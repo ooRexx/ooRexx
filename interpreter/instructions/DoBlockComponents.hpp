@@ -88,7 +88,7 @@ class ForLoop
 class ControlledLoop : public ForLoop
 {
  public:
-    inline ControlledLoop() : control(OREF_NULL), initial(OREF_NULL), to(OREF_NULL), by(OREF_NULL), expressions(0,0,0) { }
+    inline ControlledLoop() : control(OREF_NULL), initial(OREF_NULL), to(OREF_NULL), by(OREF_NULL) { }
 
     // helper memory marking methods for embedding classes to call.
     inline void live(size_t liveMark)
@@ -109,8 +109,7 @@ class ControlledLoop : public ForLoop
     }
 
 
-    virtual void setup(RexxActivation *context,
-        RexxExpressionStack *stack, RexxDoBlock *doblock);
+    virtual void setup(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock);
 
     RexxVariableBase *control;           // control variable retriever
     RexxObject       *initial;           // initial control expression
@@ -166,7 +165,6 @@ public:
     inline void liveGeneral(int reason)
     {
         memory_mark_general(conditional);
-        memory_mark_general(target);
     }
 
     bool checkWhile(RexxActivation *context, RexxExpressionStack *stack);

@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -53,6 +53,7 @@
 #include "MessageClass.hpp"
 #include "RexxNativeCode.hpp"
 #include "ProtectedObject.hpp"
+#include "MethodArguments.hpp"
 
 // singleton class instance
 RexxClass *RexxMessage::classInstance = OREF_NULL;
@@ -79,16 +80,18 @@ void RexxMessage::createInstance()
 RexxMessage::RexxMessage(RexxObject *_target, RexxString *msgName, RexxObject *scope, RexxArray *_args)
 {
                                          /* defult target is target specified */
-    OrefSet(this, this->receiver, _target);
-    OrefSet(this, this->target, _target); /* Target specified on new           */
+    receiver = target;
+    target = _target;                    /* Target specified on new           */
     /* Args to be sent wuth tmessage     */
-    OrefSet(this, this->args, _args);
-    OrefSet(this, this->message, msgName);
-    OrefSet(this, this->startscope, scope);
+    args = _args;
+    message = msgName;
+    startscope = scope;
 
     /* initialize a list of message to be*/
     /* once we have a result.            */
-    OrefSet(this, this->interestedParties, new RexxList);
+
+    // TODO:  make this something other than a list
+    interestedParties = new RexxList;
 }
 
 void RexxMessage::live(size_t liveMark)

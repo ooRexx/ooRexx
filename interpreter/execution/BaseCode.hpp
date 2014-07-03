@@ -44,6 +44,7 @@
 #ifndef Included_BaseCode
 #define Included_BaseCode
 
+#include "RexxCore.h"
 #include "ProtectedObject.hpp"
 
 /**

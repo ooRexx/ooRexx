@@ -171,7 +171,7 @@ void RexxInstructionIf::execute(RexxActivation *context, RexxExpressionStack *st
  * @param context The current execution context.
  * @param stack   The current evaluation stack.
  */
-void RexxInstructionIf::execute(RexxActivation *context, RexxExpressionStack *stack)
+void RexxInstructionCaseWhen::execute(RexxActivation *context, RexxExpressionStack *stack)
 {
     context->traceInstruction(this);
 

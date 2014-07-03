@@ -41,7 +41,6 @@
 /* Support class for building a compound variable tail.                       */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "RexxCompoundTail.hpp"
@@ -294,7 +293,7 @@ void RexxCompoundTail::expandCapacity(
 {
     length = current - tail;             /* update the accumulated length */
 
-    if (temp != OREF_NULL)               /* have we already allocated a buffer? */
+    if (!temp.isNull())                  /* have we already allocated a buffer? */
     {
                                          /* expand the size of our existing buffer  */
         temp->expand(needed + ALLOCATION_PAD);
@@ -307,7 +306,6 @@ void RexxCompoundTail::expandCapacity(
                                          /* get a new buffer size */
         size_t newLength = length + needed + ALLOCATION_PAD;
         temp = (RexxBuffer *)new_buffer(newLength);
-        p = temp;                  // this protects the buffer
         tail = temp->getData();
         current = tail + length;
         memcpy(tail, buffer, length);    /* make sure we copy the old data */

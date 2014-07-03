@@ -41,11 +41,6 @@
 /* Primitive NumberString Class                                               */
 /*                                                                            */
 /******************************************************************************/
-#include <ctype.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
-#include <float.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "BufferClass.hpp"
@@ -53,8 +48,7 @@
 #include "NumberStringMath.hpp"
 #include "Numerics.hpp"
 #include "StringUtil.hpp"
-
-
+#include "MethodArguments.hpp"
 
 // singleton class instance
 RexxClass *RexxNumberString::classInstance = OREF_NULL;

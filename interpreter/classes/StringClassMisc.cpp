@@ -41,17 +41,13 @@
 /* Miscellaneous REXX string methods                                          */
 /*                                                                            */
 /******************************************************************************/
-
-#include <ctype.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "SourceFile.hpp"
 #include "ActivityManager.hpp"
 #include "StringUtil.hpp"
 #include "LanguageParser.hpp"
+#include "MethodArguments.hpp"
 
 
 // TODO:  The bulk of this code should be moved to the LanguageParser.

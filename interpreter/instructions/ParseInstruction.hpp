@@ -46,9 +46,9 @@
 
 #include "RexxInstruction.hpp"
 #include "ParseTrigger.hpp"
-#include <bitset>
+#include "FlagSet.hpp"
 
-enum
+typedef enum
 {
     parse_upper,               // doing a parse upper
     parse_lower,               // doing a parse lower

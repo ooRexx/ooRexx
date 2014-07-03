@@ -48,6 +48,7 @@
 #include "SupplierClass.hpp"
 #include "ActivityManager.hpp"
 #include "ProtectedObject.hpp"
+#include "MethodArguments.hpp"
 
 // singleton class instance
 RexxClass *RexxSupplier::classInstance = OREF_NULL;

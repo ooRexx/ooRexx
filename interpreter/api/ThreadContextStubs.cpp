@@ -62,6 +62,7 @@
 #include "RexxStartDispatcher.hpp"
 #include "PackageManager.hpp"
 #include "MutableBufferClass.hpp"
+#include "MethodArguments.hpp"
 
 BEGIN_EXTERN_C()
 

@@ -47,13 +47,12 @@
 
 #include "ProtectedObject.hpp"
 #include "LanguageParser.hpp"
+#include "BufferClass.hpp"
 
 class RexxBuffer;
 
- class RexxCompoundTail {
-
-    enum { ALLOCATION_PAD = 100 } ;   /* amount of padding added when the buffer size is increased */
-
+class RexxCompoundTail
+{
   public:
    inline RexxCompoundTail(RexxVariableDictionary *dictionary, RexxObject **tails, size_t tailCount)
    {
@@ -132,10 +131,10 @@ class RexxBuffer;
 
    RexxString *createCompoundName(RexxString *);
    RexxString *makeString();
-   void init()
+   inline void init()
    {
        length = 0;                              /* set the initial lengths */
-       remainder = MAX_SYMBOL_LENGTH;
+       remainder = LanguageParser::MAX_SYMBOL_LENGTH;
        tail = buffer;                           /* the default tail is the buffer */
        current = tail;                          /* the current pointer is the beginning */
        temp = OREF_NULL;                        /* we don't have a temporary here */
@@ -165,15 +164,16 @@ class RexxBuffer;
    inline size_t getLength() { return length; }
    inline const char *getTail()  { return tail; }
 
+   const size_t ALLOCATION_PAD = 100;
+
  protected:
 
-   size_t  length;                     /* length of the buffer (current) */
-   size_t  remainder;                  /* remaining length in the buffer */
-   char   *tail;                       /* the start of the tail buffer   */
-   char   *current;                    /* current write position         */
-   char    buffer[MAX_SYMBOL_LENGTH];  /* the default buffer             */
-   RexxString  *value;                 /* a created string value         */
-   RexxBuffer *temp;                   // potential temporary buffer
-   ProtectedObject p;                  // used to protect the temp buffer
+     size_t  length;                     // length of the buffer (current)
+     size_t  remainder;                  // remaining length in the buffer
+     char   *tail;                       // the start of the tail buffer
+     char   *current;                    // current write position
+     char    buffer[LanguageParser::MAX_SYMBOL_LENGTH];  // the default buffer
+     RexxString  *value;                 // a created string value
+     Protected<RexxBuffer> temp;         // potential temporary buffer
  };
 #endif

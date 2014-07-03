@@ -36,15 +36,11 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                           IntegerClass.c       */
+/* REXX Kernel                                           IntegerClass.cpp     */
 /*                                                                            */
 /* Primitive Integer Class                                                    */
 /*                                                                            */
 /******************************************************************************/
-#include <ctype.h>
-#include <string.h>
-#include <stdlib.h>
-#include <math.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "ArrayClass.hpp"
@@ -52,6 +48,7 @@
 #include "RexxActivity.hpp"
 #include "Numerics.hpp"
 #include "RexxCompoundTail.hpp"
+#include "MethodArguments.hpp"
 
 
 

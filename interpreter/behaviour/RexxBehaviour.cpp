@@ -41,7 +41,6 @@
 /* Primitive Behaviour Class                                                  */
 /*                                                                            */
 /******************************************************************************/
-#include <string.h>
 #include "RexxCore.h"
 #include "RexxBehaviour.hpp"
 #include "StringClass.hpp"
@@ -50,6 +49,7 @@
 #include "SupplierClass.hpp"
 #include "ProtectedObject.hpp"
 #include "CPPCode.hpp"
+#include "MethodArguments.hpp"
 
 
 RexxBehaviour::RexxBehaviour(

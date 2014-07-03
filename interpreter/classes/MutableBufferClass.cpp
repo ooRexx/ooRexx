@@ -41,15 +41,12 @@
 /* Primitive MutableBuffer Class                                              */
 /*                                                                            */
 /******************************************************************************/
-#include <ctype.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "MutableBufferClass.hpp"
 #include "ProtectedObject.hpp"
 #include "StringUtil.hpp"
+#include "MethodArguments.hpp"
 
 
 // singleton class instance
@@ -66,6 +63,7 @@ void RexxMutableBuffer::createInstance()
 }
 
 
+// TODO:  make this a constant.
 #define DEFAULT_BUFFER_LENGTH 256
 
 /**

@@ -45,7 +45,6 @@
 #ifndef Included_Numerics
 #define Included_Numerics
 
-
 class NumericSettings                  // "global" numeric settings         */
 {
     public:

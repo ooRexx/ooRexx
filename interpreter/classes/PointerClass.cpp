@@ -44,6 +44,7 @@
 #include "RexxCore.h"
 #include "PointerClass.hpp"
 #include "ActivityManager.hpp"
+#include "MethodArguments.hpp"
 
 
 RexxClass *RexxPointer::classInstance = OREF_NULL;   // singleton class instance

@@ -50,10 +50,7 @@
 class RexxInstructionIf : public RexxInstructionSet
 {
  public:
-    inline void *operator new(size_t size, void *ptr) {return ptr;}
-    inline void operator delete(void *) { }
-    inline void operator delete(void *, void *) { }
-
+     RexxInstructionIf() { };
     RexxInstructionIf(RexxObject *, RexxToken *);
     inline RexxInstructionIf(RESTORETYPE restoreType) { ; };
 
@@ -82,11 +79,7 @@ class RexxInstructionIf : public RexxInstructionSet
 class RexxInstructionCaseWhen : public RexxInstructionIf
 {
  public:
-    inline void *operator new(size_t size, void *ptr) {return ptr;}
-    inline void operator delete(void *) { }
-    inline void operator delete(void *, void *) { }
-
-    RexxInstructionCaseWhen(RexxObject *, RexxToken *);
+    RexxInstructionCaseWhen() { };
     inline RexxInstructionCaseWhen(RESTORETYPE restoreType) { ; };
 
     virtual void execute(RexxActivation *, RexxExpressionStack *);

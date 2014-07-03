@@ -44,6 +44,8 @@
 #ifndef Included_RexxMessage
 #define Included_RexxMessage
 
+// TODO:  make this a typed flag
+
 #define  flagResultReturned   0x00000001
 #define  flagRaiseError       0x00000002
 #define  flagErrorReported    0x00000004
@@ -51,63 +53,64 @@
 #define  flagStartPending     0x00000010
 #define  flagMsgSent          0x00000020
 
- class RexxMessage : public RexxObject {
+class RexxMessage : public RexxObject
+{
   public:
-   void * operator new(size_t);
-   inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };
-                                        /* So it doesn't need to do anythin*/
-   RexxMessage(RexxObject *, RexxString *, RexxObject *, RexxArray *);
-   inline RexxMessage(RESTORETYPE restoreType) { ; };
+    void * operator new(size_t);
+    inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };
 
-   void          live(size_t);
-   void          liveGeneral(int reason);
-   void          flatten(RexxEnvelope *);
-   RexxObject   *notify(RexxMessage *);
-   RexxObject   *result();
-   RexxObject   *send(RexxObject *);
-   RexxObject   *start(RexxObject *);
-   RexxObject   *completed();
-   void          sendNotification();
-   void          error(RexxDirectory *);
-   RexxObject   *messageTarget();
-   RexxString   *messageName();
-   RexxArray    *arguments();
-   RexxObject   *hasError();
-   RexxObject   *errorCondition();
-   RexxObject   *newRexx(RexxObject **, size_t);
-   RexxActivity *getActivity() { return startActivity; }
+    RexxMessage(RexxObject *, RexxString *, RexxObject *, RexxArray *);
+    inline RexxMessage(RESTORETYPE restoreType) { ; };
 
-   inline bool          resultReturned() { return (this->dataFlags & flagResultReturned) != 0; };
-   inline bool          raiseError()     { return (this->dataFlags & flagRaiseError) != 0;     };
-   inline bool          errorReported()  { return (this->dataFlags & flagErrorReported) != 0;  };
-   inline bool          allNotified()    { return (this->dataFlags & flagAllNotified) != 0;    };
-   inline bool          startPending()   { return (this->dataFlags & flagStartPending) != 0;   };
-   inline bool          msgSent()        { return (this->dataFlags & flagMsgSent) != 0;        };
-   inline void          setResultReturned() { this->dataFlags |= flagResultReturned; };
-   inline void          setRaiseError()     { this->dataFlags |= flagRaiseError;     };
-   inline void          setErrorReported()  { this->dataFlags |= flagErrorReported;  };
-   inline void          setAllNotified()    { this->dataFlags |= flagAllNotified;    };
-   inline void          setStartPending()   { this->dataFlags |= flagStartPending;   };
-   inline void          setMsgSent()        { this->dataFlags |= flagMsgSent;        };
+    void          live(size_t);
+    void          liveGeneral(int reason);
+    void          flatten(RexxEnvelope *);
+    RexxObject   *notify(RexxMessage *);
+    RexxObject   *result();
+    RexxObject   *send(RexxObject *);
+    RexxObject   *start(RexxObject *);
+    RexxObject   *completed();
+    void          sendNotification();
+    void          error(RexxDirectory *);
+    RexxObject   *messageTarget();
+    RexxString   *messageName();
+    RexxArray    *arguments();
+    RexxObject   *hasError();
+    RexxObject   *errorCondition();
+    RexxObject   *newRexx(RexxObject **, size_t);
+    RexxActivity *getActivity() { return startActivity; }
 
-   static void createInstance();
-   static RexxClass *classInstance;
+    inline bool          resultReturned() { return (this->dataFlags & flagResultReturned) != 0; };
+    inline bool          raiseError()     { return (this->dataFlags & flagRaiseError) != 0;     };
+    inline bool          errorReported()  { return (this->dataFlags & flagErrorReported) != 0;  };
+    inline bool          allNotified()    { return (this->dataFlags & flagAllNotified) != 0;    };
+    inline bool          startPending()   { return (this->dataFlags & flagStartPending) != 0;   };
+    inline bool          msgSent()        { return (this->dataFlags & flagMsgSent) != 0;        };
+    inline void          setResultReturned() { this->dataFlags |= flagResultReturned; };
+    inline void          setRaiseError()     { this->dataFlags |= flagRaiseError;     };
+    inline void          setErrorReported()  { this->dataFlags |= flagErrorReported;  };
+    inline void          setAllNotified()    { this->dataFlags |= flagAllNotified;    };
+    inline void          setStartPending()   { this->dataFlags |= flagStartPending;   };
+    inline void          setMsgSent()        { this->dataFlags |= flagMsgSent;        };
+
+    static void createInstance();
+    static RexxClass *classInstance;
 
  protected:
 
-   RexxObject    *receiver;            /* Real receiver of message.         */
-   RexxObject    *target;              /* Target object specified           */
-   RexxString    *message;             /* Message to be sent                */
-   RexxObject    *startscope;          /* Starting scope for method lookup  */
-   RexxArray     *args;
-   RexxObject    *resultObject;
-   RexxList      *interestedParties;   /* message objects to be notified    */
-   RexxDirectory *condition;           /* condition object, generated by    */
-   RexxActivity *startActivity;        /* Activity created to run msg       */
-   RexxList     *waitingActivities;    /* waiting activities list           */
-   size_t dataFlags;                   /* flags to control processing       */
-   SysSemaphore  waitResultSem;        /* Semophore used to wait on result  */
-   size_t NumWaiting;                  /* activities waiting on result      */
- };
+    RexxObject    *receiver;            /* Real receiver of message.         */
+    RexxObject    *target;              /* Target object specified           */
+    RexxString    *message;             /* Message to be sent                */
+    RexxObject    *startscope;          /* Starting scope for method lookup  */
+    RexxArray     *args;
+    RexxObject    *resultObject;
+    RexxList      *interestedParties;   /* message objects to be notified    */
+    RexxDirectory *condition;           /* condition object, generated by    */
+    RexxActivity *startActivity;        /* Activity created to run msg       */
+    RexxList     *waitingActivities;    /* waiting activities list           */
+    size_t dataFlags;                   /* flags to control processing       */
+    SysSemaphore  waitResultSem;        /* Semophore used to wait on result  */
+    size_t NumWaiting;                  /* activities waiting on result      */
+};
 
 #endif

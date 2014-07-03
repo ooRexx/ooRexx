@@ -43,6 +43,11 @@
 /******************************************************************************/
 
 #include "BaseCode.hpp"
+#include "ProtectedObject.hpp"
+#include "MethodArguments.hpp"
+#include "MethodClass.hpp"
+#include "RoutineClass.hpp"
+#include "PackageClass.hpp"
 
 
 /**
@@ -120,9 +125,9 @@ RexxArray *BaseExecutable::source()
 /**
  * Detach the source code from an executable package
  */
-RexxArray *BaseExecutable::detachSource()
+void BaseExecutable::detachSource()
 {
-    return code->detachSource();
+    code->detachSource();
 }
 
 
@@ -138,7 +143,7 @@ RexxArray *BaseExecutable::detachSource()
  */
 RexxArray *BaseExecutable::processExecutableSource(RexxObject *source, RexxObject *position)
 {
-    Protected<RexxArray> sourceArray = OREF_NULL;
+    Protected<RexxArray> sourceArray;
 
     // if this is a string object, then convert to a a single element array.
     if (isString(source))
@@ -218,7 +223,7 @@ void BaseExecutable::processNewExecutableArgs(RexxObject **&init_args, size_t &a
     size_t initCount = 0;                // count of arguments we pass along
 
     // do the initial parse of the new arguments.
-    RexxClass::processNewArgs(init_args, argCount, &init_args, &initCount, 2, (RexxObject **)&pgmname, (RexxObject **)&_source);
+    RexxClass::processNewArgs(init_args, argCount, &init_args, &initCount, 2, (RexxObject **)&pgmname, (RexxObject **)&source);
     // get the method name as a string
     RexxString *nameString = stringArgument(pgmname, ARG_ONE);
     // make sure there is something for the second arg.

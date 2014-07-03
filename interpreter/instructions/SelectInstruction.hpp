@@ -55,10 +55,7 @@ class RexxInstructionOtherwise;
 class RexxInstructionSelect : public RexxBlockInstruction
 {
 public:
-    inline void *operator new(size_t size, void *ptr) {return ptr;}
-    inline void  operator delete(void *) { }
-    inline void  operator delete(void *, void *) { }
-
+    inline RexxInstructionSelect() { }
     RexxInstructionSelect(RexxString *);
     inline RexxInstructionSelect(RESTORETYPE restoreType) { ; };
 
@@ -73,6 +70,9 @@ public:
     virtual void matchEnd(RexxInstructionEnd *, RexxSource *);
     virtual bool isLoop();
     virtual void terminate(RexxActivation *, RexxDoBlock *);
+
+    // all select instructions do the same thing here
+    virtual EndBlockType getEndStyle() { return SELECT_BLOCK; }
 
     // specific to the SELECT instruction
     void addWhen(RexxInstructionIf *);
@@ -92,11 +92,7 @@ protected:
 class RexxInstructionSelectCase : public RexxInstructionSelect
 {
 public:
-    inline void *operator new(size_t size, void *ptr) {return ptr;}
-    inline void  operator delete(void *) { }
-    inline void  operator delete(void *, void *) { }
-
-    RexxInstructionSelectCase(RexxString *, RexxObject *);
+    RexxInstructionSelectCase(RexxString *label, RexxObject *condition);
     inline RexxInstructionSelectCase(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);

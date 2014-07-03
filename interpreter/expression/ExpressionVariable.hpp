@@ -46,7 +46,8 @@
 
 #include "ExpressionBaseVariable.hpp"
 
-class RexxSimpleVariable : public RexxVariableBase {
+class RexxSimpleVariable : public RexxVariableBase
+{
  public:
     void *operator new(size_t);
     inline void *operator new(size_t size, void *ptr) {return ptr;};

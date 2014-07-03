@@ -84,10 +84,10 @@ class RexxInstructionDynamicCallBase : public RexxInstruction
 /**
  * Base class for SIGNAL/CALL ON trap instructions.
  */
-class RexxTrapInstructionBase : public RexxInstructionCallBase
+class RexxInstructionTrapBase : public RexxInstructionCallBase
 {
  public:
-    inline RexxTrapInstructionBase() { ; };
+    inline RexxInstructionTrapBase() { ; };
     virtual void trap(RexxActivation *, RexxDirectory *) { ; };
 
  protected:
@@ -158,7 +158,8 @@ protected:
  * An instruction object to handle the basics of the
  * CALL ON/OFF instruction.
  */
-class RexxInstructionCallOn : public RexxTrapInstructionBase {
+class RexxInstructionCallOn : public RexxInstructionTrapBase
+{
  public:
 
     inline void *operator new(size_t size, void *ptr) {return ptr;}

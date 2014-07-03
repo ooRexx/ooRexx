@@ -49,6 +49,7 @@
 #include "MethodClass.hpp"
 #include "RexxActivation.hpp"
 #include "ProtectedObject.hpp"
+#include "MethodArguments.hpp"
 
 // singleton class instance
 RexxClass *RexxDirectory::classInstance = OREF_NULL;

@@ -66,7 +66,6 @@
 /*                                                                            */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "RexxActivity.hpp"
 #include "IntegerClass.hpp"
@@ -75,9 +74,7 @@
 #include "MutableBufferClass.hpp"
 #include "ActivityManager.hpp"
 #include "ProtectedObject.hpp"
-
-#include <deque>
-
+#include "MethodArguments.hpp"
 
 // singleton class instance
 RexxClass *RexxArray::classInstance = OREF_NULL;

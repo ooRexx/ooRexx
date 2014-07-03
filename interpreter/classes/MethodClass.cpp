@@ -61,6 +61,7 @@
 #include "RexxCode.hpp"
 #include "PackageManager.hpp"
 #include "LanguageParser.hpp"
+#include "MethodArguments.hpp"
 
 // singleton class instance
 RexxClass *MethodClass::classInstance = OREF_NULL;

@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                               QueueClass.c     */
+/* REXX Kernel                                               QueueClass.cpp   */
 /*                                                                            */
 /* Primitive Queue Class                                                      */
 /*                                                                            */
@@ -47,6 +47,7 @@
 #include "SupplierClass.hpp"
 #include "ActivityManager.hpp"
 #include "ProtectedObject.hpp"
+#include "MethodArguments.hpp"
 
 // singleton class instance
 RexxClass *RexxQueue::classInstance = OREF_NULL;

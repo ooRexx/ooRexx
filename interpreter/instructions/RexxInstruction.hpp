@@ -57,7 +57,9 @@ class RexxClause;
  * a successor instruction and recording the instruction
  * location.
  */
-class RexxInstruction : public RexxInternalObject {
+class RexxInstruction : public RexxInternalObject
+{
+ friend class RexxActivation;
  public:
            void *operator new(size_t);
     inline void *operator new(size_t size, void *objectPtr) { return objectPtr; }

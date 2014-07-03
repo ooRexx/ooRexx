@@ -48,45 +48,48 @@ class RexxSmartBuffer;
 class RexxBuffer;
 
 // default size of the buffer used for flatten operations
-#define DEFAULT_ENVELOPE_BUFFER (64*1024)
+#define DEFAULT_ENVELOPE_BUFFER (128*1024)
 
 class RexxEnvelope : public RexxInternalObject
 {
   public:
-   void *operator new(size_t);
+    void *operator new(size_t);
+    inline void *operator new(size_t size, void *objectPtr) { return objectPtr; };
+    inline void  operator delete(void *) { ; }
+    inline void  operator delete(void *, void *) {;}
 
-   RexxEnvelope();
-   inline RexxEnvelope(RESTORETYPE restoreType) { ; };
+    RexxEnvelope();
+    inline RexxEnvelope(RESTORETYPE restoreType) { ; };
 
-   virtual void live(size_t);
-   virtual void liveGeneral(int reason);
+    virtual void live(size_t);
+    virtual void liveGeneral(int reason);
 
-   void flattenReference(void *, size_t, void *);
-   RexxBuffer *pack(RexxObject *);
-   void        puff(RexxBuffer *, const char *, size_t length);
-   size_t queryObj(RexxObject *);
-   size_t copyBuffer(RexxObject *);
-   void   rehash();
-   char  *bufferStart();
-   void   associateObject(RexxObject *, size_t);
-   void   addTable(RexxObject *obj);
+    void flattenReference(void *, size_t, void *);
+    RexxBuffer *pack(RexxObject *);
+    void        puff(RexxBuffer *, const char *, size_t length);
+    size_t queryObj(RexxObject *);
+    size_t copyBuffer(RexxObject *);
+    void   rehash();
+    char  *bufferStart();
+    void   associateObject(RexxObject *, size_t);
+    void   addTable(RexxObject *obj);
 
-   inline RexxSmartBuffer *getBuffer() {return this->buffer;}
-   inline RexxObject *getReceiver() {return this->receiver;}
-   inline size_t      getCurrentOffset() { return this->currentOffset; }
-   inline RexxIdentityTable *getDuptable() {return this->duptable;}
-   inline RexxIdentityTable *getRehashtable() {return this->rehashtable;}
+    inline RexxSmartBuffer *getBuffer() {return this->buffer;}
+    inline RexxObject *getReceiver() {return this->receiver;}
+    inline size_t      getCurrentOffset() { return this->currentOffset; }
+    inline RexxIdentityTable *getDuptable() {return this->duptable;}
+    inline RexxIdentityTable *getRehashtable() {return this->rehashtable;}
 
-   size_t      currentOffset;          /* current flattening offset         */
+    size_t      currentOffset;            // current flattening offset
 
 protected:
 
-   RexxObject *home;
-   RexxObject *receiver;               /* object to receive the message     */
-   RexxIdentityTable  *duptable;         /* table of duplicates               */
-   RexxIdentityTable  *savetable;        /* table of protected objects created during flattening */
-   RexxSmartBuffer *buffer;            /* smart buffer wrapper              */
-   RexxIdentityTable  *rehashtable;      /* table to rehash                   */
-   RexxStack  *flattenStack;           /* the flattening stack              */
+    RexxObject *home;
+    RexxObject *receiver;                 // object to receive the message
+    RexxIdentityTable  *duptable;         // table of duplicates
+    RexxIdentityTable  *savetable;        // table of protected objects created during flattening */
+    RexxSmartBuffer *buffer;              // smart buffer wrapper
+    RexxIdentityTable  *rehashtable;      // table to rehash
+    RexxStack  *flattenStack;             // the flattening stack
 };
 #endif

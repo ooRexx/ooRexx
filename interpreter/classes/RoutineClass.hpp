@@ -81,6 +81,16 @@ public:
     RoutineClass *newFileRexx(RexxString *);
     RoutineClass *loadExternalRoutine(RexxString *name, RexxString *descriptor);
 
+    // various static classes for reading from a file and restoring potential
+    // compiled images.
+    static RoutineClass *restore(RexxBuffer *, char *, size_t length);
+    static RoutineClass *restore(const char *data, size_t length);
+    static RoutineClass *restore(RexxString *fileName, RexxBuffer *buffer);
+    static RoutineClass *restoreFromMacroSpace(RexxString *name);
+    static RoutineClass *restore(RexxBuffer *buffer);
+    static RoutineClass *restore(RXSTRING *inData, RexxString *name);
+    static RoutineClass *fromFile(RexxString *filename);
+
     static void createInstance();
     static RexxClass *classInstance;
 };

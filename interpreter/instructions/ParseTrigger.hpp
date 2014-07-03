@@ -44,7 +44,7 @@
 #ifndef Included_RexxInstructionTrigger
 #define Included_RexxInstructionTrigger
 
-enum
+typedef enum
 {
     TRIGGER_END,
     TRIGGER_PLUS,

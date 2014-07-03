@@ -168,6 +168,16 @@ RoutineClass *LanguageParser::createProgram(RexxString *name)
 }
 
 
+RexxCode *LanguageParser::translateInterpret(RexxString *interpretString, RexxDirectory *labels, size_t lineNumber)
+{
+    // create the appropriate array source, then the parser, then generate the
+    // code.
+    ProtectedObject p = new ArrayProgramSource(new_array(interpretString), lineNumber);
+    p = new LanguageParser(name, (ProgramSource *)(RexxInternalObject *)p);
+    return ((LanguageParser *)(RexxInternalObject *)p)->translateInterpret(labels);
+}
+
+
 /**
  * Construct a program source object.
  *
@@ -340,6 +350,31 @@ RoutineClass *LanguageParser::generateProgram()
     package->initCode = mainSection;
     // return the main executable.
     return (RoutineClass *)package->mainExecutable();
+}
+
+
+/**
+ * Translate an interpret string.
+ *
+ * @param contextlabels
+ *               The labels for the interpreting source program.
+ *
+ * @return A RexxCode object resulting from the compilation of
+ *         this interpret line.
+ */
+RexxCode *LanguageParser::translateInterpret(RexxDirectory *contextLabels)
+{
+    // to translate this, we use the labels from the parent context.
+    labels = contextLabels;
+    // turn on the interpret restrictions
+    setInterpret();
+    // initialize, and compile all of the source.
+    compileSource();
+
+    //. the package ends up with neither a init section or a main executable.
+    // we just return the main code section
+    // return the main executable.
+    return mainSection;
 }
 
 
@@ -675,9 +710,6 @@ void LanguageParser::translate()
 /**
  * Translate a block of REXX code (delimited by possible
  * directive instructions
- *
- * @param _labels A parent label context (generally only used for
- *                interpret instructions).
  *
  * @return A RexxCode object for this block.
  */

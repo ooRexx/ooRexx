@@ -58,6 +58,7 @@
 #include "WeakReferenceClass.hpp"
 #include "SourceFile.hpp"
 #include "PackageClass.hpp"
+#include "MethodArguments.hpp"
 
 
 // singleton class instance

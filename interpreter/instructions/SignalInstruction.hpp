@@ -55,10 +55,6 @@
 class RexxInstructionSignal : public RexxInstructionCallBase
 {
  public:
-    inline void *operator new(size_t size, void *ptr) {return ptr;}
-    inline void  operator delete(void *) { }
-    inline void  operator delete(void *, void *) { }
-
     RexxInstructionSignal(RexxString *);
     inline RexxInstructionSignal(RESTORETYPE restoreType) { ; };
 
@@ -79,12 +75,8 @@ class RexxInstructionSignal : public RexxInstructionCallBase
 class RexxInstructionDynamicSignal : public RexxInstructionDynamicCallBase
 {
  public:
-    inline void *operator new(size_t size, void *ptr) {return ptr;}
-    inline void  operator delete(void *) { }
-    inline void  operator delete(void *, void *) { }
-
-    RexxInstructionSignal(RexxObject *);
-    inline RexxInstructionSignal(RESTORETYPE restoreType) { ; };
+    RexxInstructionDynamicSignal(RexxObject *);
+    inline RexxInstructionDynamicSignal(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
     virtual void liveGeneral(int reason);
@@ -98,14 +90,9 @@ class RexxInstructionDynamicSignal : public RexxInstructionDynamicCallBase
  * An instruction object to handle the basics of the SIGNAL
  * ON/OFF instruction.
  */
-class RexxInstructionSignalOn : public RexxTrapInstructionBase
+class RexxInstructionSignalOn : public RexxInstructionTrapBase
 {
  public:
-
-    inline void *operator new(size_t size, void *ptr) {return ptr;}
-    inline void operator delete(void *) { }
-    inline void operator delete(void *, void *) { }
-
     RexxInstructionSignalOn(RexxString*, RexxString *);
     inline RexxInstructionSignalOn(RESTORETYPE restoreType) { ; };
 

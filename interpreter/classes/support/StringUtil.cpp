@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -41,14 +41,13 @@
 /* String Utilities shared between String class and MutableBuffer class       */
 /*                                                                            */
 /******************************************************************************/
-#include <ctype.h>
-#include <string.h>
 
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "ProtectedObject.hpp"
 #include "StringUtil.hpp"
 #include "QueueClass.hpp"
+#include "MethodArguments.hpp"
 
 
 /**
@@ -545,6 +544,7 @@ RexxArray *StringUtil::makearray(const char *start, size_t length, RexxString *s
     }
 
 
+    // TODO:  Just use an array and append...
     RexxQueue *strings = new_queue();    /* save each string in a queue       */
     ProtectedObject p2(strings);         /* which we need to protect */
     // this is the end of the string

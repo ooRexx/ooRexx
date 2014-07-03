@@ -56,7 +56,9 @@ class RexxCode : public BaseCode
 {
   public:
    void *operator new(size_t);
+   inline void *operator new(size_t size, void *objectPtr) { return objectPtr; };
    inline void  operator delete(void *) { ; }
+   inline void  operator delete(void *, void *) {;}
 
    const size_t MINIMUM_STACK_FRAME = 0;
 
@@ -89,6 +91,7 @@ class RexxCode : public BaseCode
    inline RoutineClass *findRoutine(RexxString *n) { return source->findRoutine(n); }
    inline RexxString *resolveProgramName(RexxActivity *activity, RexxString *name) { return source->resolveProgramName(activity, name); }
    inline void        mergeRequired(RexxSource *s) { source->mergeRequired(s); }
+          RexxCode *interpret(RexxString *source, size_t lineNumber);
 
    // overrides for BaseCode classes
    virtual void run(RexxActivity *, MethodClass *, RexxObject *, RexxString *, RexxObject **,  size_t, ProtectedObject &);

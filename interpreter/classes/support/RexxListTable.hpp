@@ -60,8 +60,10 @@ class RexxListTable : public RexxInternalObject
   public:
    void * operator new(size_t, size_t);
    void * operator new(size_t, size_t, size_t);
+   inline void *operator new(size_t size, void *objectPtr) { return objectPtr; };
    inline void operator delete(void *, size_t) { }
    inline void operator delete(void *, size_t, size_t) { }
+   inline void  operator delete(void *, void *) {;}
 
    inline RexxListTable(RESTORETYPE restoreType) { ; };
    inline RexxListTable() {;};

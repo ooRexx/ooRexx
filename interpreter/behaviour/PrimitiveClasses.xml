@@ -117,7 +117,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <Class id="Variable" class="RexxVariable" include="RexxVariable.hpp"/>
 <Class id="VariableDictionary" class="RexxVariableDictionary" include="RexxVariableDictionary.hpp"/>
-<Class id="VariableTerm" class="RexxParseVariable" include="ExpressionVariable.hpp"/>
+<Class id="VariableTerm" class="RexxSimpleVariable" include="ExpressionVariable.hpp"/>
 <Class id="CompoundVariableTerm" class="RexxCompoundVariable" include="ExpressionCompoundVariable.hpp"/>
 <Class id="StemVariableTerm" class="RexxStemVariable" include="ExpressionStem.hpp"/>
 <Class id="DotVariableTerm" class="RexxDotVariable" include="ExpressionDotVariable.hpp"/>
@@ -157,6 +157,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="ForwardInstruction" class="RexxInstructionForward" include="ForwardInstruction.hpp"/>
 <Class id="GuardInstruction" class="RexxInstructionGuard" include="GuardInstruction.hpp"/>
 <Class id="IfInstruction" class="RexxInstructionIf" include="IfInstruction.hpp"/>
+<Class id="CaseWhenInstruction" class="RexxInstructionCaseWhen" include="IfInstruction.hpp"/>
 <Class id="InterpretInstruction" class="RexxInstructionInterpret" include="InterpretInstruction.hpp"/>
 <Class id="LabelInstruction" class="RexxInstructionLabel" include="LabelInstruction.hpp"/>
 <Class id="LeaveInstruction" class="RexxInstructionLeave" include="LeaveInstruction.hpp"/>
@@ -173,6 +174,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="ReturnInstruction" class="RexxInstructionReturn" include="ReturnInstruction.hpp"/>
 <Class id="SayInstruction" class="RexxInstructionSay" include="SayInstruction.hpp"/>
 <Class id="SelectInstruction" class="RexxInstructionSelect" include="SelectInstruction.hpp"/>
+<Class id="SelectCaseInstruction" class="RexxInstructionSelectCase" include="SelectInstruction.hpp"/>
 <Class id="SignalInstruction" class="RexxInstructionSignal" include="SignalInstruction.hpp"/>
 <Class id="DynamicSignalInstruction" class="RexxInstructionDynamicSignal" include="SignalInstruction.hpp"/>
 <Class id="SignalOnInstruction" class="RexxInstructionSignalOn" include="SignalInstruction.hpp"/>

@@ -55,7 +55,6 @@
 #include "ProgramSource.hpp"
 
 class RexxInstruction;
-class RexxInstructionDo;
 class RexxInstructionIf;
 class RexxInstructionForward;
 class RexxExpressionMessage;

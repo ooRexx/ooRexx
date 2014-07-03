@@ -47,25 +47,29 @@
 class RexxSupplier : public RexxObject
 {
  public:
-   inline RexxSupplier(RESTORETYPE restoreType) { ; };
-   RexxSupplier(RexxArray  *, RexxArray  *);
-   RexxSupplier();
+           void *operator new(size_t);
+    inline void *operator new(size_t size, void *objectPtr) { return objectPtr; };
+    inline void  operator delete(void *, void *) {;}
+    inline void  operator delete(void *) {;}
 
-   void       *operator new(size_t);
+    inline RexxSupplier(RESTORETYPE restoreType) { ; };
+    RexxSupplier(RexxArray  *, RexxArray  *);
+    RexxSupplier();
 
-   virtual void live(size_t);
-   virtual void liveGeneral(int reason);
-   virtual void flatten(RexxEnvelope *);
 
-   RexxInteger *available();
-   RexxObject  *next();
-   RexxObject  *value();
-   RexxObject  *index();
-   RexxObject  *initRexx(RexxArray *values, RexxArray *indexes);
-   RexxObject  *newRexx(RexxObject **, size_t);
+    virtual void live(size_t);
+    virtual void liveGeneral(int reason);
+    virtual void flatten(RexxEnvelope *);
 
-   static void createInstance();
-   static RexxClass *classInstance;
+    RexxInteger *available();
+    RexxObject  *next();
+    RexxObject  *value();
+    RexxObject  *index();
+    RexxObject  *initRexx(RexxArray *values, RexxArray *indexes);
+    RexxObject  *newRexx(RexxObject **, size_t);
+
+    static void createInstance();
+    static RexxClass *classInstance;
 
  protected:
 

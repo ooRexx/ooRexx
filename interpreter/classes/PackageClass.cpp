@@ -50,7 +50,7 @@
 #include "RoutineClass.hpp"
 #include "InterpreterInstance.hpp"
 #include "PackageManager.hpp"
-
+#include "MethodArguments.hpp"
 
 // singleton class instance
 RexxClass *PackageClass::classInstance = OREF_NULL;

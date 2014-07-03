@@ -375,7 +375,7 @@ typedef enum
 
 
 // markers for the builtin function
-enum
+typedef enum
 {
     NO_BUILTIN  = 0,
     BUILTIN_ABBREV,
@@ -487,7 +487,9 @@ class RexxToken : public RexxInternalObject
 {
  public:
     void        *operator new(size_t);
+    inline void *operator new(size_t size, void *objectPtr) { return objectPtr; };
     inline void  operator delete(void *) { ; }
+    inline void  operator delete(void *, void *) {;}
 
     inline RexxToken(TokenClass c, SourceLocation &l, TokenSubclass sc = SUBTYPE_NONE, RexxString *v = OREF_NULL) : classId(c), subclass(sc),
         stringValue(v), numeric(SUBTYPE_NONE), tokenLocation(l) { };

@@ -63,6 +63,7 @@
 #include "PackageManager.hpp"
 #include "InterpreterInstance.hpp"
 #include "LanguageParser.hpp"
+#include "MethodArguments.hpp"
 
 // singleton class instance
 RexxClass *RoutineClass::classInstance = OREF_NULL;
@@ -74,6 +75,19 @@ RexxClass *RoutineClass::classInstance = OREF_NULL;
 void RoutineClass::createInstance()
 {
     CLASS_CREATE(Routine, "Routine", RexxClass);
+}
+
+
+/**
+ * Allocate memory for a new Routine instance.
+ *
+ * @param size   The size of the object.
+ *
+ * @return An allocated object configured for a Routine object.
+ */
+void *RoutineClass::operator new (size_t size)
+{
+    return new_object(size, T_Routine);
 }
 
 
@@ -327,15 +341,165 @@ void RoutineClass::save(const char *filename)
 
 
 /**
- * Allocate memory for a new Routine instance.
+ * Retrieve a routine object from a file.  This will first attempt
+ * to restore a previously translated image, then will try to
+ * translate the source if that fails.
  *
- * @param size   The size of the object.
+ * @param filename The target file name.
  *
- * @return An allocated object configured for a Routine object.
+ * @return A resulting Routine object, if possible.
  */
-void *RoutineClass::operator new (size_t size)
+RoutineClass *RoutineClass::fromFile(RexxString *filename)
 {
-    return new_object(size, T_Routine);
+    // load the file into a buffer
+    RexxBuffer *program_buffer = SystemInterpreter::readProgram(filename->getStringData());
+    // if this failed, report an error now.
+    if (program_buffer == OREF_NULL)
+    {
+        reportException(Error_Program_unreadable_name, filename);
+    }
+
+    // try to restore a flattened program first
+    RoutineClass *routine = restore(filename, program_buffer);
+    if (routine != OREF_NULL)
+    {
+        return routine;
+    }
+
+    // process this from the source
+    return LanguageParser::createProgram(filename, program_buffer);
+}
+
+
+/**
+ * Restore a saved routine directly from character data.
+ *
+ * @param data   The data pointer.
+ * @param length the data length.
+ *
+ * @return The unflattened routine object.
+ */
+RoutineClass *RoutineClass::restore(const char *data, size_t length)
+{
+    // create a buffer object and restore from it
+    RexxBuffer *buffer = new_buffer(data, length);
+    ProtectedObject p(buffer);
+    return restore(buffer, buffer->getData(), length);
+}
+
+
+/**
+ * Unflatten a saved Routine object.
+ *
+ * @param buffer The buffer containing the saved data.
+ * @param startPointer
+ *               The pointer to the start of the flattened data.
+ * @param length The length of the flattened data.
+ *
+ * @return A restored Routine object.
+ */
+RoutineClass *RoutineClass::restore(RexxBuffer *buffer, char *startPointer, size_t length)
+{
+    // get an envelope and puff up the object
+    Protected<RexxEnvelope> envelope  = new RexxEnvelope;
+    envelope->puff(buffer, startPointer, length);
+    // the envelope receiver object is our return value.
+    return (RoutineClass *)envelope->getReceiver();
+}
+
+
+/**
+ * Restore a program from a simple buffer.
+ *
+ * @param fileName The file name of the program we're restoring from.
+ * @param buffer   The source buffer.  This contains all of the saved metadata
+ *                 ahead of the the flattened object.
+ *
+ * @return The inflated Routine object, if valid.
+ */
+RoutineClass *RoutineClass::restore(RexxString *fileName, RexxBuffer *buffer)
+{
+    const char *data = buffer->getData();
+
+    // does this start with a hash-bang?  Need to scan forward to the first
+    // newline character
+    if (data[0] == '#' && data[1] == '!')
+    {
+        data = Utilities::strnchr(data, buffer->getDataLength(), '\n');
+        if (data == OREF_NULL)
+        {
+            return OREF_NULL;
+        }
+        // step over the linend
+        data++;
+    }
+
+    ProgramMetaData *metaData = (ProgramMetaData *)data;
+    bool badVersion = false;
+    // make sure this is valid for interpreter
+    if (!metaData->validate(badVersion))
+    {
+        // if the failure was due to a version mismatch, this is an error condition.
+        if (badVersion)
+        {
+            reportException(Error_Program_unreadable_version, fileName);
+        }
+        return OREF_NULL;
+    }
+    // this should be valid...try to restore.
+    RoutineClass *routine = restore(buffer, metaData->getImageData(), metaData->getImageSize());
+    // change the program name to match the file this was restored from
+    routine->getSourceObject()->setProgramName(fileName);
+    return routine;
+}
+
+
+/**
+ * Restore a routine object from a previously saved instore buffer.
+ *
+ * @param inData The input data (in RXSTRING form).
+ *
+ * @return The unflattened object.
+ */
+RoutineClass *RoutineClass::restore(RXSTRING *inData, RexxString *name)
+{
+    const char *data = inData->strptr;
+
+    // does this start with a hash-bang?  Need to scan forward to the first
+    // newline character
+    if (data[0] == '#' && data[1] == '!')
+    {
+        data = Utilities::strnchr(data, inData->strlength, '\n');
+        if (data == OREF_NULL)
+        {
+            return OREF_NULL;
+        }
+        // step over the linend
+        data++;
+    }
+
+    ProgramMetaData *metaData = (ProgramMetaData *)data;
+    bool badVersion;
+    // make sure this is valid for interpreter
+    if (!metaData->validate(badVersion))
+    {
+        // if the failure was due to a version mismatch, this is an error condition.
+        if (badVersion)
+        {
+            reportException(Error_Program_unreadable_version, name);
+        }
+        return OREF_NULL;
+    }
+    RexxBuffer *bufferData = metaData->extractBufferData();
+    ProtectedObject p(bufferData);
+    // we're restoring from the beginning of this.
+    RoutineClass *routine = restore(bufferData, bufferData->getData(), metaData->getImageSize());
+    // if this restored properly (and it should), reconnect it to the source file
+    if (routine != OREF_NULL)
+    {
+        routine->getSourceObject()->setProgramName(name);
+    }
+    return routine;
 }
 
 

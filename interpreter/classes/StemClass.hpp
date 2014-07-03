@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -67,98 +67,100 @@ class RexxNativeActivation;
  };
 
 
- class RexxStem : public RexxObject {
+class RexxStem : public RexxObject
+{
   friend class RexxCompoundTable;
   public:
-   void *operator new (size_t);
-   inline void *operator new(size_t size, void *ptr) {return ptr;};
-   RexxStem(RexxString *);
-  inline RexxStem(RESTORETYPE restoreType) { ; };
-  void live(size_t);
-  void liveGeneral(int reason);
-  void flatten(RexxEnvelope*);
-  RexxObject * copy();
+    void *operator new (size_t);
+    inline void *operator new(size_t size, void *ptr) {return ptr;};
+    RexxStem(RexxString *);
+    inline RexxStem(RESTORETYPE restoreType) { ; };
 
-  void         copyFrom(RexxCompoundTable &_tails);
-  bool         numberValue(wholenumber_t &result, size_t precision);
-  bool         numberValue(wholenumber_t &result);
-  bool         unsignedNumberValue(stringsize_t &result, size_t precision);
-  bool         unsignedNumberValue(stringsize_t &result);
-  bool         doubleValue(double &result);
-  RexxNumberString *numberString();
-  RexxInteger *integerValue(size_t);
-  RexxString  *stringValue();
-  RexxArray   *makeArray();
-  RexxArray   *allItems();
-  RexxArray   *allIndexes();
-  RexxSupplier *supplier();
-  RexxDirectory *toDirectory();
-  RexxObject  *request(RexxString *);
-  RexxObject   *empty();
-  RexxObject   *isEmpty();
-  size_t        items();
+    virtual void live(size_t);
+    virtual void liveGeneral(int reason);
+    virtual void flatten(RexxEnvelope*);
+    virtual RexxObject * copy();
 
-  void        dropValue();
-  RexxObject *getStemValue();
-  RexxObject *unknown (RexxString *, RexxArray *);
-  RexxObject *bracket (RexxObject **, size_t);
-  RexxObject *bracketEqual(RexxObject **, size_t);
+    void         copyFrom(RexxCompoundTable &_tails);
+    bool         numberValue(wholenumber_t &result, size_t precision);
+    bool         numberValue(wholenumber_t &result);
+    bool         unsignedNumberValue(stringsize_t &result, size_t precision);
+    bool         unsignedNumberValue(stringsize_t &result);
+    bool         doubleValue(double &result);
+    RexxNumberString *numberString();
+    RexxInteger *integerValue(size_t);
+    RexxString  *stringValue();
+    RexxArray   *makeArray();
+    RexxArray   *allItems();
+    RexxArray   *allIndexes();
+    RexxSupplier *supplier();
+    RexxDirectory *toDirectory();
+    RexxObject  *request(RexxString *);
+    RexxObject   *empty();
+    RexxObject   *isEmpty();
+    size_t        items();
 
-  RexxObject *hasIndex(RexxObject **, size_t);
-  RexxObject *remove(RexxObject **, size_t);
-  RexxObject *hasItem(RexxObject *);
-  RexxObject *index(RexxObject *);
-  RexxObject *itemsRexx();
-  RexxObject *removeItem(RexxObject *);
+    void        dropValue();
+    RexxObject *getStemValue();
+    RexxObject *unknown (RexxString *, RexxArray *);
+    RexxObject *bracket (RexxObject **, size_t);
+    RexxObject *bracketEqual(RexxObject **, size_t);
+
+    RexxObject *hasIndex(RexxObject **, size_t);
+    RexxObject *remove(RexxObject **, size_t);
+    RexxObject *hasItem(RexxObject *);
+    RexxObject *index(RexxObject *);
+    RexxObject *itemsRexx();
+    RexxObject *removeItem(RexxObject *);
 
 
-  RexxString *tail(RexxArray *, size_t);
-  RexxObject *newRexx(RexxObject **, size_t);
-  RexxObject *evaluateCompoundVariableValue(RexxActivation *context, RexxString *stemVariableName, RexxCompoundTail *resolved_tail);
-  RexxObject *getCompoundVariableValue(RexxCompoundTail *resolved_tail);
-  RexxObject *getCompoundVariableRealValue(RexxCompoundTail *resolved_tail);
-  RexxObject *realCompoundVariableValue(RexxCompoundTail *resolved_tail);
-  RexxCompoundElement *getCompoundVariable(RexxCompoundTail *name);
-  RexxCompoundElement *exposeCompoundVariable(RexxCompoundTail *name);
-  RexxCompoundElement *findCompoundVariable(RexxCompoundTail *name);
-  RexxCompoundElement *findByValue(RexxObject *target);
-  void        dropCompoundVariable(RexxCompoundTail *name);
-  void        setCompoundVariable(RexxCompoundTail *name, RexxObject *value);
-  void        setValue(RexxObject *value);
-  RexxArray  *tailArray();
-  RexxCompoundElement *nextVariable(RexxNativeActivation *activation);
-  RexxObject *handleNovalue(RexxActivation *context, RexxString *name, RexxObject *defaultValue, RexxCompoundElement *variable);
-  void        expose(RexxCompoundElement *variable);
-  bool        sort(RexxString *prefix, int order, int type, size_t start, size_t end, size_t firstcol, size_t lastcol);
-  void        mergeSort(SortData *sd, int (*comparator)(SortData *, RexxString *, RexxString *), RexxString **strings, RexxString **working, size_t left, size_t right);
-  void        merge(SortData *sd, int (*comparator)(SortData *, RexxString *, RexxString *), RexxString **strings, RexxString **working, size_t left, size_t mid, size_t right);
-  size_t      find(SortData *sd, int (*comparator)(SortData *, RexxString *, RexxString *), RexxString **strings, RexxString *val, int bnd, size_t left, size_t right);
-  void        arraycopy(RexxString **source, size_t start, RexxString **target, size_t index, size_t count);
+    RexxString *tail(RexxArray *, size_t);
+    RexxObject *newRexx(RexxObject **, size_t);
+    RexxObject *evaluateCompoundVariableValue(RexxActivation *context, RexxString *stemVariableName, RexxCompoundTail *resolved_tail);
+    RexxObject *getCompoundVariableValue(RexxCompoundTail *resolved_tail);
+    RexxObject *getCompoundVariableRealValue(RexxCompoundTail *resolved_tail);
+    RexxObject *realCompoundVariableValue(RexxCompoundTail *resolved_tail);
+    RexxCompoundElement *getCompoundVariable(RexxCompoundTail *name);
+    RexxCompoundElement *exposeCompoundVariable(RexxCompoundTail *name);
+    RexxCompoundElement *findCompoundVariable(RexxCompoundTail *name);
+    RexxCompoundElement *findByValue(RexxObject *target);
+    void        dropCompoundVariable(RexxCompoundTail *name);
+    void        setCompoundVariable(RexxCompoundTail *name, RexxObject *value);
+    void        setValue(RexxObject *value);
+    RexxArray  *tailArray();
+    RexxCompoundElement *nextVariable(RexxNativeActivation *activation);
+    RexxObject *handleNovalue(RexxActivation *context, RexxString *name, RexxObject *defaultValue, RexxCompoundElement *variable);
+    void        expose(RexxCompoundElement *variable);
+    bool        sort(RexxString *prefix, int order, int type, size_t start, size_t end, size_t firstcol, size_t lastcol);
+    void        mergeSort(SortData *sd, int (*comparator)(SortData *, RexxString *, RexxString *), RexxString **strings, RexxString **working, size_t left, size_t right);
+    void        merge(SortData *sd, int (*comparator)(SortData *, RexxString *, RexxString *), RexxString **strings, RexxString **working, size_t left, size_t mid, size_t right);
+    size_t      find(SortData *sd, int (*comparator)(SortData *, RexxString *, RexxString *), RexxString **strings, RexxString *val, int bnd, size_t left, size_t right);
+    void        arraycopy(RexxString **source, size_t start, RexxString **target, size_t index, size_t count);
 
-  inline bool compoundVariableExists(RexxCompoundTail *resolved_tail) { return realCompoundVariableValue(resolved_tail) != OREF_NULL; }
-  inline RexxString *getName() { return stemName; }
-  inline RexxCompoundElement *first() { return tails.first(); }
-         RexxString *createCompoundName(RexxCompoundTail *tailPart);
-  inline void init() { tails.init(this); }
+    inline bool compoundVariableExists(RexxCompoundTail *resolved_tail) { return realCompoundVariableValue(resolved_tail) != OREF_NULL; }
+    inline RexxString *getName() { return stemName; }
+    inline RexxCompoundElement *first() { return tails.first(); }
+           RexxString *createCompoundName(RexxCompoundTail *tailPart);
+    inline void init() { tails.init(this); }
 
-  void setElement(const char *tail, RexxObject *value);
-  void setElement(size_t tail, RexxObject *value);
-  void dropElement(const char *tail);
-  void dropElement(size_t tail);
-  void dropElement(RexxCompoundTail *tail);
-  RexxObject *getElement(size_t tail);
-  RexxObject *getElement(const char *tail);
-  RexxObject *getElement(RexxCompoundTail *tail);
+    void setElement(const char *tail, RexxObject *value);
+    void setElement(size_t tail, RexxObject *value);
+    void dropElement(const char *tail);
+    void dropElement(size_t tail);
+    void dropElement(RexxCompoundTail *tail);
+    RexxObject *getElement(size_t tail);
+    RexxObject *getElement(const char *tail);
+    RexxObject *getElement(RexxCompoundTail *tail);
 
-  static void createInstance();
-  static RexxClass *classInstance;
+    static void createInstance();
+    static RexxClass *classInstance;
 
  protected:
 
-  RexxString *stemName;               // the name of the stem
-  RexxCompoundTable tails;            /* the table of compound tails */
-  RexxObject *value;                  /* value of the stem                 */
-  bool dropped;                       /* stem has no explicit value        */
+    RexxString *stemName;               // the name of the stem
+    RexxCompoundTable tails;            // the table of compound tails
+    RexxObject *value;                  // value of the stem
+    bool dropped;                       // stem has no explicit value
 
- };
+};
  #endif

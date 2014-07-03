@@ -49,6 +49,7 @@
 #include "SourceFile.hpp"
 #include "ActivityManager.hpp"
 #include "RexxActivation.hpp"
+#include "LanguageParser.hpp"
 
 
 /**
@@ -190,11 +191,22 @@ RexxString * RexxCode::getProgramName()
  * @return always returns true.
  */
 RexxObject *RexxCode::setSecurityManager(RexxObject *manager)
-/******************************************************************************/
-/* Function:  Associate a security manager with a method's source             */
-/******************************************************************************/
 {
     source->setSecurityManager(manager);
     return TheTrueObject;
 }
 
+
+/**
+ * Translate a string into code that will be interpreted
+ * in the current code context.
+ *
+ * @param source     The source string.
+ * @param lineNumber The line number of the context.
+ *
+ * @return A translated code object.
+ */
+RexxCode *RexxCode::interpret(RexxString *source, size_t lineNumber)
+{
+    return LanguageParser::translateInterpret(source, labels, lineNumber);
+}

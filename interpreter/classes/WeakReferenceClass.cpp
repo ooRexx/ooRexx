@@ -45,6 +45,7 @@
 #include "RexxCore.h"
 #include "WeakReferenceClass.hpp"
 #include "ProtectedObject.hpp"
+#include "MethodArguments.hpp"
 
 
 RexxClass *WeakReference::classInstance = OREF_NULL;   // singleton class instance

@@ -143,7 +143,7 @@ void Interpreter::startInterpreter(InterpreterStartupMode mode)
             InstanceBlock instance;
             /* get the local environment         */
             /* get the server class              */
-            RexxObject *server_class = env_find(new_string("!SERVER"));
+            RexxObject *server_class = TheEnvironment->entry(new_string("!SERVER"));
 
             // NOTE:  This is a second block so that the
             // protected object's destructor gets run before

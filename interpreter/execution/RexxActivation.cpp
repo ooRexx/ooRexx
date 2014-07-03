@@ -77,9 +77,10 @@
 #include "StackFrameClass.hpp"
 #include "InterpreterInstance.hpp"
 #include "PackageClass.hpp"
+#include "RoutineClass.hpp"
 
 /* max instructions without a yield */
-#define MAX_INSTRUCTIONS  100
+const size_t MAX_INSTRUCTIONS = 100;
                                        /* default template for a new        */
                                        /* activation.  This must be changed */
                                        /* whenever the settings definition  */
@@ -127,6 +128,7 @@ const size_t RexxActivation::transfer_failed     = 0x10000000; /* transfer of va
 
 const size_t RexxActivation::elapsed_reset       = 0x20000000; // The elapsed time stamp was reset via time('r')
 const size_t RexxActivation::guarded_method      = 0x40000000; // this is a guarded method
+
 
 void * RexxActivation::operator new(size_t size)
 /******************************************************************************/
@@ -523,12 +525,12 @@ RexxObject * RexxActivation::run(RexxObject *_receiver, RexxString *msgname, Rex
                 }
 #endif
 
-                this->current = nextInst;          /* set the next instruction          */
-                this->next = nextInst->nextInstruction;/* prefetch the next clause          */
+                current = nextInst;                  /* set the next instruction          */
+                next = nextInst->nextInstruction;    /* prefetch the next clause          */
 
                 nextInst->execute(this, localStack);  /* execute the instruction           */
                 localStack->clear();                  /* Force the stack clear             */
-                this->settings.timestamp.valid = false;
+                settings.timestamp.valid = false;
                                                    /* need to process inter-clause stuff*/
                 if (this->settings.flags&clause_boundary)
                 {
@@ -687,7 +689,7 @@ void RexxActivation::processTraps()
             try
             {
                 /* call the condition handler        */
-                ((RexxInstructionCallBase *)trapHandler->get(1))->trap(this, conditionObj);
+                ((RexxInstructionTrapBase *)trapHandler->get(1))->trap(this, conditionObj);
             }
             catch (RexxActivation *t)
             {
@@ -777,7 +779,7 @@ void RexxActivation::setTrace(size_t traceOption, size_t traceFlags)
 
     // we might need to transfer some information from the
     // current settings
-    if ((traceOption&RexxSource::DEBUG_TOGGLE) != 0)
+    if ((traceOption&LanguageParser::DEBUG_TOGGLE) != 0)
     {
         // if nothing else was specified, this was a pure toggle
         // operation, which maintains the existing settings
@@ -794,7 +796,7 @@ void RexxActivation::setTrace(size_t traceOption, size_t traceFlags)
         {
             /* switch the setting off            */
             traceFlags &= ~trace_debug;
-            traceOption &= ~RexxSource::DEBUG_ON;
+            traceOption &= ~LanguageParser::DEBUG_ON;
             // flipping out of debug mode.  Reissue the debug prompt when
             // turned back on again
             this->settings.flags &= ~debug_prompt_issued;
@@ -803,7 +805,7 @@ void RexxActivation::setTrace(size_t traceOption, size_t traceFlags)
         {
             // switch the setting on in both the flags and the setting
             traceFlags |= trace_debug;
-            traceOption |= RexxSource::DEBUG_ON;
+            traceOption |= LanguageParser::DEBUG_ON;
         }
     }
     // are we in debug mode already?  A trace setting with no "?" maintains the
@@ -820,7 +822,7 @@ void RexxActivation::setTrace(size_t traceOption, size_t traceFlags)
         {
             // add debug mode into the new settings if on
             traceFlags |= trace_debug;
-            traceOption |= RexxSource::DEBUG_ON;
+            traceOption |= LanguageParser::DEBUG_ON;
         }
     }
 
@@ -858,65 +860,65 @@ void RexxActivation::setTrace(size_t traceOption, size_t traceFlags)
 size_t RexxActivation::processTraceSetting(size_t traceSetting)
 {
     size_t flags = 0;
-    switch (traceSetting & TRACE_DEBUG_MASK)
+    switch (traceSetting & LanguageParser::TRACE_DEBUG_MASK)
     {
-        case RexxSource::DEBUG_ON:                     /* turn on interactive debug         */
+        case LanguageParser::DEBUG_ON:                     /* turn on interactive debug         */
             /* switch the setting on             */
             flags |= trace_debug;
             break;
 
-        case RexxSource::DEBUG_OFF:                    /* turn off interactive debug        */
+        case LanguageParser::DEBUG_OFF:                    /* turn off interactive debug        */
             /* switch the setting off            */
             flags &= ~trace_debug;
             break;
         // These two have no meaning in a staticically defined situation, so
         // they'll need to be handled at runtime.
-        case RexxSource::DEBUG_TOGGLE:                 /* toggle interactive debug setting  */
-        case RexxSource::DEBUG_IGNORE:                 /* no changes to debug setting       */
+        case LanguageParser::DEBUG_TOGGLE:                 /* toggle interactive debug setting  */
+        case LanguageParser::DEBUG_IGNORE:                 /* no changes to debug setting       */
             break;
     }
     // now optimize the trace setting flags
-    switch (traceSetting&RexxSource::TRACE_SETTING_MASK)
+    switch (traceSetting&LanguageParser::TRACE_SETTING_MASK)
     {
-        case RexxSource::TRACE_ALL:                    /* TRACE ALL;                        */
+        case LanguageParser::TRACE_ALL:                    /* TRACE ALL;                        */
                                              /* trace instructions, labels and    */
                                              /* all commands                      */
             flags |= (trace_all | trace_labels | trace_commands);
             break;
 
-        case RexxSource::TRACE_COMMANDS:               /* TRACE COMMANDS;                   */
+        case LanguageParser::TRACE_COMMANDS:               /* TRACE COMMANDS;                   */
             flags |= trace_commands;
             break;
 
-        case RexxSource::TRACE_LABELS:                 /* TRACE LABELS                      */
+        case LanguageParser::TRACE_LABELS:                 /* TRACE LABELS                      */
             flags |= trace_labels;
             break;
 
-        case RexxSource::TRACE_NORMAL:                 /* TRACE NORMAL                      */
-        case RexxSource::TRACE_FAILURES:               /* TRACE FAILURES                    */
+        case LanguageParser::TRACE_NORMAL:                 /* TRACE NORMAL                      */
+        case LanguageParser::TRACE_FAILURES:               /* TRACE FAILURES                    */
                                              /* just trace command failures       */
             flags |= trace_failures;
             break;
 
-        case RexxSource::TRACE_ERRORS:                 /* TRACE ERRORS                      */
+        case LanguageParser::TRACE_ERRORS:                 /* TRACE ERRORS                      */
                                              /* trace command failures and error  */
             flags |= (trace_failures | trace_errors);
             break;
 
-        case RexxSource::TRACE_RESULTS:                /* TRACE RESULTS                     */
+        case LanguageParser::TRACE_RESULTS:                /* TRACE RESULTS                     */
             flags |= (trace_all | trace_labels | trace_results | trace_commands);
             break;
 
-        case RexxSource::TRACE_INTERMEDIATES:          /* TRACE INTERMEDIATES               */
+        case LanguageParser::TRACE_INTERMEDIATES:          /* TRACE INTERMEDIATES               */
                                              /* trace just about every things     */
             flags |= (trace_all | trace_labels | trace_results | trace_commands | trace_intermediates);
             break;
 
-        case RexxSource::TRACE_OFF:                    /* TRACE OFF                         */
+        case LanguageParser::TRACE_OFF:                    /* TRACE OFF                         */
             flags = trace_off;               // turn of all trace options, including debug flags
             break;
 
-        case RexxSource::TRACE_IGNORE:                 /* don't change trace setting        */
+        case LanguageParser::TRACE_IGNORE:                 /* don't change trace setting        */
             break;
     }
     return flags;
@@ -1103,7 +1105,7 @@ void RexxActivation::iterate(
             {
                 /* reset the indentation             */
                 this->setIndent(doblock->getIndent());
-                ((RexxInstructionDo *)loop)->reExecute(this, &this->stack, doblock);
+                ((RexxInstructionBaseDo *)loop)->reExecute(this, &this->stack, doblock);
                 return;                          /* we're finished                    */
             }
 
@@ -1117,7 +1119,7 @@ void RexxActivation::iterate(
             }
             /* reset the indentation             */
             this->setIndent(doblock->getIndent());
-            ((RexxInstructionDo *)loop)->reExecute(this, &this->stack, doblock);
+            ((RexxInstructionBaseDo *)loop)->reExecute(this, &this->stack, doblock);
             return;                          /* we're finished                    */
         }
         this->popBlock();                  /* cause termination cleanup         */
@@ -2349,45 +2351,52 @@ RexxActivation * RexxActivation::senderActivation()
     return(RexxActivation *)_sender;    /* return that activation            */
 }
 
+/**
+ * Translate and interpret a string of data as a piece
+ * of Rexx code within the current program context.
+ *
+ * @param codestring The source code string.
+ */
 void RexxActivation::interpret(RexxString * codestring)
 /******************************************************************************/
 /* Function:  Translate and interpret a string of data as a piece of REXX     */
 /*            code within the current program context.                        */
 /******************************************************************************/
 {
-    ActivityManager::currentActivity->checkStackSpace();       /* have enough stack space?          */
-    /* translate the code                */
-    RexxCode * newCode = this->code->interpret(codestring, this->current->getLineNumber());
-    /* create a new activation           */
-    RexxActivation *newActivation = ActivityManager::newActivation(this->activity, this, newCode, INTERPRET);
-    this->activity->pushStackFrame(newActivation); /* push on the activity stack        */
+    // check the stack space to see if we have room.
+    ActivityManager::currentActivity->checkStackSpace();
+    // translate the code as if it was located here.
+    RexxCode * newCode = code->interpret(codestring, current->getLineNumber());
+    // create a new activation to run this code
+    RexxActivation *newActivation = ActivityManager::newActivation(activity, this, newCode, INTERPRET);
+    activity->pushStackFrame(newActivation);
     ProtectedObject r;
-    /* run the internal routine on the   */
-    /* new activation                    */
+    // run this compiled code on the new activation
     newActivation->run(OREF_NULL, OREF_NULL, arglist, argcount, OREF_NULL, r);
 }
 
 
-void RexxActivation::debugInterpret(   /* interpret interactive debug input */
-     RexxString * codestring)          /* entered instruction               */
-/******************************************************************************/
-/* Function:  Interpret a string created for interactive debug                */
-/******************************************************************************/
+/**
+ * Interpret a string of debug input.
+ *
+ * @param codestring The code string to interpret
+ */
+void RexxActivation::debugInterpret(RexxString * codestring)
 {
-    this->debug_pause = true;            /* now in debug pause                */
+    // mark that this is debug mode
+    debug_pause = true;
     try
     {
-        /* translate the code                */
-        RexxCode *newCode = this->code->interpret(codestring, this->current->getLineNumber());
-        /* create a new activation           */
+        // translate the code
+        RexxCode *newCode = code->interpret(codestring, current->getLineNumber());
+        // get a new activation to execute this
         RexxActivation *newActivation = ActivityManager::newActivation(this->activity, this, newCode, DEBUGPAUSE);
-        this->activity->pushStackFrame(newActivation); /* push on the activity stack        */
+        activity->pushStackFrame(newActivation);
         ProtectedObject r;
-                                             /* run the internal routine on the   */
-                                             /* new activation                    */
+        // go run the code
         newActivation->run(receiver, settings.msgname, arglist, argcount, OREF_NULL, r);
         // turn this off when done executing
-        this->debug_pause = false;
+        debug_pause = false;
     }
     catch (RexxActivation *t)
     {
@@ -2401,61 +2410,53 @@ void RexxActivation::debugInterpret(   /* interpret interactive debug input */
     }
 }
 
-RexxObject * RexxActivation::rexxVariable(   /* retrieve a program entry          */
-     RexxString * name )                     /* target program entry name         */
-/******************************************************************************/
-/* Function:  Retrieve a REXX defined "dot" environment variable              */
-/******************************************************************************/
+/**
+ * Return a Rexx-defined "dot" variable na.e
+ *
+ * @param name   The target variable name.
+ *
+ * @return The variable value or OREF_NULL if this is not
+ *         one of the special variables.
+ */
+RexxObject * RexxActivation::rexxVariable(RexxString * name )
 {
-    if (name->strCompare(CHAR_METHODS))  /* is this ".methods"                */
+    // .RS happens in our context, so process here.
+    if (name->strCompare(CHAR_RS))
     {
-        /* get the methods directory         */
-        return(RexxObject *)this->settings.parent_code->getMethods();
-    }
-    else if (name->strCompare(CHAR_ROUTINES))  /* is this ".routines"                */
-    {
-        /* get the methods directory         */
-        return(RexxObject *)this->settings.parent_code->getRoutines();
-    }
-    else if (name->strCompare(CHAR_RS))  /* command return status (".rs")?    */
-    {
-        if (this->settings.flags&return_status_set)
+        if (settings.flags&return_status_set)
         {
             /* returned as an integer object     */
-            return new_integer(this->settings.return_status);
+            return new_integer(settings.return_status);
         }
         else                               /* just return the name              */
         {
             return name->concatToCstring(".");
         }
     }
+    // all other should be handled by the parent context
+    if (isInterpret())
+    {
+        return parent->rexxVariable(name);
+    }
+
+    if (name->strCompare(CHAR_METHODS))  /* is this ".methods"                */
+    {
+        /* get the methods directory         */
+        return(RexxObject *)settings.parent_code->getMethods();
+    }
+    else if (name->strCompare(CHAR_ROUTINES))  /* is this ".routines"                */
+    {
+        /* get the methods directory         */
+        return(RexxObject *)settings.parent_code->getRoutines();
+    }
     else if (name->strCompare(CHAR_LINE))  /* current line (".line")?    */
     {
-        // if this is an interpret, we need to report the line number of
-        // the context that calls the interpret.
-        if (this->isInterpret())
-        {
-            return parent->rexxVariable(name);
-        }
-        else
-        {
-
-            return new_integer(this->current->getLineNumber());
-        }
+        return new_integer(current->getLineNumber());
     }
-    else if (name->strCompare(CHAR_CONTEXT))  /* current execution context (".context")?    */
+    else if (name->strCompare(CHAR_CONTEXT))
     {
-        // if this is an interpret, we need to report the line number of
-        // the context that calls the interpret.
-        if (this->isInterpret())
-        {
-            return parent->rexxVariable(name);
-        }
-        else
-        {
-            // retrieve the context object (potentially creating it on the first request)
-            return getContextObject();
-        }
+        // retrieve the context object (potentially creating it on the first request)
+        return getContextObject();
     }
     return OREF_NULL;                    // not recognized
 }
@@ -2487,14 +2488,14 @@ RexxObject *RexxActivation::getContextLine()
 {
     // if this is an interpret, we need to report the line number of
     // the context that calls the interpret.
-    if (this->isInterpret())
+    if (isInterpret())
     {
         return parent->getContextLine();
     }
     else
     {
 
-        return new_integer(this->current->getLineNumber());
+        return new_integer(current->getLineNumber());
     }
 }
 
@@ -2564,17 +2565,15 @@ bool RexxActivation::callMacroSpaceFunction(RexxString * target, RexxObject **_a
         {
             return false;                    /* didn't really find this           */
         }
-        /* unflatten the method now          */
-        RoutineClass *routine = getMacroCode(target);
+        // unflatten the code now
+        Protected<RoutineClass> routine = getMacroCode(target);
 
         // not restoreable is a call failure
         if (routine == OREF_NULL)
         {
             return false;
         }
-        // need to anchor this while calling
-        ProtectedObject *p(routine);
-        /* run as a call                     */
+        // run as a call
         routine->call(activity, target, _arguments, _argcount, calltype, OREF_NULL, EXTERNALCALL, _result);
         // merge (class) definitions from macro with current settings
         getSourceObject()->mergeRequired(routine->getSourceObject());
@@ -2668,41 +2667,40 @@ RexxObject *RexxActivation::externalCall(RexxString *target, size_t _argcount, R
  * @return True if an external program was located and called.  false for
  *         any failures.
  */
-bool RexxActivation::callExternalRexx(
-  RexxString *      target,            /* Name of external function         */
-  RexxObject **     _arguments,        /* Argument array                    */
-  size_t            _argcount,         /* number of arguments in the call   */
-  RexxString *      calltype,          /* Type of call                      */
-  ProtectedObject  &resultObj)         /* Result of function call           */
-/******************************************************************************/
-/* Function:  Call a rexx protram as an external routine                      */
-/******************************************************************************/
+bool RexxActivation::callExternalRexx(RexxString *target, RexxObject **_arguments,
+    size_t _argcount, RexxString *calltype, ProtectedObject  &resultObj)
 {
-    /* Get full name including path      */
+    // Get full name including path
     RexxString *filename = resolveProgramName(target);
-    if (filename != OREF_NULL)           /* found something?                  */
+    if (filename != OREF_NULL)
     {
-        stack.push(filename);            /* protect the file name here        */
-        // try for a saved program or translate anew.
+        // protect the file name on stack
+        stack.push(filename);
+        // try for a saved program or translate a anew
+
+        // TODO:  need to handle pre-compiled somewhere...
         RoutineClass *routine = RoutineClass::fromFile(filename);
-        stack.pop();                       /* remove the protected name         */
-        if (routine == OREF_NULL)          /* Do we have a method???            */
+        // remove the protected name
+        stack.pop();
+        // do we have something?  return not found
+        if (routine == OREF_NULL)
         {
-            return false;                    /* No, return not found              */
+            return false;
         }
-        else                               /* Try to run method                 */
+        else
         {
             ProtectedObject p(routine);
-            /* run as a call                     */
-            routine->call(this->activity, target, _arguments, _argcount, calltype, this->settings.current_env, EXTERNALCALL, resultObj);
-            /* now merge all of the public info  */
+            // run as a call
+            routine->call(activity, target, _arguments, _argcount, calltype, settings.current_env, EXTERNALCALL, resultObj);
+            // merge all of the public info
             settings.parent_code->mergeRequired(routine->getSourceObject());
-            return true;                     /* Return routine found flag         */
+            return true;
         }
     }
+    // the external routine wasn't found
     else
     {
-        return false;                      /* this wasn't found                 */
+        return false;
     }
 }
 
@@ -3592,7 +3590,7 @@ void RexxActivation::processClauseBoundary()
         this->settings.flags &= ~set_trace_on;
         this->setExternalTraceOn();        /* and save the current state        */
                                            /* turn on tracing                   */
-        this->setTrace(TRACE_RESULTS | DEBUG_ON, trace_results_flags | trace_debug);
+        this->setTrace(LanguageParser::TRACE_RESULTS | LanguageParser::DEBUG_ON, trace_results_flags | trace_debug);
     }
     /* need to turn off tracing?         */
     if (this->settings.flags&set_trace_off)
@@ -3601,7 +3599,7 @@ void RexxActivation::processClauseBoundary()
         this->settings.flags &= ~set_trace_off;
         this->setExternalTraceOff();       /* and save the current state        */
                                            /* turn on tracing                   */
-        this->setTrace(TRACE_OFF | DEBUG_OFF, trace_off);
+        this->setTrace(LanguageParser::TRACE_OFF | LanguageParser::DEBUG_OFF, trace_off);
     }
     /* no clause exits and all conditions*/
     /* have been processed?              */
@@ -3619,7 +3617,7 @@ void RexxActivation::processClauseBoundary()
  */
 void RexxActivation::enableExternalTrace()
 {
-    this->setTrace(TRACE_RESULTS | DEBUG_ON, trace_results_flags | trace_debug);
+    this->setTrace(LanguageParser::TRACE_RESULTS | LanguageParser::DEBUG_ON, trace_results_flags | trace_debug);
 }
 
 
@@ -3672,7 +3670,7 @@ void RexxActivation::externalTraceOn()
                                        /* turn on clause boundary checking  */
   this->settings.flags |= clause_boundary;
                                        /* turn on tracing                   */
-  this->setTrace(TRACE_RESULTS | DEBUG_ON, trace_results_flags | trace_debug);
+  this->setTrace(LanguageParser::TRACE_RESULTS | LanguageParser::DEBUG_ON, trace_results_flags | trace_debug);
 }
 
 void RexxActivation::externalTraceOff()

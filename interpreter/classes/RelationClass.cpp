@@ -47,6 +47,7 @@
 #include "RelationClass.hpp"
 #include "SupplierClass.hpp"
 #include "ProtectedObject.hpp"
+#include "MethodArguments.hpp"
 
 // singleton class instance
 RexxClass *RexxRelation::classInstance = OREF_NULL;

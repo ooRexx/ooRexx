@@ -54,7 +54,6 @@
 #include "RexxInstruction.hpp"
 
 class RexxInstruction;
-class RexxInstructionDo;
 class RexxInstructionIf;
 class RexxExpressionMessage;
 class RexxCompoundVariable;
@@ -70,41 +69,7 @@ class RexxVariableBase;
 class RexxStemVariable;
 
 
-const size_t TRACE_ALL           = 'A';
-const size_t TRACE_COMMANDS      = 'C';
-const size_t TRACE_LABELS        = 'L';
-const size_t TRACE_NORMAL        = 'N';
-const size_t TRACE_FAILURES      = 'F';
-const size_t TRACE_ERRORS        = 'E';
-const size_t TRACE_RESULTS       = 'R';
-const size_t TRACE_INTERMEDIATES = 'I';
-const size_t TRACE_OFF           = 'O';
-const size_t TRACE_IGNORE        = '0';
-
-// a mask for accessing just the setting information
-const size_t TRACE_SETTING_MASK  = 0xff;
-
-/******************************************************************************/
-/* Constants used for setting trace interactive debug.  These get merged      */
-/* in with the setting value, so they must be > 256                           */
-/******************************************************************************/
-const int DEBUG_IGNORE      =  0x0000;
-const int DEBUG_ON          =  0x0100;
-const int DEBUG_OFF         =  0x0200;
-const int DEBUG_TOGGLE      =  0x0400;
-const int DEBUG_NOTRACE     =  0x0800;
-
-// the mask for accessing just the debug flags
-const size_t TRACE_DEBUG_MASK  = 0xff00;
-
-// an invalid 8-bit character marker.
-const unsigned int INVALID_CHARACTER = 0x100;
-
-// maximum length of a symbol
-const size_t MAX_SYMBOL_LENGTH = 250;
-
-
-                                       /* handy defines to easy coding      */
+// handy defines for simplifying creation of instruction types.
 #define new_instruction(name, type) sourceNewObject(sizeof(RexxInstruction##type), The##type##InstructionBehaviour, KEYWORD_##name)
 #define new_variable_instruction(name, type, size) sourceNewObject(size, The##type##InstructionBehaviour, KEYWORD_##name)
 
@@ -131,16 +96,20 @@ class LanguageParser: public RexxInternalObject
     inline void  operator delete(void *, void *) { ; }
 
     LanguageParser(RexxSource *p, ProgramSource *s, RexxDirectory *labels = OREF_NULL);
+    inline LanguageParser(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
     virtual void liveGeneral(int reason);
 
     // main execution methods
-    RexxCode   *generateCode(bool isMethod);
     RexxCode   *translate();
     void        resolveDependencies();
     void        flushControl(RexxInstruction *);
     RexxCode   *translateBlock();
+    RexxCode   *translateInterpret(RexxDirectory *contextLabels);
+    RoutineClass *generateProgram();
+    RoutineClass *generateRoutine();
+    MethodClass *generateMethod();
 
     StackFrameClass *createStackFrame();
     void        holdObject(RexxObject *object) { holdStack->push(object);};
@@ -198,6 +167,7 @@ class LanguageParser: public RexxInternalObject
     inline void        reclaimClause()  { flags.set(reclaimed); };
     inline bool        atEnd(void) { return !flags.test(reclaimed) && !moreLines(); };
 
+           void setInterpret() { flags.set(interpret); }
     inline bool isInterpret() { return flags.test(interpret); }
     inline bool noClauseAvailable() { return flags.test(noClause); }
     inline bool clauseAvailable() { return !flags.test(noClause); }
@@ -237,9 +207,6 @@ class LanguageParser: public RexxInternalObject
     RexxInstruction *commandNew();
     RexxInstruction *doNew();
     RexxInstruction *loopNew();
-    RexxInstruction *createLoop();
-    RexxInstruction *createDoLoop();
-    RexxInstruction *createDoLoop(RexxInstructionDo *, bool);
     RexxInstruction *dropNew();
     RexxInstruction *elseNew(RexxToken *);
     RexxInstruction *endNew();
@@ -381,6 +348,7 @@ class LanguageParser: public RexxInternalObject
     static RoutineClass *createProgram(RexxString *name);
     static RoutineClass *restoreFromMacroSpace(RexxString *name);
     static RoutineClass *processInstore(PRXSTRING instore, RexxString * name);
+    static RexxCode *translateInterpret(RexxString *interpretString, RexxDirectory *labels, size_t lineNumber);
 
     static pbuiltin builtinTable[];      /* table of builtin function stubs   */
 
@@ -412,6 +380,12 @@ class LanguageParser: public RexxInternalObject
 
 // the mask for accessing just the debug flags
     static const size_t TRACE_DEBUG_MASK  = 0xff00;
+
+// an invalid 8-bit character marker.
+    const unsigned int INVALID_CHARACTER = 0x100;
+
+// maximum length of a symbol
+    static const size_t MAX_SYMBOL_LENGTH = 250;
 
 protected:
 

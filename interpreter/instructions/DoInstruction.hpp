@@ -45,28 +45,8 @@
 #define Included_RexxInstructionDo
 
 #include "RexxInstruction.hpp"
+#include "DoBlockComponents.hpp"
 #include "EndInstruction.hpp"
-
-
-/**
- * Identifier for different DO loop types.
- */
-enum
-{
-    SIMPLE_DO,
-    DO_COUNT,
-    DO_FOREVER,
-    DO_WHILE,
-    DO_UNTIL,
-    CONTROLLED_DO,
-    CONTROLLED_WHILE,
-    CONTROLLED_UNTIL,
-    DO_OVER,
-    DO_OVER_WHILE,
-    DO_OVER_UNTIL,
-    DO_COUNT_WHILE,
-    DO_COUNT_UNTIL
-} DoInstructionType;
 
 
 /**
@@ -98,7 +78,7 @@ class RexxInstructionBaseDo : public RexxBlockInstruction
     // most DO blocks are loops.  The simple styles will need to override.
     virtual EndBlockType getEndStyle() { return LOOP_BLOCK; }
     // Most DOs are loops...Simple DO will override again.
-    virtual bool isLoop() { return true };
+    virtual bool isLoop() { return true; };
 
     // specific to Do loops.  Most subclasses can rely on the default
     virtual void reExecute(RexxActivation *, RexxExpressionStack *, RexxDoBlock *);
@@ -135,6 +115,8 @@ class RexxInstructionSimpleDo : public RexxInstructionBaseDo
 
     // methods required by RexxBlockInstruction;
     virtual bool isLoop() { return false; }
+    // most DO blocks are loops.  The simple styles will need to override.
+    virtual EndBlockType getEndStyle() { return DO_BLOCK; }
 };
 
 
@@ -179,6 +161,8 @@ class RexxInstructionDoOver : public RexxInstructionBaseDo
     // Methods needed for loop iteration
     virtual void setup(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock);
     virtual bool iterate(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock, bool first);
+
+ protected:
 
     OverLoop overLoop;          // handles control logic for a DO OVER
 };

@@ -110,7 +110,7 @@ class ProtectedObject : public ProtectedBase
     virtual void mark(size_t liveMark) { memory_mark(protectedObject); }
     virtual void markGeneral(int reason) { memory_mark_general(protectedObject); }
 
-    inline ProtectedObject & operator=(RexxInternalObject *o)
+    inline ProtectedBase & operator=(RexxInternalObject *o)
     {
         protectedObject = o;
         return *this;
@@ -211,7 +211,7 @@ public:
     virtual void mark(size_t liveMark) { memory_mark(protectedObject); }
     virtual void markGeneral(int reason) { memory_mark_general(protectedObject); }
 
-    inline ProtectedObject & operator=(objType *o)
+    inline ProtectedBase & operator=(objType *o)
     {
         protectedObject = o;
         return *this;

@@ -41,8 +41,6 @@
 /* The main REXX object definitions                                           */
 /*                                                                            */
 /******************************************************************************/
-#include <ctype.h>
-#include <string.h>
 #include "RexxCore.h"
 #include "ObjectClass.hpp"
 #include "StringClass.hpp"
@@ -59,6 +57,7 @@
 #include "SourceFile.hpp"
 #include "ProtectedObject.hpp"
 #include "PointerClass.hpp"
+#include "MethodArguments.hpp"
 
 
 // singleton class instance

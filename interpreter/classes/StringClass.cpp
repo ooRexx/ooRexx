@@ -41,12 +41,6 @@
 /* Primitive String Class                                                     */
 /*                                                                            */
 /******************************************************************************/
-#include <ctype.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
-#include <limits>
-
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "DirectoryClass.hpp"
@@ -56,6 +50,7 @@
 #include "StringUtil.hpp"
 #include "RexxCompoundTail.hpp"
 #include "SystemInterpreter.hpp"
+#include "MethodArguments.hpp"
 
 // singleton class instance
 RexxClass *RexxString::classInstance = OREF_NULL;
