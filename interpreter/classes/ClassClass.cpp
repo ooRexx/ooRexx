@@ -74,7 +74,7 @@ RexxClass *RexxClass::classInstance = OREF_NULL;
  */
 void  *RexxClass::operator new(size_t size)
 {
-    (RexxClass *)new_object(size, T_Class);
+    return new_object(size, T_Class);
 }
 
 

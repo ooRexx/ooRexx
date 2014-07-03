@@ -116,8 +116,7 @@ RexxMutableBuffer *RexxMutableBuffer::newRexx(RexxObject **args, size_t argc)
         bufferLength = string->getLength();
     }
     // allocate the new object
-    RexxBuffer *newBuffer = new RexxMutableBuffer(bufferLength, defaultSize);
-    ProtectedObject p(newBuffer);
+    Protected<RexxMutableBuffer> newBuffer = new RexxMutableBuffer(bufferLength, defaultSize);
 
     newBuffer->dataLength = string->getLength();
     // copy the content

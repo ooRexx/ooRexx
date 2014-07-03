@@ -72,7 +72,8 @@ public:
 
 
 // major token types
-enum {
+typedef enum
+{
     TOKEN_NULL       = 1,
     TOKEN_BLANK,
     TOKEN_SYMBOL,
@@ -96,7 +97,8 @@ enum {
 
 // token extended types.  Each category gets is own
 // section of the numeric range.
-enum {
+typedef enum
+{
     SUBTYPE_NONE = 0,
 
     // Operator sub-types.
@@ -164,7 +166,7 @@ enum {
 // objects.  To preserve release-to-release compiled image
 // compatibility, new constants need to be added to the end
 // of this list.
-enum
+typedef enum
 {
     KEYWORD_NONE = 0,
     KEYWORD_ADDRESS,
@@ -238,7 +240,8 @@ enum
 } InstructionKeyword;
 
 // instruction subkeyword types
-enum {
+typedef enum
+{
     SUBKEY_NONE = 0,
     SUBKEY_ARG,
     SUBKEY_BY,
@@ -291,7 +294,11 @@ enum {
 } InstructionSubKeyword;
 
 
-enum {
+/**
+ * Keyword identifiers for directives.
+ */
+typedef enum
+{
     DIRECTIVE_NONE = 0,
     DIRECTIVE_METHOD,
     DIRECTIVE_OPTIONS,
@@ -303,19 +310,23 @@ enum {
     DIRECTIVE_CONSTANT
 } DirectiveKeyword;
 
+
 // Identify different token types returned by
 // locateToken()
-enum {
+typedef enum
+{
     NORMAL_CHAR,
     SIGNIFICANT_BLANK,
     CLAUSE_EOF,
     CLAUSE_EOL,
 } CharacterClass;
 
-/* token extended types - end of clause */
 
-
-enum {
+/**
+ * Keywords allowed on directive statements.
+ */
+typedef enum
+{
     SUBDIRECTIVE_NONE = 0,
     SUBDIRECTIVE_PUBLIC,
     SUBDIRECTIVE_METACLASS,
@@ -342,7 +353,11 @@ enum {
 } DirectiveSubKeyword;
 
 
-enum {
+/**
+ * Condition keyword posibilities
+ */
+typedef enum
+{
     CONDITION_NONE = 0,
     CONDITION_ANY,
     CONDITION_ERROR,
@@ -358,8 +373,10 @@ enum {
     CONDITION_LOSTDIGITS
 } ConditionKeyword;
 
+
 // markers for the builtin function
-enum {
+enum
+{
     NO_BUILTIN  = 0,
     BUILTIN_ABBREV,
     BUILTIN_ABS,
@@ -466,15 +483,14 @@ enum {
 #define   TERM_IF      (TERM_KEYWORD | TERM_THEN)
 
 
-class RexxToken : public RexxInternalObject {
+class RexxToken : public RexxInternalObject
+{
  public:
     void        *operator new(size_t);
-    inline void *operator new(size_t size, void *ptr) {return ptr;};
     inline void  operator delete(void *) { ; }
-    inline void  operator delete(void *, void *) { ; }
 
-    inline RexxToken(TokenClass c, SourceLocation &l, TokenSubclass sc = SUBTYPE_NONE, RexxString *v = OREF_NULL) : class(c), subclass(sc),
-        stringValue(v), numeric(SUBTYPE_NONE), location(l) { };
+    inline RexxToken(TokenClass c, SourceLocation &l, TokenSubclass sc = SUBTYPE_NONE, RexxString *v = OREF_NULL) : classId(c), subclass(sc),
+        stringValue(v), numeric(SUBTYPE_NONE), tokenLocation(l) { };
 
     inline RexxToken(RESTORETYPE restoreType) { ; };
     void       live(size_t);
@@ -483,15 +499,15 @@ class RexxToken : public RexxInternalObject {
     inline void setStart(size_t l, size_t o) { tokenLocation.setStart(l, o); }
     inline void setEnd(size_t l, size_t o) { tokenLocation.setEnd(l, o); }
 
-    inline bool       isType(TokenClass t) { return classId = t; }
-    inline bool       isType(TokenClass t1, TokenClass t2) { return classId = t1 || classId == t2; }
-    inline bool       isType(TokenClass t1, TokenClass t2, TokenClass t3) { return classId = t1 || classId == t2 || classId == t3; }
-    inline bool       isSubtype(TokenSubclass t) { return subclass = t; }
-    inline bool       isSubtype(TokenSubclass t1, TokenSubclass t2) { return subclass = t1 || subclass == t2; }
-    inline bool       type() { return classId; }
-    inline bool       subtype() { return subclass; }
-    inline bool       value() { return stringValue; }
-    inline bool       upperValue() { return stringValue->upper(); }
+    inline bool       isType(TokenClass t) { return classId == t; }
+    inline bool       isType(TokenClass t1, TokenClass t2) { return classId == t1 || classId == t2; }
+    inline bool       isType(TokenClass t1, TokenClass t2, TokenClass t3) { return classId == t1 || classId == t2 || classId == t3; }
+    inline bool       isSubtype(TokenSubclass t) { return subclass == t; }
+    inline bool       isSubtype(TokenSubclass t1, TokenSubclass t2) { return subclass == t1 || subclass == t2; }
+    inline TokenClass type() { return classId; }
+    inline TokenSubclass  subtype() { return subclass; }
+    inline RexxString *value() { return stringValue; }
+    inline RexxString *upperValue() { return stringValue->upper(); }
     inline void       setType(TokenClass t) { classId = t; }
     inline void       setSubtype(TokenSubclass t) { subclass = t; }
     inline void       setValue(RexxString *v) { stringValue = v; }
@@ -541,6 +557,6 @@ protected:
 
 
 inline RexxArray *new_arrayOfTokens(size_t n) { return memoryObject.newObjects(sizeof(RexxToken), n, T_Token); }
-inline RexxToken *new_token(int c, int s, RexxString *v, SourceLocation &l) { return new RexxToken (c, s, v, l); }
+inline RexxToken *new_token(TokenClass c, TokenSubclass s, RexxString *v, SourceLocation &l) { return new RexxToken (c, l, s, v); }
 
 #endif

@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -36,87 +36,134 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                                */
 /*                                                                            */
-/* Primitive Buffer Class                                                     */
+/* Handy type-safe template class for flag sets.                              */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
-#include <string.h>
-#include "RexxCore.h"
-#include "RexxActivity.hpp"
-#include "ActivityManager.hpp"
-#include "BufferClass.hpp"
 
+#ifndef FlagSet_Included
+#define FlagSet_Included
+#include <bitset>
 
-RexxClass *RexxBuffer::classInstance = OREF_NULL;   // singleton class instance
+// a useful type-safe bit flag class where the allowed settings are based
+// on enum values.
 
-void RexxBuffer::createInstance()
-/******************************************************************************/
-/* Function:  Create initial bootstrap objects                                */
-/******************************************************************************/
+// this is defined as a template so we can specify what enums are stored here.
+template < typename TEnum, int TMaxFlags = 8 >
+class FlagSet
 {
-    CLASS_CREATE(Buffer, "Buffer", RexxClass);
-}
+public:
+	// a reference to a flag set item.  This is a proxy that allows
+    // assignment semantics
+	class FlagSetReference
+	{
+		friend class FlagSet<TEnum, TMaxFlags>;
+
+	public:
+		inline ~FlagSetReference() {}
+
+        // assign bool to the a flag position.
+		FlagSetReference& operator=(bool val)
+        {
+            refSet->set(refPos, val);
+            return *this;
+        }
+
+        // allows a flag value to be retrieved.
+		operator bool() const
+        {
+            return refSet->test(refPos);
+        }
+
+	private:
+        // constructor for a reference proxy
+		FlagSetReference(FlagSet<TEnum, TMaxFlags>& theSet, TEnum pos)
+			: refSet(&theSet), refPos(pos) { }
+
+        // pointer to the set we're proxying
+		FlagSet<TEnum, TMaxFlags> *refSet;
+        // the element we test
+		TEnum refPos;
+	};
 
 
-/**
- * Allocate a new buffer object.
- *
- * @param size    The size of the object.
- * @param _length The length of the buffer portion required.
- *
- * @return The new buffer object.
- */
-void *RexxBuffer::operator new(size_t size, size_t length)
-{
-    return new_object(size + length, T_Buffer);
-}
-
-
-/**
- * New method for the buffer class.  This always raises
- * an error if called.
- *
- * @param args   The new arguments.
- * @param argc   The argument count.
- *
- * @return Always raises an error.
- */
-RexxObject *RexxBuffer::newRexx(RexxObject **args, size_t argc)
-{
-    // we do not allow these to be allocated from Rexx code...
-    reportException(Error_Unsupported_new_method, ((RexxClass *)this)->getId());
-    return TheNilObject;
-}
-
-
-RexxBuffer *RexxBuffer::expand(
-    size_t l)                            /* minimum space needed              */
-/******************************************************************************/
-/* Function:  Create a larger buffer and copy existing data into it           */
-/******************************************************************************/
-{
-    RexxBuffer * newBuffer;              /* returned new buffer               */
-
-                                         /* we will either return a buffer    */
-                                         /* twice the size of the current     */
-                                         /* buffer, or this size of           */
-                                         /* current(this)buffer + requested   */
-                                         /* minimum length.                   */
-    if (l > this->getBufferSize())       /* need more than double?            */
+    // set a flag value to true
+    inline void set(const TEnum flag)
     {
-        /* increase by the requested amount  */
-        newBuffer = new_buffer(this->getBufferSize() + l);
+        flags.set(flag);
     }
-    else                                 /* just double the existing length   */
-    {
-        newBuffer = new_buffer(this->getBufferSize() * 2);
-    }
-    /* have new buffer, so copy data from*/
-    /* current buffer into new buffer.   */
-    memcpy(newBuffer->getData(), this->getData(), this->getDataLength());
-    return newBuffer;                    /* all done, return new buffer       */
 
-}
+    // turn a flag value off
+    inline void reset(const TEnum flag)
+    {
+        flags.reset(flag);
+    }
+
+    // flip the value of a bit
+    inline void flip(const TEnum flag)
+    {
+        flags.flip(flag);
+    }
+
+    // turn a flag value off
+    inline bool test(const TEnum flag)
+    {
+        return flags.test(flag);
+    }
+
+    // access the value of a flag
+    inline bool operator[] (const TEnum flag) const
+    {
+        return flags[flag];
+    }
+
+    // proxied access of a flag (allows assignment)
+	FlagSetReference operator[](const TEnum flag)
+    {
+        return FlagSetReference(*this, flag);
+    }
+
+    // test if any flags are set
+    inline bool any() const
+    {
+        return flags.any();
+    }
+
+    // test for any of the specified flags being set
+    inline bool any(const TEnum flag1, const TEnum flag2)
+    {
+        return flags.test(flag1) || flags.test(flag2);
+    }
+
+    // test for any of the specified flags being set
+    inline bool any(const TEnum flag1, const TEnum flag2, const TEnum flag3)
+    {
+        return flags.test(flag1) || flags.test(flag2) || flags.test(flag3);
+    }
+
+    // test for all of the specified flags being set
+    inline bool all(const TEnum flag1, const TEnum flag2)
+    {
+        return flags.test(flag1) && flags.test(flag2);
+    }
+
+    // test for any of the specified flags being set
+    inline bool all(const TEnum flag1, const TEnum flag2, const TEnum flag3)
+    {
+        return flags.test(flag1) && flags.test(flag2) && flags.test(flag3);
+    }
+
+    // test if no flags are set
+    inline bool none() const
+    {
+        return flags.none();
+    }
+
+private:
+
+    std::bitset<TMaxFlags> flags;
+};
+
+
+#endif
 

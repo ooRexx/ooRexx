@@ -46,30 +46,29 @@
 
 #include "ObjectClass.hpp"
 
-typedef class listentry
+class LISTENTRY
 {
-    RexxObject *value;                   // list element value                //
-    size_t next;                         // next list element in chain        //
-    size_t previous;                     // previous list element in chain    //
-} LISTENTRY;
+public:
+    RexxObject *value;                   // list element value
+    size_t next;                         // next list element in chain
+    size_t previous;                     // previous list element in chain
+};
+
 
 class RexxListTable : public RexxInternalObject
 {
   public:
    void * operator new(size_t, size_t);
    void * operator new(size_t, size_t, size_t);
-   inline void *operator new(size_t size, void *objectPtr) { return objectPtr; };
-   inline void operator delete(void *) { ; }
    inline void operator delete(void *, size_t) { }
    inline void operator delete(void *, size_t, size_t) { }
-   inline void operator delete(void *, void *) { }
 
    inline RexxListTable(RESTORETYPE restoreType) { ; };
    inline RexxListTable() {;};
 
-   void         live(size_t);
-   void         liveGeneral(int reason);
-   void         flatten(RexxEnvelope *);
+   virtual void live(size_t);
+   virtual void liveGeneral(int reason);
+   virtual void flatten(RexxEnvelope *);
    inline LISTENTRY   *getData() {return elements; };
 
  protected:

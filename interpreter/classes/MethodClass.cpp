@@ -60,6 +60,7 @@
 #include "Interpreter.hpp"
 #include "RexxCode.hpp"
 #include "PackageManager.hpp"
+#include "LanguageParser.hpp"
 
 // singleton class instance
 RexxClass *MethodClass::classInstance = OREF_NULL;
@@ -71,226 +72,6 @@ RexxClass *MethodClass::classInstance = OREF_NULL;
 void MethodClass::createInstance()
 {
     CLASS_CREATE(Method, "Method", RexxClass);
-}
-
-
-/**
- * Resolve a class in the context of an executable.
- *
- * @param className The name of the required class.
- *
- * @return The resolve class, or OREF_NULL if not found.
- */
-RexxClass *BaseExecutable::findClass(RexxString *className)
-{
-    return code->findClass(className);
-}
-
-
-/**
- * Set the source object into a routine or method executable.
- * This is generally used to attach a source context to a
- * native method or function defined on a source directive.  Since
- * native functions can be referenced in multiple packages, but are
- * managed in the package manager context, this may end up
- * returning a copy of the executable.
- *
- * @param s      The new source.
- *
- * @return Either the same executable object, or a new copy with the
- *         context set.
- */
-BaseExecutable *BaseExecutable::setSourceObject(RexxSource *s)
-{
-    // set this into a source object context.  If we get a
-    // new object returned, we need to make a copy of the base
-    // executable object also
-    BaseCode *setCode = code->setSourceObject(s);
-    // we're cool if these are equal
-    if (setCode == code)
-    {
-        return this;
-    }
-    // make a copy of this executable, and set the new code into it.
-    BaseExecutable *newBase = (BaseExecutable *)this->copy();
-    OrefSet(newBase, newBase->code, setCode);
-    return newBase;
-}
-
-
-/**
- * Retrieve the package from a base executable.
- *
- * @return The associated package object.  If there is no available package
- *         object, this returns .nil.
- */
-PackageClass *BaseExecutable::getPackage()
-{
-    PackageClass *package = code->getPackage();
-    if (package == OREF_NULL)
-    {
-        return (PackageClass *)TheNilObject;
-    }
-    return package;
-}
-
-
-/**
- * Retrieve the source lines for a base executable
- *
- * @return An array of the source lines
- */
-RexxArray *BaseExecutable::source()
-{
-    return code->getSource();
-}
-
-
-/**
- * Run this code as a method invocation.
- *
- * @param activity  The current activity.
- * @param method    The method we're invoking.
- * @param receiver  The method target object.
- * @param msgname   The name the method was invoked under.
- * @param argCount  The count of arguments.
- * @param arguments The argument pointer.
- * @param result    The returned result.
- */
-void BaseCode::run(RexxActivity *activity, MethodClass *method, RexxObject *receiver, RexxString *msgname, RexxObject **arguments, size_t argCount, ProtectedObject &result)
-{
-    // The subcasses decide which of run and call are allowed
-    reportException(Error_Interpretation);
-}
-
-
-/**
- * Invoke a code element as a call target.  This form is generally
- * only used for calls from Rexx code to Rexx code or for top level
- * program invocation.
- *
- * @param activity  The activity we're running under.
- * @param msgname   The name of the program or name used to invoke the routine.
- * @param arguments The arguments to the method.
- * @param argcount  The count of arguments.
- * @param ct        The call context.
- * @param env       The current address environment.
- * @param context   The type of call being made (program call, internal call, interpret,
- *                  etc.)
- * @param result    The returned result.
- */
-void BaseCode::call(RexxActivity *activity, RoutineClass *routine, RexxString *msgname, RexxObject **arguments, size_t argcount, RexxString *ct, RexxString *env, int context, ProtectedObject &result)
-{
-    // the default for this is the simplified call.   This is used by Rexx code to make calls to
-    // both Rexx programs and native routines, so the polymorphism simplifies the processing.
-    call(activity, routine, msgname, arguments, argcount, result);
-}
-
-
-/**
- * Simplified call form used for calling from Rexx code to native code.
- *
- * @param activity  The current activity.
- * @param msgname   The name of the call.
- * @param arguments the call arguments.
- * @param argcount  The count of arguments.
- * @param result    The returned result.
- */
-void BaseCode::call(RexxActivity *activity, RoutineClass *routine, RexxString *msgname, RexxObject **arguments, size_t argcount, ProtectedObject &result)
-{
-    // The subcasses decide which of run and call are allowed
-    reportException(Error_Interpretation);
-}
-
-
-/**
- * Return source informaton for a BaseCode object.  If not
- * representing an element in a source file, this returns
- * an empty array.
- *
- * @return A null array.
- */
-RexxArray *BaseCode::getSource()
-{
-                                       /* this is always a null array       */
-    return (RexxArray *)TheNullArray->copy();
-}
-
-
-/**
- * Set the security manager in the code source context.
- *
- * @param manager The new security manager.
- *
- * @return Returns true if the manager could be set.  Non-Rexx code objects
- *         just return false unconditionally.
- */
-RexxObject *BaseCode::setSecurityManager(RexxObject *manager)
-{
-    // the default is just to return a failure
-    return TheFalseObject;
-}
-
-
-/**
- * Retrieve the source object associated with a code object.
- *
- * @return
- */
-RexxSource *BaseCode::getSourceObject()
-{
-    return OREF_NULL;
-}
-
-
-/**
- * Default class resolution...which only looks in the environment
- * or .local.
- *
- * @param className The target class name.
- *
- * @return The resolved class object, or OREF_NULL if this is not known.
- */
-RexxClass *BaseCode::findClass(RexxString *className)
-{
-    // the interpreter class handles the default lookups
-    return Interpreter::findClass(className);
-}
-
-
-
-/**
- * Set a source object into a code context.  The default
- * implementation is just to return the same object without
- * setting a source.  This is used mostly for attaching a source
- * context to native code methods and routines defined on
- * directives.
- *
- * @param s      The new source object.
- *
- * @return Either the same object, or a new copy of the code object.
- */
-BaseCode *BaseCode::setSourceObject(RexxSource *s)
-{
-    return this;         // this is just a nop
-}
-
-
-/**
- * Retrieve the package associated with a code object.  Returns
- * OREF_NULL if this code object doesn't have a source.
- *
- * @return The associated package, or OREF_NULL.
- */
-PackageClass *BaseCode::getPackage()
-{
-    RexxSource *source = getSourceObject();
-    if (source != OREF_NULL)
-    {
-        return source->getPackage();
-    }
-
-    return OREF_NULL;
 }
 
 
@@ -317,7 +98,7 @@ void *MethodClass::operator new (size_t size)
 MethodClass::MethodClass(RexxString *name, BaseCode *codeObj)
 {
     executableName = name;
-    code = codeObj
+    code = codeObj;
 }
 
 
@@ -571,10 +352,7 @@ RexxSmartBuffer *MethodClass::saveMethod()
  *
  * @return An inflated Method object.
  */
-MethodClass *MethodClass::restore(RexxBuffer *buffer, const char *startPointer, size_t length)
-/* Function: Unflatten a translated method.  Passed a buffer object containing*/
-/*           the method                                                       */
-/******************************************************************************/
+MethodClass *MethodClass::restore(RexxBuffer *buffer, char *startPointer, size_t length)
 {
     // get an envelop and puff the object back to usability.
     RexxEnvelope *envelope  = new RexxEnvelope;
@@ -608,7 +386,7 @@ MethodClass *MethodClass::newMethodObject(RexxString *pgmname, RexxObject *sourc
     // if this is a string object, then convert to a a single element array.
     if (isString(source))
     {
-        newSourceArray = new_array(sourceString);
+        newSourceArray = new_array((RexxString *)source);
     }
     else
     {

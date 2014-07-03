@@ -77,7 +77,7 @@ MethodClass *LanguageParser::createMethod(RexxString *name, RexxArray *source)
  *
  * @return An executable method object.
  */
-MethodClass *LanguageParser::createMethodFromFile(name)
+MethodClass *LanguageParser::createMethodFromFile(RexxString *name)
 {
     // create the appropriate array source, then the parser, then generate the
     // code.
@@ -114,7 +114,7 @@ RoutineClass *LanguageParser::createRoutine(RexxString *name, RexxArray *source)
  *
  * @return An executable method object.
  */
-RoutineClass *LanguageParser::createRoutineFromFile(name)
+RoutineClass *LanguageParser::createRoutineFromFile(RexxString *name)
 {
     // create the appropriate array source, then the parser, then generate the
     // code.
@@ -304,6 +304,12 @@ void LanguageParser::initializeForParsing()
 {
     // create a package object that we'll be filling in.
     package = new RexxSource(name, source);
+
+    // have the source object do any required initialization
+    source->setup();
+
+    // get the count of lines
+    lineCount = source->getLineCount();
 
     // handy stack for temporary values...this is a push through
     holdStack = new (HOLDSIZE, false) RexxStack(HOLDSIZE);

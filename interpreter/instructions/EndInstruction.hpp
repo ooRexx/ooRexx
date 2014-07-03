@@ -46,18 +46,6 @@
 
 #include "RexxInstruction.hpp"
 
-// types of END terminators
-enum
-{
-    DO_BLOCK,
-    SELECT_BLOCK,
-    OTHERWISE_BLOCK,
-    LOOP_BLOCK,
-    LABELED_SELECT_BLOCK,
-    LABELED_OTHERWISE_BLOCK,
-    LABELED_DO_BLOCK,
-} EndBlockType;
-
 class RexxInstructionEnd : public RexxInstruction
 {
  public:

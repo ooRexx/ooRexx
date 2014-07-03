@@ -68,36 +68,6 @@ class RexxActivation;
 class RexxExpressionStack;
 class StackFrameClass;
 
-/******************************************************************************/
-/* Constants used for setting trace                                           */
-/******************************************************************************/
-
-const size_t TRACE_ALL           = 'A';
-const size_t TRACE_COMMANDS      = 'C';
-const size_t TRACE_LABELS        = 'L';
-const size_t TRACE_NORMAL        = 'N';
-const size_t TRACE_FAILURES      = 'F';
-const size_t TRACE_ERRORS        = 'E';
-const size_t TRACE_RESULTS       = 'R';
-const size_t TRACE_INTERMEDIATES = 'I';
-const size_t TRACE_OFF           = 'O';
-const size_t TRACE_IGNORE        = '0';
-
-// a mask for accessing just the setting information
-const size_t TRACE_SETTING_MASK  = 0xff;
-
-/******************************************************************************/
-/* Constants used for setting trace interactive debug.  These get merged      */
-/* in with the setting value, so they must be > 256                           */
-/******************************************************************************/
-const int DEBUG_IGNORE      =  0x0000;
-const int DEBUG_ON          =  0x0100;
-const int DEBUG_OFF         =  0x0200;
-const int DEBUG_TOGGLE      =  0x0400;
-const int DEBUG_NOTRACE     =  0x0800;
-
-// the mask for accessing just the debug flags
-const size_t TRACE_DEBUG_MASK  = 0xff00;
 
 /**
  * An enum for the flag positions in the flags bitset.
@@ -105,9 +75,9 @@ const size_t TRACE_DEBUG_MASK  = 0xff00;
  * using a bitset allows us to define additional attributes
  * if required.
  */
-enum
+typedef enum
 {
-    installRequired;                // this requirements that require an install step
+    installRequired,                // this requirements that require an install step
 } SourceFlag;
 
 
@@ -189,7 +159,7 @@ class RexxSource: public RexxInternalObject
     inline RexxDirectory *getInstalledPublicRoutines() { install(); return publicRoutines; }
     inline RexxDirectory *getImportedRoutines() { install(); return mergedPublicRoutines; }
     inline RexxDirectory *getDefinedMethods() { install(); return unattachedMethods; }
-    inline RexxList      *getPackages() { install(); return loadedPackages; }
+    inline RexxArray     *getPackages() { install(); return loadedPackages; }
     inline void           setDigits(size_t d) { digits = d; }
     inline size_t         getDigits() { return digits; }
     inline void           setForm(bool f) { form = f; }
@@ -201,7 +171,7 @@ class RexxSource: public RexxInternalObject
     inline void           setTraceFlags(size_t t) { traceFlags = t; }
     inline size_t         getTraceFlags() { return traceFlags; }
     inline RexxString    *getTrace() { return formatTraceSetting(traceSetting); }
-    inline void           setInitCode(RexxCode *c) { initCode = c: }
+    static RexxString *formatTraceSetting(size_t source);
 
 protected:
 

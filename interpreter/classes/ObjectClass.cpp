@@ -1152,11 +1152,11 @@ RexxString *RexxObject::requestString()
     {                               /* do a real request for this        */
         ProtectedObject string_value;
 
-        this->sendMessage(OREF_REQUEST, OREF_STRINGSYM, string_value);
+        sendMessage(OREF_REQUEST, OREF_STRINGSYM, string_value);
         // The returned value might be an Integer or NumberString value.  We need to
         // force this to be a real string value.
         string_value = ((RexxObject *)string_value)->primitiveMakeString();
-        if (string_value == TheNilObject)
+        if ((RexxObject *)string_value == TheNilObject)
         {/* didn't convert?                   */
          /* get the final string value        */
             this->sendMessage(OREF_STRINGSYM, string_value);
@@ -1211,8 +1211,8 @@ RexxString *RexxObject::requestStringNoNOSTRING()
     else
     {                               /* do a real request for this        */
         ProtectedObject string_value;
-        this->sendMessage(OREF_REQUEST, OREF_STRINGSYM, string_value);
-        if (string_value == TheNilObject)
+        sendMessage(OREF_REQUEST, OREF_STRINGSYM, string_value);
+        if ((RexxObject *)string_value == TheNilObject)
         {/* didn't convert?                   */
          /* get the final string value        */
             this->sendMessage(OREF_STRINGSYM, string_value);
@@ -1796,7 +1796,7 @@ RexxMessage *RexxObject::startCommon(RexxObject *message, RexxObject **arguments
     decodeMessageName(this, message, messageName, startScope);
 
     /* Create the new message object.    */
-    RexxMessage *newMessage = new_ RexxMessage(this, messageName, startScope, new_array(argCount, arguments));
+    RexxMessage *newMessage = new RexxMessage(this, messageName, startScope, new_array(argCount, arguments));
     ProtectedObject p(newMessage);
     newMessage->start(OREF_NULL);        /* Tell the message object to start  */
     return newMessage;                   /* return the new message object     */
@@ -2326,7 +2326,7 @@ RexxObject *RexxObject::newRexx(RexxObject **arguments, size_t argCount)
     ProtectedObject p(newObj);
 
     // handle Rexx class completion
-    classThis->completeNewObject(newObj, args, argCount);
+    classThis->completeNewObject(newObj, arguments, argCount);
 
     return newObj;
 }
@@ -2355,7 +2355,7 @@ RexxObject *RexxInternalObject::clone()
     cloneObj->header = newHeader;
     // we might be copying an oldspace object.  The new object, by definition,
     // will not be oldspace.
-    cloneObj~clearOldSpace();
+    cloneObj->setNewSpace();
     return cloneObj;
 }
 
@@ -2606,9 +2606,6 @@ void *RexxObject::getCSelf(RexxObject *scope)
     }
     return NULL;                     /* no object available               */
 }
-/******************************************************************************/
-/* Typed method invocation macros                                             */
-/******************************************************************************/
 
 RexxObject *RexxObject::callOperatorMethod(size_t methodOffset, RexxObject *argument)
 {

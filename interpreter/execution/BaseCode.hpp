@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -36,87 +36,60 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                                */
+/* REXX Kernel                                                 BaseCode.hpp   */
 /*                                                                            */
-/* Primitive Buffer Class                                                     */
+/* Class defintions for executable code objects.                              */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
-#include <string.h>
-#include "RexxCore.h"
-#include "RexxActivity.hpp"
-#include "ActivityManager.hpp"
-#include "BufferClass.hpp"
-
-
-RexxClass *RexxBuffer::classInstance = OREF_NULL;   // singleton class instance
-
-void RexxBuffer::createInstance()
-/******************************************************************************/
-/* Function:  Create initial bootstrap objects                                */
-/******************************************************************************/
-{
-    CLASS_CREATE(Buffer, "Buffer", RexxClass);
-}
-
+#ifndef Included_BaseCode
+#define Included_BaseCode
 
 /**
- * Allocate a new buffer object.
- *
- * @param size    The size of the object.
- * @param _length The length of the buffer portion required.
- *
- * @return The new buffer object.
+ * Base class for a code object.  Code objects can be invoked as
+ * methods, or called.
  */
-void *RexxBuffer::operator new(size_t size, size_t length)
+class BaseCode : public RexxInternalObject
 {
-    return new_object(size + length, T_Buffer);
-}
+public:
+    virtual void run(RexxActivity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
+    virtual void call(RexxActivity *, RoutineClass *, RexxString *,  RexxObject **, size_t, RexxString *, RexxString *, int, ProtectedObject &);
+    virtual void call(RexxActivity *, RoutineClass *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
+    virtual RexxArray *getSource();
+    virtual RexxObject *setSecurityManager(RexxObject *manager);
+    virtual RexxSource *getSourceObject();
+    virtual RexxClass *findClass(RexxString *className);
+    virtual BaseCode  *setSourceObject(RexxSource *s);
+    virtual PackageClass *getPackage();
+};
 
+// pointer to native method function
+typedef uint16_t *(RexxEntry *PNATIVEMETHOD)(RexxMethodContext *, ValueDescriptor *);
+// pointer to native function function
+typedef uint16_t *(RexxEntry *PNATIVEROUTINE)(RexxCallContext *, ValueDescriptor *);
+// prototype for a registered function call.
+typedef size_t (RexxEntry *PREGISTEREDROUTINE)(const char *, size_t, PCONSTRXSTRING, const char *, PRXSTRING);
 
 /**
- * New method for the buffer class.  This always raises
- * an error if called.
- *
- * @param args   The new arguments.
- * @param argc   The argument count.
- *
- * @return Always raises an error.
+ * Base class for all executable objects.  Executable
+ * objects and Methods and Routines.
  */
-RexxObject *RexxBuffer::newRexx(RexxObject **args, size_t argc)
+class BaseExecutable : public RexxObject
 {
-    // we do not allow these to be allocated from Rexx code...
-    reportException(Error_Unsupported_new_method, ((RexxClass *)this)->getId());
-    return TheNilObject;
-}
+public:
+    inline RexxSource *getSourceObject() { return code->getSourceObject(); };
+    inline BaseCode   *getCode() { return code; }
+    RexxArray  *getSource() { return code->getSource(); }
+    PackageClass *getPackage();
 
+    RexxArray *source();
+    RexxClass *findClass(RexxString *className);
+    BaseExecutable *setSourceObject(RexxSource *s);
+    RexxString *getName() { return executableName; }
 
-RexxBuffer *RexxBuffer::expand(
-    size_t l)                            /* minimum space needed              */
-/******************************************************************************/
-/* Function:  Create a larger buffer and copy existing data into it           */
-/******************************************************************************/
-{
-    RexxBuffer * newBuffer;              /* returned new buffer               */
+protected:
 
-                                         /* we will either return a buffer    */
-                                         /* twice the size of the current     */
-                                         /* buffer, or this size of           */
-                                         /* current(this)buffer + requested   */
-                                         /* minimum length.                   */
-    if (l > this->getBufferSize())       /* need more than double?            */
-    {
-        /* increase by the requested amount  */
-        newBuffer = new_buffer(this->getBufferSize() + l);
-    }
-    else                                 /* just double the existing length   */
-    {
-        newBuffer = new_buffer(this->getBufferSize() * 2);
-    }
-    /* have new buffer, so copy data from*/
-    /* current buffer into new buffer.   */
-    memcpy(newBuffer->getData(), this->getData(), this->getDataLength());
-    return newBuffer;                    /* all done, return new buffer       */
+    RexxString *executableName;         // the created name of this routine
+    BaseCode   *code;                   // the backing code object
+};
 
-}
-
+#endif

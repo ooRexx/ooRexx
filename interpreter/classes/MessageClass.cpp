@@ -599,7 +599,7 @@ RexxObject *RexxMessage::newRexx(
     ProtectedObject p(newMessage);
 
     // handle Rexx class completion
-    classThis->completeNewObject(newObj, args, argCount);
+    classThis->completeNewObject(newMessage);
 
     return newMessage;                   /* return the new message            */
 }

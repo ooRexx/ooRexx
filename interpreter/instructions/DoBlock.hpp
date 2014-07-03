@@ -73,7 +73,7 @@ class RexxDoBlock : public RexxInternalObject
     inline void setFor(wholenumber_t value) {forCount = value;};
     inline void setCase(RexxObject * value) {to = value;};
     inline void setCompare(int value) {compare = (unsigned short)value;};
-    inline void getCase() { return to; }
+    inline RexxObject *getCase() { return to; }
     inline size_t getIndent() { return indent; };
     inline bool checkFor() {return (forCount--) <= 0;};
            bool checkControl(RexxActivation *context, RexxExpressionStack *stack, bool increment);

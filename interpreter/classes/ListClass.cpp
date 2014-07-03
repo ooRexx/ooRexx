@@ -1234,7 +1234,7 @@ RexxList *RexxList::newRexx(RexxObject **init_args, size_t  argCount)
     ProtectedObject p(newList);
 
     // handle Rexx class completion
-    classThis->completeNewObject(newList, args, argCount);
+    classThis->completeNewObject(newList, init_args, argCount);
 
     return newList;                      /* return the new list item          */
 }

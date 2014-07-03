@@ -62,7 +62,7 @@ class LineDescriptor
     }
 
     // map the descriptor to a line position/length
-    inline getLine(const char *dataPointer, const char *&linePointer, size_t &lineLength)
+    inline void getLine(const char *dataPointer, const char *&linePointer, size_t &lineLength)
     {
         linePointer = dataPointer + position;
         lineLength = length;
@@ -116,7 +116,7 @@ class BufferProgramSource: public ProgramSource
  public:
     void        *operator new(size_t);
     inline void  operator delete(void *) { ; }
-    BufferProgramSource(RexxBuffer *b) : buffer(b), descriptorArea(OREF_NULL) : ProgramSource() { }
+    BufferProgramSource(RexxBuffer *b) : buffer(b), descriptorArea(OREF_NULL), ProgramSource() { }
 
     virtual void live(size_t);
     virtual void liveGeneral(int reason);

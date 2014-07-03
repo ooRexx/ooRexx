@@ -53,7 +53,7 @@
 #define NumberRounded      0x00000010       /* Indicate the number was rounded once */
                                             /*  at NumDigits, avoid double rounding */
 
-#define OVERFLOWSPACE 2                     /* space for numeric buffer overflow */
+const size_t OVERFLOWSPACE = 2;             // space for numeric buffer overflow
 
 
 // TODO: figure out what this does...should probably just be a method
@@ -61,6 +61,7 @@
 
 class RexxNumberStringBase : public RexxObject
 {
+ friend class RexxNumberString;
 public:
     inline RexxNumberStringBase() { ; }
 

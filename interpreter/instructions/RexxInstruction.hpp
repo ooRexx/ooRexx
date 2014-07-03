@@ -94,6 +94,17 @@ class RexxInstruction : public RexxInternalObject {
     RexxInstruction  *nextInstruction;      // the next instruction object in the assembled chain.
 };
 
+// types of END terminators
+typedef enum
+{
+    DO_BLOCK,
+    SELECT_BLOCK,
+    OTHERWISE_BLOCK,
+    LOOP_BLOCK,
+    LABELED_SELECT_BLOCK,
+    LABELED_OTHERWISE_BLOCK,
+    LABELED_DO_BLOCK,
+} EndBlockType;
 
 class RexxDoBlock;
 

@@ -939,7 +939,7 @@ void RexxSource::processInstall(RexxActivation *activation)
  *
  * @return The string representation of the trace setting.
  */
-RexxString * RexxSource::formatTraceSetting(size_t source)
+RexxString *RexxSource::formatTraceSetting(size_t source)
 {
     char         setting[3];             /* returned trace setting            */
     setting[0] = '\0';                   /* start with a null string          */

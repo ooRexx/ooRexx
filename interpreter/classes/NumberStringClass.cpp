@@ -1163,7 +1163,7 @@ bool numberStringScan(const char *number, size_t length)
     InPtr = number;                     /*Point to start of input string.    */
     EndData = InPtr + length;           /*Point to end of Data + 1.          */
 
-    while (*InPtr == ch_BLANK || *InPtr == ch_TAB)  /* Skip all leading blanks.          */
+    while (*InPtr == ch_SPACE || *InPtr == ch_TAB)  /* Skip all leading blanks.          */
     {
         InPtr++;                          /* Skip it, and go on to next char   */
     }
@@ -1171,7 +1171,7 @@ bool numberStringScan(const char *number, size_t length)
     if ((ch = *InPtr) == ch_MINUS || ch == ch_PLUS)
     {
         InPtr++;                          /* Yes, skip it.                     */
-        while (*InPtr == ch_BLANK || *InPtr == ch_TAB)   /* Ship all leading blanks.          */
+        while (*InPtr == ch_SPACE || *InPtr == ch_TAB)   /* Ship all leading blanks.          */
         {
             InPtr++;                        /* Skip it, and go on to next char   */
         }
@@ -1259,7 +1259,7 @@ bool numberStringScan(const char *number, size_t length)
     }
     /* At this point all that should be  */
     /* left Are trailing blanks.         */
-    while (*InPtr == ch_BLANK || *InPtr == ch_TAB)  /* Skip all trailing blanks          */
+    while (*InPtr == ch_SPACE || *InPtr == ch_TAB)  /* Skip all trailing blanks          */
     {
         InPtr++;                          /* Skip it, and go on to next char   */
     }
@@ -2284,7 +2284,7 @@ int RexxNumberString::format(const char *_number, size_t _length)
     InPtr = _number;                    /*Point to start of input string.    */
     EndData = InPtr + _length;          /*Point to end of Data + 1.          */
 
-    while (*InPtr == ch_BLANK || *InPtr == ch_TAB)    /* Ship all leading blanks.          */
+    while (*InPtr == ch_SPACE || *InPtr == ch_TAB)    /* Ship all leading blanks.          */
     {
         InPtr++;                          /* Skip it, and go on to next char   */
     }
@@ -2297,7 +2297,7 @@ int RexxNumberString::format(const char *_number, size_t _length)
             this->sign   = -1;                /* Yup, indicate a negative number.  */
         }
     }
-    while (*InPtr == ch_BLANK || *InPtr == ch_TAB)   /* Ship all leading blanks.          */
+    while (*InPtr == ch_SPACE || *InPtr == ch_TAB)   /* Ship all leading blanks.          */
     {
         InPtr++;                          /* Skip it, and go on to next char   */
     }
@@ -2315,7 +2315,7 @@ int RexxNumberString::format(const char *_number, size_t _length)
                                           /*zero?                              */
     if (InPtr >= EndData)
     {
-        SetNumberStringZero();            /* Make value a zero.                */
+        setZero();                        /* Make value a zero.                */
         return 0;
     }
     /* Now process real digits.          */
@@ -2388,7 +2388,7 @@ int RexxNumberString::format(const char *_number, size_t _length)
                                               /*zero?                              */
                 if (InPtr >= EndData)
                 {
-                    SetNumberStringZero();      /* Make value a zero.                */
+                    setZero();                  /* Make value a zero.                */
                     return 0;
                 }
             }

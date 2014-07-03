@@ -45,6 +45,8 @@
 #define Included_RexxCode
 
 #include "SourceFile.hpp"
+#include "BaseCode.hpp"
+#include "RexxLocalVariables.hpp"
 
 /**
  * The fundamental unit of Rexx code execution.  This
@@ -79,11 +81,9 @@ class RexxCode : public BaseCode
    inline void setLocalRoutines(RexxDirectory *r) { source->setLocalRoutines(r); }
    inline void setPublicRoutines(RexxDirectory *r) { source->setPublicRoutines(r); }
    inline bool isTraceable() { return source->isTraceable(); }
-   inline bool isInterpret() { return source->isInterpret(); }
    inline RexxString *extract(SourceLocation &l) { return source->extract(l); }
    inline SecurityManager *getSecurityManager() { return source->getSecurityManager(); }
    inline void        install(RexxActivation *activation) { source->install(activation); }
-   inline RexxCode *interpret(RexxString *s, size_t n) { return source->interpret(s, labels, n); }
    inline RexxDirectory *getMethods() { return source->getMethods(); };
    inline RexxDirectory *getRoutines() { return source->getRoutines(); };
    inline RoutineClass *findRoutine(RexxString *n) { return source->findRoutine(n); }

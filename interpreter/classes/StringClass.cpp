@@ -635,13 +635,13 @@ wholenumber_t RexxString::comp(RexxObject *other)
     secondStart = second->getStringData(); /* get pointer to start of data */
 
     /* while we have leading blanks.     */
-    while (firstLen > 0 && (*firstStart == ch_BLANK || *firstStart == ch_TAB))
+    while (firstLen > 0 && (*firstStart == ch_SPACE || *firstStart == ch_TAB))
     {
         firstStart++;                       /* ignore character and look at next */
         firstLen--;                         /* and string is now one char less.  */
     }
     /* while we have leading blanks.     */
-    while (secondLen > 0 && (*secondStart == ch_BLANK || *secondStart == ch_TAB))
+    while (secondLen > 0 && (*secondStart == ch_SPACE || *secondStart == ch_TAB))
     {
         secondStart++;                      /* ignore character and look at next */
         secondLen--;                        /* and string is now one char less.  */
@@ -664,9 +664,9 @@ wholenumber_t RexxString::comp(RexxObject *other)
                 // Need unsigned char or chars above 0x7f will compare as less than
                 // blank.
                 unsigned char current = *firstStart++;
-                if (current != ch_BLANK && current != ch_TAB)
+                if (current != ch_SPACE && current != ch_TAB)
                 {
-                    return current - ch_BLANK;
+                    return current - ch_SPACE;
                 }
             }
         }
@@ -687,9 +687,9 @@ wholenumber_t RexxString::comp(RexxObject *other)
                 // Need unsigned char or chars above 0x7f will compare as less than
                 // blank.
                 unsigned char current = *secondStart++;
-                if (current != ch_BLANK && current != ch_TAB)
+                if (current != ch_SPACE && current != ch_TAB)
                 {
-                    return ch_BLANK - current;
+                    return ch_SPACE - current;
                 }
             }
         }
@@ -1856,7 +1856,7 @@ RexxObject *RexxString::isInteger()
     digitsLeft = getLength();
 
     /* Skip all leading blanks           */
-    for (; digitsLeft && (*digitPtr == ch_BLANK || *digitPtr == ch_TAB); ++digitPtr, --digitsLeft) ;
+    for (; digitsLeft && (*digitPtr == ch_SPACE || *digitPtr == ch_TAB); ++digitPtr, --digitsLeft) ;
 
     if (digitsLeft)
     {                   /* Still Digits left ?               */
@@ -1865,7 +1865,7 @@ RexxObject *RexxString::isInteger()
             /* need to move past the sign and    */
             /*  remove any remaining blanks.     */
             for (++digitPtr, --digitsLeft;
-                digitsLeft && (*digitPtr == ch_BLANK || *digitPtr == ch_TAB);
+                digitsLeft && (*digitPtr == ch_SPACE || *digitPtr == ch_TAB);
                 ++digitPtr, --digitsLeft) ;
             /* Yes, skip any blanks              */
             if (!digitsLeft)                /* Did we reach end of data ?        */
@@ -1888,7 +1888,7 @@ RexxObject *RexxString::isInteger()
         }
         /* if chars left make sure all are   */
         /* blanks.                           */
-        for (; digitsLeft && (*digitPtr == ch_BLANK || *digitPtr == ch_TAB); ++digitPtr, --digitsLeft) ;
+        for (; digitsLeft && (*digitPtr == ch_SPACE || *digitPtr == ch_TAB); ++digitPtr, --digitsLeft) ;
         /* skipped all trailing blanks.      */
         /* we better be at the end of the    */
         /* string, otherwise its invalid.    */

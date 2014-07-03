@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -55,93 +55,6 @@
 #include <string.h>
 #include <ctype.h>
 #include <limits.h>
-#include <bitset>
-
-// a useful type-safe bit flag class where the allowed settings are based
-// on enum values.
-
-// this is defined as a template so we can specify what enums are stored here.
-template < typename TEnum, int TMaxFlags = 8 >
-class FlagSet
-{
-public:
-    // set a flag value to true
-    inline void set(const TEnum flag)
-    {
-        flags.set(flag);
-    }
-
-    // turn a flag value off
-    inline void reset(const TEnum flag)
-    {
-        flags.reset(flag);
-    }
-
-    // flip the value of a bit
-    inline void flip(const TEnum flag)
-    {
-        flags.flip(flag);
-    }
-
-    // turn a flag value off
-    inline bool test(const TEnum flag)
-    {
-        return flags.test(flag);
-    }
-
-    // access the value of a flag
-    inline bool operator[] (const TEnum flag) const
-    {
-        return flags[flag];
-    }
-
-    // test if any flags are set
-    inline bool any() const
-    {
-        return flags.any();
-    }
-
-    // test for any of the specified flags being set
-    inline bool any(const TEnum flag1, const TEnum flag2)
-    {
-        return flags.test(flag) || flags.test(flag2);
-    }
-
-    // test for any of the specified flags being set
-    inline bool any(const TEnum flag1, const TEnum flag2, const TEnum flag3)
-    {
-        return flags.test(flag) || flags.test(flag2) || flags.test(flag3);
-    }
-
-    // test if all flags are set
-    inline bool all() const
-    {
-        return flags.all();
-    }
-
-    // test for all of the specified flags being set
-    inline bool all(const TEnum flag1, const TEnum flag2)
-    {
-        return flags.test(flag) && flags.test(flag2);
-    }
-
-    // test for any of the specified flags being set
-    inline bool all(const TEnum flag1, const TEnum flag2, const TEnum flag3)
-    {
-        return flags.test(flag) && flags.test(flag2) && flags.test(flag3);
-    }
-
-    // test if no flags are set
-    inline bool none() const
-    {
-        return flags.none();
-    }
-
-private:
-
-    std::bitset<TMaxFlags> flags;
-};
-
 
 /* REXX Library definitions */
 #define OREF_NULL NULL                 /* definition of a NULL REXX object  */

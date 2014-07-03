@@ -94,7 +94,7 @@ const int DEBUG_NOTRACE     =  0x0800;
 const size_t TRACE_DEBUG_MASK  = 0xff00;
 
 // an invalid 8-bit character marker.
-const unsigned int INVALID_CHARACTER = '00000100';
+const unsigned int INVALID_CHARACTER = 0x100;
 
                                        /* handy defines to easy coding      */
 #define new_instruction(name, type) sourceNewObject(sizeof(RexxInstruction##type), The##type##InstructionBehaviour, KEYWORD_##name)
@@ -129,13 +129,10 @@ class LanguageParser: public RexxInternalObject
 
     // main execution methods
     RexxCode   *generateCode(bool isMethod);
-    RexxCode   *interpretMethod(RexxDirectory *);
-    RexxCode   *interpret(RexxString *, RexxDirectory *, size_t);
-    void        globalSetup();
-    RexxCode   *translate(RexxDirectory *);
+    RexxCode   *translate();
     void        resolveDependencies();
     void        flushControl(RexxInstruction *);
-    RexxCode   *translateBlock(RexxDirectory *);
+    RexxCode   *translateBlock();
 
     StackFrameClass *createStackFrame();
     void        holdObject(RexxObject *object) { holdStack->push(object);};
@@ -191,14 +188,14 @@ class LanguageParser: public RexxInternalObject
     RexxArray  *words(RexxString *);
     RexxInstruction *parserNewObject(size_t, RexxBehaviour *, int);
     inline void        reclaimClause()  { flags.set(reclaimed); };
-    inline bool        atEnd(void) { return (!(flags.test(reclaimed)) && !moreLines); };
+    inline bool        atEnd(void) { return !flags.test(reclaimed) && !moreLines(); };
 
-    inline bool isInterpret() { return (flags.test(interpret); }
-    inline bool noClauseAvailable() { return (flags.test(noClause); }
-    inline bool clauseAvailable() { return !(flags.test(noClause); }
+    inline bool isInterpret() { return flags.test(interpret); }
+    inline bool noClauseAvailable() { return flags.test(noClause); }
+    inline bool clauseAvailable() { return !flags.test(noClause); }
     inline RexxToken  *nextToken() { return clause->next(); }
     inline RexxToken  *nextReal() { return clause->nextRealToken(); }
-    inline void        requiredEndOfClause(RexxToken *first, int terminators, size_t error)
+    inline void        requiredEndOfClause(RexxToken *first, int terminators, int error)
     {
         RexxToken *token = nextReal();
         if (!token->isEndOfClause())
@@ -207,7 +204,7 @@ class LanguageParser: public RexxInternalObject
         }
     }
 
-    inline RexxObject *requiredLogicalExpression(RexxToken *first, int terminators, size_t error)
+    inline RexxObject *requiredLogicalExpression(RexxToken *first, int terminators, int error)
     {
         RexxObject *conditional = parseLogical(first, terminators);
         if (conditional == OREF_NULL)
@@ -223,7 +220,6 @@ class LanguageParser: public RexxInternalObject
     RexxInstruction *nextInstruction();
     void        isExposeValid();
     static bool parseTraceSetting(RexxString *, size_t &, size_t &, char &);
-    static RexxString *formatTraceSetting(size_t source);
     size_t      processVariableList(InstructionKeyword);
 
     RexxInstruction *addressNew();
@@ -363,6 +359,11 @@ class LanguageParser: public RexxInternalObject
         return characterTable[ch & 0xff];
     }
 
+    static MethodClass *createMethod(RexxString *name, RexxArray *source);
+    static MethodClass *createMethodFromFile(RexxString *name);
+    static RoutineClass *createRoutine(RexxString *name, RexxArray *source);
+    static RoutineClass *createRoutineFromFile(RexxString *name);
+
     static pbuiltin builtinTable[];      /* table of builtin function stubs   */
 
     static const size_t TRACE_ALL           = 'A';
@@ -402,6 +403,7 @@ protected:
     FlagSet<ParsingFlags, 32> flags;     // a set of flags with parse state
     const char *current;                 // current working line
     size_t currentLength;                // length of current line
+    size_t lineCount;                    // count of lines in the source
     RexxClause *clause;                  // current clause being created
     SourceLocation clauseLocation;       // current clause location for errors
     size_t lineNumber;                   // current line position

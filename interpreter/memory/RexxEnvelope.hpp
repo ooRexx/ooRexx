@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -54,18 +54,19 @@ class RexxEnvelope : public RexxInternalObject
 {
   public:
    void *operator new(size_t);
-   inline void *operator new(size_t size, void *ptr) {return ptr;}
+
    RexxEnvelope();
    inline RexxEnvelope(RESTORETYPE restoreType) { ; };
-   void live(size_t);
-   void liveGeneral(int reason);
+
+   virtual void live(size_t);
+   virtual void liveGeneral(int reason);
 
    void flattenReference(void *, size_t, void *);
    RexxBuffer *pack(RexxObject *);
-   void        puff(RexxBuffer *, char *, size_t length);
+   void        puff(RexxBuffer *, const char *, size_t length);
    size_t queryObj(RexxObject *);
    size_t copyBuffer(RexxObject *);
-   void rehash();
+   void   rehash();
    char  *bufferStart();
    void   associateObject(RexxObject *, size_t);
    void   addTable(RexxObject *obj);
@@ -79,6 +80,7 @@ class RexxEnvelope : public RexxInternalObject
    size_t      currentOffset;          /* current flattening offset         */
 
 protected:
+
    RexxObject *home;
    RexxObject *receiver;               /* object to receive the message     */
    RexxIdentityTable  *duptable;         /* table of duplicates               */

@@ -1270,7 +1270,7 @@ void RexxInteger::createInstance()
 /******************************************************************************/
 {
     CLASS_CREATE(Integer, "String", RexxIntegerClass);
-    TheIntegerClass->initCache()
+    TheIntegerClass->initCache();
 }
 
 PCPPM RexxInteger::operatorMethods[] =

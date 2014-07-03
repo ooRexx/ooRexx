@@ -65,6 +65,7 @@ enum
  */
 class RexxLocalVariables
 {
+ friend class RexxActivation;
  public:
     inline void *operator new(size_t size, void *ptr) { return ptr;};
     RexxLocalVariables(RexxObject **frames, size_t items) { locals = (RexxVariable **)frames; size = items; }
@@ -144,7 +145,7 @@ class RexxLocalVariables
     inline void       setDictionary(RexxVariableDictionary *dict) { dictionary = dict; }
     inline RexxVariableDictionary *getNestedDictionary() { return dictionary; }
 
-    const size_t FIRST_VARIABLE_INDEX = VARIABLE_SIGL;
+    static const size_t FIRST_VARIABLE_INDEX = VARIABLE_SIGL;
 
  protected:
 
