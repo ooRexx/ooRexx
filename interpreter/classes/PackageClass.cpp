@@ -148,7 +148,7 @@ RexxArray *PackageClass::getSource()
  */
 RexxString *PackageClass::getSourceLine(size_t n)
 {
-    return source->get(n);
+    return source->getLine(n);
 }
 
 
@@ -163,7 +163,7 @@ RexxString *PackageClass::getSourceLineRexx(RexxObject *position)
 {
     // the starting position isn't optional
     size_t n = positionArgument(position, ARG_ONE);
-    return source->get(n);
+    return source->getLine(n);
 }
 
 
@@ -336,10 +336,10 @@ RexxDirectory *PackageClass::getMethods()
  */
 RexxArray *PackageClass::getImportedPackages()
 {
-    RexxList *packages = source->getPackages();
+    RexxArray *packages = source->getPackages();
     if (packages != OREF_NULL)
     {
-        return packages->makeArray();
+        return (RexxArray *)packages->copy();
     }
     else
     {

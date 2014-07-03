@@ -46,6 +46,7 @@
 #define Included_RexxCompoundTail
 
 #include "ProtectedObject.hpp"
+#include "LanguageParser.hpp"
 
 class RexxBuffer;
 

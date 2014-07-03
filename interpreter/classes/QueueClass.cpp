@@ -620,7 +620,7 @@ RexxObject *RexxQueue::newRexx(RexxObject **init_args, size_t argCount)
     ProtectedObject p(newObj);
 
     // handle Rexx class completion
-    classThis->completeNewObject(newObj, args, argCount);
+    classThis->completeNewObject(newObj, init_args, argCount);
     return newObj;
 }
 
@@ -636,7 +636,7 @@ RexxObject *RexxQueue::newRexx(RexxObject **init_args, size_t argCount)
 RexxQueue *RexxQueue::ofRexx(RexxObject **args, size_t argCount)
 {
     // create a queue object.
-    RexxQueue *newQueue = RexxQueue::newRexx(NULL, 0);
+    RexxQueue *newQueue = (RexxQueue *)RexxQueue::newRexx(NULL, 0);
     ProtectedObject p(newQueue);
 
     for (size_t i = 0; i < argCount; i++)

@@ -55,16 +55,19 @@
  *
  * @param name   The name given to the method and package.
  * @param source The code source as an array of strings.
+ * @param sourceContext
+ *               A parent source context that this method will inherit
+ *               a package environment from.
  *
  * @return An executable method object.
  */
-MethodClass *LanguageParser::createMethod(RexxString *name, RexxArray *source)
+MethodClass *LanguageParser::createMethod(RexxString *name, RexxArray *source, PackageClass *sourceContext)
 {
     // create the appropriate array source, then the parser, then generate the
     // code.
     ProtectedObject p = new ArrayProgramSource(source);
     p = new LanguageParser(name, (ProgramSource *)(RexxInternalObject *)p);
-    return ((LanguageParser *)(RexxInternalObject *)p)->generateMethod();
+    return ((LanguageParser *)(RexxInternalObject *)p)->generateMethod(sourceContext);
 }
 
 
@@ -77,7 +80,7 @@ MethodClass *LanguageParser::createMethod(RexxString *name, RexxArray *source)
  *
  * @return An executable method object.
  */
-MethodClass *LanguageParser::createMethodFromFile(RexxString *name)
+MethodClass *LanguageParser::createMethod(RexxString *name)
 {
     // create the appropriate array source, then the parser, then generate the
     // code.
@@ -92,16 +95,19 @@ MethodClass *LanguageParser::createMethodFromFile(RexxString *name)
  *
  * @param name   The name given to the routine and package.
  * @param source The code source as an array of strings.
+ * @param sourceContext
+ *               A parent source context that this method will inherit
+ *               a package environment from.
  *
  * @return An executable method object.
  */
-RoutineClass *LanguageParser::createRoutine(RexxString *name, RexxArray *source)
+RoutineClass *LanguageParser::createRoutine(RexxString *name, RexxArray *source, PackageClass *sourceContext)
 {
     // create the appropriate array source, then the parser, then generate the
     // code.
     ProtectedObject p = new ArrayProgramSource(source);
     p = new LanguageParser(name, (ProgramSource *)(RexxInternalObject *)p);
-    return ((LanguageParser *)(RexxInternalObject *)p)->generateRoutine();
+    return ((LanguageParser *)(RexxInternalObject *)p)->generateRoutine(sourceContext);
 }
 
 
@@ -114,13 +120,51 @@ RoutineClass *LanguageParser::createRoutine(RexxString *name, RexxArray *source)
  *
  * @return An executable method object.
  */
-RoutineClass *LanguageParser::createRoutineFromFile(RexxString *name)
+RoutineClass *LanguageParser::createRoutine(RexxString *name)
 {
-    // create the appropriate array source, then the parser, then generate the
+    // create the appropriate program source, then the parser, then generate the
     // code.
     ProtectedObject p = new FileProgramSource(name)
     p = new LanguageParser(name, (ProgramSource *)(RexxInternalObject *)p);
     return ((LanguageParser *)(RexxInternalObject *)p)->generateRoutine();
+}
+
+
+/**
+ * Static method for creating a new RoutineClass instance as a
+ * top-level program (no install step is run)
+ *
+ * @param name   The name given to the routine and package.
+ * @param source The buffer containing the source.
+ *
+ * @return An executable method object.
+ */
+RoutineClass *LanguageParser::createProgram(RexxString *name, RexxBuffer *source)
+{
+    // create the appropriate array source, then the parser, then generate the
+    // code.
+    ProtectedObject p = new BufferProgramSource(source);
+    p = new LanguageParser(name, (ProgramSource *)(RexxInternalObject *)p);
+    return ((LanguageParser *)(RexxInternalObject *)p)->generateProgram();
+}
+
+
+/**
+ * Static method for creating a new RoutineClass instance as a
+ * top-level program (no install step is run)
+ *
+ * @param name   The name given to the routine and package.
+ * @param source The buffer containing the source.
+ *
+ * @return An executable method object.
+ */
+RoutineClass *LanguageParser::createProgram(RexxString *name)
+{
+    // create the appropriate program source, then the parser, then generate the
+    // code.
+    ProtectedObject p = new FileProgramSource(name)
+    p = new LanguageParser(name, (ProgramSource *)(RexxInternalObject *)p);
+    return ((LanguageParser *)(RexxInternalObject *)p)->generateProgram();
 }
 
 
@@ -211,12 +255,16 @@ void LanguageParser::liveGeneral(int reason)
 /**
  * Generate a method object from a source collection.
  *
+ * @param sourceContext
+ *               An optional source context used to add additional visibilty to
+ *               dynamically generated methods.
+ *
  * @return A method object represented by the leading code block
  *         of the source.  Ideally, this code should not contain directives,
  *         but since this was allowed in the past, we need to continue
  *         to allow this.
  */
-MethodClass *LanguageParser::generateMethod()
+MethodClass *LanguageParser::generateMethod(PackageClass *sourceContext)
 {
     // initialize, and compile all of the source.
     compileSource();
@@ -226,6 +274,11 @@ MethodClass *LanguageParser::generateMethod()
     // since we've explicitly made this a method, there is no
     // longer an init code section to this package.
     package->initCode = OREF_NULL;
+    // if we have a source context, then we need to inherit this
+    // context before doing the install so that anything from the parent
+    // context is visible during the install processing.
+    package->inheritSourceContext(sourceContext);
+
     // force the package to resolve classes/libraries now.
     installPackage();
     // return the main executable.
@@ -236,12 +289,16 @@ MethodClass *LanguageParser::generateMethod()
 /**
  * Generate a routine object from a source collection.
  *
+ * @param sourceContext
+ *               An optional source context used to add additional visibilty to
+ *               dynamically generated methods.
+ *
  * @return A routine object represented by the leading code
  *         block of the source.  Ideally, this code should not
  *         contain directives, but since this was allowed in the
  *         past, we need to continue to allow this.
  */
-RoutineClass *LanguageParser::generateRoutine()
+RoutineClass *LanguageParser::generateRoutine(PackageClass *sourceContext)
 {
     // initialize, and compile all of the source.
     compileSource();
@@ -251,8 +308,36 @@ RoutineClass *LanguageParser::generateRoutine()
     // since we've explicitly made this a method, there is no
     // longer an init code section to this package.
     package->initCode = OREF_NULL;
+    // if we have a source context, then we need to inherit this
+    // context before doing the install so that anything from the parent
+    // context is visible during the install processing.
+    package->inheritSourceContext(sourceContext);
+
     // force the package to resolve classes/libraries now.
     installPackage();
+    // return the main executable.
+    return (RoutineClass *)package->mainExecutable();
+}
+
+
+/**
+ * Generate a routine object as a top-level program.
+ *
+ * @return A routine object represented by the leading code
+ *         block of the source.  This will not have an installs
+ *         performed at this time.
+ */
+RoutineClass *LanguageParser::generateProgram()
+{
+    // initialize, and compile all of the source.
+    compileSource();
+    // get the main section of the source package and make a method
+    // object from it.  This is the package "main" executable.
+    package->mainExecutable = new RoutineClass(name, mainSection);
+    // this has code marked as the init code that will run the first
+    // time something on this is called.  We do not do any installation
+    // at this time.
+    package->initCode = mainSection;
     // return the main executable.
     return (RoutineClass *)package->mainExecutable();
 }
@@ -3234,4 +3319,82 @@ bool LanguageParser::parseTraceSetting(RexxString *value, size_t &newSetting, si
     // create the activation-specific flags
     debugFlags = RexxActivation::processTraceSetting(newSetting);
     return true;
+}
+
+
+/**
+ * Process handling of instore execution arguments.
+ *
+ * @param instore The instore descriptor.
+ * @param name    The name of the program.
+ *
+ * @return An executable top-level program object (a routine, actually)
+ */
+RoutineClass *LanguageParser::processInstore(PRXSTRING instore, RexxString * name )
+{
+    // just a generic empty one indicating that we should check the macrospace?
+    if (instore[0].strptr == NULL && instore[1].strptr == NULL)
+    {
+        unsigned short temp;
+
+        // see if this exists
+        if (!RexxQueryMacro(name->getStringData(), &temp))
+        {
+            return restoreFromMacroSpace(name);
+        }
+        return OREF_NULL;
+    }
+    // we have a precompiled image (likely a repeat call...restore and reuse this
+    if (instore[1].strptr != NULL)
+    {
+        // we're saved as a program object
+        RoutineClass *routine = RoutineClass::restore(&instore[1], name);
+        if (routine != OREF_NULL)
+        {
+            // did it unflatten successfully?   If we have source also,
+            // reattach it to the routine for tracing/error reporting.
+            if (instore[0].strptr != NULL)
+            {
+                RexxBuffer *source_buffer = new_buffer(instore[0]);
+                routine->getSourceObject()->attachSource(source_buffer);
+            }
+            return routine;                  /* go return it                      */
+        }
+    }
+    // we have instorage source, but no compiled image.  We'll compile, and optionally
+    // flatten the program for reuse.
+    if (instore[0].strptr != NULL)
+    {
+        RexxBuffer *source_buffer = new_buffer(instore[0]);
+
+        // translate the source
+        Protected<RoutineClass> routine = createProgram(name, source_buffer);
+        // save this in the instore buffer
+        routine->save(&instore[1]);
+        return routine;
+    }
+    return OREF_NULL;                    /* processing failed                 */
+}
+
+
+/**
+ * Create a routine from a macrospace source.
+ *
+ * @param name   The name of the macrospace item.
+ *
+ * @return The inflatted macrospace routine.
+ */
+RoutineClass *LanguageParser::restoreFromMacroSpace(RexxString *name)
+{
+    // the instorage buffer
+    RXSTRING buffer;
+
+    MAKERXSTRING(buffer, NULL, 0);
+    // get the image of function
+    RexxResolveMacroFunction(name->getStringData(), &buffer);
+    // unflatten the method now
+    RoutineClass *routine = RoutineClass::restore(&buffer, name);
+    // release the buffer memory
+    SystemInterpreter::releaseResultMemory(buffer.strptr);
+    return routine;
 }

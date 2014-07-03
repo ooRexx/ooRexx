@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -44,38 +44,36 @@
 #ifndef Included_RexxSupplier
 #define Included_RexxSupplier
 
- class RexxSupplier : public RexxObject {
-  public:
+class RexxSupplier : public RexxObject
+{
+ public:
    inline RexxSupplier(RESTORETYPE restoreType) { ; };
    RexxSupplier(RexxArray  *, RexxArray  *);
    RexxSupplier();
 
    void       *operator new(size_t);
-   inline void       *operator new(size_t size, void *ptr) { return ptr; };
 
-   void        live(size_t);
-   void        liveGeneral(int reason);
-   void        flatten(RexxEnvelope *);
+   virtual void live(size_t);
+   virtual void liveGeneral(int reason);
+   virtual void flatten(RexxEnvelope *);
+
    RexxInteger *available();
    RexxObject  *next();
    RexxObject  *value();
    RexxObject  *index();
    RexxObject  *initRexx(RexxArray *values, RexxArray *indexes);
+   RexxObject  *newRexx(RexxObject **, size_t);
 
    static void createInstance();
    static RexxClass *classInstance;
 
  protected:
-   RexxArray  *values;                 /* array of values                   */
-   RexxArray  *indexes;                /* array of indexes                  */
-   size_t position;                    /* current array position            */
 
- };
- class RexxSupplierClass : public RexxClass  {
-  public:
-   RexxObject  *newRexx(RexxObject **, size_t);
- };
+    RexxArray  *values;                 // array of values
+    RexxArray  *indexes;                // array of indexes
+    size_t position;                    // current array position
+};
 
+inline RexxSupplier *new_supplier(RexxArray *values, RexxArray *indexes) { return new RexxSupplier(values, indexes); }
 
- inline RexxSupplier *new_supplier(RexxArray *c, RexxArray *f) { return new RexxSupplier(c, f); }
- #endif
+#endif

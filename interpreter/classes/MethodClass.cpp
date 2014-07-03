@@ -326,46 +326,6 @@ void MethodClass::setAttributes(bool _private, bool _protected, bool _guarded)
 
 
 /**
- * Flatten a method into a buffer for saving to another
- * source (a file perhaps, or stored in the macrospace.)
- *
- * @return The smart buffer containing the flattened code.
- */
-RexxSmartBuffer *MethodClass::saveMethod()
-{
-    RexxEnvelope *envelope = new RexxEnvelope;
-    ProtectedObject p(envelope);
-
-    // pack the method object (and source object) into the buffer.
-    envelope->pack(this);
-    return envelope->getBuffer();
-}
-
-
-/**
- * Restore a method object from the saved state.
- *
- * @param buffer The buffer object containing the flattened object.
- * @param startPointer
- *               The starting pointer within the buffer.
- * @param length The length of the flattened object.
- *
- * @return An inflated Method object.
- */
-MethodClass *MethodClass::restore(RexxBuffer *buffer, char *startPointer, size_t length)
-{
-    // get an envelop and puff the object back to usability.
-    RexxEnvelope *envelope  = new RexxEnvelope;
-    ProtectedObject p(envelope);
-    envelope->puff(buffer, startPointer, length);
-
-    // The method object is the root of the object tree.  Get that from the
-    // envelop and return it.
-    return (MethodClass *)envelope->getReceiver();
-}
-
-
-/**
  * Static method used for constructing new method objects in
  * various contexts (such as the define method on the Class class).
  *
@@ -373,86 +333,27 @@ MethodClass *MethodClass::restore(RexxBuffer *buffer, char *startPointer, size_t
  * @param source   The method source (either a string or an array).
  * @param position The position used for reporting errors.  This is the position
  *                 of the source argument for the calling method context.
- * @param parentScope
- *                 The parent code we inherit routine scope from.  This overrides
- *                 anything that might be defined in single method code.
  *
  * @return The constructed method object.
  */
-MethodClass *MethodClass::newMethodObject(RexxString *pgmname, RexxObject *source, RexxObject *position, RexxSource *parentSource)
+MethodClass *MethodClass::newMethodObject(RexxString *pgmname, RexxObject *source, RexxObject *position)
 {
-    RexxArray *newSourceArray = OREF_NULL;
+    // validate, and potentially transform, the method source object.
+    RexxArray *newSourceArray = processExecutableSource(source, position);
 
-    // if this is a string object, then convert to a a single element array.
-    if (isString(source))
+    // this method is called when methods are added to class, object, directory, etc.
+    // we want to inherit from the current execution source context if we can.
+
+    PackageClass *sourceContext = OREF_NULL;
+
+    // see if we have an active context and use the current source as the basis for the lookup
+    RexxActivation *currentContext = ActivityManager::currentActivity->getCurrentRexxFrame();
+    if (currentContext != OREF_NULL)
     {
-        newSourceArray = new_array((RexxString *)source);
-    }
-    else
-    {
-        // request this as an array.  If not convertable, then we'll use it as a string
-        RexxArray *newSourceArray = source->requestArray();
-        // couldn't convert?
-        if (newSourceArray == (RexxArray *)TheNilObject)
-        {
-            // get the string representation
-            RexxString *sourceString = source->makeString();
-            // still can't convert?  This is an error
-            if (sourceString == (RexxString *)TheNilObject)
-            {
-                reportException(Error_Incorrect_method_no_method, position);
-            }
-            // wrap an array around the value
-            newSourceArray = new_array(sourceString);
-        }
-        // have an array of strings (hopefully)
-        else
-        {
-            // must be single dimension
-            if (newSourceArray->getDimension() != 1)
-            {
-                reportException(Error_Incorrect_method_noarray, position);
-            }
-            // now run through the array make sure we have all string objects.
-            ProtectedObject p(newSourceArray);
-            for (size_t counter = 1; counter <= newSourceArray->size(); counter++)
-            {
-                RexxString *sourceString = newSourceArray ->get(counter)->makeString();
-                // if this did not convert, this is an error
-                if (sourceString == (RexxString *)TheNilObject)
-                {
-                    reportException(Error_Incorrect_method_nostring_inarray, IntegerTwo);
-                }
-                else
-                {
-                    // replace the original item in the array
-                    newSourceArray ->put(sourceString, counter);
-                }
-            }
-        }
+        sourceContext = currentContext->getPackage();
     }
 
-    MethodClass *result = LanguageParser::createMethod(pgmname, newSourceArray);
-    ProtectedObject p(result);
-
-    // if we've been provided with a scope, use it
-    if (parentSource == OREF_NULL)
-    {
-        // see if we have an active context and use the current source as the basis for the lookup
-        RexxActivation *currentContext = ActivityManager::currentActivity->getCurrentRexxFrame();
-        if (currentContext != OREF_NULL)
-        {
-            parentSource = currentContext->getSourceObject();
-        }
-    }
-
-    // if there is a parent source, then merge in the scope information
-    if (parentSource != OREF_NULL)
-    {
-        result->getSourceObject()->inheritSourceContext(parentSource);
-    }
-
-    return result;
+    return LanguageParser::createMethod(pgmname, newSourceArray, sourceContext);
 }
 
 
@@ -473,58 +374,20 @@ MethodClass *MethodClass::newRexx(RexxObject **init_args, size_t argCount)
     // any methods on this object from this method.
     RexxClass *classThis = (RexxClass *)this;
 
-    RexxObject *pgmname;                 // method name
-    RexxObject *_source;                 // Array or string object
-    MethodClass *newMethod;               // newly created method object
-    RexxObject *option = OREF_NULL;
-    size_t initCount = 0;                // count of arguments we pass along
+    RexxString *programName;
+    Protected<RexxArray> sourceArray;
+    PackageClass *sourceContext;
 
-    RexxClass::processNewArgs(init_args, argCount, &init_args, &initCount, 2, (RexxObject **)&pgmname, (RexxObject **)&_source);
-    // get the method name as a string
-    RexxString *nameString = stringArgument(pgmname, ARG_ONE);
-    // make sure there is something for the second arge.
-    requiredArgument(_source, ARG_TWO);
+    // parse all of the options
+    processNewExecutableArgs(init_args, argCount, programName, sourceArray, sourceContext);
 
-    RexxSource *sourceContext = OREF_NULL;
-    // retrieve extra parameter if exists
-    if (initCount != 0)
-    {
-        RexxClass::processNewArgs(init_args, initCount, &init_args, &initCount, 1, (RexxObject **)&option, NULL);
-        if (isOfClass(Method, option))
-        {
-            sourceContext = ((MethodClass *)option)->getSourceObject();
-        }
-        else if (isOfClass(Routine, option))
-        {
-            sourceContext = ((RoutineClass *)option)->getSourceObject();
-        }
-        else if (isOfClass(Package, option))
-        {
-            sourceContext = ((PackageClass *)option)->getSourceObject();
-        }
-        else
-        {
-            // this must be a string (or convertable) and have a specific value
-            option = option->requestString();
-            if (option == TheNilObject)
-            {
-                reportException(Error_Incorrect_method_argType, IntegerThree, "Method, Routine, Package, or String object");
-            }
-            // default given? set option to NULL (see code below)
-            if (!((RexxString *)option)->strCaselessCompare("PROGRAMSCOPE"))
-            {
-                reportException(Error_Incorrect_call_list, "NEW", IntegerThree, "\"PROGRAMSCOPE\", Method, Routine, Package object", option);
-            }
-        }
-    }
     // go create a method from whatever we were given for source.
-    newMethod = newMethodObject(nameString, _source, IntegerTwo, sourceContext);
-    ProtectedObject p(newMethod);
+    ProtectedObject newMethod = LanguageParser::createMethod(programName, sourceArray, sourceContext);
 
     // finish up the object creation.  Set the correct instance behavior (this could
     // be a subclass), check for uninit methods, and finally, send an init message using any
     // left over arguments.
-    classThis->completeNewObject(newMethod, init_args, initCount);
+    classThis->completeNewObject(newMethod, init_args, argCount);
     return newMethod;
 }
 
@@ -546,8 +409,7 @@ MethodClass *MethodClass::newFileRexx(RexxString *filename)
     // get the method name as a string
     filename = stringArgument(filename, ARG_ONE);
 
-    MethodClass *newMethod = LanguageParser::createMethodFromFile(filename);
-    ProtectedObject p(newMethod);
+    Protected<MethodClass> newMethod = LanguageParser::createMethod(filename);
 
     newMethod->setScope((RexxClass *)TheNilObject);
     classThis->completeNewObject(newMethod);

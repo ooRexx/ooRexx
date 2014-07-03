@@ -118,6 +118,170 @@ RexxArray *BaseExecutable::source()
 
 
 /**
+ * Detach the source code from an executable package
+ */
+RexxArray *BaseExecutable::detachSource()
+{
+    return code->detachSource();
+}
+
+
+/**
+ * Common handling static method for processing method or
+ * routine source.  This sorts out the string vs. array
+ * argument and returns everything as an array if valid.
+ *
+ * @param source   The input object.
+ * @param position The position (for error reporting)
+ *
+ * @return An array of the source lines.
+ */
+RexxArray *BaseExecutable::processExecutableSource(RexxObject *source, RexxObject *position)
+{
+    Protected<RexxArray> sourceArray = OREF_NULL;
+
+    // if this is a string object, then convert to a a single element array.
+    if (isString(source))
+    {
+        sourceArray = new_array((RexxString *)source);
+    }
+    else
+    {
+        // request this as an array.  If not convertable, then we'll use it as a string
+        sourceArray = source->requestArray();
+        // couldn't convert?
+        if (sourceArray == (RexxArray *)TheNilObject)
+        {
+            // get the string representation
+            RexxString *sourceString = source->makeString();
+            // still can't convert?  This is an error
+            if (sourceString == (RexxString *)TheNilObject)
+            {
+                reportException(Error_Incorrect_method_no_method, position);
+            }
+            // wrap an array around the value
+            sourceArray = new_array(sourceString);
+        }
+        // have an array of strings (hopefully)
+        else
+        {
+            // must be single dimension
+            if (sourceArray->getDimension() != 1)
+            {
+                reportException(Error_Incorrect_method_noarray, position);
+            }
+
+            for (size_t counter = 1; counter <= sourceArray->size(); counter++)
+            {
+                RexxString *sourceString = sourceArray ->get(counter)->makeString();
+                // if this did not convert, this is an error
+                if (sourceString == (RexxString *)TheNilObject)
+                {
+                    reportException(Error_Incorrect_method_nostring_inarray, position);
+                }
+                else
+                {
+                    // replace the original item in the array
+                    sourceArray->put(sourceString, counter);
+                }
+            }
+        }
+    }
+    return sourceArray;
+}
+
+
+/**
+ * Process the new arguments for either a Routine
+ * or Method class.  This decodes all of the arguments
+ * and processes them into acceptable forms.  This includes
+ * figuring out the different source types and the
+ * different source contexts.
+ *
+ * @param init_args The original argument pointer passed to the new method.
+ *                  This will be advanced over any of the arguments we
+ *                  consume to leave the remaining arguments to be passed
+ *                  to an init method.
+ * @param argCount  The count of arguments.  This will be decremented for
+ *                  any arguments we use.
+ * @param name      The name option of the call.
+ * @param sourceArray
+ *                  The array that will be used to create this object.
+ * @param sourceContext
+ *                  The optional source context this should inherit from.
+ */
+void BaseExecutable::processNewExecutableArgs(RexxObject **&init_args, size_t &argCount, RexxString *&name,
+     Protected<RexxArray> &sourceArray, PackageClass *&sourceContext)
+{
+    RexxObject *pgmname;                 // method name
+    RexxObject *source;                  // Array or string object
+    size_t initCount = 0;                // count of arguments we pass along
+
+    // do the initial parse of the new arguments.
+    RexxClass::processNewArgs(init_args, argCount, &init_args, &initCount, 2, (RexxObject **)&pgmname, (RexxObject **)&_source);
+    // get the method name as a string
+    RexxString *nameString = stringArgument(pgmname, ARG_ONE);
+    // make sure there is something for the second arg.
+    requiredArgument(source, ARG_TWO);
+
+    // figure out the source section.
+    sourceArray = processExecutableSource(source, IntegerTwo);
+
+    // now process an optional sourcecontext argument
+    sourceContext = OREF_NULL;
+    // retrieve extra parameter if exists
+    if (initCount != 0)
+    {
+        RexxObject *option;
+        // parse off an additional argument
+        RexxClass::processNewArgs(init_args, initCount, &init_args, &initCount, 1, &option, NULL);
+        // if there are more than 3 options passed, it is possible this one was omitted
+        // we're don
+        if (option == OREF_NULL)
+        {
+            return;
+        }
+
+        if (isOfClass(Method, option))
+        {
+            sourceContext = ((MethodClass *)option)->getPackage();
+        }
+        else if (isOfClass(Routine, option))
+        {
+            sourceContext = ((RoutineClass *)option)->getPackage();
+        }
+        else if (isOfClass(Package, option))
+        {
+            sourceContext = (PackageClass *)option;
+        }
+        else
+        {
+            // this must be a string (or convertable) and have a specific value
+            option = option->requestString();
+            if (option == TheNilObject)
+            {
+                reportException(Error_Incorrect_method_argType, IntegerThree, "Method, Routine, Package, or String object");
+            }
+            // default given? set option to NULL (see code below)
+            if (!((RexxString *)option)->strCaselessCompare("PROGRAMSCOPE"))
+            {
+                reportException(Error_Incorrect_call_list, "NEW", IntegerThree, "\"PROGRAMSCOPE\", Method, Routine, Package object", option);
+            }
+
+            // using the calling source context, so get the package from the top activation if
+            // there is one.
+            // see if we have an active context and use the current source as the basis for the lookup
+            RexxActivation *currentContext = ActivityManager::currentActivity->getCurrentRexxFrame();
+            if (currentContext != OREF_NULL)
+            {
+                sourceContext = currentContext->getPackage();
+            }
+        }
+    }
+}
+
+
+/**
  * Run this code as a method invocation.
  *
  * @param activity  The current activity.
@@ -263,3 +427,17 @@ PackageClass *BaseCode::getPackage()
 
     return OREF_NULL;
 }
+
+
+/**
+ * Detach the source from a code object.
+ */
+void BaseCode::detachSource()
+{
+    RexxSource *source = getSourceObject();
+    if (source != OREF_NULL)
+    {
+        source->detachSource();
+    }
+}
+

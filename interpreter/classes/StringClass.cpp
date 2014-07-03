@@ -138,7 +138,7 @@ void RexxString::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-    memory_mark(numberStringVallue);
+    memory_mark(numberStringValue);
     memory_mark(objectVariables);
 }
 
@@ -147,7 +147,7 @@ void RexxString::liveGeneral(int reason)
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-    memory_mark_general(numberStringVallue);
+    memory_mark_general(numberStringValue);
     memory_mark_general(objectVariables);
 }
 
@@ -158,8 +158,8 @@ void RexxString::flatten(RexxEnvelope *envelope)
 {
   setUpFlatten(RexxString)
 
-   flatten_reference(newThis->NumberString, envelope);
-   flatten_reference(newThis->objectVariables, envelope);
+   flattenRef(numberStringValue);
+   flattenRef(objectVariables);
 
   cleanUpFlatten
 }
@@ -376,17 +376,17 @@ RexxNumberString *RexxString::numberString()
         return OREF_NULL;                   /* Yes, no need to try agian.        */
     }
 
-    if (numberStringVallue != OREF_NULL) /* see if we have already converted  */
+    if (numberStringValue != OREF_NULL) /* see if we have already converted  */
     {
-        return numberStringVallue;         /* return the numberString Object.   */
+        return numberStringValue;         /* return the numberString Object.   */
     }
 
     if (!isOfClass(String, this))
     {          /* not truly a string type?          */
         newSelf = requestString();   /* do the conversion                 */
                                            /* get a new numberstring Obj        */
-        OrefSet(this, numberStringVallue, (RexxNumberString *)new_numberstring(newSelf->getStringData(), newSelf->getLength()));
-        if (numberStringVallue != OREF_NULL)     /* Did number convert OK?            */
+        OrefSet(this, numberStringValue, (RexxNumberString *)new_numberstring(newSelf->getStringData(), newSelf->getLength()));
+        if (numberStringValue != OREF_NULL)     /* Did number convert OK?            */
         {
             setHasReferences();     /* Make sure we are sent Live...     */
         }
@@ -394,8 +394,8 @@ RexxNumberString *RexxString::numberString()
     else
     {                               /* real primitive string             */
                                     /* get a new numberstring Obj        */
-        OrefSet(this, numberStringVallue, (RexxNumberString *)new_numberstring(getStringData(), getLength()));
-        if (numberStringVallue == OREF_NULL)     /* Did number convert OK?            */
+        OrefSet(this, numberStringValue, (RexxNumberString *)new_numberstring(getStringData(), getLength()));
+        if (numberStringValue == OREF_NULL)     /* Did number convert OK?            */
         {
             setNonNumeric();           /* mark as a nonnumeric              */
         }
@@ -403,10 +403,10 @@ RexxNumberString *RexxString::numberString()
         {
             setHasReferences();        /* Make sure we are sent Live...     */
                                              /* connect the string and number     */
-            numberStringVallue->setString(this);
+            numberStringValue->setString(this);
         }
     }
-    return numberStringVallue;           /* return the numberString Object.   */
+    return numberStringValue;           /* return the numberString Object.   */
 }
 
 RexxNumberString *RexxString::createNumberString()
@@ -414,25 +414,23 @@ RexxNumberString *RexxString::createNumberString()
 /* Function:   Convert a String Object into a Number Object                   */
 /******************************************************************************/
 {
-    RexxString       *newSelf;           /* converted string value            */
-
     if (!isOfClass(String, this))
     {          /* not truly a string type?          */
-        newSelf = requestString();   /* do the conversion                 */
+        RexxString *newSelf = requestString();   /* do the conversion                 */
                                            /* get a new numberstring Obj        */
-        OrefSet(newSelf, newSelf->NumberString, (RexxNumberString *)new_numberstring(newSelf->getStringData(), newSelf->getLength()));
+        OrefSet(newSelf, newSelf->numberStringValue, (RexxNumberString *)new_numberstring(newSelf->getStringData(), newSelf->getLength()));
         /* save the number string            */
-        if (newSelf->NumberString != OREF_NULL)     /* Did number convert OK?            */
+        if (newSelf->numberStringValue != OREF_NULL)     /* Did number convert OK?            */
         {
             newSelf->setHasReferences();     /* Make sure we are sent Live...     */
         }
-        return newSelf->NumberString;
+        return newSelf->numberStringValue;
     }
     else
     {                               /* real primitive string             */
                                     /* get a new numberstring Obj        */
-        OrefSet(this, numberStringVallue, (RexxNumberString *)new_numberstring(getStringData(), getLength()));
-        if (numberStringVallue == OREF_NULL)     /* Did number convert OK?            */
+        OrefSet(this, numberStringValue, (RexxNumberString *)new_numberstring(getStringData(), getLength()));
+        if (numberStringValue == OREF_NULL)     /* Did number convert OK?            */
         {
             setNonNumeric();           /* mark as a nonnumeric              */
         }
@@ -440,9 +438,9 @@ RexxNumberString *RexxString::createNumberString()
         {
             setHasReferences();        /* Make sure we are sent Live...     */
                                              /* connect the string and number     */
-            numberStringVallue->setString(this);
+            numberStringValue->setString(this);
         }
-        return numberStringVallue;
+        return numberStringValue;
     }
 }
 
@@ -1727,7 +1725,7 @@ void RexxString::setNumberString(RexxObject *NumberRep)
 /******************************************************************************/
 {
 
-    OrefSet(this, numberStringVallue, (RexxNumberString *)NumberRep);
+    OrefSet(this, numberStringValue, (RexxNumberString *)NumberRep);
 
     if (NumberRep != OREF_NULL)          /* actually get one?                 */
     {

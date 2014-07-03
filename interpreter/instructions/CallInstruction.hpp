@@ -45,6 +45,7 @@
 #define Included_RexxInstructionCall
 
 #include "RexxInstruction.hpp"
+#include "Token.hpp"
 
 
 /**
@@ -138,7 +139,7 @@ class RexxInstructionDynamicCall : public RexxInstructionDynamicCallBase
     inline void operator delete(void *, void *) { }
 
     RexxInstructionDynamicCall(RexxObject *, size_t, RexxQueue *);
-    inline RexxInstructionCall(RESTORETYPE restoreType) { ; };
+    inline RexxInstructionDynamicCall(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
     virtual void liveGeneral(int reason);

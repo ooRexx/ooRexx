@@ -88,39 +88,63 @@ void *RexxObject::operator new (size_t size)
 }
 
 
+/**
+ * Default object live stack marking.  Since Object is
+ * an exported object, it needs to mark the object variables.
+ * Other exported classes that inherit from Object are
+ * also expected to mark this field.
+ *
+ * @param liveMark The current live mark.
+ */
 void RexxObject::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
     memory_mark(objectVariables);
 }
 
+
+/**
+ * Default object general live stack marking.  Since Object is
+ * an exported object, it needs to mark the object variables.
+ * Other exported classes that inherit from Object are
+ * also expected to mark this field.
+ *
+ * @param reason The reason for the mark being performed.
+ */
 void RexxObject::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
 {
     memory_mark_general(objectVariables);
 }
 
+
+/**
+ * Default object flatten processing..  Since Object is an
+ * exported object, it needs to mark the object variables. Other
+ * exported classes that inherit from Object are also expected
+ * to mark this field.
+ *
+ * @param envelope the target envelope we're flatting in.
+ */
 void RexxObject::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
 {
-  setUpFlatten(RexxObject)
+    setUpFlatten(RexxObject)
 
     flattenRef(objectVariables);
 
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
+
+/**
+ * Create a proxy object for a "special" REXX object.
+ *
+ * @param envelope The target envelope.
+ *
+ * @return The proxy object, which is usually a name.
+ */
 RexxObject * RexxInternalObject::makeProxy(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Create a proxy object for a "special" REXX object               */
-/******************************************************************************/
 {
+    // we are generally only called if the class is marked as a proxy class.
+    // we recognize .nil, but don't handle any other special objects here.
     if (this == TheNilObject)
     {
         return(RexxObject *)new_proxy("NIL");
@@ -130,6 +154,7 @@ RexxObject * RexxInternalObject::makeProxy(RexxEnvelope *envelope)
         return(RexxObject *)this;
     }
 }
+
 
 bool RexxInternalObject::isEqual(
     RexxObject *other )                /* other object for comparison       */
@@ -172,8 +197,6 @@ bool RexxInternalObject::isSubClassOrEnhanced()
 {
     return behaviour->isNonPrimitive();
 }
-
-
 
 
 /**
@@ -1614,7 +1637,7 @@ RexxObject  *RexxObject::setMethod(
     else if (!isOfClass(Method, methobj))    /* not a method type already?        */
     {
         /* make one from a string or array   */
-        methobj = MethodClass::newMethodObject(msgname, (RexxObject *)methobj, IntegerTwo, OREF_NULL);
+        methobj = MethodClass::newMethodObject(msgname, (RexxObject *)methobj, IntegerTwo);
     }
     this->defMethod(msgname, methobj, option);   /* defMethod handles all the details */
     return OREF_NULL;                    /* no return value                   */
@@ -1903,7 +1926,7 @@ RexxObject  *RexxObject::run(
     if (!isOfClass(Method, methobj))         /* this a method object?             */
     {
         /* create a method object            */
-        methobj = MethodClass::newMethodObject(OREF_RUN, (RexxObject *)methobj, IntegerOne, OREF_NULL);
+        methobj = MethodClass::newMethodObject(OREF_RUN, (RexxObject *)methobj, IntegerOne);
         /* set the correct scope             */
         methobj->setScope((RexxClass *)TheNilObject);
     }

@@ -49,7 +49,6 @@
 #include "StringUtil.hpp"
 #include "Utilities.hpp"
 
-
 /**
  * Return type from string isSymbol() method.
  */
@@ -63,6 +62,7 @@ typedef enum
     STRING_NUMERIC,
     STRING_NAME
 } StringSymbolType;
+
 
 #define  STRING_HASLOWER       0x01    /* string does contain lowercase     */
 #define  STRING_NOLOWER        0x02    /* string does not contain lowercase */

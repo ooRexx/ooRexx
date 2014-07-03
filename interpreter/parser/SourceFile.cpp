@@ -180,7 +180,7 @@ void RexxSource::live(size_t liveMark)
     memory_mark(installedClasses);
     memory_mark(mergedPublicClasses);
     memory_mark(mergedPublicRoutines);
-    memory_mark(methods);
+    memory_mark(unattachedMethods);
     memory_mark(initCode);
 }
 
@@ -199,7 +199,7 @@ void RexxSource::liveGeneral(int reason)
     {
         // NOTE:  more work required here!
         // don't need to use OrefSet here because there's no oldspace when saving the image.
-        methods = OREF_NULL;
+        unattachedMethods = OREF_NULL;
         requires = OREF_NULL;
         classes = OREF_NULL;
         routines = OREF_NULL;
@@ -227,7 +227,7 @@ void RexxSource::liveGeneral(int reason)
     memory_mark_general(installedClasses);
     memory_mark_general(mergedPublicClasses);
     memory_mark_general(mergedPublicRoutines);
-    memory_mark_general(methods);
+    memory_mark_general(unattachedMethods);
     memory_mark_general(initCode);
 }
 
@@ -259,7 +259,7 @@ void RexxSource::flatten (RexxEnvelope *envelope)
     flattenRef(installedClasses);
     flattenRef(mergedPublicClasses);
     flattenRef(mergedPublicRoutines);
-    flattenRef(methods);
+    flattenRef(unattachedMethods);
     flattenRef(initCode);
 
   cleanUpFlatten
@@ -558,16 +558,15 @@ void RexxSource::mergeRequired(RexxSource *source)
     // so that the direct set will override
     if (source->mergedPublicRoutines != OREF_NULL)
     {
-        /* first merged attempt?             */
+        // first merged attempt?  Create our directory
         if (mergedPublicRoutines == OREF_NULL)
         {
-            /* get the directory                 */
             setField(mergedPublicRoutines, new_directory());
         }
-        /* loop through the list of routines */
+        // loop through the list of routines
         for (HashLink i = source->mergedPublicRoutines->first(); source->mergedPublicRoutines->available(i); i = source->mergedPublicRoutines->next(i))
         {
-            /* copy the routine over             */
+            // copy the routine over
             mergedPublicRoutines->setEntry((RexxString *)source->mergedPublicRoutines->index(i), source->mergedPublicRoutines->value(i));
         }
 
@@ -576,16 +575,14 @@ void RexxSource::mergeRequired(RexxSource *source)
     // now process the direct set
     if (source->publicRoutines != OREF_NULL)
     {
-        /* first merged attempt?             */
+        // first merged attempt?  Create out directory
         if (mergedPublicRoutines == OREF_NULL)
         {
-            /* get the directory                 */
             setField(mergedPublicRoutines, new_directory());
         }
-        /* loop through the list of routines */
+        // now copy all of the direct routines
         for (HashLink i = source->publicRoutines->first(); source->publicRoutines->available(i); i = source->publicRoutines->next(i))
         {
-            /* copy the routine over             */
             mergedPublicRoutines->setEntry((RexxString *)source->publicRoutines->index(i), source->publicRoutines->value(i));
         }
     }
@@ -596,13 +593,10 @@ void RexxSource::mergeRequired(RexxSource *source)
     {
         if (mergedPublicClasses == OREF_NULL)
         {
-            /* get the directory                 */
             setField(mergedPublicClasses, new_directory());
         }
-        /* loop through the list of classes, */
         for (HashLink i = source->mergedPublicClasses->first(); source->mergedPublicClasses->available(i); i = source->mergedPublicClasses->next(i))
         {
-            /* copy the routine over             */
             mergedPublicClasses->setEntry((RexxString *)source->mergedPublicClasses->index(i), source->mergedPublicClasses->value(i));
         }
     }
@@ -613,13 +607,10 @@ void RexxSource::mergeRequired(RexxSource *source)
     {
         if (mergedPublicClasses == OREF_NULL)
         {
-            /* get the directory                 */
             setField(mergedPublicClasses, new_directory());
         }
-        /* loop through the list of classes, */
         for (HashLink i = source->installedPublicClasses->first(); source->installedPublicClasses->available(i); i = source->installedPublicClasses->next(i))
         {
-            /* copy the routine over             */
             mergedPublicClasses->setEntry((RexxString *)source->installedPublicClasses->index(i), source->installedPublicClasses->value(i));
         }
     }
@@ -647,7 +638,8 @@ RoutineClass *RexxSource::findLocalRoutine(RexxString *name)
         }
     }
 
-    // we might have a chained context, so check it also
+    // we might have a chained context.  We check this after any locally
+    // defined ones in this source.
     if (parentSource != OREF_NULL)
     {
         return parentSource->findLocalRoutine(name);
@@ -678,6 +670,9 @@ RoutineClass *RexxSource::findPublicRoutine(RexxString *name)
     }
 
     // we might have a chained context, so check it also
+    // The inherited context comes after any directly included
+    // context.  In for methods or routines that are created from
+    // a parent context, this will be the only thing here.
     if (parentSource != OREF_NULL)
     {
         return parentSource->findPublicRoutine(name);
@@ -752,6 +747,7 @@ RexxClass *RexxSource::findInstalledClass(RexxString *name)
     }
 
     // we might have a chained context, so check it also
+    // the parents ones come after ones we define.
     if (parentSource != OREF_NULL)
     {
         return parentSource->findInstalledClass(name);
@@ -761,6 +757,14 @@ RexxClass *RexxSource::findInstalledClass(RexxString *name)
 }
 
 
+/**
+ * Find a public class that we might have inherited from
+ * our included packages.
+ *
+ * @param name   The target class name.
+ *
+ * @return A resolved class object, or OREF_NULL if this cannot be found.
+ */
 RexxClass *RexxSource::findPublicClass(RexxString *name)
 {
     // if we have one locally, then return it.
@@ -775,6 +779,9 @@ RexxClass *RexxSource::findPublicClass(RexxString *name)
     }
 
     // we might have a chained context, so check it also
+    // The inherited context comes after any directly included
+    // context.  In for methods or routines that are created from
+    // a parent context, this will be the only thing here.
     if (parentSource != OREF_NULL)
     {
         return parentSource->findPublicClass(name);
@@ -1123,4 +1130,44 @@ void RexxSource::addInstalledRoutine(RexxString *name, RoutineClass *routineObje
         }
         publicRoutines->setEntry(name, routineObject);
     }
+}
+
+
+/**
+ * Retrieve a line from the program source.
+ *
+ * @param position The line position.
+ *
+ * @return The string value of the line.
+ */
+RexxString *RexxSource::getLine(size_t position)
+{
+    return source->getStringLine(position);
+}
+
+
+/**
+ * Attach a buffered source object to a source that
+ * has been saved in sourceless form.  Normally used
+ * for instore RexxStart calls.
+ *
+ * @param s      The Buffer with the source code in original form.
+ */
+void RexxSource::attachSource(RexxBuffer *s)
+{
+    // replace the current source object (likely the dummy one)
+    source = new BufferProgramSource(buffer);
+    // Go create the source line indices
+    source->setup();
+}
+
+
+/**
+ * Convert this package to a sourceless form.
+ */
+void RexxSource::detachSource()
+{
+    // replace this with the base program source, which
+    // does not return anything.
+    source = new ProgramSource();
 }

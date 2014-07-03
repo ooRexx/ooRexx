@@ -48,12 +48,13 @@
 /* The type for the reference links */
 typedef size_t HashLink;
 
-typedef class
+class TABENTRY
 {
+public:
     RexxObject *value;                   // item value object
     RexxObject *index;                   // item index object
     HashLink next;                       // next item in overflow bucket
-} TABENTRY;
+};
 
 class RexxHashTableCollection;
 class RexxTable;

@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -62,24 +62,37 @@ void RexxSupplier::createInstance()
 }
 
 
-RexxSupplier::RexxSupplier(
-  RexxArray  *_values,                 /* array of values                   */
-  RexxArray  *_indexes )               /* array of indexes                  */
-/****************************************************************************/
-/* Function:  Initialize a supplier                                         */
-/****************************************************************************/
+/**
+ * Allocate a new supplier object.
+ *
+ * @param size   The object size
+ *
+ * @return Storage for creating a supplier object.
+ */
+void *RexxSupplier::operator new(size_t size)
 {
-  OrefSet(this, this->values, _values); /* store the values array            */
-                                       /* and the index array also          */
-  OrefSet(this, this->indexes, _indexes);
-  this->position = 1;                  /* set the first position            */
+    return new_object(size, T_Supplier);
 }
 
 
+/**
+ * Constructor for a supplier.
+ *
+ * @param _values  The array of values.
+ * @param _indexes The array of indexes
+ */
+RexxSupplier::RexxSupplier(RexxArray  *_values, RexxArray  *_indexes )
+{
+    values = _values;
+    indexes = _indexes;
+    position = 1;
+}
+
+
+/**
+ * No argument constructor for a supplier.
+ */
 RexxSupplier::RexxSupplier()
-/****************************************************************************/
-/* Function:  Initialize a supplier                                         */
-/****************************************************************************/
 {
     values = OREF_NULL;
     indexes = OREF_NULL;
@@ -87,124 +100,118 @@ RexxSupplier::RexxSupplier()
 
 
 void RexxSupplier::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
-  memory_mark(this->values);
-  memory_mark(this->indexes);
-  memory_mark(this->objectVariables);
+    memory_mark(values);
+    memory_mark(indexes);
+    memory_mark(objectVariables);
 }
 
+
 void RexxSupplier::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
 {
-  memory_mark_general(this->values);
-  memory_mark_general(this->indexes);
-  memory_mark_general(this->objectVariables);
+    memory_mark_general(values);
+    memory_mark_general(indexes);
+    memory_mark_general(objectVariables);
 }
 
 void RexxSupplier::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
 {
-  setUpFlatten(RexxSupplier)
+   setUpFlatten(RexxSupplier)
 
-   flatten_reference(newThis->values, envelope);
-   flatten_reference(newThis->indexes, envelope);
+   flattenRef(values);
+   flattenRef(indexes);
 
-  cleanUpFlatten
+   cleanUpFlatten
 }
 
+
+/**
+ * Test if the supplier has a next item available.
+ *
+ * @return True if there are still objects to supply, false otherwise.
+ */
 RexxInteger *RexxSupplier::available()
-/****************************************************************************/
-/* Function:  Return indication of object availability                      */
-/****************************************************************************/
 {
-                                       /* check the array size              */
-  return (this->position > this->values->size()) ? TheFalseObject : TheTrueObject;
+    // test if we have an available next item
+    return (position > values->size()) ? TheFalseObject : TheTrueObject;
 }
 
+
+/**
+ * Step to the next available item
+ *
+ * @return Returns NOTHING
+ */
 RexxObject  *RexxSupplier::next()
-/****************************************************************************/
-/* Function:  Step to the next element of the supplier                      */
-/****************************************************************************/
 {
-    /* already gone past the end?        */
-    if (this->position > this->values->size())
+    // it is an error to ask for next after we've hit the end.
+    if (position > values->size())
     {
-        /* oops, give an error               */
         reportException(Error_Incorrect_method_supplier);
     }
-    this->position++;                    /* step the position pointer         */
-    return OREF_NULL;                    /* this returns nothing              */
+    // step the position
+    position++;
+    return OREF_NULL;
 }
 
+
+/**
+ * Retrieve the value portion of the pair.
+ *
+ * @return The associated value.
+ */
 RexxObject  *RexxSupplier::value()
-/****************************************************************************/
-/* Function:  Retrieve the value of a collection item                       */
-/****************************************************************************/
 {
-    /* already gone past the end?        */
-    if (this->position > this->values->size())
+    // already gone past the end the end is an error
+    if (position > values->size())
     {
-        /* oops, give an error               */
         reportException(Error_Incorrect_method_supplier);
     }
-    /* get the value                     */
-    RexxObject *_value = this->values->get(this->position);
-    if (_value == OREF_NULL)              /* returned nothing?                 */
+
+    // get the value, but make sure we at least return .nil
+    RexxObject *_value = values->get(position);
+    if (_value == OREF_NULL)
     {
-        _value = TheNilObject;              /* change this to .nil               */
+        _value = TheNilObject;
     }
-    return _value;                        /* return this value                 */
+    return _value;
 }
 
-RexxObject  *RexxSupplier::index()
-/****************************************************************************/
-/* Function:  Retrieve the index of a collection item                       */
-/****************************************************************************/
-{
-    RexxObject *_value;                   /* supplier value                    */
 
-    /* already gone past the end?        */
-    if (this->position > this->values->size())
+/**
+ * Retrieve the index of the current position.
+ *
+ * @return The position index.
+ */
+RexxObject  *RexxSupplier::index()
+{
+    // past the end if an error
+    if (position > values->size())
     {
-        /* oops, give an error               */
         reportException(Error_Incorrect_method_supplier);
     }
-    if (this->indexes == OREF_NULL)      /* no index array given?             */
+    // the index array is optional...if we don't have it, just give
+    // the numeric position
+    if (indexes == OREF_NULL)
     {
-        /* just return current position      */
-        return(RexxObject *)new_integer(this->position);
+        return(RexxObject *)new_integer(position);
     }
-    /* already gone past the end?        */
-    if (this->position > this->indexes->size())
+
+    // already gone past the end of the index array?
+    if (position > indexes->size())
     {
-        _value = TheNilObject;              /* no value to return                */
+        return TheNilObject;
     }
     else
     {
-        /* get the value                     */
-        _value = this->indexes->get(this->position);
-        if (_value == OREF_NULL)            /* returned nothing?                 */
+        // get the current value and return .nil if nothing is there.
+        RexxObject *_value = indexes->get(position);
+        if (_value == OREF_NULL)
         {
-            _value = TheNilObject;            /* change this to .nil               */
+            return TheNilObject;
         }
+        return _value;
     }
-    return _value;                        /* and return the value              */
-}
-
-void *RexxSupplier::operator new(size_t size)
-/****************************************************************************/
-/* Function:  Create a new supplier object                                  */
-/****************************************************************************/
-{
-                                       /* Get new object                    */
-    return new_object(size, T_Supplier);
 }
 
 
@@ -234,20 +241,16 @@ RexxObject *RexxSupplier::initRexx(RexxArray *_values, RexxArray *_indexes)
         reportException(Error_Incorrect_method_noarray, indexes);
     }
 
-    OrefSet(this, this->values, new_values);
-    OrefSet(this, this->indexes, new_indexes);
-    this->position = 1;
+    // technically, we could probably directly assign these since this really is a constructor,
+    // but it doesn't hurt to use these here.
+    setField(values, new_values);
+    setField(indexes, new_indexes);
+    position = 1;
     return OREF_NULL;
 }
 
 
-
-RexxObject  *RexxSupplierClass::newRexx(
-    RexxObject **init_args,            /* subclass init arguments           */
-    size_t argCount)                   /* count of arguments                */
-/****************************************************************************/
-/* Function:  Public REXX supplier new method                               */
-/****************************************************************************/
+RexxObject  *RexxSupplier::newRexx(RexxObject **init_args, size_t argCount)
 {
     // this class is defined on the object class, but this is actually attached
     // to a class object instance.  Therefore, any use of the this pointer
@@ -259,7 +262,7 @@ RexxObject  *RexxSupplierClass::newRexx(
     ProtectedObject p(newObj);
 
     // handle Rexx class completion
-    classThis->completeNewObject(newObj, args, argCount);
+    classThis->completeNewObject(newObj, init_args, argCount);
 
     return newObj;
 }

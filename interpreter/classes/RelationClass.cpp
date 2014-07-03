@@ -227,12 +227,15 @@ RexxObject *RexxRelation::put(
     return OREF_NULL;                    /* never returns anything            */
 }
 
-RexxObject *RexxRelation::newRexx(
-     RexxObject **init_args,           /* subclass init arguments           */
-     size_t       argCount)            /* the number of arguments           */
-/******************************************************************************/
-/* Function:  Create an instance of a relation                                */
-/******************************************************************************/
+/**
+ * Create a new relation object from Rexx code.
+ *
+ * @param init_args The arguments passed to new.
+ * @param argCount  The count of the arguments.
+ *
+ * @return A new instance of the relation class.
+ */
+RexxObject *RexxRelation::newRexx(RexxObject **init_args, size_t argCount)
 {
     // this class is defined on the object class, but this is actually attached
     // to a class object instance.  Therefore, any use of the this pointer
@@ -244,7 +247,7 @@ RexxObject *RexxRelation::newRexx(
     ProtectedObject p(newObj);
 
     // handle Rexx class completion
-    classThis->completeNewObject(newObj, args, argCount);
+    classThis->completeNewObject(newObj, init_args, argCount);
     return newObj;
 }
 

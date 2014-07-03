@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -81,7 +81,7 @@ void CPPCode::liveGeneral(int reason)
 {
     if (reason == RESTORINGIMAGE)        /* restoring the image?              */
     {
-        this->cppEntry = exportedMethods[this->methodIndex];
+        cppEntry = exportedMethods[methodIndex];
     }
 }
 
@@ -91,7 +91,7 @@ RexxObject *CPPCode::unflatten(RexxEnvelope *envelope)
 /* Function:  unflatten an object                                             */
 /******************************************************************************/
 {
-    this->cppEntry = exportedMethods[this->methodIndex];
+    cppEntry = exportedMethods[methodIndex];
     return (RexxObject *)this;
 }
 
@@ -951,7 +951,7 @@ CPPM(RexxSupplier::value),
 CPPM(RexxSupplier::index),
 CPPM(RexxSupplier::initRexx),
 
-CPPM(RexxSupplierClass::newRexx),
+CPPM(RexxSupplier::newRexx),
 
                                        /* Table methods                     */
 CPPM(RexxHashTableCollection::removeRexx),

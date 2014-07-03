@@ -302,3 +302,14 @@ bool LanguageParser::isTerminator(int terminators)
 
     return false;                    // no terminator found
 }
+
+
+/**
+ * Upper case the string value.
+ *
+ * @return The upper case string value of the token.
+ */
+RexxString *RexxToken::upperValue()
+{
+    return stringValue->upper();
+}

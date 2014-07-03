@@ -1769,3 +1769,178 @@ RexxToken *LanguageParser::scanLiteral()
     endLocation(location);
     return clause->newToken(TOKEN_LITERAL, type, value, location);
 }
+
+
+/**
+ * Scans a string for symbol validity and returns a
+ * type indicator as to what type of symbol.
+ *
+ * @param string The string to scan.
+ *
+ * @return A type indicator indicating what sort of symbol we're
+ *         looking at.
+ */
+StringSymbolType LanguageParser::scanSymbol(RexxString *string)
+{
+    size_t stringLength = string->getLength();
+
+    // null string or too long is a bad variable.
+    if (stringLength > MAX_SYMBOL_LENGTH || stringLength == 0)
+    {
+        return STRING_BAD_VARIABLE;
+    }
+
+    const char *linend = string->getStringData() + stringLength;
+
+    // counter of periods in the name
+    size_t compound = 0;
+    // no exponent encountered
+    bool haveExponent = false;
+
+    const char *scan = string->getStringData();
+
+    // first scan the entire string looking for an invalid character...that is a quick
+    // out.  Note that we might encounter a "+" or "-" in a potential numeric value, so
+    // we can just drop out
+    while (scan < linend && isSymbolCharacter(*scan)
+    {
+        // count any periods we see along the way.
+        if (*scan == '.')
+        {
+            compound++;
+        }
+        scan++;
+    }
+
+    // not used up the entire string before hitting a non-symbol character.
+    // this could be because of a "+" or "-" in an exponent value, so we
+    // can't bail immediately.
+    if (scan < linend)
+    {
+        // we've found a non-symbol character.  This might be a '-' or '+', but
+        // if we found this at the end of the string, then it can't be a number.
+        // we can bail immediately
+        if (scan + 1 >= linend)
+        {
+            return STRING_BAD_VARIABLE;
+        }
+
+        // something other than a sign is also bad
+        if ((*scan != '-' && *scan != '+')
+        {
+            return STRING_BAD_VARIABLE;
+        }
+
+        // we've found a "+" or "-".  The character before
+        // this character must be a 'e' or 'E' and the rest of
+        // the string must only be digits
+
+        if (toupper(*(scan - 1)) != 'E')
+        {
+            return STRING_BAD_VARIABLE;
+        }
+
+        // verify the remainder
+        scan++;
+        while (scan < linend)
+        {
+            if (!isdigit(*scan))
+            {
+                return STRING_BAD_VARIABLE;
+            }
+            scan++;
+        }
+        // we've seen an exponent value.
+        haveExponent = true;
+    }
+    // we've scanned the entire string and it is "provisionally" valid.
+
+    // now check for different types.  firs check for potential numbers
+    if (string->getChar(0) == '.' || isdigit(string->getChar(0)))
+    {
+        // only a period?
+        if (compound == 1 && stringLength == 1)
+        {
+            return STRING_LITERAL_DOT;
+        }
+        // more than one period precludes this being a valid
+        // number.  It also negates the validity of an exponent
+        // if we've seen one.
+        else if (compound > 1)
+        {
+            if (haveExponent)
+            {
+                return STRING_BAD_VARIABLE;
+            }
+            // just a literal token
+            return STRING_LITERAL;
+        }
+        else
+        {
+            // this is potentially a number.  We scan the string up to the
+            // exponent (if we have one), verifying that we have nothing but
+            // periods and digits.
+
+            scan = string->getStringData();
+
+            while (scan < linend)
+            {
+                // stop scanning on first non-numeric
+                if (!isdigit(*scan) && *scan != '.')
+                {
+                    break;
+                }
+                scan++;
+            }
+
+            // used everything up, we're numeric
+            if (scan >= linend)
+            {
+                return STRING_NUMERIC;
+            }
+
+            // found a potential exponent.  If the next characater is
+            // "+" or "-", we already validated everything past that point
+            if (toupper(*scan) == 'E')
+            {
+                scan++;
+                if (*scan == '-' || *scan == '+')
+                {
+                    return STRING_NUMERIC;
+                }
+
+                // after the 'E', we expect to find digits
+                while (scan < linend)
+                {
+                    // stop scanning on first non-numeric
+                    // this cannot be a number any longer
+                    if (!isdigit(*scan))
+                    {
+                        return STRING_LITERAL;
+                    }
+                    scan++;
+                }
+                // this is a number
+                return STRING_NUMERIC;
+            }
+            // some other symbol character...this is a literal symbol
+            return STRING_LITERAL;
+        }
+    }
+
+    // no periods, does not begin with a digit...must be a simple variable
+    else if (compound == 0)
+    {
+        return STRING_NAME;
+    }
+    // a stem has one period and it is the end character
+    else if (compound == 1 && *(scan - 1) == '.')
+    {
+        return STRING_STEM;
+    }
+    // at least one period not at the beginning or end, this is a compound variable
+    else
+    {
+        return STRING_COMPOUND_NAME;
+    }
+}

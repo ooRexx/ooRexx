@@ -89,7 +89,7 @@ class RexxUnaryOperator : public RexxExpressionOperator {
     inline void  operator delete(void *) { ; }
     inline void  operator delete(void *, void *) { ; }
 
-    inline RexxUnaryOperator(int op, RexxObject *left)
+    inline RexxUnaryOperator(TokenSubclass op, RexxObject *left)
         : RexxExpressionOperator(op, left, OREF_NULL) { ; }
     inline RexxUnaryOperator(RESTORETYPE restoreType) { ; };
 

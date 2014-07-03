@@ -70,8 +70,7 @@
 /* Kernel Internal Limits                                                     */
 /******************************************************************************/
 
-const int MAX_ERROR_NUMBER = 99999;        /* maximum error code number         */
-const int MAX_SYMBOL_LENGTH = 250;         /* length of a symbol name           */
+const int MAX_ERROR_NUMBER = 99999;        // maximum error code number
 
 /******************************************************************************/
 /* Defines for argument error reporting                                       */

@@ -114,7 +114,7 @@ class RexxSource: public RexxInternalObject
     PackageClass *loadRequires(RexxActivity *activity, RexxString *target, RexxArray *s);
     void        addPackage(PackageClass *package);
     PackageClass *getPackage();
-    void        inheritSourceContext(RexxSource *source);
+    void        inheritSourceContext(PackageClass *source);
     RoutineClass *findRoutine(RexxString *);
     RoutineClass *findLocalRoutine(RexxString *);
     RoutineClass *findPublicRoutine(RexxString *);
@@ -127,6 +127,8 @@ class RexxSource: public RexxInternalObject
     RexxInstruction *sourceNewObject(size_t, RexxBehaviour *, int);
 
     bool        isTraceable();
+    RexxString  *getLine(size_t position);
+    void        setBufferedSource(RexxBuffer *buffer);
 
     inline bool        needsInstallation() { return flags[installRequired]; }
     inline bool        setNeedsInstallation() { flags[installRequired] = true; }

@@ -44,6 +44,8 @@
 #ifndef Included_BaseCode
 #define Included_BaseCode
 
+#include "ProtectedObject.hpp"
+
 /**
  * Base class for a code object.  Code objects can be invoked as
  * methods, or called.
@@ -60,6 +62,7 @@ public:
     virtual RexxClass *findClass(RexxString *className);
     virtual BaseCode  *setSourceObject(RexxSource *s);
     virtual PackageClass *getPackage();
+            void detachSource();
 };
 
 // pointer to native method function
@@ -85,6 +88,10 @@ public:
     RexxClass *findClass(RexxString *className);
     BaseExecutable *setSourceObject(RexxSource *s);
     RexxString *getName() { return executableName; }
+    void detachSource();
+    static RexxArray *processExecutableSource(RexxObject *source, RexxObject *position);
+    static void processNewExecutableArgs(RexxObject **&init_args, size_t &argCount, RexxString *&name,
+        Protected<RexxArray> &sourceArray, PackageClass *&sourceContext);
 
 protected:
 

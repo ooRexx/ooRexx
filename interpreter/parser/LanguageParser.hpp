@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -42,8 +42,9 @@
 /*                                                                            */
 /******************************************************************************/
 #ifndef Included_LanguageParser
-#define Included_RexxSource
+#define Included_LanguageParser
 
+#include "FlagSet.hpp"
 #include "SourceLocation.hpp"
 #include "ListClass.hpp"
 #include "QueueClass.hpp"
@@ -64,6 +65,9 @@ class ClassDirective;
 class RexxActivation;
 class RexxExpressionStack;
 class StackFrameClass;
+class ProgramSource;
+class RexxVariableBase;
+class RexxStemVariable;
 
 
 const size_t TRACE_ALL           = 'A';
@@ -95,6 +99,10 @@ const size_t TRACE_DEBUG_MASK  = 0xff00;
 
 // an invalid 8-bit character marker.
 const unsigned int INVALID_CHARACTER = 0x100;
+
+// maximum length of a symbol
+const size_t MAX_SYMBOL_LENGTH = 250;
+
 
                                        /* handy defines to easy coding      */
 #define new_instruction(name, type) sourceNewObject(sizeof(RexxInstruction##type), The##type##InstructionBehaviour, KEYWORD_##name)
@@ -342,6 +350,10 @@ class LanguageParser: public RexxInternalObject
     inline void syntaxError(int errorcode, RexxToken *token) { errorToken(errorcode, token); }
     inline void syntaxError(int errorcode) { error(errorcode); }
 
+
+    // other useful static scanning routines
+    static StringSymbolType LanguageParser::scanSymbol(RexxString *string);
+
     static inline bool isSymbolCharacter(unsigned int ch)
     {
         // The anding is necessary to keep characters > 0x7F from being
@@ -359,10 +371,16 @@ class LanguageParser: public RexxInternalObject
         return characterTable[ch & 0xff];
     }
 
-    static MethodClass *createMethod(RexxString *name, RexxArray *source);
-    static MethodClass *createMethodFromFile(RexxString *name);
-    static RoutineClass *createRoutine(RexxString *name, RexxArray *source);
-    static RoutineClass *createRoutineFromFile(RexxString *name);
+    // static methods for creating/processing different Rexx executables.
+
+    static MethodClass *createMethod(RexxString *name, RexxArray *source, PackageClass *sourceContext);
+    static MethodClass *createMethod(RexxString *name);
+    static RoutineClass *createRoutine(RexxString *name, RexxArray *source, PackageClass *sourceContext);
+    static RoutineClass *createRoutine(RexxString *name);
+    static RoutineClass *createProgram(RexxString *name, RexxBuffer *source);
+    static RoutineClass *createProgram(RexxString *name);
+    static RoutineClass *restoreFromMacroSpace(RexxString *name);
+    static RoutineClass *processInstore(PRXSTRING instore, RexxString * name);
 
     static pbuiltin builtinTable[];      /* table of builtin function stubs   */
 

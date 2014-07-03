@@ -501,23 +501,24 @@ RexxObject *RexxDirectory::setMethod(
     entryname = stringArgument(entryname, ARG_ONE)->upper();
     if (methodobj != OREF_NULL)          /* have a method object?             */
     {
-        if (!isOfClass(Method, methodobj))     /* given as a string?                */
+        // not given as a method object already?  Could be a string
+        // or array.
+        if (!isOfClass(Method, methodobj))
         {
-            /* convert to a method               */
-            methodobj = MethodClass::newMethodObject(entryname, methodobj, IntegerTwo, OREF_NULL);
-            /* set a new scope on this           */
+            // create a new method and set the scope
+            methodobj = MethodClass::newMethodObject(entryname, methodobj, IntegerTwo);
             methodobj->setScope((RexxClass *)this);
         }
         else
         {
-            /* set a new scope on this           */
+            // might return a new method if this has a scope already.
             methodobj = methodobj->newScope((RexxClass *)this);
         }
         /* the unknown method?               */
         if (entryname->strCompare(CHAR_UNKNOWN))
         {
             /* stash this is a special place     */
-            OrefSet(this, this->unknown_method, methodobj);
+            setField(unknown_method, methodobj);
         }
         else
         {
@@ -525,7 +526,7 @@ RexxObject *RexxDirectory::setMethod(
             if (this->method_table == OREF_NULL)
             {
                 /* create one                        */
-                OrefSet(this, this->method_table, new_table());
+                setField(method_table, new_table());
             }
             /* now add the method                */
             this->method_table->stringPut(methodobj, entryname);

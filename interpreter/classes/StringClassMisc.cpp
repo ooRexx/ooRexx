@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -51,7 +51,10 @@
 #include "SourceFile.hpp"
 #include "ActivityManager.hpp"
 #include "StringUtil.hpp"
+#include "LanguageParser.hpp"
 
+
+// TODO:  The bulk of this code should be moved to the LanguageParser.
 StringSymbolType RexxString::isSymbol()
 /*********************************************************************/
 /*                                                                   */
@@ -61,125 +64,8 @@ StringSymbolType RexxString::isSymbol()
 /*                                                                   */
 /*********************************************************************/
 {
-    const char *Scan;                    /* string scan pointer               */
-    size_t     Compound;                 /* count of periods                  */
-    size_t     i;                        /* loop counter                      */
-    const char *Linend;                  /* end of line                       */
-    StringSymbolType Type;               /* return type                       */
-
-                                         /* name too long                     */
-                                         /* or too short                      */
-    if (this->getLength() > (size_t)MAX_SYMBOL_LENGTH || this->getLength() == 0)
-    {
-        return STRING_BAD_VARIABLE;        /* set a bad type                    */
-    }
-
-                                           /* step to end                       */
-    Linend = this->getStringData() + this->getLength();
-
-    Compound = 0;                        /* set compound name is no           */
-    Scan = this->getStringData();        /* save start position               */
-                                         /* while still part of symbol        */
-    while (Scan < Linend && LanguageParser::isSymbolCharacter(*Scan))
-    {
-
-        if (*Scan == '.')                  /* a dot found..                     */
-        {
-            Compound++;                      /* indicate a compound var           */
-        }
-
-        Scan++;                            /* step the pointer                  */
-    }                                    /* len of symbol                     */
-    /* now check for exponent            */
-    if (((Scan + 1) < Linend) &&
-        (*Scan == '-' || *Scan == '+') &&
-        (isdigit(this->getChar(0)) || *Scan == '.') &&
-        (toupper(*(Scan - 1)) == 'E'))
-    {
-        Scan++;                            /* step to next                      */
-
-        while (Scan < Linend)
-        {            /* while more characters             */
-            if (!isdigit(*Scan))             /* if not a digit                    */
-            {
-                return STRING_BAD_VARIABLE;    /* this isn't valid                  */
-            }
-            Scan++;                          /* step to next char                 */
-        }
-    }
-    if (Scan < Linend)                   /* use the entire string?            */
-    {
-        return STRING_BAD_VARIABLE;        /* no, can't be good                 */
-    }
-                                           /* now determine symbol type         */
-                                           /* possible number?                  */
-    if (this->getChar(0) == '.' || isdigit(this->getChar(0)))
-    {
-
-        /* only a period?                    */
-        if (Compound == 1 && this->getLength() == 1)
-        {
-            Type = STRING_LITERAL_DOT;       /* yes, set the token type           */
-        }
-        else if (Compound > 1)             /* too many periods?                 */
-        {
-            Type = STRING_LITERAL;           /* yes, just a literal token         */
-        }
-        else
-        {                             /* check for a real number           */
-            Type = STRING_NUMERIC;           /* assume numeric for now            */
-            Scan = this->getStringData();    /* point to symbol                   */
-                                             /* scan symbol, validating           */
-            for (i = this->getLength() ; i; i-- )
-            {
-                if (!isdigit(*Scan) &&         /* if not a digit and                */
-                    *Scan != '.')              /* and not a period...               */
-                {
-                    break;                       /* finished                          */
-                }
-                Scan++;                        /* step to next character            */
-            }
-            if (i > 1 &&                     /* if tripped over an 'E'            */
-                toupper(*Scan) == 'E')
-            {     /* could be exponential              */
-                Scan++;                        /* step past E                       */
-                i--;                           /* count the character               */
-                                               /* +/- case already validated        */
-                if (*Scan != '+' && *Scan != '-')
-                {
-                    for (; i; i--)
-                    {              /* scan rest of symbol               */
-                        if (!isdigit(*Scan))
-                        {     /* if not a digit...                 */
-                            Type = STRING_LITERAL;   /* not a number                      */
-                            break;
-                        }
-                        Scan++;                    /* step to next character            */
-                    }
-                }
-            }
-            else if (i)                      /* literal if stuff left             */
-            {
-                Type = STRING_LITERAL;         /* yes, just a literal token         */
-            }
-        }
-    }
-
-    else if (!Compound)
-    {                /* not a compound so...              */
-        Type = STRING_NAME;                /* set the token type                */
-    }
-    /* is it a stem?                     */
-    else if (Compound == 1 && *(Scan - 1) == '.')
-    {
-        Type = STRING_STEM;                /* yes, set the token type           */
-    }
-    else
-    {
-        Type = STRING_COMPOUND_NAME;       /* otherwise just plain              */
-    }
-                                           /* compound                          */
-    return Type;                         /* return the type info              */
+    // the language parser handles all of these rules
+    return LanguageParser::scanSymbol(this);
 }
 
 RexxInteger *RexxString::abbrev(

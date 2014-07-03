@@ -1168,7 +1168,7 @@ void RexxMemory::createImage()
   /***************************************************************************/
                                        /* Add the NEW methods to the class  */
                                        /* behaviour mdict                   */
-  defineKernelMethod(CHAR_NEW, TheSupplierClassBehaviour, CPPM(RexxSupplierClass::newRexx), A_COUNT);
+  defineKernelMethod(CHAR_NEW, TheSupplierClassBehaviour, CPPM(RexxSupplier::newRexx), A_COUNT);
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
   TheSupplierClassBehaviour->setMethodDictionaryScope(TheSupplierClass);

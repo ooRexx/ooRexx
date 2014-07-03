@@ -44,7 +44,7 @@
 #ifndef Included_RoutineClass
 #define Included_RoutineClass
 
-#include "MethodClass.hpp"
+#include "BaseCode.hpp"
 
 class RoutineClass : public BaseExecutable
 {
@@ -74,24 +74,12 @@ public:
     RexxBuffer *save();
     void save(PRXSTRING outBuffer);
     void save(const char *filename);
+    void detachSource();
     RexxObject  *setSecurityManager(RexxObject *);
 
     RoutineClass *newRexx(RexxObject **, size_t);
     RoutineClass *newFileRexx(RexxString *);
     RoutineClass *loadExternalRoutine(RexxString *name, RexxString *descriptor);
-
-    static RoutineClass *restore(RexxBuffer *, char *, size_t length);
-    static RoutineClass *restore(const char *data, size_t length);
-    static RoutineClass *restore(RexxString *fileName, RexxBuffer *buffer);
-    static RoutineClass *restoreFromMacroSpace(RexxString *name);
-    static RoutineClass *restore(RexxBuffer *buffer);
-    static RoutineClass *restore(RXSTRING *inData, RexxString *name);
-    static RoutineClass *fromFile(RexxString *filename);
-
-    static RoutineClass *newRoutineObject(RexxString *, RexxObject *, RexxObject *, RexxSource *s);
-    static RoutineClass *newRoutineObject(RexxString *, RexxArray *, RexxObject *);
-
-    static RoutineClass *processInstore(PRXSTRING instore, RexxString * name );
 
     static void createInstance();
     static RexxClass *classInstance;

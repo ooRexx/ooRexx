@@ -43,7 +43,6 @@
 /******************************************************************************/
 
 #include <stdarg.h>
-#include <string.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "ListClass.hpp"
@@ -678,7 +677,7 @@ RexxObject *RexxClass::defineMethod(
     else if (TheNilObject != method_object && !isOfClass(Method, method_object))
     {
         /* make one from a string            */
-        method_object = MethodClass::newMethodObject(method_name, method_object, IntegerTwo, OREF_NULL);
+        method_object = MethodClass::newMethodObject(method_name, method_object, IntegerTwo);
     }
     if (TheNilObject != method_object)   /* if the method is not TheNilObject */
     {
@@ -1129,7 +1128,7 @@ RexxTable *RexxClass::methodDictionaryCreate(
             if (!isOfClass(Method, newMethod))   /* object                            */
             {
                 /* make it into a method object      */
-                newMethod = MethodClass::newMethodObject(method_name, newMethod, IntegerOne, OREF_NULL);
+                newMethod = MethodClass::newMethodObject(method_name, newMethod, IntegerOne);
                 newMethod->setScope(scope);   /* and set the scope to the given    */
             }
             else

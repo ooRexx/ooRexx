@@ -531,6 +531,20 @@ void ArrayProgramSource::setup()
 {
     // set the line count to the number of items
     lineCount = array->items();
+
+    // it is possible that the array version might include a shebang line (sigh).
+    // if we detect that, replace it with a null line so it will be ignored.
+    if (lineCount > 0)
+    {
+        RexxString *firstLine = array->get(1);
+        // now we need to see if we've got a shebang line.  If we find
+        // this, zero the length of the line to make this just a null line
+        // we want to keep the line so we don't throw off the line counts.
+        if (firstLine->getChar(0) == '#' && firstLine->getChar(1) == '!')
+        {
+            array->put(OREF_NULLSTRING, 1);
+        }
+    }
 }
 
 

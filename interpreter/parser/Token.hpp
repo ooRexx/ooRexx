@@ -507,7 +507,7 @@ class RexxToken : public RexxInternalObject
     inline TokenClass type() { return classId; }
     inline TokenSubclass  subtype() { return subclass; }
     inline RexxString *value() { return stringValue; }
-    inline RexxString *upperValue() { return stringValue->upper(); }
+    inline RexxString *upperValue();
     inline void       setType(TokenClass t) { classId = t; }
     inline void       setSubtype(TokenSubclass t) { subclass = t; }
     inline void       setValue(RexxString *v) { stringValue = v; }
