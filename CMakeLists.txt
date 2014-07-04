@@ -517,7 +517,6 @@ set (classes_sources ${build_classes_dir}/ArrayClass.cpp
             ${build_classes_dir}/RelationClass.cpp
             ${build_classes_dir}/RoutineClass.cpp
             ${build_classes_dir}/RexxQueueMethods.cpp
-            ${build_classes_dir}/StackClass.cpp
             ${build_classes_dir}/StemClass.cpp
             ${build_classes_dir}/StringClass.cpp
             ${build_classes_dir}/StringClassBit.cpp
@@ -535,6 +534,7 @@ set (package_sources ${build_package_dir}/LibraryPackage.cpp
             ${build_package_dir}/PackageManager.cpp)
 set (memory_sources ${build_memory_dir}/DeadObject.cpp
             ${build_memory_dir}/MemorySegment.cpp
+            ${build_memory_dir}/MemoryStack.cpp
             ${build_memory_dir}/MemoryStats.cpp
             ${build_memory_dir}/ProtectedObject.cpp
             ${build_memory_dir}/RexxEnvelope.cpp
