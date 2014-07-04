@@ -41,10 +41,6 @@
 /* Startup                                                                    */
 /*                                                                            */
 /******************************************************************************/
-#include <string.h>
-#include <signal.h>
-#include <stdlib.h>
-
 #include "RexxCore.h"
 #include "RexxMemory.hpp"
 #include "StringClass.hpp"
@@ -52,7 +48,6 @@
 #include "RexxActivity.hpp"
 #include "ActivityManager.hpp"
 #include "MethodClass.hpp"
-#include "StackClass.hpp"
 #include "Interpreter.hpp"
 #include "TranslateDispatcher.hpp"
 #include "RexxStartDispatcher.hpp"

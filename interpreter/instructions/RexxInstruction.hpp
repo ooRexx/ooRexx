@@ -44,9 +44,10 @@
 #ifndef Included_RexxInstruction
 #define Included_RexxInstruction
 
+#include "Token.hpp"
+
 class RexxInstructionEnd;
 class RexxInstructionEndIf;
-class RexxSource;
 class RexxClause;
 
 #include "SourceLocation.hpp"

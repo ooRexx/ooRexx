@@ -41,11 +41,9 @@
 /* Memory Object                                                              */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
-#include <string.h>
 #include "RexxCore.h"
 #include "RexxMemory.hpp"
-#include "StackClass.hpp"
+#include "MemoryStack.hpp"
 #include "StringClass.hpp"
 #include "MutableBufferClass.hpp"
 #include "DirectoryClass.hpp"
@@ -117,7 +115,7 @@ RexxMemory::RexxMemory()
     /* to the minimum allocation boundary, even though that might be */
     /* a lie.  Since this never participates in a sweep operation, */
     /* this works ok in the end. */
-    this->setObjectSize(roundObjectBoundary(sizeof(RexxMemory)));
+    setObjectSize(Memory::roundObjectBoundary(sizeof(RexxMemory)));
     // our first pool is the current one
     currentPool = firstPool;
 
@@ -186,7 +184,7 @@ void RexxMemory::initialize(bool _restoringImage)
     /*are so early on in the system,     */
     /*that we can't use it right now,    */
     /*we will fix this all               */
-    liveStack = (RexxStack *)oldSpaceSegments.allocateObject(SegmentDeadSpace);
+    liveStack = (LiveStack *)oldSpaceSegments.allocateObject(MemorySegmentSet::SegmentDeadSpace);
     /* remember the original one         */
     originalLiveStack = liveStack;
 
@@ -723,7 +721,7 @@ MemorySegment *RexxMemory::newSegment(size_t requestedBytes, size_t minBytes)
 #endif
     /* first make sure we've got enough space for the control */
     /* information, and round this to a proper boundary */
-    requestedBytes = roundSegmentBoundary(requestedBytes + MemorySegmentOverhead);
+    requestedBytes = MemorySegment::roundSegmentBoundary(requestedBytes + MemorySegment::MemorySegmentOverhead);
 #ifdef MEMPROFILE
     printf("Allocating boundary a new segment of %d bytes\n", requestedBytes);
 #endif
@@ -736,7 +734,7 @@ MemorySegment *RexxMemory::newSegment(size_t requestedBytes, size_t minBytes)
         /* minbytes is small, then we're just adding a segment to the */
         /* small pool.  Reduce the request to SegmentSize and try again. */
         /* For all other requests, try once more with the minimum. */
-        minBytes = roundSegmentBoundary(minBytes + MemorySegmentOverhead);
+        minBytes = MemorySegment::roundSegmentBoundary(minBytes + MemorySegment::MemorySegmentOverhead);
         /* try to allocate once more...if this fails, the caller will */
         /* have to handle it. */
         segment = currentPool->newSegment(minBytes);
@@ -760,7 +758,7 @@ MemorySegment *RexxMemory::newLargeSegment(size_t requestedBytes, size_t minByte
 
     /* first make sure we've got enough space for the control */
     /* information, and round this to a proper boundary */
-    size_t allocationBytes = roundSegmentBoundary(requestedBytes + MemorySegmentOverhead);
+    size_t allocationBytes = MemorySegment::roundSegmentBoundary(requestedBytes + MemorySegment::MemorySegmentOverhead);
 #ifdef MEMPROFILE
     printf("Allocating large boundary new segment of %d bytes for request of %d\n", allocationBytes, requestedBytes);
 #endif
@@ -773,7 +771,8 @@ MemorySegment *RexxMemory::newLargeSegment(size_t requestedBytes, size_t minByte
         /* minbytes is small, then we're just adding a segment to the */
         /* small pool.  Reduce the request to SegmentSize and try again. */
         /* For all other requests, try once more with the minimum. */
-        minBytes = roundSegmentBoundary(minBytes + MemorySegmentOverhead);
+        // TODO: this operation is done a lot...consider adding a method to MemorySegment
+        minBytes = MemorySegment::roundSegmentBoundary(minBytes + MemorySegment::MemorySegmentOverhead);
         /* try to allocate once more...if this fails, the caller will */
         /* have to handle it. */
         segment = currentPool->newLargeSegment(minBytes);
@@ -1035,7 +1034,7 @@ RexxObject *RexxMemory::oldObject(size_t requestLength)
 {
     /* Compute size of new object and determine where we should */
     /* allocate from */
-    requestLength = roundObjectBoundary(requestLength);
+    requestLength = Memory::roundObjectBoundary(requestLength);
     RexxObject *newObj = oldSpaceSegments.allocateObject(requestLength);
 
     /* if we got a new object, then perform the final setup steps. */
@@ -1077,15 +1076,15 @@ RexxObject *RexxMemory::newObject(size_t requestLength, size_t type)
 
     /* Compute size of new object and determine where we should */
     /* allocate from */
-    requestLength = roundObjectBoundary(requestLength);
+    requestLength = Memory::roundObjectBoundary(requestLength);
 
     /* is this a typical small object? */
-    if (requestLength <= LargeBlockThreshold)
+    if (requestLength <= MemorySegment::LargeBlockThreshold)
     {
         /* make sure we don't go below our minimum size. */
-        if (requestLength < MinimumObjectSize)
+        if (requestLength < Memory::MinimumObjectSize)
         {
-            requestLength = MinimumObjectSize;
+            requestLength = Memory::MinimumObjectSize;
         }
         newObj = newSpaceNormalSegments.allocateObject(requestLength);
         /* feat. 1061 moves the handleAllocationFailure code into the initial */
@@ -1099,7 +1098,7 @@ RexxObject *RexxMemory::newObject(size_t requestLength, size_t type)
     else
     {
         /* round this allocation up to the appropriate large boundary */
-        requestLength = roundLargeObjectAllocation(requestLength);
+        requestLength = Memory::roundLargeObjectAllocation(requestLength);
         newObj = newSpaceLargeSegments.allocateObject(requestLength);
         if (newObj == NULL)
         {
@@ -1141,7 +1140,7 @@ RexxArray  *RexxMemory::newObjects(
 /******************************************************************************/
 {
     size_t i;
-    size_t objSize = roundObjectBoundary(size);
+    size_t objSize = Memory::roundObjectBoundary(size);
     size_t totalSize;                      /* total size allocated              */
     RexxObject *prototype;                 /* our first prototype object        */
 
@@ -1161,7 +1160,7 @@ RexxArray  *RexxMemory::newObjects(
     /* this is for allocating large collections of small objects, we */
     /* don't want those objects coming from the large block heap, */
     /* even if the aggregate size would suggest this should happen. */
-    if (objSize <= LargeBlockThreshold)
+    if (objSize <= MemorySegment::LargeBlockThreshold)
     {
         largeObject = newSpaceNormalSegments.allocateObject(totalSize);
         if (largeObject == OREF_NULL)
@@ -1255,11 +1254,11 @@ void RexxMemory::reSize(RexxObject *shrinkObj, size_t requestSize)
 {
     DeadObject *newDeadObj;
 
-    size_t newSize = roundObjectResize(requestSize);
+    size_t newSize = Memory::roundObjectResize(requestSize);
 
     /* is the rounded size smaller and is remainder at least the size */
     /* of the smallest OBJ MINOBJSIZE */
-    if (newSize < requestSize && (shrinkObj->getObjectSize() - newSize) >= MinimumObjectSize)
+    if (newSize < requestSize && (shrinkObj->getObjectSize() - newSize) >= Memory::MinimumObjectSize)
     {
         size_t deadObjectSize = shrinkObj->getObjectSize() - newSize;
         /* Yes, then we can shrink the object.  Get starting point of */
@@ -1337,7 +1336,7 @@ void RexxMemory::liveStackFull()
 /******************************************************************************/
 {
     // create a new stack that is double in size
-    RexxStack *newLiveStack = liveStack->reallocate(2);
+    LiveStack *newLiveStack = liveStack->reallocate(2);
 
     /* has this already been expanded?   */
     // TODO:  Why is this calling free?
@@ -1391,7 +1390,7 @@ RexxObject *RexxMemory::temporaryObject(size_t requestLength)
 /******************************************************************************/
 {
     /* get the rounded size of the object*/
-    size_t allocationLength = roundObjectBoundary(requestLength);
+    size_t allocationLength = Memory::roundObjectBoundary(requestLength);
     /* allocate a new object             */
     RexxObject *newObj = (RexxObject *)malloc(allocationLength);
     if (newObj == OREF_NULL)             /* unable to allocate a new one?     */
@@ -1493,7 +1492,7 @@ void RexxMemory::saveImageMark(RexxObject *markObject, RexxObject **pMarkObject)
         bufferReference = (RexxObject *)(image_buffer + image_offset);
         // we allocated a hard coded buffer, so we need to make sure we don't blow
         // the buffer size.
-        if (image_offset + size> MaxImageSize)
+        if (image_offset + size > Memory::MaxImageSize)
         {
             Interpreter::logicError("Rexx saved image exceeds expected maximum");
         }
@@ -1713,7 +1712,7 @@ void RexxMemory::saveImage(void)
     /* add to the save array             */
     saveArray->put(primitive_behaviours, saveArray_PBEHAV);
 
-    image_buffer = (char *)malloc(MaxImageSize);
+    image_buffer = (char *)malloc(Memory::MaxImageSize);
     image_offset = sizeof(size_t);
     saveimage = true;
     disableOrefChecks();                 /* Don't try to check OrefSets now.  */
@@ -2124,7 +2123,7 @@ RexxObject *RexxMemory::checkSetOref(
 
 }
 
-RexxStack *RexxMemory::getFlattenStack(void)
+LiveStack *RexxMemory::getFlattenStack(void)
 /******************************************************************************/
 /* Function:  Allocate and lock the flatten stack capability.                 */
 /******************************************************************************/
@@ -2139,7 +2138,7 @@ RexxStack *RexxMemory::getFlattenStack(void)
         }
     }
     /* create a temporary stack          */
-    this->flattenStack = new (LiveStackSize, true) RexxStack (LiveStackSize);
+    this->flattenStack = new (Memory::LiveStackSize, true) LiveStack (Memory::LiveStackSize);
     return this->flattenStack;           /* return flatten Stack              */
 }
 
@@ -2212,8 +2211,8 @@ void RexxMemory::setUpMemoryTables(RexxIdentityTable *old2newTable)
 {
     /* fix up the previously allocated live stack to have the correct */
     /* characteristics...we're almost ready to go on the air. */
-    liveStack->setBehaviour(TheStackBehaviour);
-    liveStack->init(LiveStackSize);
+    liveStack->setBehaviour(TheLiveStackBehaviour);
+    liveStack = new ((void *)liveStack) LiveStack(Memory::LiveStackSize);
     /* set up the old 2 new table provided for us */
     old2new = old2newTable;
     /* if we have a table (this is NULL if we're not running from a */
@@ -2233,7 +2232,7 @@ void RexxMemory::setUpMemoryTables(RexxIdentityTable *old2newTable)
     /* order in which these two are marked in the live(size_t) method of */
     /* RexxMemory.  If these are added to the mark table, they'll be */
     /* processed earlier than we'd like. */
-    saveStack = new (SaveStackAllocSize) RexxSaveStack(SaveStackSize, SaveStackAllocSize);
+    saveStack = new (Memory::SaveStackSize) PushThroughStack(Memory::SaveStackSize);
     /* from this point on, we push things on to the save stack */
     saveTable = new_identity_table();
 }

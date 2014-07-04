@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -36,65 +36,24 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                RexxMemory.hpp  */
+/* REXX Kernel                                       RexxMemorysegment.hpp    */
 /*                                                                            */
-/* Primitive Memory Class Definitions                                         */
+/* Primitive MemorySegment class definitions                                  */
 /*                                                                            */
 /******************************************************************************/
 
-#ifndef Included_RexxMemory
-#define Included_RexxMemory
+#ifndef Included_MemoryObject
+#define Included_MemoryObject
 
+#include "Memory.hpp"
+#include "MemoryStack.hpp"              // classes, so pull them in next.
 #include "SysSemaphore.hpp"
 #include "IdentityTableClass.hpp"
 
 // this can be enabled to switch on memory profiling info
 //#define MEMPROFILE
 
-#ifdef __REXX64__
-// The minimum allocation unit for an object.
-// 16 is needed for 64-bit to maintain some required alignments
-#define ObjectGrain 16
-/* The unit of granularity for large allocation */
-#define LargeAllocationUnit 2048
-/* The unit of granularity for extremely large objects */
-#define VeryLargeAllocationUnit 8192
-/* Minimum size of an object.  This is not the actual minimum size, */
-/* but we allocate objects with an 8-byte granularity */
-/* this is the granularity for objects greater than 16Mb. */
-#define VeryLargeObjectGrain    512
 
-/* Minimum size of an object.  This is not the actual minimum size, */
-/* but we allocate objects with a defined granularity */
-/* This is the smallest object we'll allocate from storage.  */
-#define MinimumObjectSize ((size_t)48)
-#define MaximumObjectSize ((size_t)0xfffffffffffffff0ull)
-#else
-/* The minimum allocation unit for an object.   */
-#define ObjectGrain 8
-/* The unit of granularity for large allocation */
-#define LargeAllocationUnit 1024
-/* The unit of granularity for extremely large objects */
-#define VeryLargeAllocationUnit 4096
-/* this is the granularity for objects greater than 16Mb. */
-#define VeryLargeObjectGrain    256
-
-/* Minimum size of an object.  This is not the actual minimum size, */
-/* but we allocate objects with an 8-byte granularity */
-/* This is the smallest object we'll allocate from storage.  */
-#define MinimumObjectSize ((size_t)24)
-#define MaximumObjectSize ((size_t)0xfffffff0)
-#endif
-
-inline void SetObjectLive(void *o, size_t mark) {
-    ((RexxObject *)o)->setObjectLive(mark);
-}
-#define IsObjectGrained(o)  ((((size_t)o)%ObjectGrain) == 0)
-#define IsValidSize(s) ((s) >= MinimumObjectSize && ((s) % ObjectGrain) == 0)
-
-inline size_t roundObjectBoundary(size_t n) { return RXROUNDUP(n,ObjectGrain); }
-inline size_t roundLargeObjectAllocation(size_t n) { return RXROUNDUP(n, LargeAllocationUnit); }
-inline size_t roundObjectResize(size_t n) { return RXROUNDUP(n, ObjectGrain); }
 
 class RexxActivationFrameBuffer;
 class MemorySegment;
@@ -114,6 +73,7 @@ enum
 {
     LIVEMARK,
     RESTORINGIMAGE,
+    PREPARINGIMAGE,
     SAVINGIMAGE,
     FLATTENINGOBJECT,
     UNFLATTENINGOBJECT,
@@ -136,6 +96,7 @@ class MemorySegmentPoolHeader
      size_t uncommitted;
      size_t reserved;            // force aligment of the state data....
 };
+
 
 class MemorySegmentPool : public MemorySegmentPoolHeader
 {
@@ -222,7 +183,7 @@ class RexxMemory : public RexxInternalObject
     inline void        setOrphanCheck(bool orphancheck) {this->orphanCheck = orphancheck; };
     RexxObject *checkSetOref(RexxObject *, RexxObject **, RexxObject *, const char *, int);
     RexxObject *setOref(void *index, RexxObject *value);
-    RexxStack  *getFlattenStack();
+    LiveStack  *getFlattenStack();
     void        returnFlattenStack();
     RexxObject *reclaim();
     RexxObject *setParms(RexxObject *, RexxObject *);
@@ -279,6 +240,12 @@ class RexxMemory : public RexxInternalObject
     static RexxArray *saveStrings();
     static void restoreStrings(RexxArray *stringArray);
 
+    // set the live mark in an object referenced by a void pointer
+    static inline void setObjectLive(void *o, size_t mark)
+    {
+        ((RexxObject *)o)->setObjectLive(mark);
+    }
+
     static void *virtualFunctionTable[];             /* table of virtual functions        */
     static PCPPM exportedMethods[];      /* start of exported methods table   */
 
@@ -293,16 +260,9 @@ class RexxMemory : public RexxInternalObject
     static RexxDirectory *kernel;           // the kernel directory
     static RexxDirectory *system;           // the system directory
 
+
 private:
 
-    // default size for the live stack (in entries)
-    static const size_t LiveStackSize = 32 * 1024;
-    // the number of newly created items to stack in the save stack
-    static const size_t SaveStackSize = 10;
-    // the pre-allocation size for the save stack
-    static const size_t SaveStackAllocSize = 500;
-    // the maximum size for the startup image size
-    static const size_t MaxImageSize = 2000000;
 
 /******************************************************************************/
 /* Define location of objects saved in SaveArray during Saveimage processing  */
@@ -331,8 +291,8 @@ enum
 
 
     inline void checkLiveStack() { if (!liveStack->checkRoom()) liveStackFull(); }
-    inline void pushLiveStack(RexxObject *obj) { checkLiveStack(); liveStack->fastPush(obj); }
-    inline RexxObject * popLiveStack() { return (RexxObject *)liveStack->fastPop(); }
+    inline void pushLiveStack(RexxObject *obj) { checkLiveStack(); liveStack->push(obj); }
+    inline RexxObject * popLiveStack() { return (RexxObject *)liveStack->pop(); }
     inline void bumpMarkWord() { markWord ^= MarkMask; }
     inline void restoreMark(RexxObject *markObject, RexxObject **pMarkObject) {
                                          /* we update the object's location   */
@@ -341,7 +301,7 @@ enum
 
     inline void unflattenMark(RexxObject *markObject, RexxObject **pMarkObject) {
                                          /* do the unflatten                  */
-        *pMarkObject = markObject->unflatten(this->envelope);
+        *pMarkObject = markObject->unflatten(envelope);
     }
 
     inline void restoreObjectMark(RexxObject *markObject, RexxObject **pMarkObject) {
@@ -365,9 +325,9 @@ enum
     static void defineProtectedKernelMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments);
     static void definePrivateKernelMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments);
 
-    RexxStack  *liveStack;
-    RexxStack  *flattenStack;
-    RexxSaveStack      *saveStack;
+    LiveStack  *liveStack;
+    LiveStack  *flattenStack;
+    PushThroughStack      *saveStack;
     RexxIdentityTable  *saveTable;
     RexxTable  *markTable;               /* tabobjects to start a memory mark */
                                          /*  if building/restoring image,     */
@@ -396,7 +356,7 @@ enum
                                          /* envelope for arriving mobile      */
                                          /*objects                            */
     RexxEnvelope *envelope;
-    RexxStack *originalLiveStack;        /* original live stack allocation    */
+    LiveStack *originalLiveStack;        /* original live stack allocation    */
     MemoryStats *imageStats;             /* current statistics collector      */
 
     size_t allocations;                  /* number of allocations since last GC */

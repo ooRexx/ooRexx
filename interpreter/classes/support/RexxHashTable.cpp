@@ -46,6 +46,7 @@
 #include "ArrayClass.hpp"
 #include "SupplierClass.hpp"
 #include "ProtectedObject.hpp"
+#include "Memory.hpp"
 
 /******************************************************************************/
 /*                                                                            */
@@ -125,9 +126,9 @@ RexxTable *RexxHashTable::newInstance(
 
     entries = bucketSize * 2;            /* double the bucket size for the overflow */
                                          /* Compute size of hash tab object   */
-    bytes = roundObjectBoundary(sizeof(RexxHashTable) + (sizeof(TABENTRY) * (entries - 1)));
+    bytes = Memory::roundObjectBoundary(sizeof(RexxHashTable) + (sizeof(TABENTRY) * (entries - 1)));
     /* make sure we've got proper sizes for each of the object parts. */
-    companionSize = roundObjectBoundary(companionSize);
+    companionSize = Memory::roundObjectBoundary(companionSize);
     /* Get space for two objects         */
     newObj = (RexxTable *)new_object(bytes + companionSize, type);
                                          /* address the hash table            */

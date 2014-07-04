@@ -48,7 +48,7 @@
 #include "SourceLocation.hpp"
 #include "ListClass.hpp"
 #include "QueueClass.hpp"
-#include "StackClass.hpp"
+#include "MemoryStack.hpp"
 #include "Token.hpp"
 #include "Clause.hpp"
 #include "RexxInstruction.hpp"
@@ -403,7 +403,7 @@ protected:
     size_t interpretAdjust;              // INTERPRET adjustment TODO:  might not need this in the parser.
 
     RexxCode        *mainSection;        // the main section of code before any directives
-    RexxStack       *holdStack;          // stack for holding temporaries
+    PushThroughStack *holdStack;         // stack for holding temporaries
     RexxDirectory   *literals;           // root of associated literal list
     RexxDirectory   *strings;            // common pool of created strings
     RexxQueue       *control;            // queue of control structures

@@ -209,14 +209,6 @@ EXTERNMEM RexxMemory  memoryObject;
 #include "ClassTypeCodes.h"
 
 /******************************************************************************/
-/* Utility Macros                                                             */
-/******************************************************************************/
-
-#define RXROUNDUP(n,to)  ((((n)+(to-1))/(to))*to)
-#define rounddown(n,to)  (((n)/(to))*to)
-
-
-/******************************************************************************/
 /* Global Objects - Names                                                     */
 /******************************************************************************/
 #undef GLOBAL_NAME
@@ -225,13 +217,11 @@ EXTERNMEM RexxMemory  memoryObject;
 
 #include "ObjectClass.hpp"               // get real definition of Object
 
- #include "TableClass.hpp"               // memory has inline methods to these
- #include "StackClass.hpp"               // classes, so pull them in next.
- #include "RexxMemory.hpp"               // memory next, to get OrefSet
- #include "RexxBehaviour.hpp"            // now behaviours and
- #include "ClassClass.hpp"               // classes, which everything needs
- #include "RexxEnvelope.hpp"             // envelope is needed for flattens
- #include "RexxActivity.hpp"             // activity is needed for errors
+#include "TableClass.hpp"                // memory has inline methods to these
+#include "RexxMemory.hpp"                // memory next, to get OrefSet
+#include "RexxBehaviour.hpp"             // now behaviours and
+#include "ClassClass.hpp"                // classes, which everything needs
+#include "RexxEnvelope.hpp"              // envelope is needed for flattens
 
 /******************************************************************************/
 /* Return codes                                                               */

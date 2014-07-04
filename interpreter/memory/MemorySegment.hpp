@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -48,74 +48,15 @@
 #include "stddef.h"
 #include "DeadObject.hpp"
 #include "Interpreter.hpp"
-
-#define MemorySegmentOverhead       (sizeof(MemorySegmentHeader))
-#define MemorySegmentPoolOverhead   (sizeof(MemorySegmentPoolHeader))
-
-#ifdef __REXX64__
-// default size for a segment allocation, we go larger on 64-bit
-#define SegmentSize (256*1024*2)
-/* our threshold for moving to a larger block allocation scheme */
-#define LargeBlockThreshold 8192
-#else
-/* default size for a segment allocation */
-#define SegmentSize (256*1024)
-/* our threshold for moving to a larger block allocation scheme */
-#define LargeBlockThreshold 4096
-#endif
-/* Minimum size segment we'll allow */
-#define MinimumSegmentSize (SegmentSize/2)
-/* amount of usable space in a minimum sized segment */
-#define MinimumSegmentDeadSpace (MinimumSegmentSize - MemorySegmentOverhead)
-/* default size for a larger segment allocation */
-#define LargeSegmentSize (SegmentSize * 4)
-/* allocation available in a default segment */
-#define SegmentDeadSpace (SegmentSize - MemorySegmentOverhead)
-/* allocation request for the recovery segment */
-#define RecoverSegmentSize ((SegmentSize/2) - MemorySegmentOverhead)
-/* space available in a larger allocation. */
-#define LargeSegmentDeadSpace (LargeSegmentSize - MemorySegmentOverhead)
-
-#define InitialNormalSegmentSpace ((LargeSegmentSize * 8) - MemorySegmentOverhead)
-
-#define LargestNormalSegmentSize (LargeObjectMinSize - (1024 * 1024)  - MemorySegmentOverhead)
+#include "Memory.hpp"
 
 
-/* Our threshold for deciding we're thrashing the garbage */
-/* collector.  We'll always just extend memory if we're below this */
-/* request threshold. */
-#define MemoryThrashingThreshold 4
 
-/* map an object length to an allocation deadpool.  NOTE:  this */
-/* assumes the length has already been rounded to ObjectGrain! */
-#define LengthToDeadPool(l) ((l)/ObjectGrain)
-
-/* map a dead pool index to the size of blocks held in the pool */
-#define DeadPoolToLength(d) ((d)*ObjectGrain)
-/* index of first dead free chain.  We start with the previous */
-/* chain, as older tokenized images can contain objects smaller */
-/* than our minimum.  If these are garbage collected individually, */
-/* we need a place to put them. */
-#define FirstDeadPool (LengthToDeadPool(MinimumObjectSize) - 1)
-/* The largest size element we'll keep in a subpool */
-#define LargestSubpool 512
-/* The index of the last subpool dead chain */
-#define LastDeadPool LengthToDeadPool(LargestSubpool)
-/* number of free chains (we index zero based, so we need to */
-/* allocate one additional pool) */
-#define DeadPools LastDeadPool + 1
-
-/* the threshold to trigger expansion of the normal segment set. */
-#define NormalMemoryExpansionThreshold .30
-/* The point where we consider releasing segments */
-#define NormalMemoryContractionThreshold .70
 
 /* the sanity check point where we don't force automatic expansion */
 /* of the normal heap */
-#define MaxDeadObjectSpace 1000000
+const size_t MaxDeadObjectSpace = 1000000;
 
-/* This rounds to segment sized chunks, not taking the overhead into account. */
-inline size_t roundSegmentBoundary(size_t n) { return RXROUNDUP(n, SegmentSize); }
 
 
 class RexxMemory;
@@ -123,7 +64,8 @@ class RexxMemory;
 /* A segment of heap memory. A MemorySegment will be associated */
 /* with a particular MemorySegmentSet, which implements the */
 /* suballocation rules. */
-class MemorySegmentHeader {
+class MemorySegmentHeader
+{
  friend class MemorySegmentSet;
  friend class NormalSegmentSet;
  friend class LargeSegmentSet;
@@ -131,16 +73,25 @@ class MemorySegmentHeader {
  friend class RexxMemory;
 
   protected:
+
    size_t segmentSize;                     /* size of the segment */
    size_t liveObjects;                     /* number of live objects in segment */
    MemorySegment *next;                    /* next segment in the chain */
    MemorySegment *previous;                /* previous segment in the chain */
 };
 
+
+
+// Our threshold for deciding we're thrashing the garbage
+// collector.  We'll always just extend memory if we're below this
+// request threshold.
+const size_t MemoryThrashingThreshold = 4;
+
 /* A segment of heap memory. A MemorySegment will be associated */
 /* with a particular MemorySegmentSet, which implements the */
 /* suballocation rules. */
-class MemorySegment : public MemorySegmentHeader {
+class MemorySegment : public MemorySegmentHeader
+{
  friend class MemorySegmentSet;
  friend class NormalSegmentSet;
  friend class LargeSegmentSet;
@@ -213,7 +164,18 @@ class MemorySegment : public MemorySegmentHeader {
    void gatherObjectStats(MemoryStats *memStats, SegmentStats *stats);
    void markAllObjects();
 
-  public:
+   // This rounds to segment sized chunks, not taking the overhead into account.
+   static inline size_t roundSegmentBoundary(size_t n) { return Memory::roundUp(n, SegmentSize); }
+
+   static const size_t MemorySegmentOverhead = sizeof(MemorySegmentHeader);
+   static const size_t MemorySegmentPoolOverhead  = sizeof(MemorySegmentPoolHeader);
+
+   // default size for a segment allocation, we go larger on 64-bit
+   static const size_t SegmentSize = (256 * Memory::LargeAllocationUnit * 2);
+   // our threshold for moving to a larger block allocation scheme
+   static const size_t LargeBlockThreshold = Memory::VeryLargeAllocationUnit;
+   // Minimum size segment we'll allow
+
    char segmentStart[8];                   /* start of the object data      */
 };
 
@@ -224,7 +186,8 @@ class MemorySegment : public MemorySegmentHeader {
 /* memory segments allocated for different uses by RexxMemory. */
 /* This is a subclass of MemorySegment because the MemorySegmentSet */
 /* object is also the anchor element for the segment chaining. */
-class MemorySegmentSet {
+class MemorySegmentSet
+{
     friend class RexxMemory;
 
   public:
@@ -316,6 +279,16 @@ class MemorySegmentSet {
       virtual DeadObject *donateObject(size_t allocationLength);
       virtual MemorySegment *donateSegment(size_t allocationLength);
 
+      static const size_t MinimumSegmentSize = (MemorySegment::SegmentSize/2);
+      // amount of usable space in a minimum sized segment
+      static const size_t MinimumSegmentDeadSpace = (MinimumSegmentSize - MemorySegment::MemorySegmentOverhead);
+      // default size for a larger segment allocation
+      static const size_t LargeSegmentSize = (MemorySegment::SegmentSize * 4);;
+      // allocation available in a default segment
+      static const size_t SegmentDeadSpace = (MemorySegment::SegmentSize - MemorySegment::MemorySegmentOverhead);
+      // space available in a larger allocation.
+      static const size_t LargeSegmentDeadSpace = (LargeSegmentSize - MemorySegment::MemorySegmentOverhead);
+
   protected:
 
       virtual void collectEmptySegments();
@@ -343,13 +316,14 @@ class MemorySegmentSet {
       inline size_t totalFreeMemory() { return liveObjectBytes + deadObjectBytes; }
       /* This rounds a size into an even segment multiple, taking the */
       /* segment overhead into account. */
-      inline size_t calculateSegmentAllocation(size_t n) {
-          size_t size = roundSegmentBoundary(n) - MemorySegmentOverhead;
+      inline size_t calculateSegmentAllocation(size_t n)
+      {
+          size_t size = MemorySegment::roundSegmentBoundary(n) - MemorySegment::MemorySegmentOverhead;
           /* this could be true if our size is larger than can fit into a */
           /* segment once the overhead is considered.  If we can't fit, */
           /* we go over by a segment. */
           if (size < n)  {
-              size += SegmentSize;
+              size += MemorySegment::SegmentSize;
           }
           return size;
       }
@@ -361,7 +335,7 @@ class MemorySegmentSet {
       {
       #ifdef CHECKOREFS
           /* is object invalid size?           */
-          if (!IsValidSize(bytes)) {
+          if (!RexxMemory::isValidSize(bytes)) {
               /* Yes, this is not good.  Exit      */
               /* Critical Section and report       */
               /* unrecoverable error.              */
@@ -383,6 +357,11 @@ class MemorySegmentSet {
 };
 
 
+/**
+ * The segment set used for "normal" allocations.  This
+ * segment set will be used for smaller allocations, particularly
+ * ones that can be allocated from one of the small allocation pools.
+ */
 class NormalSegmentSet : public MemorySegmentSet
 {
   public:
@@ -403,7 +382,7 @@ class NormalSegmentSet : public MemorySegmentSet
         /* causing this to drop down to the large block allocation */
         /* logic.  This eliminates an additional check against the */
         /* large size. */
-        targetPool = LengthToDeadPool(allocationLength);
+        targetPool = lengthToDeadPool(allocationLength);
 
         if (targetPool < DeadPools) {
 
@@ -465,7 +444,7 @@ class NormalSegmentSet : public MemorySegmentSet
             size_t deadLength = realLength - allocationLength;
             /* remainder too small or this is a very large request */
             /* is the remainder two small to reuse? */
-            if (deadLength < MinimumObjectSize) {
+            if (deadLength < Memory::MinimumObjectSize) {
                 /* Convert this from a dead object into a real one of the */
                 /* given size. */
                 return (RexxObject *)newObject;
@@ -493,7 +472,35 @@ class NormalSegmentSet : public MemorySegmentSet
 
   private:
 
-    inline size_t mapLengthToDeadPool(size_t length) { return length/ObjectGrain; }
+    // index of first dead free chain.  We start with the previous
+    // chain, as older tokenized images can contain objects smaller
+    // than our minimum.  If these are garbage collected individually,
+    // we need a place to put them.
+    static const size_t FirstDeadPool = Memory::MinimumObjectSize / Memory::ObjectGrain;
+    // The largest size element we'll keep in a subpool
+    static const size_t LargestSubpool = 512;
+    // The index of the last subpool dead chain
+    static const size_t LastDeadPool = LargestSubpool / Memory::ObjectGrain;
+    // number of free chains (we index zero based, so we need to
+    // allocate one additional pool)
+    static const size_t DeadPools = LastDeadPool + 1;
+
+    // the threshold to trigger expansion of the normal segment set.
+    static const double NormalMemoryExpansionThreshold;
+    // The point where we consider releasing segments
+    static const double NormalMemoryContractionThreshold;
+    // allocation request for the recovery segment
+    static const size_t RecoverSegmentSize = ((MemorySegment::SegmentSize/2) - MemorySegment::MemorySegmentOverhead);
+    // initial allocation size for normal space.
+    static const size_t InitialNormalSegmentSpace = ((LargeSegmentSize * 8) - MemorySegment::MemorySegmentOverhead);
+
+    // map an object length to an allocation deadpool.  NOTE:  this
+    // assumes the length has already been rounded to ObjectGrain!
+    static inline size_t lengthToDeadPool(size_t l) { return ((l) / Memory::ObjectGrain); }
+    // map a dead pool index to the size of blocks held in the pool
+    static inline size_t deadPoolToLength(size_t d) { return ((d) * Memory::ObjectGrain); }
+
+    inline size_t mapLengthToDeadPool(size_t length) { return length / Memory::ObjectGrain; }
     RexxObject *findLargeDeadObject(size_t allocationLength);
     inline size_t recommendedMemorySize() { return (size_t)((float)liveObjectBytes/(1.0 - NormalMemoryExpansionThreshold)); }
     inline size_t recommendedMaximumMemorySize() { return (size_t)((float)liveObjectBytes/(1.0 - NormalMemoryContractionThreshold)); }
@@ -525,7 +532,7 @@ class NormalSegmentSet : public MemorySegmentSet
         else {
             /* calculate the dead chain          */
             /* and add that to the appropriate chain */
-            size_t deadChain = LengthToDeadPool(deadLength);
+            size_t deadChain = lengthToDeadPool(deadLength);
             subpools[deadChain].addSingle(new (largeObject) DeadObject(deadLength));
             /* we can mark this subpool as having items again */
             lastUsedSubpool[deadChain] = deadChain;
@@ -566,7 +573,7 @@ class LargeSegmentSet : public MemorySegmentSet
               /* remember the successful request */
               requests++;
               /* split and prepare this object for use */
-              return splitDeadObject(largeObject, allocationLength, LargeAllocationUnit);
+              return splitDeadObject(largeObject, allocationLength, Memory::LargeAllocationUnit);
           }
           return OREF_NULL;                    /* we couldn't get this              */
         }

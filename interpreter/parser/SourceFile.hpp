@@ -44,13 +44,7 @@
 #ifndef Included_RexxSource
 #define Included_RexxSource
 
-#include <bitset>
 #include "SourceLocation.hpp"
-#include "ListClass.hpp"
-#include "QueueClass.hpp"
-#include "StackClass.hpp"
-#include "Token.hpp"
-#include "Clause.hpp"
 #include "SecurityManager.hpp"
 #include "ProgramSource.hpp"
 
@@ -69,17 +63,10 @@ class StackFrameClass;
 
 
 /**
- * An enum for the flag positions in the flags bitset.
- * We currently only have a single flag defined, but
- * using a bitset allows us to define additional attributes
- * if required.
+ * The holding class for all information compiled from
+ * a large unit of Rexx source (which might include directive
+ * information);
  */
-typedef enum
-{
-    installRequired,                // this requirements that require an install step
-} SourceFlag;
-
-
 class RexxSource: public RexxInternalObject
 {
     // grant the language parser full access to our
@@ -129,8 +116,8 @@ class RexxSource: public RexxInternalObject
     RexxString  *getLine(size_t position);
     void        setBufferedSource(RexxBuffer *buffer);
 
-    inline bool        needsInstallation() { return flags[installRequired]; }
-    inline bool        setNeedsInstallation() { flags[installRequired] = true; }
+    inline bool        needsInstallation() { return installRequired; }
+    inline bool        setNeedsInstallation() { installRequired = true; }
     inline void        install(RexxActivation *activation) { if (needsInstallation()) processInstall(activation); };
            void        setProgramName(RexxString *name);
     inline RexxString *getProgramName() { return programName; }
@@ -211,7 +198,7 @@ protected:
                                          // all public required routines
     RexxDirectory *mergedPublicRoutines;
 
-    std::bitset<32>     flags;           // flag settings.  Make it big enough for some expansion.
+    bool           installRequired;      // flag settings.  Make it big enough for some expansion.
 
     // settings inherited from ::options statements
     size_t digits;                       // numeric digits setting

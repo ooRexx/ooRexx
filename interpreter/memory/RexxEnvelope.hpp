@@ -90,6 +90,6 @@ protected:
     RexxIdentityTable  *savetable;        // table of protected objects created during flattening */
     RexxSmartBuffer *buffer;              // smart buffer wrapper
     RexxIdentityTable  *rehashtable;      // table to rehash
-    RexxStack  *flattenStack;             // the flattening stack
+    LiveStack  *flattenStack;             // the flattening stack
 };
 #endif

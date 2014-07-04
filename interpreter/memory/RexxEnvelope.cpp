@@ -43,7 +43,7 @@
 /******************************************************************************/
 
 #include "RexxCore.h"
-#include "StackClass.hpp"
+#include "MemoryStack.hpp"
 #include "StringClass.hpp"
 #include "BufferClass.hpp"
 #include "RexxSmartBuffer.hpp"
@@ -144,7 +144,7 @@ void RexxEnvelope::flattenReference(
         // We're pushing an object offset on to our live stack, so we want to make sure our debug traps
         // don't try to process this.
         memoryObject.disableOrefChecks();
-        this->flattenStack->fastPush((RexxObject *)objOffset);
+        this->flattenStack->push((RexxObject *)objOffset);
         memoryObject.enableOrefChecks();
         // if the buffer reallocated, we need to update the updating object pointer too.
         char *newBuffer = this->bufferStart();
@@ -187,7 +187,7 @@ RexxBuffer *RexxEnvelope::pack(
     // get a flatten stack from the memory object
     this->flattenStack = memoryObject.getFlattenStack();
     // push unique terminator onto stack
-    this->flattenStack->fastPush(OREF_NULL);
+    this->flattenStack->push(OREF_NULL);
 
     // First, put a header into the buffer.  This is necessary because without
     // it, the envelope object would be at 0 offset into the buffer, which is not
@@ -209,9 +209,9 @@ RexxBuffer *RexxEnvelope::pack(
     // ok, keep flattening until will find our marker object on the stack
     newSelf->flatten(this);              /* start the flatten process.        */
 
-    for (flattenObj = this->flattenStack->fastPop();
+    for (flattenObj = flattenStack->pop();
         flattenObj != OREF_NULL;
-        flattenObj = this->flattenStack->fastPop())
+        flattenObj = flattenStack->pop())
     {
         // the popped object is actuall an object offset.  We need to convert this into a
         // real object pointer

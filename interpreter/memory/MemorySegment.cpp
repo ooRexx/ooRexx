@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -43,6 +43,11 @@
 /******************************************************************************/
 #include "RexxCore.h"
 #include "ActivityManager.hpp"
+
+// the threshold to trigger expansion of the normal segment set.
+const double NormalSegmentSet::NormalMemoryExpansionThreshold = .30;
+// The point where we consider releasing segments
+const double NormalSegmentSet::NormalMemoryContractionThreshold = .70;
 
 
 void MemorySegment::dump(const char *owner, size_t counter, FILE *keyfile, FILE *dumpfile)
@@ -216,7 +221,7 @@ NormalSegmentSet::NormalSegmentSet(RexxMemory *mem) :
     {  /* there are only                    */
         /* DeadPools subpools! (<, not <=)   */
         char buffer[100];
-        sprintf(buffer, "Normal allocation subpool %d for blocks of size %d", i, DeadPoolToLength(i));
+        sprintf(buffer, "Normal allocation subpool %d for blocks of size %d", i, deadPoolToLength(i));
         subpools[i].setID(buffer);
         /* make sure these are properly set up as single size */
         /* keepers */
@@ -397,7 +402,7 @@ void NormalSegmentSet::addDeadObject(DeadObject *object)
     {
         /* calculate the dead chain          */
         /* and add that to the appropriate chain */
-        size_t deadChain = LengthToDeadPool(length);
+        size_t deadChain = lengthToDeadPool(length);
         subpools[deadChain].addSingle(object);
         /* we can mark this subpool as having items again */
         lastUsedSubpool[deadChain] = deadChain;
@@ -462,7 +467,7 @@ void NormalSegmentSet::addDeadObject(char *object, size_t length)
     {
         /* calculate the dead chain          */
         /* and add that to the appropriate chain */
-        size_t deadChain = LengthToDeadPool(length);
+        size_t deadChain = lengthToDeadPool(length);
         subpools[deadChain].addSingle(new (object) DeadObject(length));
         /* we can mark this subpool as having items again */
         lastUsedSubpool[deadChain] = deadChain;
@@ -595,7 +600,7 @@ MemorySegment *MemorySegmentSet::splitSegment(size_t allocationLength)
     SplitType split = NO_SEGMENT;
     MemorySegment *candidateSegment = NULL;
     char    *splitBlock = NULL;
-    size_t   splitLength = MaximumObjectSize;
+    size_t   splitLength = Memory::MaximumObjectSize;
 
     char *objectPtr;
 
@@ -720,7 +725,7 @@ MemorySegment *MemorySegmentSet::splitSegment(size_t allocationLength)
                 /* remove this from the dead chain. */
                 deadObject->remove();
                 /* And turn this into a segment */
-                MemorySegment *newSeg = new (splitBlock) MemorySegment(splitLength - MemorySegmentOverhead);
+                MemorySegment *newSeg = new (splitBlock) MemorySegment(splitLength - MemorySegment::MemorySegmentOverhead);
                 /* reduce the length of the segment we took this from */
                 candidateSegment->shrink(splitLength);
                 return newSeg;
@@ -764,11 +769,11 @@ MemorySegment *MemorySegmentSet::splitSegment(size_t allocationLength)
                 /* for the segment header we're adding on to the front */
                 /* of it (which comes from the end of the segment block */
                 /* we're stealing) */
-                MemorySegment *tailSegment = (MemorySegment *)(splitBlock + splitLength - MemorySegmentOverhead);
+                MemorySegment *tailSegment = (MemorySegment *)(splitBlock + splitLength - MemorySegment::MemorySegmentOverhead);
                 /* we need to reduce this by two segment headers...one */
                 /* for the segment we're stealing, and one for the */
                 /* trailing segment */
-                splitLength -= (2 * MemorySegmentOverhead);
+                splitLength -= (2 * MemorySegment::MemorySegmentOverhead);
                 /* create two segments out of this */
                 MemorySegment *newSeg = new (splitBlock) MemorySegment(splitLength);
                 tailSegment = new (tailSegment) MemorySegment(tailLength);
@@ -921,7 +926,7 @@ void MemorySegmentSet::releaseEmptySegments(size_t releaseSize)
     /* round this up to the next segment boundary. We're already at */
     /* a pretty good overage point, so we can afford to round this */
     /* up. */
-    releaseSize = roundSegmentBoundary(releaseSize);
+    releaseSize = MemorySegment::roundSegmentBoundary(releaseSize);
     MemorySegment *segment = first();
     for (;segment != NULL; segment = next(segment))
     {
@@ -1243,7 +1248,7 @@ RexxObject *NormalSegmentSet::findLargeDeadObject(
     {         /* did we find an object?            */
         /* potentially split this object into a smaller unit so we */
         /* can reuse the remainder. */
-        return splitDeadObject(largeObject, allocationLength, MinimumObjectSize);
+        return splitDeadObject(largeObject, allocationLength, Memory::MinimumObjectSize);
     }
     return OREF_NULL;
 }
@@ -1279,7 +1284,7 @@ RexxObject *NormalSegmentSet::handleAllocationFailure(size_t allocationLength)
         /* anything because, yet we were unable to allocate a block */
         /* because we're highly fragmented.  Try adding a new segment */
         /* now, before going to the extreme methods. */
-        addSegments(SegmentSize);
+        addSegments(MemorySegment::SegmentSize);
         /* see if can allocate now */
         newObject = findObject(allocationLength);
         /* still no luck?                    */
@@ -1392,7 +1397,7 @@ RexxObject *OldSpaceSegmentSet::findObject(size_t allocationLength)
     if (largeObject != NULL)
     {
         /* split and prepare this object for use */
-        return splitDeadObject(largeObject, allocationLength, LargeAllocationUnit);
+        return splitDeadObject(largeObject, allocationLength, Memory::LargeAllocationUnit);
     }
     return OREF_NULL;                    /* we couldn't get this              */
 }
@@ -1407,7 +1412,7 @@ RexxObject *OldSpaceSegmentSet::allocateObject(size_t requestLength)
 /******************************************************************************/
 {
     /* round this allocation up to the appropriate large boundary */
-    size_t allocationLength = roundLargeObjectAllocation(requestLength);
+    size_t allocationLength = Memory::roundLargeObjectAllocation(requestLength);
     /* Step 1, try to find an object in the current heap.  We don't */
     /* try to round the object size up at all.  This will take place */
     /* once we've found a fit.  The allocations will be rounded up to */
@@ -1628,7 +1633,7 @@ void MemorySegmentSet::mergeSegments(size_t allocationLength)
                 DeadObject *firstBlock = nextSeg->firstDeadObject();
                 if (firstBlock != NULL)
                 {
-                    deadLength += firstBlock->getObjectSize() + MemorySegmentOverhead;
+                    deadLength += firstBlock->getObjectSize() + MemorySegment::MemorySegmentOverhead;
                     tailSegment = nextSeg;
                 }
             }
@@ -1742,7 +1747,7 @@ void LargeSegmentSet::expandSegmentSet(
     /* to use the extra. */
     else
     {
-        size_t requestLength = roundSegmentBoundary(allocationLength);
+        size_t requestLength = MemorySegment::roundSegmentBoundary(allocationLength);
         if ((requestLength - allocationLength) < MinimumSegmentSize)
         {
             requestLength += SegmentDeadSpace;

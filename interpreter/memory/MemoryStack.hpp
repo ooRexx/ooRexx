@@ -36,15 +36,22 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                               StackClass.hpp   */
+/* REXX Kernel                                             MemoryStack.hpp    */
 /*                                                                            */
 /* Primitive Stack Class Definitions                                          */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_RexxStack
-#define Included_RexxStack
+#ifndef Included_MemoryStack
+#define Included_MemoryStack
 
-class RexxStack : public RexxInternalObject
+
+/**
+ * A simple and fast stack object for doing memory management
+ * live marking.  This has minimal overrun protections, so
+ * the using code needs to perform appropriate "stack is full"
+ * checks.
+ */
+class LiveStack : public RexxInternalObject
 {
  public:
     inline void *operator new(size_t size, void *ptr) { return ptr; }
@@ -54,60 +61,172 @@ class RexxStack : public RexxInternalObject
     inline void  operator delete(void *, size_t) { };
     inline void  operator delete(void *, size_t, bool temporary) { };
 
-    inline RexxStack(RESTORETYPE restoreType) { ; };
-    RexxStack(size_t size);
-
-    void        init(size_t);
+    inline LiveStack(RESTORETYPE restoreType) { ; };
+    LiveStack(size_t size);
 
     virtual void live(size_t);
     virtual void liveGeneral(int reason);
-    virtual void flatten(RexxEnvelope *);
 
-    RexxObject *get(size_t pos);
-    inline RexxObject *push(RexxObject *obj)
+    // the position is origin zero, relative to the top, which is an empty slot.  So, position 0
+    // is the top element, 1 is the penultimate elements, etc.
+    inline RexxObject *get(size_t pos)
     {
-        incrementTop();
-        return *(stack + top) = obj;
+        // we only return something if within the bounds
+        if (pos < top)
+        {
+            return stack[top - (pos + 1)];
+        }
+        else
+        {
+            return OREF_NULL;
+        }
     }
 
-    RexxObject *pop();
-    RexxObject *fpop();
-    RexxStack  *reallocate(size_t increment);
 
-    inline void        fastPush(RexxObject *element) { stack[++(top)] = element; };
-    inline bool        checkRoom() { return top < size-1; }
-    inline RexxObject *fastPop() { return stack[(top)--]; };
+    /**
+     * Push an object on to the stack
+     *
+     * @param obj    The object to push
+     *
+     * @return
+     */
+    inline void push(RexxObject *obj)
+    {
+        // we have no overrun protection here.  The using piece either
+        // needs to accurately predict how large the stack needs to be or
+        // it needs to check if things are full before pushing.
+        stack[top++] = obj;
+    }
+
+
+    /**
+     * Pop an item off of the stack.  Has some underrun protection,
+     * but that's it.
+     *
+     * @return The popped object (or OREF_NULL if we're empty)
+     */
+    RexxObject *pop()
+    {
+        // protect from an underrun
+        if (top == 0)
+        {
+            return OREF_NULL;
+        }
+        // decrement the top and return the pointer
+        return stack[--top];
+    }
+
+    LiveStack  *reallocate(size_t increment);
+
+    inline bool        checkRoom() { return top < size; }
     inline size_t      stackSize() { return size; };
-    inline RexxObject *stackTop() { return (*(stack + top)); };
-    inline void        decrementTop() { top = (top == 0) ? size - 1 : top - 1; }
-    inline void        incrementTop() { if (++top >= size) top = 0; }
-                                                                                                                                                           /* (other->size + 1) was wrong !? */
-    inline void        copyEntries(RexxStack *other) { memcpy((char *)stack, other->stack, other->size * sizeof(RexxObject *)); top = other->top; }
+    inline RexxObject *stackTop() { return top == 0 ? OREF_NULL : stack[top - 1]; };
+    inline void        copyEntries(LiveStack *other) { memcpy((char *)stack, (char *)other->stack, other->size * sizeof(RexxObject *)); top = other->top; }
     inline void        clear() { memset(stack, 0, sizeof(RexxObject*) * size); }
 
  protected:
 
     size_t   size;                      // the stack size
-    size_t   top;                       /* top position on the stack         */
-    RexxObject *stack[1];               /* stack entries                     */
+    size_t   top;                       // the next position we push on the stack
+    RexxObject *stack[1];               // the stack entries
 };
 
-class RexxSaveStack : public RexxStack
+
+/**
+ * A wrap-around marking stack.  This stack can hold n
+ * elements, and if more than n elements are pushed on the
+ * stack, the oldest element is removed.
+ */
+class PushThroughStack : public RexxInternalObject
 {
  public:
-     void       *operator new(size_t, size_t);
-     inline void operator delete(void *) { ; }
-     inline void operator delete(void *, size_t) { }
+    inline void *operator new(size_t size, void *ptr) { return ptr; }
+    void        *operator new(size_t, size_t);
+    void        *operator new(size_t, size_t, bool temporary);
+    inline void  operator delete(void *, void *) { }
+    inline void  operator delete(void *, size_t) { };
+    inline void  operator delete(void *, size_t, bool temporary) { };
 
-     RexxSaveStack(size_t, size_t);
-     virtual void live(size_t);
-     void        init(size_t, size_t);
-     void        extend(size_t);
-     void        remove(RexxObject *, bool search = false);
+    inline PushThroughStack(RESTORETYPE restoreType) { ; };
+    PushThroughStack(size_t size);
+
+    void         init(size_t);
+
+    virtual void live(size_t);
+    virtual void liveGeneral(int reason);
+
+    // the position is origin zero, relative to the current.  Current
+    // is the position of the last item pushed on to the stack.
+    inline RexxObject *get(size_t pos)
+    {
+        // if they a really searching back, reduce it modulo size.
+        pos = pos % size;
+        // Since we wrap, the position within the bounds
+        if (pos > current)
+        {
+            // this is relative to the top of the stack
+            // if stack
+            return stack[size + current - pos];
+        }
+        else
+        {
+            // just pos items back from current
+            return stack[current - pos];
+        }
+    }
+
+
+    /**
+     * Push an object on to the stack
+     *
+     * @param obj    The object to push
+     *
+     * @return
+     */
+    inline void push(RexxObject *obj)
+    {
+        // this will wrap, as necessary, wiping out the reference at the bottom of the stack
+        incrementCurrent();
+        stack[current] = obj;
+    }
+
+
+    /**
+     * Pop an item off of the stack.  Has some underrun protection,
+     * but that's it.
+     *
+     * @return The popped object (or OREF_NULL if we're empty)
+     */
+    RexxObject *pop()
+    {
+        // get the current referenced item
+        RexxObject *obj = stack[current];
+        // because we make everything in the stack and this is used for GC
+        // protection, null out the removed entry
+        stack[current] = OREF_NULL;
+        // now move back an item, with wrap protection.
+        decrementCurrent();
+    }
+
+    LiveStack  *reallocate(size_t increment);
+
+    inline size_t      stackSize() { return size; };
+    inline RexxObject *stackTop() { return stack[current]; };
+
+    // increment and decrement will wrap
+    inline void        decrementCurrent() { current = (current == 0) ? size - 1 : current - 1; }
+    inline void        incrementCurrent() { if (++current >= size) current = 0; }
+
+    inline void        copyEntries(PushThroughStack *other) { memcpy((char *)stack, other->stack, other->size * sizeof(RexxObject *)); current = other->current; }
+    inline void        clear() { memset(stack, 0, sizeof(RexxObject*) * size); }
+           void        extend(size_t);
+           void        remove(RexxObject *, bool search = false);
 
  protected:
 
-     size_t allocSize;
+    size_t   size;                      // the stack size
+    size_t   current;                   // the last object on the stack (starts as if OREF_NULL had been written first)
+    RexxObject *stack[1];               // the stack entries
 };
 
 #endif

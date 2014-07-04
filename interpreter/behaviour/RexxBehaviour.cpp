@@ -50,6 +50,7 @@
 #include "ProtectedObject.hpp"
 #include "CPPCode.hpp"
 #include "MethodArguments.hpp"
+#include "Memory.hpp"
 
 
 RexxBehaviour::RexxBehaviour(
@@ -432,7 +433,7 @@ void RexxBehaviour::restore(
     /* set the behaviour behaviour       */
     setBehaviour(getPrimitiveBehaviour(T_Behaviour));
     /* set proper size                   */
-    setObjectSize(roundObjectBoundary(sizeof(RexxBehaviour)));
+    setObjectSize(Memory::roundObjectBoundary(sizeof(RexxBehaviour)));
     setOldSpace();
     /* Make sure we pick up additional   */
     /*  methods defined during saveimage */

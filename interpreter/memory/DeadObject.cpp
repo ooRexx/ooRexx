@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -36,14 +36,11 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                DeadObject.c  */
+/* REXX Kernel                                                DeadObject.cpp  */
 /*                                                                            */
 /* Primitive DeadObject management code                                       */
 /*                                                                            */
 /******************************************************************************/
-
-#include <stdlib.h>
-#include <string.h>
 #include "RexxCore.h"
 #include "RexxMemory.hpp"
 #include "Interpreter.hpp"
@@ -82,7 +79,7 @@ DeadObject *DeadObjectPool::findBestFit(size_t length)
             /* if within an allocation unit of the request size (which should */
             /* be common, since we round to a higher boundary for */
             /* large allocations), use this block */
-            if ((deadLength - length) < VeryLargeObjectGrain) {
+            if ((deadLength - length) < Memory::VeryLargeObjectGrain) {
                 newObject->remove();
                 logHit();
                 return newObject;
@@ -116,7 +113,7 @@ DeadObject *DeadObjectPool::findSmallestFit(size_t minSize)
 {
     DeadObject *newObject = anchor.next;
     DeadObject *smallest = NULL;
-    size_t smallestSize = MaximumObjectSize;
+    size_t smallestSize = Memory::MaximumObjectSize;
 
     while (newObject->isReal()) {
         size_t deadLength = newObject->getObjectSize();
@@ -203,7 +200,7 @@ void DeadObjectPool::checkObjectGrain(DeadObject *obj)
 /* Function:  Debug validity check of object added to a dead pool.            */
 /******************************************************************************/
 {
-    if (!IsObjectGrained(obj))
+    if (!Memory::isObjectGrained((RexxObject *)obj))
     {
         Interpreter::logicError("Object aligned on improper boundary");
     }

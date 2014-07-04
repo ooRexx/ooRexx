@@ -192,7 +192,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Transient>
 <Class id="Memory" class="RexxMemory" include="RexxMemory.hpp" objectvirtual="true"/>
 <Class id="InternalStack" class="RexxInternalStack" include="RexxInternalStack.hpp"/>
-<Class id="Stack" class="RexxStack" include="StackClass.hpp"/>
+<Class id="LiveStack" class="LiveStack" include="MemoryStack.hpp"/>
+<Class id="PushThroughStack" class="PushThroughStack" include="MemoryStack.hpp"/>
 <Class id="Activity" class="RexxActivity" include="RexxActivity.hpp"/>
 <Class id="Activation" class="RexxActivation" include="RexxActivation.hpp"/>
 <Class id="NativeActivation" class="RexxNativeActivation" include="RexxNativeActivation.hpp"/>

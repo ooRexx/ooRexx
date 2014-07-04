@@ -42,110 +42,8 @@
 /*                                                                            */
 /******************************************************************************/
 #include "RexxCore.h"
-#include "StackClass.hpp"
-
-// TODO:  This does NOT belong in the classes directory.  It really needs to
-// be renamed as well.
-
-RexxStack::RexxStack(
-    size_t _size)                  /* elements in the stack             */
-/******************************************************************************/
-/* Function:  Initialize a primitive stack.                                   */
-/******************************************************************************/
-{
-    this->clearObject();                 /* clear entire stack                */
-    this->size = _size;                  /* set the size                      */
-    this->top = 0;                       /* and we're set at the top          */
-}
-
-
-void RexxStack::init(
-    size_t _size)                      /* elements in the stack             */
-/******************************************************************************/
-/* Function:  Initialize a primitive stack early in memory set up             */
-/******************************************************************************/
-{
-    this->clearObject();                 /* clear entire stack                */
-    this->size = _size;                  /* set the size                      */
-    this->top = 0;                       /* and we're set at the top          */
-}
-
-void RexxStack::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
-{
-    memory_mark_array(size, stack);
-}
-
-void RexxStack::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
-{
-    memory_mark_general_array(size, stack);
-}
-
-
-RexxObject  *RexxStack::get(size_t pos)
-/******************************************************************************/
-/* Function:  Get a specific stack element                                    */
-/******************************************************************************/
-{
-    // TODO:  Seriously don't understand this...I think this class needs a
-    // rethink...it seems more complicated than it needs to be.
-    if (pos < size)
-    {
-        return *(stack + (size + top - pos) % size);
-    }
-    else
-    {
-        return OREF_NULL;
-    }
-}
-
-RexxObject  *RexxStack::pop()
-/******************************************************************************/
-/* Function:  Pop an element from the stack                                   */
-/******************************************************************************/
-{
-    RexxObject *object = *(this->stack + this->top); /* get the new item                  */
-    /* needed by memory_alloc            */
-    // Don't think we want to use OREF set here.
-    OrefSet(this, *(this->stack+this->top), OREF_NULL);
-    decrementTop();                      /* move the top pointer (and potentially wrap) */
-    return object;                       /* return the object                 */
-}
-
-RexxObject  *RexxStack::fpop()
-/******************************************************************************/
-/* Function:  Get top stack element, which is removed from the stack          */
-/*                                                                            */
-/* This "fast pop" method doesn't null out the popped stack entry and can     */
-/* therefore leave spurious object references in the stack.  It is used by    */
-/* memory_collect for mobj.livestack, where speed is of the essence and the   */
-/* spurious references have no effect.                                        */
-/******************************************************************************/
-{
-    RexxObject *object = *(this->stack + this->top); /* get the top item                  */
-    decrementTop();                      /* move the top pointer (and potentially wrap) */
-    return object;                       /* return the object                 */
-}
-
-
-/**
- * Create a new stack for the memory object.
- *
- * @param size    The base size of the object.
- * @param stksize The number of items we wish to have in the stack.
- *
- * @return A newly allocated stack object.
- */
-void *RexxStack::operator new(size_t size, size_t stksize)
-{
-    return new_object(size + ((stksize-1) * sizeof(RexxObject *)), T_Stack);
-}
-
+#include "ObjectClass.hpp"
+#include "MemoryStack.hpp"
 
 /**
  * Create a new stack for the memory object from temporary
@@ -158,134 +56,65 @@ void *RexxStack::operator new(size_t size, size_t stksize)
  *
  * @return A newly allocated stack object.
  */
-void *RexxStack::operator new(size_t size, size_t stksize, bool temporary)
+void *LiveStack::operator new(size_t size, size_t stksize, bool temporary)
 {
     // This is a special allocation.  We use this if we need to expand the livestack
     // during a GC operation, which of course is when we are not able to allocate from
     // the Rexx heap.
-    newObject = memoryObject.temporaryObject(size + ((stksize-1) * sizeof(RexxObject *)));
+    RexxObject *newObject = memoryObject.temporaryObject(size + ((stksize-1) * sizeof(RexxObject *)));
     // set the behaviour
-    newObject->setBehaviour(TheStackBehaviour);
+    newObject->setBehaviour(TheLiveStackBehaviour);
     return newObject;
 }
 
 
-RexxSaveStack::RexxSaveStack(
-    size_t _size,                      /* elements in the stack             */
-    size_t aSize)                      /* size to allocate!                 */
-      : RexxStack(_size)
-/******************************************************************************/
-/* Function:  Initialize a primitive stack.                                   */
-/******************************************************************************/
+/**
+ * Allocate a live stack with the given number of slots.
+ *
+ * @param _size  The stack size.
+ */
+LiveStack::LiveStack(size_t _size)
 {
-    this->allocSize = aSize;
+    // we can get created via means other than normal memory allocation, so
+    // ensure we're completely cleared out
+    clearObject();
+    // set the size and top element
+    size = _size;
+    top = 0;
 }
 
-void RexxSaveStack::init(
-    size_t _size,                      /* elements in the stack             */
-    size_t aSize)                      /* size to allocate                  */
-/******************************************************************************/
-/* Function:  Initialize a primitive stack early in memory set up             */
-/******************************************************************************/
-{
-    this->clearObject();                 /* clear entire stack                */
-    this->size = _size;                  /* set the size                      */
-    this->top = 0;                       /* set the element to the top        */
-    this->allocSize = aSize;
-}
 
-void *RexxSaveStack::operator new(
-     size_t size,                      /* Object size                       */
-     size_t allocSize )                /* size to allocate                  */
-/******************************************************************************/
-/* Function:  Create a new translator object                                  */
-/******************************************************************************/
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
+void LiveStack::live(size_t liveMark)
 {
-    /* Get new object                    */
-    return new_object(size + ((allocSize-1) * sizeof(RexxObject *)), T_Stack);
-}
-
-void RexxSaveStack::extend(
-                          size_t newSize)                    /* new size to use                   */
-/******************************************************************************/
-/* Function:  Extend the usable size of the save stack                        */
-/******************************************************************************/
-{
-    if (newSize < this->allocSize)
+    // note, we only mark the array up to (but not including) the top position.
+    if (top > 0)
     {
-        this->size = newSize;
+        memory_mark_array(top - 1, stack);
     }
 }
 
-void RexxSaveStack::remove(
-    RexxObject *element,               /* object to remove from save stack  */
-    bool search)                       /* search through whole savestack?   */
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
+void LiveStack::liveGeneral(int reason)
 {
-    size_t i;
-
-    /* I remember top element so that this operation is not disturbed by */
-    /* another thread pushing something onto the savestack               */
-
-    /* first check top element */
-    i = this->top;
-
-    if (this->stack[i] == element)
+    // note, we only mark the array up to (but not including) the top position.
+    if (top > 0)
     {
-        this->stack[i] = OREF_NULL;
-        if (i == this->top)
-        {
-            this->top--;
-        }
-    }
-    else
-    {
-        /* not top element, search it if requested */
-        if (search)
-        {
-            for (i=0; i<this->size; i++)
-            {
-                if (this->stack[i] == element)
-                {
-                    this->stack[i] = OREF_NULL;
-                    break;
-                }
-            }
-        }
+        memory_mark_general_array(top - 1, stack);
     }
 }
 
-#define SAVE_THRESHOLD 5
-
-void RexxSaveStack::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
-{
-    RexxObject **rp;
-
-    for (rp = this->stack; rp < this->stack+this->stackSize(); rp++)
-    {
-        RexxObject *thisObject = *rp;      /* get the next object in the stack */
-        if (thisObject == OREF_NULL)
-        {
-            continue;                      /* an empty entry? just go on */
-        }
-        /* if the object has already been marked, */
-        else if (thisObject->isObjectMarked(liveMark))
-        {
-            *rp = OREF_NULL;               /* we can clear this out now, rather than keeping it in the stack */
-        }
-        else
-        {
-            /* this is an object we need to keep alive, but we'll only */
-            /* do this for one GC cycle.  We'll clear this out now, to */
-            /* make sure we don't keep this pinned longer than */
-            /* necessary. */
-            memory_mark(*rp);
-            *rp = OREF_NULL;
-        }
-    }
-}
 
 /**
  * Reallocate the stack to one that is larger by a given multiplier.
@@ -295,13 +124,101 @@ void RexxSaveStack::live(size_t liveMark)
  * @return A newly allocated stack with the entries from this
  *         stack copied over to it.
  */
-RexxStack *RexxStack::reallocate(size_t multiplier)
+LiveStack *LiveStack::reallocate(size_t multiplier)
 {
     // create a new stack that is larger by the given multiplier
-    RexxStack *newStack = new (size * multiplier, true) RexxStack (size * multiplier);
+    LiveStack *newStack = new (size * multiplier, true) LiveStack (size * multiplier);
     // copy the entries over to the new stack
     newStack->copyEntries(this);
     return newStack;
+}
+
+
+/**
+ * Create a new push through stack
+ *
+ * @param size    The base size of the object.
+ * @param stksize The number of items we wish to have in the stack.
+ *
+ * @return A newly allocated stack object.
+ */
+void *PushThroughStack::operator new(size_t size, size_t stksize)
+{
+    return new_object(size + ((stksize-1) * sizeof(RexxObject *)), T_PushThroughStack);
+}
+
+
+/**
+ * Allocate a live stack with the given number of slots.
+ *
+ * @param _size  The stack size.
+ */
+PushThroughStack::PushThroughStack(size_t _size)
+{
+    // we can get created via means other than normal memory allocation, so
+    // ensure we're completely cleared out
+    clearObject();
+    // set the size and first element (we're essentially starting
+    // out as if we pushed OREF_NULL on to the stack)
+    size = _size;
+    current = 0;
+}
+
+
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
+void PushThroughStack::live(size_t liveMark)
+{
+    // note, because we are a push-through stack, we mark everything.
+    memory_mark_array(size, stack);
+}
+
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
+void PushThroughStack::liveGeneral(int reason)
+{
+    // note, because we are a push-through stack, we mark everything.
+    memory_mark_general_array(size, stack);
+}
+
+/**
+ * Remove an element from the stack and NULL out the stack slot.
+ *
+ * @param element The element to remove.
+ * @param search  indicates whether we should search the stack for the item.
+ */
+void PushThroughStack::remove(RexxObject *element, bool search)
+{
+    // first check the top item (which is easy)...we just leave the empty slot
+    // if we found it.
+    if (stack[current] == element)
+    {
+        stack[current] = OREF_NULL;
+    }
+    else
+    {
+        // not top element, search it if requested
+        if (search)
+        {
+            for (size_t i= 0; i < size; i++)
+            {
+                if (stack[i] == element)
+                {
+                    stack[i] = OREF_NULL;
+                    break;
+                }
+            }
+        }
+    }
 }
 
 

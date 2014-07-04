@@ -43,6 +43,7 @@
 /******************************************************************************/
 #include "RexxCore.h"
 #include "ListClass.hpp"
+#include "Memory.hpp"
 
 void RexxListTable::live(size_t liveMark)
 /******************************************************************************/
@@ -103,9 +104,9 @@ void *RexxListTable::operator new(size_t size, size_t initialSize, size_t compan
 /******************************************************************************/
 {
     /* Compute size of hash tab object   */
-    size_t bytes = roundObjectBoundary(size + (sizeof(LISTENTRY) * (initialSize - 1)));
+    size_t bytes = Memory::roundObjectBoundary(size + (sizeof(LISTENTRY) * (initialSize - 1)));
     /* make sure we've got proper sizes for each of the object parts. */
-    companionSize = roundObjectBoundary(companionSize);
+    companionSize = Memory::roundObjectBoundary(companionSize);
     /* Get space for two objects         */
     /* Get new object                    */
     RexxList *newList  = (RexxList *)new_object(bytes + companionSize);

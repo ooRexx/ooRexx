@@ -139,7 +139,7 @@
 #include "ParseTrigger.hpp"
 #include "RexxMemory.hpp"
 #include "RexxInternalStack.hpp"
-#include "StackClass.hpp"
+#include "MemoryStack.hpp"
 #include "RexxActivity.hpp"
 #include "RexxActivation.hpp"
 #include "RexxNativeActivation.hpp"
@@ -588,8 +588,11 @@ void RexxMemory::buildVirtualFunctionTable()
    objectPtr = new (objectLoc) RexxInternalStack(RESTOREIMAGE);
    virtualFunctionTable[T_InternalStack] = getVftPointer(objectLoc);
    
-   objectPtr = new (objectLoc) RexxStack(RESTOREIMAGE);
-   virtualFunctionTable[T_Stack] = getVftPointer(objectLoc);
+   objectPtr = new (objectLoc) LiveStack(RESTOREIMAGE);
+   virtualFunctionTable[T_LiveStack] = getVftPointer(objectLoc);
+   
+   objectPtr = new (objectLoc) PushThroughStack(RESTOREIMAGE);
+   virtualFunctionTable[T_PushThroughStack] = getVftPointer(objectLoc);
    
    objectPtr = new (objectLoc) RexxActivity(RESTOREIMAGE);
    virtualFunctionTable[T_Activity] = getVftPointer(objectLoc);

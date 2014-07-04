@@ -193,6 +193,7 @@ LanguageParser::LanguageParser(RexxString *p, ProgramSource *s)
     source = s;
 }
 
+
 /**
  * Perform garbage collection on a live object.
  *
@@ -225,6 +226,7 @@ void LanguageParser::live(size_t liveMark)
     memory_mark(calls);
     memory_mark(activeClass);
 }
+
 
 /**
  * Perform generalized live marking on an object.  This is
@@ -432,7 +434,7 @@ void LanguageParser::initializeForParsing()
     lineCount = source->getLineCount();
 
     // handy stack for temporary values...this is a push through
-    holdStack = new (HOLDSIZE, false) RexxStack(HOLDSIZE);
+    holdStack = new (HOLDSIZE) PushThroughStack(HOLDSIZE);
 
     // general parsing control setups
     control = new_queue();        // our stack of control instructions

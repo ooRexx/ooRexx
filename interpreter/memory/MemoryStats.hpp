@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -49,7 +49,8 @@
 
 class MemoryStats;
 /* a class for collecting object statistics */
-class ObjectStats {
+class ObjectStats
+{
 
   public:
     inline ObjectStats() : count(0), size(0) {}
@@ -65,7 +66,8 @@ class ObjectStats {
 };
 
 /* a class for collecting segment set statistics */
-class SegmentStats {
+class SegmentStats
+{
   friend class MemoryStats;
   friend class MemorySegmentSet;
 
@@ -94,7 +96,8 @@ class SegmentStats {
     const char *name;
 };
 
-class MemoryStats {
+class MemoryStats
+{
   public:
     inline MemoryStats() :
         normalStats("Normal allocation segment set"),
