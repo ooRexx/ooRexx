@@ -66,7 +66,7 @@ class RexxEnvelope : public RexxInternalObject
 
     void flattenReference(void *, size_t, void *);
     RexxBuffer *pack(RexxObject *);
-    void        puff(RexxBuffer *, const char *, size_t length);
+    void        puff(RexxBuffer *, char *, size_t length);
     size_t queryObj(RexxObject *);
     size_t copyBuffer(RexxObject *);
     void   rehash();

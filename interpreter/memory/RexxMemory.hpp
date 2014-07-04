@@ -144,23 +144,22 @@ class MemorySegmentPool : public MemorySegmentPoolHeader
 #endif
  friend bool SysAccessPool(MemorySegmentPool **);
  public:
-    void          *operator new(size_t size, size_t minSize);
-    inline void   *operator new(size_t size, void *pool) { return pool;}
-    inline void    operator delete(void *) { }
-    inline void    operator delete(void *, size_t) { }
-    inline void    operator delete(void *, void *) { }
+     void          *operator new(size_t size, size_t minSize);
+     inline void   *operator new(size_t size, void *pool) { return pool;}
+     inline void    operator delete(void *, size_t) { }
+     inline void    operator delete(void *, void *) { }
 
-    static MemorySegmentPool *createPool();
+     static MemorySegmentPool *createPool();
 
-    MemorySegmentPool();
-    MemorySegment *newSegment(size_t minSize);
-    MemorySegment *newLargeSegment(size_t minSize);
-    void               freePool(void);
-    MemorySegmentPool *nextPool() {return this->next;}
-    void               setNext( MemorySegmentPool *nextPool ); /* CHM - def.96: new function */
+     MemorySegmentPool();
+     MemorySegment *newSegment(size_t minSize);
+     MemorySegment *newLargeSegment(size_t minSize);
+     void               freePool(void);
+     MemorySegmentPool *nextPool() {return this->next;}
+     void               setNext( MemorySegmentPool *nextPool ); /* CHM - def.96: new function */
 
  private:
-    char           state[8];    // must be at the end of the structure.
+     char           state[8];    // must be at the end of the structure.
 };
 
 #include "MemoryStats.hpp"
@@ -295,6 +294,15 @@ class RexxMemory : public RexxInternalObject
     static RexxDirectory *system;           // the system directory
 
 private:
+
+    // default size for the live stack (in entries)
+    static const size_t LiveStackSize = 32 * 1024;
+    // the number of newly created items to stack in the save stack
+    static const size_t SaveStackSize = 10;
+    // the pre-allocation size for the save stack
+    static const size_t SaveStackAllocSize = 500;
+    // the maximum size for the startup image size
+    static const size_t MaxImageSize = 2000000;
 
 /******************************************************************************/
 /* Define location of objects saved in SaveArray during Saveimage processing  */

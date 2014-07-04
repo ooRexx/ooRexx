@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -45,7 +45,6 @@
 /* for these particular methods and tables.                                   */
 /*                                                                            */
 /******************************************************************************/
-#include <string.h>
 #include "RexxCore.h"
 #include "TableClass.hpp"
 #include "RexxMemory.hpp"
@@ -1445,8 +1444,8 @@ void RexxMemory::createImage()
 /*      the rest of the REXX image.                                           */
 /******************************************************************************/
 
-  /* set up the kernel methods that will be defined on OBJECT classes in  */
-  /* CoreClasses.orx
+  // set up the kernel methods that will be defined on OBJECT classes in
+  // CoreClasses.orx
   {
                                            /* create a kernel methods directory */
       RexxDirectory *kernel_methods = new_directory();

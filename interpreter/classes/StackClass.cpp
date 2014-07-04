@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -41,9 +41,11 @@
 /* Primitive Stack Class                                                      */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "StackClass.hpp"
+
+// TODO:  This does NOT belong in the classes directory.  It really needs to
+// be renamed as well.
 
 RexxStack::RexxStack(
     size_t _size)                  /* elements in the stack             */
@@ -73,12 +75,7 @@ void RexxStack::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-    RexxObject **rp;
-
-    for (rp = this->stack; rp < this->stack+this->stackSize(); rp++)
-    {
-        memory_mark(*rp);
-    }
+    memory_mark_array(size, stack);
 }
 
 void RexxStack::liveGeneral(int reason)
@@ -86,36 +83,20 @@ void RexxStack::liveGeneral(int reason)
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-    RexxObject **rp;
-
-    for (rp = this->stack; rp < this->stack+this->stackSize(); rp++)
-    {
-        memory_mark_general(*rp);
-    }
+    memory_mark_general_array(size, stack);
 }
 
-
-void RexxStack::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
-{
-  setUpFlatten(RexxStack)
-    for (size_t i=0; i < this->stackSize(); i++ )
-    {
-        flatten_reference(newThis->stack[i], envelope);
-    }
-  cleanUpFlatten
-}
 
 RexxObject  *RexxStack::get(size_t pos)
 /******************************************************************************/
 /* Function:  Get a specific stack element                                    */
 /******************************************************************************/
 {
-    if (pos < this->stackSize())
+    // TODO:  Seriously don't understand this...I think this class needs a
+    // rethink...it seems more complicated than it needs to be.
+    if (pos < size)
     {
-        return *(this->stack+(this->stackSize()+this->top-pos)%this->stackSize());
+        return *(stack + (size + top - pos) % size);
     }
     else
     {
@@ -130,6 +111,7 @@ RexxObject  *RexxStack::pop()
 {
     RexxObject *object = *(this->stack + this->top); /* get the new item                  */
     /* needed by memory_alloc            */
+    // Don't think we want to use OREF set here.
     OrefSet(this, *(this->stack+this->top), OREF_NULL);
     decrementTop();                      /* move the top pointer (and potentially wrap) */
     return object;                       /* return the object                 */
@@ -150,29 +132,41 @@ RexxObject  *RexxStack::fpop()
     return object;                       /* return the object                 */
 }
 
-void *RexxStack::operator new(
-     size_t size,                      /* Object size                       */
-     size_t stksize,                   /* stack size                        */
-     bool   temporary )                /* this is a temporary one           */
-/******************************************************************************/
-/* Function:  Create a new translator object                                  */
-/******************************************************************************/
-{
-    RexxObject *newObject;               /* the new atack                     */
 
-    if (!temporary)                      /* normal stack object?              */
-    {
-        /* Get new object                    */
-        newObject = new_object(size + ((stksize-1) * sizeof(RexxObject *)), T_Stack);
-    }
-    else
-    {
-        /* Get new object                    */
-        newObject = memoryObject.temporaryObject(size + ((stksize-1) * sizeof(RexxObject *)));
-        /* set the behaviour                 */
-        newObject->setBehaviour(TheStackBehaviour);
-    }
-    return newObject;                    /* return the new object             */
+/**
+ * Create a new stack for the memory object.
+ *
+ * @param size    The base size of the object.
+ * @param stksize The number of items we wish to have in the stack.
+ *
+ * @return A newly allocated stack object.
+ */
+void *RexxStack::operator new(size_t size, size_t stksize)
+{
+    return new_object(size + ((stksize-1) * sizeof(RexxObject *)), T_Stack);
+}
+
+
+/**
+ * Create a new stack for the memory object from temporary
+ * memory.
+ *
+ * @param size      The base size of the object.
+ * @param stksize   The number of items we wish to have in the stack.
+ * @param temporary A dummy argument just to get this new method invoked...
+ *                  causes the stack to be allocated from temporary memory.
+ *
+ * @return A newly allocated stack object.
+ */
+void *RexxStack::operator new(size_t size, size_t stksize, bool temporary)
+{
+    // This is a special allocation.  We use this if we need to expand the livestack
+    // during a GC operation, which of course is when we are not able to allocate from
+    // the Rexx heap.
+    newObject = memoryObject.temporaryObject(size + ((stksize-1) * sizeof(RexxObject *)));
+    // set the behaviour
+    newObject->setBehaviour(TheStackBehaviour);
+    return newObject;
 }
 
 
@@ -292,4 +286,22 @@ void RexxSaveStack::live(size_t liveMark)
         }
     }
 }
+
+/**
+ * Reallocate the stack to one that is larger by a given multiplier.
+ *
+ * @param multiplier The multiplier value.
+ *
+ * @return A newly allocated stack with the entries from this
+ *         stack copied over to it.
+ */
+RexxStack *RexxStack::reallocate(size_t multiplier)
+{
+    // create a new stack that is larger by the given multiplier
+    RexxStack *newStack = new (size * multiplier, true) RexxStack (size * multiplier);
+    // copy the entries over to the new stack
+    newStack->copyEntries(this);
+    return newStack;
+}
+
 

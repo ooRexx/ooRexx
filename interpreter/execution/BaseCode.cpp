@@ -48,6 +48,7 @@
 #include "MethodClass.hpp"
 #include "RoutineClass.hpp"
 #include "PackageClass.hpp"
+#include "RexxActivation.hpp"
 
 
 /**

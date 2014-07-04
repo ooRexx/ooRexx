@@ -50,101 +50,103 @@
 
 class RexxSupplier;
 
-#define DEFAULT_OBJECT_DICTIONARY_SIZE 7
-
-class RexxVariableDictionary : public RexxInternalObject {
+class RexxVariableDictionary : public RexxInternalObject
+{
  public:
-  inline void  *operator new(size_t size, void *ptr) { return ptr; };
-  inline void  operator delete(void *) { }
-  inline void  operator delete(void *, void *) { }
+    inline void  *operator new(size_t size, void *ptr) { return ptr; };
+    inline void  operator delete(void *) { }
+    inline void  operator delete(void *, void *) { }
 
-  inline RexxVariableDictionary(RESTORETYPE restoreType) { ; };
+    inline RexxVariableDictionary(RESTORETYPE restoreType) { ; };
 
-  void         live(size_t);
-  void         liveGeneral(int reason);
-  void         flatten(RexxEnvelope *envelope);
-  RexxObject  *copy();
-  void         copyValues();
+    virtual void live(size_t);
+    virtual void liveGeneral(int reason);
+    virtual void flatten(RexxEnvelope *envelope);
 
-  RexxObject  *realValue(RexxString *name);
-  void         add(RexxVariable *, RexxString *);
-  void         put(RexxVariable *, RexxString *);
-  inline RexxStem    *getStem(RexxString *stemName) { return (RexxStem *)getStemVariable(stemName)->getVariableValue(); }
-  RexxVariable *createStemVariable(RexxString *stemName);
-  RexxVariable *createVariable(RexxString *stemName);
+    virtual RexxObject  *copy();
+    virtual void         copyValues();
 
-  inline RexxVariable *resolveVariable(RexxString *name)
-  {
-      return (RexxVariable *)contents->stringGet(name);
-  }
+    RexxObject  *realValue(RexxString *name);
+    void         add(RexxVariable *, RexxString *);
+    void         put(RexxVariable *, RexxString *);
+    inline RexxStem    *getStem(RexxString *stemName) { return (RexxStem *)getStemVariable(stemName)->getVariableValue(); }
+    RexxVariable *createStemVariable(RexxString *stemName);
+    RexxVariable *createVariable(RexxString *stemName);
 
-  inline RexxVariable *getVariable(RexxString *name)
+    inline RexxVariable *resolveVariable(RexxString *name)
     {
-      RexxVariable *variable;              /* resolved variable item            */
-
-      /* find the entry */
-      variable = resolveVariable(name);
-      if (variable == OREF_NULL) {         /* not in the table?                 */
-          /* create a new one */
-          variable = createVariable(name);
-      }
-      return variable;                     /* return the stem                   */
+        return (RexxVariable *)contents->stringGet(name);
     }
 
-  inline RexxVariable *getStemVariable(RexxString *stemName)
-    {
-      RexxVariable *variable;              /* resolved variable item            */
+    inline RexxVariable *getVariable(RexxString *name)
+      {
+        RexxVariable *variable;              /* resolved variable item            */
 
-                                           /* find the stem entry               */
-      variable = resolveVariable(stemName);
-      if (variable == OREF_NULL) {         /* not in the table?                 */
-          /* create a new one */
-          variable = createStemVariable(stemName);
+        /* find the entry */
+        variable = resolveVariable(name);
+        if (variable == OREF_NULL) {         /* not in the table?                 */
+            /* create a new one */
+            variable = createVariable(name);
+        }
+        return variable;                     /* return the stem                   */
       }
-      return variable;                     /* return the stem                   */
-    }
 
-  void setCompoundVariable(RexxString *stemName, RexxObject **tail, size_t tailCount, RexxObject *value);
-  void dropCompoundVariable(RexxString *stemName, RexxObject **tail, size_t tailCount);
-  RexxDirectory *getAllVariables();
-  inline void remove(RexxString *n) { contents->remove(n); }
+    inline RexxVariable *getStemVariable(RexxString *stemName)
+      {
+        RexxVariable *variable;              /* resolved variable item            */
 
-  RexxVariable *nextVariable(RexxNativeActivation *);
-  void         set(RexxString *, RexxObject *);
-  void         drop(RexxString *);
-  void         dropStemVariable(RexxString *);
-  void         reserve(RexxActivity *);
-  void         release(RexxActivity *);
-  bool         transfer(RexxActivity *);
+                                             /* find the stem entry               */
+        variable = resolveVariable(stemName);
+        if (variable == OREF_NULL) {         /* not in the table?                 */
+            /* create a new one */
+            variable = createStemVariable(stemName);
+        }
+        return variable;                     /* return the stem                   */
+      }
 
-  RexxCompoundElement *getCompoundVariable(RexxString *stemName, RexxObject **tail, size_t tailCount);
-  RexxObject  *getCompoundVariableValue(RexxString *stemName, RexxObject **tail, size_t tailCount);
-  RexxObject  *getCompoundVariableRealValue(RexxString *stem, RexxObject **tail, size_t tailCount);
+    void setCompoundVariable(RexxString *stemName, RexxObject **tail, size_t tailCount, RexxObject *value);
+    void dropCompoundVariable(RexxString *stemName, RexxObject **tail, size_t tailCount);
+    RexxDirectory *getAllVariables();
+    inline void remove(RexxString *n) { contents->remove(n); }
 
-  RexxObject  *realStemValue(RexxString *stemName);
+    RexxVariable *nextVariable(RexxNativeActivation *);
+    void         set(RexxString *, RexxObject *);
+    void         drop(RexxString *);
+    void         dropStemVariable(RexxString *);
+    void         reserve(RexxActivity *);
+    void         release(RexxActivity *);
+    bool         transfer(RexxActivity *);
 
-  inline bool isScope(RexxObject *otherScope) { return this->scope == otherScope; }
-  inline RexxVariableDictionary *getNextDictionary() { return next; }
-  inline RexxActivity *getReservingActivity() { return reservingActivity; }
+    RexxCompoundElement *getCompoundVariable(RexxString *stemName, RexxObject **tail, size_t tailCount);
+    RexxObject  *getCompoundVariableValue(RexxString *stemName, RexxObject **tail, size_t tailCount);
+    RexxObject  *getCompoundVariableRealValue(RexxString *stem, RexxObject **tail, size_t tailCount);
 
-  void setNextDictionary(RexxVariableDictionary *next);
+    RexxObject  *realStemValue(RexxString *stemName);
 
-  static RexxVariableBase *getVariableRetriever(RexxString  *variable);
-  static RexxVariableBase *getDirectVariableRetriever(RexxString  *variable);
-  static RexxObject *buildCompoundVariable(RexxString * variable_name, bool direct);
+    inline bool isScope(RexxObject *otherScope) { return this->scope == otherScope; }
+    inline RexxVariableDictionary *getNextDictionary() { return next; }
+    inline RexxActivity *getReservingActivity() { return reservingActivity; }
 
-  static RexxVariableDictionary *newInstance(size_t);
-  static RexxVariableDictionary *newInstance(RexxObject *);
+    void setNextDictionary(RexxVariableDictionary *next);
+
+    static const size_t DEFAULT_OBJECT_DICTIONARY_SIZE = 7;
+
+    static RexxVariableBase *getVariableRetriever(RexxString  *variable);
+    static RexxVariableBase *getDirectVariableRetriever(RexxString  *variable);
+    static RexxObject *buildCompoundVariable(RexxString * variable_name, bool direct);
+
+    static RexxVariableDictionary *newInstance(size_t);
+    static RexxVariableDictionary *newInstance(RexxObject *);
 
 protected:
 
-  RexxActivity  *reservingActivity;    /* current reserving activity        */
-  RexxHashTable *contents;             /* vdict hashtable                   */
-  RexxList *waitingActivities;         /* list of waiting activities        */
-  unsigned short flags;                /* dictionary control flags          */
-  unsigned short reserveCount;         /* number of times reserved          */
-  RexxVariableDictionary *next;        /* chained object dictionary         */
-  RexxObject *scope;                   /* scopy of this object dictionary   */
+    RexxActivity  *reservingActivity;    // current reserving activity
+    RexxHashTable *contents;             // vdict hashtable
+    RexxList *waitingActivities;         // list of waiting activities
+    unsigned short flags;                // dictionary control flags
+    unsigned short reserveCount;         // number of times reserved
+    RexxVariableDictionary *next;        // chained object dictionary
+    RexxObject *scope;                   // scopy of this object dictionary
 };
 
 

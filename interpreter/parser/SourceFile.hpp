@@ -172,6 +172,7 @@ class RexxSource: public RexxInternalObject
     inline void           setTraceFlags(size_t t) { traceFlags = t; }
     inline size_t         getTraceFlags() { return traceFlags; }
     inline RexxString    *getTrace() { return formatTraceSetting(traceSetting); }
+           void           detachSource();
     static RexxString *formatTraceSetting(size_t source);
 
 protected:

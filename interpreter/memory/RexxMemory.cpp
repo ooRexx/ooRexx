@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -79,16 +79,9 @@
 
 
 bool SysAccessPool(MemorySegmentPool **pool);
-/* NOTE:  There is just a single memory object in global storage.  We'll define      */
-/* memobj to be the direct address of this memory object.                            */
+// NOTE:  There is just a single memory object in global storage.  We'll define
+// memobj to be the direct address of this memory object.
 RexxMemory memoryObject;
-
-#define LiveStackSize  16370         /* live stack size                   */
-
-#define SaveStackSize 10             /* newly created objects to save */
-#define SaveStackAllocSize 500       /* pre-allocation for save stack  */
-
-#define MaxImageSize 1800000         /* maximum startup image size */
 
 RexxDirectory *RexxMemory::globalStrings = OREF_NULL;
 RexxDirectory *RexxMemory::environment = OREF_NULL;       // global environment
@@ -645,12 +638,14 @@ void RexxMemory::markObjects()
                                            /* now mark the unInit table and the */
         this->markObjectsMain(uninitTable);
     }
-    /* have to expand the live stack?    */
-    if (this->liveStack != this->originalLiveStack)
+
+    // if we had to expand the live stack previously, we allocated a temporary
+    // one from malloc() storage rather than the object heap.  We need to
+    // explicitly free this version when that happens.
+    if (liveStack != originalLiveStack)
     {
-        free((void *)this->liveStack);     /* release the old one               */
-                                           /* and set back to the original      */
-        this->liveStack = this->originalLiveStack;
+        free((void *)liveStack);
+        liveStack = originalLiveStack;
     }
     verboseMessage("Mark operation completed\n");
 }
@@ -1341,16 +1336,17 @@ void RexxMemory::liveStackFull()
 /* Function:  Process a live-stack overflow situation                         */
 /******************************************************************************/
 {
-                                         /* create a temporary stack          */
-    RexxStack *newLiveStack = new (this->liveStack->size * 2, true) RexxStack (this->liveStack->size * 2);
-    /* copy the live stack entries       */
-    newLiveStack->copyEntries(this->liveStack);
+    // create a new stack that is double in size
+    RexxStack *newLiveStack = liveStack->reallocate(2);
+
     /* has this already been expanded?   */
-    if (this->liveStack != this->originalLiveStack)
+    // TODO:  Why is this calling free?
+    if (liveStack != originalLiveStack)
     {
-        free((void *)this->liveStack);     /* release the old one               */
+        free((void *)liveStack);
     }
-    this->liveStack = newLiveStack;      /* and set the new stack             */
+    // we can set the new stack
+    liveStack = newLiveStack;
 }
 
 void RexxMemory::mark(RexxObject *markObject)

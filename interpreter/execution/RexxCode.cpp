@@ -168,7 +168,7 @@ void RexxCode::run(RexxActivity *activity, MethodClass *method, RexxObject *rece
 RexxArray *RexxCode::getSource()
 {
     // the source package handles this.
-    return source->extractSourceLines(location);
+    return source->extractSource(location);
 }
 
 

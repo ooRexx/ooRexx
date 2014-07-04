@@ -48,8 +48,10 @@ class RexxStack : public RexxInternalObject
 {
  public:
     inline void *operator new(size_t size, void *ptr) { return ptr; }
+    void        *operator new(size_t, size_t);
     void        *operator new(size_t, size_t, bool temporary);
     inline void  operator delete(void *, void *) { }
+    inline void  operator delete(void *, size_t) { };
     inline void  operator delete(void *, size_t, bool temporary) { };
 
     inline RexxStack(RESTORETYPE restoreType) { ; };
@@ -70,6 +72,7 @@ class RexxStack : public RexxInternalObject
 
     RexxObject *pop();
     RexxObject *fpop();
+    RexxStack  *reallocate(size_t increment);
 
     inline void        fastPush(RexxObject *element) { stack[++(top)] = element; };
     inline bool        checkRoom() { return top < size-1; }

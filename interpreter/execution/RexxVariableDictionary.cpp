@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -59,8 +59,10 @@
 #include "SupplierClass.hpp"
 #include "RexxCompoundTail.hpp"
 #include "SourceFile.hpp"
+#include "LanguageParser.hpp"
 
 
+// TODO:  Add deepcopy default virtual method?
 RexxObject  *RexxVariableDictionary::copy()
 /******************************************************************************/
 /* Function:  Copy a variable dictionary                                      */
@@ -650,7 +652,7 @@ RexxVariableBase  *RexxVariableDictionary::getDirectVariableRetriever(
         literal = true;                    /* this is a literal value           */
     }
                                            /* have a valid length?              */
-    if (length <= (size_t)MAX_SYMBOL_LENGTH && length > 0)
+    if (length <= LanguageParser::MAX_SYMBOL_LENGTH && length > 0)
     {
         size_t compound = 0;                      /* no periods yet                    */
         size_t scan = 0;                          /* start at string beginning         */

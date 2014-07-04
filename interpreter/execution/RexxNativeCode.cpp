@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -41,8 +41,6 @@
 /* Primitive Method Class                                                     */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
-#include <string.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "DirectoryClass.hpp"
@@ -50,17 +48,16 @@
 #include "RexxNativeCode.hpp"
 #include "SourceFile.hpp"
 #include "PackageManager.hpp"
-#include <ctype.h>
 
 
 RexxNativeCode::RexxNativeCode(RexxString *_package, RexxString *_name)
 {
     // and this is the information needed to resolve this again after an
     // image restore
-    OrefSet(this, this->package, _package);
-    OrefSet(this, this->name, _name);
+    package = _package;
+    name = _name;
     // this will be set later, if available
-    OrefSet(this, this->source, OREF_NULL);
+    source = OREF_NULL;
 }
 
 
