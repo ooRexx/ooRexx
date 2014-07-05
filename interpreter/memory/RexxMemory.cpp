@@ -69,6 +69,7 @@
 #include "SysFileSystem.hpp"
 #include "UninitDispatcher.hpp"
 #include "GlobalProtectedObject.hpp"
+#include "MapTable.hpp"
 
 // restore a class from its
 // associated primitive behaviour
@@ -195,13 +196,6 @@ void MemoryObject::initialize(bool _restoringImage)
 
     /* set memories behaviour */
     memoryObject.setBehaviour(TheMemoryBehaviour);
-    /* initial marktable value is        */
-    /* TheKernel                         */
-    this->markTable = OREF_NULL;         /* fix by CHM/Rick: set initial table*/
-                                         /* to NULL since TheKernel could     */
-                                         /* point to an invalid memory address*/
-                                         /* if one OREXX session is started   */
-                                         /* while another one is closed       */
 
     /* make sure we have an inital segment set to allocate from. */
     newSpaceNormalSegments.getInitialSet();
@@ -386,7 +380,7 @@ void  MemoryObject::killOrphans(RexxObject *rootObject)
 
     /* push a unique terminator          */
     pushLiveStack(OREF_NULL);
-    /*Push an extra marktable            */
+    // push our root object on to the stack and start by marking that.
     pushLiveStack(rootObject);
     memory_mark_general(rootObject);     /* start from the very tip-top       */
     memory_mark_general(TheNilObject);   /* use .nil to mark the stack        */
@@ -626,7 +620,7 @@ void MemoryObject::markObjects()
     else
     {
         /* call normal,speedy,efficient mark */
-        this->markObjectsMain((RexxObject *)this);
+        markObjectsMain((RexxObject *)this);
         // now process the weak reference queue...We check this before the
         // uninit list is processed so that the uninit list doesn't mark any of the
         // weakly referenced items.  We don't want an object placed on the uninit queue
@@ -910,7 +904,6 @@ void MemoryObject::live(size_t liveMark)
     memory_mark(old2new);
     memory_mark(envelope);
     memory_mark(variableCache);
-    memory_mark(markTable);
     memory_mark(globalStrings);
     // now call the various subsystem managers to mark their references
     Interpreter::live(liveMark);
@@ -940,7 +933,6 @@ void MemoryObject::liveGeneral(MarkReason reason)
     memory_mark_general(old2new);
     memory_mark_general(envelope);
     memory_mark_general(variableCache);
-    memory_mark_general(markTable);
     memory_mark_general(globalStrings);
     // now call the various subsystem managers to mark their references
     Interpreter::liveGeneral(reason);
@@ -1837,89 +1829,6 @@ RexxObject *MemoryObject::setDump(RexxObject *selection)
     return selection;
 }
 
-RexxObject *MemoryObject::gutCheck(void)
-/******************************************************************************/
-/* Arguments:  None                                                           */
-/*                                                                            */
-/*  Returned:  Nothing                                                        */
-/******************************************************************************/
-{
-    wholenumber_t  count, testcount;
-    HashLink j;
-    bool restoreimagesave;
-    RexxInteger *value;
-    RexxInteger *testValue;
-    RexxObject *index;
-    /* temp OREF used to hold original   */
-    /*and test versions                  */
-    RexxIdentityTable *tempold2new;
-
-    printf("Comparing old2new with the current system.\n");
-
-    /* build a test remembered set       */
-    tempold2new = new_identity_table();
-    restoreimagesave = restoreimage;
-    restoreimage = true;                 /* setting both of these to true will*/
-                                         /* traverse System OldSpace and live */
-                                         /*mark all objects                   */
-    oldSpaceSegments.markOldSpaceObjects();
-
-    restoreimage = restoreimagesave;     /* all done building remembered set  */
-                                         /* For all object in old2new table   */
-    for (j = old2new->first();
-        (index = (RexxObject *)old2new->index(j)) != OREF_NULL;
-        j = old2new->next(j))
-    {
-        /* Get refCount for this obj old2new */
-        value = (RexxInteger *)this->old2new->get(index);
-        /* new refcount for obj in newly     */
-        /*build old2new table                */
-        testValue = (RexxInteger *)tempold2new->get(index);
-        /* Was object found in new table?    */
-        if (testValue == OREF_NULL)
-        {
-            /* nope, extra stuff in orig.        */
-            printf("object:  %p,  type:  %lu, is extra in old2new.\n\n",
-                   index, index->behaviour->getClassType());
-        }
-        else
-        {
-            /* now make sure both refCounts are  */
-            /* the same.                         */
-            count = value->getValue();
-            testcount = testValue->getValue();
-            if (count != testcount)
-            {
-                printf("object:  %p,  type:  %lu, has an incorrect refcount.\n",
-                       index, index->behaviour->getClassType());
-                printf("Refcount for object is %ld, should be %ld.\n\n", count, testcount);
-            }
-            /* now remove object from new table  */
-            tempold2new->remove(index);
-        }
-    }
-    /* Anything left in new table was    */
-    /* missing from original old2new     */
-    /* so iterate through it and report  */
-    /* the missing objects               */
-    for (j = tempold2new->first();
-        (index = (RexxObject *)tempold2new->index(j)) != OREF_NULL;
-        j = tempold2new->next(j))
-    {
-        printf("object:  %p,  type:  %lu, is missing from old2new.\n\n",
-               index,index->behaviour->getClassType());
-    }
-
-    /* now take a dump so that we can    */
-    /*  diagnose any problems we just    */
-    /*uncovered                          */
-    printf("Dumping object memory.\n");  /* tell the user what's happening    */
-    this->dumpEnable = true;             /* turn dumps on                     */
-    this->dump();                        /* take the dump                     */
-
-    return OREF_NULL;
-}
-
 
 void MemoryObject::setObjectOffset(size_t offset)
 /******************************************************************************/
@@ -1990,36 +1899,47 @@ void      MemoryObject::setEnvelope(RexxEnvelope *_envelope)
 }
 
 
+/**
+ * Update a reference to an object when the target
+ * object is a member of the OldSpace.
+ *
+ * @param oldValue The old field needing updating.
+ * @param value    The new value being assigned.
+ *
+ * @return The assigned object value.
+ */
 RexxObject *MemoryObject::setOref(void *oldValue, RexxObject *value)
-/******************************************************************************/
-/* Arguments:  index-- OREF to set;  value--OREF to which objr is set         */
-/*                                                                            */
-/*  Returned:  nothing                                                        */
-/*                                                                            */
-/******************************************************************************/
 {
-    RexxInteger *refcount;
     RexxObject **oldValueLoc = (RexxObject **)oldValue;
     RexxObject *index = *oldValueLoc;
 
+    // if there is no old2new table, we're doing an image build.  No tracking
+    // required then.
     if (old2new != OREF_NULL)
     {
+        // the index value is the one assigned there currently.  If this
+        // is a newspace value, we should have a table entry with a reference
+        // count for it in our table.
         if (index != OREF_NULL && index->isNewSpace())
         {
-            /* decrement reference count for     */
-            /**index                             */
-            refcount = (RexxInteger *)this->old2new->get(index);
-            if (refcount != OREF_NULL)
+            // get the old reference count, which
+            // *should* be non-zero
+            size_t refcount = old2new->get(index);
+            if (refcount != 0)
             {
-                /* found a value for refcount, now   */
-                /*decrement the count                */
-                refcount->decrementValue();
-                /* if the new value is 0, *index is  */
-                /*no longer ref'ed from oldspace     */
-                if (refcount->getValue() == 0)
+                // TODO:  We can optimize this with a special method
+
+                // decrement the value.  If the new value
+                // is zero, then we remove the reference object.
+                refcount--;
+                if (refcount == 0)
                 {
-                    /* delete the entry for *index       */
-                    this->old2new->remove(index);
+                    old2new->remove(index);
+                }
+                // update with the new count
+                else
+                {
+                    old2new->put(refcount, index);
                 }
             }
             else
@@ -2031,31 +1951,18 @@ RexxObject *MemoryObject::setOref(void *oldValue, RexxObject *value)
                 printf("Naughty object reference type is:  %lu\n", (index)->behaviour->getClassType());
             }
         }
+        // now we have to do this for the new value.
         if (value != OREF_NULL && value->isNewSpace())
         {
-            /* increment reference count for     */
-            /*value                              */
-            refcount = (RexxInteger *)this->old2new->get(value);
-            /* was there a reference here        */
-            /*already?                           */
-            if (refcount)
-            {
-                /* yep, found one, so just increment */
-                /*it                                 */
-                refcount->incrementValue();
-            }
-            else
-            {
-                /* nope, this is the first, so set   */
-                /*the refcount to 1                  */
-                // NOTE:  We don't use new_integer here because we need a mutable
-                // integer and can't use the one out of the cache.
-                this->old2new->put(new RexxInteger(1), value);
-            }
+            // will return 0 if not in there already
+            size_t refCount = old2new->get(value);
+            // increment and put back
+            refCount ++;
+            old2new->put(refCount, value);
         }
     }
-    /* now make the assignment, just     */
-    /*like all this stuff never happened!*/
+    // now make the assignment, just     //
+    //like all this stuff never happened!//
     return *oldValueLoc = value;
 }
 
@@ -2204,7 +2111,7 @@ void MemoryObject::shutdown()
 }
 
 
-void MemoryObject::setUpMemoryTables(RexxIdentityTable *old2newTable)
+void MemoryObject::setUpMemoryTables(MapTable *old2newTable)
 /******************************************************************************/
 /* Function:  Set up the initial memory table.                                */
 /******************************************************************************/
@@ -2219,13 +2126,9 @@ void MemoryObject::setUpMemoryTables(RexxIdentityTable *old2newTable)
     /* restored image), then add the first entry to the table. */
     if (old2new != NULL)
     {
-        /* now add old2new itself to the old2new table! */
-        // NOTE:  We don't use new_integer here because we need a mutable
-        // integer and can't use the one out of the cache.
-        old2new->put(new RexxInteger(1), old2new);
+        // now add old2new itself to the old2new table!
+        old2new->put(1 , old2new);
     }
-    /* first official OrefSet!! */
-    OrefSet(this, markTable, old2new);
     /* Now get our savestack and savetable */
     /* allocate savestack with usable and allocated size */
     /* NOTE:  We do not use OREF_SET here.  We want to control the */
@@ -2348,7 +2251,7 @@ void MemoryObject::restore()
 
     memoryObject.setOldSpace();          /* Mark Memory Object as OldSpace    */
     /* initialize the tables used for garbage collection. */
-    memoryObject.setUpMemoryTables(new_identity_table());
+    memoryObject.setUpMemoryTables(new MapTable(Memory::DefaultOld2NewSize));
                                          /* If first one through, generate all*/
     IntegerZero   = new_integer(0);      /*  static integers we want to use...*/
     IntegerOne    = new_integer(1);      /* This will allow us to use static  */

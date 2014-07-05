@@ -78,7 +78,7 @@ class RexxInstruction : public RexxInternalObject
     virtual void execute(RexxActivation *, RexxExpressionStack *) { ; };
 
     inline const SourceLocation &getLocation() { return instructionLocation; }
-    inline void  setLocation(SourceLocation &l) { instructionLocation = l; }
+    inline void  setLocation(const SourceLocation &l) { instructionLocation = l; }
 
     // NOTE:  This method is only used during program translation, so we can skip using
     // OrefSet to set this variable.

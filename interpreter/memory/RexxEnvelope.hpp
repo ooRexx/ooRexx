@@ -46,9 +46,8 @@
 
 class RexxSmartBuffer;
 class RexxBuffer;
+class MapTable;
 
-// default size of the buffer used for flatten operations
-#define DEFAULT_ENVELOPE_BUFFER (128*1024)
 
 class RexxEnvelope : public RexxInternalObject
 {
@@ -77,16 +76,21 @@ class RexxEnvelope : public RexxInternalObject
     inline RexxSmartBuffer *getBuffer() {return this->buffer;}
     inline RexxObject *getReceiver() {return this->receiver;}
     inline size_t      getCurrentOffset() { return this->currentOffset; }
-    inline RexxIdentityTable *getDuptable() {return this->duptable;}
+    inline MapTable *getDuptable() {return this->duptable;}
     inline RexxIdentityTable *getRehashtable() {return this->rehashtable;}
 
     size_t      currentOffset;            // current flattening offset
+
+    // default size of the buffer used for flatten operations
+    static const size_t DefaultEnvelopeBuffer = (256*1024);
+    // default number initial dup table size (allow for a lot of objects)
+    static const size_t DefaultDupTableSize = 32 * 1024;
 
 protected:
 
     RexxObject *home;
     RexxObject *receiver;                 // object to receive the message
-    RexxIdentityTable  *duptable;         // table of duplicates
+    MapTable           *duptable;         // table of duplicates
     RexxIdentityTable  *savetable;        // table of protected objects created during flattening
     RexxSmartBuffer *buffer;              // smart buffer wrapper
     RexxIdentityTable  *rehashtable;      // table to rehash

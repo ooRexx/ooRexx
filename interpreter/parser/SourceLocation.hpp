@@ -98,7 +98,7 @@ public:
         endOffset = end_offset;
     }
 
-    inline void setLocation(SourceLocation &l)
+    inline void setLocation(const SourceLocation &l)
     {
         startLine = l.startLine;
         startOffset = l.startOffset;

@@ -73,7 +73,7 @@ class RexxClause : public RexxInternalObject
     RexxToken  *nextRealToken();
     inline void        firstToken() {current = first;};
     inline const SourceLocation &getLocation() { return clauseLocation; }
-    inline void  setLocation(SourceLocation &l) { clauseLocation = l; }
+    inline void  setLocation(const SourceLocation &l) { clauseLocation = l; }
     inline void        previous() { current--; }
     inline RexxToken  *next() { return (RexxToken *)tokens->get(current++); }
     inline size_t      mark() { return current; }

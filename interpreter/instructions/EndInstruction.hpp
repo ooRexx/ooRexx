@@ -64,7 +64,7 @@ class RexxInstructionEnd : public RexxInstruction
 
     inline RexxString  *endName() { return name; };
     inline void         setStyle(EndBlockType type) { style = type; };
-    inline EndBlockType getStyle() { style; };
+    inline EndBlockType getStyle() { return style; };
 
  protected:
 

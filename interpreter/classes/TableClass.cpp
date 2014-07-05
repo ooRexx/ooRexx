@@ -61,37 +61,6 @@ void RexxTable::createInstance()
     CLASS_CREATE(Table, "Table", RexxClass);
 }
 
-
-RexxObject *RexxTable::addOffset(
-  size_t      _value,                   /* object to add                     */
-  RexxObject *_index)                   /* added index                       */
-/******************************************************************************/
-/* Function:  This add method is used by the envelope packing/copybuffer      */
-/*  processing.  it is used to maintain the nodupTable.  The value argument   */
-/*  is not really an OREF but rather a offSet into the smartBuffer.           */
-/*  This routine will do the same function as Add except that we won't verify */
-/*    any arguments and f we need to grow the hashtab we mark it as           */
-/*    having to references.  This is needed to so that we don't try and Mark  */
-/*    (Collect) the offset values.                                            */
-/******************************************************************************/
-{
-    memoryObject.disableOrefChecks();    /* Turn off OrefSet Checking.        */
-                                         /* try to place in existing hashtab  */
-    RexxHashTable *newHash = this->contents->primitiveAdd((RexxObject *)_value, _index);
-    if (newHash  != OREF_NULL)
-    {         /* have a reallocation occur?        */
-              /* mark the hash as not having refere*/
-              /* even though the indices are objs  */
-              /* we don't need to mark this Hash.  */
-              /* Trust me !!!                      */
-        newHash->setHasNoReferences();
-        /* hook on the new hash table        */
-        OrefSet(this, this->contents, newHash);
-    }
-    memoryObject.enableOrefChecks();     /* Turn OrefSet Checking.            */
-    return OREF_NULL;                    /* always return nothing             */
-}
-
 RexxObject *RexxTable::stringAdd(
   RexxObject *_value,                   /* object to add                     */
   RexxString *_index)                   /* added index                       */

@@ -57,7 +57,7 @@ class RexxInteger : public RexxObject
 {
  public:
     inline RexxInteger(RESTORETYPE restoreType) { ; };
-    inline RexxInteger(wholenumber_t intValue) { this->value = intValue; };
+    inline RexxInteger(wholenumber_t intValue) { value = intValue; };
     inline void *operator new(size_t size, void *ptr) {return ptr;};
     void *operator new(size_t);
 
@@ -140,12 +140,10 @@ class RexxInteger : public RexxObject
                                          /* numberstring operator forwarders  */
     koper (integer_operator_not)
 
-    inline wholenumber_t getValue() {return this->value;}
-    inline wholenumber_t wholeNumber() {return this->value;}
-    inline stringsize_t stringSize() {return (stringsize_t)this->value;}
-    inline wholenumber_t incrementValue() {return ++this->value;}
-    inline wholenumber_t decrementValue() {return --this->value;}
-    inline RexxString *getStringrep() {return this->stringrep;}
+    inline wholenumber_t getValue() {return value;}
+    inline wholenumber_t wholeNumber() {return value;}
+    inline stringsize_t stringSize() {return (stringsize_t)value;}
+    inline RexxString *getStringrep() {return stringrep;}
 
     static void createInstance();
     static PCPPM operatorMethods[];
@@ -186,7 +184,7 @@ class RexxIntegerClass : public RexxClass
     {
         if (value >= INTEGERCACHELOW && value < INTEGERCACHESIZE)
         {
-            return this->integercache[value - INTEGERCACHELOW];
+            return integercache[value - INTEGERCACHELOW];
         }
         else
         {

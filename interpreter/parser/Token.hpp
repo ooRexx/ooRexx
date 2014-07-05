@@ -538,7 +538,7 @@ class RexxToken : public RexxInternalObject
     inline bool       isMessageOperator() { return classId == TOKEN_TILDE || classId == TOKEN_DTILDE || classId == TOKEN_SQLEFT; }
     inline void       setNumeric(TokenSubclass v)   { this->numeric = v; };
     inline const SourceLocation &getLocation() { return tokenLocation; }
-    inline void       setLocation(SourceLocation &l) { tokenLocation = l; }
+    inline void       setLocation(const SourceLocation &l) { tokenLocation = l; }
            void       checkAssignment(RexxSource *source, RexxString *newValue);
            int        precedence();
            bool       isTerminator(int);

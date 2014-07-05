@@ -141,7 +141,7 @@ class LanguageParser: public RexxInternalObject
     // general parsing methods
     void        needVariable(RexxToken *);
     void        needVariableOrDotSymbol(RexxToken *);
-    void        getLocation(SourceLocation &);
+    const SourceLocation& getLocation() { return clauseLocation; }
     void        startLocation(SourceLocation &);
     void        endLocation(SourceLocation &);
     inline void        previousToken() { clause->previous(); }

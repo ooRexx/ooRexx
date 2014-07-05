@@ -65,7 +65,7 @@ RexxInstructionDrop::RexxInstructionDrop(size_t varCount, RexxQueue *variable_li
     variableCount = varCount;
     while (varCount > 0)
     {
-        variables[--varCount = (RexxVariableBase *)variable_list->pop();
+        variables[--varCount] = (RexxVariableBase *)variable_list->pop();
     }
 }
 

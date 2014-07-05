@@ -51,7 +51,7 @@
 #include "RexxEnvelope.hpp"
 #include "MethodClass.hpp"
 #include "ActivityManager.hpp"
-
+#include "MapTable.hpp"
 
 
 /**
@@ -204,12 +204,8 @@ RexxBuffer *RexxEnvelope::pack(RexxObject *_receiver)
     // create a save table to protect any objects (such as proxy
     // objects) we create during flattening.
     savetable = new_identity_table();
-    duptable = new_identity_table();
-    // this is a bit of a hack, but necessary.  This allows us to store
-    // object offsets into a hashtable without having the hashtable
-    // attempt to mark the references.
-    duptable->contents->setHasNoReferences();
-    buffer = new RexxSmartBuffer(DEFAULT_ENVELOPE_BUFFER);
+    duptable = new MapTable(DefaultDupTableSize);
+    buffer = new RexxSmartBuffer(DefaultEnvelopeBuffer);
     // get a flatten stack from the memory object
     flattenStack = memoryObject.getFlattenStack();
     // push unique terminator onto stack
@@ -384,9 +380,7 @@ void RexxEnvelope::puff(RexxBuffer *sourceBuffer, char *startPointer, size_t dat
  */
 size_t RexxEnvelope::queryObj(RexxObject *obj)
 {
-    // TODO:  Little concerned about GC on this one...if it gets expanded.
-    // might want to consider a special table for non-objects
-    return (size_t)duptable->get(obj);
+    return duptable->get(obj);
 }
 
 
@@ -471,7 +465,7 @@ void  RexxEnvelope::associateObject(RexxObject *o, size_t flattenOffset)
 {
     // we just add this to the duptable under the original object
     // reference value.
-    this->duptable->addOffset(flattenOffset, o);
+    duptable->put(flattenOffset, o);
 }
 
 

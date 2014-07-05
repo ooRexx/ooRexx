@@ -79,6 +79,10 @@ public:
 
 protected:
 
+    // The default size for the old2new table.  Hopefully, this
+    // is more than we need, but we don't want this extending frequently
+    static const size_t DefaultOld2NewSize = 512;
+
     // The minimum allocation unit for an object, which must be large
     // enought for a pair of pointer values
     static const size_t ObjectGrain = sizeof(void *) * 2;

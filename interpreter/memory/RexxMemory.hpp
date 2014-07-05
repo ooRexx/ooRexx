@@ -63,6 +63,7 @@ class RexxVariable;
 class WeakReference;
 class RexxIdentityTable;
 class GlobalProtectedObject;
+class MapTable;
 
 #ifdef _DEBUG
 class MemoryObject;
@@ -166,15 +167,14 @@ class MemoryObject : public RexxInternalObject
     void        dumpObject(RexxObject *objectRef, FILE *outfile);
     void        setObjectOffset(size_t offset);
     void        setEnvelope(RexxEnvelope *);
-    inline void        setMarkTable(RexxTable *marktable) {this->markTable = marktable;};
-    inline void        setOrphanCheck(bool orphancheck) {this->orphanCheck = orphancheck; };
+    inline void        setMarkTable(RexxTable *marktable) { markTable = marktable;};
+    inline void        setOrphanCheck(bool orphancheck) { orphanCheck = orphancheck; };
     RexxObject *checkSetOref(RexxObject *, RexxObject **, RexxObject *, const char *, int);
     RexxObject *setOref(void *index, RexxObject *value);
     LiveStack  *getFlattenStack();
     void        returnFlattenStack();
     RexxObject *reclaim();
     RexxObject *setParms(RexxObject *, RexxObject *);
-    RexxObject *gutCheck();
     void        memoryPoolAdded(MemorySegmentPool *);
     void        shutdown();
     void        liveStackFull();
@@ -211,7 +211,7 @@ class MemoryObject : public RexxInternalObject
     static void createLocks();
     static void closeLocks();
     void        scavengeSegmentSets(MemorySegmentSet *requester, size_t allocationLength);
-    void        setUpMemoryTables(RexxIdentityTable *old2newTable);
+    void        setUpMemoryTables(MapTable *old2newTable);
     void        collectAndUninit(bool clearStack);
     void        lastChanceUninit();
     inline RexxDirectory *getGlobalStrings() { return globalStrings; }
@@ -319,39 +319,35 @@ enum
     RexxTable  *markTable;               /* tabobjects to start a memory mark */
                                          /*  if building/restoring image,     */
                                          /*OREF_ENV, else old2new             */
-    RexxIdentityTable  *old2new;           /* remd set                          */
-    RexxIdentityTable  *uninitTable;       // the table of objects with uninit methods
+    MapTable           *old2new;         // the table for tracking old2new references.
+    RexxIdentityTable  *uninitTable;     // the table of objects with uninit methods
     size_t            pendingUninits;    // objects waiting to have uninits run
     bool              processingUninits; // true when we are processing the uninit table
 
-    MemorySegmentPool *firstPool;        /* First segmentPool block.          */
-    MemorySegmentPool *currentPool;      /* Curent segmentPool being carved   */
+    MemorySegmentPool *firstPool;        // First segmentPool block.
+    MemorySegmentPool *currentPool;      // Curent segmentPool being carved
     OldSpaceSegmentSet oldSpaceSegments;
     NormalSegmentSet newSpaceNormalSegments;
     LargeSegmentSet  newSpaceLargeSegments;
-    char *image_buffer;                  /* the buffer used for image save/restore operations */
-    size_t image_offset;                 /* the offset information for the image */
-    size_t relocation;                   /* image save/restore relocation factor */
-    bool dumpEnable;                     /* enabled for dumps?                */
-    bool saveimage;                      /* we're saving the image */
-    bool restoreimage;                   /* we're restoring the image */
-    bool checkSetOK;                     /* OREF checking is enabled          */
-                                         /* enabled for checking for bad      */
-                                         /*OREF's?                            */
+    char *image_buffer;                  // the buffer used for image save/restore operations
+    size_t image_offset;                 // the offset information for the image
+    size_t relocation;                   // image save/restore relocation factor
+    bool dumpEnable;                     // enabled for dumps?
+    bool saveimage;                      // we're saving the image
+    bool restoreimage;                   // we're restoring the image
+    bool checkSetOK;                     // OREF checking is enabled enabled for checking for bad OREF's?
     bool orphanCheck;
-    size_t objOffset;                    /* offset of arriving mobile objects */
-                                         /* envelope for arriving mobile      */
-                                         /*objects                            */
-    RexxEnvelope *envelope;
-    LiveStack *originalLiveStack;        /* original live stack allocation    */
-    MemoryStats *imageStats;             /* current statistics collector      */
+    size_t objOffset;                    // off set of objects in enveloper for flattening.
+    RexxEnvelope *envelope;              // envelope used for unflatten phase
+    LiveStack *originalLiveStack;        // original live stack allocation
+    MemoryStats *imageStats;             // current statistics collector
 
-    size_t allocations;                  /* number of allocations since last GC */
-    size_t collections;                  /* number of garbage collections     */
+    size_t allocations;                  // number of allocations since last GC
+    size_t collections;                  // number of garbage collections
     WeakReference *weakReferenceList;    // list of active weak references
 
     static RexxDirectory *globalStrings; // table of global strings
-    static SysMutex flattenMutex;        /* locks for various memory processes */
+    static SysMutex flattenMutex;        // locks for various memory processes */
     static SysMutex unflattenMutex;
     static SysMutex envelopeMutex;
 };

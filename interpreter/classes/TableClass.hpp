@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -58,13 +58,12 @@ class RexxTable : public RexxHashTableCollection {
    RexxObject * putNodupe(RexxObject *, RexxObject *);
    RexxObject * stringPut(RexxObject *, RexxString *);
    RexxObject * stringAdd(RexxObject *, RexxString *);
-   RexxObject * addOffset(size_t, RexxObject *);
-   RexxObject * replace(RexxObject *newValue, HashLink pos) {return this->contents->replace(newValue, pos); };
-   RexxArray  * allAt(RexxObject *key)  { return this->contents->getAll(key); }
+   RexxObject * replace(RexxObject *newValue, HashLink pos) {return contents->replace(newValue, pos); };
+   RexxArray  * allAt(RexxObject *key)  { return contents->getAll(key); }
    void         reHash();
    RexxArray  * requestArray();
-   inline RexxArray  * stringGetAll(RexxString *key) {return this->contents->stringGetAll(key); };
-   inline       RexxObject * stringGet(RexxString *key) {return this->contents->stringGet(key); };
+   inline RexxArray  * stringGetAll(RexxString *key) {return contents->stringGetAll(key); };
+   inline       RexxObject * stringGet(RexxString *key) {return contents->stringGet(key); };
 
    RexxObject *newRexx(RexxObject **, size_t);
    static RexxTable  *newInstance();
