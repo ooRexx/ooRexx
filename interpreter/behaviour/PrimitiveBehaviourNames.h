@@ -199,6 +199,8 @@
 #define TheInterpreterInstanceBehaviour      (&RexxBehaviour::primitiveBehaviours[T_InterpreterInstance])
 #define TheSecurityManagerBehaviour      (&RexxBehaviour::primitiveBehaviours[T_SecurityManager])
 #define TheCommandHandlerBehaviour      (&RexxBehaviour::primitiveBehaviours[T_CommandHandler])
+#define TheMapBucketBehaviour      (&RexxBehaviour::primitiveBehaviours[T_MapBucket])
+#define TheMapTableBehaviour      (&RexxBehaviour::primitiveBehaviours[T_MapTable])
 
 
 /* -------------------------------------------------------------------------- */

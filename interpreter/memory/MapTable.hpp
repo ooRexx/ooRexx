@@ -36,111 +36,40 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                                            */
-/*                                                                            */
-/* Primitive Drop Parse Class                                                 */
+/* Defintions for a MapTable, which is used by memory management to map       */
+/* object instances to integer values.  Used mostly for old-to-new tables     */
+/* and flattening offset tables.                                              */
 /*                                                                            */
 /******************************************************************************/
-#include "RexxCore.h"
-#include "QueueClass.hpp"
-#include "RexxActivation.hpp"
-#include "DropInstruction.hpp"
-#include "ExpressionBaseVariable.hpp"
-#include "RexxActivity.hpp"
-#include "BufferClass.hpp"
+#ifndef Included_MapTable
+#define Included_MapTable
 
+#include "MapBucket.hpp"
 
-/**
- * Complete construction of a drop instruction.
- *
- * @param varCount The count of variables.
- * @param variable_list
- *                 The list of variables, a queue with the variables
- *                 stored in reverse order.
- */
-RexxInstructionDrop::RexxInstructionDrop(size_t varCount, RexxQueue *variable_list)
+class MapTable : public RexxInternalObject
 {
-    // copy each of the variables from the queue into the object storage.
-    // the copy is done back to front because the queue has them in LIFO order.
-    variableCount = varCount;
-    while (varCount > 0)
-    {
-        variables[--varCount = (RexxVariableBase *)variable_list->pop();
-    }
-}
+ public:
+    void *operator new(size_t base);
+    inline void *operator new(size_t size, void *objectPtr) { return objectPtr; };
+    inline void  operator delete(void *, void *) {;}
+    inline void  operator delete(void *) {;}
 
+    MapTable(size_t entries);
+    inline MapTable(RESTORETYPE restoreType) { ; };
 
-/**
- * Perform garbage collection on a live object.
- *
- * @param liveMark The current live mark.
- */
-void RexxInstructionDrop::live(size_t liveMark)
-{
-    // must be first one marked
-    memory_mark(nextInstruction);
-    for (size_t i = 0; i < variableCount; i++)
-    {
-        memory_mark(variables[i]);
-    }
-}
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
 
+    RexxObject *copy();
 
-/**
- * Perform generalized live marking on an object.  This is
- * used when mark-and-sweep processing is needed for purposes
- * other than garbage collection.
- *
- * @param reason The reason for the marking call.
- */
-void RexxInstructionDrop::liveGeneral(MarkReason reason)
-{
-    // must be first one marked
-    memory_mark_general(nextInstruction);
-    for (size_t i = 0; i < variableCount; i++)
-    {
-        memory_mark_general(variables[i]);
-    }
-}
+    inline size_t get(RexxInternalObject *key) { return contents->get(key); }
+    inline void   put(size_t value, RexxInternalObject *key);
+    inline size_t remove(RexxInternalObject *key) { return contents->remove(key); };
+    inline void   empty() { contents->empty(); }
+    inline bool   isEmpty() { return contents->isEmpty(); }
+           void   reallocateContents();
 
-
-/**
- * Flatten a source object.
- *
- * @param envelope The envelope that will hold the flattened object.
- */
-void RexxInstructionDrop::flatten(RexxEnvelope *envelope)
-{
-    setUpFlatten(RexxInstructionDrop)
-
-    flattenRef(nextInstruction);
-
-    for (size_t i = 0; i < variableCount; i++)
-    {
-        flattenRef(variables[i]);
-    }
-
-    cleanUpFlatten
-}
-
-/**
- * Execute a drop instruction.
- *
- * @param context The current execution context.
- * @param stack   The current evaluation stack.
- */
-void RexxInstructionDrop::execute(RexxActivation *context, RexxExpressionStack *stack)
-{
-    // trace if necessary
-    context->traceInstruction(this);
-
-    // loop through the list telling each variable to drop.
-    for (size_t i = 0; i < variableCount; i++)
-    {
-        variables[i]->drop(context);
-    }
-
-    // standard debug pause.
-    context->pauseInstruction();
-}
+    MapBucket *contents;     // the backing collection for this
+};
+#endif
 

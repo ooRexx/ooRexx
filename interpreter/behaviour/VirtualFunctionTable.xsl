@@ -67,7 +67,7 @@
 <xsl:text>
 
 
-void *RexxMemory::virtualFunctionTable[T_Last_Class_Type + 1] = {NULL};
+void *MemoryObject::virtualFunctionTable[T_Last_Class_Type + 1] = {NULL};
 
 /******************************************************************************/
 /* Function:  This small function is necessary to void optimizer problems on  */
@@ -80,7 +80,7 @@ void *getVftPointer(void *loc)
     return *((void **)loc);
 }
 
-void RexxMemory::buildVirtualFunctionTable()
+void MemoryObject::buildVirtualFunctionTable()
 /******************************************************************************/
 /* Function:  This routine will build an array of the virtualFunctions        */
 /*            There will be one for each Class.                               */

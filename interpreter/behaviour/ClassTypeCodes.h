@@ -214,10 +214,12 @@ typedef enum
     T_InterpreterInstance = 147,
     T_SecurityManager = 148,
     T_CommandHandler = 149,
+    T_MapBucket = 150,
+    T_MapTable = 151,
 
-    T_Last_Transient_Class = 149,
-    T_Last_Primitive_Class = 149,
-    T_Last_Class_Type = 149,
+    T_Last_Transient_Class = 151,
+    T_Last_Primitive_Class = 151,
+    T_Last_Class_Type = 151,
     
 } ClassTypeCode;
 

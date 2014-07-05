@@ -533,7 +533,8 @@ set (classes_sources ${build_classes_dir}/ArrayClass.cpp
 set (package_sources ${build_package_dir}/LibraryPackage.cpp
             ${build_package_dir}/PackageManager.cpp)
 set (memory_sources ${build_memory_dir}/DeadObject.cpp
-            ${build_memory_dir}/MemorySegment.cpp
+            ${build_memory_dir}/MapBucket.cpp
+            ${build_memory_dir}/MapTable.cpp
             ${build_memory_dir}/MemoryStack.cpp
             ${build_memory_dir}/MemoryStats.cpp
             ${build_memory_dir}/ProtectedObject.cpp

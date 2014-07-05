@@ -206,6 +206,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="InterpreterInstance" class="InterpreterInstance" include="InterpreterInstance.hpp"/>
 <Class id="SecurityManager" class="SecurityManager" include="SecurityManager.hpp"/>
 <Class id="CommandHandler" class="CommandHandler" include="CommandHandler.hpp"/>
+<Class id="MapBucket" class="MapBucket" include="MapBucket.hpp"/>
+<Class id="MapTable" class="MapTable" include="MapTable.hpp"/>
 </Transient>
 </Classes>
 </RexxClasses>

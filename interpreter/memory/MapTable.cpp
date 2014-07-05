@@ -36,111 +36,107 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                                            */
-/*                                                                            */
-/* Primitive Drop Parse Class                                                 */
+/* A collection that maps objects to integer values.  Used for internal       */
+/* memory management.                                                         */
 /*                                                                            */
 /******************************************************************************/
+
 #include "RexxCore.h"
-#include "QueueClass.hpp"
-#include "RexxActivation.hpp"
-#include "DropInstruction.hpp"
-#include "ExpressionBaseVariable.hpp"
-#include "RexxActivity.hpp"
-#include "BufferClass.hpp"
+#include "MapTable.hpp"
 
 
 /**
- * Complete construction of a drop instruction.
+ * Allocate a new MapTable item.
  *
- * @param varCount The count of variables.
- * @param variable_list
- *                 The list of variables, a queue with the variables
- *                 stored in reverse order.
+ * @param size    The base object size.
+ *
+ * @return The storage for creating a MapBucket.
  */
-RexxInstructionDrop::RexxInstructionDrop(size_t varCount, RexxQueue *variable_list)
+void *MapTable::operator new(size_t size)
 {
-    // copy each of the variables from the queue into the object storage.
-    // the copy is done back to front because the queue has them in LIFO order.
-    variableCount = varCount;
-    while (varCount > 0)
-    {
-        variables[--varCount = (RexxVariableBase *)variable_list->pop();
-    }
+   return new_object(size, T_MapBucket);
 }
 
 
 /**
- * Perform garbage collection on a live object.
+ * Initialize a MapTable object.
+ *
+ * @param entries The number of entries.
+ */
+MapTable::MapTable(size_t entries)
+{
+    // get a new bucket of the correct size
+    contents = new (entries) MapBucket(entries);
+}
+
+
+/**
+ * Normal garbage collection live marking
  *
  * @param liveMark The current live mark.
  */
-void RexxInstructionDrop::live(size_t liveMark)
+void MapTable::live(size_t liveMark)
 {
-    // must be first one marked
-    memory_mark(nextInstruction);
-    for (size_t i = 0; i < variableCount; i++)
+    memory_mark(contents);
+}
+
+
+/**
+ * Generalized object marking.
+ *
+ * @param reason The reason for this live marking operation.
+ */
+void MapTable::liveGeneral(MarkReason reason)
+{
+    memory_mark_general(contents);
+}
+
+
+/**
+ * Copy a map table.
+ *
+ * @return The new maptable object.
+ */
+RexxObject *MapTable::copy(void)
+{
+    // copy this object first
+    MapTable *newObj = (MapTable *)RexxInternalObject::copy();
+    newObj->contents = (MapBucket *)contents->copy();
+    return (RexxObject *)newObj;
+}
+
+
+/**
+ * Place an item into a hash collection using a key.
+ *
+ * @param value The inserted value.
+ * @param index The insertion key.
+ *
+ * @return The retrieved object.  Returns OREF_NULL if the object
+ *         was not found.
+ */
+void MapTable::put(size_t value, RexxInternalObject *index)
+{
+    // try to insert in the existing hash tables...if this
+    // fails, we're full and need to reallocate.
+    if (!contents->put(value, index))
     {
-        memory_mark(variables[i]);
+        // reallocate and try again
+        reallocateContents();
+        contents->put(value, index);
     }
 }
 
 
 /**
- * Perform generalized live marking on an object.  This is
- * used when mark-and-sweep processing is needed for purposes
- * other than garbage collection.
- *
- * @param reason The reason for the marking call.
+ * Reallocate the hash bucket to a larger version after
+ * a failed put() operation.
  */
-void RexxInstructionDrop::liveGeneral(MarkReason reason)
+void MapTable::reallocateContents()
 {
-    // must be first one marked
-    memory_mark_general(nextInstruction);
-    for (size_t i = 0; i < variableCount; i++)
-    {
-        memory_mark_general(variables[i]);
-    }
+    // create a new bucket and merge the old bucket into it, then replace the contents
+    // with the new ones.
+    MapBucket *newContents = new (contents->totalSize * 2) MapBucket(contents->totalSize * 2);
+    contents->merge(newContents);
+    contents = newContents;
 }
-
-
-/**
- * Flatten a source object.
- *
- * @param envelope The envelope that will hold the flattened object.
- */
-void RexxInstructionDrop::flatten(RexxEnvelope *envelope)
-{
-    setUpFlatten(RexxInstructionDrop)
-
-    flattenRef(nextInstruction);
-
-    for (size_t i = 0; i < variableCount; i++)
-    {
-        flattenRef(variables[i]);
-    }
-
-    cleanUpFlatten
-}
-
-/**
- * Execute a drop instruction.
- *
- * @param context The current execution context.
- * @param stack   The current evaluation stack.
- */
-void RexxInstructionDrop::execute(RexxActivation *context, RexxExpressionStack *stack)
-{
-    // trace if necessary
-    context->traceInstruction(this);
-
-    // loop through the list telling each variable to drop.
-    for (size_t i = 0; i < variableCount; i++)
-    {
-        variables[i]->drop(context);
-    }
-
-    // standard debug pause.
-    context->pauseInstruction();
-}
-
