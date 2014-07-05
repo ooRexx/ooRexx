@@ -64,14 +64,6 @@ const HashLink NO_MORE = 0;
 // indicates not linked
 const HashLink NO_LINK = ~((HashLink)0);
 
-                                       /* compare a value item to the value */
-                                       /* at the specified position         */
-bool inline EQUAL_VALUE(RexxObject *value, RexxObject *other)
-{
-                                       /* true for either direct identity or*/
-                                       /* real equality ("==")              */
-  return (value == other) || value->isEqual(other);
-}
 
 RexxHashTable *RexxHashTable::newInstance(
   size_t entries )                     /* number of entries in the table    */
@@ -272,7 +264,7 @@ RexxObject *RexxHashTable::remove(
         do
         {                               /* while more items in chain         */
                                         /* get a match?                      */
-            if (EQUAL_VALUE(_index, this->entries[position].index))
+            if (_index->equalValue(entries[position].index))
             {
                 /* save the current value            */
                 removed = this->entries[position].value;
@@ -350,7 +342,7 @@ RexxObject *RexxHashTable::removeAll(RexxObject *_index)
             /* copy the value into our array     */
             result->put(this->entries[position].value,i++);
                                           /* if got a match                    */
-            if (EQUAL_VALUE(_index, this->entries[position].index))
+            if (_index->equalValue(entries[position].index))
             {
                 /* get the next pointer              */
                 HashLink _next = this->entries[position].next;
@@ -496,8 +488,8 @@ RexxObject *RexxHashTable::removeItem(
         do
         {                               /* while more items in chain         */
                                         /* get a match?                      */
-            if (EQUAL_VALUE(_index, this->entries[position].index) &&
-                EQUAL_VALUE(_value, this->entries[position].value))
+            if (_index->equalValue(entries[position].index) &&
+                _value->equalValue(entries[position].value))
             {
                 /* save the current value            */
                 removed = this->entries[position].value;
@@ -662,8 +654,8 @@ RexxObject *RexxHashTable::hasItem(
         do
         {                               /* while more items in chain         */
                                         /* get a match?                      */
-            if (EQUAL_VALUE(_index, this->entries[position].index) &&
-                EQUAL_VALUE(_value, this->entries[position].value))
+            if (_index->equalValue(entries[position].index) &&
+                _value->equalValue(entries[position].value))
             {
                 /* got the one we want               */
                 return(RexxObject *)TheTrueObject;
@@ -695,7 +687,7 @@ RexxObject *RexxHashTable::hasItem(RexxObject *_value)
         // if we have an item, see if it's the one we're looking for.
         if (ep->index != OREF_NULL)
         {
-            if (EQUAL_VALUE(_value, ep->value))
+            if (_value->equalValue(ep->value))
             {
                 return TheTrueObject;    // return the index value
 
@@ -726,7 +718,7 @@ RexxObject *RexxHashTable::removeItem(RexxObject *_value)
         // if we have an item, see if it's the one we're looking for.
         if (ep->index != OREF_NULL)
         {
-            if (EQUAL_VALUE(_value, ep->value))
+            if (_value->equalValue(ep->value))
             {
                 // this is complicated, so it's easier to just remove
                 // this using the fully qualified tuple.
@@ -881,7 +873,7 @@ RexxArray  *RexxHashTable::getAll(
         do
         {                                 /* while more items in chain         */
                                           /* if got a match                    */
-            if (EQUAL_VALUE(_index, this->entries[position].index))
+            if (_index->equalValue(entries[position].index))
             {
                 /* copy the value into our array     */
                 result->put(this->entries[position].value,i++);
@@ -909,7 +901,7 @@ size_t RexxHashTable::countAll(RexxObject *_index)
         do
         {                               /* while more items in chain         */
                                         /* if got a match                    */
-            if (EQUAL_VALUE(_index, this->entries[position].index))
+            if (_index->equalValue(entries[position].index))
             {
                 count++;                       /* bump our counter                  */
             }
@@ -1033,7 +1025,7 @@ RexxArray  *RexxHashTable::allIndex(
         if (this->entries[i - 1].index != OREF_NULL)
         {
             /* is this the item we want?         */
-            if (EQUAL_VALUE(_value, this->entries[i - 1].value))
+            if (_value->equalValue(entries[i - 1].value))
             {
                 count++;                       /* bump our counter                  */
             }
@@ -1049,7 +1041,7 @@ RexxArray  *RexxHashTable::allIndex(
         if (this->entries[i - 1].index != OREF_NULL)
         {
             /* is this the item we want?         */
-            if (EQUAL_VALUE(_value, this->entries[i - 1].value))
+            if (_value->equalValue(entries[i - 1].value))
             {
                 /* copy the value into our array     */
                 result->put(this->entries[i - 1].index, j++);
@@ -1076,7 +1068,7 @@ RexxObject *RexxHashTable::getIndex(
         if (this->entries[i - 1].index != OREF_NULL)
         {
             /* is this the item we want?         */
-            if (EQUAL_VALUE(_value, this->entries[i - 1].value))
+            if (_value->equalValue(entries[i - 1].value))
             {
                 /* get the index                     */
                 result = this->entries[i - 1].index;
@@ -1129,7 +1121,7 @@ RexxObject *RexxHashTable::get(
         do
         {                               /* while more items in chain         */
                                         /* if got a match                    */
-            if (EQUAL_VALUE(_index, this->entries[position].index))
+            if (_index->equalValue(entries[position].index))
             {
                 /* return this item's value          */
                 return this->entries[position].value;
@@ -1355,7 +1347,7 @@ RexxHashTable *RexxHashTable::put(
         do
         {                               /* while more items in chain         */
                                         /* if got a match                    */
-            if (EQUAL_VALUE(_index, this->entries[position].index))
+            if (_index->equalValue(entries[position].index))
             {
                 /* set a new value                   */
                 OrefSet(this,this->entries[position].value, _value);
@@ -1427,7 +1419,7 @@ RexxHashTable *RexxHashTable::putNodupe(
         do
         {                               /* while more items in chain         */
                                         /* if got match on index and value   */
-            if (EQUAL_VALUE(_index, this->entries[position].index) && this->entries[position].value == _value)
+            if (_index->equalValue(entries[position].index) && this->entries[position].value == _value)
             {
                 return OREF_NULL;              /* indicate success                  */
             }

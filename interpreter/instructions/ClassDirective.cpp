@@ -48,6 +48,7 @@
 #include "TableClass.hpp"
 #include "ListClass.hpp"
 #include "RexxActivation.hpp"
+#include "MethodClass.hpp"
 
 
 /**
@@ -321,7 +322,7 @@ void ClassDirective::addInherits(RexxString *name)
 {
     if (inheritsClasses == OREF_NULL)
     {
-        inheritsClasses = new_array());
+        inheritsClasses = new_array();
     }
     inheritsClasses->append(name);
 }

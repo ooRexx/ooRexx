@@ -534,6 +534,7 @@ class RexxObject : public RexxInternalObject
         return (this == other) || this->isEqual(other);
     }
     virtual wholenumber_t compareTo(RexxObject *);
+
     RexxObject *callOperatorMethod(size_t methodOffset, RexxObject *argument);
 
  // Define operator methods here.

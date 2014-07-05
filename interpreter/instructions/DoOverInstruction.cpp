@@ -133,7 +133,7 @@ void RexxInstructionDoOver::flatten(RexxEnvelope *envelope)
 void RexxInstructionDoOver::setup(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock)
 {
     // perform the DO OVER initialization
-    overLoop.setup(context, stack, doblock)
+    overLoop.setup(context, stack, doblock);
 }
 
 
@@ -216,7 +216,7 @@ void RexxInstructionDoOverUntil::liveGeneral(MarkReason reason)
  */
 void RexxInstructionDoOverUntil::flatten(RexxEnvelope *envelope)
 {
-    setUpFlatten(RexxInstructionDoUntil)
+    setUpFlatten(RexxInstructionDoOverUntil)
 
     flattenRef(nextInstruction);
     flattenRef(end);

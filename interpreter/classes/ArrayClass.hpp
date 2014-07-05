@@ -240,31 +240,96 @@ class RexxArray : public RexxObject {
     RexxObject  *objects[1];            /* Data.                         */
 };
 
+/**
+ * Make a zero-length array item.
+ *
+ * @return A new array.
+ */
+inline RexxArray *new_array()
+{
+    return new ((size_t)0) RexxArray;
+}
+
+
+/**
+ * Create an array with a given size.
+ *
+ * @param s      The size of the array.
+ *
+ * @return The new array item.
+ */
 inline RexxArray *new_array(size_t s)
 {
     return new (s) RexxArray;
 }
 
+
+/**
+ * Create an array populated with objects from another source.
+ *
+ * @param s      The number of objects.
+ * @param o      The pointer to the set of objects.
+ *
+ * @return A new array object.
+ */
 inline RexxArray *new_array(size_t s, RexxObject **o)
 {
     return new (s) RexxArray(o, s);
 }
 
+
+/**
+ * Create a new array with one item.
+ *
+ * @param o1     The object to add to the array.
+ *
+ * @return A new array object.
+ */
 inline RexxArray *new_array(RexxObject *o1)
 {
     return new (1) RexxArray(o1);
 }
 
+
+/**
+ * Create a new array with two items.
+ *
+ * @param o1     The first object to add to the array.
+ * @param o2     The second object to add
+ *
+ * @return A new array object.
+ */
 inline RexxArray *new_array(RexxObject *o1, RexxObject *o2)
 {
     return new (2) RexxArray(o1, o2);
 }
 
+
+/**
+ * Create a new array with three items.
+ *
+ * @param o1     The first object to add to the array.
+ * @param o2     The second object to add
+ * @param o3     The third object to add.
+ *
+ * @return A new array object.
+ */
 inline RexxArray *new_array(RexxObject *o1, RexxObject *o2, RexxObject *o3)
 {
     return new (3) RexxArray(o1, o2, o3);
 }
 
+
+/**
+ * Create a new array with four items.
+ *
+ * @param o1     The first object to add to the array.
+ * @param o2     The second object to add
+ * @param o3     The third object to add.
+ * @param o4     The fourth object to add.
+ *
+ * @return A new array object.
+ */
 inline RexxArray *new_array(RexxObject *o1, RexxObject *o2, RexxObject *o3, RexxObject *o4)
 {
     return new (4) RexxArray(o1, o2, o3, o4);

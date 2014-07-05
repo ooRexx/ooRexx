@@ -132,7 +132,7 @@ void RexxInstructionDoCount::flatten(RexxEnvelope *envelope)
 void RexxInstructionDoCount::setup(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock)
 {
     // perform the DO OVER initialization
-    forLoop.setup(context, stack, doblock)
+    forLoop.setup(context, stack, doblock);
 }
 
 
@@ -269,21 +269,6 @@ RexxInstructionDoCountWhile::RexxInstructionDoCountWhile(RexxString *l, ForLoop 
     label = l;
     forLoop = f;
     whileLoop = w;
-}
-
-
-/**
- * Initialize a Do Over While block from a fuller DO
- * instruction.
- *
- * @param parent The parent DO instruction.
- */
-RexxInstructionDoCountWhile::RexxInstructionDoCountWhile(RexxInstructionDo *parent)
-{
-    // we need the label and the DO OVER control logic from the parent
-    label = parent->label;
-    forLoop = parent->overLoop;
-    whileLoop = parent->whileLoop;
 }
 
 // NOTE The WHILE variant does not any additional fields, so it can

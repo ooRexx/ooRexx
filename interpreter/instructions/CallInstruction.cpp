@@ -41,7 +41,6 @@
 /* Primitive Call Parse Class                                                 */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "DirectoryClass.hpp"
@@ -52,6 +51,7 @@
 #include "CallInstruction.hpp"
 #include "SourceFile.hpp"
 #include "ProtectedObject.hpp"
+#include "MethodArguments.hpp"
 
 
 /**
@@ -141,7 +141,7 @@ void RexxInstructionCall::resolve(RexxDirectory *labels)
     {
         // see if there is a matching label.  If we get something,
         // we're finished.
-        targetInstruction = (RexxInstruction *)labels->at((RexxString *)targetName));
+        targetInstruction = (RexxInstruction *)labels->at((RexxString *)targetName);
     }
 
     // really nothing else required here.  If we did not resolve a label location, then
@@ -162,7 +162,7 @@ void RexxInstructionCall::execute(RexxActivation *context, RexxExpressionStack *
     context->traceInstruction(this);
 
     // before we do anything, we need to evaluate all of the arguments.
-    for (i = 0; i < argumentCount; i++)
+    for (size_t i = 0; i < argumentCount; i++)
     {
         // arguments can be omitted, so don't try to evaluate any of
         // those.
@@ -298,20 +298,16 @@ void RexxInstructionDynamicCall::execute(RexxActivation *context, RexxExpression
     ActivityManager::currentActivity->checkStackSpace();
     context->traceInstruction(this);
 
-    // we need to evaluate this first
-    RexxObject *evaluatedTarget;
-    ProtectedObject targetName;
-
     // NB:  This leaves this on the stack...that's fine, because
     // it protects the expression
     RexxObject *evaluatedTarget = dynamicName->evaluate(context, stack);
     // this needs to be in string form, and protected
-    ProtectedObject targetName = REQUEST_STRING(evaluatedTarget);
-    context->traceResult((RexxString *)targetName);
+    Protected<RexxString> targetName = REQUEST_STRING(evaluatedTarget);
+    context->traceResult(targetName);
 
 
     // before we do anything, we need to evaluate all of the arguments.
-    for (i = 0; i < argumentCount; i++)
+    for (size_t i = 0; i < argumentCount; i++)
     {
         // arguments can be omitted, so don't try to evaluate any of
         // those.
@@ -459,7 +455,7 @@ void RexxInstructionCallOn::resolve(RexxDirectory *labels)
     {
         // see if there is a matching label.  If we get something,
         // we're finished.
-        targetInstruction = (RexxInstruction *)labels->at((RexxString *)targetName));
+        targetInstruction = (RexxInstruction *)labels->at((RexxString *)targetName);
         if (targetInstruction != OREF_NULL)
         {
             return;

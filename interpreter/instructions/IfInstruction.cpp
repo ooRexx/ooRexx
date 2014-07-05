@@ -186,7 +186,7 @@ void RexxInstructionCaseWhen::execute(RexxActivation *context, RexxExpressionSta
 
     // now perform the compare using the "==" operator method.
     // NOTE that the case value is the left hand side.
-    RexxObject *result = callOperatorMethod(caseValue, OPERATOR_PLUS, compareValue);
+    RexxObject *result = caseValue->callOperatorMethod(OPERATOR_STRICT_EQUAL, compareValue);
     context->traceResult(result);
 
     // the comparison methods return either .true or .false, so we

@@ -168,7 +168,7 @@ void RexxInstructionAddress::execute(RexxActivation *context, RexxExpressionStac
     else
     {
         // evaluate
-        RexxObject *result = expression->evaluate(context, stack);
+        RexxObject *result = dynamicAddress->evaluate(context, stack);
         RexxString *_address = REQUEST_STRING(result);
         // protect this
         stack->push(_address);

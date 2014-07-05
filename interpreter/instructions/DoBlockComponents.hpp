@@ -48,6 +48,8 @@
 
 #include "RexxCore.h"
 
+class RexxDoBlock;
+
 enum
 {
     EXP_TO,
@@ -74,8 +76,7 @@ class ForLoop
          memory_mark_general(forCount);
      }
 
-     virtual void setup(RexxActivation *context,
-         RexxExpressionStack *stack, RexxDoBlock *doblock);
+     virtual void setup(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock);
 
     RexxObject       *forCount;          // number of iterations
 };

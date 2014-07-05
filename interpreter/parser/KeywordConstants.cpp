@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -186,8 +186,8 @@ KeywordEntry RexxToken::builtinFunctions[] =
     KeywordEntry(CHAR_LINEOUT,     BUILTIN_LINEOUT),
     KeywordEntry(CHAR_LINES,       BUILTIN_LINES),
     KeywordEntry(CHAR_LOWER,       BUILTIN_LOWER),
-    KeywordEntry(CHAR_ORXMAX,         BUILTIN_MAX),
-    KeywordEntry(CHAR_ORXMIN,         BUILTIN_MIN),
+    KeywordEntry(CHAR_ORXMAX,      BUILTIN_MAX),
+    KeywordEntry(CHAR_ORXMIN,      BUILTIN_MIN),
     KeywordEntry(CHAR_OVERLAY,     BUILTIN_OVERLAY),
     KeywordEntry(CHAR_POS,         BUILTIN_POS),
     KeywordEntry(CHAR_QUALIFY,     BUILTIN_QUALIFY),

@@ -41,10 +41,10 @@
 /* Primitive Command Parse Class                                              */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "RexxActivation.hpp"
 #include "CommandInstruction.hpp"
+#include "MethodArguments.hpp"
 
 
 /**

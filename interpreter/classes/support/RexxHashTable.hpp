@@ -59,7 +59,8 @@ public:
 class RexxHashTableCollection;
 class RexxTable;
 
-class RexxHashTable : public RexxInternalObject {
+class RexxHashTable : public RexxInternalObject
+{
  public:
     enum
     {
@@ -76,9 +77,10 @@ class RexxHashTable : public RexxInternalObject {
     inline RexxHashTable(RESTORETYPE restoreType) { ; };
     inline RexxHashTable() { ; }
 
-    void         live(size_t);
-    void         liveGeneral(MarkReason reason);
-    void         flatten(RexxEnvelope *);
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(RexxEnvelope *);
+
     RexxArray  * makeArray();
     void         empty();
     bool         isEmpty();

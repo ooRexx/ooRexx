@@ -108,7 +108,7 @@ class RexxInstructionCall : public RexxInstructionCallBase
     inline void operator delete(void *) { }
     inline void operator delete(void *, void *) { }
 
-    RexxInstructionCall(RexxObject *, RexxString *, size_t, RexxQueue *, bool, BuiltinCode);
+    RexxInstructionCall(RexxString *, size_t, RexxQueue *, BuiltinCode);
     inline RexxInstructionCall(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
@@ -166,15 +166,17 @@ class RexxInstructionCallOn : public RexxInstructionTrapBase
     inline void operator delete(void *) { }
     inline void operator delete(void *, void *) { }
 
-    RexxInstructionCallOn(RexxString*, RexxString *);
+    RexxInstructionCallOn(RexxString*, RexxString *, BuiltinCode);
     inline RexxInstructionCallOn(RESTORETYPE restoreType) { ; };
 
-    void live(size_t);
-    void liveGeneral(MarkReason reason);
-    void flatten(RexxEnvelope*);
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(RexxEnvelope*);
 
-    void execute(RexxActivation *, RexxExpressionStack *);
-    void resolve(RexxDirectory *);
+    virtual void execute(RexxActivation *, RexxExpressionStack *);
+    virtual void resolve(RexxDirectory *);
+
+    virtual void trap(RexxActivation *context, RexxDirectory  *conditionObj);
 
 protected:
 

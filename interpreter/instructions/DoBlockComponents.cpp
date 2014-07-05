@@ -43,6 +43,9 @@
 /******************************************************************************/
 #include "DoBlockComponents.hpp"
 #include "DoInstruction.hpp"
+#include "DoBlock.hpp"
+#include "RexxActivation.hpp"
+#include "MethodArguments.hpp"
 
 /**
  * Set up for execution of a FOR loop.
@@ -59,7 +62,7 @@ void ForLoop::setup(RexxActivation *context,
     if (forCount == OREF_NULL)
     {
         // set this to a negative value to indicate not to use this.
-        forCount = -1;
+        doblock->setFor(SIZE_MAX);
         return;
     }
 
@@ -67,9 +70,7 @@ void ForLoop::setup(RexxActivation *context,
     // validate and convert now.
     wholenumber_t count = 0;
     RexxObject *result = forCount->evaluate(context, stack);
-                                   /* an integer value already, and     */
-                                   /* we're dealing with a "normal      */
-                                   /* NUMERIC DIGITS setting            */
+
     // if this is an integer value already and we're at the default digits setting,
     // we should be able to use this directly.
     if (isOfClass(Integer, result) && context->digits() >= Numerics::DEFAULT_DIGITS)
@@ -83,7 +84,7 @@ void ForLoop::setup(RexxActivation *context,
         // first get the string version and force numeric rounding rules.
         RexxString *strResult = REQUEST_STRING(result);
         /* force rounding                    */
-        RexxObject *rounded = callOperatorMethod(result, OPERATOR_PLUS, OREF_NULL);
+        RexxObject *rounded = result->callOperatorMethod(OPERATOR_PLUS, OREF_NULL);
         context->traceResult(rounded);
         // now convert the rounded value to an integer, if possible
         if (!rounded->requestNumber(count, number_digits()))
@@ -101,9 +102,7 @@ void ForLoop::setup(RexxActivation *context,
     }
 
     // set this value in the doblock
-    doblock->setFor(count);
-    break;
-
+    doblock->setFor((size_t)count);
 }
 
 
@@ -121,11 +120,11 @@ void ControlledLoop::setup( RexxActivation *context,
     RexxObject *_initial = initial->evaluate(context, stack);
 
     // force rounding by adding zero to this
-    _initial = callOperatorMethod(_initial, OPERATOR_PLUS, OREF_NULL);
+    _initial = _initial->callOperatorMethod(OPERATOR_PLUS, OREF_NULL);
     // now process each of the expressions.  the expressions
     // array allows us to process these in the order they were specified on
     // the instruction
-    for (i = 0; i < 3 && expressions[i] != 0; i++)
+    for (size_t i = 0; i < 3 && expressions[i] != 0; i++)
     {
         switch (expressions[i])
         {
@@ -136,7 +135,7 @@ void ControlledLoop::setup( RexxActivation *context,
                 // of also validating that this is a valid numeric.
                 RexxObject *result = to->evaluate(context, stack);
                 // prefix + is like adding zero
-                result = callOperatorMethod(result, OPERATOR_PLUS, OREF_NULL);
+                result = result->callOperatorMethod(OPERATOR_PLUS, OREF_NULL);
 
                 // if the result is a string, see if we can convert this to
                 // an integer value.  This is very common in loops, and can
@@ -156,13 +155,13 @@ void ControlledLoop::setup( RexxActivation *context,
             {
                 // get the expression value and round
                 RexxObject *result = by->evaluate(context, stack);
-                result = callOperatorMethod(result, OPERATOR_PLUS, OREF_NULL);
+                result = result->callOperatorMethod(OPERATOR_PLUS, OREF_NULL);
                 // this gets saved in the doblock
                 doblock->setBy(result);
 
                 // now we need to check if this is a negative value so set know how to
                 // compare.
-                if (callOperatorMethod(result, OPERATOR_LESSTHAN, IntegerZero) == TheTrueObject)
+                if (result->callOperatorMethod(OPERATOR_LESSTHAN, IntegerZero) == TheTrueObject)
                 {
                     // we're counting down, so check less than for termination
                     doblock->setCompare(OPERATOR_LESSTHAN);
@@ -209,7 +208,7 @@ void OverLoop::setup( RexxActivation *context,
      RexxExpressionStack *stack, RexxDoBlock *doblock)
 {
     // evaluate the array target
-    RexxObject result = target->evaluate(context, stack);
+    RexxObject* result = target->evaluate(context, stack);
     // anchor immediately to protect from GC
     doblock->setTo(result);
 

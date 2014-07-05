@@ -90,9 +90,7 @@ class RexxInstruction : public RexxInternalObject
     inline      bool        isType(InstructionKeyword type)  { return instructionType == type; }
     inline      size_t      getLineNumber()      { return instructionLocation.getLineNumber(); }
 
- protected:
     InstructionKeyword  instructionType;    // name of the instruction
-
     SourceLocation    instructionLocation;  // location of the instruction in its source
     RexxInstruction  *nextInstruction;      // the next instruction object in the assembled chain.
 };
@@ -135,7 +133,6 @@ class RexxBlockInstruction : public RexxInstruction
     bool isLabel(RexxString *name) { return name == label; }
     RexxString *getLabel() { return label; };
 
- protected:
     RexxString *label;         // the block instruction label
     RexxInstructionEnd *end;   // the END matching the block instruction
 };

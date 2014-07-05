@@ -236,6 +236,9 @@ typedef enum
     KEYWORD_MESSAGE_DOUBLE,
     KEYWORD_SELECT_CASE,
     KEYWORD_WHEN_CASE,
+    KEYWORD_CLASS,
+    KEYWORD_LIBRARY,
+    KEYWORD_REQUIRES,
 
 } InstructionKeyword;
 
@@ -540,7 +543,19 @@ class RexxToken : public RexxInternalObject
            int        precedence();
            bool       isTerminator(int);
 
+           InstructionKeyword keyword();
+           InstructionSubKeyword subKeyword();
+           BuiltinCode builtin();
+           ConditionKeyword condition();
+           InstructionSubKeyword parseOption();
+           DirectiveKeyword keyDirective();
+           DirectiveSubKeyword subDirective();
+    static BuiltinCode resolveBuiltin(RexxString *value);
+
 protected:
+
+    static int resolveKeyword(RexxString *token, KeywordEntry *table, int table_size);
+
     RexxString   *stringValue;             // token string value
     TokenClass    classId;                 // class of token
     TokenSubclass subclass;                // specialized type of token

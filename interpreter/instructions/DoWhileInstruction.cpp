@@ -135,7 +135,7 @@ void RexxInstructionDoWhile::flatten(RexxEnvelope *envelope)
  */
 bool RexxInstructionDoWhile::iterate(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock, bool first)
 {
-    whileLoop.checkWhile(context, stack);
+    return whileLoop.checkWhile(context, stack);
 }
 
 

@@ -41,14 +41,10 @@
 /* Primitive Translator Token Class                                           */
 /*                                                                            */
 /******************************************************************************/
-#include <ctype.h>
-#include <string.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "Token.hpp"
 #include "SourceFile.hpp"
-
-
 
 /**
  * Create a new Token object.
@@ -70,7 +66,7 @@ void *RexxToken::operator new(size_t size)
  */
 void RexxToken::live(size_t liveMark)
 {
-    memory_mark(value);
+    memory_mark(stringValue);
 }
 
 
@@ -83,7 +79,7 @@ void RexxToken::live(size_t liveMark)
  */
 void RexxToken::liveGeneral(MarkReason reason)
 {
-    memory_mark_general(value);
+    memory_mark_general(stringValue);
 }
 
 
@@ -93,10 +89,10 @@ void RexxToken::liveGeneral(MarkReason reason)
  *
  * @param source The source for the original operator token.
  */
-void RexxToken::checkAssignment(RexxSource *source, RexxString *newValue)
+void RexxToken::checkAssignment(LanguageParser *parser, RexxString *newValue)
 {
     // check if the next character is a special assignment shortcut
-    if (source->nextSpecial('=', tokenLocation))
+    if (parser->nextSpecial('=', tokenLocation))
     {
         // this is a special type, which uses the same subtype.
         classId = TOKEN_ASSIGNMENT;

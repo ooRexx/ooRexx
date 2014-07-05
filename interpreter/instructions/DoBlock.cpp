@@ -44,6 +44,7 @@
 #include "RexxCore.h"
 #include "DoInstruction.hpp"
 #include "DoBlock.hpp"
+#include "RexxActivation.hpp"
 
 
 
@@ -120,7 +121,7 @@ bool RexxDoBlock::checkOver(RexxActivation *context, RexxExpressionStack *stack)
     // the array was stored in the too field
     RexxArray *overArray = (RexxArray *)to;
     // are we past the end of the array?
-    if (overArray->size() < for)
+    if (overArray->size() < forCount)
     {
         return false;                    // time to get out of here.
     }
@@ -137,7 +138,7 @@ bool RexxDoBlock::checkOver(RexxActivation *context, RexxExpressionStack *stack)
     // assign the control variable and trace this result
     control->assign(context, stack, result);
     context->traceResult(result);
-    forCount++
+    forCount++;
     return true;
 }
 
@@ -164,7 +165,7 @@ bool RexxDoBlock::checkControl(RexxActivation *context, RexxExpressionStack *sta
     // to add in the BY increment.
     if (increment)
     {
-        result = callOperatorMethod(result, OPERATOR_PLUS, by);
+        result = result->callOperatorMethod(OPERATOR_PLUS, by);
 
         // the control variable gets set immediately, and we trace this
         // increment result
@@ -175,7 +176,7 @@ bool RexxDoBlock::checkControl(RexxActivation *context, RexxExpressionStack *sta
     // if we have a termination condition, do the compare now by calling the operator method.
     if (to != OREF_NULL)
     {
-        if (callOperatorMethod(result, compare, to) == TheTrueObject)
+        if (result->callOperatorMethod(compare, to) == TheTrueObject)
         {
             return false;                  // time to stop if this is true
         }
