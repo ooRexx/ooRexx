@@ -44,6 +44,8 @@
 #ifndef Included_RexxExpressionMessage
 #define Included_RexxExpressionMessage
 
+class LanguageParser;
+
 class RexxExpressionMessage : public RexxVariableBase
 {
  public:
@@ -62,7 +64,7 @@ class RexxExpressionMessage : public RexxVariableBase
 
     virtual RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
 
-    void makeAssignment(RexxSource *source);
+    void makeAssignment(LanguageParser *parser);
 
  protected:
 

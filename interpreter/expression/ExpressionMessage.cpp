@@ -93,7 +93,7 @@ RexxExpressionMessage::RexxExpressionMessage(RexxObject *_target, RexxString *na
     super = _super;
     doubleTilde = double_form;
     argumentCount = argCount;
-    initializeObjectArray(argCount, arguments, RexxObject, argList);
+    initializeObjectArray(argCount, arguments, RexxObject, arglist);
 }
 
 
@@ -136,9 +136,9 @@ void RexxExpressionMessage::flatten(RexxEnvelope *envelope)
 {
     setUpFlatten(RexxExpressionMessage)
 
-    flatten(messageName);
-    flatten(target);
-    flatten(super);
+    flattenRef(messageName);
+    flattenRef(target);
+    flattenRef(super);
     flattenArrayRefs(argumentCount, arguments);
 
     cleanUpFlatten
@@ -155,7 +155,6 @@ void RexxExpressionMessage::flatten(RexxEnvelope *envelope)
  */
 RexxObject *RexxExpressionMessage::evaluate(RexxActivation *context, RexxExpressionStack *stack)
 {
-    ProtectedObject result;              /* message expression result         */
     // evaluate the target object
     RexxObject *_target = target->evaluate(context, stack);
     RexxObject *_super = OREF_NULL;
@@ -231,7 +230,7 @@ RexxObject *RexxExpressionMessage::evaluate(RexxActivation *context, RexxExpress
     // trace if necessary
     context->traceMessage(messageName, (RexxObject *)result);
 
-    return(RexxObject *)result;
+    return (RexxObject *)result;
 }
 
 

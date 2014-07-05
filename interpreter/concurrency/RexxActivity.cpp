@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -47,11 +47,8 @@
 /*        used to maintain this situation.                                    */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
-#include <ctype.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
-#include "StackClass.hpp"
 #include "RexxActivity.hpp"
 #include "RexxActivation.hpp"
 #include "RexxNativeActivation.hpp"
@@ -76,6 +73,7 @@
 #include "ActivationFrame.hpp"
 #include "StackFrameClass.hpp"
 #include "GlobalProtectedObject.hpp"
+#include "MethodArguments.hpp"
 
 const size_t ACT_STACK_SIZE = 20;
 
@@ -1323,47 +1321,46 @@ void RexxActivity::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  memory_mark(this->activations);
-  memory_mark(this->topStackFrame);
-  memory_mark(this->currentRexxFrame);
-  memory_mark(this->conditionobj);
-  memory_mark(this->requiresTable);
-  memory_mark(this->waitingObject);
-  memory_mark(this->dispatchMessage);
+    memory_mark(activations);
+    memory_mark(topStackFrame);
+    memory_mark(currentRexxFrame);
+    memory_mark(conditionobj);
+    memory_mark(requiresTable);
+    memory_mark(waitingObject);
+    memory_mark(dispatchMessage);
 
-  /* have the frame stack do its own marking. */
-  frameStack.live(liveMark);
-  // mark any protected objects we've been watching over
+    /* have the frame stack do its own marking. */
+    frameStack.live(liveMark);
+    // mark any protected objects we've been watching over
 
-  ProtectedObject *p = protectedObjects;
-  while (p != NULL)
-  {
-      p->mark(liveMark);
-      memory_mark(p->protectedObject);
-      p = p->next;
-  }
+    ProtectedBase *p = protectedObjects;
+    while (p != NULL)
+    {
+        p->mark(liveMark);
+        p = p->next;
+    }
 }
 void RexxActivity::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  memory_mark_general(this->activations);
-  memory_mark_general(this->topStackFrame);
-  memory_mark_general(this->currentRexxFrame);
-  memory_mark_general(this->conditionobj);
-  memory_mark_general(this->requiresTable);
-  memory_mark_general(this->waitingObject);
-  memory_mark_general(this->dispatchMessage);
+    memory_mark_general(activations);
+    memory_mark_general(topStackFrame);
+    memory_mark_general(currentRexxFrame);
+    memory_mark_general(conditionobj);
+    memory_mark_general(requiresTable);
+    memory_mark_general(waitingObject);
+    memory_mark_general(dispatchMessage);
 
-  /* have the frame stack do its own marking. */
-  frameStack.liveGeneral(reason);
+    /* have the frame stack do its own marking. */
+    frameStack.liveGeneral(reason);
 
-  ProtectedObject *p = protectedObjects;
-  while (p != NULL)
-  {
-      p->markGeneral(reason);
-  }
+    ProtectedBase *p = protectedObjects;
+    while (p != NULL)
+    {
+        p->markGeneral(reason);
+    }
 }
 
 

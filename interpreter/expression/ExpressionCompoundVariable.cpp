@@ -203,7 +203,7 @@ RexxObject *build(RexxString * variable_name, bool direct )
             RexxString *tail = variable_name->extract(start, position - start);
             // have a null tail piece or section begin with a digit?
             // this is a constant tail section and can be used directly
-            if (tail->getLength() == 0 || isdigit(tail->getChar(0))
+            if (tail->getLength() == 0 || isdigit(tail->getChar(0)))
             {
                 tails->push(tail);
             }

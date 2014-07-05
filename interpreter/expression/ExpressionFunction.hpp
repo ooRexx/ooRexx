@@ -44,7 +44,11 @@
 #ifndef Included_RexxExpressionFunction
 #define Included_RexxExpressionFunction
 
-class RexxExpressionFunction : public RexxInternalObject {
+#include "Token.hpp"
+
+
+class RexxExpressionFunction : public RexxInternalObject
+{
  public:
     void *operator new(size_t, size_t);
     inline void *operator new(size_t size, void *ptr) {return ptr;};
@@ -52,7 +56,7 @@ class RexxExpressionFunction : public RexxInternalObject {
     inline void  operator delete(void *, size_t) { ; }
     inline void  operator delete(void *, void *) { ; }
 
-    RexxExpressionFunction(RexxString *, size_t, RexxQueue *, size_t, bool);
+    RexxExpressionFunction(RexxString *, size_t, RexxQueue *, BuiltinCode);
     inline RexxExpressionFunction(RESTORETYPE restoreType) { ; };
 
     virtual void        live(size_t);

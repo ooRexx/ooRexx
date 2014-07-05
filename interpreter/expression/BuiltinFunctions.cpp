@@ -1830,7 +1830,7 @@ BUILTIN(SOURCELINE)
             reportException(Error_Incorrect_call_sourceline, line_number, size);
         }
         /* get the specific line             */
-        return(RexxObject *)source->get(line_number);
+        return(RexxObject *)source->getLine(line_number);
     }
     else
     {

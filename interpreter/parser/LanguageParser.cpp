@@ -668,7 +668,7 @@ bool LanguageParser::nextClause()
 void LanguageParser::translate()
 {
     // create a stack frame so errors can display the parsing location.
-    ParseActivationFrame frame(ActivityManager::currentActivity, this);
+    ParserActivationFrame frame(ActivityManager::currentActivity, this);
 
     // set up the package global defaults
     package->digits = Numerics::DEFAULT_DIGITS;

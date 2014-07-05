@@ -596,79 +596,79 @@ class ActivationSettings
 
  protected:
 
-   ActivationSettings   settings;      // inherited REXX settings
-   RexxExpressionStack  stack;         // current evaluation stack
-   RexxCode            *code;          // rexx method object
-   RexxSource         *sourceObject;   // the source object associated with this instance
-   RexxClass           *scope;         // scope of any active method call
-   RexxObject          *receiver;      // target of a message invocation
-   RexxActivity        *activity;      // current running activation
-   RexxActivation      *parent;        // previous running activation for internal call/interpret
-   RexxObject         **arglist;       // activity argument list
-   size_t               argcount;      // the count of arguments
-   RexxDoBlock         *dostack;       // stack of DO loops
-   RexxInstruction     *current;       // current execution pointer
-   RexxInstruction     *next;          // next instruction to execute
-   bool                 debug_pause;   // executing a debug pause
-   int                  object_scope;  // reserve/release state of variables
-   RexxObject          *result;        // result of execution
-   RexxArray           *trapinfo;      // current trap handler
-   RexxContext         *contextObject; // the context object representing the execution context
-                                       // current activation state
-   int                  execution_state;
-                                       // type of activation activity
-   int                  activation_context;
-   RexxMessage         *objnotify;     // an object to notify if excep occur
-                                       // LIst of Saved Local environments
-   RexxList            *environmentList;
-   size_t               pending_count; // number of pending conditions
-   RexxQueue           *handler_queue; // queue of trapped condition handler
-                                       // queue of trapped conditions
-   RexxQueue           *condition_queue;
-   uint64_t             random_seed;   // random number seed
-   bool                 random_set;    // random seed has been set
-   size_t               blockNest;     // block instruction nesting level
-   size_t               lookaside_size;// size of the lookaside table
+    ActivationSettings   settings;      // inherited REXX settings
+    RexxExpressionStack  stack;         // current evaluation stack
+    RexxCode            *code;          // rexx method object
+    RexxSource         *sourceObject;   // the source object associated with this instance
+    RexxClass           *scope;         // scope of any active method call
+    RexxObject          *receiver;      // target of a message invocation
+    RexxActivity        *activity;      // current running activation
+    RexxActivation      *parent;        // previous running activation for internal call/interpret
+    RexxObject         **arglist;       // activity argument list
+    size_t               argcount;      // the count of arguments
+    RexxDoBlock         *dostack;       // stack of DO loops
+    RexxInstruction     *current;       // current execution pointer
+    RexxInstruction     *next;          // next instruction to execute
+    bool                 debug_pause;   // executing a debug pause
+    int                  object_scope;  // reserve/release state of variables
+    RexxObject          *result;        // result of execution
+    RexxArray           *trapinfo;      // current trap handler
+    RexxContext         *contextObject; // the context object representing the execution context
+                                        // current activation state
+    int                  execution_state;
+                                        // type of activation activity
+    int                  activation_context;
+    RexxMessage         *objnotify;     // an object to notify if excep occur
+                                        // LIst of Saved Local environments
+    RexxList            *environmentList;
+    size_t               pending_count; // number of pending conditions
+    RexxQueue           *handler_queue; // queue of trapped condition handler
+                                        // queue of trapped conditions
+    RexxQueue           *condition_queue;
+    uint64_t             random_seed;   // random number seed
+    bool                 random_set;    // random seed has been set
+    size_t               blockNest;     // block instruction nesting level
+    size_t               lookaside_size;// size of the lookaside table
 
 
-   // constants
+    // constants
 
-   static const size_t trace_off;           // no tracing
-   static const size_t trace_debug;         // interactive trace mode flag
-   static const size_t trace_all;           // trace all instructions
-   static const size_t trace_results;       // trace all results
-   static const size_t trace_intermediates; // trace all instructions
-   static const size_t trace_commands;      // trace all commands
-   static const size_t trace_labels;        // trace all labels
-   static const size_t trace_errors;        // trace all command errors
-   static const size_t trace_failures;      // trace all command failures
-   static const size_t trace_suppress;      // tracing is suppressed during skips
-   static const size_t trace_flags;         // all tracing flags (EXCEPT debug)
-   static const size_t default_trace_flags;
-   static const size_t trace_all_flags;     // flag set for trace all
-   static const size_t trace_results_flags; // flag set for trace results
-   static const size_t trace_intermediates_flags; // flag set for trace intermediates
+    static const size_t trace_off;           // no tracing
+    static const size_t trace_debug;         // interactive trace mode flag
+    static const size_t trace_all;           // trace all instructions
+    static const size_t trace_results;       // trace all results
+    static const size_t trace_intermediates; // trace all instructions
+    static const size_t trace_commands;      // trace all commands
+    static const size_t trace_labels;        // trace all labels
+    static const size_t trace_errors;        // trace all command errors
+    static const size_t trace_failures;      // trace all command failures
+    static const size_t trace_suppress;      // tracing is suppressed during skips
+    static const size_t trace_flags;         // all tracing flags (EXCEPT debug)
+    static const size_t default_trace_flags;
+    static const size_t trace_all_flags;     // flag set for trace all
+    static const size_t trace_results_flags; // flag set for trace results
+    static const size_t trace_intermediates_flags; // flag set for trace intermediates
 
-   static const size_t single_step;         // we are single stepping execution
-   static const size_t single_step_nested;  // this is a nested stepping
-   static const size_t debug_prompt_issued; // debug prompt already issued
-   static const size_t debug_bypass;        // skip next debug pause
-   static const size_t procedure_valid;     // procedure instruction is valid
-   static const size_t clause_boundary;     // work required at clause boundary
-   static const size_t halt_condition;      // a HALT condition occurred
-   static const size_t trace_on;            // external trace condition occurred
-   static const size_t source_traced;       // source string has been traced
-   static const size_t clause_exits;        // need to call clause boundary exits
-   static const size_t external_yield;      // activity wants us to yield
-   static const size_t forwarded;           // forward instruction active
-   static const size_t reply_issued;        // reply has already been issued
-   static const size_t set_trace_on;        // trace turned on externally
-   static const size_t set_trace_off;       // trace turned off externally
-   static const size_t traps_copied;        // copy of trap info has been made
-   static const size_t return_status_set;   // had our first host command
-   static const size_t transfer_failed;     // transfer of variable lock failure
+    static const size_t single_step;         // we are single stepping execution
+    static const size_t single_step_nested;  // this is a nested stepping
+    static const size_t debug_prompt_issued; // debug prompt already issued
+    static const size_t debug_bypass;        // skip next debug pause
+    static const size_t procedure_valid;     // procedure instruction is valid
+    static const size_t clause_boundary;     // work required at clause boundary
+    static const size_t halt_condition;      // a HALT condition occurred
+    static const size_t trace_on;            // external trace condition occurred
+    static const size_t source_traced;       // source string has been traced
+    static const size_t clause_exits;        // need to call clause boundary exits
+    static const size_t external_yield;      // activity wants us to yield
+    static const size_t forwarded;           // forward instruction active
+    static const size_t reply_issued;        // reply has already been issued
+    static const size_t set_trace_on;        // trace turned on externally
+    static const size_t set_trace_off;       // trace turned off externally
+    static const size_t traps_copied;        // copy of trap info has been made
+    static const size_t return_status_set;   // had our first host command
+    static const size_t transfer_failed;     // transfer of variable lock failure
 
-   static const size_t elapsed_reset;       // The elapsed time stamp was reset via time('r')
-   static const size_t guarded_method;      // this is a guarded method
+    static const size_t elapsed_reset;       // The elapsed time stamp was reset via time('r')
+    static const size_t guarded_method;      // this is a guarded method
  };
  #endif

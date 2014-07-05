@@ -107,22 +107,22 @@ RexxSource *InternalActivationFrame::getSource()
     return OREF_NULL;
 }
 
-RexxString *ParseActivationFrame::messageName()
+RexxString *ParserActivationFrame::messageName()
 {
     return OREF_NULL;
 }
 
-MethodClass *ParseActivationFrame::method()
+MethodClass *ParserActivationFrame::method()
 {
     return OREF_NULL;
 }
 
-StackFrameClass *ParseActivationFrame::createStackFrame()
+StackFrameClass *ParserActivationFrame::createStackFrame()
 {
-    return source->createStackFrame();
+    return parser->createStackFrame();
 }
 
-RexxSource *ParseActivationFrame::getSource()
+RexxSource *ParserActivationFrame::getSource()
 {
-    return source;
+    return parser->getPackage();
 }

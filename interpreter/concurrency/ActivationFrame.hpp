@@ -44,7 +44,7 @@ class RexxActivation;
 class RexxNativeActivation;
 class MethodClass;
 class StackFrameClass;
-class RexxSource;
+class LanguageParser;
 
 
 // TODO: document what each of these frame classes do.
@@ -133,10 +133,15 @@ class InternalActivationFrame : public ActivationFrame
 };
 
 
-class ParseActivationFrame : public ActivationFrame
+/**
+ * A frame representing a source file being translated.
+ * A lot of syntax errors are generated with one of these
+ * at the top of the stack.
+ */
+class ParserActivationFrame : public ActivationFrame
 {
  public:
-    inline ParseActivationFrame(RexxActivity *a, RexxSource *s) : ActivationFrame(a), source(s) { }
+    inline ParserActivationFrame(RexxActivity *a, LanguageParser *p) : ActivationFrame(a), parser(p) { }
 
     virtual RexxString *messageName();
     // TODO:  Why is there a method in this interface rather than an excutable?
@@ -146,7 +151,7 @@ class ParseActivationFrame : public ActivationFrame
 
 protected:
 
-    RexxSource *source;                      // the source object being parsed.
+    LanguageParser *parser;                  // the parser instance handling source translation.
 };
 
 #endif

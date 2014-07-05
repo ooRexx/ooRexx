@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -43,6 +43,7 @@
 #include "SystemInterpreter.hpp"
 #include "InterpreterInstance.hpp"
 #include "RexxNativeActivation.hpp"
+#include "LanguageParser.hpp"
 
 
 /**
@@ -113,7 +114,7 @@ void RexxStartDispatcher::run()
             break;
     }
 
-    RoutineClass *program = OREF_NULL;
+    Protected<RoutineClass> program;
 
     if (instore == NULL)                     /* no instore request?               */
     {
@@ -131,7 +132,7 @@ void RexxStartDispatcher::run()
     else                                 /* have an instore program           */
     {
         /* go handle instore parms           */
-        program = RoutineClass::processInstore(instore, name);
+        program = LanguageParser::processInstore(instore, name);
         if (program == OREF_NULL)        /* couldn't get it?                  */
         {
             /* got an error here                 */
@@ -139,11 +140,9 @@ void RexxStartDispatcher::run()
         }
     }
 
-    ProtectedObject p(program);
-
     RexxString *initial_address = activity->getInstance()->getDefaultEnvironment();
     /* actually need to run this?        */
-    if (program != OREF_NULL)
+    if (!program.isNull())
     {
         ProtectedObject program_result;
         // call the program

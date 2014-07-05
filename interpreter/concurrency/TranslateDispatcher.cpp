@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -41,6 +41,7 @@
 #include "RoutineClass.hpp"
 #include "ProtectedObject.hpp"
 #include "RexxNativeActivation.hpp"
+#include "LanguageParser.hpp"
 
 
 /**
@@ -79,7 +80,7 @@ void TranslateDispatcher::run()
     else                                 /* have an instore program           */
     {
         /* go handle instore parms           */
-        program = RoutineClass::processInstore(instore, name);
+        program = LanguageParser::processInstore(instore, name);
         if (program == OREF_NULL)           /* couldn't get it?                  */
         {
             /* got an error here                 */
@@ -133,7 +134,7 @@ void TranslateInstoreDispatcher::run()
     MAKERXSTRING(instore[1], NULL, 0);
 
     /* go handle instore parms           */
-    RoutineClass *program = RoutineClass::processInstore(instore, name);
+    RoutineClass *program = LanguageParser::processInstore(instore, name);
     if (program == OREF_NULL)           /* couldn't get it?                  */
     {
         /* got an error here                 */

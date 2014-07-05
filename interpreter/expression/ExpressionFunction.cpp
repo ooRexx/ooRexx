@@ -49,7 +49,6 @@
 #include "RexxInstruction.hpp"
 #include "ExpressionFunction.hpp"
 #include "Token.hpp"
-#include "StackClass.hpp"
 #include "RexxActivity.hpp"
 #include "ProtectedObject.hpp"
 
@@ -86,7 +85,7 @@ void *RexxExpressionFunction::operator new(size_t size, size_t argCount)
  * @param index      A potential builtin function index.
  */
 RexxExpressionFunction::RexxExpressionFunction(RexxString *function_name,
-    size_t argCount, RexxQueue *arglist, size_t index)
+    size_t argCount, RexxQueue *argList, BuiltinCode index)
 {
     functionName = function_name;
     builtinIndex = index;
@@ -157,7 +156,7 @@ void RexxExpressionFunction::resolve(RexxDirectory *labels)
     {
         // see if there is a matching label.  If we get something,
         // we're finished.
-        targetInstruction = (RexxInstruction *)labels->at((RexxString *)targetName));
+        target = (RexxInstruction *)labels->at((RexxString *)functionName);
     }
 
     // really nothing else required here.  If we did not resolve a label location, then

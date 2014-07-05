@@ -111,6 +111,8 @@ class LanguageParser: public RexxInternalObject
     RoutineClass *generateRoutine();
     MethodClass *generateMethod();
 
+    RexxSource  *getPackage() { return package; }
+
     StackFrameClass *createStackFrame();
     void        holdObject(RexxObject *object) { holdStack->push(object);};
 

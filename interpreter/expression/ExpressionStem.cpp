@@ -83,7 +83,7 @@ RexxStemVariable::RexxStemVariable(RexxString *name, size_t var_index)
  */
 void RexxStemVariable::live(size_t liveMark)
 {
-    memory_mark(stem);
+    memory_mark(stemName);
 }
 
 
@@ -96,7 +96,7 @@ void RexxStemVariable::live(size_t liveMark)
  */
 void RexxStemVariable::liveGeneral(int reason)
 {
-    memory_mark_general(stem);
+    memory_mark_general(stemName);
 }
 
 
@@ -109,7 +109,7 @@ void RexxStemVariable::flatten(RexxEnvelope *envelope)
 {
     setUpFlatten(RexxStemVariable)
 
-    flattenRef(stem);
+    flattenRef(stemName);
 
     cleanUpFlatten
 }
@@ -233,7 +233,7 @@ void RexxStemVariable::set(RexxVariableDictionary  *dictionary, RexxObject *valu
  */
 bool RexxStemVariable::exists(RexxActivation *context)
 {
-    return context->localStemVariableExists(stemName, stemIndex)
+    return context->localStemVariableExists(stemName, stemIndex);
 }
 
 
@@ -251,7 +251,7 @@ void RexxStemVariable::assign(RexxActivation *context, RexxObject *value )
     // the variable object handles the setting details
     variable->setStem(value);
     // trace the assignment
-    context->traceAssignment(stem, value);
+    context->traceAssignment(stemName, value);
 }
 
 
@@ -313,7 +313,7 @@ void RexxStemVariable::procedureExpose(RexxActivation *context, RexxActivation *
 void RexxStemVariable::expose(RexxActivation *context, RexxVariableDictionary *object_dictionary)
 {
     // get the old variable entry (will create if first request)
-    RexxVariable *old_stem = object_dictionary->getStemVariable(stem);
+    RexxVariable *old_stem = object_dictionary->getStemVariable(stemName);
     // and make this a local variable
     context->putLocalVariable(old_stem, stemIndex);
 }
@@ -328,7 +328,7 @@ void RexxStemVariable::setGuard(RexxActivation *context)
 {
     // get the variable and ask for our activity to be notified.
     RexxVariable *variable = context->getLocalStemVariable(stemName, stemIndex);
-    variable->inform(context->activity());
+    variable->inform(context->getActivity());
 }
 
 
@@ -341,7 +341,7 @@ void RexxStemVariable::clearGuard(RexxActivation *context )
 {
     // look up the variable and remove the inform status for this activity.
     RexxVariable *variable = context->getLocalStemVariable(stemName, stemIndex);
-    variable->uninform(context->activity());
+    variable->uninform(context->getActivity());
 }
 
 
