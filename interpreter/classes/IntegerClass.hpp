@@ -62,7 +62,7 @@ class RexxInteger : public RexxObject
     void *operator new(size_t);
 
     virtual void live(size_t);
-    virtual void liveGeneral(int reason);
+    virtual void liveGeneral(MarkReason reason);
     virtual void flatten(RexxEnvelope*);
     virtual HashCode getHashValue();
 
@@ -195,7 +195,7 @@ class RexxIntegerClass : public RexxClass
     }
 
     virtual void live(size_t);
-    virtual void liveGeneral(int reason);
+    virtual void liveGeneral(MarkReason reason);
 
     void initCache();
 

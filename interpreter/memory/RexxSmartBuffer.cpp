@@ -62,14 +62,14 @@ void RexxSmartBuffer::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-    memory_mark(this->buffer);
+    memory_mark(buffer);
 }
-void RexxSmartBuffer::liveGeneral(int reason)
+void RexxSmartBuffer::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-    memory_mark_general(this->buffer);
+    memory_mark_general(buffer);
 }
 
 void RexxSmartBuffer::flatten(RexxEnvelope *envelope)
@@ -79,7 +79,7 @@ void RexxSmartBuffer::flatten(RexxEnvelope *envelope)
 {
     setUpFlatten(RexxSmartBuffer)
 
-    flatten_reference(newThis->buffer, envelope);
+    flattenRef(buffer);
 
     cleanUpFlatten
 }

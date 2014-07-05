@@ -55,17 +55,17 @@ void RexxHashTableCollection::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  memory_mark(this->contents);
-  memory_mark(this->objectVariables);
+    memory_mark(contents);
+    memory_mark(objectVariables);
 }
 
-void RexxHashTableCollection::liveGeneral(int reason)
+void RexxHashTableCollection::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  memory_mark_general(this->contents);
-  memory_mark_general(this->objectVariables);
+    memory_mark_general(contents);
+    memory_mark_general(objectVariables);
 }
 
 void RexxHashTableCollection::flatten(RexxEnvelope *envelope)
@@ -73,12 +73,12 @@ void RexxHashTableCollection::flatten(RexxEnvelope *envelope)
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
 {
-  setUpFlatten(RexxHashTableCollection)
+    setUpFlatten(RexxHashTableCollection)
 
-      flatten_reference(newThis->contents, envelope);
-      flatten_reference(newThis->objectVariables, envelope);
+    flattenRef(contents);
+    flattenRef(objectVariables);
 
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
 RexxObject *RexxHashTableCollection::unflatten(RexxEnvelope *envelope)

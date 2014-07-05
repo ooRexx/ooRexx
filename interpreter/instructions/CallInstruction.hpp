@@ -112,7 +112,7 @@ class RexxInstructionCall : public RexxInstructionCallBase
     inline RexxInstructionCall(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
-    virtual void liveGeneral(int reason);
+    virtual void liveGeneral(MarkReason reason);
     virtual void flatten(RexxEnvelope*);
 
     virtual void execute(RexxActivation *, RexxExpressionStack *);
@@ -142,7 +142,7 @@ class RexxInstructionDynamicCall : public RexxInstructionDynamicCallBase
     inline RexxInstructionDynamicCall(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
-    virtual void liveGeneral(int reason);
+    virtual void liveGeneral(MarkReason reason);
     virtual void flatten(RexxEnvelope*);
 
     virtual void execute(RexxActivation *, RexxExpressionStack *);
@@ -170,7 +170,7 @@ class RexxInstructionCallOn : public RexxInstructionTrapBase
     inline RexxInstructionCallOn(RESTORETYPE restoreType) { ; };
 
     void live(size_t);
-    void liveGeneral(int reason);
+    void liveGeneral(MarkReason reason);
     void flatten(RexxEnvelope*);
 
     void execute(RexxActivation *, RexxExpressionStack *);

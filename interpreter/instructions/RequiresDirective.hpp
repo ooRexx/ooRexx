@@ -58,7 +58,7 @@ class RequiresDirective : public RexxDirective
     inline RequiresDirective(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
-    virtual void liveGeneral(int reason);
+    virtual void liveGeneral(MarkReason reason);
     virtual void flatten(RexxEnvelope *);
 
     inline RexxString *getName() { return name; }

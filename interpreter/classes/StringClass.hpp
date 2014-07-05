@@ -125,7 +125,7 @@ class RexxString : public RexxObject
     inline RexxString(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
-    virtual void liveGeneral(int reason);
+    virtual void liveGeneral(MarkReason reason);
     virtual void flatten(RexxEnvelope *envelope);
     virtual RexxObject *unflatten(RexxEnvelope *);
 

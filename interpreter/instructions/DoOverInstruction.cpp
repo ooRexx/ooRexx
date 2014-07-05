@@ -85,7 +85,7 @@ void RexxInstructionDoOver::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void RexxInstructionDoOver::liveGeneral(int reason)
+void RexxInstructionDoOver::liveGeneral(MarkReason reason)
 {
     // must be first object marked
     memory_mark_general(nextInstruction);
@@ -196,7 +196,7 @@ void RexxInstructionDoOverUntil::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void RexxInstructionDoOverUntil::liveGeneral(int reason)
+void RexxInstructionDoOverUntil::liveGeneral(MarkReason reason)
 {
     // must be first object marked
     memory_mark_general(nextInstruction);

@@ -123,7 +123,7 @@ void RexxInstructionRaise::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void RexxInstructionRaise::liveGeneral(int reason)
+void RexxInstructionRaise::liveGeneral(MarkReason reason)
 {
     // this must be the first one marked.
     memory_mark_general(nextInstruction);

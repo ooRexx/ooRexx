@@ -127,17 +127,17 @@ void RexxNumberString::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-    memory_mark(this->objectVariables);
-    memory_mark(this->stringObject);
+    memory_mark(objectVariables);
+    memory_mark(stringObject);
 }
 
-void RexxNumberString::liveGeneral(int reason)
+void RexxNumberString::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-    memory_mark_general(this->objectVariables);
-    memory_mark_general(this->stringObject);
+    memory_mark_general(objectVariables);
+    memory_mark_general(stringObject);
 }
 
 void RexxNumberString::flatten(RexxEnvelope *envelope)
@@ -145,12 +145,12 @@ void RexxNumberString::flatten(RexxEnvelope *envelope)
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
 {
-  setUpFlatten(RexxNumberString)
+    setUpFlatten(RexxNumberString)
 
-    flatten_reference(newThis->objectVariables, envelope);
-    flatten_reference(newThis->stringObject, envelope);
+    flattenRef(objectVariables);
+    flattenRef(stringObject);
 
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
 void RexxNumberString::setString(

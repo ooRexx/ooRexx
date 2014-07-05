@@ -115,25 +115,25 @@ void StackFrameClass::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-    memory_mark(this->name);
-    memory_mark(this->executable);
-    memory_mark(this->traceLine);
-    memory_mark(this->arguments);
-    memory_mark(this->target);
-    memory_mark(this->objectVariables);
+    memory_mark(name);
+    memory_mark(executable);
+    memory_mark(traceLine);
+    memory_mark(arguments);
+    memory_mark(target);
+    memory_mark(objectVariables);
 }
 
-void StackFrameClass::liveGeneral(int reason)
+void StackFrameClass::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-    memory_mark_general(this->name);
-    memory_mark_general(this->executable);
-    memory_mark_general(this->traceLine);
-    memory_mark_general(this->arguments);
-    memory_mark_general(this->target);
-    memory_mark_general(this->objectVariables);
+    memory_mark_general(name);
+    memory_mark_general(executable);
+    memory_mark_general(traceLine);
+    memory_mark_general(arguments);
+    memory_mark_general(target);
+    memory_mark_general(objectVariables);
 }
 
 void StackFrameClass::flatten(RexxEnvelope *envelope)
@@ -141,16 +141,16 @@ void StackFrameClass::flatten(RexxEnvelope *envelope)
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
 {
-  setUpFlatten(StackFrameClass)
+    setUpFlatten(StackFrameClass)
 
-  newThis->name = OREF_NULL;   // this never should be getting flattened, so sever the connection
-  newThis->executable = OREF_NULL;
-  newThis->traceLine = OREF_NULL;
-  newThis->arguments = OREF_NULL;
-  newThis->target = OREF_NULL;
-  newThis->objectVariables = OREF_NULL;
+    newThis->name = OREF_NULL;   // this never should be getting flattened, so sever the connection
+    newThis->executable = OREF_NULL;
+    newThis->traceLine = OREF_NULL;
+    newThis->arguments = OREF_NULL;
+    newThis->target = OREF_NULL;
+    newThis->objectVariables = OREF_NULL;
 
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
 

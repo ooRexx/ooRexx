@@ -125,7 +125,7 @@ void RoutineClass::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void RoutineClass::liveGeneral(int reason)
+void RoutineClass::liveGeneral(MarkReason reason)
 {
     memory_mark_general(code);
     memory_mark_general(executableName);

@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -46,7 +46,8 @@
 #define Included_RexxActivationStack
 
 
-class RexxActivationFrameBuffer : public RexxInternalObject {
+class RexxActivationFrameBuffer : public RexxInternalObject
+{
     public:
      inline void *operator new(size_t size, void *ptr) { return ptr;};
      inline void  operator delete(void *) { ; }
@@ -55,8 +56,7 @@ class RexxActivationFrameBuffer : public RexxInternalObject {
      RexxActivationFrameBuffer() { ; }
      inline RexxActivationFrameBuffer(RESTORETYPE restoreType) { ; }
      void live(size_t);
-     void liveGeneral(int reason);
-     void flatten(RexxEnvelope *);
+     void liveGeneral(MarkReason reason);
 
      inline bool hasCapacity(size_t entries) { return size - next >= entries; }
      inline RexxObject **allocateFrame(size_t entries)
@@ -90,36 +90,36 @@ class RexxActivationFrameBuffer : public RexxInternalObject {
 
 protected:
 
-
-     size_t size;                        /* size of the buffer (in slots) */
-     size_t next;                        /* location of next allocation */
-     RexxActivationFrameBuffer *previous;/* previous entry in the stack */
-     RexxObject *buffer[1];              /* start of the buffer location */
+     size_t size;                        // size of the buffer (in slots)
+     size_t next;                        // location of next allocation
+     RexxActivationFrameBuffer *previous;// previous entry in the stack
+     RexxObject *buffer[1];              // start of the buffer location
 };
 
 
-class RexxActivationStack {
+class RexxActivationStack
+{
  public:
 
-  enum { DefaultFrameBufferSize = 2048 };
+    enum { DefaultFrameBufferSize = 2048 };
 
-  inline void *operator new(size_t size, void *ptr) { return ptr;};
-  RexxActivationStack() { ; }
-  void live(size_t);
-  void liveGeneral(int reason);
+    inline void *operator new(size_t size, void *ptr) { return ptr;};
+    RexxActivationStack() { ; }
+    void live(size_t);
+    void liveGeneral(MarkReason reason);
 
-  void init();
-  void expandCapacity(size_t entries);
+    void init();
+    void expandCapacity(size_t entries);
 
-  inline void ensureCapacity(size_t entries) { if (!current->hasCapacity(entries)) { expandCapacity(entries); } }
-  inline RexxObject **allocateFrame(size_t entries)
-  {
-      /* make sure we have space first */
-      ensureCapacity(entries);
-      /* now allocate from the current stack buffer */
-      return current->allocateFrame(entries);
-  }
-  void releaseFrame(RexxObject **frame)
+    inline void ensureCapacity(size_t entries) { if (!current->hasCapacity(entries)) { expandCapacity(entries); } }
+    inline RexxObject **allocateFrame(size_t entries)
+    {
+        /* make sure we have space first */
+        ensureCapacity(entries);
+        /* now allocate from the current stack buffer */
+        return current->allocateFrame(entries);
+    }
+    void releaseFrame(RexxObject **frame)
     {
         /* we may be popping back one or more buffers.  We deactivate */
         /* the newer ones */
@@ -142,8 +142,8 @@ class RexxActivationStack {
 
 protected:
 
-  RexxActivationFrameBuffer *current;
-  RexxActivationFrameBuffer *unused;
+    RexxActivationFrameBuffer *current;
+    RexxActivationFrameBuffer *unused;
 };
 
 

@@ -94,7 +94,7 @@ void RexxStemVariable::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void RexxStemVariable::liveGeneral(int reason)
+void RexxStemVariable::liveGeneral(MarkReason reason)
 {
     memory_mark_general(stemName);
 }

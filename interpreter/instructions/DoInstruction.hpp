@@ -66,7 +66,7 @@ class RexxInstructionBaseDo : public RexxBlockInstruction
     inline RexxInstructionBaseDo(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
-    virtual void liveGeneral(int reason);
+    virtual void liveGeneral(MarkReason reason);
     virtual void flatten(RexxEnvelope *);
 
     // required by RexxInstruction.  For most subclasses, the default
@@ -155,7 +155,7 @@ class RexxInstructionDoOver : public RexxInstructionBaseDo
            RexxInstructionDoOver(RexxString *l, OverLoop &o);
 
     virtual void live(size_t);
-    virtual void liveGeneral(int reason);
+    virtual void liveGeneral(MarkReason reason);
     virtual void flatten(RexxEnvelope *);
 
     // Methods needed for loop iteration
@@ -185,7 +185,7 @@ class RexxInstructionDoOverUntil : public RexxInstructionDoOver
            RexxInstructionDoOverUntil(RexxString *l, OverLoop &o, WhileUntilLoop &w);
 
     virtual void live(size_t);
-    virtual void liveGeneral(int reason);
+    virtual void liveGeneral(MarkReason reason);
     virtual void flatten(RexxEnvelope *);
 
     // Methods needed for loop iteration
@@ -235,7 +235,7 @@ class RexxInstructionControlledDo: public RexxInstructionBaseDo
            RexxInstructionControlledDo(RexxString *l, ControlledLoop &c);
 
     virtual void live(size_t);
-    virtual void liveGeneral(int reason);
+    virtual void liveGeneral(MarkReason reason);
     virtual void flatten(RexxEnvelope *);
 
     // Methods needed for loop iteration
@@ -264,7 +264,7 @@ class RexxInstructionControlledDoUntil : public RexxInstructionControlledDo
            RexxInstructionControlledDoUntil(RexxString *l, ControlledLoop &c, WhileUntilLoop &w);
 
     virtual void live(size_t);
-    virtual void liveGeneral(int reason);
+    virtual void liveGeneral(MarkReason reason);
     virtual void flatten(RexxEnvelope *);
 
     // Methods needed for loop iteration
@@ -311,7 +311,7 @@ class RexxInstructionDoWhile: public RexxInstructionBaseDo
            RexxInstructionDoWhile(RexxString *l, WhileUntilLoop &w);
 
     virtual void live(size_t);
-    virtual void liveGeneral(int reason);
+    virtual void liveGeneral(MarkReason reason);
     virtual void flatten(RexxEnvelope *);
 
     // Methods needed for loop iteration
@@ -360,7 +360,7 @@ class RexxInstructionDoCount : public RexxInstructionBaseDo
            RexxInstructionDoCount(RexxString *l, ForLoop &f);
 
     virtual void live(size_t);
-    virtual void liveGeneral(int reason);
+    virtual void liveGeneral(MarkReason reason);
     virtual void flatten(RexxEnvelope *);
 
     // Methods needed for loop iteration
@@ -389,7 +389,7 @@ class RexxInstructionDoCountUntil : public RexxInstructionDoCount
            RexxInstructionDoCountUntil(RexxString *l, ForLoop &f, WhileUntilLoop &w);
 
     virtual void live(size_t);
-    virtual void liveGeneral(int reason);
+    virtual void liveGeneral(MarkReason reason);
     virtual void flatten(RexxEnvelope *);
 
     // Methods needed for loop iteration

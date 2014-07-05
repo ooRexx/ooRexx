@@ -59,8 +59,7 @@ public:
     inline void operator delete(void *, void *) { }
     CPPCode(size_t, PCPPM, size_t);
     inline CPPCode(RESTORETYPE restoreType) { ; };
-    void liveGeneral(int reason);
-    RexxObject *unflatten(RexxEnvelope *envelope);
+    void liveGeneral(MarkReason reason);
 
     void run(RexxActivity *, MethodClass *, RexxObject *, RexxString *, RexxObject **, size_t, ProtectedObject &);
 
@@ -69,6 +68,7 @@ public:
     static PCPPM exportedMethods[];
 
 protected:
+
     uint16_t   methodIndex;           // kernel method number
     uint16_t   argumentCount;         // argument count
     PCPPM      cppEntry;              // C++ Method entry point.
@@ -88,7 +88,7 @@ public:
     inline AttributeGetterCode(RexxVariableBase *a) { attribute = a; }
     inline AttributeGetterCode(RESTORETYPE restoreType) { ; };
     void live(size_t);
-    void liveGeneral(int reason);
+    void liveGeneral(MarkReason reason);
     void flatten(RexxEnvelope*);
 
     void run(RexxActivity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
@@ -128,7 +128,7 @@ public:
     inline ConstantGetterCode(RexxObject * v) { constantValue = v; }
     inline ConstantGetterCode(RESTORETYPE restoreType) { }
     void live(size_t);
-    void liveGeneral(int reason);
+    void liveGeneral(MarkReason reason);
     void flatten(RexxEnvelope*);
 
     void run(RexxActivity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);

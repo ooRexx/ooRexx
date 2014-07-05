@@ -72,7 +72,7 @@ class RexxLocalVariables
     RexxLocalVariables() { locals = OREF_NULL; size = 0; }
 
     void live(size_t);
-    void liveGeneral(int reason);
+    void liveGeneral(MarkReason reason);
     void migrate(RexxActivity *);
 
     /* NOTE:  we add one because the size is actually the index */

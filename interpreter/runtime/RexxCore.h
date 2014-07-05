@@ -123,7 +123,7 @@ class RexxClass;
 class RexxDirectory;
 class RexxIntegerClass;
 class RexxArray;
-class RexxMemory;
+class MemoryObject;
 class RexxString;
 
 
@@ -149,7 +149,7 @@ class RexxString;
 /* Global Objects - General                                                   */
 /******************************************************************************/
 // this one is special, and is truly global.
-EXTERNMEM RexxMemory  memoryObject;
+EXTERNMEM MemoryObject memoryObject;
 
 // short hand references to internal class objects.
 
@@ -179,11 +179,11 @@ EXTERNMEM RexxMemory  memoryObject;
 #define TheStackFrameClass StackFrameClass::classInstance
 
 // shorthand access to some important object.
-#define TheEnvironment RexxMemory::environment
-#define TheFunctionsDirectory RexxMemory::functionsDir
-#define TheCommonRetrievers RexxMemory::commonRetrievers
-#define TheKernel RexxMemory::kernel
-#define TheSystem RexxMemory::system
+#define TheEnvironment MemoryObject::environment
+#define TheFunctionsDirectory MemoryObject::functionsDir
+#define TheCommonRetrievers MemoryObject::commonRetrievers
+#define TheKernel MemoryObject::kernel
+#define TheSystem MemoryObject::system
 
 #define TheNilObject RexxNilObject::nilObject
 

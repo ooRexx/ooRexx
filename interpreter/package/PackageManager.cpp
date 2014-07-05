@@ -164,7 +164,7 @@ void PackageManager::live(size_t liveMark)
 /**
  * Generalized live marking.
  */
-void PackageManager::liveGeneral(int reason)
+void PackageManager::liveGeneral(MarkReason reason)
 {
     memory_mark_general(packages);
     memory_mark_general(packageRoutines);

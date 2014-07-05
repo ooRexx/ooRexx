@@ -79,19 +79,19 @@
 bool SysAccessPool(MemorySegmentPool **pool);
 // NOTE:  There is just a single memory object in global storage.  We'll define
 // memobj to be the direct address of this memory object.
-RexxMemory memoryObject;
+MemoryObject memoryObject;
 
-RexxDirectory *RexxMemory::globalStrings = OREF_NULL;
-RexxDirectory *RexxMemory::environment = OREF_NULL;       // global environment
-RexxDirectory *RexxMemory::functionsDir = OREF_NULL;      // statically defined requires
-RexxDirectory *RexxMemory::commonRetrievers = OREF_NULL;
-RexxDirectory *RexxMemory::kernel = OREF_NULL;
-RexxDirectory *RexxMemory::system = OREF_NULL;
+RexxDirectory *MemoryObject::globalStrings = OREF_NULL;
+RexxDirectory *MemoryObject::environment = OREF_NULL;       // global environment
+RexxDirectory *MemoryObject::functionsDir = OREF_NULL;      // statically defined requires
+RexxDirectory *MemoryObject::commonRetrievers = OREF_NULL;
+RexxDirectory *MemoryObject::kernel = OREF_NULL;
+RexxDirectory *MemoryObject::system = OREF_NULL;
 
 // locks for the memory process access
-SysMutex RexxMemory::flattenMutex;
-SysMutex RexxMemory::unflattenMutex;
-SysMutex RexxMemory::envelopeMutex;
+SysMutex MemoryObject::flattenMutex;
+SysMutex MemoryObject::unflattenMutex;
+SysMutex MemoryObject::envelopeMutex;
 
 static void logMemoryCheck(FILE *outfile, const char *message, ...)
 {
@@ -105,7 +105,7 @@ static void logMemoryCheck(FILE *outfile, const char *message, ...)
 }
 
 
-RexxMemory::RexxMemory()
+MemoryObject::MemoryObject()
 /******************************************************************************/
 /* Function: Main Constructor for Rexxmemory, called once during main         */
 /*  initialization.  Will create the initial memory Pool(s), etc.             */
@@ -115,7 +115,7 @@ RexxMemory::RexxMemory()
     /* to the minimum allocation boundary, even though that might be */
     /* a lie.  Since this never participates in a sweep operation, */
     /* this works ok in the end. */
-    setObjectSize(Memory::roundObjectBoundary(sizeof(RexxMemory)));
+    setObjectSize(Memory::roundObjectBoundary(sizeof(MemoryObject)));
     // our first pool is the current one
     currentPool = firstPool;
 
@@ -148,7 +148,7 @@ RexxMemory::RexxMemory()
 }
 
 
-void RexxMemory::initialize(bool _restoringImage)
+void MemoryObject::initialize(bool _restoringImage)
 /******************************************************************************/
 /* Function:  Gain access to all Pools                                        */
 /******************************************************************************/
@@ -164,7 +164,7 @@ void RexxMemory::initialize(bool _restoringImage)
                                          /* Make sure memory is fully         */
                                          /*constructed, mainlyt a concern on  */
                                          /*2nd entry and DLL not unloaded.    */
-    new (this) RexxMemory;
+    new (this) MemoryObject;
     new (&newSpaceNormalSegments) NormalSegmentSet(this);
     new (&newSpaceLargeSegments) LargeSegmentSet(this);
 
@@ -219,7 +219,7 @@ void RexxMemory::initialize(bool _restoringImage)
 }
 
 
-void RexxMemory::logVerboseOutput(const char *message, void *sub1, void *sub2)
+void MemoryObject::logVerboseOutput(const char *message, void *sub1, void *sub2)
 /******************************************************************************/
 /* Function:  Log verbose output events                                       */
 /******************************************************************************/
@@ -227,7 +227,7 @@ void RexxMemory::logVerboseOutput(const char *message, void *sub1, void *sub2)
     logMemoryCheck(NULL, message, sub1, sub2);
 }
 
-void RexxMemory::dumpMemoryProfile()
+void MemoryObject::dumpMemoryProfile()
 {
     FILE *outFile;                       /* memory stat output file           */
 
@@ -239,7 +239,7 @@ void RexxMemory::dumpMemoryProfile()
 }
 
 
-void RexxMemory::dumpObject(RexxObject *objectRef, FILE *outfile)
+void MemoryObject::dumpObject(RexxObject *objectRef, FILE *outfile)
 /******************************************************************************/
 /* Arguments:  none,                                                          */
 /*                                                                            */
@@ -257,7 +257,7 @@ void RexxMemory::dumpObject(RexxObject *objectRef, FILE *outfile)
     }
 }
 
-bool RexxMemory::inSharedObjectStorage(RexxObject *object)
+bool MemoryObject::inSharedObjectStorage(RexxObject *object)
 /******************************************************************************/
 /* Arguments:  Any OREF                                                       */
 /*                                                                            */
@@ -287,7 +287,7 @@ bool RexxMemory::inSharedObjectStorage(RexxObject *object)
 }
 
 
-bool RexxMemory::inObjectStorage(RexxObject *object)
+bool MemoryObject::inObjectStorage(RexxObject *object)
 /******************************************************************************/
 /* Arguments:  Any OREF                                                       */
 /*                                                                            */
@@ -306,7 +306,7 @@ bool RexxMemory::inObjectStorage(RexxObject *object)
 
 
 /* object validation method --used to find and diagnose broken object references       */
-bool RexxMemory::objectReferenceOK(RexxObject *o)
+bool MemoryObject::objectReferenceOK(RexxObject *o)
 /******************************************************************************/
 /* Function:  Object validation...used to find and diagnose broken object     */
 /* references.                                                                */
@@ -329,7 +329,7 @@ bool RexxMemory::objectReferenceOK(RexxObject *o)
 }
 
 
-void RexxMemory::markObjectsMain(RexxObject *rootObject)
+void MemoryObject::markObjectsMain(RexxObject *rootObject)
 /******************************************************************************/
 /* Function:  Main memory_mark driving loop                                   */
 /******************************************************************************/
@@ -364,7 +364,7 @@ void RexxMemory::markObjectsMain(RexxObject *rootObject)
 }
 
 
-void  RexxMemory::killOrphans(RexxObject *rootObject)
+void  MemoryObject::killOrphans(RexxObject *rootObject)
 /******************************************************************************/
 /* Function:  Garbage collection validity check routine                       */
 /******************************************************************************/
@@ -429,7 +429,7 @@ void  RexxMemory::killOrphans(RexxObject *rootObject)
     }
 }
 
-void RexxMemory::checkUninit()
+void MemoryObject::checkUninit()
 /******************************************************************************/
 /*                                                                            */
 /******************************************************************************/
@@ -467,7 +467,7 @@ void RexxMemory::checkUninit()
  * attempt to ensure that all objects with uninit methods get
  * a chance to clean up prior to termination.
  */
-void RexxMemory::collectAndUninit(bool clearStack)
+void MemoryObject::collectAndUninit(bool clearStack)
 {
     // clear the save stack if we're working with a single instance
     if (clearStack)
@@ -485,7 +485,7 @@ void RexxMemory::collectAndUninit(bool clearStack)
  * attempt to ensure that all objects with uninit methods get
  * a chance to clean up prior to termination.
  */
-void RexxMemory::lastChanceUninit()
+void MemoryObject::lastChanceUninit()
 {
     // collect and run any uninits still pending
     collectAndUninit(true);
@@ -495,7 +495,7 @@ void RexxMemory::lastChanceUninit()
 }
 
 
-void  RexxMemory::runUninits()
+void  MemoryObject::runUninits()
 /******************************************************************************/
 /* Function:  Run any UNINIT methods for this activity                        */
 /******************************************************************************/
@@ -566,7 +566,7 @@ void  RexxMemory::runUninits()
 }
 
 
-void  RexxMemory::removeUninitObject(
+void  MemoryObject::removeUninitObject(
     RexxObject *obj)                   /* object to remove                  */
 /******************************************************************************/
 /* Function:  Remove an object from the uninit tables                         */
@@ -577,7 +577,7 @@ void  RexxMemory::removeUninitObject(
 }
 
 
-void RexxMemory::addUninitObject(
+void MemoryObject::addUninitObject(
     RexxObject *obj)                   /* object to add                     */
 /******************************************************************************/
 /* Function:  Add an object with an uninit method to the uninit table for     */
@@ -594,7 +594,7 @@ void RexxMemory::addUninitObject(
 
 }
 
-bool RexxMemory::isPendingUninit(RexxObject *obj)
+bool MemoryObject::isPendingUninit(RexxObject *obj)
 /******************************************************************************/
 /* Function:  Test if an object is going to require its uninit method run.    */
 /******************************************************************************/
@@ -603,7 +603,7 @@ bool RexxMemory::isPendingUninit(RexxObject *obj)
 }
 
 
-void RexxMemory::markObjects()
+void MemoryObject::markObjects()
 /******************************************************************************/
 /* Function:   Main mark routine for garbage collection.  This reoutine       */
 /*  Determines which mark routine to call and does all additional processing  */
@@ -656,7 +656,7 @@ void RexxMemory::markObjects()
 /* scope) will be moved to a notification queue, which is processed after     */
 /* everything is scanned.                                                     */
 /******************************************************************************/
-void RexxMemory::checkWeakReferences()
+void MemoryObject::checkWeakReferences()
 {
     WeakReference *current = weakReferenceList;
     // list of "live" weak references...built while scanning
@@ -692,7 +692,7 @@ void RexxMemory::checkWeakReferences()
 }
 
 
-void RexxMemory::addWeakReference(WeakReference *ref)
+void MemoryObject::addWeakReference(WeakReference *ref)
 /******************************************************************************/
 /* Function:  Add a new weak reference to the tracking table                  */
 /******************************************************************************/
@@ -703,7 +703,7 @@ void RexxMemory::addWeakReference(WeakReference *ref)
 }
 
 
-MemorySegment *RexxMemory::newSegment(size_t requestedBytes, size_t minBytes)
+MemorySegment *MemoryObject::newSegment(size_t requestedBytes, size_t minBytes)
 /******************************************************************************/
 /* Function:  Allocate a segment of the requested size.  The requested size   */
 /* is the desired size, while the minimum is the absolute minimum we can      */
@@ -743,7 +743,7 @@ MemorySegment *RexxMemory::newSegment(size_t requestedBytes, size_t minBytes)
 }
 
 
-MemorySegment *RexxMemory::newLargeSegment(size_t requestedBytes, size_t minBytes)
+MemorySegment *MemoryObject::newLargeSegment(size_t requestedBytes, size_t minBytes)
 /******************************************************************************/
 /* Function:  Allocate a segment of the requested size.  The requested size   */
 /* is the desired size, while the minimum is the absolute minimum we can      */
@@ -781,7 +781,7 @@ MemorySegment *RexxMemory::newLargeSegment(size_t requestedBytes, size_t minByte
 }
 
 
-void RexxMemory::restoreImage()
+void MemoryObject::restoreImage()
 /******************************************************************************/
 /* Function:  Restore a saved image to usefulness.                            */
 /******************************************************************************/
@@ -893,7 +893,7 @@ void RexxMemory::restoreImage()
 }
 
 
-void RexxMemory::live(size_t liveMark)
+void MemoryObject::live(size_t liveMark)
 /******************************************************************************/
 /* Arguments:  None                                                           */
 /*                                                                            */
@@ -901,33 +901,33 @@ void RexxMemory::live(size_t liveMark)
 /*                                                                            */
 /******************************************************************************/
 {
-  /* Mark the save stack first, since it will be pulled off of */
-  /* the stack after everything else.  This will give other */
-  /* objects a chance to be marked before we remove them from */
-  /* the savestack. */
-  memory_mark(this->saveStack);
-  memory_mark(this->saveTable);
-  memory_mark(this->old2new);
-  memory_mark(this->envelope);
-  memory_mark(this->variableCache);
-  memory_mark(this->markTable);
-  memory_mark(globalStrings);
-  // now call the various subsystem managers to mark their references
-  Interpreter::live(liveMark);
-  SystemInterpreter::live(liveMark);
-  ActivityManager::live(liveMark);
-  PackageManager::live(liveMark);
-  // mark any protected objects we've been watching over
+    // Mark the save stack first, since it will be pulled off of
+    // the stack after everything else.  This will give other
+    // objects a chance to be marked before we remove them from
+    // the savestack.
+    memory_mark(saveStack);
+    memory_mark(saveTable);
+    memory_mark(old2new);
+    memory_mark(envelope);
+    memory_mark(variableCache);
+    memory_mark(markTable);
+    memory_mark(globalStrings);
+    // now call the various subsystem managers to mark their references
+    Interpreter::live(liveMark);
+    SystemInterpreter::live(liveMark);
+    ActivityManager::live(liveMark);
+    PackageManager::live(liveMark);
+    // mark any protected objects we've been watching over
 
-  GlobalProtectedObject *p = protectedObjects;
-  while (p != NULL)
-  {
-      memory_mark(p->protectedObject);
-      p = p->next;
-  }
+    GlobalProtectedObject *p = protectedObjects;
+    while (p != NULL)
+    {
+        memory_mark(p->protectedObject);
+        p = p->next;
+    }
 }
 
-void RexxMemory::liveGeneral(int reason)
+void MemoryObject::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Arguments:  None                                                           */
 /*                                                                            */
@@ -935,31 +935,30 @@ void RexxMemory::liveGeneral(int reason)
 /*                                                                            */
 /******************************************************************************/
 {
-  memory_mark_general(this->saveStack);/* Mark the save stack last, to give it a chance to clear out entries */
-  memory_mark_general(this->saveTable);
-  memory_mark_general(this->old2new);
-  memory_mark_general(this->envelope);
-  memory_mark_general(this->variableCache);
-  memory_mark_general(this->markTable);
-  memory_mark_general(globalStrings);
-  // now call the various subsystem managers to mark their references
-  Interpreter::liveGeneral(reason);
-  SystemInterpreter::liveGeneral(reason);
-  ActivityManager::liveGeneral(reason);
-  PackageManager::liveGeneral(reason);
+    memory_mark_general(saveStack);/* Mark the save stack last, to give it a chance to clear out entries */
+    memory_mark_general(saveTable);
+    memory_mark_general(old2new);
+    memory_mark_general(envelope);
+    memory_mark_general(variableCache);
+    memory_mark_general(markTable);
+    memory_mark_general(globalStrings);
+    // now call the various subsystem managers to mark their references
+    Interpreter::liveGeneral(reason);
+    SystemInterpreter::liveGeneral(reason);
+    ActivityManager::liveGeneral(reason);
+    PackageManager::liveGeneral(reason);
+    // mark any protected objects we've been watching over
+
+    GlobalProtectedObject *p = protectedObjects;
+    while (p != NULL)
+    {
+        memory_mark_general(p->protectedObject);
+        p = p->next;
+    }
 }
 
-void RexxMemory::flatten(RexxEnvelope *env)
-/******************************************************************************/
-/* Arguments:  None                                                           */
-/*                                                                            */
-/*  Returned:  OREF NULL,                                                     */
-/******************************************************************************/
-{
 
-}
-
-RexxObject  *RexxMemory::makeProxy(RexxEnvelope *env)
+RexxObject  *MemoryObject::makeProxy(RexxEnvelope *env)
 /******************************************************************************/
 /* Arguments:  None                                                           */
 /*                                                                            */
@@ -980,7 +979,7 @@ RexxObject  *RexxMemory::makeProxy(RexxEnvelope *env)
 }
 
 
-RexxObject* RexxMemory::reclaim()
+RexxObject* MemoryObject::reclaim()
 /******************************************************************************/
 /* Function:  Interface method for external control of garbage collection.    */
 /* This forces a GC cycle.                                                    */
@@ -992,7 +991,7 @@ RexxObject* RexxMemory::reclaim()
 }
 
 
-void RexxMemory::collect()
+void MemoryObject::collect()
 /******************************************************************************/
 /* Function:  Collect all dead memory in the Rexx object space.  The          */
 /* collection process performs a mark operation to mark all of the live       */
@@ -1025,7 +1024,7 @@ void RexxMemory::collect()
     verboseMessage("Object save table contains %d objects\n", this->saveTable->items());
 }
 
-RexxObject *RexxMemory::oldObject(size_t requestLength)
+RexxObject *MemoryObject::oldObject(size_t requestLength)
 /******************************************************************************/
 /* Arguments:  Requested length                                               */
 /*                                                                            */
@@ -1051,7 +1050,7 @@ RexxObject *RexxMemory::oldObject(size_t requestLength)
     return newObj;
 }
 
-char *RexxMemory::allocateImageBuffer(size_t imageSize)
+char *MemoryObject::allocateImageBuffer(size_t imageSize)
 /******************************************************************************/
 /* Function:  Allocate an image buffer for the system code.  The image buffer */
 /* is allocated in the oldspace segment set.  We create an object from that   */
@@ -1063,7 +1062,7 @@ char *RexxMemory::allocateImageBuffer(size_t imageSize)
 }
 
 
-RexxObject *RexxMemory::newObject(size_t requestLength, size_t type)
+RexxObject *MemoryObject::newObject(size_t requestLength, size_t type)
 /******************************************************************************/
 /* Arguments:  Requested length                                               */
 /*                                                                            */
@@ -1124,7 +1123,7 @@ RexxObject *RexxMemory::newObject(size_t requestLength, size_t type)
 }
 
 
-RexxArray  *RexxMemory::newObjects(
+RexxArray  *MemoryObject::newObjects(
                 size_t         size,
                 size_t         count,
                 size_t         objectType)
@@ -1240,7 +1239,7 @@ RexxArray  *RexxMemory::newObjects(
 }
 
 
-void RexxMemory::reSize(RexxObject *shrinkObj, size_t requestSize)
+void MemoryObject::reSize(RexxObject *shrinkObj, size_t requestSize)
 /******************************************************************************/
 /* Function:  The object shrinkObj only needs to be the size of newSize       */
 /*             If the left over space is big enough to become a dead object   */
@@ -1284,7 +1283,7 @@ void RexxMemory::reSize(RexxObject *shrinkObj, size_t requestSize)
 }
 
 
-void RexxMemory::scavengeSegmentSets(
+void MemoryObject::scavengeSegmentSets(
     MemorySegmentSet *requestor,           /* the requesting segment set */
     size_t allocationLength)               /* the size required          */
 /******************************************************************************/
@@ -1330,7 +1329,7 @@ void RexxMemory::scavengeSegmentSets(
 }
 
 
-void RexxMemory::liveStackFull()
+void MemoryObject::liveStackFull()
 /******************************************************************************/
 /* Function:  Process a live-stack overflow situation                         */
 /******************************************************************************/
@@ -1348,7 +1347,7 @@ void RexxMemory::liveStackFull()
     liveStack = newLiveStack;
 }
 
-void RexxMemory::mark(RexxObject *markObject)
+void MemoryObject::mark(RexxObject *markObject)
 /******************************************************************************/
 /* Function:  Perform a memory management mark operation                      */
 /******************************************************************************/
@@ -1382,7 +1381,7 @@ void RexxMemory::mark(RexxObject *markObject)
     }
 }
 
-RexxObject *RexxMemory::temporaryObject(size_t requestLength)
+RexxObject *MemoryObject::temporaryObject(size_t requestLength)
 /******************************************************************************/
 /* Function:  Allocate and setup a temporary object obtained via malloc       */
 /*            storage.  This is used currently only by the mark routine to    */
@@ -1406,7 +1405,7 @@ RexxObject *RexxMemory::temporaryObject(size_t requestLength)
     return newObj;                       /* and return it                     */
 }
 
-void RexxMemory::markGeneral(void *obj)
+void MemoryObject::markGeneral(void *obj)
 /******************************************************************************/
 /* Function:  Perform various general marking functions such as image save,   */
 /*            image restore, object unflatten, and debug garbage collection   */
@@ -1436,6 +1435,7 @@ void RexxMemory::markGeneral(void *obj)
         return;                            /* finished                          */
     }
 
+    // TODO:  Not sure this ever gets called...need to investigate.
     if (this->envelope)
     {                /* processing an envelope?           */
         /* do the unflatten */
@@ -1467,7 +1467,7 @@ void RexxMemory::markGeneral(void *obj)
 }
 
 
-void RexxMemory::saveImageMark(RexxObject *markObject, RexxObject **pMarkObject)
+void MemoryObject::saveImageMark(RexxObject *markObject, RexxObject **pMarkObject)
 /******************************************************************************/
 /* Function:  Perform marking during a save image operation                   */
 /******************************************************************************/
@@ -1535,7 +1535,7 @@ void RexxMemory::saveImageMark(RexxObject *markObject, RexxObject **pMarkObject)
 }
 
 
-void RexxMemory::orphanCheckMark(RexxObject *markObject, RexxObject **pMarkObject)
+void MemoryObject::orphanCheckMark(RexxObject *markObject, RexxObject **pMarkObject)
 /******************************************************************************/
 /* Function:  Perform orphan check marking on an object                       */
 /******************************************************************************/
@@ -1621,7 +1621,7 @@ void RexxMemory::orphanCheckMark(RexxObject *markObject, RexxObject **pMarkObjec
 }
 
 
-void RexxMemory::discardHoldObject(RexxInternalObject *obj)
+void MemoryObject::discardHoldObject(RexxInternalObject *obj)
 {
    /* Remove object form savetable */
    saveTable->remove((RexxObject *)obj);
@@ -1630,7 +1630,7 @@ void RexxMemory::discardHoldObject(RexxInternalObject *obj)
 }
 
 
-RexxObject *RexxMemory::holdObject(RexxInternalObject *obj)
+RexxObject *MemoryObject::holdObject(RexxInternalObject *obj)
 /******************************************************************************/
 /* Function:  Place an object on the hold stack                               */
 /******************************************************************************/
@@ -1641,7 +1641,7 @@ RexxObject *RexxMemory::holdObject(RexxInternalObject *obj)
    return (RexxObject *)obj;
 }
 
-RexxObject *RexxMemory::setParms(RexxObject *deadSegs, RexxObject *notUsed)
+RexxObject *MemoryObject::setParms(RexxObject *deadSegs, RexxObject *notUsed)
 /******************************************************************************/
 /* Arguments:  Maximum and minimum allocations between reclamations           */
 /******************************************************************************/
@@ -1649,7 +1649,7 @@ RexxObject *RexxMemory::setParms(RexxObject *deadSegs, RexxObject *notUsed)
     return OREF_NULL;
 }
 
-void RexxMemory::saveImage(void)
+void MemoryObject::saveImage(void)
 /******************************************************************************/
 /* Function:  Save the memory image as part of interpreter build              */
 /******************************************************************************/
@@ -1765,7 +1765,7 @@ void RexxMemory::saveImage(void)
 }
 
 
-RexxObject *RexxMemory::dump(void)
+RexxObject *MemoryObject::dump(void)
 /******************************************************************************/
 /* Function:  Dump the memory tables                                          */
 /******************************************************************************/
@@ -1823,7 +1823,7 @@ RexxObject *RexxMemory::dump(void)
 }
 
 
-RexxObject *RexxMemory::setDump(RexxObject *selection)
+RexxObject *MemoryObject::setDump(RexxObject *selection)
 /******************************************************************************/
 /* Arguments:  selection, 0 for no, anything else for yes                     */
 /*                                                                            */
@@ -1837,7 +1837,7 @@ RexxObject *RexxMemory::setDump(RexxObject *selection)
     return selection;
 }
 
-RexxObject *RexxMemory::gutCheck(void)
+RexxObject *MemoryObject::gutCheck(void)
 /******************************************************************************/
 /* Arguments:  None                                                           */
 /*                                                                            */
@@ -1921,7 +1921,7 @@ RexxObject *RexxMemory::gutCheck(void)
 }
 
 
-void RexxMemory::setObjectOffset(size_t offset)
+void MemoryObject::setObjectOffset(size_t offset)
 /******************************************************************************/
 /* Arguments:  offset, the length to add to references within arriving objects*/
 /*     since only one unflattem can happen at a time, we need to ensure       */
@@ -1956,7 +1956,7 @@ void RexxMemory::setObjectOffset(size_t offset)
     this->objOffset = offset;
 }
 
-void      RexxMemory::setEnvelope(RexxEnvelope *_envelope)
+void      MemoryObject::setEnvelope(RexxEnvelope *_envelope)
 /******************************************************************************/
 /* Arguments:  envelope object,                                               */
 /*     since only one unflattem can happen at a time, we need to ensure       */
@@ -1990,7 +1990,7 @@ void      RexxMemory::setEnvelope(RexxEnvelope *_envelope)
 }
 
 
-RexxObject *RexxMemory::setOref(void *oldValue, RexxObject *value)
+RexxObject *MemoryObject::setOref(void *oldValue, RexxObject *value)
 /******************************************************************************/
 /* Arguments:  index-- OREF to set;  value--OREF to which objr is set         */
 /*                                                                            */
@@ -2060,7 +2060,7 @@ RexxObject *RexxMemory::setOref(void *oldValue, RexxObject *value)
 }
 
 
-RexxObject *RexxMemory::checkSetOref(
+RexxObject *MemoryObject::checkSetOref(
                 RexxObject  *setter,
                 RexxObject **index,
                 RexxObject  *value,
@@ -2123,7 +2123,7 @@ RexxObject *RexxMemory::checkSetOref(
 
 }
 
-LiveStack *RexxMemory::getFlattenStack(void)
+LiveStack *MemoryObject::getFlattenStack(void)
 /******************************************************************************/
 /* Function:  Allocate and lock the flatten stack capability.                 */
 /******************************************************************************/
@@ -2142,7 +2142,7 @@ LiveStack *RexxMemory::getFlattenStack(void)
     return this->flattenStack;           /* return flatten Stack              */
 }
 
-void RexxMemory::returnFlattenStack(void)
+void MemoryObject::returnFlattenStack(void)
 /******************************************************************************/
 /* Function:  Release the flatten stack                                       */
 /******************************************************************************/
@@ -2151,7 +2151,7 @@ void RexxMemory::returnFlattenStack(void)
    this->flattenMutex.release();       /* and release the semaphore         */
 }
 
-RexxObject *RexxMemory::dumpImageStats(void)
+RexxObject *MemoryObject::dumpImageStats(void)
 /******************************************************************************/
 /*                                                                            */
 /******************************************************************************/
@@ -2176,13 +2176,13 @@ RexxObject *RexxMemory::dumpImageStats(void)
  *
  * @param pool   The new pool.
  */
-void RexxMemory::memoryPoolAdded(MemorySegmentPool *pool)
+void MemoryObject::memoryPoolAdded(MemorySegmentPool *pool)
 {
     currentPool = pool;
 }
 
 
-void RexxMemory::shutdown()
+void MemoryObject::shutdown()
 /******************************************************************************/
 /* Function:  Free all the memory pools currently accessed by this process    */
 /*    If not already released.  Then set process Pool to NULL, indicate       */
@@ -2204,7 +2204,7 @@ void RexxMemory::shutdown()
 }
 
 
-void RexxMemory::setUpMemoryTables(RexxIdentityTable *old2newTable)
+void MemoryObject::setUpMemoryTables(RexxIdentityTable *old2newTable)
 /******************************************************************************/
 /* Function:  Set up the initial memory table.                                */
 /******************************************************************************/
@@ -2237,7 +2237,7 @@ void RexxMemory::setUpMemoryTables(RexxIdentityTable *old2newTable)
     saveTable = new_identity_table();
 }
 
-void RexxMemory::createLocks()
+void MemoryObject::createLocks()
 /******************************************************************************/
 /* Function:  Do the initial lock creation for memory setup.                  */
 /******************************************************************************/
@@ -2250,7 +2250,7 @@ void RexxMemory::createLocks()
     envelopeMutex.create();
 }
 
-void RexxMemory::closeLocks()
+void MemoryObject::closeLocks()
 /******************************************************************************/
 /* Function:  Do the initial lock creation for memory setup.                  */
 /******************************************************************************/
@@ -2271,7 +2271,7 @@ void RexxMemory::closeLocks()
  *
  * @return The single instance of this string.
  */
-RexxString *RexxMemory::getGlobalName(const char *value)
+RexxString *MemoryObject::getGlobalName(const char *value)
 {
     // see if we have a global table.  If not collecting currently,
     // just return the non-unique value
@@ -2294,7 +2294,7 @@ RexxString *RexxMemory::getGlobalName(const char *value)
 }
 
 
-void RexxMemory::create()
+void MemoryObject::create()
 /******************************************************************************/
 /* Function:  Initial memory setup during image build                         */
 /******************************************************************************/
@@ -2311,7 +2311,7 @@ void RexxMemory::create()
 }
 
 
-void RexxMemory::restore()
+void MemoryObject::restore()
 /******************************************************************************/
 /* Function:  Memory management image restore functions                       */
 /******************************************************************************/

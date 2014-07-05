@@ -53,7 +53,7 @@
 // is enqueued to notify the owning object that a state change has occurred.
 class WeakReference : public RexxObject
 {
-    friend class RexxMemory;
+    friend class MemoryObject;
 public:
     inline WeakReference(RESTORETYPE restoreType) { ; };
     WeakReference();
@@ -65,7 +65,7 @@ public:
     inline void  operator delete(void *) {;}
 
     void        live(size_t);
-    void        liveGeneral(int);
+    void        liveGeneral(MarkReason);
     void        flatten(RexxEnvelope *);
     RexxObject *unflatten(RexxEnvelope *);
 

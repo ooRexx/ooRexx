@@ -112,61 +112,54 @@ void RexxNativeActivation::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-    memory_mark(this->previous);
-    memory_mark(this->executable);
-    memory_mark(this->argArray);
-    memory_mark(this->receiver);
-    memory_mark(this->activity);
-    memory_mark(this->activation);
-    memory_mark(this->msgname);
-    memory_mark(this->savelist);
-    memory_mark(this->result);
-    memory_mark(this->nextstem);
-    memory_mark(this->compoundelement);
-    memory_mark(this->nextcurrent);
-    memory_mark(this->objectVariables);
-    memory_mark(this->conditionObj);
-    memory_mark(this->securityManager);
+    memory_mark(previous);
+    memory_mark(executable);
+    memory_mark(argArray);
+    memory_mark(receiver);
+    memory_mark(activity);
+    memory_mark(activation);
+    memory_mark(msgname);
+    memory_mark(savelist);
+    memory_mark(result);
+    memory_mark(nextstem);
+    memory_mark(compoundelement);
+    memory_mark(nextcurrent);
+    memory_mark(objectVariables);
+    memory_mark(conditionObj);
+    memory_mark(securityManager);
 
-    /* We're hold a pointer back to our arguments directly where they */
-    /* are created.  Since in some places, this argument list comes */
-    /* from the C stack, we need to handle the marker ourselves. */
-    size_t i;
-    for (i = 0; i < argcount; i++)
-    {
-        memory_mark(arglist[i]);
-    }
+    // We're hold a pointer back to our arguments directly where they
+    // are created.  Since in some places, this argument list comes
+    // from the C stack, we need to handle the marker ourselves.
+    memory_mark_array(argcount, arglist);
 }
 
-void RexxNativeActivation::liveGeneral(int reason)
+
+void RexxNativeActivation::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-    memory_mark_general(this->previous);
-    memory_mark_general(this->executable);
-    memory_mark_general(this->argArray);
-    memory_mark_general(this->receiver);
-    memory_mark_general(this->activity);
-    memory_mark_general(this->activation);
-    memory_mark_general(this->msgname);
-    memory_mark_general(this->savelist);
-    memory_mark_general(this->result);
-    memory_mark_general(this->nextstem);
-    memory_mark_general(this->compoundelement);
-    memory_mark_general(this->nextcurrent);
-    memory_mark_general(this->objectVariables);
-    memory_mark_general(this->conditionObj);
-    memory_mark_general(this->securityManager);
+    memory_mark_general(previous);
+    memory_mark_general(executable);
+    memory_mark_general(argArray);
+    memory_mark_general(receiver);
+    memory_mark_general(activity);
+    memory_mark_general(activation);
+    memory_mark_general(msgname);
+    memory_mark_general(savelist);
+    memory_mark_general(result);
+    memory_mark_general(nextstem);
+    memory_mark_general(compoundelement);
+    memory_mark_general(nextcurrent);
+    memory_mark_general(objectVariables);
+    memory_mark_general(conditionObj);
+    memory_mark_general(securityManager);
 
-    /* We're hold a pointer back to our arguments directly where they */
-    /* are created.  Since in some places, this argument list comes */
-    /* from the C stack, we need to handle the marker ourselves. */
-    size_t i;
-    for (i = 0; i < argcount; i++)
-    {
-        memory_mark_general(arglist[i]);
-    }
+    // We're hold a pointer back to our arguments directly where they
+    // are created.  Since in some places, this argument list comes
+    // from the C stack, we need to handle the marker ourselves.
+    memory_mark_general_array(argcount, arglist);
 }
 
 

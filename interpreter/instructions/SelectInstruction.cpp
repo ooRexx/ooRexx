@@ -92,7 +92,7 @@ void RexxInstructionSelect::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void RexxInstructionSelect::liveGeneral(int reason)
+void RexxInstructionSelect::liveGeneral(MarkReason reason)
 {
     // must be first object marked
     memory_mark_general(nextInstruction);
@@ -311,7 +311,7 @@ void RexxInstructionSelectCase::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void RexxInstructionSelectCase::liveGeneral(int reason)
+void RexxInstructionSelectCase::liveGeneral(MarkReason reason)
 {
     // must be first object marked
     memory_mark_general(nextInstruction);

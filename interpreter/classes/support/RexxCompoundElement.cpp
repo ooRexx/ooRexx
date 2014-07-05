@@ -50,27 +50,27 @@ void RexxCompoundElement::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  memory_mark(this->variableValue);
-  memory_mark(this->variable_name);
-  memory_mark(this->dependents);
-  memory_mark(this->parent);
-  memory_mark(this->left);
-  memory_mark(this->right);
-  memory_mark(this->real_element);
+    memory_mark(variableValue);
+    memory_mark(variable_name);
+    memory_mark(dependents);
+    memory_mark(parent);
+    memory_mark(left);
+    memory_mark(right);
+    memory_mark(real_element);
 }
 
-void RexxCompoundElement::liveGeneral(int reason)
+void RexxCompoundElement::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  memory_mark_general(this->variableValue);
-  memory_mark_general(this->variable_name);
-  memory_mark_general(this->dependents);
-  memory_mark_general(this->parent);
-  memory_mark_general(this->left);
-  memory_mark_general(this->right);
-  memory_mark_general(this->real_element);
+    memory_mark_general(variableValue);
+    memory_mark_general(variable_name);
+    memory_mark_general(dependents);
+    memory_mark_general(parent);
+    memory_mark_general(left);
+    memory_mark_general(right);
+    memory_mark_general(real_element);
 }
 
 void RexxCompoundElement::flatten(RexxEnvelope *envelope)
@@ -78,17 +78,17 @@ void RexxCompoundElement::flatten(RexxEnvelope *envelope)
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
 {
-  setUpFlatten(RexxCompoundElement)
+    setUpFlatten(RexxCompoundElement)
 
-   flatten_reference(newThis->variableValue, envelope);
-   flatten_reference(newThis->variable_name, envelope);
-   flatten_reference(newThis->dependents, envelope);
-   flatten_reference(newThis->parent, envelope);
-   flatten_reference(newThis->left, envelope);
-   flatten_reference(newThis->right, envelope);
-   flatten_reference(newThis->real_element, envelope);
+    flattenRef(variableValue);
+    flattenRef(variable_name);
+    flattenRef(dependents);
+    flattenRef(parent);
+    flattenRef(left);
+    flattenRef(right);
+    flattenRef(real_element);
 
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
 

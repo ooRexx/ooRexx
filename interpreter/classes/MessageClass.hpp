@@ -63,7 +63,7 @@ class RexxMessage : public RexxObject
     inline RexxMessage(RESTORETYPE restoreType) { ; };
 
     void          live(size_t);
-    void          liveGeneral(int reason);
+    void          liveGeneral(MarkReason reason);
     void          flatten(RexxEnvelope *);
     RexxObject   *notify(RexxMessage *);
     RexxObject   *result();

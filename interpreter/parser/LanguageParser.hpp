@@ -99,7 +99,7 @@ class LanguageParser: public RexxInternalObject
     inline LanguageParser(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
-    virtual void liveGeneral(int reason);
+    virtual void liveGeneral(MarkReason reason);
 
     // main execution methods
     RexxCode   *translate();

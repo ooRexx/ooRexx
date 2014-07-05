@@ -199,6 +199,8 @@ LanguageParser::LanguageParser(RexxString *p, ProgramSource *s)
  *
  * @param liveMark The current live mark.
  */
+
+// TODO:  double check that this list and the one on SourceFile are correct.
 void LanguageParser::live(size_t liveMark)
 {
     // because of the way garbage collection works, it is a good
@@ -235,7 +237,7 @@ void LanguageParser::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void LanguageParser::liveGeneral(int reason)
+void LanguageParser::liveGeneral(MarkReason reason)
 {
     // because of the way garbage collection works, it is a good
     // idea to mark these first because they are chained.

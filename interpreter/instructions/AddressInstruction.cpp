@@ -41,12 +41,12 @@
 /* Primitive Address Parse Class                                              */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "RexxActivation.hpp"
 #include "AddressInstruction.hpp"
 #include "SystemInterpreter.hpp"
+#include "MethodArguments.hpp"
 
 /**
  * Constructor for an Address instruction object.
@@ -63,7 +63,7 @@ RexxInstructionAddress::RexxInstructionAddress(RexxObject *_expression,
 
     dynamicAddress = _expression;
     environment = environment;
-    command = command);
+    command = command;
 }
 
 
@@ -89,7 +89,7 @@ void RexxInstructionAddress::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void RexxInstructionAddress::liveGeneral(int reason)
+void RexxInstructionAddress::liveGeneral(MarkReason reason)
 {
     // must be first one marked
     memory_mark_general(nextInstruction);

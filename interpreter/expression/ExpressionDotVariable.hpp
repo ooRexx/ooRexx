@@ -62,7 +62,7 @@ class RexxDotVariable : public RexxVariableBase
     inline RexxDotVariable(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
-    virtual void liveGeneral(int reason);
+    virtual void liveGeneral(MarkReason reason);
     virtual void flatten(RexxEnvelope *);
 
     // part ov RexxVariableBase...rest of the methods default

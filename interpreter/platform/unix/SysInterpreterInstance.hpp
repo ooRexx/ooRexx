@@ -50,7 +50,7 @@ class SysInterpreterInstance
 {
 public:
     void live(size_t);
-    void liveGeneral(int);
+    void liveGeneral(MarkReason);
 
     void initialize(InterpreterInstance *i, RexxOption *options);
     void terminate();

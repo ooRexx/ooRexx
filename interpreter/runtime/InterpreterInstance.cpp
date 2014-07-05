@@ -95,7 +95,7 @@ void InterpreterInstance::live(size_t liveMark)
 }
 
 
-void InterpreterInstance::liveGeneral(int reason)
+void InterpreterInstance::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/

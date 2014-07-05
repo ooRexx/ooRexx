@@ -84,7 +84,7 @@ class RexxSource: public RexxInternalObject
     inline RexxSource(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
-    virtual void liveGeneral(int reason);
+    virtual void liveGeneral(MarkReason reason);
     virtual void flatten(RexxEnvelope *);
 
     void        setup();

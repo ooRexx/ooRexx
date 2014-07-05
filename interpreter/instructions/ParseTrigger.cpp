@@ -107,7 +107,7 @@ void RexxTrigger::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void RexxTrigger::liveGeneral(int reason)
+void RexxTrigger::liveGeneral(MarkReason reason)
 {
     memory_mark_general(value);
     memory_mark_general_array(variableCount, variables);

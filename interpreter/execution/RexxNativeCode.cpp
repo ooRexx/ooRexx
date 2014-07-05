@@ -66,20 +66,20 @@ void RexxNativeCode::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-    memory_mark(this->package);
-    memory_mark(this->name);
-    memory_mark(this->source);
+    memory_mark(package);
+    memory_mark(name);
+    memory_mark(source);
 }
 
 
-void RexxNativeCode::liveGeneral(int reason)
+void RexxNativeCode::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-    memory_mark_general(this->package);
-    memory_mark_general(this->name);
-    memory_mark_general(this->source);
+    memory_mark_general(package);
+    memory_mark_general(name);
+    memory_mark_general(source);
 }
 
 
@@ -88,11 +88,13 @@ void RexxNativeCode::flatten(RexxEnvelope *envelope)
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
 {
-  setUpFlatten(RexxNativeMethod)
-   flatten_reference(newThis->package, envelope);
-   flatten_reference(newThis->name, envelope);
-   flatten_reference(newThis->source, envelope);
-  cleanUpFlatten
+    setUpFlatten(RexxNativeMethod)
+
+    flattenRef(package);
+    flattenRef(name);
+    flattenRef(source);
+
+    cleanUpFlatten
 }
 
 
@@ -168,7 +170,7 @@ SecurityManager *RexxNativeCode::getSecurityManager()
 }
 
 
-void RexxNativeMethod::liveGeneral(int reason)
+void RexxNativeMethod::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
@@ -194,7 +196,7 @@ void RexxNativeMethod::flatten(RexxEnvelope *envelope)
 }
 
 
-void RexxNativeRoutine::liveGeneral(int reason)
+void RexxNativeRoutine::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
@@ -220,7 +222,7 @@ void RexxNativeRoutine::flatten(RexxEnvelope *envelope)
 }
 
 
-void RegisteredRoutine::liveGeneral(int reason)
+void RegisteredRoutine::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/

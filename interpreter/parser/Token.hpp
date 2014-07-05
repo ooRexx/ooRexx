@@ -496,7 +496,7 @@ class RexxToken : public RexxInternalObject
 
     inline RexxToken(RESTORETYPE restoreType) { ; };
     void       live(size_t);
-    void       liveGeneral(int reason);
+    void       liveGeneral(MarkReason reason);
 
     inline void setStart(size_t l, size_t o) { tokenLocation.setStart(l, o); }
     inline void setEnd(size_t l, size_t o) { tokenLocation.setEnd(l, o); }

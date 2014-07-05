@@ -118,7 +118,7 @@ void RexxExpressionMessage::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void RexxExpressionMessage::liveGeneral(int reason)
+void RexxExpressionMessage::liveGeneral(MarkReason reason)
 {
     memory_mark_general(this->messageName);
     memory_mark_general(this->target);

@@ -67,7 +67,7 @@ class RexxInstructionRaise : public RexxInstruction {
     RexxInstructionRaise(RexxString *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, size_t, RexxQueue *, bool);
 
     virtual void live(size_t);
-    virtual void liveGeneral(int reason);
+    virtual void liveGeneral(MarkReason reason);
     virtual void flatten(RexxEnvelope*);
 
     virtual void execute(RexxActivation *, RexxExpressionStack *);

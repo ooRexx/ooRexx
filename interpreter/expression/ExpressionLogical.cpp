@@ -47,7 +47,6 @@
 #include "RexxActivation.hpp"
 #include "RexxInstruction.hpp"
 #include "ExpressionLogical.hpp"
-#include "StackClass.hpp"
 #include "RexxActivity.hpp"
 #include "BuiltinFunctions.hpp"
 #include "LanguageParser.hpp"
@@ -82,12 +81,15 @@ RexxExpressionLogical::RexxExpressionLogical(LanguageParser *parser, size_t coun
     // the parsed expressions are stored in a queue, so we process them in
     // reverse order.  Note that we cannot use the macro to copy these here
     // because we need to validate these as well.
+
+    // TODO:  Ideally, this should be validated in the parser...also need to check that
+    // while/until are not subject to this.
     while (count > 0)
     {
         RexxObject *condition = list->pop();
         if (condition == OREF_NULL)
         {
-            source->syntaxError(Error_Invalid_expression_logical_list);
+            parser->syntaxError(Error_Invalid_expression_logical_list);
         }
         expressions[--count] = condition;
     }
@@ -107,7 +109,7 @@ void RexxExpressionLogical::live(size_t liveMark)
  * The generalized live marking routine used for non-performance
  * critical marking operations.
  */
-void RexxExpressionLogical::liveGeneral(int reason)
+void RexxExpressionLogical::liveGeneral(MarkReason reason)
 {
     memory_mark_general_array(expressionCount, expressions);
 }
@@ -122,7 +124,7 @@ void RexxExpressionLogical::flatten(RexxEnvelope *envelope)
 {
     setUpFlatten(RexxExpressionLogical)
 
-    flattenArrayRefs(expressionCount, expressons);
+    flattenArrayRefs(expressionCount, expressions);
 
     cleanUpFlatten
 }

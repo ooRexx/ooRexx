@@ -60,7 +60,7 @@ class PackageManager
 {
 public:
     static void live(size_t liveMark);
-    static void liveGeneral(int reason);
+    static void liveGeneral(MarkReason reason);
 
     static void initialize();
     static RexxArray *getImageData();

@@ -1340,7 +1340,7 @@ void RexxActivity::live(size_t liveMark)
         p = p->next;
     }
 }
-void RexxActivity::liveGeneral(int reason)
+void RexxActivity::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/

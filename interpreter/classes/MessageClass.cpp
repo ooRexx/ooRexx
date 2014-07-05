@@ -99,35 +99,35 @@ void RexxMessage::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-    memory_mark(this->receiver);
-    memory_mark(this->target);
-    memory_mark(this->message);
-    memory_mark(this->startscope);
-    memory_mark(this->args);
-    memory_mark(this->resultObject);
-    memory_mark(this->interestedParties);
-    memory_mark(this->condition);
-    memory_mark(this->startActivity);
-    memory_mark(this->objectVariables);
-    memory_mark(this->waitingActivities);
+    memory_mark(receiver);
+    memory_mark(target);
+    memory_mark(message);
+    memory_mark(startscope);
+    memory_mark(args);
+    memory_mark(resultObject);
+    memory_mark(interestedParties);
+    memory_mark(condition);
+    memory_mark(startActivity);
+    memory_mark(objectVariables);
+    memory_mark(waitingActivities);
 }
 
-void RexxMessage::liveGeneral(int reason)
+void RexxMessage::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-    memory_mark_general(this->receiver);
-    memory_mark_general(this->target);
-    memory_mark_general(this->message);
-    memory_mark_general(this->startscope);
-    memory_mark_general(this->args);
-    memory_mark_general(this->resultObject);
-    memory_mark_general(this->interestedParties);
-    memory_mark_general(this->condition);
-    memory_mark_general(this->startActivity);
-    memory_mark_general(this->objectVariables);
-    memory_mark_general(this->waitingActivities);
+    memory_mark_general(receiver);
+    memory_mark_general(target);
+    memory_mark_general(message);
+    memory_mark_general(startscope);
+    memory_mark_general(args);
+    memory_mark_general(resultObject);
+    memory_mark_general(interestedParties);
+    memory_mark_general(condition);
+    memory_mark_general(startActivity);
+    memory_mark_general(objectVariables);
+    memory_mark_general(waitingActivities);
 }
 
 void RexxMessage::flatten(RexxEnvelope *envelope)
@@ -135,21 +135,21 @@ void RexxMessage::flatten(RexxEnvelope *envelope)
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
 {
-  setUpFlatten(RexxMessage)
+    setUpFlatten(RexxMessage)
 
-   flatten_reference(newThis->receiver, envelope);
-   flatten_reference(newThis->target, envelope);
-   flatten_reference(newThis->message, envelope);
-   flatten_reference(newThis->startscope, envelope);
-   flatten_reference(newThis->args, envelope);
-   flatten_reference(newThis->resultObject, envelope);
-   flatten_reference(newThis->interestedParties, envelope);
-   flatten_reference(newThis->condition, envelope);
-   flatten_reference(newThis->startActivity, envelope);
-   flatten_reference(newThis->objectVariables, envelope);
-   flatten_reference(newThis->waitingActivities, envelope);
+    flattenRef(receiver);
+    flattenRef(target);
+    flattenRef(message);
+    flattenRef(startscope);
+    flattenRef(args);
+    flattenRef(resultObject);
+    flattenRef(interestedParties);
+    flattenRef(condition);
+    flattenRef(startActivity);
+    flattenRef(objectVariables);
+    flattenRef(waitingActivities);
 
-  cleanUpFlatten
+   cleanUpFlatten
 }
 
 RexxObject *RexxMessage::notify(RexxMessage *_message)

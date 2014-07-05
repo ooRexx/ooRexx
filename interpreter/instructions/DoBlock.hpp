@@ -60,7 +60,7 @@ class RexxDoBlock : public RexxInternalObject
     inline RexxDoBlock(RESTORETYPE restoreType) { ; };
 
     void live(size_t);
-    void liveGeneral(int reason);
+    void liveGeneral(MarkReason reason);
     void flatten(RexxEnvelope *);
 
     inline RexxBlockInstruction * getParent() {return this->parent;};

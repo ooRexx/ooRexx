@@ -57,7 +57,7 @@ class RexxCompoundElement : public RexxVariable {
 
   inline RexxCompoundElement(RESTORETYPE restoreType) { ; };
   void         live(size_t);
-  void         liveGeneral(int reason);
+  void         liveGeneral(MarkReason reason);
   void         flatten(RexxEnvelope *);
 
   inline RexxCompoundElement *realVariable() { return real_element != OREF_NULL ? real_element : this; }

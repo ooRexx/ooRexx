@@ -60,7 +60,7 @@ public:
     inline RexxInstructionSelect(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
-    virtual void liveGeneral(int reason);
+    virtual void liveGeneral(MarkReason reason);
     virtual void flatten(RexxEnvelope*);
 
     // required by RexxInstructon
@@ -96,7 +96,7 @@ public:
     inline RexxInstructionSelectCase(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
-    virtual void liveGeneral(int reason);
+    virtual void liveGeneral(MarkReason reason);
     virtual void flatten(RexxEnvelope*);
 
     // required by RexxInstructon

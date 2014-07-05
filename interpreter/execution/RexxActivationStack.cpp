@@ -58,50 +58,35 @@ void RexxActivationFrameBuffer::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  /* we only mark housekeeping type fields.  The main buffer */
-  /* entries are marked by the owning activations. */
-  memory_mark(this->previous);
+    // we only mark housekeeping type fields.  The main buffer
+    // entries are marked by the owning activations.
+    memory_mark(previous);
 }
 
-void RexxActivationFrameBuffer::liveGeneral(int reason)
+void RexxActivationFrameBuffer::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  memory_mark_general(this->previous);
+    memory_mark_general(previous);
 }
-
-void RexxActivationFrameBuffer::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
-{
-  setUpFlatten(RexxActivationFrameBuffer)
-  /* we only mark housekeeping type fields.  The main buffer */
-  /* entries are marked by the owning activations. */
-
-   flatten_reference(newThis->previous, envelope);
-
-  cleanUpFlatten
-}
-
 
 void RexxActivationStack::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  memory_mark(this->current);
-  memory_mark(this->unused);
+    memory_mark(current);
+    memory_mark(unused);
 }
 
-void RexxActivationStack::liveGeneral(int reason)
+void RexxActivationStack::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  memory_mark_general(this->current);
-  memory_mark_general(this->unused);
+    memory_mark_general(current);
+    memory_mark_general(unused);
 }
 
 void RexxActivationStack::init()

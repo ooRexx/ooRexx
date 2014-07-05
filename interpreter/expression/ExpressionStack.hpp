@@ -59,7 +59,7 @@ class RexxExpressionStack
     RexxExpressionStack() { stack = OREF_NULL; size = 0; top = stack; }
 
     virtual void live(size_t);
-    virtual void liveGeneral(int reason);
+    virtual void liveGeneral(MarkReason reason);
 
     void         expandArgs(size_t, size_t, size_t, const char *);
     RexxString * requiredStringArg(size_t);

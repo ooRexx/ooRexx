@@ -88,7 +88,7 @@ void ClassDirective::live(size_t liveMark)
  *
  * @param reason The processing faze we're running the mark on.
  */
-void ClassDirective::liveGeneral(int reason)
+void ClassDirective::liveGeneral(MarkReason reason)
 {
     // must be first one marked (though normally null)
     memory_mark_general(nextInstruction);
@@ -112,17 +112,14 @@ void ClassDirective::flatten(RexxEnvelope *envelope)
 {
     setUpFlatten(ClassDirective)
 
-        flatten(nextInstruction, envelope);
-        flatten(publicName, envelope);
-        flatten(idName, envelope);
-        flatten(metaclassName, envelope);
-        flatten(subclassName, envelope);
-        flatten(inheritsClasses, envelope);
-        flatten(instanceMethods, envelope);
-        flatten(classMethods, envelope);
-        // by this time, we should be finished with this, and it should
-        // already be null.  Make sure this is the case.
-        newThis->dependencies = OREF_NULL;
+        flattenRef(nextInstruction);
+        flattenRef(publicName);
+        flattenRef(idName);
+        flattenRef(metaclassName);
+        flattenRef(subclassName);
+        flattenRef(inheritsClasses);
+        flattenRef(instanceMethods);
+        flattenRef(classMethods);
 
     cleanUpFlatten
 }

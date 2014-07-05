@@ -58,7 +58,7 @@ class LibraryDirective : public RexxDirective
     inline LibraryDirective(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
-    virtual void liveGeneral(int reason);
+    virtual void liveGeneral(MarkReason reason);
     virtual void flatten(RexxEnvelope *);
 
     inline RexxString *getName() { return name; }

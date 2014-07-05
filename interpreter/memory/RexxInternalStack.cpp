@@ -60,7 +60,7 @@ void RexxInternalStack::live(size_t liveMark)
    }
 }
 
-void RexxInternalStack::liveGeneral(int reason)
+void RexxInternalStack::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
@@ -88,7 +88,7 @@ void RexxInternalStack::flatten(RexxEnvelope * envelope)
                                        /* loop through the stack entries    */
    for (i = 0; i < count; i++)
    {
-       flatten_reference(newThis->stack[i], envelope);
+       flattenRef(stack[i]);
    }
   cleanUpFlatten
 }

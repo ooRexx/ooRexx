@@ -58,7 +58,7 @@ class RexxSupplier : public RexxObject
 
 
     virtual void live(size_t);
-    virtual void liveGeneral(int reason);
+    virtual void liveGeneral(MarkReason reason);
     virtual void flatten(RexxEnvelope *);
 
     RexxInteger *available();

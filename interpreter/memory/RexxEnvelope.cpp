@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -52,52 +52,72 @@
 #include "MethodClass.hpp"
 #include "ActivityManager.hpp"
 
-RexxEnvelope::RexxEnvelope()
-/******************************************************************************/
-/* Function:  Initialize a REXX envelope object                               */
-/******************************************************************************/
+
+
+/**
+ * Allocate an envelope object.
+ *
+ * @param size   The size of the object.
+ *
+ * @return Storage for an object.
+ */
+void *RexxEnvelope::operator new(size_t size)
 {
+    return new_object(sizeof(RexxEnvelope), T_Envelope);
 }
 
+
+/**
+ * Normal garbage collection live marking
+ *
+ *  NOTE: Do not mark flattenStack
+ *
+ * @param liveMark The current live mark.
+ */
 void RexxEnvelope::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/*                                                                            */
-/*  NOTE: Do not mark flattenStack                                            */
-/******************************************************************************/
 {
-  memory_mark(this->home);
-  memory_mark(this->receiver);
-  memory_mark(this->duptable);
-  memory_mark(this->savetable);
-  memory_mark(this->buffer);
-  memory_mark(this->rehashtable);
+    memory_mark(home);
+    memory_mark(receiver);
+    memory_mark(duptable);
+    memory_mark(savetable);
+    memory_mark(buffer);
+    memory_mark(rehashtable);
 
 }
 
-void RexxEnvelope::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/*                                                                            */
-/*  NOTE: Do not mark flattenStack                                            */
-/******************************************************************************/
+
+/**
+ * Generalized object marking
+ *
+ * NOTE: Do not mark flattenStack
+ *
+ * @param reason The reason for the marking call.
+ */
+void RexxEnvelope::liveGeneral(MarkReason reason)
 {
-  memory_mark_general(this->home);
-  memory_mark_general(this->receiver);
-  memory_mark_general(this->duptable);
-  memory_mark_general(this->savetable);
-  memory_mark_general(this->buffer);
-  memory_mark_general(this->rehashtable);
+    memory_mark_general(home);
+    memory_mark_general(receiver);
+    memory_mark_general(duptable);
+    memory_mark_general(savetable);
+    memory_mark_general(buffer);
+    memory_mark_general(rehashtable);
 }
 
 
-void RexxEnvelope::flattenReference(
-    void        *newThisVoid,          /* current pointer to flattening obj */
-    size_t       newSelf,              /* offset of the flattening object   */
-    void        *objRefVoid)           /* object to process                 */
-/******************************************************************************/
-/* Function: This method does the copy buffer,                                */
-/******************************************************************************/
+/**
+ * Potentially copy an object into a buffer and resolve
+ * references to the object to it's buffer location.
+ *
+ * @param newThisVoid
+ *                   The pointer to the reference to the copied object
+ *                   owning this reference.  If it is necessary to reallocate
+ *                   the buffer during this mark operation, this pointer
+ *                   value gets updated.
+ * @param newSelf    The current buffer offset for this object.
+ * @param objRefVoid The pointer to the reference getting marked
+ *                   (will also get updated)
+ */
+void RexxEnvelope::flattenReference(void *newThisVoid, size_t newSelf, void *objRefVoid)
 {
     RexxObject **newThis = (RexxObject **)newThisVoid;
     RexxObject **objRef  = (RexxObject **)objRefVoid;
@@ -164,30 +184,36 @@ void RexxEnvelope::flattenReference(
 }
 
 
-RexxBuffer *RexxEnvelope::pack(
-    RexxObject *_receiver)              /* the receiver object               */
-/******************************************************************************/
-/* Function:  Pack an envelope item                                           */
-/******************************************************************************/
+/**
+ * Pack an object into an envelope
+ *
+ * @param _receiver The object to be packed.
+ *
+ * @return The buffer containing the flattened object.
+ */
+RexxBuffer *RexxEnvelope::pack(RexxObject *_receiver)
 {
     RexxObject *flattenObj;              /* flattened object                  */
     RexxObject *newSelf;                 /* the flattened envelope            */
     RexxObject *firstObject;             /* first object to flatten           */
 
-    OrefSet(this, this->receiver, _receiver);
+    // NOTE:  Envelopes are transient objects and will never appear in the OldSpace
+    // image.  We do not need to use OrefSet or setField here.
+
+    receiver = _receiver;
     // create a save table to protect any objects (such as proxy
     // objects) we create during flattening.
-    OrefSet(this, this->savetable, new_identity_table());
-    OrefSet(this, this->duptable, new_identity_table());
+    savetable = new_identity_table();
+    duptable = new_identity_table();
     // this is a bit of a hack, but necessary.  This allows us to store
     // object offsets into a hashtable without having the hashtable
     // attempt to mark the references.
     duptable->contents->setHasNoReferences();
-    OrefSet(this, this->buffer, new RexxSmartBuffer(DEFAULT_ENVELOPE_BUFFER));
+    buffer = new RexxSmartBuffer(DEFAULT_ENVELOPE_BUFFER);
     // get a flatten stack from the memory object
-    this->flattenStack = memoryObject.getFlattenStack();
+    flattenStack = memoryObject.getFlattenStack();
     // push unique terminator onto stack
-    this->flattenStack->push(OREF_NULL);
+    flattenStack->push(OREF_NULL);
 
     // First, put a header into the buffer.  This is necessary because without
     // it, the envelope object would be at 0 offset into the buffer, which is not
@@ -198,35 +224,38 @@ RexxBuffer *RexxEnvelope::pack(
     // this to the dup table, as it won't ever be duped.
     copyBuffer(new RexxObject);
     // we start the flattening process with the received object
-    firstObject = this->receiver;
+    firstObject = receiver;
 
-    this->currentOffset = this->copyBuffer(firstObject);
+    currentOffset = copyBuffer(firstObject);
     // make sure we add this to the dup table in case it's self-referential at any point
-    associateObject(firstObject, this->currentOffset);
-    /* point to the copied one           */
-    newSelf = (RexxObject *)(this->bufferStart() + this->currentOffset);
+    associateObject(firstObject, currentOffset);
+    // point to the copied one
+    newSelf = (RexxObject *)(bufferStart() + currentOffset);
 
     // ok, keep flattening until will find our marker object on the stack
-    newSelf->flatten(this);              /* start the flatten process.        */
+    newSelf->flatten(this);
 
     for (flattenObj = flattenStack->pop();
         flattenObj != OREF_NULL;
         flattenObj = flattenStack->pop())
     {
-        // the popped object is actuall an object offset.  We need to convert this into a
-        // real object pointer
-        this->currentOffset = (size_t)flattenObj;
-        flattenObj = (RexxObject *)(this->bufferStart() + this->currentOffset);
+        // the popped object is actually an object offset.  We need to store them
+        // that way because the object location can change if the buffer needs to
+        // reallocate.  We need to convert this into a real object pointer
+        currentOffset = (size_t)flattenObj;
+        flattenObj = (RexxObject *)(bufferStart() + currentOffset);
         // and flatten the next object
-        flattenObj->flatten(this);         /* let this obj flatten its refs     */
+        flattenObj->flatten(this);
     }
-    memoryObject.returnFlattenStack();   /* done with the flatten stack       */
+    // finished with the flatten stack
+    memoryObject.returnFlattenStack();
     // now unwrap the smart buffer and fix the length of the real buffer
     // behind it to the size we've written to it.
     RexxBuffer *letter = buffer->getBuffer();
     letter->setDataLength(buffer->getDataLength());
     return letter;
 }
+
 
 /**
  * Perform an in-place unflatten operation on an object
@@ -277,27 +306,27 @@ void RexxEnvelope::puff(RexxBuffer *sourceBuffer, char *startPointer, size_t dat
             puffObject->behaviour = RexxBehaviour::restoreSavedPrimitiveBehaviour(puffObject->behaviour);
             primitiveTypeNum = puffObject->behaviour->getClassType();
         }
-        /* Force fix-up of                   */
-        /*VirtualFunctionTable,              */
-        ((RexxObject *)bufferPointer)->setVirtualFunctions(RexxMemory::virtualFunctionTable[primitiveTypeNum]);
-        puffObject->setObjectLive(memoryObject.markWord);  /* Then Mark this object as live.    */
-                                           /* Mark other referenced objs        */
-                                           /* Note that this flavor of          */
-                                           /* mark_general should update the    */
-                                           /* mark fields in the objects.       */
+
+        // Force fix-up of VirtualFunctionTable,
+        ((RexxObject *)bufferPointer)->setVirtualFunctions(MemoryObject::virtualFunctionTable[primitiveTypeNum]);
+        // mark this object as live
+        puffObject->setObjectLive(memoryObject.markWord);
+        // Mark other referenced objs
+        // Note that this flavor of
+        // mark_general should update the
+        // mark fields in the objects.
         puffObject->liveGeneral(UNFLATTENINGOBJECT);
-        /* Point to next object in image.    */
+        // Point to next object in image.
         bufferPointer += puffObject->getObjectSize();
     }
+
     memoryObject.setObjectOffset(0);     /* all done with the fixups!         */
 
     // Prepare to reveal the objects in  the buffer.
     // the first object in the buffer is a dummy added
     // for padding.  We need to step past that one to the
     // beginning of the real unflattened objects
-    OrefSet(this, this->receiver, (RexxObject *)(startPointer + ((RexxObject *)startPointer)->getObjectSize()));
-    /* chop off end of buffer to reveal  */
-    /* its contents to memory obj        */
+    receiver = (RexxObject *)(startPointer + ((RexxObject *)startPointer)->getObjectSize());
 
     // this is the location of the next object after the buffer
     char *nextObject = ((char *)sourceBuffer) + sourceBuffer->getObjectSize();
@@ -312,18 +341,24 @@ void RexxEnvelope::puff(RexxBuffer *sourceBuffer, char *startPointer, size_t dat
     sourceBuffer->setObjectSize((char *)startPointer - (char *)sourceBuffer + ((RexxObject *)startPointer)->getObjectSize());
 
     // move past the header to the real unflattened data
-    bufferPointer = (char *)this->receiver;
-    /* Set envelope to the real address of the new objects.  This tells               */
-    /* mark_general to send unflatten to run any proxies.                             */
-    memoryObject.setEnvelope(this);      /* tell memory to send unflatten     */
+    bufferPointer = (char *)receiver;
+    // Set envelope to the real address of the new objects.  This tells
+    // mark_general to send unflatten to run any proxies.
 
-    /* Now traverse the buffer running any proxies.                                   */
+    // tell the memory object to unflatten...this sends a second message to the
+    // objects in the buffer, which are real live objects now.
+    memoryObject.setEnvelope(this);
+
+    // Now traverse the buffer running any proxies.
     while (bufferPointer < endPointer)
     {
         puffObject = (RexxObject *)bufferPointer;
         // Since a GC could happen at anytime we need to check to make sure the object
         //  we are going now unflatten is still alive, since all who reference it may have already
         //  run and gotten the info from it and no longer reference it.
+
+        // In theory, this should not be an issue because all of the objects were
+        // in the protected set, but unflatten might have cast off some references.
         if (puffObject->isObjectLive(memoryObject.markWord))
         {
             // Note that this flavor of  liveGeneral will run any proxies
@@ -337,37 +372,44 @@ void RexxEnvelope::puff(RexxBuffer *sourceBuffer, char *startPointer, size_t dat
 
     // Tell memory we're done unflattening
     memoryObject.setEnvelope(OREF_NULL);
-    // Before we run the method we need to give any tables a chance to rehash...
-    this->rehash();
+    rehash();
 }
 
-size_t RexxEnvelope::queryObj(
-    RexxObject *obj)                   /* object to check                   */
-/******************************************************************************/
-/* Function:  Check to see if we've already flattened an object               */
-/******************************************************************************/
+/**
+ * Check if an object has already been flattened.
+ *
+ * @param obj    The object to check.
+ *
+ * @return The offset to the object if it is in the table.
+ */
+size_t RexxEnvelope::queryObj(RexxObject *obj)
 {
-   return (size_t)this->duptable->get(obj);
+    // TODO:  Little concerned about GC on this one...if it gets expanded.
+    // might want to consider a special table for non-objects
+    return (size_t)duptable->get(obj);
 }
 
-size_t RexxEnvelope::copyBuffer(
-    RexxObject *obj)                   /* object to copy                    */
-/******************************************************************************/
-/* Function:  Copy an object into our flatten buffer                          */
-/******************************************************************************/
+
+/**
+ * Copy an object into the flattening buffer.
+ *
+ * @param obj    The object to copy.
+ *
+ * @return The offset of the object within the buffer.
+ */
+size_t RexxEnvelope::copyBuffer(RexxObject *obj)
 {
     // copy the object into the buffer, which might cause the buffer to
     // resize itself.
-    size_t objOffset = this->buffer->copyData((void *)obj, obj->getObjectSize());
+    size_t objOffset = buffer->copyData((void *)obj, obj->getObjectSize());
     // get a reference to the copied object
-    RexxObject *newObj = (RexxObject *) (this->buffer->getBuffer()->getData() + objOffset);
+    RexxObject *newObj = (RexxObject *) (buffer->getBuffer()->getData() + objOffset);
     // if this is a non-primative behaviour, we need to flatten it as well.  The
     // offset is tagged as being a non-primitive behaviour that needs later inflating.
     if (newObj->behaviour->isNonPrimitive())
     {
         void *behavPtr = &newObj->behaviour;
-
-        this->flattenReference(&newObj, objOffset, (RexxObject **)behavPtr);
+        flattenReference(&newObj, objOffset, (RexxObject **)behavPtr);
     }
     else
     {
@@ -389,79 +431,72 @@ size_t RexxEnvelope::copyBuffer(
 }
 
 
+/**
+ * Rehash flattened tables
+ */
 void  RexxEnvelope::rehash()
-/******************************************************************************/
-/* Function:  Rehash flattened tables                                         */
-/******************************************************************************/
 {
-    HashLink     i;                      /* loop index                        */
-    RexxTable    * index;                /* table to flatten                  */
-
-    if (this->rehashtable != OREF_NULL)
-    {/* tables to rehash here?            */
-     /* Before we run the method we need  */
-     /* to give the tables a chance to    */
-     /* rehash...                         */
-        for (i = this->rehashtable->first(); (index = (RexxTable *)this->rehashtable->index(i)) != OREF_NULL; i = this->rehashtable->next(i))
+    // do we actually have anything here?
+    if (rehashtable != OREF_NULL)
+    {
+        RexxTable *index;
+        for (HashLink i = rehashtable->first(); (index = (RexxTable *)rehashtable->index(i)) != OREF_NULL; i = rehashtable->next(i))
         {
-            index->reHash();                 /* rehash the table                  */
+            // tell the table to rehash
+            index->reHash();
         }
     }
 }
 
+
+/**
+ * Return the start of the envelope buffer
+ *
+ * @return The pointer to the start of the buffer data.
+ */
 char *RexxEnvelope::bufferStart()
-/******************************************************************************/
-/* Return the start of the envelope buffer                                    */
-/******************************************************************************/
 {
-    return this->buffer->getBuffer()->getData();
+    return buffer->getBuffer()->getData();
 }
 
-void  RexxEnvelope::associateObject(
-    RexxObject *o,                     /* original object                   */
-    size_t      flattenOffset)         /* new proxy object                  */
-/******************************************************************************/
-/* Function:  Map an object to a flattened proxy object                       */
-/******************************************************************************/
+
+/**
+ * Associate an object with an object offset.
+ *
+ * @param o      The object reference.
+ * @param flattenOffset
+ *               The associated offset.
+ */
+void  RexxEnvelope::associateObject(RexxObject *o, size_t flattenOffset)
 {
     // we just add this to the duptable under the original object
     // reference value.
     this->duptable->addOffset(flattenOffset, o);
 }
 
-void RexxEnvelope::addTable(
-    RexxObject *obj)                   /* table object to rehash            */
-/******************************************************************************/
-/* Function:  Add an object to the rehash table for later processing          */
-/******************************************************************************/
+
+/**
+ * Add an object to the rehash table for later processing
+ *
+ * @param obj    The object requiring a rehash.
+ */
+void RexxEnvelope::addTable(RexxObject *obj)
 {
-    /*  the following table will be used */
-    /* by the table_unflatten method.    */
-    /*                                   */
-    /* Every table that gets unflattened */
-    /* place itself in this table.  Once */
-    /* every object has been unflattened */
-    /* we traverse this table and allow  */
-    /* the hashtables to re-hash their   */
-    /* since some hash value may have    */
-    /* change                            */
-    if (this->rehashtable == OREF_NULL)  /* first table added?                */
+    // The following table will be used by the table_unflatten method.
+    //
+    // Every table that gets unflattened place itself in this table.  Once
+    // every object has been unflattened we traverse this table and allow
+    // the hashtables to re-hash their since some hash values may have changed
+    // changed
+
+    // create the table on first addition
+    if (rehashtable == OREF_NULL)
     {
-        /* create the table now              */
-        OrefSet(this, this->rehashtable, new_identity_table());
+        rehashtable = new_identity_table();
     }
-    /* use put to make sure we only get  */
-    /* a single version of each table    */
-    this->rehashtable->put(TheNilObject, obj);
-}
 
-
-void *RexxEnvelope::operator new(size_t size)
-/******************************************************************************/
-/* Function:  Create a new translator object                                  */
-/******************************************************************************/
-{
-    /* Get new object                    */
-    return new_object(sizeof(RexxEnvelope), T_Envelope);
+    // use put to make sure we only get
+    // a single version of each table
+    rehashtable->put(TheNilObject, obj);
 }
 

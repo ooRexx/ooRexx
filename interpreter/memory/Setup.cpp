@@ -87,7 +87,7 @@
 #include "StackFrameClass.hpp"
 
 
-void RexxMemory::defineKernelMethod(
+void MemoryObject::defineKernelMethod(
     const char    * name,              /* ASCII-Z name for the method       */
     RexxBehaviour * behaviour,         /* behaviour to use                  */
     PCPPM           entryPoint,        /* method's entry point              */
@@ -99,7 +99,7 @@ void RexxMemory::defineKernelMethod(
     behaviour->define(name, entryPoint, arguments);
 }
 
-void RexxMemory::defineProtectedKernelMethod(
+void MemoryObject::defineProtectedKernelMethod(
     const char    * name,              /* ASCII-Z name for the method       */
     RexxBehaviour * behaviour,         /* behaviour to use                  */
     PCPPM           entryPoint,        /* method's entry point              */
@@ -113,7 +113,7 @@ void RexxMemory::defineProtectedKernelMethod(
 }
 
 
-void RexxMemory::definePrivateKernelMethod(
+void MemoryObject::definePrivateKernelMethod(
     const char    * name,              /* ASCII-Z name for the method       */
     RexxBehaviour * behaviour,         /* behaviour to use                  */
     PCPPM           entryPoint,        /* method's entry point              */
@@ -128,12 +128,12 @@ void RexxMemory::definePrivateKernelMethod(
 }
 
 
-void RexxMemory::createImage()
+void MemoryObject::createImage()
 /******************************************************************************/
 /* Function:  Initialize the kernel on image build                            */
 /******************************************************************************/
 {
-  RexxMemory::create();                /* create initial memory stuff       */
+  MemoryObject::create();                /* create initial memory stuff       */
 
   Interpreter::init();                 // the interpreter subsystem first
   ActivityManager::init();             /* Initialize the activity managers  */

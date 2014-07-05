@@ -119,20 +119,20 @@ void RexxStem::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-    memory_mark(this->value);
-    memory_mark(this->stemName);
-    memory_mark(this->objectVariables);
+    memory_mark(value);
+    memory_mark(stemName);
+    memory_mark(objectVariables);
     markCompoundTable();
 }
 
-void RexxStem::liveGeneral(int reason)
+void RexxStem::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-    memory_mark_general(this->value);
-    memory_mark_general(this->stemName);
-    memory_mark_general(this->objectVariables);
+    memory_mark_general(value);
+    memory_mark_general(stemName);
+    memory_mark_general(objectVariables);
     markGeneralCompoundTable();
 }
 
@@ -143,9 +143,9 @@ void RexxStem::flatten(RexxEnvelope *envelope)
 {
   setUpFlatten(RexxStem)
 
-   flatten_reference(newThis->value, envelope);
-   flatten_reference(newThis->stemName, envelope);
-   flatten_reference(newThis->objectVariables, envelope);
+   flattenRef(value);
+   flattenRef(stemName);
+   flattenRef(objectVariables);
    flattenCompoundTable();
 
   cleanUpFlatten

@@ -87,7 +87,7 @@ void RexxInstructionGuard::live(size_t liveMark)
 
 
 
-void RexxInstructionGuard::liveGeneral(int reason)
+void RexxInstructionGuard::liveGeneral(MarkReason reason)
 {
     // must be first one marked
     memory_mark_general(nextInstruction);

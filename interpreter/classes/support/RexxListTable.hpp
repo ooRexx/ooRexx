@@ -69,7 +69,7 @@ class RexxListTable : public RexxInternalObject
    inline RexxListTable() {;};
 
    virtual void live(size_t);
-   virtual void liveGeneral(int reason);
+   virtual void liveGeneral(MarkReason reason);
    virtual void flatten(RexxEnvelope *);
    inline LISTENTRY   *getData() {return elements; };
 

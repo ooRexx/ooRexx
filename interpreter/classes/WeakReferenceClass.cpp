@@ -103,17 +103,17 @@ void WeakReference::live(size_t liveMark)
 {
     // we need to get called, but we don't do any marking of the referent.
     // we do, however, need to mark the object variables in case this is a subclass.
-    memory_mark(this->objectVariables);
+    memory_mark(objectVariables);
 }
 
 
-void WeakReference::liveGeneral(int reason)
+void WeakReference::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
     // this might be a subclass, so we need to mark the object variables always
-    memory_mark_general(this->objectVariables);
+    memory_mark_general(objectVariables);
     // these references are only marked during a save or restore image process.
     // NOTE:  WeakReference objects saved in the Rexx image get removed from the
     // weak reference list and just become normal objects.  Since the weak references
@@ -131,15 +131,15 @@ void WeakReference::flatten(RexxEnvelope *envelope)
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
 {
-  setUpFlatten(WeakReference)
-   // not normally needed, but this might be a subclass
-   flatten_reference(newThis->objectVariables, envelope);
-   flatten_reference(newThis->referentObject, envelope);
+    setUpFlatten(WeakReference)
+    // not normally needed, but this might be a subclass
+    flattenRef(objectVariables);
+    flattenRef(referentObject);
 
-   // make sure the new version has nulled out list pointers
-   newThis->nextReferenceList = OREF_NULL;
+    // make sure the new version has nulled out list pointers
+    newThis->nextReferenceList = OREF_NULL;
 
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
 RexxObject *WeakReference::unflatten(RexxEnvelope *envelope)
@@ -147,13 +147,13 @@ RexxObject *WeakReference::unflatten(RexxEnvelope *envelope)
 /* Function:  unflatten an object                                             */
 /******************************************************************************/
 {
-    // if we still have a reference to handle, then add this to the
-    // tracking list
-    if (referentObject != OREF_NULL)
-    {
-        memoryObject.addWeakReference(this);
-    }
-    return (RexxObject *)this;           /* return ourself.                   */
+    // TODO:  Is the weak reference table held in OldSpace?  Image initialization
+    // should probably create a new space version.
+
+    // We add ourselves unconditionally as a weak object, even if the referenent
+    // is null, since we could have a new one assigned.
+    memoryObject.addWeakReference(this);
+    return (RexxObject *)this;
 }
 
 void WeakReference::clear()

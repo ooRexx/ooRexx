@@ -87,7 +87,7 @@ void Interpreter::live(size_t liveMark)
     memory_mark(versionNumber);
 }
 
-void Interpreter::liveGeneral(int reason)
+void Interpreter::liveGeneral(MarkReason reason)
 {
   if (!memoryObject.savingImage())
   {
@@ -102,14 +102,14 @@ void Interpreter::processStartup()
     // the locks get create in order
     createLocks();
     ActivityManager::createLocks();
-    RexxMemory::createLocks();
+    MemoryObject::createLocks();
     // make sure we have a session queue created for this process
 }
 
 void Interpreter::processShutdown()
 {
     // we destroy the locks in reverse order
-    RexxMemory::closeLocks();
+    MemoryObject::closeLocks();
     ActivityManager::closeLocks();
     closeLocks();
 }

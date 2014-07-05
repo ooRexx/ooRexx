@@ -70,7 +70,7 @@ void *RexxToken::operator new(size_t size)
  */
 void RexxToken::live(size_t liveMark)
 {
-    memory_mark(this->value);
+    memory_mark(value);
 }
 
 
@@ -81,9 +81,9 @@ void RexxToken::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void RexxToken::liveGeneral(int reason)
+void RexxToken::liveGeneral(MarkReason reason)
 {
-    memory_mark_general(this->value);
+    memory_mark_general(value);
 }
 
 

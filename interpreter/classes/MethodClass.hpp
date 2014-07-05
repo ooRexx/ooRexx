@@ -77,7 +77,7 @@ class MethodClass : public BaseExecutable
 
     virtual void execute(RexxObject *, RexxObject *);
     virtual void live(size_t);
-    virtual void liveGeneral(int reason);
+    virtual void liveGeneral(MarkReason reason);
     virtual void flatten(RexxEnvelope*);
 
     void         run(RexxActivity *,  RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);

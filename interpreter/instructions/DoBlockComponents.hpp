@@ -69,7 +69,7 @@ class ForLoop
      {
          memory_mark(forCount);
      }
-     inline void liveGeneral(int reason)
+     inline void liveGeneral(MarkReason reason)
      {
          memory_mark_general(forCount);
      }
@@ -99,7 +99,7 @@ class ControlledLoop : public ForLoop
         memory_mark(to);
         memory_mark(by);
     }
-    inline void liveGeneral(int reason)
+    inline void liveGeneral(MarkReason reason)
     {
         memory_mark_general(forCount);
         memory_mark_general(control);
@@ -133,7 +133,7 @@ class OverLoop
         memory_mark(control);
         memory_mark(target);
     }
-    inline void liveGeneral(int reason)
+    inline void liveGeneral(MarkReason reason)
     {
         memory_mark_general(control);
         memory_mark_general(target);
@@ -162,7 +162,7 @@ public:
         memory_mark(conditional);
     }
 
-    inline void liveGeneral(int reason)
+    inline void liveGeneral(MarkReason reason)
     {
         memory_mark_general(conditional);
     }

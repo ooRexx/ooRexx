@@ -117,7 +117,7 @@ void RexxInstructionUseStrict::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void RexxInstructionUseStrict::liveGeneral(int reason)
+void RexxInstructionUseStrict::liveGeneral(MarkReason reason)
 {
     // must be first object marked
     memory_mark_general(nextInstruction);

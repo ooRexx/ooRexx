@@ -66,7 +66,7 @@ void RexxLocalVariables::live(size_t liveMark)
     memory_mark(dictionary);            /* also mark any created vdict       */
 }
 
-void RexxLocalVariables::liveGeneral(int reason)
+void RexxLocalVariables::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/

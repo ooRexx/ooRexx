@@ -60,7 +60,7 @@ class RexxMutableBuffer : public RexxObject
     inline             RexxMutableBuffer(RESTORETYPE restoreType) { ; };
 
     virtual void       live(size_t);
-    virtual void       liveGeneral(int reason);
+    virtual void       liveGeneral(MarkReason reason);
     virtual void       flatten(RexxEnvelope *envelope);
 
     RexxObject        *copy();

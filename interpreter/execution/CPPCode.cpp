@@ -74,25 +74,18 @@ CPPCode::CPPCode(size_t index, PCPPM entry, size_t argcount)
 }
 
 
-void CPPCode::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
+/**
+ * Generalized object marking.  If restoring or unflattening,
+ * make sure we restore the method pointer.
+ *
+ * @param reason The reason for the call.
+ */
+void CPPCode::liveGeneral(MarkReason reason)
 {
-    if (reason == RESTORINGIMAGE)        /* restoring the image?              */
+    if (reason == RESTORINGIMAGE || reason == UNFLATTENINGOBJECT)
     {
         cppEntry = exportedMethods[methodIndex];
     }
-}
-
-
-RexxObject *CPPCode::unflatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  unflatten an object                                             */
-/******************************************************************************/
-{
-    cppEntry = exportedMethods[methodIndex];
-    return (RexxObject *)this;
 }
 
 
@@ -197,15 +190,15 @@ void AttributeGetterCode::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  memory_mark(this->attribute);
+    memory_mark(attribute);
 }
 
-void AttributeGetterCode::liveGeneral(int reason)
+void AttributeGetterCode::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  memory_mark_general(this->attribute);
+    memory_mark_general(attribute);
 }
 
 void AttributeGetterCode::flatten(RexxEnvelope *envelope)
@@ -213,11 +206,11 @@ void AttributeGetterCode::flatten(RexxEnvelope *envelope)
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
 {
-  setUpFlatten(AttributeGetterCode)
+    setUpFlatten(AttributeGetterCode)
 
-  flatten_reference(newThis->attribute, envelope);
+    flattenRef(attribute);
 
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
 
@@ -333,15 +326,15 @@ void ConstantGetterCode::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  memory_mark(this->constantValue);
+    memory_mark(constantValue);
 }
 
-void ConstantGetterCode::liveGeneral(int reason)
+void ConstantGetterCode::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  memory_mark_general(this->constantValue);
+    memory_mark_general(constantValue);
 }
 
 void ConstantGetterCode::flatten(RexxEnvelope *envelope)
@@ -351,7 +344,7 @@ void ConstantGetterCode::flatten(RexxEnvelope *envelope)
 {
   setUpFlatten(ConstantGetterCode)
 
-  flatten_reference(newThis->constantValue, envelope);
+  flattenRef(constantValue);
 
   cleanUpFlatten
 }

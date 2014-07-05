@@ -96,7 +96,7 @@ void SystemInterpreter::live(size_t liveMark)
 {
 }
 
-void SystemInterpreter::liveGeneral(int reason)
+void SystemInterpreter::liveGeneral(MarkReason reason)
 {
   if (!memoryObject.savingImage())
   {

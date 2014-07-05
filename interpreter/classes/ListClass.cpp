@@ -155,17 +155,17 @@ void RexxList::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-    memory_mark(this->table);
-    memory_mark(this->objectVariables);
+    memory_mark(table);
+    memory_mark(objectVariables);
 }
 
-void RexxList::liveGeneral(int reason)
+void RexxList::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-    memory_mark_general(this->table);
-    memory_mark_general(this->objectVariables);
+    memory_mark_general(table);
+    memory_mark_general(objectVariables);
 }
 
 void RexxList::flatten(RexxEnvelope *envelope)
@@ -173,12 +173,12 @@ void RexxList::flatten(RexxEnvelope *envelope)
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
 {
-  setUpFlatten(RexxList)
+    setUpFlatten(RexxList)
 
-   flatten_reference(newThis->table, envelope);
-   flatten_reference(newThis->objectVariables, envelope);
+    flattenRef(table);
+    flattenRef(objectVariables);
 
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
 LISTENTRY * RexxList::getEntry(

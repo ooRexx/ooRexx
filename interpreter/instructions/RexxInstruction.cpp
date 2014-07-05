@@ -110,7 +110,7 @@ void RexxInstruction::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void RexxInstruction::liveGeneral(int reason)
+void RexxInstruction::liveGeneral(MarkReason reason)
 {
     memory_mark_general(nextInstruction);
 }
@@ -153,7 +153,7 @@ void RexxInstructionExpression::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void RexxInstructionExpression::liveGeneral(int reason)
+void RexxInstructionExpression::liveGeneral(MarkReason reason)
 {
     memory_mark_general(nextInstruction);
     memory_mark_general(expression);

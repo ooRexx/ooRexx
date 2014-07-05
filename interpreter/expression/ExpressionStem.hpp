@@ -63,7 +63,7 @@ class RexxStemVariable : public RexxVariableBase
     RexxStemVariable(RexxString *, size_t);
 
     virtual void live(size_t);
-    virtual void liveGeneral(int reason);
+    virtual void liveGeneral(MarkReason reason);
     virtual void flatten(RexxEnvelope *);
 
     // overrides of RexxInternalObject evaluaton methods

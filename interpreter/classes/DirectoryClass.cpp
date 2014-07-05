@@ -68,19 +68,19 @@ void RexxDirectory::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-    this->RexxHashTableCollection::live(liveMark);
-    memory_mark(this->method_table);
-    memory_mark(this->unknown_method);
+    RexxHashTableCollection::live(liveMark);
+    memory_mark(method_table);
+    memory_mark(unknown_method);
 }
 
-void RexxDirectory::liveGeneral(int reason)
+void RexxDirectory::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-    this->RexxHashTableCollection::liveGeneral(reason);
-    memory_mark_general(this->method_table);
-    memory_mark_general(this->unknown_method);
+    RexxHashTableCollection::liveGeneral(reason);
+    memory_mark_general(method_table);
+    memory_mark_general(unknown_method);
 }
 
 void RexxDirectory::flatten(RexxEnvelope *envelope)
@@ -88,24 +88,16 @@ void RexxDirectory::flatten(RexxEnvelope *envelope)
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
 {
-  setUpFlatten(RexxDirectory)
+    setUpFlatten(RexxDirectory)
 
-      flatten_reference(newThis->contents, envelope);
-      flatten_reference(newThis->method_table, envelope);
-      flatten_reference(newThis->unknown_method, envelope);
-      flatten_reference(newThis->objectVariables, envelope);
+      flattenRef(contents);
+      flattenRef(method_table);
+      flattenRef(unknown_method);
+      flattenRef(objectVariables);
 
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
-RexxObject *RexxDirectory::unflatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  unflatten an object                                             */
-/******************************************************************************/
-{
-    envelope->addTable(this);            /* add to the envelope table         */
-    return this;                         /* and just return out selves        */
-}
 
 RexxObject *RexxDirectory::copy()
 /******************************************************************************/
@@ -115,10 +107,10 @@ RexxObject *RexxDirectory::copy()
                                        /* copy object via Collection copy   */
     RexxDirectory *newObj = (RexxDirectory *)this->RexxHashTableCollection::copy();
                                        /* No specifics for Directory.       */
-    if (this->method_table != OREF_NULL)
+    if (method_table != OREF_NULL)
     {
                                        /* copy it too                       */
-        OrefSet(newObj, newObj->method_table, (RexxTable *)this->method_table->copy());
+        newObj->method_table = (RexxTable *)method_table->copy();
     }
     return newObj;                       /* return the copy                   */
 }

@@ -45,6 +45,7 @@
 #ifndef Memory_Included
 #define Memory_Included
 
+
 /**
  * Holding place for Memory-related constants and functions.
  * Most things in here are protected, with classes that
@@ -61,7 +62,7 @@ class Memory
     friend class NormalSegmentSet;
     friend class LargeSegmentSet;
     friend class OldSpaceSegmentSet;
-    friend class RexxMemory;
+    friend class MemoryObject;
     friend class DeadObjectPool;
     friend class SegmentStats;
 public:

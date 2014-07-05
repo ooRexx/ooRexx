@@ -97,7 +97,7 @@ void RexxClause::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void RexxClause::liveGeneral(int reason)
+void RexxClause::liveGeneral(MarkReason reason)
 {
     memory_mark_general(tokens);
 }

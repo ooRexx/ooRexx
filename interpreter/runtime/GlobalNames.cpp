@@ -44,7 +44,7 @@
 #include "RexxCore.h"
 #include "DirectoryClass.hpp"
 #include "ArrayClass.hpp"
-void RexxMemory::createStrings()
+void MemoryObject::createStrings()
 /******************************************************************************/
 /* Function:  Create all globally available string objects                    */
 /******************************************************************************/
@@ -61,7 +61,7 @@ void RexxMemory::createStrings()
 }
 
 
-RexxArray *RexxMemory::saveStrings()
+RexxArray *MemoryObject::saveStrings()
 /******************************************************************************/
 /* Function:  Create all globally available string objects                    */
 /******************************************************************************/
@@ -89,7 +89,7 @@ RexxArray *RexxMemory::saveStrings()
   return stringArray;                  // and return the saved string array
 }
 
-void RexxMemory::restoreStrings(RexxArray *stringArray)
+void MemoryObject::restoreStrings(RexxArray *stringArray)
 /******************************************************************************/
 /* Function:  Create all globally available string objects                    */
 /******************************************************************************/

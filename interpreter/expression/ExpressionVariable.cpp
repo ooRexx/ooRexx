@@ -95,7 +95,7 @@ void RexxSimpleVariable::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void RexxSimpleVariable::liveGeneral(int reason)
+void RexxSimpleVariable::liveGeneral(MarkReason reason)
 {
     memory_mark_general(variableName);
 }

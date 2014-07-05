@@ -68,7 +68,7 @@ public:
     void *operator new(size_t);
     inline void  operator delete(void *) {;}
     void        live(size_t);
-    void        liveGeneral(int);
+    void        liveGeneral(MarkReason);
 
     RexxString *getDefaultEnvironment() { return defaultEnvironment; }
     RexxActivity *getRootActivity() { return rootActivity; }

@@ -69,7 +69,7 @@ class SystemInterpreter
 {
 public:
     static void live(size_t);
-    static void liveGeneral(int reason);
+    static void liveGeneral(MarkReason reason);
 
     static void processStartup();
     static void processShutdown();

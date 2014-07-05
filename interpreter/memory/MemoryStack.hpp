@@ -65,7 +65,7 @@ class LiveStack : public RexxInternalObject
     LiveStack(size_t size);
 
     virtual void live(size_t);
-    virtual void liveGeneral(int reason);
+    virtual void liveGeneral(MarkReason reason);
 
     // the position is origin zero, relative to the top, which is an empty slot.  So, position 0
     // is the top element, 1 is the penultimate elements, etc.
@@ -153,7 +153,7 @@ class PushThroughStack : public RexxInternalObject
     void         init(size_t);
 
     virtual void live(size_t);
-    virtual void liveGeneral(int reason);
+    virtual void liveGeneral(MarkReason reason);
 
     // the position is origin zero, relative to the current.  Current
     // is the position of the last item pushed on to the stack.

@@ -124,7 +124,7 @@ void MethodClass::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void MethodClass::liveGeneral(int reason)
+void MethodClass::liveGeneral(MarkReason reason)
 {
     memory_mark_general(scope);
     memory_mark_general(code);

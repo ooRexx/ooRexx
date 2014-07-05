@@ -45,21 +45,11 @@
 #ifndef Included_MemorySegment
 #define Included_MemorySegment
 
-#include "stddef.h"
 #include "DeadObject.hpp"
 #include "Interpreter.hpp"
 #include "Memory.hpp"
 
-
-
-
-/* the sanity check point where we don't force automatic expansion */
-/* of the normal heap */
-const size_t MaxDeadObjectSpace = 1000000;
-
-
-
-class RexxMemory;
+class MemoryObject;
 
 /* A segment of heap memory. A MemorySegment will be associated */
 /* with a particular MemorySegmentSet, which implements the */
@@ -70,7 +60,7 @@ class MemorySegmentHeader
  friend class NormalSegmentSet;
  friend class LargeSegmentSet;
  friend class OldSegmentSet;
- friend class RexxMemory;
+ friend class MemoryObject;
 
   protected:
 
@@ -96,7 +86,7 @@ class MemorySegment : public MemorySegmentHeader
  friend class NormalSegmentSet;
  friend class LargeSegmentSet;
  friend class OldSegmentSet;
- friend class RexxMemory;
+ friend class MemoryObject;
 
  public:
    inline void *operator new(size_t size, void *segment) { return segment; }
@@ -106,9 +96,10 @@ class MemorySegment : public MemorySegmentHeader
    inline MemorySegment(size_t segSize) {
        segmentSize = segSize - sizeof(MemorySegmentHeader);
    }
-   /* Following is a static constructor, called during RexxMemory */
+   /* Following is a static constructor, called during MemoryObject */
    /* initialization */
-   inline MemorySegment() {
+   inline MemorySegment()
+   {
        segmentSize = 0;
        /* Chain this segment to itself. */
        next = this;
@@ -183,17 +174,17 @@ class MemorySegment : public MemorySegmentHeader
 
 
 /* A set of memory segments.  This manages the access to a pool of */
-/* memory segments allocated for different uses by RexxMemory. */
+/* memory segments allocated for different uses by MemoryObject. */
 /* This is a subclass of MemorySegment because the MemorySegmentSet */
 /* object is also the anchor element for the segment chaining. */
 class MemorySegmentSet
 {
-    friend class RexxMemory;
+    friend class MemoryObject;
 
   public:
       typedef enum { SET_UNINITIALIZED, SET_NORMAL, SET_LARGEBLOCK, SET_OLDSPACE } SegmentSetID;
         /* the memory segment mimic for anchoring the pool */
-      MemorySegmentSet(RexxMemory *memObject, SegmentSetID id, const char *setName)  {
+      MemorySegmentSet(MemoryObject *memObject, SegmentSetID id, const char *setName)  {
           /* Chain this segment to itself.     */
           owner = id;
           count = 0;
@@ -217,7 +208,7 @@ class MemorySegmentSet
       inline void  operator delete(void * size, void *segment) { }
 
       /* Following is a static constructor, called during */
-      /* RexxMemeory initialization */
+      /* MemoryObject initialization */
 
       inline void removeSegment(MemorySegment *segment) {
           /* remove both the segment, and any blocks on the dead */
@@ -335,7 +326,7 @@ class MemorySegmentSet
       {
       #ifdef CHECKOREFS
           /* is object invalid size?           */
-          if (!RexxMemory::isValidSize(bytes)) {
+          if (!MemoryObject::isValidSize(bytes)) {
               /* Yes, this is not good.  Exit      */
               /* Critical Section and report       */
               /* unrecoverable error.              */
@@ -353,7 +344,7 @@ class MemorySegmentSet
     size_t  deadObjectBytes;              /* bytes consumed by dead objects */
     SegmentSetID owner;                   /* the owner of this segment */
     const char  *name;                    /* character identifier for debugging/profiling */
-    RexxMemory  *memory;                  /* the hosting memory object */
+    MemoryObject *memory;                 /* the hosting memory object */
 };
 
 
@@ -368,7 +359,7 @@ class NormalSegmentSet : public MemorySegmentSet
 
     /* the default constructor */
     NormalSegmentSet()  { ; }
-    NormalSegmentSet(RexxMemory *memory);
+    NormalSegmentSet(MemoryObject *memory);
     virtual ~NormalSegmentSet() { ; }
     virtual void   dumpMemoryProfile(FILE *outfile);
     inline  RexxObject *allocateObject(size_t allocationLength)
@@ -556,7 +547,7 @@ class LargeSegmentSet : public MemorySegmentSet
 
     /* the default constructor */
     LargeSegmentSet()  { ; }
-    LargeSegmentSet(RexxMemory *memory);
+    LargeSegmentSet(MemoryObject *memory);
     virtual ~LargeSegmentSet() { ; }
     virtual void   dumpMemoryProfile(FILE *outfile);
     RexxObject *handleAllocationFailure(size_t allocationLength);
@@ -607,7 +598,7 @@ class OldSpaceSegmentSet : public MemorySegmentSet
 
     /* the default constructor */
     OldSpaceSegmentSet()  { ; }
-    OldSpaceSegmentSet(RexxMemory *memory);
+    OldSpaceSegmentSet(MemoryObject *memory);
     virtual ~OldSpaceSegmentSet() { ; }
             RexxObject *allocateObject(size_t allocationLength);
 

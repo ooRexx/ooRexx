@@ -96,7 +96,7 @@ class RexxNumberString : public RexxNumberStringBase
     inline RexxNumberString(RESTORETYPE restoreType) { ; };
     virtual HashCode getHashValue();
     void        live(size_t);
-    void        liveGeneral(int reason);
+    void        liveGeneral(MarkReason reason);
     void        flatten(RexxEnvelope *);
 
     bool         numberValue(wholenumber_t &result, size_t precision);

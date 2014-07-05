@@ -109,7 +109,7 @@ void RexxObject::live(size_t liveMark)
  *
  * @param reason The reason for the mark being performed.
  */
-void RexxObject::liveGeneral(int reason)
+void RexxObject::liveGeneral(MarkReason reason)
 {
     memory_mark_general(objectVariables);
 }
@@ -2649,7 +2649,7 @@ void *RexxNilObject::operator new(size_t size)
     // function table pointer.
     RexxObject *newObj = new_object(size, T_Object);
     // we need to switch the virtual method table pointer new.
-    newObj->setVirtualFunctions(RexxMemory::virtualFunctionTable[T_NilObject]);
+    newObj->setVirtualFunctions(MemoryObject::virtualFunctionTable[T_NilObject]);
     return newObj;
 }
 

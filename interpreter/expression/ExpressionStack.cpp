@@ -70,7 +70,7 @@ void RexxExpressionStack::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void RexxExpressionStack::liveGeneral(int reason)
+void RexxExpressionStack::liveGeneral(MarkReason reason)
 {
     // mark all current entries on the stack.
     for (RexxObject **entry = stack; entry <= top; entry++)

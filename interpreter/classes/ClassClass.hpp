@@ -61,7 +61,7 @@ class RexxClass : public RexxObject
            RexxClass(const char *id , RexxBehaviour *classBehaviour, RexxBehaviour *instanceBehaviour);
 
     void live(size_t);
-    void liveGeneral(int reason);
+    void liveGeneral(MarkReason reason);
     void flatten(RexxEnvelope*);
     RexxObject *unflatten(RexxEnvelope*);
     RexxObject *makeProxy(RexxEnvelope*);

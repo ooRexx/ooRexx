@@ -137,7 +137,7 @@ void RexxString::live(size_t liveMark)
     memory_mark(objectVariables);
 }
 
-void RexxString::liveGeneral(int reason)
+void RexxString::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/

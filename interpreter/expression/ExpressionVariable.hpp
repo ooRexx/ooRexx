@@ -58,7 +58,7 @@ class RexxSimpleVariable : public RexxVariableBase
     RexxSimpleVariable(RexxString *, size_t);
 
     virtual void live(size_t);
-    virtual void liveGeneral(int reason);
+    virtual void liveGeneral(MarkReason reason);
     virtual void flatten(RexxEnvelope *);
 
     // RexxInternalObject evaluation methods

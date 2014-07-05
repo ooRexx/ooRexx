@@ -61,7 +61,7 @@ class RexxClause : public RexxInternalObject
     inline RexxClause(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
-    virtual void liveGeneral(int reason);
+    virtual void liveGeneral(MarkReason reason);
 
     void        setStart(size_t, size_t);
     void        setEnd(size_t, size_t);

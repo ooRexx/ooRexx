@@ -67,7 +67,7 @@ public:
     inline LibraryPackage(RESTORETYPE restoreType) { ; };
 
     void   live(size_t liveMark);
-    void   liveGeneral(int reason);
+    void   liveGeneral(MarkReason reason);
     bool   load();
     void   unload();
     RexxPackageEntry *getPackageTable();

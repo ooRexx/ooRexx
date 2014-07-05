@@ -168,7 +168,7 @@ class ActivationSettings
    RexxActivation(RexxActivity *_activity, RexxActivation *_parent, RexxCode *_code, int context);
 
    void live(size_t);
-   void liveGeneral(int reason);
+   void liveGeneral(MarkReason reason);
    RexxObject      * dispatch();
    size_t            digits();
    size_t            fuzz();

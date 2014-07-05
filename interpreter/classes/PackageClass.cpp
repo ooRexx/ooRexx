@@ -99,7 +99,7 @@ void PackageClass::live(size_t liveMark)
 }
 
 
-void PackageClass::liveGeneral(int reason)
+void PackageClass::liveGeneral(MarkReason reason)
 {
     memory_mark_general(source);
     memory_mark_general(objectVariables);

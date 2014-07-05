@@ -337,32 +337,27 @@ void RexxArray::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  RexxObject **arrayPtr;
-  RexxObject **endPtr;
+    memory_mark(dimensions);
+    memory_mark(objectVariables);
+    memory_mark(expansionArray);
 
-  memory_mark(this->dimensions);
-  memory_mark(this->objectVariables);
-                                       /* mark expanded array               */
-  memory_mark(this->expansionArray);
-  for (arrayPtr = this->objects, endPtr = arrayPtr + this->arraySize; arrayPtr < endPtr; arrayPtr++)
-  {
-      memory_mark(*arrayPtr);
-  }
+    // if we expand, we adjust the expansion size down so we don't overrun.
+    // but we need to mark our space too.
+    memory_mark_array(arraySize, objects);
 }
 
-void RexxArray::liveGeneral(int reason)
+void RexxArray::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  memory_mark_general(this->dimensions);
-  memory_mark_general(this->objectVariables);
-  memory_mark_general(this->expansionArray);
+    memory_mark_general(dimensions);
+    memory_mark_general(objectVariables);
+    memory_mark_general(expansionArray);
 
-  for (RexxObject **arrayPtr = this->objects; arrayPtr < this->objects + this->arraySize; arrayPtr++)
-  {
-      memory_mark_general(*arrayPtr);
-  }
+    // if we expand, we adjust the expansion size down so we don't overrun.
+    // but we need to mark our space too.
+    memory_mark_general_array(arraySize, objects);
 }
 
 void RexxArray::flatten(RexxEnvelope *envelope)
@@ -370,17 +365,15 @@ void RexxArray::flatten(RexxEnvelope *envelope)
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
 {
-  setUpFlatten(RexxArray)
+    setUpFlatten(RexxArray)
 
-    flatten_reference(newThis->dimensions, envelope);
-    flatten_reference(newThis->objectVariables, envelope);
-    flatten_reference(newThis->expansionArray, envelope);
-    for (size_t i = 0; i < this->arraySize; i++)
-    {
-        flatten_reference(newThis->objects[i], envelope);
-    }
+    flattenRef(dimensions);
+    flattenRef(objectVariables);
+    flattenRef(expansionArray);
 
-  cleanUpFlatten
+    flattenArrayRefs(arraySize, objects);
+
+    cleanUpFlatten
 }
 
 

@@ -106,7 +106,7 @@ void LiveStack::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void LiveStack::liveGeneral(int reason)
+void LiveStack::liveGeneral(MarkReason reason)
 {
     // note, we only mark the array up to (but not including) the top position.
     if (top > 0)
@@ -184,7 +184,7 @@ void PushThroughStack::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void PushThroughStack::liveGeneral(int reason)
+void PushThroughStack::liveGeneral(MarkReason reason)
 {
     // note, because we are a push-through stack, we mark everything.
     memory_mark_general_array(size, stack);

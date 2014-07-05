@@ -66,7 +66,7 @@ class RexxCode : public BaseCode
    inline RexxCode(RESTORETYPE restoreType) { ; };
 
    virtual void live(size_t);
-   virtual void liveGeneral(int reason);
+   virtual void liveGeneral(MarkReason reason);
    virtual void flatten(RexxEnvelope *);
 
    RexxArray      * getSource();

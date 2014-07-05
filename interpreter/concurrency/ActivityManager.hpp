@@ -52,7 +52,7 @@ class ActivityManager
 {
 public:
     static void live(size_t);
-    static void liveGeneral(int reason);
+    static void liveGeneral(MarkReason reason);
 
     static void addWaitingActivity(RexxActivity *a, bool release);
     static inline bool hasWaiters() { return !waitingActivities.empty(); }

@@ -106,7 +106,7 @@ void LibraryPackage::live(size_t liveMark)
 /**
  * Generalized live marking.
  */
-void LibraryPackage::liveGeneral(int reason)
+void LibraryPackage::liveGeneral(MarkReason reason)
 {
     memory_mark_general(libraryName);
     memory_mark_general(routines);

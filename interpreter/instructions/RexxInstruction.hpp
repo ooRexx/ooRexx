@@ -72,7 +72,7 @@ class RexxInstruction : public RexxInternalObject
     inline RexxInstruction() { ; }
 
     virtual void live(size_t);
-    virtual void liveGeneral(int reason);
+    virtual void liveGeneral(MarkReason reason);
     virtual void flatten(RexxEnvelope *);
 
     virtual void execute(RexxActivation *, RexxExpressionStack *) { ; };
@@ -166,7 +166,7 @@ class RexxInstructionExpression : public RexxInstruction
     RexxInstructionExpression(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
-    virtual void liveGeneral(int reason);
+    virtual void liveGeneral(MarkReason reason);
     virtual void flatten(RexxEnvelope *);
 
     RexxObject *evaluateExpression(RexxActivation *context, RexxExpressionStack *stack);

@@ -441,23 +441,43 @@ void RexxVariableDictionary::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  memory_mark(this->contents);
-  memory_mark(this->reservingActivity);
-  memory_mark(this->waitingActivities);
-  memory_mark(this->next);
-  memory_mark(this->scope);
+    memory_mark(contents);
+    memory_mark(reservingActivity);
+    memory_mark(waitingActivities);
+    memory_mark(next);
+    memory_mark(scope);
 }
 
-void RexxVariableDictionary::liveGeneral(int reason)
+void RexxVariableDictionary::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  memory_mark_general(this->contents);
-  memory_mark_general(this->reservingActivity);
-  memory_mark_general(this->waitingActivities);
-  memory_mark_general(this->next);
-  memory_mark_general(this->scope);
+    memory_mark_general(contents);
+    memory_mark_general(reservingActivity);
+    memory_mark_general(waitingActivities);
+    memory_mark_general(next);
+    memory_mark_general(scope);
+}
+
+
+void RexxVariableDictionary::flatten(RexxEnvelope *envelope)
+/******************************************************************************/
+/* Function:  Flatten an object                                               */
+/******************************************************************************/
+{
+    setUpFlatten(RexxVariableDictionary)
+
+    flattenRef(contents);
+    flattenRef(next);
+    flattenRef(scope);
+
+    // these are references to activities and will give an error
+    // if flattened.  Clear them out now.
+    newThis->reservingActivity = OREF_NULL;
+    newThis->waitingActivities = OREF_NULL;
+
+    cleanUpFlatten
 }
 
 
@@ -487,22 +507,6 @@ RexxDirectory *RexxVariableDictionary::getAllVariables()
     }
 
     return result;
-}
-
-
-void RexxVariableDictionary::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
-{
-  setUpFlatten(RexxVariableDictionary)
-
-   flatten_reference(newThis->contents, envelope);
-   flatten_reference(newThis->reservingActivity, envelope);
-   flatten_reference(newThis->waitingActivities, envelope);
-   flatten_reference(newThis->next, envelope);
-   flatten_reference(newThis->scope, envelope);
-  cleanUpFlatten
 }
 
 

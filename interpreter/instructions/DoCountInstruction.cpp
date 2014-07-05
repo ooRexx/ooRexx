@@ -85,7 +85,7 @@ void RexxInstructionDoCount::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void RexxInstructionDoCount::liveGeneral(int reason)
+void RexxInstructionDoCount::liveGeneral(MarkReason reason)
 {
     // must be first object marked
     memory_mark_general(nextInstruction);
@@ -195,7 +195,7 @@ void RexxInstructionDoCountUntil::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void RexxInstructionDoCountUntil::liveGeneral(int reason)
+void RexxInstructionDoCountUntil::liveGeneral(MarkReason reason)
 {
     // must be first object marked
     memory_mark_general(nextInstruction);

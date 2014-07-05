@@ -66,7 +66,7 @@ class RexxCompoundVariable : public RexxVariableBase
     inline RexxCompoundVariable(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
-    virtual void liveGeneral(int reason);
+    virtual void liveGeneral(MarkReason reason);
     virtual void flatten(RexxEnvelope *);
 
     // evaluation method from RexxInternalObject

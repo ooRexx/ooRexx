@@ -97,7 +97,7 @@ void RexxBehaviour::live(size_t liveMark)
   memory_mark(owningClass);
 }
 
-void RexxBehaviour::liveGeneral(int reason)
+void RexxBehaviour::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
@@ -131,10 +131,10 @@ void RexxBehaviour::flatten(RexxEnvelope *envelope)
 {
   setUpFlatten(RexxBehaviour)
 
-   flatten_reference(newThis->methodDictionary, envelope);
-   flatten_reference(newThis->instanceMethodDictionary, envelope);
-   flatten_reference(newThis->scopes, envelope);
-   flatten_reference(newThis->owningClass, envelope);
+   flattenRef(methodDictionary);
+   flattenRef(instanceMethodDictionary);
+   flattenRef(scopes);
+   flattenRef(owningClass);
 
                                        /* Is this a non-primitive behav */
    if (isNonPrimitive())
@@ -240,7 +240,7 @@ void RexxBehaviour::copyBehaviour(RexxBehaviour *source)
  */
 MethodClass *RexxBehaviour::define(const char *name, PCPPM entryPoint, size_t arguments)
 {
-    RexxString *n = RexxMemory::getGlobalName(name);
+    RexxString *n = MemoryObject::getGlobalName(name);
     MethodClass *method = new MethodClass(n, CPPCode::resolveExportedMethod(name, entryPoint, arguments));
     define(n, method);
     return method;

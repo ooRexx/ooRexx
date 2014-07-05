@@ -70,7 +70,7 @@
 
    void          init();
    void          live(size_t);
-   void          liveGeneral(int reason);
+   void          liveGeneral(MarkReason reason);
    void          flatten(RexxEnvelope *);
    RexxObject   *copy();
    RexxArray    *makeArray();

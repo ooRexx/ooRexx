@@ -93,7 +93,7 @@ void RequiresDirective::live(size_t liveMark)
  *
  * @param reason The processing faze we're running the mark on.
  */
-void RequiresDirective::liveGeneral(int reason)
+void RequiresDirective::liveGeneral(MarkReason reason)
 {
     // must be first one marked (though normally null)
     memory_mark_general(nextInstruction);

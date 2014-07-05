@@ -145,7 +145,7 @@ void RexxExpressionOperator::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void RexxExpressionOperator::liveGeneral(int reason)
+void RexxExpressionOperator::liveGeneral(MarkReason reason)
 {
   memory_mark_general(left_term);
   memory_mark_general(right_term);

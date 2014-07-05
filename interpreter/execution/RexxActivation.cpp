@@ -929,102 +929,86 @@ void RexxActivation::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-    memory_mark(this->previous);
-    memory_mark(this->executable);
-    memory_mark(this->scope);
-    memory_mark(this->code);
-    memory_mark(this->settings.securityManager);
-    memory_mark(this->receiver);
-    memory_mark(this->activity);
-    memory_mark(this->parent);
-    memory_mark(this->dostack);
-    /* the stack and the local variables handle their own marking. */
-    this->stack.live(liveMark);
-    this->settings.local_variables.live(liveMark);
-    memory_mark(this->current);
-    memory_mark(this->next);
-    memory_mark(this->result);
-    memory_mark(this->trapinfo);
-    memory_mark(this->objnotify);
-    memory_mark(this->environmentList);
-    memory_mark(this->handler_queue);
-    memory_mark(this->condition_queue);
-    memory_mark(this->settings.traps);
-    memory_mark(this->settings.conditionObj);
-    memory_mark(this->settings.parent_code);
-    memory_mark(this->settings.current_env);
-    memory_mark(this->settings.alternate_env);
-    memory_mark(this->settings.msgname);
-    memory_mark(this->settings.object_variables);
-    memory_mark(this->settings.calltype);
-    memory_mark(this->settings.streams);
-    memory_mark(this->settings.halt_description);
-    memory_mark(this->contextObject);
+    memory_mark(previous);
+    memory_mark(executable);
+    memory_mark(scope);
+    memory_mark(code);
+    memory_mark(settings.securityManager);
+    memory_mark(receiver);
+    memory_mark(activity);
+    memory_mark(parent);
+    memory_mark(dostack);
+    // the stack and the local variables handle their own marking.
+    stack.live(liveMark);
+    settings.local_variables.live(liveMark);
+    memory_mark(current);
+    memory_mark(next);
+    memory_mark(result);
+    memory_mark(trapinfo);
+    memory_mark(objnotify);
+    memory_mark(environmentList);
+    memory_mark(handler_queue);
+    memory_mark(condition_queue);
+    memory_mark(settings.traps);
+    memory_mark(settings.conditionObj);
+    memory_mark(settings.parent_code);
+    memory_mark(settings.current_env);
+    memory_mark(settings.alternate_env);
+    memory_mark(settings.msgname);
+    memory_mark(settings.object_variables);
+    memory_mark(settings.calltype);
+    memory_mark(settings.streams);
+    memory_mark(settings.halt_description);
+    memory_mark(contextObject);
 
-    /* We're hold a pointer back to our arguments directly where they */
-    /* are created.  Since in some places, this argument list comes */
-    /* from the C stack, we need to handle the marker ourselves. */
-    size_t i;
-    for (i = 0; i < argcount; i++)
-    {
-        memory_mark(arglist[i]);
-    }
-
-    for (i = 0; i < settings.parent_argcount; i++)
-    {
-        memory_mark(settings.parent_arglist[i]);
-    }
+    // We're hold a pointer back to our arguments directly where they
+    // are created.  Since in some places, this argument list comes
+    // from the C stack, we need to handle the marker ourselves.
+    memory_mark_array(argcount, arglist);
+    memory_mark_array(settings.parent_argcount, settings.parent_arglist);
 }
 
-void RexxActivation::liveGeneral(int reason)
+void RexxActivation::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-    memory_mark_general(this->previous);
-    memory_mark_general(this->executable);
-    memory_mark_general(this->code);
-    memory_mark_general(this->settings.securityManager);
-    memory_mark_general(this->receiver);
-    memory_mark_general(this->activity);
-    memory_mark_general(this->parent);
-    memory_mark_general(this->dostack);
-    /* the stack and the local variables handle their own marking. */
-    this->stack.liveGeneral(reason);
-    this->settings.local_variables.liveGeneral(reason);
-    memory_mark_general(this->current);
-    memory_mark_general(this->next);
-    memory_mark_general(this->result);
-    memory_mark_general(this->trapinfo);
-    memory_mark_general(this->objnotify);
-    memory_mark_general(this->environmentList);
-    memory_mark_general(this->handler_queue);
-    memory_mark_general(this->condition_queue);
-    memory_mark_general(this->settings.traps);
-    memory_mark_general(this->settings.conditionObj);
-    memory_mark_general(this->settings.parent_code);
-    memory_mark_general(this->settings.current_env);
-    memory_mark_general(this->settings.alternate_env);
-    memory_mark_general(this->settings.msgname);
-    memory_mark_general(this->settings.object_variables);
-    memory_mark_general(this->settings.calltype);
-    memory_mark_general(this->settings.streams);
-    memory_mark_general(this->settings.halt_description);
-    memory_mark_general(this->contextObject);
+    memory_mark_general(previous);
+    memory_mark_general(executable);
+    memory_mark_general(code);
+    memory_mark_general(settings.securityManager);
+    memory_mark_general(receiver);
+    memory_mark_general(activity);
+    memory_mark_general(parent);
+    memory_mark_general(dostack);
+    // the stack and the local variables handle their own marking.
+    stack.liveGeneral(reason);
+    settings.local_variables.liveGeneral(reason);
+    memory_mark_general(current);
+    memory_mark_general(next);
+    memory_mark_general(result);
+    memory_mark_general(trapinfo);
+    memory_mark_general(objnotify);
+    memory_mark_general(environmentList);
+    memory_mark_general(handler_queue);
+    memory_mark_general(condition_queue);
+    memory_mark_general(settings.traps);
+    memory_mark_general(settings.conditionObj);
+    memory_mark_general(settings.parent_code);
+    memory_mark_general(settings.current_env);
+    memory_mark_general(settings.alternate_env);
+    memory_mark_general(settings.msgname);
+    memory_mark_general(settings.object_variables);
+    memory_mark_general(settings.calltype);
+    memory_mark_general(settings.streams);
+    memory_mark_general(settings.halt_description);
+    memory_mark_general(contextObject);
 
-    /* We're hold a pointer back to our arguments directly where they */
-    /* are created.  Since in some places, this argument list comes */
-    /* from the C stack, we need to handle the marker ourselves. */
-    size_t i;
-    for (i = 0; i < argcount; i++)
-    {
-        memory_mark_general(arglist[i]);
-    }
-
-    for (i = 0; i < settings.parent_argcount; i++)
-    {
-        memory_mark_general(settings.parent_arglist[i]);
-    }
+    // We're hold a pointer back to our arguments directly where they
+    // are created.  Since in some places, this argument list comes
+    // from the C stack, we need to handle the marking ourselves.
+    memory_mark_general_array(argcount, arglist);
+    memory_mark_general_array(settings.parent_argcount, settings.parent_arglist);
 }
 
 

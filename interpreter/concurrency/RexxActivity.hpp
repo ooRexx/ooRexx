@@ -130,7 +130,7 @@ class RexxActivity : public RexxInternalObject
     RexxActivity(bool);
 
     virtual void live(size_t);
-    virtual void liveGeneral(int reason);
+    virtual void liveGeneral(MarkReason reason);
 
     void reset();
     void runThread();

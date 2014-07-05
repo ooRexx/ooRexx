@@ -192,7 +192,7 @@ void RexxSource::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void RexxSource::liveGeneral(int reason)
+void RexxSource::liveGeneral(MarkReason reason)
 {
 #ifndef KEEPSOURCE
     if (memoryObject.savingImage())

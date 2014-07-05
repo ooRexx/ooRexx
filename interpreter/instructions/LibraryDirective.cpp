@@ -90,7 +90,7 @@ void LibraryDirective::live(size_t liveMark)
  *
  * @param reason The processing faze we're running the mark on.
  */
-void LibraryDirective::liveGeneral(int reason)
+void LibraryDirective::liveGeneral(MarkReason reason)
 {
     // must be first one marked (though normally null)
     memory_mark_general(nextInstruction);

@@ -120,7 +120,7 @@ void RexxClass::live(size_t liveMark)
     memory_mark(source);
 }
 
-void RexxClass::liveGeneral(int reason)
+void RexxClass::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/

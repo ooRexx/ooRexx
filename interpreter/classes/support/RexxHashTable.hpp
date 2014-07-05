@@ -77,7 +77,7 @@ class RexxHashTable : public RexxInternalObject {
     inline RexxHashTable() { ; }
 
     void         live(size_t);
-    void         liveGeneral(int reason);
+    void         liveGeneral(MarkReason reason);
     void         flatten(RexxEnvelope *);
     RexxArray  * makeArray();
     void         empty();

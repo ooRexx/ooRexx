@@ -48,6 +48,7 @@
 #include "RexxActivity.hpp"
 #include "RexxVariableDictionary.hpp"
 #include "IndirectVariableReference.hpp"
+#include "MethodArguments.hpp"
 
 
 /**
@@ -93,7 +94,7 @@ void RexxVariableReference::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void RexxVariableReference::liveGeneral(int reason)
+void RexxVariableReference::liveGeneral(MarkReason reason)
 {
     memory_mark_general(variableObject);
 }
@@ -127,10 +128,9 @@ RexxArray *RexxVariableReference::list(RexxActivation *context)
     // get the variable value
     RexxObject *value = variableObject->getValue(context);
     // force to string form
-    ProtectedObject nameString = REQUEST_STRING(value);
+    Protected<RexxString> nameString = REQUEST_STRING(value);
     // get this as a list of words
-    ProtectedObject nameList = ((RexxString *)nameString)->subWords(OREF_NULL, OREF_NULL);
-    RexxArray *list = (RexxArray *)nameList;
+    Protected<RexxArray> list = ((RexxString *)nameString)->subWords(OREF_NULL, OREF_NULL);
 
     size_t count = list->size();
 
@@ -138,10 +138,10 @@ RexxArray *RexxVariableReference::list(RexxActivation *context)
     for (size_t i = 1; i <= count; i++)
     {
         // get the next name
-        RexxString *variable_name = list(i);
+        RexxString *variable_name = (RexxString *)list->get(i);
 
         // get the first character
-        int character = variable_name->getChar(0);
+        unsigned int character = variable_name->getChar(0);
         // report obvious non-variable names
         // start with a period
         if (character == '.')
@@ -224,7 +224,7 @@ void RexxVariableReference::procedureExpose(RexxActivation *context, RexxActivat
 void RexxVariableReference::expose(RexxActivation *context, RexxVariableDictionary *object_dictionary)
 {
     // expose the variable first
-    variableObject->expose(context, stack, object_dictionary);
+    variableObject->expose(context, object_dictionary);
     // evaluate into a variable list
     RexxArray *variables = list(context);
     ProtectedObject p(variables);

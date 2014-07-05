@@ -177,17 +177,17 @@ void RexxMutableBuffer::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-    memory_mark(this->objectVariables);
-    memory_mark(this->data);
+    memory_mark(objectVariables);
+    memory_mark(data);
 }
 
-void RexxMutableBuffer::liveGeneral(int reason)
+void RexxMutableBuffer::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-    memory_mark_general(this->objectVariables);
-    memory_mark_general(this->data);
+    memory_mark_general(objectVariables);
+    memory_mark_general(data);
 }
 
 
@@ -196,12 +196,12 @@ void RexxMutableBuffer::flatten(RexxEnvelope *envelope)
 /* Function:  Flatten a mutable buffer                                        */
 /******************************************************************************/
 {
-  setUpFlatten(RexxMutableBuffer)
+    setUpFlatten(RexxMutableBuffer)
 
-  flatten_reference(newThis->data, envelope);
-  flatten_reference(newThis->objectVariables, envelope);
+    flattenRef(data);
+    flattenRef(objectVariables);
 
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
 RexxObject *RexxMutableBuffer::copy()

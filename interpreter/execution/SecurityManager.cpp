@@ -59,16 +59,16 @@ void SecurityManager::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-    memory_mark(this->manager);
+    memory_mark(manager);
 }
 
 
-void SecurityManager::liveGeneral(int reason)
+void SecurityManager::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-    memory_mark_general(this->manager);
+    memory_mark_general(manager);
 }
 
 /**

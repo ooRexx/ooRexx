@@ -190,7 +190,7 @@ void NormalSegmentSet::checkObjectOverlap(DeadObject *obj)
 /******************************************************************************/
 /* Function:  Constructor for the large segment pool.                         */
 /******************************************************************************/
-LargeSegmentSet::LargeSegmentSet(RexxMemory *mem) :
+LargeSegmentSet::LargeSegmentSet(MemoryObject *mem) :
     MemorySegmentSet(mem, SET_NORMAL, "Large Allocation Segments"),
     deadCache("Large Block Allocation Pool"), requests(0), smallestObject(0), largestObject(0) { }
 
@@ -198,7 +198,7 @@ LargeSegmentSet::LargeSegmentSet(RexxMemory *mem) :
 /******************************************************************************/
 /* Function:  Constructor for the large segment pool.                         */
 /******************************************************************************/
-OldSpaceSegmentSet::OldSpaceSegmentSet(RexxMemory *mem) :
+OldSpaceSegmentSet::OldSpaceSegmentSet(MemoryObject *mem) :
     MemorySegmentSet(mem, SET_OLDSPACE, "Old Space Segments"),
     deadCache("Old Space Allocation Pool")
 {
@@ -209,7 +209,7 @@ OldSpaceSegmentSet::OldSpaceSegmentSet(RexxMemory *mem) :
 /******************************************************************************/
 /* Function:  Constructor for the normal segment pool.                        */
 /******************************************************************************/
-NormalSegmentSet::NormalSegmentSet(RexxMemory *mem) :
+NormalSegmentSet::NormalSegmentSet(MemoryObject *mem) :
     MemorySegmentSet(mem, SET_NORMAL, "Normal Allocation Segments"),
     largeDead("Large Normal Allocation Pool")
 {

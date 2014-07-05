@@ -94,7 +94,7 @@ void RexxInstructionDrop::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void RexxInstructionDrop::liveGeneral(int reason)
+void RexxInstructionDrop::liveGeneral(MarkReason reason)
 {
     // must be first one marked
     memory_mark_general(nextInstruction);

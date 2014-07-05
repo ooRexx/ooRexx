@@ -265,7 +265,7 @@ void BufferProgramSource::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void BufferProgramSource::liveGeneral(int reason)
+void BufferProgramSource::liveGeneral(MarkReason reason)
 {
     memory_mark_general(descriptorArea);
     memory_mark_general(buffer);
@@ -505,7 +505,7 @@ void ArrayProgramSource::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void ArrayProgramSource::liveGeneral(int reason)
+void ArrayProgramSource::liveGeneral(MarkReason reason)
 {
     memory_mark_general(array);
 }
@@ -629,7 +629,7 @@ void FileProgramSource::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void FileProgramSource::liveGeneral(int reason)
+void FileProgramSource::liveGeneral(MarkReason reason)
 {
     memory_mark_general(descriptorArea);
     memory_mark_general(buffer);

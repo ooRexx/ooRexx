@@ -95,7 +95,7 @@ void RexxDoBlock::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void RexxDoBlock::liveGeneral(int reason)
+void RexxDoBlock::liveGeneral(MarkReason reason)
 {
     memory_mark_general(previous);
     memory_mark_general(parent);

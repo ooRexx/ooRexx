@@ -119,7 +119,7 @@ class BufferProgramSource: public ProgramSource
     BufferProgramSource(RexxBuffer *b) : buffer(b), descriptorArea(OREF_NULL), ProgramSource() { }
 
     virtual void live(size_t);
-    virtual void liveGeneral(int reason);
+    virtual void liveGeneral(MarkReason reason);
     virtual void flatten(RexxEnvelope *);
 
     // virtual definitions
@@ -155,7 +155,7 @@ class FileProgramSource: public BufferProgramSource
     FileProgramSource(RexxString *f) : fileName(f), BufferProgramSource(OREF_NULL) { }
 
     virtual void live(size_t);
-    virtual void liveGeneral(int reason);
+    virtual void liveGeneral(MarkReason reason);
     virtual void flatten(RexxEnvelope *);
 
     // virtual definitions
@@ -179,7 +179,7 @@ class ArrayProgramSource: public ProgramSource
     ArrayProgramSource(RexxArray *a, size_t adjust) : interpretAdjust(adjust), array(a), ProgramSource() { };
 
     virtual void live(size_t);
-    virtual void liveGeneral(int reason);
+    virtual void liveGeneral(MarkReason reason);
     virtual void flatten(RexxEnvelope *);
 
     virtual void getLine(size_t lineNumber, const char *&data, size_t &length);

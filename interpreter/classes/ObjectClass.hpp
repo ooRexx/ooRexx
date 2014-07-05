@@ -47,37 +47,49 @@
 
 #include "Numerics.hpp"
 
-#include <stddef.h>
-
-  class RexxObject;
-  class RexxInteger;
-  class RexxBehaviour;
-  class RexxCompoundTail;
-  class RexxCompoundElement;
-  class RexxInternalStack;
-  class RexxSupplier;
-  class RexxEnvelope;
-  class RexxVariableDictionary;
-  class RexxNumberString;
-  class MethodClass;
-  class RexxMessage;
-  class ProtectedObject;
-  class SecurityManager;
-  class BaseExecutable;
-  class RexxActivity;
+class RexxObject;
+class RexxInteger;
+class RexxBehaviour;
+class RexxCompoundTail;
+class RexxCompoundElement;
+class RexxInternalStack;
+class RexxSupplier;
+class RexxEnvelope;
+class RexxVariableDictionary;
+class RexxNumberString;
+class MethodClass;
+class RexxMessage;
+class ProtectedObject;
+class SecurityManager;
+class BaseExecutable;
+class RexxActivity;
 
 
-  enum
-  {
-      LiveMask         =  0xFFFC,    // mask for the checking the mark bits
-      MarkMask         =  0x0003,    // mask use for checking the mark bits
-      OldSpaceBit      =  0x0010,    // location of the OldSpace bit
-  };
+enum
+{
+    LiveMask         =  0xFFFC,    // mask for the checking the mark bits
+    MarkMask         =  0x0003,    // mask use for checking the mark bits
+    OldSpaceBit      =  0x0010,    // location of the OldSpace bit
+};
 
 typedef size_t HashCode;            // a hash code value
 
                                        /* used ofor special constructor   */
-typedef enum {RESTOREIMAGE, MOBILEUNFLATTEN, METHODUNFLATTEN} RESTORETYPE;
+typedef enum {RESTOREIMAGE} RESTORETYPE;
+
+
+/**
+ * Typedef for the marking reasons passed to all liveGeneral methods.
+ */
+typedef enum
+{
+    LIVEMARK,               // Performing debug live marking
+    RESTORINGIMAGE,         // marking during image restore
+    PREPARINGIMAGE,         // marking to allow and image save preparation.
+    SAVINGIMAGE,            // saving the Rexx image
+    FLATTENINGOBJECT,       // marking to flatten an object
+    UNFLATTENINGOBJECT,     // marking to unflatten an object
+} MarkReason;
 
 
 /**
@@ -176,7 +188,7 @@ class RexxVirtualBase
     // vft.  If the garbage collector sees this, it will crash unless these
     // are defined at this level.
     virtual void         live(size_t) {;}
-    virtual void         liveGeneral(int reason) {;}
+    virtual void         liveGeneral(MarkReason reason) {;}
     virtual void         flatten(RexxEnvelope *) {;}
     virtual RexxObject  *unflatten(RexxEnvelope *) { return (RexxObject *)this; };
 };
@@ -395,7 +407,7 @@ class RexxObject : public RexxInternalObject
     void        uninit();
 
     virtual void live(size_t);
-    virtual void liveGeneral(int reason);
+    virtual void liveGeneral(MarkReason reason);
     virtual void flatten(RexxEnvelope *);
 
     RexxObject  *copy();

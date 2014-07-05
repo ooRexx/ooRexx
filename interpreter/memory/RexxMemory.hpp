@@ -36,9 +36,9 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                       RexxMemorysegment.hpp    */
+/* REXX Kernel                                       RexxMemory.hpp           */
 /*                                                                            */
-/* Primitive MemorySegment class definitions                                  */
+/* Primitive Memory management definitions                                    */
 /*                                                                            */
 /******************************************************************************/
 
@@ -65,27 +65,15 @@ class RexxIdentityTable;
 class GlobalProtectedObject;
 
 #ifdef _DEBUG
-class RexxMemory;
+class MemoryObject;
 #endif
-
-
-enum
-{
-    LIVEMARK,
-    RESTORINGIMAGE,
-    PREPARINGIMAGE,
-    SAVINGIMAGE,
-    FLATTENINGOBJECT,
-    UNFLATTENINGOBJECT,
-};
-
 
 typedef char MEMORY_POOL_STATE;
 
 class MemorySegmentPoolHeader
 {
 #ifdef _DEBUG
- friend class RexxMemory;
+ friend class MemoryObject;
 #endif
 
  protected:
@@ -101,7 +89,7 @@ class MemorySegmentPoolHeader
 class MemorySegmentPool : public MemorySegmentPoolHeader
 {
 #ifdef _DEBUG
- friend class RexxMemory;
+ friend class MemoryObject;
 #endif
  friend bool SysAccessPool(MemorySegmentPool **);
  public:
@@ -126,22 +114,21 @@ class MemorySegmentPool : public MemorySegmentPoolHeader
 #include "MemoryStats.hpp"
 #include "MemorySegment.hpp"
 
-class RexxMemory : public RexxInternalObject
+class MemoryObject : public RexxInternalObject
 {
 #ifdef _DEBUG
   friend class RexxInstructionOptions;
 #endif
  public:
-    inline RexxMemory();
-    inline RexxMemory(RESTORETYPE restoreType) { ; };
+    inline MemoryObject();
+    inline MemoryObject(RESTORETYPE restoreType) { ; };
 
     inline operator RexxObject*() { return (RexxObject *)this; };
     inline RexxObject *operator=(DeadObject *d) { return (RexxObject *)this; };
 
-    void live(size_t);
-    void liveGeneral(int reason);
-    void flatten(RexxEnvelope *);
-    RexxObject  *makeProxy(RexxEnvelope *);
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual RexxObject  *makeProxy(RexxEnvelope *);
 
     void        initialize(bool restoringImage);
     MemorySegment *newSegment(size_t requestLength, size_t minLength);
@@ -387,7 +374,8 @@ inline RexxObject *new_object(size_t s, size_t t) { return memoryObject.newObjec
 inline RexxArray *new_arrayOfObject(size_t s, size_t c, size_t t)  { return memoryObject.newObjects(s, c, t); }
 
 
-// memory marking macros
+// memory marking macros.  These are macros because they use the assumed arguments
+// passed to the live method
 #define ObjectNeedsMarking(oref) ((oref) != OREF_NULL && !((oref)->isObjectMarked(liveMark)) )
 #define memory_mark(oref)  if (ObjectNeedsMarking(oref)) memoryObject.mark((RexxObject *)(oref))
 #define memory_mark_general(oref) (memoryObject.markGeneral((void *)&(oref)))
@@ -426,8 +414,6 @@ inline RexxArray *new_arrayOfObject(size_t s, size_t c, size_t t)  { return memo
 #define cleanUpFlatten                    \
  }
 
-// flatten an individual reference.  This version is deprecated, use flattenRef instead.
-#define flatten_reference(oref,envel)  if ((oref) != OREF_NULL) envel->flattenReference((void *)&newThis, newSelf, (void *)&(oref))
 // newer, simplified form.  Just give the name of the field.
 #define flattenRef(oref)  if ((newThis->oref) != OREF_NULL) envelope->flattenReference((void *)&newThis, newSelf, (void *)&(newThis->oref))
 

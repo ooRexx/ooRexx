@@ -108,7 +108,7 @@ void RexxSupplier::live(size_t liveMark)
 }
 
 
-void RexxSupplier::liveGeneral(int reason)
+void RexxSupplier::liveGeneral(MarkReason reason)
 {
     memory_mark_general(values);
     memory_mark_general(indexes);

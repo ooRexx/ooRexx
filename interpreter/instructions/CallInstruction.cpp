@@ -100,7 +100,7 @@ void RexxInstructionCall::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void RexxInstructionCall::liveGeneral(int reason)
+void RexxInstructionCall::liveGeneral(MarkReason reason)
 {
     // must be first one marked
     memory_mark_general(nextInstruction);
@@ -260,7 +260,7 @@ void RexxInstructionDynamicCall::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void RexxInstructionDynamicCall::liveGeneral(int reason)
+void RexxInstructionDynamicCall::liveGeneral(MarkReason reason)
 {
     // must be first one marked
     memory_mark_general(nextInstruction);
@@ -420,7 +420,7 @@ void RexxInstructionCallOn::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void RexxInstructionCallOn::liveGeneral(int reason)
+void RexxInstructionCallOn::liveGeneral(MarkReason reason)
 {
     // must be first one marked
     memory_mark_general(nextInstruction);

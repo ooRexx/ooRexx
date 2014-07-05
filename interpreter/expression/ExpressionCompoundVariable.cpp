@@ -120,7 +120,7 @@ void RexxCompoundVariable::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void RexxCompoundVariable::liveGeneral(int reason)
+void RexxCompoundVariable::liveGeneral(MarkReason reason)
 {
     memory_mark_general(stemName);
     memory_mark_general_array(tailCount, tails)

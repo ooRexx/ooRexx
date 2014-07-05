@@ -98,7 +98,7 @@ void ActivityManager::live(size_t liveMark)
   memory_mark(allActivities);
 }
 
-void ActivityManager::liveGeneral(int reason)
+void ActivityManager::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* NOTE: we do not mark the UninitTables.  MEMORY will request the table      */
 /*  and mark it for us.  This is so that it can determine if there are        */

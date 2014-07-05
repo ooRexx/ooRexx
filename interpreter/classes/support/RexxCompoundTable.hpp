@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -49,42 +49,50 @@ class RexxStem;
 class RexxCompoundElement;
                                            /* macros for embedding within the stem object */
 #define markCompoundTable() { \
-  memory_mark(this->tails.root); \
-  memory_mark(this->tails.parent);  \
+  memory_mark(tails.root); \
+  memory_mark(tails.parent);  \
 }
 
 #define markGeneralCompoundTable() { \
-  memory_mark_general(this->tails.root); \
-  memory_mark_general(this->tails.parent); \
+  memory_mark_general(tails.root); \
+  memory_mark_general(tails.parent); \
 }
 
 #define flattenCompoundTable() { \
-  flatten_reference(newThis->tails.root, envelope); \
-  flatten_reference(newThis->tails.parent, envelope); \
+  flattenRef(tails.root); \
+  flattenRef(tails.parent); \
 }
 
-class RexxCompoundTable {
+/**
+ * Compound table object embedded within a Stem object.
+ * This is not a Rexx internal object, but rather a
+ * helper object.
+ */
+class RexxCompoundTable
+{
  friend class RexxStem;
  public:
-  inline RexxCompoundTable() { ; };
-  void         copyFrom(RexxCompoundTable &other);
-  void         init(RexxStem *parent);
-  void         clear();
-  inline RexxCompoundElement *get(RexxCompoundTail *name) { return findEntry(name); }
-  RexxCompoundElement *findEntry(RexxCompoundTail *tail);
-  RexxCompoundElement *findEntry(RexxCompoundTail *tail, bool create);
-  RexxCompoundElement *findEntry(RexxString *tail, bool create = false);
-  void         balance(RexxCompoundElement *node);
-  void         moveNode(RexxCompoundElement **anchor, bool toright);
-  RexxCompoundElement *first();
-  RexxCompoundElement *findLeaf(RexxCompoundElement *node);
-  RexxCompoundElement *next(RexxCompoundElement *node);
+    inline RexxCompoundTable() { ; };
+    void         copyFrom(RexxCompoundTable &other);
+    void         init(RexxStem *parent);
+    void         clear();
+    inline RexxCompoundElement *get(RexxCompoundTail *name) { return findEntry(name); }
+    RexxCompoundElement *findEntry(RexxCompoundTail *tail);
+    RexxCompoundElement *findEntry(RexxCompoundTail *tail, bool create);
+    RexxCompoundElement *findEntry(RexxString *tail, bool create = false);
+    void         balance(RexxCompoundElement *node);
+    void         moveNode(RexxCompoundElement **anchor, bool toright);
+    RexxCompoundElement *first();
+    RexxCompoundElement *findLeaf(RexxCompoundElement *node);
+    RexxCompoundElement *next(RexxCompoundElement *node);
 
-  void         setParent(RexxStem *parent);
-  void         setRoot(RexxCompoundElement *newRoot);
+    void         setParent(RexxStem *parent);
+    void         setRoot(RexxCompoundElement *newRoot);
 
-  RexxCompoundElement *root;               /* the root node */
-  RexxStem *parent;                        /* link back to the hosting stem */
+protected:
+
+    RexxCompoundElement *root;               /* the root node */
+    RexxStem *parent;                        /* link back to the hosting stem */
 };
 
 #endif

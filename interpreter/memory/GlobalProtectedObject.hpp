@@ -45,7 +45,7 @@ class RexxInstruction;
 
 class GlobalProtectedObject
 {
-friend class RexxMemory;
+friend class MemoryObject;
 public:
     inline GlobalProtectedObject() : protectedObject(OREF_NULL), next(NULL), previous(NULL)
     {

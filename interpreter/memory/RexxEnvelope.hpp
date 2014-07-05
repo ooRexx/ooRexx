@@ -58,11 +58,11 @@ class RexxEnvelope : public RexxInternalObject
     inline void  operator delete(void *) { ; }
     inline void  operator delete(void *, void *) {;}
 
-    RexxEnvelope();
-    inline RexxEnvelope(RESTORETYPE restoreType) { ; };
+    RexxEnvelope() { }
+    inline RexxEnvelope(RESTORETYPE restoreType) { }
 
     virtual void live(size_t);
-    virtual void liveGeneral(int reason);
+    virtual void liveGeneral(MarkReason reason);
 
     void flattenReference(void *, size_t, void *);
     RexxBuffer *pack(RexxObject *);
@@ -87,7 +87,7 @@ protected:
     RexxObject *home;
     RexxObject *receiver;                 // object to receive the message
     RexxIdentityTable  *duptable;         // table of duplicates
-    RexxIdentityTable  *savetable;        // table of protected objects created during flattening */
+    RexxIdentityTable  *savetable;        // table of protected objects created during flattening
     RexxSmartBuffer *buffer;              // smart buffer wrapper
     RexxIdentityTable  *rehashtable;      // table to rehash
     LiveStack  *flattenStack;             // the flattening stack

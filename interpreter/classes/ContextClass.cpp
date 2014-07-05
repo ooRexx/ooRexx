@@ -106,27 +106,30 @@ void RexxContext::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-    memory_mark(this->activation);
+    memory_mark(activation);
 }
 
-void RexxContext::liveGeneral(int reason)
+void RexxContext::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-    memory_mark_general(this->activation);
+    memory_mark_general(activation);
 }
 
+
+/**
+ * Ensure this object does not flatten to a live object.
+ *
+ * @param envelope The flattening envelope.
+ */
 void RexxContext::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
 {
-  setUpFlatten(RexxContext)
+    setUpFlatten(RexxContext)
 
-  newThis->activation = OREF_NULL;   // this never should be getting flattened, so sever the connection
+    newThis->activation = OREF_NULL;   // this never should be getting flattened, so sever the connection
 
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
 

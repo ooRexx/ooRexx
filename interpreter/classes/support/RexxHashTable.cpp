@@ -140,7 +140,7 @@ RexxTable *RexxHashTable::newInstance(
     bytes = newObj->getObjectSize() - companionSize;
 
     // initialize the hash table object
-    ((RexxObject *)newHash)->initializeNewObject(bytes, memoryObject.markWord, RexxMemory::virtualFunctionTable[T_HashTable], TheHashTableBehaviour);
+    ((RexxObject *)newHash)->initializeNewObject(bytes, memoryObject.markWord, MemoryObject::virtualFunctionTable[T_HashTable], TheHashTableBehaviour);
     /* reduce the companion size         */
     newObj->setObjectSize(companionSize);
     newHash->size = bucketSize;          /* record the size                   */
@@ -173,7 +173,7 @@ void RexxHashTable::live(size_t liveMark)
     }
 }
 
-void RexxHashTable::liveGeneral(int reason)
+void RexxHashTable::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
@@ -205,8 +205,8 @@ void RexxHashTable::flatten(RexxEnvelope *envelope)
     {
         if (this->entries[i].index != OREF_NULL)
         {
-            flatten_reference(newThis->entries[i].index, envelope);
-            flatten_reference(newThis->entries[i].value, envelope);
+            flattenRef(entries[i].index);
+            flattenRef(entries[i].value);
         }
     }
     cleanUpFlatten

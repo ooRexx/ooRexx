@@ -57,7 +57,7 @@ void RexxListTable::live(size_t liveMark)
     }
 }
 
-void RexxListTable::liveGeneral(int reason)
+void RexxListTable::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
@@ -119,7 +119,7 @@ void *RexxListTable::operator new(size_t size, size_t initialSize, size_t compan
     bytes = newList->getObjectSize() - companionSize;
 
     // initialize the hash table object
-    ((RexxObject *)newTable)->initializeNewObject(bytes, memoryObject.markWord, RexxMemory::virtualFunctionTable[T_ListTable], TheListTableBehaviour);
+    ((RexxObject *)newTable)->initializeNewObject(bytes, memoryObject.markWord, MemoryObject::virtualFunctionTable[T_ListTable], TheListTableBehaviour);
     /* reduce the companion size         */
     newList->setObjectSize(companionSize);
     newTable->size = initialSize;        /* fill in the initial size          */

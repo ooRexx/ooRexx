@@ -61,7 +61,7 @@ public:
     inline SecurityManager(RESTORETYPE restoreType) { ; };
 
     void         live(size_t);
-    void         liveGeneral(int reason);
+    void         liveGeneral(MarkReason reason);
     RexxObject  *checkLocalAccess(RexxString *index);
     RexxObject  *checkEnvironmentAccess(RexxString *index);
     bool         checkProtectedMethod(RexxObject *target, RexxString *messageName, size_t count, RexxObject **arguments, ProtectedObject &result);

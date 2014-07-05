@@ -46,6 +46,8 @@
 
 #include "ExpressionBaseVariable.hpp"
 
+class RexxArray;
+
 class RexxVariableReference : public RexxVariableBase
 {
  public:
@@ -57,16 +59,16 @@ class RexxVariableReference : public RexxVariableBase
     inline RexxVariableReference(RESTORETYPE restoreType) { ; };
     RexxVariableReference(RexxVariableBase *);
 
-    void live(size_t);
-    void liveGeneral(int reason);
-    void flatten(RexxEnvelope *);
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(RexxEnvelope *);
 
-    // methods implementd from RexxVariableBase
-    void drop(RexxActivation *);
-    void expose(RexxActivation *, RexxVariableDictionary *);
-    void procedureExpose(RexxActivation *, RexxActivation *);
+    // methods implemented from RexxVariableBase
+    virtual void drop(RexxActivation *);
+    virtual void expose(RexxActivation *, RexxVariableDictionary *);
+    virtual void procedureExpose(RexxActivation *, RexxActivation *);
 
-    RexxList *list(RexxActivation *, RexxExpressionStack *);
+    RexxArray *list(RexxActivation *);
 
  protected:
 

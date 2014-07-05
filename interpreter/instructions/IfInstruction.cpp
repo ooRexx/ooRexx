@@ -100,7 +100,7 @@ void RexxInstructionIf::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void RexxInstructionIf::liveGeneral(int reason)
+void RexxInstructionIf::liveGeneral(MarkReason reason)
 {
     // must be first object marked.
     memory_mark_general(nextInstruction);
