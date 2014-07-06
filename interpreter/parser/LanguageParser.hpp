@@ -273,6 +273,9 @@ class LanguageParser: public RexxInternalObject
     void        createAbstractMethod(RexxString *name, bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod);
     void        checkDuplicateMethod(RexxString *name, bool classMethod, int errorMsg);
     void        addMethod(RexxString *name, MethodClass *method, bool classMethod);
+    bool        isDuplicateClass(RexxString *name);
+    bool        isDuplicateRoutine(RexxString *name);
+    void        addClassDirective(RexxString *name, ClassDirective *directive);
 
     // expression parsing methods
     RexxObject *constantExpression();
@@ -304,7 +307,7 @@ class LanguageParser: public RexxInternalObject
     void        error(int, RexxObject *);
     void        error(int, RexxObject *, RexxObject *);
     void        error(int, RexxObject *, RexxObject *, RexxObject *);
-    void        error(int errorcode, SourceLocation &location, RexxArray *subs);
+    void        error(int errorcode, const SourceLocation &location, RexxArray *subs);
     void        errorLine(int, RexxInstruction *);
     void        errorPosition(int, RexxToken *);
     void        errorToken(int, RexxToken *);
@@ -379,9 +382,11 @@ class LanguageParser: public RexxInternalObject
     static const size_t DEBUG_OFF         =  0x0200;
     static const size_t DEBUG_TOGGLE      =  0x0400;
     static const size_t DEBUG_NOTRACE     =  0x0800;
+    // NOTE:  This is not part of the masked off settings.
+    static const size_t DEBUG_SKIP        =  0x1000;
 
 // the mask for accessing just the debug flags
-    static const size_t TRACE_DEBUG_MASK  = 0xff00;
+    static const size_t TRACE_DEBUG_MASK  = 0x0f00;
 
 // an invalid 8-bit character marker.
     const unsigned int INVALID_CHARACTER = 0x100;

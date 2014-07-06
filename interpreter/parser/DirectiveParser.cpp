@@ -45,6 +45,9 @@
 #include "ArrayClass.hpp"
 #include "RexxActivation.hpp"
 #include "LanguageParser.hpp"
+#include "DirectoryClass.hpp"
+#include "ClassDirective.hpp"
+#include "RequiresDirective.hpp"
 
 
 /**
@@ -216,7 +219,7 @@ enum
  */
 bool LanguageParser::isDuplicateClass(RexxString *name)
 {
-    return classDependencies->hasEntry(name);
+    return classDependencies->hasEntry(name) == TheTrueObject;
 }
 
 
@@ -230,10 +233,16 @@ bool LanguageParser::isDuplicateClass(RexxString *name)
  */
 bool LanguageParser::isDuplicateRoutine(RexxString *name)
 {
-    return routines->hasEntry(name);
+    return routines->hasEntry(name) == TheTrueObject;
 }
 
 
+/**
+ * Add a class directive to the definition set.
+ *
+ * @param name      The new class directive.
+ * @param directive
+ */
 void LanguageParser::addClassDirective(RexxString *name, ClassDirective *directive)
 {
     classDependencies->put(name, directive);

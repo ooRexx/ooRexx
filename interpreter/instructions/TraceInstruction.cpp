@@ -44,8 +44,8 @@
 #include "RexxCore.h"
 #include "RexxActivation.hpp"
 #include "TraceInstruction.hpp"
-#include "SourceFile.hpp"
-
+#include "LanguageParser.hpp"
+#include "MethodArguments.hpp"
 
 /**
  * Initialize a Trace instruction.
@@ -124,10 +124,10 @@ void RexxInstructionTrace::execute(RexxActivation *context, RexxExpressionStack 
     // trace if needed.
     context->traceInstruction(this);
     // is this a debug skip request (the setting value is zero in that case)
-    if ((traceSetting&TRACE_SETTING_MASK) == 0)
+    if ((traceSetting&LanguageParser::DEBUG_SKIP) != 0)
     {
         // turn on the skip mode in the context.
-        context->debugSkip(debugskip, (traceSetting&DEBUG_NOTRACE) != 0);
+        context->debugSkip(debugskip, (traceSetting&LanguageParser::DEBUG_NOTRACE) != 0);
     }
     // non-dynamic form?
     else if (expression == OREF_NULL)

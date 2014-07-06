@@ -100,7 +100,7 @@ void RexxInstructionUseStrict::live(size_t liveMark)
 {
     // must be first object marked
     memory_mark(nextInstruction);
-    for (size_t i = 0, i < variableCount; i++)
+    for (size_t i = 0; i < variableCount; i++)
     {
         memory_mark(variables[i].variable);
         memory_mark(variables[i].defaultValue);
@@ -120,7 +120,7 @@ void RexxInstructionUseStrict::liveGeneral(MarkReason reason)
 {
     // must be first object marked
     memory_mark_general(nextInstruction);
-    for (size_t i = 0, i < variableCount; i++)
+    for (size_t i = 0; i < variableCount; i++)
     {
         memory_mark_general(variables[i].variable);
         memory_mark_general(variables[i].defaultValue);
@@ -138,7 +138,7 @@ void RexxInstructionUseStrict::flatten(RexxEnvelope *envelope)
     setUpFlatten(RexxInstructionUseStrict)
 
     flattenRef(nextInstruction);
-    for (size_t i = 0, ; i < variableCount; i++)
+    for (size_t i = 0; i < variableCount; i++)
     {
         flattenRef(variables[i].variable);
         flattenRef(variables[i].defaultValue);

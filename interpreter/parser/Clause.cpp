@@ -182,7 +182,7 @@ RexxToken *RexxClause::newToken(TokenClass classId, TokenSubclass subclass, Rexx
     /* get the first free token          */
     RexxToken *token = (RexxToken *)tokens->get(free++);
     // construct the token and return
-    new ((void *)token) RexxToken(classId, subclass, value, l);
+    new ((void *)token) RexxToken(classId, l, subclass, value);
     return token;
 }
 

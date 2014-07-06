@@ -102,5 +102,7 @@ class RexxInstructionSignalOn : public RexxInstructionTrapBase
 
     virtual void execute(RexxActivation *, RexxExpressionStack *);
     virtual void resolve(RexxDirectory *);
+
+    virtual void trap(RexxActivation *context, RexxDirectory  *conditionObj);
 };
 #endif

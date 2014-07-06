@@ -185,7 +185,7 @@ void RexxInstructionSelect::matchEnd(RexxInstructionEnd *partner, LanguageParser
 
     // ok, we need to match up the names. If the END has a label, then it must
     // match a label on the SELECT.
-    RexxString *name = partner->name;
+    RexxString *name = partner->endName();
     if (name != OREF_NULL)
     {
         // One error if we don't had a label, a different error if the
@@ -193,7 +193,7 @@ void RexxInstructionSelect::matchEnd(RexxInstructionEnd *partner, LanguageParser
         RexxString *myLabel = getLabel();
         if (myLabel == OREF_NULL)
         {
-            parser->error(Error_Unexpected_end_select_nolabel, endLocation, new_array(partner->name, new_integer(lineNum)));
+            parser->error(Error_Unexpected_end_select_nolabel, endLocation, new_array(name, new_integer(lineNum)));
         }
         else if (name != myLabel)
         {
@@ -255,7 +255,7 @@ void RexxInstructionSelect::matchEnd(RexxInstructionEnd *partner, LanguageParser
 void RexxInstructionSelect::addWhen(RexxInstructionIf *when)
 {
     // just add to the queue
-    whenList->push(((RexxObject *)when);
+    whenList->push((RexxObject *)when);
 }
 
 
@@ -275,7 +275,7 @@ void RexxInstructionSelect::setOtherwise(RexxInstructionOtherwise *_otherwise)
  *
  * @param name   The optional label name.
  */
-RexxInstructionSelect::RexxInstructionSelectCase(RexxString *name, RexxObject *expr)
+RexxInstructionSelectCase::RexxInstructionSelectCase(RexxString *name, RexxObject *expr)
 {
     // we keep track of each WHEN that is added to the select.
     // once we get the END instruction, we can update each of the WHENs
@@ -295,7 +295,7 @@ void RexxInstructionSelectCase::live(size_t liveMark)
 {
     // must be first object marked
     memory_mark(nextInstruction);
-    memory_mark(caseExpr)
+    memory_mark(caseExpr);
     memory_mark(whenList);
     memory_mark(end);
     memory_mark(otherwise);
@@ -329,7 +329,7 @@ void RexxInstructionSelectCase::liveGeneral(MarkReason reason)
  */
 void RexxInstructionSelectCase::flatten(RexxEnvelope *envelope)
 {
-    setUpFlatten(RexxInstructionSelect)
+    setUpFlatten(RexxInstructionSelectCase)
 
     flattenRef(nextInstruction);
     flattenRef(whenList);

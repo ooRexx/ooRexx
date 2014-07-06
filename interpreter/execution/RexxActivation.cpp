@@ -860,63 +860,72 @@ size_t RexxActivation::processTraceSetting(size_t traceSetting)
     size_t flags = 0;
     switch (traceSetting & LanguageParser::TRACE_DEBUG_MASK)
     {
-        case LanguageParser::DEBUG_ON:                     /* turn on interactive debug         */
-            /* switch the setting on             */
+        // We've had the ? interactive debug prefix. Turn on debug
+        case LanguageParser::DEBUG_ON:
             flags |= trace_debug;
             break;
 
-        case LanguageParser::DEBUG_OFF:                    /* turn off interactive debug        */
-            /* switch the setting off            */
+        // Need to turn debug off
+        case LanguageParser::DEBUG_OFF:
             flags &= ~trace_debug;
             break;
+
         // These two have no meaning in a staticically defined situation, so
         // they'll need to be handled at runtime.
-        case LanguageParser::DEBUG_TOGGLE:                 /* toggle interactive debug setting  */
-        case LanguageParser::DEBUG_IGNORE:                 /* no changes to debug setting       */
+        case LanguageParser::DEBUG_TOGGLE:                 // toggle interactive debug setting
+        case LanguageParser::DEBUG_IGNORE:                 // no changes to debug setting...might change trace setting.
             break;
     }
+
     // now optimize the trace setting flags
     switch (traceSetting&LanguageParser::TRACE_SETTING_MASK)
     {
-        case LanguageParser::TRACE_ALL:                    /* TRACE ALL;                        */
-                                             /* trace instructions, labels and    */
-                                             /* all commands                      */
+        // Trace all instructions, labels, and commands
+        case LanguageParser::TRACE_ALL:
             flags |= (trace_all | trace_labels | trace_commands);
             break;
 
-        case LanguageParser::TRACE_COMMANDS:               /* TRACE COMMANDS;                   */
+        // Trace just commands
+        case LanguageParser::TRACE_COMMANDS:
             flags |= trace_commands;
             break;
 
-        case LanguageParser::TRACE_LABELS:                 /* TRACE LABELS                      */
+        // Trace label instructions
+        case LanguageParser::TRACE_LABELS:
             flags |= trace_labels;
             break;
 
-        case LanguageParser::TRACE_NORMAL:                 /* TRACE NORMAL                      */
-        case LanguageParser::TRACE_FAILURES:               /* TRACE FAILURES                    */
-                                             /* just trace command failures       */
+        // Trace NORMAL and TRACE FAILURES are the same...trace commands
+        // with failure return codes.
+        case LanguageParser::TRACE_NORMAL:
+        case LanguageParser::TRACE_FAILURES:
             flags |= trace_failures;
             break;
 
-        case LanguageParser::TRACE_ERRORS:                 /* TRACE ERRORS                      */
-                                             /* trace command failures and error  */
+        // Trace commands with error and failure return codes.
+        case LanguageParser::TRACE_ERRORS:
             flags |= (trace_failures | trace_errors);
             break;
 
-        case LanguageParser::TRACE_RESULTS:                /* TRACE RESULTS                     */
+        // Trace ALL + all expression results
+        case LanguageParser::TRACE_RESULTS:
             flags |= (trace_all | trace_labels | trace_results | trace_commands);
             break;
 
-        case LanguageParser::TRACE_INTERMEDIATES:          /* TRACE INTERMEDIATES               */
-                                             /* trace just about every things     */
+        // Trace RESULTS + intermediate expression values
+        case LanguageParser::TRACE_INTERMEDIATES:
             flags |= (trace_all | trace_labels | trace_results | trace_commands | trace_intermediates);
             break;
 
-        case LanguageParser::TRACE_OFF:                    /* TRACE OFF                         */
-            flags = trace_off;               // turn of all trace options, including debug flags
+        // Turn off all tracing, including debug options
+        case LanguageParser::TRACE_OFF:
+            flags = trace_off;
             break;
 
-        case LanguageParser::TRACE_IGNORE:                 /* don't change trace setting        */
+        // don't change the trace setting...used when we are only changing
+        // a debug option without changing the tracing mode (e.g., typing "trace ?" to toggle
+        // debug mode).
+        case LanguageParser::TRACE_IGNORE:
             break;
     }
     return flags;

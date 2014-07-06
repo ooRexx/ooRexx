@@ -3044,7 +3044,7 @@ void LanguageParser::error(int errorcode)
     ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, OREF_NULL, OREF_NULL);
 }
 
-void LanguageParser::error(int errorcode, SourceLocation &location, RexxArray *subs)
+void LanguageParser::error(int errorcode, const SourceLocation &location, RexxArray *subs)
 {
     // set the error location.  This location is picked up from the
     // parse context stack frame we set up before we started
@@ -3261,11 +3261,12 @@ RexxObject *LanguageParser::parseLogical(RexxToken *_first, int terminators)
  */
 bool LanguageParser::parseTraceSetting(RexxString *value, size_t &newSetting, size_t &debugFlags, char &badOption)
 {
-    size_t setting = TRACE_IGNORE;       /* don't change trace setting yet    */
-    size_t debug = DEBUG_IGNORE;         /* and the default debug change      */
+    size_t setting = TRACE_IGNORE;       // don't change trace setting yet
+    size_t debug = DEBUG_IGNORE;         // and the default debug change
 
-    size_t length = value->getLength();  /* get the string length             */
-    /* null string?                      */
+    size_t length = value->getLength();
+
+    // null string?  This just turns tracing off.
     if (length == 0)
     {
         setting = TRACE_NORMAL;           /* use default trace setting         */
@@ -3273,74 +3274,81 @@ bool LanguageParser::parseTraceSetting(RexxString *value, size_t &newSetting, si
     }
     else
     {
-        /* start at the beginning            */
-        /* while more length to process      */
-        /* step one each character           */
+        // scan the characters.  We only recognize the first characters of
+        // words, but this can also have a prefix.
         for (size_t _position = 0; _position < length; _position++)
         {
-
-            /* process the next character        */
             switch (value->getChar(_position))
             {
-
-                case '?':                      /* debug toggle character            */
-                    /* already toggling?                 */
+                // Toggle the debug character...we can have any number of these, we
+                // only perform an operation if we have an odd number of them.
+                case '?':
                     if (debug == DEBUG_TOGGLE)
                     {
-                        debug = DEBUG_IGNORE;     /* this is back to no change at all  */
+                        debug = DEBUG_IGNORE;
                     }
                     else
                     {
-                        debug = DEBUG_TOGGLE;     /* need to toggle the debug mode     */
+                        debug = DEBUG_TOGGLE;
                     }
-                    continue;                    /* go loop again                     */
+                    continue;
 
-                case 'a':                      /* TRACE ALL                         */
+                // TRACE ALL
+                case 'a':
                 case 'A':
                     setting = TRACE_ALL;
                     break;
 
-                case 'c':                      /* TRACE COMMANDS                    */
+                // TRACE COMMANDS
+                case 'c':
                 case 'C':
                     setting = TRACE_COMMANDS;
                     break;
 
-                case 'l':                      /* TRACE LABELS                      */
+                // TRACE LABELS
+                case 'l':
                 case 'L':
                     setting = TRACE_LABELS;
                     break;
 
-                case 'e':                      /* TRACE ERRORS                      */
+                // TRACE ERRORS
+                case 'e':
                 case 'E':
                     setting = TRACE_ERRORS;
                     break;
 
-                case 'f':                      /* TRACE FAILURES                    */
+                // TRACE FAILURES
+                case 'f':
                 case 'F':
                     setting = TRACE_FAILURES;
                     break;
 
-                case 'n':                      /* TRACE NORMAL                      */
+                // TRACE NORMAL
+                case 'n':
                 case 'N':
                     setting = TRACE_NORMAL;
                     break;
 
-                case 'o':                      /* TRACE OFF                         */
+                // TRACE OFF
+                case 'o':
                 case 'O':
                     setting = TRACE_OFF;
                     break;
 
-                case 'r':                      /* TRACE RESULTS                     */
+                // TRACE RESULTS
+                case 'r':
                 case 'R':
                     setting = TRACE_RESULTS;
                     break;
 
-                case 'i':                      /* TRACE INTERMEDIATES               */
+                // TRACE INTERMEDIATES
+                case 'i':
                 case 'I':
                     setting = TRACE_INTERMEDIATES;
                     break;
 
-                default:                       /* unknown trace setting             */
+                // unknown trace setting
+                default:
                     // each context handles it's own error reporting, so give back the
                     // information needed for the message.
                     badOption = value->getChar(_position);

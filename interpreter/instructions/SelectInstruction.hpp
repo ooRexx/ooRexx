@@ -46,6 +46,7 @@
 
 #include "RexxInstruction.hpp"
 
+class LanguageParser;
 class RexxInstructionOtherwise;
 
 /**
@@ -67,7 +68,7 @@ public:
     virtual void execute(RexxActivation *, RexxExpressionStack *);
 
     // required by RexxBlockinstruction;
-    virtual void matchEnd(RexxInstructionEnd *, RexxSource *);
+    virtual void matchEnd(RexxInstructionEnd *, LanguageParser *);
     virtual bool isLoop();
     virtual void terminate(RexxActivation *, RexxDoBlock *);
 
@@ -77,8 +78,6 @@ public:
     // specific to the SELECT instruction
     void addWhen(RexxInstructionIf *);
     void setOtherwise(RexxInstructionOtherwise *);
-
-protected:
 
     RexxQueue                *whenList;  // list of WHEN end targets
     RexxInstructionOtherwise *otherwise; // OTHERWISE matching the SELECT
@@ -101,8 +100,6 @@ public:
 
     // required by RexxInstructon
     virtual void execute(RexxActivation *, RexxExpressionStack *);
-
-protected:
 
     RexxObject *caseExpr;  // the SELECT CASE expression.
 };

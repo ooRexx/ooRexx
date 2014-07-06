@@ -378,21 +378,23 @@ KeywordEntry RexxToken::subDirectives[] =
  * @return The numeric identifier for the constant.  Returns 0 if not
  *         found in the target table.
  */
-int RexxToken::resolveKeyword(RexxString *token, KeywordEntry *table, int table_size)
+int RexxToken::resolveKeyword(RexxString *token, KeywordEntry *table, size_t tableSize)
 {
     const char *name = token->getStringData();
     stringsize_t length = token->getLength();
 
     // search this table using a binary search
 
-    int lower = 0;                             // set initial lower bound
-    int upper = tableSize - 1;                 // set the upper bound
-    char firstChar = *name;                    // get the first character for fast compares
+    size_t lower = 0;                             // set initial lower bound
+    size_t upper = tableSize - 1;                 // set the upper bound
+    char firstChar = *name;                       // get the first character for fast compares
 
     // loop until the range converges
     while (lower <= upper)
+    {
         // find a new middle location
-        int middle = lower + ((upper - lower) / 2);
+        size_t middle = lower + ((upper - lower) / 2);
+
         // only compare on the name if the first character matches
         if (*table[middle].name == firstChar)
         {
@@ -432,14 +434,15 @@ int RexxToken::resolveKeyword(RexxString *token, KeywordEntry *table, int table_
         // still on the first char compares
         else if (*table[middle].name < firstChar)
         {
-            lower = middle + 1;              /* set new lower bound        */
+            lower = middle + 1;
         }
-        else                               /* going down                 */
+        else
         {
-            upper = middle - 1;              /* set new upper bound        */
+            upper = middle - 1;
         }
     }
-    return 0;                            /* return failure flag        */
+    // zero is not found
+    return 0;
 }
 
 
@@ -458,7 +461,7 @@ InstructionSubKeyword RexxToken::subKeyword()
     {
         return SUBKEY_NONE;
     }
-    return resolveKeyword(value, subKeywords, tabSize(subKeywords));
+    return static_cast<InstructionSubKeyword>(resolveKeyword(stringValue, subKeywords, tabSize(subKeywords)));
 }
 
 /**
@@ -473,7 +476,7 @@ InstructionKeyword RexxToken::keyword()
     {
         return KEYWORD_NONE;
     }
-    return resolveKeyword(value, keywordInstructions, tabSize(keywordInstructions));
+    return static_cast<InstructionKeyword>(resolveKeyword(stringValue, keywordInstructions, tabSize(keywordInstructions)));
 }
 
 /**
@@ -488,7 +491,7 @@ BuiltinCode RexxToken::builtin()
     {
         return NO_BUILTIN;
     }
-    return resolveKeyword(value, builtinFunctions, tabSize(builtinFunctions));
+    return static_cast<BuiltinCode>(resolveKeyword(stringValue, builtinFunctions, tabSize(builtinFunctions)));
 }
 
 
@@ -504,7 +507,7 @@ ConditionKeyword RexxToken::condition()
     {
         return CONDITION_NONE;
     }
-    return resolveKeyword(value, conditionKeywords, tabSize(conditionKeywords));
+    return static_cast<ConditionKeyword>(resolveKeyword(stringValue, conditionKeywords, tabSize(conditionKeywords)));
 }
 
 /**
@@ -519,7 +522,7 @@ InstructionSubKeyword RexxToken::parseOption()
     {
         return SUBKEY_NONE;
     }
-    return resolveKeyword(value, parseOptions, tabSize(parseOptions));
+    return static_cast<InstructionSubKeyword>(resolveKeyword(stringValue, parseOptions, tabSize(parseOptions)));
 }
 
 /**
@@ -534,7 +537,7 @@ DirectiveKeyword RexxToken::keyDirective()
     {
         return DIRECTIVE_NONE;
     }
-    return resolveKeyword(value, directives, tabSize(directives));
+    return static_cast<DirectiveKeyword>(resolveKeyword(stringValue, directives, tabSize(directives)));
 }
 
 /**
@@ -549,7 +552,7 @@ DirectiveSubKeyword RexxToken::subDirective()
     {
         return SUBDIRECTIVE_NONE;
     }
-    return resolveKeyword(token->value, subDirectives, tabSize(subDirectives));
+    return static_cast<DirectiveSubKeyword>(resolveKeyword(stringValue, subDirectives, tabSize(subDirectives)));
 }
 
 
@@ -562,5 +565,5 @@ DirectiveSubKeyword RexxToken::subDirective()
  */
 BuiltinCode RexxToken::resolveBuiltin(RexxString *value)
 {
-    return (BuiltinCode)resolveKeyword(value, builtinFunctions, tabSize(builtinFunctions));
+    return static_cast<BuiltinCode>(resolveKeyword(value, builtinFunctions, tabSize(builtinFunctions)));
 }

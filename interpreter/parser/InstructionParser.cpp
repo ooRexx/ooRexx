@@ -3329,7 +3329,7 @@ RexxInstruction *LanguageParser::traceNew()
                 }
                 else
                 {
-                    setting = 0;                 /* not a normal setting situation    */
+                    setting = DEBUG_SKIP;  // turn on the skip flag
                 }
             }
         }

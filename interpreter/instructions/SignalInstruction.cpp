@@ -46,13 +46,14 @@
 #include "RexxActivation.hpp"
 #include "DirectoryClass.hpp"
 #include "SignalInstruction.hpp"
+#include "MethodArguments.hpp"
 
 /**
  * Constructor for a SIGNAL instruction.
  *
  * @param labelName The name of the target label.
  */
-RexxInstructionSignal::RexxInstructionSignal(RexxObject *labelName)
+RexxInstructionSignal::RexxInstructionSignal(RexxString *labelName)
 {
     targetName = labelName;
 }
@@ -116,7 +117,7 @@ void RexxInstructionSignal::resolve(RexxDirectory *labels)
     {
         // this links the signal instruction directly to the label
         // instruction that is the target.
-        targetInstruction = (RexxInstruction *)labels->at(targetName));
+        targetInstruction = (RexxInstruction *)labels->at(targetName);
     }
 }
 
@@ -136,9 +137,9 @@ void RexxInstructionSignal::execute(RexxActivation *context, RexxExpressionStack
 
     // the target should have been resolved during the resolve phase.
     // if we don't have anything, raise the error now
-    if (targetInstructon == OREF_NULL)
+    if (targetInstruction == OREF_NULL)
     {
-        reportException(Error_Label_not_found_name, name);
+        reportException(Error_Label_not_found_name, targetName);
     }
     // tell the activation we're changing course.  Debug pauses
     // are handled after the signal
@@ -299,7 +300,7 @@ void RexxInstructionSignalOn::resolve(RexxDirectory *labels)
     {
         // see if there is a matching label.  If we get something,
         // we're finished.
-        targetInstruction = (RexxInstruction *)labels->at((RexxString *)targetName));
+        targetInstruction = (RexxInstruction *)labels->at((RexxString *)targetName);
     }
 }
 

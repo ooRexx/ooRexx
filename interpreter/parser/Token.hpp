@@ -62,12 +62,12 @@ public:
     {
         name = n;
         length = strlen(name);
-        keyword_code = code;
+        keywordCode = code;
     }
 
     const char *name;                       // the keyword name
     size_t      length;                     // length of the keyword string
-    int         keyword_code;               // the string-to-identifier mapping
+    int         keywordCode;                // the string-to-identifier mapping
 };
 
 
@@ -554,7 +554,7 @@ class RexxToken : public RexxInternalObject
 
 protected:
 
-    static int resolveKeyword(RexxString *token, KeywordEntry *table, int table_size);
+    static int resolveKeyword(RexxString *token, KeywordEntry *table, size_t table_size);
 
     RexxString   *stringValue;             // token string value
     TokenClass    classId;                 // class of token
