@@ -36,7 +36,6 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 #include <windows.h>
-#include <stdlib.h>
 
 #include "RexxCore.h"
 #include "StringClass.hpp"

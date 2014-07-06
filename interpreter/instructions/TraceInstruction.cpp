@@ -41,7 +41,6 @@
 /* Primitive Trace Parse Class                                                */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "RexxActivation.hpp"
 #include "TraceInstruction.hpp"

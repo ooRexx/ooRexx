@@ -41,8 +41,6 @@
 /* Primitive Smart Buffer Class                                               */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
-#include <string.h>
 #include "RexxCore.h"
 #include "BufferClass.hpp"
 #include "RexxSmartBuffer.hpp"

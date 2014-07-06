@@ -41,7 +41,6 @@
 /* Base methods shared amoung all of the DO/LOOP instruction subclasses       */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "RexxInstruction.hpp"
 #include "StringClass.hpp"

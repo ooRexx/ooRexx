@@ -47,8 +47,6 @@
 /*        used to maintain this situation.                                    */
 /*                                                                            */
 /******************************************************************************/
-#include <ctype.h>
-#include <string.h>
 #include "RexxCore.h"
 #include "RexxActivationStack.hpp"
 

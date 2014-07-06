@@ -81,7 +81,7 @@ RexxInstructionMessage::RexxInstructionMessage(RexxExpressionMessage *message, R
     // we add an additional first argument here, so add one to the argument count
     argumentCount = message->argumentCount + 1;
     // the assignment expression is the first argument
-    arguments[0] = expresson;
+    arguments[0] = expression;
     for (size_t i = 1; i < argumentCount; i++)
     {
         arguments[i] = message->arguments[i - 1];

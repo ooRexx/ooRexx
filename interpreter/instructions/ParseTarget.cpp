@@ -41,7 +41,6 @@
 /* Primitive Procedure Parse Trigger Class                                    */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "ArrayClass.hpp"

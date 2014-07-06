@@ -47,7 +47,7 @@
 #include "RexxVariableDictionary.hpp"
 #include "RexxActivation.hpp"
 #include "ForwardInstruction.hpp"
-
+#include "MethodArguments.hpp"
 
 /**
  * Initialize a FORWARD instruction.
@@ -204,7 +204,7 @@ void RexxInstructionForward::execute(RexxActivation *context, RexxExpressionStac
     {
         // this is an array of expressions, so we need to evaluate all of these
         count = array->size();
-        for (i = 1; i <= count; i++)
+        for (size_t i = 1; i <= count; i++)
         {
             RexxObject *argElement = array->get(i);
             // a real argument?                  */
@@ -223,7 +223,7 @@ void RexxInstructionForward::execute(RexxActivation *context, RexxExpressionStac
         _arguments = stack->arguments(count);
     }
     // now have the context forward this
-    ProtectedObject result = context->forward(_target, _message, _superClass, _arguments, count, continueExecution);
+    ProtectedObject result = context->forward(_target, (RexxString *)_message, _superClass, _arguments, count, continueExecution);
     // if we continued, then we may need to set the RESULT variable in the current context.
     if (continueExecution)
     {
@@ -231,7 +231,7 @@ void RexxInstructionForward::execute(RexxActivation *context, RexxExpressionStac
         if (!result.isNull())
         {
             context->traceResult((RexxObject *)result);
-            context->setLocalVariable(OREF_RESULT, VARIABLE_RESULT, (RexxObject *result);
+            context->setLocalVariable(OREF_RESULT, VARIABLE_RESULT, result);
         }
         // ne result returned, so we drop the RESULT variable
         else

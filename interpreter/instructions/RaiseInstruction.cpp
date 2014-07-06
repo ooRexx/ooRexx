@@ -41,7 +41,6 @@
 /* Primitive Raise Parse Class                                                */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "DirectoryClass.hpp"

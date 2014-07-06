@@ -41,7 +41,6 @@
 /* Primitive Translator Abstract Directive Code                               */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "LibraryDirective.hpp"
 #include "Clause.hpp"

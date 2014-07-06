@@ -39,9 +39,6 @@
 /*  wininit.c - dllentrypoint for oryxk.dll                                   */
 /*                                                                            */
 /******************************************************************************/
-#include <stdio.h>                          /* Get printf, FILE type, etc.    */
-#include <string.h>                         /* Get strcpy, strcat, etc.       */
-#include <stdlib.h>                         /* Get system, max_path etc...    */
 #include "RexxCore.h"
 #include "SystemInterpreter.hpp"
 #include "SysSemaphore.hpp"

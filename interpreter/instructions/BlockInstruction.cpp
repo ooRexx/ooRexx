@@ -42,7 +42,6 @@
 /* and SELECT.                                                                */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "RexxInstruction.hpp"
 #include "StringClass.hpp"

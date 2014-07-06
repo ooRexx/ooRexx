@@ -41,8 +41,6 @@
 /* Primitive Buffer Class                                                     */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
-#include <string.h>
 #include "RexxCore.h"
 #include "RexxActivity.hpp"
 #include "ActivityManager.hpp"

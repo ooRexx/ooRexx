@@ -41,7 +41,6 @@
 /* Primitive Say Parse Class                                                  */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "RexxActivity.hpp"

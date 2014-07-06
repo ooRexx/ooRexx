@@ -41,12 +41,11 @@
 /* Primitive Options Parse Class                                              */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "RexxActivation.hpp"
 #include "OptionsInstruction.hpp"
-#include "RexxArray.hpp"
+#include "ArrayClass.hpp"
 
 /**
  * Constructor for an OPTIONS instruction

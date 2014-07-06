@@ -41,8 +41,6 @@
 /* Handlers for subcom callbacks                                              */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
-#include <string.h>
 #include "RexxCore.h"
 #include "CommandHandler.hpp"
 #include "RexxNativeActivation.hpp"

@@ -42,8 +42,6 @@
 /*                                                                            */
 /******************************************************************************/
 
-#include <stdlib.h>
-#include <ctype.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "DirectoryClass.hpp"

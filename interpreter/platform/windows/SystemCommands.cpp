@@ -45,10 +45,7 @@
 /*  Internal routines:                                                        */
 /*    sys_command - Run a command through system command processor.           */
 /******************************************************************************/
-#include <string.h>                    /* Get strcpy, strcat, etc.       */
-
 #include <process.h>
-#include <stdlib.h>
 
 #include "RexxCore.h"                    /* global REXX declarations     */
 #include "StringClass.hpp"

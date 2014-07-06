@@ -41,7 +41,6 @@
 /* IF instruction executable class                                            */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "RexxActivation.hpp"
 #include "IfInstruction.hpp"
@@ -181,8 +180,8 @@ void RexxInstructionCaseWhen::execute(RexxActivation *context, RexxExpressionSta
     // get the case expression
     RexxObject *caseValue = doBlock->getCase();
     // and the compare target (which needs tracing, but only as an intermediate
-    RexxObject *compareValue = condition->evaluate(context, stack)
-    context->traceIntermediate(compareValue);
+    RexxObject *compareValue = condition->evaluate(context, stack);
+    context->traceResult(compareValue);
 
     // now perform the compare using the "==" operator method.
     // NOTE that the case value is the left hand side.

@@ -46,7 +46,6 @@
 #include "SystemInterpreter.hpp"
 #include "RexxActivation.hpp"
 
-#include <stdio.h>
 #include <fcntl.h>
 #include <io.h>
 

@@ -50,8 +50,6 @@
 #include "SystemInterpreter.hpp"
 #include "Interpreter.hpp"
 
-#include <stdlib.h>
-
 ULONG SystemInterpreter::exceptionHostProcessId = 0;
 HANDLE SystemInterpreter::exceptionHostProcess = NULL;
 bool SystemInterpreter::exceptionConsole = false;

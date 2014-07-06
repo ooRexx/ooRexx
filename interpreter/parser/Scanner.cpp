@@ -41,8 +41,6 @@
 /* Scanner portion of the REXX Source File Class                              */
 /*                                                                            */
 /******************************************************************************/
-#include <ctype.h>
-#include <string.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "ArrayClass.hpp"

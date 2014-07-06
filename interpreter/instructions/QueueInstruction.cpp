@@ -41,7 +41,6 @@
 /* Queue and Push instruction classes.                                        */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "RexxActivation.hpp"

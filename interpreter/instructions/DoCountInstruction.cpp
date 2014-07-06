@@ -41,7 +41,6 @@
 /* All DO/LOOP count instruction variants                                     */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "DoInstruction.hpp"
 #include "DoBlock.hpp"

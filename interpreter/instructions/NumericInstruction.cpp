@@ -41,12 +41,12 @@
 /* Primitive Numeric Parse Class                                              */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "RexxActivation.hpp"
 #include "NumericInstruction.hpp"
 #include "Token.hpp"
+#include "MethodArguments.hpp"
 
 /**
  * Constructor for a NUMERIC instruction
@@ -56,7 +56,7 @@
  *               function.
  * @param flags  A set of flags that drive the execution function.
  */
-RexxInstructionNumeric::RexxInstructionNumeric(RexxObject *_expression, std::bitset<32> flags)
+RexxInstructionNumeric::RexxInstructionNumeric(RexxObject *_expression, FlagSet<NumericInstructionFlags, 32> flags)
 {
     expression = _expression;
     numericFlags = flags;
@@ -70,10 +70,6 @@ RexxInstructionNumeric::RexxInstructionNumeric(RexxObject *_expression, std::bit
  */
 void RexxInstructionNumeric::execute(RexxActivation *context, RexxExpressionStack *stack )
 {
-    RexxObject  *result;                 /* expression evaluation result      */
-    RexxString  *stringResult;           /* converted string                  */
-    stringsize_t setting;                /* binary form of the setting        */
-
     // trace if necessary
     context->traceInstruction(this);
 
@@ -93,6 +89,8 @@ void RexxInstructionNumeric::execute(RexxActivation *context, RexxExpressionStac
             // need to evaluate
             RexxObject *result = expression->evaluate(context, stack);
             context->traceResult(result);
+
+            size_t setting;
 
             // this must be an a positive numeric value
             if (!result->requestUnsignedNumber(setting, number_digits()) || setting < 1)
@@ -121,11 +119,14 @@ void RexxInstructionNumeric::execute(RexxActivation *context, RexxExpressionStac
             // get the expression value and convert to a numeric
             RexxObject *result = expression->evaluate(context, stack);
             context->traceResult(result);  /* trace if necessary                */
+
+            size_t setting;
                                            /* bad value?                        */
             if (!result->requestUnsignedNumber(setting, number_digits()))
             {
                 reportException(Error_Invalid_whole_number_fuzz, result);
             }
+
             // cannot be greater than or equal to digits
             if (setting >= context->digits())
             {
@@ -156,7 +157,7 @@ void RexxInstructionNumeric::execute(RexxActivation *context, RexxExpressionStac
         {
             // evaluate the expression and get as a string value.
             RexxObject *result = expression->evaluate(context, stack);
-            stringResult = REQUEST_STRING(result);
+            RexxString *stringResult = REQUEST_STRING(result);
             context->traceResult(stringResult);
 
             //  Scientific form?

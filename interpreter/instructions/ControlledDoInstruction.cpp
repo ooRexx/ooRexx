@@ -41,7 +41,6 @@
 /* All controlled DO/LOOP variants                                            */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "DoInstruction.hpp"
 #include "DoBlock.hpp"

@@ -41,7 +41,6 @@
 /* Primitive Select Parse Class                                               */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "RexxActivity.hpp"
 #include "RexxActivation.hpp"

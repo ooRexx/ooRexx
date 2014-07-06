@@ -48,6 +48,7 @@ class LanguageParser;
 
 class RexxExpressionMessage : public RexxVariableBase
 {
+ friend class RexxInstructionMessage;
  public:
     void *operator new(size_t, size_t);
     inline void *operator new(size_t size, void *ptr) {return ptr;};

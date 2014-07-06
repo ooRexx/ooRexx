@@ -41,7 +41,6 @@
 /* Primitive Translator Abstract Instruction Code                             */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "RexxInstruction.hpp"
 #include "Clause.hpp"

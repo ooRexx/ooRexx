@@ -41,7 +41,6 @@
 /* Simple (non-looping) Do instruction                                        */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "DoInstruction.hpp"
 #include "DoBlock.hpp"

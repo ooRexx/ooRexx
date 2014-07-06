@@ -46,7 +46,6 @@
 /*                                                                           */
 /*****************************************************************************/
 
-#include <stdio.h>
 #include <termios.h>
 #include "RexxCore.h"
 #include "SystemInterpreter.hpp"

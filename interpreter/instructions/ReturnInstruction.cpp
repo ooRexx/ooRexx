@@ -41,7 +41,6 @@
 /* Primitive Return Parse Class                                               */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "RexxActivation.hpp"
 #include "ReturnInstruction.hpp"

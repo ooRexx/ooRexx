@@ -41,7 +41,6 @@
 /* Primitive USE STRICT instruction class                                     */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "ArrayClass.hpp"
 #include "QueueClass.hpp"

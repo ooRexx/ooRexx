@@ -45,13 +45,14 @@
 #define Included_RexxInstructionNumeric
 
 #include "RexxInstruction.hpp"
-#include <bitset>
+#include "FlagSet.hpp"
 
-enum
+typedef enum
 {
     numeric_engineering,
     numeric_digits,
     numeric_fuzz,
+    numeric_form,
     numeric_form_default
 } NumericInstructionFlags;
 
@@ -62,11 +63,12 @@ class RexxInstructionNumeric : public RexxInstructionExpression
     inline void operator delete(void *) { }
     inline void operator delete(void *, void *) { }
 
-    RexxInstructionNumeric(RexxObject *, unsigned short, size_t);
+    RexxInstructionNumeric(RexxObject *, FlagSet<NumericInstructionFlags, 32>);
     inline RexxInstructionNumeric(RESTORETYPE restoreType) { ; };
     virtual void execute(RexxActivation *, RexxExpressionStack *);
 
  protected:
-    std::bitset<32>    numericFlags;
+
+    FlagSet<NumericInstructionFlags, 32> numericFlags;
 };
 #endif

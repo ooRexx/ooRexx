@@ -40,10 +40,6 @@
 /*  Function:  Queue support routines                                */
 /*                                                                   */
 /*********************************************************************/
-
-#include <string.h>                    /* Get strcpy, strcat, etc.          */
-#include <stdlib.h>
-
 #include "RexxCore.h"                  /* global REXX declarations          */
 #include "StringClass.hpp"
 

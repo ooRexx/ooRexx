@@ -41,7 +41,6 @@
 /* Primitive Assignment Parse Class                                           */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "ExpressionBaseVariable.hpp"
 #include "RexxActivation.hpp"

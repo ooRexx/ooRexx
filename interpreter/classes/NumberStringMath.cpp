@@ -41,10 +41,6 @@
 /* Arithemtic function for the NumberString Class                             */
 /*                                                                            */
 /******************************************************************************/
-#include <ctype.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "NumberStringClass.hpp"

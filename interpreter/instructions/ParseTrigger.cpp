@@ -41,7 +41,6 @@
 /* PARSE instruction trigger operation.                                       */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "QueueClass.hpp"
