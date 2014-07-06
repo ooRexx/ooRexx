@@ -71,7 +71,7 @@ void *RequiresDirective::operator new(size_t size)
 RequiresDirective::RequiresDirective(RexxString *n, RexxString *l, RexxClause *clause) : RexxDirective(clause, KEYWORD_REQUIRES)
 {
     name = n;
-    label = l
+    label = l;
 }
 
 /**
@@ -111,9 +111,9 @@ void RequiresDirective::flatten(RexxEnvelope *envelope)
 {
     setUpFlatten(RequiresDirective)
 
-        flattenRef(nextInstruction);
-        flattenRef(name);
-        flattenRef(label);
+    flattenRef(nextInstruction);
+    flattenRef(name);
+    flattenRef(label);
 
     cleanUpFlatten
 }
@@ -128,5 +128,7 @@ void RequiresDirective::flatten(RexxEnvelope *envelope)
  */
 void RequiresDirective::install(RexxActivation *context)
 {
-    context->loadRequires(name, label, this);
+
+    // TODO:  Need to sort out how the label is handled at load time
+    context->loadRequires(name, this);
 }

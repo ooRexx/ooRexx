@@ -92,11 +92,11 @@ class RexxBehaviour : public RexxInternalObject
 
     inline RexxIdentityTable  *getScopes()       { return scopes; };
     inline RexxTable  *getMethodDictionary()   { return methodDictionary; };
-    inline void        setMethodDictionary(RexxTable * m) { setField(methodDictionary, m); };
-    inline void        setInstanceMethodDictionary(RexxTable * m) { setField(instanceMethodDictionary, m); };
+    inline void        setMethodDictionary(RexxTable * m);
+    inline void        setInstanceMethodDictionary(RexxTable * m);
     inline RexxTable  *getInstanceMethodDictionary()   { return instanceMethodDictionary; };
     inline RexxClass  *getOwningClass()        { return owningClass;};
-    inline void        setOwningClass(RexxClass *c)  { setField(owningClass,  c); };
+    inline void        setOwningClass(RexxClass *c);
 
     inline void  setClassType(size_t n) { classType = (uint16_t)n; }
     inline size_t getClassType()  { return (size_t)classType; }
@@ -158,6 +158,7 @@ class RexxBehaviour : public RexxInternalObject
     };
 
 
+    // TODO:  Don't try packing these any more...counter productive.
     uint16_t classType;                   // primitive class identifier
     uint16_t behaviourFlags;              // various behaviour flag types
     RexxIdentityTable  *scopes;           // scopes table

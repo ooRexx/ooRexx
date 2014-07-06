@@ -47,6 +47,9 @@
 #include "RexxInstruction.hpp"
 #include "ParseTrigger.hpp"
 #include "FlagSet.hpp"
+#include "Token.hpp"
+
+class RexxQueue;
 
 typedef enum
 {
@@ -55,13 +58,15 @@ typedef enum
     parse_caseless             // doing a caseless compare
 } ParseFlags;
 
-class RexxInstructionParse : public RexxInstruction {
+class RexxInstructionParse : public RexxInstruction
+{
  public:
     inline void *operator new(size_t size, void *ptr) {return ptr;}
     inline void operator delete(void *) { }
     inline void operator delete(void *, void *) { }
 
-    RexxInstructionParse(RexxObject *, unsigned short, size_t, size_t, RexxQueue *);
+    RexxInstructionParse(RexxObject *expr, InstructionSubKeyword source,
+        FlagSet<ParseFlags, 32>, size_t templateCount, RexxQueue *parse_template);
     inline RexxInstructionParse(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
@@ -71,7 +76,7 @@ class RexxInstructionParse : public RexxInstruction {
     void execute(RexxActivation *, RexxExpressionStack *);
 
  protected:
-    FlagSet<ParseFlags, 32>   parseFlags;        // parsing control flags
+    FlagSet<ParseFlags, 32>  parseFlags;         // parsing control flags
     InstructionSubKeyword stringSource;          // where the parsed data originates
     RexxObject       *expression;                // parse value expression
     size_t            trigger_count;             // number of triggers

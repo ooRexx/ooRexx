@@ -189,8 +189,8 @@ MethodClass *MethodClass::newScope(RexxClass  *_scope)
     else
     {
         // we need to return a copy of the method with the scope set
-        MethodClass *newMethod= (MethodClass *)this->copy();
-        OrefSet(newMethod, newMethod->scope, _scope);
+        MethodClass *newMethod= (MethodClass *)copy();
+        setOtherField(newMethod, scope, _scope);
         return newMethod;
     }
 }

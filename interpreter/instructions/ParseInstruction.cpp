@@ -68,7 +68,7 @@
  *               The source of the parsing templates.
  */
 RexxInstructionParse::RexxInstructionParse(RexxObject *_expression, InstructionSubKeyword string_source,
-    std::bitset<32> flags, size_t templateCount, RexxQueue *parse_template )
+    FlagSet<ParseFlags, 32> flags, size_t templateCount, RexxQueue *parse_template )
 {
     expression = expression;
     parseFlags = flags;
@@ -146,8 +146,10 @@ void RexxInstructionParse::execute(RexxActivation *context, RexxExpressionStack 
     bool multiple = false;
 
     // default different pieces of source data information
-    RexxString *value = OREF_NULLSTRING;
-    RexxArray *argList = OREF_NULL;
+    RexxObject *value = OREF_NULLSTRING;
+    // TODO:  A small helper class that encapsulates this mode of argument passing
+    // might be useful.
+    RexxObject **argList = OREF_NULL;
     size_t argCount = 0;
 
     switch (stringSource)
@@ -203,7 +205,7 @@ void RexxInstructionParse::execute(RexxActivation *context, RexxExpressionStack 
         // PARSE VALUE expr WITH
         case SUBKEY_VALUE:
             // we should have an expression, but if not, use a NULLSTRING
-            if (>expression != OREF_NULL)
+            if (expression != OREF_NULL)
             {
                 value = expression->evaluate(context, stack);
             }

@@ -49,6 +49,8 @@
 #include "RexxActivation.hpp"
 #include "RaiseInstruction.hpp"
 #include "Interpreter.hpp"
+#include "MethodArguments.hpp"
+
 
 /**
  * Construct a RAISE instruction object.
@@ -68,7 +70,7 @@
  */
 RexxInstructionRaise::RexxInstructionRaise(RexxString *_condition, RexxObject *_expression,
     RexxObject *_description, RexxObject *_additional, RexxObject *_result,
-    std::bitset<32> flags)
+    FlagSet<RaiseInstructionFlags, 32> flags)
 {
     // just copy the argument information
     conditionName = _condition;
@@ -83,7 +85,7 @@ RexxInstructionRaise::RexxInstructionRaise(RexxString *_condition, RexxObject *_
 
         arrayCount = arrayItems->size();
         // copy each of the argument expressions
-        for (size_t i = 0, i < arrayCount; i++)
+        for (size_t i = 0; i < arrayCount; i++)
         {
             additional[i] = arrayItems->get(i + 1);
         }
@@ -166,7 +168,7 @@ void RexxInstructionRaise::execute(RexxActivation *context, RexxExpressionStack 
 
     // set defaults for anything we need to evaluate.
     RexxObject *_additional = OREF_NULL;
-    RexxObject *_description = OREF_NULL;
+    RexxString *_description = OREF_NULL;
     RexxObject *rc = OREF_NULL;
     RexxObject *_result = OREF_NULL;
 
@@ -179,7 +181,7 @@ void RexxInstructionRaise::execute(RexxActivation *context, RexxExpressionStack 
     }
     // syntax conditions have some special requirements, so process those
     // up front.
-    if (instructionFlags[syntax])
+    if (instructionFlags[raise_syntax])
     {
         // give this a default additional information of an empty array
         _additional = TheNullArray->copy();
@@ -199,7 +201,7 @@ void RexxInstructionRaise::execute(RexxActivation *context, RexxExpressionStack 
     }
 
     // Reasonable defaults are set up, now see if we have explicit things given
-    if (this->description != OREF_NULL)
+    if (description != OREF_NULL)
     {
         _description = (RexxString *)description->evaluate(context, stack);
     }
@@ -212,11 +214,11 @@ void RexxInstructionRaise::execute(RexxActivation *context, RexxExpressionStack 
         _additional = new_array(count);
         // push this on the eval stack for safekeeping
         stack->push(_additional);
-        for (i = 0; i < count; i++)
+        for (size_t i = 0; i < count; i++)
         {
             // we can have ommitted ones here, so only try to evaluate the
             // ones that have been specified
-            if (this->additional[i] != OREF_NULL)
+            if (additional[i] != OREF_NULL)
             {
                 ((RexxArray *)_additional)->put((additional[i])->evaluate(context, stack), i + 1);
             }

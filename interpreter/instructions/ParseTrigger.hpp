@@ -59,30 +59,30 @@ typedef enum
 class RexxTarget;
 class RexxVariableBase;
 
-class RexxTrigger : public RexxInternalObject {
+class RexxTrigger : public RexxInternalObject
+{
  public:
-  void        *operator new(size_t, int);
-  inline void *operator new(size_t size, void *ptr) {return ptr;};
-  inline void  operator delete(void *) { }
-  inline void  operator delete(void *, int) { }
-  inline void  operator delete(void *, void *) { ; }
+    void        *operator new(size_t, size_t);
+    inline void *operator new(size_t size, void *ptr) {return ptr;};
+    inline void  operator delete(void *, size_t) { }
+    inline void  operator delete(void *, void *) { ; }
 
-  RexxTrigger(ParseTriggerType, RexxObject *, size_t, RexxQueue *);
-  inline RexxTrigger(RESTORETYPE restoreType) { ; };
+    RexxTrigger(ParseTriggerType, RexxObject *, size_t, RexxQueue *);
+    inline RexxTrigger(RESTORETYPE restoreType) { ; };
 
-  virtual void live(size_t);
-  virtual void liveGeneral(MarkReason reason);
-  virtual void flatten(RexxEnvelope *);
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(RexxEnvelope *);
 
-  stringsize_t integerTrigger(RexxObject *);
-  RexxString *stringTrigger(RexxObject *);
-  void        parse(RexxActivation *, RexxExpressionStack *, RexxTarget *);
+    stringsize_t integerTrigger(RexxActivation *context, RexxExpressionStack *stack);
+    RexxString *stringTrigger(RexxActivation *context, RexxExpressionStack *stack);
+    void        parse(RexxActivation *, RexxExpressionStack *, RexxTarget *);
 
 protected:
 
-  ParseTriggerType  triggerType;       // type of trigger
-  RexxObject *value;                   // value associated with trigger (can be an expression)
-  size_t      variableCount;           // count of variables to assign after applying trigger
-  RexxVariableBase *variables[1];      // after applying trigger
+    ParseTriggerType  triggerType;       // type of trigger
+    RexxObject *value;                   // value associated with trigger (can be an expression)
+    size_t      variableCount;           // count of variables to assign after applying trigger
+    RexxVariableBase *variables[1];      // after applying trigger
 };
 #endif

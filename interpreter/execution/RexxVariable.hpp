@@ -45,6 +45,7 @@
 #define Included_RexxVariable
 
 #include "StringClass.hpp"
+#include "ObjectClass.hpp"
 
 class RexxVariable : public RexxInternalObject
 {
@@ -70,7 +71,7 @@ class RexxVariable : public RexxInternalObject
 
     inline void set(RexxObject *value)
     {
-        OrefSet(this, variableValue, value);
+        setField(variableValue, value);
         if (dependents != OREF_NULL)
         {
             notify();

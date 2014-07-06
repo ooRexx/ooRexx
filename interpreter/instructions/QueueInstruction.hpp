@@ -46,8 +46,6 @@
 
 #include "RexxInstruction.hpp"
 
-#define queue_lifo 0x01
-
 class RexxInstructionQueue : public RexxInstructionExpression
 {
  public:
@@ -56,7 +54,7 @@ class RexxInstructionQueue : public RexxInstructionExpression
     inline void  operator delete(void *, void *) { }
 
     inline RexxInstructionQueue(RESTORETYPE restoreType) { ; };
-    RexxInstructionQueue(RexxObject *, int);
+    RexxInstructionQueue(RexxObject *);
 
     virtual void execute(RexxActivation *, RexxExpressionStack *);
 };

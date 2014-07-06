@@ -48,6 +48,7 @@
 #include "ParseTrigger.hpp"
 #include "ParseTarget.hpp"
 #include "ExpressionBaseVariable.hpp"
+#include "MethodArguments.hpp"
 
 /**
  * Initialize a parsing trigger object.
@@ -200,7 +201,6 @@ void RexxTrigger::parse(RexxActivation *context, RexxExpressionStack *stack,
 
         // a positive relative movement.
         case TRIGGER_PLUS:
-            integer = integerTrigger(context, stack);
             target->forward(integerTrigger(context, stack));
             break;
 
@@ -233,7 +233,7 @@ void RexxTrigger::parse(RexxActivation *context, RexxExpressionStack *stack,
 
         // caseless string search
         case TRIGGER_MIXED:
-            target->caselessSearch(stringTrigger(context, stack)));
+            target->caselessSearch(stringTrigger(context, stack));
             // the string trigger was protected on the stack.  Remove it now
             stack->pop();
             break;

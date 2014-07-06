@@ -53,8 +53,6 @@
 // this can be enabled to switch on memory profiling info
 //#define MEMPROFILE
 
-
-
 class RexxActivationFrameBuffer;
 class MemorySegment;
 class MemorySegmentPool;
@@ -169,8 +167,7 @@ class MemoryObject : public RexxInternalObject
     void        setEnvelope(RexxEnvelope *);
     inline void        setMarkTable(RexxTable *marktable) { markTable = marktable;};
     inline void        setOrphanCheck(bool orphancheck) { orphanCheck = orphancheck; };
-    RexxObject *checkSetOref(RexxObject *, RexxObject **, RexxObject *, const char *, int);
-    RexxObject *setOref(void *index, RexxObject *value);
+    void        setOref(RexxInternalObject *variable, RexxInternalObject *value);
     LiveStack  *getFlattenStack();
     void        returnFlattenStack();
     RexxObject *reclaim();

@@ -54,7 +54,7 @@ class RequiresDirective : public RexxDirective
     inline void  operator delete(void *) { }
     inline void  operator delete(void *, void *) { }
 
-    RequiresDirective(RexxString *, RexxClause *);
+    RequiresDirective(RexxString *n, RexxString *l, RexxClause *clause);
     inline RequiresDirective(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);

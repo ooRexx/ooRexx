@@ -1716,8 +1716,8 @@ void MemoryObject::saveImage(void)
     saveStack = OREF_NULL;
     /* or any of there references in the */
     saveTable = OREF_NULL;
-    /* image, which will become OldSpace */
-    OrefSet(&memoryObject, old2new, OREF_NULL);
+    // clear out the old2 new table.
+    old2new = OREF_NULL;
 
     pushLiveStack(OREF_NULL);            /* push a unique terminator          */
     memory_mark_general(saveArray);      /* push live root                    */
@@ -1908,11 +1908,8 @@ void      MemoryObject::setEnvelope(RexxEnvelope *_envelope)
  *
  * @return The assigned object value.
  */
-RexxObject *MemoryObject::setOref(void *oldValue, RexxObject *value)
+void MemoryObject::setOref(RexxInternalObject *oldValue, RexxInternalObject *value)
 {
-    RexxObject **oldValueLoc = (RexxObject **)oldValue;
-    RexxObject *index = *oldValueLoc;
-
     // if there is no old2new table, we're doing an image build.  No tracking
     // required then.
     if (old2new != OREF_NULL)
@@ -1920,11 +1917,11 @@ RexxObject *MemoryObject::setOref(void *oldValue, RexxObject *value)
         // the index value is the one assigned there currently.  If this
         // is a newspace value, we should have a table entry with a reference
         // count for it in our table.
-        if (index != OREF_NULL && index->isNewSpace())
+        if (oldValue != OREF_NULL && oldValue->isNewSpace())
         {
             // get the old reference count, which
             // *should* be non-zero
-            size_t refcount = old2new->get(index);
+            size_t refcount = old2new->get(oldValue);
             if (refcount != 0)
             {
                 // TODO:  We can optimize this with a special method
@@ -1934,21 +1931,20 @@ RexxObject *MemoryObject::setOref(void *oldValue, RexxObject *value)
                 refcount--;
                 if (refcount == 0)
                 {
-                    old2new->remove(index);
+                    old2new->remove(oldValue);
                 }
                 // update with the new count
                 else
                 {
-                    old2new->put(refcount, index);
+                    old2new->put(refcount, oldValue);
                 }
             }
             else
             {
                 /* naughty, naughty, someone didn't use SetOref */
                 printf("******** error in memory_setoref, unable to decrement refcount\n");
-                printf("Naughty object reference is from:  %p\n", oldValueLoc);
-                printf("Naughty object reference is at:  %p\n", index);
-                printf("Naughty object reference type is:  %lu\n", (index)->behaviour->getClassType());
+                printf("Naughty object reference is at:  %p\n", oldValue);
+                printf("Naughty object reference type is:  %lu\n", (oldValue)->behaviour->getClassType());
             }
         }
         // now we have to do this for the new value.
@@ -1961,74 +1957,8 @@ RexxObject *MemoryObject::setOref(void *oldValue, RexxObject *value)
             old2new->put(refCount, value);
         }
     }
-    // now make the assignment, just     //
-    //like all this stuff never happened!//
-    return *oldValueLoc = value;
 }
 
-
-RexxObject *MemoryObject::checkSetOref(
-                RexxObject  *setter,
-                RexxObject **index,
-                RexxObject  *value,
-                const char  *fileName,
-                int          lineNum)
-/******************************************************************************/
-/* Arguments:  index-- OREF to set;  value--OREF to which objr is set         */
-/*                                                                            */
-/*  Returned:  nothing                                                        */
-/*                                                                            */
-/******************************************************************************/
-{
-    bool allOK = true;
-    const char *outFileName;
-    FILE *outfile;
-    /* Skip all checks during saveimage  */
-    if (checkSetOK)
-    {                     /* and initial part of restore Image */
-        if (!inObjectStorage(setter))
-        {      /* Is the setter object invalid      */
-            allOK = false;                     /* No, just put out setters addr.    */
-            outFileName = SysFileSystem::getTempFileName();/* Get a temporary file name for out */
-            outfile = fopen(outFileName,"wb");
-            logMemoryCheck(outfile, "The Setter object at %p is invalid...\n");
-
-            /* Is the new value a real object?   */
-        }
-        else if (value && (RexxBehaviour *)value != TheBehaviourBehaviour && (RexxBehaviour *)value != RexxBehaviour::getPrimitiveBehaviour(T_Behaviour) && !objectReferenceOK(value))
-        {
-            allOK = false;                     /* No, put out the info              */
-            outFileName = SysFileSystem::getTempFileName();/* Get a temporary file name for out */
-            outfile = fopen(outFileName,"wb");
-            logMemoryCheck(outfile, "The Setter object at %p attempted to put a non object %p, at offset %p\n",setter, value, (char *)index - (char *)setter);
-            logMemoryCheck(outfile, " A dump of the Setting object follows: \n");
-            dumpObject(setter, outfile);
-
-        }
-        else if (index >= (RexxObject **)((char *)setter + setter->getObjectSize()))
-        {
-            allOK = false;                     /* Yes, let them know                */
-            outFileName = SysFileSystem::getTempFileName();/* Get a temporary file name for out */
-            outfile = fopen(outFileName,"wb");
-            logMemoryCheck(outfile, "The Setter object at %p has tried to store at offset, which is  outside his object range\n",setter, (char *)index - (char *)setter);
-            logMemoryCheck(outfile, " A dump of the Setting object follows: \n");
-            dumpObject(setter, outfile);
-        }
-
-
-    }
-
-    if (!allOK)
-    {
-        logMemoryCheck(outfile, " The error occurred in line %u of file %s\n", lineNum, fileName);
-        printf("The dump data has been written to file %s \n",outFileName);
-        fclose(outfile);
-        Interpreter::logicError("Something went really wrong in SetOref ...\n");
-    }
-    /* now do the normal SetOref() stuff */
-    return(setter->isOldSpace() ? (this->setOref(index, value)) : (*index = value));
-
-}
 
 LiveStack *MemoryObject::getFlattenStack(void)
 /******************************************************************************/

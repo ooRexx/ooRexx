@@ -146,6 +146,40 @@ void RexxBehaviour::flatten(RexxEnvelope *envelope)
   cleanUpFlatten
 }
 
+
+/**
+ * Set a new method dictionary in the behaviour.
+ *
+ * @param m      The new dictionary.
+ */
+void RexxBehaviour::setMethodDictionary(RexxTable * m)
+{
+    setField(methodDictionary, m);
+};
+
+
+/**
+ * Set a new instance method dictionary in the behaviour.
+ *
+ * @param m      The new dictionary.
+ */
+void RexxBehaviour::setInstanceMethodDictionary(RexxTable * m)
+{
+    setField(instanceMethodDictionary, m);
+};
+
+
+/**
+ * Set a new owning class for this behaviour.
+ *
+ * @param c      The new class.
+ */
+void RexxBehaviour::setOwningClass(RexxClass *c)
+{
+    setField(owningClass,  c);
+};
+
+
 /**
  * Do fix ups for non-primitive behaviours, ensuring they
  * get all of the appropriate information from their parent

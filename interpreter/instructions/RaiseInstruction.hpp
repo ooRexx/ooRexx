@@ -45,10 +45,10 @@
 #define Included_RexxInstructionRaise
 
 #include "RexxInstruction.hpp"
-#include <bitset>
+#include "FlagSet.hpp"
 
 // flags to control the execution of a RAISE instruction
-enum
+typedef enum
 {
     raise_return,
     raise_exit,
@@ -57,14 +57,16 @@ enum
     raise_propagate
 } RaiseInstructionFlags;
 
-class RexxInstructionRaise : public RexxInstruction {
+class RexxInstructionRaise : public RexxInstruction
+{
  public:
     inline void *operator new(size_t size, void *ptr) {return ptr;}
     inline void  operator delete(void *) { }
     inline void  operator delete(void *, void *) { }
 
     inline RexxInstructionRaise(RESTORETYPE restoreType) { ; };
-    RexxInstructionRaise(RexxString *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, size_t, RexxQueue *, bool);
+    RexxInstructionRaise(RexxString *_condition, RexxObject *_expression, RexxObject *_description,
+        RexxObject *_additional, RexxObject *_result, FlagSet<RaiseInstructionFlags, 32> flags);
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
@@ -74,7 +76,7 @@ class RexxInstructionRaise : public RexxInstruction {
 
  protected:
 
-    std::bitset<32>  instructionFlags;   // instruction control flags
+    FlagSet<RaiseInstructionFlags, 32>  instructionFlags;   // instruction control flags
     RexxObject *rcValue;                 // RC value expression
     RexxString *conditionName;           // condition trap name
     RexxObject *description;             // condition description

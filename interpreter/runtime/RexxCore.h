@@ -104,15 +104,21 @@ const int ARG_TEN    = 10;
 // use OrefSet().  It is never an error to use in places where it is not required, but it certainly can be an
 // error to use in places where it is required.
 
-#ifndef CHECKOREFS
-#define OrefSet(o,r,v) ((o)->isOldSpace() ? memoryObject.setOref((void *)&(r),(RexxObject *)v) : (RexxObject *)(r=v))
-#else
-#define OrefSet(o,r,v) memoryObject.checkSetOref((RexxObject *)o, (RexxObject **)&(r), (RexxObject *)v, __FILE__, __LINE__)
-#endif
+#define OrefSet(o,r,v) \
+{                      \
+    if (o->isOldSpace()) \
+    {                    \
+        memoryObject.setOref(r, v); \
+    }                               \
+    r = v;                          \
+}
 
 // short cut version of OrefSet().  99% of the uses specify this as the object pointer...this version
 // saves a little typing :-)
 #define setField(r, v)  OrefSet(this, this->r, v)
+// cleaner version for setting in another object
+#define setOtherField(o, r, v) OrefSet(o, o->r, v)
+
 
 
 // forward declaration of commonly used classes

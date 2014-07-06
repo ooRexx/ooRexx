@@ -44,6 +44,8 @@
 #include "RexxCore.h"
 #include "RexxInstruction.hpp"
 #include "Clause.hpp"
+#include "RexxActivation.hpp"
+#include "MethodArguments.hpp"
 
 
 /**

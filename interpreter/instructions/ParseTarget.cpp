@@ -47,6 +47,7 @@
 #include "RexxActivation.hpp"
 #include "ParseTarget.hpp"
 #include "ParseInstruction.hpp"
+#include "MethodArguments.hpp"
 
 /**
  * Initialize a ParseTarget instance.
@@ -60,7 +61,7 @@
  * @param s          The evaluation stack.
  */
 void RexxTarget::init(RexxObject *_string, RexxObject **_arglist, size_t _argcount,
-    std::bitset<32>_translate, bool multiple, RexxActivation *context, RexxExpressionStack *s)
+    FlagSet<ParseFlags, 32>_translate, bool multiple, RexxActivation *context, RexxExpressionStack *s)
 {
     translate = _translate;
     arglist = _arglist;
@@ -206,7 +207,7 @@ void RexxTarget::forwardLength(stringsize_t offset)
     // the start position is our last start position (which will
     // be the beginning of the last string match.
     start = pattern_start;
-    end = start + offset;    /
+    end = start + offset;
 
     // perform movement past the string end tests.
     if (end >= string_length)
@@ -406,7 +407,7 @@ RexxString *RexxTarget::getWord()
     // already moved past the end of the string?  This is a NULLSTRING result
     if (subcurrent >= end)
     {
-        word = OREF_NULLSTRING;
+        return OREF_NULLSTRING;
     }
     else                               /* need to scan off a word           */
     {
@@ -511,7 +512,7 @@ void RexxTarget::skipWord()
         {
             // look for the next blank
             const char *endScan = NULL;
-            while (scann < endScan)
+            while (scan < endScan)
             {
                 if (*scan == ' ' || *scan == '\t')
                 {

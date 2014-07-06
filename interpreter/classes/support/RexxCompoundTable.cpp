@@ -317,25 +317,18 @@ RexxCompoundElement *RexxCompoundTable::next(
 }
 
 
-void RexxCompoundTable::setParent(
-    RexxStem *parentStem)
+void RexxCompoundTable::setParent(RexxStem *parentStem)
 /******************************************************************************/
 /* Function:  Set the parent for a compound table.  N.B., this cannot be an   */
 /* inline method because of circular header file dependencies between         */
 /* RexxCompoundTable and RexxStem.                                            */
 /******************************************************************************/
 {
-    // NOTE:  This seems a little weird, but we're doing the set using the parent
-    // object...which will actually set the value in our own object instance.
-    // This is done because the if we have checkSetOref turned on, the validity
-    // checker won't recognize our address as being a valid object because it's
-    // embedded within another Rexx object.
-    OrefSet(parentStem, parentStem->tails.parent, parentStem);
+    setOtherField(parentStem, tails.parent, parentStem);
 }
 
 
-void RexxCompoundTable::setRoot(
-    RexxCompoundElement *newRoot)
+void RexxCompoundTable::setRoot(RexxCompoundElement *newRoot)
 /******************************************************************************/
 /* Function:  Set the root node for a compound table.  N.B., this cannot be an*/
 /* inline method because of circular header file dependencies between         */
@@ -344,10 +337,7 @@ void RexxCompoundTable::setRoot(
 {
     // NOTE:  This seems a little weird, but we're doing the set using the parent
     // object...which will actually set the value in our own object instance.
-    // This is done because the if we have checkSetOref turned on, the validity
-    // checker won't recognize our address as being a valid object because it's
-    // embedded within another Rexx object.
-    OrefSet(parent, parent->tails.root, newRoot);
+    setOtherField(parent, tails.root, newRoot);
 }
 
 

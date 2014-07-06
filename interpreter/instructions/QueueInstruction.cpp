@@ -47,10 +47,12 @@
 #include "RexxActivity.hpp"
 #include "QueueInstruction.hpp"
 
+
 RexxInstructionQueue::RexxInstructionQueue(RexxObject *_expression)
 {
     expression = _expression;
 }
+
 
 /**
  * Execute a PUSH or QUEUE operation (depends on the instruction type.)
