@@ -49,23 +49,24 @@ class LanguageParser;
 class RexxExpressionMessage : public RexxVariableBase
 {
  friend class RexxInstructionMessage;
+ friend class LanguageParser;
  public:
     void *operator new(size_t, size_t);
     inline void *operator new(size_t size, void *ptr) {return ptr;};
-    inline void  operator delete(void *) { ; }
     inline void  operator delete(void *, size_t) { ; }
     inline void  operator delete(void *, void *) { ; }
 
     RexxExpressionMessage(RexxObject *, RexxString *, RexxObject *, size_t, RexxQueue *, bool);
     inline RexxExpressionMessage(RESTORETYPE restoreType) { ; };
 
-    virtual void        live(size_t);
-    virtual void        liveGeneral(MarkReason reason);
-    virtual void        flatten(RexxEnvelope *);
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(RexxEnvelope *);
 
     virtual RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
 
     void makeAssignment(LanguageParser *parser);
+    bool isDoubleTilde() { return doubleTilde; }
 
  protected:
 

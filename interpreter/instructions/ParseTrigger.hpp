@@ -46,6 +46,7 @@
 
 typedef enum
 {
+    TRIGGER_NONE,
     TRIGGER_END,
     TRIGGER_PLUS,
     TRIGGER_MINUS,

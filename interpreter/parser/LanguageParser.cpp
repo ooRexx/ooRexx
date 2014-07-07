@@ -42,12 +42,15 @@
 /*                                                                            */
 /******************************************************************************/
 
+#include "RexxCore.h"
 #include "LanguageParser.hpp"
 #include "SourceFile.hpp"
 #include "ProgramSource.hpp"
 #include "MethodClass.hpp"
 #include "RoutineClass.hpp"
 #include "PackageClass.hpp"
+#include "RexxCode.hpp"
+#include "DirectoryClass.hpp"
 
 
 /**
@@ -65,9 +68,9 @@ MethodClass *LanguageParser::createMethod(RexxString *name, RexxArray *source, P
 {
     // create the appropriate array source, then the parser, then generate the
     // code.
-    ProtectedObject p = new ArrayProgramSource(source);
-    p = new LanguageParser(name, (ProgramSource *)(RexxInternalObject *)p);
-    return ((LanguageParser *)(RexxInternalObject *)p)->generateMethod(sourceContext);
+    ProgramSource *programSource = new ArrayProgramSource(source);
+    Protected<LanguageParser> parser = new LanguageParser(name, programSource);
+    return parser->generateMethod(sourceContext);
 }
 
 
@@ -84,9 +87,9 @@ MethodClass *LanguageParser::createMethod(RexxString *name)
 {
     // create the appropriate array source, then the parser, then generate the
     // code.
-    ProtectedObject p = new FileProgramSource(name)
-    p = new LanguageParser(name, (ProgramSource *)(RexxInternalObject *)p);
-    return ((LanguageParser *)(RexxInternalObject *)p)->generateMethod();
+    ProgramSource *programSource = new FileProgramSource(name);
+    Protected<LanguageParser> parser = new LanguageParser(name, programSource);
+    return parser->generateMethod();
 }
 
 
@@ -105,9 +108,9 @@ RoutineClass *LanguageParser::createRoutine(RexxString *name, RexxArray *source,
 {
     // create the appropriate array source, then the parser, then generate the
     // code.
-    ProtectedObject p = new ArrayProgramSource(source);
-    p = new LanguageParser(name, (ProgramSource *)(RexxInternalObject *)p);
-    return ((LanguageParser *)(RexxInternalObject *)p)->generateRoutine(sourceContext);
+    ProgramSource *programSource = new ArrayProgramSource(source);
+    Protected<LanguageParser> parser = new LanguageParser(name, programSource);
+    return parser->generateRoutine(sourceContext);
 }
 
 
@@ -124,9 +127,9 @@ RoutineClass *LanguageParser::createRoutine(RexxString *name)
 {
     // create the appropriate program source, then the parser, then generate the
     // code.
-    ProtectedObject p = new FileProgramSource(name)
-    p = new LanguageParser(name, (ProgramSource *)(RexxInternalObject *)p);
-    return ((LanguageParser *)(RexxInternalObject *)p)->generateRoutine();
+    ProgramSource *programSource = new FileProgramSource(name);
+    Protected<LanguageParser> parser = new LanguageParser(name, programSource);
+    return parser->generateRoutine();
 }
 
 
@@ -143,9 +146,9 @@ RoutineClass *LanguageParser::createProgram(RexxString *name, RexxBuffer *source
 {
     // create the appropriate array source, then the parser, then generate the
     // code.
-    ProtectedObject p = new BufferProgramSource(source);
-    p = new LanguageParser(name, (ProgramSource *)(RexxInternalObject *)p);
-    return ((LanguageParser *)(RexxInternalObject *)p)->generateProgram();
+    ProgramSource *programSource = new BufferProgramSource(source);
+    Protected<LanguageParser> parser = new LanguageParser(name, programSource);
+    return parser->generateProgram();
 }
 
 
@@ -162,9 +165,9 @@ RoutineClass *LanguageParser::createProgram(RexxString *name)
 {
     // create the appropriate program source, then the parser, then generate the
     // code.
-    ProtectedObject p = new FileProgramSource(name)
-    p = new LanguageParser(name, (ProgramSource *)(RexxInternalObject *)p);
-    return ((LanguageParser *)(RexxInternalObject *)p)->generateProgram();
+    ProgramSource *programSource = new FileProgramSource(name);
+    Protected<LanguageParser> parser = new LanguageParser(name, programSource);
+    return parser->generateProgram();
 }
 
 
@@ -172,9 +175,9 @@ RexxCode *LanguageParser::translateInterpret(RexxString *interpretString, RexxDi
 {
     // create the appropriate array source, then the parser, then generate the
     // code.
-    ProtectedObject p = new ArrayProgramSource(new_array(interpretString), lineNumber);
-    p = new LanguageParser(name, (ProgramSource *)(RexxInternalObject *)p);
-    return ((LanguageParser *)(RexxInternalObject *)p)->translateInterpret(labels);
+    ProgramSource *programSource = new ArrayProgramSource(new_array(interpretString), lineNumber);
+    Protected<LanguageParser> parser = new LanguageParser(OREF_NULLSTRING, programSource);
+    return parser->translateInterpret(labels);
 }
 
 
@@ -184,12 +187,12 @@ RexxCode *LanguageParser::translateInterpret(RexxString *interpretString, RexxDi
  * @param p      The source package we're parsing code for.
  * @param s      The provider for the actual program source.
  */
-LanguageParser::LanguageParser(RexxString *p, ProgramSource *s)
+LanguageParser::LanguageParser(RexxString *n, ProgramSource *s)
 {
     // at this point, we just save the link back to the
     // package and source objects.  We hold off creating
     // more objects until we start parsing.
-    package = p;
+    name = n;
     source = s;
 }
 
@@ -1623,12 +1626,12 @@ RexxString *LanguageParser::commonString(RexxString *string)
  * @return A retriever object that can be used as an expression
  *         term.
  */
-RexxObject *LanguageParser::addVariable(RexxToken *token)
+RexxVariableBase *LanguageParser::addVariable(RexxToken *token)
 {
     // we first validate that this token represents a valid variable,
     needVariable(token);
     // then create the text retriever object.
-    return addText(token);
+    return (RexxVariableBase *)addText(token);
 }
 
 // generate a retriever for a specific token type.  Note that we
@@ -1641,7 +1644,7 @@ RexxObject *LanguageParser::addVariable(RexxToken *token)
 RexxObject *LanguageParser::addText(RexxToken *token)
 {
     // these should be text type tokens that have a real value.
-    RexxString *name = token->value;
+    RexxString *name = token->value();
 
     // we might already have processed this before.
     // if not, we need to examine this and find the
@@ -1653,7 +1656,7 @@ RexxObject *LanguageParser::addText(RexxToken *token)
     }
 
     // now switch on the major token class id.
-    switch (token->classId)
+    switch (token->type())
     {
         // various categories of symbols.
         case TOKEN_SYMBOL:
@@ -1949,6 +1952,7 @@ RexxObject *LanguageParser::constantExpression()
     return OREF_NULL;
 }
 
+
 /**
  * Evaluate a "constant" expression for REXX instruction keyword
  * values.  A constant expression is a literal string, constant
@@ -1959,12 +1963,7 @@ RexxObject *LanguageParser::constantExpression()
  *
  * @return A parsed out expression.
  */
-RexxObject *LanguageParser::constantLogicalExpression()
-/* Function:  Evaluate a "constant" expression for REXX instruction keyword   */
-/*            values.  A constant expression is a literal string, constant    */
-/*            symbol, or an expression enclosed in parentheses.  The          */
-/*            expression inside parens can be a complex logical expression.   */
-/******************************************************************************/
+RexxObject *LanguageParser::parseConstantLogicalExpression()
 {
     // This is very similar to constant expression, until we get to the
     // expression inside the parents.

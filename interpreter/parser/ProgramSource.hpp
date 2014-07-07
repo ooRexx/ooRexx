@@ -176,7 +176,8 @@ class ArrayProgramSource: public ProgramSource
  public:
     void        *operator new(size_t);
     inline void  operator delete(void *) { ; };
-    ArrayProgramSource(RexxArray *a, size_t adjust) : interpretAdjust(adjust), array(a), ProgramSource() { };
+
+    ArrayProgramSource(RexxArray *a, size_t adjust = 0) : interpretAdjust(adjust), array(a), ProgramSource() { };
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);

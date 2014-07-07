@@ -52,6 +52,7 @@
 #include "Token.hpp"
 #include "Clause.hpp"
 #include "RexxInstruction.hpp"
+#include "DoBlockComponents.hpp"
 
 class RexxInstruction;
 class RexxInstructionIf;
@@ -95,7 +96,7 @@ class LanguageParser: public RexxInternalObject
     inline void  operator delete(void *) { ; }
     inline void  operator delete(void *, void *) { ; }
 
-    LanguageParser(RexxSource *p, ProgramSource *s, RexxDirectory *labels = OREF_NULL);
+    LanguageParser(RexxString *name, ProgramSource *s);
     inline LanguageParser(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
@@ -108,8 +109,9 @@ class LanguageParser: public RexxInternalObject
     RexxCode   *translateBlock();
     RexxCode   *translateInterpret(RexxDirectory *contextLabels);
     RoutineClass *generateProgram();
-    RoutineClass *generateRoutine();
-    MethodClass *generateMethod();
+    RoutineClass *generateRoutine(PackageClass *sourceContext = OREF_NULL);
+    MethodClass *generateMethod(PackageClass *sourceContext = OREF_NULL);
+    RexxSource  *generatePackage();
 
     RexxSource  *getPackage() { return package; }
 
@@ -156,7 +158,7 @@ class LanguageParser: public RexxInternalObject
     void        expose(RexxString *);
     RexxString *commonString(RexxString *);
     RexxObject *addText(RexxToken *);
-    RexxObject *addVariable(RexxToken *);
+    RexxVariableBase *addVariable(RexxToken *);
     void        addClause(RexxInstruction *);
     void        addLabel(RexxInstruction *, RexxString *);
     RexxInstruction *findLabel(RexxString *);
@@ -165,7 +167,6 @@ class LanguageParser: public RexxInternalObject
     void        addBlock(void);
     RexxVariableBase *getRetriever(RexxString *);
     RexxArray  *words(RexxString *);
-    RexxInstruction *parserNewObject(size_t, RexxBehaviour *, int);
     inline void        reclaimClause()  { flags.set(reclaimed); };
     inline bool        atEnd(void) { return !flags.test(reclaimed) && !moreLines(); };
 
@@ -175,7 +176,7 @@ class LanguageParser: public RexxInternalObject
     inline bool clauseAvailable() { return !flags.test(noClause); }
     inline RexxToken  *nextToken() { return clause->next(); }
     inline RexxToken  *nextReal() { return clause->nextRealToken(); }
-    inline void        requiredEndOfClause(RexxToken *first, int terminators, int error)
+    inline void        requiredEndOfClause(int error)
     {
         RexxToken *token = nextReal();
         if (!token->isEndOfClause())
@@ -193,6 +194,17 @@ class LanguageParser: public RexxInternalObject
         }
         return conditional;
     }
+
+    inline RexxObject *requiredExpression(int terminators, int error)
+    {
+        RexxObject *expression = parseExpression(terminators);
+        if (expression == OREF_NULL)
+        {
+            syntaxError(error);
+        }
+        return expression;
+    }
+
     inline bool capturingGuardVariables() { return guardVariables != OREF_NULL; }
            bool isExposed(RexxString *varName);
 
@@ -205,10 +217,20 @@ class LanguageParser: public RexxInternalObject
     RexxInstruction *addressNew();
     RexxInstruction *assignmentNew(RexxToken *);
     RexxInstruction *assignmentOpNew(RexxToken *, RexxToken *);
+    RexxInstruction *callOnNew(InstructionSubKeyword type);
+    RexxInstruction *dynamicCallNew(RexxToken *token);
     RexxInstruction *callNew();
     RexxInstruction *commandNew();
     RexxInstruction *doNew();
-    RexxInstruction *loopNew();
+    RexxInstruction *newControlledLoop(RexxString *label, RexxToken *nameToken);
+    RexxInstruction *newDoOverLoop(RexxString *label, RexxToken *nameToken);
+    RexxInstruction *newSimpleDo(RexxString *label);
+    RexxInstruction *newLoopForever(RexxString *label);
+    RexxInstruction *newLoopWhile(RexxString *label, WhileUntilLoop &conditional);
+    RexxInstruction *newLoopUntil(RexxString *label, WhileUntilLoop &conditional);
+    RexxInstruction *parseForeverLoop(RexxString *label);
+    RexxInstruction *parseCountLoop(RexxString *label);
+    RexxInstruction *createLoop(bool isLoop);
     RexxInstruction *dropNew();
     RexxInstruction *elseNew(RexxToken *);
     RexxInstruction *endNew();
@@ -217,29 +239,34 @@ class LanguageParser: public RexxInternalObject
     RexxInstruction *exposeNew();
     RexxInstruction *forwardNew();
     RexxInstruction *guardNew();
-    RexxInstruction *ifNew(int);
+    RexxInstruction *ifNew(InstructionKeyword type);
     RexxInstruction *interpretNew();
     RexxInstruction *labelNew(RexxToken *name, RexxToken *colon);
-    RexxInstruction *leaveNew(int);
+    RexxInstruction *leaveNew(InstructionKeyword type);
     RexxInstruction *messageNew(RexxExpressionMessage *);
+    RexxInstruction *doubleMessageNew(RexxExpressionMessage *msg);
     RexxInstruction *messageAssignmentNew(RexxExpressionMessage *, RexxObject *);
     RexxInstruction *messageAssignmentOpNew(RexxExpressionMessage *, RexxToken *, RexxObject *);
     RexxInstruction *nopNew();
     RexxInstruction *numericNew();
     RexxInstruction *optionsNew();
     RexxInstruction *otherwiseNew(RexxToken *);
-    RexxInstruction *parseNew(int);
+    RexxInstruction *parseNew(InstructionSubKeyword);
     RexxInstruction *procedureNew();
-    RexxInstruction *queueNew(int);
+    RexxInstruction *pushNew();
+    RexxInstruction *queueNew();
     RexxInstruction *raiseNew();
     RexxInstruction *replyNew();
     RexxInstruction *returnNew();
     RexxInstruction *sayNew();
     RexxInstruction *selectNew();
+    RexxInstruction *dynamicSignalNew();
+    RexxInstruction *signalOnNew(InstructionSubKeyword type);
     RexxInstruction *signalNew();
     RexxInstruction *thenNew(RexxToken *, RexxInstructionIf *);
     RexxInstruction *traceNew();
     RexxInstruction *useNew();
+    RexxInstruction *whenCaseNew(RexxInstructionIf *original);
 
     inline void        addReference(RexxObject *reference) { calls->addLast(reference); }
     inline void        pushDo(RexxInstruction *i) { control->pushRexx((RexxObject *)i); }
@@ -247,6 +274,7 @@ class LanguageParser: public RexxInternalObject
     inline RexxInstruction *topDo() { return (RexxInstruction *)(control->peek()); };
     inline InstructionKeyword topDoType() { return ((RexxInstruction *)(control->peek()))->getType(); };
     inline bool topDoIsType(InstructionKeyword t) { return ((RexxInstruction *)(control->peek()))->isType(t); };
+    RexxInstruction *sourceNewObject(size_t size, RexxBehaviour *_behaviour, InstructionKeyword type);
 
     // directive parsing methods
     void        nextDirective();
@@ -278,8 +306,8 @@ class LanguageParser: public RexxInternalObject
     void        addClassDirective(RexxString *name, ClassDirective *directive);
 
     // expression parsing methods
-    RexxObject *constantExpression();
-    RexxObject *constantLogicalExpression();
+    RexxObject *parseConstantExpression();
+    RexxObject *parseConstantLogicalExpression();
     RexxObject *parenExpression(RexxToken *);
     RexxObject *parseExpression(int);
     RexxObject *parseSubExpression(int);
@@ -423,6 +451,7 @@ protected:
     RexxDirectory   *routines;           // routines defined by ::routine directives.
     RexxDirectory   *publicRoutines;     // routines defined by ::routine directives.
     RexxArray       *requires;           // list of ::requires directories, in order of appearance.
+    RexxArray       *libraries;          // libraries identified on a ::requires directive.
 
                                          // start of block parsing section
 

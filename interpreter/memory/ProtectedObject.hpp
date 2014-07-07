@@ -132,6 +132,12 @@ class ProtectedObject : public ProtectedBase
         return (RexxObject *)protectedObject;
     }
 
+    // cast conversion operators for some very common uses of protected object.
+    inline operator RexxInternalObject *()
+    {
+        return protectedObject;
+    }
+
     inline operator RexxObjectPtr ()
     {
         return (RexxObjectPtr)protectedObject;

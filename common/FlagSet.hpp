@@ -93,6 +93,13 @@ public:
         flags.set(flag);
     }
 
+
+    // set a flag value to true
+    inline void set(const TEnum flag, bool val)
+    {
+        flags.set(flag, val);
+    }
+
     // turn a flag value off
     inline void reset(const TEnum flag)
     {

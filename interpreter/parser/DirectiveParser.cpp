@@ -48,6 +48,12 @@
 #include "DirectoryClass.hpp"
 #include "ClassDirective.hpp"
 #include "RequiresDirective.hpp"
+#include "LibraryDirective.hpp"
+#include "MethodClass.hpp"
+#include "RoutineClass.hpp"
+#include "CPPCode.hpp"
+#include "BaseCode.hpp"
+#include "PackageManager.hpp"
 
 
 /**
@@ -188,21 +194,21 @@ bool LanguageParser::hasBody()
     return result;
 }
 
-enum
+typedef enum
 {
     DEFAULT_GUARD,                 // default guard
     GUARDED_METHOD,                // guard specified
     UNGUARDED_METHOD,              // unguarded specified
 } GuardFlag;
 
-enum
+typedef enum
 {
     DEFAULT_PROTECTION,            // using defualt protection
     PROTECTED_METHOD,              // security manager permission needed
     UNPROTECTED_METHOD,            // no protection.
 } ProtectedFlag;
 
-enum
+typedef enum
 {
     DEFAULT_ACCESS_SCOPE,          // using defualt scope
     PUBLIC_SCOPE,                  // publicly accessible
@@ -245,7 +251,7 @@ bool LanguageParser::isDuplicateRoutine(RexxString *name)
  */
 void LanguageParser::addClassDirective(RexxString *name, ClassDirective *directive)
 {
-    classDependencies->put(name, directive);
+    classDependencies->put((RexxObject *)directive, name);
 }
 
 
@@ -276,7 +282,7 @@ void LanguageParser::classDirective()
 //  this->flags |= _install;         /* have information to install       */
 
     // create a class directive and add this to the dependency list
-    activeClass = new ClassDirective(name, pulic_name, clause));
+    activeClass = new ClassDirective(name, public_name, clause);
     // add this to our directives list.
     addClassDirective(public_name, activeClass);
 
@@ -319,7 +325,7 @@ void LanguageParser::classDirective()
                         syntaxError(Error_Symbol_or_string_metaclass, token);
                     }
                     // set the meta class...use the upper case name
-                    activeClass->setMetaClass(commonString(token->upperValue());
+                    activeClass->setMetaClass(commonString(token->upperValue()));
                     break;
 
                 // ::CLASS name PUBLIC
@@ -329,7 +335,7 @@ void LanguageParser::classDirective()
                     {
                         syntaxError(Error_Invalid_subkeyword_class, token);
                     }
-                    accessflag = PUBLIC_SCOPE;
+                    accessFlag = PUBLIC_SCOPE;
                     // set the access in the active class.
                     activeClass->setPublic();
                     break;
@@ -655,7 +661,7 @@ void LanguageParser::methodDirective()
         // now get this as the setter method.
         RexxString *setterName = commonString(internalname->concatWithCstring("="));
         // need to check for duplicates on that too
-        checkDuplicateMethod(setterName, Class, Error_Translation_duplicate_method);
+        checkDuplicateMethod(setterName, isClass, Error_Translation_duplicate_method);
 
         // cannot have code following an method with the attribute keyword
         checkDirective(Error_Translation_attribute_method);
@@ -707,8 +713,7 @@ void LanguageParser::methodDirective()
         // Since the translateBlock() call will allocate a lot of new objects before returning,
         // there's a high probability that the method object can get garbage collected before
         // there is any opportunity to protect the object.
-        RexxCode *code = translateBlock(OREF_NULL);
-        ProtectedObject p(code);
+        Protected<RexxCode> code = translateBlock();
 
         // go do the next block of code
         _method = new MethodClass(name, code);
@@ -754,7 +759,7 @@ void LanguageParser::optionsDirective()
         else
         {
             // potential options keyword
-            switch (token->subDirective(token))
+            switch (token->subDirective())
             {
                 // ::OPTIONS DIGITS nnnn
                 case SUBDIRECTIVE_DIGITS:
@@ -771,7 +776,7 @@ void LanguageParser::optionsDirective()
                     // convert to a binary number
                     if (!token->value()->requestUnsignedNumber(digits, number_digits()) || digits < 1)
                     {
-                        syntaxError(Error_Invalid_whole_number_digits, value);
+                        syntaxError(Error_Invalid_whole_number_digits, token->value());
                     }
                     // problem with the fuzz setting?
                     if (digits <= package->getFuzz())
@@ -940,7 +945,11 @@ void LanguageParser::decodeExternalMethod(RexxString *methodName, RexxString *ex
     }
 }
 
-enum
+
+/**
+ * Indicator of what type of attribute to generate.
+ */
+typedef enum
 {
     ATTRIBUTE_BOTH,
     ATTRIBUTE_GET,
@@ -1145,12 +1154,12 @@ void LanguageParser::attributeDirective()
                 MethodClass *_method = createNativeMethod(internalname, library, procedure->concatToCstring("GET"));
                 _method->setAttributes(accessFlag == PRIVATE_SCOPE, protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
                 // add to the compilation
-                addMethod(internalname, _method, Class);
+                addMethod(internalname, _method, isClass);
 
                 _method = createNativeMethod(setterName, library, procedure->concatToCstring("SET"));
                 _method->setAttributes(accessFlag == PRIVATE_SCOPE, protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
                 // add to the compilation
-                addMethod(setterName, _method, Class);
+                addMethod(setterName, _method, isClass);
             }
             // abstract method?
             else if (isAbstract)
@@ -1166,7 +1175,7 @@ void LanguageParser::attributeDirective()
                 // create the method pair and quit.
                 createAttributeGetterMethod(internalname, retriever, isClass, accessFlag == PRIVATE_SCOPE,
                     protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
-                createAttributeSetterMethod(setterName, retriever, Class, Private == PRIVATE_SCOPE,
+                createAttributeSetterMethod(setterName, retriever, isClass, accessFlag == PRIVATE_SCOPE,
                     protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
             }
             break;
@@ -1193,7 +1202,7 @@ void LanguageParser::attributeDirective()
                 MethodClass *_method = createNativeMethod(internalname, library, procedure);
                 _method->setAttributes(accessFlag == PRIVATE_SCOPE, protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
                 // add to the compilation
-                addMethod(internalname, _method, Class);
+                addMethod(internalname, _method, isClass);
             }
             // abstract method?
             else if (isAbstract)
@@ -1210,12 +1219,12 @@ void LanguageParser::attributeDirective()
                 // written in Rexx?  go create
                 if (hasBody())
                 {
-                    createMethod(internalname, isClass, accessFlags == PRIVATE_SCOPE,
+                    createMethod(internalname, isClass, accessFlag == PRIVATE_SCOPE,
                         protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
                 }
                 else
                 {
-                    createAttributeGetterMethod(internalname, retriever, isClass, accessFlags == PRIVATE_SCOPE,
+                    createAttributeGetterMethod(internalname, retriever, isClass, accessFlag == PRIVATE_SCOPE,
                         protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
                 }
             }
@@ -1328,7 +1337,7 @@ void LanguageParser::constantDirective()
     else
     {
         // this will be some sort of literal value
-        value = token->value;
+        value = token->value();
     }
 
     token = nextReal();
@@ -1376,7 +1385,7 @@ void LanguageParser::createMethod(RexxString *name, bool classMethod,
     // Since the translateBlock() call will allocate a lot of new objects before returning,
     // there's a high probability that the method object can get garbage collected before
     // there is any opportunity to protect the object.
-    RexxCode *code = translateBlock(OREF_NULL);
+    RexxCode *code = translateBlock();
     ProtectedObject p(code);
 
     // convert into a method object
@@ -1679,7 +1688,7 @@ void LanguageParser::routineDirective()
             // Since the translateBlock() call will allocate a lot of new objects before returning,
             // there's a high probability that the method object can get garbage collected before
             // there is any opportunity to protect the object.
-            RexxCode *code = this->translateBlock(OREF_NULL);
+            RexxCode *code = translateBlock();
             ProtectedObject p(code);
             RoutineClass *routine = new RoutineClass(name, code);
             // add to the routine directory
@@ -1727,20 +1736,9 @@ void LanguageParser::requiresDirective()
 
         switch (token->subDirective())
         {
-            // this identifies a library
-            case SUBDIRECTIVE_LIBRARY:
-                // can only specify library once and for now, at least,
-                // the LABEL keyword is not allowed on a LIBRARY requires.
-                // this might have some meaning eventually for resolving
-                // external routines, but for now, this is a restriction.
-                if (isLibrary || label != OREF_NULL)
-                {
-                    syntaxError(Error_Invalid_subkeyword_requires, token);
-                }
-                isLibrary = true;
-                break:
-
+            // we have a label on the requires
             case SUBDIRECTIVE_LABEL:
+            {
                 // can only have one of these and cannot have this with the LIBRARY option
                 if (isLibrary || label != OREF_NULL)
                 {
@@ -1755,7 +1753,23 @@ void LanguageParser::requiresDirective()
                 // NOTE:  since this is a symbol, the label will be an
                 // uppercase name.
                 label = token->value();
-                break:
+                break;
+            }
+
+            // this identifies a library
+            case SUBDIRECTIVE_LIBRARY:
+            {
+                // can only specify library once and for now, at least,
+                // the LABEL keyword is not allowed on a LIBRARY requires.
+                // this might have some meaning eventually for resolving
+                // external routines, but for now, this is a restriction.
+                if (isLibrary || label != OREF_NULL)
+                {
+                    syntaxError(Error_Invalid_subkeyword_requires, token);
+                }
+                isLibrary = true;
+                break;
+            }
 
             default:
                 syntaxError(Error_Invalid_subkeyword_requires, token);
