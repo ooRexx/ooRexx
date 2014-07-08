@@ -121,7 +121,7 @@ int LanguageParser::characterTable[]={
 #define CHECK_ASSIGNMENT(op) \
 {\
    RexxToken *token = clause->newToken(TOKEN_OPERATOR, OPERATOR_##op, (RexxString *)OREF_##op, location); \
-   token->checkAssignment(this, (RexxString *)OREF_ASSIGNMENT_##op)); \
+   token->checkAssignment(this, (RexxString *)OREF_ASSIGNMENT_##op); \
    return token; \
 }
 
@@ -134,7 +134,7 @@ int LanguageParser::characterTable[]={
 void LanguageParser::startLocation(SourceLocation &location )
 {
     // copy the start line location into the location object.
-    location.setStart(line_number, lineOffset);
+    location.setStart(lineNumber, lineOffset);
 }
 
 /**
@@ -145,7 +145,7 @@ void LanguageParser::startLocation(SourceLocation &location )
 void LanguageParser::endLocation(SourceLocation &location )
 {
     // copy the end line location into the location object.
-    location.setEnd(line_number, lineOffset);
+    location.setEnd(lineNumber, lineOffset);
 }
 
 
@@ -184,7 +184,7 @@ bool LanguageParser::nextSpecial(unsigned int target, SourceLocation &location )
         if (getChar() == target)
         {
             // step the position and record where we are as the end position
-            stepPosition()
+            stepPosition();
             endLocation(location);
             return true;
         }
@@ -226,7 +226,7 @@ void LanguageParser::scanComment()
                 clause->setEnd(lineCount, lineOffset);
                 // update the error information
                 clauseLocation = clause->getLocation();
-                syntaxError(Error_Unmatched_quote_comment, new_integer(startline));
+                syntaxError(Error_Unmatched_quote_comment, new_integer(startLine));
             }
             // keep scanning for the terminator
             continue;
@@ -251,6 +251,7 @@ void LanguageParser::scanComment()
     }
 }
 
+
 /**
  * Locate the next "real" token in the parsing stream,
  * skipping extra blanks and comments.
@@ -272,13 +273,13 @@ CharacterClass LanguageParser::locateToken(unsigned int &character, bool blanksS
     // no more lines?  indicate a we've hit the end of the file.
     if (!moreLines())
     {
-        return CLAUSEEND_EOF;
+        return CLAUSE_EOF;
     }
     // or, we could be at the end of the line...still a clause terminator,
     // but for a different reason.
     else if (!moreChars())
     {
-        return CLAUSEEND_EOL;
+        return CLAUSE_EOL;
     }
 
     // ok, we will scan as long as we have line left.
@@ -308,7 +309,7 @@ CharacterClass LanguageParser::locateToken(unsigned int &character, bool blanksS
             if (inch == '-' && followingChar() == '-')
             {
                 truncateLine();
-                return CLAUSEEND_EOL;
+                return CLAUSE_EOL;
             }
 
             // assume for now that this is a real character...we need to
@@ -336,8 +337,9 @@ CharacterClass LanguageParser::locateToken(unsigned int &character, bool blanksS
                     // otherwise we need to continue scanning for a token character.
                     if (moreLines())
                     {
-                        this->nextLine();
-                        if (blanksSignificant) {
+                        nextLine();
+                        if (blanksSignificant)
+                        {
                             return SIGNIFICANT_BLANK;
                         }
                     }
@@ -396,7 +398,7 @@ CharacterClass LanguageParser::locateToken(unsigned int &character, bool blanksS
     }
 
     // hit the end of the line without finding anything.  Indicate end of clause
-    return CLAUSEEND_EOL;
+    return CLAUSE_EOL;
 }
 
 
@@ -440,14 +442,14 @@ RexxString *LanguageParser::packHexLiteral(size_t start, size_t length)
     for (size_t i = 0; i < length; i++)
     {
         // do we have a white space character?
-        if (*inPointer] == ' ' || *inPointer == '\t')
+        if (*inPointer == ' ' || *inPointer == '\t')
         {
             // now check to see if this is in a valid position.  We do not allow
             // blanks at the beginning of the string, and if we are past the
             // first group, then blanks must appear at even character boundaries.
             if (i == 0  ||                 // this is the test for the beginning
                (!firstGroup &&             // ok, we've processed the first group, this must be on a boundary
-                ((groupCount & 1) != 0))   // not evenly divisible by two...bad placement.
+                ((groupCount & 1) != 0)))  // not evenly divisible by two...bad placement.
             {
                 // update the error information
                 clauseLocation = clause->getLocation();
@@ -467,7 +469,7 @@ RexxString *LanguageParser::packHexLiteral(size_t start, size_t length)
         {
             // keep track of how large this group is and how many
             // total nibbles we have.
-            groupCount++
+            groupCount++;
             nibbleCount++;
         }
 
@@ -512,7 +514,7 @@ RexxString *LanguageParser::packHexLiteral(size_t start, size_t length)
         unsigned char byte = 0;
 
         // get the nibble character and pack it.
-        unsigned char *nibble = (unsigned char)*inPointer++;
+        unsigned char nibble = (unsigned char)*inPointer++;
         // scan over white space, if we're there.
         while (nibble == ' ' || nibble == '\t')
         {
@@ -552,10 +554,8 @@ RexxString *LanguageParser::packHexLiteral(size_t start, size_t length)
             {
                 // invalid character
                 clauseLocation = clause->getLocation();
-                char errorOutput[2];
-                errorOutput[0] = nibble;
-                errorOutput[1] = '\0';
-                syntaxError(Error_Invalid_hex_invhex, new_string(&error_output[0]));
+                char errorOutput = (char)nibble;
+                syntaxError(Error_Invalid_hex_invhex, new_string(&errorOutput, 1));
             }
             // shift over the last nibble and add in the new one
             byte <<= 4;
@@ -612,14 +612,14 @@ RexxString *LanguageParser::packBinaryLiteral(size_t start, size_t length)
     for (size_t i = 0; i < length; i++)
     {
         // do we have a white space character?
-        if (*inPointer] == ' ' || *inPointer == '\t')
+        if (*inPointer == ' ' || *inPointer == '\t')
         {
             // now check to see if this is in a valid position.  We do not allow
             // blanks at the beginning of the string, and if we are past the
             // first group, then blanks must appear at even nibble (4 bit) boundaries.
             if (i == 0  ||                 // this is the test for the beginning
                (!firstGroup &&             // ok, we've processed the first group, this must be on a boundary
-                ((groupCount & 3) != 0))   // not evenly divisible by four...bad placement.
+                ((groupCount & 3) != 0)))  // not evenly divisible by four...bad placement.
             {
                 // update the error information
                 clauseLocation = clause->getLocation();
@@ -639,7 +639,7 @@ RexxString *LanguageParser::packBinaryLiteral(size_t start, size_t length)
         {
             // keep track of how large this group is and how many
             // total nibbles we have.
-            groupCount++
+            groupCount++;
             bitCount++;
         }
 
@@ -670,7 +670,7 @@ RexxString *LanguageParser::packBinaryLiteral(size_t start, size_t length)
     // for the first byte.  The first grouping of the string can have
     // an odd number of bits.
 
-    size_t characterCount = bitCount / 8 + (byteSize \= 0);
+    size_t characterCount = bitCount / 8 + (byteSize != 0);
 
     // if we have an even multiple of 8 bits, adjust the
     // first byte size.  After the first group, we always process
@@ -702,7 +702,7 @@ RexxString *LanguageParser::packBinaryLiteral(size_t start, size_t length)
         for (size_t k = 0; k < byteSize; k++)
         {
             // get the bit character and pack it.
-            unsigned char *bit = (unsigned char)*inPointer++;
+            unsigned char bit = (unsigned char)*inPointer++;
             // We can have white space between nibbles, so we need to do this here.
             while (bit == ' ' || bit == '\t')
             {
@@ -716,14 +716,12 @@ RexxString *LanguageParser::packBinaryLiteral(size_t start, size_t length)
                 byte++;
             }
             // other option is a 0, else give an error
-            else if (bit \= '0')
+            else if (bit != '0')
             {
                 // invalid character
                 clauseLocation = clause->getLocation();
-                char errorOutput[2];
-                errorOutput[0] = bit;
-                errorOutput[1] = '\0';
-                syntaxError(Error_Invalid_hex_invhex, new_string(&errorOutput[0]));
+                char errorOutput = (char)bit;
+                syntaxError(Error_Invalid_hex_invhex, new_string(&errorOutput, 1));
             }
         }
         // we always process 8 bits after the first byte
@@ -759,6 +757,7 @@ RexxToken *LanguageParser::sourceNextToken(RexxToken *previous )
         // locate the next token position
         CharacterClass tokenClass = locateToken(inch, blanksSignificant);
 
+        SourceLocation location;
         // record a starting location.
         startLocation(location);
 
@@ -774,7 +773,7 @@ RexxToken *LanguageParser::sourceNextToken(RexxToken *previous )
             // mark the end offset as the current length of the line.
             location.setEndOffset(currentLength);
             // step to the next line and return a terminator token.
-            nextLine()
+            nextLine();
             return clause->newToken(TOKEN_EOC, CLAUSEEND_EOL, location);
         }
 
@@ -891,7 +890,7 @@ RexxToken *LanguageParser::sourceNextToken(RexxToken *previous )
                     // the twiddle...we also handle the double case as a special
                     case '~':
                     {
-                        if (this->nextSpecial('~', location))
+                        if (nextSpecial('~', location))
                         {
                             // this is a special character class
                             return clause->newToken(TOKEN_DTILDE, location);
@@ -945,7 +944,7 @@ RexxToken *LanguageParser::sourceNextToken(RexxToken *previous )
                     case '*':
                     {
                         // two start is power
-                        if (this->nextSpecial('*', location))
+                        if (nextSpecial('*', location))
                         {
                             return OPERATOR(POWER);  // this is not an assignment operator
                         }
@@ -961,7 +960,7 @@ RexxToken *LanguageParser::sourceNextToken(RexxToken *previous )
                     case '&':
                     {
                         // double ampersand?
-                        if (this->nextSpecial('&', location))
+                        if (nextSpecial('&', location))
                         {
 
                             CHECK_ASSIGNMENT(XOR);  // this is allowed as an assignment shortcut
@@ -978,7 +977,7 @@ RexxToken *LanguageParser::sourceNextToken(RexxToken *previous )
                     case '|':
                     {
                          // doubled is concatenate, which cannot be used as an assignment shortcut.
-                         if (this->nextSpecial('|', location))
+                         if (nextSpecial('|', location))
                          {
                              return OPERATOR(CONCATENATE);
                          }
@@ -994,7 +993,7 @@ RexxToken *LanguageParser::sourceNextToken(RexxToken *previous )
                     case '=':
                     {
                         // double is a strict equal operator
-                        if (this->nextSpecial('=', location))
+                        if (nextSpecial('=', location))
                         {
                             return OPERATOR(STRICT_EQUAL);
                         }
@@ -1011,26 +1010,26 @@ RexxToken *LanguageParser::sourceNextToken(RexxToken *previous )
                     case '<':
                     {
                          // << or <<=
-                         if (this->nextSpecial('<', location))
+                         if (nextSpecial('<', location))
                          {
                              // <<=
-                             if (this->nextSpecial('=', location))
+                             if (nextSpecial('=', location))
                              {
                                  return OPERATOR(STRICT_LESSTHAN_EQUAL);
                              }
                              // <<
                              else
                              {
-                                 token = OPERATOR(STRICT_LESSTHAN);
+                                 return OPERATOR(STRICT_LESSTHAN);
                              }
                          }
                          // <=
-                         else if (this->nextSpecial('=', location))
+                         else if (nextSpecial('=', location))
                          {
                              return OPERATOR(LESSTHAN_EQUAL);
                          }
                          // <>
-                         else if (this->nextSpecial('>', location))
+                         else if (nextSpecial('>', location))
                          {
                              return OPERATOR(LESSTHAN_GREATERTHAN);
                          }
@@ -1061,12 +1060,12 @@ RexxToken *LanguageParser::sourceNextToken(RexxToken *previous )
                             }
                         }
                         // >=
-                        else if (this->nextSpecial('=', location))
+                        else if (nextSpecial('=', location))
                         {
                             return OPERATOR(GREATERTHAN_EQUAL);
                         }
                         // ><
-                        else if (this->nextSpecial('<', location))
+                        else if (nextSpecial('<', location))
                         {
                             return OPERATOR(GREATERTHAN_LESSTHAN);
                         }
@@ -1082,10 +1081,10 @@ RexxToken *LanguageParser::sourceNextToken(RexxToken *previous )
                     case '\\':
                     {
                         // \=
-                        if (this->nextSpecial('=', location))
+                        if (nextSpecial('=', location))
                         {
                             // \==
-                            if (this->nextSpecial('=', location))
+                            if (nextSpecial('=', location))
                             {
                                 return OPERATOR(STRICT_BACKSLASH_EQUAL);
                             }
@@ -1096,10 +1095,10 @@ RexxToken *LanguageParser::sourceNextToken(RexxToken *previous )
                             }
                         }
                         // \> variations
-                        else if (this->nextSpecial('>', location))
+                        else if (nextSpecial('>', location))
                         {
                             // \>>
-                            if (this->nextSpecial('>', location))
+                            if (nextSpecial('>', location))
                             {
                                 return OPERATOR(STRICT_BACKSLASH_GREATERTHAN);
                             }
@@ -1110,10 +1109,10 @@ RexxToken *LanguageParser::sourceNextToken(RexxToken *previous )
                             }
                         }
                         // \< variations s than sign?        */
-                        else if (this->nextSpecial('<', location))
+                        else if (nextSpecial('<', location))
                         {
                             // \<<
-                            if (this->nextSpecial('<', location))
+                            if (nextSpecial('<', location))
                             {
                                 return OPERATOR(STRICT_BACKSLASH_LESSTHAN);
                             }
@@ -1126,7 +1125,7 @@ RexxToken *LanguageParser::sourceNextToken(RexxToken *previous )
                         // simple \ logical not
                         else
                         {
-                            token = OPERATOR(BACKSLASH);
+                            return OPERATOR(BACKSLASH);
                         }
                         break;
                     }
@@ -1137,10 +1136,10 @@ RexxToken *LanguageParser::sourceNextToken(RexxToken *previous )
                     case (unsigned char)0xAC:      /* logical not  (need unsigned cast) */
                     {
                         // not equal variants                */
-                        if (this->nextSpecial('=', location))
+                        if (nextSpecial('=', location))
                         {
                             // not ==
-                            if (this->nextSpecial('=', location))
+                            if (nextSpecial('=', location))
                             {
                                 return OPERATOR(STRICT_BACKSLASH_EQUAL);
                             }
@@ -1151,10 +1150,10 @@ RexxToken *LanguageParser::sourceNextToken(RexxToken *previous )
                             }
                         }
                         // not > variants
-                        else if (this->nextSpecial('>', location))
+                        else if (nextSpecial('>', location))
                         {
                             // not >>
-                            if (this->nextSpecial('>', location))
+                            if (nextSpecial('>', location))
                             {
                                 return OPERATOR(STRICT_BACKSLASH_GREATERTHAN);
                             }
@@ -1165,10 +1164,10 @@ RexxToken *LanguageParser::sourceNextToken(RexxToken *previous )
                             }
                         }
                         // not < variants
-                        else if (this->nextSpecial('<', location))
+                        else if (nextSpecial('<', location))
                         {
                             // not <<
-                            if (this->nextSpecial('<', location))
+                            if (nextSpecial('<', location))
                             {
                                 return OPERATOR(STRICT_BACKSLASH_LESSTHAN);
                             }
@@ -1205,13 +1204,14 @@ RexxToken *LanguageParser::sourceNextToken(RexxToken *previous )
                 }
             }
         }
-        break;                             /* have a token now                  */
+        break;
     }
-    return token;                        /* return the next token             */
+    // should never get here
+    return OREF_NULL;
 }
 
 // different scanning states for scanning numeric symbols
-enum
+typedef enum
 {
     EXP_START,
     EXP_EXCLUDED,
@@ -1241,9 +1241,9 @@ RexxToken *LanguageParser::scanSymbol()
 
     // set the start position for the token
     SourceLocation location;
-    startLocation(location;)
+    startLocation(location);
 
-    unsigned int getChar();               // ok, get the current character to start this off
+    unsigned int inch = getChar();       // ok, get the current character to start this off
     // ok, loop through the token until we've consumed it all.
     for (;;)
     {
@@ -1294,7 +1294,7 @@ RexxToken *LanguageParser::scanSymbol()
                 }
                 // So far, the form is "digitsE"...this can still be a number,
                 // but know we're looking for an exponent.
-                else if (inch=='E' | inch == 'e')
+                else if (inch=='E' || inch == 'e')
                 {
                     state = EXP_E;
                 }
@@ -1438,7 +1438,7 @@ RexxToken *LanguageParser::scanSymbol()
             eoffset = lineOffset;
             // step past the sign and switch the scanning state to look for
             // the exponent digits after a sign.
-            stepPosition()
+            stepPosition();
             state = EXP_ESIGN;
 
             // everything is all set up so we can back up.  Now get the next
@@ -1480,7 +1480,7 @@ RexxToken *LanguageParser::scanSymbol()
     TokenSubclass numeric = SUBTYPE_NONE;
 
     // ok, copy each character over, translating to uppercase.
-    for (i = 0; i < length; i++)
+    for (size_t i = 0; i < length; i++)
     {
         inch = getChar(start + i);
         unsigned int tran = translateChar(inch);
@@ -1602,7 +1602,7 @@ RexxToken *LanguageParser::scanLiteral()
 {
     // set the start position for the token
     SourceLocation location;
-    startLocation(location;)
+    startLocation(location);
 
     // get the opening quote character and save for end matching
     unsigned int inch = getChar();
@@ -1635,7 +1635,7 @@ RexxToken *LanguageParser::scanLiteral()
             clauseLocation = clause->getLocation();
 
             // we have different errors depending on the type of delimier
-            if (literal_delimiter == '\'')
+            if (literalDelimiter == '\'')
             {
                 syntaxError(Error_Unmatched_quote_single);
             }
@@ -1738,7 +1738,7 @@ RexxToken *LanguageParser::scanLiteral()
         // scanning, which is faster
         if (doubleQuotes == 0)
         {
-            value = newString(current + start, length);
+            value = new_string(current + start, length);
         }
         else
         {
@@ -1746,16 +1746,16 @@ RexxToken *LanguageParser::scanLiteral()
             // of doubled quotes.
             value = raw_string(length - doubleQuotes);
             // copy over the value, accounting for the doubled quotes
-            for (i = 0, j = start; j < length; i++, j++)
+            for (size_t i = 0, j = start; j < length; i++, j++)
             {
                 // get the next character and check against the delimiter
                 inch = getChar(j);
                 if (inch == literalDelimiter)
                 {
                     // just step one extra character for the doubleds.
-                    j++;                     /* step one extra                    */
+                    j++;
                 }
-                value->putChar(i, inch);   /* copy over the literal data        */
+                value->putChar(i, inch);
             }
         }
     }
@@ -1800,7 +1800,7 @@ StringSymbolType LanguageParser::scanSymbol(RexxString *string)
     // first scan the entire string looking for an invalid character...that is a quick
     // out.  Note that we might encounter a "+" or "-" in a potential numeric value, so
     // we can just drop out
-    while (scan < linend && isSymbolCharacter(*scan)
+    while (scan < linend && isSymbolCharacter(*scan))
     {
         // count any periods we see along the way.
         if (*scan == '.')
@@ -1824,7 +1824,7 @@ StringSymbolType LanguageParser::scanSymbol(RexxString *string)
         }
 
         // something other than a sign is also bad
-        if ((*scan != '-' && *scan != '+')
+        if (*scan != '-' && *scan != '+')
         {
             return STRING_BAD_VARIABLE;
         }

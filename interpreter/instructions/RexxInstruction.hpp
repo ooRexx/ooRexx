@@ -49,6 +49,7 @@
 class RexxInstructionEnd;
 class RexxInstructionEndIf;
 class RexxClause;
+class LanguageParser;
 
 #include "SourceLocation.hpp"
 
@@ -124,7 +125,7 @@ class RexxBlockInstruction : public RexxInstruction
 
     virtual EndBlockType getEndStyle() = 0;
     virtual bool isLoop() { return false; };
-    virtual void matchEnd(RexxInstructionEnd *, RexxSource *) { ; };
+    virtual void matchEnd(RexxInstructionEnd *, LanguageParser *) { ; };
     virtual void terminate(RexxActivation *, RexxDoBlock *) { ; };
 
     // inherited behaviour

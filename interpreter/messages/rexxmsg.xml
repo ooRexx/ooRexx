@@ -550,7 +550,7 @@ Say NOT EQUALS
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Incomplete_do_loop</SymbolicName>
-        <Text>LOOP instruction on line <Sub position="1" name="line_number"/> requires matching END</Text>
+        <Text>DO or LOOP instruction on line <Sub position="1" name="line_number"/> requires matching END</Text>
       </SubMessage>
     </Subcodes>
   </Message>

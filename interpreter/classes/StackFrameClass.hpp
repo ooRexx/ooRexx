@@ -46,13 +46,6 @@
 #include "RoutineClass.hpp"
 #include "MethodClass.hpp"
 
-#define FRAME_PARSE "PARSE"
-#define FRAME_ROUTINE "ROUTINE"
-#define FRAME_METHOD "METHOD"
-#define FRAME_INTERNAL_CALL "INTERNALCALL"
-#define FRAME_INTERPRET "INTERPRET"
-#define FRAME_PROGRAM "PROGRAM"
-
 class RexxSource;
 class RexxArray;
 
@@ -83,6 +76,14 @@ public:
     virtual     RexxString  *stringValue();
 
     RexxObject *newRexx(RexxObject **args, size_t argc);
+
+    // frame identifier constants
+    static const char *FRAME_COMPILE;
+    static const char *FRAME_ROUTINE;
+    static const char *FRAME_METHOD;
+    static const char *FRAME_INTERNAL_CALL;
+    static const char *FRAME_INTERPRET;
+    static const char *FRAME_PROGRAM;
 
 protected:
 

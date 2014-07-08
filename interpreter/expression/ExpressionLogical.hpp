@@ -52,11 +52,10 @@ class RexxExpressionLogical : public RexxInternalObject
  public:
     inline void *operator new(size_t, void *ptr) {return ptr;}
            void *operator new(size_t, size_t);
-    inline void  operator delete(void *) { ; }
     inline void  operator delete(void *, void *) {;}
     inline void  operator delete(void *, size_t) {;}
 
-    RexxExpressionLogical(LanguageParser *, size_t, RexxQueue *);
+    RexxExpressionLogical(size_t, RexxQueue *);
     inline RexxExpressionLogical(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);

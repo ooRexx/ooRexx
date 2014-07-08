@@ -309,3 +309,67 @@ RexxString *RexxToken::upperValue()
 {
     return stringValue->upper();
 }
+
+
+/**
+ * Get a display value for a token.  For all symbols,
+ * literals, and operators, this is just the string value
+ * already set in the token.  For others, we generate
+ * a string object automatically.
+ *
+ * @return The string display value of the token.
+ */
+RexxString *RexxToken::displayValue()
+{
+    // get the token string value.  Not all tokens have an assigned
+    // string value, so we generate it here for the error.
+    if (stringValue != OREF_NULL)
+    {
+        return stringValue;
+    }
+
+    // some tokens don't directly have a string value...we can provide one here
+    switch (classId)
+    {
+        // blank operator
+        case TOKEN_BLANK:
+            return new_string(" ", 1);
+
+        // end of clause...just use a semicolon, even though it might be
+        // a linend.
+        case TOKEN_EOC:
+            return new_string(";", 1);
+
+        // comma
+        case TOKEN_COMMA:
+            return new_string(",", 1);
+
+        case TOKEN_LEFT:
+            return new_string("(", 1);
+
+        case TOKEN_RIGHT:
+            return new_string(")", 1);
+
+        case TOKEN_SQLEFT:
+            return new_string("[", 1);
+
+        case TOKEN_SQRIGHT:
+            return new_string("]", 1);
+
+        case TOKEN_COLON:
+            return new_string(":", 1);
+
+        case TOKEN_TILDE:
+            return new_string("~", 1);
+
+        case TOKEN_DTILDE:
+            return new_string("~~", 2);
+
+        case TOKEN_DCOLON:
+            return new_string("::", 2);
+
+        // token we don't have an answer for...just use a null string
+        default:
+            return (RexxString *)OREF_NULLSTRING;
+    }
+}

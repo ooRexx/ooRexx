@@ -70,29 +70,16 @@ void *RexxExpressionLogical::operator new(size_t size, size_t  count)
 /**
  * Constructor for a RexxExpressionLogical object.
  *
- * @param source The source parsing context (used for raising errors)
  * @param count  The number of expressions in the list.
  * @param list   The accumulated list of expressions.
  */
-RexxExpressionLogical::RexxExpressionLogical(LanguageParser *parser, size_t count, RexxQueue  *list)
+RexxExpressionLogical::RexxExpressionLogical(size_t count, RexxQueue *list)
 {
     expressionCount = count;
 
-    // the parsed expressions are stored in a queue, so we process them in
-    // reverse order.  Note that we cannot use the macro to copy these here
-    // because we need to validate these as well.
-
-    // TODO:  Ideally, this should be validated in the parser...also need to check that
-    // while/until are not subject to this.
-    while (count > 0)
-    {
-        RexxObject *condition = list->pop();
-        if (condition == OREF_NULL)
-        {
-            parser->syntaxError(Error_Invalid_expression_logical_list);
-        }
-        expressions[--count] = condition;
-    }
+    // now copy the expressions from the sub term stack
+    // NOTE:  The expressionss are in last-to-first order on the stack.
+    initializeObjectArray(count, expressions, RexxObject, list);
 }
 
 

@@ -47,18 +47,22 @@
 
 #include "RexxVariableDictionary.hpp"
 
+// TODO:  See about eliminating these defines
 #define VDICT_NOVALUE    0x0001u       // novalue traps enabled
 #define NESTED_INTERNAL  0x0002u       // this is an internal call without procedure
 #define METHOD_CONTEXT   0x0004u       // this is a method context
 
-enum
+/**
+ * Predefined index values for a stack frame.
+ */
+typedef enum
 {
    VARIABLE_SELF,
    VARIABLE_SUPER,
    VARIABLE_RESULT,
    VARIABLE_RC,
    VARIABLE_SIGL,
-};
+} VariableFrameIndex;
 
 /**
  * Locate variable frame managed by an activation.

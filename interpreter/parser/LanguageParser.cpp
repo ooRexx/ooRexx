@@ -51,6 +51,28 @@
 #include "PackageClass.hpp"
 #include "RexxCode.hpp"
 #include "DirectoryClass.hpp"
+#include "ClassDirective.hpp"
+#include "StackFrameClass.hpp"
+#include "ActivationFrame.hpp"
+#include "RexxActivation.hpp"
+#include "RexxLocalVariables.hpp"
+#include "SelectInstruction.hpp"
+#include "ElseInstruction.hpp"
+#include "EndIf.hpp"
+#include "EndInstruction.hpp"
+#include "DoInstruction.hpp"
+#include "OtherwiseInstruction.hpp"
+#include "CallInstruction.hpp"
+#include "ExpressionFunction.hpp"
+#include "ExpressionVariable.hpp"
+#include "ExpressionCompoundVariable.hpp"
+#include "ExpressionStem.hpp"
+#include "ExpressionDotVariable.hpp"
+#include "ExpressionMessage.hpp"
+#include "ExpressionOperator.hpp"
+#include "ExpressionLogical.hpp"
+#include "RexxInternalApis.h"
+#include "SystemInterpreter.hpp"
 
 
 /**
@@ -171,6 +193,17 @@ RoutineClass *LanguageParser::createProgram(RexxString *name)
 }
 
 
+/**
+ * Translate a single string value for an interpret
+ * instruction.
+ *
+ * @param interpretString
+ *                   The string to interpret.
+ * @param labels     The labels from the interpret context.
+ * @param lineNumber The line number of the interpret location.
+ *
+ * @return The interpreted code.
+ */
 RexxCode *LanguageParser::translateInterpret(RexxString *interpretString, RexxDirectory *labels, size_t lineNumber)
 {
     // create the appropriate array source, then the parser, then generate the
@@ -230,6 +263,11 @@ void LanguageParser::live(size_t liveMark)
     memory_mark(operators);
     memory_mark(calls);
     memory_mark(activeClass);
+    memory_mark(classes);
+    memory_mark(unattachedMethods);
+    memory_mark(routines);
+    memory_mark(publicRoutines);
+    memory_mark(libraries);
 }
 
 
@@ -244,7 +282,7 @@ void LanguageParser::liveGeneral(MarkReason reason)
 {
     // because of the way garbage collection works, it is a good
     // idea to mark these first because they are chained.
-    memory_mark(mainSection);
+    memory_mark_general(mainSection);
     memory_mark_general(firstInstruction);
     memory_mark_general(lastInstruction);
     memory_mark_general(currentInstruction);
@@ -266,6 +304,11 @@ void LanguageParser::liveGeneral(MarkReason reason)
     memory_mark_general(operators);
     memory_mark_general(calls);
     memory_mark_general(activeClass);
+    memory_mark_general(classes);
+    memory_mark_general(unattachedMethods);
+    memory_mark_general(routines);
+    memory_mark_general(publicRoutines);
+    memory_mark_general(libraries);
 }
 
 
@@ -299,7 +342,7 @@ MethodClass *LanguageParser::generateMethod(PackageClass *sourceContext)
     // force the package to resolve classes/libraries now.
     installPackage();
     // return the main executable.
-    return (MethodClass *)package->mainExecutable();
+    return (MethodClass *)package->mainExecutable;
 }
 
 
@@ -333,7 +376,7 @@ RoutineClass *LanguageParser::generateRoutine(PackageClass *sourceContext)
     // force the package to resolve classes/libraries now.
     installPackage();
     // return the main executable.
-    return (RoutineClass *)package->mainExecutable();
+    return (RoutineClass *)package->mainExecutable;
 }
 
 
@@ -356,7 +399,7 @@ RoutineClass *LanguageParser::generateProgram()
     // at this time.
     package->initCode = mainSection;
     // return the main executable.
-    return (RoutineClass *)package->mainExecutable();
+    return (RoutineClass *)package->mainExecutable;
 }
 
 
@@ -502,7 +545,8 @@ StackFrameClass *LanguageParser::createStackFrame()
     // arguments.
     RexxString *traceback = package->traceBack(OREF_NULL, clauseLocation, 0, true);
     ProtectedObject p(traceback);
-    return new StackFrameClass(FRAME_PARSE, package->programName, OREF_NULL, OREF_NULL, OREF_NULL, traceback, clauseLocation.getLineNumber());
+    return new StackFrameClass(StackFrameClass::FRAME_COMPILE, package->programName, OREF_NULL,
+        OREF_NULL, OREF_NULL, traceback, clauseLocation.getLineNumber());
 }
 
 
@@ -558,7 +602,7 @@ void LanguageParser::nextLine()
         clause->setEnd(lineNumber, lineOffset);
     }
     // move to the start of the next line
-    position(line_number + 1, 0);
+    position(lineNumber + 1, 0);
 }
 
 /**
@@ -590,6 +634,7 @@ bool LanguageParser::nextClause()
 {
     SourceLocation location;             // location of the clause
     SourceLocation tokenLocation;        // location of each token
+    RexxToken *token = OREF_NULL;
 
     // if reclamed is true, we have previously given up on processing a clause, so
     // the tokens are already available.  This is not typically the case.
@@ -605,7 +650,7 @@ bool LanguageParser::nextClause()
             clause->setStart(lineNumber, lineOffset);
             // get the next source token.  White space tokens are ignored in this context,
             // as we're looking for the beginning of a real clause.
-            RexxToken *token = sourceNextToken(OREF_NULL);
+            token = sourceNextToken(OREF_NULL);
             // OREF_NULL indicates we've hit the end of the source.  Mark us as
             // finished and return
             if (token == OREF_NULL)
@@ -673,7 +718,7 @@ bool LanguageParser::nextClause()
 void LanguageParser::translate()
 {
     // create a stack frame so errors can display the parsing location.
-    ParserActivationFrame frame(ActivityManager::currentActivity, this);
+    CompileActivationFrame frame(ActivityManager::currentActivity, this);
 
     // set up the package global defaults
     package->digits = Numerics::DEFAULT_DIGITS;
@@ -706,7 +751,7 @@ void LanguageParser::translate()
         // now loop until we hit the end of the source processing directives.
         while (!atEnd())
         {
-            parseDirective();
+            nextDirective();
         }
         // resolve any class dependencies
         resolveDependencies();
@@ -726,11 +771,11 @@ RexxCode *LanguageParser::translateBlock()
     firstInstruction = OREF_NULL;
     lastInstruction = OREF_NULL;
     // get a list of all calls that might need resolution
-    calls = new_array()
+    calls = new_array();
     // a table of variables...starting with the special variables we allocated space for.
     variables = (RexxDirectory *)TheCommonRetrievers->copy();
     // restart the variable index        */
-    variableIndex = FIRST_VARIABLE_INDEX;
+    variableIndex = RexxLocalVariables::FIRST_VARIABLE_INDEX;
     exposedVariables = new_directory();
 
     // do we have labels from an interpret?
@@ -840,10 +885,10 @@ RexxCode *LanguageParser::translateBlock()
         // any pending control levels.
         else if (type != KEYWORD_ELSE)
         {
-            this->flushControl(instruction);
+            flushControl(instruction);
         }
         // validate allowed instructions in a SELECT
-        if (topDoType(KEYWORD_SELECT) &&
+        if (topDoIsType(KEYWORD_SELECT) &&
             (type != KEYWORD_WHEN && type != KEYWORD_OTHERWISE && type != KEYWORD_END ))
         {
             syntaxError(Error_When_expected_whenotherwise, topDo());
@@ -869,7 +914,7 @@ RexxCode *LanguageParser::translateBlock()
                 {
                     // let the select know that another WHEN was added, but we
                     // need the special WHEN CASE version.
-                    ((RexxInstructionSelectCase *)second)->addWhen(whenCaseNew(RexxInstructionIf *)instruction));
+                    ((RexxInstructionSelectCase *)second)->addWhen(whenCaseNew((RexxInstructionIf *)instruction));
                 }
                 // mis-placed WHEN instruction
                 else
@@ -1128,7 +1173,8 @@ RexxCode *LanguageParser::translateBlock()
     // now that we've got all of the labels scanned off, we can figure out
     // what sort of targets these calls will resolve to.
 
-    for (size_t i = 1, size_t count = calls->items(); i <- count; i++)
+    size_t count = calls->items();
+    for (size_t i = 1;  i <= count; i++)
     {
         instruction = (RexxInstruction *)calls->get(i);
         // function calls are expression objects, while CALLs
@@ -1162,6 +1208,8 @@ RexxCode *LanguageParser::translateBlock()
     // they might have been provided by an interpret.  So always clear them out at the
     // end of a block.
     labels = OREF_NULL;
+    // and return the code object.
+    return code;
 }
 
 
@@ -1229,7 +1277,7 @@ void LanguageParser::resolveDependencies()
             if (nextInstall == OREF_NULL)
             {
                 // directive line where we can give as the source of the error
-                ClassDirective *errorClass = (ClassDirective *)(classes->getValue(classes->firstIndex()));
+                ClassDirective *errorClass = (ClassDirective *)classes->get(1);
                 clauseLocation = errorClass->getLocation();
                 syntaxError(Error_Execution_cyclic, name);
             }
@@ -1302,7 +1350,7 @@ void LanguageParser::flushControl(RexxInstruction *instruction)
             // pop the instruction off of the stack
             RexxInstruction *second = popDo();
             // and create a new end marker for that instruction.
-            RexxInstruction second = endIfNew((RexxInstructionIf *)second);
+            second = endIfNew((RexxInstructionIf *)second);
             // have an instruction to add?
             if (instruction != OREF_NULL)
             {
@@ -1331,8 +1379,8 @@ void LanguageParser::flushControl(RexxInstruction *instruction)
             second = endIfNew((RexxInstructionIf *)second);
             // we add this clause behine the new one, and also add this
             // to the control stack as a pending instruction
-            this->addClause(second);
-            this->pushDo(second);
+            addClause(second);
+            pushDo(second);
 
             // we're done with this
             break;
@@ -1495,7 +1543,7 @@ RexxCompoundVariable *LanguageParser::addCompound(RexxString *name)
     // we cache compound variables also...see if we've encountered
     // this exact name before.
     RexxCompoundVariable *retriever = (RexxCompoundVariable *)(variables->fastAt(name));
-    if (retriever \= OREF_NULL)
+    if (retriever != OREF_NULL)
     {
         return retriever;
     }
@@ -1516,13 +1564,13 @@ RexxCompoundVariable *LanguageParser::addCompound(RexxString *name)
     // create a Rexx string version of the stem name and retrieve this
     // from the
     RexxString *stemName = new_string(start, _position - start + 1);
-    RexxStemVariable *stemRetriever = this->addStem(stemName);
+    RexxStemVariable *stemRetriever = addStem(stemName);
 
     ProtectedObject p(stemRetriever);
 
     // now split the tail piece into its component parts so that
     // we can optimize construction of the final tail lookup.
-    tailCount = 0;
+    size_t tailCount = 0;
     do
     {
         // we're here because we just saw a previous period.  that's either the
@@ -1564,7 +1612,7 @@ RexxCompoundVariable *LanguageParser::addCompound(RexxString *name)
     } while (_position < end);
     // This will pull the items off of the term stack and populate its internal
     // tail table for lookup processing.
-    RexxCompoundVariable *retriever = new (tailCount) RexxCompoundVariable(stemName, stemRetriever->index, subTerms, tailCount);
+    retriever = new (tailCount) RexxCompoundVariable(stemName, stemRetriever->getIndex(), subTerms, tailCount);
     // add this to the retriever table so that all references to a compound variable with the
     // same full name will resolved to the same retriever.  We're safe just using the
     // variables table for this.
@@ -1663,16 +1711,18 @@ RexxObject *LanguageParser::addText(RexxToken *token)
         {
             // each symbol subtype requires a
             // different retrieval method
-            switch (token->subclass)
+            switch (token->subtype())
             {
                 // the dummy placeholder period and symbols
                 // that start with a digit are just literal strings.
                 case SYMBOL_DUMMY:
                 case SYMBOL_CONSTANT:
                 {
+                    RexxObject *value;
+
                     // if this is a pure integer value within the default
                     // digits, create an integer object
-                    if (token->numeric == INTEGER_CONSTANT)
+                    if (token->isNumericSymbol())
                     {
                         value = name->requestInteger(Numerics::DEFAULT_DIGITS);
                         // this should not happen, given we've already validated
@@ -1683,6 +1733,7 @@ RexxObject *LanguageParser::addText(RexxToken *token)
                             value = name;
                         }
                         else
+                        {
                             // snip off the string number string
                             // value that was created when the
                             // integer value was created.  This
@@ -1690,6 +1741,7 @@ RexxObject *LanguageParser::addText(RexxToken *token)
                             // to the saved program size. It will
                             // be rebuilt on demand if it is needed.
                             name->setNumberString(OREF_NULL);
+                        }
                     }
                     else
                     {
@@ -1734,10 +1786,9 @@ RexxObject *LanguageParser::addText(RexxToken *token)
                 case SYMBOL_DOTSYMBOL:
                 {
                     // create the shorter name and add to the common set
-                    value = name->extract(1, name->getLength() - 1);
-                    value = commonString(name->extract(1, name->getLength() - 1));
+                    RexxString *shortName = commonString(name->extract(1, name->getLength() - 1));
                     // create a retriever for this using the shorter name.
-                    retriever = (RexxObject *)new RexxDotVariable((RexxString *)value);
+                    retriever = (RexxObject *)new RexxDotVariable(shortName);
                     literals->put(retriever, name);
                     return retriever;
                     break;
@@ -1814,7 +1865,7 @@ void LanguageParser::addClause(RexxInstruction *instruction)
     // NOTE:  the first instruction is set manually, so we should ALWAYS
     // have non-null values here.
     lastInstruction->setNext(instruction);
-    lastInstruction = instruction);
+    lastInstruction = instruction;
 }
 
 
@@ -1900,7 +1951,7 @@ RexxArray *LanguageParser::getGuard()
  * @return An object that can be used to evaluate this option
  *         expression.
  */
-RexxObject *LanguageParser::constantExpression()
+RexxObject *LanguageParser::parseConstantExpression()
 {
     // everthing keys off of the first token.
     RexxToken *token = nextReal();
@@ -1937,59 +1988,7 @@ RexxObject *LanguageParser::constantExpression()
     {
         // parse our a subexpression, terminating on the end of clause or
         // a right paren (the right paren is actually the required terminator)
-        RexxObject *exp = this->subExpression(TERM_RIGHT);
-        // now verify that the terminator token was a right paren.  If not,
-        // issue an error message using the original opening token so we know
-        // which one is an issue.
-        if (!nextToken()->isRightParen())
-        {
-            syntaxErrorAt(Error_Unmatched_parenthesis_paren, token);
-        }
-        // protect the expression from GC and return it.
-        holdObject(exp);
-        return exp;
-    }
-    return OREF_NULL;
-}
-
-
-/**
- * Evaluate a "constant" expression for REXX instruction keyword
- * values.  A constant expression is a literal string, constant
- * symbol, or an expression enclosed in parentheses.  The
- * expression inside parens can be a complex logical expression.
- * That is, something like (a = b, c = d), which acts like a
- * logical AND with evaluation shortcutting.
- *
- * @return A parsed out expression.
- */
-RexxObject *LanguageParser::parseConstantLogicalExpression()
-{
-    // This is very similar to constant expression, until we get to the
-    // expression inside the parents.
-    RexxToken *token = nextReal();
-    if (token->isLiteral())
-    {
-        return addText(token);
-    }
-    else if (token->isConstant())
-    {
-        return addText(token);
-    }
-    else if (token->isEndOfClause())
-    {
-        previousToken();
-        return OREF_NULL;
-    }
-    else if (!token->isLeftParen())
-    {
-        syntaxError(Error_Invalid_expression_general, token);
-    }
-    else
-    {
-        // we use a different method for parsing the expression that knows
-        // about the logical lists
-        RexxObject *expression = parseLogical(token, TERM_RIGHT);
+        RexxObject *exp = parseSubExpression(TERM_RIGHT);
         // now verify that the terminator token was a right paren.  If not,
         // issue an error message using the original opening token so we know
         // which one is an issue.
@@ -2020,7 +2019,7 @@ RexxObject *LanguageParser::parenExpression(RexxToken *start)
     // NB, the opening paren has already been parsed off and is in
     // the start token, which we only need for error reporting.
 
-    RexxObject *exp = subExpression(TERM_RIGHT);
+    RexxObject *expression = parseSubExpression(TERM_RIGHT);
 
     // this must be terminated by a right paren
     if (!nextToken()->isRightParen())
@@ -2029,9 +2028,10 @@ RexxObject *LanguageParser::parenExpression(RexxToken *start)
     }
 
     // protect the expression and return it.
-    holdObject(exp);
-    return exp;
+    holdObject(expression);
+    return expression;
 }
+
 
 /**
  * Parse off an expression, stopping when one of the possible set
@@ -2043,7 +2043,7 @@ RexxObject *LanguageParser::parenExpression(RexxToken *start)
  *
  * @return An executable expression object.
  */
-RexxObject *LanguageParser::expression(int terminators)
+RexxObject *LanguageParser::parseExpression(int terminators)
 {
     // get the first real token.  This will skip over all of the
     // white space, comments, etc. to get to the real meat of the expression.
@@ -2052,7 +2052,7 @@ RexxObject *LanguageParser::expression(int terminators)
     nextReal();
     previousToken();
     // and go parse this.
-    return subExpression(terminators);
+    return parseSubExpression(terminators);
 }
 
 
@@ -2069,11 +2069,11 @@ RexxObject *LanguageParser::expression(int terminators)
  *
  * @return
  */
-RexxObject *LanguageParser::subExpression(int terminators )
+RexxObject *LanguageParser::parseSubExpression(int terminators )
 {
     // generally, expressions proceed with term-operator-term, with various modifications.
     // start by processing of a term value.
-    RexxObject *left = messageSubterm(terminators);
+    RexxObject *left = parseMessageSubterm(terminators);
     RexxObject *right = OREF_NULL;
 
     // hmmm, nothing found, so we're done.
@@ -2109,7 +2109,7 @@ RexxObject *LanguageParser::subExpression(int terminators )
 
                 // create a message term from the target...this also figures out
                 // the message name and any arguments.
-                RexxObject *subexpression = message(left, token->isType(TOKEN_DTILDE), terminators);
+                RexxObject *subexpression = parseMessage(left, token->isType(TOKEN_DTILDE), terminators);
                 // that goes back on the term stack
                 pushTerm(subexpression);
                 break;
@@ -2119,10 +2119,10 @@ RexxObject *LanguageParser::subExpression(int terminators )
             case  TOKEN_SQLEFT:
             {
                 // the term is required
-                left = requiredTerm();
+                left = requiredTerm(token);
                 // this is a message to the left term, and may (ok, probably) have
                 // arguments as well
-                RexxObject *subexpression = collectionMessage(token, left);
+                RexxObject *subexpression = parseCollectionMessage(token, left);
                 // and this goes back on to the term stack
                 pushTerm(subexpression);
                 break;
@@ -2142,7 +2142,7 @@ RexxObject *LanguageParser::subExpression(int terminators )
                 location.setEnd(location.getLineNumber(), location.getOffset());
                 // create a dummy token, push the abuttal token back on the queue, and fall
                 // through to the next section where the blank concatenate operator is handled.
-                token = new RexxToken (TOKEN_OPERATOR, OPERATOR_ABUTTAL, OREF_NULLSTRING, location);
+                token = new RexxToken (TOKEN_OPERATOR, location, OPERATOR_ABUTTAL, OREF_NULLSTRING);
                 previousToken();
             }
             // NOTE:  The above section falls through to this piece
@@ -2202,14 +2202,14 @@ RexxObject *LanguageParser::subExpression(int terminators )
                     // pop off the top operator, and push a new term on the stack to
                     // replace this.
                     RexxToken *op = popOperator();
-                    pushTerm((RexxObject *)new RexxBinaryOperator(op->subType(), left, right));
+                    pushTerm((RexxObject *)new RexxBinaryOperator(op->subtype(), left, right));
                 }
 
                 // finished popping lower precedence items.  Now push this operator on
                 // to the stack.  We need to evaluate its right-hand side before this can be handled.
                 pushOperator(token);
                 // evaluate a right-hand side to this expression.
-                right = messageSubterm(terminators);
+                right = parseMessageSubterm(terminators);
                 // Ok, we need a right term here, unless this is actually a blank operator.
                 // in theory, we've already handled that possibility, but it doesn't hurt
                 // to check.
@@ -2282,7 +2282,7 @@ RexxObject *LanguageParser::subExpression(int terminators )
         left = requiredTerm(token);
 
         // all of these operators are binaries, and get pushed back on the stack
-        pushTerm((RexxObject *)new RexxBinaryOperator(token->subType(), left, right));
+        pushTerm((RexxObject *)new RexxBinaryOperator(token->subtype(), left, right));
         // and pop another operator.
         token = popOperator();
     }
@@ -2303,11 +2303,11 @@ RexxObject *LanguageParser::subExpression(int terminators )
  *
  * @return An array object holding the argument expressions.
  */
-RexxArray *LanguageParser::argArray(RexxToken *firstToken, int terminators )
+RexxArray *LanguageParser::parseArgArray(RexxToken *firstToken, int terminators )
 {
     // scan a set of arguments until we hit our terminator (likely to be
     // a ')' or ']'.  Arguments are delimited by ','
-    size_t argCount = argList(firstToken, terminators);
+    size_t argCount = parseArgList(firstToken, terminators);
 
     // The arguments are pushed on to the term stack.  We need to allocate
     // an array and copy them into the array
@@ -2339,7 +2339,7 @@ RexxArray *LanguageParser::argArray(RexxToken *firstToken, int terminators )
  *         an empty expression following a final "," does not
  *         count as a real argument.
  */
-size_t LanguageParser::argList(RexxToken *firstToken, int terminators )
+size_t LanguageParser::parseArgList(RexxToken *firstToken, int terminators )
 {
     size_t realcount = 0;            // real count is arguments up to the last real one
     size_t total = 0;                // total is the full count of arguments we attempt to parse.
@@ -2357,7 +2357,7 @@ size_t LanguageParser::argList(RexxToken *firstToken, int terminators )
     for (;;)
     {
         // parse off an argument expression
-        RexxObject *subExpr = this->subExpression(terminators | TERM_COMMA);
+        RexxObject *subExpr = parseSubExpression(terminators | TERM_COMMA);
         // We have two term stacks.  The main term stack is used for expression evaluation.
         // the subTerm stack is used for processing expression lists like this.
         subTerms->push(subExpr);
@@ -2406,6 +2406,7 @@ size_t LanguageParser::argList(RexxToken *firstToken, int terminators )
     return realcount;
 }
 
+
 /**
  * Parse off a function call and create an expression
  * object that can process the call.
@@ -2415,12 +2416,12 @@ size_t LanguageParser::argList(RexxToken *firstToken, int terminators )
  *
  * @return A function expression object that can invoke this function.
  */
-RexxObject *LanguageParser::function(RexxToken *token, RexxToken *name)
+RexxObject *LanguageParser::parseFunction(RexxToken *token, RexxToken *name)
 {
     // parse off the argument list, leaving the arguments in the subterm stack.
     // NOTE:  Because we have a closed () construct delimiting the function arguments,
     // we can ignore any terminators specified from the parent context.
-    size_t argCount = argList(token, (TERM_RIGHT));
+    size_t argCount = parseArgList(token, (TERM_RIGHT));
 
     // create a function item.  This will also pull the argument items from the
     // subterm stack
@@ -2452,7 +2453,7 @@ RexxObject *LanguageParser::function(RexxToken *token, RexxToken *name)
  *
  * @return A message expression object.
  */
-RexxObject *LanguageParser::collectionMessage(RexxToken *token, RexxObject *target)
+RexxObject *LanguageParser::parseCollectionMessage(RexxToken *token, RexxObject *target)
 {
     // this was popped from the term stack, so we need to give is a little protection
     // until we're done parsing.
@@ -2460,7 +2461,7 @@ RexxObject *LanguageParser::collectionMessage(RexxToken *token, RexxObject *targ
 
     // get the arguments.  Like with builtin function calls, we just ignore any
     // prior terminator context and rely on the fact that the brackes must match.
-    size_t argCount = argList(token, (TERM_SQRIGHT));
+    size_t argCount = parseArgList(token, (TERM_SQRIGHT));
 
     // create the message item.
     RexxObject *msg = (RexxObject *)new (argCount) RexxExpressionMessage(target, (RexxString *)OREF_BRACKETS,
@@ -2511,10 +2512,8 @@ RexxToken  *LanguageParser::getToken(int terminators, int errorcode)
  *
  * @return An object to execute the message send.
  */
-RexxObject *LanguageParser::message(RexxObject *target, bool doubleTilde, int terminators )
+RexxObject *LanguageParser::parseMessage(RexxObject *target, bool doubleTilde, int terminators )
 {
-    RexxString   *messagename = OREF_NULL;  /* message name                      */
-
     // this message might have a superclass override...default is none.
     RexxObject *super = OREF_NULL;
     // no arguments yet
@@ -2575,7 +2574,7 @@ RexxObject *LanguageParser::message(RexxObject *target, bool doubleTilde, int te
         {
             // NOTE:  because of the parens, we can ignore our parent terminators...
             // we only look for the right paren
-            argCount = argList(token, TERM_RIGHT);
+            argCount = parseArgList(token, TERM_RIGHT);
         }
         else
         {
@@ -2605,19 +2604,19 @@ RexxObject *LanguageParser::message(RexxObject *target, bool doubleTilde, int te
  *         the clause position pointer will either be unchanged or
  *         positioned at the next token of the clause.
  */
-RexxObject *LanguageParser::variableOrMessageTerm()
+RexxObject *LanguageParser::parseVariableOrMessageTerm()
 {
     // try for a message term first.  If not successful, see if the
     // next token is a variable symbol.
-    RexxObject *result = messageTerm();
+    RexxObject *result = parseMessageTerm();
     if (result == OREF_NULL)
     {
         RexxToken *_first = nextReal();
         if (_first->isSymbol())
         {
             // ok, add the variable to the processing list
-            this->needVariable(_first);
-            result = this->addText(_first);
+            needVariable(_first);
+            result = addText(_first);
         }
         else
         {
@@ -2644,13 +2643,13 @@ RexxObject *LanguageParser::variableOrMessageTerm()
  *
  * @return The message term execution element.
  */
-RexxObject *LanguageParser::messageTerm()
+RexxObject *LanguageParser::parseMessageTerm()
 {
     // save the current position so we can reset cleanly
     size_t mark = markPosition();
 
     // get the first message term
-    RexxObject *start = subTerm(TERM_EOC);
+    RexxObject *start = parseSubTerm(TERM_EOC);
     // save this on the term stack
     pushTerm(start);
 
@@ -2659,19 +2658,19 @@ RexxObject *LanguageParser::messageTerm()
 
     // the leading message term can be a cascade of messages, so
     // keep processing things until we hit some other type of operation.
-    while (token~isMessageOperator())
+    while (token->isMessageOperator())
     {
         // we need to perform the the message operation on this term to create
         // an new term which will be the target of the next one.
         // this could be a bracket lookup, which is a collection message.
-        if (token~isLeftBracket())
+        if (token->isLeftBracket())
         {
-            term = collectionMessage(token, start);
+            term = parseCollectionMessage(token, start);
         }
         else
         {
             // normal message twiddle message
-            term = message(start, token~isType(TOKEN_DTILDE), TERM_EOC);
+            term = parseMessage(start, token->isType(TOKEN_DTILDE), TERM_EOC);
         }
         // this is the target for the next one in the chain.
         // remove the previous one from the term stack and push a new
@@ -2713,7 +2712,7 @@ RexxObject *LanguageParser::messageTerm()
  * @return An object to represent this message term.  Returns
  *         OREF_NULL if no suitable term is found.
  */
-RexxObject *LanguageParser::messageSubterm(int terminators)
+RexxObject *LanguageParser::parseMessageSubterm(int terminators)
 {
     // get the first token.  If we've hit a terminator here, this could be
     // the real end of the expression.  The caller context will figure out
@@ -2743,7 +2742,7 @@ RexxObject *LanguageParser::messageSubterm(int terminators)
                 // on this, which might find a chain of prefix operators (except,
                 // as I'm sure Walter Pachl will be sure to point out, --, which
                 // will be treated as a line comment :-)
-                RexxObject *term = messageSubterm(terminators);
+                RexxObject *term = parseMessageSubterm(terminators);
                 if (term == OREF_NULL)
                 {
                     syntaxError(Error_Invalid_expression_prefix, token);
@@ -2766,7 +2765,7 @@ RexxObject *LanguageParser::messageSubterm(int terminators)
         // put the token back and try parsing off a subTerm (smaller subset, no
         // prefix stuff allowed).
         previousToken();
-        RexxObject *term = subTerm(terminators);
+        RexxObject *term = parseSubTerm(terminators);
         // protect on the term stack
         pushTerm(term);
         // ok, now see if this is actually a message send target by checking
@@ -2781,16 +2780,16 @@ RexxObject *LanguageParser::messageSubterm(int terminators)
 
         // we can have a long cascade of message sends.  For expression syntax,
         // this all one term (just like nested function calls would be).
-        while (token~isMessageOperator())
+        while (token->isMessageOperator())
         {
             // we have two possibilities here, a bracket message or a twiddle form.
-            if (token~isRightBracket())
+            if (token->isRightBracket())
             {
-                term = collectionMessage(token, term);
+                term = parseCollectionMessage(token, term);
             }
             else
             {
-                term = this->message(term, classId == TOKEN_DTILDE, terminators);
+                term = parseMessage(term, token->isType(TOKEN_DTILDE), terminators);
             }
             popTerm();
             pushTerm(term);
@@ -2800,9 +2799,10 @@ RexxObject *LanguageParser::messageSubterm(int terminators)
         // back up to the token that stopped the loop
         previousToken();
         // pop our term from the stack and return the final version.
-        popTerm()
+        popTerm();
         return term;
     }
+    return OREF_NULL;     // should never get here.
 }
 
 
@@ -2816,7 +2816,7 @@ RexxObject *LanguageParser::messageSubterm(int terminators)
  *
  * @return An executable object for the message term.
  */
-RexxObject *LanguageParser::subTerm(int terminators)
+RexxObject *LanguageParser::parseSubTerm(int terminators)
 {
     // get the first token and make sure we really have something here.
     // The caller knows how to deal with a missing term.
@@ -2836,7 +2836,7 @@ RexxObject *LanguageParser::subTerm(int terminators)
         {
             // parse off the parenthetical.  This might not return anything if there
             // are nothing in the parens.  This is an error.
-            RexxObject *term = subExpression(TERM_RIGHT);
+            RexxObject *term = parseSubExpression(TERM_RIGHT);
             if (term == OREF_NULL)
             {
                 syntaxError(Error_Invalid_expression_general, token);
@@ -2860,7 +2860,7 @@ RexxObject *LanguageParser::subTerm(int terminators)
             RexxToken *second = nextToken();
             if (second->isLeftParen())
             {
-                return function(second, token);
+                return parseFunction(second, token);
             }
             else
             {
@@ -2961,11 +2961,11 @@ RexxObject *LanguageParser::requiredTerm(RexxToken *token, int errorCode)
     // we track the size count when we push/pop
     currentStack--;
     // pop the term off of the stack
-    term = terms->pop();
+    RexxObject *term = terms->pop();
     // we need a term, if this is not here, this is a syntax error
     if (term == OREF_NULL)
     {
-        syntaxError(errCode, token);
+        syntaxError(errorCode, token);
     }
     // give this term some short-term GC protection and return it.
     holdObject(term);
@@ -3027,22 +3027,38 @@ RexxArray  *LanguageParser::words(RexxString *string)
     // we know we have at least 1 word here.  Replace the first one
     // with the uppercase, commonstring version.
 
-    wordArray->put(commonString(((RexxString *)wordArray->get(1))->upper()), 1)
+    wordArray->put(commonString(((RexxString *)wordArray->get(1))->upper()), 1);
 
     // now make commonstring versions of the rest of the words
-    for (i = 2; i <= count; i++)
+    for (size_t i = 2; i <= count; i++)
     {
-        wordArray->put(commonString(((RexxString *)wordArray->get(1))), 1)
+        wordArray->put(commonString(((RexxString *)wordArray->get(1))), 1);
     }
 
     return wordArray;
 }
 
+
+/**
+ * Raise a simple error message, using the current clause
+ * location information.
+ *
+ * @param errorcode The error message to raise.
+ */
 void LanguageParser::error(int errorcode)
 {
     ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, OREF_NULL, OREF_NULL);
 }
 
+
+/**
+ * Raise an error message using specifically provided location
+ * information.
+ *
+ * @param errorcode The error message to raise.
+ * @param location  The location of the instruction in error.
+ * @param subs      The message substitutions.
+ */
 void LanguageParser::error(int errorcode, const SourceLocation &location, RexxArray *subs)
 {
     // set the error location.  This location is picked up from the
@@ -3051,145 +3067,130 @@ void LanguageParser::error(int errorcode, const SourceLocation &location, RexxAr
     ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, subs, OREF_NULL);
 }
 
+
+/**
+ * Raise an error where one of the error message substitutions
+ * is the line number location of another instruction.
+ *
+ * @param errorcode The error to issue
+ * @param instruction
+ *                  The instruction used to obtain the line number for the
+ *                  message.
+ */
 void LanguageParser::errorLine(int errorcode, RexxInstruction *instruction)
-/******************************************************************************/
-/* Function:  Raise an error where one of the error message substitutions is  */
-/*            the line number of another instruction object                   */
-/******************************************************************************/
 {
     ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(new_integer(instruction->getLineNumber())), OREF_NULL);
 }
 
+
+/**
+ * Raise an error using a Token location for the message
+ * substitution.
+ *
+ * @param errorcode The error to issue.
+ * @param token     The source token for the location.
+ */
 void LanguageParser::errorPosition(int errorcode, RexxToken *token )
-/******************************************************************************/
-/* Function:  Raise an error, displaying the location of a token associated   */
-/*            with the error.                                                 */
-/******************************************************************************/
 {
-    SourceLocation tokenLocation = token->getLocation(); /* get the token location            */
+    SourceLocation tokenLocation = token->getLocation();
 
     ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(new_integer(tokenLocation.getOffset()), new_integer(tokenLocation.getLineNumber())), OREF_NULL);
 }
 
+
+/**
+ * Raise an error using the value of the token as a
+ * substitution parameter.
+ *
+ * @param errorcode The error code to issue.
+ * @param token     The token used for the substitution information.
+ */
 void LanguageParser::errorToken(int errorcode, RexxToken *token )
-/******************************************************************************/
-/* Function:  Raise an error, displaying the value of a token in the error    */
-/*            message.                                                        */
-/******************************************************************************/
 {
-    // get the token string value.
-    RexxString *value = token->value;
-    if (value == OREF_NULL)
-    {
-        // some tokens don't directly have a string value...we can provide one here
-        switch (token->type())
-        {
-            // blank operator
-            case TOKEN_BLANK:
-                value = new_string(" ", 1);
-                break;
-
-            // end of clause...just use a semicolon, even though it might be
-            // a linend.
-            case TOKEN_EOC:
-                value = new_string(";", 1);
-                break;
-
-            // comma
-            case TOKEN_COMMA:
-                value = new_string(",", 1);
-                break;
-
-            case TOKEN_LEFT:
-                value = new_string("(", 1);
-                break;
-
-            case TOKEN_RIGHT:
-                value = new_string(")", 1);
-                break;
-
-            case TOKEN_SQLEFT:
-                value = new_string("[", 1);
-                break;
-
-            case TOKEN_SQRIGHT:
-                value = new_string("]", 1);
-                break;
-
-            case TOKEN_COLON:
-                value = new_string(":", 1);
-                break;
-
-            case TOKEN_TILDE:
-                value = new_string("~", 1);
-                break;
-
-            case TOKEN_DTILDE:
-                value = new_string("~~", 2);
-                break;
-
-            case TOKEN_DCOLON:
-                value = new_string("::", 2);
-                break;
-
-            // token we don't have an answer for...just use a null string
-            default:
-                value = (RexxString *)OREF_NULLSTRING;
-                break;
-        }
-    }
-
-    ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(value), OREF_NULL);
+    ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(token->displayValue()), OREF_NULL);
 }
 
+
+/**
+ * Issue an error message with a single substitution value.
+ *
+ * @param errorcode The error to issue.
+ * @param value     The substitution value.
+ */
 void LanguageParser::error(int errorcode, RexxObject *value )
-/******************************************************************************/
-/* Function:  Issue an error message with a single substitution parameter.    */
-/******************************************************************************/
 {
    ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(value), OREF_NULL);
 }
 
+
+/**
+ * Issue an error message with two substitution values.
+ *
+ * @param errorcode The error number to issue.
+ * @param value1    The first substitution object.
+ * @param value2    The second substitution objec.t
+ */
 void LanguageParser::error(int errorcode, RexxObject *value1, RexxObject *value2 )
-/******************************************************************************/
-/* Function:  Issue an error message with two substitution parameters.        */
-/******************************************************************************/
 {
    ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(value1, value2), OREF_NULL);
 }
 
+
+/**
+ * Issue an error message with three substitution values.
+ *
+ * @param errorcode The error number to issue.
+ * @param value1    The first substitution object.
+ * @param value2    The second substitution objec.t
+ * @param value3    The third substitution objec.t
+ */
 void LanguageParser::error(int errorcode, RexxObject *value1, RexxObject *value2, RexxObject *value3 )
-/****************************************************************************/
-/* Function:  Issue an error message with three substitution parameters.    */
-/****************************************************************************/
 {
     ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(value1, value2, value3), OREF_NULL);
 }
 
+
+/**
+ * Raise an error for an unclosed block instruction.
+ *
+ * @param instruction
+ *               The unclosed instruction.
+ */
 void LanguageParser::blockError(RexxInstruction *instruction)
-/******************************************************************************/
-/* Function:  Raise an error for an unclosed block instruction.               */
-/******************************************************************************/
 {
     // get the last instruction location and set as the current error location
-    clauseLocation = last->getLocation();
+    clauseLocation = lastInstruction->getLocation();
 
     switch (instruction->getType())
     {
         // each type of block instruction has its own message
 
         // DO instruction
+        case KEYWORD_SIMPLE_BLOCK:
         case KEYWORD_DO:
             syntaxError(Error_Incomplete_do_do, instruction);
             break;
 
         // LOOP instruction
         case KEYWORD_LOOP:
+        case KEYWORD_LOOP_FOREVER:
+        case KEYWORD_LOOP_OVER:
+        case KEYWORD_LOOP_OVER_UNTIL:
+        case KEYWORD_LOOP_OVER_WHILE:
+        case KEYWORD_LOOP_CONTROLLED:
+        case KEYWORD_LOOP_CONTROLLED_UNTIL:
+        case KEYWORD_LOOP_CONTROLLED_WHILE:
+        case KEYWORD_LOOP_COUNT:
+        case KEYWORD_LOOP_COUNT_UNTIL:
+        case KEYWORD_LOOP_COUNT_WHILE:
+        case KEYWORD_LOOP_WHILE:
+        case KEYWORD_LOOP_UNTIL:
             syntaxError(Error_Incomplete_do_loop, instruction);
             break;
 
         // SELECT instruction
         case KEYWORD_SELECT:
+        case KEYWORD_SELECT_CASE:
             syntaxError(Error_Incomplete_do_select, instruction);
             break;
 
@@ -3200,6 +3201,8 @@ void LanguageParser::blockError(RexxInstruction *instruction)
 
         // different variants of an IF
         case KEYWORD_IF:
+        case KEYWORD_WHEN:
+        case KEYWORD_WHEN_CASE:
         case KEYWORD_IFTHEN:
         case KEYWORD_WHENTHEN:
             syntaxError(Error_Incomplete_do_then, instruction);
@@ -3221,31 +3224,62 @@ void LanguageParser::blockError(RexxInstruction *instruction)
  *         element if a single expression is located, and a complex
  *         logical expression operator for a list of expressions.
  */
-RexxObject *LanguageParser::parseLogical(RexxToken *_first, int terminators)
+RexxObject *LanguageParser::parseLogical(int terminators)
 {
     // These are not delimited lists, but are part of keyword contexts where
     // other keywords terminate the expression (e.g., IF, WHEN, WHILE), so we
-    // need to pass along the terminators.
+    // need to pass along the terminators.  Unlike argument lists,
+    // omitted expressions are not allowed:
+    size_t total = 0;                // total is the full count of arguments we attempt to parse.
+    RexxToken *terminatorToken;      // the terminator token that ended a sub expression
 
-    // we can just pretend this is an argument list for now.
-    size_t count = argList(_first, terminators);
-    // arglist has swallowed the terminator token, so we need to back up one.
+    // we need to skip ahead to the first real token, then backup one to be
+    // properly positioned for the start.  If this is an IF instruction, this
+    // will skip the blank between the IF keyword and the start of the expression,
+    // which counts as a significant blank by the tokenizer.
+    nextReal();
     previousToken();
 
-    // let the caller deal with completely missing expressions
-    if (count == 0)
+    // now loop until we get a terminator.  Since we're processing an argument
+    // list here, we add in the COMMA to whatever terminators we've been handed.
+    for (;;)
     {
-        return OREF_NULL;
+        // parse off an argument expression
+        RexxObject *subExpr = parseSubExpression(terminators | TERM_COMMA);
+        // all sub expressions are required here.
+        if (subExpr == OREF_NULL)
+        {
+            syntaxError(Error_Invalid_expression_logical_list);
+        }
+
+        // We have two term stacks.  The main term stack is used for expression evaluation.
+        // the subTerm stack is used for processing expression lists like this.
+        subTerms->push(subExpr);
+
+        // add this to our total count.
+        total++;
+
+        // the next token will be our terminator.  If this is not
+        // a comma, we have more expressions to parse.
+        terminatorToken = nextToken();
+        if (!terminatorToken->isType(TOKEN_COMMA))
+        {
+            // push the terminator token back
+            previousToken();
+            break;
+        }
     }
 
-    // just a single item (common)?  Just pop the top item and return it.
-    if (count == 1)
+    // we have at least one item (caught in the loop) and if we have exactly
+    // one (most common situation), just pop the top item and return it
+    if (total == 1)
     {
         return subTerms->pop();
     }
 
-                                       /* create a new function item        */
-    return (RexxObject *)new (count) RexxExpressionLogical(this, count, subTerms);
+    // composite tis expression into a single object that can evaluate the
+    // multiple expressions.
+    return (RexxObject *)new (total) RexxExpressionLogical(total, subTerms);
 }
 
 
@@ -3365,6 +3399,7 @@ bool LanguageParser::parseTraceSetting(RexxString *value, size_t &newSetting, si
 }
 
 
+// TODO:  move some of the stuff from Routine to here.
 /**
  * Process handling of instore execution arguments.
  *
@@ -3440,4 +3475,35 @@ RoutineClass *LanguageParser::restoreFromMacroSpace(RexxString *name)
     // release the buffer memory
     SystemInterpreter::releaseResultMemory(buffer.strptr);
     return routine;
+}
+
+
+/**
+ * Retrieve a routine object from a file.  This will first attempt
+ * to restore a previously translated image, then will try to
+ * translate the source if that fails.
+ *
+ * @param filename The target file name.
+ *
+ * @return A resulting Routine object, if possible.
+ */
+RoutineClass *LanguageParser::createProgramFromFile(RexxString *filename)
+{
+    // load the file into a buffer
+    RexxBuffer *program_buffer = SystemInterpreter::readProgram(filename->getStringData());
+    // if this failed, report an error now.
+    if (program_buffer == OREF_NULL)
+    {
+        reportException(Error_Program_unreadable_name, filename);
+    }
+
+    // try to restore a flattened program first
+    RoutineClass *routine = RoutineClass::restore(filename, program_buffer);
+    if (routine != OREF_NULL)
+    {
+        return routine;
+    }
+
+    // process this from the source
+    return createProgram(filename, program_buffer);
 }

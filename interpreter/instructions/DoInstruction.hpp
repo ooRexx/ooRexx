@@ -48,6 +48,8 @@
 #include "DoBlockComponents.hpp"
 #include "EndInstruction.hpp"
 
+class LanguageParser;
+
 
 /**
  * The base class for a DO instruction.  This implements all of
@@ -74,7 +76,7 @@ class RexxInstructionBaseDo : public RexxBlockInstruction
     virtual void execute(RexxActivation *, RexxExpressionStack *);
 
     // methods required by RexxBlockInstruction;
-    virtual void matchEnd(RexxInstructionEnd *, RexxSource *);
+    virtual void matchEnd(RexxInstructionEnd *, LanguageParser *);
     // most DO blocks are loops.  The simple styles will need to override.
     virtual EndBlockType getEndStyle() { return LOOP_BLOCK; }
     // Most DOs are loops...Simple DO will override again.
@@ -88,7 +90,7 @@ class RexxInstructionBaseDo : public RexxBlockInstruction
     virtual void setup(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock);
     virtual bool iterate(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock, bool first);
 
-    void matchLabel(RexxInstructionEnd *end, RexxSource *source );
+    void matchLabel(RexxInstructionEnd *end, LanguageParser *source );
     void handleDebugPause(RexxActivation *context, RexxDoBlock *doblock);
     void endLoop(RexxActivation *context);
 };

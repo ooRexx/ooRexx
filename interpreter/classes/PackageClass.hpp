@@ -45,11 +45,16 @@
 
 class RexxSource;
 
+/**
+ * An object that represents the source context for a
+ * Method or Routine object.
+ */
 class PackageClass : public RexxObject
 {
 public:
     void *operator new(size_t);
     inline void *operator new(size_t size, void *ptr) { return ptr; };
+
     PackageClass(RexxSource *source);
     inline PackageClass(RESTORETYPE restoreType) { ; };
 

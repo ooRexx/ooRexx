@@ -1824,20 +1824,7 @@ RexxInstruction *LanguageParser::guardNew()
 RexxInstruction *LanguageParser::ifNew(InstructionKeyword type)
 {
     // ok, get a conditional expression
-    RexxObject *_condition = parseLogical(OREF_NULL, TERM_IF);
-    // this is required...and, of course, we have different error
-    // messages for IF and WHEN
-    if (_condition == OREF_NULL)
-    {
-        if (type == KEYWORD_IF)
-        {
-            syntaxError(Error_Invalid_expression_if);
-        }
-        else
-        {
-            syntaxError(Error_Invalid_expression_when);
-        }
-    }
+    RexxObject *_condition = requiredLogicalExpression(TERM_IF, type == KEYWORD_IF ? Error_Invalid_expression_if : Error_Invalid_expression_when);
 
     // get to the terminator token for this (likely a THEN, but it could
     // be an EOC.  We use this to update the end location for the instruction since
@@ -3206,7 +3193,7 @@ RexxInstruction *LanguageParser::thenNew(RexxToken *token, RexxInstructionIf *pa
  *
  * @return The converted instruction object.
  */
-RexxInstruction *LanguageParser::whenCaseNew(RexxInstructionIf *original)
+RexxInstructionIf *LanguageParser::whenCaseNew(RexxInstructionIf *original)
 {
     // We are going to build on the processing that is done when
     // instruction object are originally created.  We're just going
@@ -3674,7 +3661,7 @@ RexxObject *LanguageParser::parseLoopConditional(InstructionSubKeyword &conditio
                 // parse off the conditional.  We only recognize other conditional keywords
                 // as terminators after this.  Since we had the keyword, the
                 // epression is required.
-                conditional = requiredLogicalExpression(OREF_NULL, TERM_COND, Error_Invalid_expression_while);
+                conditional = requiredLogicalExpression(TERM_COND, Error_Invalid_expression_while);
                 // must not be anthing after this
                 requiredEndOfClause(Error_Invalid_do_whileuntil);
                 // and record the type.
@@ -3686,7 +3673,7 @@ RexxObject *LanguageParser::parseLoopConditional(InstructionSubKeyword &conditio
             case SUBKEY_UNTIL:
             {
                 // pretty much the same as the WHILE situation
-                conditional = requiredLogicalExpression(OREF_NULL, TERM_COND, Error_Invalid_expression_until);
+                conditional = requiredLogicalExpression(TERM_COND, Error_Invalid_expression_until);
                 // must not be anthing after this
                 requiredEndOfClause(Error_Invalid_do_whileuntil);
                 // and record the type.

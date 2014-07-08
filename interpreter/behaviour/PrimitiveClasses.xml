@@ -188,6 +188,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <Class id="CompoundElement" class="RexxCompoundElement" include="RexxCompoundElement.hpp"/>
 <Class id="ParseTrigger" class="RexxTrigger" include="ParseTrigger.hpp"/>
+<Class id="ArrayProgramSource" class="ArrayProgramSource" include="ProgramSource.hpp"/>
+<Class id="BufferProgramSource" class="BufferProgramSource" include="ProgramSource.hpp"/>
+<Class id="FileProgramSource" class="FileProgramSource" include="ProgramSource.hpp"/>
 </Internal>
 <Transient>
 <Class id="Memory" class="RexxMemory" include="RexxMemory.hpp" objectvirtual="true"/>

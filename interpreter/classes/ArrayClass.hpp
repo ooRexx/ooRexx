@@ -69,7 +69,8 @@ typedef struct copyElementParm
 class PartitionBounds
 {
  public:
-     enum {
+     enum
+     {
          SmallRange = 10   // the size where we revert to an insertion sort
      };
 
@@ -103,7 +104,8 @@ protected:
 };
 
 
-class RexxArray : public RexxObject {
+class RexxArray : public RexxObject
+{
  public:
 
     inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };
@@ -239,6 +241,7 @@ class RexxArray : public RexxObject {
     RexxArray *expansionArray;          /* actual array containing data  */
     RexxObject  *objects[1];            /* Data.                         */
 };
+
 
 /**
  * Make a zero-length array item.

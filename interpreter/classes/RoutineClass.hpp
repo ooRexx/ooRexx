@@ -89,7 +89,6 @@ public:
     static RoutineClass *restoreFromMacroSpace(RexxString *name);
     static RoutineClass *restore(RexxBuffer *buffer);
     static RoutineClass *restore(RXSTRING *inData, RexxString *name);
-    static RoutineClass *fromFile(RexxString *filename);
 
     static void createInstance();
     static RexxClass *classInstance;

@@ -380,7 +380,7 @@ Say NOT EQUALS
 <varlistentry>
 <term>005</term>
 <listitem>
-<para>LOOP instruction on line <emphasis role="italic">line_number</emphasis> requires matching END</para>
+<para>DO or LOOP instruction on line <emphasis role="italic">line_number</emphasis> requires matching END</para>
 </listitem>
 </varlistentry>
 <varlistentry>

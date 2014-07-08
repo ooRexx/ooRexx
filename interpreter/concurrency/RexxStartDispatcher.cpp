@@ -127,7 +127,7 @@ void RexxStartDispatcher::run()
         }
         savedObjects.add(fullname);
                                            /* try to restore saved image        */
-        program = RoutineClass::fromFile(fullname);
+        program = LanguageParser::createProgramFromFile(fullname);
     }
     else                                 /* have an instore program           */
     {
@@ -141,7 +141,7 @@ void RexxStartDispatcher::run()
     }
 
     RexxString *initial_address = activity->getInstance()->getDefaultEnvironment();
-    /* actually need to run this?        */
+    // actually need to run this?
     if (!program.isNull())
     {
         ProtectedObject program_result;
@@ -229,7 +229,7 @@ void CallProgramDispatcher::run()
     }
     ProtectedObject p(name);
     // create a routine from this file
-    RoutineClass *routine = RoutineClass::fromFile(name);
+    Protected<RoutineClass> routine = LanguageParser::createProgramFromFile(name);
     p = routine;
 
     if (arguments != OREF_NULL)

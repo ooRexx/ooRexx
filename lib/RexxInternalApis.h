@@ -43,7 +43,8 @@
 
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 int REXXENTRY RexxResolveExit(const char *, REXXPFN *);

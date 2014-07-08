@@ -138,10 +138,10 @@ class InternalActivationFrame : public ActivationFrame
  * A lot of syntax errors are generated with one of these
  * at the top of the stack.
  */
-class ParserActivationFrame : public ActivationFrame
+class CompileActivationFrame : public ActivationFrame
 {
  public:
-    inline ParserActivationFrame(RexxActivity *a, LanguageParser *p) : ActivationFrame(a), parser(p) { }
+    inline CompileActivationFrame(RexxActivity *a, LanguageParser *p) : ActivationFrame(a), parser(p) { }
 
     virtual RexxString *messageName();
     // TODO:  Why is there a method in this interface rather than an excutable?

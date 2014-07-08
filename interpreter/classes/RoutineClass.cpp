@@ -55,11 +55,9 @@
 #include "DirectoryClass.hpp"
 #include "ProtectedObject.hpp"
 #include "BufferClass.hpp"
-#include "RexxInternalApis.h"
 #include "RexxSmartBuffer.hpp"
 #include "ProgramMetaData.hpp"
 #include "Utilities.hpp"
-#include "SystemInterpreter.hpp"
 #include "PackageManager.hpp"
 #include "InterpreterInstance.hpp"
 #include "LanguageParser.hpp"
@@ -139,9 +137,6 @@ void RoutineClass::liveGeneral(MarkReason reason)
  * @param envelope The envelope that will hold the flattened object.
  */
 void RoutineClass::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
 {
     setUpFlatten(RoutineClass)
 
@@ -265,11 +260,14 @@ void RoutineClass::runProgram(RexxActivity *activity, RexxObject **arguments,
 }
 
 
-RexxObject *RoutineClass::setSecurityManager(
-    RexxObject *manager)               /* supplied security manager         */
-/******************************************************************************/
-/* Function:  Associate a security manager with a method's source             */
-/******************************************************************************/
+/**
+ * Associate a security manager with a routine's source package.
+ *
+ * @param manager The security manager object.
+ *
+ * @return The return value from the code object.
+ */
+RexxObject *RoutineClass::setSecurityManager(RexxObject *manager)
 {
     return code->setSecurityManager(manager);
 }
@@ -337,37 +335,6 @@ void RoutineClass::save(const char *filename)
         metaData.write(handle, buffer);
         fclose(handle);
     }
-}
-
-
-/**
- * Retrieve a routine object from a file.  This will first attempt
- * to restore a previously translated image, then will try to
- * translate the source if that fails.
- *
- * @param filename The target file name.
- *
- * @return A resulting Routine object, if possible.
- */
-RoutineClass *RoutineClass::fromFile(RexxString *filename)
-{
-    // load the file into a buffer
-    RexxBuffer *program_buffer = SystemInterpreter::readProgram(filename->getStringData());
-    // if this failed, report an error now.
-    if (program_buffer == OREF_NULL)
-    {
-        reportException(Error_Program_unreadable_name, filename);
-    }
-
-    // try to restore a flattened program first
-    RoutineClass *routine = restore(filename, program_buffer);
-    if (routine != OREF_NULL)
-    {
-        return routine;
-    }
-
-    // process this from the source
-    return LanguageParser::createProgram(filename, program_buffer);
 }
 
 

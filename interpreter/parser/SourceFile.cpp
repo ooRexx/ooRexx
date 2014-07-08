@@ -42,15 +42,14 @@
 /*                                                                            */
 /******************************************************************************/
 #include "RexxCore.h"
+#include "SourceFile.hpp"
 #include "StringClass.hpp"
 #include "ArrayClass.hpp"
 #include "DirectoryClass.hpp"
-#include "BufferClass.hpp"
 #include "RexxActivity.hpp"
 #include "RexxActivation.hpp"
-#include "SourceFile.hpp"
 #include "ProgramSource.hpp"
-#include "LanguageParser.hpp"
+#include "PackageClass.hpp"
 
 
 /**
@@ -63,81 +62,6 @@
 void *RexxSource::operator new (size_t size)
 {
     return new_object(sizeof(RexxSource), T_RexxSource);
-}
-
-// start of static methods for creating source objects from different program
-// sources.
-
-/**
- * Create a RexxSource object from a name and a program source.
- * This does base initialization for the object, but does not
- * compile the code.
- *
- * @param filename The source file name.
- *
- * @return An initialized RexxSource object prepared for reading from the
- *         file.
- */
-RexxSource *RexxSource::createSource(RexxString *filename, ProgramSource *s)
-{
-    // now attach that to the source object
-    RexxSource *source = new RexxSource(filename, s);
-    // protect this from GC so we can complete setup.
-    ProtectedObject p(source);
-
-    // this can potentially raise an exception
-    source->setup();
-    return source;
-}
-
-/**
- * Create a RexxSource object from a file.  This does
- * base initialization for the object, but does not compile the code.
- *
- * @param filename The source file name.
- *
- * @return An initialized RexxSource object prepared for reading from the
- *         file.
- */
-RexxSource *RexxSource::createSource(RexxString *filename)
-{
-    return createSource(filename,  new FileProgramSource(filename));
-}
-
-
-/**
- * Create a RexxSource object from data already in a buffer.
- * This does base initialization for the object, but does not
- * compile the code.
- *
- * @param filename The source file name...used for naming a
- *                 resolution, but not to actually read a file.
- * @param buffer   The buffer object containing the source data.
- *
- * @return An initialized RexxSource object prepared for reading from the
- *         file.
- */
-RexxSource *RexxSource::createSource(RexxString *filename, RexxBuffer *buffer)
-{
-    return createSource(filename,  new BufferProgramSource(buffer));
-}
-
-
-/**
- * Create a RexxSource object from data contained in an array.
- * This does base initialization for the object, but does not
- * compile the code.
- *
- * @param filename The source file name...used for naming a
- *                 resolution, but not to actually read a file.
- * @param buffer   The buffer object containing the source data.
- *
- * @return An initialized RexxSource object prepared for reading from the
- *         file.
- */
-RexxSource *RexxSource::createSource(RexxString *filename, RexxArray *programSource)
-{
-    return createSource(filename,  new ArrayProgramSource(programSource));
 }
 
 

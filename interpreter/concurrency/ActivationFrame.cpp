@@ -99,7 +99,7 @@ StackFrameClass *InternalActivationFrame::createStackFrame()
 
     RexxString *message = activity->buildMessage(Message_Translations_compiled_method_invocation, info);
     p = message;
-    return new StackFrameClass(FRAME_METHOD, name, frameMethod, target, new_array(count, argPtr), message, SIZE_MAX);
+    return new StackFrameClass(StackFrameClass::FRAME_METHOD, name, frameMethod, target, new_array(count, argPtr), message, SIZE_MAX);
 }
 
 RexxSource *InternalActivationFrame::getSource()
@@ -107,22 +107,22 @@ RexxSource *InternalActivationFrame::getSource()
     return OREF_NULL;
 }
 
-RexxString *ParserActivationFrame::messageName()
+RexxString *CompileActivationFrame::messageName()
 {
     return OREF_NULL;
 }
 
-MethodClass *ParserActivationFrame::method()
+MethodClass *CompileActivationFrame::method()
 {
     return OREF_NULL;
 }
 
-StackFrameClass *ParserActivationFrame::createStackFrame()
+StackFrameClass *CompileActivationFrame::createStackFrame()
 {
     return parser->createStackFrame();
 }
 
-RexxSource *ParserActivationFrame::getSource()
+RexxSource *CompileActivationFrame::getSource()
 {
     return parser->getPackage();
 }

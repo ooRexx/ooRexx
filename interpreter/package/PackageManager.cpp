@@ -56,6 +56,7 @@
 #include "WeakReferenceClass.hpp"
 #include "RexxActivation.hpp"
 #include "PackageClass.hpp"
+#include "LanguageParser.hpp"
 
 // this first set is the inital image set, which we preserve the references
 // to in order to reset the package loads when the Rexx environment shuts down
@@ -92,7 +93,6 @@ void PackageManager::initialize()
  */
 RexxArray *PackageManager::getImageData()
 {
-
     RexxArray *imageArray = new_array(IMAGE_ARRAY_SIZE);
     imageArray->put(packages, IMAGE_PACKAGES);
     imageArray->put(packageRoutines, IMAGE_PACKAGE_ROUTINES);
@@ -812,7 +812,7 @@ RoutineClass *PackageManager::getRequiresFile(RexxActivity *activity, RexxString
     activity->checkRequires(name);
     // try to load this from a previously compiled source file or
     // translate it a new if not.
-    RoutineClass *code = RoutineClass::fromFile(name);
+    RoutineClass *code = LanguageParser::createProgramFromFile(name);
     result = code;   // we need to protect this until things are fully resolved.
 
     if (securityManager == OREF_NULL)

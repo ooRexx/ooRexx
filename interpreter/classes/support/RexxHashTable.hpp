@@ -44,8 +44,7 @@
 #ifndef Included_RexxHash
 #define Included_RexxHash
 
-
-/* The type for the reference links */
+// The type for the reference links
 typedef size_t HashLink;
 
 class TABENTRY

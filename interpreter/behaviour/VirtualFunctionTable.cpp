@@ -137,6 +137,7 @@
 #include "RequiresDirective.hpp"
 #include "RexxCompoundElement.hpp"
 #include "ParseTrigger.hpp"
+#include "ProgramSource.hpp"
 #include "RexxMemory.hpp"
 #include "RexxInternalStack.hpp"
 #include "MemoryStack.hpp"
@@ -583,6 +584,15 @@ void MemoryObject::buildVirtualFunctionTable()
    
    objectPtr = new (objectLoc) RexxTrigger(RESTOREIMAGE);
    virtualFunctionTable[T_ParseTrigger] = getVftPointer(objectLoc);
+   
+   objectPtr = new (objectLoc) ArrayProgramSource(RESTOREIMAGE);
+   virtualFunctionTable[T_ArrayProgramSource] = getVftPointer(objectLoc);
+   
+   objectPtr = new (objectLoc) BufferProgramSource(RESTOREIMAGE);
+   virtualFunctionTable[T_BufferProgramSource] = getVftPointer(objectLoc);
+   
+   objectPtr = new (objectLoc) FileProgramSource(RESTOREIMAGE);
+   virtualFunctionTable[T_FileProgramSource] = getVftPointer(objectLoc);
    
    objectPtr = new (objectLoc) RexxObject(RESTOREIMAGE);
    virtualFunctionTable[T_Memory] = getVftPointer(objectLoc);

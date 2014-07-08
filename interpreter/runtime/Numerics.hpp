@@ -45,6 +45,8 @@
 #ifndef Included_Numerics
 #define Included_Numerics
 
+#include "RexxCore.h"
+
 class NumericSettings                  // "global" numeric settings         */
 {
     public:

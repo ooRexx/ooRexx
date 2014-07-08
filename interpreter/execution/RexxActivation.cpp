@@ -76,6 +76,7 @@
 #include "InterpreterInstance.hpp"
 #include "PackageClass.hpp"
 #include "RoutineClass.hpp"
+#include "LanguageParser.hpp"
 
 /* max instructions without a yield */
 const size_t MAX_INSTRUCTIONS = 100;
@@ -2669,8 +2670,7 @@ bool RexxActivation::callExternalRexx(RexxString *target, RexxObject **_argument
         stack.push(filename);
         // try for a saved program or translate a anew
 
-        // TODO:  need to handle pre-compiled somewhere...
-        RoutineClass *routine = RoutineClass::fromFile(filename);
+        RoutineClass *routine = LanguageParser::createProgramFromFile(filename);
         // remove the protected name
         stack.pop();
         // do we have something?  return not found
@@ -4291,33 +4291,33 @@ RexxObject *RexxActivation::getLocalEnvironment(RexxString *name)
  */
 StackFrameClass *RexxActivation::createStackFrame()
 {
-    const char *type = FRAME_METHOD;
+    const char *type = StackFrameClass::FRAME_METHOD;
     RexxArray *arguments = OREF_NULL;
     RexxObject *target = OREF_NULL;
 
     if (isInterpret())
     {
-        type = FRAME_INTERPRET;
+        type = StackFrameClass::FRAME_INTERPRET;
     }
     else if (isInternalCall())
     {
-        type = FRAME_INTERNAL_CALL;
+        type = StackFrameClass::FRAME_INTERNAL_CALL;
         arguments = getArguments();
     }
     else if (isMethod())
     {
-        type = FRAME_METHOD;
+        type = StackFrameClass::FRAME_METHOD;
         arguments = getArguments();
         target = receiver;
     }
     else if (isProgram())
     {
-        type = FRAME_PROGRAM;
+        type = StackFrameClass::FRAME_PROGRAM;
         arguments = getArguments();
     }
     else if (isRoutine())
     {
-        type = FRAME_ROUTINE;
+        type = StackFrameClass::FRAME_ROUTINE;
         arguments = getArguments();
     }
 

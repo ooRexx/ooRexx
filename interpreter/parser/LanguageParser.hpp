@@ -103,7 +103,10 @@ class LanguageParser: public RexxInternalObject
     virtual void liveGeneral(MarkReason reason);
 
     // main execution methods
-    RexxCode   *translate();
+    void        translate();
+    void        compileSource();
+    void        initializeForParsing();
+    void        initializeForDirectives();
     void        resolveDependencies();
     void        flushControl(RexxInstruction *);
     RexxCode   *translateBlock();
@@ -115,18 +118,22 @@ class LanguageParser: public RexxInternalObject
 
     RexxSource  *getPackage() { return package; }
 
+    void         installPackage();
     StackFrameClass *createStackFrame();
     void        holdObject(RexxObject *object) { holdStack->push(object);};
 
     // token scanning methods
     void        scanComment();
+    RexxToken  *scanSymbol();
+    RexxToken  *scanLiteral();
     void        nextLine();
     void        position(size_t, size_t);
-    void        nextClause();
+    bool        nextClause();
     RexxToken  *sourceNextToken(RexxToken *);
     bool        nextSpecial(unsigned int, SourceLocation &);
-    unsigned int locateToken(bool);
-    RexxString *packLiteral(size_t, size_t, int);
+    CharacterClass locateToken(unsigned int &, bool);
+    RexxString *packHexLiteral(size_t, size_t);
+    RexxString *packBinaryLiteral(size_t, size_t);
     RexxToken  *getToken(int term, int error = 0);
     inline unsigned int getChar() { return (unsigned char)(current[lineOffset]); }
     inline unsigned int getChar(size_t o) { return (unsigned char)(current[o]); }
@@ -146,6 +153,7 @@ class LanguageParser: public RexxInternalObject
     const SourceLocation& getLocation() { return clauseLocation; }
     void        startLocation(SourceLocation &);
     void        endLocation(SourceLocation &);
+    void        setLocation(SourceLocation &);
     inline void        previousToken() { clause->previous(); }
     inline void        firstToken() { clause->firstToken(); }
     inline void        trimClause() { clause->trim(); }
@@ -185,9 +193,9 @@ class LanguageParser: public RexxInternalObject
         }
     }
 
-    inline RexxObject *requiredLogicalExpression(RexxToken *first, int terminators, int error)
+    inline RexxObject *requiredLogicalExpression(int terminators, int error)
     {
-        RexxObject *conditional = parseLogical(first, terminators);
+        RexxObject *conditional = parseLogical(terminators);
         if (conditional == OREF_NULL)
         {
             syntaxError(error);
@@ -207,6 +215,7 @@ class LanguageParser: public RexxInternalObject
 
     inline bool capturingGuardVariables() { return guardVariables != OREF_NULL; }
            bool isExposed(RexxString *varName);
+    void captureGuardVariable(RexxString *varname, RexxVariableBase *retriever);
 
     // instruction parsing methods
     RexxInstruction *nextInstruction();
@@ -266,7 +275,7 @@ class LanguageParser: public RexxInternalObject
     RexxInstruction *thenNew(RexxToken *, RexxInstructionIf *);
     RexxInstruction *traceNew();
     RexxInstruction *useNew();
-    RexxInstruction *whenCaseNew(RexxInstructionIf *original);
+    RexxInstructionIf *whenCaseNew(RexxInstructionIf *original);
 
     inline void        addReference(RexxObject *reference) { calls->addLast(reference); }
     inline void        pushDo(RexxInstruction *i) { control->pushRexx((RexxObject *)i); }
@@ -307,7 +316,6 @@ class LanguageParser: public RexxInternalObject
 
     // expression parsing methods
     RexxObject *parseConstantExpression();
-    RexxObject *parseConstantLogicalExpression();
     RexxObject *parenExpression(RexxToken *);
     RexxObject *parseExpression(int);
     RexxObject *parseSubExpression(int);
@@ -321,7 +329,7 @@ class LanguageParser: public RexxInternalObject
     RexxObject *parseMessageSubterm(int);
     RexxObject *parseSubTerm(int);
     RexxObject *parseLoopConditional(InstructionSubKeyword &, int);
-    RexxObject *parseLogical(RexxToken *first, int terminators);
+    RexxObject *parseLogical(int terminators);
     inline void        pushOperator(RexxToken *operatorToken) { operators->pushRexx((RexxObject *)operatorToken); };
     inline RexxToken  *popOperator() { return (RexxToken *)(operators->pullRexx()); };
     inline RexxToken  *topOperator() { return (RexxToken *)(operators->peek()); };
@@ -382,9 +390,12 @@ class LanguageParser: public RexxInternalObject
     static RoutineClass *restoreFromMacroSpace(RexxString *name);
     static RoutineClass *processInstore(PRXSTRING instore, RexxString * name);
     static RexxCode *translateInterpret(RexxString *interpretString, RexxDirectory *labels, size_t lineNumber);
+    static RoutineClass *createProgramFromFile(RexxString *filename);
 
-    static pbuiltin builtinTable[];      /* table of builtin function stubs   */
+    // the table of builtin function stubs.
+    static pbuiltin builtinTable[];
 
+    // Different trace setting values
     static const size_t TRACE_ALL           = 'A';
     static const size_t TRACE_COMMANDS      = 'C';
     static const size_t TRACE_LABELS        = 'L';
@@ -398,13 +409,11 @@ class LanguageParser: public RexxInternalObject
 
     static const size_t DEFAULT_TRACE_SETTING = TRACE_NORMAL;
 
-// a mask for accessing just the setting information
+    // a mask for accessing just the setting information
     static const size_t TRACE_SETTING_MASK  = 0xff;
 
-/******************************************************************************/
-/* static constants used for setting trace interactive debug.  These get      */
-/* merged in with the setting value, so they must be > 256                    */
-/******************************************************************************/
+    // static constants used for setting trace interactive debug.  These get
+    // merged in with the setting value, so they must be > 256
     static const size_t DEBUG_IGNORE      =  0x0000;
     static const size_t DEBUG_ON          =  0x0100;
     static const size_t DEBUG_OFF         =  0x0200;
@@ -413,16 +422,19 @@ class LanguageParser: public RexxInternalObject
     // NOTE:  This is not part of the masked off settings.
     static const size_t DEBUG_SKIP        =  0x1000;
 
-// the mask for accessing just the debug flags
+    // the mask for accessing just the debug flags
     static const size_t TRACE_DEBUG_MASK  = 0x0f00;
 
-// an invalid 8-bit character marker.
+    // an invalid 8-bit character marker.
     const unsigned int INVALID_CHARACTER = 0x100;
 
-// maximum length of a symbol
+    // maximum length of a symbol
     static const size_t MAX_SYMBOL_LENGTH = 250;
 
 protected:
+
+    // size of our parsing holdstack used for short-term protection.
+    static const size_t HOLDSIZE = 30;
 
     RexxString *name;                    // the name of the code we're translating (frequently a file name)
     ProgramSource *source;               // the source we're translating.
@@ -452,6 +464,7 @@ protected:
     RexxDirectory   *publicRoutines;     // routines defined by ::routine directives.
     RexxArray       *requires;           // list of ::requires directories, in order of appearance.
     RexxArray       *libraries;          // libraries identified on a ::requires directive.
+    RexxArray       *classes;            // list of installed ::class directives.
 
                                          // start of block parsing section
 

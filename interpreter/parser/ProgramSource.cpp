@@ -40,7 +40,12 @@
 /*                                                                            */
 /******************************************************************************/
 
+#include "RexxCore.h"
 #include "ProgramSource.hpp"
+#include "ProtectedObject.hpp"
+#include "BufferClass.hpp"
+#include "RexxSmartBuffer.hpp"
+#include "SystemInterpreter.hpp"
 
 /**
  * Retrieve a source line as a string object.
@@ -145,12 +150,12 @@ RexxString *ProgramSource::extract(SourceLocation &location )
         ProtectedObject line = getStringLine(location.getLineNumber(), location.getOffset(), location.getEndOffset());
         // now concatentate all of the full lines onto this until we get to the final line, which is likely
         // a partial line again.
-        for (counter = location.getLineNumber() + 1; counter < location.getEndLine(); counter++)
+        for (size_t counter = location.getLineNumber() + 1; counter < location.getEndLine(); counter++)
         {
             line = ((RexxString *)line)->concat(getStringLine(counter));
         }
         // and finally add the partial last line
-        return ((RexxString *)line)->concat(getStringLine(counter, 0, location.getEndOffset()));
+        return ((RexxString *)line)->concat(getStringLine(location.getEndLine(), 0, location.getEndOffset()));
     }
 }
 
@@ -343,7 +348,7 @@ void BufferProgramSource::buildDescriptors()
     const char *scan = (const char *)memchr(bufferArea, ctrl_z, bufferLength);
     if (scan != NULL)
     {
-        bufferLength = scan - bufferArea
+        bufferLength = scan - bufferArea;
     }
 
     // now we start scanning for lines from the beginning.  NOTE:
@@ -458,7 +463,7 @@ LineDescriptor *BufferProgramSource::getDescriptors()
  *
  * @param lineLength The returned line length.
  */
-void BufferProgramSource::getLine(size_t lineNumber, const char *&linePointer, size_t lineLength)
+void BufferProgramSource::getLine(size_t lineNumber, const char *&linePointer, size_t &lineLength)
 {
     // check to see if  the requested number in bounds
     if (lineNumber > lineCount)
@@ -470,7 +475,7 @@ void BufferProgramSource::getLine(size_t lineNumber, const char *&linePointer, s
     }
 
     // get the line descriptor and turn that into a pointer/length pair
-    LineDescriptor &line = getDescriptor(targetLine);
+    LineDescriptor &line = getDescriptor(lineNumber);
     line.getLine(getBufferPointer(), linePointer, lineLength);
 }
 
@@ -518,7 +523,7 @@ void ArrayProgramSource::liveGeneral(MarkReason reason)
  */
 void ArrayProgramSource::flatten(RexxEnvelope *envelope)
 {
-    setUpFlatten(BufferProgramSource)
+    setUpFlatten(ArrayProgramSource)
       flattenRef(array);
     cleanUpFlatten
 }
@@ -536,7 +541,7 @@ void ArrayProgramSource::setup()
     // if we detect that, replace it with a null line so it will be ignored.
     if (lineCount > 0)
     {
-        RexxString *firstLine = array->get(1);
+        RexxString *firstLine = (RexxString *)array->get(1);
         // now we need to see if we've got a shebang line.  If we find
         // this, zero the length of the line to make this just a null line
         // we want to keep the line so we don't throw off the line counts.
@@ -559,7 +564,7 @@ void ArrayProgramSource::setup()
  *
  * @param lineLength The returned line length.
  */
-void ArrayProgramSource::getLine(size_t lineNumber, const char *&linePointer, size_t lineLength)
+void ArrayProgramSource::getLine(size_t lineNumber, const char *&linePointer, size_t &lineLength)
 {
     // adjust for the interpret offset, then check to see if
     // the requested number is still in bounds
@@ -659,10 +664,10 @@ void FileProgramSource::setup()
 {
     // read the file into a buffer object, reporting an error if this failed
     // for any reason
-    buffer = SystemInterpreter::readProgram(programName->getStringData());
+    buffer = SystemInterpreter::readProgram(fileName->getStringData());
     if (buffer == OREF_NULL)
     {
-        reportException(Error_Program_unreadable_name, programName);
+        reportException(Error_Program_unreadable_name, fileName);
     }
     // go set up all of the line information so the parser can read this.
     BufferProgramSource::setup();

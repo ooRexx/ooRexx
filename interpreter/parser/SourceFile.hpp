@@ -73,14 +73,13 @@ class RexxSource: public RexxInternalObject
     // protected data.
     friend class LanguageParser;
  public:
-    static RexxSource *createSource(RexxString *filename, ProgramSource *s);
-    static RexxSource *createSource(RexxString *filename);
-    static RexxSource *createSource(RexxString *filename, RexxBuffer *b);
-    static RexxSource *createSource(RexxString *filename, RexxArray *a);
+    void        *operator new(size_t);
+    inline void *operator new(size_t size, void *ptr) {return ptr;}
+    inline void  operator delete(void *) { ; }
+    inline void  operator delete(void *, void *) { ; }
 
-    // NOTE:  for GC purposes, only simple initialization is done at this point.
-    // We do the real work in the setup() method.
-    RexxSource(RexxString *p, ProgramSource *s) : programName(p), source(s) { }
+    RexxSource(RexxString *p, ProgramSource *s);
+
     inline RexxSource(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
@@ -113,11 +112,11 @@ class RexxSource: public RexxInternalObject
     RexxInstruction *sourceNewObject(size_t, RexxBehaviour *, int);
 
     bool        isTraceable();
-    RexxString  *getLine(size_t position);
-    void        setBufferedSource(RexxBuffer *buffer);
+    RexxString *getLine(size_t position);
+    void        attachSource(RexxBuffer *s);
 
     inline bool        needsInstallation() { return installRequired; }
-    inline bool        setNeedsInstallation() { installRequired = true; }
+    inline void        setNeedsInstallation() { installRequired = true; }
     inline void        install(RexxActivation *activation) { if (needsInstallation()) processInstall(activation); };
            void        setProgramName(RexxString *name);
     inline RexxString *getProgramName() { return programName; }

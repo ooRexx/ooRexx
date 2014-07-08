@@ -46,6 +46,8 @@
 #define line_delimiters "\r\n"         // stream file line end characters
 #define ctrl_z 0x1a                    // the end of file marker
 
+#include "ObjectClass.hpp"
+
 /**
  * A descriptor for a single source line.
  */
@@ -80,8 +82,6 @@ class LineDescriptor
 class ProgramSource: public RexxInternalObject
 {
 public:
-    void *operator new(size_t);
-    inline void  operator delete(void *) { ; }
     ProgramSource() : lineCount(0) { };
 
     // each subclass will need to implement this.
@@ -99,7 +99,9 @@ public:
     inline size_t getLineCount() { return lineCount; }
 
     RexxString *getStringLine(size_t lineNumber);
+    RexxString *getStringLine(size_t position, size_t startOffset, size_t endOffset);
     RexxString *extract(SourceLocation &location);
+    RexxArray  *extractSourceLines(SourceLocation &location);
 
 protected:
 
@@ -114,9 +116,13 @@ protected:
 class BufferProgramSource: public ProgramSource
 {
  public:
-    void        *operator new(size_t);
+    inline void *operator new(size_t, void *ptr) {return ptr;}
+    inline void  operator delete(void *, void *) { ; }
+    void *operator new(size_t);
     inline void  operator delete(void *) { ; }
+
     BufferProgramSource(RexxBuffer *b) : buffer(b), descriptorArea(OREF_NULL), ProgramSource() { }
+    inline BufferProgramSource(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
@@ -147,12 +153,15 @@ protected:
 class FileProgramSource: public BufferProgramSource
 {
  public:
-    void        *operator new(size_t);
+    inline void *operator new(size_t, void *ptr) {return ptr;}
+    inline void  operator delete(void *, void *) { ; }
+    void *operator new(size_t);
     inline void  operator delete(void *) { ; }
 
     // we provide the buffer source after we've read the file information in from
     // the target file.
     FileProgramSource(RexxString *f) : fileName(f), BufferProgramSource(OREF_NULL) { }
+    inline FileProgramSource(RESTORETYPE restoreType) : BufferProgramSource(restoreType) { ; };
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
@@ -174,15 +183,19 @@ protected:
 class ArrayProgramSource: public ProgramSource
 {
  public:
-    void        *operator new(size_t);
-    inline void  operator delete(void *) { ; };
+    inline void *operator new(size_t, void *ptr) {return ptr;}
+    inline void  operator delete(void *, void *) { ; }
+    void *operator new(size_t);
+    inline void  operator delete(void *) { ; }
 
     ArrayProgramSource(RexxArray *a, size_t adjust = 0) : interpretAdjust(adjust), array(a), ProgramSource() { };
+    inline ArrayProgramSource(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(RexxEnvelope *);
 
+    virtual void setup();
     virtual void getLine(size_t lineNumber, const char *&data, size_t &length);
     virtual bool isTraceable() { return true; }
 

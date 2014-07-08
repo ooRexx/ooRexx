@@ -594,6 +594,9 @@ class ActivationSettings
 
    inline void setLocalVariableDictionary(RexxVariableDictionary *dict) {settings.local_variables.setDictionary(dict); }
 
+   // the default trace flag values used for new activations.
+   static const size_t default_trace_flags;
+
  protected:
 
     ActivationSettings   settings;      // inherited REXX settings
@@ -644,7 +647,6 @@ class ActivationSettings
     static const size_t trace_failures;      // trace all command failures
     static const size_t trace_suppress;      // tracing is suppressed during skips
     static const size_t trace_flags;         // all tracing flags (EXCEPT debug)
-    static const size_t default_trace_flags;
     static const size_t trace_all_flags;     // flag set for trace all
     static const size_t trace_results_flags; // flag set for trace results
     static const size_t trace_intermediates_flags; // flag set for trace intermediates

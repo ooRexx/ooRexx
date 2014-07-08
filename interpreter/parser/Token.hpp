@@ -46,6 +46,8 @@
 
 #include "SourceLocation.hpp"
 
+class LanguageParser;
+
 /**
  * A class for an entry in the various token keyword tables.
  */
@@ -541,9 +543,10 @@ class RexxToken : public RexxInternalObject
     inline void       setNumeric(TokenSubclass v)   { this->numeric = v; };
     inline const SourceLocation &getLocation() { return tokenLocation; }
     inline void       setLocation(const SourceLocation &l) { tokenLocation = l; }
-           void       checkAssignment(RexxSource *source, RexxString *newValue);
+           void       checkAssignment(LanguageParser *parser, RexxString *newValue);
            int        precedence();
            bool       isTerminator(int);
+           RexxString *displayValue();
 
            InstructionKeyword keyword();
            InstructionSubKeyword subKeyword();
