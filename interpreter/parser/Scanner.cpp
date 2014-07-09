@@ -234,15 +234,15 @@ void LanguageParser::scanComment()
 
         // get the current char and step the position.
         unsigned int inch = nextChar();
-        // at the end delimiter (NB:  followingChar() checks if we're at the end of the line)
-        if (inch == '*' && followingChar() == '/')
+        // at the end delimiter
+        if (inch == '*' && getChar() == '/')
         {
             // this is our closer, step over the position and reduce the level.
             stepPosition();
             level--;
         }
         // start of a new nested character?
-        else if (inch == '/' && followingChar() == '*')
+        else if (inch == '/' && getChar() == '*')
         {
             // we have a new nesting level to process
             stepPosition();
@@ -417,7 +417,7 @@ RexxString *LanguageParser::packHexLiteral(size_t start, size_t length)
 {
     // ""X is legal...it is just a null string
     // the rest is not nearly as easy :-)
-    if (!length)
+    if (length == 0)
     {
         return OREF_NULLSTRING;
     }
@@ -528,7 +528,7 @@ RexxString *LanguageParser::packHexLiteral(size_t start, size_t length)
         // characters after the first, this will handle things fine.
         // Note also, since we do not allow leading blanks, we'll be
         // positioned correctly at the start.
-        for (size_t k = nibbleStart; k < 2; k++)
+        for (size_t k = nibbleStart; k < 1; k++)
         {
             // this should be a real character now
             nibble = (unsigned char)*inPointer++;
@@ -587,7 +587,7 @@ RexxString *LanguageParser::packBinaryLiteral(size_t start, size_t length)
 {
     // ""B is legal...it is just a null string
     // the rest is not nearly as easy :-)
-    if (!length)
+    if (length == 0)
     {
         return OREF_NULLSTRING;
     }
@@ -760,6 +760,8 @@ RexxToken *LanguageParser::sourceNextToken(RexxToken *previous )
         SourceLocation location;
         // record a starting location.
         startLocation(location);
+        // record this as just a single characters by default
+        location.adjustEnd(1);
 
         // hit the end of the file while scanning for the next token?  Return nothing
         if (tokenClass == CLAUSE_EOF)

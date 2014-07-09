@@ -518,7 +518,7 @@ ConditionKeyword RexxToken::condition()
 InstructionSubKeyword RexxToken::parseOption()
 {
     // not a symbol?  not a keyword
-    if (isSymbol())
+    if (!isSymbol())
     {
         return SUBKEY_NONE;
     }
@@ -533,7 +533,7 @@ InstructionSubKeyword RexxToken::parseOption()
 DirectiveKeyword RexxToken::keyDirective()
 {
     // not a symbol?  not a keyword
-    if (isSymbol())
+    if (!isSymbol())
     {
         return DIRECTIVE_NONE;
     }

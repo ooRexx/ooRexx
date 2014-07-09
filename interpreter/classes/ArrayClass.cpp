@@ -258,7 +258,7 @@ void *RexxArray::operator new(size_t size, size_t items, size_t maxSize)
     // we never create below a minimum size
     maxSize = Numerics::maxVal(maxSize, ARRAY_MIN_SIZE);
     // and use at least the size as the max
-    maxSize = Numerics::maxVal(maxSize, size);
+    maxSize = Numerics::maxVal(maxSize, items);
     // add in the max size value.  Note that we subtract one since
     // the first item is contained in the base object allocation.
     bytes += sizeof(RexxObject *) * (maxSize - 1);
@@ -266,7 +266,7 @@ void *RexxArray::operator new(size_t size, size_t items, size_t maxSize)
     RexxArray *newArray = (RexxArray *)new_object(bytes, T_Method);
 
     // now fill in the various control bits
-    newArray->arraySize = size;
+    newArray->arraySize = items;
     newArray->maximumSize = maxSize;
     newArray->lastElement = 0;
     // no expansion yet, use ourself as the expansion

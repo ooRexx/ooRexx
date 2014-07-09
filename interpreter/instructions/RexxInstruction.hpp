@@ -77,6 +77,7 @@ class RexxInstruction : public RexxInternalObject
     virtual void flatten(RexxEnvelope *);
 
     virtual void execute(RexxActivation *, RexxExpressionStack *) { ; };
+    virtual bool isBlock() { return false; }
 
     inline const SourceLocation &getLocation() { return instructionLocation; }
     inline void  setLocation(const SourceLocation &l) { instructionLocation = l; }
@@ -123,6 +124,7 @@ class RexxBlockInstruction : public RexxInstruction
 
     // virtual functions required by subclasses to override.
 
+    virtual bool isBlock() { return true; }
     virtual EndBlockType getEndStyle() = 0;
     virtual bool isLoop() { return false; };
     virtual void matchEnd(RexxInstructionEnd *, LanguageParser *) { ; };

@@ -202,8 +202,8 @@ template <class objType> class Protected : public ProtectedBase
 public:
     inline Protected() : protectedObject(OREF_NULL), ProtectedBase() { }
     inline Protected(RexxActivity *a) : protectedObject(OREF_NULL), ProtectedBase(a) { }
-    inline Protected(objType *o) : protectedObject(OREF_NULL), ProtectedBase() { }
-    inline Protected(objType *o, RexxActivity *a) : protectedObject(OREF_NULL), ProtectedBase(a) { }
+    inline Protected(objType *o) : protectedObject(o), ProtectedBase() { }
+    inline Protected(objType *o, RexxActivity *a) : protectedObject(o), ProtectedBase(a) { }
 
     inline ~Protected()
     {

@@ -3204,8 +3204,8 @@ bool addCommandMessage(pCEventNotification pcen, RexxMethodContext *c, WPARAM wP
         pcen->commandMsgs = (MESSAGETABLEENTRY *)temp;
     }
 
-    pcen->commandMsgs[index].MethodClass = (char *)LocalAlloc(LMEM_FIXED, strlen(method) + 1);
-    if ( pcen->commandMsgs[index].MethodClass == NULL )
+    pcen->commandMsgs[index].rexxMethod = (char *)LocalAlloc(LMEM_FIXED, strlen(method) + 1);
+    if ( pcen->commandMsgs[index].rexxMethod == NULL )
     {
         outOfMemoryException(c->threadContext);
         return false;
@@ -3280,8 +3280,8 @@ bool addNotifyMessage(pCEventNotification pcen, RexxMethodContext *c, WPARAM wPa
         pcen->notifyMsgs = (MESSAGETABLEENTRY *)temp;
     }
 
-    pcen->notifyMsgs[index].MethodClass = (char *)LocalAlloc(LMEM_FIXED, strlen(method) + 1);
-    if ( pcen->notifyMsgs[index].MethodClass == NULL )
+    pcen->notifyMsgs[index].rexxMethod = (char *)LocalAlloc(LMEM_FIXED, strlen(method) + 1);
+    if ( pcen->notifyMsgs[index].rexxMethod == NULL )
     {
         outOfMemoryException(c->threadContext);
         return false;
@@ -3358,8 +3358,8 @@ bool addMiscMessage(pCEventNotification pcen, RexxMethodContext *c, uint32_t win
         pcen->miscMsgs = (MESSAGETABLEENTRY *)temp;
     }
 
-    pcen->miscMsgs[index].MethodClass = (char *)LocalAlloc(LMEM_FIXED, strlen(method) + 1);
-    if ( pcen->miscMsgs[index].MethodClass == NULL )
+    pcen->miscMsgs[index].rexxMethod = (char *)LocalAlloc(LMEM_FIXED, strlen(method) + 1);
+    if ( pcen->miscMsgs[index].rexxMethod == NULL )
     {
         outOfMemoryException(c->threadContext);
         return false;

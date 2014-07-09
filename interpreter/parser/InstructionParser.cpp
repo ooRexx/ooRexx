@@ -2204,7 +2204,7 @@ RexxInstruction *LanguageParser::parseNew(InstructionSubKeyword argPull)
             }
 
             // resolve this to the indexed form
-            InstructionSubKeyword keyword = token->parseOption();
+            keyword = token->parseOption();
 
             switch (keyword)
             {
@@ -2248,7 +2248,7 @@ RexxInstruction *LanguageParser::parseNew(InstructionSubKeyword argPull)
                     }
                     // remember the option...passed on when we create the instruction,
                     // but also helps trap duplicates.
-                    parseFlags[parse_lower] = true;
+                    parseFlags[parse_caseless] = true;
                     // go directly to the start of the loop again.
                     continue;
             }

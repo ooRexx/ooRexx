@@ -44,6 +44,8 @@
 #ifndef Included_RexxClass
 #define Included_RexxClass
 
+#include "FlagSet.hpp"
+
 // required for method signatures
  class RexxSource;
  class PackageClass;
@@ -120,21 +122,21 @@ class RexxClass : public RexxObject
 
 
     // TODO:  Use bitset for class flags.
-    inline bool         isRexxDefined() { return (classFlags & REXX_DEFINED) != 0; };
-    inline bool         isMixinClass()  { return (classFlags & MIXIN) != 0; };
-    inline bool         isMetaClass() { return (classFlags & META_CLASS) != 0; };
-    inline bool         hasUninitDefined()   { return (classFlags & HAS_UNINIT) != 0; };
-    inline void         setHasUninitDefined()   { classFlags |= HAS_UNINIT; };
-    inline void         clearHasUninitDefined()   { classFlags &= ~HAS_UNINIT; };
+    inline bool         isRexxDefined() { return classFlags[REXX_DEFINED]; }
+    inline bool         isMixinClass()  { return classFlags[MIXIN]; }
+    inline bool         isMetaClass() { return classFlags[META_CLASS]; }
+    inline bool         hasUninitDefined()   { return classFlags[HAS_UNINIT]; }
+    inline void         setHasUninitDefined()   { classFlags.set(HAS_UNINIT); }
+    inline void         clearHasUninitDefined()   { classFlags.reset(HAS_UNINIT); }
     // NB:  This clears every flag BUT the UNINIT flag
-    inline void         setInitialFlagState()   { classFlags &= HAS_UNINIT; };
-    inline bool         parentHasUninitDefined()   { return (classFlags & PARENT_HAS_UNINIT) != 0; };
-    inline void         setParentHasUninitDefined()   { classFlags |= PARENT_HAS_UNINIT; };
-    inline bool         isPrimitiveClass() { return (classFlags & PRIMITIVE_CLASS) != 0; }
-    inline void         setMixinClass() { classFlags |= MIXIN; }
-    inline void         setNonPrimitive() { classFlags &= ~PRIMITIVE_CLASS; };
-    inline RexxBehaviour *getInstanceBehaviour() {return instanceBehaviour;};
-    inline void         setMetaClass() { classFlags |= META_CLASS; }
+    inline void         setInitialFlagState()   { bool uninit = classFlags[HAS_UNINIT]; classFlags.reset(); classFlags.set(HAS_UNINIT, uninit); }
+    inline bool         parentHasUninitDefined()   { return classFlags[PARENT_HAS_UNINIT]; }
+    inline void         setParentHasUninitDefined()   { classFlags.set(PARENT_HAS_UNINIT); }
+    inline bool         isPrimitiveClass() { return classFlags[PRIMITIVE_CLASS]; }
+    inline void         setMixinClass() { classFlags.set(MIXIN); }
+    inline void         setNonPrimitive() { classFlags.reset(PRIMITIVE_CLASS); }
+    inline RexxBehaviour *getInstanceBehaviour() {return instanceBehaviour;}
+    inline void         setMetaClass() { classFlags[META_CLASS]; }
            void         addSubClass(RexxClass *);
            void         removeSubclass(RexxClass *c);
 
@@ -145,15 +147,16 @@ class RexxClass : public RexxObject
     static RexxClass *classInstance;
 
  protected:
-    enum
+
+    typedef enum
     {
-        REXX_DEFINED      = 0x00000001,   // this class is a native rexx class
-        MIXIN             = 0x00000004,   // this is a mixin class
-        HAS_UNINIT        = 0x00000008,   // this class has an uninit method
-        META_CLASS        = 0x00000010,   // this class is a meta class
-        PRIMITIVE_CLASS   = 0x00000020,   // this is a primitive class
-        PARENT_HAS_UNINIT = 0x00000040
-    };
+        REXX_DEFINED,                     // this class is a native rexx class
+        MIXIN,                            // this is a mixin class
+        HAS_UNINIT,                       // this class has an uninit method
+        META_CLASS,                       // this class is a meta class
+        PRIMITIVE_CLASS,                  // this is a primitive class
+        PARENT_HAS_UNINIT,
+    } ClassFlag;
 
                                        /* Subclassable and subclassed       */
     RexxString    *id;                 /* classes will have a name string   */
@@ -174,9 +177,7 @@ class RexxClass : public RexxObject
                                        /* The superclass and any inherited  */
                                        /* mixins for instance behaviour     */
     RexxArray     *instanceSuperClasses;
-                                       /* class specific information        */
-                                       /* defines for this field are at the */
-    uint32_t       classFlags;         /* top of this header file           */
+    FlagSet<ClassFlag, 32> classFlags; // class attributes
 
     RexxList      *subClasses;         // our list of weak referenced subclasses
     RexxSource    *source;             // source we're defined in (if any)

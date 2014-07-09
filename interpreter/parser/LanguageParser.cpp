@@ -847,9 +847,8 @@ RexxCode *LanguageParser::translateBlock()
     calls = new_array();
     // a table of variables...starting with the special variables we allocated space for.
     variables = (RexxDirectory *)TheCommonRetrievers->copy();
-    // restart the variable index        */
+    // restart the variable index
     variableIndex = RexxLocalVariables::FIRST_VARIABLE_INDEX;
-    exposedVariables = new_directory();
 
     // do we have labels from an interpret?
     // only create a new set if we're not reusing.
@@ -861,7 +860,7 @@ RexxCode *LanguageParser::translateBlock()
     // until we need guard variables, we don't need the table
     guardVariables = OREF_NULL;
     // and we need a new set of exposed variables for each code section
-    exposedVariables = OREF_NULL;
+    exposedVariables = new_directory();
 
     // clear the stack accounting fields
     maxStack = 0;
@@ -973,6 +972,7 @@ RexxCode *LanguageParser::translateBlock()
         {
             // a WHEN clause.  The top of the Do stack must be a select.
             case KEYWORD_WHEN:
+            case KEYWORD_WHEN_CASE:
             {
                 // the top of the queue must be a SELECT instruction, but
                 // we have TWO varieties of this.  The second requires the
@@ -1167,8 +1167,9 @@ RexxCode *LanguageParser::translateBlock()
                 // correct type, we have an error.
                 RexxInstruction *second = popDo();
                 type = second->getType();
-                // verity the type
-                if (type != KEYWORD_SELECT && type != KEYWORD_OTHERWISE && type != KEYWORD_DO && type != KEYWORD_LOOP)
+                // that the top of the stack is an acceptable block-type instruction.
+                // This includes all of the DO/LOOP variants, both Select types, and Otherwise
+                if (!second->isBlock())
                 {
                     // we have a couple of specific errors based on what sort of instruction is
                     // on the top.
@@ -1178,7 +1179,6 @@ RexxCode *LanguageParser::translateBlock()
                     }
                     else if (type == KEYWORD_IFTHEN || type == KEYWORD_WHENTHEN)
                     {
-                        /* this is a different error         */
                         syntaxError(Error_Unexpected_end_then);
                     }
                     else
@@ -1199,7 +1199,7 @@ RexxCode *LanguageParser::translateBlock()
                 }
 
                 // Now do the apprpriate closure action based on the instruction type.
-                if (second->isType(KEYWORD_SELECT))
+                if (type == KEYWORD_SELECT || type == KEYWORD_SELECT_CASE)
                 {
                     ((RexxInstructionSelect *)second)->matchEnd((RexxInstructionEnd *)instruction, this);
                 }
@@ -1219,8 +1219,21 @@ RexxCode *LanguageParser::translateBlock()
             // start of new DO group (also picks up LOOP instruction)
             // this gets pushed on to the top of the control stack until
             // we find an END instruction.
-            case  KEYWORD_DO:
-            case  KEYWORD_LOOP:
+            case KEYWORD_DO:
+            case KEYWORD_LOOP:
+            case KEYWORD_SIMPLE_BLOCK:
+            case KEYWORD_LOOP_FOREVER:
+            case KEYWORD_LOOP_OVER:
+            case KEYWORD_LOOP_OVER_UNTIL:
+            case KEYWORD_LOOP_OVER_WHILE:
+            case KEYWORD_LOOP_CONTROLLED:
+            case KEYWORD_LOOP_CONTROLLED_UNTIL:
+            case KEYWORD_LOOP_CONTROLLED_WHILE:
+            case KEYWORD_LOOP_COUNT:
+            case KEYWORD_LOOP_COUNT_UNTIL:
+            case KEYWORD_LOOP_COUNT_WHILE:
+            case KEYWORD_LOOP_WHILE:
+            case KEYWORD_LOOP_UNTIL:
             {
                 pushDo(instruction);
                 break;
@@ -1229,6 +1242,7 @@ RexxCode *LanguageParser::translateBlock()
             // new select group.  Again, we push this on the start of the stack
             // while it awaits its associated WHEN, OTHERWISE, and END bits.
             case  KEYWORD_SELECT:
+            case  KEYWORD_SELECT_CASE:
             {
                 pushDo(instruction);
                 break;
@@ -2864,7 +2878,7 @@ RexxObject *LanguageParser::parseMessageSubterm(int terminators)
         while (token->isMessageOperator())
         {
             // we have two possibilities here, a bracket message or a twiddle form.
-            if (token->isRightBracket())
+            if (token->isLeftBracket())
             {
                 term = parseCollectionMessage(token, term);
             }

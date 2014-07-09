@@ -1362,8 +1362,8 @@ bool addSubclassMessage(RexxMethodContext *c, pCDialogControl pcdc, pWinMessageF
         pscd->msgs = (MESSAGETABLEENTRY *)temp;
     }
 
-    pscd->msgs[index].MethodClass = (char *)LocalAlloc(LPTR, strlen(pwmf->method) + 1);
-    if ( pscd->msgs[index].MethodClass == NULL )
+    pscd->msgs[index].rexxMethod = (char *)LocalAlloc(LPTR, strlen(pwmf->method) + 1);
+    if ( pscd->msgs[index].rexxMethod == NULL )
     {
         outOfMemoryException(c->threadContext);
         return false;

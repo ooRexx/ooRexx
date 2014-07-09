@@ -76,7 +76,7 @@ class RexxBehaviour : public RexxInternalObject
     RexxClass  *restoreClass();
     RexxObject *superScope( RexxObject *);
     MethodClass *superMethod(RexxString *, RexxObject *);
-    void        setmethodDictionaryScope( RexxObject *);
+    void        setMethodDictionaryScope(RexxObject *);
     RexxObject *setScopes( RexxIdentityTable *);
     RexxObject *addScope( RexxObject *);
     RexxObject *mergeScope( RexxObject *);

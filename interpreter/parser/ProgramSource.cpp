@@ -118,8 +118,8 @@ RexxString *ProgramSource::getStringLine(size_t position, size_t startOffset, si
     }
 
     // protect from an overrun
-    startOffset = Numerics::maxVal(startOffset, lineLength);
-    endOffset = Numerics::maxVal(endOffset, lineLength);
+    startOffset = Numerics::minVal(startOffset, lineLength);
+    endOffset = Numerics::minVal(endOffset, lineLength);
 
     // we can use this to extract from a position to the end by
     // specifying an end offset of 0

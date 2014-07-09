@@ -227,7 +227,7 @@ bool RexxToken::isTerminator(int terminators)
             {
                 // map the keyword token to a key word code.  This are generally
                 // keyword options on DO/LOOP, although THEN and WHEN are also terminators
-                switch (subclass)
+                switch (subKeyword())
                 {
                     case SUBKEY_TO:
                     {

@@ -88,17 +88,18 @@ public:
 
 
     // set a flag value to true
-    inline void set(const TEnum flag)
-    {
-        flags.set(flag);
-    }
-
-
-    // set a flag value to true
-    inline void set(const TEnum flag, bool val)
+    inline void set(const TEnum flag, bool val = true)
     {
         flags.set(flag, val);
     }
+
+
+    // set all flag values to true
+    inline void set()
+    {
+        flags.set();
+    }
+
 
     // turn a flag value off
     inline void reset(const TEnum flag)
@@ -106,17 +107,34 @@ public:
         flags.reset(flag);
     }
 
+
+    // turn all flag values off
+    inline void reset()
+    {
+        flags.reset();
+    }
+
+
     // flip the value of a bit
     inline void flip(const TEnum flag)
     {
         flags.flip(flag);
     }
 
-    // turn a flag value off
+
+    // flip all flag values
+    inline void flip()
+    {
+        flags.flip();
+    }
+
+
+    // test a flag value
     inline bool test(const TEnum flag)
     {
         return flags.test(flag);
     }
+
 
     // access the value of a flag
     inline bool operator[] (const TEnum flag) const
@@ -129,6 +147,7 @@ public:
     {
         return FlagSetReference(*this, flag);
     }
+
 
     // test if any flags are set
     inline bool any() const
@@ -147,6 +166,14 @@ public:
     {
         return flags.test(flag1) || flags.test(flag2) || flags.test(flag3);
     }
+
+
+    // test if all flags are set
+    inline bool all() const
+    {
+        return flags.all();
+    }
+
 
     // test for all of the specified flags being set
     inline bool all(const TEnum flag1, const TEnum flag2)
