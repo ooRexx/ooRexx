@@ -477,7 +477,18 @@ RexxObject *RexxArray::empty()
  *
  * @return True if the array is empty, false otherwise
  */
-RexxObject *RexxArray::isEmpty()
+bool RexxArray::isEmpty()
+{
+    return items() == 0;
+}
+
+
+/**
+ * Test if an array is empty.
+ *
+ * @return True if the array is empty, false otherwise
+ */
+RexxObject *RexxArray::isEmptyRexx()
 {
     return (items() == 0) ? TheTrueObject : TheFalseObject;
 }

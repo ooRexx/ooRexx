@@ -207,7 +207,7 @@ void RexxInstructionUseStrict::execute(RexxActivation *context, RexxExpressionSt
             {
                 context->traceResult(argument);  // trace if necessary
                 // assign the value
-                variable->assign(context, stack, argument);
+                variable->assign(context, argument);
             }
             else
             {
@@ -222,7 +222,7 @@ void RexxInstructionUseStrict::execute(RexxActivation *context, RexxExpressionSt
                     defaultValue = defaultValue->evaluate(context, stack);
                     context->traceResult(defaultValue);  // trace if necessary
                     // assign the value
-                    variable->assign(context, stack, defaultValue);
+                    variable->assign(context, defaultValue);
                     stack->pop();    // remove the value from the stack
                 }
                 else

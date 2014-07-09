@@ -385,15 +385,17 @@ int RexxToken::resolveKeyword(RexxString *token, KeywordEntry *table, size_t tab
 
     // search this table using a binary search
 
-    size_t lower = 0;                             // set initial lower bound
-    size_t upper = tableSize - 1;                 // set the upper bound
+    // NOTE:  We need to use signed numbers for this, otherwise
+    // the numbers can wrap
+    int lower = 0;                                // set initial lower bound
+    int upper = (int)tableSize - 1;               // set the upper bound
     char firstChar = *name;                       // get the first character for fast compares
 
     // loop until the range converges
     while (lower <= upper)
     {
         // find a new middle location
-        size_t middle = lower + ((upper - lower) / 2);
+        int middle = lower + ((upper - lower) / 2);
 
         // only compare on the name if the first character matches
         if (*table[middle].name == firstChar)

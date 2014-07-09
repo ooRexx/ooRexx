@@ -120,8 +120,6 @@ class RexxClass : public RexxObject
     RexxObject *getPackage();
     void        completeNewObject(RexxObject *obj, RexxObject **initArgs = OREF_NULL, size_t argCount = 0);
 
-
-    // TODO:  Use bitset for class flags.
     inline bool         isRexxDefined() { return classFlags[REXX_DEFINED]; }
     inline bool         isMixinClass()  { return classFlags[MIXIN]; }
     inline bool         isMetaClass() { return classFlags[META_CLASS]; }
@@ -136,7 +134,7 @@ class RexxClass : public RexxObject
     inline void         setMixinClass() { classFlags.set(MIXIN); }
     inline void         setNonPrimitive() { classFlags.reset(PRIMITIVE_CLASS); }
     inline RexxBehaviour *getInstanceBehaviour() {return instanceBehaviour;}
-    inline void         setMetaClass() { classFlags[META_CLASS]; }
+    inline void         setMetaClass() { classFlags.set(META_CLASS); }
            void         addSubClass(RexxClass *);
            void         removeSubclass(RexxClass *c);
 

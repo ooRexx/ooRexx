@@ -192,7 +192,7 @@ void ControlledLoop::setup( RexxActivation *context,
     // set the control variable in the doblock (it will use it on subsequent passes).
     doblock->setControl(control);
     // do the initial assignment
-    control->assign(context, stack, _initial);
+    control->assign(context, _initial);
 }
 
 

@@ -82,7 +82,8 @@ class RexxHashTableCollection : public RexxObject
     RexxArray    *allIndexes();
     RexxArray    *uniqueIndexes();
     RexxObject   *empty();
-    RexxObject   *isEmpty();
+    RexxObject   *isEmptyRexx();
+    bool          isEmpty();
 
     inline HashLink      items() { return this->contents->totalEntries(); };
     inline HashLink      first() { return this->contents->first(); };

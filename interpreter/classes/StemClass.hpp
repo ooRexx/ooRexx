@@ -97,7 +97,8 @@ class RexxStem : public RexxObject
     RexxDirectory *toDirectory();
     RexxObject  *request(RexxString *);
     RexxObject   *empty();
-    RexxObject   *isEmpty();
+    RexxObject   *isEmptyRexx();
+    bool          isEmpty();
     size_t        items();
 
     void        dropValue();

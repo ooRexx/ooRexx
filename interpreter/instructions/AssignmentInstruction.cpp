@@ -119,7 +119,7 @@ void RexxInstructionAssignment::execute(RexxActivation *context, RexxExpressionS
         // trace the result
         context->traceResult(result);
         // assign the variable
-        variable->assign(context, stack, result);
+        variable->assign(context, result);
         // do debug pause
         context->pauseInstruction();
     }
@@ -128,7 +128,7 @@ void RexxInstructionAssignment::execute(RexxActivation *context, RexxExpressionS
     {
         // TODO:  Consider having an method here that is optimized for the non-trace
         // situation....
-        variable->assign(context, stack, expression->evaluate(context, stack));
+        variable->assign(context, expression->evaluate(context, stack));
     }
 }
 

@@ -1653,7 +1653,7 @@ BUILTIN(VALUE)
         if (newvalue != OREF_NULL)       /* have a new value to assign?       */
         {
                                          /* do the assignment                 */
-            retriever->assign(context, stack, newvalue);
+            retriever->assign(context, newvalue);
         }
         return result;                       /* return the indicator              */
     }

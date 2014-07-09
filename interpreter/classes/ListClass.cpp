@@ -917,15 +917,25 @@ RexxObject *RexxList::empty()
 }
 
 
+/**
+ * Test if a list is empty.
+ *
+ * @return True if the list is empty, false otherwise
+ */
+RexxObject *RexxList::isEmptyRexx()
+{
+    return (count == 0) ? TheTrueObject : TheFalseObject;
+}
+
 
 /**
  * Test if a list is empty.
  *
  * @return True if the list is empty, false otherwise
  */
-RexxObject *RexxList::isEmpty()
+bool RexxList::isEmpty()
 {
-    return (count == 0) ? TheTrueObject : TheFalseObject;
+    return (count == 0);
 }
 
 

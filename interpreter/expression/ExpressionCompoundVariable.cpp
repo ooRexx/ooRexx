@@ -349,10 +349,9 @@ bool RexxCompoundVariable::exists(RexxActivation *context)
  * Perform a variable assignment operation (in the context of an assignment instruction)
  *
  * @param context The current execution context.
- * @param stack   The current evaluation stack.
  * @param value   The new variable value.
  */
-void RexxCompoundVariable::assign(RexxActivation *context, RexxExpressionStack *stack, RexxObject *value )
+void RexxCompoundVariable::assign(RexxActivation *context, RexxObject *value )
 {
     context->assignLocalCompoundVariable(stemName, stemIndex, (RexxObject **)&tails[0], tailCount, value);
 }

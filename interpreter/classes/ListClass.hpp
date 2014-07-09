@@ -115,11 +115,12 @@
    LISTENTRY    *getEntry(size_t);
    RexxObject   *indexOfValue(RexxObject *);
    RexxObject   *empty();
-   RexxObject   *isEmpty();
-   RexxObject  *index(RexxObject *);
-   RexxObject  *hasItem(RexxObject *);
-   RexxObject  *removeItem(RexxObject *);
-   RexxObject  *removeObject(RexxObject *);
+   RexxObject   *isEmptyRexx();
+   bool          isEmpty();
+   RexxObject   *index(RexxObject *);
+   RexxObject   *hasItem(RexxObject *);
+   RexxObject   *removeItem(RexxObject *);
+   RexxObject   *removeObject(RexxObject *);
 
    void          addLast(RexxObject *value);
    void          addFirst(RexxObject *value);

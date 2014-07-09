@@ -267,8 +267,8 @@ void RexxTrigger::parse(RexxActivation *context, RexxExpressionStack *stack,
             // the dummy placeholder has a special trace form.
             if (variable != OREF_NULL)
             {
-                // NOTE:  The different variable tpes handle their own assignment tracing
-                variable->assign(context, stack, variableValue);
+                // NOTE:  The different variable types handle their own assignment tracing
+                variable->assign(context, variableValue);
                 // if only tracing results and not intermediates, then we need to
                 // trace this value explicitly.
                 if (!context->tracingIntermediates())
@@ -308,7 +308,7 @@ void RexxTrigger::parse(RexxActivation *context, RexxExpressionStack *stack,
                 // target.
                 ProtectedObject p(variableValue);
                 // do the assignment                 */
-                variable->assign(context, stack, variableValue);
+                variable->assign(context, variableValue);
             }
             // dummy variable, we just skip the assignment
             else

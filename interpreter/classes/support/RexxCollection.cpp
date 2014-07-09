@@ -527,7 +527,18 @@ RexxObject *RexxHashTableCollection::empty()
  *
  * @return
  */
-RexxObject *RexxHashTableCollection::isEmpty()
+RexxObject *RexxHashTableCollection::isEmptyRexx()
 {
     return contents->isEmpty() ? TheTrueObject : TheFalseObject;
+}
+
+
+/**
+ * Test if a HashTableCollection is empty.
+ *
+ * @return
+ */
+bool RexxHashTableCollection::isEmpty()
+{
+    return contents->isEmpty();
 }

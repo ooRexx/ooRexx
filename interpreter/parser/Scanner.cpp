@@ -932,7 +932,7 @@ RexxToken *LanguageParser::sourceNextToken(RexxToken *previous )
                         if (nextSpecial('/', location))
                         {
                             // remainder operatior
-                            RexxToken *token = OPERATOR(REMAINDER);
+                            return OPERATOR(REMAINDER);
                         }
                         // normal division
                         else

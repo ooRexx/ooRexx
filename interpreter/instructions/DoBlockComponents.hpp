@@ -89,7 +89,7 @@ class ForLoop
 class ControlledLoop : public ForLoop
 {
  public:
-    inline ControlledLoop() : control(OREF_NULL), initial(OREF_NULL), to(OREF_NULL), by(OREF_NULL) { }
+    inline ControlledLoop() : control(OREF_NULL), initial(OREF_NULL), to(OREF_NULL), by(OREF_NULL), ForLoop() { }
 
     // helper memory marking methods for embedding classes to call.
     inline void live(size_t liveMark)

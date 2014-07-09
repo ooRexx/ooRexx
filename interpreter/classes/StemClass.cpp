@@ -955,9 +955,20 @@ RexxObject *RexxStem::empty()
  *
  * @return True if the stem is empty, false otherwise.
  */
-RexxObject *RexxStem::isEmpty()
+RexxObject *RexxStem::isEmptyRexx()
 {
     return (items() == 0) ? TheTrueObject : TheFalseObject;
+}
+
+
+/**
+ * Test if the stem is empty.
+ *
+ * @return True if the stem is empty, false otherwise.
+ */
+bool RexxStem::isEmpty()
+{
+    return (items() == 0);
 }
 
 

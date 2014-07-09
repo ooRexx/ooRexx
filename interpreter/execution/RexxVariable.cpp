@@ -153,7 +153,7 @@ void RexxVariable::uninform(RexxActivity *informee)
 void RexxVariable::drop()
 {
     // clear out the value
-    OrefSet(this, variableValue, OREF_NULL);
+    setField(variableValue, OREF_NULL);
     // if we have watchers, notify them
     if (dependents != OREF_NULL && !dependents->isEmpty())
     {

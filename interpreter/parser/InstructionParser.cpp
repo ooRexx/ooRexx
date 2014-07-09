@@ -877,8 +877,6 @@ RexxInstruction *LanguageParser::newControlledLoop(RexxString *label, RexxToken 
     // track while/until forms
     InstructionSubKeyword conditionalType = SUBKEY_NONE;
 
-    // set a default increment value
-    control.by = IntegerOne;
 
     // the control expressions need to evaluated in the coded order,
     // so we keep a little table of the order used.
@@ -963,6 +961,7 @@ RexxInstruction *LanguageParser::newControlledLoop(RexxString *label, RexxToken 
             }
 
             case SUBKEY_UNTIL:
+            case SUBKEY_WHILE:
             {
                 // step back a token and process the conditional
                 previousToken();
@@ -972,6 +971,12 @@ RexxInstruction *LanguageParser::newControlledLoop(RexxString *label, RexxToken 
             }
         }
         token = nextReal();
+    }
+
+    // if the by value was not specified, set this to the default on one now.
+    if (control.by == OREF_NULL)
+    {
+        control.by = IntegerOne;
     }
 
     // NOTE:  We parse until we hit the end of clause or found an error,

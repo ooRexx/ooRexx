@@ -52,14 +52,6 @@
 class SourceLocation
 {
 public:
-    inline SourceLocation()
-    {
-        startLine = 0;
-        startOffset = 0;
-        endLine = 0;
-        endOffset = 0;
-    }
-
     inline size_t getLineNumber() { return startLine; }
     inline size_t getOffset()     { return startOffset; }
     inline size_t getEndLine()    { return endLine; }

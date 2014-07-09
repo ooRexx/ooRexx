@@ -252,6 +252,8 @@ bool LanguageParser::isDuplicateRoutine(RexxString *name)
 void LanguageParser::addClassDirective(RexxString *name, ClassDirective *directive)
 {
     classDependencies->put((RexxObject *)directive, name);
+    // also add to the array list
+    classes->append((RexxObject *)directive);
 }
 
 
@@ -277,9 +279,6 @@ void LanguageParser::classDirective()
     {
         syntaxError(Error_Translation_duplicate_class);
     }
-
-    // TODO:  figure this out at the end.
-//  this->flags |= _install;         /* have information to install       */
 
     // create a class directive and add this to the dependency list
     activeClass = new ClassDirective(name, public_name, clause);

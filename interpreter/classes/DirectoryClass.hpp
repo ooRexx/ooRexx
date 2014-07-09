@@ -81,7 +81,8 @@ class RexxDirectory : public RexxHashTableCollection
     RexxArray    *allIndexes();
     void          reset();
     RexxObject   *empty();
-    RexxObject   *isEmpty();
+    bool          isEmpty();
+    RexxObject   *isEmptyRexx();
     RexxObject   *indexRexx(RexxObject *);
     RexxObject   *hasItem(RexxObject *);
     RexxObject   *removeItem(RexxObject *);

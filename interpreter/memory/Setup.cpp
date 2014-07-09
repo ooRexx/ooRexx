@@ -385,7 +385,7 @@ void MemoryObject::createImage()
   defineKernelMethod(CHAR_ALLINDEXES   ,TheArrayBehaviour, CPPM(RexxArray::allIndexes), 0);
   defineKernelMethod(CHAR_ALLITEMS     ,TheArrayBehaviour, CPPM(RexxArray::allItems), 0);
   defineKernelMethod(CHAR_EMPTY        ,TheArrayBehaviour, CPPM(RexxArray::empty), 0);
-  defineKernelMethod(CHAR_ISEMPTY      ,TheArrayBehaviour, CPPM(RexxArray::isEmpty), 0);
+  defineKernelMethod(CHAR_ISEMPTY      ,TheArrayBehaviour, CPPM(RexxArray::isEmptyRexx), 0);
   defineKernelMethod(CHAR_INDEX        ,TheArrayBehaviour, CPPM(RexxArray::index), 1);
   defineKernelMethod(CHAR_HASITEM      ,TheArrayBehaviour, CPPM(RexxArray::hasItem), 1);
   defineKernelMethod(CHAR_REMOVEITEM   ,TheArrayBehaviour, CPPM(RexxArray::removeItem), 1);
@@ -428,7 +428,7 @@ void MemoryObject::createImage()
   defineKernelMethod(CHAR_ALLITEMS      , TheDirectoryBehaviour, CPPM(RexxDirectory::allItems), 0);
   defineKernelMethod(CHAR_ALLINDEXES    , TheDirectoryBehaviour, CPPM(RexxDirectory::allIndexes), 0);
   defineKernelMethod(CHAR_EMPTY         , TheDirectoryBehaviour, CPPM(RexxDirectory::empty), 0);
-  defineKernelMethod(CHAR_ISEMPTY       , TheDirectoryBehaviour, CPPM(RexxDirectory::isEmpty), 0);
+  defineKernelMethod(CHAR_ISEMPTY       , TheDirectoryBehaviour, CPPM(RexxDirectory::isEmptyRexx), 0);
   defineKernelMethod(CHAR_PUT           , TheDirectoryBehaviour, CPPM(RexxDirectory::put), 2);
   defineKernelMethod(CHAR_REMOVE        , TheDirectoryBehaviour, CPPM(RexxDirectory::removeRexx), 1);
   defineKernelMethod(CHAR_SETENTRY      , TheDirectoryBehaviour, CPPM(RexxDirectory::setEntry), 2);
@@ -485,7 +485,7 @@ void MemoryObject::createImage()
   defineKernelMethod(CHAR_ALLITEMS     ,TheListBehaviour, CPPM(RexxList::allItems), 0);
   defineKernelMethod(CHAR_ALLINDEXES   ,TheListBehaviour, CPPM(RexxList::allIndexes), 0);
   defineKernelMethod(CHAR_EMPTY        ,TheListBehaviour, CPPM(RexxList::empty), 0);
-  defineKernelMethod(CHAR_ISEMPTY      ,TheListBehaviour, CPPM(RexxList::isEmpty), 0);
+  defineKernelMethod(CHAR_ISEMPTY      ,TheListBehaviour, CPPM(RexxList::isEmptyRexx), 0);
   defineKernelMethod(CHAR_INDEX        ,TheListBehaviour, CPPM(RexxList::index), 1);
   defineKernelMethod(CHAR_HASITEM      ,TheListBehaviour, CPPM(RexxList::hasItem), 1);
   defineKernelMethod(CHAR_REMOVEITEM   ,TheListBehaviour, CPPM(RexxList::removeItem), 1);
@@ -711,7 +711,7 @@ void MemoryObject::createImage()
   defineKernelMethod(CHAR_ALLITEMS      ,TheQueueBehaviour, CPPM(RexxList::allItems), 0);
   defineKernelMethod(CHAR_ALLINDEXES    ,TheQueueBehaviour, CPPM(RexxQueue::allIndexes), 0);
   defineKernelMethod(CHAR_EMPTY         ,TheQueueBehaviour, CPPM(RexxList::empty), 0);
-  defineKernelMethod(CHAR_ISEMPTY       ,TheQueueBehaviour, CPPM(RexxList::isEmpty), 0);
+  defineKernelMethod(CHAR_ISEMPTY       ,TheQueueBehaviour, CPPM(RexxList::isEmptyRexx), 0);
   defineKernelMethod(CHAR_INDEX         ,TheQueueBehaviour, CPPM(RexxQueue::index), 1);
   defineKernelMethod(CHAR_HASITEM       ,TheQueueBehaviour, CPPM(RexxList::hasItem), 1);
   defineKernelMethod(CHAR_REMOVEITEM    ,TheQueueBehaviour, CPPM(RexxList::removeItem), 1);
@@ -764,7 +764,7 @@ void MemoryObject::createImage()
   defineKernelMethod(CHAR_ALLINDEXES   , TheRelationBehaviour, CPPM(RexxHashTableCollection::allIndexes), 0);
   defineKernelMethod("UNIQUEINDEXES"   , TheRelationBehaviour, CPPM(RexxHashTableCollection::uniqueIndexes), 0);
   defineKernelMethod(CHAR_EMPTY        , TheRelationBehaviour, CPPM(RexxHashTableCollection::empty), 0);
-  defineKernelMethod(CHAR_ISEMPTY      , TheRelationBehaviour, CPPM(RexxHashTableCollection::isEmpty), 0);
+  defineKernelMethod(CHAR_ISEMPTY      , TheRelationBehaviour, CPPM(RexxHashTableCollection::isEmptyRexx), 0);
   defineKernelMethod("REMOVEALL"       , TheRelationBehaviour, CPPM(RexxRelation::removeAll), 1);
 
                                        /* set the scope of the methods to   */
@@ -798,7 +798,7 @@ void MemoryObject::createImage()
   defineKernelMethod(CHAR_ALLINDEXES    ,TheStemBehaviour, CPPM(RexxStem::allIndexes), 0);
   defineKernelMethod(CHAR_ALLITEMS      ,TheStemBehaviour, CPPM(RexxStem::allItems), 0);
   defineKernelMethod(CHAR_EMPTY         ,TheStemBehaviour, CPPM(RexxStem::empty), 0);
-  defineKernelMethod(CHAR_ISEMPTY       ,TheStemBehaviour, CPPM(RexxStem::isEmpty), 0);
+  defineKernelMethod(CHAR_ISEMPTY       ,TheStemBehaviour, CPPM(RexxStem::isEmptyRexx), 0);
   defineKernelMethod(CHAR_UNKNOWN       ,TheStemBehaviour, CPPM(RexxObject::unknownRexx), 2);
 
   defineKernelMethod(CHAR_ITEMS         ,TheStemBehaviour, CPPM(RexxStem::itemsRexx), 0);
@@ -1217,7 +1217,7 @@ void MemoryObject::createImage()
   defineKernelMethod(CHAR_ALLITEMS     , TheTableBehaviour, CPPM(RexxHashTableCollection::allItems), 0);
   defineKernelMethod(CHAR_ALLINDEXES   , TheTableBehaviour, CPPM(RexxHashTableCollection::allIndexes), 0);
   defineKernelMethod(CHAR_EMPTY        , TheTableBehaviour, CPPM(RexxHashTableCollection::empty), 0);
-  defineKernelMethod(CHAR_ISEMPTY      , TheTableBehaviour, CPPM(RexxHashTableCollection::isEmpty), 0);
+  defineKernelMethod(CHAR_ISEMPTY      , TheTableBehaviour, CPPM(RexxHashTableCollection::isEmptyRexx), 0);
   defineKernelMethod(CHAR_INDEX        , TheTableBehaviour, CPPM(RexxHashTableCollection::indexRexx), 1);
   defineKernelMethod(CHAR_HASITEM      , TheTableBehaviour, CPPM(RexxHashTableCollection::hasItemRexx), 1);
   defineKernelMethod(CHAR_REMOVEITEM   , TheTableBehaviour, CPPM(RexxHashTableCollection::removeItemRexx), 1);
@@ -1256,7 +1256,7 @@ void MemoryObject::createImage()
   defineKernelMethod(CHAR_ALLITEMS     , TheIdentityTableBehaviour, CPPM(RexxHashTableCollection::allItems), 0);
   defineKernelMethod(CHAR_ALLINDEXES   , TheIdentityTableBehaviour, CPPM(RexxHashTableCollection::allIndexes), 0);
   defineKernelMethod(CHAR_EMPTY        , TheIdentityTableBehaviour, CPPM(RexxHashTableCollection::empty), 0);
-  defineKernelMethod(CHAR_ISEMPTY      , TheIdentityTableBehaviour, CPPM(RexxHashTableCollection::isEmpty), 0);
+  defineKernelMethod(CHAR_ISEMPTY      , TheIdentityTableBehaviour, CPPM(RexxHashTableCollection::isEmptyRexx), 0);
   defineKernelMethod(CHAR_INDEX        , TheIdentityTableBehaviour, CPPM(RexxHashTableCollection::indexRexx), 1);
   defineKernelMethod(CHAR_HASITEM      , TheIdentityTableBehaviour, CPPM(RexxHashTableCollection::hasItemRexx), 1);
   defineKernelMethod(CHAR_REMOVEITEM   , TheIdentityTableBehaviour, CPPM(RexxHashTableCollection::removeItemRexx), 1);

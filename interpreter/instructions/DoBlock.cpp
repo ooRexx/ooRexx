@@ -136,7 +136,7 @@ bool RexxDoBlock::checkOver(RexxActivation *context, RexxExpressionStack *stack)
     }
 
     // assign the control variable and trace this result
-    control->assign(context, stack, result);
+    control->assign(context, result);
     context->traceResult(result);
     forCount++;
     return true;

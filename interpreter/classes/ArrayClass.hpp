@@ -181,7 +181,8 @@ class RexxArray : public RexxObject
     RexxObject  *newRexx(RexxObject **, size_t);
     RexxObject  *of(RexxObject **, size_t);
     RexxObject  *empty();
-    RexxObject  *isEmpty();
+    bool         isEmpty();
+    RexxObject  *isEmptyRexx();
     RexxObject  *fill(RexxObject *);
     RexxObject  *index(RexxObject *);
     RexxObject  *hasItem(RexxObject *);
