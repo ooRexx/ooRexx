@@ -100,10 +100,12 @@ RexxClass::RexxClass(const char *className, RexxBehaviour *classBehaviour,
 }
 
 
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
 void RexxClass::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
     memory_mark(objectVariables);
     memory_mark(id);
@@ -120,10 +122,15 @@ void RexxClass::live(size_t liveMark)
     memory_mark(source);
 }
 
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
 void RexxClass::liveGeneral(MarkReason reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
 {
     memory_mark_general(objectVariables);
     memory_mark_general(id);
@@ -140,25 +147,17 @@ void RexxClass::liveGeneral(MarkReason reason)
     memory_mark_general(source);
 }
 
-RexxObject *RexxClass::unflatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  unflaatten an object                                            */
-/******************************************************************************/
-{
-    return this;
-}
 
+/**
+ * Make a proxy object from a class.
+ *
+ * @param envelope The envelope we're flattening into.
+ *
+ * @return A string proxy name for this object.
+ */
 RexxObject *RexxClass::makeProxy(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Make a proxy object                                             */
-/******************************************************************************/
 {
-
-                                       /* Following code is pulled from     */
-                                       /*  object_primitive, to get class id*/
-                                       /*  as a string object.              */
-                                       /* get the class id                  */
-     return new_proxy(id->getStringData());
+    return new_proxy(id->getStringData());
 }
 
 

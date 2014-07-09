@@ -535,6 +535,7 @@ set (package_sources ${build_package_dir}/LibraryPackage.cpp
 set (memory_sources ${build_memory_dir}/DeadObject.cpp
             ${build_memory_dir}/MapBucket.cpp
             ${build_memory_dir}/MapTable.cpp
+            ${build_memory_dir}/MemorySegment.cpp
             ${build_memory_dir}/MemoryStack.cpp
             ${build_memory_dir}/MemoryStats.cpp
             ${build_memory_dir}/ProtectedObject.cpp
@@ -583,12 +584,15 @@ set (expression_sources ${build_expression_dir}/BuiltinFunctions.cpp
             ${build_expression_dir}/ExpressionLogical.cpp)
 set (instructions_sources  ${build_instructions_dir}/AddressInstruction.cpp
             ${build_instructions_dir}/AssignmentInstruction.cpp
+            ${build_instructions_dir}/BaseDoInstruction.cpp
             ${build_instructions_dir}/CallInstruction.cpp
             ${build_instructions_dir}/ClassDirective.cpp
             ${build_instructions_dir}/CommandInstruction.cpp
             ${build_instructions_dir}/DoBlock.cpp
             ${build_instructions_dir}/DoBlockComponents.cpp
             ${build_instructions_dir}/DoCountInstruction.cpp
+            ${build_instructions_dir}/SimpleDoInstruction.cpp
+            ${build_instructions_dir}/ControlledDoInstruction.cpp
             ${build_instructions_dir}/DoForeverInstruction.cpp
             ${build_instructions_dir}/DoOverInstruction.cpp
             ${build_instructions_dir}/DoWhileInstruction.cpp

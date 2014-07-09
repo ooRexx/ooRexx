@@ -63,6 +63,7 @@
 #include "PackageManager.hpp"
 #include "MutableBufferClass.hpp"
 #include "MethodArguments.hpp"
+#include "LanguageParser.hpp"
 
 BEGIN_EXTERN_C()
 
@@ -512,7 +513,7 @@ RexxMethodObject RexxEntry NewMethod(RexxThreadContext *c, CSTRING n, CSTRING s,
         RexxBuffer *source = new_buffer(s, l);
         ProtectedObject p2(source);
         // convert the name to a string instance, and check the environments.
-        return (RexxMethodObject)context.ret(new MethodClass(name, source));
+        return (RexxMethodObject)context.ret(LanguageParser::createMethod(name, source));
     }
     catch (RexxNativeActivation *)
     {
@@ -531,7 +532,7 @@ RexxRoutineObject RexxEntry NewRoutine(RexxThreadContext *c, CSTRING n, CSTRING 
         RexxBuffer *source = new_buffer(s, l);
         ProtectedObject p2(source);
         // convert the name to a string instance, and check the environments.
-        return (RexxRoutineObject)context.ret(new RoutineClass(name, source));
+        return (RexxRoutineObject)context.ret(LanguageParser::createRoutine(name, source));
     }
     catch (RexxNativeActivation *)
     {

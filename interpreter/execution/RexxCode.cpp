@@ -89,6 +89,51 @@ RexxCode::RexxCode(RexxSource *_source, RexxInstruction *_start, RexxDirectory *
 
 
 /**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
+void RexxCode::live(size_t liveMark)
+{
+    memory_mark(source);
+    memory_mark(start);
+    memory_mark(labels);
+}
+
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
+void RexxCode::liveGeneral(MarkReason reason)
+{
+    memory_mark_general(source);
+    memory_mark_general(start);
+    memory_mark_general(labels);
+}
+
+
+/**
+ * Flatten a Rexx code object
+ *
+ * @param envelope The envelope used for the data.
+ */
+void RexxCode::flatten(RexxEnvelope * envelope)
+{
+    setUpFlatten(RexxCode)
+
+    flattenRef(source);
+    flattenRef(start);
+    flattenRef(labels);
+
+    cleanUpFlatten
+}
+
+
+/**
  * Process a detached ::requires type call.
  *
  * @param activity The current activity,

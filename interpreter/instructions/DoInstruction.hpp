@@ -59,13 +59,7 @@ class LanguageParser;
 class RexxInstructionBaseDo : public RexxBlockInstruction
 {
  public:
-
-    inline void *operator new(size_t size, void *ptr) {return ptr;}
-    inline void operator delete(void *) { }
-    inline void operator delete(void *, void *) { }
-
     inline RexxInstructionBaseDo(void) { ; }
-    inline RexxInstructionBaseDo(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);

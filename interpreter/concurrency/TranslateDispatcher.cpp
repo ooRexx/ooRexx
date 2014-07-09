@@ -74,7 +74,7 @@ void TranslateDispatcher::run()
         }
         savedObjects.add(fullname);
         /* go translate the image            */
-        program = new RoutineClass(fullname);
+        program = LanguageParser::createProgram(fullname);
         savedObjects.add(program);
     }
     else                                 /* have an instore program           */

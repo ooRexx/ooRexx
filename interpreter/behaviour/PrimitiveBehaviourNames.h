@@ -183,6 +183,7 @@
 #define TheRequiresDirectiveBehaviour      (&RexxBehaviour::primitiveBehaviours[T_RequiresDirective])
 #define TheCompoundElementBehaviour      (&RexxBehaviour::primitiveBehaviours[T_CompoundElement])
 #define TheParseTriggerBehaviour      (&RexxBehaviour::primitiveBehaviours[T_ParseTrigger])
+#define TheProgramSourceBehaviour      (&RexxBehaviour::primitiveBehaviours[T_ProgramSource])
 #define TheArrayProgramSourceBehaviour      (&RexxBehaviour::primitiveBehaviours[T_ArrayProgramSource])
 #define TheBufferProgramSourceBehaviour      (&RexxBehaviour::primitiveBehaviours[T_BufferProgramSource])
 #define TheFileProgramSourceBehaviour      (&RexxBehaviour::primitiveBehaviours[T_FileProgramSource])

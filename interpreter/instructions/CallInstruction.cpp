@@ -476,6 +476,7 @@ void RexxInstructionCallOn::resolve(RexxDirectory *labels)
     // if none of the above resolved anything, this is an external call.
 }
 
+
 /**
  * Execute a CALL ON/OFF instruction.  This either
  * activates or deactivates the call trap.  Calling of

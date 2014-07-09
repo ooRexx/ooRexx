@@ -51,14 +51,10 @@ class RoutineClass : public BaseExecutable
 public:
     void *operator new(size_t);
     inline void *operator new(size_t size, void *ptr) { return ptr; };
+
     RoutineClass(RexxString *n, BaseCode *_code);
-    RoutineClass(RexxString *name);
-    RoutineClass(RexxString *name, RexxBuffer *source);
-    RoutineClass(RexxString *name, const char *data, size_t length);
-    RoutineClass(RexxString *name, RexxArray *source);
     inline RoutineClass(RESTORETYPE restoreType) { ; };
 
-    virtual void execute(RexxObject *, RexxObject *);
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(RexxEnvelope*);
@@ -74,7 +70,6 @@ public:
     RexxBuffer *save();
     void save(PRXSTRING outBuffer);
     void save(const char *filename);
-    void detachSource();
     RexxObject  *setSecurityManager(RexxObject *);
 
     RoutineClass *newRexx(RexxObject **, size_t);

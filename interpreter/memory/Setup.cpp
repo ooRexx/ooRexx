@@ -85,6 +85,7 @@
 #include "PackageClass.hpp"
 #include "ContextClass.hpp"
 #include "StackFrameClass.hpp"
+#include "LanguageParser.hpp"
 
 
 void MemoryObject::defineKernelMethod(
@@ -1460,14 +1461,12 @@ void MemoryObject::createImage()
       ActivityManager::currentActivity->createNewActivationStack();
       try
       {
-                                               /* create a method object out of this*/
-          RoutineClass *loader = new RoutineClass(programName);
-          ProtectedObject p(loader);
-
+          // create an executable object for this.
+          Protected<RoutineClass> loader = LanguageParser::createProgram(programName);
 
           RexxObject *args = kernel_methods;   // temporary to avoid type-punning warnings
           ProtectedObject result;
-                                               /* now call BaseClasses to finish the image*/
+          // now create the core program objects.
           loader->runProgram(ActivityManager::currentActivity, OREF_PROGRAM, OREF_NULL, (RexxObject **)&args, 1, result);
       }
       catch (ActivityException )

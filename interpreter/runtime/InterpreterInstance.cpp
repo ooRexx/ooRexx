@@ -50,6 +50,8 @@
 #include "CommandHandler.hpp"
 #include "PackageClass.hpp"
 #include "WeakReferenceClass.hpp"
+#include "RoutineClass.hpp"
+
 
 /**
  * Create a new Package object instance.
@@ -63,6 +65,10 @@ void *InterpreterInstance::operator new(size_t size)
     return new_object(size, T_InterpreterInstance);
 }
 
+
+/**
+ * Constructor for an interpreter instance.
+ */
 InterpreterInstance::InterpreterInstance()
 {
     // this needs to be created and set

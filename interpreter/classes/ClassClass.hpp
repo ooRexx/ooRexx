@@ -60,12 +60,11 @@ class RexxClass : public RexxObject
     inline RexxClass(RESTORETYPE restoreType) { ; };
            RexxClass(const char *id , RexxBehaviour *classBehaviour, RexxBehaviour *instanceBehaviour);
 
-    void live(size_t);
-    void liveGeneral(MarkReason reason);
-    void flatten(RexxEnvelope*);
-    RexxObject *unflatten(RexxEnvelope*);
-    RexxObject *makeProxy(RexxEnvelope*);
-    bool        isEqual(RexxObject *);
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+
+    virtual RexxObject *makeProxy(RexxEnvelope*);
+    virtual bool        isEqual(RexxObject *);
 
     HashCode     hash();
     HashCode     getHashValue();

@@ -92,8 +92,8 @@ public:
     static RoutineClass *loadRequires(RexxActivity *activity, RexxString *shortName, RexxString *resolvedName, ProtectedObject &result);
     static RoutineClass *getMacroSpaceRequires(RexxActivity *activity, RexxString *name, ProtectedObject &result, RexxObject *securityManager);
     static RoutineClass *getRequiresFile(RexxActivity *activity, RexxString *name, RexxObject *securityManager, ProtectedObject &result);
-    static RoutineClass *loadRequires(RexxActivity *activity, RexxString *name, const char *data, size_t length, ProtectedObject &result);
     static RoutineClass *loadRequires(RexxActivity *activity, RexxString *name, RexxArray *data, ProtectedObject &result);
+    static RoutineClass *loadRequires(RexxActivity *activity, RexxString *name, const char *data, size_t length, ProtectedObject &result);
 
 protected:
 

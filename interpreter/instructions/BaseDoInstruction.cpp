@@ -43,6 +43,7 @@
 /******************************************************************************/
 #include "RexxCore.h"
 #include "RexxInstruction.hpp"
+#include "DoInstruction.hpp"
 #include "StringClass.hpp"
 #include "EndInstruction.hpp"
 #include "Token.hpp"
@@ -79,7 +80,7 @@ void RexxInstructionBaseDo::liveGeneral(MarkReason reason)
     // must be first object marked
     memory_mark_general(nextInstruction);
     memory_mark_general(end);
-    memory_mark_general(conditional);
+    memory_mark_general(label);
 }
 
 
@@ -118,7 +119,7 @@ void RexxInstructionBaseDo::execute(RexxActivation *context, RexxExpressionStack
     context->newDo(doblock);
 
     // perform loop specific initialization
-    setup(context, stack, doblock)
+    setup(context, stack, doblock);
 
     // now perform the initial iteration checks
     if (!iterate(context, stack, doblock, true))
@@ -151,7 +152,7 @@ void RexxInstructionBaseDo::reExecute(RexxActivation *context, RexxExpressionSta
     if (iterate(context, stack, doblock, false))
     {
         // we're all good.
-        return
+        return;
     }
 
     // we need to terminate this loop
@@ -281,20 +282,6 @@ void RexxInstructionBaseDo::handleDebugPause(RexxActivation *context, RexxDoBloc
         // this makes us the next instruction to be executed
         context->setNext(this);
     }
-}
-
-
-/**
- * Base re-execute method for a DO instruction.  The
- * base version just does nothing...it is a virtual filler only.
- *
- * @param context The current execution context.
- * @param stack   The current evaluation stack.
- * @param doblock The doblock associated with this loop instance.
- */
-void RexxInstructionBaseDo::reExecute(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock)
-{
-    // This does nothing in the base class.  Specific subclasses will need to provide this.
 }
 
 

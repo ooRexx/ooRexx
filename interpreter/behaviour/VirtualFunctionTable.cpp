@@ -585,6 +585,9 @@ void MemoryObject::buildVirtualFunctionTable()
    objectPtr = new (objectLoc) RexxTrigger(RESTOREIMAGE);
    virtualFunctionTable[T_ParseTrigger] = getVftPointer(objectLoc);
    
+   objectPtr = new (objectLoc) ProgramSource(RESTOREIMAGE);
+   virtualFunctionTable[T_ProgramSource] = getVftPointer(objectLoc);
+   
    objectPtr = new (objectLoc) ArrayProgramSource(RESTOREIMAGE);
    virtualFunctionTable[T_ArrayProgramSource] = getVftPointer(objectLoc);
    

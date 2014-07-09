@@ -114,9 +114,9 @@ public:
     void addCommandHandler(const char *name, REXXPFN entryPoint);
     CommandHandler *resolveCommandHandler(RexxString *name);
     PackageClass *getRequiresFile(RexxActivity *activity, RexxString *name);
-    PackageClass *loadRequires(RexxActivity *activity, RexxString *shortName, const char *data, size_t length);
     PackageClass *loadRequires(RexxActivity *activity, RexxString *shortName, RexxArray *source);
     PackageClass *loadRequires(RexxActivity *activity, RexxString *shortName, RexxString *fullName);
+    PackageClass *loadRequires(RexxActivity *activity, RexxString *shortName, const char *data, size_t length);
     void          runRequires(RexxActivity *activity, RexxString *name, RoutineClass *code);
     void          addRequiresFile(RexxString *shortName, RexxString *fullName, PackageClass *package);
     inline void   setupProgram(RexxActivation *activation)

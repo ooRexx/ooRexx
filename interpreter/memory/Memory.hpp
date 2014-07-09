@@ -54,17 +54,6 @@
  */
 class Memory
 {
-    // Generally, we want to restrict the use of these constants so we're
-    // being careful of where access is granted.  The memory management
-    // classes definitely qualify.
-    friend class MemorySegment;
-    friend class MemorySegmentSet;
-    friend class NormalSegmentSet;
-    friend class LargeSegmentSet;
-    friend class OldSpaceSegmentSet;
-    friend class MemoryObject;
-    friend class DeadObjectPool;
-    friend class SegmentStats;
 public:
 
     static inline bool isObjectGrained(RexxObject *o) { return ((((size_t)o)%ObjectGrain) == 0); }
@@ -76,8 +65,7 @@ public:
     static inline size_t roundObjectBoundary(size_t n) { return roundUp(n, ObjectGrain); }
     static inline size_t roundLargeObjectAllocation(size_t n) { return roundUp(n, LargeAllocationUnit); }
     static inline size_t roundObjectResize(size_t n) { return roundUp(n, ObjectGrain); }
-
-protected:
+    static inline size_t roundPageSize(size_t n)  { return roundUp(n, PageSize); }
 
     // The default size for the old2new table.  Hopefully, this
     // is more than we need, but we don't want this extending frequently
@@ -110,6 +98,10 @@ protected:
     static const size_t SaveStackSize = 10;
     // the maximum size for the startup image size
     static const size_t MaxImageSize = 2000000;
+    // the size of a page
+    static const size_t PageSize = 4096;
+    // the standard memory pool allocation size.
+    static const size_t MemoryAllocationSize = PageSize * 1024;
 };
 
 #endif

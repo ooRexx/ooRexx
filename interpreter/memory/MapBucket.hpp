@@ -70,7 +70,6 @@ class MapBucket : public RexxInternalObject
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(RexxEnvelope *);
 
     void         empty();
     bool         isEmpty() { return itemCount == 0; }

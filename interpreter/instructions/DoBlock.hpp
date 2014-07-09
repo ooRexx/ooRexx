@@ -63,7 +63,6 @@ class RexxDoBlock : public RexxInternalObject
 
     void live(size_t);
     void liveGeneral(MarkReason reason);
-    void flatten(RexxEnvelope *);
 
     inline RexxBlockInstruction * getParent() {return this->parent;};
     inline void setPrevious(RexxDoBlock *block) { previous = block; }

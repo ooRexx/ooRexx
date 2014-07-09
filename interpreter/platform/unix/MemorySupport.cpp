@@ -48,11 +48,8 @@
 #include "RexxMemory.hpp"
 #include "ActivityManager.hpp"
 #include "SystemInterpreter.hpp"
+#include "Memory.hpp"
 
-#define MEMSIZE     4194304            /* memory pool                       */
-#ifdef LINUX
-#define PAGESIZE    4096               /* page size                         */
-#endif
 
 /*********************************************************************/
 /*                                                                   */
@@ -63,7 +60,7 @@
 void * SystemInterpreter::allocateResultMemory(
    size_t   Size )                     /* size to allocate                  */
 {
-  return malloc(Size);
+    return malloc(Size);
 }
 
 /*********************************************************************/
@@ -75,7 +72,7 @@ void * SystemInterpreter::allocateResultMemory(
 void SystemInterpreter::releaseResultMemory(
   void  *MemoryBlock)                  /* pointer to the result memory      */
 {
-  free(MemoryBlock);                   /* release this block                */
+    free(MemoryBlock);                   /* release this block                */
 }
 
 
@@ -88,17 +85,18 @@ MemorySegmentPool *MemorySegmentPool::createPool()
     MemorySegmentPool *  newPool;
     void  *tmpPtr;
     size_t segmentSize;
+
     /* create the shared memory segemnt  */
     /* if already exists then this       */
     /* isn't a coldstart.                */
-    tmpPtr = (void *)calloc(MEMSIZE,1);
+    tmpPtr = (void *)calloc(Memory::MemoryAllocationSize, 1);
     if (tmpPtr == NULL)              /* Error on commit?                  */
     {
         reportException(Error_System_resources);
     }
 
     newPool = (MemorySegmentPool *)tmpPtr;
-    segmentSize = RXROUNDUP(SegmentSize, PAGESIZE);
+    segmentSize = Memory::roundPageSize(SegmentSize);
 
     /* Since memory may not be ready     */
     /* for a segment we keep it as a spar*/
@@ -107,9 +105,9 @@ MemorySegmentPool *MemorySegmentPool::createPool()
 
     newPool->spareSegment = new (((char *)newPool) + MemorySegmentPoolOverhead) MemorySegment (segmentSize - MemorySegmentPoolOverhead);
     /* compute actual usable space.      */
-    newPool->uncommitted = MEMSIZE - segmentSize;
+    newPool->uncommitted = Memory::MemoryAllocationSize - segmentSize;
 #ifdef _DEBUG
-    newPool->reserved = MEMSIZE;
+    newPool->reserved = Memory::MemoryAllocationSize;
 #endif
     /* compute starting poin of next     */
     /* allocation.                       */
@@ -117,7 +115,7 @@ MemorySegmentPool *MemorySegmentPool::createPool()
 
     /* start allocating large segments   */
     /* from the end of the pool.         */
-    newPool->nextLargeAlloc = ((char*) newPool) + MEMSIZE;
+    newPool->nextLargeAlloc = ((char*) newPool) + Memory::MemoryAllocationSize;
 
     new (newPool) MemorySegmentPool;   /* Initialize as a segmentPool       */
     return newPool;                    /* newly created.                    */
@@ -136,11 +134,15 @@ void *MemorySegmentPool::operator new(size_t size, size_t minSize)
 
                                        /* Add pool object overhead to minSiz*/
   minSize += MemorySegmentPoolOverhead;
-  if (minSize > MEMSIZE)               /* Asking for more than default pool */
+  if (minSize > Memory::MemoryAllocationSize)               /* Asking for more than default pool */
+  {
                                        /* compute actual request size.      */
-   poolSize = RXROUNDUP(minSize + MemorySegmentPoolOverhead, PAGESIZE);
+      poolSize = MemorySegment::roundToSegmentPoolSize(minSize);
+  }
   else
-   poolSize = MEMSIZE;
+  {
+      poolSize = Memory::MemoryAllocationSize;
+  }
 
 
    tmpPtr = calloc(poolSize,1);
@@ -152,11 +154,16 @@ void *MemorySegmentPool::operator new(size_t size, size_t minSize)
    newPool = (MemorySegmentPool *) tmpPtr;
 
    if (minSize < SegmentSize)
-      initialSegSize = RXROUNDUP(SegmentSize, PAGESIZE);
+   {
+       initialSegSize = Memory::roundPageSize(MemorySegment::SegmentSize);
+   }
    else
-      initialSegSize = RXROUNDUP(minSize, PAGESIZE);
+   {
+       initialSegSize = Memory::roundPageSize(minSize);
+   }
 
-   newPool->spareSegment = new (((char *)newPool) + MemorySegmentPoolOverhead) MemorySegment (initialSegSize - MemorySegmentPoolOverhead);
+   newPool->spareSegment = new (((char *)newPool) + MemorySegment::MemorySegmentPoolOverhead)
+       MemorySegment (initialSegSize - MemorySegment::MemorySegmentPoolOverhead);
    newPool->uncommitted = poolSize - initialSegSize;
 #ifdef _DEBUG
    newPool->reserved = poolSize;
@@ -178,7 +185,7 @@ MemorySegmentPool::MemorySegmentPool()
 /*                                                                   */
 /*********************************************************************/
 {
-   this->next  = NULL;                 /* No next pointer right now         */
+    next  = NULL;                 /* No next pointer right now         */
 }
 
 MemorySegment *MemorySegmentPool::newSegment(size_t minSize)
@@ -194,20 +201,20 @@ MemorySegment *MemorySegmentPool::newSegment(size_t minSize)
     /* Any spare segments left over      */
     /* from initial pool alloc?          */
     /* And big enough for this request?  */
-    if (this->spareSegment && this->spareSegment->size() >= minSize)
+    if (spareSegment && spareSegment->size() >= minSize)
     {
-        newSeg = this->spareSegment;      /* no longer have a spare            */
-        this->spareSegment = NULL;
+        newSeg = spareSegment;      /* no longer have a spare            */
+        spareSegment = NULL;
         return newSeg;                    /* return this segment for allocation*/
     }
-    segmentSize = RXROUNDUP(minSize, PAGESIZE); /* compute commit size       */
+    segmentSize = Memory::roundPageSize(minSize); /* compute commit size       */
     /* enough space for request          */
-    if (this->uncommitted >= segmentSize)
+    if (uncommitted >= segmentSize)
     {
-        newSeg = new (this->nextAlloc) MemorySegment (segmentSize);
+        newSeg = new (nextAlloc) MemorySegment (segmentSize);
 
-        this->uncommitted -= segmentSize; /* Adjust uncommitted amount         */
-        this->nextAlloc += segmentSize;   /* Adjust to next Allocation addr    */
+        uncommitted -= segmentSize; /* Adjust uncommitted amount         */
+        nextAlloc += segmentSize;   /* Adjust to next Allocation addr    */
         return newSeg;
     }
     else                                /* uncommitted not enough need a new pool */
@@ -215,7 +222,7 @@ MemorySegment *MemorySegmentPool::newSegment(size_t minSize)
         newPool = new (minSize) MemorySegmentPool;
         if (newPool)
         {                    /* Did we get a new Pool?            */
-            this->next = newPool;         /* Anchor it to end of chain         */
+            next = newPool;         /* Anchor it to end of chain         */
             memoryObject.memoryPoolAdded(newPool);  // tell the memory object we'v added a new pool
             return newPool->newSegment(minSize);
         }
@@ -238,24 +245,24 @@ MemorySegment *MemorySegmentPool::newLargeSegment(size_t minSize)
     /* Any spare segments left over      */
     /* from initial pool alloc?          */
     /* And big enough for this request?  */
-    if (this->spareSegment && this->spareSegment->size() >= minSize)
+    if (spareSegment && spareSegment->size() >= minSize)
     {
-        newSeg = this->spareSegment;      /* no longer have a spare            */
-        this->spareSegment = NULL;
+        newSeg = spareSegment;      /* no longer have a spare            */
+        spareSegment = NULL;
         return newSeg;                    /* return this segment for allocation*/
     }
 
     /* compute commit size               */
-    segmentSize = RXROUNDUP(minSize, PAGESIZE);
+    segmentSize = Memory::roundPageSize(minSize);
     /* enough space for request          */
-    if (this->uncommitted >= segmentSize)
+    if (uncommitted >= segmentSize)
     {
-        this->nextLargeAlloc = this->nextLargeAlloc - segmentSize; // already calloc'd on AIX, just move pointer
+        nextLargeAlloc = nextLargeAlloc - segmentSize; // already calloc'd on AIX, just move pointer
 
         /* Create new segment.               */
-        newSeg = new (this->nextLargeAlloc) MemorySegment (segmentSize);
-        this->uncommitted -= segmentSize; /* Adjust uncommitted amount         */
-        // this->nextLargeAlloc does not have to be adjusted, will be correct
+        newSeg = new (nextLargeAlloc) MemorySegment (segmentSize);
+        uncommitted -= segmentSize; /* Adjust uncommitted amount         */
+        // nextLargeAlloc does not have to be adjusted, will be correct
         return newSeg;
     }
     else
@@ -264,7 +271,7 @@ MemorySegment *MemorySegmentPool::newLargeSegment(size_t minSize)
         if (newPool)                      /* Did we get a new Pool?            */
         {
             /* Make sure new pool is added to the end of list   */
-            this->next = newPool;           /* Anchor it to end of chain         */
+            next = newPool;           /* Anchor it to end of chain         */
             memoryObject.memoryPoolAdded(newPool);  // tell the memory object we've added a new pool
             return newPool->newLargeSegment(minSize);
         }
@@ -289,5 +296,5 @@ void MemorySegmentPool::setNext( MemorySegmentPool *nextPoolPtr )
 /* Function:: set the next pointer                                   */
 /*********************************************************************/
 {
-   this->next = nextPoolPtr;
+   next = nextPoolPtr;
 }

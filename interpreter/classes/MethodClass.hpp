@@ -68,20 +68,14 @@ class MethodClass : public BaseExecutable
     inline void *operator new(size_t size, void *ptr) { return ptr; };
 
     MethodClass(RexxString *name, BaseCode *_code);
-    MethodClass(RexxString *name, RexxSource *source);
-    MethodClass(RexxString *name);
-    MethodClass(RexxString *name, RexxBuffer *source);
-    MethodClass(RexxString *name, const char *data, size_t length);
-    MethodClass(RexxString *name, RexxArray *source);
     inline MethodClass(RESTORETYPE restoreType) { ; };
 
-    virtual void execute(RexxObject *, RexxObject *);
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(RexxEnvelope*);
 
     void         run(RexxActivity *,  RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
-    MethodClass  *newScope(RexxClass  *);
+    MethodClass *newScope(RexxClass  *);
     void         setScope(RexxClass  *);
     RexxSmartBuffer  *saveMethod();
     RexxObject  *setUnguardedRexx();

@@ -135,7 +135,7 @@ void RexxInstructionControlledDo::flatten(RexxEnvelope *envelope)
 void RexxInstructionControlledDo::setup(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock)
 {
     // perform the controlled DO setup
-    controlLoop.setup(context, stack, doblock)
+    controlLoop.setup(context, stack, doblock);
 }
 
 
@@ -257,10 +257,10 @@ bool RexxInstructionControlledDoUntil::iterate(RexxActivation *context, RexxExpr
     // we don't check the UNTIL condition on the first iteration
     if (first)
     {
-        return doblock->checkOver(context, stack, false);
+        return doblock->checkOver(context, stack);
     }
 
-    return !whileLoop.checkUntil(context, stack) && doblock->checkOver(context, stack, true);
+    return !whileLoop.checkUntil(context, stack) && doblock->checkOver(context, stack);
 }
 
 

@@ -97,6 +97,27 @@ MethodClass *LanguageParser::createMethod(RexxString *name, RexxArray *source, P
 
 
 /**
+ * Static method for creating a new MethodClass instance.
+ *
+ * @param name   The name given to the method and package.
+ * @param source The code source as a buffer
+ * @param sourceContext
+ *               A parent source context that this method will inherit
+ *               a package environment from.
+ *
+ * @return An executable method object.
+ */
+MethodClass *LanguageParser::createMethod(RexxString *name, RexxBuffer *source)
+{
+    // create the appropriate array source, then the parser, then generate the
+    // code.
+    ProgramSource *programSource = new BufferProgramSource(source);
+    Protected<LanguageParser> parser = new LanguageParser(name, programSource);
+    return parser->generateMethod();
+}
+
+
+/**
  * Static method for creating a new MethodClass instance from a
  * file.
  *
@@ -156,6 +177,27 @@ RoutineClass *LanguageParser::createRoutine(RexxString *name)
 
 
 /**
+ * Static method for creating a new RoutineClass instance.
+ *
+ * @param name   The name given to the routine and package.
+ * @param source The code source as a buffer
+ * @param sourceContext
+ *               A parent source context that this method will inherit
+ *               a package environment from.
+ *
+ * @return An executable method object.
+ */
+RoutineClass *LanguageParser::createRoutine(RexxString *name, RexxBuffer *source)
+{
+    // create the appropriate array source, then the parser, then generate the
+    // code.
+    ProgramSource *programSource = new BufferProgramSource(source);
+    Protected<LanguageParser> parser = new LanguageParser(name, programSource);
+    return parser->generateRoutine();
+}
+
+
+/**
  * Static method for creating a new RoutineClass instance as a
  * top-level program (no install step is run)
  *
@@ -169,6 +211,25 @@ RoutineClass *LanguageParser::createProgram(RexxString *name, RexxBuffer *source
     // create the appropriate array source, then the parser, then generate the
     // code.
     ProgramSource *programSource = new BufferProgramSource(source);
+    Protected<LanguageParser> parser = new LanguageParser(name, programSource);
+    return parser->generateProgram();
+}
+
+
+/**
+ * Static method for creating a new RoutineClass instance as a
+ * top-level program (no install step is run)
+ *
+ * @param name   The name given to the routine and package.
+ * @param source The buffer containing the source.
+ *
+ * @return An executable method object.
+ */
+RoutineClass *LanguageParser::createProgram(RexxString *name, RexxArray *source)
+{
+    // create the appropriate array source, then the parser, then generate the
+    // code.
+    ProgramSource *programSource = new ArrayProgramSource(source);
     Protected<LanguageParser> parser = new LanguageParser(name, programSource);
     return parser->generateProgram();
 }
@@ -215,6 +276,19 @@ RexxCode *LanguageParser::translateInterpret(RexxString *interpretString, RexxDi
 
 
 /**
+ * Allocate a new LanguageParser item
+ *
+ * @param size    The base object size.
+ *
+ * @return The storage for creating a LanguageParser.
+ */
+void *LanguageParser::operator new(size_t size)
+{
+   return new_object(size, T_LanguageParser);
+}
+
+
+/**
  * Construct a program source object.
  *
  * @param p      The source package we're parsing code for.
@@ -235,7 +309,6 @@ LanguageParser::LanguageParser(RexxString *n, ProgramSource *s)
  *
  * @param liveMark The current live mark.
  */
-
 // TODO:  double check that this list and the one on SourceFile are correct.
 void LanguageParser::live(size_t liveMark)
 {
@@ -2155,14 +2228,16 @@ RexxObject *LanguageParser::parseSubExpression(int terminators )
                 // a blank before a WHILE keyword on a LOOP.  This is the same with abuttal.
                 // We need to check for the terminators, and if we get a hit, we're done here.
                  RexxToken *second = nextReal();
+
+                 // back up to the operator token and fall through to the operator logic.
+                 // this will then sort things out based on the sub type of the token.
+                 // we need to go to the previous token even if the terminator test is true.
+                 previousToken();
                  // not a real operator if adjacent to a terminator
                  if (second->isTerminator(terminators))
                  {
                      break;
                  }
-                 // back up to the operator token and fall through to the operator logic.
-                 // this will then sort things out based on the sub type of the token.
-                 previousToken();
             }
 
             // we have an operator of some sort (including the blank and abuttal concatenates)
@@ -2267,6 +2342,9 @@ RexxObject *LanguageParser::parseSubExpression(int terminators )
         // ok, grab the next token and keep processing.
         token = nextToken();
     }
+
+    // step back so the terminator is the next token.
+    previousToken();
 
     // we've hit a terminator for this subexpression.  We probably
     // have some pending operators on the operator stack that we need
@@ -2495,6 +2573,7 @@ RexxToken  *LanguageParser::getToken(int terminators, int errorcode)
             syntaxError(errorcode);
         }
         // just return a null if not requested to issue an error.
+        previousToken();
         return OREF_NULL;
     }
     return token;
@@ -2718,10 +2797,12 @@ RexxObject *LanguageParser::parseMessageSubterm(int terminators)
     // the real end of the expression.  The caller context will figure out
     // how to handle that.
     RexxToken *token = nextToken();
-                                         /* this the expression end?          */
+
     if (token->isTerminator(terminators))
     {
-        return OREF_NULL;                  /* nothing to do here                */
+        // need to push the terminator back
+        previousToken();
+        return OREF_NULL;
     }
 
     // is this an operator?  I this context, it will need to be a prefix operator.
@@ -2823,6 +2904,8 @@ RexxObject *LanguageParser::parseSubTerm(int terminators)
     RexxToken *token = nextToken();
     if (token->isTerminator(terminators))
     {
+        // push the terminator back
+        previousToken();
         return OREF_NULL;
     }
 
@@ -3506,4 +3589,34 @@ RoutineClass *LanguageParser::createProgramFromFile(RexxString *filename)
 
     // process this from the source
     return createProgram(filename, program_buffer);
+}
+
+
+/**
+ * Format an encoded trace setting back into human readable form.
+ *
+ * @param setting The source setting.
+ *
+ * @return The string representation of the trace setting.
+ */
+RexxString *LanguageParser::formatTraceSetting(size_t source)
+{
+    char         setting[3];             /* returned trace setting            */
+    setting[0] = '\0';                   /* start with a null string          */
+                                         /* debug mode?                       */
+    if (source & DEBUG_ON)
+    {
+        setting[0] = '?';                  /* add the question mark             */
+                                           /* add current trace option          */
+        setting[1] = (char)source&TRACE_SETTING_MASK;
+        /* create a string form              */
+        return new_string(setting, 2);
+    }
+    else                                 /* no debug prefix                   */
+    {
+        /* add current trace option          */
+        setting[0] = (char)source&TRACE_SETTING_MASK;
+        /* create a string form              */
+        return new_string(setting, 1);
+    }
 }

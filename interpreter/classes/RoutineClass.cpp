@@ -530,3 +530,58 @@ RoutineClass *RoutineClass::newFileRexx(RexxString *filename)
     classThis->completeNewObject(newRoutine);
     return newRoutine;
 }
+
+
+/**
+ * Create a routine from an external library source.
+ *
+ * @param name   The routine name.
+ *
+ * @return The resolved routine object, or OREF_NULL if unable to load
+ *         the routine.
+ */
+RoutineClass *RoutineClass::loadExternalRoutine(RexxString *name, RexxString *descriptor)
+{
+    name = stringArgument(name, "name");
+    descriptor = stringArgument(descriptor, "descriptor");
+
+    // convert external into words
+    Protected<RexxArray> words = StringUtil::words(descriptor->getStringData(), descriptor->getLength());
+    // "LIBRARY libbar [foo]"
+    if (((RexxString *)(words->get(1)))->strCompare(CHAR_LIBRARY))
+    {
+        RexxString *library = OREF_NULL;
+        // the default entry point name is the internal name
+        RexxString *entry = name;
+
+        // full library with entry name version?
+        if (words->size() == 3)
+        {
+            library = (RexxString *)words->get(2);
+            entry = (RexxString *)words->get(3);
+        }
+        else if (words->size() == 2)
+        {
+            library = (RexxString *)words->get(2);
+        }
+        else  // wrong number of tokens
+        {
+            reportException(Error_Translation_bad_external, descriptor);
+        }
+
+        // create a new native method
+        RoutineClass *routine = PackageManager::loadRoutine(library, entry);
+        // raise an exception if this entry point is not found.
+        if (routine == OREF_NULL)
+        {
+             return (RoutineClass *)TheNilObject;
+        }
+        return routine;
+    }
+    else
+    {
+        // unknown external type
+        reportException(Error_Translation_bad_external, descriptor);
+    }
+    return OREF_NULL;
+}

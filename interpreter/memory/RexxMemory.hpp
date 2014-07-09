@@ -85,6 +85,10 @@ class MemorySegmentPoolHeader
 };
 
 
+/**
+ * Class for managing memory pools. We define the interfaces
+ * here, but the platform code implements most of the methods.
+ */
 class MemorySegmentPool : public MemorySegmentPoolHeader
 {
 #ifdef _DEBUG

@@ -55,12 +55,11 @@ class RexxDirectory : public RexxHashTableCollection
     virtual void          live(size_t);
     virtual void          liveGeneral(MarkReason reason);
     virtual void          flatten(RexxEnvelope *);
-    virtual RexxObject   *unflatten(RexxEnvelope *);
 
-    RexxObject   *copy();
-    RexxArray    *makeArray();
+    virtual RexxObject   *copy();
+    virtual RexxArray    *makeArray();
+    virtual RexxArray    *requestArray();
 
-    RexxArray    *requestArray();
     RexxObject   *mergeItem(RexxObject *, RexxObject *);
     RexxObject   *at(RexxString *);
     RexxObject   *fastAt(RexxString *name) { return this->contents->stringGet(name);}

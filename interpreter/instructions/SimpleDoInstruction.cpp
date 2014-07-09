@@ -45,6 +45,7 @@
 #include "DoInstruction.hpp"
 #include "DoBlock.hpp"
 #include "EndInstruction.hpp"
+#include "RexxActivation.hpp"
 
 
 /**

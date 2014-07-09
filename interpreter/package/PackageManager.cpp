@@ -57,6 +57,7 @@
 #include "RexxActivation.hpp"
 #include "PackageClass.hpp"
 #include "LanguageParser.hpp"
+#include "BufferClass.hpp"
 
 // this first set is the inital image set, which we preserve the references
 // to in order to reset the package loads when the Rexx environment shuts down
@@ -824,6 +825,36 @@ RoutineClass *PackageManager::getRequiresFile(RexxActivity *activity, RexxString
 
 
 /**
+ * Loade a requires file from an array source.  NOTE:  This is
+ * not cached like the other requires files
+ *
+ * @param activity The current activity.
+ * @param name     The fully resolved file name.
+ * @param result   The return routine object.
+ *
+ * @return The return Routine instance.
+ */
+RoutineClass *PackageManager::loadRequires(RexxActivity *activity, RexxString *name, RexxArray *data, ProtectedObject &result)
+{
+    // first check this using the specified name.
+    RoutineClass *code = checkRequiresCache(name, result);
+    if (code == OREF_NULL)
+    {
+        code = LanguageParser::createProgram(name, data);
+        result = code;
+
+        // we place the code in the package table so we have
+        // access to it to run the prologue code in other instances
+        // We also add this before running the prolog in case another
+        // thread tries to load the same thing.
+        WeakReference *ref = new WeakReference(code);
+        loadedRequires->put(ref, name);
+    }
+    return code;
+}
+
+
+/**
  * Loade a requires file from an in-store source.  NOTE:  This
  * is not cached like the other requires files
  *
@@ -842,7 +873,9 @@ RoutineClass *PackageManager::loadRequires(RexxActivity *activity, RexxString *n
         return resolved;
     }
 
-    RoutineClass *code = new RoutineClass(name, data, length);
+    Protected<RexxBuffer> buffer = new_buffer(data, length);
+
+    RoutineClass *code = LanguageParser::createProgram(name, buffer);
     result = code;
 
     // we place the code in the package table so we have
@@ -851,36 +884,6 @@ RoutineClass *PackageManager::loadRequires(RexxActivity *activity, RexxString *n
     // thread tries to load the same thing.
     WeakReference *ref = new WeakReference(code);
     loadedRequires->put(ref, name);
-    return code;
-}
-
-
-/**
- * Loade a requires file from an array source.  NOTE:  This is
- * not cached like the other requires files
- *
- * @param activity The current activity.
- * @param name     The fully resolved file name.
- * @param result   The return routine object.
- *
- * @return The return Routine instance.
- */
-RoutineClass *PackageManager::loadRequires(RexxActivity *activity, RexxString *name, RexxArray *data, ProtectedObject &result)
-{
-    // first check this using the specified name.
-    RoutineClass *code = checkRequiresCache(name, result);
-    if (code == OREF_NULL)
-    {
-        code = new RoutineClass(name, data);
-        result = code;
-
-        // we place the code in the package table so we have
-        // access to it to run the prologue code in other instances
-        // We also add this before running the prolog in case another
-        // thread tries to load the same thing.
-        WeakReference *ref = new WeakReference(code);
-        loadedRequires->put(ref, name);
-    }
     return code;
 }
 

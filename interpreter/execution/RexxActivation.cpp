@@ -732,13 +732,17 @@ void RexxActivation::debugSkip(
     this->settings.flags |= debug_bypass;/* let debug prompt know of changes  */
 }
 
+
+/**
+ * Generate a string version of the current trace setting.
+ *
+ * @return The current trace setting formatted into a human-readable
+ *         string.
+ */
 RexxString * RexxActivation::traceSetting()
-/******************************************************************************/
-/* Function:  Generate a string form of the current trace setting             */
-/******************************************************************************/
 {
     // have the source file process this
-    return RexxSource::formatTraceSetting(settings.traceOption);
+    return LanguageParser::formatTraceSetting(settings.traceOption);
 }
 
 

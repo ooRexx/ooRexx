@@ -50,6 +50,13 @@
 #include "RexxActivation.hpp"
 #include "ProgramSource.hpp"
 #include "PackageClass.hpp"
+#include "SysFileSystem.hpp"
+#include "InterpreterInstance.hpp"
+#include "RoutineClass.hpp"
+#include "ClassDirective.hpp"
+#include "LibraryDirective.hpp"
+#include "RequiresDirective.hpp"
+#include "LanguageParser.hpp"
 
 
 /**
@@ -191,34 +198,6 @@ void RexxSource::flatten (RexxEnvelope *envelope)
 
 
 /**
- * Process an interpret instruction.
- *
- * @param string  The string value to interpret.
- * @param _labels The labels inherited from the parent source context.
- * @param _line_number
- *                The line number of the interpret instruction (used for
- *                line number offsets).
- *
- * @return A translated code object.
- */
-RexxCode *RexxSource::interpret(RexxString *string, RexxDirectory *_labels,
-    size_t _line_number )
-{
-    // TODO:  lots of work needed here, specifically creating the source object
-    // with a program source configured with the interpret ovvset.
-
-
-    RexxSource *source = RexxSource::createSource(programName, new_array(string));
-    ProtectedObject p(source);
-    // have the source fudge the line numbering
-    source->interpretLine(_line_number);
-
-    // now convert this to executable form
-    return interpretMethod(_labels);
-}
-
-
-/**
  * Extract various bits of the source name to give us directory,
  * extension and file portions to be used for searches for additional
  * files.
@@ -302,10 +281,10 @@ bool RexxSource::isTraceable()
  * @return The string version of the source line.  Returns OREF_NULL
  *         if the line is not available.
  */
-RexxString *RexxSource::get(size_t _position)
+RexxString *RexxSource::getLine(size_t position)
 {
     // the source object does the heavy lifting here.
-    return souce->getStringLine(position);
+    return source->getStringLine(position);
 }
 
 // extra space required to format a result line.  This overhead is
@@ -327,7 +306,7 @@ const size_t TRACE_OVERHEAD = 16;
 const size_t INSTRUCTION_OVERHEAD = 11;
 
 // size of a line number
-const size_t LINENUMBER = 6
+const size_t LINENUMBER = 6;
 
 // offset of the prefix information
 const size_t PREFIX_OFFSET = (LINENUMBER + 1);
@@ -351,7 +330,6 @@ const size_t INDENT_SPACING = 2;
 RexxString *RexxSource::traceBack(RexxActivation *activation, SourceLocation &location,
      size_t indent, bool trace)
 {
-    size_t       outlength;              /* output length                     */
     char         linenumber[11];         /* formatted line number             */
 
     // format the line number as a string
@@ -465,13 +443,19 @@ RexxArray *RexxSource::extractSource(SourceLocation &location )
  *
  * @param parent The parent source context.
  */
-void RexxSource::inheritSourceContext(RexxSource *source)
+void RexxSource::inheritSourceContext(PackageClass *parentPackage)
 {
     // set this as a parent
-    setField(parentSource, source);
+    setField(parentSource, parentPackage->getSourceObject());
 }
 
 
+/**
+ * Merge all of the information from inherited packages
+ * into this lookup context.
+ *
+ * @param source The source object we're merging from.
+ */
 void RexxSource::mergeRequired(RexxSource *source)
 /******************************************************************************/
 /* Function:  Merge all public class and routine information from a called    */
@@ -784,7 +768,7 @@ void RexxSource::install()
     {
         // In order to install, we need to call something.  We manage this by
         // creating a dummy stub routine that we can call to force things to install
-        Protected<RexxCode> code = new RoutineClass(programName, new RexxCode(this, OREF_NULL));
+        Protected<RoutineClass> code = new RoutineClass(programName, new RexxCode(this, OREF_NULL));
         ProtectedObject dummy;
         code->call(ActivityManager::currentActivity, programName, NULL, 0, dummy);
     }
@@ -802,15 +786,15 @@ void RexxSource::processInstall(RexxActivation *activation)
 {
     // turn the install flag off immediately, otherwise we may
     // run into a recursion problem when class init methods are  processed
-    flags[installRequired] = false;
+    installRequired = false;
 
     // native packages are processed first.  The requires might actually need
     // functons loaded by the packages
     if (libraries != OREF_NULL)
     {
         // now loop through the requires items
-
-        for (size_t i = 1, size_t count = libraries->items(); i <= count; i++)
+        size_t count = libraries->items();
+        for (size_t i = 1; i <= count; i++)
         {
             // and have it do the installs processing
             LibraryDirective *library = (LibraryDirective *)libraries->get(i);
@@ -825,7 +809,8 @@ void RexxSource::processInstall(RexxActivation *activation)
     if (requires != OREF_NULL)
     {
         // now loop through the requires items
-        for (size_t i = 1, size_t count = requires->items(); i <= count; i++)
+        size_t count = requires->items();
+        for (size_t i = 1; i <= count; i++)
         {
             // and have it do the installs processing.  This is a little roundabout, but
             // we end up back in our own context while processing this, and the merge
@@ -844,7 +829,8 @@ void RexxSource::processInstall(RexxActivation *activation)
         setField(installedPublicClasses, new_directory());
         Protected<RexxArray> createdClasses = new_array(classes->items());
 
-        for (size_t i = 1, size_t count = classes->items(); i <= count; i++)
+        size_t count = classes->items();
+        for (size_t i = 1; i <= count; i++)
         {
             /* get the class info                */
             ClassDirective *current_class = (ClassDirective *)classes->get(i);
@@ -854,41 +840,12 @@ void RexxSource::processInstall(RexxActivation *activation)
             createdClasses->put(newClass, i);
         }
         // now send an activate message to each of these classes
-        for (size_t i = 1, size_t count = createdClasses->items(); i <= count; i++)
+        count = createdClasses->items();
+        for (size_t i = 1; i <= count; i++)
         {
-            RexxClass *clz = (RexxClass *)createdClasses->get(j);
+            RexxClass *clz = (RexxClass *)createdClasses->get(i);
             clz->sendMessage(OREF_ACTIVATE);
         }
-    }
-}
-
-
-/**
- * Format an encoded trace setting back into human readable form.
- *
- * @param setting The source setting.
- *
- * @return The string representation of the trace setting.
- */
-RexxString *RexxSource::formatTraceSetting(size_t source)
-{
-    char         setting[3];             /* returned trace setting            */
-    setting[0] = '\0';                   /* start with a null string          */
-                                         /* debug mode?                       */
-    if (source & DEBUG_ON)
-    {
-        setting[0] = '?';                  /* add the question mark             */
-                                           /* add current trace option          */
-        setting[1] = (char)source&TRACE_SETTING_MASK;
-        /* create a string form              */
-        return new_string(setting, 2);
-    }
-    else                                 /* no debug prefix                   */
-    {
-        /* add current trace option          */
-        setting[0] = (char)source&TRACE_SETTING_MASK;
-        /* create a string form              */
-        return new_string(setting, 1);
     }
 }
 
@@ -962,7 +919,7 @@ void RexxSource::addPackage(PackageClass *p)
     // we only create this on the first use
     if (loadedPackages == OREF_NULL)
     {
-        loadedPackages = new_list();
+        loadedPackages = new_array();
     }
     else
     {
@@ -1058,19 +1015,6 @@ void RexxSource::addInstalledRoutine(RexxString *name, RoutineClass *routineObje
 
 
 /**
- * Retrieve a line from the program source.
- *
- * @param position The line position.
- *
- * @return The string value of the line.
- */
-RexxString *RexxSource::getLine(size_t position)
-{
-    return source->getStringLine(position);
-}
-
-
-/**
  * Attach a buffered source object to a source that
  * has been saved in sourceless form.  Normally used
  * for instore RexxStart calls.
@@ -1080,7 +1024,7 @@ RexxString *RexxSource::getLine(size_t position)
 void RexxSource::attachSource(RexxBuffer *s)
 {
     // replace the current source object (likely the dummy one)
-    source = new BufferProgramSource(buffer);
+    source = new BufferProgramSource(s);
     // Go create the source line indices
     source->setup();
 }
@@ -1094,4 +1038,15 @@ void RexxSource::detachSource()
     // replace this with the base program source, which
     // does not return anything.
     source = new ProgramSource();
+}
+
+
+/**
+ * Return the full default trace setting for this package.
+ *
+ * @return The current trace setting formatted into readable form.
+ */
+RexxString *RexxSource::getTrace()
+{
+    return LanguageParser::formatTraceSetting(traceSetting);
 }

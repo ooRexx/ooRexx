@@ -47,6 +47,21 @@
 #include "RexxSmartBuffer.hpp"
 #include "SystemInterpreter.hpp"
 
+
+
+/**
+ * Create a new program source instance
+ *
+ * @param size   The size of the handler
+ *
+ * @return The allocated object.
+ */
+void *ProgramSource::operator new(size_t size)
+{
+    return new_object(size, T_ProgramSource);  // Get new object
+}
+
+
 /**
  * Retrieve a source line as a string object.
  *
@@ -477,6 +492,17 @@ void BufferProgramSource::getLine(size_t lineNumber, const char *&linePointer, s
     // get the line descriptor and turn that into a pointer/length pair
     LineDescriptor &line = getDescriptor(lineNumber);
     line.getLine(getBufferPointer(), linePointer, lineLength);
+}
+
+
+/**
+ * Get the pointer to the source buffer area.
+ *
+ * @return The character pointer to the buffer.
+ */
+const char *BufferProgramSource::getBufferPointer()
+{
+    return buffer->getData();
 }
 
 

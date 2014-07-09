@@ -287,6 +287,35 @@ void RexxInstructionSignalOn::flatten(RexxEnvelope *envelope)
     cleanUpFlatten
 }
 
+
+/**
+ * Execute a SIGNAL ON/OFF instruction.  This either activates
+ * or deactivates the signal trap.  Calling of a target only
+ * happens when a trap is activated.
+ *
+ * @param context The current program context.
+ * @param stack   The current context evaluation stack.
+ */
+void RexxInstructionSignalOn::execute(RexxActivation *context, RexxExpressionStack *stack)
+{
+    // do trace stuff.
+    context->traceInstruction(this);
+
+    // if we do not have a target name set, this is a SIGNAL OFF instruction.  Just
+    // disable the trap.
+    if (targetName != OREF_NULL)
+    {
+        // wax on...
+        context->trapOn(conditionName, this);
+    }
+    else
+    {
+        // wax off...
+        context->trapOff(conditionName);
+    }
+}
+
+
 /**
  * Resolve a call target at the end of block processing.
  *

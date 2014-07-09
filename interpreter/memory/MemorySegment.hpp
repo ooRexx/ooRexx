@@ -161,6 +161,8 @@ class MemorySegment : public MemorySegmentHeader
    static const size_t MemorySegmentOverhead = sizeof(MemorySegmentHeader);
    static const size_t MemorySegmentPoolOverhead  = sizeof(MemorySegmentPoolHeader);
 
+   static inline size_t roundToSegmentPoolSize(size_t n) { return Memory::roundPageSize(n + MemorySegmentPoolOverhead); }
+
    // default size for a segment allocation, we go larger on 64-bit
    static const size_t SegmentSize = (256 * Memory::LargeAllocationUnit * 2);
    // our threshold for moving to a larger block allocation scheme

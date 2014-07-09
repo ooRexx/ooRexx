@@ -51,7 +51,6 @@ class RexxBehaviour : public RexxInternalObject
  public:
     void *operator new(size_t, size_t);
     inline void *operator new(size_t size, void *ptr) {return ptr;};
-    inline void  operator delete(void *) { ; }
     inline void  operator delete(void *, size_t) { }
     inline void  operator delete(void *, void *) { ; }
 
@@ -77,7 +76,7 @@ class RexxBehaviour : public RexxInternalObject
     RexxClass  *restoreClass();
     RexxObject *superScope( RexxObject *);
     MethodClass *superMethod(RexxString *, RexxObject *);
-    void        setMethodDictionaryScope( RexxObject *);
+    void        setmethodDictionaryScope( RexxObject *);
     RexxObject *setScopes( RexxIdentityTable *);
     RexxObject *addScope( RexxObject *);
     RexxObject *mergeScope( RexxObject *);
@@ -92,11 +91,11 @@ class RexxBehaviour : public RexxInternalObject
 
     inline RexxIdentityTable  *getScopes()       { return scopes; };
     inline RexxTable  *getMethodDictionary()   { return methodDictionary; };
-    inline void        setMethodDictionary(RexxTable * m);
-    inline void        setInstanceMethodDictionary(RexxTable * m);
-    inline RexxTable  *getInstanceMethodDictionary()   { return instanceMethodDictionary; };
+           void        setMethodDictionary(RexxTable * m);
+           void        setInstanceMethodDictionary(RexxTable * m);
+           RexxTable  *getInstanceMethodDictionary()   { return instanceMethodDictionary; };
     inline RexxClass  *getOwningClass()        { return owningClass;};
-    inline void        setOwningClass(RexxClass *c);
+           void        setOwningClass(RexxClass *c);
 
     inline void  setClassType(size_t n) { classType = (uint16_t)n; }
     inline size_t getClassType()  { return (size_t)classType; }

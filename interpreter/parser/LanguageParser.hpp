@@ -382,15 +382,19 @@ class LanguageParser: public RexxInternalObject
     // static methods for creating/processing different Rexx executables.
 
     static MethodClass *createMethod(RexxString *name, RexxArray *source, PackageClass *sourceContext);
+    static MethodClass *createMethod(RexxString *name, RexxBuffer *source);
     static MethodClass *createMethod(RexxString *name);
     static RoutineClass *createRoutine(RexxString *name, RexxArray *source, PackageClass *sourceContext);
+    static RoutineClass *createRoutine(RexxString *name, RexxBuffer *source);
     static RoutineClass *createRoutine(RexxString *name);
     static RoutineClass *createProgram(RexxString *name, RexxBuffer *source);
+    static RoutineClass *createProgram(RexxString *name, RexxArray *source);
     static RoutineClass *createProgram(RexxString *name);
     static RoutineClass *restoreFromMacroSpace(RexxString *name);
     static RoutineClass *processInstore(PRXSTRING instore, RexxString * name);
     static RexxCode *translateInterpret(RexxString *interpretString, RexxDirectory *labels, size_t lineNumber);
     static RoutineClass *createProgramFromFile(RexxString *filename);
+    static RexxString *formatTraceSetting(size_t source);
 
     // the table of builtin function stubs.
     static pbuiltin builtinTable[];

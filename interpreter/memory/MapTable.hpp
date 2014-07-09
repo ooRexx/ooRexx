@@ -60,10 +60,10 @@ class MapTable : public RexxInternalObject
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
 
-    RexxObject *copy();
+    virtual RexxObject *copy();
 
     inline size_t get(RexxInternalObject *key) { return contents->get(key); }
-    inline void   put(size_t value, RexxInternalObject *key);
+           void   put(size_t value, RexxInternalObject *key);
     inline size_t remove(RexxInternalObject *key) { return contents->remove(key); };
     inline void   empty() { contents->empty(); }
     inline bool   isEmpty() { return contents->isEmpty(); }

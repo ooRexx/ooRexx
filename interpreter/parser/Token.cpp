@@ -45,6 +45,7 @@
 #include "StringClass.hpp"
 #include "Token.hpp"
 #include "SourceFile.hpp"
+#include "LanguageParser.hpp"
 
 /**
  * Create a new Token object.
@@ -97,7 +98,7 @@ void RexxToken::checkAssignment(LanguageParser *parser, RexxString *newValue)
         // this is a special type, which uses the same subtype.
         classId = TOKEN_ASSIGNMENT;
         // this is the new string value of the token
-        value = newValue;
+        stringValue = newValue;
     }
 }
 
@@ -185,21 +186,19 @@ int RexxToken::precedence()
  * @return true if this is a terminator, false if it doesn't match
  *         one of the terminator classes.
  */
-bool LanguageParser::isTerminator(int terminators)
+bool RexxToken::isTerminator(int terminators)
 {
     // process based on terminator class
     switch (classId)
     {
         case  TOKEN_EOC:                     // end-of-clause is always a terminator
         {
-            previousToken();
             return true;
         }
         case  TOKEN_RIGHT:                   // found a right paren
         {
             if (terminators&TERM_RIGHT)
             {
-                previousToken();
                 return true;
             }
             break;
@@ -208,7 +207,6 @@ bool LanguageParser::isTerminator(int terminators)
         {
             if (terminators&TERM_SQRIGHT)
             {
-                previousToken();
                 return true;
             }
             break;
@@ -217,7 +215,6 @@ bool LanguageParser::isTerminator(int terminators)
         {
             if (terminators&TERM_COMMA)
             {
-                previousToken();
                 return true;
             }
             break;
@@ -236,7 +233,6 @@ bool LanguageParser::isTerminator(int terminators)
                     {
                         if (terminators&TERM_TO)
                         {
-                            previousToken();
                             return true;
                         }
                         break;
@@ -245,7 +241,6 @@ bool LanguageParser::isTerminator(int terminators)
                     {
                          if (terminators&TERM_BY)
                          {
-                             previousToken();
                              return true;
                          }
                          break;
@@ -254,7 +249,6 @@ bool LanguageParser::isTerminator(int terminators)
                     {
                         if (terminators&TERM_FOR)
                         {
-                            previousToken();
                             return true;
                         }
                         break;
@@ -264,7 +258,6 @@ bool LanguageParser::isTerminator(int terminators)
                     {
                         if (terminators&TERM_WHILE)
                         {
-                            previousToken();
                             return true;
                         }
                         break;
@@ -273,7 +266,6 @@ bool LanguageParser::isTerminator(int terminators)
                     {
                         if (terminators&TERM_WITH)
                         {
-                            previousToken();
                             return true;
                         }
                         break;
@@ -282,7 +274,6 @@ bool LanguageParser::isTerminator(int terminators)
                     {
                         if (terminators&TERM_THEN)
                         {
-                            previousToken();
                             return true;
                         }
                         break;
@@ -295,7 +286,6 @@ bool LanguageParser::isTerminator(int terminators)
         default:
             break;
     }
-
     return false;                    // no terminator found
 }
 

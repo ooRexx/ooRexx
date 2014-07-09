@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -41,8 +41,9 @@
 #include "StringClass.hpp"
 #include "ActivityManager.hpp"
 #include "SystemInterpreter.hpp"
+#include "MethodArguments.hpp"
 
-#define  SELECTOR  "ENVIRONMENT"    /* environment selector               */
+const char *SELECTOR = "ENVIRONMENT";    /* environment selector               */
 
 /*********************************************************************/
 /*                                                                   */
@@ -58,43 +59,52 @@ bool SystemInterpreter::valueFunction(
     RexxString * Selector,             /* variable selector                 */
     RexxObject *&result)
 {
-  /* GetEnvironmentVariable will not alloc memory for OldValue ! */
-  char        *OldValue = NULL;        /* old environment value             */
-  DWORD        dwSize;                 /* size of env. variable             */
+    /* GetEnvironmentVariable will not alloc memory for OldValue ! */
+    char        *OldValue = NULL;        /* old environment value             */
+    DWORD        dwSize;                 /* size of env. variable             */
 
-  Selector = Selector->upper();        /* upper case the selector           */
-  Name = Name->upper();                /* and the name too                  */
+    Selector = Selector->upper();        /* upper case the selector           */
+    Name = Name->upper();                /* and the name too                  */
 
-  if (Selector->strCompare(SELECTOR)) {/* selector ENVIRONMENT?             */
-
-    /* get the size of the environment variable and allocate buffer         */
-    dwSize = GetEnvironmentVariable(Name->getStringData(), NULL, 0);
-    if (dwSize)
+    if (Selector->strCompare(SELECTOR))/* selector ENVIRONMENT?             */
     {
-      OldValue = (char *) SystemInterpreter::allocateResultMemory(dwSize);
-                                         /* scan for the variable           */
-      if (OldValue && GetEnvironmentVariable(Name->getStringData(),OldValue,dwSize) )
-      {
-                                         /* have a value already?           */
-        result = (RexxObject*) new_string(OldValue);
-        SystemInterpreter::releaseResultMemory(OldValue);
-      }
-      else
-        result = OREF_NULLSTRING;        /* otherwise, return null            */
-    }
-    else
-      result = OREF_NULLSTRING;
 
-    if (NewValue != OREF_NULL)           /* have a new value?                 */
-    {
-       if (NewValue == (RexxString *) TheNilObject)
-            SetEnvironmentVariable((LPCTSTR)Name->getStringData(), NULL);
-       else
-            SetEnvironmentVariable((LPCTSTR)Name->getStringData(),
-                             (LPCTSTR)stringArgument(NewValue,ARG_TWO)->getStringData());
+        /* get the size of the environment variable and allocate buffer         */
+        dwSize = GetEnvironmentVariable(Name->getStringData(), NULL, 0);
+        if (dwSize)
+        {
+            OldValue = (char *) SystemInterpreter::allocateResultMemory(dwSize);
+            /* scan for the variable           */
+            if (OldValue && GetEnvironmentVariable(Name->getStringData(),OldValue,dwSize) )
+            {
+                /* have a value already?           */
+                result = (RexxObject*) new_string(OldValue);
+                SystemInterpreter::releaseResultMemory(OldValue);
+            }
+            else
+            {
+                result = OREF_NULLSTRING;        /* otherwise, return null            */
+            }
+        }
+        else
+        {
+            result = OREF_NULLSTRING;
+        }
+
+        if (NewValue != OREF_NULL)           /* have a new value?                 */
+        {
+            if (NewValue == (RexxString *) TheNilObject)
+            {
+                SetEnvironmentVariable((LPCTSTR)Name->getStringData(), NULL);
+            }
+            else
+            {
+                SetEnvironmentVariable((LPCTSTR)Name->getStringData(),
+                                       (LPCTSTR)stringArgument(NewValue,ARG_TWO)->getStringData());
+            }
+        }
+        return true;
     }
-    return true;
-  }
-  return false;                        // we could not handle this
+    return false;                        // we could not handle this
 }
 

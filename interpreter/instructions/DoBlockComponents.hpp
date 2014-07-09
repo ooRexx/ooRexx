@@ -50,7 +50,7 @@
 
 class RexxDoBlock;
 
-enum
+typedef enum
 {
     EXP_TO,
     EXP_BY,

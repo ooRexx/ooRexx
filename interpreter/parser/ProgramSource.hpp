@@ -82,7 +82,13 @@ class LineDescriptor
 class ProgramSource: public RexxInternalObject
 {
 public:
+    inline void *operator new(size_t, void *ptr) {return ptr;}
+    inline void  operator delete(void *, void *) { ; }
+    void *operator new(size_t);
+    inline void  operator delete(void *) { ; }
+
     ProgramSource() : lineCount(0) { };
+    inline ProgramSource(RESTORETYPE restoreType) { ; };
 
     // each subclass will need to implement this.
     // default setup is to do nothing.
@@ -129,11 +135,12 @@ class BufferProgramSource: public ProgramSource
     virtual void flatten(RexxEnvelope *);
 
     // virtual definitions
-    virtual void getBuffer(const char *&data, size_t &length);
     virtual void setup();
     virtual void getLine(size_t lineNumber, const char *&data, size_t &length);
-    virtual const char *getBufferPointer();
     virtual bool isTraceable() { return true; }
+
+    const char *getBufferPointer();
+    void getBuffer(const char *&data, size_t &length);
 
     void            buildDescriptors();
     LineDescriptor *getDescriptors();
@@ -169,7 +176,6 @@ class FileProgramSource: public BufferProgramSource
 
     // virtual definitions
     virtual void setup();
-    virtual void getBuffer(const char *&data, size_t &length);
 
 protected:
 
