@@ -1767,6 +1767,11 @@ if (BUILD_RPM)
      ")
    # This pevents the rpm from generating these subdirectories in the install.
    set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION
+      ${CMAKE_INSTALL_PREFIX}
+      ${CMAKE_INSTALL_PREFIX}/bin
+      ${CMAKE_INSTALL_PREFIX}/lib
+      ${CMAKE_INSTALL_PREFIX}/lib64
+      ${CMAKE_INSTALL_PREFIX}/share
       ${CMAKE_INSTALL_PREFIX}/share/man
       ${CMAKE_INSTALL_PREFIX}/share/man/man1
       ${CMAKE_INSTALL_PREFIX}/share/applications
