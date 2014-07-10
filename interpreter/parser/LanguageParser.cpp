@@ -1314,10 +1314,6 @@ void LanguageParser::resolveDependencies()
     // and configure the source package with this.
     if (!classes->isEmpty())
     {
-        // create a directory for managing the dependencies between the classes
-        RexxDirectory *classDependencies = new_directory();
-        ProtectedObject p1(classDependencies);
-
         // get the count of classes we need to process.
         size_t classCount = classes->items();
 
@@ -1356,6 +1352,7 @@ void LanguageParser::resolveDependencies()
                     classOrder->append((RexxObject *)nextInstall);
                     // remove this from the processing list
                     classes->deleteItem(i);
+                    break;
                 }
             }
 

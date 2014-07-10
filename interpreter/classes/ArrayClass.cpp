@@ -263,7 +263,7 @@ void *RexxArray::operator new(size_t size, size_t items, size_t maxSize)
     // the first item is contained in the base object allocation.
     bytes += sizeof(RexxObject *) * (maxSize - 1);
     // now allocate the new object with that size.
-    RexxArray *newArray = (RexxArray *)new_object(bytes, T_Method);
+    RexxArray *newArray = (RexxArray *)new_object(bytes, T_Array);
 
     // now fill in the various control bits
     newArray->arraySize = items;

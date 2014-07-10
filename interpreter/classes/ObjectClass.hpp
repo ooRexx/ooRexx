@@ -83,6 +83,7 @@ typedef enum {RESTOREIMAGE} RESTORETYPE;
  */
 typedef enum
 {
+    NOREASON,               // Nothing configured currently.
     LIVEMARK,               // Performing debug live marking
     RESTORINGIMAGE,         // marking during image restore
     PREPARINGIMAGE,         // marking to allow and image save preparation.
@@ -257,6 +258,8 @@ class RexxInternalObject : public RexxVirtualBase
     static inline size_t getObjectHeaderSize() { return sizeof(RexxInternalObject); }
     inline size_t getObjectDataSize() { return getObjectSize() - getObjectHeaderSize(); }
     inline void  *getObjectDataSpace() { return ((char *)this) + getObjectHeaderSize(); }
+
+    inline RexxObject *nextObject() { return (RexxObject *)(((char *)this) + getObjectSize()); }
     // these clear everything after the hash value.
     inline void   clearObject() { memset(getObjectDataSpace(), '\0', getObjectDataSize()); }
     inline void   clearObject(size_t l) { memset(getObjectDataSpace(), '\0', l - getObjectHeaderSize()); }

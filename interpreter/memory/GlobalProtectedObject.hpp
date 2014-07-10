@@ -141,6 +141,7 @@ public:
     }
 
 protected:
+
     RexxObject *protectedObject;       // next in the chain of protected object
     GlobalProtectedObject *next;       // the pointer protected by the object
     GlobalProtectedObject *previous;   // the previous object in the chain

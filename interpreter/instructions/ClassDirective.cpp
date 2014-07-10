@@ -121,6 +121,8 @@ void ClassDirective::flatten(RexxEnvelope *envelope)
         flattenRef(inheritsClasses);
         flattenRef(instanceMethods);
         flattenRef(classMethods);
+        // we don't carry this one forward
+        newThis->dependencies = OREF_NULL;
 
     cleanUpFlatten
 }
@@ -232,21 +234,21 @@ RexxClass *ClassDirective::install(RexxSource *source, RexxActivation *activatio
  * class co-located in the same class package.
  *
  * @param name   The class name.
- * @param class_directives
+ * @param classDirectives
  *               The global local classes list.
  */
-void ClassDirective::checkDependency(RexxString *name, RexxDirectory *class_directives)
+void ClassDirective::checkDependency(RexxString *name, RexxDirectory *classDirectives)
 {
     if (name != OREF_NULL)
     {
         // if this is in install?
-        if (class_directives->entry(name) != OREF_NULL)
+        if (classDirectives->entry(name) != OREF_NULL)
         {
             if (dependencies == OREF_NULL)
             {
                 dependencies = new_directory();
             }
-            // to our pending list
+            // add to our pending list
             dependencies->setEntry(name, name);
         }
     }
@@ -257,16 +259,16 @@ void ClassDirective::checkDependency(RexxString *name, RexxDirectory *class_dire
  * Check our class dependencies against the locally defined class
  * list to develop a cross dependency list.
  *
- * @param class_directives
+ * @param classDirectives
  *               The global set of defined classes in this package.
  */
-void ClassDirective::addDependencies(RexxDirectory *class_directives)
+void ClassDirective::addDependencies(RexxDirectory *classDirectives)
 {
     // now for each of our dependent classes, if this is defined locally, we
-    // an entry to our dependency list to aid the class ordering
+    // add an entry to our dependency list to aid the class ordering
 
-    checkDependency(metaclassName, class_directives);
-    checkDependency(subclassName, class_directives);
+    checkDependency(metaclassName, classDirectives);
+    checkDependency(subclassName, classDirectives);
     // process each inherits item the same way
     if (inheritsClasses != OREF_NULL)
     {
@@ -275,7 +277,7 @@ void ClassDirective::addDependencies(RexxDirectory *class_directives)
         for (size_t i = 1; i <= count; i++)
         {
             RexxString *inheritsName = (RexxString *)inheritsClasses->get(i);
-            checkDependency(inheritsName, class_directives);
+            checkDependency(inheritsName, classDirectives);
         }
     }
 }

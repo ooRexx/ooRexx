@@ -57,7 +57,7 @@
 /**
  * Initialize a parse instruction.
  *
- * @param _expression
+ * @param sourceExpression
  *               An expression for parse value/parse var.
  * @param string_source
  *               A marker for the string source.
@@ -67,18 +67,16 @@
  * @param parse_template
  *               The source of the parsing templates.
  */
-RexxInstructionParse::RexxInstructionParse(RexxObject *_expression, InstructionSubKeyword string_source,
+RexxInstructionParse::RexxInstructionParse(RexxObject *sourceExpression, InstructionSubKeyword string_source,
     FlagSet<ParseFlags, 32> flags, size_t templateCount, RexxQueue *parse_template )
 {
-    expression = expression;
+    expression = sourceExpression;
     parseFlags = flags;
     stringSource = string_source;
-    trigger_count = templateCount;
-    // copy all of the triggers
-    while (templateCount > 0)
-    {
-        triggers[--templateCount] = (RexxTrigger *)parse_template->pop();
-    }
+    triggerCount = templateCount;
+    // now copy any triggerss from the sub term stack
+    // NOTE:  The triggerss are in last-to-first order on the stack.
+    initializeObjectArray(templateCount, triggers, RexxTrigger, parse_template);
 }
 
 
@@ -92,7 +90,7 @@ void RexxInstructionParse::live(size_t liveMark)
     // must be first object marked
     memory_mark(nextInstruction);
     memory_mark(expression);
-    memory_mark_array(trigger_count, triggers);
+    memory_mark_array(triggerCount, triggers);
 }
 
 
@@ -108,7 +106,7 @@ void RexxInstructionParse::liveGeneral(MarkReason reason)
     // must be first object marked
     memory_mark_general(nextInstruction);
     memory_mark_general(expression);
-    memory_mark_general_array(trigger_count, triggers);
+    memory_mark_general_array(triggerCount, triggers);
 }
 
 
@@ -123,7 +121,7 @@ void RexxInstructionParse::flatten(RexxEnvelope *envelope)
 
     flattenRef(nextInstruction);
     flattenRef(expression);
-    flattenArrayRefs(trigger_count, triggers);
+    flattenArrayRefs(triggerCount, triggers);
 
     cleanUpFlatten
 }
@@ -222,7 +220,7 @@ void RexxInstructionParse::execute(RexxActivation *context, RexxExpressionStack 
     target.init(value, argList, argCount, parseFlags, multiple, context, stack);
 
     // now loop through the triggers, have each perform its configured operation.
-    for (size_t i = 0; i < trigger_count; i++)
+    for (size_t i = 0; i < triggerCount; i++)
     {
         // a NULL trigger marks the boundary between comman delimited template
         // sections.  For PARSE ARG, this will advance to the next argument.  For

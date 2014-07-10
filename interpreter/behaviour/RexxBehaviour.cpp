@@ -102,14 +102,14 @@ void RexxBehaviour::liveGeneral(MarkReason reason)
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-    /* Save image processing?        */
-    if (memoryObject.savingImage() && isNonPrimitive())
+    // special handling if marking during a save image.
+    if (reason == SAVINGIMAGE && isNonPrimitive())
     {
         // mark this as needing resolution when restored.
         setNotResolved();
     }
     // the other side of the process?
-    else if (memoryObject.restoringImage())
+    else if (reason == RESTORINGIMAGE)
     {
         // if we have a non-primitive here on a restore image, we need to fix this up.
         if (isNonPrimitive())
@@ -123,6 +123,7 @@ void RexxBehaviour::liveGeneral(MarkReason reason)
     memory_mark_general(scopes);
     memory_mark_general(owningClass);
 }
+
 
 void RexxBehaviour::flatten(RexxEnvelope *envelope)
 /******************************************************************************/
@@ -274,7 +275,7 @@ void RexxBehaviour::copyBehaviour(RexxBehaviour *source)
  */
 MethodClass *RexxBehaviour::define(const char *name, PCPPM entryPoint, size_t arguments)
 {
-    RexxString *n = MemoryObject::getGlobalName(name);
+    RexxString *n = memoryObject.getGlobalName(name);
     MethodClass *method = new MethodClass(n, CPPCode::resolveExportedMethod(name, entryPoint, arguments));
     define(n, method);
     return method;

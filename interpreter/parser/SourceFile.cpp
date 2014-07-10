@@ -94,25 +94,31 @@ RexxSource::RexxSource(RexxString *p, ProgramSource *s)
  */
 void RexxSource::live(size_t liveMark)
 {
+    memory_mark(source);
     memory_mark(parentSource);
     memory_mark(programName);
     memory_mark(programDirectory);
     memory_mark(programExtension);
     memory_mark(programFile);
     memory_mark(securityManager);
+    memory_mark(initCode);
+    memory_mark(mainExecutable);
+    memory_mark(package);
+    memory_mark(parentSource);
     memory_mark(routines);
     memory_mark(publicRoutines);
-    memory_mark(requires);
     memory_mark(libraries);
+    memory_mark(requires);
+    memory_mark(classes);
+    memory_mark(dataAssets);
     memory_mark(loadedPackages);
     memory_mark(package);
-    memory_mark(classes);
+    memory_mark(unattachedMethods);
+    memory_mark(loadedPackages);
     memory_mark(installedPublicClasses);
     memory_mark(installedClasses);
     memory_mark(mergedPublicClasses);
     memory_mark(mergedPublicRoutines);
-    memory_mark(unattachedMethods);
-    memory_mark(initCode);
 }
 
 
@@ -125,41 +131,31 @@ void RexxSource::live(size_t liveMark)
  */
 void RexxSource::liveGeneral(MarkReason reason)
 {
-#ifndef KEEPSOURCE
-    if (memoryObject.savingImage())
-    {
-        // NOTE:  more work required here!
-        // don't need to use OrefSet here because there's no oldspace when saving the image.
-        unattachedMethods = OREF_NULL;
-        requires = OREF_NULL;
-        classes = OREF_NULL;
-        routines = OREF_NULL;
-        libraries = OREF_NULL;
-        installedClasses = OREF_NULL;
-        installedPublicClasses = OREF_NULL;
-        mergedPublicClasses = OREF_NULL;
-        mergedPublicRoutines = OREF_NULL;
-    }
-#endif
+    memory_mark_general(source);
     memory_mark_general(parentSource);
     memory_mark_general(programName);
     memory_mark_general(programDirectory);
     memory_mark_general(programExtension);
     memory_mark_general(programFile);
     memory_mark_general(securityManager);
+    memory_mark_general(initCode);
+    memory_mark_general(mainExecutable);
+    memory_mark_general(package);
+    memory_mark_general(parentSource);
     memory_mark_general(routines);
     memory_mark_general(publicRoutines);
-    memory_mark_general(requires);
     memory_mark_general(libraries);
+    memory_mark_general(requires);
+    memory_mark_general(classes);
+    memory_mark_general(dataAssets);
     memory_mark_general(loadedPackages);
     memory_mark_general(package);
-    memory_mark_general(classes);
+    memory_mark_general(unattachedMethods);
+    memory_mark_general(loadedPackages);
     memory_mark_general(installedPublicClasses);
     memory_mark_general(installedClasses);
     memory_mark_general(mergedPublicClasses);
     memory_mark_general(mergedPublicRoutines);
-    memory_mark_general(unattachedMethods);
-    memory_mark_general(initCode);
 }
 
 
@@ -170,30 +166,36 @@ void RexxSource::liveGeneral(MarkReason reason)
  */
 void RexxSource::flatten (RexxEnvelope *envelope)
 {
-  setUpFlatten(RexxSource)
+    setUpFlatten(RexxSource)
 
     securityManager = OREF_NULL;
+    flattenRef(source);
     flattenRef(parentSource);
     flattenRef(programName);
     flattenRef(programDirectory);
     flattenRef(programExtension);
     flattenRef(programFile);
     flattenRef(securityManager);
+    flattenRef(initCode);
+    flattenRef(mainExecutable);
+    flattenRef(package);
+    flattenRef(parentSource);
     flattenRef(routines);
     flattenRef(publicRoutines);
-    flattenRef(requires);
     flattenRef(libraries);
+    flattenRef(requires);
+    flattenRef(classes);
+    flattenRef(dataAssets);
     flattenRef(loadedPackages);
     flattenRef(package);
-    flattenRef(classes);
+    flattenRef(unattachedMethods);
+    flattenRef(loadedPackages);
     flattenRef(installedPublicClasses);
     flattenRef(installedClasses);
     flattenRef(mergedPublicClasses);
     flattenRef(mergedPublicRoutines);
-    flattenRef(unattachedMethods);
-    flattenRef(initCode);
 
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
 

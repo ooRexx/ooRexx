@@ -167,9 +167,6 @@ void SystemInterpreter::live(size_t liveMark)
 
 void SystemInterpreter::liveGeneral(MarkReason reason)
 {
-  if (!memoryObject.savingImage())
-  {
-  }
 }
 
 

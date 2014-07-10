@@ -79,7 +79,7 @@ class RexxInstructionParse : public RexxInstruction
     FlagSet<ParseFlags, 32>  parseFlags;         // parsing control flags
     InstructionSubKeyword stringSource;          // where the parsed data originates
     RexxObject       *expression;                // parse value expression
-    size_t            trigger_count;             // number of triggers
-    RexxTrigger *triggers[1];                    // parsing triggers
+    size_t            triggerCount;              // number of triggers
+    RexxTrigger      *triggers[1];               // parsing triggers
 };
 #endif

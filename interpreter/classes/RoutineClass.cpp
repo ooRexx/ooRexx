@@ -280,6 +280,9 @@ RexxObject *RoutineClass::setSecurityManager(RexxObject *manager)
  */
 RexxBuffer *RoutineClass::save()
 {
+    // TODO:  I suspect we really should do this on a copied version
+    // so we don't lose the source connection.
+
     // detach the source from this routine object before saving
     detachSource();
 

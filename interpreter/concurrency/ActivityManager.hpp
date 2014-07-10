@@ -298,6 +298,33 @@ protected:
 
 
 /**
+ * Obtain a lock on a semaphore in "safe" fashion.  This will
+ * release the kernel lock if it needs to wait on the
+ * target semaphore to keep from locking out other threads.
+ */
+class SafeLock
+{
+public:
+    inline SafeLock(SysMutex &l) : lock(l)
+    {
+        // make sure we grab the target semaphore first, then
+        // the kernel semaphore.
+        UnsafeBlock releaser;
+        lock.request();
+    }
+
+
+    inline ~SafeLock()
+    {
+        lock.release();
+    }
+
+protected:
+     SysMutex &lock;
+};
+
+
+/**
  * A class that can be used to release kernel exclusive access inside
  * a block and have the kernel access automatically reobtained
  * once the UnsafeBlock object goes out of scope.

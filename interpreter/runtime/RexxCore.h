@@ -185,11 +185,11 @@ EXTERNMEM MemoryObject memoryObject;
 #define TheStackFrameClass StackFrameClass::classInstance
 
 // shorthand access to some important object.
-#define TheEnvironment MemoryObject::environment
-#define TheFunctionsDirectory MemoryObject::functionsDir
-#define TheCommonRetrievers MemoryObject::commonRetrievers
-#define TheKernel MemoryObject::kernel
-#define TheSystem MemoryObject::system
+#define TheEnvironment memoryObject.environment
+#define TheCommonRetrievers memoryObject.commonRetrievers
+#define TheFunctionsDirectory memoryObject.functionsDir
+#define TheKernel memoryObject.kernel
+#define TheSystem memoryObject.system
 
 #define TheNilObject RexxNilObject::nilObject
 

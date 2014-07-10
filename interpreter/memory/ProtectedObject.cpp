@@ -38,7 +38,7 @@
 
 #include "RexxCore.h"
 #include "ProtectedObject.hpp"
-#include "ListClass.hpp"
+#include "ArrayClass.hpp"
 
 
 void ProtectedSet::add(RexxObject *o)
@@ -46,9 +46,9 @@ void ProtectedSet::add(RexxObject *o)
     // first one we've added?
     if (protectedObject == OREF_NULL)
     {
-        protectedObject = new_list();
+        protectedObject = new_array();
     }
-    RexxList *saveTable = (RexxList *)(RexxObject *)protectedObject;
+    RexxArray *saveTable = (RexxArray *)protectedObject;
     saveTable->append(o);
 }
 

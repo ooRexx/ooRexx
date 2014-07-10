@@ -58,8 +58,15 @@ public:
         // it would be better to have the activity class do this, but because
         // we're doing this with inline methods, we run into a bit of a
         // circular reference problem
-        next = activity->protectedObjects;
-        activity->protectedObjects = this;
+
+        // NOTE:  ProtectedObject gets used in a few places during image
+        // restore before we have a valid activity.  If we don't have
+        // one, then just assume this will be safe.
+        if (activity != OREF_NULL)
+        {
+            next = activity->protectedObjects;
+            activity->protectedObjects = this;
+        }
     }
 
     inline ProtectedBase(RexxActivity *a) : activity(a)
@@ -67,15 +74,28 @@ public:
         // it would be better to have the activity class do this, but because
         // we're doing this with inline methods, we run into a bit of a
         // circular reference problem
-        next = activity->protectedObjects;
-        activity->protectedObjects = this;
+
+        // NOTE:  ProtectedObject gets used in a few places during image
+        // restore before we have a valid activity.  If we don't have
+        // one, then just assume this will be safe.
+        if (activity != OREF_NULL)
+        {
+            next = activity->protectedObjects;
+            activity->protectedObjects = this;
+        }
     }
 
     inline ~ProtectedBase()
     {
-        // remove ourselves from the list and give this object a
-        // little hold protection.
-        activity->protectedObjects = next;
+        // remove ourselves from the list.
+
+        // NOTE:  ProtectedObject gets used in a few places during image
+        // restore before we have a valid activity.  If we don't have
+        // one, then just assume this will be safe.
+        if (activity != OREF_NULL)
+        {
+            activity->protectedObjects = next;
+        }
     }
 
     virtual void mark(size_t liveMark) = 0;

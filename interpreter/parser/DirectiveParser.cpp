@@ -186,7 +186,7 @@ bool LanguageParser::hasBody()
         // we have a clause, now check if this is a directive or not
         RexxToken *token = nextReal();
         // not a "::", not a directive, which means we have real code to deal with
-        result = token->isType(TOKEN_DCOLON);
+        result = !token->isType(TOKEN_DCOLON);
         // reset this clause entirely so we can start parsing for real.
         firstToken();
         reclaimClause();

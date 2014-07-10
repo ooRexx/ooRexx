@@ -89,7 +89,7 @@ void Interpreter::live(size_t liveMark)
 
 void Interpreter::liveGeneral(MarkReason reason)
 {
-  if (!memoryObject.savingImage())
+  if (reason != SAVINGIMAGE)
   {
       memory_mark_general(interpreterInstances);
       memory_mark_general(localServer);
@@ -102,14 +102,11 @@ void Interpreter::processStartup()
     // the locks get create in order
     createLocks();
     ActivityManager::createLocks();
-    MemoryObject::createLocks();
     // make sure we have a session queue created for this process
 }
 
 void Interpreter::processShutdown()
 {
-    // we destroy the locks in reverse order
-    MemoryObject::closeLocks();
     ActivityManager::closeLocks();
     closeLocks();
 }

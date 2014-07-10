@@ -108,7 +108,7 @@ void ActivityManager::liveGeneral(MarkReason reason)
 /*  classes will still have the proper subclass definitions.                  */
 /******************************************************************************/
 {
-  if (!memoryObject.savingImage())
+  if (reason != SAVINGIMAGE)
   {
       memory_mark_general(availableActivities);
       memory_mark_general(allActivities);

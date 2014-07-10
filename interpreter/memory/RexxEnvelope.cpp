@@ -70,8 +70,6 @@ void *RexxEnvelope::operator new(size_t size)
 /**
  * Normal garbage collection live marking
  *
- *  NOTE: Do not mark flattenStack
- *
  * @param liveMark The current live mark.
  */
 void RexxEnvelope::live(size_t liveMark)
@@ -82,7 +80,7 @@ void RexxEnvelope::live(size_t liveMark)
     memory_mark(savetable);
     memory_mark(buffer);
     memory_mark(rehashtable);
-
+    memory_mark(flattenStack);
 }
 
 
@@ -101,6 +99,7 @@ void RexxEnvelope::liveGeneral(MarkReason reason)
     memory_mark_general(savetable);
     memory_mark_general(buffer);
     memory_mark_general(rehashtable);
+    memory_mark_general(flattenStack);
 }
 
 
@@ -160,12 +159,8 @@ void RexxEnvelope::flattenReference(void *newThisVoid, size_t newSelf, void *obj
             objOffset = this->copyBuffer(obj);
         }
         // regardless of how we handle this, add an association for the object to the offset
-        this->associateObject(obj, objOffset);
-        // We're pushing an object offset on to our live stack, so we want to make sure our debug traps
-        // don't try to process this.
-        memoryObject.disableOrefChecks();
-        this->flattenStack->push((RexxObject *)objOffset);
-        memoryObject.enableOrefChecks();
+        associateObject(obj, objOffset);
+        flattenStack->push((RexxObject *)objOffset);
         // if the buffer reallocated, we need to update the updating object pointer too.
         char *newBuffer = this->bufferStart();
         if (newBuffer != flattenBuffer)
@@ -206,15 +201,18 @@ RexxBuffer *RexxEnvelope::pack(RexxObject *_receiver)
     savetable = new_identity_table();
     duptable = new MapTable(DefaultDupTableSize);
     buffer = new RexxSmartBuffer(DefaultEnvelopeBuffer);
-    // get a flatten stack from the memory object
-    flattenStack = memoryObject.getFlattenStack();
+    // Allocate a flatten stack
+    flattenStack = new (Memory::LiveStackSize, true) LiveStack (Memory::LiveStackSize);
+    // we need to mark the flatten stack to protect it from GC, but we're
+    // going to be storing offsets in here, not object references, so we don't want
+    // this to be marked.
+    flattenStack->setHasNoReferences();
     // push unique terminator onto stack
     flattenStack->push(OREF_NULL);
 
     // First, put a header into the buffer.  This is necessary because without
     // it, the envelope object would be at 0 offset into the buffer, which is not
     // distinguishable from OREF_NULL when the objects are unpacked from buffer.
-
 
     // the header is just a dummy minimal object instance.  We don't bother adding
     // this to the dup table, as it won't ever be duped.
@@ -231,9 +229,7 @@ RexxBuffer *RexxEnvelope::pack(RexxObject *_receiver)
     // ok, keep flattening until will find our marker object on the stack
     newSelf->flatten(this);
 
-    for (flattenObj = flattenStack->pop();
-        flattenObj != OREF_NULL;
-        flattenObj = flattenStack->pop())
+    for (flattenObj = flattenStack->pop(); flattenObj != OREF_NULL; flattenObj = flattenStack->pop())
     {
         // the popped object is actually an object offset.  We need to store them
         // that way because the object location can change if the buffer needs to
@@ -243,8 +239,7 @@ RexxBuffer *RexxEnvelope::pack(RexxObject *_receiver)
         // and flatten the next object
         flattenObj->flatten(this);
     }
-    // finished with the flatten stack
-    memoryObject.returnFlattenStack();
+
     // now unwrap the smart buffer and fix the length of the real buffer
     // behind it to the size we've written to it.
     RexxBuffer *letter = buffer->getBuffer();
@@ -265,111 +260,22 @@ RexxBuffer *RexxEnvelope::pack(RexxObject *_receiver)
  */
 void RexxEnvelope::puff(RexxBuffer *sourceBuffer, char *startPointer, size_t dataLength)
 {
-    size_t primitiveTypeNum = 0;         /* primitive behaviour type number   */
+    // this will mark the last object of our range
+    RexxObject *lastObject = sourceBuffer->nextObject();
 
-    char *bufferPointer = startPointer;  /* copy the starting point           */
-                                         /* point to end of buffer            */
-    char *endPointer = (char *)startPointer + dataLength;
-    RexxObject *puffObject = OREF_NULL;
-
-    /* Set objoffset to the real address of the new objects.  This tells              */
-    /* mark_general to fix the object's refs and set their live flags.                */
-    memoryObject.setObjectOffset((size_t)bufferPointer);
-    /* Now traverse the buffer fixing all of the behaviour pointers of the objects.   */
-    while (bufferPointer < endPointer)
-    {
-        puffObject = (RexxObject *)bufferPointer;
-
-        /* a non-primitive behaviour         */
-        /* These are actually in flattened   */
-        /* storgage.                         */
-        if (puffObject->isNonPrimitive())
-        {
-            /* Yes, lets get the behaviour Object*/
-            RexxBehaviour *objBehav = (RexxBehaviour *)(((uintptr_t)puffObject->behaviour) + sourceBuffer->getData());
-            /* Resolve the static behaviour info */
-            objBehav->resolveNonPrimitiveBehaviour();
-            /* Set this objects behaviour.       */
-            puffObject->behaviour = objBehav;
-            /* get the behaviour's type number   */
-            primitiveTypeNum = objBehav->getClassType();
-
-        }
-        else
-        {
-            // convert this from a type number to the actuall class.  This will unnormalize the
-            // type number to the different object classes.
-            puffObject->behaviour = RexxBehaviour::restoreSavedPrimitiveBehaviour(puffObject->behaviour);
-            primitiveTypeNum = puffObject->behaviour->getClassType();
-        }
-
-        // Force fix-up of VirtualFunctionTable,
-        ((RexxObject *)bufferPointer)->setVirtualFunctions(MemoryObject::virtualFunctionTable[primitiveTypeNum]);
-        // mark this object as live
-        puffObject->setObjectLive(memoryObject.markWord);
-        // Mark other referenced objs
-        // Note that this flavor of
-        // mark_general should update the
-        // mark fields in the objects.
-        puffObject->liveGeneral(UNFLATTENINGOBJECT);
-        // Point to next object in image.
-        bufferPointer += puffObject->getObjectSize();
-    }
-
-    memoryObject.setObjectOffset(0);     /* all done with the fixups!         */
-
-    // Prepare to reveal the objects in  the buffer.
-    // the first object in the buffer is a dummy added
-    // for padding.  We need to step past that one to the
-    // beginning of the real unflattened objects
-    receiver = (RexxObject *)(startPointer + ((RexxObject *)startPointer)->getObjectSize());
-
-    // this is the location of the next object after the buffer
-    char *nextObject = ((char *)sourceBuffer) + sourceBuffer->getObjectSize();
-    // this is the size of any tailing buffer portion after the last unflattened object.
-    size_t tailSize = nextObject - endPointer;
-
-    // puffObject is the last object we processed.  Add any tail data size on to that object
-    // so we don't create an invalid gap in the heap.
-    puffObject->setObjectSize(puffObject->getObjectSize() + tailSize);
-    // now adjust the front portion of the buffer object to reveal all of the
-    // unflattened data.
-    sourceBuffer->setObjectSize((char *)startPointer - (char *)sourceBuffer + ((RexxObject *)startPointer)->getObjectSize());
-
-    // move past the header to the real unflattened data
-    bufferPointer = (char *)receiver;
+    // fix up the objects contained in the data buffer.
+    receiver = memoryObject.unflattenObjectBuffer(sourceBuffer, startPointer, dataLength);
     // Set envelope to the real address of the new objects.  This tells
     // mark_general to send unflatten to run any proxies.
 
-    // tell the memory object to unflatten...this sends a second message to the
-    // objects in the buffer, which are real live objects now.
-    memoryObject.setEnvelope(this);
+    // now have the memory object traverse this set of objects handling
+    // the unflatten calls.
+    memoryObject.unflattenProxyObjects(this, receiver, lastObject);
 
-    // Now traverse the buffer running any proxies.
-    while (bufferPointer < endPointer)
-    {
-        puffObject = (RexxObject *)bufferPointer;
-        // Since a GC could happen at anytime we need to check to make sure the object
-        //  we are going now unflatten is still alive, since all who reference it may have already
-        //  run and gotten the info from it and no longer reference it.
-
-        // In theory, this should not be an issue because all of the objects were
-        // in the protected set, but unflatten might have cast off some references.
-        if (puffObject->isObjectLive(memoryObject.markWord))
-        {
-            // Note that this flavor of  liveGeneral will run any proxies
-            // created by unflatten and fixup  the refs to them.
-            puffObject->liveGeneral(UNFLATTENINGOBJECT);
-        }
-
-        // Point to next object in image.
-        bufferPointer += puffObject->getObjectSize();
-    }
-
-    // Tell memory we're done unflattening
-    memoryObject.setEnvelope(OREF_NULL);
+    // now rehash any unflattened collection objects that require it.
     rehash();
 }
+
 
 /**
  * Check if an object has already been flattened.
