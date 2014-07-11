@@ -55,7 +55,7 @@
  */
 RexxInstructionInterpret::RexxInstructionInterpret(RexxObject *_expression)
 {
-    expression = expression;
+    expression = _expression;
 }
 
 

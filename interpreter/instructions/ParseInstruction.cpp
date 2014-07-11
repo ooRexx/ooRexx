@@ -194,10 +194,8 @@ void RexxInstructionParse::execute(RexxActivation *context, RexxExpressionStack 
             // our expression is a variable retriever which we can
             // evaluate to get the value.
             value = expression->evaluate(context, stack);
-            // The value we just retrieved is safe from garbage collection,
-            // but the parse operation might overwrite the variable and
-            // remove that safety net.  We still push this on the stack for safety.
-            stack->push(value);
+            // Evaluate always pushes the object on to the evaluation stack.
+            // We don't need to do anthing extra to protect this.
             break;
 
         // PARSE VALUE expr WITH
@@ -212,7 +210,7 @@ void RexxInstructionParse::execute(RexxActivation *context, RexxExpressionStack 
             {
                 value = OREF_NULLSTRING;
             }
-            stack->push(value);
+            // the expression version is still on the evalation stack.
             break;
     }
 

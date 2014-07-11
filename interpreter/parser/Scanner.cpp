@@ -978,17 +978,18 @@ RexxToken *LanguageParser::sourceNextToken(RexxToken *previous )
                     // vertical bar...could be the logical OR or concatenate.
                     case '|':
                     {
-                         // doubled is concatenate, which cannot be used as an assignment shortcut.
-                         if (nextSpecial('|', location))
-                         {
-                             return OPERATOR(CONCATENATE);
-                         }
-                         // logical OR, which can be an assignment shortcut
-                         else
-                         {
-                             CHECK_ASSIGNMENT(OR);         // this is allowed as an assignment shortcut
-                         }
-                         break;
+                        // doubled is concatenate, which can also be used as an assignment shortcut.
+                        // TODO:  the ||= operation is not documented!!!!
+                        if (nextSpecial('|', location))
+                        {
+                            CHECK_ASSIGNMENT(CONCATENATE);
+                        }
+                        // logical OR, which can be an assignment shortcut
+                        else
+                        {
+                            CHECK_ASSIGNMENT(OR);         // this is allowed as an assignment shortcut
+                        }
+                        break;
                     }
 
                     // equal sign...doubled can have special meaning too.

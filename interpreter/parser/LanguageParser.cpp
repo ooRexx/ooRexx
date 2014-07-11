@@ -554,6 +554,11 @@ void LanguageParser::initializeForParsing()
     // get the count of lines
     lineCount = source->getLineCount();
 
+    // and the lineNumber we should start reading from.  For interpret,
+    // this will be one line before the interpret instruction.  This allows
+    // all syntax errors to be reported on the correct line.
+    lineNumber = source->getFirstLine();
+
     // handy stack for temporary values...this is a push through
     holdStack = new (HOLDSIZE) PushThroughStack(HOLDSIZE);
 

@@ -102,7 +102,10 @@ public:
 
     // provides with real source need to override this
     virtual bool isTraceable() { return false; }
-    inline size_t getLineCount() { return lineCount; }
+    // provides the starting line location.  Can be non-zero
+    // if this is an interpret
+    virtual size_t getFirstLine() { return 0; }
+    size_t getLineCount() { return lineCount; }
 
     RexxString *getStringLine(size_t lineNumber);
     RexxString *getStringLine(size_t position, size_t startOffset, size_t endOffset);
@@ -204,6 +207,7 @@ class ArrayProgramSource: public ProgramSource
     virtual void setup();
     virtual void getLine(size_t lineNumber, const char *&data, size_t &length);
     virtual bool isTraceable() { return true; }
+    virtual size_t getFirstLine() { return interpretAdjust; }
 
  protected:
 

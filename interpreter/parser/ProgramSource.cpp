@@ -560,12 +560,22 @@ void ArrayProgramSource::flatten(RexxEnvelope *envelope)
  */
 void ArrayProgramSource::setup()
 {
+    // if we have an interpret adjustment, back it off one
+    if (interpretAdjust > 0)
+    {
+        interpretAdjust --;
+    }
+
     // set the line count to the number of items
     lineCount = array->items();
 
+    // fake things out by the interpret adjustment amount
+    lineCount += interpretAdjust;
+
     // it is possible that the array version might include a shebang line (sigh).
     // if we detect that, replace it with a null line so it will be ignored.
-    if (lineCount > 0)
+    // BUT, we don't do this if we're an interpret.
+    if (lineCount > 0 && interpretAdjust > 0)
     {
         RexxString *firstLine = (RexxString *)array->get(1);
         // now we need to see if we've got a shebang line.  If we find
@@ -592,16 +602,16 @@ void ArrayProgramSource::setup()
  */
 void ArrayProgramSource::getLine(size_t lineNumber, const char *&linePointer, size_t &lineLength)
 {
-    // adjust for the interpret offset, then check to see if
-    // the requested number is still in bounds
-    size_t targetLine = lineNumber - interpretAdjust;
-    if (targetLine > lineCount)
+    if (lineNumber > lineCount || lineNumber <= interpretAdjust)
     {
         // null out the line information and quit
         linePointer = NULL;
         lineLength = 0;
         return;
     }
+
+    // adjust for the interpret offset
+    size_t targetLine = lineNumber - interpretAdjust;
 
     // get the line from the array, making sure we adjust for interpret line numbers.
     RexxString *line = (RexxString *)(array->get(targetLine));

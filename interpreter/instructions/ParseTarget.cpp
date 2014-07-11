@@ -551,6 +551,8 @@ RexxString *RexxTarget::remainder()
 
     // get the length, and then clear the string section
     stringsize_t length = end - subcurrent;
+    stringsize_t offset = subcurrent;
+    // consume the rest
     subcurrent = end;
     // if this is the entire string, we can just return
     // the string without making a new string object
@@ -560,5 +562,6 @@ RexxString *RexxTarget::remainder()
     }
 
     // extract a new string piece
-    return string->extract(subcurrent, length);
+    RexxString *word = string->extract(offset, length);
+    return word;
 }
