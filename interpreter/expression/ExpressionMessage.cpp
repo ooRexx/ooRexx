@@ -170,8 +170,12 @@ RexxObject *RexxExpressionMessage::evaluate(RexxActivation *context, RexxExpress
         }
 
         _super = super->evaluate(context, stack);
-        // this can only come from a variable, so this
-        // is a safe item.  Remove it from the stack
+        // we send the message using the stack, which
+        // expects to find the target and the arguments
+        // on the stack, but not the super.  We need to
+        // pop this item off after evaluation.  Since this
+        // comes either from a variable or the environment, this
+        // is already protected from GC.
         stack->toss();
     }
 

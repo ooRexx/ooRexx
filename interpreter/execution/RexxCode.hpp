@@ -60,7 +60,9 @@ class RexxCode : public BaseCode
    inline void  operator delete(void *) { ; }
    inline void  operator delete(void *, void *) {;}
 
-   const size_t MINIMUM_STACK_FRAME = 0;
+   // an extra added to the stack frame needed because the count
+   // is generally off by one or two.
+   const size_t MINIMUM_STACK_FRAME = 10;
 
    RexxCode(RexxSource *s, RexxInstruction *i, RexxDirectory *l = OREF_NULL, size_t f = 0, size_t v = RexxLocalVariables::FIRST_VARIABLE_INDEX);
    inline RexxCode(RESTORETYPE restoreType) { ; };

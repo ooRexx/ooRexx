@@ -57,7 +57,7 @@
  */
 typedef enum
 {
-   VARIABLE_SELF,
+   VARIABLE_SELF = 1,          // NOTE:  The slots start at 1, not 0.
    VARIABLE_SUPER,
    VARIABLE_RESULT,
    VARIABLE_RC,
@@ -111,14 +111,18 @@ class RexxLocalVariables
     {
         /* this may be a dynamic addition, so we might not know the */
         /* index. */
-        if (index != 0) {
+        if (index != 0)
+        {
             locals[index] = variable;
-            if (dictionary != OREF_NULL) {
+            if (dictionary != OREF_NULL)
+            {
                 dictionary->put(variable, variable->getName());
             }
         }
-        else {
-            if (dictionary == OREF_NULL) {
+        else
+        {
+            if (dictionary == OREF_NULL)
+            {
                 createDictionary();
             }
             dictionary->put(variable, variable->getName());

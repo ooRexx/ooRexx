@@ -1236,6 +1236,9 @@ void MemoryObject::saveImage(void)
     // add these to the save array
     saveArray->put(primitive_behaviours, saveArray_PBEHAV);
 
+    // this is make sure we're getting the new set
+    bumpMarkWord();
+
     // create a generic mark handler for this.  We really just
     // want to trace all of the live objects alerting them to the pending
     // image save.
@@ -1243,7 +1246,7 @@ void MemoryObject::saveImage(void)
     setMarkHandler(&markHandler);
 
     // go to any pre-save pruning/replacement needed by image objects first
-    markGeneral(saveArray, PREPARINGIMAGE);
+    tracingMark(saveArray, PREPARINGIMAGE);
 
     // reset the marking handler
     resetMarkHandler();
@@ -1314,10 +1317,8 @@ void MemoryObject::saveImage(void)
  * @param root   The root object to mark from.
  * @param reason The marking reason.
  */
-void MemoryObject::markGeneral(RexxObject *root, MarkReason reason)
+void MemoryObject::tracingMark(RexxObject *root, MarkReason reason)
 {
-    // this is make sure we're getting the new set
-    bumpMarkWord();
     // push a unique terminator
     pushLiveStack(OREF_NULL);
     // push the live root, and process until we run out of stacked objects.

@@ -862,6 +862,10 @@ RexxCode *LanguageParser::translateBlock()
     // and we need a new set of exposed variables for each code section
     exposedVariables = new_directory();
 
+    // TODO:  Once things are generally working, make sure this value
+    // gets calculated fairly accurately.  I'm not sure it is correct when
+    // different expression types are involved.
+
     // clear the stack accounting fields
     maxStack = 0;
     currentStack = 0;
@@ -948,8 +952,9 @@ RexxCode *LanguageParser::translateBlock()
         }
 
         // now check the actual disposition of this instruction.  If it is a control type
-        // add it immediately to the stream
-        if (type == KEYWORD_IF || type == KEYWORD_SELECT || type == KEYWORD_DO || type == KEYWORD_LOOP)
+        // add it immediately to the stream.  Control types are IF, SELECT, or any of the
+        // DO/LOOP types.
+        if (instruction->isControl())
         {
             addClause(instruction);
         }

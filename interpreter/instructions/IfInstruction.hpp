@@ -59,6 +59,9 @@ class RexxInstructionIf : public RexxInstructionSet
     virtual void flatten(RexxEnvelope*);
 
     virtual void execute(RexxActivation *, RexxExpressionStack *);
+    // We consider this a control instruction only if it is an IF.
+    // WHENs are part of SELECT and thus not a top-level control type.
+    virtual bool isControl() { return isType(KEYWORD_IF) ; }
 
     void setEndInstruction(RexxInstructionEndIf *);
     inline void fixWhen(RexxInstructionEndIf *partner) { this->else_location->setEndInstruction(partner); };

@@ -167,6 +167,13 @@ void RexxInstructionMessage::execute(RexxActivation *context, RexxExpressionStac
         }
         // get the superclass target
         _super = super->evaluate(context, stack);
+        // we send the message using the stack, which
+        // expects to find the target and the arguments
+        // on the stack, but not the super.  We need to
+        // pop this item off after evaluation.  Since this
+        // comes either from a variable or the environment, this
+        // is already protected from GC.
+        stack->toss();
     }
 
     // loop through the argument list evaluating the arguments

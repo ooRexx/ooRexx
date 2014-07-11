@@ -77,7 +77,11 @@ class RexxInstruction : public RexxInternalObject
     virtual void flatten(RexxEnvelope *);
 
     virtual void execute(RexxActivation *, RexxExpressionStack *) { ; };
+    // indicates whether this is a block instruction type that requires
+    // a matching END
     virtual bool isBlock() { return false; }
+    // indicates if this is a complex control construct.
+    virtual bool isControl() { return false; }
 
     inline const SourceLocation &getLocation() { return instructionLocation; }
     inline void  setLocation(const SourceLocation &l) { instructionLocation = l; }
@@ -125,6 +129,8 @@ class RexxBlockInstruction : public RexxInstruction
     // virtual functions required by subclasses to override.
 
     virtual bool isBlock() { return true; }
+    // all block instructions are also control instructions.
+    virtual bool isControl() { return true; }
     virtual EndBlockType getEndStyle() = 0;
     virtual bool isLoop() { return false; };
     virtual void matchEnd(RexxInstructionEnd *, LanguageParser *) { ; };

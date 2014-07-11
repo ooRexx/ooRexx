@@ -166,7 +166,7 @@ class MemoryObject : public RexxInternalObject
     void        markObjectsMain(RexxObject *);
     void        mark(RexxObject *);
     void        markGeneral(void *);
-    void        markGeneral(RexxObject *root, MarkReason reason);
+    void        tracingMark(RexxObject *root, MarkReason reason);
     void        collect();
     inline void removeHold(RexxInternalObject *obj) { saveStack->remove((RexxObject *)obj); }
     RexxObject *holdObject(RexxInternalObject *obj);
@@ -251,7 +251,7 @@ private:
 /******************************************************************************/
 /* Define location of objects saved in SaveArray during Saveimage processing  */
 /*  and used during restart processing.                                       */
-/* Currently only used in OKMEMORY.C                                          */
+/* Currently only used in MemoryObject                                        */
 /******************************************************************************/
 enum
 {
@@ -268,8 +268,8 @@ enum
     saveArray_NULLA,
     saveArray_NULLPOINTER,
     saveArray_SYSTEM,
-    saveArray_COMMON_RETRIEVERS,
     saveArray_FUNCTIONS,
+    saveArray_COMMON_RETRIEVERS,
     saveArray_highest = saveArray_COMMON_RETRIEVERS
 };
 

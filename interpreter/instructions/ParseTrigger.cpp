@@ -78,13 +78,11 @@ RexxTrigger::RexxTrigger(ParseTriggerType type, RexxObject *_value, size_t _vari
     RexxQueue  *_variables)
 {
     triggerType = type;
-    variableCount = variableCount;
+    variableCount = _variableCount;
     value = _value;
-    // copy all of the variables from the queue (stored in reverse order)
-    while (_variableCount > 0)
-    {
-        variables[--_variableCount] = (RexxVariableBase *)_variables->pop();
-    }
+    // now copy any arguments from the sub term stack
+    // NOTE:  The arguments are in last-to-first order on the stack.
+    initializeObjectArray(_variableCount, variables, RexxVariableBase, _variables);
 }
 
 
