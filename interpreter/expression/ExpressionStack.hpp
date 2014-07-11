@@ -58,8 +58,8 @@ class RexxExpressionStack
     RexxExpressionStack(RexxObject **frames, size_t items) { stack = frames; size = items; top = stack; }
     RexxExpressionStack() { stack = OREF_NULL; size = 0; top = stack; }
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
+    void live(size_t);
+    void liveGeneral(MarkReason reason);
 
     void         expandArgs(size_t, size_t, size_t, const char *);
     RexxString * requiredStringArg(size_t);

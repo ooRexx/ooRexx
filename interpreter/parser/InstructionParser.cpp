@@ -973,12 +973,6 @@ RexxInstruction *LanguageParser::newControlledLoop(RexxString *label, RexxToken 
         token = nextReal();
     }
 
-    // if the by value was not specified, set this to the default on one now.
-    if (control.by == OREF_NULL)
-    {
-        control.by = IntegerOne;
-    }
-
     // NOTE:  We parse until we hit the end of clause or found an error,
     // so once we get here, there's no need for any end-of-clause checks.
 

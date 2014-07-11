@@ -602,7 +602,7 @@ class ActivationSettings
     ActivationSettings   settings;      // inherited REXX settings
     RexxExpressionStack  stack;         // current evaluation stack
     RexxCode            *code;          // rexx method object
-    RexxSource         *sourceObject;   // the source object associated with this instance
+    RexxSource          *sourceObject;  // the source object associated with this instance
     RexxClass           *scope;         // scope of any active method call
     RexxObject          *receiver;      // target of a message invocation
     RexxActivity        *activity;      // current running activation

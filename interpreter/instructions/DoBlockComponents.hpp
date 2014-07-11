@@ -52,6 +52,7 @@ class RexxDoBlock;
 
 typedef enum
 {
+    EXP_NONE,
     EXP_TO,
     EXP_BY,
     EXP_FOR
@@ -76,7 +77,7 @@ class ForLoop
          memory_mark_general(forCount);
      }
 
-     virtual void setup(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock);
+     void setup(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock);
 
     RexxObject       *forCount;          // number of iterations
 };
@@ -89,7 +90,13 @@ class ForLoop
 class ControlledLoop : public ForLoop
 {
  public:
-    inline ControlledLoop() : control(OREF_NULL), initial(OREF_NULL), to(OREF_NULL), by(OREF_NULL), ForLoop() { }
+    inline ControlledLoop() : control(OREF_NULL), initial(OREF_NULL), to(OREF_NULL), by(OREF_NULL), ForLoop()
+    {
+        for (size_t i = 0; i < 3; i++)
+        {
+            expressions[i] = EXP_NONE;
+        }
+    }
 
     // helper memory marking methods for embedding classes to call.
     inline void live(size_t liveMark)
@@ -110,7 +117,7 @@ class ControlledLoop : public ForLoop
     }
 
 
-    virtual void setup(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock);
+    void setup(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock);
 
     RexxVariableBase *control;           // control variable retriever
     RexxObject       *initial;           // initial control expression
@@ -140,7 +147,7 @@ class OverLoop
         memory_mark_general(target);
     }
 
-    virtual void setup(RexxActivation *context,
+    void setup(RexxActivation *context,
         RexxExpressionStack *stack, RexxDoBlock *doblock);
 
     RexxVariableBase *control;           // control variable retriever

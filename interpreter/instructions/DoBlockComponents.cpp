@@ -237,6 +237,8 @@ void OverLoop::setup( RexxActivation *context,
     // counter is our index position.
     doblock->setTo(array);
     doblock->setFor(1);
+    // and don't forget the variable (which of course, I DID forget!)
+    doblock->setControl(control);
 }
 
 
