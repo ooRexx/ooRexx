@@ -67,26 +67,32 @@ void RexxStem::createInstance()
 }
 
 
-RexxStem::RexxStem(
-    RexxString *name)                  /* the variable name                 */
+/**
+ * Initialize a stem instance.
+ *
+ * @param name   The name of the stem (optional)
+ */
+RexxStem::RexxStem(RexxString *name)
 /******************************************************************************/
 /* Function:  Initialize a STEM class item                                    */
 /******************************************************************************/
 {
-    if (name == OREF_NULL)               /* no explicit default value?        */
+    // if not give an explicit value, we use a null string.
+    if (name == OREF_NULL)
     {
-        name = OREF_NULLSTRING;            /* set a null string                 */
+        name = OREF_NULLSTRING;
     }
+    // use the string form of the supplied name.
     else
     {
-        /* must get a string here            */
         name = stringArgument(name, ARG_ONE);
     }
-    OrefSet(this, this->stemName, name); /* fill in the name                  */
-    OrefSet(this, this->value, name);    /* fill in the default value         */
-    tails.init(this);                    /* initialize the tail table         */
-                                         /* create a tails table              */
-    this->dropped = true;                /* no explicit value                 */
+    stemName = name;
+    value = name;
+    // initialize the tail table so it knows who owns it.
+    tails.init(this);
+    // no explicit value at this point
+    dropped = true;
 }
 
 RexxObject *RexxStem::copy(void)

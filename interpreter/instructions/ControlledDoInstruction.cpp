@@ -257,10 +257,10 @@ bool RexxInstructionControlledDoUntil::iterate(RexxActivation *context, RexxExpr
     // we don't check the UNTIL condition on the first iteration
     if (first)
     {
-        return doblock->checkOver(context, stack);
+        return doblock->checkControl(context, stack, !first);
     }
 
-    return !whileLoop.checkUntil(context, stack) && doblock->checkOver(context, stack);
+    return !whileLoop.checkUntil(context, stack) && doblock->checkControl(context, stack, !first);
 }
 
 

@@ -931,8 +931,9 @@ RexxToken *LanguageParser::sourceNextToken(RexxToken *previous )
                         // two slashes is a special operator
                         if (nextSpecial('/', location))
                         {
+                            // TODO:  Not sure this is documented as one of these either
                             // remainder operatior
-                            return OPERATOR(REMAINDER);
+                            CHECK_ASSIGNMENT(REMAINDER);
                         }
                         // normal division
                         else
@@ -948,7 +949,9 @@ RexxToken *LanguageParser::sourceNextToken(RexxToken *previous )
                         // two start is power
                         if (nextSpecial('*', location))
                         {
-                            return OPERATOR(POWER);  // this is not an assignment operator
+                            // also an assignment operator, but not sure why anybody would use it!
+                            // TODO:  Check docs on this one also.
+                            CHECK_ASSIGNMENT(POWER);
                         }
                         // standard multiply
                         else

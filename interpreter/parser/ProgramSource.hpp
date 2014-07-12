@@ -108,7 +108,7 @@ public:
     size_t getLineCount() { return lineCount; }
 
     RexxString *getStringLine(size_t lineNumber);
-    RexxString *getStringLine(size_t position, size_t startOffset, size_t endOffset);
+    RexxString *getStringLine(size_t position, size_t startOffset, size_t endOffset = SIZE_MAX);
     RexxString *extract(SourceLocation &location);
     RexxArray  *extractSourceLines(SourceLocation &location);
 

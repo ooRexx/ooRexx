@@ -183,7 +183,7 @@ bool RexxDoBlock::checkControl(RexxActivation *context, RexxExpressionStack *sta
     }
 
     // do we have a forCount?  perform that test now
-    if (forCount > 0)
+    if (forCount != SIZE_MAX)
     {
         return checkFor();
     }

@@ -2164,7 +2164,7 @@ bool RexxActivation::trap(             /* trap a condition                  */
              /* get the handler info              */
             RexxInstructionCallBase *handler = (RexxInstructionCallBase *)traphandler->get(1);
             /* condition not trappable with CALL?*/
-            if (handler->isType(KEYWORD_CALL) &&
+            if (handler->isType(KEYWORD_CALL_ON) &&
                 (condition->strCompare(CHAR_SYNTAX) ||
                  condition->strCompare(CHAR_NOVALUE) ||
                  condition->strCompare(CHAR_LOSTDIGITS) ||
@@ -2196,7 +2196,7 @@ bool RexxActivation::trap(             /* trap a condition                  */
         }
 
         RexxString *instruction = OREF_CALL;
-        if (handler->isType(KEYWORD_SIGNAL))
+        if (handler->isType(KEYWORD_SIGNAL_ON))
         {
             instruction = OREF_SIGNAL;       /* this is trapped by a SIGNAL       */
         }
@@ -2212,7 +2212,7 @@ bool RexxActivation::trap(             /* trap a condition                  */
         activity->clearCurrentCondition();
                                            /* is this a signal instruction      */
                                            /* no the non-returnable PROPAGATE?  */
-        if (handler->isType(KEYWORD_SIGNAL))
+        if (handler->isType(KEYWORD_SIGNAL_ON))
         {
             /* not an Interpret instruction?     */
             if (!isInterpret())

@@ -160,7 +160,7 @@ class LanguageParser: public RexxInternalObject
     inline size_t      markPosition() { return clause->mark(); }
     inline void        resetPosition(size_t p) { clause->reset(p); }
 
-    RexxVariableBase *addVariable(RexxString *);
+    RexxVariableBase *addSimpleVariable(RexxString *);
     RexxStemVariable  *addStem(RexxString *);
     RexxCompoundVariable *addCompound(RexxString *);
     void        expose(RexxString *);
@@ -191,6 +191,10 @@ class LanguageParser: public RexxInternalObject
         {
             syntaxError(error, token);
         }
+        // NOTE:  Some contexts where this is tested are
+        // in loops that still process the next token.  Back up
+        // to the clause terminator so it is still there.
+        previousToken();
     }
 
     inline RexxObject *requiredLogicalExpression(int terminators, int error)

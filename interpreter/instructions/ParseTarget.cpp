@@ -511,7 +511,7 @@ void RexxTarget::skipWord()
         if (subcurrent < end)
         {
             // look for the next blank
-            const char *endScan = NULL;
+            const char *endPosition = NULL;
             while (scan < endScan)
             {
                 if (*scan == ' ' || *scan == '\t')

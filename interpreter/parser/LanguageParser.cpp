@@ -1541,7 +1541,7 @@ void LanguageParser::captureGuardVariable(RexxString *varname, RexxVariableBase 
  * @return A retrieve object for accessing the variable.  This
  *         will identify a variable slot in the code stack frame.
  */
-RexxVariableBase *LanguageParser::addVariable(RexxString *varname)
+RexxVariableBase *LanguageParser::addSimpleVariable(RexxString *varname)
 {
     // we might have this already (fairly common in most programs).  If
     // not we cache a new one for the next time.
@@ -1693,7 +1693,7 @@ RexxCompoundVariable *LanguageParser::addCompound(RexxString *name)
             // this is a real variable piece.  Add this to the global
             // variable table and push its retriever on to the term stack
             // for safe keeping.
-            subTerms->push((RexxObject *)(addVariable(tail)));
+            subTerms->push((RexxObject *)(addSimpleVariable(tail)));
         }
         else
         {
@@ -1772,7 +1772,7 @@ RexxVariableBase *LanguageParser::addVariable(RexxToken *token)
 {
     // we first validate that this token represents a valid variable,
     needVariable(token);
-    // then create the text retriever object.
+    // then create the variable retriever object.
     return (RexxVariableBase *)addText(token);
 }
 
@@ -1788,14 +1788,10 @@ RexxObject *LanguageParser::addText(RexxToken *token)
     // these should be text type tokens that have a real value.
     RexxString *name = token->value();
 
-    // we might already have processed this before.
-    // if not, we need to examine this and find the
-    // most appropriate form.
-    RexxObject *retriever = literals->fastAt(name);
-    if (retriever != OREF_NULL)
-    {
-        return retriever;
-    }
+    // NOTE:  We cannot check the literals table at the beginning without
+    // knowing the type of token first.  It is possible for both a literal string
+    // and a variable name to have the same value, which could result in the
+    // string constant getting used where a real variable retriever is required.
 
     // now switch on the major token class id.
     switch (token->type())
@@ -1812,6 +1808,15 @@ RexxObject *LanguageParser::addText(RexxToken *token)
                 case SYMBOL_DUMMY:
                 case SYMBOL_CONSTANT:
                 {
+                    // we might already have processed this before.
+                    // if not, we need to examine this and find the
+                    // most appropriate form.
+                    RexxObject *retriever = literals->fastAt(name);
+                    if (retriever != OREF_NULL)
+                    {
+                        return retriever;
+                    }
+
                     RexxObject *value;
 
                     // if this is a pure integer value within the default
@@ -1852,11 +1857,14 @@ RexxObject *LanguageParser::addText(RexxToken *token)
                     break;
                 }
 
+                // TODO:  We're assigning variable slots to all of the keyword
+                // instructions while parsing message terms...need to have a way to roll that back.
+
                 // simple variable.
                 case SYMBOL_VARIABLE:
                 {
                     // do the variable resolution
-                    return (RexxObject *)addVariable(name);
+                    return (RexxObject *)addSimpleVariable(name);
                     break;
                 }
 
@@ -1879,10 +1887,21 @@ RexxObject *LanguageParser::addText(RexxToken *token)
                 // are treated as environment symbols.
                 case SYMBOL_DOTSYMBOL:
                 {
+                    // we might already have processed this before.
+                    // if not, we need to examine this and find the
+                    // most appropriate form.
+                    RexxObject *retriever = literals->fastAt(name);
+                    if (retriever != OREF_NULL)
+                    {
+                        return retriever;
+                    }
+
                     // create the shorter name and add to the common set
                     RexxString *shortName = commonString(name->extract(1, name->getLength() - 1));
                     // create a retriever for this using the shorter name.
                     retriever = (RexxObject *)new RexxDotVariable(shortName);
+                    // we can add this to the literals list, since they do not
+                    // depend upon context.
                     literals->put(retriever, name);
                     return retriever;
                     break;
@@ -1894,6 +1913,15 @@ RexxObject *LanguageParser::addText(RexxToken *token)
         // just a straight literal string
         case TOKEN_LITERAL:
         {
+            // we might already have processed this before.
+            // if not, we need to examine this and find the
+            // most appropriate form.
+            RexxObject *retriever = literals->fastAt(name);
+            if (retriever != OREF_NULL)
+            {
+                return retriever;
+            }
+
             // strings are their own expression retrievers, so just add
             // this to the table and return it directly
             literals->put(name,  name);

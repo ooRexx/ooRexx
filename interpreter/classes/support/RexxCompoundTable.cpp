@@ -46,11 +46,18 @@
 #include "RexxCompoundElement.hpp"
 #include "RexxCompoundTail.hpp"
 
-void RexxCompoundTable::init(
-    RexxStem *parentStem)              /* the parent object we're embedded in */
+
+/**
+ * Initialize a compound table when a Stem object is
+ * created.
+ *
+ * @param parentStem Our stem parent.
+ */
+void RexxCompoundTable::init(RexxStem *parentStem)
 {
-    setParent(parentStem);             /* make the parent hook up */
-    setRoot(OREF_NULL);                /* no root member */
+    // record the parent object and clear out the root element.
+    setParent(parentStem);
+    setRoot(OREF_NULL);
 }
 
 /**
@@ -324,6 +331,10 @@ void RexxCompoundTable::setParent(RexxStem *parentStem)
 /* RexxCompoundTable and RexxStem.                                            */
 /******************************************************************************/
 {
+    // We are embedded in the parent stem as the tails item. By setting this
+    // value in the parentStem object, we're really setting it in ourselves.  Since
+    // OrefSet needs to test the header field of the object getting set into, we're
+    // forced to do it this way.
     setOtherField(parentStem, tails.parent, parentStem);
 }
 

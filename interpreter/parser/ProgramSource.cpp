@@ -149,7 +149,7 @@ RexxString *ProgramSource::extract(SourceLocation &location )
     }
 
     // make sure this is within range of the lines we have.
-    if (location.getLineNumber() == 0 || location.getLineNumber() > lineCount)
+    if (location.getLineNumber() <= getFirstLine() || location.getLineNumber() > lineCount)
     {
         return OREF_NULLSTRING;
     }
@@ -162,7 +162,7 @@ RexxString *ProgramSource::extract(SourceLocation &location )
     {
         // multiple line case...sigh.  We need to build this up
         // start with the first line, which might be a partial
-        ProtectedObject line = getStringLine(location.getLineNumber(), location.getOffset(), location.getEndOffset());
+        ProtectedObject line = getStringLine(location.getLineNumber(), location.getOffset());
         // now concatentate all of the full lines onto this until we get to the final line, which is likely
         // a partial line again.
         for (size_t counter = location.getLineNumber() + 1; counter < location.getEndLine(); counter++)

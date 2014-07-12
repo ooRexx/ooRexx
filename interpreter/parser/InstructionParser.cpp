@@ -593,8 +593,8 @@ RexxInstruction *LanguageParser::assignmentOpNew(RexxToken *target, RexxToken *o
     // we require an expression for the additional part, which is required
     RexxObject *expr = requiredExpression(TERM_EOC, Error_Invalid_expression_assign);
 
-    // get a retriever for this
-    RexxVariableBase *variable = addVariable(target->value());
+    // get a retriever for this, of the appropriate type
+    RexxVariableBase *variable = addVariable(target);
 
     // now add a binary operator to this expression tree
     expr = (RexxObject *)new RexxBinaryOperator(operation->subtype(), (RexxObject *)variable, expr);
@@ -3080,7 +3080,7 @@ RexxInstruction *LanguageParser::signalOnNew(InstructionSubKeyword type)
 
     // create a new instruction object
     RexxInstruction *newObject = new_instruction(SIGNAL_ON, SignalOn);
-    new ((void *)newObject) RexxInstructionSignalOn(labelName, conditionName);
+    new ((void *)newObject) RexxInstructionSignalOn(conditionName, labelName);
 
     // if this is the ON form, we have some end parsing resolution to perform.
     if (type == SUBKEY_ON)
