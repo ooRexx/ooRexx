@@ -529,6 +529,7 @@ class RexxToken : public RexxInternalObject
     inline bool       isSymbolOrLiteral()  { return classId == TOKEN_LITERAL || this->classId == TOKEN_SYMBOL; };
     inline bool       isConstant()  { return (classId == TOKEN_SYMBOL && subclass != SYMBOL_VARIABLE && subclass != SYMBOL_STEM && subclass != SYMBOL_COMPOUND); };
     inline bool       isNumericSymbol()  { return (subclass == SYMBOL_CONSTANT); }
+    inline bool       isIntegerConstant() { return numeric == INTEGER_CONSTANT; }
     inline bool       isSymbol() { return classId == TOKEN_SYMBOL; };
     inline bool       isOperator() { return classId == TOKEN_OPERATOR; }
     inline bool       isBlank() { return classId == TOKEN_BLANK; }

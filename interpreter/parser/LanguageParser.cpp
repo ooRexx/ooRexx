@@ -1821,7 +1821,7 @@ RexxObject *LanguageParser::addText(RexxToken *token)
 
                     // if this is a pure integer value within the default
                     // digits, create an integer object
-                    if (token->isNumericSymbol())
+                    if (token->isIntegerConstant())
                     {
                         value = name->requestInteger(Numerics::DEFAULT_DIGITS);
                         // this should not happen, given we've already validated

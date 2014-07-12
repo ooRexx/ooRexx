@@ -1187,7 +1187,7 @@ RexxInstruction *LanguageParser::parseForeverLoop(RexxString *label)
         // DO FOREVER with an UNTIL conditional...identical to a DO UNTIL
         case SUBKEY_UNTIL:
         {
-            return newLoopWhile(label, conditional);
+            return newLoopUntil(label, conditional);
         }
     }
     return OREF_NULL;    // should never get here.

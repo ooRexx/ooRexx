@@ -188,6 +188,12 @@ void ControlledLoop::setup( RexxActivation *context,
         doblock->setBy(IntegerOne);
         doblock->setCompare(OPERATOR_GREATERTHAN);
     }
+    // also disable the FOR count if that was not specified.
+    if (forCount == OREF_NULL)
+    {
+        // set this to a negative value to indicate not to use this.
+        doblock->setFor(SIZE_MAX);
+    }
 
     // set the control variable in the doblock (it will use it on subsequent passes).
     doblock->setControl(control);

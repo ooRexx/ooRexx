@@ -289,9 +289,10 @@ CharacterClass LanguageParser::locateToken(unsigned int &character, bool blanksS
         unsigned char inch = getChar();
         // a recognized whitespace character?
         if (inch==' ' || inch=='\t')
-        {    /* blank or tab?                     */
+        {
             // if blanks are significant, then return the indicator.
-            if (blanksSignificant) {
+            if (blanksSignificant)
+            {
                 return SIGNIFICANT_BLANK;
             }
             else
@@ -789,9 +790,9 @@ RexxToken *LanguageParser::sourceNextToken(RexxToken *previous )
             // in order for this blank to be truely significant, the next token
             // needs to be the start of a symbol, the start of a quoted literal,
             // or a paren or square bracket.
-            if (inch == NORMAL_CHAR &&  (isSymbolCharacter(inch) ||
+            if ((tokenClass == NORMAL_CHAR && isSymbolCharacter(inch)) ||
                  inch == '\"' || inch == '\'' ||
-                 inch == '('  || inch == '['))
+                 inch == '('  || inch == '[')
             {
                 // this is a blank operator token
                 return clause->newToken(TOKEN_BLANK, OPERATOR_BLANK, OREF_BLANK, location);
