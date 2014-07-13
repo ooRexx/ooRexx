@@ -88,7 +88,7 @@ class MethodClass : public BaseExecutable
     RexxObject  *isPrivateRexx();
     RexxObject  *isProtectedRexx();
 
-    inline bool  isGuarded()      {return methodFlags[UNGUARDED_FLAG]; };
+    inline bool  isGuarded()      {return !methodFlags[UNGUARDED_FLAG]; };
     inline bool  isPrivate()      {return methodFlags[PRIVATE_FLAG];}
     inline bool  isProtected()    {return methodFlags[PROTECTED_FLAG];}
     inline bool  isSpecial()      {return methodFlags.any(PROTECTED_FLAG, PRIVATE_FLAG);}
@@ -97,6 +97,8 @@ class MethodClass : public BaseExecutable
     inline void  setGuarded()      {methodFlags.reset(UNGUARDED_FLAG);};
     inline void  setPrivate()      {methodFlags.set(PRIVATE_FLAG); };
     inline void  setProtected()    {methodFlags.set(PROTECTED_FLAG); };
+    inline void  setUnprotected()  {methodFlags.reset(PROTECTED_FLAG); };
+    inline void  setPublic()       {methodFlags.reset(PRIVATE_FLAG); };
            void  setAttributes(bool _private, bool _protected, bool _guarded);
     inline RexxClass *getScope() {return scope;}
 

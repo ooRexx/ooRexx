@@ -1407,6 +1407,8 @@ void LanguageParser::resolveDependencies()
     if (!libraries->isEmpty())
     {
         package->libraries = libraries;
+        // this requires an install step
+        package->setNeedsInstallation();
     }
     if (!routines->isEmpty())
     {
