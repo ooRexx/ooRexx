@@ -309,7 +309,6 @@ LanguageParser::LanguageParser(RexxString *n, ProgramSource *s)
  *
  * @param liveMark The current live mark.
  */
-// TODO:  double check that this list and the one on SourceFile are correct.
 void LanguageParser::live(size_t liveMark)
 {
     // because of the way garbage collection works, it is a good
@@ -866,10 +865,6 @@ RexxCode *LanguageParser::translateBlock()
     guardVariables = OREF_NULL;
     // and we need a new set of exposed variables for each code section
     exposedVariables = new_directory();
-
-    // TODO:  Once things are generally working, make sure this value
-    // gets calculated fairly accurately.  I'm not sure it is correct when
-    // different expression types are involved.
 
     // clear the stack accounting fields
     maxStack = 0;
@@ -1858,9 +1853,6 @@ RexxObject *LanguageParser::addText(RexxToken *token)
                     return value;
                     break;
                 }
-
-                // TODO:  We're assigning variable slots to all of the keyword
-                // instructions while parsing message terms...need to have a way to roll that back.
 
                 // simple variable.
                 case SYMBOL_VARIABLE:
@@ -2955,12 +2947,6 @@ RexxObject *LanguageParser::parseMessageSubterm(int terminators)
         // the next token
         token = nextToken();
 
-        // TODO:  Old code had some bugs in with respect to keyword terminators
-        // because it was not passing along the terminator types.  For example,
-        // do i = -UNTIL .true would not recognize the UNTIL as a terminator because
-        // the prefix code is not passing along the terminator checks. Similarly,
-        // DO i = foo~WHILE will fail for the same reason.
-
         // we can have a long cascade of message sends.  For expression syntax,
         // this all one term (just like nested function calls would be).
         while (token->isMessageOperator())
@@ -3609,7 +3595,6 @@ bool LanguageParser::parseTraceSetting(RexxString *value, size_t &newSetting, si
 }
 
 
-// TODO:  move some of the stuff from Routine to here.
 /**
  * Process handling of instore execution arguments.
  *

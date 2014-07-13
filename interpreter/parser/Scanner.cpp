@@ -932,7 +932,6 @@ RexxToken *LanguageParser::sourceNextToken(RexxToken *previous )
                         // two slashes is a special operator
                         if (nextSpecial('/', location))
                         {
-                            // TODO:  Not sure this is documented as one of these either
                             // remainder operatior
                             CHECK_ASSIGNMENT(REMAINDER);
                         }
@@ -951,7 +950,6 @@ RexxToken *LanguageParser::sourceNextToken(RexxToken *previous )
                         if (nextSpecial('*', location))
                         {
                             // also an assignment operator, but not sure why anybody would use it!
-                            // TODO:  Check docs on this one also.
                             CHECK_ASSIGNMENT(POWER);
                         }
                         // standard multiply
@@ -983,7 +981,6 @@ RexxToken *LanguageParser::sourceNextToken(RexxToken *previous )
                     case '|':
                     {
                         // doubled is concatenate, which can also be used as an assignment shortcut.
-                        // TODO:  the ||= operation is not documented!!!!
                         if (nextSpecial('|', location))
                         {
                             CHECK_ASSIGNMENT(CONCATENATE);

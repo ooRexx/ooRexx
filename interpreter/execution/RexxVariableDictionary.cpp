@@ -62,40 +62,61 @@
 #include "LanguageParser.hpp"
 
 
-// TODO:  Add deepcopy default virtual method?
+/**
+ * Copy a variable dictionary.
+ *
+ * @return The new dictionary.
+ */
 RexxObject  *RexxVariableDictionary::copy()
-/******************************************************************************/
-/* Function:  Copy a variable dictionary                                      */
-/******************************************************************************/
 {
-    /* create a new object               */
-    RexxVariableDictionary *copyObj = new_variableDictionary(contents->mainSlotsSize());
-                                         /* copy the behaviour pointer        */
-    OrefSet(copyObj, copyObj->behaviour, this->behaviour);
-    ProtectedObject p(copyObj);
-    /* copy the hash table               */
-    OrefSet(copyObj, copyObj->contents, (RexxHashTable *)this->contents->copy());
-    /* make sure we copy the scope too */
-    OrefSet(copyObj, copyObj->scope, this->scope);
-    copyObj->copyValues();               /* copy all of the variables         */
-    return(RexxObject *)copyObj;        /* return the new vdict              */
+    // clone the top level object
+    Protected<RexxVariableDictionary> copyObj = (RexxVariableDictionary *)clone();
+    // now copy the contents
+    copyObj->contents =  (RexxHashTable *)contents->copy();
+    // copy all of the values in the table and return
+    copyObj->copyValues();
+    return (RexxObject *)copyObj;
 }
 
-void RexxVariableDictionary::copyValues()
-/******************************************************************************/
-/* Function:  Copy all of the values in a vdict                               */
-/******************************************************************************/
+/**
+ * Perform a deep copy of a variable dictionary.  This copies the object,
+ * all variable objects stored in the object, AND any variable dictionaries chained
+ * off of this one in an object's variable set.
+ *
+ * @return A complete chain copy of the object.
+ */
+RexxVariableDictionary *RexxVariableDictionary::deepCopy()
 {
-    /* loop through the hash table       */
-    for (size_t i = this->contents->first();
-        i < this->contents->totalSlotsSize();
-        i = this->contents->next(i))
+    // make a copy of ourselves first.  This also copies the values.
+    Protected<RexxVariableDictionary> newDictionary = (RexxVariableDictionary *)copy();
+    // and propagate this if we're chained
+    if (next != OREF_NULL)
     {
-        RexxObject *value = this->contents->value(i);     /* get the next value                */
-        RexxObject *copyObj = value->copy();              /* copy the value                    */
-        this->contents->replace(copyObj, i);  /* replace with the copied value     */
+        newDictionary->setNextDictionary(next->deepCopy());
+    }
+
+    return newDictionary;
+}
+
+
+/**
+ * Copy all of the values in a variable dictionary.  This
+ * copies the variable objects, but does not copy the
+ * values stored in the variables.
+ */
+void RexxVariableDictionary::copyValues()
+{
+    // loop thorugh the entire hash table copying and replacing each variable
+    for (size_t i = contents->first();
+        i < contents->totalSlotsSize();
+        i = contents->next(i))
+    {
+        RexxObject *value = contents->value(i);
+        RexxObject *copyObj = value->copy();
+        contents->replace(copyObj, i);
     }
 }
+
 
 RexxObject  *RexxVariableDictionary::realValue(
      RexxString *name)                 /* name of variable to retrieve      */

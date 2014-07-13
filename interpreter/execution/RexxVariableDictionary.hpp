@@ -65,6 +65,7 @@ class RexxVariableDictionary : public RexxInternalObject
 
     virtual RexxObject  *copy();
     virtual void         copyValues();
+            RexxVariableDictionary *deepCopy();
 
     RexxObject  *realValue(RexxString *name);
     void         add(RexxVariable *, RexxString *);

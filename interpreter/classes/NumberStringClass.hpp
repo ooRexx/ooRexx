@@ -46,23 +46,23 @@
 
 #include "Numerics.hpp"
 #include "NumberStringMath.hpp"
+#include "FlagSet.hpp"
 
 
-#define NumFormScientific  0x00000001       /* Define Numeric form setting at Object*/
-                                            /*  creation time.                      */
-#define NumberRounded      0x00000010       /* Indicate the number was rounded once */
                                             /*  at NumDigits, avoid double rounding */
 
-const size_t OVERFLOWSPACE = 2;             // space for numeric buffer overflow
-
-
-// TODO: figure out what this does...should probably just be a method
-#define NumberStringRound(s,d) s->roundUp(s,d)
 
 class RexxNumberStringBase : public RexxObject
 {
  friend class RexxNumberString;
 public:
+    typedef enum
+    {
+        NumberFormScientific,
+        NumberRounded,
+    } NumberFlag;
+
+
     inline RexxNumberStringBase() { ; }
 
     void   mathRound(char *);
@@ -71,14 +71,13 @@ public:
 
   protected:
 
-    RexxString *stringObject;          /* converted string value          */
-    short NumFlags;                    /* Flags for use by the Numberstring met*/
-    short sign;                        /* sign for this number (-1 is neg)     */
-    size_t  NumDigits;                 /* Maintain a copy of digits setting of */
-                                       /* From when object was created         */
-    wholenumber_t exp;
-    size_t  length;
- };
+    RexxString *stringObject;          // converted string value
+    FlagSet<NumberFlag, 16> numFlags;  // Flags for use by the Numberstring methods
+    short sign;                        // sign for this number (-1 is neg)
+    size_t  numDigits;                 // Maintain a copy of digits setting of from when object was created
+    wholenumber_t exp;                 // the exponent value
+    size_t  length;                    // the length of the number data
+};
 
 
 class RexxNumberString : public RexxNumberStringBase
@@ -157,11 +156,11 @@ class RexxNumberString : public RexxNumberStringBase
     RexxClass  *classObject();
     inline RexxNumberString *checkNumber(size_t digits)
     {
-       if (this->length > digits)            // is the length larger than digits()?
+       if (length > digits)            // is the length larger than digits()?
        {
                                              // need to allocate a new number, but
                                              // we chop to digits + 1
-           return this->prepareOperatorNumber(digits + 1, digits, NOROUND);
+           return prepareOperatorNumber(digits + 1, digits, NOROUND);
        }
        return this;                          // no adjustment required
     }
@@ -170,23 +169,31 @@ class RexxNumberString : public RexxNumberStringBase
     RexxNumberString *prepareOperatorNumber(size_t, size_t, bool);
     void              adjustPrecision(char *, size_t);
     void              adjustPrecision();
-    inline void       checkPrecision() { if (length > NumDigits) adjustPrecision(); }
+    inline void       checkPrecision() { if (length > numDigits) adjustPrecision(); }
     inline void       setNumericSettings(size_t digits, bool form)
     {
-        this->NumDigits = digits;
+        numDigits = digits;
         if (form == Numerics::FORM_SCIENTIFIC)
-            this->NumFlags |= NumFormScientific;
+        {
+            numFlags.set(NumberFormScientific);
+        }
         else
-            this->NumFlags &= ~NumFormScientific;
+        {
+            numFlags.reset(NumberFormScientific);
+        }
     }
 
-    inline void       setupNumber()
+    inline bool isScientific() { return numFlags[NumberFormScientific]; }
+    inline bool isEngineering() { return !numFlags[NumberFormScientific]; }
+
+    inline void setupNumber()
     {
         /* inherit the current numeric settings */
         setNumericSettings(number_digits(), number_form());
         /* check for any required rounding */
         checkPrecision();
     }
+
     bool  createUnsignedValue(const char *thisnum, stringsize_t intlength, int carry, wholenumber_t exponent, size_t maxValue, size_t &result);
     bool  createUnsignedInt64Value(const char *thisnum, stringsize_t intlength, int carry, wholenumber_t exponent, uint64_t maxValue, uint64_t &result);
     bool  checkIntegerDigits(stringsize_t numDigits, stringsize_t &numberLength, wholenumber_t &numberExponent, bool &carry);
@@ -224,10 +231,10 @@ class RexxNumberString : public RexxNumberStringBase
     void        formatUnsignedNumber(size_t);
     int         format(const char *, size_t);
     inline void        setZero() {
-                   this->number[0] = '\0';               /* Make value a zero.*/
-                   this->length = 1;                     /* Length is 1       */
-                   this->sign = 0;                       /* Make sign Zero.   */
-                   this->exp = 0;                        /* exponent is zero. */
+                   number[0] = '\0';               /* Make value a zero.*/
+                   length = 1;                     /* Length is 1       */
+                   sign = 0;                       /* Make sign Zero.   */
+                   exp = 0;                        /* exponent is zero. */
                 }
 
     static PCPPM operatorMethods[];
@@ -258,11 +265,11 @@ class RexxNumberString : public RexxNumberStringBase
     static char *multiplyBaseSixteen(char *, char *);
     static char *multiplyBaseTen(char *, char *);
 
+    static const size_t OVERFLOWSPACE = 2;   // space for numeric buffer overflow
+
     char  number[4];
 };
 
-// TODO:  Why is this a function rather than a method?
-void AdjustPrecision(RexxNumberString *, char *, int);
 
 inline RexxNumberString *new_numberstring(const char *s, stringsize_t l)
 {

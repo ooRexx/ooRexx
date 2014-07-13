@@ -147,9 +147,6 @@ RexxObject *WeakReference::unflatten(RexxEnvelope *envelope)
 /* Function:  unflatten an object                                             */
 /******************************************************************************/
 {
-    // TODO:  Is the weak reference table held in OldSpace?  Image initialization
-    // should probably create a new space version.
-
     // We add ourselves unconditionally as a weak object, even if the referenent
     // is null, since we could have a new one assigned.
     memoryObject.addWeakReference(this);

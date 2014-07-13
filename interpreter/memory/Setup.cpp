@@ -1417,9 +1417,6 @@ void MemoryObject::createImage()
     kernel_public(CHAR_INTEGER          ,TheIntegerClass     , TheKernel);
     kernel_public(CHAR_NUMBERSTRING     ,TheNumberStringClass, TheKernel);
 
-    // TODO:  Make the kernel directory part of the memory object, but not in the
-    // environment.
-
     kernel_public(CHAR_NULLARRAY        ,TheNullArray           ,TheKernel);
     kernel_public(CHAR_NULLPOINTER      ,TheNullPointer         ,TheKernel);
     kernel_public(CHAR_COMMON_RETRIEVERS,TheCommonRetrievers    ,TheKernel);

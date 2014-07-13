@@ -343,6 +343,7 @@ class ActivationSettings
    inline bool              inMethod()  {return activation_context == METHODCALL; }
    inline void              indent() {settings.traceindent++; };
    inline void              unindent() {if (settings.traceindent > 0) settings.traceindent--; };
+   inline void              unindentTwice() {if (settings.traceindent > 1) settings.traceindent -= 2; };
    inline void              setIndent(size_t v) {settings.traceindent=(v); };
    inline size_t            getIndent() {return settings.traceindent;};
    inline bool              tracingIntermediates() {return settings.intermediate_trace;};

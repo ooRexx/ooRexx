@@ -48,6 +48,7 @@
 #include "IntegerClass.hpp"
 #include "StringUtil.hpp"
 #include "Utilities.hpp"
+#include "FlagSet.hpp"
 
 /**
  * Return type from string isSymbol() method.
@@ -64,65 +65,19 @@ typedef enum
 } StringSymbolType;
 
 
-#define  STRING_HASLOWER       0x01    /* string does contain lowercase     */
-#define  STRING_NOLOWER        0x02    /* string does not contain lowercase */
-#define  STRING_NONNUMERIC     0x04    /* string is non-numeric             */
-
-#define  INITIAL_NAME_SIZE     10      /* first name table allocation       */
-#define  EXTENDED_NAME_SIZE    10      /* amount to extend table by         */
-
-// Strip method options
-const char STRIP_BOTH =              'B';
-const char STRIP_LEADING =           'L';
-const char STRIP_TRAILING =          'T';
-
-// Datatype method options
-const char DATATYPE_ALPHANUMERIC =   'A';
-const char DATATYPE_BINARY =         'B';
-const char DATATYPE_LOWERCASE =      'L';
-const char DATATYPE_MIXEDCASE =      'M';
-const char DATATYPE_NUMBER =         'N';
-const char DATATYPE_SYMBOL =         'S';
-const char DATATYPE_VARIABLE =       'V';
-const char DATATYPE_UPPERCASE =      'U';
-const char DATATYPE_WHOLE_NUMBER =   'W';
-const char DATATYPE_HEX =            'X';
-const char DATATYPE_9DIGITS =        '9';
-const char DATATYPE_LOGICAL =        'O';  // lOgical.
-
-// Verify method options
-const char VERIFY_MATCH =            'M';
-const char VERIFY_NOMATCH =          'N';
-
-// string white space characters
-const char ch_SPACE = ' ';
-const char ch_TAB   = '\t';
-
-// Define char data used in in number string parsing
-const char ch_MINUS  = '-';
-const char ch_PLUS   = '+';
-const char ch_PERIOD = '.';
-const char ch_ZERO   = '0';
-const char ch_ONE    = '1';
-const char ch_FIVE   = '5';
-const char ch_NINE   = '9';
-
-// TODO: make these character constants
-// character validation sets for the datatype function
-#define  HEX_CHAR_STR   "0123456789ABCDEFabcdef"
-#define  ALPHANUM       "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-#define  BINARI         "01"
-#define  LOWER_ALPHA    "abcdefghijklmnopqrstuvwxyz"
-#define  MIXED_ALPHA    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-#define  UPPER_ALPHA    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
-
 class RexxString : public RexxObject
 {
  public:
-    inline void       *operator new(size_t size, void *ptr){return ptr;};
+     typedef enum
+     {
+        STRING_HASLOWER,
+        STRING_NOLOWER,
+        STRING_NONNUMERIC,
+     } StringFlag;
+
+    inline void       *operator new(size_t size, void *ptr){return ptr;}
     inline RexxString() {;} ;
-    inline RexxString(RESTORETYPE restoreType) { ; };
+    inline RexxString(RESTORETYPE restoreType) { ; }
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
@@ -328,23 +283,23 @@ class RexxString : public RexxObject
 
 // Inline_functions
 
-    inline size_t  getLength() const { return length; };
-    inline void  setLength(size_t l) { length = l; };
+    inline size_t  getLength() const { return length; }
+    inline void  setLength(size_t l) { length = l; }
     inline void  finish(stringsize_t l) { length = l; }
-    inline const char *getStringData() const { return stringData; };
-    inline char *getWritableData() { return &stringData[0]; };
-    inline void  put(size_t s, const void *b, size_t l) { memcpy(getWritableData() + s, b, l); };
-    inline void  put(size_t s, RexxString *o) { put(s, o->getStringData(), o->getLength()); };
-    inline void  set(size_t s,int c, size_t l) { memset((stringData+s), c, l); };
-    inline char  getChar(size_t p) const { return *(stringData+p); };
-    inline char  putChar(size_t p,char c) { return *(stringData+p) = c; };
-    inline bool  upperOnly() const {return (attributes&STRING_NOLOWER) != 0;};
-    inline bool  hasLower() const {return (attributes&STRING_HASLOWER) != 0;};
-    inline void  setUpperOnly() { attributes |= STRING_NOLOWER;};
-    inline void  setHasLower() { attributes |= STRING_HASLOWER;};
-    inline bool  nonNumeric() const {return (attributes&STRING_NONNUMERIC) != 0;};
-    inline void  setNonNumeric() { attributes |= STRING_NONNUMERIC;};
-    inline bool  strCompare(const char * s) const {return memCompare((s), strlen(s));};
+    inline const char *getStringData() const { return stringData; }
+    inline char *getWritableData() { return &stringData[0]; }
+    inline void  put(size_t s, const void *b, size_t l) { memcpy(getWritableData() + s, b, l); }
+    inline void  put(size_t s, RexxString *o) { put(s, o->getStringData(), o->getLength()); }
+    inline void  set(size_t s,int c, size_t l) { memset((stringData+s), c, l); }
+    inline char  getChar(size_t p) const { return *(stringData+p); }
+    inline char  putChar(size_t p,char c) { return *(stringData+p) = c; }
+    inline bool  upperOnly() const {return attributes[STRING_NOLOWER];}
+    inline bool  hasLower() const {return attributes[STRING_HASLOWER]; }
+    inline void  setUpperOnly() { attributes.set(STRING_NOLOWER);}
+    inline void  setHasLower() { attributes.set(STRING_HASLOWER);}
+    inline bool  nonNumeric() const {return attributes[STRING_NONNUMERIC];}
+    inline void  setNonNumeric() { attributes.set(STRING_NONNUMERIC);}
+    inline bool  strCompare(const char * s) const {return memCompare((s), strlen(s));}
     inline bool  strCaselessCompare(const char * s) const { return (size_t)length == strlen(s) && Utilities::strCaselessCompare(s, stringData) == 0;}
     inline bool  memCompare(const char * s, size_t l) const { return l == length && memcmp(s, stringData, l) == 0; }
     inline bool  memCompare(RexxString *other) const { return other->length == length && memcmp(other->stringData, stringData, length) == 0; }
@@ -494,12 +449,56 @@ class RexxString : public RexxObject
     static void createInstance();
     static RexxClass *classInstance;
 
+    // Strip method options
+    static const char STRIP_BOTH =              'B';
+    static const char STRIP_LEADING =           'L';
+    static const char STRIP_TRAILING =          'T';
+
+    // Datatype method options
+    static const char DATATYPE_ALPHANUMERIC =   'A';
+    static const char DATATYPE_BINARY =         'B';
+    static const char DATATYPE_LOWERCASE =      'L';
+    static const char DATATYPE_MIXEDCASE =      'M';
+    static const char DATATYPE_NUMBER =         'N';
+    static const char DATATYPE_SYMBOL =         'S';
+    static const char DATATYPE_VARIABLE =       'V';
+    static const char DATATYPE_UPPERCASE =      'U';
+    static const char DATATYPE_WHOLE_NUMBER =   'W';
+    static const char DATATYPE_HEX =            'X';
+    static const char DATATYPE_9DIGITS =        '9';
+    static const char DATATYPE_LOGICAL =        'O';  // lOgical.
+
+    // Verify method options
+    static const char VERIFY_MATCH =            'M';
+    static const char VERIFY_NOMATCH =          'N';
+
+    // string white space characters
+    static const char ch_SPACE = ' ';
+    static const char ch_TAB   = '\t';
+
+    // Define char data used in in number string parsing
+    static const char ch_MINUS  = '-';
+    static const char ch_PLUS   = '+';
+    static const char ch_PERIOD = '.';
+    static const char ch_ZERO   = '0';
+    static const char ch_ONE    = '1';
+    static const char ch_FIVE   = '5';
+    static const char ch_NINE   = '9';
+
+    // character validation sets for the datatype function
+    static const char *HEX_CHAR_STR;
+    static const char *ALPHANUM;
+    static const char *BINARY;
+    static const char *LOWER_ALPHA;
+    static const char *MIXED_ALPHA;
+    static const char *UPPER_ALPHA;
+
   protected:
 
     HashCode hashValue;                      // stored has value
     size_t length;                           // string length
     RexxNumberString *numberStringValue;     // lookaside information
-    size_t attributes;                       // string attributes
+    FlagSet<StringFlag, 32> attributes;      // string attributes
     char stringData[4];                      // Start of the string data part
 };
 

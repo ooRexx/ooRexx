@@ -63,9 +63,6 @@ void RexxMutableBuffer::createInstance()
 }
 
 
-// TODO:  make this a constant.
-#define DEFAULT_BUFFER_LENGTH 256
-
 /**
  * Allocate a MutableBuffer object from Rexx code.
  *

@@ -81,6 +81,8 @@ void RexxMessage::createInstance()
 }
 
 
+// TODO:  There are no tests for the message class.
+
 /**
  * Create a new message object.
  *
@@ -259,8 +261,12 @@ RexxObject *RexxMessage::result()
         }
     }
 
-    // TODO:  Check on what happens if no result is returned....
-    // completed, no errors, so return whatever result we got back
+    // since this is requested via a method that will give an error if used
+    // in an expression, return .nil if there is no return value.
+    if (resultObject == OREF_NULL)
+    {
+        return TheNilObject;
+    }
     return resultObject;
 }
 
@@ -328,7 +334,6 @@ RexxObject *RexxMessage::send(RexxObject *_receiver)
         receiver->messageSend(message, (RexxObject **)args->data(), args->size(), result);
     }
     resultObject = result;
-    // we have a returned result...TODO:  should we make this .nil if nothing returned?
     setResultReturned();
     // notify any waiters and return the result object
     sendNotification();

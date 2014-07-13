@@ -130,6 +130,7 @@ class RexxMutableBuffer : public RexxObject
 
            RexxMutableBuffer *newRexx(RexxObject**, size_t);
 
+    static const size_t DEFAULT_BUFFER_LENGTH = 256;
 
     static void createInstance();
     static RexxClass *classInstance;

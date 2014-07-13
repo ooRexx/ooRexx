@@ -1947,8 +1947,6 @@ RexxInstruction *LanguageParser::messageNew(RexxExpressionMessage *msg)
  */
 RexxInstruction *LanguageParser::doubleMessageNew(RexxExpressionMessage *msg)
 {
-    // TODO:  What happens if I try something like a~~foo = x?
-
     ProtectedObject p(msg);
     // just allocate and initialize the object.
     RexxInstruction *newObject = new_variable_instruction(MESSAGE_DOUBLE, Message, sizeof(RexxInstructionMessage) + (msg->argumentCount - 1) * sizeof(RexxObject *));
@@ -3343,13 +3341,6 @@ RexxInstruction *LanguageParser::traceNew()
  */
 RexxInstruction *LanguageParser::useNew()
 {
-    // TODO:  I'm not sure why this restriction is here...need to check this out.
-
-    if (isInterpret())
-    {
-        syntaxError(Error_Translation_use_interpret);
-    }
-
     bool strictChecking = false;  // no strict checking enabled yet
 
     // The STRICT keyword turns this into a different instruction with different

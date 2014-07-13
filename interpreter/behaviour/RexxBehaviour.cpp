@@ -63,7 +63,7 @@ RexxBehaviour::RexxBehaviour(
     behaviour = getPrimitiveBehaviour(T_Behaviour);
     header.setObjectSize(sizeof(RexxBehaviour));
     setClassType(newTypenum);
-    behaviourFlags = 0;
+    behaviourFlags.reset();
     scopes = OREF_NULL;
     methodDictionary = OREF_NULL;
     operatorMethods = operator_methods;
@@ -75,12 +75,12 @@ RexxBehaviour::RexxBehaviour(
     if (newTypenum > T_Last_Exported_Class && newTypenum < T_First_Transient_Class)
     {
 
-        behaviourFlags |=  INTERNAL_CLASS;
+        behaviourFlags.set(INTERNAL_CLASS);
     }
     else if (newTypenum >= T_First_Transient_Class)
     {
 
-        behaviourFlags |=  TRANSIENT_CLASS;
+        behaviourFlags.set(TRANSIENT_CLASS);
     }
 
 
@@ -130,7 +130,7 @@ void RexxBehaviour::flatten(RexxEnvelope *envelope)
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
 {
-  setUpFlatten(RexxBehaviour)
+   setUpFlatten(RexxBehaviour)
 
    flattenRef(methodDictionary);
    flattenRef(instanceMethodDictionary);
@@ -144,7 +144,7 @@ void RexxBehaviour::flatten(RexxEnvelope *envelope)
                                        /*  resolved on the puff.        */
        newThis->setNotResolved();
    }
-  cleanUpFlatten
+   cleanUpFlatten
 }
 
 
@@ -212,18 +212,18 @@ RexxObject *RexxBehaviour::copy()
     if (methodDictionary != OREF_NULL)
     {
         /* make a copy of this too           */
-        OrefSet(newBehaviour, newBehaviour->methodDictionary, (RexxTable *)methodDictionary->copy());
+        newBehaviour->methodDictionary = (RexxTable *)methodDictionary->copy();
     }
     if (scopes != OREF_NULL)       /* scope information?                */
     {
         /* make a copy of it too             */
-        OrefSet(newBehaviour, newBehaviour->scopes, (RexxIdentityTable *)scopes->copy());
+        newBehaviour->scopes = (RexxIdentityTable *)scopes->copy();
     }
     /* do we have added methods?         */
     if (instanceMethodDictionary != OREF_NULL)
     {
         /* copy those also                   */
-        OrefSet(newBehaviour, newBehaviour->instanceMethodDictionary, (RexxTable *)instanceMethodDictionary->copy());
+        newBehaviour->instanceMethodDictionary = (RexxTable *)instanceMethodDictionary->copy();
     }
     /* use default operator methods set  */
     newBehaviour->operatorMethods = RexxObject::operatorMethods;

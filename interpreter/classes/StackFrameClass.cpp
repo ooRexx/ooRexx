@@ -47,7 +47,6 @@
 RexxClass *StackFrameClass::classInstance = OREF_NULL;   // singleton class instance
 
 // the constants for the different frame types
-// TODO:  The compile entry is not documented.
 const char *StackFrameClass::FRAME_COMPILE = "COMPILE";
 const char *StackFrameClass::FRAME_ROUTINE = "ROUTINE";
 const char *StackFrameClass::FRAME_METHOD = "METHOD";

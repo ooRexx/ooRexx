@@ -69,7 +69,7 @@ friend class RexxActivity;
     }
 
     virtual RexxString *messageName() = 0;
-    virtual MethodClass *method() = 0;
+    virtual BaseExecutable *executable() = 0;
     virtual StackFrameClass *createStackFrame() = 0;
     virtual RexxSource *getSource() = 0;
 
@@ -86,7 +86,7 @@ class RexxActivationFrame : public ActivationFrame
     inline RexxActivationFrame(RexxActivity *a, RexxActivation *context) : ActivationFrame(a), activation(context) { }
 
     virtual RexxString *messageName();
-    virtual MethodClass *method();
+    virtual BaseExecutable *executable();
     virtual StackFrameClass *createStackFrame();
     virtual RexxSource *getSource();
 
@@ -102,7 +102,7 @@ class NativeActivationFrame : public ActivationFrame
     inline NativeActivationFrame(RexxActivity *a, RexxNativeActivation *context) : ActivationFrame(a), activation(context) { }
 
     virtual RexxString *messageName();
-    virtual MethodClass *method();
+    virtual BaseExecutable *executable();
     virtual StackFrameClass *createStackFrame();
     virtual RexxSource *getSource();
 
@@ -119,7 +119,7 @@ class InternalActivationFrame : public ActivationFrame
         : ActivationFrame(a), name(n), target(t), frameMethod(m), argPtr(args), count(c) { }
 
     virtual RexxString *messageName();
-    virtual MethodClass *method();
+    virtual BaseExecutable *executable();
     virtual StackFrameClass *createStackFrame();
     virtual RexxSource *getSource();
 
@@ -144,8 +144,7 @@ class CompileActivationFrame : public ActivationFrame
     inline CompileActivationFrame(RexxActivity *a, LanguageParser *p) : ActivationFrame(a), parser(p) { }
 
     virtual RexxString *messageName();
-    // TODO:  Why is there a method in this interface rather than an excutable?
-    virtual MethodClass *method();
+    virtual BaseExecutable *executable();
     virtual StackFrameClass *createStackFrame();
     virtual RexxSource *getSource();
 

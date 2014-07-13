@@ -56,6 +56,15 @@
 RexxClass *RexxString::classInstance = OREF_NULL;
 
 
+// character validation sets for the datatype function
+const char *RexxString::HEX_CHAR_STR = "0123456789ABCDEFabcdef";
+const char *RexxString::ALPHANUM     = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+const char *RexxString::BINARY       = "01";
+const char *RexxString::LOWER_ALPHA  = "abcdefghijklmnopqrstuvwxyz";
+const char *RexxString::MIXED_ALPHA  = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const char *RexxString::UPPER_ALPHA  = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+
 /**
  * Create initial class object at bootstrap time.
  */

@@ -461,11 +461,11 @@ RexxString *RexxString::x2dC2d(RexxInteger *_length,
 
     Scan = StringPtr;                    /* point to the string               */
                                          /* allocate a temp buffer            */
-    Buffer = (RexxBuffer *)new_buffer(CurrentDigits + OVERFLOWSPACE + 1);
+    Buffer = (RexxBuffer *)new_buffer(CurrentDigits + RexxNumberString::OVERFLOWSPACE + 1);
     /* set accumulator pointer           */
-    Accumulator = Buffer->getData() + CurrentDigits + OVERFLOWSPACE;
+    Accumulator = Buffer->getData() + CurrentDigits + RexxNumberString::OVERFLOWSPACE;
     /* clear the buffer                  */
-    memset(Buffer->getData(), '\0', CurrentDigits + OVERFLOWSPACE + 1);
+    memset(Buffer->getData(), '\0', CurrentDigits + RexxNumberString::OVERFLOWSPACE + 1);
     HighDigit = Accumulator - 1;         /* set initial high point            */
 
     while (StringLength--)

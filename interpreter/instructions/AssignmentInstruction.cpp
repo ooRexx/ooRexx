@@ -126,8 +126,6 @@ void RexxInstructionAssignment::execute(RexxActivation *context, RexxExpressionS
     // fast path for non-traced execution
     else
     {
-        // TODO:  Consider having an method here that is optimized for the non-trace
-        // situation....
         variable->assign(context, expression->evaluate(context, stack));
     }
 }

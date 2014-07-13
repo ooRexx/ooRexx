@@ -144,9 +144,7 @@ void RexxInstructionEndIf::execute(RexxActivation *context, RexxExpressionStack 
     else
     {
         // We indent twice at the THEN, so we need to remove both of these.
-        // TODO:  Add an unindent twice method.  We do this a lot.
-        context->unindent();
-        context->unindent();
+        context->unindentTwice();
 
         // There are three situation here 1)  We're following a THEN clause
         // with no ELSE, 2) we're following an ELSE, or 3) we're following

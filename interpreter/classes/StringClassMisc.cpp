@@ -49,8 +49,6 @@
 #include "LanguageParser.hpp"
 #include "MethodArguments.hpp"
 
-
-// TODO:  The bulk of this code should be moved to the LanguageParser.
 StringSymbolType RexxString::isSymbol()
 /*********************************************************************/
 /*                                                                   */

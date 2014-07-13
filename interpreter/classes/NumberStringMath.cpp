@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  okmath.c      */
+/* REXX Kernel                                                                */
 /*                                                                            */
 /* Arithemtic function for the NumberString Class                             */
 /*                                                                            */
@@ -76,7 +76,7 @@ RexxNumberString *RexxNumberString::maxMin(RexxObject **args, size_t argCount, u
                                           /*  one we want !                    */
     // NB:  The min and max methods are defined as rounding the values to the
     // current digits settings, which bypasses the LOSTDIGITS condition
-    maxminobj = this->prepareNumber(saveDigits, ROUND);
+    maxminobj = prepareNumber(saveDigits, ROUND);
     ProtectedObject p(maxminobj);
     for (arg=0; arg < argCount; arg++)
     {  /* Loop through all args             */
@@ -157,8 +157,8 @@ void RexxNumberStringBase::mathRound(
     size_t resultDigits;
     wholenumber_t numVal;
 
-    resultDigits = this->length;          /* get number of digits in number    */
-    NumPtr += this->length;               /* point one past last digit, this   */
+    resultDigits = length;          /* get number of digits in number    */
+    NumPtr += length;               /* point one past last digit, this   */
                                           /* gives us most significant digit of*/
                                           /* digits being truncated.           */
 
@@ -185,21 +185,21 @@ void RexxNumberStringBase::mathRound(
                                  /* have a carry (Did carry propogate */
                                  /* all the way through?              */
             *++NumPtr = 1;                      /* yes, set high digit to 1          */
-            this->exp += 1;                     /*      increment exponent by one.   */
+            exp += 1;                     /*      increment exponent by one.   */
         }
     }
 
     /* At this point number is all setup,*/
     /*  Check for overflow               */
-    numVal = this->exp + this->length - 1;
+    numVal = exp + length - 1;
     if (numVal > Numerics::MAX_EXPONENT)
     {
         reportException(Error_Overflow_expoverflow, numVal, Numerics::DEFAULT_DIGITS);
     }
     /*  Check for underflow.             */
-    else if (this->exp < Numerics::MIN_EXPONENT)
+    else if (exp < Numerics::MIN_EXPONENT)
     {
-        reportException(Error_Overflow_expunderflow, this->exp, Numerics::DEFAULT_DIGITS);
+        reportException(Error_Overflow_expunderflow, exp, Numerics::DEFAULT_DIGITS);
     }
     return;
 }
@@ -211,32 +211,32 @@ void RexxNumberString::adjustPrecision()
 {
     wholenumber_t resultVal;
     /* is length of number too big?      */
-    if (this->length > NumDigits)
+    if (length > numDigits)
     {
-        size_t extra = this->length - NumDigits;
-        this->length = NumDigits;         /* Yes, make length equal precision  */
-        this->exp += extra;               /* adjust exponent by amount over    */
-        this->mathRound(number);          /* Round the adjusted number         */
+        size_t extra = length - numDigits;
+        length = numDigits;         /* Yes, make length equal precision  */
+        exp += extra;               /* adjust exponent by amount over    */
+        mathRound(number);          /* Round the adjusted number         */
     }
 
     /* Was number reduced to zero?       */
-    if (*number == 0 && this->length == 1)
+    if (*number == 0 && length == 1)
     {
-        this->setZero();                /* Yes, make it so...                */
+        setZero();                /* Yes, make it so...                */
     }
     else
     {
 
         /* At this point number is all setup,*/
         /*  Check for overflow               */
-        resultVal = this->exp + this->length - 1;
+        resultVal = exp + length - 1;
         if (resultVal > Numerics::MAX_EXPONENT)
         {
             reportException(Error_Overflow_expoverflow, resultVal, Numerics::DEFAULT_DIGITS);
         }
-        else if (this->exp < Numerics::MIN_EXPONENT)
+        else if (exp < Numerics::MIN_EXPONENT)
         {      /*  Check for underflow.             */
-            reportException(Error_Overflow_expunderflow, this->exp, Numerics::DEFAULT_DIGITS);
+            reportException(Error_Overflow_expunderflow, exp, Numerics::DEFAULT_DIGITS);
         }
     }
     return;                               /* just return to caller.            */
@@ -278,15 +278,15 @@ char *RexxNumberStringBase::adjustNumber(
 /*********************************************************************/
 {
     /* Remove all leading zeros          */
-    NumPtr = this->stripLeadingZeros(NumPtr);
+    NumPtr = stripLeadingZeros(NumPtr);
 
     /* is length of number too big?      */
-    if (this->length > NumberDigits)
+    if (length > NumberDigits)
     {
-        this->length = NumberDigits;         /* Yes, make length equal precision  */
+        length = NumberDigits;         /* Yes, make length equal precision  */
                                              /* adjust exponent by amount over    */
-        this->exp += this->length - NumberDigits;
-        this->mathRound(NumPtr);             /* Round the adjusted number         */
+        exp += length - NumberDigits;
+        mathRound(NumPtr);             /* Round the adjusted number         */
     }
 
     if (resultLen == 0)                   /* See if there is anything to copy? */
@@ -297,7 +297,7 @@ char *RexxNumberStringBase::adjustNumber(
     {
         /* Copy the data into the result area*/
         /*  and pointer to start of data     */
-        return(char *)memcpy(((result + resultLen - 1) - this->length), NumPtr, this->length);
+        return(char *)memcpy(((result + resultLen - 1) - length), NumPtr, length);
     }
 }
 
@@ -309,10 +309,10 @@ char *RexxNumberStringBase::stripLeadingZeros(
 {
     /* while leading digit is zero and   */
     /* still data in object              */
-    while (!*AccumPtr && this->length>1)
+    while (!*AccumPtr && length>1)
     {
         AccumPtr++;                         /* Point to next digit.              */
-        this->length--;                     /* length od number is one less.     */
+        length--;                     /* length od number is one less.     */
     }
     return AccumPtr;                      /* return pointer to 1st non-zero    */
 }
@@ -333,48 +333,48 @@ void RexxNumberString::adjustPrecision(char *resultPtr, size_t NumberDigits)
                    /*  already in result object?        */
         CopyData = false;                    /* Yes, don't copy data.             */
                                              /* have data pointer point to data in*/
-        resultPtr = this->number;            /* The result object.                */
+        resultPtr = number;            /* The result object.                */
     }
     else
     {
         CopyData = true;                     /* resultPtr not null, need to copy  */
     }
     /* is length of number too big?      */
-    if (this->length > NumberDigits)
+    if (length > NumberDigits)
     {
-        size_t extra = this->length - NumberDigits;
-        this->length = NumberDigits;        /* Yes, make length equal precision  */
-        this->exp += extra;                 /* adjust exponent by amount over    */
-        this->mathRound(resultPtr);         /* Round the adjusted number         */
+        size_t extra = length - NumberDigits;
+        length = NumberDigits;        /* Yes, make length equal precision  */
+        exp += extra;                 /* adjust exponent by amount over    */
+        mathRound(resultPtr);         /* Round the adjusted number         */
     }
 
     if (CopyData)
     {                       /* only remove leading zeros if      */
                             /* data note already in the object.  */
                             /* remove any leading zeros          */
-        resultPtr = this->stripLeadingZeros(resultPtr);
+        resultPtr = stripLeadingZeros(resultPtr);
         /* Move result data into object      */
-        memcpy(this->number, resultPtr, (size_t)this->length);
+        memcpy(number, resultPtr, (size_t)length);
     }
 
     /* make sure this number has the correct numeric settings */
     setNumericSettings(NumberDigits, number_form());
 
-    if (!*resultPtr && this->length == 1) /* Was number reduced to zero?       */
-        this->setZero();                     /* Yes, make it so...                */
+    if (!*resultPtr && length == 1) /* Was number reduced to zero?       */
+        setZero();                     /* Yes, make it so...                */
     else
     {
 
         /* At this point number is all setup,*/
         /*  Check for overflow               */
-        resultVal = this->exp + this->length - 1;
+        resultVal = exp + length - 1;
         if (resultVal > Numerics::MAX_EXPONENT)
         {
             reportException(Error_Overflow_expoverflow, resultVal, Numerics::DEFAULT_DIGITS);
         }
-        else if (this->exp < Numerics::MIN_EXPONENT)
+        else if (exp < Numerics::MIN_EXPONENT)
         {      /*  Check for underflow.             */
-            reportException(Error_Overflow_expunderflow, this->exp, Numerics::DEFAULT_DIGITS);
+            reportException(Error_Overflow_expunderflow, exp, Numerics::DEFAULT_DIGITS);
         }
     }
     return;                               /* just return to caller.            */
@@ -388,7 +388,7 @@ RexxNumberString *RexxNumberString::prepareNumber(size_t NumberDigits, bool roun
 /*********************************************************************/
 {
     /* clone ourselves                   */
-    RexxNumberString *newObj = this->clone();
+    RexxNumberString *newObj = clone();
     if (newObj->length > NumberDigits)
     {
         // NOTE:  This version does NOT raise a LOSTDIGITS condition, since it
@@ -432,7 +432,7 @@ RexxNumberString *RexxNumberString::prepareOperatorNumber(size_t targetLength, s
 /*********************************************************************/
 {
     /* clone ourselves                   */
-    RexxNumberString *newObj = this->clone();
+    RexxNumberString *newObj = clone();
     if (newObj->length > numberDigits)
     {  /* is the length larger than digits()*/
        /* raise a numeric condition, may    */

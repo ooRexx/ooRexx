@@ -1077,8 +1077,10 @@ void MemoryObject::liveStackFull()
     // create a new stack that is double in size
     LiveStack *newLiveStack = liveStack->reallocate(2);
 
-    /* has this already been expanded?   */
-    // TODO:  Why is this calling free?
+    // if we've already been expanded, we need to release the
+    // storage for the existing livestack.  When we expand, we create a
+    // new object using malloc() storage rather than the object heap, so we
+    // use free() to release it.
     if (liveStack != originalLiveStack)
     {
         free((void *)liveStack);
@@ -1086,6 +1088,7 @@ void MemoryObject::liveStackFull()
     // we can set the new stack
     liveStack = newLiveStack;
 }
+
 
 void MemoryObject::mark(RexxObject *markObject)
 /******************************************************************************/

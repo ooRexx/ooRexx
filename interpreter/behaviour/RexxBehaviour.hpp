@@ -44,7 +44,8 @@
 #ifndef Included_RexxBehaviour
 #define Included_RexxBehaviour
 
-#define INTERNALCLASS (((uintptr_t)1) << ((sizeof(uintptr_t) * 8) - 1))
+#include "FlagSet.hpp"
+
 
 class RexxBehaviour : public RexxInternalObject
 {
@@ -53,6 +54,9 @@ class RexxBehaviour : public RexxInternalObject
     inline void *operator new(size_t size, void *ptr) {return ptr;};
     inline void  operator delete(void *, size_t) { }
     inline void  operator delete(void *, void *) { ; }
+
+
+    static const uintptr_t INTERNALCLASS = (((uintptr_t)1) << ((sizeof(uintptr_t) * 8) - 1));
 
     RexxBehaviour(size_t, PCPPM *);
     inline RexxBehaviour() {;};
@@ -99,23 +103,23 @@ class RexxBehaviour : public RexxInternalObject
 
     inline void  setClassType(size_t n) { classType = (uint16_t)n; }
     inline size_t getClassType()  { return (size_t)classType; }
-    inline bool  isPrimitive()    {  return (behaviourFlags & NON_PRIMITIVE_BEHAVIOUR) == 0; };
-    inline bool  isNonPrimitive() {  return (behaviourFlags & NON_PRIMITIVE_BEHAVIOUR) != 0; };
-    inline bool  isNotResolved()  {  return (behaviourFlags & BEHAVIOUR_NOT_RESOLVED) != 0; };
-    inline bool  isResolved()     {  return (behaviourFlags & BEHAVIOUR_NOT_RESOLVED) == 0; };
-    inline bool  isEnhanced()     {  return (behaviourFlags & ENHANCED_OBJECT) != 0; };
-    inline bool  isInternalClass()  {  return (behaviourFlags & INTERNAL_CLASS) != 0; };
-    inline bool  isTransientClass()  {  return (behaviourFlags & TRANSIENT_CLASS) != 0; };
-    inline void  setResolved()    {  behaviourFlags &= ~BEHAVIOUR_NOT_RESOLVED; };
-    inline void  setNotResolved() {  behaviourFlags |= BEHAVIOUR_NOT_RESOLVED; };
-    inline void  setEnhanced()    {  behaviourFlags |= ENHANCED_OBJECT; };
-    inline void  setNonPrimitive() {  behaviourFlags |= NON_PRIMITIVE_BEHAVIOUR; };
-    inline void  setInternalClass() { behaviourFlags |= INTERNAL_CLASS; };
-    inline void  setTransientClass() { behaviourFlags |= TRANSIENT_CLASS; };
+    inline bool  isPrimitive()    {  return !behaviourFlags[NON_PRIMITIVE_BEHAVIOUR]; };
+    inline bool  isNonPrimitive() {  return behaviourFlags[NON_PRIMITIVE_BEHAVIOUR]; };
+    inline bool  isNotResolved()  {  return behaviourFlags[BEHAVIOUR_NOT_RESOLVED]; };
+    inline bool  isResolved()     {  return !behaviourFlags[BEHAVIOUR_NOT_RESOLVED]; };
+    inline bool  isEnhanced()     {  return behaviourFlags[ENHANCED_OBJECT]; };
+    inline bool  isInternalClass()  {  return behaviourFlags[INTERNAL_CLASS]; };
+    inline bool  isTransientClass()  {  return behaviourFlags[TRANSIENT_CLASS]; };
+    inline void  setResolved()    {  behaviourFlags.reset(BEHAVIOUR_NOT_RESOLVED); };
+    inline void  setNotResolved() {  behaviourFlags.set(BEHAVIOUR_NOT_RESOLVED); };
+    inline void  setEnhanced()    {  behaviourFlags.set(ENHANCED_OBJECT); };
+    inline void  setNonPrimitive() {  behaviourFlags.set(NON_PRIMITIVE_BEHAVIOUR); };
+    inline void  setInternalClass() { behaviourFlags.set(INTERNAL_CLASS); };
+    inline void  setTransientClass() { behaviourFlags.set(TRANSIENT_CLASS); };
 
     inline RexxBehaviour *getSavedPrimitiveBehaviour()
     {
-        uintptr_t behaviourID = (uintptr_t)getClassType();
+        uintptr_t behaviourID = getClassType();
         // if this is an internal class, normalize this so we can
         // restore this to the correct value if we add additional internal classes.
         if (isInternalClass())
@@ -147,19 +151,19 @@ class RexxBehaviour : public RexxInternalObject
 
  protected:
 
-    enum
+
+    typedef enum
     {
-        NON_PRIMITIVE_BEHAVIOUR = 0x0001,
-        ENHANCED_OBJECT         = 0x0002,
-        INTERNAL_CLASS          = 0x0004,
-        TRANSIENT_CLASS         = 0x0008,
-        BEHAVIOUR_NOT_RESOLVED  = 0x0010
-    };
+        NON_PRIMITIVE_BEHAVIOUR,
+        ENHANCED_OBJECT,
+        INTERNAL_CLASS,
+        TRANSIENT_CLASS,
+        BEHAVIOUR_NOT_RESOLVED,
+    } BehaviourFlag;
 
 
-    // TODO:  Don't try packing these any more...counter productive.
-    uint16_t classType;                   // primitive class identifier
-    uint16_t behaviourFlags;              // various behaviour flag types
+    size_t   classType;                   // primitive class identifier
+    FlagSet<BehaviourFlag, 32> behaviourFlags; // various behaviour flag types
     RexxIdentityTable  *scopes;           // scopes table
     RexxTable  *methodDictionary;         // method dictionary
     PCPPM      *operatorMethods;          // operator look-a-side table

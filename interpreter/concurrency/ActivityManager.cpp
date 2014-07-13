@@ -202,7 +202,6 @@ void ActivityManager::addWaitingActivity(RexxActivity *waitingAct, bool release 
  */
 void ActivityManager::createInterpreter()
 {
-    //TODO:  more stuff should be moved into here.
     interpreterInstances++;
 }
 

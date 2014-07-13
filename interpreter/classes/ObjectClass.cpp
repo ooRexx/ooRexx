@@ -568,23 +568,10 @@ RexxObject * RexxObject::copy()
  */
 void RexxObject::copyObjectVariables(RexxObject *newObj)
 {
-    RexxVariableDictionary *dictionary = objectVariables;
-    /* clear out the existing object variable pointer */
-    newObj->objectVariables = OREF_NULL;
-
-    // TODO:   This really should be done internally in RexxVariableDictionary.
-    // Double TODO:  There's something about this that doesn't really make sense to me.
-    while (dictionary != OREF_NULL)
+    // copy the complete variable set if we have something
+    if (objectVariables != OREF_NULL)
     {
-        // copy the dictionary
-        RexxVariableDictionary *newDictionary = (RexxVariableDictionary *)dictionary->copy();
-        // add this to the variable set
-        newObj->addObjectVariables(newDictionary);
-        // now that the dictionary is anchored in the new object,
-        // copy the variable objects inside. //
-        newDictionary->copyValues();
-        // and repeat for each one //
-        dictionary = dictionary->getNextDictionary();
+        objectVariables = objectVariables->deepCopy();
     }
 }
 
@@ -2163,16 +2150,18 @@ void RexxObject::setObjectVariable(
     ovd->set(name, value);               /* do the variable assignment      */
 }
 
-void RexxObject::addObjectVariables(
-    RexxVariableDictionary *dictionary)/* new variable set                  */
-/******************************************************************************/
-/* Function:  Add a new variable dictionary to an object with a given scope   */
-/******************************************************************************/
+
+/**
+ * Add a new variable dictionary to an object with a given scope
+ *
+ * @param dictionary The new dictionary.
+ */
+void RexxObject::addObjectVariables(RexxVariableDictionary *dictionary)
 {
-    /* chain any existing dictionaries off of the new one */
+    // chain any existing dictionaries off of the new one
     dictionary->setNextDictionary(objectVariables);
     /* make this the new head of the chain */
-    OrefSet(this, objectVariables, dictionary);
+    setField(objectVariables, dictionary);
 }
 
 RexxObject * RexxObject::superScope(

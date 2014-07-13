@@ -456,7 +456,6 @@ protected:
     SourceLocation clauseLocation;       // current clause location for errors
     size_t lineNumber;                   // current line position
     size_t lineOffset;                   // current offset with in the line
-    size_t interpretAdjust;              // INTERPRET adjustment TODO:  might not need this in the parser.
 
     RexxCode        *mainSection;        // the main section of code before any directives
     PushThroughStack *holdStack;         // stack for holding temporaries
