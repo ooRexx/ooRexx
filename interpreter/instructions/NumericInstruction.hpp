@@ -49,6 +49,7 @@
 
 typedef enum
 {
+    numeric_scientific,
     numeric_engineering,
     numeric_digits,
     numeric_fuzz,

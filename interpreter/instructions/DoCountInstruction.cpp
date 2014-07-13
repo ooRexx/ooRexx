@@ -131,7 +131,7 @@ void RexxInstructionDoCount::flatten(RexxEnvelope *envelope)
 void RexxInstructionDoCount::setup(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock)
 {
     // perform the DO OVER initialization
-    forLoop.setup(context, stack, doblock);
+    forLoop.setup(context, stack, doblock, false);
 }
 
 

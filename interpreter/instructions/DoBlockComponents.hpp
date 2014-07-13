@@ -77,7 +77,7 @@ class ForLoop
          memory_mark_general(forCount);
      }
 
-     void setup(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock);
+     void setup(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock, bool forKeyword);
 
     RexxObject       *forCount;          // number of iterations
 };

@@ -2779,13 +2779,61 @@ RexxObject *LanguageParser::parseMessageTerm()
     // save the current position so we can reset cleanly
     size_t mark = markPosition();
 
+    // The straight forward approach is to parse off the first
+    // sub term and then see if this is followed by a messaging
+    // operator.  Unfortunately, there's a problem hidden within
+    // that approach.  Parsing off the first term results in an
+    // symbols that are located getting handled as variable references.
+    // This means that for all keyword instructions, we're allocating a variable
+    // slot and creating a variable retriever for all keyword instruction names
+    // used within a code block.  And this happens with every code block (e.g.,
+    // ::method or ::routine section) in the program.  So, we will attempt to
+    // eliminate this particular situation up front just be examining the
+    // tokens.
+
+    // get the first token and make sure we really have something here.
+    // The caller knows how to deal with a missing term.
+    RexxToken *token = nextToken();
+    if (token->isTerminator(TERM_EOC))
+    {
+        // push the terminator back
+        previousToken();
+        return OREF_NULL;
+    }
+
+    // this problem only occurs if the first token is a simple variable token.
+    if (token->isSimpleVariable())
+    {
+        RexxToken *second = nextToken();
+        // we can go ahead and reset...we need to do this regardless of the
+        // path we take.
+        resetPosition(mark);
+
+        // if the first token is a symbol that is followed by a
+        // message operator token (~, ~~, or [), this is a message term.
+        // if the next token is a "(", this is "potentially" a function call
+        // that is a message term.  But in that case, it will not be handled
+        // as a variable.  For any other case, we reject this as a message term
+        // and return NULL.
+        if (!second->isMessageOperator() & !second->isLeftParen())
+        {
+            return OREF_NULL;
+        }
+        // fall through and do the generalized parsing process from here.
+    }
+    // if not a simple symbol, back up to the first token again
+    else
+    {
+        resetPosition(mark);
+    }
+
     // get the first message term
     RexxObject *start = parseSubTerm(TERM_EOC);
     // save this on the term stack
     pushTerm(start);
 
     RexxObject *term = OREF_NULL;         // an allocated message term
-    RexxToken *token = nextToken();
+    token = nextToken();
 
     // the leading message term can be a cascade of messages, so
     // keep processing things until we hit some other type of operation.
@@ -2960,6 +3008,7 @@ RexxObject *LanguageParser::parseSubTerm(int terminators)
         previousToken();
         return OREF_NULL;
     }
+
 
     // ok, process based on the token category
     switch (token->type())

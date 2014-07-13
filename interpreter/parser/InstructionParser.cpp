@@ -192,12 +192,9 @@ RexxInstruction *LanguageParser::nextInstruction()
         }
     }
 
-    // some other type of instruction
-    // we need to skip over the first
-    // term of the instruction to
-    // determine the type of clause,
-    // including recognition of keyword
-    // instructions
+    // some other type of instruction we need to skip over the first
+    // term of the instruction to determine the type of clause,
+    // including recognition of keyword instructions
 
     // reset to the beginning and parse off the first term (which could be a
     // message send)
@@ -2074,6 +2071,8 @@ RexxInstruction *LanguageParser::numericNew()
         // quite a flavors
         case SUBKEY_FORM:
         {
+            // setting the numeric form
+            _flags[numeric_form] = true;
             // get the next token, skipping any white space
             token = nextReal();
             // Just NUMERIC FORM resets to the default
@@ -2091,6 +2090,7 @@ RexxInstruction *LanguageParser::numericNew()
                 {
                     // NUMERIC FORM SCIENTIFIC
                     case SUBKEY_SCIENTIFIC:
+                        _flags[numeric_scientific] = true;
                         // check there's nothing extra
                         requiredEndOfClause(Error_Invalid_data_form);
                         break;
@@ -2098,7 +2098,7 @@ RexxInstruction *LanguageParser::numericNew()
                     // NUMERIC FORM ENGINEERING
                     case SUBKEY_ENGINEERING:
                         // set the engineering flag
-                        _flags[numeric_engineering];
+                        _flags[numeric_engineering] = true;
                         // check for extra stuff
                         requiredEndOfClause(Error_Invalid_data_form);
                         break;

@@ -62,8 +62,8 @@ RexxInstructionAddress::RexxInstructionAddress(RexxObject *_expression,
 {
 
     dynamicAddress = _expression;
-    environment = environment;
-    command = command;
+    environment = _environment;
+    command = _command;
 }
 
 

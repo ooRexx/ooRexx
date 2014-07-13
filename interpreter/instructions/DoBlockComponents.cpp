@@ -55,7 +55,7 @@
  * @param doblock The context doblock useds to store loop state data.
  */
 void ForLoop::setup(RexxActivation *context,
-        RexxExpressionStack *stack, RexxDoBlock *doblock)
+        RexxExpressionStack *stack, RexxDoBlock *doblock, bool forKeyword)
 {
     // we might not have anything here, but we need to set
     // a marker in the doblock so we know not to use this
@@ -84,13 +84,13 @@ void ForLoop::setup(RexxActivation *context,
         // first get the string version and force numeric rounding rules.
         RexxString *strResult = REQUEST_STRING(result);
         /* force rounding                    */
-        RexxObject *rounded = result->callOperatorMethod(OPERATOR_PLUS, OREF_NULL);
+        RexxObject *rounded = strResult->callOperatorMethod(OPERATOR_PLUS, OREF_NULL);
         context->traceResult(rounded);
         // now convert the rounded value to an integer, if possible
         if (!rounded->requestNumber(count, number_digits()))
         {
             // use original object in the error report.
-            reportException(Error_Invalid_whole_number_for, result);
+            reportException(forKeyword ? Error_Invalid_whole_number_for : Error_Invalid_whole_number_repeat, result);
         }
     }
 
@@ -98,7 +98,7 @@ void ForLoop::setup(RexxActivation *context,
     if (count < 0)
     {
         /* report an exception               */
-        reportException(Error_Invalid_whole_number_for, result);
+        reportException(forKeyword ? Error_Invalid_whole_number_for : Error_Invalid_whole_number_repeat, result);
     }
 
     // set this value in the doblock
@@ -177,7 +177,7 @@ void ControlledLoop::setup( RexxActivation *context,
             // FOR expression...does a binary count
             // our superclass can handle that one.
             case EXP_FOR:
-                ForLoop::setup(context, stack, doblock);
+                ForLoop::setup(context, stack, doblock, true);
                 break;
         }
     }
