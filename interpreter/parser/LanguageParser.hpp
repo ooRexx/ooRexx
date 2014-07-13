@@ -338,6 +338,7 @@ class LanguageParser: public RexxInternalObject
     inline RexxToken  *popOperator() { return (RexxToken *)(operators->pullRexx()); };
     inline RexxToken  *topOperator() { return (RexxToken *)(operators->peek()); };
     void        pushTerm(RexxObject *);
+    void        pushSubTerm(RexxObject *);
     RexxObject *requiredTerm(RexxToken *token, int errorCode = Error_Invalid_expression_general);
     RexxObject *popTerm();
     RexxObject *popNTerms(size_t);

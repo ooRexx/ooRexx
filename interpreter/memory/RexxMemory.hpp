@@ -223,7 +223,7 @@ class MemoryObject : public RexxInternalObject
     inline void checkLiveStack() { if (!liveStack->checkRoom()) liveStackFull(); }
     inline void pushLiveStack(RexxObject *obj) { checkLiveStack(); liveStack->push(obj); }
     inline RexxObject * popLiveStack() { return (RexxObject *)liveStack->pop(); }
-    inline void bumpMarkWord() { markWord ^= MarkMask; }
+    inline void bumpMarkWord() { markWord ^= ObjectHeader::MarkMask; }
 
     // set the live mark in an object referenced by a void pointer
     static inline void setObjectLive(void *o, size_t mark)

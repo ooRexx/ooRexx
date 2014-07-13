@@ -131,6 +131,12 @@ void RexxSource::live(size_t liveMark)
  */
 void RexxSource::liveGeneral(MarkReason reason)
 {
+    // detach the source if we're preparing the image for a save.
+    if (reason == PREPARINGIMAGE)
+    {
+        detachSource();
+    }
+
     memory_mark_general(source);
     memory_mark_general(parentSource);
     memory_mark_general(programName);

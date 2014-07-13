@@ -97,6 +97,14 @@ void RexxInteger::liveGeneral(MarkReason reason)
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
+    // if this integer is part of the image, force the
+    // string rep and the numberstring version to be created.  This
+    // avoids issues with old-to-new references with common objects.
+    if (reason == PREPARINGIMAGE)
+    {
+        stringValue()->numberString();
+    }
+
     memory_mark_general(objectVariables);
     memory_mark_general(stringrep);
 }
@@ -1206,7 +1214,10 @@ void RexxIntegerClass::initCache()
          // us a lot of time when string indices are used for compound
          // variables and also eliminate a bunch of old-new table
          // references.
-         integercache[i - INTEGERCACHELOW]->stringValue();
+
+         // because the numberstring value is required for operations, we
+         // also generate that as well to avoid the oldspace/newspace operations.
+         integercache[i - INTEGERCACHELOW]->stringValue()->numberString();
      }
 }
 

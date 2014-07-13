@@ -142,6 +142,12 @@ void RexxString::liveGeneral(MarkReason reason)
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
+    // if this string is part of the image, generate the numberstring value now
+    // if possible to avoid oldspace/newspace cross references at trun time.
+    if (reason == PREPARINGIMAGE)
+    {
+        numberString();
+    }
     memory_mark_general(numberStringValue);
     memory_mark_general(objectVariables);
 }

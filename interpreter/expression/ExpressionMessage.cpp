@@ -239,6 +239,82 @@ RexxObject *RexxExpressionMessage::evaluate(RexxActivation *context, RexxExpress
 
 
 /**
+ * Perform an assignment operation for a message term
+ * used in USE ARG or PARSE situation.
+ *
+ * @param context The current activation context.
+ * @param value   The new value.
+ */
+void RexxExpressionMessage::assign(RexxActivation *context, RexxObject *value)
+{
+    // the stack is not passed to assignment operations but fortunately, we can
+    // get that from the context.
+    RexxExpressionStack *stack = context->getStack();
+
+    // evaluate the target (protected on the stack)
+    RexxObject *_target = target->evaluate(context, stack);
+    RexxObject *_super = OREF_NULL;
+
+    // message override?
+    if (super != OREF_NULL)
+    {
+        // in this context, the value needs to be SELF
+        if (_target != context->getReceiver())
+        {
+            reportException(Error_Execution_super);
+        }
+        // evaluate the superclass override
+        _super = super->evaluate(context, stack);
+        // we need to remove this from the stack for the send operation to work.
+        stack->toss();
+    }
+
+    // push the assignment value on to the stack as the firt argument
+    stack->push(value);
+    // now push the rest of the arguments.  This might be something like a[1,2,3,4] as
+    // an assignment term.  The assignment value is the first argument, followed by
+    // any other arguments that are part of the encoded message term.
+    size_t argcount = argumentCount;
+
+    for (size_t i = 0; i < argcount; i++)
+    {
+        // non-omitted argument?
+        if (arguments[i] != OREF_NULL)
+        {
+            // evaluate and potentially trace
+            RexxObject *resultArg = arguments[i]->evaluate(context, stack);
+            context->traceResult(resultArg);
+        }
+        else
+        {
+            // non existant arg....we may still need to trace that
+            stack->push(OREF_NULL);
+            context->traceResult(OREF_NULLSTRING);
+        }
+    }
+
+    ProtectedObject result;
+
+    // now send the message the appropriate way.  Note we
+    // have an extra arg from the assignment target.
+    if (_super == OREF_NULL)
+    {
+        // normal message send
+        stack->send(messageName, argcount + 1, result);
+    }
+    else
+    {
+        // send with an override
+        stack->send(messageName, _super, argcount + 1, result);
+    }
+
+    context->traceAssignment(messageName, (RexxObject *)result);
+    // remove all arguments (arguments + target + assignment value)
+    stack->popn(argcount + 2);
+}
+
+
+/**
  * Convert a message into an assignment message by adding "="
  * to the end of the message name.
  *

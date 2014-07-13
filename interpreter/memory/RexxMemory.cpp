@@ -198,7 +198,9 @@ void MemoryObject::markObjectsMain(RexxObject *rootObject)
     RexxObject *markObject;
 
     // set up the live marking word passed to the live() routines
-    size_t liveMark = markWord | OldSpaceBit;
+    // we include the OldSpaceBit here to allow both conditions to be tested
+    // in one shot.
+    size_t liveMark = markWord | ObjectHeader::OldSpaceBit;
 
     allocations = 0;
     pushLiveStack(OREF_NULL);            /* push a unique terminator          */
@@ -1090,7 +1092,7 @@ void MemoryObject::mark(RexxObject *markObject)
 /* Function:  Perform a memory management mark operation                      */
 /******************************************************************************/
 {
-    size_t liveMark = markWord | OldSpaceBit;
+    size_t liveMark = markWord | ObjectHeader::OldSpaceBit;
 
     markObject->setObjectLive(markWord); /* Then Mark this object as live.    */
                                          /* object have any references?       */

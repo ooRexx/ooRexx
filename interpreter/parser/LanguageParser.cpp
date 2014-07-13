@@ -2419,6 +2419,7 @@ RexxObject *LanguageParser::parseSubExpression(int terminators )
     return popTerm();
 }
 
+
 /**
  * Parse off multiple arguments for a some sort of
  * call, function, or method invocation, returning them
@@ -2487,7 +2488,9 @@ size_t LanguageParser::parseArgList(RexxToken *firstToken, int terminators )
         RexxObject *subExpr = parseSubExpression(terminators | TERM_COMMA);
         // We have two term stacks.  The main term stack is used for expression evaluation.
         // the subTerm stack is used for processing expression lists like this.
-        subTerms->push(subExpr);
+        // NOTE that we need to use pushSubTerm here so that the required expression stack
+        // calculation comes out right.
+        pushSubTerm(subExpr);
 
         // now check the total.  Real count will be the last
         // expression that requires evaluation.
@@ -3046,6 +3049,7 @@ RexxObject *LanguageParser::parseSubTerm(int terminators)
     return OREF_NULL;
 }
 
+
 /**
  * Push a term on to the expression term stack.
  *
@@ -3062,6 +3066,7 @@ void LanguageParser::pushTerm(RexxObject *term )
     maxStack = Numerics::maxVal(currentStack, maxStack);
 }
 
+
 /**
  * Pop a term off of the expression stack.
  *
@@ -3077,6 +3082,28 @@ RexxObject *LanguageParser::popTerm()
     holdObject(term);
     return term;
 }
+
+
+/**
+ * Push a term on to the expression sub term stack.  The
+ * subterms normally contribute to the total required stack
+ * size, so make sure we account for these when calculating the
+ * total required stack size.  Only use this method of pushing
+ * the term when the max stack size is affected.
+ *
+ * @param term   The term object.
+ */
+void LanguageParser::pushSubTerm(RexxObject *term )
+{
+    // push the term on to the stack.
+    subTerms->push(term);
+
+    // we keep track of how large the term stack gets during parsing.  This
+    // tells us how much stack space we need to allocate at run time.
+    currentStack++;
+    maxStack = Numerics::maxVal(currentStack, maxStack);
+}
+
 
 /**
  * Pop a term item off of the execution stack.  Will
@@ -3386,7 +3413,7 @@ RexxObject *LanguageParser::parseLogical(int terminators)
 
         // We have two term stacks.  The main term stack is used for expression evaluation.
         // the subTerm stack is used for processing expression lists like this.
-        subTerms->push(subExpr);
+        pushSubTerm(subExpr);
 
         // add this to our total count.
         total++;

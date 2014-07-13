@@ -134,6 +134,11 @@ RexxInstruction *LanguageParser::nextInstruction()
     // objects from garbage collection.  Empty this list before parsing
     // any instruction.
     subTerms->empty();
+    // empty the term stack also
+    terms->empty();
+    // also clear the stack count for each new instruction
+    currentStack = 0;
+
 
     // ok, now go through the instruction type progression.  First check is for
     // a label.
@@ -325,12 +330,12 @@ RexxInstruction *LanguageParser::nextInstruction()
 
             // PUSH instruction
             case KEYWORD_PUSH:
-                return queueNew();
+                return pushNew();
                 break;
 
             // QUEUE instruction
             case KEYWORD_QUEUE:
-                return pushNew();
+                return queueNew();
                 break;
 
             // REPLY instruction
@@ -894,7 +899,7 @@ RexxInstruction *LanguageParser::newControlledLoop(RexxString *label, RexxToken 
     control.initial = requiredExpression(TERM_CONTROL, Error_Invalid_expression_control);
 
     // protect on the term stack
-    subTerms->push(control.initial);
+    pushSubTerm(control.initial);
 
     // ok, keep looping while we don't have a clause terminator
     // because the parsing of the initial expression is terminated by either
@@ -920,7 +925,7 @@ RexxInstruction *LanguageParser::newControlledLoop(RexxString *label, RexxToken 
                 control.by = requiredExpression(TERM_CONTROL, Error_Invalid_expression_by);
 
                 // protect on the term stack
-                subTerms->push(control.by);
+                pushSubTerm(control.by);
 
                 // record the processing order
                 control.expressions[keyslot++] = EXP_BY;
@@ -938,7 +943,7 @@ RexxInstruction *LanguageParser::newControlledLoop(RexxString *label, RexxToken 
                 // get the keyword expression, which is required also
                 control.to = requiredExpression(TERM_CONTROL, Error_Invalid_expression_to);
                 // protect on the term stack
-                subTerms->push(control.to);
+                pushSubTerm(control.to);
 
                 // record the processing order
                 control.expressions[keyslot++] = EXP_TO;
@@ -1614,7 +1619,7 @@ RexxInstruction *LanguageParser::forwardNew()
                 {
                     syntaxError(Error_Invalid_expression_forward_to);
                 }
-                subTerms->push(target);
+                pushSubTerm(target);
                 break;
             }
 
@@ -1632,7 +1637,7 @@ RexxInstruction *LanguageParser::forwardNew()
                 {
                     syntaxError(Error_Invalid_expression_forward_class);
                 }
-                subTerms->push(superClass);
+                pushSubTerm(superClass);
                 break;
             }
 
@@ -1650,7 +1655,7 @@ RexxInstruction *LanguageParser::forwardNew()
                 {
                     syntaxError(Error_Invalid_expression_forward_message);
                 }
-                subTerms->push(message);
+                pushSubTerm(message);
                 break;
             }
 
@@ -2621,7 +2626,7 @@ RexxInstruction *LanguageParser::raiseNew()
                 syntaxError(Error_Invalid_expression_general, nextToken());
             }
             // add this to the sub terms queue
-            subTerms->push(rcValue);
+            pushSubTerm(rcValue);
             break;
         }
 
@@ -2695,7 +2700,7 @@ RexxInstruction *LanguageParser::raiseNew()
                     syntaxError(Error_Invalid_expression_raise_description);
                 }
                 // protect from GC.
-                subTerms->push(description);
+                pushSubTerm(description);
                 break;
             }
 
@@ -2713,7 +2718,7 @@ RexxInstruction *LanguageParser::raiseNew()
                 {
                     syntaxError(Error_Invalid_expression_raise_additional);
                 }
-                subTerms->push(additional);
+                pushSubTerm(additional);
                 break;
             }
 
@@ -2738,7 +2743,7 @@ RexxInstruction *LanguageParser::raiseNew()
                 // other items on there that will mess things up.  So,
                 // we grab this in an array.
                 arrayItems = parseArgArray(token, TERM_RIGHT);
-                subTerms->push(arrayItems);
+                pushSubTerm(arrayItems);
                 // remember this is the raise form.
                 flags[raise_array] = true;
                 break;
@@ -2761,7 +2766,7 @@ RexxInstruction *LanguageParser::raiseNew()
                 // this is actually optional
                 if (result != OREF_NULL)
                 {
-                    subTerms->push(result);
+                    pushSubTerm(result);
                 }
                 break;
             }
@@ -2779,7 +2784,7 @@ RexxInstruction *LanguageParser::raiseNew()
                 result = parseConstantExpression();
                 if (result != OREF_NULL)
                 {
-                    subTerms->push(result);
+                    pushSubTerm(result);
                 }
                 break;
             }
@@ -3534,7 +3539,7 @@ size_t LanguageParser::processVariableList(InstructionKeyword type )
             }
 
             // ok, get a retriever for the variable and push it on the stack.
-            subTerms->push(addText(token));
+            pushSubTerm(addText(token));
 
             // are we processing an expose instruction?  keep track of this variable
             // in case we use GUARD WHEN

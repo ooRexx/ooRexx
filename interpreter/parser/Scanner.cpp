@@ -515,11 +515,11 @@ RexxString *LanguageParser::packHexLiteral(size_t start, size_t length)
         unsigned char byte = 0;
 
         // get the nibble character and pack it.
-        unsigned char nibble = (unsigned char)*inPointer++;
+        unsigned char nibble = (unsigned char)*inPointer;
         // scan over white space, if we're there.
         while (nibble == ' ' || nibble == '\t')
         {
-            nibble = (unsigned char)*inPointer++;
+            nibble = (unsigned char)*(++inPointer);
         }
 
         // if we had an odd number of nibbles, the first time
@@ -529,7 +529,7 @@ RexxString *LanguageParser::packHexLiteral(size_t start, size_t length)
         // characters after the first, this will handle things fine.
         // Note also, since we do not allow leading blanks, we'll be
         // positioned correctly at the start.
-        for (size_t k = nibbleStart; k < 1; k++)
+        for (size_t k = nibbleStart; k < 2; k++)
         {
             // this should be a real character now
             nibble = (unsigned char)*inPointer++;
@@ -1753,7 +1753,7 @@ RexxToken *LanguageParser::scanLiteral()
             // of doubled quotes.
             value = raw_string(length - doubleQuotes);
             // copy over the value, accounting for the doubled quotes
-            for (size_t i = 0, j = start; j < length; i++, j++)
+            for (size_t i = 0, j = start; i < length; i++, j++)
             {
                 // get the next character and check against the delimiter
                 inch = getChar(j);

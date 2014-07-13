@@ -65,16 +65,9 @@ class BaseExecutable;
 class RexxActivity;
 
 
-enum
-{
-    LiveMask         =  0xFFFC,    // mask for the checking the mark bits
-    MarkMask         =  0x0003,    // mask use for checking the mark bits
-    OldSpaceBit      =  0x0010,    // location of the OldSpace bit
-};
+typedef size_t HashCode;               // a hash code value
 
-typedef size_t HashCode;            // a hash code value
-
-                                       /* used ofor special constructor   */
+// Special type used for building the virtual function table. //
 typedef enum {RESTOREIMAGE} RESTORETYPE;
 
 
@@ -98,6 +91,7 @@ typedef enum
  */
 class ObjectHeader
 {
+friend class MemoryObject;
 public:
     inline ObjectHeader & operator= (ObjectHeader &h)
     {
@@ -151,11 +145,13 @@ protected:
     {
         MarkBit1         =  0x0001,    // location of the first mark bit.  Note:  shared with IsNonPrimitive
         MarkBit2         =  0x0002,    // Second of the mark bits
+        LiveMask         =  0xFFFC,    // mask for the checking the mark bits
+        MarkMask         =  0x0003,    // mask use for checking the mark bits
         ProxiedObject    =  0x0004,    // This requires a proxy
         ProxyObject      =  0x0008,    // This object is a PROXY(String) Obj
         IsNonPrimitive   =  0x0010,    // use for flattened objects to indicated behaviour status
-        NoRefBit         =  0x0020     // location of No References Bit.
-
+        NoRefBit         =  0x0020,    // location of No References Bit.
+        OldSpaceBit      =  0x0040,    // location of the OldSpace bit
     };
 
     size_t    objectSize;              // allocated size of the object

@@ -136,7 +136,7 @@ class RexxString : public RexxObject
     {
         if (hashValue == 0)                // if we've never generated this, the code is zero
         {
-            stringsize_t len = this->getLength();
+            stringsize_t len = getLength();
 
             HashCode h = 0;
             // the hash code is generated from all of the string characters.
@@ -145,9 +145,9 @@ class RexxString : public RexxObject
             // This hashing algorithm is very similar to that used for Java strings.
             for (stringsize_t i = 0; i < len; i++)
             {
-                h = 31 * h + this->stringData[i];
+                h = 31 * h + stringData[i];
             }
-            this->hashValue = h;
+            hashValue = h;
         }
         return hashValue;
     }
@@ -230,7 +230,7 @@ class RexxString : public RexxObject
     RexxObject *format(RexxObject *Integers, RexxObject *Decimals, RexxObject *MathExp, RexxObject *ExpTrigger);
     RexxObject *isInteger();
     RexxObject *logicalOperation(RexxObject *, RexxObject *, unsigned int);
-    RexxString *extract(size_t offset, size_t sublength) { return newString(this->getStringData() + offset, sublength); }
+    RexxString *extract(size_t offset, size_t sublength) { return newString(getStringData() + offset, sublength); }
     RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
     RexxObject *getValue(RexxActivation *);
     RexxObject *getValue(RexxVariableDictionary *);
@@ -290,13 +290,11 @@ class RexxString : public RexxObject
     RexxInteger *countStrRexx(RexxString *);
     RexxInteger *caselessCountStrRexx(RexxString *);
     size_t       caselessCountStr(RexxString *);
-                                        /* the following methods are in    */
-                                        /* OKBBITS                         */
+
     RexxString  *bitAnd(RexxString *, RexxString *);
     RexxString  *bitOr(RexxString *, RexxString *);
     RexxString  *bitXor(RexxString *, RexxString *);
-                                        /* the following methods are in    */
-                                        /* OKBCONV                         */
+
     RexxString  *b2x();
     RexxString  *c2d(RexxInteger *);
     RexxString  *c2x();
@@ -328,33 +326,33 @@ class RexxString : public RexxObject
 
     StringSymbolType isSymbol();
 
-/* Inline_functions */
+// Inline_functions
 
-    inline size_t  getLength() { return this->length; };
-    inline void    setLength(size_t l) { this->length = l; };
-    inline void finish(stringsize_t l) { length = l; }
-    inline const char *getStringData() { return this->stringData; };
-    inline char *getWritableData() { return &this->stringData[0]; };
-    inline void put(size_t s, const void *b, size_t l) { memcpy(getWritableData() + s, b, l); };
-    inline void put(size_t s, RexxString *o) { put(s, o->getStringData(), o->getLength()); };
-    inline void set(size_t s,int c, size_t l) { memset((this->stringData+s), c, l); };
-    inline char getChar(size_t p) { return *(this->stringData+p); };
-    inline char putChar(size_t p,char c) { return *(this->stringData+p) = c; };
-    inline bool upperOnly() {return (attributes&STRING_NOLOWER) != 0;};
-    inline bool hasLower() {return (attributes&STRING_HASLOWER) != 0;};
+    inline size_t  getLength() const { return length; };
+    inline void  setLength(size_t l) { length = l; };
+    inline void  finish(stringsize_t l) { length = l; }
+    inline const char *getStringData() const { return stringData; };
+    inline char *getWritableData() { return &stringData[0]; };
+    inline void  put(size_t s, const void *b, size_t l) { memcpy(getWritableData() + s, b, l); };
+    inline void  put(size_t s, RexxString *o) { put(s, o->getStringData(), o->getLength()); };
+    inline void  set(size_t s,int c, size_t l) { memset((stringData+s), c, l); };
+    inline char  getChar(size_t p) const { return *(stringData+p); };
+    inline char  putChar(size_t p,char c) { return *(stringData+p) = c; };
+    inline bool  upperOnly() const {return (attributes&STRING_NOLOWER) != 0;};
+    inline bool  hasLower() const {return (attributes&STRING_HASLOWER) != 0;};
     inline void  setUpperOnly() { attributes |= STRING_NOLOWER;};
     inline void  setHasLower() { attributes |= STRING_HASLOWER;};
-    inline bool  nonNumeric() {return (attributes&STRING_NONNUMERIC) != 0;};
+    inline bool  nonNumeric() const {return (attributes&STRING_NONNUMERIC) != 0;};
     inline void  setNonNumeric() { attributes |= STRING_NONNUMERIC;};
-    inline bool  strCompare(const char * s) {return memCompare((s), strlen(s));};
-    inline bool  strCaselessCompare(const char * s) { return (size_t)this->length == strlen(s) && Utilities::strCaselessCompare(s, this->stringData) == 0;}
-    inline bool  memCompare(const char * s, size_t l) { return l == this->length && memcmp(s, this->stringData, l) == 0; }
-    inline bool  memCompare(RexxString *other) { return other->length == this->length && memcmp(other->stringData, this->stringData, length) == 0; }
-    inline void  memCopy(char * s) { memcpy(s, stringData, length); }
+    inline bool  strCompare(const char * s) const {return memCompare((s), strlen(s));};
+    inline bool  strCaselessCompare(const char * s) const { return (size_t)length == strlen(s) && Utilities::strCaselessCompare(s, stringData) == 0;}
+    inline bool  memCompare(const char * s, size_t l) const { return l == length && memcmp(s, stringData, l) == 0; }
+    inline bool  memCompare(RexxString *other) const { return other->length == length && memcmp(other->stringData, stringData, length) == 0; }
+    inline void  memCopy(char * s) const { memcpy(s, stringData, length); }
     inline void  toRxstring(CONSTRXSTRING &r) { r.strptr = getStringData(); r.strlength = getLength(); }
     inline void  toRxstring(RXSTRING &r) { r.strptr = getWritableData(); r.strlength = getLength(); }
            void  copyToRxstring(RXSTRING &r);
-    inline bool  endsWith(char c) { return this->length > 0 && this->stringData[this->length - 1] == c; }
+    inline bool  endsWith(char c) const { return length > 0 && stringData[length - 1] == c; }
 
     RexxNumberString *createNumberString();
 

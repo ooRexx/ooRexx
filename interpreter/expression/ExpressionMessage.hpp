@@ -64,6 +64,7 @@ class RexxExpressionMessage : public RexxVariableBase
     virtual void flatten(RexxEnvelope *);
 
     virtual RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
+    virtual void assign(RexxActivation *, RexxObject *);
 
     void makeAssignment(LanguageParser *parser);
     bool isDoubleTilde() { return doubleTilde; }
