@@ -164,7 +164,8 @@ RexxObject *RexxClass::makeProxy(RexxEnvelope *envelope)
 /**
  * Hash a class object.  Because behaviors don't always get set
  * up properly with this, we'll always use the primitive one for
- * class objects.
+ * class objects.  We want to ensure that this is not overridden
+ * on us.
  *
  * @return A "hashed hash" that can be used by the map collections.
  */

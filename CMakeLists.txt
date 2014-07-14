@@ -488,7 +488,9 @@ set (interpreter_api_sources ${build_interpreter_api_dir}/CallContextStubs.cpp
             ${build_interpreter_api_dir}/InterpreterInstanceStubs.cpp
             ${build_interpreter_api_dir}/MethodContextStubs.cpp
             ${build_interpreter_api_dir}/ThreadContextStubs.cpp)
-set (classes_support_sources ${build_classes_support_dir}/ProgramMetaData.cpp
+set (classes_support_sources ${build_classes_support_dir}/HashCollection.cpp
+            ${build_classes_support_dir}/HashContents.cpp
+            ${build_classes_support_dir}/ProgramMetaData.cpp
             ${build_classes_support_dir}/RexxCollection.cpp
             ${build_classes_support_dir}/RexxCompoundElement.cpp
             ${build_classes_support_dir}/RexxCompoundTable.cpp

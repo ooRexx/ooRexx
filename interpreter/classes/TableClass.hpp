@@ -46,11 +46,11 @@
 
 #include "RexxCollection.hpp"
 
-class RexxTable : public RexxHashTableCollection {
+class RexxTable : public RexxHashTableCollection
+{
   public:
-   inline RexxTable() {;}
    inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };
-                                       /* So it doesn't need to do anythin*/
+   inline RexxTable() {;}
    inline RexxTable(RESTORETYPE restoreType) { ; };
 
    RexxObject * itemsRexx();

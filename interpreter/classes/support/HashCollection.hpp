@@ -36,61 +36,74 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                          RexxCollection.hpp    */
+/* REXX Kernel                                                                */
 /*                                                                            */
-/* Primitive HashTableCollection Class                                        */
+/* Base class for an exported hash collection type.                           */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_RexxHashTableCollection
-#define Included_RexxHashTableCollection
+#ifndef Included_HashCollection
+#define Included_HashCollection
 
-#include "RexxHashTable.hpp"
+#include "HashContents.hpp"
 
-class RexxHashTableCollection : public RexxObject
- {
-   public:
-    void         live(size_t);
-    void         liveGeneral(MarkReason reason);
-    void         flatten(RexxEnvelope *);
-    RexxObject * unflatten(RexxEnvelope *);
-    RexxObject * makeProxy(RexxEnvelope *);
-    RexxObject * copy();
-    RexxArray  * makeArray();
+/**
+ * Base class for all collection types based on hash tables.
+ * The implements most of the base methods.
+ */
+class HashCollection : public RexxObject
+{
+ public:
+    HashCollection(size_t capacity);
 
-    virtual RexxObject *mergeItem(RexxObject *, RexxObject *);
-    virtual RexxObject *remove(RexxObject *key);
-    virtual RexxObject *get(RexxObject *key);
-    virtual RexxObject *put(RexxObject *, RexxObject *);
-    virtual RexxObject *add(RexxObject *, RexxObject *);
-    virtual RexxObject *removeItem(RexxObject *value);
-    virtual RexxObject *hasItem(RexxObject *);
-    virtual RexxObject *getIndex(RexxObject * value);
+    virtual void        live(size_t);
+    virtual void        liveGeneral(MarkReason reason);
+    virtual void        flatten(RexxEnvelope *);
 
-    RexxObject   *removeRexx(RexxObject *);
-    RexxObject   *getRexx(RexxObject *);
-    RexxObject   *putRexx(RexxObject *, RexxObject *);
-    RexxObject   *addRexx(RexxObject *, RexxObject *);
-    RexxObject   *hasIndexRexx(RexxObject *);
-    RexxObject   *hasItemRexx(RexxObject *);
-    RexxObject   *removeItemRexx(RexxObject *value);
-    RexxObject   *allAt(RexxObject *);
-    RexxObject   *indexRexx(RexxObject * value);
+    virtual RexxObject *unflatten(RexxEnvelope *);
+    virtual RexxObject *copy();
+    virtual RexxArray  *makeArray();
+
+    virtual HashContent *allocateContents(size_t bucketSize, size_t capacity);
+    virtual void validateIndex(RexxInternalObject *index, size_t position);
+
+    void expandContents();
+    void expandContents(size_t capacity );
+    void ensureCapacity(size_t delta);
+    size_t calculateBucketSize(size_t capacity);
+
+    inline RexxInternalObject *resultOrNil(RexxInternalObject *o) { return o != OREF_NULL ? o : TheNilObject; }
+
+    virtual RexxInternalObject *mergeItem(RexxInternalObject *, RexxInternalObject *);
+    virtual RexxInternalObject *remove(RexxInternalObject *key);
+    virtual RexxInternalObject *get(RexxInternalObject *key);
+    virtual RexxInternalObject *put(RexxInternalObject *, RexxInternalObject *);
+    virtual RexxInternalObject *add(RexxInternalObject *, RexxInternalObject *);
+    virtual RexxInternalObject *removeItem(RexxInternalObject *value);
+    virtual RexxInternalObject *hasItem(RexxInternalObject *);
+    virtual RexxInternalObject *getIndex(RexxInternalObject * value);
+
+    void          copyValues();
+    RexxInternalObject   *removeRexx(RexxInternalObject *);
+    RexxInternalObject   *getRexx(RexxInternalObject *);
+    RexxInternalObject   *putRexx(RexxInternalObject *, RexxInternalObject *);
+    RexxInternalObject   *addRexx(RexxInternalObject *, RexxInternalObject *);
+    RexxInternalObject   *hasIndexRexx(RexxInternalObject *);
+    RexxInternalObject   *hasItemRexx(RexxInternalObject *);
+    RexxInternalObject   *removeItemRexx(RexxInternalObject *value);
+    RexxInternalObject   *allAt(RexxInternalObject *);
+    RexxInternalObject   *indexRexx(RexxInternalObject * value);
     RexxSupplier *supplier();
-    RexxObject   *merge(RexxHashTableCollection *);
+    void          merge(HashCollection *);
     RexxArray    *allItems();
     RexxArray    *allIndexes();
     RexxArray    *uniqueIndexes();
-    RexxObject   *empty();
+    RexxObject   *emptyRexx();
+    void          empty();
     RexxObject   *isEmptyRexx();
-    bool          isEmpty();
 
-    inline HashLink      items() { return this->contents->totalEntries(); };
-    inline HashLink      first() { return this->contents->first(); };
-    inline HashLink      next(HashLink pos) { return this->contents->next(pos);};
-    inline RexxObject   *value(HashLink pos) {return this->contents->value(pos); };
-    inline RexxObject   *index(HashLink pos) {return this->contents->index(pos); };
-    inline bool          available(HashLink pos) {return this->contents->available(pos); };
+    inline size_t items() { return contents->items(); }
+    inline bool   isEmpty() { return contents->isEmpty(); }
 
-    RexxHashTable *contents;           /* collection associated hash table  */
- };
- #endif
+    HashContents *contents;           // the backing hash table collection.
+};
+#endif

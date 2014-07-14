@@ -331,6 +331,21 @@ class RexxInternalObject : public RexxVirtualBase
             void         printObject();
             RexxObject  *clone();
 
+            RexxString  *requiredString(size_t);
+            RexxString  *requiredString(const char *);
+            RexxString  *requiredString();
+            RexxInteger *requiredInteger(size_t, size_t);
+            wholenumber_t requiredNumber(size_t position, size_t precision = Numerics::ARGUMENT_DIGITS);
+            stringsize_t requiredPositive(size_t position, size_t precision = Numerics::ARGUMENT_DIGITS);
+            stringsize_t requiredNonNegative(size_t position, size_t precision = Numerics::ARGUMENT_DIGITS);
+
+            RexxString  *requestString();
+            RexxString  *requestStringNoNOSTRING();
+            RexxInteger *requestInteger(size_t);
+            bool         requestNumber(wholenumber_t &, size_t);
+            bool         requestUnsignedNumber(stringsize_t &, size_t);
+            RexxArray   *requestArray();
+
     ObjectHeader header;              /* memory management header          */
     RexxBehaviour *behaviour;         /* the object's behaviour            */
 };
@@ -425,19 +440,6 @@ class RexxObject : public RexxInternalObject
     void         copyIntoTail(RexxCompoundTail *buffer);
     RexxArray   *makeArray();
     RexxString  *stringValue();
-    RexxString  *requestString();
-    RexxString  *requestStringNoNOSTRING();
-    RexxInteger *requestInteger(size_t);
-    bool         requestNumber(wholenumber_t &, size_t);
-    bool         requestUnsignedNumber(stringsize_t &, size_t);
-    RexxArray   *requestArray();
-    RexxString  *requiredString(size_t);
-    RexxString  *requiredString(const char *);
-    RexxString  *requiredString();
-    RexxInteger *requiredInteger(size_t, size_t);
-    wholenumber_t requiredNumber(size_t position, size_t precision = Numerics::ARGUMENT_DIGITS);
-    stringsize_t requiredPositive(size_t position, size_t precision = Numerics::ARGUMENT_DIGITS);
-    stringsize_t requiredNonNegative(size_t position, size_t precision = Numerics::ARGUMENT_DIGITS);
 
     bool         isEqual(RexxObject *);
     bool         isInstanceOf(RexxClass *);

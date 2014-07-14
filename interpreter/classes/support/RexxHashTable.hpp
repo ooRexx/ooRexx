@@ -69,12 +69,11 @@ class RexxHashTable : public RexxInternalObject
         FULL_TABLE        = 3,
     };
 
-    inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };
+    inline void *operator new(size_t size, void *objectPtr) { return objectPtr; };
     inline void  operator delete(void *) { ; }
     inline void  operator delete(void *, void *) { ; }
 
     inline RexxHashTable(RESTORETYPE restoreType) { ; };
-    inline RexxHashTable() { ; }
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);

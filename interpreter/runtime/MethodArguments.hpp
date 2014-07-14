@@ -56,7 +56,7 @@
  * @param object   The reference to check.
  * @param position the position of the argument for the error message.
  */
-inline void requiredArgument(RexxObject *object, size_t position)
+inline void requiredArgument(RexxInternalObject *object, size_t position)
 {
     if (object == OREF_NULL)
     {
@@ -75,7 +75,7 @@ inline void requiredArgument(RexxObject *object, size_t position)
  *
  * @return The String value of the object, if it really has a string value.
  */
-inline RexxString * stringArgument(RexxObject *object, size_t position)
+inline RexxString * stringArgument(RexxInternalObject *object, size_t position)
 {
     if (object == OREF_NULL)
     {
@@ -95,7 +95,7 @@ inline RexxString * stringArgument(RexxObject *object, size_t position)
  *
  * @return The string value of the object if it truely has a string value.
  */
-inline RexxString * stringArgument(RexxObject *object, const char *name)
+inline RexxString *stringArgument(RexxInternalObject *object, const char *name)
 {
     if (object == OREF_NULL)
     {
@@ -106,14 +106,14 @@ inline RexxString * stringArgument(RexxObject *object, const char *name)
 }
 
 // handle an option string argument where a default argument value is provided.
-inline RexxString *optionalStringArgument(RexxObject *o, RexxString *d, size_t p)
+inline RexxString *optionalStringArgument(RexxInternalObject *o, RexxString *d, size_t p)
 {
     return (o == OREF_NULL ? d : stringArgument(o, p));
 }
 
 
 // handle an option string argument where a default argument value is provided.
-inline RexxString *optionalStringArgument(RexxObject *o, RexxString *d, const char *p)
+inline RexxString *optionalStringArgument(RexxInternalObject *o, RexxString *d, const char *p)
 {
     return (o == OREF_NULL ? d : stringArgument(o, p));
 }
@@ -129,7 +129,7 @@ inline RexxString *optionalStringArgument(RexxObject *o, RexxString *d, const ch
  *
  * @return The converted numeric value of the object.
  */
-size_t lengthArgument(RexxObject *o, size_t p);
+size_t lengthArgument(RexxInternalObject *o, size_t p);
 
 
 /**
@@ -143,7 +143,7 @@ size_t lengthArgument(RexxObject *o, size_t p);
  *
  * @return The converted numeric value of the object.
  */
-inline size_t optionalLengthArgument(RexxObject *o, size_t d, size_t p)
+inline size_t optionalLengthArgument(RexxInternalObject *o, size_t d, size_t p)
 {
     return (o == OREF_NULL ? d : lengthArgument(o, p));
 }
@@ -159,7 +159,7 @@ inline size_t optionalLengthArgument(RexxObject *o, size_t d, size_t p)
  *
  * @return The converted numeric value of the object.
  */
-size_t positionArgument(RexxObject *o, size_t p);
+size_t positionArgument(RexxInternalObject *o, size_t p);
 
 
 /**
@@ -173,7 +173,7 @@ size_t positionArgument(RexxObject *o, size_t p);
  *
  * @return The converted numeric value of the object.
  */
-inline size_t optionalPositionArgument(RexxObject *o, size_t d, size_t p)
+inline size_t optionalPositionArgument(RexxInternalObject *o, size_t d, size_t p)
 {
     return (o == OREF_NULL ? d : positionArgument(o, p));
 }
@@ -189,7 +189,7 @@ inline size_t optionalPositionArgument(RexxObject *o, size_t d, size_t p)
  *
  * @return The pad character from the argument string.
  */
-char padArgument(RexxObject *o, size_t p);
+char padArgument(RexxInternalObject *o, size_t p);
 
 
 
@@ -203,7 +203,7 @@ char padArgument(RexxObject *o, size_t p);
  *
  * @return The pad character from the argument string.
  */
-inline char optionalPadArgument(RexxObject *o, char d, size_t p)
+inline char optionalPadArgument(RexxInternalObject *o, char d, size_t p)
 {
     return (o == OREF_NULL ? d : padArgument(o, p));
 }
@@ -217,7 +217,7 @@ inline char optionalPadArgument(RexxObject *o, char d, size_t p)
  *
  * @return The first character of the option string.
  */
-char optionArgument(RexxObject *o, size_t p);
+char optionArgument(RexxInternalObject *o, size_t p);
 
 
 /**
@@ -230,7 +230,7 @@ char optionArgument(RexxObject *o, size_t p);
  *
  * @return The first character of the option string.
  */
-inline char optionalOptionArgument(RexxObject *o, char d, size_t p)
+inline char optionalOptionArgument(RexxInternalObject *o, char d, size_t p)
 {
     return (o == OREF_NULL ? d : optionArgument(o, p));
 }
@@ -245,7 +245,7 @@ inline char optionalOptionArgument(RexxObject *o, char d, size_t p)
  *
  * @return The converted numeric value.
  */
-inline size_t optionalNonNegative(RexxObject *o, size_t d, size_t p)
+inline size_t optionalNonNegative(RexxInternalObject *o, size_t d, size_t p)
 {
     return (o == OREF_NULL ? d : o->requiredNonNegative(p));
 }
@@ -260,7 +260,7 @@ inline size_t optionalNonNegative(RexxObject *o, size_t d, size_t p)
  *
  * @return The converted numeric value.
  */
-inline size_t optionalPositive(RexxObject *o, size_t d, size_t p)
+inline size_t optionalPositive(RexxInternalObject *o, size_t d, size_t p)
 {
     return (o == OREF_NULL ? d : o->requiredPositive(p));
 }
@@ -275,7 +275,7 @@ inline size_t optionalPositive(RexxObject *o, size_t d, size_t p)
  *
  * @return A converted single-dimension array.
  */
-inline RexxArray *arrayArgument(RexxObject *object, size_t position)
+inline RexxArray *arrayArgument(RexxInternalObject *object, size_t position)
 {
     // this is required.
     if (object == OREF_NULL)
@@ -303,7 +303,7 @@ inline RexxArray *arrayArgument(RexxObject *object, size_t position)
  *
  * @return A converted single-dimension array.
  */
-inline RexxArray * arrayArgument(RexxObject *object, const char *name)
+inline RexxArray * arrayArgument(RexxInternalObject *object, const char *name)
 {
     if (object == OREF_NULL)
     {
@@ -328,7 +328,7 @@ inline RexxArray * arrayArgument(RexxObject *object, const char *name)
  * @param clazz  The class type to check it against.
  * @param name   The argument name for error reporting.
  */
-inline void classArgument(RexxObject *object, RexxClass *clazz, const char *name)
+inline void classArgument(RexxInternalObject *object, RexxClass *clazz, const char *name)
 {
     if (object == OREF_NULL)             /* missing argument?                 */
     {
@@ -353,7 +353,7 @@ inline void classArgument(RexxObject *object, RexxClass *clazz, const char *name
  *
  * @return The string value of the object.
  */
-inline RexxString *REQUEST_STRING(RexxObject *object)
+inline RexxString *REQUEST_STRING(RexxInternalObject *object)
 {
     return (isOfClass(String, object) ? (RexxString *)object : (object)->requestString());
 }
@@ -367,7 +367,7 @@ inline RexxString *REQUEST_STRING(RexxObject *object)
  * @return The converted array value of the object or TheNilObject if
  *         if did not convert.
  */
-inline RexxArray * REQUEST_ARRAY(RexxObject *obj) { return ((obj)->requestArray()); }
+inline RexxArray * REQUEST_ARRAY(RexxInternalObject *obj) { return ((obj)->requestArray()); }
 
 /**
  * Request an object to be converted to a RexxInteger
@@ -378,7 +378,7 @@ inline RexxArray * REQUEST_ARRAY(RexxObject *obj) { return ((obj)->requestArray(
  * @return An Integer object instance representing this object or
  *         .nil if it cannot be converted.
  */
-inline RexxInteger * REQUEST_INTEGER(RexxObject *obj) { return ((obj)->requestInteger(Numerics::ARGUMENT_DIGITS));}
+inline RexxInteger * REQUEST_INTEGER(RexxInternalObject *obj) { return ((obj)->requestInteger(Numerics::ARGUMENT_DIGITS));}
 
 #endif
 

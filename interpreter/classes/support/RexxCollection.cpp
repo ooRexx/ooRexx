@@ -332,31 +332,6 @@ RexxObject *RexxHashTableCollection::merge(
 }
 
 
-RexxObject *RexxHashTableCollection::copyValues(
-   int  depth)                         /* depth to propagate the copy to    */
-/******************************************************************************/
-/* Arguments:  Recursion depth                                                */
-/*                                                                            */
-/*  Returned:  Nothing                                                        */
-/******************************************************************************/
-{
-    /* Get hash table.                   */
-    RexxHashTable *hashTable = this->contents;
-    /* For all indices.                  */
-    for (HashLink i = hashTable->first(); i < hashTable->totalSlotsSize(); i = hashTable->next(i))
-    {
-        RexxObject *_value  = hashTable->value(i);     /* Get this value                    */
-        RexxObject *valueCopy = _value->copy();        /* make a copy.                      */
-        hashTable->replace(valueCopy, i);  /* Replace original w/ copy          */
-        if (depth > 1)                     /* gone depth requested.             */
-                                           /* nope, copy these values           */
-            ((RexxHashTableCollection *)valueCopy)->copyValues(depth-1);
-    }
-
-    return OREF_NULL;
-}
-
-
 /**
  * Test for the existence of an index in the collection.
  * This uses the get() virtual function to determine if
