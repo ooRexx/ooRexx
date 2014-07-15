@@ -55,7 +55,7 @@ class RexxInstructionForward : public RexxInstruction
     inline void operator delete(void *) { }
     inline void operator delete(void *, void *) { }
 
-    inline RexxInstructionForward(void) { ; }
+    inline RexxInstructionForward() { ; }
     inline RexxInstructionForward(RESTORETYPE restoreType) { ; }
            RexxInstructionForward(RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxArray *, bool);
 

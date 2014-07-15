@@ -95,7 +95,7 @@ RexxStem::RexxStem(RexxString *name)
     dropped = true;
 }
 
-RexxObject *RexxStem::copy(void)
+RexxObject *RexxStem::copy()
 /******************************************************************************/
 /* Function:  Copy a stem collection object                                   */
 /******************************************************************************/

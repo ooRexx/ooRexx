@@ -44,6 +44,8 @@
 #ifndef Included_RexxArray
 #define Included_RexxArray
 
+
+// TODO:  Get rid of these defines
 #define RaiseBoundsNone     0x00000000
 #define RaiseBoundsUpper    0x00000001
 #define RaiseBoundsInvalid  0x00000002
@@ -129,6 +131,7 @@ class RexxArray : public RexxObject
     virtual void flatten(RexxEnvelope *);
 
     virtual RexxObject *copy();
+
     RexxArray   *makeArray();
     RexxArray   *allItems();
     RexxArray   *allIndexes();
@@ -210,6 +213,7 @@ class RexxArray : public RexxObject
 
     inline bool isMultiDimensional() { return this->dimensions != OREF_NULL && this->dimensions->size() != 1; }
     inline bool isSingleDimensional() { return !isMultiDimensional(); }
+    inline bool hasExpanded() { return expansionArray != this; }
 
     static RexxArray *createMultidimensional(RexxObject **dims, size_t count, RexxClass *);
 

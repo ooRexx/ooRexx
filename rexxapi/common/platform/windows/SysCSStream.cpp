@@ -538,7 +538,7 @@ bool SysServerStream::make(int port)
  *
  * @return True on an error, otherwise false
  */
-SysServerConnection *SysServerStream::connect(void)
+SysServerConnection *SysServerStream::connect()
 {
     struct sockaddr_in addr; // address structure
     int sz = sizeof(addr);

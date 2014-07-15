@@ -2241,7 +2241,7 @@ void RexxObject::guardOff(RexxActivity *activity, RexxObject *scope)
 
 
 
-const char *RexxObject::idString(void)
+const char *RexxObject::idString()
 /******************************************************************************/
 /* Function:  Return a pointer to the object's string value                   */
 /******************************************************************************/
@@ -2257,7 +2257,7 @@ const char *RexxObject::idString(void)
     }
 }
 
-RexxString *RexxObject::id(void)
+RexxString *RexxObject::id()
 /******************************************************************************/
 /* Function:  Get the class string name                                       */
 /******************************************************************************/
@@ -2274,7 +2274,7 @@ RexxString *RexxObject::id(void)
     }
 }
 
-RexxObject *RexxObject::init(void)
+RexxObject *RexxObject::init()
 /******************************************************************************/
 /* Function:  Exported Object INIT method                                     */
 /******************************************************************************/
@@ -2296,7 +2296,7 @@ RexxInteger *RexxObject::identityHashRexx()
 }
 
 
-void RexxObject::uninit(void)
+void RexxObject::uninit()
 /******************************************************************************/
 /* Function:  Exported Object INIT method                                     */
 /******************************************************************************/

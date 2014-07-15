@@ -117,7 +117,7 @@ RexxObject *RexxHashTableCollection::makeProxy(RexxEnvelope *envelope)
 }
 
 
-RexxObject *RexxHashTableCollection::copy(void)
+RexxObject *RexxHashTableCollection::copy()
 /******************************************************************************/
 /* Function:  Copy a hash based collection object                             */
 /******************************************************************************/
@@ -130,7 +130,7 @@ RexxObject *RexxHashTableCollection::copy(void)
     return newObj;                       /* return the new object             */
 }
 
-RexxArray *RexxHashTableCollection::makeArray(void)
+RexxArray *RexxHashTableCollection::makeArray()
 /******************************************************************************/
 /* Function:  Return all of the collection indices in an array                */
 /******************************************************************************/

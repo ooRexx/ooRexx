@@ -270,7 +270,7 @@ static WinServiceStatusT getServiceStatus(SC_HANDLE *phSCM)
  *         Vista this is especially important because it prevents unnecessary
  *         failures.
  */
-bool startAsService(void)
+bool startAsService()
 {
     SC_HANDLE hSCM = NULL;
 

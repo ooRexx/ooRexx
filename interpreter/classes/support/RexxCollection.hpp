@@ -49,13 +49,14 @@
 class RexxHashTableCollection : public RexxObject
  {
    public:
-    void         live(size_t);
-    void         liveGeneral(MarkReason reason);
-    void         flatten(RexxEnvelope *);
-    RexxObject * unflatten(RexxEnvelope *);
-    RexxObject * makeProxy(RexxEnvelope *);
-    RexxObject * copy();
-    RexxArray  * makeArray();
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(RexxEnvelope *);
+
+    virtual RexxObject * unflatten(RexxEnvelope *);
+    virtual RexxObject * makeProxy(RexxEnvelope *);
+    virtual RexxObject * copy();
+    virtual RexxArray  * makeArray();
 
     virtual RexxObject *mergeItem(RexxObject *, RexxObject *);
     virtual RexxObject *remove(RexxObject *key);

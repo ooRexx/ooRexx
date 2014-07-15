@@ -127,7 +127,7 @@ RexxObject *RexxDirectory::entry(
     return this->at(entryName);          /* just return the "at" form         */
 }
 
-size_t RexxDirectory::items(void)
+size_t RexxDirectory::items()
 /******************************************************************************/
 /* Function:  Return the count of items in the directory, including the       */
 /*            number of methods added via set method calls                    */
@@ -144,7 +144,7 @@ size_t RexxDirectory::items(void)
     return count;                        /* return this amount                */
 }
 
-RexxObject *RexxDirectory::itemsRexx(void)
+RexxObject *RexxDirectory::itemsRexx()
 /******************************************************************************/
 /* Function:  Return the count of items in the directory, including the       */
 /*            number of methods added via set method calls                    */
@@ -153,7 +153,7 @@ RexxObject *RexxDirectory::itemsRexx(void)
     return (RexxObject *)new_integer(this->items());
 }
 
-RexxSupplier *RexxDirectory::supplier(void)
+RexxSupplier *RexxDirectory::supplier()
 /******************************************************************************/
 /* Function:  Create a supplier for a directory, including the results of all */
 /*            of the SETMETHOD methods as values                              */
@@ -205,7 +205,7 @@ RexxArray *RexxDirectory::requestArray()
     }
 }
 
-RexxArray *RexxDirectory::makeArray(void)
+RexxArray *RexxDirectory::makeArray()
 /******************************************************************************/
 /* Function:  Create an array of all of the directory indices, including those*/
 /*            of all the SETMETHOD methods.                                   */
@@ -221,7 +221,7 @@ RexxArray *RexxDirectory::makeArray(void)
  *
  * @return An array containing all of the directory indices.
  */
-RexxArray *RexxDirectory::allIndexes(void)
+RexxArray *RexxDirectory::allIndexes()
 {
     // get a result array of the appropriate size
     wholenumber_t count = this->items();
@@ -650,7 +650,7 @@ RexxObject *RexxDirectory::put(
     return OREF_NULL;                    /* this returns nothing              */
 }
 
-void RexxDirectory::reset(void)
+void RexxDirectory::reset()
 /******************************************************************************/
 /* Function:  Reset a directory to a "pristine" empty state                   */
 /******************************************************************************/

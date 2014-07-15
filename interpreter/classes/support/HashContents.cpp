@@ -1000,19 +1000,6 @@ void HashContents::empty()
 
 
 /**
- * Convert this collection to an array...this will be
- * the set of all index objects.
- *
- * @return An array of all index objects.
- */
-RexxArray *RexxHashTable::makeArray()
-{
-    // this just returns the index values
-    return allIndexes();
-}
-
-
-/**
  * Create an array of all index items.
  *
  * @return An array of all indexes.

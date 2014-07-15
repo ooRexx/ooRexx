@@ -539,7 +539,7 @@ bool SysServerStream::make(int port)
  *
  * @return True on an error, otherwise false
  */
-SysServerConnection *SysServerStream::connect(void)
+SysServerConnection *SysServerStream::connect()
 {
     struct sockaddr_in addr; // address structure
     socklen_t sz = sizeof(addr);
@@ -609,7 +609,7 @@ SysServerConnection::~SysServerConnection()
  *
  * @return True if the client is at address 127.0.0.1, otherwise false
  */
-bool SysServerConnection::isLocalConnection(void)
+bool SysServerConnection::isLocalConnection()
 {
     sockaddr_in  addr;
     int          rc;

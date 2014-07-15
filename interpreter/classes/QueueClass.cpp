@@ -405,7 +405,7 @@ RexxObject *RexxQueue::index(RexxObject *target)
 }
 
 
-RexxObject *RexxQueue::firstRexx(void)
+RexxObject *RexxQueue::firstRexx()
 /******************************************************************************/
 /* Function:  Return index of the first list item                             */
 /******************************************************************************/
@@ -422,7 +422,7 @@ RexxObject *RexxQueue::firstRexx(void)
 }
 
 
-RexxObject *RexxQueue::lastRexx(void)
+RexxObject *RexxQueue::lastRexx()
 /******************************************************************************/
 /* Function:  Return index of the last list item                              */
 /******************************************************************************/

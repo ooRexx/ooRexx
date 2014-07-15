@@ -172,11 +172,11 @@ class LanguageParser: public RexxInternalObject
     RexxInstruction *findLabel(RexxString *);
     void        setGuard();
     RexxArray  *getGuard();
-    void        addBlock(void);
+    void        addBlock();
     RexxVariableBase *getRetriever(RexxString *);
     RexxArray  *words(RexxString *);
     inline void        reclaimClause()  { flags.set(reclaimed); };
-    inline bool        atEnd(void) { return !flags.test(reclaimed) && !moreLines(); };
+    inline bool        atEnd() { return !flags.test(reclaimed) && !moreLines(); };
 
            void setInterpret() { flags.set(interpret); }
     inline bool isInterpret() { return flags.test(interpret); }

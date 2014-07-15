@@ -1192,7 +1192,7 @@ RexxObject *MemoryObject::holdObject(RexxInternalObject *obj)
 }
 
 
-void MemoryObject::saveImage(void)
+void MemoryObject::saveImage()
 /******************************************************************************/
 /* Function:  Save the memory image as part of interpreter build              */
 /******************************************************************************/
@@ -1532,7 +1532,7 @@ void MemoryObject::setOref(RexxInternalObject *oldValue, RexxInternalObject *val
     }
 }
 
-RexxObject *MemoryObject::dumpImageStats(void)
+RexxObject *MemoryObject::dumpImageStats()
 /******************************************************************************/
 /*                                                                            */
 /******************************************************************************/

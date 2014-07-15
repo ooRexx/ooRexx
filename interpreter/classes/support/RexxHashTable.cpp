@@ -1455,7 +1455,7 @@ RexxObject *RexxHashTable::value(
     }
 }
 
-size_t RexxHashTable::totalEntries(void)
+size_t RexxHashTable::totalEntries()
 /******************************************************************************/
 /* Function:  Return the count of entries in a hash table.                    */
 /******************************************************************************/
@@ -1551,7 +1551,7 @@ RexxObject *RexxHashTable::stringMerge(
     return OREF_NULL;                    /* always returns nothing            */
 }
 
-HashLink RexxHashTable::first(void)
+HashLink RexxHashTable::first()
 /******************************************************************************/
 /* Function:  Return the index of the first item in the hash table            */
 /******************************************************************************/
@@ -1708,17 +1708,6 @@ bool RexxHashTable::isEmpty()
 
 
 
-
-RexxArray *RexxHashTable::makeArray(void)
-/******************************************************************************/
-/* Function:  Create an array containing the hash table indexes.              */
-/******************************************************************************/
-{
-    // this just returns the index values
-    return this->allIndexes();
-}
-
-
 RexxArray *RexxHashTable::allIndexes()
 /******************************************************************************/
 /* Function:  Create an array containing the hash table indexes.              */
@@ -1764,7 +1753,7 @@ RexxArray *RexxHashTable::uniqueIndexes()
 }
 
 
-RexxSupplier *RexxHashTable::supplier(void)
+RexxSupplier *RexxHashTable::supplier()
 /******************************************************************************/
 /* Function:  create a supplier from a hash table                             */
 /******************************************************************************/
@@ -1809,7 +1798,7 @@ RexxObject *RexxHashTable::index(
     }
 }
 
-RexxHashTable *RexxHashTable::reHash(void)
+RexxHashTable *RexxHashTable::reHash()
 /******************************************************************************/
 /* Function:  Rehash the elements of a hash table because of a restore        */
 /******************************************************************************/

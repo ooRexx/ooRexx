@@ -266,7 +266,6 @@ public:
     bool mergePut(RexxInternalObject *item, RexxInternalObject *index);
     RexxArray  *allItems();
     void empty();
-    RexxArray *makeArray();
     RexxArray *allIndexes();
     RexxArray *uniqueIndexes();
     RexxSupplier *supplier();

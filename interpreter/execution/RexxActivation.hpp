@@ -392,14 +392,14 @@ class ActivationSettings
    inline void              traceCompound(RexxString *stemVar, RexxObject **tails, size_t tailCount, RexxObject *value) { if (settings.intermediate_trace) traceCompoundValue(TRACE_PREFIX_VARIABLE, stemVar, tails, tailCount, VALUE_MARKER, value); };
    inline void              traceCompoundAssignment(RexxString *stemVar, RexxObject **tails, size_t tailCount, RexxObject *value) { if (settings.intermediate_trace) traceCompoundValue(TRACE_PREFIX_ASSIGNMENT, stemVar, tails, tailCount, ASSIGNMENT_MARKER, value); };
    inline void              traceResult(RexxObject * v) { if ((settings.flags&trace_results)) traceValue(v, TRACE_PREFIX_RESULT); };
-   inline bool              tracingInstructions(void) { return (settings.flags&trace_all) != 0; }
-   inline bool              tracingErrors(void) { return (settings.flags&trace_errors) != 0; }
-   inline bool              tracingFailures(void) { return (settings.flags&trace_failures) != 0; }
+   inline bool              tracingInstructions() { return (settings.flags&trace_all) != 0; }
+   inline bool              tracingErrors() { return (settings.flags&trace_errors) != 0; }
+   inline bool              tracingFailures() { return (settings.flags&trace_failures) != 0; }
    inline void              traceInstruction(RexxInstruction * v) { if (settings.flags&trace_all) traceClause(v, TRACE_PREFIX_CLAUSE); }
    inline void              traceLabel(RexxInstruction * v) { if ((settings.flags&trace_labels) != 0) traceClause(v, TRACE_PREFIX_CLAUSE); };
    inline void              traceCommand(RexxInstruction * v) { if ((settings.flags&trace_commands) != 0) traceClause(v, TRACE_PREFIX_CLAUSE); }
-   inline bool              tracingCommands(void) { return (settings.flags&trace_commands) != 0; }
-   inline bool              tracingAll(void) { return (settings.flags&trace_all) != 0; }
+   inline bool              tracingCommands() { return (settings.flags&trace_commands) != 0; }
+   inline bool              tracingAll() { return (settings.flags&trace_all) != 0; }
    inline void              pauseInstruction() {  if ((settings.flags&(trace_all | trace_debug)) == (trace_all | trace_debug)) debugPause(); };
    inline int               conditionalPauseInstruction() { return (((settings.flags&(trace_all | trace_debug)) == (trace_all | trace_debug)) ? debugPause(): false); };
    inline void              pauseLabel() { if ((settings.flags&(trace_labels | trace_debug)) == (trace_labels | trace_debug)) debugPause(); };

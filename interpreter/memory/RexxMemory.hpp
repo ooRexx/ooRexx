@@ -107,7 +107,7 @@ class MemorySegmentPool : public MemorySegmentPoolHeader
      MemorySegmentPool();
      MemorySegment *newSegment(size_t minSize);
      MemorySegment *newLargeSegment(size_t minSize);
-     void               freePool(void);
+     void               freePool();
      MemorySegmentPool *nextPool() {return next;}
      void               setNext( MemorySegmentPool *nextPool ); /* CHM - def.96: new function */
 
@@ -162,7 +162,7 @@ class MemoryObject : public RexxInternalObject
     RexxObject *unflattenObjectBuffer(RexxBuffer *sourceBuffer, char *startPointer, size_t dataLength);
     void        unflattenProxyObjects(RexxEnvelope *envelope, RexxObject *firstObject, RexxObject *endObject);
 
-    void        markObjects(void);
+    void        markObjects();
     void        markObjectsMain(RexxObject *);
     void        mark(RexxObject *);
     void        markGeneral(void *);

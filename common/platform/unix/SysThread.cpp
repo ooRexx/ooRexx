@@ -127,7 +127,7 @@ static void * call_thread_function(void *argument)
 
 
 // create a new thread and attach to an activity
-void SysThread::createThread(void)
+void SysThread::createThread()
 {
     pthread_attr_t  newThreadAttr;
     int schedpolicy, maxpri, minpri;

@@ -114,7 +114,7 @@ RexxArray  *RexxTable::requestArray()
     }
 }
 
-RexxObject *RexxTable::itemsRexx(void)
+RexxObject *RexxTable::itemsRexx()
 /******************************************************************************/
 /* Function:  Return the count of items in the table                          */
 /******************************************************************************/
@@ -146,7 +146,7 @@ RexxObject *RexxTable::putNodupe(RexxObject *_value, RexxObject *_index)
     return OREF_NULL;
 }
 
-void RexxTable::reHash(void)
+void RexxTable::reHash()
 /******************************************************************************/
 /* Function:  Create an instance of a table                                   */
 /******************************************************************************/

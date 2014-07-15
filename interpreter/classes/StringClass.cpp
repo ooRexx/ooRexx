@@ -859,7 +859,7 @@ RexxObject *RexxString::power(RexxObject *right_term)
     return numstr->power(right_term);    /* have numberstring do this         */
 }
 
-RexxObject *RexxString::abs(void)
+RexxObject *RexxString::abs()
 /******************************************************************************/
 /* Function:  String absolute value...performed by RexxNumberString           */
 /******************************************************************************/
@@ -875,7 +875,7 @@ RexxObject *RexxString::abs(void)
     return numstr->abs();                /* have numberstring do this         */
 }
 
-RexxObject *RexxString::sign(void)
+RexxObject *RexxString::sign()
 /******************************************************************************/
 /* Function:  String sign value...performed by RexxNumberString               */
 /******************************************************************************/

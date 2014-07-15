@@ -213,6 +213,8 @@ typedef RexxObject *  (RexxObject::*PCPPM)();
 
 
 // the shift amount for generating a hash value from an object reference.
+// TODO:  Might want to vary this depending on the grain size...This definitely needs
+// adjusting for 64-bit.
 #define OREFSHIFT 3
                                        /* generate hash value from OREF     */
 inline uintptr_t HASHOREF(RexxVirtualBase *r) { return ((uintptr_t)r) >> OREFSHIFT; }

@@ -79,7 +79,6 @@ class RexxHashTable : public RexxInternalObject
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(RexxEnvelope *);
 
-    RexxArray  * makeArray();
     void         empty();
     bool         isEmpty();
     size_t       items();

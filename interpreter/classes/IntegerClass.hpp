@@ -46,7 +46,7 @@
 
 #include "NumberStringClass.hpp"
 
-void integer_create (void);
+void integer_create ();
 #define INTEGERCACHELOW  -10
 #define INTEGERCACHESIZE 100
 #define MAX_INTEGER_LENGTH 10

@@ -317,7 +317,7 @@ RexxString *RexxClass::getId()
  *
  * @return Dummy OREF_NULL.
  */
-RexxObject *RexxClass::setRexxDefined(void)
+RexxObject *RexxClass::setRexxDefined()
 {
     classFlags.set(REXX_DEFINED);
     return OREF_NULL;

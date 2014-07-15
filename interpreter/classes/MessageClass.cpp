@@ -443,7 +443,7 @@ void RexxMessage::error(RexxDirectory *_condition)
  *
  * @return .true if this has completed, .false otherwise.
  */
-RexxObject *RexxMessage::completed(void)
+RexxObject *RexxMessage::completed()
 {
     // we're complete if we have a result or have an error.
     if (resultReturned() || raiseError())

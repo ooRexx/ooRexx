@@ -308,7 +308,7 @@ RexxArray::RexxArray(RexxObject **objs, size_t count)
  *
  * @return A copy of the array object.
  */
-RexxObject *RexxArray::copy(void)
+RexxObject *RexxArray::copy()
 {
     // TODO:  if we have an expansion array, then allocate
     // just a single item of the correct size and copy that.
@@ -1417,7 +1417,7 @@ RexxObject *RexxArray::sectionSubclass(
     return newArray;                     /* return the new array              */
 }
 
-RexxObject  *RexxArray::firstRexx(void)
+RexxObject  *RexxArray::firstRexx()
 /******************************************************************************/
 /* Function:  Retrieve the first element index from the array as an integer   */
 /*            object                                                          */
@@ -1444,7 +1444,7 @@ RexxObject  *RexxArray::firstRexx(void)
     }
 }
 
-RexxObject  *RexxArray::lastRexx(void)
+RexxObject  *RexxArray::lastRexx()
 /******************************************************************************/
 /* Function:  Return the index of the last array item as an integer object    */
 /******************************************************************************/
@@ -1652,7 +1652,7 @@ RexxArray *RexxArray::makeArray(void)
  *
  * @return An array with all of the array items (non-sparse).
  */
-RexxArray *RexxArray::allItems(void)
+RexxArray *RexxArray::allItems()
 {
     // get a result array of the appropriate size
     RexxArray *newArray = (RexxArray *)new_array(this->items());
@@ -1842,31 +1842,34 @@ RexxObject *RexxArray::join(           /* join two arrays into one          */
 
 }
 
-void RexxArray::resize(void)           /* resize this array to be a NULLARRA*/
-/******************************************************************************/
-/* Function:  An Array is being expanded so chop off the data (array)         */
-/*            portion of this array.                                          */
-/******************************************************************************/
+/**
+ * An Array is being expanded so chop off the data (array)
+ * portion of this array.
+ */
+void RexxArray::resize()
 {
-    size_t i;
-    /* Has the array already been        */
-    /* expanded ?                        */
-    if (this->expansionArray == this)
+    // still working off of the original array allocation?
+    // if not, we need to chop down the initial allocation.
+    if (!hasExpanded())
     {
-        /* no, then we resize the array      */
-        /* is this array in OldSpace ?       */
-        if (this->isOldSpace())
+        // if this array is an oldspace one, there's no
+        // point in resizing this.  However, we do need to
+        // clear out any of the entries so that the old-to-new table is
+        // updated correctly.
+        if (isOldSpace())
         {
-            /* Old Space, remove any reference   */
-            /* to new space from memory tables   */
-            for (i = 0; i < this->arraySize; i++)
+            for (size_t i = 0; i < arraySize; i++)
             {
-                OrefSet(this, this->objects[i], OREF_NULL);
+                setField(objects[i], OREF_NULL);
             }
         }
-        /* resize the array object           */
-        memoryObject.reSize(this, sizeof(RexxArray));
-        this->arraySize = 0;               /* outer array has no elements       */
+        else
+        {
+            // resize the array object
+            memoryObject.reSize(this, sizeof(RexxArray));
+            // the outer array has no elements
+            arraySize = 0;
+        }
     }
 }
 
@@ -1882,6 +1885,7 @@ void RexxArray::shrink(
 
     this->expansionArray->arraySize = newSize;
 }
+
 
 size_t RexxArray::indexOf(
     RexxObject *target)                /* target object to locate           */

@@ -45,11 +45,11 @@ extern "C"
 {
 #endif
 
-int _init(void) __attribute__((constructor));
-int _fini(void) __attribute__((destructor));
+int _init() __attribute__((constructor));
+int _fini() __attribute__((destructor));
 
 
-int _init(void)
+int _init()
 {
     // perform the interpreter start up
     SystemInterpreter::processStartup();
@@ -57,7 +57,7 @@ int _init(void)
 }
 
 
-int _fini(void)
+int _fini()
 {
     SystemInterpreter::processShutdown();
     return 0;

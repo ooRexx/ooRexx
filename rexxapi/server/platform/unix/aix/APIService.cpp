@@ -126,7 +126,7 @@ void Stop(int signo)
  * Returns TRUE if a daemon, FALSE if not or an error
  *
  *==========================================================================*/
-static bool morph2daemon(void)
+static bool morph2daemon()
 {
     char pid_buf[256];
 

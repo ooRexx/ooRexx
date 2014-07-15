@@ -64,7 +64,7 @@ void RexxList::createInstance()
 }
 
 
-void RexxList::init(void)
+void RexxList::init()
 /******************************************************************************/
 /* Function:  Initial set up of a list object instance                        */
 /******************************************************************************/
@@ -76,7 +76,7 @@ void RexxList::init(void)
     this->partitionBuffer(0, INITIAL_LIST_SIZE);
 }
 
-RexxObject *RexxList::copy(void)
+RexxObject *RexxList::copy()
 /******************************************************************************/
 /* Function:   create a copy of a list and the associated table               */
 /******************************************************************************/
@@ -112,7 +112,7 @@ void RexxList::partitionBuffer(
     element->next = LIST_END;            /* set the terminator                */
 }
 
-size_t RexxList::getFree(void)
+size_t RexxList::getFree()
 /******************************************************************************/
 /* Function:  Check that we have at least one element on the free chain, and  */
 /*            if not, expand our buffer size to add some space.               */
@@ -679,7 +679,7 @@ RexxObject *RexxList::primitiveRemove(
     return _value;                       /* return the old value              */
 }
 
-RexxObject *RexxList::firstItem(void)
+RexxObject *RexxList::firstItem()
 /******************************************************************************/
 /* Function:  Return first item (value part) in the list                      */
 /******************************************************************************/
@@ -694,7 +694,7 @@ RexxObject *RexxList::firstItem(void)
     }
 }
 
-RexxObject *RexxList::lastItem(void)
+RexxObject *RexxList::lastItem()
 /******************************************************************************/
 /* Function:  Return last item (value part) in the list                       */
 /******************************************************************************/
@@ -709,7 +709,7 @@ RexxObject *RexxList::lastItem(void)
     }
 }
 
-RexxObject *RexxList::firstRexx(void)
+RexxObject *RexxList::firstRexx()
 /******************************************************************************/
 /* Function:  Return index of the first list item                             */
 /******************************************************************************/
@@ -725,7 +725,7 @@ RexxObject *RexxList::firstRexx(void)
     }
 }
 
-RexxObject *RexxList::lastRexx(void)
+RexxObject *RexxList::lastRexx()
 /******************************************************************************/
 /* Function:  Return index of the last list item                              */
 /******************************************************************************/
@@ -870,7 +870,7 @@ RexxArray *RexxList::requestArray()
 }
 
 
-RexxArray *RexxList::makeArray(void)
+RexxArray *RexxList::makeArray()
 /******************************************************************************/
 /* Function:  Return all of the list values in an array                       */
 /******************************************************************************/
@@ -885,7 +885,7 @@ RexxArray *RexxList::makeArray(void)
  *
  * @return An array with the list elements.
  */
-RexxArray *RexxList::allItems(void)
+RexxArray *RexxList::allItems()
 {
     // just iterate through the list, copying the elements.
     RexxArray *array = (RexxArray *)new_array(this->count);
@@ -945,7 +945,7 @@ bool RexxList::isEmpty()
  *
  * @return An array with the list elements.
  */
-RexxArray *RexxList::allIndexes(void)
+RexxArray *RexxList::allIndexes()
 {
     // just iterate through the list, copying the elements.
     RexxArray *array = (RexxArray *)new_array(this->count);
@@ -1138,7 +1138,7 @@ RexxArray  *RexxList::makeArrayIndices()
     return array;                        /* return the array element          */
 }
 
-RexxSupplier *RexxList::supplier(void)
+RexxSupplier *RexxList::supplier()
 /******************************************************************************/
 /* Function:  Create a supplier object for this list                          */
 /******************************************************************************/
@@ -1153,7 +1153,7 @@ RexxSupplier *RexxList::supplier(void)
     return(RexxSupplier *)new_supplier(values, indices);
 }
 
-RexxObject *RexxList::itemsRexx(void)
+RexxObject *RexxList::itemsRexx()
 /******************************************************************************/
 /* Function:  Return the size of the list as an integer                       */
 /******************************************************************************/

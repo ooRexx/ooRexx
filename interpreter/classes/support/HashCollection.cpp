@@ -245,7 +245,7 @@ RexxObject *HashCollection::copy()
  *
  * @return An array of the collection indexes.
  */
-RexxArray *HashCollection::makeArray(void)
+RexxArray *HashCollection::makeArray()
 {
     return contents->makeArray();
 }

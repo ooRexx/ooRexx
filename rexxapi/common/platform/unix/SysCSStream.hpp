@@ -61,7 +61,7 @@ public:
     inline SysSocketConnection() : c(-1), errcode(CSERROR_OK), messageBuffer(NULL) { }
     inline SysSocketConnection(int sock) : c(sock), errcode(CSERROR_OK), messageBuffer(NULL) { }
     inline ~SysSocketConnection() { if (messageBuffer != NULL) { free(messageBuffer); } }
-    CSErrorCodeT getError(void)
+    CSErrorCodeT getError()
     {
         return errcode;
     };
@@ -93,7 +93,7 @@ public:
     SysClientStream(const char *name);
     SysClientStream(const char *host, int port);
     ~SysClientStream();
-    CSErrorCodeT getError(void)
+    CSErrorCodeT getError()
     {
         return errcode;
     };
@@ -139,7 +139,7 @@ public:
     ~SysServerConnection();
 
     bool isLocalConnection();
-    bool disconnect(void);
+    bool disconnect();
 
 protected:
     SysServerStream *server;
@@ -161,7 +161,7 @@ public:
     SysServerStream(const char *name);
     SysServerStream(int port);
     ~SysServerStream();
-    CSErrorCodeT getError(void)
+    CSErrorCodeT getError()
     {
         return errcode;
     };

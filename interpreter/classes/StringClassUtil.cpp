@@ -47,85 +47,93 @@
 #include "MethodArguments.hpp"
 
 
-/******************************************************************************/
-/* Function:   Take in an agument passed to a method, convert it to a length  */
-/*               object, verifying that the number is a non-negative value.   */
-/*               If the argument is omitted, an error is raised.              */
-/******************************************************************************/
-stringsize_t lengthArgument(
-    RexxObject * argument,             /* input argument                    */
-    size_t position )                  /* position of the argument          */
+/**
+ * Take in an agument passed to a method, convert it to a length
+ * object, verifying that the number is a non-negative value.
+ * If the argument is omitted, an error is raised.
+ *
+ * @param argument The argument reference to test.
+ * @param position The position of the argument (used for error reporting.)
+ *
+ * @return The argument converted to a non-negative integer value.
+ */
+stringsize_t lengthArgument(RexxInternalObject *argument, size_t position )
 {
-    if (argument == OREF_NULL)            /* have a real argument?             */
+    if (argument == OREF_NULL)
     {
-        missingArgument(position);       /* raise an error                    */
+        missingArgument(position);
     }
-    stringsize_t    value;                /* converted number value            */
-
+    stringsize_t    value;
+    // converted using the ARGUMENT_DIGITS value
     if (!argument->unsignedNumberValue(value, Numerics::ARGUMENT_DIGITS))
     {
-        /* raise the error                   */
-        reportException(Error_Incorrect_method_length, argument);
+        reportException(Error_Incorrect_method_length, (RexxObject *)argument);
     }
     return value;
 }
 
 
-/******************************************************************************/
-/* Function:   Take in an agument passed to a method, convert it to a position*/
-/*               value, verifying that the number is a positive value.        */
-/*               If the argument is omitted, an error is raised.              */
-/******************************************************************************/
-stringsize_t positionArgument(
-    RexxObject *argument,              /* input argument                    */
-    size_t position )                  /* position of the argument          */
+/**
+ * Take in an agument passed to a method, convert it to a position
+ * value, verifying that the number is a positive value.
+ * If the argument is omitted, an error is raised.
+ *
+ * @param argument The argument to test.
+ * @param position The argument list position of the argument.
+ *
+ * @return The converted numeric value.
+ */
+stringsize_t positionArgument(RexxInternalObject *argument, size_t position )
 {
-    if (argument == OREF_NULL)            /* have a real argument?             */
+    if (argument == OREF_NULL)
     {
-        missingArgument(position);         /* raise an error                    */
+        missingArgument(position);
     }
-    stringsize_t    value;                /* converted number value            */
+    stringsize_t    value;
 
     if (!argument->unsignedNumberValue(value, Numerics::ARGUMENT_DIGITS) || value == 0)
     {
-        /* raise the error                   */
-        reportException(Error_Incorrect_method_position, argument);
+        reportException(Error_Incorrect_method_position, (RexxObject *)argument);
     }
     return value;
 }
 
-/******************************************************************************/
-/* Function:   Take in an argument passed to the BIF, convert it to a         */
-/*               character, if it exists otherwise return the default         */
-/*               character as defined (passed in) by the BIF.                 */
-/******************************************************************************/
-char padArgument(
-    RexxObject *argument,              /* method argument                   */
-    size_t position )                  /* argument position                 */
+
+/**
+ * Take in an argument passed to the BIF, convert it to a
+ * character, if it exists otherwise return the default
+ * character as defined (passed in) by the BIF.
+ *
+ * @param argument The argument to test.
+ * @param position The argument position in the argument list.
+ *
+ * @return The first character of the option.
+ */
+char padArgument(RexxInternalObject *argument, size_t position)
 {
     RexxString *parameter = (RexxString *)stringArgument(argument, position);
-    /* is the string only 1 character?   */
+    // pad characters must be a single character long
     if (parameter->getLength() != 1)
     {
-        /* argument not good, so raise an    */
-        /*error                              */
-        reportException(Error_Incorrect_method_pad, argument);
+        reportException(Error_Incorrect_method_pad, (RexxObject *)argument);
     }
-    /* yes, return the character.        */
     return parameter->getChar(0);
 }
 
-/******************************************************************************/
-/* Function:   Take in an argument passed to the BIF, convert it to a         */
-/*               character, if it exists otherwise return the default         */
-/*               character as defined (passed in) by the BIF.                 */
-/******************************************************************************/
-char optionArgument(
-    RexxObject *argument,              /* method argument                   */
-    size_t position )                  /* argument position                 */
+
+/**
+ * Take in an argument passed to the BIF, convert it to a
+ * character, if it exists otherwise return the default
+ * character as defined (passed in) by the BIF.
+ *
+ * @param argument The argument to test.
+ * @param position The position of the argument
+ *
+ * @return The first character of the option string.
+ */
+char optionArgument(RexxInternalObject *argument, size_t position)
 {
-    /* force option to string            */
+    // must be a string value
     RexxString *parameter = (RexxString *)stringArgument(argument, position);
-    /* return the first character        */
     return toupper(parameter->getChar(0));
 }
