@@ -59,7 +59,7 @@ class MemorySegmentPool;
 class MethodClass;
 class RexxVariable;
 class WeakReference;
-class RexxIdentityTable;
+class IdentityTable;
 class GlobalProtectedObject;
 class MapTable;
 class RexxBuffer;
@@ -288,7 +288,7 @@ enum
     PushThroughStack *saveStack;         // our temporary protection stack
 
     MapTable           *old2new;         // the table for tracking old2new references.
-    RexxIdentityTable  *uninitTable;     // the table of objects with uninit methods
+    IdentityTable  *uninitTable;     // the table of objects with uninit methods
     size_t            pendingUninits;    // objects waiting to have uninits run
     bool              processingUninits; // true when we are processing the uninit table
     WeakReference    *weakReferenceList; // list of active weak references

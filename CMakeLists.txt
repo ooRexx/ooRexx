@@ -560,6 +560,7 @@ set (execution_sources ${build_execution_dir}/CPPCode.cpp
             ${build_execution_dir}/SecurityManager.cpp)
 set (behaviour_sources ${build_behaviour_dir}/PrimitiveBehaviours.cpp
             ${build_behaviour_dir}/RexxBehaviour.cpp
+            ${build_behaviour_dir}/ScopeTable.cpp
             ${build_behaviour_dir}/VirtualFunctionTable.cpp)
 set (concurrency_sources ${build_concurrency_dir}/ActivityDispatcher.cpp
             ${build_concurrency_dir}/ActivityManager.cpp

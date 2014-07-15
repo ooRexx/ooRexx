@@ -47,8 +47,9 @@
 #include "FlagSet.hpp"
 
 // required for method signatures
- class RexxSource;
- class PackageClass;
+class RexxSource;
+class PackageClass;
+class SourceTable;
 
 class RexxClass : public RexxObject
 {
@@ -82,16 +83,16 @@ class RexxClass : public RexxObject
     RexxArray   *getSuperClasses();
     RexxArray   *getClassSuperClasses() { return classSuperClasses; }
     RexxArray   *getSubClasses();
-    void         defmeths(RexxTable *);
+    void         defmeths(TableClass *);
     void         setInstanceBehaviour(RexxBehaviour *);
-    RexxTable  *getInstanceBehaviourDictionary();
-    RexxTable  *getBehaviourDictionary();
+    TableClass  *getInstanceBehaviourDictionary();
+    TableClass  *getBehaviourDictionary();
     RexxString *defaultName();
     void        subClassable(bool);
     void        subClassable(RexxClass *superClass, bool restricted);
     void        mergeSuperClassScopes(RexxBehaviour *target_instance_behaviour);
     RexxObject *defineMethod(RexxString *, MethodClass *);
-    RexxObject *defineMethods(RexxTable *);
+    RexxObject *defineMethods(TableClass *);
     RexxObject *deleteMethod(RexxString *);
     RexxObject *defineClassMethod(RexxString *method_name, MethodClass *newMethod);
     void        removeClassMethod(RexxString *method_name);
@@ -101,15 +102,15 @@ class RexxClass : public RexxObject
     void        updateInstanceSubClasses();
     void        createClassBehaviour(RexxBehaviour *);
     void        createInstanceBehaviour(RexxBehaviour *);
-    void        methodDictionaryMerge(RexxTable *, RexxTable *);
-    RexxTable  *methodDictionaryCreate(RexxTable *, RexxClass *);
+    void        methodDictionaryMerge(TableClass *, TableClass *);
+    TableClass  *methodDictionaryCreate(TableClass *, RexxClass *);
     RexxObject *inherit(RexxClass *, RexxClass *);
     RexxObject *uninherit(RexxClass *);
     RexxObject *enhanced(RexxObject **, size_t);
-    RexxClass  *mixinclass(RexxSource *, RexxString *, RexxClass *, RexxTable *);
-    RexxClass  *subclass(RexxSource *, RexxString *, RexxClass *, RexxTable *);
-    RexxClass  *mixinclassRexx(RexxString *, RexxClass *, RexxTable *);
-    RexxClass  *subclassRexx(RexxString *, RexxClass *, RexxTable *);
+    RexxClass  *mixinclass(RexxSource *, RexxString *, RexxClass *, TableClass *);
+    RexxClass  *subclass(RexxSource *, RexxString *, RexxClass *, TableClass *);
+    RexxClass  *mixinclassRexx(RexxString *, RexxClass *, TableClass *);
+    RexxClass  *subclassRexx(RexxString *, RexxClass *, TableClass *);
     RexxClass  *newRexx(RexxObject **args, size_t argCount);
     void        setMetaClass(RexxClass *);
     bool        isCompatibleWith(RexxClass *other);
@@ -137,6 +138,10 @@ class RexxClass : public RexxObject
     inline void         setMetaClass() { classFlags.set(META_CLASS); }
            void         addSubClass(RexxClass *);
            void         removeSubclass(RexxClass *c);
+           ScopeTable  *copyScopes();
+           RexxArray   *allScopes();
+           TableClass   *copyInstanceMethods();
+           ScopeTable  *copyMetaclassScopes();
 
     static void processNewArgs(RexxObject **, size_t, RexxObject ***, size_t *, size_t, RexxObject **, RexxObject **);
 
@@ -156,24 +161,21 @@ class RexxClass : public RexxObject
         PARENT_HAS_UNINIT,
     } ClassFlag;
 
-                                       /* Subclassable and subclassed       */
-    RexxString    *id;                 /* classes will have a name string   */
-                                       /* class methods specific to this    */
-                                       /* class                             */
-    RexxTable     *classMethodDictionary;
-                                       /* instances of this class inherit   */
-    RexxBehaviour *instanceBehaviour;  /* this behaviour                    */
-                                       /* methods added to this class       */
-    RexxTable     *instanceMethodDictionary;
-    RexxClass     *baseClass;          /* Baseclass of this class           */
-    RexxArray     *metaClass;          /* Metaclass of this class           */
-                                       /* Metaclass mdict                   */
+                                       // Subclassable and subclassed
+    RexxString    *id;                 // classes will have a name string
+    // class methods specific to this class.                                */
+    MethodDictionary *classMethodDictionary;
+    // instances of this class will be given this behaviour.
+    RexxBehaviour *instanceBehaviour;
+
+    RexxClass     *baseClass;          // Baseclass of this class
+    RexxArray     *metaClass;          // Metaclass(s) of this class
+                                       // meta class method dictionaries
     RexxArray     *metaClassMethodDictionary;
-    RexxIdentityTable *metaClassScopes;  /* Metaclass scopes                  */
-                                       /* The superclass and any inherited  */
-    RexxArray     *classSuperClasses;  /* mixins for class behaviour        */
-                                       /* The superclass and any inherited  */
-                                       /* mixins for instance behaviour     */
+    // the super class and any inherited mixins for class
+    // behaviour
+    RexxArray     *classSuperClasses;
+    // the super class and any inherited mixins that contribute to instance behaviour.
     RexxArray     *instanceSuperClasses;
     FlagSet<ClassFlag, 32> classFlags; // class attributes
 

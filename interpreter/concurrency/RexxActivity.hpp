@@ -335,7 +335,7 @@ class RexxActivity : public RexxInternalObject
     RexxActivity *oldActivity;          // pushed nested activity
     RexxActivationStack   frameStack;   // our stack used for activation frames
     RexxDirectory      *conditionobj;   // condition object for killed activi
-    RexxTable          *requiresTable;  // Current ::REQUIRES being installed
+    TableClass          *requiresTable;  // Current ::REQUIRES being installed
     RexxMessage        *dispatchMessage;  // a message object to run on this thread
 
 

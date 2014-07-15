@@ -46,7 +46,7 @@
 
 #include "TableClass.hpp"
 
-class RexxRelation : public RexxTable {
+class RexxRelation : public TableClass {
  public:
    void * operator new(size_t);
    inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };

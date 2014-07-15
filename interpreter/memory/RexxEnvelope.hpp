@@ -77,7 +77,7 @@ class RexxEnvelope : public RexxInternalObject
     inline RexxObject *getReceiver() {return this->receiver;}
     inline size_t      getCurrentOffset() { return this->currentOffset; }
     inline MapTable *getDuptable() {return this->duptable;}
-    inline RexxIdentityTable *getRehashtable() {return this->rehashtable;}
+    inline IdentityTable *getRehashtable() {return this->rehashtable;}
 
     size_t      currentOffset;            // current flattening offset
 
@@ -91,9 +91,9 @@ protected:
     RexxObject *home;
     RexxObject *receiver;                 // object to receive the message
     MapTable           *duptable;         // table of duplicates
-    RexxIdentityTable  *savetable;        // table of protected objects created during flattening
+    IdentityTable  *savetable;        // table of protected objects created during flattening
     RexxSmartBuffer *buffer;              // smart buffer wrapper
-    RexxIdentityTable  *rehashtable;      // table to rehash
+    IdentityTable  *rehashtable;      // table to rehash
     LiveStack  *flattenStack;             // the flattening stack
 };
 #endif

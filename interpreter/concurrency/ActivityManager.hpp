@@ -42,7 +42,7 @@
 
 #include <deque>
 
-class RexxIdentityTable;
+class IdentityTable;
 class LiveStack;
 class RexxCode;
 class RoutineClass;
@@ -107,18 +107,16 @@ public:
     }
 
 protected:
-    enum
-    {
-        MAX_THREAD_POOL_SIZE = 5,       // maximum number of activities we'll pool
-    };
 
-                                        /* activities in use                 */
+    // maximum number of activities we'll pool
+    static const size_t MAX_THREAD_POOL_SIZE = 5;
+
+    // activities in use
     static RexxList         *activeActivities;
-                                        /* free activities                   */
+    // free activities
     static RexxList         *availableActivities;
-                                        /* table of all localact             */
+    // table of all activities
     static RexxList         *allActivities;
-    static RexxIdentityTable  *subClasses;   /* SubClasses...one per system       */
     static bool              processTerminating;  // shutdown processing started
     static size_t            interpreterInstances;  // number of times an interpreter has been created.
 

@@ -481,7 +481,7 @@ protected:
     RexxInstruction *currentInstruction; // current "protected" instruction
     RexxDirectory   *variables;          // root of associated variable list
     RexxDirectory   *labels;             // root of associated label list
-    RexxIdentityTable *guardVariables;   // exposed variables in guard list
+    IdentityTable *guardVariables;   // exposed variables in guard list
     RexxDirectory   *exposedVariables;   // root of exposed variables list
     RexxArray       *calls;              // root of call list
 

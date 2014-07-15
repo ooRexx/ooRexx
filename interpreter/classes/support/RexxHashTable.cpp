@@ -91,7 +91,7 @@ RexxHashTable *RexxHashTable::newInstance(
     return newHash;                      /* and return it                     */
 }
 
-RexxTable *RexxHashTable::newInstance(
+TableClass *RexxHashTable::newInstance(
   size_t entries,                      /* number of entries in the table    */
   size_t companionSize,                /* size of companion "table" object  */
   size_t type)                         // type of collection we're creating
@@ -106,7 +106,7 @@ RexxTable *RexxHashTable::newInstance(
 /******************************************************************************/
 {
     RexxHashTable *newHash;              /* new hash table object             */
-    RexxTable     *newObj;               /* associated table object           */
+    TableClass     *newObj;               /* associated table object           */
     size_t bytes;                        /* size of the allocated object      */
     size_t bucketSize;                   /* size of the bucket                */
 
@@ -122,7 +122,7 @@ RexxTable *RexxHashTable::newInstance(
     /* make sure we've got proper sizes for each of the object parts. */
     companionSize = Memory::roundObjectBoundary(companionSize);
     /* Get space for two objects         */
-    newObj = (RexxTable *)new_object(bytes + companionSize, type);
+    newObj = (TableClass *)new_object(bytes + companionSize, type);
                                          /* address the hash table            */
     newHash = (RexxHashTable *)(((char *)newObj) + companionSize);
     /* compute total size of the hash    */
@@ -1736,7 +1736,7 @@ RexxArray *RexxHashTable::allIndexes()
  */
 RexxArray *RexxHashTable::uniqueIndexes()
 {
-    RexxTable *indexSet = new_table();
+    TableClass *indexSet = new_table();
     ProtectedObject p(indexSet);
     size_t j = 0;                               /* set the insertion point           */
     // loop through all of the items

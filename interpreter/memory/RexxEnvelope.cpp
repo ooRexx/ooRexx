@@ -339,8 +339,8 @@ void  RexxEnvelope::rehash()
     // do we actually have anything here?
     if (rehashtable != OREF_NULL)
     {
-        RexxTable *index;
-        for (HashLink i = rehashtable->first(); (index = (RexxTable *)rehashtable->index(i)) != OREF_NULL; i = rehashtable->next(i))
+        TableClass *index;
+        for (HashLink i = rehashtable->first(); (index = (TableClass *)rehashtable->index(i)) != OREF_NULL; i = rehashtable->next(i))
         {
             // tell the table to rehash
             index->reHash();

@@ -46,14 +46,16 @@
 
 #include "HashContents.hpp"
 
+
 /**
  * Base class for all collection types based on hash tables.
- * The implements most of the base methods.
+ * The implements most of the base methods, and uses object
+ * identity comparison semantics.
  */
 class HashCollection : public RexxObject
 {
  public:
-    HashCollection(size_t capacity);
+    inline HashCollection() { ; }
 
     virtual void        live(size_t);
     virtual void        liveGeneral(MarkReason reason);
@@ -77,7 +79,6 @@ class HashCollection : public RexxObject
     virtual RexxInternalObject *remove(RexxInternalObject *key);
     virtual RexxInternalObject *get(RexxInternalObject *key);
     virtual void put(RexxInternalObject *, RexxInternalObject *);
-    virtual void add(RexxInternalObject *, RexxInternalObject *);
     virtual RexxInternalObject *removeItem(RexxInternalObject *value);
     virtual bool hasItem(RexxInternalObject *);
     virtual RexxInternalObject *getIndex(RexxInternalObject * value);
@@ -107,6 +108,38 @@ class HashCollection : public RexxObject
     // minimum bucket size we'll work with
     static const size_t MinimumBucketSize = 17;
 
+    // Our default bucket size (currently the same as the minimum, but
+    // it does not need to be)
+    static const size_t DefaultTableSize = 17;
+
     HashContents *contents;           // the backing hash table collection.
+
+protected:
+
+    // These are protected because we want to enable this on a case-by-case basis.
+    // in appropriate subclasses.
+    virtual void add(RexxInternalObject *, RexxInternalObject *);
+};
+
+
+/**
+ * A hash collection subclass for all classes where
+ * equality is based on object identity
+ */
+class IdentityHashCollection : public HashCollection
+{
+public:
+    virtual HashContents *allocateContents(size_t bucketSize, size_t capacity);
+};
+
+
+/**
+ * A hash collection subclass for all classes where
+ * equality is based on object equality rather than identity.
+ */
+class EqualityHashCollection : public HashCollection
+{
+public:
+    virtual HashContents *allocateContents(size_t bucketSize, size_t capacity);
 };
 #endif

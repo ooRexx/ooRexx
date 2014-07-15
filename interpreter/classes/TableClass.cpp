@@ -50,116 +50,40 @@
 #include "MethodArguments.hpp"
 
 // singleton class instance
-RexxClass *RexxTable::classInstance = OREF_NULL;
+RexxClass *TableClass::classInstance = OREF_NULL;
 
 
 /**
  * Create initial class object at bootstrap time.
  */
-void RexxTable::createInstance()
+void RexxClass::createInstance()
 {
     CLASS_CREATE(Table, "Table", RexxClass);
 }
 
-RexxObject *RexxTable::stringAdd(
-  RexxObject *_value,                   /* object to add                     */
-  RexxString *_index)                   /* added index                       */
-/******************************************************************************/
-/* Function:  Add an object to a table using a string index.                  */
-/******************************************************************************/
+
+/**
+ * Create a new table object.
+ *
+ * @param size   the size of the object.
+ *
+ * @return Storage for creating a table object.
+ */
+void *TableClass::operator new (size_t size)
 {
-    requiredArgument(_value, ARG_ONE);            /* make sure we have an value        */
-    requiredArgument(_index, ARG_TWO);            /* make sure we have an index        */
-    /* try to place in existing hashtab  */
-    RexxHashTable *newHash = this->contents->stringAdd(_value, _index);
-    if (newHash != OREF_NULL)            /* have a reallocation occur?        */
-    {
-        /* hook on the new hash table        */
-        OrefSet(this, this->contents, newHash);
-    }
-    return OREF_NULL;                    /* always return nothing             */
+    return new_object(size, T_IdentityTable);
 }
 
-RexxObject *RexxTable::stringPut(
-  RexxObject *_value,                   /* value to insert                   */
-  RexxString *_index)                   /* item index                        */
-/******************************************************************************/
-/* Function:  Put an object into the table using a string index               */
-/******************************************************************************/
-{
-    requiredArgument(_value, ARG_ONE);            /* make sure we have an value        */
-    requiredArgument(_index, ARG_TWO);            /* make sure we have an index        */
-    /* try to place in existing hashtab  */
-    RexxHashTable *newHash = this->contents->stringPut(_value, _index);
-    if (newHash  != OREF_NULL)           /* have a reallocation occur?        */
-    {
-        /* hook on the new hash table        */
-        OrefSet(this, this->contents, newHash);
-    }
-    return OREF_NULL;                    /* always return nothing             */
-}
 
-RexxArray  *RexxTable::requestArray()
-/******************************************************************************/
-/* Function:  Primitive level request('ARRAY') fast path                      */
-/******************************************************************************/
-{
-    if (isOfClass(Table, this))              /* primitive level object?           */
-    {
-        return this->makeArray();          /* just do the makearray             */
-    }
-    else                                 /* need to so full request mechanism */
-    {
-        return(RexxArray *)this->sendMessage(OREF_REQUEST, OREF_ARRAYSYM);
-    }
-}
-
-RexxObject *RexxTable::itemsRexx()
-/******************************************************************************/
-/* Function:  Return the count of items in the table                          */
-/******************************************************************************/
-{
-    size_t numEntries = this->contents->totalEntries();
-    return(RexxObject *)new_integer(numEntries);
-}
-
-void RexxTable::reset()
-/******************************************************************************/
-/* Function:  Reset a table by clearing out the old contents table            */
-/******************************************************************************/
-{
-    OrefSet(this, this->contents, new_hashtab(RexxHashTable::DEFAULT_HASH_SIZE));
-}
-
-RexxObject *RexxTable::putNodupe(RexxObject *_value, RexxObject *_index)
-/******************************************************************************/
-/* Function:  Put an object into a table, ensuring no duplicates.             */
-/******************************************************************************/
-{
-    /* try to place in existing hashtab  */
-    RexxHashTable *newHash = this->contents->putNodupe(_value, _index);
-    if (newHash  != OREF_NULL)           /* have a reallocation occur?        */
-    {
-        /* hook on the new hash table        */
-        OrefSet(this, this->contents, newHash);
-    }
-    return OREF_NULL;
-}
-
-void RexxTable::reHash()
-/******************************************************************************/
-/* Function:  Create an instance of a table                                   */
-/******************************************************************************/
-{
-    OrefSet(this, this->contents, this->contents->reHash());
-}
-
-RexxObject *RexxTable::newRexx(
-    RexxObject **args,                 /* subclass init arguments           */
-    size_t argCount)                   /* count of arguments                */
-/******************************************************************************/
-/* Function:  Create an instance of a table                                   */
-/******************************************************************************/
+/**
+ * Create a new table instance from Rexx code.
+ *
+ * @param args     The new arguments.
+ * @param argCount The count of new arguments.
+ *
+ * @return The constructed instance.
+ */
+RexxObject *TableClass::newRexx(RexxObject **args, size_t argCount)
 {
     // this class is defined on the object class, but this is actually attached
     // to a class object instance.  Therefore, any use of the this pointer
@@ -167,21 +91,19 @@ RexxObject *RexxTable::newRexx(
     // any methods on this object from this method.
     RexxClass *classThis = (RexxClass *)this;
 
-    RexxTable *newObj = new_table();
-    ProtectedObject p(newObj);
+    RexxObject *initialSize;
 
-    // handle Rexx class completion
-    classThis->completeNewObject(newObj, args, argCount);
+    // parse the arguments
+    RexxClass::processNewArgs(args, argCount, &args, &argCount, 1, (RexxObject **)&initialSize, NULL);
 
-    return newObj;
+    // the capacity is optional, but must be a positive numeric value
+    size_t capacity = optionalLengthArgument(initialSize, DefaultTableSize, ARG_ONE);
+
+    // create the new identity table item
+    Table *temp = new Table(capacity);
+    ProtectedObject p(temp);
+    // finish setting this up.
+    classThis->completeNewObject(temp, args, argCount);
+    return temp;
 }
-
-RexxTable *RexxTable::newInstance()
-/******************************************************************************/
-/* Function:  Create an instance of a table                                   */
-/******************************************************************************/
-{
-    return (RexxTable *)new_hashCollection(RexxHashTable::DEFAULT_HASH_SIZE, sizeof(RexxTable), T_Table);
-}
-
 

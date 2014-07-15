@@ -66,6 +66,58 @@ public:
     // indicates not linked
     static const ItemLink NoLink = SIZE_MAX;
 
+
+    /**
+     * an iterator for iterating over all entries that have a given index.
+     */
+	class IndexIterator
+	{
+		friend class HashContents;
+
+	public:
+		inline ~IndexIterator() {}
+
+        bool isAvailable()  { return position != NoMore; }
+        RexxInternalObject *value() { return contents->entryValue(position); }
+        RexxInternalObject *index() { return contents->entryIndex(position); }
+        void next() { position = contents->nextMatch(index, position); }
+
+	private:
+        // constructor for an index iterator
+		IndexIterator(HashContents *c, RexxInternalObject *i, ItemLink p)
+            : contents(c), index(i), position(p) { }
+
+        HashContents *contents;
+        RexxInternalObject *index(i);
+        ItemLink position(p);
+	};
+
+
+    /**
+     * an iterator for iterating over all entries of the table
+     */
+	class TableIterator
+	{
+		friend class HashContents;
+
+	public:
+		inline ~TableIterator() {}
+
+        bool isAvailable()  { return position != NoMore; }
+        RexxInternalObject *value() { return contents->entryValue(position); }
+        RexxInternalObject *index() { return contents->entryIndex(position); }
+        void next() { position = contents->iterateNext(position, nextBucket); }
+
+	private:
+        // constructor for an index iterator
+		TableIterator(HashContents *c, ItemLink p, ItemLink nextBucket)
+            : contents(c), index(i), position(p) { }
+
+        HashContents *contents;
+        ItemLink position(p);
+        ItemLink nextBucket;
+	};
+
     /**
      * Small helper class for an entry stored in the contents.
      */
@@ -83,18 +135,13 @@ public:
         ItemLink next;                       // next item in overflow bucket
     };
 
-
-           void * operator new(size_t size, size_t capacity);
-    inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };
-    inline void  operator delete(void *, void *) { ; }
-    inline void  operator delete(void *, size_t) { ; }
-
-    inline HashContents(RESTORETYPE restoreType) { ; };
+    inline HashContents() { ; };
            HashContents(size_t entries, size_t total);
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(RexxEnvelope *);
+
 
     // default index comparison method
     virtual bool isIndexEqual(RexxInternalObject *target, RexxInternalObject *entryIndex)
@@ -119,21 +166,13 @@ public:
     void initializeFreeChain();
 
     // set the entry values for a position
-    inline void setEntry(ItemLink position, RexxInternalObject *value, RexxInternalObject *index)
-    {
-        setField(entries[position].value, value);
-        setField(entries[position].index, index);
-    }
+    void setEntry(ItemLink position, RexxInternalObject *value, RexxInternalObject *index);
 
     // clear and entry in the chain
-    inline void clearEntry(ItemLink position)
-    {
-        // clear out the value/index fields
-        setField(entries[position].value, OREF_NULL);
-        setField(entries[position].index, OREF_NULL);
-        // clear the link also.
-        entries[position].next = NoMore;
-    }
+    void clearEntry(ItemLink position);
+
+    // update a next entry
+    void setNext(ItemLink position, ItemLink next) { entries[position].next = next; }
 
     // copy an entry contents into another entry
     inline void copyEntry(ItemLink target, ItemLink source)
@@ -163,10 +202,7 @@ public:
     }
 
     // set the value in an existing entry
-    inline void setValue(ItemLink position, RexxInternalObject *value)
-    {
-        setField(entries[position].value, value);
-    }
+    void setValue(ItemLink position, RexxInternalObject *value);
 
     // perform an index comparison for a position
     inline bool isIndex(ItemLink position, RexxInternalObject *index)
@@ -248,6 +284,7 @@ public:
     bool locateEntry(RexxInternalObject *index, ItemLink &position, ItemLink &previous);
     bool locateEntry(RexxInternalObject *index, RexxInternalObject *item, ItemLink &position, ItemLink &previous);
     bool locateItem(RexxInternalObject *item, ItemLink &position, ItemLink &previous);
+    bool nextMatch(RexxInternalObject *index, ItemLink &position);
     RexxArray *removeAll(RexxInternalObject *index);
     RexxInternalObject *removeItem(RexxInternalObject *value, RexxInternalObject *index);
     bool hasItem(RexxInternalObject *value, RexxInternalObject *index );
@@ -271,7 +308,11 @@ public:
     RexxSupplier *supplier();
     void reHash(HashContents *newHash);
     bool add(RexxInternalObject *item, RexxInternalObject *index);
+    bool addFront(RexxInternalObject *item, RexxInternalObject *index);
     void copyValues();
+
+    IndexIterator iterator(RexxInternalObject *index);
+    TableIterator iterator();
 
 protected:
 
@@ -280,6 +321,61 @@ protected:
     size_t   itemCount;                 // total number of items in the table
     ItemLink freeChain;                 // first free element
     ContentEntry entries[1];            // hash table entries
+};
+
+
+/**
+ * A contents class that applies object identity look up
+ * for key\item equality.  Used for the identity table
+ * class.
+ */
+class IdentityHashContents : public HashContents
+{
+public:
+        void * operator new(size_t size, size_t capacity);
+    inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };
+    inline void  operator delete(void *, void *) { ; }
+    inline void  operator delete(void *, size_t) { ; }
+
+    inline IdentityHashContents(RESTORETYPE restoreType) { ; };
+           IdentityHashContents(size_t entries, size_t total) : HashContents(entries, total) { }
+};
+
+
+/**
+ * A contents class that applies object equality lookup for
+ * key\item equality.  Used for the identity table class.
+ */
+class EqualityHashContents : public HashContents
+{
+public:
+        void * operator new(size_t size, size_t capacity);
+    inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };
+    inline void  operator delete(void *, void *) { ; }
+    inline void  operator delete(void *, size_t) { ; }
+
+    inline EqualityHashContents(RESTORETYPE restoreType) { ; };
+           EqualityHashContents(size_t entries, size_t total) : HashContents(entries, total) { }
+
+    // default index comparison method
+    virtual bool isIndexEqual(RexxInternalObject *target, RexxInternalObject *entryIndex)
+    {
+        // compare using object equality
+        return target->equalValue(entryIndex);
+    }
+
+    // default item comparison method
+    virtual bool isItemEqual(RexxInternalObject *target, RexxInternalObject *entryItem)
+    {
+        // compare using object equality
+        return target->equalValue(entryItem);
+    }
+
+    // Use the full hash() method processing to determine this.
+    virtual ItemLink hashIndex(RexxInternalObject *index)
+    {
+        return (ItemLink)(index->hash() % bucketSize);
+    }
 };
 
 #endif

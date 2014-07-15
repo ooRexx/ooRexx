@@ -176,8 +176,8 @@ EXTERNMEM MemoryObject memoryObject;
 #define TheStringClass RexxString::classInstance
 #define TheMutableBufferClass RexxMutableBuffer::classInstance
 #define TheSupplierClass RexxSupplier::classInstance
-#define TheTableClass RexxTable::classInstance
-#define TheIdentityTableClass RexxIdentityTable::classInstance
+#define TheTableClass TableClass::classInstance
+#define TheIdentityTableClass IdentityTable::classInstance
 #define TheRelationClass RexxRelation::classInstance
 #define ThePointerClass RexxPointer::classInstance
 #define TheBufferClass RexxBuffer::classInstance

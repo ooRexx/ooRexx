@@ -42,34 +42,46 @@
 /*                                                                          */
 /****************************************************************************/
 #include "RexxCore.h"
+#include "IdentityTableClass.hpp"
 #include "IntegerClass.hpp"
-#include "TableClass.hpp"
-#include "RexxActivity.hpp"
-#include "ActivityManager.hpp"
 #include "ProtectedObject.hpp"
+#include "MethodArguments.hpp"
 
 // singleton class instance
-RexxClass *RexxIdentityTable::classInstance = OREF_NULL;
+RexxClass *IdentityTable::classInstance = OREF_NULL;
 
 
 /**
  * Create initial class object at bootstrap time.
  */
-void RexxIdentityTable::createInstance()
+void IdentityTable::createInstance()
 {
     CLASS_CREATE(IdentityTable, "IdentityTable", RexxClass);
 }
 
 
 /**
- * Create a new identity table instance.
+ * Create a new identity table package object.
+ *
+ * @param size   the size of the source object.
+ *
+ * @return Storage for creating a source object.
+ */
+void *IdentityTable::operator new (size_t size)
+{
+    return new_object(size, T_IdentityTable);
+}
+
+
+/**
+ * Create a new identity table instance from Rexx code.
  *
  * @param args     The new arguments.
  * @param argCount The count of new arguments.
  *
  * @return The constructed instance.
  */
-RexxObject *RexxIdentityTable::newRexx(RexxObject **args, size_t argCount)
+RexxObject *IdentityTable::newRexx(RexxObject **args, size_t argCount)
 {
     // this class is defined on the object class, but this is actually attached
     // to a class object instance.  Therefore, any use of the this pointer
@@ -77,140 +89,18 @@ RexxObject *RexxIdentityTable::newRexx(RexxObject **args, size_t argCount)
     // any methods on this object from this method.
     RexxClass *classThis = (RexxClass *)this;
 
-    RexxIdentityTable *newObj = new_identity_table();
-    ProtectedObject p(newObj);
+    RexxObject *initialSize;
 
-    // handle Rexx class completion
-    classThis->completeNewObject(newObj, args, argCount);
+    // parse the arguments
+    RexxClass::processNewArgs(args, argCount, &args, &argCount, 1, (RexxObject **)&initialSize, NULL);
 
-    return newObj;
-}
+    // the capacity is optional, but must be a positive numeric value
+    size_t capacity = optionalLengthArgument(initialSize, DefaultTableSize, ARG_ONE);
 
-
-/**
- * Remove an object from an IdentityTable
- *
- * @param key    The key of the object to remove
- *
- * @return The removed object (if any).
- */
-RexxObject *RexxIdentityTable::remove(RexxObject *key)
-{
-    return contents->primitiveRemove(key);
-}
-
-
-/**
- * Retrieve an object from the table using identity
- * semantics.  This is an override for the base
- * collection get method.
- *
- * @param key    The target index.
- *
- * @return The retrieved object.  Returns OREF_NULL if the key is
- *         not found.
- */
-RexxObject *RexxIdentityTable::get(RexxObject *key)
-{
-    return this->contents->primitiveGet(key);
-}
-
-
-/**
- * Create a new instance of an identity table.
- *
- * @param size   The initial table capacity.
- *
- * @return The newly created table.
- */
-RexxIdentityTable *RexxIdentityTable::newInstance(size_t size)
-{
-    return (RexxIdentityTable *)new_hashCollection(size, sizeof(RexxIdentityTable), T_IdentityTable);
-}
-
-
-/**
- * Virtual override for the default hash collection put()
- * operation.
- *
- * @param _value The value to insert.
- * @param _index The target index.
- *
- * @return Always returns OREF_NULL
- */
-RexxObject *RexxIdentityTable::put(RexxObject *_value, RexxObject *_index)
-{
-    /* try to place in existing hashtab  */
-    RexxHashTable *newHash = this->contents->primitivePut(_value, _index);
-    if (newHash != OREF_NULL)            /* have a reallocation occur?        */
-    {
-        /* hook on the new hash table        */
-        OrefSet(this, this->contents, newHash);
-    }
-    return OREF_NULL;                    /* always return nothing             */
-}
-
-
-/**
- * Override for the default hash collection add()
- * method.
- *
- * @param _value The value to insert.
- * @param _index The index this will be stored under.
- *
- * @return Always returns OREF_NULL.
- */
-RexxObject *RexxIdentityTable::add(RexxObject *_value, RexxObject *_index)
-{
-    /* try to place in existing hashtab  */
-    RexxHashTable *newHash  = this->contents->primitiveAdd(_value, _index);
-    if (newHash  != OREF_NULL)           /* have a reallocation occur?        */
-    {
-        /* hook on the new hash table        */
-        OrefSet(this, this->contents, newHash);
-    }
-    return OREF_NULL;                    /* always return nothing             */
-}
-
-
-/**
- * Remove an item specified by value.
- *
- * @param target The target object.
- *
- * @return The target object again.
- */
-RexxObject *RexxIdentityTable::removeItem(RexxObject *target)
-{
-    // the contents handle all of this.
-    return this->contents->primitiveRemoveItem(target);
-}
-
-
-/**
- * Test if a given item exists in the collection.
- *
- * @param target The target object.
- *
- * @return .true if the object exists, .false otherwise.
- */
-RexxObject *RexxIdentityTable::hasItem(RexxObject *target)
-{
-    return this->contents->primitiveHasItem(target);
-}
-
-
-/**
- * Retrieve an index for a given item.  Which index is returned
- * is indeterminate.
- *
- * @param target The target object.
- *
- * @return The index for the target object, or .nil if no object was
- *         found.
- */
-RexxObject *RexxIdentityTable::getIndex(RexxObject *target)
-{
-    // retrieve this from the hash table
-    return contents->primitiveGetIndex(target);
+    // create the new identity table item
+    IdentityTable *temp = new IdentityTable(capacity);
+    ProtectedObject p(temp);
+    // finish setting this up.
+    classThis->completeNewObject(temp, args, argCount);
+    return temp;
 }

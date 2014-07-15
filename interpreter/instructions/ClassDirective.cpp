@@ -335,7 +335,7 @@ void ClassDirective::addInherits(RexxString *name)
  *
  * @return The class methods directory.
  */
-RexxTable *ClassDirective::getClassMethods()
+TableClass *ClassDirective::getClassMethods()
 {
     if (classMethods == OREF_NULL)
     {
@@ -350,7 +350,7 @@ RexxTable *ClassDirective::getClassMethods()
  *
  * @return The instance methods directory.
  */
-RexxTable *ClassDirective::getInstanceMethods()
+TableClass *ClassDirective::getInstanceMethods()
 {
     if (instanceMethods == OREF_NULL)
     {

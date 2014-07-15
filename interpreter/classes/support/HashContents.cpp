@@ -47,20 +47,38 @@
 #include "ProtectedObject.hpp"
 #include "SupplierClass.hpp"
 
+
 /**
- * Allocate a new HashContent item.
+ * Allocate a new IdentityHashContent item.
  *
  * @param size     The base size of the object.
  * @param capacity The capacity in entries (must be greater than zero)
  *
  * @return The backing storage for a content instance.
  */
-void *HashContents::operator new(size_t size, size_t capacity)
+void *IdentityHashContents::operator new(size_t size, size_t capacity)
 {
     size_t bytes = size + (sizeof(ContentEntry) * (capacity - 1));
 
     // now allocate the suggested bucket size
-    return new_object(bytes, T_HashContents);
+    return new_object(bytes, T_IdentityHashContents);
+}
+
+
+/**
+ * Allocate a new EqualityHashContent item.
+ *
+ * @param size     The base size of the object.
+ * @param capacity The capacity in entries (must be greater than zero)
+ *
+ * @return The backing storage for a content instance.
+ */
+void *EqualityHashContents::operator new(size_t size, size_t capacity)
+{
+    size_t bytes = size + (sizeof(ContentEntry) * (capacity - 1));
+
+    // now allocate the suggested bucket size
+    return new_object(bytes, T_EqualityHashContents);
 }
 
 
@@ -245,6 +263,48 @@ bool HashContents::append(RexxInternalObject *value, RexxInternalObject * index,
 
 
 /**
+ * Add a link to a slot position chain  This adds it at the
+ * FRONT of the chain.
+ *
+ * @param value    The value to add.
+ * @param index    The index value.
+ * @param position The position of the chain anchor.
+ *
+ * @return true if we added this successfully, false if we had
+ *         an overflow condition.
+ */
+bool HashContents::insert(RexxInternalObject *value, RexxInternalObject * index, ItemLink position)
+{
+    // we keep all of the free items in a chain, so we can just pull
+    // the first entry off of the chain.  In theory, we've already checked
+    // that we're not full, so we should find one there.
+
+    ItemLink newEntry = freeChain;
+
+    // belt-and-braces...this should not occur
+    if (newEntry == NoMore)
+    {
+        return false;
+    }
+
+    // close up the chain
+    freeChain = entries[newEntry].next;
+
+    // copy the anchor position to this new entry
+    copyEntry(newEntry, position);
+
+    // set the anchor item to the new values
+    setEntry(position, value, index);
+    // and chain the new entry off of this.
+    setNext(postion, newEntry);
+
+    // we have a new item in the list.
+    itemCount++;
+    return true;
+}
+
+
+/**
  * Remove an item from the collection.
  *
  * @param index The index value
@@ -280,6 +340,9 @@ RexxInternalObject *HashContents::remove(RexxInternalObject *index)
  */
 void HashContents::removeChainLink(ItemLink &position, ItemLink previous)
 {
+    // reduce the item count for this removal.
+    itemCount--;
+
     // are we removing the first item in the chain?  We can't move this
     // to the free list because this is the anchor for the hash postion.
     // we need to either promote the next item to the front of the chain
@@ -325,7 +388,7 @@ bool HashContents::locateEntry(RexxInternalObject *index, ItemLink &position, It
     previous = NoLink;
 
     // ok, run the chain searching for an index match.
-    while (isInUse(position))
+    while (position != NoMore && isInUse(position))
     {
         // have a match? return to the caller.  All of the position
         // stuff should be set now
@@ -341,6 +404,76 @@ bool HashContents::locateEntry(RexxInternalObject *index, ItemLink &position, It
 
     // hit the end of the chain, we don't have this item
     return false;
+}
+
+
+/**
+ * Locate the next entry in the table for a given index
+ *
+ * @param index    The target entry index.
+ * @param position The starting position for the search (the
+ *                 last match)
+ *
+ * @return true if the item is located, false for a failure
+ */
+bool HashContents::nextMatch(RexxInternalObject *index, ItemLink &position)
+{
+    // got a bad call here.
+    if (position == NoMore)
+    {
+        return false;
+    }
+
+    // step to the next position
+    position = nextEntry(position);
+
+    // keep looping until the end of this chain
+    while (position != NoMore)
+    {
+        // if this is a match, we're done
+        if (isIndex(position, index))
+        {
+            return true;
+        }
+        // step to the next position
+        position = nextEntry(position);
+    }
+
+    // hit the end of the chain, we don't have this item
+    // (position also marks this as the end)
+    return false;
+}
+
+
+/**
+ * Iterate to the next occupied entry of the list.
+ *
+ * @param position   The starting position.
+ * @param nextBucket The next bucket to step to once this chain is used up.
+ */
+void HashContents::iterateNext(ItemLink &position, ItemLink nextBucket)
+{
+    // have a good current position...step to the next chain item.
+    if (position != NoMore)
+    {
+        // if we still have a chain, then we can just return this position as the next one
+        position = nextEntry(position);
+        if (position != NoMore)
+        {
+            return;
+        }
+    }
+
+    // look for another bucket with an active chain.
+    while (nextBucket < bucketSize)
+    {
+        position = nextBucket++;
+        // if this bucket position is active, we've found our match
+        if (isInuse(position))
+        {
+            return;
+        }
+    }
 }
 
 
@@ -1054,7 +1187,7 @@ RexxArray *HashContents::uniqueIndexes()
     // however, this method is only exposed for relations/bags, so we'll
     // leave the implementation in the base
     // TODO:  good use for a hinting version
-    Protected<RexxTable> indexSet = new_table();
+    Protected<TableClass> indexSet = new_table();
 
     for (size_t i = 0; i < bucketSize; i++)
     {
@@ -1199,6 +1332,44 @@ bool HashContents::add(RexxInternalObject *item, RexxInternalObject *index)
 
 
 /**
+ * Add an element to a hash table without accounting
+ * for duplicates.  This operation adds the item to the front of
+ * the bucket chain so that a search on this index will return
+ * this item, essentially overriding any other item already in
+ * the collection.
+ *
+ * @param item   The value to add.
+ * @param index  The index this will be added under.
+ *
+ * @return True if this was successfully added, false if the table
+ *         is full.
+ */
+bool HashContents::addFront(RexxInternalObject *item, RexxInternalObject *index)
+{
+    // indicate an addition failure if we're out of room
+    if (isFull())
+    {
+        return false;
+    }
+
+    // calculate the bucket position
+    ItemLink position = hashIndex(index);
+
+    // if the hash slot is empty, we can just fill this in right here
+    if (isAvailable(position))
+    {
+        setEntry(position, item, index);
+        // new item, so bump the count
+        itemCount++;
+        return true;
+    }
+
+    // insert at the front of the bucket.
+    return insert(item, index, position);
+}
+
+
+/**
  * copy all of the values contained in this table.
  */
 void HashContents::copyValues()
@@ -1216,4 +1387,87 @@ void HashContents::copyValues()
             setValue(position, entryValue(position)->copy());
         }
     }
+}
+
+
+/**
+ * set the entry values for a position
+ *
+ * @param position The table position.
+ * @param value    The value to set.
+ * @param index    The index to set.
+ */
+void HashContents::setEntry(ItemLink position, RexxInternalObject *value, RexxInternalObject *index)
+{
+    setField(entries[position].value, value);
+    setField(entries[position].index, index);
+}
+
+
+/**
+ * clear an entry in the chain
+ *
+ * @param position The entry position.
+ */
+void HashContents::clearEntry(ItemLink position)
+{
+    // clear out the value/index fields
+    setField(entries[position].value, OREF_NULL);
+    setField(entries[position].index, OREF_NULL);
+    // clear the link also.
+    entries[position].next = NoMore;
+}
+
+
+/**
+ * set the value in an existing entry
+ *
+ * @param position The position of the entry.
+ * @param value    The value to set.
+ */
+void HashContents::setValue(ItemLink position, RexxInternalObject *value)
+{
+    setField(entries[position].value, value);
+}
+
+
+/**
+ * Create an iterator for traversing through all of the
+ * entries with a given index.
+ *
+ * @param index  The target index.
+ *
+ * @return An IndexIterator item.
+ */
+IndexIterator HashContents::iterator(RexxInteralObject *index)
+{
+    ItemLink position;
+    ItemLink previous;
+
+    // try to find the first matching item.  At this point,
+    // we don't really care if this succeeds or fails
+    locateEntry(index, position, previous);
+
+    return IndexIterator(this, index, position);
+}
+
+
+/**
+ * Create an iterator for traversing through all of the
+ * entries of the table
+ *
+ * @param index  The target index.
+ *
+ * @return A TableIterator item.
+ */
+TableIterator HashContents::iterator()
+{
+    ItemLink position = NoMore;
+    ItemLink nextBucket = 0;
+
+    // try to find the first real item.
+    // we don't really care if this succeeds or fails
+    iterateNext(position, nextBucket);
+
+    return TableIterator(this, position, nextBucket);
 }

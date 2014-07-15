@@ -89,7 +89,7 @@ class RexxDirectory : public RexxHashTableCollection
 
     RexxObject   *newRexx(RexxObject **init_args, size_t);
 
-    RexxTable  *method_table;            /* table of added methods            */
+    TableClass  *method_table;            /* table of added methods            */
     MethodClass *unknown_method;          /* unknown method entry              */
 
     static RexxDirectory *newInstance();

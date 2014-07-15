@@ -964,10 +964,10 @@ CPPM(RexxHashTableCollection::indexRexx),
 CPPM(RexxHashTableCollection::hasItemRexx),
 CPPM(RexxHashTableCollection::removeItemRexx),
 
-CPPM(RexxTable::itemsRexx),
-CPPM(RexxTable::newRexx),
+CPPM(TableClass::itemsRexx),
+CPPM(TableClass::newRexx),
 
-CPPM(RexxIdentityTable::newRexx),
+CPPM(IdentityTable::newRexx),
 
 CPPM(RexxRelation::put),               /* Relation methods                  */
 CPPM(RexxRelation::removeItemRexx),

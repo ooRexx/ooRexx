@@ -89,9 +89,6 @@ void ActivityManager::live(size_t liveMark)
 /*  and mark it for us.  This is so that it can determine if there are        */
 /*  any objects that a "dead" and need uninit run.  Activity will run the     */
 /*  UNINIT, but we let Garbage Collection, handle detection/etc.              */
-/* NOTE: we also do not mark the subClasses table.  This will be managed      */
-/*  by memory so that we can reclaim classes once all of the instances have   */
-/*  also been reclaimed.                                                      */
 /******************************************************************************/
 {
   memory_mark(availableActivities);
@@ -104,8 +101,6 @@ void ActivityManager::liveGeneral(MarkReason reason)
 /*  and mark it for us.  This is so that it can determine if there are        */
 /*  any objects that a "dead" and need uninit run.  Activity will run the     */
 /*  UNINIT, but we let Garbage Collection, handle detection/etc.              */
-/*  The subClasses table is only marked during a save image, so that the      */
-/*  classes will still have the proper subclass definitions.                  */
 /******************************************************************************/
 {
   if (reason != SAVINGIMAGE)

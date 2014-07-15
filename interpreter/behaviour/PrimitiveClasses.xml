@@ -93,12 +93,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="Routine" class="RoutineClass" include="RoutineClass.hpp"/>
 <Class id="Package" class="PackageClass" include="PackageClass.hpp"/>
 <Class id="RexxContext" class="RexxContext" include="ContextClass.hpp"/>
-<Class id="IdentityTable" class="RexxIdentityTable" include="IdentityTableClass.hpp"/>
+<Class id="IdentityTable" class="IdentityTable" include="IdentityTableClass.hpp"/>
 <Class id="StackFrame" class="StackFrameClass" include="StackFrameClass.hpp"/>
 </Exported>
 <Internal>
 <Class id="NilObject" class="RexxNilObject" include="ObjectClass.hpp"/>
 <Class id="Behaviour" class="RexxBehaviour" include="RexxBehaviour.hpp"/>
+<Class id="ScopeTable" class="ScopeTable" include="ScopeTable.hpp"/>
 <Class id="RexxSource" class="RexxSource" include="SourceFile.hpp"/>
 <Class id="LibraryPackage" class="LibraryPackage" include="LibraryPackage.hpp"/>
 <Class id="RexxCode" class="RexxCode" include="RexxCode.hpp"/>
@@ -114,7 +115,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="HashTable" class="RexxHashTable" include="RexxHashTable.hpp"/>
 <Class id="ListTable" class="RexxListTable" include="RexxListTable.hpp"/>
 <Class id="SmartBuffer" class="RexxSmartBuffer" include="RexxSmartBuffer.hpp"/>
-<Class id="HashContents" class="HashContents" include="HashContents.hpp"/>
+<Class id="IdentityHashContents" class="IdentityHashContents" include="HashContents.hpp"/>
+<Class id="EqualityHashContents" class="EqualityHashContents" include="HashContents.hpp"/>
 
 <Class id="Variable" class="RexxVariable" include="RexxVariable.hpp"/>
 <Class id="VariableDictionary" class="RexxVariableDictionary" include="RexxVariableDictionary.hpp"/>

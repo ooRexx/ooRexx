@@ -41,37 +41,33 @@
 /* Primitive Table Collection Class Definition                                */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_RexxTable
-#define Included_RexxTable
+#ifndef Included_TableClass
+#define Included_TableClass
 
-#include "RexxCollection.hpp"
+#include "HashCollection.hpp"
 
-class RexxTable : public RexxHashTableCollection
+/**
+ * Exported table class where indexing is done using object
+ * identity.
+ *
+ */
+class TableClass : public EqualityHashCollection
 {
-  public:
-   inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };
-   inline RexxTable() {;}
-   inline RexxTable(RESTORETYPE restoreType) { ; };
+ public:
+     void        *operator new(size_t);
+     inline void *operator new(size_t size, void *ptr) {return ptr;}
+     inline void  operator delete(void *) { ; }
+     inline void  operator delete(void *, void *) { ; }
 
-   RexxObject * itemsRexx();
-   void         reset();
-   RexxObject * putNodupe(RexxObject *, RexxObject *);
-   RexxObject * stringPut(RexxObject *, RexxString *);
-   RexxObject * stringAdd(RexxObject *, RexxString *);
-   RexxObject * replace(RexxObject *newValue, HashLink pos) {return contents->replace(newValue, pos); };
-   RexxArray  * allAt(RexxObject *key)  { return contents->getAll(key); }
-   void         reHash();
-   RexxArray  * requestArray();
-   inline RexxArray  * stringGetAll(RexxString *key) {return contents->stringGetAll(key); };
-   inline       RexxObject * stringGet(RexxString *key) {return contents->stringGet(key); };
+    inline TableClass(RESTORETYPE restoreType) { ; }
+           TableClass(size_t capacity) : EqualityHashCollection(capacity) { }
 
-   RexxObject *newRexx(RexxObject **, size_t);
-   static RexxTable  *newInstance();
-   static void createInstance();
-   static RexxClass *classInstance;
+    RexxObject *newRexx(RexxObject **, size_t);
 
+    static void createInstance();
+    static RexxClass *classInstance;
 };
 
-inline RexxTable *new_table()             { return RexxTable::newInstance(); }
+inline TableClass *new_table() { return new TableClass(HashCollection::DefaultTableSize); }
 
 #endif

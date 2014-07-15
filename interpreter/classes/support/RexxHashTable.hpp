@@ -56,7 +56,7 @@ public:
 };
 
 class RexxHashTableCollection;
-class RexxTable;
+class TableClass;
 
 class RexxHashTable : public RexxInternalObject
 {
@@ -143,7 +143,7 @@ class RexxHashTable : public RexxInternalObject
     inline HashLink hashPrimitiveIndex(RexxObject *obj) { return (HashLink)(obj->getHashValue() % this->mainSlotsSize()); }
     inline HashLink hashStringIndex(RexxObject *obj) { return (HashLink)(obj->hash() % this->mainSlotsSize()); }
 
-    static RexxTable *newInstance(size_t, size_t, size_t);
+    static TableClass *newInstance(size_t, size_t, size_t);
     static RexxHashTable *newInstance(size_t);
 
 protected:
@@ -154,7 +154,7 @@ protected:
 };
 
 
-inline RexxTable *new_hashCollection(size_t s, size_t s2, size_t t) { return RexxHashTable::newInstance(s, s2, t); }
+inline TableClass *new_hashCollection(size_t s, size_t s2, size_t t) { return RexxHashTable::newInstance(s, s2, t); }
 inline RexxHashTable *new_hashtab(size_t s) { return RexxHashTable::newInstance(s); }
 
  #endif

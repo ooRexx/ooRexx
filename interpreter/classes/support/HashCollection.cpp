@@ -48,17 +48,7 @@
 #include "MethodArguments.hpp"
 #include "ProtectedObject.hpp"
 
-/**
- * construct a HashCollection with a given size.
- *
- * @param capacity The required capacity.
- */
-HashCollection::HashCollection(size_t capacity)
-{
-    // get a suggested bucket size for this capacity
-    size_t bucketSize = calculateBucketSize(capacity);
-    contents = allocateContents(bucketSize, bucketSize *2);
-}
+
 
 
 /**
@@ -314,6 +304,7 @@ RexxInternalObject *HashCollection::remove(RexxInternalObject *index)
 {
     return contents->remove(index);
 }
+
 
 /**
  * Retrieve all objects with the same index.  Only used
@@ -644,4 +635,58 @@ void HashCollection::empty()
 RexxObject *HashCollection::isEmptyRexx()
 {
     return contents->isEmpty() ? TheTrueObject : TheFalseObject;
+}
+
+
+/**
+ * construct a IdentityCollection with a given size.
+ *
+ * @param capacity The required capacity.
+ */
+IdentityHashCollection::IdentityHashCollection(size_t capacity)
+{
+    // get a suggested bucket size for this capacity
+    // NOTE:  all of this needs to be done at the top-level constructor
+    // because of the way C++ constructors work.  As each
+    // previous contructor level gets called, the virtual function
+    // pointer gets changed to match the class of the contructor getting
+    // called.  We don't have access to our allocateContents() override
+    // until the final constructor is run.
+    size_t bucketSize = calculateBucketSize(capacity);
+    contents = allocateContents(bucketSize, bucketSize *2);
+}
+
+
+/**
+ * construct a HashCollection with a given size.
+ *
+ * @param capacity The required capacity.
+ */
+EqualityHashCollection::EqualityHashCollection(size_t capacity)
+{
+    // get a suggested bucket size for this capacity
+    // NOTE:  all of this needs to be done at the top-level constructor
+    // because of the way C++ constructors work.  As each
+    // previous contructor level gets called, the virtual function
+    // pointer gets changed to match the class of the contructor getting
+    // called.  We don't have access to our allocateContents() override
+    // until the final constructor is run.
+    size_t bucketSize = calculateBucketSize(capacity);
+    contents = allocateContents(bucketSize, bucketSize *2);
+}
+
+
+/**
+ * Virtual method for allocating a new contents item for this
+ * collection.  Collections with special requirements should
+ * override this and return the appropriate subclass.
+ *
+ * @param bucketSize The bucket size of the collection.
+ * @param totalSize  The total capacity of the collection.
+ *
+ * @return A new HashContents object appropriate for this collection type.
+ */
+HashContents *EqualityHashCollection::allocateContents(size_t bucketSize, size_t totalSize)
+{
+    return new (totalSize) EqualityHashContents(bucketSize, totalSize);
 }

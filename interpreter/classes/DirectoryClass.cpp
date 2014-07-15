@@ -110,7 +110,7 @@ RexxObject *RexxDirectory::copy()
     if (method_table != OREF_NULL)
     {
                                        /* copy it too                       */
-        newObj->method_table = (RexxTable *)method_table->copy();
+        newObj->method_table = (TableClass *)method_table->copy();
     }
     return newObj;                       /* return the copy                   */
 }
@@ -159,7 +159,7 @@ RexxSupplier *RexxDirectory::supplier()
 /*            of the SETMETHOD methods as values                              */
 /******************************************************************************/
 {
-    RexxTable *result = new_table();     /* get a table for the supplier      */
+    TableClass *result = new_table();     /* get a table for the supplier      */
     ProtectedObject p(result);
     RexxHashTable *hashTab = this->contents;  /* point to the contents             */
     /* now traverse the entire table     */
@@ -173,7 +173,7 @@ RexxSupplier *RexxDirectory::supplier()
     /* have a method table?              */
     if (this->method_table != OREF_NULL)
     {
-        RexxTable *methodTable = method_table;
+        TableClass *methodTable = method_table;
         /* need to extract method values     */
         for (HashLink i = methodTable->first(); methodTable->available(i); i = methodTable->next(i))
         {
@@ -240,7 +240,7 @@ RexxArray *RexxDirectory::allIndexes()
     // if e hae amethod table, we need to copy those indices also
     if (this->method_table != OREF_NULL)
     {
-        RexxTable *methodTable = this->method_table;
+        TableClass *methodTable = this->method_table;
         for (HashLink i = methodTable->first(); methodTable->available(i); i = methodTable->next(i))
         {
            RexxString *name = (RexxString *)methodTable->index(i);
@@ -271,7 +271,7 @@ RexxArray *RexxDirectory::allItems()
     /* have a method table?              */
     if (method_table != OREF_NULL)
     {
-        RexxTable *methodTable = method_table;  /* grab the table                    */
+        TableClass *methodTable = method_table;  /* grab the table                    */
         /* need to extract method values     */
         for (HashLink j = methodTable->first(); methodTable->available(j); j = methodTable->next(j))
         {
@@ -722,7 +722,7 @@ RexxObject *RexxDirectory::indexRexx(RexxObject *target)
         // rats, we might need to do this the hardway
         if (this->method_table != OREF_NULL)
         {
-            RexxTable *methodTable = this->method_table;
+            TableClass *methodTable = this->method_table;
 
             for (HashLink i = methodTable->first(); methodTable->available(i); i = methodTable->next(i))
             {

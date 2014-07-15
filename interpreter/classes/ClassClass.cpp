@@ -59,6 +59,7 @@
 #include "SourceFile.hpp"
 #include "PackageClass.hpp"
 #include "MethodArguments.hpp"
+#include "ScopeTable.hpp"
 
 
 // singleton class instance
@@ -409,7 +410,7 @@ void RexxClass::addSubClass(RexxClass *subClass)
 }
 
 void RexxClass::defmeths(
-    RexxTable *newMethods)             /* methods to add                    */
+    TableClass *newMethods)             /* methods to add                    */
 /*****************************************************************************/
 /* Function:  Add a table of methods to a primitive class behaviour          */
 /*****************************************************************************/
@@ -446,13 +447,13 @@ RexxString *RexxClass::defaultName()
     return defaultname;                  /* return that value                 */
 }
 
-RexxTable *RexxClass::getInstanceBehaviourDictionary()
+TableClass *RexxClass::getInstanceBehaviourDictionary()
 /*****************************************************************************/
 /* Function:   Return the instance behaviour's method dictionary             */
 /*****************************************************************************/
 {
     /* get the method dictionary         */
-    RexxTable *methodTable = instanceBehaviour->getMethodDictionary();
+    TableClass *methodTable = instanceBehaviour->getMethodDictionary();
     if (methodTable == OREF_NULL)        /* no methods defined yet?           */
     {
         return new_table();                /* create a new method table         */
@@ -460,17 +461,17 @@ RexxTable *RexxClass::getInstanceBehaviourDictionary()
     else
     {
         /* just copy the method dictionary   */
-        return(RexxTable *)methodTable->copy();
+        return (TableClass *)methodTable->copy();
     }
 }
 
-RexxTable *RexxClass::getBehaviourDictionary()
+TableClass *RexxClass::getBehaviourDictionary()
 /*****************************************************************************/
 /* Function:   Return the class behaviour's method dictionary                */
 /*****************************************************************************/
 {
     /* get the method dictionary         */
-    RexxTable *methodTable = behaviour->getMethodDictionary();
+    TableClass *methodTable = behaviour->getMethodDictionary();
     if (methodTable == OREF_NULL)        /* no methods defined yet?           */
     {
         return new_table();                /* create a new method table         */
@@ -478,7 +479,7 @@ RexxTable *RexxClass::getBehaviourDictionary()
     else
     {
         /* just copy the method dictionary   */
-        return(RexxTable *)methodTable->copy();
+        return(TableClass *)methodTable->copy();
     }
 }
 
@@ -566,9 +567,9 @@ void RexxClass::subClassable(bool restricted)
         /* set up the new metaclass list      */
         setField(metaClass, new_array(TheClassClass));
         /* the metaclass mdict list           */
-        setField(metaClassMethodDictionary, new_array(TheClassClass->instanceMethodDictionary->copy()));
+        setField(metaClassMethodDictionary, new_array(TheClassClass->copyInstanceMethods()));
         /* and the metaclass scopes list      */
-        setField(metaClassScopes, (RexxIdentityTable *)TheClassClass->behaviour->getScopes()->copy());
+        setField(metaClassScopes, TheClassClass->copyScopes());
     }
 
     /* The Baseclass for non-mixin classes*/
@@ -667,9 +668,11 @@ void RexxClass::subClassable(RexxClass *superClass, bool restricted)
     // set up the new metaclass list
     setField(metaClass, new_array(TheClassClass));
     // the metaclass mdict list
-    setField(metaClassMethodDictionary, new_array(TheClassClass->instanceMethodDictionary->copy()));
+    setField(metaClassMethodDictionary, new_array(TheClassClass->copyInstanceMethods()));
     // and the metaclass scopes list
-    setField(metaClassScopes, (RexxIdentityTable *)TheClassClass->behaviour->getScopes()->copy());
+
+    // TODO:  Make some of this copying activity methods in class/behavior
+    setField(metaClassScopes, TheClassClass->copyScopes());
 
     // The Baseclass for non-mixin classes is self
     setField(baseClass, this);
@@ -741,7 +744,7 @@ RexxObject *RexxClass::defineMethod(
 }
 
 RexxObject *RexxClass::defineMethods(
-    RexxTable * newMethods)            /* new table of methods to define    */
+    TableClass * newMethods)            /* new table of methods to define    */
 /*****************************************************************************/
 /* Function:  Define instance methods on this class object                   */
 /*****************************************************************************/
@@ -1003,7 +1006,9 @@ void RexxClass::createClassBehaviour(
                 // now we need to merge in the scopes.  For each metaclass, starting
                 // from the bottom of the hierarchy down, merge in each of the scope
                 // values.
-                RexxArray *addedScopes = metaclass->behaviour->getScopes()->allAt(TheNilObject);
+
+                // TODO:  More methods suggested here.
+                RexxArray *addedScopes = metaclass->allScopes();
                 ProtectedObject p(addedScopes);
 
                 // these need to be processed in reverse order
@@ -1104,8 +1109,8 @@ void RexxClass::mergeSuperClassScopes(RexxBehaviour *target_instance_behaviour)
 }
 
 void RexxClass::methodDictionaryMerge(
-    RexxTable  *source_mdict,          /* source method dictionary          */
-    RexxTable  *target_mdict)          /* target method dictionary          */
+    TableClass  *source_mdict,          /* source method dictionary          */
+    TableClass  *target_mdict)          /* target method dictionary          */
 /*****************************************************************************/
 /* Function:  Merge the source mdict methods into the target mdict after     */
 /*            getting copies of the methods with a new scope                 */
@@ -1135,8 +1140,8 @@ void RexxClass::methodDictionaryMerge(
     }
 }
 
-RexxTable *RexxClass::methodDictionaryCreate(
-    RexxTable  *sourceCollection,      /* source method collection          */
+TableClass *RexxClass::methodDictionaryCreate(
+    TableClass  *sourceCollection,      /* source method collection          */
     RexxClass  *scope )                /* required method scope             */
 /*****************************************************************************/
 /* Function:  Process a collection of methods that will be added to a class  */
@@ -1145,7 +1150,7 @@ RexxTable *RexxClass::methodDictionaryCreate(
 /*            may need conversion into method objects and given a scope.     */
 /*****************************************************************************/
 {
-    RexxTable *newDictionary = new_table(); /* get a new table for this          */
+    TableClass *newDictionary = new_table(); /* get a new table for this          */
     ProtectedObject p(newDictionary);
     /* loop thru the supplier object     */
     /* obtained from the source mdict    */
@@ -1365,7 +1370,7 @@ RexxObject *RexxClass::enhanced(
         reportException(Error_Incorrect_method_minarg, IntegerOne);
     }
     /* get the value of the arg          */
-    RexxTable *enhanced_instance_mdict = (RexxTable *)args[0];
+    TableClass *enhanced_instance_mdict = (TableClass *)args[0];
     /* make sure it was a real value     */
     requiredArgument(enhanced_instance_mdict, ARG_ONE);
     /* subclass the reciever class       */
@@ -1407,7 +1412,7 @@ RexxObject *RexxClass::enhanced(
  *
  * @return A created class object.
  */
-RexxClass  *RexxClass::mixinclassRexx(RexxString  *class_id, RexxClass *meta_class, RexxTable *enhancing_class_methods)
+RexxClass  *RexxClass::mixinclassRexx(RexxString  *class_id, RexxClass *meta_class, TableClass *enhancing_class_methods)
 {
     // just forward with no source object specified
     return mixinclass(OREF_NULL, class_id, meta_class, enhancing_class_methods);
@@ -1426,7 +1431,7 @@ RexxClass  *RexxClass::mixinclassRexx(RexxString  *class_id, RexxClass *meta_cla
  * @return A created class object.
  */
 RexxClass  *RexxClass::mixinclass(RexxSource  *source, RexxString  *mixin_id,
-    RexxClass   *meta_class, RexxTable   *enhancing_class_methods)
+    RexxClass   *meta_class, TableClass   *enhancing_class_methods)
 {
     /* call subclass with the parameters */
     RexxClass *mixin_subclass = subclass(source, mixin_id, meta_class, enhancing_class_methods);
@@ -1453,7 +1458,7 @@ RexxClass  *RexxClass::mixinclass(RexxSource  *source, RexxString  *mixin_id,
  *
  * @return A created class object.
  */
-RexxClass  *RexxClass::subclassRexx(RexxString  *class_id, RexxClass *meta_class, RexxTable *enhancing_class_methods)
+RexxClass  *RexxClass::subclassRexx(RexxString  *class_id, RexxClass *meta_class, TableClass *enhancing_class_methods)
 {
     // just forward with no source object specified
     return subclass(OREF_NULL, class_id, meta_class, enhancing_class_methods);
@@ -1473,7 +1478,7 @@ RexxClass  *RexxClass::subclassRexx(RexxString  *class_id, RexxClass *meta_class
  * @return A created class object.
  */
 RexxClass  *RexxClass::subclass(RexxSource *source, RexxString  *class_id,
-    RexxClass   *meta_class, RexxTable   * enhancing_class_methods)
+    RexxClass   *meta_class, TableClass   * enhancing_class_methods)
 {
     if (meta_class == OREF_NULL)         /* if there is no metaclass specified*/
     {
@@ -1506,9 +1511,9 @@ RexxClass  *RexxClass::subclass(RexxSource *source, RexxString  *class_id,
             /* and the metaclass scopes list      */
             /* this is done by adding all the     */
             /* scope information of the new class */
-            new_class->metaClassScopes->add(this, TheNilObject);
+            new_class->metaClassScopes->addScope(this);
             /* add the scope list for this scope  */
-            new_class->metaClassScopes->add(new_class->metaClassScopes->allAt(TheNilObject), this);
+            new_class->metaClassScopes->addClassScopes(this, new_class->metaClassScopes->allScopes());
         }
     }
     /* set up the new_class behaviour     */
@@ -1582,13 +1587,13 @@ void RexxClass::setMetaClass(
     setField(metaClass, new_array(TheClassClass));
     metaClass->addFirst(new_metaClass);
                                        /* the metaclass mdict list           */
-    setField(metaClassMethodDictionary, new_array(TheClassClass->instanceMethodDictionary->copy()));
+    setField(metaClassMethodDictionary, new_array(TheClassClass->copyInstanceMethods()));
     metaClassMethodDictionary->addFirst(new_metaClass->instanceMethodDictionary);
                                        /* and the metaclass scopes list      */
-    setField(metaClassScopes, (RexxIdentityTable *)TheClassClass->behaviour->getScopes()->copy());
+    setField(metaClassScopes, (ScopeTable *)TheClassClass->copyScopes());
                                        /* add the scope list for this scope  */
-    metaClassScopes->add(new_metaClass, TheNilObject);
-    metaClassScopes->add(metaClassScopes->allAt(TheNilObject), new_metaClass);
+    metaClassScopes->addScope(new_metaClass);
+    metaClassScopes->addClassScopes(new_metaClass, metaClassScopes->allScopes());
 }
 
 
@@ -1733,9 +1738,9 @@ RexxClass  *RexxClass::newRexx(RexxObject **args, size_t argCount)
         // set up the new metaclass list
         new_class->metaClass = new_array(TheClassClass);
         // the metaclass mdict list
-        new_class->metaClassMethodDictionary = new_array(TheClassClass->instanceMethodDictionary->copy());
+        new_class->metaClassMethodDictionary = new_array(TheClassClass->copyInstanceMethods());
         // and the metaclass scopes list
-        new_class->metaClassScopes = (RexxIdentityTable *)TheClassClass->behaviour->getScopes()->copy();
+        new_class->metaClassScopes = TheClassClass->copyScopes();
     }
     else
     {
@@ -1748,10 +1753,10 @@ RexxClass  *RexxClass::newRexx(RexxObject **args, size_t argCount)
         // and the metaclass scopes list
         // this is done by adding all the
         // scope information of the new class
-        new_class->metaClassScopes = (RexxIdentityTable *)new_class->metaClassScopes->copy();
+        new_class->metaClassScopes = new_class->copyMetaclassScopes();
         // and update the scopes to include the metaclass scopes
-        new_class->metaClassScopes->add(this, TheNilObject);
-        new_class->metaClassScopes->add(behaviour->getScopes()->allAt(TheNilObject), this);
+        new_class->metaClassScopes->addScope(this);
+        new_class->metaClassScopes->addClassScopes(this, behaviour->allScopes());
     }
 
     // create the subclasses list
@@ -1765,7 +1770,7 @@ RexxClass  *RexxClass::newRexx(RexxObject **args, size_t argCount)
     // and set the behaviour class
     new_class->instanceBehaviour->setOwningClass(TheObjectClass);
     // and the instance behaviour scopes
-    new_class->instanceBehaviour->setScopes(new_identity_table());
+    new_class->instanceBehaviour->setScopes(new ScopeTable());
     // set the scoping info
     new_class->instanceBehaviour->addScope(TheObjectClass);
     // don't give access to this class' ovd's
@@ -1873,4 +1878,48 @@ void RexxClass::processNewArgs(
     {
         *remainderSize = 0;
     }
+}
+
+
+/**
+ * Make a copy of the class scope table.
+ *
+ * @return A copy of the class scope table.
+ */
+ScopeTable *RexxClass::copyScopes()
+{
+    return (ScopeTable *)behaviour->getScopes()->copy();
+}
+
+
+/**
+ * Copy the scope table from the class meta class.
+ *
+ * @return The metaclass scope table.
+ */
+ScopeTable *RexxClass::copyMetaclassScopes()
+{
+    return (ScopeTable *)metaClassScopes->copy();
+}
+
+
+/**
+ * Get all scopes associated with a class
+ *
+ * @return The array of all scopes
+ */
+RexxArray *RexxClass::allScopes()
+{
+    return behaviour->getScopes()->allScopes();
+}
+
+
+/**
+ * Copy the instance method dicitionary for a class
+ *
+ * @return The array of all scopes
+ */
+TableClass *RexxClass::copyInstanceMethods()
+{
+    return (TableClass *)instanceMethodDictionary->copy();
 }

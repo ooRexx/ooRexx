@@ -41,39 +41,33 @@
 /* Primitive IdentityTable Collection Class Definition                        */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_RexxIdentityTable
-#define Included_RexxIdentityTable
+#ifndef Included_IdentityTable
+#define Included_IdentityTable
 
-#include "TableClass.hpp"
+#include "HashCollection.hpp"
 
-class RexxIdentityTable : public RexxTable
+/**
+ * Exported table class where indexing is done using object
+ * identity.
+                                                             */
+class IdentityTable : public IdentityHashCollection
 {
  public:
-    inline void *operator new(size_t size, void *objectPtr) { return objectPtr; };
-    inline void  operator delete(void *, void *) {;}
+     void        *operator new(size_t);
+     inline void *operator new(size_t size, void *ptr) {return ptr;}
+     inline void  operator delete(void *) { ; }
+     inline void  operator delete(void *, void *) { ; }
 
-    inline RexxIdentityTable(RESTORETYPE restoreType) { ; };
-
-    virtual RexxObject *remove(RexxObject *key);
-    virtual RexxObject *get(RexxObject *key);
-    virtual RexxObject *put(RexxObject *, RexxObject *);
-    virtual RexxObject *add(RexxObject *, RexxObject *);
-    virtual RexxObject *removeItem(RexxObject *value);
-    virtual RexxObject *hasItem(RexxObject *targetIndex);
-    virtual RexxObject *getIndex(RexxObject * value);
-
-    inline RexxObject  *hasItem(RexxObject *newValue, RexxObject *targetIndex) {return this->contents->primitiveHasItem(newValue, targetIndex); };
-    inline RexxArray   *allAt(RexxObject *key) {return this->contents->primitiveGetAll(key);}
-    inline RexxObject  *findSuperScope(RexxObject *v) { return this->contents->primitiveNextItem(v, TheNilObject); };
+    inline IdentityTable(RESTORETYPE restoreType) { ; }
+           IdentityTable(size_t capacity) : IdentityHashCollection(capacity) { }
 
     RexxObject *newRexx(RexxObject **, size_t);
+
     static void createInstance();
-    static RexxIdentityTable *newInstance(size_t size);
     static RexxClass *classInstance;
 };
 
-
-inline RexxIdentityTable *new_identity_table() { return RexxIdentityTable::newInstance(RexxHashTable::DEFAULT_HASH_SIZE); }
+inline IdentityTable *new_identity_table() { return new IdentityTable(HashCollection::DefaultTableSize); }
 
 #endif
 

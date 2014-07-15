@@ -51,16 +51,44 @@
 #include "CPPCode.hpp"
 #include "MethodArguments.hpp"
 #include "Memory.hpp"
+#include "MethodDictionary.hpp"
 
 
-RexxBehaviour::RexxBehaviour(
-    size_t          newTypenum,        /* class type number                 */
-    PCPPM *         operator_methods ) /* operator lookaside table          */
-/******************************************************************************/
-/* Function:  Construct C++ methods in OKGDATA.C                              */
-/******************************************************************************/
+/**
+ * Allocate storage for a new primitive behaviour.  This
+ * does not allocate any actual memory, but returns the
+ * pointer to the statically defined primitive behaviour.
+ *
+ * @param size    The base object size.
+ * @param typenum The desired class type number.
+ *
+ * @return A pointer to the target primitive behaviour.
+ */
+void *RexxBehaviour::operator new(size_t size, size_t typenum)
 {
+    // return a pointer to the static primitive one
+    return (void *)getPrimitiveBehaviour(typenum);
+}
+
+
+/**
+ * Construct a statically defined primitive behaviour.
+ * Behaviours are created originally in a table of objects that
+ * are not allocated from object heap memory.  There is one
+ * primitive behaviour for every class defined in
+ * PrimitiveClasses.xml.  After that, all additional behaviours
+ * are created using copies of one of the primitive behaviours.
+ *
+ * @param newTypenum The primitive type number.
+ * @param operator_methods
+ *                   The associated operator methods.
+ */
+RexxBehaviour::RexxBehaviour(size_t newTypenum, PCPPM *operator_methods)
+{
+    // All behaviour objects have a behaviour object too.
     behaviour = getPrimitiveBehaviour(T_Behaviour);
+    // these are not created via normal means, so we need to hand construct
+    // the header information.
     header.setObjectSize(sizeof(RexxBehaviour));
     setClassType(newTypenum);
     behaviourFlags.reset();
@@ -82,25 +110,27 @@ RexxBehaviour::RexxBehaviour(
 
         behaviourFlags.set(TRANSIENT_CLASS);
     }
-
-
 }
 
+
+/**
+ * Normal garbage collection live marking
+ *
+ * @param liveMark The current live mark.
+ */
 void RexxBehaviour::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
-  memory_mark(methodDictionary);
-  memory_mark(instanceMethodDictionary);
-  memory_mark(scopes);
-  memory_mark(owningClass);
+    memory_mark(methodDictionary);
+    memory_mark(owningClass);
 }
 
+
+/**
+ * Generalized object marking.
+ *
+ * @param reason The reason for this live marking operation.
+ */
 void RexxBehaviour::liveGeneral(MarkReason reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
 {
     // special handling if marking during a save image.
     if (reason == SAVINGIMAGE && isNonPrimitive())
@@ -119,32 +149,29 @@ void RexxBehaviour::liveGeneral(MarkReason reason)
     }
 
     memory_mark_general(methodDictionary);
-    memory_mark_general(instanceMethodDictionary);
-    memory_mark_general(scopes);
     memory_mark_general(owningClass);
 }
 
 
+/**
+ * Flatten the behaviour contents
+ *
+ * @param envelope The envelope we're flattening into.
+ */
 void RexxBehaviour::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
 {
-   setUpFlatten(RexxBehaviour)
+    setUpFlatten(RexxBehaviour)
 
-   flattenRef(methodDictionary);
-   flattenRef(instanceMethodDictionary);
-   flattenRef(scopes);
-   flattenRef(owningClass);
+    flattenRef(methodDictionary);
+    flattenRef(owningClass);
 
-                                       /* Is this a non-primitive behav */
-   if (isNonPrimitive())
-   {
-                                       /* yes, mark that we need to be  */
-                                       /*  resolved on the puff.        */
-       newThis->setNotResolved();
-   }
-   cleanUpFlatten
+    // if this is a non-primitive behaviour, we need to mark this for restore
+    // during the puff operation.
+    if (isNonPrimitive())
+    {
+        newThis->setNotResolved();
+    }
+    cleanUpFlatten
 }
 
 
@@ -153,7 +180,7 @@ void RexxBehaviour::flatten(RexxEnvelope *envelope)
  *
  * @param m      The new dictionary.
  */
-void RexxBehaviour::setMethodDictionary(RexxTable * m)
+void RexxBehaviour::setMethodDictionary(TableClass  *m)
 {
     setField(methodDictionary, m);
 };
@@ -164,7 +191,7 @@ void RexxBehaviour::setMethodDictionary(RexxTable * m)
  *
  * @param m      The new dictionary.
  */
-void RexxBehaviour::setInstanceMethodDictionary(RexxTable * m)
+void RexxBehaviour::setInstanceMethodDictionary(TableClass * m)
 {
     setField(instanceMethodDictionary, m);
 };
@@ -196,70 +223,55 @@ void RexxBehaviour::resolveNonPrimitiveBehaviour()
 }
 
 
+/**
+ * Copy a behaviour object.  This will make copies of all
+ * of the contained tables so that the relevant information
+ * can be changed independently of the original behaviour.
+ *
+ * @return The new behaviour object.
+ */
 RexxObject *RexxBehaviour::copy()
-/******************************************************************************/
-/*  Function:  Copy the behaviour object with an independent named method     */
-/*             dictionary, but leave the original create_class.               */
-/******************************************************************************/
 {
-    /* Instead of calling new_object and memcpy, ask the memory object to make*/
-    /* a copy of ourself.  This way, any header information can be correctly  */
-    /* initialized by memory.                                                 */
-
-    /* first, clone the existing object  */
-    RexxBehaviour *newBehaviour = (RexxBehaviour *)clone();
-    /* have an method dictionary         */
-    if (methodDictionary != OREF_NULL)
-    {
-        /* make a copy of this too           */
-        newBehaviour->methodDictionary = (RexxTable *)methodDictionary->copy();
-    }
-    if (scopes != OREF_NULL)       /* scope information?                */
-    {
-        /* make a copy of it too             */
-        newBehaviour->scopes = (RexxIdentityTable *)scopes->copy();
-    }
-    /* do we have added methods?         */
-    if (instanceMethodDictionary != OREF_NULL)
-    {
-        /* copy those also                   */
-        newBehaviour->instanceMethodDictionary = (RexxTable *)instanceMethodDictionary->copy();
-    }
-    /* use default operator methods set  */
-    newBehaviour->operatorMethods = RexxObject::operatorMethods;
-    /* all copied behaviours are         */
-    /* non-primitive ones                */
+    // first, clone the existing object
+    Protected<RexxBehaviour> newBehaviour = (RexxBehaviour *)clone();
+    // complete the copy process
+    newBehaviour->copyBehaviour();
+    // all copies are non-primitive.
     newBehaviour->setNonPrimitive();
-    return(RexxObject *)newBehaviour;   /* return the copied behaviour       */
+    // a copy operation generally means we're subclassing, so revert to the
+    // default operator methods:
+    newBehaviour->operatorMethods = RexxObject::operatorMethods;
+    return newBehaviour;
 }
 
 
-void RexxBehaviour::copyBehaviour(RexxBehaviour *source)
-/******************************************************************************/
-/*  Function:  Copy the source behaviour object into this, inheriting all of  */
-/*             the method dictionaries.                                       */
-/******************************************************************************/
+/**
+ * Copy the internal tables of a behaviour object...used to
+ * finish up the copy() operation.
+ */
+void RexxBehaviour::copyBehaviour()
 {
-    /* have an method dictionary         */
-    if (source->methodDictionary != OREF_NULL)
-    {
-        /* make a copy of this too           */
-        setField(methodDictionary, (RexxTable *)source->methodDictionary->copy());
-    }
-    if (source->scopes != OREF_NULL)       /* scope information?                */
-    {
-        /* make a copy of it too             */
-        setField(scopes, (RexxIdentityTable *)source->scopes->copy());
-    }
-    /* do we have added methods?         */
-    if (source->instanceMethodDictionary != OREF_NULL)
-    {
-        /* copy those also                   */
-        setField(instanceMethodDictionary, (RexxTable *)source->instanceMethodDictionary->copy());
-    }
+    // we already have a method that copies information from only instance into
+    // a target instance.  We'll just copy back into ourselves.
+    copyBehaviour(this);
+}
+
+
+/**
+ * Copy the source behaviour object into this, inheriting all of
+ * the method dictionaries.  Generally done during an image
+ * restore to restore the behaviours from the image.
+ *
+ * @param source The source behaviour.
+ */
+void RexxBehaviour::copyBehaviour(RexxBehaviour *source)
+{
+    setField(methodDictionary, source->copyMethodDictionary());
+    setField(scopes, source->copyScopes());
+    setField(instanceMethodDictionary, source->copyInstanceMethodDictionary());
     // this is the same class as the source also
     setField(owningClass, source->owningClass);
-    /* use default operator methods set  */
+    // copy the same operator methods.
     operatorMethods = (PCPPM *)source->operatorMethods;
 }
 
@@ -273,312 +285,241 @@ void RexxBehaviour::copyBehaviour(RexxBehaviour *source)
  *
  * @return The created method object.
  */
-MethodClass *RexxBehaviour::define(const char *name, PCPPM entryPoint, size_t arguments)
+void RexxBehaviour::defineMethod(const char *name, PCPPM entryPoint, size_t arguments)
 {
+    // we're doing this during an image build, so make sure we use the interned string name.
     RexxString *n = memoryObject.getGlobalName(name);
+    // create a method object using the resolved method pointer.
     MethodClass *method = new MethodClass(n, CPPCode::resolveExportedMethod(name, entryPoint, arguments));
-    define(n, method);
-    return method;
+    // now add this to the method dictionary
+    defineMethod(n, method);
 }
 
 
-RexxObject *RexxBehaviour::define(
-    RexxString *methodName,            /* name of the defined method        */
-    MethodClass *method)                /* method to add to the behaviour    */
-/******************************************************************************/
-/* Function:  Add or remove a method from an object's behaviour               */
-/******************************************************************************/
+/**
+ * Add a method to the method dictionary.l
+ *
+ * @param methodName The method name.
+ * @param method     The target method object.
+ */
+void RexxBehaviour::defineMethod(RexxString *methodName, MethodClass *method)
 {
-    MethodClass  * tableMethod;           /* method from the table             */
-
-                                         /* no method dictionary yet?         */
+    // create a method dictionary if we don't have one yet.
     if (methodDictionary == OREF_NULL)
     {
-        /* allocate a table                  */
-        setField(methodDictionary, new_table());
+        setField(methodDictionary, new MethodDictionary());
     }
 
-
-    if (method == OREF_NULL || method == TheNilObject)
-    {
-        /* replace the method with .nil      */
-        methodDictionary->stringPut(TheNilObject, methodName);
-
-    }
-    else
-    {
-        /* already have this method?         */
-        if ((tableMethod = (MethodClass *)methodDictionary->stringGet(methodName)) == OREF_NULL)
-        {
-            /* No, just add this directly        */
-            methodDictionary->stringAdd(method, methodName);
-        }
-        else
-        {
-            /* are the scopes the same?          */
-            if (tableMethod->getScope() == method->getScope())
-            {
-                /* same scope, so replace existing   */
-                /* method with the new one           */
-                methodDictionary->stringPut(method, methodName);
-
-            }
-            else
-            {
-                /* new scope, for this, just replace */
-                methodDictionary->stringAdd(method, methodName);
-
-            }
-        }
-    }
-    return OREF_NULL;                    /* always return nothing             */
+    methodDictionary->defineMethod(methodName, method)
 }
 
-void RexxBehaviour::removeMethod(
-    RexxString *methodName )           /* name of the removed method        */
-/******************************************************************************/
-/* Function:  Reverse a SETMETHOD operation                                   */
-/******************************************************************************/
+
+/**
+ * Remove a method from the behaviour.  this must be an instance
+ * method defined via SETMETHOD
+ *
+ * @param methodName The name of the method to remove.
+ */
+void RexxBehaviour::removeInstanceMethod(RexxString *methodName)
 {
-    /* actually done SETMETHOD calls?    */
-    if (instanceMethodDictionary != OREF_NULL)
-    {
-        /* do we have one of these?          */
-        if (instanceMethodDictionary->remove(methodName) != OREF_NULL)
-        {
-            /* remove from the real dictionary   */
-            methodDictionary->remove(methodName);
-        }
-    }
+    methodDictionary->removeInstanceMethod(methodName);
 }
 
-void RexxBehaviour::addMethod(
-    RexxString *methodName,            /* name of the defined method        */
-    MethodClass *method)                /* method to add to the behaviour    */
-/******************************************************************************/
-/* Function:  Add a method to an object's behaviour                           */
-/******************************************************************************/
+
+/**
+ * Add an instance method to an object's behaviour.
+ *
+ * @param methodName The name of the method to add.
+ * @param method
+ */
+void RexxBehaviour::addInstanceMethod(RexxString *methodName, MethodClass *method)
 {
-    /* no method dictionary yet?         */
+    // create a method dictionary if we don't have one yet (highly unusual for that to
+    // be the case).
     if (methodDictionary == OREF_NULL)
     {
-        /* allocate a table                  */
-        setField(methodDictionary, new_table());
-    }
-    /* now repeat for the instance       */
-    if (instanceMethodDictionary == OREF_NULL)
-    {
-        /* methods to track additions        */
-        setField(instanceMethodDictionary, new_table());
-    }
-    /* already added one by this name?   */
-    if (instanceMethodDictionary->stringGet(methodName) != OREF_NULL)
-    {
-        /* remove from the method dictionary */
-        methodDictionary->remove(methodName);
+        setField(methodDictionary, new MethodDictionary());
     }
 
-    /* now just add this directly        */
-    methodDictionary->stringAdd(method, methodName);
-    /* and also add to the instance one  */
-    instanceMethodDictionary->stringPut(method, methodName);
+    methodDictionary->addInstanceMethod(methodName, method);
 }
 
-MethodClass *RexxBehaviour::methodObject(
-    RexxString *messageName )          /* name of method to retrieve        */
-/******************************************************************************/
-/* Function:  Retrieve a method associated with the given name                */
-/******************************************************************************/
+
+/**
+ * Retrieve a method object associated with a given name.
+ *
+ * @param messageName
+ *               The name of the desired method.
+ *
+ * @return Any associated method object.
+ */
+MethodClass *RexxBehaviour::getMethodObject(RexxString *messageName )
 {
-    /* force to a string version (upper  */
-    /* case required)                    */
+    // force to a string version (upper case required)
     messageName = stringArgument(messageName, ARG_ONE)->upper();
     /* now just do a method lookup       */
     return methodLookup(messageName);
 }
 
-MethodClass *RexxBehaviour::methodLookup(
-    RexxString *messageName )          /* name of method to retrieve        */
-/******************************************************************************/
-/* Function:  Perform lowest level method lookup on an object                 */
-/******************************************************************************/
+
+/**
+ * Perform method lookup on a object.  This version filters out
+ * suppressed methods.
+ *
+ * @param messageName
+ *               The target message name.
+ *
+ * @return The associated method object (if any)
+ */
+MethodClass *RexxBehaviour::methodLookup(RexxString *messageName)
 {
-    /* have a method dictionary?         */
-    if (methodDictionary != OREF_NULL)
+    // just get the object directly.  Unknown methods will return OREF_NULL.  However,
+    // explicit overrides are indicated by putting .nil in the table.  Our callers
+    // are dependent upon getting OREF_NULL back for unknown methods.
+    MethodClass *method = methodDictionary->getMethod(messageName);
+    if (method != TheNilObject)
     {
-        // just get the object directly.  Unknown methods will return OREF_NULL.  However,
-        // explicit overrides are indicated by putting .nil in the table.  Our callers
-        // are dependent upon getting OREF_NULL back for unknown methods.
-        MethodClass *method = (MethodClass *)methodDictionary->stringGet(messageName);
-        if (method != TheNilObject)
-        {
-            return method;
-        }
+        return method;
     }
     return OREF_NULL;
 }
 
-MethodClass *RexxBehaviour::getMethod(
-    RexxString *messageName )          /* name of method to retrieve        */
-/******************************************************************************/
-/* Function:  Retrieve a method object from the method dictionary.  This      */
-/*            returns OREF_NULL if the method does not exist.                 */
-/******************************************************************************/
+
+/**
+ * Get a method object from the method dictionary.  If the
+ * object is suppressed by putting .nil into the table, this
+ * is still returned.
+ *
+ * @param messageName
+ *               The target message name.
+ *
+ * @return Any value from the method dictionary.
+ */
+MethodClass *RexxBehaviour::getMethod(RexxString *messageName)
 {
-    if (methodDictionary != OREF_NULL)
-    {
-        /* try to get the method             */
-        return(MethodClass *)methodDictionary->stringGet(messageName);
-    }
-    return OREF_NULL;                    /* return the method object          */
+    return methodDictionary->getMethod(messageName);
 }
 
-RexxObject *RexxBehaviour::deleteMethod(
-    RexxString *messageName )          /* name of method to delete          */
-/******************************************************************************/
-/* Function:  Delete a method from an object's behaviour                      */
-/******************************************************************************/
+
+/**
+ * Delete a method from an object's behaviour.
+ *
+ * @param messageName
+ *               The name of the method.
+ *
+ * @return The deleted method, if any.
+ */
+RexxObject *RexxBehaviour::deleteMethod(RexxString *messageName)
 {
-    /* have a dictionary?                */
-    if (methodDictionary != OREF_NULL)
-    {
-        /* just remove from the table        */
-        methodDictionary->remove(messageName);
-    }
-    return OREF_NULL;                    /* always return nothing             */
+    // this is a class definition we're removing, so just delete from the
+    // table.
+    methodDictionary->remove(messageName);
 }
 
-void RexxBehaviour::subclass(
-     RexxBehaviour *subclass_behaviour)/* source behaviour                  */
-/******************************************************************************/
-/* Function:  Replace the fields in a new behaviour attached to a new         */
-/*              subclass class object from the subclassed class behaviour.    */
-/******************************************************************************/
+
+/**
+ * Subclass a behaviour from another classes base type.
+ * Used to subclass the primitive classes.
+ *
+ * @param subclass_behaviour
+ *               The source behaviour for the subclass.
+ */
+void RexxBehaviour::subclass(RexxBehaviour *subclass_behaviour)
 {
-                                       /* replace the typenum               */
     setClassType(subclass_behaviour->getClassType());
 }
 
-void RexxBehaviour::restore(
-    RexxBehaviour * saved)             /* the saved behaviour info          */
-/******************************************************************************/
-/* Function:  Restore primtive behaviours                                                                                            */
-/******************************************************************************/
+
+/**
+ * Restore a primitive behaviour after an image restore.
+ *
+ * @param saved  The behaviour that was stored in the saved image.
+ */
+void RexxBehaviour::restore(RexxBehaviour * saved)
 {
-    /* set the behaviour behaviour       */
+    // set our object type
     setBehaviour(getPrimitiveBehaviour(T_Behaviour));
-    /* set proper size                   */
+    // fix up the memory management bits, and also turn on
+    // oldspace.
     setObjectSize(Memory::roundObjectBoundary(sizeof(RexxBehaviour)));
     setOldSpace();
-    /* Make sure we pick up additional   */
-    /*  methods defined during saveimage */
-    /* Don't use OrefSet here            */
+
+    // NOTE:  In this situation, we're assigning into the static
+    // behaviour from an oldspace saved version.  We don't want to
+    // use setField() to set these right now because memory might
+    // not be completely set up yet.
+
+    // now pull in the method dictionary from the saved copy.
     methodDictionary = saved->getMethodDictionary();
-    scopes = saved->getScopes();   /* and the scopes that are there     */
-                                         /* copy over the associated class    */
+    // and also the scopes and defining class
+    scopes = saved->getScopes();
     owningClass = saved->getOwningClass();
 }
 
+
+/**
+ * Update a behaviour in a class objects behaviour
+ * during image restore.
+ *
+ * @return Owning class.
+ */
 RexxClass *RexxBehaviour::restoreClass()
-/******************************************************************************/
-/* Function:  Update and return a primitive behaviour's primitive class       */
-/******************************************************************************/
 {
-    /* Adjust the instance behaviour.  Note that we don't use */
-    /* OrefSet() for this.  When we're restoring the classes, the */
-    /* class objects are in oldspace, and the behaviours are */
-    /* primitive objects, not subject to sweeping.  We do a direct */
-    /* assignment to avoid creating a reference entry in the old2new */
-    /* table. */
+    // Adjust the instance behaviour.  Note that we don't use
+    // OrefSet() for this.  When we're restoring the classes, the
+    // class objects are in oldspace, and the behaviours are
+    // primitive objects, not subject to sweeping.  We do a direct
+    // assignment to avoid creating a reference entry in the old2new
+    // table.
     owningClass->setInstanceBehaviour(this);
     return owningClass;            /* return the associated class       */
 }
 
-void *RexxBehaviour::operator new(size_t size,
-    size_t typenum)                     /* target behaviour type number      */
-/******************************************************************************/
-/* Function:  Create and initialize a target primitive behaviour              */
-/******************************************************************************/
+
+/**
+ * Locate the scope following a given scope.
+ *
+ * @param start_scope
+ *               The starting scope.
+ *
+ * @return The following scope, or .nil if not found.
+ */
+RexxObject * RexxBehaviour::superScope(RexxObject *start_scope)
 {
-    // return a pointer to the static primitive one
-    return (void *)getPrimitiveBehaviour(typenum);
+    return methodDictionary->findSuperScope(start_scope);
 }
 
-RexxObject * RexxBehaviour::superScope(
-    RexxObject * start_scope)          /* requested current scope           */
-/******************************************************************************/
-/* Function:  Return the scope following a give scope                         */
-/******************************************************************************/
+
+
+/**
+ * Locate a super class method given the starting lookup
+ * information.
+ *
+ * @param messageName
+ *                   The target message name.
+ * @param startScope The starting lookup scope.
+ *
+ * @return The matching method (if any)
+ */
+MethodClass *RexxBehaviour::superMethod(RexxString * messageName, RexxObject * startScope)
 {
-    if (scopes == OREF_NULL)       /* no scopes defined?                */
-    {
-        return TheNilObject;               /* no super scoping possible         */
-    }
-    /* go get the super scope            */
-    return scopes->findSuperScope(start_scope);
+    // delegate this to the method dictionary.
+    return methodDictionary->findSuperMethod(messageName, startScope);
 }
 
-MethodClass *RexxBehaviour::superMethod(
-    RexxString * messageName,          /* target method name                */
-    RexxObject * startScope)           /* starting scope                    */
-/******************************************************************************/
-/* Function:   Find a method using the given starting scope information       */
-/******************************************************************************/
-{
-    /* if we have scopes defined and we  */
-    /* have a good start scope           */
-    if (scopes != OREF_NULL && startScope != TheNilObject)
-    {
-        /* get the scope list for the given  */
-        /* starting scope                    */
-        RexxArray *scopeList = (RexxArray *)scopes->get(startScope);
-        if (scopeList != OREF_NULL)        /* have a matching list?             */
-        {
-            /* get a list of methods             */
-            RexxArray *methods = methodDictionary->stringGetAll(messageName);
-            size_t scopes_size = scopeList->size(); /* get the two array sizes           */
-            size_t methods_size = methods->size();
-            /* search through the methods list   */
-            /* for the first one with a          */
-            /* conforming scope                  */
-            for (size_t i = 1; i <= methods_size; i++)
-            {
-                /* get the next method               */
-                MethodClass *method = (MethodClass *)methods->get(i);
-                /* now loop through the scopes list  */
-                for (size_t j = 1; j <= scopes_size; j++)
-                {
-                    /* got a matching scope here?        */
-                    if (scopeList->get(j) == method->getScope())
-                    {
-                        return method;             /* return the method                 */
-                    }
-                }
-            }
-        }
-    }
-    return OREF_NULL;                    /* nothing found                     */
-}
 
-void RexxBehaviour::setMethodDictionaryScope(
-    RexxObject *scope)                 /* new scopy for all methods         */
-/******************************************************************************/
-/* Function:  Set a new set of scoping information for an object              */
-/******************************************************************************/
+/**
+ * Set a new set of scoping information for all methods in a
+ * method dictionary.  Used during image setup processing.
+ *
+ * @param scope  The scope to set.
+ */
+void RexxBehaviour::setMethodDictionaryScope(RexxClass *scope)
 {
     // we might not have instance methods to process
-    if (methodDictionary == OREF_NULL)
+    if (methodDictionary != OREF_NULL)
     {
-        return;
-    }
-
-                                         /* traverse the method dictionary    */
-    for (HashLink i = methodDictionary->first();
-          methodDictionary->index(i) != OREF_NULL;
-          i = methodDictionary->next(i))
-    {
-                                         /* setting each scope                */
-        ((MethodClass *)methodDictionary->value(i))->setScope((RexxClass *)scope);
+        methodDictionary->setMethodScope(scope);
     }
 }
 
@@ -593,76 +534,36 @@ void RexxBehaviour::setMethodDictionaryScope(
  * @return A supplier holding the names and methods with the target
  *         scope.  This supplier can be empty.
  */
-RexxSupplier *RexxBehaviour::getMethods(RexxObject *scope)
+RexxSupplier *RexxBehaviour::getMethods(RexxClass *scope)
 {
-    // if asking for everything, just return the supplier.
-    if (scope == OREF_NULL)
-    {
-        return methodDictionary->supplier();
-    }
-
-    size_t count = 0;
-    HashLink i;
-
-    // travese the method dictionary, searching for methods with the target scope
-    for (i = methodDictionary->first(); methodDictionary->index(i) != OREF_NULL; i = methodDictionary->next(i))
-    {
-        if (((MethodClass *)methodDictionary->value(i))->getScope() == scope)
-        {
-            count++;
-        }
-    }
-
-    RexxArray *names = new_array(count);
-    RexxArray *methods = new_array(count);
-    count = 1;
-
-    // pass two, copy the entries into the array
-    for (i = methodDictionary->first(); methodDictionary->index(i) != OREF_NULL; i = methodDictionary->next(i))
-    {
-        if (((MethodClass *)methodDictionary->value(i))->getScope() == scope)
-        {
-            names->put(methodDictionary->index(i), count);
-            methods->put(methodDictionary->value(i), count);
-            count++;
-        }
-    }
-
-    return (RexxSupplier *)new_supplier(methods, names);
+    // the method dictionary handles all of this.
+    return methodDictionary->getMethods(scope);
 }
 
 
-RexxObject *RexxBehaviour::setScopes(
-    RexxIdentityTable *newscopes)        /* new table of scopes               */
-/******************************************************************************/
-/* Function:  Set a new set of scoping information for an object              */
-/******************************************************************************/
+/**
+ * Add a new scope to the set used by the behaviour.
+ *
+ * @param scope  The new scope class
+ */
+void RexxBehaviour::addScope(RexxClass *scope)
 {
-                                       /* set the scoping info              */
-    setField(scopes, newscopes);
-    return OREF_NULL;                    /* always return nothing             */
+    // scoping is handled by the method dictionary.
+    methodDictionary->addScope(scope);
 }
 
-RexxObject *RexxBehaviour::addScope(
-    RexxObject *scope)                 /* new scope for the scope table     */
-/******************************************************************************/
-/* Function:  Set a new set of scoping information for an object              */
-/******************************************************************************/
-{
-    if (scopes == OREF_NULL)       /* no scopes set?                     */
-    {
-        /* add a scope table to add to        */
-        setField(scopes, new_identity_table());
-    }
-    /* set the scoping info              */
-    scopes->add(scope, TheNilObject);
-    /* add the scope list for this scope */
-    scopes->add(scopes->allAt(TheNilObject), scope);
-    return OREF_NULL;                    /* return the big nothing            */
-}
 
-RexxObject *RexxBehaviour::mergeScope(
-    RexxObject *scope)                 /* new scope for the scope table     */
+/**
+ * TODO:  What does this do and how is it used?
+ *
+ * Conditionally add scoping information to a class if
+ * not already there.
+ *
+ * @param scope  The scope to add.
+ *
+ * @return
+ */
+void RexxBehaviour::mergeScope(RexxClass *scope)
 /******************************************************************************/
 /* Function:  Set a new set of scoping information for an object              */
 /******************************************************************************/
@@ -677,7 +578,7 @@ RexxObject *RexxBehaviour::mergeScope(
 
 
 bool RexxBehaviour::checkScope(
-    RexxObject *scope)                 /* scope to check                    */
+    RexxClass *scope)                 /* scope to check                    */
 /*****************************************************************************/
 /* Function: Check if the passed scope is already in the scope table         */
 /*****************************************************************************/
@@ -687,73 +588,81 @@ bool RexxBehaviour::checkScope(
         return false;                      /* then it can't be in the table     */
     }
     /* have the table check for the index*/
-    return scopes->get(scope) != OREF_NULL;
+    return scopes->hasItem(scope);
 }
 
-void RexxBehaviour::merge(
-    RexxBehaviour * source_behav)      /* new behaviour to add in           */
-/*****************************************************************************/
-/* Function:  Merge the passed behaviour's mdict into this behaviour's mdict */
-/*            The method search order will be for the target(this) behaviour */
-/*             to be found before the source behaviour                       */
-/*****************************************************************************/
+
+/**
+ * Merge another behaviour's method dictionary into this
+ * one.  Our information will take precedence over the source
+ * behaviour.
+ *
+ * @param source_behav
+ *               The source behaviour to merge in.
+ */
+void RexxBehaviour::merge(RexxBehaviour *source_behav)
 {
-                                         /* if there isn't a source mdict     */
-                                         /* there isn't anything to do        */
-    if (source_behav->methodDictionary == OREF_NULL)
+    // merge the method dictionaries
+    methodDictionaryMerge(source_behav->methodDictionary);
+}
+
+
+/**
+ * Merge a method dictionary without method dictionary.
+ * The target dictionary methods will take lookup priority
+ * over the source dictionary methods.
+ *
+ * @param sourceDictionary
+ *               The source for the merge.
+ */
+void RexxBehaviour::methodDictionaryMerge(TableClass *sourceDictionary)
+{
+    // no source is a NOP
+    if (sourceDictionary == OREF_NULL)
     {
         return;
     }
-    /* if there isn't a mdict yet just   */
-    /* use  the source for this one      */
-    if (methodDictionary == OREF_NULL)
-    {
-        setField(methodDictionary, source_behav->methodDictionary);
-    }
-    else
-    {
-        /* get a copy of the source mdict    */
-        /* for the merge                     */
-        RexxTable *newMethods = (RexxTable *)source_behav->methodDictionary->copy();
-        ProtectedObject p(newMethods);
-        /* merge this mdict with the copy    */
-        methodDictionary->merge(newMethods);
-        /* and put it into this behaviour    */
-        setField(methodDictionary, newMethods);
-    }
-}
 
-void RexxBehaviour::methodDictionaryMerge(
-    RexxTable *sourceDictionary)       /* dictionary to merge in            */
-/*****************************************************************************/
-/* Function:  Merge the passed mdict into this behaviour's mdict             */
-/*            After this merge the method search order will find the source  */
-/*            mdict methods prior to self(target) methods                    */
-/*****************************************************************************/
-{
-    RexxTable *newDictionary;            /* new method dictionary             */
-
-                                         /* if there isn't a source mdict     */
-    if (sourceDictionary == OREF_NULL)   /* there isn't anything to do        */
-    {
-        return;                            /* just return                       */
-    }
-    /* if there isn't a mdict yet just   */
-    /* use  the source for this one      */
+    // if we have nothing to merge yet, then just use the source
+    // method dictionary.
     if (methodDictionary == OREF_NULL)
     {
         setField(methodDictionary, sourceDictionary);
     }
     else
     {
-        /* get a copy of the target mdict    */
-        /* for the merge                     */
-        newDictionary = (RexxTable *)methodDictionary->copy();
-        ProtectedObject p(newDictionary);
-        /* merge the source mdict and copy   */
-        sourceDictionary->merge(newDictionary);
-        /* and put it into this behaviour    */
-        setField(methodDictionary, newDictionary);
+        // get a copy of the source dictionary and merge our methods into it.
+        Protected<MethodDictionary> newMethods = (MethodDictionary *)sourceDictionary->copy;
+        // merge our methods into the copy
+        methodDictionary->mergeMethods(newMethods);
+        // and replace our existing behaviour.
+        setField(methodDictionary, newMethods);
     }
 }
 
+
+/**
+ * Get an array of all scopes defined in a behaviour.
+ *
+ * @return An array of the behaviour scopes.
+ */
+RexxArray *RexxBehaviour::allScopes()
+{
+    methodDictionary->allScopes();
+}
+
+
+/**
+ * Make a copy of the current method dictionary.
+ *
+ * @return The copy of the method dictionary, or OREF_NULL if this
+ *         behaviour does not have one.
+ */
+MethodDictionary *RexxBehaviour::copyMethodDictionary()
+{
+    if (methodDictionary == OREF_NULL)
+    {
+        return OREF_NULL;
+    }
+    return (MethodDictionary *)methodDictionary->copy();
+}

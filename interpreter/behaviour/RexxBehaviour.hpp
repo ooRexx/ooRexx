@@ -46,7 +46,12 @@
 
 #include "FlagSet.hpp"
 
+class MethodDictionary;
 
+
+/**
+ * The class that defines base object behaviour (i.e., what methods can be invoked)
+ */
 class RexxBehaviour : public RexxInternalObject
 {
  public:
@@ -66,40 +71,37 @@ class RexxBehaviour : public RexxInternalObject
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(RexxEnvelope*);
 
-    RexxObject *copy();
-    void        copyBehaviour(RexxBehaviour *source);
-    RexxObject *define(RexxString *, MethodClass *);
-    MethodClass *define(const char *, PCPPM, size_t);
-    void        addMethod(RexxString *, MethodClass *);
-    void        removeMethod(RexxString *);
+    virtual RexxObject *copy();
+    void         copyBehaviour(RexxBehaviour *source);
+    void         defineMethod(RexxString *, MethodClass *);
+    void         defineMethod(const char *, PCPPM, size_t);
+    void         addInstanceMethod(RexxString *, MethodClass *);
+    void         removeInstanceMethod(RexxString *);
     MethodClass *methodObject(RexxString *);
     MethodClass *methodLookup( RexxString *);
     MethodClass *getMethod( RexxString *);
-    RexxObject *deleteMethod(RexxString *);
-    void        restore(RexxBehaviour *);
-    RexxClass  *restoreClass();
-    RexxObject *superScope( RexxObject *);
+    RexxObject  *deleteMethod(RexxString *);
+    void         restore(RexxBehaviour *);
+    RexxClass   *restoreClass();
+    RexxObject  *superScope( RexxObject *);
     MethodClass *superMethod(RexxString *, RexxObject *);
-    void        setMethodDictionaryScope(RexxObject *);
-    RexxObject *setScopes( RexxIdentityTable *);
-    RexxObject *addScope( RexxObject *);
-    RexxObject *mergeScope( RexxObject *);
-    bool        checkScope( RexxObject *);
-    void        subclass(RexxBehaviour *);
+    void         setMethodDictionaryScope(RexxObject *);
+    void         addScope(RexxClass *);
+    void         mergeScope(RexxClass *);
+    void         subclass(RexxBehaviour *);
     RexxSupplier *getMethods(RexxObject *scope);
 
     void        resolveNonPrimitiveBehaviour();
 
     void        merge(RexxBehaviour *);
-    void        methodDictionaryMerge( RexxTable *);
+    void        methodDictionaryMerge(MethodDictionary *);
+    MethodDictionary *copyMethodDictionary();
 
-    inline RexxIdentityTable  *getScopes()       { return scopes; };
-    inline RexxTable  *getMethodDictionary()   { return methodDictionary; };
-           void        setMethodDictionary(RexxTable * m);
-           void        setInstanceMethodDictionary(RexxTable * m);
-           RexxTable  *getInstanceMethodDictionary()   { return instanceMethodDictionary; };
+    inline MethodDictionary *getMethodDictionary()   { return methodDictionary; };
+           void        setMethodDictionary(MethodDictionary *m);
     inline RexxClass  *getOwningClass()        { return owningClass;};
            void        setOwningClass(RexxClass *c);
+           RexxArray  *allScopes();
 
     inline void  setClassType(size_t n) { classType = (uint16_t)n; }
     inline size_t getClassType()  { return (size_t)classType; }
@@ -164,12 +166,9 @@ class RexxBehaviour : public RexxInternalObject
 
     size_t   classType;                   // primitive class identifier
     FlagSet<BehaviourFlag, 32> behaviourFlags; // various behaviour flag types
-    RexxIdentityTable  *scopes;           // scopes table
-    RexxTable  *methodDictionary;         // method dictionary
+    MethodDictionary *methodDictionary;   // method dictionary obtained from our class.
     PCPPM      *operatorMethods;          // operator look-a-side table
     RexxClass  *owningClass;              // class that created this object
-                                          // methods added via SETMETHOD
-    RexxTable  *instanceMethodDictionary;
 };
 
 
