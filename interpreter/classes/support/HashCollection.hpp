@@ -63,7 +63,7 @@ class HashCollection : public RexxObject
     virtual RexxObject *copy();
     virtual RexxArray  *makeArray();
 
-    virtual HashContent *allocateContents(size_t bucketSize, size_t capacity);
+    virtual HashContents *allocateContents(size_t bucketSize, size_t capacity);
     virtual void validateIndex(RexxInternalObject *index, size_t position);
 
     void expandContents();
@@ -73,13 +73,13 @@ class HashCollection : public RexxObject
 
     inline RexxInternalObject *resultOrNil(RexxInternalObject *o) { return o != OREF_NULL ? o : TheNilObject; }
 
-    virtual RexxInternalObject *mergeItem(RexxInternalObject *, RexxInternalObject *);
+    virtual void mergeItem(RexxInternalObject *, RexxInternalObject *);
     virtual RexxInternalObject *remove(RexxInternalObject *key);
     virtual RexxInternalObject *get(RexxInternalObject *key);
-    virtual RexxInternalObject *put(RexxInternalObject *, RexxInternalObject *);
-    virtual RexxInternalObject *add(RexxInternalObject *, RexxInternalObject *);
+    virtual void put(RexxInternalObject *, RexxInternalObject *);
+    virtual void add(RexxInternalObject *, RexxInternalObject *);
     virtual RexxInternalObject *removeItem(RexxInternalObject *value);
-    virtual RexxInternalObject *hasItem(RexxInternalObject *);
+    virtual bool hasItem(RexxInternalObject *);
     virtual RexxInternalObject *getIndex(RexxInternalObject * value);
 
     void          copyValues();
@@ -90,7 +90,7 @@ class HashCollection : public RexxObject
     RexxInternalObject   *hasIndexRexx(RexxInternalObject *);
     RexxInternalObject   *hasItemRexx(RexxInternalObject *);
     RexxInternalObject   *removeItemRexx(RexxInternalObject *value);
-    RexxInternalObject   *allAt(RexxInternalObject *);
+    RexxArray            *allAtRexx(RexxInternalObject *);
     RexxInternalObject   *indexRexx(RexxInternalObject * value);
     RexxSupplier *supplier();
     void          merge(HashCollection *);
@@ -103,6 +103,9 @@ class HashCollection : public RexxObject
 
     inline size_t items() { return contents->items(); }
     inline bool   isEmpty() { return contents->isEmpty(); }
+
+    // minimum bucket size we'll work with
+    static const size_t MinimumBucketSize = 17;
 
     HashContents *contents;           // the backing hash table collection.
 };

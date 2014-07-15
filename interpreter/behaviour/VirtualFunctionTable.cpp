@@ -86,6 +86,7 @@
 #include "RexxHashTable.hpp"
 #include "RexxListTable.hpp"
 #include "RexxSmartBuffer.hpp"
+#include "HashContents.hpp"
 #include "RexxVariable.hpp"
 #include "RexxVariableDictionary.hpp"
 #include "ExpressionVariable.hpp"
@@ -374,6 +375,9 @@ void MemoryObject::buildVirtualFunctionTable()
    
    objectPtr = new (objectLoc) RexxSmartBuffer(RESTOREIMAGE);
    virtualFunctionTable[T_SmartBuffer] = getVftPointer(objectLoc);
+   
+   objectPtr = new (objectLoc) HashContents(RESTOREIMAGE);
+   virtualFunctionTable[T_HashContents] = getVftPointer(objectLoc);
    
    objectPtr = new (objectLoc) RexxVariable(RESTOREIMAGE);
    virtualFunctionTable[T_Variable] = getVftPointer(objectLoc);

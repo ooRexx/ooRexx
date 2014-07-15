@@ -46,6 +46,7 @@
 #include "HashCollection.hpp"
 #include "ArrayClass.hpp"
 #include "MethodArguments.hpp"
+#include "ProtectedObject.hpp"
 
 /**
  * construct a HashCollection with a given size.
@@ -104,7 +105,8 @@ void HashCollection::expandContents(size_t capacity )
         contents->empty();
     }
     // replace the contents
-    setField(contents, newContents);
+
+    setField(contents, (HashContents *)newContents);
 }
 
 
@@ -120,7 +122,7 @@ void HashCollection::ensureCapacity(size_t delta)
     // the current total capacity plus the delta.
     if (!contents->hasCapacity(delta))
     {
-        expandContents(contents->capacity() + delta)
+        expandContents(contents->capacity() + delta);
     }
 }
 
@@ -161,7 +163,7 @@ size_t HashCollection::calculateBucketSize(size_t capacity)
     // 1 if we end up with an even number.
     if ((capacity | 1) == 0)
     {
-        capacity += 1
+        capacity += 1;
     }
 
     return 1;
@@ -323,7 +325,7 @@ RexxInternalObject *HashCollection::remove(RexxInternalObject *index)
  */
 RexxArray *HashCollection::allAtRexx(RexxInternalObject *index)
 {
-    validateindex(index, ARG_ONE);
+    validateIndex(index, ARG_ONE);
     return contents->getAll(index);
 }
 
@@ -340,7 +342,7 @@ RexxArray *HashCollection::allAtRexx(RexxInternalObject *index)
  */
 RexxInternalObject *HashCollection::getRexx(RexxInternalObject *index)
 {
-    validateindex(index, ARG_ONE);
+    validateIndex(index, ARG_ONE);
     return resultOrNil(get(index));
 }
 
@@ -375,11 +377,35 @@ RexxInternalObject *HashCollection::get(RexxInternalObject *key)
 RexxInternalObject *HashCollection::putRexx(RexxInternalObject *item, RexxInternalObject *index)
 {
     // validate both the index and value
-    requiredArgument(value, ARG_ONE);
-    validateindex(index, ARG_TWO);
-    put(value, index);
+    requiredArgument(item, ARG_ONE);
+    validateIndex(index, ARG_TWO);
+    put(item, index);
     // always returns nothing
     return OREF_NULL;
+}
+
+
+/**
+ * Place an item into a hash collection using a key.
+ * This is the base virtual implementation, which uses
+ * equality semantics for the retrieveal.  Other implementations
+ * may override this.
+ *
+ * @param value The inserted value.
+ * @param index The insertion key.
+ *
+ * @return The retrieved object.  Returns OREF_NULL if the object
+ *         was not found.
+ */
+void HashCollection::put(RexxInternalObject *value, RexxInternalObject *index)
+{
+    // try to add first.  If there is a failure,
+    // we need to expand our contents and try again
+    if (!contents->put(value, index))
+    {
+        expandContents();
+        contents->put(value, index);
+    }
 }
 
 
@@ -395,14 +421,14 @@ RexxInternalObject *HashCollection::putRexx(RexxInternalObject *item, RexxIntern
  * @return The retrieved object.  Returns OREF_NULL if the object
  *         was not found.
  */
-void HashCollection::put(RexxInternalObject *value, RexxInternalObject *index)
+void HashCollection::add(RexxInternalObject *value, RexxInternalObject *index)
 {
     // try to add first.  If there is a failure,
     // we need to expand our contents and try again
-    if (!contents->put(value, index))
+    if (!contents->add(value, index))
     {
         expandContents();
-        contents->put(value, index);
+        contents->add(value, index);
     }
 }
 
@@ -462,7 +488,7 @@ RexxInternalObject *HashCollection::hasIndexRexx(RexxInternalObject *index)
  */
 bool HashCollection::hasItem(RexxInternalObject *index)
 {
-    return contents->hasItem();
+    return contents->hasItem(index);
 }
 
 
@@ -480,7 +506,7 @@ RexxInternalObject *HashCollection::indexRexx(RexxInternalObject *target)
     // required argument
     requiredArgument(target, ARG_ONE);
     // retrieve this from the hash table
-    return resultOrNile(getIndex(target));
+    return resultOrNil(getIndex(target));
 }
 
 
@@ -540,20 +566,7 @@ RexxInternalObject *HashCollection::removeItem(RexxInternalObject *target)
 RexxInternalObject *HashCollection::hasItemRexx(RexxInternalObject *target)
 {
     requiredArgument(target, ARG_ONE);
-    return this->hasItem(target);
-}
-
-
-/**
- * Test if a given item exists in the collection.
- *
- * @param target The target object.
- *
- * @return .true if the object exists, .false otherwise.
- */
-RexxInternalObject *HashCollection::hasItem(RexxInternalObject *target)
-{
-    return this->contents->hasItem(target);
+    return hasItem(target) ? TheTrueObject : TheFalseObject;
 }
 
 
@@ -631,15 +644,4 @@ void HashCollection::empty()
 RexxObject *HashCollection::isEmptyRexx()
 {
     return contents->isEmpty() ? TheTrueObject : TheFalseObject;
-}
-
-
-/**
- * Test if a HashTableCollection is empty.
- *
- * @return
- */
-bool HashCollection::isEmpty()
-{
-    return contents->isEmpty();
 }

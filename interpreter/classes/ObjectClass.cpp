@@ -1135,7 +1135,7 @@ RexxArray *RexxObject::makeArray()
   }
 }
 
-RexxString *RexxObject::requestString()
+RexxString *RexxInternalObject::requestString()
 /******************************************************************************/
 /* Function:  Handle a string request for a REXX object.  This will go        */
 /*            through the whole search order to do the conversion.            */
@@ -1153,7 +1153,7 @@ RexxString *RexxObject::requestString()
          /* get the final string value        */
             string_value = stringValue();
             /* raise a NOSTRING condition        */
-            ActivityManager::currentActivity->raiseCondition(OREF_NOSTRING, OREF_NULL, string_value, this, OREF_NULL);
+            ActivityManager::currentActivity->raiseCondition(OREF_NOSTRING, OREF_NULL, string_value, (RexxObject *)this, OREF_NULL);
         }
         return string_value;               /* return the converted form         */
     }
@@ -1161,14 +1161,14 @@ RexxString *RexxObject::requestString()
     {                               /* do a real request for this        */
         ProtectedObject string_value;
 
-        sendMessage(OREF_REQUEST, OREF_STRINGSYM, string_value);
+        ((RexxObject *)this)->sendMessage(OREF_REQUEST, OREF_STRINGSYM, string_value);
         // The returned value might be an Integer or NumberString value.  We need to
         // force this to be a real string value.
         string_value = ((RexxObject *)string_value)->primitiveMakeString();
         if ((RexxObject *)string_value == TheNilObject)
         {/* didn't convert?                   */
          /* get the final string value        */
-            sendMessage(OREF_STRINGSYM, string_value);
+            ((RexxObject *)this)->sendMessage(OREF_STRINGSYM, string_value);
             // we're really dependent upon the program respecting the protocol
             // here and returning a value.  It is possible there is a
             // problem, so how to handle this.  We could just raise an error, but this
@@ -1181,7 +1181,7 @@ RexxString *RexxObject::requestString()
             // if this error ever gets issued.
             if (((RexxObject *)string_value) == OREF_NULL)
             {
-                string_value = RexxObject::stringValue();
+                string_value = stringValue();
                 if (((RexxObject *)string_value) == OREF_NULL)
                 {
                     reportException(Error_No_result_object_message, OREF_STRINGSYM);
@@ -1191,13 +1191,13 @@ RexxString *RexxObject::requestString()
             // force this to be a real string value.
             string_value = ((RexxObject *)string_value)->primitiveMakeString();
             /* raise a NOSTRING condition        */
-            ActivityManager::currentActivity->raiseCondition(OREF_NOSTRING, OREF_NULL, (RexxString *)string_value, this, OREF_NULL);
+            ActivityManager::currentActivity->raiseCondition(OREF_NOSTRING, OREF_NULL, (RexxString *)string_value, (RexxObject *)this, OREF_NULL);
         }
         return (RexxString *)string_value;   /* return the converted form         */
     }
 }
 
-RexxString *RexxObject::requestStringNoNOSTRING()
+RexxString *RexxInternalObject::requestStringNoNOSTRING()
 /******************************************************************************/
 /* Function:  Handle a string request for a REXX object.  This will go        */
 /*            through the whole search order to do the conversion.            */
@@ -1220,13 +1220,13 @@ RexxString *RexxObject::requestStringNoNOSTRING()
     else
     {                               /* do a real request for this        */
         ProtectedObject string_value;
-        sendMessage(OREF_REQUEST, OREF_STRINGSYM, string_value);
+        ((RexxObject *)this)->sendMessage(OREF_REQUEST, OREF_STRINGSYM, string_value);
         if ((RexxObject *)string_value == TheNilObject)
         {/* didn't convert?                   */
          /* get the final string value        */
-            sendMessage(OREF_STRINGSYM, string_value);
+            ((RexxObject *)this)->sendMessage(OREF_STRINGSYM, string_value);
         }
-        return(RexxString *)string_value;  /* return the converted form         */
+        return (RexxString *)string_value;  /* return the converted form         */
     }
 }
 
@@ -1246,7 +1246,7 @@ RexxString *RexxInternalObject::requiredString(
     }
     else                                 /* do a full request for this        */
     {
-        string_value = sendMessage(OREF_REQUEST, OREF_STRINGSYM);
+        string_value = ((RexxObject *)this)->sendMessage(OREF_REQUEST, OREF_STRINGSYM);
     }
     /* didn't convert?                   */
     if (string_value == TheNilObject)
@@ -1273,7 +1273,7 @@ RexxString *RexxInternalObject::requiredString(
     }
     else                                 /* do a full request for this        */
     {
-        string_value = sendMessage(OREF_REQUEST, OREF_STRINGSYM);
+        string_value = ((RexxObject *)this)->sendMessage(OREF_REQUEST, OREF_STRINGSYM);
     }
     /* didn't convert?                   */
     if (string_value == TheNilObject)
@@ -1301,7 +1301,7 @@ RexxString *RexxInternalObject::requiredString()
     else
     {
         // we have to use REQUEST to get this
-        return (RexxString *)sendMessage(OREF_REQUEST, OREF_STRINGSYM);
+        return (RexxString *)((RexxObject *)this)->sendMessage(OREF_REQUEST, OREF_STRINGSYM);
     }
 }
 
@@ -1349,7 +1349,7 @@ RexxInteger *RexxInternalObject::requiredInteger(
     if (result == (RexxInteger *)TheNilObject)
     {
         /* raise an error                    */
-        reportException(Error_Incorrect_method_whole, position, this);
+        reportException(Error_Incorrect_method_whole, position, (RexxObject *)this);
     }
     return result;                       /* return the new integer            */
 }
@@ -1387,7 +1387,7 @@ bool RexxInternalObject::requestNumber(wholenumber_t &result, size_t precision)
  *
  * @return true if the object converted ok, false for a conversion failure.
  */
-bool RexxObject::requestUnsignedNumber(stringsize_t &result, size_t precision)
+bool RexxInternalObject::requestUnsignedNumber(stringsize_t &result, size_t precision)
 {
     if (isBaseClass())
     {
@@ -1403,7 +1403,7 @@ bool RexxObject::requestUnsignedNumber(stringsize_t &result, size_t precision)
 }
 
 
-wholenumber_t RexxObject::requiredNumber(
+wholenumber_t RexxInternalObject::requiredNumber(
     size_t position ,                  /* precision to use                  */
     size_t precision)                  /* argument position for errors      */
 /******************************************************************************/
@@ -1420,7 +1420,7 @@ wholenumber_t RexxObject::requiredNumber(
         if (!numberValue(result, precision))
         {
             /* raise an error                    */
-            reportException(Error_Incorrect_method_whole, position, this);
+            reportException(Error_Incorrect_method_whole, position, (RexxObject *)this);
         }
     }
     else                                 /* return integer value of string    */
@@ -1428,13 +1428,13 @@ wholenumber_t RexxObject::requiredNumber(
         if (!requiredString(position)->numberValue(result, precision))
         {
             /* raise an error                    */
-            reportException(Error_Incorrect_method_whole, position, this);
+            reportException(Error_Incorrect_method_whole, position, (RexxObject *)this);
         }
     }
     return result;                       /* return the result                 */
 }
 
-stringsize_t RexxObject::requiredPositive(
+stringsize_t RexxInternalObject::requiredPositive(
     size_t position,                   /* precision to use                  */
     size_t precision)                  /* argument position for errors      */
 /******************************************************************************/
@@ -1447,13 +1447,13 @@ stringsize_t RexxObject::requiredPositive(
     if (!unsignedNumberValue(result, precision) || result == 0)
     {
         /* raise the error                   */
-        reportException(Error_Incorrect_method_positive, position, this);
+        reportException(Error_Incorrect_method_positive, position, (RexxObject *)this);
     }
     return result;
 }
 
 
-stringsize_t RexxObject::requiredNonNegative(
+stringsize_t RexxInternalObject::requiredNonNegative(
     size_t position ,                  /* precision to use                  */
     size_t precision)                  /* argument position for errors      */
 /******************************************************************************/
@@ -1466,13 +1466,13 @@ stringsize_t RexxObject::requiredNonNegative(
     if (!unsignedNumberValue(result, precision))
     {
         /* raise the error                   */
-        reportException(Error_Incorrect_method_nonnegative, position, this);
+        reportException(Error_Incorrect_method_nonnegative, position, (RexxObject *)this);
     }
     return result;
 }
 
 
-RexxArray *RexxObject::requestArray()
+RexxArray *RexxInternalObject::requestArray()
 /******************************************************************************/
 /* Function:  Request an array value from an object.                          */
 /******************************************************************************/
@@ -1480,13 +1480,17 @@ RexxArray *RexxObject::requestArray()
   if (isBaseClass())             /* primitive object?                 */
   {
     if (isOfClass(Array, this))            /* already an array?                 */
+    {
       return (RexxArray *)this;        /* return directly, don't makearray  */
+    }
     else
+    {
       return makeArray();        /* return the array value            */
+    }
   }
   else                                 /* return integer value of string    */
   {
-      return (RexxArray *)sendMessage(OREF_REQUEST, OREF_ARRAYSYM);
+      return (RexxArray *)((RexxObject *)this)->sendMessage(OREF_REQUEST, OREF_ARRAYSYM);
   }
 }
 
@@ -2623,7 +2627,7 @@ RexxObject *RexxObject::callOperatorMethod(size_t methodOffset, RexxObject *argu
     // The behavior manages the operator tables.
     PCPPM cppEntry = behaviour->getOperatorMethod(methodOffset);
     // Go issue the method directly.
-    return (*((PCPPM1)cppEntry))(argument);
+    return (this->*((PCPPM1)cppEntry))(argument);
 }
 
 

@@ -114,6 +114,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="HashTable" class="RexxHashTable" include="RexxHashTable.hpp"/>
 <Class id="ListTable" class="RexxListTable" include="RexxListTable.hpp"/>
 <Class id="SmartBuffer" class="RexxSmartBuffer" include="RexxSmartBuffer.hpp"/>
+<Class id="HashContents" class="HashContents" include="HashContents.hpp"/>
 
 <Class id="Variable" class="RexxVariable" include="RexxVariable.hpp"/>
 <Class id="VariableDictionary" class="RexxVariableDictionary" include="RexxVariableDictionary.hpp"/>

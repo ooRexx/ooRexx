@@ -145,7 +145,7 @@ inline void reportException(wholenumber_t error, RexxArray *args)
     ActivityManager::currentActivity->raiseException(error, OREF_NULL, args, OREF_NULL);
 }
 
-inline void reportException(wholenumber_t error, RexxInternalObject *a1)
+inline void reportException(wholenumber_t error, RexxObject *a1)
 {
     ActivityManager::currentActivity->reportAnException(error, a1);
 }
@@ -160,22 +160,22 @@ inline void reportException(wholenumber_t error, wholenumber_t a1, wholenumber_t
     ActivityManager::currentActivity->reportAnException(error, a1, a2);
 }
 
-inline void reportException(wholenumber_t error, wholenumber_t a1, RexxInternalObject *a2)
+inline void reportException(wholenumber_t error, wholenumber_t a1, RexxObject *a2)
 {
     ActivityManager::currentActivity->reportAnException(error, a1, a2);
 }
 
-inline void reportException(wholenumber_t error, RexxInternalObject *a1, wholenumber_t a2)
+inline void reportException(wholenumber_t error, RexxObject *a1, wholenumber_t a2)
 {
     ActivityManager::currentActivity->reportAnException(error, a1, a2);
 }
 
-inline void reportException(wholenumber_t error, const char *a1, RexxInternalObject *a2)
+inline void reportException(wholenumber_t error, const char *a1, RexxObject *a2)
 {
     ActivityManager::currentActivity->reportAnException(error, a1, a2);
 }
 
-inline void reportException(wholenumber_t error, RexxInternalObject *a1, const char *a2)
+inline void reportException(wholenumber_t error, RexxObject *a1, const char *a2)
 {
     ActivityManager::currentActivity->reportAnException(error, a1, a2);
 }
@@ -195,47 +195,47 @@ inline void reportException(wholenumber_t error, const char *a1, wholenumber_t a
     ActivityManager::currentActivity->reportAnException(error, a1, a2);
 }
 
-inline void reportException(wholenumber_t error, const char *a1, wholenumber_t a2, RexxInternalObject *a3)
+inline void reportException(wholenumber_t error, const char *a1, wholenumber_t a2, RexxObject *a3)
 {
     ActivityManager::currentActivity->reportAnException(error, a1, a2, a3);
 }
 
-inline void reportException(wholenumber_t error, const char *a1, RexxInternalObject *a2, wholenumber_t a3)
+inline void reportException(wholenumber_t error, const char *a1, RexxObject *a2, wholenumber_t a3)
 {
     ActivityManager::currentActivity->reportAnException(error, a1, a2, a3);
 }
 
-inline void reportException(wholenumber_t error, RexxInternalObject *a1, RexxInternalObject *a2)
+inline void reportException(wholenumber_t error, RexxObject *a1, RexxObject *a2)
 {
     ActivityManager::currentActivity->reportAnException(error, a1, a2);
 }
 
-inline void reportException(wholenumber_t error, RexxInternalObject *a1, RexxInternalObject *a2, RexxInternalObject *a3)
+inline void reportException(wholenumber_t error, RexxObject *a1, RexxObject *a2, RexxObject *a3)
 {
     ActivityManager::currentActivity->reportAnException(error, a1, a2, a3);
 }
 
-inline void reportException(wholenumber_t error, RexxInternalObject *a1, RexxInternalObject *a2, RexxInternalObject *a3, RexxInternalObject *a4)
+inline void reportException(wholenumber_t error, RexxObject *a1, RexxObject *a2, RexxObject *a3, RexxObject *a4)
 {
     ActivityManager::currentActivity->reportAnException(error, a1, a2, a3, a4);
 }
 
-inline void reportException(wholenumber_t error, const char *a1, RexxInternalObject *a2, const char *a3, RexxInternalObject *a4)
+inline void reportException(wholenumber_t error, const char *a1, RexxObject *a2, const char *a3, RexxObject *a4)
 {
     ActivityManager::currentActivity->reportAnException(error, a1, a2, a3, a4);
 }
 
-inline void reportException(wholenumber_t error, const char *a1, RexxInternalObject *a2, RexxInternalObject *a3, RexxInternalObject *a4)
+inline void reportException(wholenumber_t error, const char *a1, RexxObject *a2, RexxObject *a3, RexxObject *a4)
 {
     ActivityManager::currentActivity->reportAnException(error, new_string(a1), a2, a3, a4);
 }
 
-inline void reportException(wholenumber_t error, const char *a1, RexxInternalObject *a2, RexxInternalObject *a3)
+inline void reportException(wholenumber_t error, const char *a1, RexxObject *a2, RexxObject *a3)
 {
     ActivityManager::currentActivity->reportAnException(error, new_string(a1), a2, a3);
 }
 
-inline void reportNomethod(RexxString *message, RexxInternalObject *receiver)
+inline void reportNomethod(RexxString *message, RexxObject *receiver)
 {
     if (!ActivityManager::currentActivity->raiseCondition(OREF_NOMETHOD, OREF_NULL, message, receiver, OREF_NULL))
     {

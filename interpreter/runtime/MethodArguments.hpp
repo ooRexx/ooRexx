@@ -287,7 +287,7 @@ inline RexxArray *arrayArgument(RexxInternalObject *object, size_t position)
     // not an array or not single dimension?  Error!
     if (array == TheNilObject || array->getDimension() != 1)
     {
-        reportException(Error_Execution_noarray, object);
+        reportException(Error_Execution_noarray, (RexxObject *)object);
     }
     return array;
 }

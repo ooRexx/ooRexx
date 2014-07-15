@@ -44,6 +44,8 @@
 #ifndef Included_HashContents
 #define Included_HashContents
 
+class HashCollection;
+
 /**
  * Base class for storing the contents of a hash-based
  * collection.  This version bases all index and item
@@ -60,7 +62,7 @@ public:
     typedef size_t ItemLink;
 
     // link terminator
-    static const ItemLink NoMore = 0;
+    static const ItemLink NoMore = SIZE_MAX;
     // indicates not linked
     static const ItemLink NoLink = SIZE_MAX;
 
@@ -73,7 +75,7 @@ public:
         inline bool isAvailable() { return index == OREF_NULL; }
         // these can only be used when object identity matches are called for...generally
         // just some special purpose things.
-        inline bool matches(RexxInternalObject *i, RexxInternalObject v) { return index == i && value == v; }
+        inline bool matches(RexxInternalObject *i, RexxInternalObject *v) { return index == i && value == v; }
         inline bool matches(RexxInternalObject *i) { return index == i; }
 
         RexxInternalObject *index;           // item index object
@@ -81,8 +83,6 @@ public:
         ItemLink next;                       // next item in overflow bucket
     };
 
-    // minimum bucket size we'll work with
-    static const MinimumBucketSize = 17;
 
            void * operator new(size_t size, size_t capacity);
     inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };
@@ -113,7 +113,7 @@ public:
     // default index hashing method.  bypass the hash() method and directly use the hash value
     virtual ItemLink hashIndex(RexxInternalObject *index)
     {
-        return (ItemLink)(obj->getHashValue() % bucketSize);
+        return (ItemLink)(index->getHashValue() % bucketSize);
     }
 
     void initializeFreeChain();
@@ -132,7 +132,7 @@ public:
         setField(entries[position].value, OREF_NULL);
         setField(entries[position].index, OREF_NULL);
         // clear the link also.
-        next = NoMore;
+        entries[position].next = NoMore;
     }
 
     // copy an entry contents into another entry
@@ -177,13 +177,13 @@ public:
     // perform an item comparison for a position
     inline bool isItem(ItemLink position, RexxInternalObject *item)
     {
-        return isItemEqual(item, entries[position].item);
+        return isItemEqual(item, entries[position].value);
     }
 
     // perform an entry comparison for a position using both index and item value
     inline bool isItem(ItemLink position, RexxInternalObject *index, RexxInternalObject *item)
     {
-        return isIndexEqual(index, entries[position].index) && isItemEqual(item, entries[position].item);
+        return isIndexEqual(index, entries[position].index) && isItemEqual(item, entries[position].value);
     }
 
     // check if an entry is availabe
@@ -252,26 +252,27 @@ public:
     RexxInternalObject *removeItem(RexxInternalObject *value, RexxInternalObject *index);
     bool hasItem(RexxInternalObject *value, RexxInternalObject *index );
     bool hasItem(RexxInternalObject *item);
-    RexxInternalObject *removeItem(RexxObject *item);
-    RexxObject *nextItem(RexxObject *value, RexxObject *index);
+    RexxInternalObject *removeItem(RexxInternalObject *item);
+    RexxInternalObject *nextItem(RexxInternalObject *value, RexxInternalObject *index);
     RexxInternalObject *get(RexxInternalObject *index);
     RexxArray  *getAll(RexxInternalObject *index);
     size_t countAllIndex(RexxInternalObject *index, ItemLink &anchorPosition);
     size_t countAllItem(RexxInternalObject *item);
     RexxArray  *allIndex(RexxInternalObject *item);
     RexxInternalObject *getIndex(RexxInternalObject *item);
-    void merge(HashContents *target);
+    void merge(HashCollection *target);
     void reMerge(HashContents *newHash);
     bool mergeItem(RexxInternalObject *, RexxInternalObject *index);
-    bool RexxHashTable::mergePut(RexxInternalObject *item, RexxInternalObject *index);
+    bool mergePut(RexxInternalObject *item, RexxInternalObject *index);
     RexxArray  *allItems();
     void empty();
-    RexxArray *RexxHashTable::makeArray();
+    RexxArray *makeArray();
     RexxArray *allIndexes();
     RexxArray *uniqueIndexes();
     RexxSupplier *supplier();
     void reHash(HashContents *newHash);
     bool add(RexxInternalObject *item, RexxInternalObject *index);
+    void copyValues();
 
 protected:
 

@@ -113,6 +113,7 @@
 #define TheHashTableBehaviour      (&RexxBehaviour::primitiveBehaviours[T_HashTable])
 #define TheListTableBehaviour      (&RexxBehaviour::primitiveBehaviours[T_ListTable])
 #define TheSmartBufferBehaviour      (&RexxBehaviour::primitiveBehaviours[T_SmartBuffer])
+#define TheHashContentsBehaviour      (&RexxBehaviour::primitiveBehaviours[T_HashContents])
 #define TheVariableBehaviour      (&RexxBehaviour::primitiveBehaviours[T_Variable])
 #define TheVariableDictionaryBehaviour      (&RexxBehaviour::primitiveBehaviours[T_VariableDictionary])
 #define TheVariableTermBehaviour      (&RexxBehaviour::primitiveBehaviours[T_VariableTerm])
