@@ -36,94 +36,46 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                             MethodClass.hpp    */
+/* REXX Kernel                                                                */
 /*                                                                            */
-/* Primitive Kernel Method Class Definitions                                  */
+/* A class for implementing a method dictionary                               */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_RexxMethod
-#define Included_RexxMethod
+#ifndef Included_MethodDictionary
+#define Included_MethodDictionary
 
-#include "RexxCore.h"
-#include "BaseCode.hpp"
-#include "FlagSet.hpp"
-
-class RexxSource;
-class RexxActivity;
-class MethodClass;
-class ProtectedObject;
-class RexxArray;
-class RexxClass;
-class PackageClass;
-
+#include "HashCollection.hpp"
 
 /**
- * Base class for method object.  This is the frontend for
- * The different types of executable code objects.
+ * Exported table class where indexing is done using object
+ * identity
  */
-class MethodClass : public BaseExecutable
+class MethodDictionary: public EqualityHashCollection
 {
  public:
-    void *operator new(size_t);
-    inline void *operator new(size_t size, void *ptr) { return ptr; };
+     void        *operator new(size_t);
+     inline void *operator new(size_t size, void *ptr) {return ptr;}
+     inline void  operator delete(void *) { ; }
+     inline void  operator delete(void *, void *) { ; }
 
-    MethodClass(RexxString *name, BaseCode *_code);
-    inline MethodClass(RESTORETYPE restoreType) { ; };
+    inline MethodDictionary(RESTORETYPE restoreType) { ; }
+           MethodDictionary(size_t capacity = DefaultTableSize) : instanceMethods(OREF_NULL), EqualityHashCollection(capacity) { }
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(RexxEnvelope*);
+    virtual void flatten(RexxEnvelope *);
 
-    void         run(RexxActivity *,  RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
-    MethodClass *newScope(RexxClass  *);
-    void         setScope(RexxClass  *);
-    RexxSmartBuffer  *saveMethod();
-    RexxObject  *setUnguardedRexx();
-    RexxObject  *setGuardedRexx();
-    RexxObject  *setPrivateRexx();
-    RexxObject  *setProtectedRexx();
-    RexxObject  *setSecurityManager(RexxObject *);
+    virtual RexxObject *copy();
 
-    RexxObject  *isGuardedRexx();
-    RexxObject  *isPrivateRexx();
-    RexxObject  *isProtectedRexx();
-
-    inline bool  isGuarded()      {return !methodFlags[UNGUARDED_FLAG]; };
-    inline bool  isPrivate()      {return methodFlags[PRIVATE_FLAG];}
-    inline bool  isProtected()    {return methodFlags[PROTECTED_FLAG];}
-    inline bool  isSpecial()      {return methodFlags.any(PROTECTED_FLAG, PRIVATE_FLAG);}
-
-    inline void  setUnguarded()    {methodFlags.set(UNGUARDED_FLAG);};
-    inline void  setGuarded()      {methodFlags.reset(UNGUARDED_FLAG);};
-    inline void  setPrivate()      {methodFlags.set(PRIVATE_FLAG); };
-    inline void  setProtected()    {methodFlags.set(PROTECTED_FLAG); };
-    inline void  setUnprotected()  {methodFlags.reset(PROTECTED_FLAG); };
-    inline void  setPublic()       {methodFlags.reset(PRIVATE_FLAG); };
-           void  setAttributes(bool _private, bool _protected, bool _guarded);
-    inline RexxClass *getScope() { return scope; }
-    inline RexxClass *isScope(RexxClass *s) {return scope == s;}
-
-    inline BaseCode  *getCode()     { return code; }
-    MethodClass  *newRexx(RexxObject **, size_t);
-    MethodClass  *newFileRexx(RexxString *);
-    MethodClass  *loadExternalMethod(RexxString *name, RexxString *descriptor);
-
-    static MethodClass  *newMethodObject(RexxString *, RexxObject *, RexxObject *);
-
-    static void createInstance();
-    static RexxClass *classInstance;
+    RexxClass *findSuperScope(RexxClass *cls)
+    {
+        return scopeTable == OREF_NULL ? OREF_NULL : scopeTable->findSuperScope();
+    }
 
  protected:
 
-    typedef enum
-    {
-        PRIVATE_FLAG,                    // private method
-        UNGUARDED_FLAG,                  // Method can run with GUARD OFF
-        PROTECTED_FLAG,                  // method is protected
-    } MethodFlags;
-
-    FlagSet<MethodFlags, 32>  methodFlags;  // method status flags
-    RexxClass  *scope;                      // pointer to the method scope
+    TableClass *instanceMethods;     // any methods defined on this instance
+    RexxArray  *scopeList;           // the list of scope value order use for lookups
 };
 
 #endif

@@ -85,9 +85,6 @@ class RexxBehaviour : public RexxInternalObject
     RexxClass   *restoreClass();
     RexxObject  *superScope( RexxObject *);
     MethodClass *superMethod(RexxString *, RexxObject *);
-    void         setMethodDictionaryScope(RexxObject *);
-    void         addScope(RexxClass *);
-    void         mergeScope(RexxClass *);
     void         subclass(RexxBehaviour *);
     RexxSupplier *getMethods(RexxObject *scope);
 
@@ -99,6 +96,7 @@ class RexxBehaviour : public RexxInternalObject
 
     inline MethodDictionary *getMethodDictionary()   { return methodDictionary; };
            void        setMethodDictionary(MethodDictionary *m);
+    inline void        clearMethodDictionary() { setMethodDictionary(OREF_NULL); }
     inline RexxClass  *getOwningClass()        { return owningClass;};
            void        setOwningClass(RexxClass *c);
            RexxArray  *allScopes();
@@ -118,6 +116,8 @@ class RexxBehaviour : public RexxInternalObject
     inline void  setNonPrimitive() {  behaviourFlags.set(NON_PRIMITIVE_BEHAVIOUR); };
     inline void  setInternalClass() { behaviourFlags.set(INTERNAL_CLASS); };
     inline void  setTransientClass() { behaviourFlags.set(TRANSIENT_CLASS); };
+
+    inline bool  hasScope(RexxClass *scope) { return instanceMethodDictionary->hasScope(scope); }
 
     inline RexxBehaviour *getSavedPrimitiveBehaviour()
     {

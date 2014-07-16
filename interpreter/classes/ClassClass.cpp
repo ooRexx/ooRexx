@@ -270,9 +270,6 @@ RexxObject *RexxClass::equal(RexxObject *other)
  *         object otherwise.
  */
 RexxObject *RexxClass::notEqual(RexxObject *other)
-/******************************************************************************/
-/* Function:  Compare two classes                                             */
-/******************************************************************************/
 {
     requiredArgument(other, ARG_ONE);
 
@@ -355,19 +352,24 @@ RexxClass *RexxClass::getMetaClass()
     }
 }
 
-void  RexxClass::setInstanceBehaviour(
-    RexxBehaviour *b)                   /* new instance behaviour            */
-/*****************************************************************************/
-/* Function:  Give a class a new instance behaviour                          */
-/*****************************************************************************/
+
+/**
+ * Set the instance behaviour of this class object.
+ *
+ * @param b      the new instance behaviour.
+ */
+void  RexxClass::setInstanceBehaviour(RexxBehaviour *b)
 {
     setField(instanceBehaviour, b);
 }
 
+
+/**
+ * Return the immediate superclass of this class.
+ *
+ * @return The first superclass of the class.
+ */
 RexxClass *RexxClass::getSuperClass()
-/*****************************************************************************/
-/* Function:  Return the first superclass in the superclass list             */
-/*****************************************************************************/
 {
     // object has no superclasses
     if (this == TheObjectClass)
@@ -375,33 +377,40 @@ RexxClass *RexxClass::getSuperClass()
         return (RexxClass *)TheNilObject;
     }
     // get the first item from the immediate list.
-    return (RexxClass *)instanceSuperClasses->get(1);
+    return (RexxClass *)instanceSuperClasses->firstItem();
 }
 
 
+/**
+ * return an array of the class superclasses.
+ *
+ * @return An array containing all of the superclasses.
+ */
 RexxArray *RexxClass::getSuperClasses()
-/*****************************************************************************/
-/* Function:  Return an array of the superclasses                            */
-/*****************************************************************************/
 {
-                                       /* return a copy of the list          */
+    // return a copy so it can't be modified.
     return (RexxArray *)instanceSuperClasses->copy();
 }
 
 
+/**
+ * Get a list of all current subclasses of this class.
+ *
+ * @return An array of the subclasses.
+ */
 RexxArray *RexxClass::getSubClasses()
-/*****************************************************************************/
-/* Function:  Return an array of the subclasses                              */
-/*****************************************************************************/
 {
     // remove any gc classes from the list now, and return the array
     return subClasses->weakReferenceArray();
 }
 
+
+/**
+ * Add a subclass to the list of subclasses.
+ *
+ * @param subClass The new subclass.
+ */
 void RexxClass::addSubClass(RexxClass *subClass)
-/*****************************************************************************/
-/* Function:  Add a subclass to a class                                      */
-/*****************************************************************************/
 {
     // wrap a weak reference around the subclass
     WeakReference *ref = new WeakReference(subClass);
@@ -409,78 +418,75 @@ void RexxClass::addSubClass(RexxClass *subClass)
     subClasses->addFirst((RexxObject *)ref);
 }
 
-void RexxClass::defmeths(
-    TableClass *newMethods)             /* methods to add                    */
-/*****************************************************************************/
-/* Function:  Add a table of methods to a primitive class behaviour          */
-/*****************************************************************************/
-{
-    /* loop through the list of methods  */
-    for (HashLink i = newMethods->first(); newMethods->available(i); i = newMethods->next(i))
-    {
-        /* get the method name               */
-        RexxString *method_name = (RexxString *)newMethods->index(i);
-        /* add this method to the classes    */
-        /* class behaviour                   */
 
+
+/**
+ * Add a full table of methods to a class definition.
+ *
+ * @param newMethods The new methods to add.
+ */
+void RexxClass::defineMethods(TableClass *newMethods)
+{
+    // loop through the table with an iterator.
+    HashContents::TableIterator iterator = newMethods->iterator();
+
+    while (iterator.isAvailable())
+    {
+        // get the name and the value, then add to this class object
+        RexxString *method_name = (RexxString *)iterator.index();
         // if this is the Nil object, that's an override.  Make it OREF_NULL.
-        RexxObject *_method = (MethodClass *)newMethods->value(i);
+        RexxObject *method = (MethodClass *)iterator.value();
         if (_method == TheNilObject)
         {
             _method = OREF_NULL;
         }
-
+        // define this method
         behaviour->define(method_name, OREF_NULL);
     }
 }
 
+
+/**
+ * Retrieve a class default name value...this is composed
+ * from the class id value.
+ *
+ * @return The default object name.
+ */
 RexxString *RexxClass::defaultName()
-/******************************************************************************/
-/* Function:  retrieve a classes default name value                           */
-/******************************************************************************/
 {
-    RexxString *defaultname = id;  /* use the id directly               */
-                                         /* prefix with "The"                 */
+    // start with the id...
+    RexxString *defaultname = id;
+    // prefix with "The"
     defaultname = defaultname->concatToCstring("The ");
-    /* add on "class"                    */
+    // add on "class"
     defaultname = defaultname->concatWithCstring(" class");
-    return defaultname;                  /* return that value                 */
+    return defaultname;
 }
 
-TableClass *RexxClass::getInstanceBehaviourDictionary()
-/*****************************************************************************/
-/* Function:   Return the instance behaviour's method dictionary             */
-/*****************************************************************************/
+
+/**
+ * Get the method dictionary for the instance behaviour.
+ *
+ *
+ * @return The instance behaviour dictionary for the class.
+ */
+MethodDictionary *RexxClass::getInstanceBehaviourDictionary()
 {
-    /* get the method dictionary         */
-    TableClass *methodTable = instanceBehaviour->getMethodDictionary();
-    if (methodTable == OREF_NULL)        /* no methods defined yet?           */
-    {
-        return new_table();                /* create a new method table         */
-    }
-    else
-    {
-        /* just copy the method dictionary   */
-        return (TableClass *)methodTable->copy();
-    }
+    // always return a copy of the dictionary
+    // TODO:  have the behaviour class do the not there/create the dictionary test.
+    return instanceBehaviour->copyMethodictionary();
 }
 
-TableClass *RexxClass::getBehaviourDictionary()
-/*****************************************************************************/
-/* Function:   Return the class behaviour's method dictionary                */
-/*****************************************************************************/
+
+
+/**
+ * Get a copy of the method dictionary from the class behaviour.
+ *
+ * @return A copy of the behaviour method dictionary.
+ */
+MethodDictionary *RexxClass::getBehaviourDictionary()
 {
-    /* get the method dictionary         */
-    TableClass *methodTable = behaviour->getMethodDictionary();
-    if (methodTable == OREF_NULL)        /* no methods defined yet?           */
-    {
-        return new_table();                /* create a new method table         */
-    }
-    else
-    {
-        /* just copy the method dictionary   */
-        return(TableClass *)methodTable->copy();
-    }
+    return behaviour->copyMethodDictionary();
 }
 
 
@@ -494,119 +500,103 @@ TableClass *RexxClass::getBehaviourDictionary()
  */
 void RexxClass::subClassable(bool restricted)
 {
-    /* get a copy of the class instance   */
-    /* behaviour mdict before the merge   */
-    /* with OBJECT.  This unmerged mdict  */
-    /* is kept in this class's            */
-    /* class_instance_mdict field.        */
+    // get a copy of the class instance
+    // behaviour mdict before the merge
+    // with OBJECT.  This unmerged mdict
+    // is kept in this class's
+    // class_instance_mdict field.
     setField(instanceMethodDictionary, getInstanceBehaviourDictionary());
-    /* Add OBJECT to the behaviour scope  */
-    /* table                              */
+    // Add OBJECT to the behaviour scope table
     instanceBehaviour->addScope(TheObjectClass);
-    if (this != TheObjectClass)          /* if this isn't the OBJECT class    */
+    // if this is not the object class, then we need to add object
+    // to the different behaviours
+    if (this != TheObjectClass)
     {
-        /* Add OBJECT to the behaviour scope  */
-        /* table                              */
+        // add to the instance behaviour scope
         instanceBehaviour->addScope(TheObjectClass);
-        /* and merge this class's instance    */
-        /* behaviour with that of OBJECT's    */
+        // merge the class instance behaviour with object.
         instanceBehaviour->merge(TheObjectBehaviour);
     }
-    /* add self to the scope table        */
+
+    // add this class to the scope table
     instanceBehaviour->addScope(this);
-    /* get a copy of the class behaviour  */
-    /* mdict before the merge with the    */
-    /* CLASS instance behaviour. This     */
-    /* unmerged mdict is kept in the      */
-    /* class_mdict field                  */
+    // now we do the same thing with the class behaviour
     setField(classMethodDictionary, getBehaviourDictionary());
-    /* The merge of the mdict's is order  */
-    /* specific. By processing OBJECT     */
-    /* first then CLASS and then the      */
-    /* rest of the subclassable classes   */
-    /* the mdict's will be set up         */
-    /* correctly.                         */
-    /* In this way merging the CLASS      */
-    /* behaviour will only be the CLASS   */
-    /* instance methods when OBJECT is    */
-    /* processed, but will be CLASS's     */
-    /* and OBJECT's after CLASS is        */
-    /* processed                          */
+    // The merge of the mdict's is order specific. By processing OBJECT
+    // first then CLASS and then the rest of the subclassable classes
+    // the mdict's will be set up correctly.
+    // In this way merging the CLASS behaviour will only be the CLASS
+    // instance methods when OBJECT is processed, but will be CLASS's
+    // and OBJECT's after CLASS is processed
     behaviour->merge(TheClassBehaviour);
-    /* now add the scope levels to this   */
-    /* class behaviour                    */
-    /* If this isn't OBJECT put OBJECT    */
-    /* in first                           */
+    // now add the scope levels to this class behaviour
+    // If this isn't OBJECT put OBJECT in first
     if (this != TheObjectClass)
     {
         behaviour->addScope(TheObjectClass);
     }
-    /* if this is OBJECT - merge the      */
-    /* object instance methods with the   */
-    /* object class methods               */
+    // if this is OBJECT - merge the object instance
+    // methods with the object class methods
     else
     {
         behaviour->merge(TheObjectBehaviour);
-        /* and put them into the class mdict  */
-        /* so all the classes will inherit    */
+        // and put them into the class mdict
+        // so all the classes will inherit
         setField(classMethodDictionary, getBehaviourDictionary());
     }
-    /* if this isn't CLASS put CLASS in   */
-    /* next                               */
+    // if this isn't CLASS put CLASS in next
     if (this != TheClassClass)
     {
         behaviour->addScope(TheClassClass);
     }
-    behaviour->addScope(this);     /* put self into the scope table     */
-                                         /* That finishes the class behaviour  */
-                                         /* initialization.                    */
-                                         /* Now fill in the state data         */
+    // now add this class to the scope
+    behaviour->addScope(this);
 
+    // that's the behaviour information...now fill in other state data.
+
+    // if not the object class (which is special)
     if (TheObjectClass != this )
     {
-        /* set up the new metaclass list      */
+        // set up the new metaclass list
         setField(metaClass, new_array(TheClassClass));
-        /* the metaclass mdict list           */
+        // the metaclass method dictionary list, which also pulls in scopes.
         setField(metaClassMethodDictionary, new_array(TheClassClass->copyInstanceMethods()));
-        /* and the metaclass scopes list      */
-        setField(metaClassScopes, TheClassClass->copyScopes());
     }
 
-    /* The Baseclass for non-mixin classes*/
-    /* is self                            */
+    // The Baseclass for non-mixin classes is self
     setField(baseClass, this);
-    /* The class superclasses list for    */
-    /* OBJECT is an empty list.           */
-    setField(classSuperClasses, new_array((size_t)0));
-    /* as is the instance superclasses    */
-    /* list.                              */
-    setField(instanceSuperClasses, new_array((size_t)0));
+    // The class superclasses list for OBJECT is an empty list.
+    setField(classSuperClasses, new_array());
+    // as is the instance superclasses list
+    setField(instanceSuperClasses, new_array());
     // create the subclasses list
     setField(subClasses, new_list());
-    if (this != TheObjectClass)          /* not .object?                      */
+    // is this is not the object classs, we have superclass information to add
+    if (this != TheObjectClass)
     {
-        /* add object to the list             */
+        // object goes at the end...always
         classSuperClasses->addLast(TheObjectClass);
-        /* The instance superclasses for all  */
-        /* except OBJECT is OBJECT            */
+        // The instance superclasses for al' except OBJECT is OBJECT
         instanceSuperClasses->addLast(TheObjectClass);
-        /* and for OBJECT we need to add all  */
-        /* the other classes                  */
-        /* except integer and numberstring    */
+        // and for OBJECT we need to add all the other classes as
+        // subclasses except for the pseudo classes of integer and number string.
         if (this != TheIntegerClass && this != TheNumberStringClass)
         {
             TheObjectClass->addSubClass(this);
         }
     }
-    /* and point the instance behaviour   */
-    /* back to this class                 */
+    // and point the instance behaviour back to this class
     instanceBehaviour->setOwningClass(this);
-    /* and the class behaviour to CLASS   */
+    // and the class behaviour to CLASS
     behaviour->setOwningClass(TheClassClass);
-    /* these are primitive classes       */
-    classFlags.set(PRIMITIVE_CLASS);
+    // these are primitive classes
+    setPrimitive();
 
-    if (this == TheClassClass)           /* mark CLASS as a meta class        */
+    // check to see if we have an uninit methods.
+    checkUninit();
+
+    // if this is the CLASS class, make it a meta class.
+    if (this == TheClassClass)
     {
         setMetaClass();
     }
@@ -641,10 +631,7 @@ void RexxClass::subClassable(RexxClass *superClass, bool restricted)
 
     // create the merged method dictionary for the instancebehavior
     // and update all of the scopes.
-    mergeSuperClassScopes(instanceBehaviour);
-
-    /* add self to the scope table        */
-    instanceBehaviour->addScope(this);
+    mergeBehaviour(instanceBehaviour);
 
     // get a copy of the class behaviour mdict before the merge with the
     // CLASS instance behaviour. This unmerged mdict is kept in the
@@ -669,9 +656,17 @@ void RexxClass::subClassable(RexxClass *superClass, bool restricted)
     setField(metaClass, new_array(TheClassClass));
     // the metaclass mdict list
     setField(metaClassMethodDictionary, new_array(TheClassClass->copyInstanceMethods()));
+
+    // ok, now that we've built both the instance behaviour and
+    // the class behaviour, make sure we update our
+    // scope information.
+
+    setField(scopeSuperClass, instanceBehaviour->immediateSuperScope());
+    setField(scopeSearchOrder, instanceBehaviour->getScopes())
+
     // and the metaclass scopes list
 
-    // TODO:  Make some of this copying activity methods in class/behavior
+    // TODO:  Figure out what the metaclass scopes is used for.
     setField(metaClassScopes, TheClassClass->copyScopes());
 
     // The Baseclass for non-mixin classes is self
@@ -685,99 +680,114 @@ void RexxClass::subClassable(RexxClass *superClass, bool restricted)
 }
 
 
-RexxObject *RexxClass::defineMethod(
-    RexxString * method_name,          /*define method name                 */
-    MethodClass *method_object)         /* returned method object            */
-/*****************************************************************************/
-/* Function:  Define an instance method on this class object                 */
-/*****************************************************************************/
+/**
+ * Add a new instance method to this class object.
+ *
+ * @param method_name
+ *               The name the method will be added under.
+ * @param method_object
+ *               The associated method object.
+ *
+ * @return Aways returns nothing.
+ */
+RexxObject *RexxClass::defineMethod(RexxString *method_name, MethodClass *method_object)
 {
-    /* check if this is a rexx class     */
+    // Rexx defined classes are not allowed to be update.  We report this as
+    // a NOMETHOD problem, as if the define method did not even exist.
     if ( isRexxDefined())
     {
-        /* report as a nomethod condition    */
         reportNomethod(lastMessageName(), this);
     }
-    /* make sure there is at least one   */
-    /* parameter                         */
-    method_name = stringArgument(method_name, ARG_ONE)->upper();
-    if ( OREF_NULL == method_object)     /* 2nd arg omitted?                  */
+
+    // the name is required and must be a string.  We always
+    // use the uppercase name for updating the method table,
+    // but use the original name if we have to create a new method object.
+    method_name = stringArgument(method_name, ARG_ONE);
+    Protected<RexxString> dictionaryName = method_name->upper();
+
+    // if the second argument is omitted, then we are "hiding"
+    // this method definition.  We add the method object to the
+    // method dictionary as .nil, which will cause a lookup failure
+    // when an attempt is made to invoke this method.
+    if ( OREF_NULL == method_object)
     {
-        /* Yes, remove all message with this */
-        /* name from our instanceMdict       */
-        /*                 (method lookup)   */
-        /* done by defining the method       */
-        /* to be .nil at this class level, so*/
-        /* when message lookup is attempted  */
-        /* we get .nil, telling us not found */
         method_object = (MethodClass *)TheNilObject;
     }
-    /* not a method type already?        */
-    /* and not TheNilObject              */
+    // We need to convert this into a method object if it is not
+    // one already.  .nil is a special case (same as an omitted argument)
     else if (TheNilObject != method_object && !isOfClass(Method, method_object))
     {
-        /* make one from a string            */
         method_object = MethodClass::newMethodObject(method_name, method_object, IntegerTwo);
     }
-    if (TheNilObject != method_object)   /* if the method is not TheNilObject */
+    // if we have a real method object, then we need to set the scope
+    // and alse check if this is an uninit method, which is a special case.
+    if (TheNilObject != method_object)
     {
-        /* set the scope of the method to self*/
         method_object = method_object->newScope(this);
-        /* Installing UNINIT?                */
         if (method_name->strCompare(CHAR_UNINIT))
         {
-            setHasUninitDefined();     /* and turn on uninit if so          */
+            setHasUninitDefined();
         }
     }
 
-    /* make a copy of the instance       */
-    /* behaviour so any previous objects */
-    /* aren't enhanced                   */
+    ProtectedObject p(method_object);
+
+    // make a copy of the instance behaviour so any previous objects
+    // aren't enhanced                   */
     setField(instanceBehaviour, (RexxBehaviour *)instanceBehaviour->copy());
-    /* add method to the instance mdict  */
-    instanceMethodDictionary->stringPut((RexxObject *)method_object, method_name);
-    /* any subclasses that we have need  */
-    /* to redo their instance behaviour  */
-    /* this also updates our own         */
-    updateInstanceSubClasses();    /* behaviour table                   */
-    return OREF_NULL;                    /* returns nothing                   */
+    // add method to the instance method dictionary
+    instanceMethodDictionary->defineMethod(dictionaryName, method_object);
+    // any subclasses that we have need to redo their instance behaviour
+    // this also updates our own behaviour table
+    updateInstanceSubClasses();
+    // this is a Rexx method, so we need to have a return value.
+    return OREF_NULL;
 }
 
-RexxObject *RexxClass::defineMethods(
-    TableClass * newMethods)            /* new table of methods to define    */
-/*****************************************************************************/
-/* Function:  Define instance methods on this class object                   */
-/*****************************************************************************/
+
+/**
+ * Define multiple methods on a class Object.  This is an
+ * internal table only, so there is not a lot of error checking.
+ *
+ * @param newMethods The table of new methods.
+ *
+ * @return Returns nothing.
+ */
+RexxObject *RexxClass::defineMethods(TableClass *newMethods)
 {
-    RexxString * index;                  /* method name                       */
-                                         /* loop thru the methods setting the */
-                                         /* method scopes to SELF and then    */
-                                         /* adding them to SELF's instance    */
-                                         /* mdict                             */
-    for (HashLink i = newMethods->first(); (index = (RexxString *)newMethods->index(i)) != OREF_NULL; i = newMethods->next(i))
+    // use an iterator to traverse the table
+    HashContents::TableIterator iterator = newMethods->iterator();
+
+    // go through the table, processing each name/method pair.
+    // we don't use defineMethod to add these because we don't want
+    // to update the the behaviour until the very end.
+    while (iterator.isAvailable())
     {
-        /* get the method                    */
-        MethodClass *newMethod = (MethodClass *)newMethods->value(i);
-        if (isOfClass(Method, newMethod))      /* if this is a method object        */
+        MethodClass *method = (MethodClass *)iterator.value();
+        if (isOfClass(Method, method))
         {
-            newMethod->setScope(this);        /* change the scope                  */
+            method->setScope(scope);
         }
-        /* add method to the instance mdict   */
-        instanceMethodDictionary->stringPut(newMethod, index);
-        /* Installing UNINIT?                */
+
+        RexxString *index = ((RexxString *)iterator.index())->upper();
+        // add method to the instance mdict
+        instanceMethodDictionary->defineMethod(index, method);
+        // and the check for an UNINIT method
         if (index->strCompare(CHAR_UNINIT))
         {
-            setHasUninitDefined();     /* and turn on uninit if so          */
+            setHasUninitDefined();
         }
+        // step to the next item.
+        iterator.next();
     }
-    /* create the instance behaviour from */
-    /* the instance superclass list       */
+
+    // now update the instance behaviour from the superclass list
     instanceBehaviour->setMethodDictionary(OREF_NULL);
-    instanceBehaviour->setScopes(OREF_NULL);
     createInstanceBehaviour(instanceBehaviour);
 
-    return OREF_NULL;                    /* returns nothing                   */
+    return OREF_NULL;
 }
+
 
 /**
  * special method to allow a class method to be added
@@ -795,11 +805,14 @@ RexxObject *RexxClass::defineClassMethod(RexxString *method_name, MethodClass *n
     method_name = stringArgument(method_name, ARG_ONE)->upper();
     requiredArgument(newMethod, ARG_TWO);
     newMethod->setScope(this);        // change the scope to the class
-    /* now add this to the behaviour     */
-    behaviour->getMethodDictionary()->stringPut(newMethod, method_name);
-    classMethodDictionary->stringAdd(newMethod, method_name);
-    return OREF_NULL;                    /* returns nothing                   */
+    // now add this directly to the behaviour
+    behaviour->getMethodDictionary()->defineMethod(method_name, newMethod);
+    // also add to the class method dictionary
+    classMethodDictionary->defineMethod(method_name, newMethod);
+    // called as a Rexx method, so we need a return value.
+    return OREF_NULL;
 }
+
 
 /**
  * Remove a class method from a class and all of its class methods.
@@ -821,105 +834,104 @@ void RexxClass::removeClassMethod(RexxString *method_name)
 }
 
 
-RexxObject *RexxClass::deleteMethod(
-    RexxString  *method_name)          /* deleted method name               */
-/*****************************************************************************/
-/* Function:  Delete an instance method on this class object                 */
-/*****************************************************************************/
+/**
+ * Delete an instance method from this class definition.
+ *
+ * @param method_name
+ *               The target method name.
+ *
+ * @return Returns nothing.
+ */
+RexxObject *RexxClass::deleteMethod(RexxString  *method_name)
 {
-    if (isRexxDefined())           /* check if this is a rexx class     */
+    // we pretend this method does not exist for rexx defined classes.
+    if (isRexxDefined())
     {
-        /* report as a nomethod condition    */
         reportNomethod(lastMessageName(), this);
     }
-    /* and that it can be a string        */
+
+    // the method name must be a string, and we use the uppercase version...always!
     method_name = stringArgument(method_name, ARG_ONE)->upper();
-    /* make a copy of the instance        */
-    /* behaviour so any previous objects  */
-    /* aren't enhanced                    */
+    // we work on a copy of the instance behaviour so that this changed
+    // does not suddenly show up in existing instances of this class.
     setField(instanceBehaviour, (RexxBehaviour *)instanceBehaviour->copy());
-    /* if there is a method to remove     */
-    /* from the instance mdict            */
-    /* remove it                          */
-    if (OREF_NULL != instanceMethodDictionary->remove(method_name))
+    // if there is a method to remove, then we need to propagate this update.
+    if (instanceMethodDictionary->removeMethod(method_name))
     {
-        /* and update our instance behaviour  */
-        updateInstanceSubClasses();  /* along with our subclasses         */
+        // the dictionary changed, we need to update our behaviour and
+        // propagate to our subclasses.
+        updateInstanceSubClasses();
     }
-    return OREF_NULL;                    /* returns nothing                   */
+    return OREF_NULL;
 }
 
-MethodClass *RexxClass::method(
-    RexxString  *method_name)
-/*****************************************************************************/
-/* Function:  Return the method object for the method name                   */
-/*****************************************************************************/
+
+/**
+ * Returns the method object associated with a given name.
+ *
+ * @param method_name
+ *               The target method name.
+ *
+ * @return The method object, or .nil if the method does not exist.
+ */
+MethodClass *RexxClass::method(RexxString  *method_name)
 {
-    /* make sure we have a proper name    */
+    // make sure we have a proper name
     method_name = stringArgument(method_name, ARG_ONE)->upper();
-    MethodClass *method_object = (MethodClass *)instanceBehaviour->getMethodDictionary()->stringGet(method_name);
-    /* check if it is in the mdict        */
+    // get the method from the instance behaviour
+    MethodClass *method_object = instanceBehaviour->getInstanceMethod(method_name);
+    // this is an error if it is not in the method dictionary.
+    // Note that is could be there, but as .nil.  We will return that value
     if ( OREF_NULL == method_object)
     {
-        /* if not return an error             */
         reportException(Error_No_method_name, this, method_name);
     }
-    return method_object;                /* if it was - return the value      */
+    return method_object;
 }
 
-RexxSupplier *RexxClass::methods(
-    RexxClass *class_object)           /* target class object               */
-/*****************************************************************************/
-/* Function:  If no qualification parameter entered                          */
-/*              return all the methods that an instance of this class        */
-/*              will inherit                                                 */
-/*            If TheNilObject  is the qualification parameter                */
-/*              return just the methods introduced at this class scope       */
-/*            For any other qualification parameter                          */
-/*              return just the methods introduced at that class scope       */
-/*****************************************************************************/
+
+/**
+ * If no qualification parameter entered
+ * return all the methods that an instance of this class
+ * will inherit.
+ *
+ * If TheNilObject  is the qualification parameter
+ * return just the methods introduced at this class scope
+ *
+ * For any other qualification parameter
+ * return just the methods introduced at that class scope
+ *
+ * @param class_object
+ *               The class object qualifier.
+ *
+ * @return A supplier for iterating the requested methods.
+ */
+RexxSupplier *RexxClass::methods(RexxClass *class_object)
 {
-    /* if no parameter specified         */
-    /* return my  behaviour mdict as a   */
-    /* supplier object                   */
-    if (class_object == OREF_NULL)
-    {
-        return instanceBehaviour->getMethodDictionary()->supplier();
-    }
-    /* if TheNilObject specified         */
-    /*  return my instance mdict as a    */
-    /*  supplier object                  */
+    // if the argument is .nil, then change the scope to us.  The
+    // method dictionary handles everything.
     if (class_object == TheNilObject)
     {
-        return instanceMethodDictionary->supplier();
+        class_object = this;
     }
-    /* if not one of the above           */
-    /* check if it is a  superclass      */
-    if (behaviour->checkScope(class_object))
-    {
-        /*  let the class specified return   */
-        /*  it's own methods                 */
-        ProtectedObject r;
-        class_object->sendMessage(OREF_METHODS, TheNilObject, r);
-        return(RexxSupplier *)(RexxObject *)r;
-    }
-    /* or just return a null supplier    */
-    return(RexxSupplier *)TheNullArray->supplier();
+    // the instance behaviour will generate the necessary supplier
+    return instanceBehaviour->getMethods(class_object);
 }
 
+
+/**
+ * A change to this class' definitions has occurred.  We
+ * need to update the behaviour, and propagate this change
+ * to all of our subclasses as well.
+ */
 void  RexxClass::updateSubClasses()
-/******************************************************************************/
-/* Function: Update my behaviours and call each subclass to do the same       */
-/******************************************************************************/
 {
-                                         /* start out the class mdict with    */
-                                         /* a clear mdict and scopes tables   */
-    behaviour->setMethodDictionary(OREF_NULL);
-    behaviour->setScopes(OREF_NULL);
-    /* create the instance behaviour from*/
-    /* the instance superclass list      */
-    instanceBehaviour->setMethodDictionary(OREF_NULL);
-    instanceBehaviour->setScopes(OREF_NULL);
+    // clear the method dictionary from our behaviour
+    behaviour->clearMethodDictionary();
+    // and also from our instance behaviour
+    instanceBehaviour->clearMethodDictionary();
+
+    // create a new instance behaviour
     createInstanceBehaviour(instanceBehaviour);
     // This time, we update the class behaviour
     // after building the instance behaviour
@@ -927,110 +939,101 @@ void  RexxClass::updateSubClasses()
     // impact on metaclasses.
     createClassBehaviour(behaviour);
 
-    RexxArray *subClassList = getSubClasses(); /* get the subclasses list           */
-    ProtectedObject p(subClassList);
-    /* loop thru the subclass doing the  */
-    /* same for each of them             */
+    // ok, now that we've built both the instance behaviour and
+    // the class behaviour, make sure we update our
+    // scope information.
+
+    setField(scopeSuperClass, instanceBehaviour->immediateSuperScope());
+    setField(scopeSearchOrder, instanceBehaviour->getScopes())
+
+    // check to see if we have an uninit method.
+    checkUninit();
+
+    // ok, we are all updated, now touch our superclasses to update as well.
+
+    // we're updated, now nudge each of our subclasses
+    // to let them know they need to update too.
+    Protected<RexxArray> subClassList = getSubClasses();
     for (size_t index = 1; index <= subClassList->size(); index++)
     {
-        /* get the next subclass             */
-        /* and recursively update them       */
+        // each of our subclasses will do the same thing we just did
         ((RexxClass *)subClassList->get(index))->updateSubClasses();
     }
 }
 
+
+/**
+ * Update my instance behaviour and have my subclasses
+ * do the same.
+ */
 void RexxClass::updateInstanceSubClasses()
-/******************************************************************************/
-/* Function: Update my instance behaviour and have the subclasses do the same */
-/******************************************************************************/
 {
-    /* create the instance behaviour from*/
-    /* the instance superclass list      */
-    instanceBehaviour->setMethodDictionary(OREF_NULL);
-    instanceBehaviour->setScopes(OREF_NULL);
+    // clear, and rebuild the instance behaviour
+    instanceBehaviour->clearMethodDictionary();
     createInstanceBehaviour(instanceBehaviour);
-    RexxArray *subClassList = getSubClasses(); /* get the subclasses list           */
-    ProtectedObject p(subClassList);
-    /* loop thru the subclass doing the  */
-    /* same for each of them             */
+
+    // tell all of our subclasses to do this same step
+    Protected<RexxArray> subClassList = getSubClasses();
     for (size_t index = 1; index <= subClassList->size(); index++)
     {
-        /* get the next subclass             */
-        /* recursively update these          */
         ((RexxClass *)subClassList->get(index))->updateInstanceSubClasses();
     }
 }
 
-void RexxClass::createClassBehaviour(
-    RexxBehaviour *target_class_behaviour)
-/*****************************************************************************/
-/* Funcion:  To call the superclasses and have them update this classes      */
-/*           class behaviour mdict and scopes table                          */
-/*****************************************************************************/
+
+/**
+ * Create the class behaviour (the behavior for the class object
+ * itself).  This merges all of the information from our
+ * superclasses with the information defined at this class
+ * scope.
+ *
+ * @param target_class_behaviour
+ *               The behaviour object we're going to build into.
+ */
+void RexxClass::createClassBehaviour(RexxBehaviour *target_class_behaviour)
 {
-    RexxClass   * superclass;            /* superclass being called           */
-    RexxClass   * metaclass;             /* metaclass to use                  */
-
-
-                                         /* Call each of the superclasses in  */
-                                         /* this superclass list starting from*/
-                                         /* the last to the first             */
-    for (HashLink index = classSuperClasses->size(); index > 0; index--)
+    // we are going to call each of our superclasses, start from the last to the
+    // first asking them to merge their information.  The last superclass should be
+    // Object, the first will be our immediate superclass.
+    for (size_t index = classSuperClasses->items(); index > 0; index--)
     {
-        /* get the next superclass           */
-        superclass = (RexxClass *)classSuperClasses->get(index);
-        /* if there is a superclass and      */
-        /* it hasn't been added into this    */
-        /* behaviour yet, call and have it   */
-        /* add itself                        */
-        if (superclass != TheNilObject && !target_class_behaviour->checkScope(superclass))
+        RexxClass *superclass = (RexxClass *)classSuperClasses->get(index);
+        // if there is a superclass and this hasn't been added into this
+        // behaviour yet, ask it to merge it's information into this.  We
+        // can have dups when mixin classes are involved, since we inherit the
+        // same baseClass chain from each mixin.
+        if (!target_class_behaviour->hasScope(superclass))
         {
             superclass->createClassBehaviour(target_class_behaviour);
         }
     }
-    /* If this class mdict has not been   */
-    /* merged into this target behaviour  */
-    if (!target_class_behaviour->checkScope(this))
+
+    // now see if we need to merge our information into this behaviour (we likely do)
+    if (!target_class_behaviour->hasScope(this))
     {
-        if (TheObjectClass != this)        /* if this isn't OBJECT              */
+        // Object is a special case, since it is top dog.
+        if (TheObjectClass != this)
         {
             // we only process the first item in the metaclass list, since it
             // will properly pull in the scopes for all of the rest, in the correct order.
-            metaclass = (RexxClass *)metaClass->get(1);
-            /* add which ever metaclasses have    */
-            /* not been added yet                 */
-            if (metaclass != TheNilObject && !target_class_behaviour->checkScope(metaclass))
+            RexxClass *metaclass = firstMetaClass();
+            // add whichever metaclasses have not been added yet
+            if (target_class_behaviour->needsScope(metaclass))
             {
-                /* merge in the meta class mdict      */
-                target_class_behaviour->methodDictionaryMerge(metaclass->instanceBehaviour->getMethodDictionary());
-                // now we need to merge in the scopes.  For each metaclass, starting
-                // from the bottom of the hierarchy down, merge in each of the scope
-                // values.
-
-                // TODO:  More methods suggested here.
-                RexxArray *addedScopes = metaclass->allScopes();
-                ProtectedObject p(addedScopes);
-
-                // these need to be processed in reverse order
-                for (size_t i = addedScopes->size(); i > 0; i--)
-                {
-                    RexxClass *scope = (RexxClass *)addedScopes->get(i);
-                    target_class_behaviour->mergeScope(scope);
-                }
+                // merge in the meta class method dictionary into our method dictionary.
+                // this also merges the scopes.
+                metaclass->mergeInstanceMethodDictionary(target_class_behaviour);
             }
         }
-        /* only merge the mdict for CLASS     */
-        /* if this is a capable of being a    */
-        /* metaclass                          */
+        // only merge the mdict for CLASS if this is a capable of being a metaclass
         if ((this != TheClassClass) || (this == TheClassClass && isMetaClass()))
         {
-            /* Merge this class mdict with the    */
-            /* target behaviour class mdict       */
-            target_class_behaviour->methodDictionaryMerge(classMethodDictionary);
+            // Merge this class mdict with the target behaviour class mdict
+            target_class_behaviour->mergeMethodDictionary(classMethodDictionary);
         }
-        /* And update the target behaviour    */
-        /* scopes table with this class       */
-        if (this != TheClassClass && !target_class_behaviour->checkScope(this))
+
+        // update the target behaviour scopes with this class, if necessary.
+        if (this != TheClassClass)
         {
             target_class_behaviour->addScope(this);
         }
@@ -1038,298 +1041,281 @@ void RexxClass::createClassBehaviour(
 }
 
 
-void RexxClass::createInstanceBehaviour(
-                                       /* target behaviour to create        */
-    RexxBehaviour *target_instance_behaviour)
-/*****************************************************************************/
-/* Funcion:  To call the superclasses and have them update this classes      */
-/*           instance behaviour mdict and scopes table                       */
-/*****************************************************************************/
+/**
+ * Create the instance behaviour for a class.  The instance
+ * behaviour in this context is the behaviour that the
+ * class bestows upon its instances when instantiated.
+ *
+ * @param target_instance_behaviour
+ *               The behaviour we are merging information into.
+ */
+void RexxClass::createInstanceBehaviour(RexxBehaviour *target_instance_behaviour)
 {
-    /* Call each of the superclasses in  */
-    /* this superclass list starting from*/
-    /* the last going to the first       */
-    for (HashLink index = instanceSuperClasses->size(); index > 0; index--)
+    // like building the class behaviour, we process the superclasses in reverse
+    // order, starting with Object, and overlay the information from each class
+    // on top of the previous.
+    for (size_t index = instanceSuperClasses->size(); index > 0; index--)
     {
-        /* get the next super class          */
         RexxClass *superclass = (RexxClass *)instanceSuperClasses->get(index);
-        /* if there is a superclass and      */
-        /* it hasn't been added into this    */
-        /* behaviour yet, call and have it   */
-        /* add itself                        */
-        if (superclass != TheNilObject && !target_instance_behaviour->checkScope(superclass))
+        // it is possible for a superclass to have already been processed
+        // during the recursive processes, so make sure we only do each class once.
+        if (!target_instance_behaviour->hasScope(superclass))
         {
             superclass->createInstanceBehaviour(target_instance_behaviour);
         }
     }
-    /* If this class mdict has not been   */
-    /* merged into this target behaviour  */
-    if (!target_instance_behaviour->checkScope(this))
+
+    // and finally, our instance information.
+    if (!target_instance_behaviour->hasScope(this))
     {
-        /* Merge this class mdict with the    */
-        /* target behaviour class mdict       */
-        target_instance_behaviour->methodDictionaryMerge(instanceMethodDictionary);
-        /* And update the target behaviour    */
-        /* scopes table with this class       */
+        // merge our information into the target
+        target_instance_behaviour->mergeMethodDictionary(instanceMethodDictionary);
+        // and make sure our scope is also added.
         target_instance_behaviour->addScope(this);
     }
 }
 
 
 /**
- * Merge the scopes from the superclasses into a target primitive class.
+ * Merge the behaviours from the superclasses into a target
+ * primitive class.
  *
  * @param target_instance_behaviour
  *               The target behavior to update.
  */
-void RexxClass::mergeSuperClassScopes(RexxBehaviour *target_instance_behaviour)
+void RexxClass::mergeBehaviour(RexxBehaviour *target_instance_behaviour)
 {
     // Call each of the superclasses in this superclass list starting from
     // the last going to the first
-    for (HashLink index = instanceSuperClasses->size(); index > 0; index--)
+    for (size_t index = instanceSuperClasses->size(); index > 0; index--)
     {
         RexxClass *superclass = (RexxClass *)instanceSuperClasses->get(index);
         // if there is a superclass and it hasn't been added into this
         // behaviour yet, call and have it add itself                        */
-        if (superclass != TheNilObject && !target_instance_behaviour->checkScope(superclass))
+        if (!target_instance_behaviour->hasScope(superclass))
         {
-            superclass->mergeSuperClassScopes(target_instance_behaviour);
+            superclass->mergeBehaviour(target_instance_behaviour);
         }
     }
     // now add in the scope for this class, if still needed.
-    if (!target_instance_behaviour->checkScope(this))
+    if (!target_instance_behaviour->hasScope(this))
     {
-        /* Merge this class mdict with the    */
-        /* target behaviour class mdict       */
+        // this merges the instance methods defined by this class.
         target_instance_behaviour->merge(instanceBehaviour);
-        /* And update the target behaviour    */
-        /* scopes table with this class       */
+        // and make sure the scope is updated
         target_instance_behaviour->addScope(this);
     }
 }
 
-void RexxClass::methodDictionaryMerge(
-    TableClass  *source_mdict,          /* source method dictionary          */
-    TableClass  *target_mdict)          /* target method dictionary          */
-/*****************************************************************************/
-/* Function:  Merge the source mdict methods into the target mdict after     */
-/*            getting copies of the methods with a new scope                 */
-/*            After this merge the method search order will find the source  */
-/*            mdict methods prior to the target methods                      */
-/*****************************************************************************/
+
+/**
+ * Check if a class definition has an UNINIT method defined.
+ */
+void RexxClass::checkUninit()
 {
-    if (source_mdict == OREF_NULL)       /* check for a source mdict          */
+    if (instanceBehaviour->methodLookup(OREF_UNINIT) != OREF_NULL)
     {
-        return;                            /* there isn't anything to do        */
-    }
-    /* just loop through the entries     */
-    for (HashLink i = source_mdict->first(); source_mdict->available(i); i = source_mdict->next(i))
-    {
-        /* get the method name               */
-        RexxString *method_name = REQUEST_STRING(source_mdict->index(i));
-        /* get the method                    */
-        MethodClass *method_instance = (MethodClass *)source_mdict->value(i);
-        /* add the method to the target mdict */
-        target_mdict->stringAdd(method_instance, method_name);
-        /* check if the method that was added */
-        /* is the uninit method               */
-        if ( method_name->strCompare(CHAR_UNINIT))
-        {
-            setHasUninitDefined();     /* and turn on uninit if so          */
-        }
+        setHasUninitDefined();
     }
 }
 
-TableClass *RexxClass::methodDictionaryCreate(
-    TableClass  *sourceCollection,      /* source method collection          */
-    RexxClass  *scope )                /* required method scope             */
-/*****************************************************************************/
-/* Function:  Process a collection of methods that will be added to a class  */
-/*            as class methods, or will be added to an enhanced object.  In  */
-/*            either case, this is an arbitrary collection of objects that   */
-/*            may need conversion into method objects and given a scope.     */
-/*****************************************************************************/
+
+/**
+ * Process a collection of methods that will be added to a class
+ * as class methods, or will be added to an enhanced object.  In
+ * either case, this is an arbitrary collection of objects that
+ * may need conversion into method objects and given a scope.
+ *
+ * @param sourceCollection
+ *               the table containing the defined method objects.  This
+ *               can be any object that supports a Supplier method.
+ * @param scope  The scope these method objects belong to.
+ *
+ * @return A method dictionary built from this collection of methods.
+ */
+MethodDictionary *RexxClass::createMethodDictionary(RexxObject *sourceCollection, RexxClass *scope )
 {
-    TableClass *newDictionary = new_table(); /* get a new table for this          */
-    ProtectedObject p(newDictionary);
-    /* loop thru the supplier object     */
-    /* obtained from the source mdict    */
+    // get a method dictionary large enough to handle this set of methods
+    Protected<MethodDictionary> newDictionary = new MethodDicationary(sourceCollection->items());
+
+    // it would be nice to just grab a table iterator, but we need to use
+    // a supplier here.
     ProtectedObject p2;
     sourceCollection->sendMessage(OREF_SUPPLIERSYM, p2);
     RexxSupplier *supplier = (RexxSupplier *)(RexxObject *)p2;
     for (; supplier->available() == TheTrueObject; supplier->next())
     {
-        /* get the method name (uppercased)  */
-        RexxString *method_name = REQUEST_STRING(supplier->index())->upper();
-        /* get the method                    */
         MethodClass *newMethod = (MethodClass *)supplier->value();
-        /* if the method is not TheNilObject */
+        Protected<RexxString> method_name = REQUEST_STRING(supplier->index());;
+        // we add the methods to the table in uppercase, but create method objects using
+        // the original name.
+        Protected<RexxString> table_method_name = method_name->upper();
+
+        // a method can be included in the table as the Nil object...this
+        // hides the method of that name and is allowed.
         if (newMethod != (MethodClass *)TheNilObject)
         {
-            /* and it isn't a primitive method   */
-            if (!isOfClass(Method, newMethod))   /* object                            */
+            // if this isn't a method object already, try to create one
+            if (!isOfClass(Method, newMethod))
             {
-                /* make it into a method object      */
                 newMethod = MethodClass::newMethodObject(method_name, newMethod, IntegerOne);
-                newMethod->setScope(scope);   /* and set the scope to the given    */
+                newMethod->setScope(scope);
             }
             else
             {
-                /* if it is a primitive method object */
-                /* let the newscope method copy it    */
+                // if we have a method object, this might already be
+                // attached to a class.  newScope might return a copy to us.
                 newMethod = newMethod->newScope(scope);
             }
         }
-        /* add the method to the target mdict */
-        newDictionary->stringAdd(newMethod, method_name);
+        // now add the method to the target dictionary
+        newDictionary->addMethod(table_method_name, newMethod);
     }
-    return newDictionary;                /* and return the new version        */
+
+    // TODO:  Figure out when the scope gets added to this dictionary.  Might not be
+    // required, but it could be useful when doing merges.
+
+    return newDictionary;
 }
 
 
-RexxObject *RexxClass::inherit(
-    RexxClass  *mixin_class,           /* target class                      */
-    RexxClass  *position)              /* target inherit position           */
-/*****************************************************************************/
-/* Function:  To add the mixin class (parameter one) to the superclass       */
-/*            hierarchy of the receiver class (this), at the last position   */
-/*            or the specified position (parameter two).                     */
-/*****************************************************************************/
+/**
+ * To add the mixin class (parameter one) to the superclass
+ * hierarchy of the receiver class (this), at the last position
+ * or the specified position (parameter two).
+ *
+ * @param mixin_class
+ *                 The class to inherit from.
+ * @param position The position to insert the class into the hierarchy (optional)
+ *
+ * @return returns nothing.
+ */
+RexxObject *RexxClass::inherit(RexxClass *mixin_class, RexxClass  *position)
 {
-                                         /* make sure this isn't a rexx       */
-    if (isRexxDefined())           /* defined class being changed       */
+    // another operation not permitted on Rexx defined classes.
+    if (isRexxDefined())
     {
-        /* report as a nomethod condition    */
         reportNomethod(lastMessageName(), this);
     }
-    requiredArgument(mixin_class, ARG_ONE);      /* make sure it was passed in        */
 
-                                         /* check the mixin class is really a */
-                                         /* good class for this               */
+    // the mixin class is required
+    requiredArgument(mixin_class, ARG_ONE);
+
+    // this must be a class object and must be marked as a mixin
     if (!mixin_class->isInstanceOf(TheClassClass) || !mixin_class->isMixinClass())
     {
-        /* if it isn't raise an error        */
         reportException(Error_Execution_mixinclass, mixin_class);
     }
 
-    /* if the mixin class is also the    */
-    if (this == mixin_class )            /* reciever class                    */
+    // make sure this is not being done recursively.
+    if (this == mixin_class )
     {
-        /*  raise an error                   */
-        reportException(Error_Execution_recursive_inherit, this, mixin_class);
-    }
-    /* check that the mixin class is not */
-    /* a superclass of the reciever      */
-    if (behaviour->checkScope(mixin_class))
-    {
-        /* if it is raise an error           */
-        reportException(Error_Execution_recursive_inherit, this, mixin_class);
-    }
-    /* check if the reciever class is a  */
-    /* superclass of the mixin class     */
-    if (mixin_class->behaviour->checkScope(this))
-    {
-        /* if it is it's an error            */
         reportException(Error_Execution_recursive_inherit, this, mixin_class);
     }
 
-    /* Now ensure the mixin class        */
-    /* baseclass is in the reciever's    */
-    /* class superclass hierarchy        */
-    if (!behaviour->checkScope(mixin_class->getBaseClass()))
+    // this also cannot already be part of the existing class hierarchy
+    if (behaviour->hasScope(mixin_class))
     {
-        /* if it isn't raise an error        */
+        reportException(Error_Execution_recursive_inherit, this, mixin_class);
+    }
+
+    // and it can't go the other way either
+    if (mixin_class->behaviour->hasScope(this))
+    {
+        reportException(Error_Execution_recursive_inherit, this, mixin_class);
+    }
+
+    // ok, now we need to have a common base class.
+    if (!behaviour->hasScope(mixin_class->getBaseClass()))
+    {
         reportException(Error_Execution_baseclass, this, mixin_class, mixin_class->getBaseClass());
     }
 
-    /* and the reciever's                */
-    /* instance superclass hierarchy     */
-    if (!instanceBehaviour->checkScope(mixin_class->getBaseClass()))
+    // and also the instance class hiearchy (slight different because of metaclasses)
+    if (!instanceBehaviour->hasScope(mixin_class->getBaseClass()))
     {
-        /* if it isn't raise an error        */
         reportException(Error_Execution_baseclass, this, mixin_class, mixin_class->getBaseClass());
     }
-    if ( position == OREF_NULL )         /* if position was not specified     */
+
+    // ok, a lot of work to validate this was good.  Now we need to validate
+    // the position.
+
+    // if not specified, we're adding to the end of the inheritance list (typical)
+    if (position == OREF_NULL)
     {
-        /* insert the mixin class last in the*/
-        /* reciever's superclasses list      */
         classSuperClasses->addLast(mixin_class);
         instanceSuperClasses->addLast(mixin_class);
     }
-    else                                 /* if it was specified               */
+    else
     {
-        /* check that it's a valid superclass*/
-        /* in the class superclasses list    */
-        /* and the reciever's                */
-        /* instance superclasses list        */
-        HashLink class_index = classSuperClasses->indexOf(position);
-        HashLink instance_index = instanceSuperClasses->indexOf(position);
+        // ok, now we need to find this in both superclass lists
+        size_t class_index = classSuperClasses->indexOf(position);
+        size_t  instance_index = instanceSuperClasses->indexOf(position);
         if (class_index == 0 || instance_index == 0)
         {
-            /* if it isn't raise an error        */
             reportException(Error_Execution_uninherit, this, position);
         }
-        /* insert the mixin class into the   */
-        /* superclasses list's               */
+
+        // now insert into both lists at the specified position
         classSuperClasses->insertAfter(mixin_class, class_index);
         instanceSuperClasses->insertAfter(mixin_class, instance_index);
     }
 
-    /* update the mixin class subclass   */
-    mixin_class->addSubClass(this);      /* list to reflect this class        */
-                                         /* any subclasses that we have need  */
-                                         /* to redo their behaviour's         */
-                                         /* this also updates our own         */
-                                         /* behaviour tables.                 */
+    // tell the mixin class that it has a new subclass
+    mixin_class->addSubClass(this);
+
+    // now we need to to rebuild the behaviour and also
+    // propagate the change to the subclasses.
     updateSubClasses();
-    /* If the mixin class has an uninit defined, the new class must have one, too */
+
+    // If the mixin class has an uninit defined, the new class must have one, too
     if (mixin_class->hasUninitDefined() || mixin_class->parentHasUninitDefined())
     {
         setParentHasUninitDefined();
     }
-    return OREF_NULL;                    /* returns nothing                   */
+    return OREF_NULL;
 }
 
-RexxObject *RexxClass::uninherit(
-    RexxClass  *mixin_class)           /* target subclass to remove         */
-/*****************************************************************************/
-/* Function:  To remove a mixin class (parameter one) from the superclass    */
-/*            hierarchy of the receiver class (this).                        */
-/*****************************************************************************/
+/**
+ * Remove a mixin class from the class hierarchy.
+ *
+ * @param mixin_class
+ *               The target mixin
+ *
+ * @return Returns nothing.
+ */
+RexxObject *RexxClass::uninherit(RexxClass  *mixin_class)
 {
-    HashLink     class_index;            /* index for class superclasses list */
-    HashLink     instance_index;         /* index for instance superclasses   */
-                                         /* make sure this isn't rexx defined */
-    if (isRexxDefined())           /* class that is being changed       */
+    // modifying Rexx defined classes is forbidden.
+    if (isRexxDefined())
     {
-        /* report as a nomethod condition    */
         reportNomethod(lastMessageName(), this);
     }
-    requiredArgument(mixin_class, ARG_ONE);      /* make sure it was passed in        */
 
-                                         /* check that the mixin class is a   */
-                                         /* superclass of the receiver class  */
-                                         /* and not the superclass            */
-    if ( ((class_index = classSuperClasses->indexOf(mixin_class)) > 1) &&
-         ((instance_index = instanceSuperClasses->indexOf(mixin_class)) > 1))
+    // the target class is required
+    requiredArgument(mixin_class, ARG_ONE);
+
+    // this class must be a superclass of this class, but not the
+    // immeidate superclass.
+    size_t class_index = classSuperClasses->indexOf(position);
+    size_t  instance_index = instanceSuperClasses->indexOf(position);
+
+    // if good for both, go ahead and remove
+    if  (class_index > 1 && instance_index > 1)
     {
-        /* and remove it                     */
         classSuperClasses->deleteItem(class_index);
         instanceSuperClasses->deleteItem(instance_index);
     }
     else
     {
-        /* else     raise an error           */
         reportException(Error_Execution_uninherit, this, mixin_class);
     }
-    /* update the mixin class subclass    */
-    /* list to not have this class        */
+
+    // update the mixin class subclass list to not have this class
     removeSubclass(mixin_class);
-    /* any subclasses that we have need   */
-    /* to redo their behaviour's          */
-    /* this also updates our own behaviour*/
-    updateSubClasses();            /* tables.                           */
-    return OREF_NULL;                    /* returns nothing                   */
+    // and rebuild the class behaviour and broadcast to all of the subclasses
+    updateSubClasses();
+    return OREF_NULL;
 }
 
 
@@ -1341,64 +1327,56 @@ RexxObject *RexxClass::uninherit(
  */
 void RexxClass::removeSubclass(RexxClass *c)
 {
-    size_t index = subClasses->firstIndex();
-    // scan the subclasses list looking for the removed class
-    while (index != LIST_END)
-    {
-        WeakReference *ref = (WeakReference *)subClasses->getValue(index);
-        RexxObject *sc = ref->get();
-        if (sc == c)
-        {
-            subClasses->removeIndex(index);
-            return;
-        }
-        index = subClasses->nextIndex(index);
-    }
+    subClasses->removeItem(c);
 }
 
-RexxObject *RexxClass::enhanced(
-    RexxObject **args,                 /* enhanced arguments                */
-    size_t       argCount)             /* the number of arguments           */
-/*****************************************************************************/
-/* Function:  Create a new object that is an instance of the receiver class  */
-/*            object that has had it's instance mdict enhanced.              */
-/*****************************************************************************/
+
+/**
+ * Create a new object of the receive class that has
+ * had additional instance methods added to the created
+ * instance.  This creates a one-off object instance.
+ *
+ * @param args     The array of arguments to the method.
+ * @param argCount The count of method arguments.
+ *
+ * @return The inhanced object instance.
+ */
+RexxObject *RexxClass::enhanced(RexxObject **args, size_t argCount)
 {
-    if (argCount == 0)                   /* make sure an arg   was passed in  */
+    // we need at least a source for the method table.
+    if (argCount == 0)
     {
-        /* if not report an error            */
         reportException(Error_Incorrect_method_minarg, IntegerOne);
     }
-    /* get the value of the arg          */
-    TableClass *enhanced_instance_mdict = (TableClass *)args[0];
-    /* make sure it was a real value     */
-    requiredArgument(enhanced_instance_mdict, ARG_ONE);
-    /* subclass the reciever class       */
-    RexxClass *dummy_subclass = subclass(OREF_NULL, new_string("Enhanced Subclass"), OREF_NULL, OREF_NULL);
-    ProtectedObject p(dummy_subclass);
-    /* turn into a real method dictionary*/
-    enhanced_instance_mdict = dummy_subclass->methodDictionaryCreate(enhanced_instance_mdict, (RexxClass *)TheNilObject);
-    /* enhance the instance behaviour    */
-    dummy_subclass->methodDictionaryMerge(enhanced_instance_mdict, dummy_subclass->instanceMethodDictionary);
-    /* and record the changes in behavior*/
+
+    // ok, get the table argument and make sure we really got something.
+    RexxObject *enhanced_methods = (RexxObject *)args[0];
+    requiredArgument(enhanced_methods, ARG_ONE);
+
+    // create a dummy subclass of the receiver class
+    Protected<RexxClass> dummy_subclass = subclass(OREF_NULL, new_string("Enhanced Subclass"), OREF_NULL, OREF_NULL);
+    // create a method dictionary from the collection of methods.  We use dummy subclass for the dictionary scope
+    // source scope.
+    Protected<MethodDictionary> enhanced_instance_mdict = dummy_subclass->createMethodDictionary(enhanced_methods, dummy_subclass);
+    // enhance the instance behaviour of the dummy subclass with the new methods
+    enhanced_instance_mdict->merge(dummy_subclass->instanceMethodDictionary);
+    // and record the changes in behavior
     dummy_subclass->instanceBehaviour->setInstanceMethodDictionary(enhanced_instance_mdict);
-    /* recreate the instance behaviour   */
+    // recreate the instance behaviour
     dummy_subclass->instanceBehaviour->setMethodDictionary(OREF_NULL);
-    dummy_subclass->instanceBehaviour->setScopes(OREF_NULL);
     dummy_subclass->createInstanceBehaviour(dummy_subclass->instanceBehaviour);
     ProtectedObject r;
-    /* get an instance of the enhanced   */
-    /* subclass                          */
+    // now create an instance of the enhanced subclass
     dummy_subclass->sendMessage(OREF_NEW, args + 1, argCount - 1, r);
     RexxObject *enhanced_object = (RexxObject *)r;
-    /* change the create_class in the    */
-    /* instance behaviour to point to the*/
-    /* original class object             */
+    // change the create_class in the instance behaviour to point to the
+    // original class object
     enhanced_object->behaviour->setOwningClass(this);
-    /* remember it was enhanced          */
+    // remember it was enhanced
     enhanced_object->behaviour->setEnhanced();
 
-    return enhanced_object;              /* send back the new improved version*/
+    // and return this one-off class.
+    return enhanced_object;
 }
 
 
@@ -1412,11 +1390,12 @@ RexxObject *RexxClass::enhanced(
  *
  * @return A created class object.
  */
-RexxClass  *RexxClass::mixinclassRexx(RexxString  *class_id, RexxClass *meta_class, TableClass *enhancing_class_methods)
+RexxClass  *RexxClass::mixinclassRexx(RexxString  *class_id, RexxClass *meta_class, RexxObject *enhancing_class_methods)
 {
     // just forward with no source object specified
     return mixinclass(OREF_NULL, class_id, meta_class, enhancing_class_methods);
 }
+
 
 /**
  * Create a mixin class that can be used for INHERIT.
@@ -1426,20 +1405,23 @@ RexxClass  *RexxClass::mixinclassRexx(RexxString  *class_id, RexxClass *meta_cla
  * @param mixin_id   The id of the class object.
  * @param meta_class The metaclass this is created from
  * @param enhancing_class_methods
- *                   Additional class methods to be added to this class.
+ *                   Additional class methods to be added to
+ *                   this class.  This can be any collection
+ *                   supports a supplier method.
  *
  * @return A created class object.
  */
-RexxClass  *RexxClass::mixinclass(RexxSource  *source, RexxString  *mixin_id,
-    RexxClass   *meta_class, TableClass   *enhancing_class_methods)
+RexxClass  *RexxClass::mixinclass(RexxSource *source, RexxString  *mixin_id,
+    RexxClass *meta_class, RexxObject *enhancing_class_methods)
 {
-    /* call subclass with the parameters */
+    // go create the subclass, then convert to a mixin type
     RexxClass *mixin_subclass = subclass(source, mixin_id, meta_class, enhancing_class_methods);
-    mixin_subclass->setMixinClass();     /* turn on the mixin info            */
-                                         /* change the base class to the base */
-                                         /* class of the reciever             */
-    OrefSet(mixin_subclass, mixin_subclass->baseClass, baseClass);
-    /* If the mixin's parent class has an uninit defined, the new mixin class must have one, too */
+    mixin_subclass->setMixinClass();
+
+    // the mixin subclass is our baseclass
+    mixin_subclass->setBaseClass(baseClass);
+
+    // If the mixin's parent class has an uninit defined, the new mixin class must have one, too
     if (hasUninitDefined() || parentHasUninitDefined())
     {
         mixin_subclass->setParentHasUninitDefined();
@@ -1458,7 +1440,7 @@ RexxClass  *RexxClass::mixinclass(RexxSource  *source, RexxString  *mixin_id,
  *
  * @return A created class object.
  */
-RexxClass  *RexxClass::subclassRexx(RexxString  *class_id, RexxClass *meta_class, TableClass *enhancing_class_methods)
+RexxClass  *RexxClass::subclassRexx(RexxString  *class_id, RexxClass *meta_class, RexxObject *enhancing_class_methods)
 {
     // just forward with no source object specified
     return subclass(OREF_NULL, class_id, meta_class, enhancing_class_methods);
@@ -1477,123 +1459,116 @@ RexxClass  *RexxClass::subclassRexx(RexxString  *class_id, RexxClass *meta_class
  *
  * @return A created class object.
  */
-RexxClass  *RexxClass::subclass(RexxSource *source, RexxString  *class_id,
-    RexxClass   *meta_class, TableClass   * enhancing_class_methods)
+RexxClass  *RexxClass::subclass(RexxSource *source, RexxString *class_id,
+    RexxClass *meta_class, RexxObject *enhancing_method)
 {
-    if (meta_class == OREF_NULL)         /* if there is no metaclass specified*/
+    // no explicit metaclass specified?  Then use our metaclass
+    if (meta_class == OREF_NULL)
     {
-        meta_class = getMetaClass(); /* use the default metaclass         */
+        meta_class = getMetaClass();
     }
 
-    /* check that it is a meta class     */
+    // check that it is a meta class
     if (!meta_class->isInstanceOf(TheClassClass) || !meta_class->isMetaClass())
     {
         reportException(Error_Translation_bad_metaclass, meta_class);
     }
+
     ProtectedObject p;
-    /* get a copy of the metaclass class */
+    // now get an instance of the meta class
     meta_class->sendMessage(OREF_NEW, class_id, p);
     RexxClass *new_class = (RexxClass *)(RexxObject *)p;
+
     // hook this up with the source as early as possible.
     new_class->setSource(source);
-    if (isMetaClass())             /* if the superclass is a metaclass  */
+
+    // if the superclass (the classes processing the subclass operation)
+    // then the new class is a metaclass too
+    if (isMetaClass())
     {
-        new_class->setMetaClass();         /* mark the new class as a meta class*/
-                                           /* and if the metaclass lists haven't */
-                                           /* been updated yet                   */
+        new_class->setMetaClass();
+        // and also update the metaclass scopes if we're not already in there
         if (new_class->metaClassScopes->get(this) == OREF_NULL)
         {
-            /* add the class instance info to the */
-            /* metaclass lists                    */
+            // add the class instance info to the metaclass lists
             new_class->metaClass->addFirst(this);
-            /* the metaclass mdict list           */
+            // the metaclass mdict list
+            // TODO: a don't understand any of this!!!!!!!!!!
             new_class->metaClassMethodDictionary->addFirst(instanceMethodDictionary);
-            /* and the metaclass scopes list      */
-            /* this is done by adding all the     */
-            /* scope information of the new class */
+            // and the metaclass scopes list
+            // this is done by adding all the
+            // scope information of the new class
             new_class->metaClassScopes->addScope(this);
-            /* add the scope list for this scope  */
+            // add the scope list for this scope
             new_class->metaClassScopes->addClassScopes(this, new_class->metaClassScopes->allScopes());
         }
     }
-    /* set up the new_class behaviour     */
-    /* to match the subclass reciever     */
-    new_class->instanceBehaviour->subclass(instanceBehaviour);
-    /* set this class as the superclass   */
-    /* for the new class'                 */
-    /* class_superclasses list            */
-    OrefSet(new_class, new_class->classSuperClasses, new_array(this));
-    /* make the receiver class the        */
-    /* superclass for the instance behav  */
-    OrefSet(new_class, new_class->instanceSuperClasses, new_array(this));
-    /* if there was enhancing methods     */
-    /* specified                          */
-    if (enhancing_class_methods != OREF_NULL && enhancing_class_methods != TheNilObject)
-    {
-        /* convert into a real method dict.  */
-        enhancing_class_methods = new_class->methodDictionaryCreate(enhancing_class_methods, new_class);
-        /* merge them into the class mdict    */
-        new_class->methodDictionaryMerge(enhancing_class_methods, new_class->classMethodDictionary);
-    }
-    /* start out the class behaviour clean*/
-    new_class->behaviour->setMethodDictionary(OREF_NULL);
-    new_class->behaviour->setScopes(OREF_NULL);
-    /* create the class behaviour from    */
-    /* the class superclass list          */
-    new_class->createClassBehaviour(new_class->behaviour);
-    /* set the class behaviour created    */
-    /* class to the meta class            */
-    new_class->behaviour->setOwningClass(meta_class);
-    /* create the instance behaviour from */
-    /* the instance superclass list       */
-    new_class->instanceBehaviour->setMethodDictionary(OREF_NULL);
-    new_class->instanceBehaviour->setScopes(OREF_NULL);
-    new_class->createInstanceBehaviour(new_class->instanceBehaviour);
-    /* set the instance behaviour created */
-    /* class to the reciever class        */
-    new_class->instanceBehaviour->setOwningClass(new_class);
-    /* update the receiver class' subclass*/
 
-    addSubClass(new_class);        /* list to reflect the new class     */
-    /* if the class object has an UNINIT method defined, make sure we */
-    /* add this to the table of classes to be processed. */
-    if (new_class->hasUninitMethod())
+    // set up the new_class behaviour to match the subclass reciever
+    new_class->instanceBehaviour->subclass(instanceBehaviour);
+    // set this class as the superclass new class superclass list
+    new_class->setSuperClass(this);
+    // if we have enhancing methods, create an instance method dictionary using the
+    // new class as the scope.
+    if (enhancing_methods != OREF_NULL && enhancing_methods != TheNilObject)
     {
-        new_class->hasUninit();
+        // create a method dictionary and merge this into the class method dictionary
+        Protected<MethodDictionary> enhancing_class_methods = new_class->createMethodDictionary(enhancing_class_methods, new_class);
+        // these are methods of the class object, not instances
+        enhancing_class_methods->merge(new_class->classMethodDictionary);
     }
-    new_class->sendMessage(OREF_INIT);   /* now drive any user INIT methods   */
-                                         /* now the new class object should   */
-    /* If the parent class has an uninit defined, the new child class must have one, too */
+
+    // start out the class behaviour clean
+    new_class->behaviour->clearMethodDictionary();
+    // build the class behaviour for the class object
+    new_class->createClassBehaviour(new_class->behaviour);
+    // indicate that the behaviour actually belongs to the meta_class
+    new_class->behaviour->setOwningClass(meta_class);
+
+    // now create the instance behaviour
+    new_class->instanceBehaviour->clearMethodDictionary();
+    new_class->createInstanceBehaviour(new_class->instanceBehaviour);
+    // this behaviour is owned by the new class
+    new_class->instanceBehaviour->setOwningClass(new_class);
+    // record that we have a new subclass to worry about if
+    // something changes in this class
+
+    addSubClass(new_class);
+    // we need to look for an uninit method and record if we have it
+    new_class->checkUniniit();
+    // drive the new class INIT method
+    new_class->sendMessage(OREF_INIT);
+
+    // If the parent class has an uninit defined, the new child class must have one, too
     if (hasUninitDefined() || parentHasUninitDefined())
     {
         new_class->setParentHasUninitDefined();
     }
-    /* notify activity this object has an UNINIT that needs to be called
-                when collecting the object */
+
+    // notify activity this object has an UNINIT that needs to be called when collecting the object
     if (new_class->hasUninitDefined())
     {
         new_class->setHasUninitDefined();
     }
 
-    return new_class;                    /* return the new class              */
+    return new_class;
 }
 
-void RexxClass::setMetaClass(
-    RexxClass *new_metaClass )         /* new meta class to add             */
-/******************************************************************************/
-/* Function:  Set a metaclass for a class                                     */
-/******************************************************************************/
+
+/**
+ * Set a metaclass for a class.
+ *
+ * @param new_metaClass
+ *               The new metaclass
+ */
+void RexxClass::setMetaClass(RexxClass *new_metaClass)
 {
-    setField(metaClass, new_array(TheClassClass));
-    metaClass->addFirst(new_metaClass);
-                                       /* the metaclass mdict list           */
+    // We always have TheClassClass in the meta class list, but the new one is first
+    setField(metaClass, new_array(new_metaClass, TheClassClass));
+
+    // we need to keep copies of the instance methods for the metaclass.
     setField(metaClassMethodDictionary, new_array(TheClassClass->copyInstanceMethods()));
     metaClassMethodDictionary->addFirst(new_metaClass->instanceMethodDictionary);
-                                       /* and the metaclass scopes list      */
-    setField(metaClassScopes, (ScopeTable *)TheClassClass->copyScopes());
-                                       /* add the scope list for this scope  */
-    metaClassScopes->addScope(new_metaClass);
-    metaClassScopes->addClassScopes(new_metaClass, metaClassScopes->allScopes());
 }
 
 
@@ -1646,13 +1621,17 @@ RexxObject *RexxClass::isSubclassOf(RexxClass *other)
     return isCompatibleWith(other) ? TheTrueObject : TheFalseObject;
 }
 
+
+/**
+ * Exported access to an object virtual function
+ *
+ * @return The default name of the class object.
+ */
 RexxString *RexxClass::defaultNameRexx()
-/******************************************************************************/
-/* Function:  Exported access to an object virtual function                   */
-/******************************************************************************/
 {
-    return defaultName();          /* forward to the virtual function   */
+    return defaultName();          // forward to the virtual function
 }
+
 
 /**
  * Set the source object what a class was created in.  This
@@ -1922,4 +1901,29 @@ RexxArray *RexxClass::allScopes()
 TableClass *RexxClass::copyInstanceMethods()
 {
     return (TableClass *)instanceMethodDictionary->copy();
+}
+
+
+/**
+ * Merge this classes instance method dictionary into a
+ * behaviour.
+ *
+ * @param targetBehaviour
+ *               The target behaviour.
+ */
+void RexxClass::mergeInstanceMethodDictionary(RexxBehaviour *targetBehaviour)
+{
+    targetBehaviour->mergeMethodDictionary(instanceBehaviour->getMethodDictionary());
+}
+
+/**
+ * Set the immediate superclass of a newly created class object.
+ *
+ * @param super  The creating super class
+ */
+void RexxClass::setSuperClass(RexxClass *super)
+{
+    // this sets both the class and instance superclass array
+    setField(classSuperClasses, new_array(super));
+    setField(instanceSuperClasses, new_array(super));
 }

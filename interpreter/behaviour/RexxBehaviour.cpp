@@ -554,45 +554,6 @@ void RexxBehaviour::addScope(RexxClass *scope)
 
 
 /**
- * TODO:  What does this do and how is it used?
- *
- * Conditionally add scoping information to a class if
- * not already there.
- *
- * @param scope  The scope to add.
- *
- * @return
- */
-void RexxBehaviour::mergeScope(RexxClass *scope)
-/******************************************************************************/
-/* Function:  Set a new set of scoping information for an object              */
-/******************************************************************************/
-{
-    if (checkScope(scope))         // seen this one before?
-    {
-        return OREF_NULL;                // we're done
-    }
-
-    return addScope(scope);        // go and add this
-}
-
-
-bool RexxBehaviour::checkScope(
-    RexxClass *scope)                 /* scope to check                    */
-/*****************************************************************************/
-/* Function: Check if the passed scope is already in the scope table         */
-/*****************************************************************************/
-{
-    if (scopes == OREF_NULL)       /* no scopes set?                    */
-    {
-        return false;                      /* then it can't be in the table     */
-    }
-    /* have the table check for the index*/
-    return scopes->hasItem(scope);
-}
-
-
-/**
  * Merge another behaviour's method dictionary into this
  * one.  Our information will take precedence over the source
  * behaviour.
@@ -603,7 +564,7 @@ bool RexxBehaviour::checkScope(
 void RexxBehaviour::merge(RexxBehaviour *source_behav)
 {
     // merge the method dictionaries
-    methodDictionaryMerge(source_behav->methodDictionary);
+    mergeMethodDictionary(source_behav->methodDictionary);
 }
 
 
@@ -615,7 +576,7 @@ void RexxBehaviour::merge(RexxBehaviour *source_behav)
  * @param sourceDictionary
  *               The source for the merge.
  */
-void RexxBehaviour::methodDictionaryMerge(TableClass *sourceDictionary)
+void RexxBehaviour::mergeMethodDictionary(TableClass *sourceDictionary)
 {
     // no source is a NOP
     if (sourceDictionary == OREF_NULL)
@@ -627,14 +588,14 @@ void RexxBehaviour::methodDictionaryMerge(TableClass *sourceDictionary)
     // method dictionary.
     if (methodDictionary == OREF_NULL)
     {
-        setField(methodDictionary, sourceDictionary);
+        setField(methodDictionary, (MethodDictionary *)sourceDictionary->copy());
     }
     else
     {
         // get a copy of the source dictionary and merge our methods into it.
         Protected<MethodDictionary> newMethods = (MethodDictionary *)sourceDictionary->copy;
-        // merge our methods into the copy
-        methodDictionary->mergeMethods(newMethods);
+        // merge our methods and scope into the copy
+        methodDictionary->merge(newMethods);
         // and replace our existing behaviour.
         setField(methodDictionary, newMethods);
     }

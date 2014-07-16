@@ -83,7 +83,7 @@ class RexxClass : public RexxObject
     RexxArray   *getSuperClasses();
     RexxArray   *getClassSuperClasses() { return classSuperClasses; }
     RexxArray   *getSubClasses();
-    void         defmeths(TableClass *);
+    void         defineMethods(TableClass *);
     void         setInstanceBehaviour(RexxBehaviour *);
     TableClass  *getInstanceBehaviourDictionary();
     TableClass  *getBehaviourDictionary();
@@ -142,6 +142,8 @@ class RexxClass : public RexxObject
            RexxArray   *allScopes();
            TableClass   *copyInstanceMethods();
            ScopeTable  *copyMetaclassScopes();
+           RexxClass   *getSuperScope() { return scopeSuperClass; }
+           RexxArray   *getScopeOrder() { return scopeSearchOrder; }
 
     static void processNewArgs(RexxObject **, size_t, RexxObject ***, size_t *, size_t, RexxObject **, RexxObject **);
 
@@ -181,5 +183,7 @@ class RexxClass : public RexxObject
 
     RexxList      *subClasses;         // our list of weak referenced subclasses
     RexxSource    *source;             // source we're defined in (if any)
+    RexxClass     *scopeSuperClass;    // the immediate superclass used for lookups starting from this point.
+    RexxArrray    *scopeSearchOrder;   // the search order used for searches starting from this scope position.
 };
 #endif
