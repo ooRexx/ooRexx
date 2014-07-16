@@ -106,7 +106,7 @@ public:
     virtual ~ContextCommandHandlerDispatcher() { ; }
 
     virtual void run();
-    virtual void handleError(RexxDirectory *);
+    virtual void handleError(DirectoryClass *);
 
     REXXPFN   entryPoint;                 // the installed command handler
     RexxString *address;                  // the address environment

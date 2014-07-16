@@ -108,7 +108,7 @@ void RexxInstructionSignal::flatten(RexxEnvelope *envelope)
  *
  * @param labels The directory of label objects for this code section.
  */
-void RexxInstructionSignal::resolve(RexxDirectory *labels)
+void RexxInstructionSignal::resolve(DirectoryClass *labels)
 {
     // The section might not have any labels, but if it does, get our
     // name from the directory.  Note, we don't raise an error now, we
@@ -321,7 +321,7 @@ void RexxInstructionSignalOn::execute(RexxActivation *context, RexxExpressionSta
  *
  * @param labels The table of label instructions in the current context.
  */
-void RexxInstructionSignalOn::resolve(RexxDirectory *labels)
+void RexxInstructionSignalOn::resolve(DirectoryClass *labels)
 {
     // if there is a labels table, see if we can find a label object from the context.
     // SIGNALS only go to labels, but we don't report an error until the trap is triggered.
@@ -341,7 +341,7 @@ void RexxInstructionSignalOn::resolve(RexxDirectory *labels)
  * @param conditionObj
  *                The condition object for the trap
  */
-void RexxInstructionSignalOn::trap(RexxActivation *context, RexxDirectory  *conditionObj)
+void RexxInstructionSignalOn::trap(RexxActivation *context, DirectoryClass  *conditionObj)
 {
     // trapping a condition turns off the tracp
     context->trapOff(conditionName);

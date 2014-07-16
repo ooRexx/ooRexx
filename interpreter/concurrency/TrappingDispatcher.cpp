@@ -60,7 +60,7 @@ void TrappingDispatcher::run()
  *
  * @param c      The condition information for the error.
  */
-void TrappingDispatcher::handleError(wholenumber_t r, RexxDirectory *c)
+void TrappingDispatcher::handleError(wholenumber_t r, DirectoryClass *c)
 {
     // save the condition information
     rc = r;
@@ -74,7 +74,7 @@ void TrappingDispatcher::handleError(wholenumber_t r, RexxDirectory *c)
  *
  * @param c      The condition information for the error.
  */
-void TrappingDispatcher::handleError(RexxDirectory *c)
+void TrappingDispatcher::handleError(DirectoryClass *c)
 {
     // this only gets added if there is a condition
     if (c != OREF_NULL)

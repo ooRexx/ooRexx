@@ -203,7 +203,7 @@ void MemoryObject::buildVirtualFunctionTable()
    objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
    virtualFunctionTable[T_ArrayClass] = getVftPointer(objectLoc);
 
-   objectPtr = new (objectLoc) RexxDirectory(RESTOREIMAGE);
+   objectPtr = new (objectLoc) DirectoryClass(RESTOREIMAGE);
    virtualFunctionTable[T_Directory] = getVftPointer(objectLoc);
 
    objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
@@ -257,7 +257,7 @@ void MemoryObject::buildVirtualFunctionTable()
    objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
    virtualFunctionTable[T_StringClass] = getVftPointer(objectLoc);
 
-   objectPtr = new (objectLoc) RexxSupplier(RESTOREIMAGE);
+   objectPtr = new (objectLoc) SupplierClass(RESTOREIMAGE);
    virtualFunctionTable[T_Supplier] = getVftPointer(objectLoc);
 
    objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
@@ -269,7 +269,7 @@ void MemoryObject::buildVirtualFunctionTable()
    objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
    virtualFunctionTable[T_TableClass] = getVftPointer(objectLoc);
 
-   objectPtr = new (objectLoc) RexxRelation(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RelationClass(RESTOREIMAGE);
    virtualFunctionTable[T_Relation] = getVftPointer(objectLoc);
 
    objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);

@@ -2417,6 +2417,21 @@ RexxObject *RexxArray::deleteItem(size_t  _index)
 
 
 /**
+ * Append all elements of an array to this array.
+ *
+ * @param other  The source array.
+ */
+void RexxArray::appendAll(RexxArray *other)
+{
+    size_t count = other->size();
+    for (size_t i = 1; i <= count; i++)
+    {
+        append(other->get(i));
+    }
+}
+
+
+/**
  * The merge sort routine.  This will partition the data in to
  * two sections, mergesort each partition, then merge the two
  * partitions together.

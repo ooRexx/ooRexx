@@ -92,7 +92,7 @@
    RexxObject   *next(RexxObject *);
    RexxObject   *previous(RexxObject *);
    RexxObject   *hasIndex(RexxObject *);
-   RexxSupplier *supplier();
+   SupplierClass *supplier();
    RexxObject   *itemsRexx();
    inline size_t items() { return count; };
    RexxObject   *insert(RexxObject *, RexxObject *);

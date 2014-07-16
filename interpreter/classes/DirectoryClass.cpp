@@ -52,43 +52,53 @@
 #include "MethodArguments.hpp"
 
 // singleton class instance
-RexxClass *RexxDirectory::classInstance = OREF_NULL;
-
+RexxClass *DirectoryClass::classInstance = OREF_NULL;
 
 /**
  * Create initial class object at bootstrap time.
  */
-void RexxDirectory::createInstance()
+void DirectoryClass::createInstance()
 {
     CLASS_CREATE(Directory, "Directory", RexxClass);
 }
 
-void RexxDirectory::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
+
+/**
+ * Normal garbage collection live marking
+ *
+ * @param liveMark The current live mark.
+ */
+void DirectoryClass::live(size_t liveMark)
 {
-    RexxHashTableCollection::live(liveMark);
+    memory_mark(contents);
     memory_mark(method_table);
     memory_mark(unknown_method);
+    memory_mark(objectVariables);
 }
 
-void RexxDirectory::liveGeneral(MarkReason reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
+
+/**
+ * Generalized object marking.
+ *
+ * @param reason The reason for this live marking operation.
+ */
+void DirectoryClass::liveGeneral(MarkReason reason)
 {
-    RexxHashTableCollection::liveGeneral(reason);
+    memory_mark_general(contents);
     memory_mark_general(method_table);
     memory_mark_general(unknown_method);
+    memory_mark_general(objectVariables);
 }
 
-void RexxDirectory::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
+
+/**
+ * Flatten the table contents as part of a saved program.
+ *
+ * @param envelope The envelope we're flattening into.
+ */
+void DirectoryClass::flatten(RexxEnvelope *envelope)
 {
-    setUpFlatten(RexxDirectory)
+    setUpFlatten(DirectoryClass)
 
       flattenRef(contents);
       flattenRef(method_table);
@@ -99,119 +109,111 @@ void RexxDirectory::flatten(RexxEnvelope *envelope)
 }
 
 
-RexxObject *RexxDirectory::copy()
-/******************************************************************************/
-/* Function:  Copy a directory                                                */
-/******************************************************************************/
+/**
+ * Copy a directory item.
+ *
+ * @return A copy of the item.
+ */
+RexxObject *DirectoryClass::copy()
 {
-                                       /* copy object via Collection copy   */
-    RexxDirectory *newObj = (RexxDirectory *)this->RexxHashTableCollection::copy();
-                                       /* No specifics for Directory.       */
+    // first copy via the superclass copy method
+    Protected<DirectoryClass> newObj = (DirectoryClass *)HashCollection::copy();
+    // if we have a method table, make a copy of that too.
     if (method_table != OREF_NULL)
     {
-                                       /* copy it too                       */
         newObj->method_table = (TableClass *)method_table->copy();
     }
-    return newObj;                       /* return the copy                   */
+    return newObj;
 }
 
-RexxObject *RexxDirectory::entry(
-    RexxString *entryName)             /* name to retrieve                  */
-/******************************************************************************/
-/* Function:  Retrieve an entry from a directory...with upper casing          */
-/*                                                                            */
-/*  Returned:  The entry, or the result of running the method                 */
-/******************************************************************************/
+
+/**
+ * Retrieve an entry from a directory, using the uppercase
+ * version of the index.
+ *
+ * @param index The entry index.
+ *
+ * @return The indexed item, or OREF_NULL if the index was not found.
+ */
+RexxObject *DirectoryClass::entry(RexxString *index)
 {
-    entryName = entryName->upper();      /* force to uppercase                */
-    return this->at(entryName);          /* just return the "at" form         */
+    // do the lookup with the upper case name
+    return at(index->upper());
 }
 
-size_t RexxDirectory::items()
-/******************************************************************************/
-/* Function:  Return the count of items in the directory, including the       */
-/*            number of methods added via set method calls                    */
-/******************************************************************************/
+
+// TODO: make sure items is a virtual method in the base class.
+
+/**
+ * Return the count of items in the directory, including the
+ * number of methods added via set method calls
+ *
+ * @return the count of items.
+ */
+size_t DirectoryClass::items()
 {
-    /* get the direct table size         */
-    size_t count = this->contents->totalEntries();
-    /* have a method table?              */
-    if (this->method_table != OREF_NULL)
+    // get the direct table size
+    size_t count = contents->items();
+    // if we have a method table, add in its count as well.
+    if (>method_table != OREF_NULL)
     {
-        /* add in the count of methods       */
         count += this->method_table->items();
     }
-    return count;                        /* return this amount                */
+    return count;
 }
 
-RexxObject *RexxDirectory::itemsRexx()
-/******************************************************************************/
-/* Function:  Return the count of items in the directory, including the       */
-/*            number of methods added via set method calls                    */
-/******************************************************************************/
+/**
+ * TODO:  check out how the supplier override is done in the base class.
+ *
+ * Create a supplier for a directory, including the results of all */
+ * of the SETMETHOD methods as values                              */
+ *
+ * @return An appropriate supplier object.
+ */
+SupplierClass *DirectoryClass::supplier()
 {
-    return (RexxObject *)new_integer(this->items());
-}
+    // get the supplier for the base collection.
+    Protected<SupplierClass> supplier = contents->supplier();
 
-RexxSupplier *RexxDirectory::supplier()
-/******************************************************************************/
-/* Function:  Create a supplier for a directory, including the results of all */
-/*            of the SETMETHOD methods as values                              */
-/******************************************************************************/
-{
-    TableClass *result = new_table();     /* get a table for the supplier      */
-    ProtectedObject p(result);
-    RexxHashTable *hashTab = this->contents;  /* point to the contents             */
-    /* now traverse the entire table     */
-    for (HashLink i = hashTab->first(); hashTab->index(i) != OREF_NULL; i = hashTab->next(i))
+    // do we have a method table?  We need to include these also, which
+    // requires running each of the methods to obtain the value.
+    if (method_table != OREF_NULL)
     {
-        /* get the directory index           */
-        RexxString *name = (RexxString *)hashTab->index(i);
-        /* add to the table                  */
-        result->put(hashTab->value(i), name);
-    }
-    /* have a method table?              */
-    if (this->method_table != OREF_NULL)
-    {
-        TableClass *methodTable = method_table;
-        /* need to extract method values     */
-        for (HashLink i = methodTable->first(); methodTable->available(i); i = methodTable->next(i))
+        Protected<RexxArray> indexes = new_array(method_table->items());
+        Protected<RexxArray> values = new_array(method_table->items());
+
+        size_t count = 1;
+
+        HashContents::TableIterator iterator = method_table->iterator();
+
+        for (; iterator.available(); iterator.next())
         {
-            /* get the directory index           */
-            RexxString *name = (RexxString *)methodTable->index(i);
-            /* get the method                    */
-            MethodClass *method = (MethodClass *)methodTable->value(i);
+            RexxString *name = (RexxString *)iterator.index();
+            MethodClass *method = (MethodClass *)iterator.value_type();
+
             ProtectedObject v;
-            /* run the method                    */
+            // run the method, using the directory as the receiver
             method->run(ActivityManager::currentActivity, this, name, NULL, 0, v);
-            result->put((RexxObject *)v, name);  /* add to the table                  */
+
+            indexes->put(name, count);
+            values->put((RexxObject *)v, i);
         }
+        // append the method table part to the existing supplier
+        supplier->append(values, indexes);
     }
-    return result->supplier();           /* convert this to a supplier        */
+    return supplier;
 }
 
-RexxArray *RexxDirectory::requestArray()
-/******************************************************************************/
-/* Function:  Primitive level request('ARRAY') fast path                      */
-/******************************************************************************/
-{
-    if (isOfClass(Directory, this))          /* primitive level object?           */
-    {
-        return this->makeArray();          /* just do the makearray             */
-    }
-    else                                 /* need to so full request mechanism */
-    {
-        return (RexxArray *)this->sendMessage(OREF_REQUEST, OREF_ARRAYSYM);
-    }
-}
 
-RexxArray *RexxDirectory::makeArray()
+// TODO:  This should be part of the baseclass overrides.
+
+RexxArray *DirectoryClass::makeArray()
 /******************************************************************************/
 /* Function:  Create an array of all of the directory indices, including those*/
 /*            of all the SETMETHOD methods.                                   */
 /******************************************************************************/
 {
-    return this->allIndexes();
+    return allIndexes();
 }
 
 
@@ -221,99 +223,76 @@ RexxArray *RexxDirectory::makeArray()
  *
  * @return An array containing all of the directory indices.
  */
-RexxArray *RexxDirectory::allIndexes()
+RexxArray *DirectoryClass::allIndexes()
 {
-    // get a result array of the appropriate size
-    wholenumber_t count = this->items();
-    RexxArray *result = (RexxArray *)new_array(count);
-    ProtectedObject p(result);
-    size_t out = 1;
-    // we're working directly off of the contents.
-    RexxHashTable *hashTab = this->contents;
+    // get the base set
+    Protected<RexxArray> indexes = content->allIndexes();
 
-    // traverse the entire table coping over the items.
-    for (HashLink i = hashTab->first(); hashTab->index(i) != OREF_NULL; i = hashTab->next(i))
-    {
-        RexxString *name = (RexxString *)hashTab->index(i);
-        result->put(name, out++);
-    }
-    // if e hae amethod table, we need to copy those indices also
-    if (this->method_table != OREF_NULL)
-    {
-        TableClass *methodTable = this->method_table;
-        for (HashLink i = methodTable->first(); methodTable->available(i); i = methodTable->next(i))
-        {
-           RexxString *name = (RexxString *)methodTable->index(i);
-           result->put(name, out++);
-        }
-    }
-    return result;                       /* send back the array               */
-}
-
-RexxArray *RexxDirectory::allItems()
-/******************************************************************************/
-/* Function:  Create an array of all of the directory values, including the   */
-/*            values of all the SETMETHOD methods                             */
-/******************************************************************************/
-{
-    size_t count = this->items();        /* get the array size                */
-                                         /* get result array of correct size  */
-    RexxArray *result = (RexxArray *)new_array(count);
-    ProtectedObject p(result);
-    size_t i = 1;                        /* position in array                 */
-    RexxHashTable *hashTab = this->contents;
-    /* now traverse the entire table     */
-    for (HashLink j = hashTab->first(); hashTab->index(j) != OREF_NULL; j = hashTab->next(j))
-    {
-        /* add to the array                  */
-        result->put(hashTab->value(j), i++);
-    }
-    /* have a method table?              */
+    // if we have a method table, we need to append those indices also
     if (method_table != OREF_NULL)
     {
-        TableClass *methodTable = method_table;  /* grab the table                    */
-        /* need to extract method values     */
-        for (HashLink j = methodTable->first(); methodTable->available(j); j = methodTable->next(j))
+        indexes->appendAll(method_table->allIndexes());
+    }
+    return result;
+}
+
+
+/**
+ * Create an array of all of the directory values, including the
+ * values of all the SETMETHOD methods
+ *
+ * @return An array of all item values.
+ */
+RexxArray *DirectoryClass::allItems()
+{
+    // get the base set
+    Protected<RexxArray> itemArray = content->allIndexes();
+    // have a method table? we need to run the methods an append to the result
+    if (method_table != OREF_NULL)
+    {
+        HashContents::TableIterator iterator = method_table->iterator();
+
+        for (; iterator.available(); iterator.next())
         {
-            /* get the directory index           */
-            RexxString *name = (RexxString *)methodTable->index(j);
-            /* need to extract method values     */
-            MethodClass *method = (MethodClass *)methodTable->value(j);
+            MethodClass *method = (MethodClass *)iterator.value_type();
+
             ProtectedObject v;
-            /* run the method                    */
+            // run the method, using the directory as the receiver
             method->run(ActivityManager::currentActivity, this, name, NULL, 0, v);
-            result->put((RexxObject *)v, i++);  /* add to the array                  */
+
+            itemArray->append((RexxObject *)v);
         }
     }
-    return result;                       /* send back the array               */
+
+    return itemArray;
 }
 
-RexxObject *RexxDirectory::entryRexx(
-    RexxString *entryName)             /* name to retrieve                  */
-/******************************************************************************/
-/* Function:     This is the REXX version of entry.  It issues a STRINGREQUEST*/
-/*               message to the entryname parameter if it isn't already a     */
-/*               string or a name object.  Thus, this may raise NOSTRING.     */
-/******************************************************************************/
+
+/**
+ * This is the REXX version of entry.  It issues a STRINGREQUEST
+ * message to the entryname parameter if it isn't already a
+ * string or a name object.  Thus, this may raise NOSTRING.
+ *
+ * @param entryName The entry name.
+ *
+ * @return The entry value, if it has one.
+ */
+RexxObject *DirectoryClass::entryRexx(RexxString *entryName)
 {
-                                         /* get a string parameter (uppercase)*/
-    entryName = stringArgument(entryName, ARG_ONE)->upper();
-    RexxObject *temp = this->at(entryName);          /* retrieve the name                 */
-
-                                         /* if we found nothing or the method */
-    if (temp == OREF_NULL)               /* we ran returned nothing,          */
-    {
-        temp = TheNilObject;               /* return TheNilObject as a default  */
-    }
-    return temp;                         /* return the value                  */
+    // make sure we have a string argument and upper case it.
+    return atRexx(stringArgument(entryName, ARG_ONE)->upper());
 }
 
-RexxObject *RexxDirectory::hasIndex(
-    RexxString *indexName)             /* name to retrieve                  */
-/******************************************************************************/
-/* Function:  Determine if the directory has an entry with this name (used    */
-/*            without uppercasing)                                            */
-/******************************************************************************/
+
+/**
+ * Determine if the directory has an entry with this name (used
+ * without uppercasing)
+ *
+ * @param indexName
+ *
+ * @return
+ */
+RexxObject *DirectoryClass::hasIndex(RexxString *indexName)
 {
     /* get as a string parameter         */
     indexName = stringArgument(indexName, ARG_ONE);
@@ -340,7 +319,8 @@ RexxObject *RexxDirectory::hasIndex(
     }
 }
 
-RexxObject *RexxDirectory::hasEntry(
+
+RexxObject *DirectoryClass::hasEntry(
     RexxString *entryName)             /* name to retrieve                  */
 /******************************************************************************/
 /* Function:  Determine if an entry exists in the directory (name will be     */
@@ -372,7 +352,7 @@ RexxObject *RexxDirectory::hasEntry(
     }
 }
 
-RexxObject *RexxDirectory::setEntry(
+RexxObject *DirectoryClass::setEntry(
   RexxString *entryname,               /* directory entry name              */
   RexxObject *entryobj)                /* associated object                 */
 /******************************************************************************/
@@ -411,7 +391,7 @@ RexxObject *RexxDirectory::setEntry(
  * @return The removed item.  Returns .nil if the item did not exist
  *         in the directory.
  */
-RexxObject *RexxDirectory::removeRexx(RexxString *entryname)
+RexxObject *DirectoryClass::removeRexx(RexxString *entryname)
 {
     /* get as a string parameter         */
     entryname = stringArgument(entryname, ARG_ONE);
@@ -423,7 +403,7 @@ RexxObject *RexxDirectory::removeRexx(RexxString *entryname)
     return oldVal;
 }
 
-RexxObject *RexxDirectory::remove(
+RexxObject *DirectoryClass::remove(
     RexxString *entryname)             /* name to retrieve                  */
 /******************************************************************************/
 /* Function:  Remove an entry from a directory.                               */
@@ -445,7 +425,7 @@ RexxObject *RexxDirectory::remove(
     return oldVal;                       /* return the directory value        */
 }
 
-RexxObject *RexxDirectory::unknown(
+RexxObject *DirectoryClass::unknown(
   RexxString *msgname,                 /* name of unknown message           */
   RexxArray  *arguments)               /* arguments to the message          */
 /******************************************************************************/
@@ -483,7 +463,7 @@ RexxObject *RexxDirectory::unknown(
     }
 }
 
-RexxObject *RexxDirectory::setMethod(
+RexxObject *DirectoryClass::setMethod(
     RexxString *entryname,             /* name to set this under            */
     MethodClass *methodobj)             /* new method argument               */
 /******************************************************************************/
@@ -547,7 +527,7 @@ RexxObject *RexxDirectory::setMethod(
     return OREF_NULL;                    /* this always returns nothing       */
 }
 
-RexxObject *RexxDirectory::mergeItem(
+RexxObject *DirectoryClass::mergeItem(
     RexxObject *_value,                /* value to add                      */
     RexxObject *_index)                /* index to use                      */
 /******************************************************************************/
@@ -558,7 +538,7 @@ RexxObject *RexxDirectory::mergeItem(
     return this->put(_value, (RexxString *)_index);
 }
 
-RexxObject *RexxDirectory::at(
+RexxObject *DirectoryClass::at(
     RexxString *_index)                /* index to retrieve                 */
 /******************************************************************************/
 /* Function:  Retrieve an item from a directory                               */
@@ -595,7 +575,7 @@ RexxObject *RexxDirectory::at(
     return result;                       /* return a result                   */
 }
 
-RexxObject *RexxDirectory::atRexx(
+RexxObject *DirectoryClass::atRexx(
     RexxString *_index)                 /* index to retrieve                 */
 /******************************************************************************/
 /* Function:     This is the REXX version of at.  It issues a                 */
@@ -627,7 +607,7 @@ RexxObject *RexxDirectory::atRexx(
     return temp;                         /* return the value                  */
 }
 
-RexxObject *RexxDirectory::put(
+RexxObject *DirectoryClass::put(
     RexxObject *_value,                /* value to add                      */
     RexxString *_index)                /* string index of the value         */
 /******************************************************************************/
@@ -650,7 +630,7 @@ RexxObject *RexxDirectory::put(
     return OREF_NULL;                    /* this returns nothing              */
 }
 
-void RexxDirectory::reset()
+void DirectoryClass::reset()
 /******************************************************************************/
 /* Function:  Reset a directory to a "pristine" empty state                   */
 /******************************************************************************/
@@ -671,7 +651,7 @@ void RexxDirectory::reset()
  *
  * @return nothing
  */
-RexxObject *RexxDirectory::empty()
+RexxObject *DirectoryClass::empty()
 {
     reset();
     return OREF_NULL;
@@ -683,7 +663,7 @@ RexxObject *RexxDirectory::empty()
  *
  * @return
  */
-bool RexxDirectory::isEmpty()
+bool DirectoryClass::isEmpty()
 {
     return items() == 0;
 }
@@ -694,7 +674,7 @@ bool RexxDirectory::isEmpty()
  *
  * @return
  */
-RexxObject *RexxDirectory::isEmptyRexx()
+RexxObject *DirectoryClass::isEmptyRexx()
 {
     return items() == 0 ? TheTrueObject : TheFalseObject;
 }
@@ -710,7 +690,7 @@ RexxObject *RexxDirectory::isEmptyRexx()
  * @return The index for the target object, or .nil if no object was
  *         found.
  */
-RexxObject *RexxDirectory::indexRexx(RexxObject *target)
+RexxObject *DirectoryClass::indexRexx(RexxObject *target)
 {
     // required argument
     requiredArgument(target, ARG_ONE);
@@ -751,7 +731,7 @@ RexxObject *RexxDirectory::indexRexx(RexxObject *target)
  *
  * @return .true if the object exists, .false otherwise.
  */
-RexxObject *RexxDirectory::hasItem(RexxObject *target)
+RexxObject *DirectoryClass::hasItem(RexxObject *target)
 {
     requiredArgument(target, ARG_ONE);
     // the lookup is more complicated, so just delegate to the index lookup code.
@@ -766,7 +746,7 @@ RexxObject *RexxDirectory::hasItem(RexxObject *target)
  *
  * @return .true if the object exists, .false otherwise.
  */
-RexxObject *RexxDirectory::removeItem(RexxObject *target)
+RexxObject *DirectoryClass::removeItem(RexxObject *target)
 {
     requiredArgument(target, ARG_ONE);
     // the lookup is more complicated, so just delegate to the index lookup code.
@@ -788,7 +768,7 @@ RexxObject *RexxDirectory::removeItem(RexxObject *target)
  *
  * @return A new directory object.
  */
-RexxObject *RexxDirectory::newRexx(RexxObject **init_args, size_t       argCount)
+RexxObject *DirectoryClass::newRexx(RexxObject **init_args, size_t       argCount)
 {
     // this class is defined on the object class, but this is actually attached
     // to a class object instance.  Therefore, any use of the this pointer
@@ -796,7 +776,7 @@ RexxObject *RexxDirectory::newRexx(RexxObject **init_args, size_t       argCount
     // any methods on this object from this method.
     RexxClass *classThis = (RexxClass *)this;
 
-    RexxDirectory *newDirectory = new_directory();
+    DirectoryClass *newDirectory = new_directory();
     ProtectedObject p(newDirectory);
 
     // handle Rexx class completion
@@ -806,12 +786,12 @@ RexxObject *RexxDirectory::newRexx(RexxObject **init_args, size_t       argCount
 }
 
 
-RexxDirectory *RexxDirectory::newInstance()
+DirectoryClass *DirectoryClass::newInstance()
 /******************************************************************************/
 /* Create a new directory item                                                */
 /******************************************************************************/
 {
                                        /* get a new object and hash         */
-    return (RexxDirectory *)new_hashCollection(RexxHashTable::DEFAULT_HASH_SIZE, sizeof(RexxDirectory), T_Directory);
+    return (DirectoryClass *)new_hashCollection(RexxHashTable::DEFAULT_HASH_SIZE, sizeof(DirectoryClass), T_Directory);
 }
 

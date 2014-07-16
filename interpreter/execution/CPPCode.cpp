@@ -544,26 +544,26 @@ CPPM(RexxArray::newRexx),
 CPPM(RexxArray::makeString),
 CPPM(RexxArray::of),
 
-CPPM(RexxDirectory::atRexx),           /* Directory methods                 */
-CPPM(RexxDirectory::put),
-CPPM(RexxDirectory::entryRexx),
-CPPM(RexxDirectory::hasEntry),
-CPPM(RexxDirectory::hasIndex),
-CPPM(RexxDirectory::itemsRexx),
+CPPM(DirectoryClass::atRexx),           /* Directory methods                 */
+CPPM(DirectoryClass::put),
+CPPM(DirectoryClass::entryRexx),
+CPPM(DirectoryClass::hasEntry),
+CPPM(DirectoryClass::hasIndex),
+CPPM(DirectoryClass::itemsRexx),
 CPPM(RexxHashTableCollection::merge),
-CPPM(RexxDirectory::removeRexx),
-CPPM(RexxDirectory::setEntry),
-CPPM(RexxDirectory::setMethod),
-CPPM(RexxDirectory::supplier),
-CPPM(RexxDirectory::allIndexes),
-CPPM(RexxDirectory::allItems),
-CPPM(RexxDirectory::empty),
-CPPM(RexxDirectory::isEmptyRexx),
-CPPM(RexxDirectory::indexRexx),
-CPPM(RexxDirectory::hasItem),
-CPPM(RexxDirectory::removeItem),
+CPPM(DirectoryClass::removeRexx),
+CPPM(DirectoryClass::setEntry),
+CPPM(DirectoryClass::setMethod),
+CPPM(DirectoryClass::supplier),
+CPPM(DirectoryClass::allIndexes),
+CPPM(DirectoryClass::allItems),
+CPPM(DirectoryClass::empty),
+CPPM(DirectoryClass::isEmptyRexx),
+CPPM(DirectoryClass::indexRexx),
+CPPM(DirectoryClass::hasItem),
+CPPM(DirectoryClass::removeItem),
 
-CPPM(RexxDirectory::newRexx),
+CPPM(DirectoryClass::newRexx),
 
 CPPM(RexxInteger::plus),               /* Integer methods                   */
 CPPM(RexxInteger::minus),
@@ -938,13 +938,13 @@ CPPM(RexxMutableBuffer::caselessContains),
 CPPM(RexxMutableBuffer::containsWord),
 CPPM(RexxMutableBuffer::caselessContainsWord),
 
-CPPM(RexxSupplier::available),         /* Supplier methods                  */
-CPPM(RexxSupplier::next),
-CPPM(RexxSupplier::value),
-CPPM(RexxSupplier::index),
-CPPM(RexxSupplier::initRexx),
+CPPM(SupplierClass::available),         /* Supplier methods                  */
+CPPM(SupplierClass::next),
+CPPM(SupplierClass::value),
+CPPM(SupplierClass::index),
+CPPM(SupplierClass::initRexx),
 
-CPPM(RexxSupplier::newRexx),
+CPPM(SupplierClass::newRexx),
 
                                        /* Table methods                     */
 CPPM(RexxHashTableCollection::removeRexx),
@@ -969,15 +969,15 @@ CPPM(TableClass::newRexx),
 
 CPPM(IdentityTable::newRexx),
 
-CPPM(RexxRelation::put),               /* Relation methods                  */
-CPPM(RexxRelation::removeItemRexx),
-CPPM(RexxRelation::removeAll),
-CPPM(RexxRelation::allIndex),
-CPPM(RexxRelation::itemsRexx),
-CPPM(RexxRelation::supplier),
-CPPM(RexxRelation::hasItem),
+CPPM(RelationClass::put),               /* Relation methods                  */
+CPPM(RelationClass::removeItemRexx),
+CPPM(RelationClass::removeAll),
+CPPM(RelationClass::allIndex),
+CPPM(RelationClass::itemsRexx),
+CPPM(RelationClass::supplier),
+CPPM(RelationClass::hasItem),
 
-CPPM(RexxRelation::newRexx),
+CPPM(RelationClass::newRexx),
 
 CPPM(RexxLocal::local),                /* the .local environment methods    */
 

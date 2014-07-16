@@ -59,7 +59,7 @@ void ActivityDispatcher::run()
  *
  * @param c      The condition information for the error.
  */
-void ActivityDispatcher::handleError(wholenumber_t r, RexxDirectory *c)
+void ActivityDispatcher::handleError(wholenumber_t r, DirectoryClass *c)
 {
     // save the condition information
     rc = r;
@@ -73,7 +73,7 @@ void ActivityDispatcher::handleError(wholenumber_t r, RexxDirectory *c)
  *
  * @param c      The condition information for the error.
  */
-void ActivityDispatcher::handleError(RexxDirectory *c)
+void ActivityDispatcher::handleError(DirectoryClass *c)
 {
     // this only gets added if there is a condition
     if (c != OREF_NULL)

@@ -487,6 +487,7 @@ RexxObject *RexxString::lengthRexx()
     return new_integer(getLength());
 }
 
+
 bool RexxString::isEqual(
     RexxObject *otherObj)              /* other comparison object           */
 /******************************************************************************/

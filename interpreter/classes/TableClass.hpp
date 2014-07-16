@@ -60,7 +60,7 @@ class TableClass : public EqualityHashCollection
      inline void  operator delete(void *, void *) { ; }
 
     inline TableClass(RESTORETYPE restoreType) { ; }
-           TableClass(size_t capacity) : EqualityHashCollection(capacity) { }
+           TableClass(size_t capacity = HashCollection::DefaultTableSize) : EqualityHashCollection(capacity) { }
 
     RexxObject *newRexx(RexxObject **, size_t);
 
@@ -68,6 +68,6 @@ class TableClass : public EqualityHashCollection
     static RexxClass *classInstance;
 };
 
-inline TableClass *new_table() { return new TableClass(HashCollection::DefaultTableSize); }
+inline TableClass *new_table(size_t capacity = HashCollection::DefaultTableSize) { return new TableClass(capacity); }
 
 #endif

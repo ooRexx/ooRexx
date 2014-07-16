@@ -237,7 +237,7 @@ RexxClass *ClassDirective::install(RexxSource *source, RexxActivation *activatio
  * @param classDirectives
  *               The global local classes list.
  */
-void ClassDirective::checkDependency(RexxString *name, RexxDirectory *classDirectives)
+void ClassDirective::checkDependency(RexxString *name, DirectoryClass *classDirectives)
 {
     if (name != OREF_NULL)
     {
@@ -262,7 +262,7 @@ void ClassDirective::checkDependency(RexxString *name, RexxDirectory *classDirec
  * @param classDirectives
  *               The global set of defined classes in this package.
  */
-void ClassDirective::addDependencies(RexxDirectory *classDirectives)
+void ClassDirective::addDependencies(DirectoryClass *classDirectives)
 {
     // now for each of our dependent classes, if this is defined locally, we
     // add an entry to our dependency list to aid the class ordering

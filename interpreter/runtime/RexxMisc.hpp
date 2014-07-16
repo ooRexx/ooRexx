@@ -48,7 +48,7 @@
 class RexxLocal : public RexxObject
 {
    public:
-     RexxDirectory *local();
+     DirectoryClass *local();
 };
 
 #endif

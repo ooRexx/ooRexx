@@ -53,7 +53,7 @@ class RexxNativeMethod;
 class RexxNativeRoutine;
 class RegisteredRoutine;
 class RexxStem;
-class RexxSupplier;
+class SupplierClass;
 class StackFrameClass;
 class IdentityTable;
 
@@ -105,7 +105,7 @@ class RexxNativeActivation : public RexxActivationBase
     void   guardOn();
     void   enableVariablepool();
     void   disableVariablepool();
-    bool   trap (RexxString *, RexxDirectory *);
+    bool   trap (RexxString *, DirectoryClass *);
     void   resetNext();
     bool   fetchNext(RexxString **name, RexxObject **value);
     void   raiseCondition(RexxString *condition, RexxString *description, RexxObject *additional, RexxObject *result);
@@ -131,9 +131,9 @@ class RexxNativeActivation : public RexxActivationBase
     RexxObject *getObjectVariable(const char *name);
     void setObjectVariable(const char *name, RexxObject *value);
     void dropObjectVariable(const char *name);
-    RexxDirectory *getAllContextVariables();
-    inline void setConditionInfo(RexxDirectory *info) { conditionObj = info; }
-    inline RexxDirectory *getConditionInfo() { return conditionObj; }
+    DirectoryClass *getAllContextVariables();
+    inline void setConditionInfo(DirectoryClass *info) { conditionObj = info; }
+    inline DirectoryClass *getConditionInfo() { return conditionObj; }
     inline void clearException() { conditionObj = OREF_NULL; }
     void checkConditions();
     inline RexxVariableDictionary *nextCurrent()     {return this->nextcurrent;}
@@ -207,7 +207,7 @@ protected:
     IdentityTable   *savelist;       // list of saved objects
     RexxObject     *result;              // result from RexxRaise call
     ActivationType  activationType;      // the type of activation
-    RexxDirectory  *conditionObj;        // potential condition object
+    DirectoryClass  *conditionObj;        // potential condition object
     SecurityManager *securityManager;    // our active security manager
                                          // running object variable pool
     RexxVariableDictionary *objectVariables;

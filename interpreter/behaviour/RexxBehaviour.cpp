@@ -534,7 +534,7 @@ void RexxBehaviour::setMethodDictionaryScope(RexxClass *scope)
  * @return A supplier holding the names and methods with the target
  *         scope.  This supplier can be empty.
  */
-RexxSupplier *RexxBehaviour::getMethods(RexxClass *scope)
+SupplierClass *RexxBehaviour::getMethods(RexxClass *scope)
 {
     // the method dictionary handles all of this.
     return methodDictionary->getMethods(scope);

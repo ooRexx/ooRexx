@@ -83,7 +83,7 @@ class RexxInteger : public RexxObject
     virtual bool logicalValue(logical_t &);
     bool         isInstanceOf(RexxClass *);
     MethodClass   *instanceMethod(RexxString *);
-    RexxSupplier *instanceMethods(RexxClass *);
+    SupplierClass *instanceMethods(RexxClass *);
 
     bool        isEqual(RexxObject *);
     wholenumber_t strictComp(RexxObject *);

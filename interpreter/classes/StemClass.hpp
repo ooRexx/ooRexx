@@ -54,8 +54,8 @@
 #define SORT_ASCENDING 0
 #define SORT_DECENDING 1
 
-class RexxSupplier;
-class RexxDirectory;
+class SupplierClass;
+class DirectoryClass;
 class RexxCompoundTail;
 class RexxNativeActivation;
 
@@ -93,8 +93,8 @@ class RexxStem : public RexxObject
     RexxArray   *makeArray();
     RexxArray   *allItems();
     RexxArray   *allIndexes();
-    RexxSupplier *supplier();
-    RexxDirectory *toDirectory();
+    SupplierClass *supplier();
+    DirectoryClass *toDirectory();
     RexxObject  *request(RexxString *);
     RexxObject   *empty();
     RexxObject   *isEmptyRexx();

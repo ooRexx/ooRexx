@@ -46,7 +46,7 @@
 
 #include "RexxDirective.hpp"
 
-class RexxDirectory;
+class DirectoryClass;
 class RexxClass;
 
 class ClassDirective : public RexxDirective
@@ -68,8 +68,8 @@ class ClassDirective : public RexxDirective
     inline RexxString *getName() { return publicName; }
     RexxClass *install(RexxSource *source, RexxActivation *activation);
 
-    void addDependencies(RexxDirectory *class_directives);
-    void checkDependency(RexxString *name, RexxDirectory *class_directives);
+    void addDependencies(DirectoryClass *class_directives);
+    void checkDependency(RexxString *name, DirectoryClass *class_directives);
     bool dependenciesResolved();
     void removeDependency(RexxString *name);
 
@@ -99,7 +99,7 @@ protected:
     TableClass  *classMethods;       // the set of class methods
     bool        publicClass;        // this is a public class
     bool        mixinClass;         // this is a mixin class
-    RexxDirectory *dependencies;    // in-package dependencies
+    DirectoryClass *dependencies;    // in-package dependencies
 };
 
 #endif

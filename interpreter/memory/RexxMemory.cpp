@@ -638,7 +638,7 @@ void MemoryObject::restoreImage()
     }
 
     // now start restoring the critical objects from the save array
-    TheEnvironment = (RexxDirectory *)saveArray->get(saveArray_ENV);
+    TheEnvironment = (DirectoryClass *)saveArray->get(saveArray_ENV);
     // restore all of the primitive behaviour data...right now, these are
     // all default values.
     RexxArray *primitiveBehaviours = (RexxArray *)saveArray->get(saveArray_PBEHAV);
@@ -648,16 +648,16 @@ void MemoryObject::restoreImage()
         RexxBehaviour::primitiveBehaviours[i].restore((RexxBehaviour *)primitiveBehaviours->get(i + 1));
     }
 
-    TheKernel      = (RexxDirectory *)saveArray->get(saveArray_KERNEL);
-    TheSystem      = (RexxDirectory *)saveArray->get(saveArray_SYSTEM);
-    TheFunctionsDirectory = (RexxDirectory *)saveArray->get(saveArray_FUNCTIONS);
+    TheKernel      = (DirectoryClass *)saveArray->get(saveArray_KERNEL);
+    TheSystem      = (DirectoryClass *)saveArray->get(saveArray_SYSTEM);
+    TheFunctionsDirectory = (DirectoryClass *)saveArray->get(saveArray_FUNCTIONS);
     TheTrueObject  = (RexxInteger *)saveArray->get(saveArray_TRUE);
     TheFalseObject = (RexxInteger *)saveArray->get(saveArray_FALSE);
     TheNilObject   = saveArray->get(saveArray_NIL);
     TheNullArray   = (RexxArray *)saveArray->get(saveArray_NULLA);
     TheNullPointer   = (RexxPointer *)saveArray->get(saveArray_NULLPOINTER);
     TheClassClass  = (RexxClass *)saveArray->get(saveArray_CLASS);
-    TheCommonRetrievers = (RexxDirectory *)saveArray->get(saveArray_COMMON_RETRIEVERS);
+    TheCommonRetrievers = (DirectoryClass *)saveArray->get(saveArray_COMMON_RETRIEVERS);
 
     // restore the global strings
     memoryObject.restoreStrings((RexxArray *)saveArray->get(saveArray_NAME_STRINGS));

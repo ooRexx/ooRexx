@@ -56,8 +56,8 @@ public:
     virtual ~UninitDispatcher() { ; }
 
     virtual void run();
-    virtual void handleError(wholenumber_t, RexxDirectory *);
-    virtual void handleError(RexxDirectory *);
+    virtual void handleError(wholenumber_t, DirectoryClass *);
+    virtual void handleError(DirectoryClass *);
 
 protected:
     RexxObject *target;     // the object we're invoking

@@ -102,7 +102,7 @@ void TranslateDispatcher::run()
  *
  * @param c      The condition information for the error.
  */
-void TranslateDispatcher::handleError(wholenumber_t r, RexxDirectory *c)
+void TranslateDispatcher::handleError(wholenumber_t r, DirectoryClass *c)
 {
     // use the base error handling and set our return code to the negated error code.
     ActivityDispatcher::handleError(rc, c);
@@ -152,7 +152,7 @@ void TranslateInstoreDispatcher::run()
  *
  * @param c      The condition information for the error.
  */
-void TranslateInstoreDispatcher::handleError(wholenumber_t r, RexxDirectory *c)
+void TranslateInstoreDispatcher::handleError(wholenumber_t r, DirectoryClass *c)
 {
     // use the base error handling and set our return code to the negated error code.
     ActivityDispatcher::handleError(rc, c);

@@ -110,7 +110,7 @@ class LanguageParser: public RexxInternalObject
     void        resolveDependencies();
     void        flushControl(RexxInstruction *);
     RexxCode   *translateBlock();
-    RexxCode   *translateInterpret(RexxDirectory *contextLabels);
+    RexxCode   *translateInterpret(DirectoryClass *contextLabels);
     RoutineClass *generateProgram();
     RoutineClass *generateRoutine(PackageClass *sourceContext = OREF_NULL);
     MethodClass *generateMethod(PackageClass *sourceContext = OREF_NULL);
@@ -397,7 +397,7 @@ class LanguageParser: public RexxInternalObject
     static RoutineClass *createProgram(RexxString *name);
     static RoutineClass *restoreFromMacroSpace(RexxString *name);
     static RoutineClass *processInstore(PRXSTRING instore, RexxString * name);
-    static RexxCode *translateInterpret(RexxString *interpretString, RexxDirectory *labels, size_t lineNumber);
+    static RexxCode *translateInterpret(RexxString *interpretString, DirectoryClass *labels, size_t lineNumber);
     static RoutineClass *createProgramFromFile(RexxString *filename);
     static RexxString *formatTraceSetting(size_t source);
 
@@ -459,17 +459,17 @@ protected:
 
     RexxCode        *mainSection;        // the main section of code before any directives
     PushThroughStack *holdStack;         // stack for holding temporaries
-    RexxDirectory   *literals;           // root of associated literal list
-    RexxDirectory   *strings;            // common pool of created strings
+    DirectoryClass   *literals;           // root of associated literal list
+    DirectoryClass   *strings;            // common pool of created strings
     RexxQueue       *control;            // queue of control structures
     RexxQueue       *terms;              // stack of expression terms
     RexxQueue       *subTerms;           // stack for arguments lists, et al.
     RexxQueue       *operators;          // stack of expression terms
     ClassDirective  *activeClass;        // currently active ::CLASS directive
-    RexxDirectory   *classDependencies;  // directory of named ::class directives
-    RexxDirectory   *unattachedMethods;  // methods not associated with any class
-    RexxDirectory   *routines;           // routines defined by ::routine directives.
-    RexxDirectory   *publicRoutines;     // routines defined by ::routine directives.
+    DirectoryClass   *classDependencies;  // directory of named ::class directives
+    DirectoryClass   *unattachedMethods;  // methods not associated with any class
+    DirectoryClass   *routines;           // routines defined by ::routine directives.
+    DirectoryClass   *publicRoutines;     // routines defined by ::routine directives.
     RexxArray       *requires;           // list of ::requires directories, in order of appearance.
     RexxArray       *libraries;          // libraries identified on a ::requires directive.
     RexxArray       *classes;            // list of installed ::class directives.
@@ -479,10 +479,10 @@ protected:
     RexxInstruction *firstInstruction;   // first instruction of parse tree
     RexxInstruction *lastInstruction;    // last instruction of parse tree
     RexxInstruction *currentInstruction; // current "protected" instruction
-    RexxDirectory   *variables;          // root of associated variable list
-    RexxDirectory   *labels;             // root of associated label list
+    DirectoryClass   *variables;          // root of associated variable list
+    DirectoryClass   *labels;             // root of associated label list
     IdentityTable *guardVariables;   // exposed variables in guard list
-    RexxDirectory   *exposedVariables;   // root of exposed variables list
+    DirectoryClass   *exposedVariables;   // root of exposed variables list
     RexxArray       *calls;              // root of call list
 
     size_t           currentStack;       // current expression stack depth

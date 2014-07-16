@@ -327,7 +327,7 @@ MethodClass *RexxObject::instanceMethod(RexxString  *method_name)
  *
  * @return A supplier with the appropriate method set.
  */
-RexxSupplier *RexxInternalObject::instanceMethods(RexxClass *class_object)
+SupplierClass *RexxInternalObject::instanceMethods(RexxClass *class_object)
 {
     return OREF_NULL;
 }
@@ -344,7 +344,7 @@ RexxSupplier *RexxInternalObject::instanceMethods(RexxClass *class_object)
  *
  * @return A supplier with the appropriate method set.
  */
-RexxSupplier *RexxObject::instanceMethods(RexxClass *class_object)
+SupplierClass *RexxObject::instanceMethods(RexxClass *class_object)
 {
     // the behaviour handles all of this
     return behaviour->getMethods(class_object);
@@ -376,7 +376,7 @@ MethodClass *RexxObject::instanceMethodRexx(RexxString  *method_name)
  *
  * @return A supplier with the appropriate method set.
  */
-RexxSupplier *RexxObject::instanceMethodsRexx(RexxClass *class_object)
+SupplierClass *RexxObject::instanceMethodsRexx(RexxClass *class_object)
 {
     return instanceMethods(class_object);
 }
@@ -1477,21 +1477,21 @@ RexxArray *RexxInternalObject::requestArray()
 /* Function:  Request an array value from an object.                          */
 /******************************************************************************/
 {
-  if (isBaseClass())             /* primitive object?                 */
-  {
-    if (isOfClass(Array, this))            /* already an array?                 */
+    if (isBaseClass())             /* primitive object?                 */
     {
-      return (RexxArray *)this;        /* return directly, don't makearray  */
+        if (isOfClass(Array, this))            /* already an array?                 */
+        {
+            return(RexxArray *)this;        /* return directly, don't makearray  */
+        }
+        else
+        {
+            return makeArray();        /* return the array value            */
+        }
     }
-    else
+    else                                 /* return integer value of string    */
     {
-      return makeArray();        /* return the array value            */
+        return(RexxArray *)((RexxObject *)this)->sendMessage(OREF_REQUEST, OREF_ARRAYSYM);
     }
-  }
-  else                                 /* return integer value of string    */
-  {
-      return (RexxArray *)((RexxObject *)this)->sendMessage(OREF_REQUEST, OREF_ARRAYSYM);
-  }
 }
 
 RexxString *RexxObject::objectName()
@@ -1988,7 +1988,7 @@ RexxObject  *RexxObject::run(
 }
 
 RexxObject  *RexxObject::defMethods(
-    RexxDirectory *methods)            /* new table of methods              */
+    DirectoryClass *methods)            /* new table of methods              */
 /****************************************************************************/
 /* Function:  Add a table of methods to an object's behaviour               */
 /****************************************************************************/

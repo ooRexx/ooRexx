@@ -132,7 +132,7 @@ void RexxInstructionCall::flatten(RexxEnvelope *envelope)
  *
  * @param labels The table of label instructions in the current context.
  */
-void RexxInstructionCall::resolve(RexxDirectory *labels)
+void RexxInstructionCall::resolve(DirectoryClass *labels)
 {
     // Note, if we are not allowed to have internal calls, we never get added to the
     // resolution list.  If we get a resolve call, then we need to check for this.
@@ -332,7 +332,7 @@ void RexxInstructionDynamicCall::execute(RexxActivation *context, RexxExpression
     // see if we can find an internal label target
     RexxInstruction *targetInstruction = OREF_NULL;
     // see if the context has a matching label (case sensitive lookup)
-    RexxDirectory *labels = context->getLabels();
+    DirectoryClass *labels = context->getLabels();
     if (labels != OREF_NULL)
     {
         targetInstruction = (RexxInstruction *)(labels->at(targetName));
@@ -448,7 +448,7 @@ void RexxInstructionCallOn::flatten(RexxEnvelope *envelope)
  *
  * @param labels The table of label instructions in the current context.
  */
-void RexxInstructionCallOn::resolve(RexxDirectory *labels)
+void RexxInstructionCallOn::resolve(DirectoryClass *labels)
 {
     // if there is a labels table, see if we can find a label object from the context.
     if (labels != OREF_NULL)
@@ -512,7 +512,7 @@ void RexxInstructionCallOn::execute(RexxActivation *context, RexxExpressionStack
  * @param conditionObj
  *                The condition object associated with the condition.
  */
-void RexxInstructionCallOn::trap(RexxActivation *context, RexxDirectory  *conditionObj)
+void RexxInstructionCallOn::trap(RexxActivation *context, DirectoryClass  *conditionObj)
 {
     ProtectedObject result;
 

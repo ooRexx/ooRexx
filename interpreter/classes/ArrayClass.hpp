@@ -151,6 +151,7 @@ class RexxArray : public RexxObject
     RexxObject  *removeRexx(RexxObject **, size_t);
     RexxObject  *appendRexx(RexxObject *);
     size_t       append(RexxObject *);
+    void         appendAll(RexxArray *);
     void         setExpansion(RexxObject * expansion);
     RexxInteger *available(size_t position);
     bool         validateIndex(RexxObject **, size_t, size_t, size_t, stringsize_t &);

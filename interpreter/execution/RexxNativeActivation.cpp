@@ -2370,7 +2370,7 @@ bool RexxNativeActivation::fetchNext(
  * @return false if this activation takes a pass on the condition.  Does not
  *         return at all if the condition is handled.
  */
-bool RexxNativeActivation::trap(RexxString *condition, RexxDirectory * exception_object)
+bool RexxNativeActivation::trap(RexxString *condition, DirectoryClass * exception_object)
 {
     // There are two possibilities here.  We're either seeing this because of a
     // propagating syntax condition.  for this case, we trap this and hold it.
@@ -2607,7 +2607,7 @@ void RexxNativeActivation::dropContextVariable(const char *name)
 }
 
 
-RexxDirectory *RexxNativeActivation::getAllContextVariables()
+DirectoryClass *RexxNativeActivation::getAllContextVariables()
 /******************************************************************************/
 /* Function:  Retriev a list of all variables in the current context.         */
 /******************************************************************************/

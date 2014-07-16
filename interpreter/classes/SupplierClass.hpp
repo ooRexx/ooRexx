@@ -41,10 +41,10 @@
 /* Primitive Supplier Class Definition                                        */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_RexxSupplier
-#define Included_RexxSupplier
+#ifndef Included_SupplierClass
+#define Included_SupplierClass
 
-class RexxSupplier : public RexxObject
+class SupplierClass : public RexxObject
 {
  public:
            void *operator new(size_t);
@@ -52,21 +52,26 @@ class RexxSupplier : public RexxObject
     inline void  operator delete(void *, void *) {;}
     inline void  operator delete(void *) {;}
 
-    inline RexxSupplier(RESTORETYPE restoreType) { ; };
-    RexxSupplier(RexxArray  *, RexxArray  *);
-    RexxSupplier();
+    inline SupplierClass(RESTORETYPE restoreType) { ; };
+    SupplierClass(RexxArray  *, RexxArray  *);
+    SupplierClass();
 
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(RexxEnvelope *);
 
+    bool         isAvailable()
     RexxInteger *available();
     RexxObject  *next();
     RexxObject  *value();
     RexxObject  *index();
     RexxObject  *initRexx(RexxArray *values, RexxArray *indexes);
     RexxObject  *newRexx(RexxObject **, size_t);
+    RexxArray   *indexes() {return indexes; }
+    RexxArray   *values() {return values; }
+    void         append(RexxArray *, RexxArray *);
+    void         append(RexxSuppler *);
 
     static void createInstance();
     static RexxClass *classInstance;
@@ -78,6 +83,6 @@ class RexxSupplier : public RexxObject
     size_t position;                    // current array position
 };
 
-inline RexxSupplier *new_supplier(RexxArray *values, RexxArray *indexes) { return new RexxSupplier(values, indexes); }
+inline SupplierClass *new_supplier(RexxArray *values, RexxArray *indexes) { return new SupplierClass(values, indexes); }
 
 #endif

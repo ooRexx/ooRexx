@@ -823,7 +823,7 @@ RexxObject *ActivityManager::getLocalEnvironment(RexxString *name)
  *
  * @return The .local directory for the current activity.
  */
-RexxDirectory *ActivityManager::getLocal()
+DirectoryClass *ActivityManager::getLocal()
 {
     if (currentActivity == OREF_NULL)
     {

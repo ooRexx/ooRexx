@@ -207,7 +207,7 @@ class MemoryObject : public RexxInternalObject
     void        setUpMemoryTables(MapTable *old2newTable);
     void        collectAndUninit(bool clearStack);
     void        lastChanceUninit();
-    inline RexxDirectory *getGlobalStrings() { return globalStrings; }
+    inline DirectoryClass *getGlobalStrings() { return globalStrings; }
     void        addWeakReference(WeakReference *ref);
     void        checkWeakReferences();
 
@@ -238,11 +238,11 @@ class MemoryObject : public RexxInternalObject
     RexxVariable *variableCache;         // our cache of variable objects
     GlobalProtectedObject *protectedObjects;  // specially protected objects
 
-    RexxDirectory *environment;      // global environment
-    RexxDirectory *commonRetrievers; // statically defined requires
-    RexxDirectory *kernel;           // the kernel directory
-    RexxDirectory *system;           // the system directory
-    RexxDirectory *functionsDir;     // statically defined requires
+    DirectoryClass *environment;      // global environment
+    DirectoryClass *commonRetrievers; // statically defined requires
+    DirectoryClass *kernel;           // the kernel directory
+    DirectoryClass *system;           // the system directory
+    DirectoryClass *functionsDir;     // statically defined requires
 
 
 private:
@@ -310,7 +310,7 @@ enum
 
     char *restoredImage;                 // our restored image.
 
-    RexxDirectory *globalStrings;        // table of global strings
+    DirectoryClass *globalStrings;        // table of global strings
 };
 
 

@@ -147,7 +147,7 @@ void RexxExpressionFunction::flatten(RexxEnvelope *envelope)
  *
  * @param labels The table of label instructions in the current code block.
  */
-void RexxExpressionFunction::resolve(RexxDirectory *labels)
+void RexxExpressionFunction::resolve(DirectoryClass *labels)
 {
     // Note, if we are not allowed to have internal calls, we never get added to the
     // resolution list.  If we get a resolve call, then we need to check for this.

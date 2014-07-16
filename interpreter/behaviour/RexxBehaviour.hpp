@@ -86,7 +86,7 @@ class RexxBehaviour : public RexxInternalObject
     RexxObject  *superScope( RexxObject *);
     MethodClass *superMethod(RexxString *, RexxObject *);
     void         subclass(RexxBehaviour *);
-    RexxSupplier *getMethods(RexxObject *scope);
+    SupplierClass *getMethods(RexxObject *scope);
 
     void        resolveNonPrimitiveBehaviour();
 

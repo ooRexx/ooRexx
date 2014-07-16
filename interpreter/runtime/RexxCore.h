@@ -126,7 +126,7 @@ class RexxExpressionStack;
 class RexxActivation;
 class RexxObject;
 class RexxClass;
-class RexxDirectory;
+class DirectoryClass;
 class RexxIntegerClass;
 class RexxArray;
 class MemoryObject;
@@ -161,7 +161,7 @@ EXTERNMEM MemoryObject memoryObject;
 
 #define TheArrayClass RexxArray::classInstance
 #define TheClassClass RexxClass::classInstance
-#define TheDirectoryClass RexxDirectory::classInstance
+#define TheDirectoryClass DirectoryClass::classInstance
 #define TheIntegerClass RexxInteger::classInstance
 #define TheListClass RexxList::classInstance
 #define TheMessageClass RexxMessage::classInstance
@@ -175,10 +175,10 @@ EXTERNMEM MemoryObject memoryObject;
 #define TheStemClass RexxStem::classInstance
 #define TheStringClass RexxString::classInstance
 #define TheMutableBufferClass RexxMutableBuffer::classInstance
-#define TheSupplierClass RexxSupplier::classInstance
+#define TheSupplierClass SupplierClass::classInstance
 #define TheTableClass TableClass::classInstance
 #define TheIdentityTableClass IdentityTable::classInstance
-#define TheRelationClass RexxRelation::classInstance
+#define TheRelationClass RelationClass::classInstance
 #define ThePointerClass RexxPointer::classInstance
 #define TheBufferClass RexxBuffer::classInstance
 #define TheWeakReferenceClass WeakReference::classInstance

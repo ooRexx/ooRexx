@@ -1195,7 +1195,7 @@ void  RexxEntry DirectoryPut(RexxThreadContext *c, RexxDirectoryObject t, RexxOb
     {
         RexxString *index = new_string(i);
         ProtectedObject p(index);
-        ((RexxDirectory *)t)->put((RexxObject *)o, index);
+        ((DirectoryClass *)t)->put((RexxObject *)o, index);
     }
     catch (RexxNativeActivation *)
     {
@@ -1209,7 +1209,7 @@ RexxObjectPtr RexxEntry DirectoryAt(RexxThreadContext *c, RexxDirectoryObject t,
     {
         RexxString *index = new_string(i);
         ProtectedObject p(index);
-        return context.ret(((RexxDirectory *)t)->at(index));
+        return context.ret(((DirectoryClass *)t)->at(index));
     }
     catch (RexxNativeActivation *)
     {
@@ -1224,7 +1224,7 @@ RexxObjectPtr RexxEntry DirectoryRemove(RexxThreadContext *c, RexxDirectoryObjec
     {
         RexxString *index = new_string(i);
         ProtectedObject p(index);
-        return context.ret(((RexxDirectory *)t)->remove(index));
+        return context.ret(((DirectoryClass *)t)->remove(index));
     }
     catch (RexxNativeActivation *)
     {
@@ -1538,7 +1538,7 @@ RexxObjectPtr RexxEntry SupplierItem(RexxThreadContext *c, RexxSupplierObject o)
     ApiContext context(c);
     try
     {
-        return context.ret(((RexxSupplier *)o)->value());
+        return context.ret(((SupplierClass *)o)->value());
     }
     catch (RexxNativeActivation *)
     {
@@ -1551,7 +1551,7 @@ RexxObjectPtr RexxEntry SupplierIndex(RexxThreadContext *c, RexxSupplierObject o
     ApiContext context(c);
     try
     {
-        return context.ret(((RexxSupplier *)o)->index());
+        return context.ret(((SupplierClass *)o)->index());
     }
     catch (RexxNativeActivation *)
     {
@@ -1564,7 +1564,7 @@ logical_t RexxEntry SupplierAvailable(RexxThreadContext *c, RexxSupplierObject o
     ApiContext context(c);
     try
     {
-        return ((RexxSupplier *)o)->available() == TheTrueObject;
+        return ((SupplierClass *)o)->available() == TheTrueObject;
     }
     catch (RexxNativeActivation *)
     {
@@ -1577,7 +1577,7 @@ void RexxEntry SupplierNext(RexxThreadContext *c, RexxSupplierObject o)
     ApiContext context(c);
     try
     {
-        ((RexxSupplier *)o)->next();
+        ((SupplierClass *)o)->next();
     }
     catch (RexxNativeActivation *)
     {
@@ -1841,7 +1841,7 @@ void RexxEntry DecodeConditionInfo(RexxThreadContext *c, RexxDirectoryObject d, 
     ApiContext context(c);
     try
     {
-        Interpreter::decodeConditionData((RexxDirectory *)d, cd);
+        Interpreter::decodeConditionData((DirectoryClass *)d, cd);
     }
     catch (RexxNativeActivation *)
     {

@@ -113,7 +113,7 @@ class RexxHashTable : public RexxInternalObject
     RexxObject    *getIndex(RexxObject *value);
     RexxHashTable *reHash();
     RexxHashTable *putNodupe(RexxObject *value, RexxObject *key);
-    RexxSupplier  *supplier();
+    SupplierClass  *supplier();
     RexxArray     *allItems();
     RexxArray     *allIndexes();
     RexxArray     *uniqueIndexes();
@@ -157,4 +157,4 @@ protected:
 inline TableClass *new_hashCollection(size_t s, size_t s2, size_t t) { return RexxHashTable::newInstance(s, s2, t); }
 inline RexxHashTable *new_hashtab(size_t s) { return RexxHashTable::newInstance(s); }
 
- #endif
+#endif

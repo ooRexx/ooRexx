@@ -152,7 +152,7 @@ class RexxNumberString : public RexxNumberStringBase
     RexxObject *unknown(RexxString *, RexxArray *);
     bool        isInstanceOf(RexxClass *);
     MethodClass   *instanceMethod(RexxString *);
-    RexxSupplier *instanceMethods(RexxClass *);
+    SupplierClass *instanceMethods(RexxClass *);
     RexxClass  *classObject();
     inline RexxNumberString *checkNumber(size_t digits)
     {

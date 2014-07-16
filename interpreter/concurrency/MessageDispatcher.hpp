@@ -51,7 +51,7 @@ public:
     virtual ~MessageDispatcher() { ; }
 
     virtual void run();
-    virtual void handleError(wholenumber_t, RexxDirectory *);
+    virtual void handleError(wholenumber_t, DirectoryClass *);
 
 protected:
     RexxMessage *message;         // the dispatchable message

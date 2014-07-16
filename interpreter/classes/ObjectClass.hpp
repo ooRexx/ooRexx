@@ -53,7 +53,7 @@ class RexxBehaviour;
 class RexxCompoundTail;
 class RexxCompoundElement;
 class RexxInternalStack;
-class RexxSupplier;
+class SupplierClass;
 class RexxEnvelope;
 class RexxVariableDictionary;
 class RexxNumberString;
@@ -326,7 +326,7 @@ class RexxInternalObject : public RexxVirtualBase
     virtual bool         isEqual(RexxObject *);
     virtual bool         isInstanceOf(RexxClass *);
     virtual MethodClass   *instanceMethod(RexxString *);
-    virtual RexxSupplier *instanceMethods(RexxClass *);
+    virtual SupplierClass *instanceMethods(RexxClass *);
 
             void         hasUninit();
             void         removedUninit();
@@ -447,9 +447,9 @@ class RexxObject : public RexxInternalObject
     bool         isInstanceOf(RexxClass *);
     RexxObject  *isInstanceOfRexx(RexxClass *);
     MethodClass   *instanceMethod(RexxString *);
-    RexxSupplier *instanceMethods(RexxClass *);
+    SupplierClass *instanceMethods(RexxClass *);
     MethodClass   *instanceMethodRexx(RexxString *);
-    RexxSupplier *instanceMethodsRexx(RexxClass *);
+    SupplierClass *instanceMethodsRexx(RexxClass *);
     RexxString  *objectName();
     RexxObject  *objectNameEquals(RexxObject *);
     RexxClass   *classObject();
@@ -491,7 +491,7 @@ class RexxObject : public RexxInternalObject
     RexxObject  *sendMessage(RexxString *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
 
                                       // Following are internal OREXX methods
-    RexxObject  *defMethods(RexxDirectory *);
+    RexxObject  *defMethods(DirectoryClass *);
     void         setObjectVariable(RexxString *, RexxObject *, RexxObject *);
     RexxObject  *getObjectVariable(RexxString *);
     RexxObject  *getObjectVariable(RexxString *, RexxObject *);
@@ -633,7 +633,7 @@ public:
     virtual void setDigits(size_t) {;};
     virtual void setFuzz(size_t) {;};
     virtual void setForm(bool) {;}
-    virtual bool trap(RexxString *, RexxDirectory *) {return false;};
+    virtual bool trap(RexxString *, DirectoryClass *) {return false;};
     virtual void setObjNotify(RexxMessage *) {;};
     virtual void termination(){;};
     virtual SecurityManager *getSecurityManager() = 0;

@@ -183,14 +183,14 @@ RexxInteger *PackageClass::getSourceSize()
  *
  * @return A directory of all of the classes defined by this package.
  */
-RexxDirectory *PackageClass::getClasses()
+DirectoryClass *PackageClass::getClasses()
 {
     // we need to return a copy.  The source might necessarily have any of these,
     // so we return an empty directory if it's not there.
-    RexxDirectory *classes = source->getInstalledClasses();
+    DirectoryClass *classes = source->getInstalledClasses();
     if (classes != OREF_NULL)
     {
-        return (RexxDirectory *)classes->copy();
+        return (DirectoryClass *)classes->copy();
     }
     else
     {
@@ -204,14 +204,14 @@ RexxDirectory *PackageClass::getClasses()
  *
  * @return A directory of the public classes.
  */
-RexxDirectory *PackageClass::getPublicClasses()
+DirectoryClass *PackageClass::getPublicClasses()
 {
     // we need to return a copy.  The source might necessarily have any of these,
     // so we return an empty directory if it's not there.
-    RexxDirectory *classes = source->getInstalledPublicClasses();
+    DirectoryClass *classes = source->getInstalledPublicClasses();
     if (classes != OREF_NULL)
     {
-        return (RexxDirectory *)classes->copy();
+        return (DirectoryClass *)classes->copy();
     }
     else
     {
@@ -226,14 +226,14 @@ RexxDirectory *PackageClass::getPublicClasses()
  *
  * @return A directory of the imported classes.
  */
-RexxDirectory *PackageClass::getImportedClasses()
+DirectoryClass *PackageClass::getImportedClasses()
 {
     // we need to return a copy.  The source might necessarily have any of these,
     // so we return an empty directory if it's not there.
-    RexxDirectory *classes = source->getImportedClasses();
+    DirectoryClass *classes = source->getImportedClasses();
     if (classes != OREF_NULL)
     {
-        return (RexxDirectory *)classes->copy();
+        return (DirectoryClass *)classes->copy();
     }
     else
     {
@@ -247,14 +247,14 @@ RexxDirectory *PackageClass::getImportedClasses()
  *
  * @return A directory of the routines.
  */
-RexxDirectory *PackageClass::getRoutines()
+DirectoryClass *PackageClass::getRoutines()
 {
     // we need to return a copy.  The source might necessarily have any of these,
     // so we return an empty directory if it's not there.
-    RexxDirectory *routines = source->getInstalledRoutines();
+    DirectoryClass *routines = source->getInstalledRoutines();
     if (routines != OREF_NULL)
     {
-        return (RexxDirectory *)routines->copy();
+        return (DirectoryClass *)routines->copy();
     }
     else
     {
@@ -269,14 +269,14 @@ RexxDirectory *PackageClass::getRoutines()
  *
  * @return A directory holding the public routines.
  */
-RexxDirectory *PackageClass::getPublicRoutines()
+DirectoryClass *PackageClass::getPublicRoutines()
 {
     // we need to return a copy.  The source might necessarily have any of these,
     // so we return an empty directory if it's not there.
-    RexxDirectory *routines = source->getInstalledPublicRoutines();
+    DirectoryClass *routines = source->getInstalledPublicRoutines();
     if (routines != OREF_NULL)
     {
-        return (RexxDirectory *)routines->copy();
+        return (DirectoryClass *)routines->copy();
     }
     else
     {
@@ -291,14 +291,14 @@ RexxDirectory *PackageClass::getPublicRoutines()
  *
  * @return A directory of the imported routines.
  */
-RexxDirectory *PackageClass::getImportedRoutines()
+DirectoryClass *PackageClass::getImportedRoutines()
 {
     // we need to return a copy.  The source might necessarily have any of these,
     // so we return an empty directory if it's not there.
-    RexxDirectory *routines = source->getImportedRoutines();
+    DirectoryClass *routines = source->getImportedRoutines();
     if (routines != OREF_NULL)
     {
-        return (RexxDirectory *)routines->copy();
+        return (DirectoryClass *)routines->copy();
     }
     else
     {
@@ -312,14 +312,14 @@ RexxDirectory *PackageClass::getImportedRoutines()
  *
  * @return A directory of the unattached methods.
  */
-RexxDirectory *PackageClass::getMethods()
+DirectoryClass *PackageClass::getMethods()
 {
     // we need to return a copy.  The source might necessarily have any of these,
     // so we return an empty directory if it's not there.
-    RexxDirectory *methods = source->getMethods();
+    DirectoryClass *methods = source->getMethods();
     if (methods != OREF_NULL)
     {
-        return (RexxDirectory *)methods->copy();
+        return (DirectoryClass *)methods->copy();
     }
     else
     {

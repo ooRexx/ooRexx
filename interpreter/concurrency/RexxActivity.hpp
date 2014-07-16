@@ -135,15 +135,15 @@ class RexxActivity : public RexxInternalObject
     void reset();
     void runThread();
     wholenumber_t error();
-    wholenumber_t error(RexxActivationBase *, RexxDirectory *errorInfo);
-    wholenumber_t errorNumber(RexxDirectory *conditionObject);
-    wholenumber_t displayCondition(RexxDirectory *conditionObject);
+    wholenumber_t error(RexxActivationBase *, DirectoryClass *errorInfo);
+    wholenumber_t errorNumber(DirectoryClass *conditionObject);
+    wholenumber_t displayCondition(DirectoryClass *conditionObject);
     bool        raiseCondition(RexxString *, RexxObject *, RexxString *, RexxObject *, RexxObject *);
-    bool        raiseCondition(RexxDirectory *);
-    RexxDirectory *createConditionObject(RexxString *, RexxObject *, RexxString *, RexxObject *, RexxObject *);
+    bool        raiseCondition(DirectoryClass *);
+    DirectoryClass *createConditionObject(RexxString *, RexxObject *, RexxString *, RexxObject *, RexxObject *);
     void        raiseException(wholenumber_t, RexxString *, RexxArray *, RexxObject *);
-    RexxDirectory *createExceptionObject(wholenumber_t, RexxString *, RexxArray *, RexxObject *);
-    void        generateProgramInformation(RexxDirectory *exObj);
+    DirectoryClass *createExceptionObject(wholenumber_t, RexxString *, RexxArray *, RexxObject *);
+    void        generateProgramInformation(DirectoryClass *exObj);
     void        reportAnException(wholenumber_t, const char *);
     void        reportAnException(wholenumber_t, const char *, const char *);
     void        reportAnException(wholenumber_t, RexxObject *, const char *);
@@ -161,10 +161,10 @@ class RexxActivity : public RexxInternalObject
     void        reportAnException(wholenumber_t, RexxObject *, RexxObject *, RexxObject *);
     void        reportAnException(wholenumber_t, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
     void        reportAnException(wholenumber_t, const char *, RexxObject *, const char *, RexxObject *);
-    void        reraiseException(RexxDirectory *);
-    void        raisePropagate(RexxDirectory *);
-    RexxObject *display(RexxDirectory *);
-    RexxObject *displayDebug(RexxDirectory *);
+    void        reraiseException(DirectoryClass *);
+    void        raisePropagate(DirectoryClass *);
+    RexxObject *display(DirectoryClass *);
+    RexxObject *displayDebug(DirectoryClass *);
     RexxString *buildMessage(wholenumber_t, RexxArray *);
     RexxString *messageSubstitution(RexxString *, RexxArray *);
     void        run();
@@ -191,7 +191,7 @@ class RexxActivity : public RexxInternalObject
     void        guardSet();
     void        checkDeadLock(RexxActivity *);
     void        postDispatch();
-    void        kill(RexxDirectory *);
+    void        kill(DirectoryClass *);
     void        joinKernelQueue();
     void        relinquish();
     bool        halt(RexxString *);
@@ -308,7 +308,7 @@ class RexxActivity : public RexxInternalObject
         locals->setFrame(frameStack.allocateFrame(locals->getSize()));
     }
 
-    inline RexxDirectory *getCurrentCondition() { return conditionobj; }
+    inline DirectoryClass *getCurrentCondition() { return conditionobj; }
     inline void           clearCurrentCondition() { conditionobj = OREF_NULL; }
     void setExitHandler(int exitNum, REXXPFN e) { getExitHandler(exitNum).setEntryPoint(e); }
     void setExitHandler(int exitNum, const char *e) { getExitHandler(exitNum).resolve(e); }
@@ -318,7 +318,7 @@ class RexxActivity : public RexxInternalObject
     void createCallContext(CallContext &context, RexxNativeActivation *owner);
     void createExitContext(ExitContext &context, RexxNativeActivation *owner);
     RexxObject *getLocalEnvironment(RexxString *name);
-    RexxDirectory *getLocal();
+    DirectoryClass *getLocal();
     CommandHandler *resolveCommandHandler(RexxString *);
 
     static void initializeThreadContext();
@@ -334,7 +334,7 @@ class RexxActivity : public RexxInternalObject
     ActivityContext      threadContext; // the handed out activity context
     RexxActivity *oldActivity;          // pushed nested activity
     RexxActivationStack   frameStack;   // our stack used for activation frames
-    RexxDirectory      *conditionobj;   // condition object for killed activi
+    DirectoryClass      *conditionobj;   // condition object for killed activi
     TableClass          *requiresTable;  // Current ::REQUIRES being installed
     RexxMessage        *dispatchMessage;  // a message object to run on this thread
 

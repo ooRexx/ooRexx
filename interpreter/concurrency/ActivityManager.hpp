@@ -92,7 +92,7 @@ public:
     static void returnRootActivity(RexxActivity *activity);
     static RexxActivity *attachThread();
     static RexxObject *getLocalEnvironment(RexxString *name);
-    static RexxDirectory *getLocal();
+    static DirectoryClass *getLocal();
 
     static RexxActivity * volatile currentActivity;   // the currently active thread
 

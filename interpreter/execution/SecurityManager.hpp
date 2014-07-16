@@ -47,7 +47,7 @@
 #include "RexxCore.h"
 #include "ProtectedObject.hpp"
 
-class RexxDirectory;
+class DirectoryClass;
 
 class SecurityManager : public RexxInternalObject
 {
@@ -72,7 +72,7 @@ public:
 
 
 protected:
-    bool         callSecurityManager(RexxString *methodName, RexxDirectory *arguments);
+    bool         callSecurityManager(RexxString *methodName, DirectoryClass *arguments);
 
     RexxObject *manager;       // the wrappered manager object
 };

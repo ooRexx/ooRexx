@@ -508,10 +508,10 @@ void RexxVariableDictionary::flatten(RexxEnvelope *envelope)
  *
  * @return A supplier for iterating the variable sset.
  */
-RexxDirectory *RexxVariableDictionary::getAllVariables()
+DirectoryClass *RexxVariableDictionary::getAllVariables()
 {
     HashLink i;
-    RexxDirectory *result = new_directory();
+    DirectoryClass *result = new_directory();
     ProtectedObject p1(result);
                                          /* loop through the hash table       */
     for (i = this->contents->first();

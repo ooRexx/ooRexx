@@ -237,7 +237,7 @@ void RexxInstructionRaise::execute(RexxActivation *context, RexxExpressionStack 
     }
 
     // set a default condition object
-    RexxDirectory *conditionobj = (RexxDirectory *)TheNilObject;
+    DirectoryClass *conditionobj = (DirectoryClass *)TheNilObject;
     // propagating an existing condition?
     if (instructionFlags[raise_propagate])
     {

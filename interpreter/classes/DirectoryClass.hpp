@@ -41,65 +41,40 @@
 /* Primitive Directory Class Definitions                                      */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_RexxDirectory
-#define Included_RexxDirectory
+#ifndef Included_DirectoryClass
+#define Included_DirectoryClass
 
-#include "RexxCollection.hpp"
+#include "HashCollection.hpp"
 
-class RexxDirectory : public RexxHashTableCollection
+class DirectoryClass : public StringHashCollection
 {
  public:
-    inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };
-    inline RexxDirectory(RESTORETYPE restoreType) { ; };
+    void        *operator new(size_t);
+    inline void *operator new(size_t size, void *ptr) {return ptr;}
+    inline void  operator delete(void *) { ; }
+    inline void  operator delete(void *, void *) { ; }
 
-    virtual void          live(size_t);
-    virtual void          liveGeneral(MarkReason reason);
-    virtual void          flatten(RexxEnvelope *);
+    inline DirectoryClass(RESTORETYPE restoreType) { ; }
+           Directory(size_t capacity = HashCollection::DefaultTableSize) : StringHashCollection(capacity) { }
 
-    virtual RexxObject   *copy();
-    virtual RexxArray    *makeArray();
-    virtual RexxArray    *requestArray();
+    RexxObject *newRexx(RexxObject **, size_t);
 
-    RexxObject   *mergeItem(RexxObject *, RexxObject *);
-    RexxObject   *at(RexxString *);
-    RexxObject   *fastAt(RexxString *name) { return this->contents->stringGet(name);}
-    RexxObject   *atRexx(RexxString *);
-    RexxObject   *put(RexxObject *, RexxString *);
-    RexxObject   *entry(RexxString *);
-    RexxObject   *entryRexx(RexxString *);
-    RexxObject   *hasEntry(RexxString *);
-    RexxObject   *hasIndex(RexxString *);
-    size_t        items();
-    RexxObject   *itemsRexx();
-    RexxObject   *remove(RexxString *);
-    RexxObject   *removeRexx(RexxString *);
-    RexxObject   *setEntry(RexxString *, RexxObject *);
-    RexxObject   *setMethod(RexxString *, MethodClass *);
-    RexxObject   *unknown(RexxString *, RexxArray *);
-    RexxSupplier *supplier();
-    RexxArray    *allItems();
-    RexxArray    *allIndexes();
-    void          reset();
-    RexxObject   *empty();
-    bool          isEmpty();
-    RexxObject   *isEmptyRexx();
-    RexxObject   *indexRexx(RexxObject *);
-    RexxObject   *hasItem(RexxObject *);
-    RexxObject   *removeItem(RexxObject *);
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(RexxEnvelope *);
 
-    RexxObject   *newRexx(RexxObject **init_args, size_t);
+    virtual RexxObject *copy();
+    virtual RexxArray  *makeArray();
+    virtual RexxArray  *requestArray();
 
-    TableClass  *method_table;            /* table of added methods            */
-    MethodClass *unknown_method;          /* unknown method entry              */
-
-    static RexxDirectory *newInstance();
+    TableClass  *method_table;            // table of added methods
+    MethodClass *unknown_method;          // unknown method entry
 
     static void createInstance();
     // singleton class instance;
     static RexxClass *classInstance;
 };
 
-
-inline RexxDirectory *new_directory() { return RexxDirectory::newInstance(); }
+inline TableClass *new_directory(size_t capacity = HashCollection::DefaultTableSize) { return new DirectoryClass(capacity); }
 
 #endif

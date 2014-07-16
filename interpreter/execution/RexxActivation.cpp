@@ -676,7 +676,7 @@ void RexxActivation::processTraps()
         {
             pending_count--;           /* decrement the pending count       */
                                              /* get the current condition object  */
-            RexxDirectory *conditionObj = (RexxDirectory *)condition_queue->pullRexx();
+            DirectoryClass *conditionObj = (DirectoryClass *)condition_queue->pullRexx();
             RexxObject *rc = conditionObj->at(OREF_RC);  /* get any return code information   */
             if (rc != OREF_NULL)             /* have something to assign to RC?   */
             {
@@ -1440,7 +1440,7 @@ void RexxActivation::checkTrapTable()
     else if (isInternalCall() && !(settings.flags&traps_copied))
     {
         /* copy the table                    */
-        settings.traps = (RexxDirectory *)settings.traps->copy();
+        settings.traps = (DirectoryClass *)settings.traps->copy();
         /* record that we've copied this     */
         settings.flags |= traps_copied;
     }
@@ -1512,7 +1512,7 @@ void RexxActivation::raiseExit(
      RexxString    * description,      /* description of the condition      */
      RexxObject    * additional,       /* extra descriptive information     */
      RexxObject    * resultObj,        /* return result                     */
-     RexxDirectory * conditionobj )    /* propagated condition object       */
+     DirectoryClass * conditionobj )    /* propagated condition object       */
 /******************************************************************************/
 /* Function:  Raise a condition using exit semantics for the returned value.  */
 /******************************************************************************/
@@ -1554,7 +1554,7 @@ void RexxActivation::raise(
      RexxString    * description,      /* description of the condition      */
      RexxObject    * additional,       /* extra descriptive information     */
      RexxObject    * resultObj,        /* return result                     */
-     RexxDirectory * conditionobj )    /* propagated condition object       */
+     DirectoryClass * conditionobj )    /* propagated condition object       */
 /******************************************************************************/
 /* Function:  Raise a give REXX condition                                     */
 /******************************************************************************/
@@ -1687,7 +1687,7 @@ RexxObject *RexxActivation::resolveStream(RexxString *name, bool input, RexxStri
     {
         *added = false;           /* when caller requires stream table entry then initialize */
     }
-    RexxDirectory *streamTable = getStreams(); /* get the current stream set        */
+    DirectoryClass *streamTable = getStreams(); /* get the current stream set        */
     if (fullName)                        /* fullName requested?               */
     {
         *fullName = name;                  /* initialize to name                */
@@ -1765,7 +1765,7 @@ RexxObject *RexxActivation::resolveStream(RexxString *name, bool input, RexxStri
     }
 }
 
-RexxDirectory *RexxActivation::getStreams()
+DirectoryClass *RexxActivation::getStreams()
 /******************************************************************************/
 /* Function:  Return the associated object variables stream table             */
 /******************************************************************************/
@@ -1871,7 +1871,7 @@ void RexxActivation::signalValue(
 /******************************************************************************/
 {
     RexxInstruction *target = OREF_NULL;                  /* no target yet                     */
-    RexxDirectory *labels = getLabels();          /* get the labels                    */
+    DirectoryClass *labels = getLabels();          /* get the labels                    */
     if (labels != OREF_NULL)             /* have labels?                      */
     {
         /* look up label and go to normal    */
@@ -2103,7 +2103,7 @@ void RexxActivation::trapUndelay(
 
 bool RexxActivation::trap(             /* trap a condition                  */
     RexxString    * condition,         /* condition to process              */
-    RexxDirectory * exception_object)  /* associated condition object       */
+    DirectoryClass * exception_object)  /* associated condition object       */
 /******************************************************************************/
 /* Function:  Check the activation to see if this is trapping a condition.    */
 /*            For SIGNAL traps, control goes back to the point of the trap    */
@@ -2867,7 +2867,7 @@ RexxObject * RexxActivation::internalCall(RexxString *name, RexxInstruction *tar
  * @return Any return result
  */
 RexxObject * RexxActivation::internalCallTrap(RexxString *name, RexxInstruction * target,
-    RexxDirectory *conditionObj, ProtectedObject &resultObj)
+    DirectoryClass *conditionObj, ProtectedObject &resultObj)
 {
 
     stack.push(conditionObj);      /* protect the condition object      */
@@ -3831,7 +3831,7 @@ void RexxActivation::command(RexxString *address, RexxString *commandString)
     }
 
     RexxObject *rc = (RexxObject *)commandResult;
-    RexxDirectory *conditionObj = (RexxDirectory *)(RexxObject *)condition;
+    DirectoryClass *conditionObj = (DirectoryClass *)(RexxObject *)condition;
 
     bool failureCondition = false;    // don't have a failure condition yet
 
@@ -3967,7 +3967,7 @@ RexxString * RexxActivation::getProgramName()
   return code->getProgramName(); /* get the name from the code        */
 }
 
-RexxDirectory * RexxActivation::getLabels()
+DirectoryClass * RexxActivation::getLabels()
 /******************************************************************************/
 /* Function:  Return the directory of labels for this method                  */
 /******************************************************************************/
@@ -3994,7 +3994,7 @@ RexxString * RexxActivation::sourceString()
 void RexxActivation::addLocalRoutine(RexxString *name, MethodClass *_method)
 {
     // get the directory of external functions
-    RexxDirectory *routines = settings.parent_code->getLocalRoutines();
+    DirectoryClass *routines = settings.parent_code->getLocalRoutines();
 
     // if it does not exist, it will be created
     if (routines == OREF_NULL)
@@ -4014,7 +4014,7 @@ void RexxActivation::addLocalRoutine(RexxString *name, MethodClass *_method)
  *
  * @return A directory of the public routines.
  */
-RexxDirectory *RexxActivation::getPublicRoutines()
+DirectoryClass *RexxActivation::getPublicRoutines()
 {
     return code->getPublicRoutines();
 }
@@ -4094,7 +4094,7 @@ void RexxActivation::closeStreams()
                                          /* exiting a bottom level?           */
     if (isProgramOrMethod())
     {
-        RexxDirectory *streams = settings.streams;  /* get the streams directory         */
+        DirectoryClass *streams = settings.streams;  /* get the streams directory         */
         /* actually have a table?            */
         if (streams != OREF_NULL)
         {

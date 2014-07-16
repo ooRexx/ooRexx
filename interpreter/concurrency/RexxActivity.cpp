@@ -337,7 +337,7 @@ wholenumber_t RexxActivity::error()
 }
 
 
-wholenumber_t RexxActivity::error(RexxActivationBase *activation, RexxDirectory *errorInfo)
+wholenumber_t RexxActivity::error(RexxActivationBase *activation, DirectoryClass *errorInfo)
 /******************************************************************************/
 /* Function:  Force error termination on an activity, returning the resulting */
 /*            REXX error code.                                                */
@@ -371,7 +371,7 @@ wholenumber_t RexxActivity::error(RexxActivationBase *activation, RexxDirectory 
  * @return The major error code for the syntax error, if this is
  *         indeed a syntax conditon.
  */
-wholenumber_t RexxActivity::displayCondition(RexxDirectory *errorInfo)
+wholenumber_t RexxActivity::displayCondition(DirectoryClass *errorInfo)
 {
     // no condition object?  This is a nop
     if (errorInfo == OREF_NULL)
@@ -403,7 +403,7 @@ wholenumber_t RexxActivity::displayCondition(RexxDirectory *errorInfo)
  *
  * @return The RC value associated with the condition.
  */
-wholenumber_t RexxActivity::errorNumber(RexxDirectory *conditionObject)
+wholenumber_t RexxActivity::errorNumber(DirectoryClass *conditionObject)
 {
     wholenumber_t rc = Error_Interpretation/1000;      /* set default return code           */
     /* did we get a condtion object?     */
@@ -432,7 +432,7 @@ wholenumber_t RexxActivity::errorNumber(RexxDirectory *conditionObject)
 bool RexxActivity::raiseCondition(RexxString *condition, RexxObject *rc, RexxString *description, RexxObject *additional, RexxObject *result)
 {
     // just create a condition object and process the traps.
-    RexxDirectory *conditionObj = createConditionObject(condition, rc, description, additional, result);
+    DirectoryClass *conditionObj = createConditionObject(condition, rc, description, additional, result);
     return raiseCondition(conditionObj);
 }
 
@@ -446,7 +446,7 @@ bool RexxActivity::raiseCondition(RexxString *condition, RexxObject *rc, RexxStr
  * @return true if this was trapped, false otherwise.  If trapped
  *         via a SIGNAL ON, this will NOT return to here.
  */
-bool RexxActivity::raiseCondition(RexxDirectory *conditionObj)
+bool RexxActivity::raiseCondition(DirectoryClass *conditionObj)
 {
     bool handled = false;                     /* condition not handled yet         */
     RexxString *condition = (RexxString *)conditionObj->at(OREF_CONDITION);
@@ -483,10 +483,10 @@ bool RexxActivity::raiseCondition(RexxDirectory *conditionObj)
  *
  * @return The constructed condition object (a directory).
  */
-RexxDirectory *RexxActivity::createConditionObject(RexxString *condition, RexxObject *rc, RexxString *description, RexxObject *additional, RexxObject *result)
+DirectoryClass *RexxActivity::createConditionObject(RexxString *condition, RexxObject *rc, RexxString *description, RexxObject *additional, RexxObject *result)
 {
     // condition objects are directories
-    RexxDirectory *conditionObj = new_directory();
+    DirectoryClass *conditionObj = new_directory();
     ProtectedObject p(conditionObj);
                                        /* put in the condition name         */
     conditionObj->put(condition, OREF_CONDITION);
@@ -808,7 +808,7 @@ void RexxActivity::raiseException(wholenumber_t  errcode, RexxString *descriptio
  *
  * @return The created exception dictionary.
  */
-RexxDirectory *RexxActivity::createExceptionObject(wholenumber_t  errcode,
+DirectoryClass *RexxActivity::createExceptionObject(wholenumber_t  errcode,
     RexxString *description, RexxArray *additional, RexxObject *result )
 /******************************************************************************/
 /* This routine is used for SYNTAX conditions only.                           */
@@ -826,7 +826,7 @@ RexxDirectory *RexxActivity::createExceptionObject(wholenumber_t  errcode,
     /* All error detection done. we can  */
     /*  build and save exobj now.        */
     /* get an exception directory        */
-    RexxDirectory *exobj = (RexxDirectory *)new_directory();
+    DirectoryClass *exobj = (DirectoryClass *)new_directory();
     // this is the anchor for anything else
     ProtectedObject p(exobj);
 
@@ -907,7 +907,7 @@ RexxDirectory *RexxActivity::createExceptionObject(wholenumber_t  errcode,
  *
  * @param exobj  The exception object being constructed.
  */
-void RexxActivity::generateProgramInformation(RexxDirectory *exobj)
+void RexxActivity::generateProgramInformation(DirectoryClass *exobj)
 {
     // create lists for both the stack frames and the traceback lines
     RexxList *stackFrames = new_list();
@@ -1100,7 +1100,7 @@ RexxString *RexxActivity::messageSubstitution(
  *
  * @param exobj  The exception object with the syntax information.
  */
-void RexxActivity::reraiseException(RexxDirectory *exobj)
+void RexxActivity::reraiseException(DirectoryClass *exobj)
 {
     RexxActivation *activation = this->getCurrentRexxFrame();/* get the current activation        */
     /* have a target activation?         */
@@ -1144,7 +1144,7 @@ void RexxActivity::reraiseException(RexxDirectory *exobj)
 }
 
 void RexxActivity::raisePropagate(
-    RexxDirectory *conditionObj )      /* condition descriptive information */
+    DirectoryClass *conditionObj )      /* condition descriptive information */
 /******************************************************************************/
 /* Function:   Propagate a condition down the chain of activations            */
 /******************************************************************************/
@@ -1177,7 +1177,7 @@ void RexxActivity::raisePropagate(
     this->kill(conditionObj);            /* imbedded description object       */
 }
 
-RexxObject *RexxActivity::display(RexxDirectory *exobj)
+RexxObject *RexxActivity::display(DirectoryClass *exobj)
                                        /* display exception object info     */
                                        /* target exception object           */
 /******************************************************************************/
@@ -1278,7 +1278,7 @@ RexxObject *RexxActivity::display(RexxDirectory *exobj)
     return TheNilObject;                 /* just return .nil                  */
 }
 
-RexxObject *RexxActivity::displayDebug(RexxDirectory *exobj)
+RexxObject *RexxActivity::displayDebug(DirectoryClass *exobj)
                                        /* display exception object info     */
                                        /* target exception object           */
 /******************************************************************************/
@@ -1824,7 +1824,7 @@ void RexxActivity::postDispatch()
 }
 
 void RexxActivity::kill(
-    RexxDirectory *conditionObj)       /* associated "kill" object          */
+    DirectoryClass *conditionObj)       /* associated "kill" object          */
 /******************************************************************************/
 /* Function:  Kill a running activity,                                        */
 /******************************************************************************/
@@ -1960,7 +1960,7 @@ void RexxActivity::checkStackSpace()
 }
 
 
-RexxDirectory *RexxActivity::getLocal()
+DirectoryClass *RexxActivity::getLocal()
 /******************************************************************************/
 /* Function:  Retrive the activities local environment                        */
 /******************************************************************************/

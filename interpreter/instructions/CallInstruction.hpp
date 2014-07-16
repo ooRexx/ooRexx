@@ -57,7 +57,7 @@ class RexxInstructionCallBase : public RexxInstruction
  public:
     inline RexxInstructionCallBase() { ; };
     // subclasses must provide this
-    virtual void resolve(RexxDirectory *) = 0;
+    virtual void resolve(DirectoryClass *) = 0;
 
  protected:
 
@@ -88,7 +88,7 @@ class RexxInstructionTrapBase : public RexxInstructionCallBase
 {
  public:
     inline RexxInstructionTrapBase() { ; };
-    virtual void trap(RexxActivation *, RexxDirectory *) { ; };
+    virtual void trap(RexxActivation *, DirectoryClass *) { ; };
 
  protected:
 
@@ -116,7 +116,7 @@ class RexxInstructionCall : public RexxInstructionCallBase
     virtual void flatten(RexxEnvelope*);
 
     virtual void execute(RexxActivation *, RexxExpressionStack *);
-    virtual void resolve(RexxDirectory *);
+    virtual void resolve(DirectoryClass *);
 
 protected:
 
@@ -174,9 +174,9 @@ class RexxInstructionCallOn : public RexxInstructionTrapBase
     virtual void flatten(RexxEnvelope*);
 
     virtual void execute(RexxActivation *, RexxExpressionStack *);
-    virtual void resolve(RexxDirectory *);
+    virtual void resolve(DirectoryClass *);
 
-    virtual void trap(RexxActivation *context, RexxDirectory  *conditionObj);
+    virtual void trap(RexxActivation *context, DirectoryClass  *conditionObj);
 
 protected:
 

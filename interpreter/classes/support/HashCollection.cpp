@@ -49,8 +49,6 @@
 #include "ProtectedObject.hpp"
 
 
-
-
 /**
  * Virtual method for allocating a new contents item for this
  * collection.  Collections with special requirements should
@@ -566,7 +564,7 @@ RexxInternalObject *HashCollection::hasItemRexx(RexxInternalObject *target)
  *
  * @return The supplier object.
  */
-RexxSupplier *HashCollection::supplier()
+SupplierClass *HashCollection::supplier()
 {
     return contents->supplier();
 }
@@ -689,4 +687,33 @@ EqualityHashCollection::EqualityHashCollection(size_t capacity)
 HashContents *EqualityHashCollection::allocateContents(size_t bucketSize, size_t totalSize)
 {
     return new (totalSize) EqualityHashContents(bucketSize, totalSize);
+}
+
+
+/**
+ * Virtual method for allocating a new contents item for this
+ * collection.  Collections with special requirements should
+ * override this and return the appropriate subclass.
+ *
+ * @param bucketSize The bucket size of the collection.
+ * @param totalSize  The total capacity of the collection.
+ *
+ * @return A new HashContents object appropriate for this collection type.
+ */
+HashContents *StringHashCollection::allocateContents(size_t bucketSize, size_t totalSize)
+{
+    return new (totalSize) StringHashContents(bucketSize, totalSize);
+}
+
+
+/**
+ * Validate an index for an operation.  Subclasses with
+ * special index requirements should override.
+ *
+ * @param index    The method index value.
+ * @param position The argument position for error reporting.
+ */
+void StringHashCollection::validateIndex(RexxInternalObject *index, size_t position)
+{
+    stringArgument(index, position);    // make sure we have an index, and it is a string value.
 }

@@ -85,7 +85,7 @@ RexxObject *SecurityManager::checkLocalAccess(RexxString *index)
         return OREF_NULL;
     }
 
-    RexxDirectory *securityArgs = new_directory();
+    DirectoryClass *securityArgs = new_directory();
     ProtectedObject p(securityArgs);
 
     securityArgs->put(index, OREF_NAME);
@@ -114,7 +114,7 @@ RexxObject *SecurityManager::checkEnvironmentAccess(RexxString *index)
         return OREF_NULL;
     }
 
-    RexxDirectory *securityArgs = new_directory();
+    DirectoryClass *securityArgs = new_directory();
     ProtectedObject p(securityArgs);
 
     securityArgs->put(index, OREF_NAME);
@@ -136,7 +136,7 @@ RexxObject *SecurityManager::checkEnvironmentAccess(RexxString *index)
  *
  * @return true if the security manager overrode this, false otherwise.
  */
-bool SecurityManager::callSecurityManager(RexxString *methodName, RexxDirectory *arguments)
+bool SecurityManager::callSecurityManager(RexxString *methodName, DirectoryClass *arguments)
 {
     // invoke the manager
     RexxObject *resultObj = manager->sendMessage(methodName, arguments);
@@ -168,7 +168,7 @@ bool SecurityManager::checkProtectedMethod(RexxObject *target, RexxString *messa
     {
         return false;
     }
-    RexxDirectory *securityArgs = new_directory();
+    DirectoryClass *securityArgs = new_directory();
     ProtectedObject p(securityArgs);
 
     securityArgs->put(target, OREF_OBJECTSYM);
@@ -203,7 +203,7 @@ bool SecurityManager::checkFunctionCall(RexxString *functionName, size_t count, 
     {
         return false;
     }
-    RexxDirectory *securityArgs = new_directory();
+    DirectoryClass *securityArgs = new_directory();
     ProtectedObject p(securityArgs);
 
     securityArgs->put(functionName, OREF_NAME);
@@ -237,7 +237,7 @@ bool SecurityManager::checkCommand(RexxActivity *activity, RexxString *address, 
     {
         return false;
     }
-    RexxDirectory *securityArgs = new_directory();
+    DirectoryClass *securityArgs = new_directory();
     ProtectedObject p(securityArgs);
                                        /* add the command                   */
     securityArgs->put(command, OREF_COMMAND);
@@ -285,7 +285,7 @@ RexxObject *SecurityManager::checkStreamAccess(RexxString *name)
         return OREF_NULL;
     }
 
-    RexxDirectory *securityArgs = new_directory();
+    DirectoryClass *securityArgs = new_directory();
     ProtectedObject p(securityArgs);
 
     securityArgs->put(name, OREF_NAME);
@@ -315,7 +315,7 @@ RexxString *SecurityManager::checkRequiresAccess(RexxString *name, RexxObject *&
         return name;
     }
 
-    RexxDirectory *securityArgs = new_directory();
+    DirectoryClass *securityArgs = new_directory();
     ProtectedObject p(securityArgs);
 
                                        /* add the program name              */

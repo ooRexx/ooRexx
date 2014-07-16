@@ -996,7 +996,7 @@ RexxArray  *RexxStem::allIndexes()
  *
  * @return A supplier instance.
  */
-RexxSupplier *RexxStem::supplier()
+SupplierClass *RexxStem::supplier()
 {
     // essentially the same logic as allItems(), but both the item and the
     // tail value are accumulated.
@@ -1039,9 +1039,9 @@ RexxSupplier *RexxStem::supplier()
  *
  * @return A directory instance.
  */
-RexxDirectory *RexxStem::toDirectory()
+DirectoryClass *RexxStem::toDirectory()
 {
-    RexxDirectory *result = new_directory();
+    DirectoryClass *result = new_directory();
     ProtectedObject p1(result);
     RexxCompoundElement *variable = tails.first();
     while (variable != OREF_NULL)

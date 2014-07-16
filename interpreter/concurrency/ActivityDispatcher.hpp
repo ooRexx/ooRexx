@@ -41,7 +41,7 @@
 #define ActivityDispatcher_included
 
 
-class RexxDirectory;
+class DirectoryClass;
 class RexxNativeActivation;
 
 class ActivityDispatcher
@@ -51,8 +51,8 @@ public:
     virtual ~ActivityDispatcher() { ; }
 
     virtual void run();
-    virtual void handleError(wholenumber_t, RexxDirectory *);
-    virtual void handleError(RexxDirectory *);
+    virtual void handleError(wholenumber_t, DirectoryClass *);
+    virtual void handleError(DirectoryClass *);
     virtual void invoke();
     virtual void invoke(RexxOption *);
     virtual void invoke(PRXSYSEXIT exits, const char *env);
@@ -60,7 +60,7 @@ public:
     inline void setContext(RexxActivity *act, RexxNativeActivation *a) { activity = act; activation = a; }
 
     wholenumber_t  rc;                 // error return code
-    RexxDirectory *conditionData;      // any condition data posted due to an activity error
+    DirectoryClass *conditionData;      // any condition data posted due to an activity error
 
 protected:
 

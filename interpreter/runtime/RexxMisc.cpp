@@ -60,7 +60,7 @@
 enum { STOP, START };
 
 
-RexxDirectory *RexxLocal::local()
+DirectoryClass *RexxLocal::local()
 /******************************************************************************/
 /* Function:  Return the current activation's local environment pointer       */
 /******************************************************************************/

@@ -162,7 +162,7 @@ void MemoryObject::createImage()
     RexxObject::createInstance();
     TableClass::createInstance();
     IdentityTable::createInstance();
-    RexxRelation::createInstance();
+    RelationClass::createInstance();
 
     // functions directory used for functions like rxqueue.
     TheFunctionsDirectory = new_directory();
@@ -190,8 +190,8 @@ void MemoryObject::createImage()
     // use the instances to store information.
     RexxPointer::createInstance();
 
-    RexxDirectory::createInstance();
-    CLASS_CREATE(Directory, "Directory", RexxClass);  /* RexxDirectory                     */
+    DirectoryClass::createInstance();
+    CLASS_CREATE(Directory, "Directory", RexxClass);  /* DirectoryClass                     */
     // create the environment directory
     TheEnvironment = new_directory();
 
@@ -210,7 +210,7 @@ void MemoryObject::createImage()
     RexxQueue::createInstance();
     RexxList::createInstance();
     RexxStem::createInstance();
-    RexxSupplier::createInstance();
+    SupplierClass::createInstance();
     RexxMessage::createInstance();
     RexxMutableBuffer::createInstance();
 
@@ -219,7 +219,7 @@ void MemoryObject::createImage()
     StackFrameClass::createInstance();
 
                                          /* build the common retriever tables */
-    TheCommonRetrievers = (RexxDirectory *)new_directory();
+    TheCommonRetrievers = (DirectoryClass *)new_directory();
                                          /* add all of the special variables  */
     TheCommonRetrievers->put((RexxObject *)new RexxSimpleVariable(OREF_SELF, VARIABLE_SELF), OREF_SELF);
     TheCommonRetrievers->put((RexxObject *)new RexxSimpleVariable(OREF_SUPER, VARIABLE_SUPER), OREF_SUPER);
@@ -406,35 +406,35 @@ void MemoryObject::createImage()
     /*           DIRECTORY                                                     */
     /***************************************************************************/
 
-    defineKernelMethod(CHAR_NEW           , TheDirectoryClassBehaviour, CPPM(RexxDirectory::newRexx), A_COUNT);
+    defineKernelMethod(CHAR_NEW           , TheDirectoryClassBehaviour, CPPM(DirectoryClass::newRexx), A_COUNT);
 
                                          /* set the scope of the method to    */
                                          /* this classes oref                 */
     TheDirectoryClassBehaviour->setMethodDictionaryScope(TheDirectoryClass);
 
                                          /* add the instance methods          */
-    defineKernelMethod(CHAR_BRACKETS      , TheDirectoryBehaviour, CPPM(RexxDirectory::atRexx), 1);
-    defineKernelMethod(CHAR_BRACKETSEQUAL , TheDirectoryBehaviour, CPPM(RexxDirectory::put), 2);
-    defineKernelMethod(CHAR_AT            , TheDirectoryBehaviour, CPPM(RexxDirectory::atRexx), 1);
-    defineKernelMethod(CHAR_ENTRY         , TheDirectoryBehaviour, CPPM(RexxDirectory::entryRexx), 1);
-    defineKernelMethod(CHAR_HASENTRY      , TheDirectoryBehaviour, CPPM(RexxDirectory::hasEntry), 1);
-    defineKernelMethod(CHAR_HASINDEX      , TheDirectoryBehaviour, CPPM(RexxDirectory::hasIndex), 1);
-    defineKernelMethod(CHAR_ITEMS         , TheDirectoryBehaviour, CPPM(RexxDirectory::itemsRexx), 0);
+    defineKernelMethod(CHAR_BRACKETS      , TheDirectoryBehaviour, CPPM(DirectoryClass::atRexx), 1);
+    defineKernelMethod(CHAR_BRACKETSEQUAL , TheDirectoryBehaviour, CPPM(DirectoryClass::put), 2);
+    defineKernelMethod(CHAR_AT            , TheDirectoryBehaviour, CPPM(DirectoryClass::atRexx), 1);
+    defineKernelMethod(CHAR_ENTRY         , TheDirectoryBehaviour, CPPM(DirectoryClass::entryRexx), 1);
+    defineKernelMethod(CHAR_HASENTRY      , TheDirectoryBehaviour, CPPM(DirectoryClass::hasEntry), 1);
+    defineKernelMethod(CHAR_HASINDEX      , TheDirectoryBehaviour, CPPM(DirectoryClass::hasIndex), 1);
+    defineKernelMethod(CHAR_ITEMS         , TheDirectoryBehaviour, CPPM(DirectoryClass::itemsRexx), 0);
     defineKernelMethod(CHAR_MAKEARRAY     , TheDirectoryBehaviour, CPPM(RexxObject::makeArrayRexx), 0);
-    defineKernelMethod(CHAR_ALLITEMS      , TheDirectoryBehaviour, CPPM(RexxDirectory::allItems), 0);
-    defineKernelMethod(CHAR_ALLINDEXES    , TheDirectoryBehaviour, CPPM(RexxDirectory::allIndexes), 0);
-    defineKernelMethod(CHAR_EMPTY         , TheDirectoryBehaviour, CPPM(RexxDirectory::empty), 0);
-    defineKernelMethod(CHAR_ISEMPTY       , TheDirectoryBehaviour, CPPM(RexxDirectory::isEmptyRexx), 0);
-    defineKernelMethod(CHAR_PUT           , TheDirectoryBehaviour, CPPM(RexxDirectory::put), 2);
-    defineKernelMethod(CHAR_REMOVE        , TheDirectoryBehaviour, CPPM(RexxDirectory::removeRexx), 1);
-    defineKernelMethod(CHAR_SETENTRY      , TheDirectoryBehaviour, CPPM(RexxDirectory::setEntry), 2);
-    defineProtectedKernelMethod(CHAR_SETMETHOD   , TheDirectoryBehaviour, CPPM(RexxDirectory::setMethod), 2);
-    defineKernelMethod(CHAR_SUPPLIER      , TheDirectoryBehaviour, CPPM(RexxDirectory::supplier), 0);
+    defineKernelMethod(CHAR_ALLITEMS      , TheDirectoryBehaviour, CPPM(DirectoryClass::allItems), 0);
+    defineKernelMethod(CHAR_ALLINDEXES    , TheDirectoryBehaviour, CPPM(DirectoryClass::allIndexes), 0);
+    defineKernelMethod(CHAR_EMPTY         , TheDirectoryBehaviour, CPPM(DirectoryClass::empty), 0);
+    defineKernelMethod(CHAR_ISEMPTY       , TheDirectoryBehaviour, CPPM(DirectoryClass::isEmptyRexx), 0);
+    defineKernelMethod(CHAR_PUT           , TheDirectoryBehaviour, CPPM(DirectoryClass::put), 2);
+    defineKernelMethod(CHAR_REMOVE        , TheDirectoryBehaviour, CPPM(DirectoryClass::removeRexx), 1);
+    defineKernelMethod(CHAR_SETENTRY      , TheDirectoryBehaviour, CPPM(DirectoryClass::setEntry), 2);
+    defineProtectedKernelMethod(CHAR_SETMETHOD   , TheDirectoryBehaviour, CPPM(DirectoryClass::setMethod), 2);
+    defineKernelMethod(CHAR_SUPPLIER      , TheDirectoryBehaviour, CPPM(DirectoryClass::supplier), 0);
     defineKernelMethod(CHAR_UNKNOWN       , TheDirectoryBehaviour, CPPM(RexxObject::unknownRexx), 2);
-    defineProtectedKernelMethod(CHAR_UNSETMETHOD   , TheDirectoryBehaviour, CPPM(RexxDirectory::removeRexx), 1);
-    defineKernelMethod(CHAR_INDEX        , TheDirectoryBehaviour, CPPM(RexxDirectory::indexRexx), 1);
-    defineKernelMethod(CHAR_HASITEM      , TheDirectoryBehaviour, CPPM(RexxDirectory::hasItem), 1);
-    defineKernelMethod(CHAR_REMOVEITEM   , TheDirectoryBehaviour, CPPM(RexxDirectory::removeItem), 1);
+    defineProtectedKernelMethod(CHAR_UNSETMETHOD   , TheDirectoryBehaviour, CPPM(DirectoryClass::removeRexx), 1);
+    defineKernelMethod(CHAR_INDEX        , TheDirectoryBehaviour, CPPM(DirectoryClass::indexRexx), 1);
+    defineKernelMethod(CHAR_HASITEM      , TheDirectoryBehaviour, CPPM(DirectoryClass::hasItem), 1);
+    defineKernelMethod(CHAR_REMOVEITEM   , TheDirectoryBehaviour, CPPM(DirectoryClass::removeItem), 1);
 
                                          /* set the scope of the methods to   */
                                          /* this classes oref                 */
@@ -734,7 +734,7 @@ void MemoryObject::createImage()
 
                                          /* Add the NEW method to the         */
                                          /* class behaviour mdict             */
-    defineKernelMethod(CHAR_NEW          , TheRelationClassBehaviour, CPPM(RexxRelation::newRexx), A_COUNT);
+    defineKernelMethod(CHAR_NEW          , TheRelationClassBehaviour, CPPM(RelationClass::newRexx), A_COUNT);
 
                                          /* set the scope of the methods to   */
                                          /* this classes oref                 */
@@ -743,25 +743,25 @@ void MemoryObject::createImage()
                                          /* Add the instance methods to the   */
                                          /* instance behaviour mdict          */
     defineKernelMethod(CHAR_BRACKETS     , TheRelationBehaviour, CPPM(RexxHashTableCollection::getRexx), 1);
-    defineKernelMethod(CHAR_BRACKETSEQUAL, TheRelationBehaviour, CPPM(RexxRelation::put), 2);
+    defineKernelMethod(CHAR_BRACKETSEQUAL, TheRelationBehaviour, CPPM(RelationClass::put), 2);
     defineKernelMethod(CHAR_ALLAT        , TheRelationBehaviour, CPPM(RexxHashTableCollection::allAt), 1);
-    defineKernelMethod(CHAR_ALLINDEX     , TheRelationBehaviour, CPPM(RexxRelation::allIndex), 1);
+    defineKernelMethod(CHAR_ALLINDEX     , TheRelationBehaviour, CPPM(RelationClass::allIndex), 1);
     defineKernelMethod(CHAR_MAKEARRAY    , TheRelationBehaviour, CPPM(RexxObject::makeArrayRexx), 0);
     defineKernelMethod(CHAR_AT           , TheRelationBehaviour, CPPM(RexxHashTableCollection::getRexx), 1);
     defineKernelMethod(CHAR_HASINDEX     , TheRelationBehaviour, CPPM(RexxHashTableCollection::hasIndexRexx), 1);
-    defineKernelMethod(CHAR_HASITEM      , TheRelationBehaviour, CPPM(RexxRelation::hasItem), 2);
+    defineKernelMethod(CHAR_HASITEM      , TheRelationBehaviour, CPPM(RelationClass::hasItem), 2);
     defineKernelMethod(CHAR_INDEX        , TheRelationBehaviour, CPPM(RexxHashTableCollection::indexRexx), 1);
-    defineKernelMethod(CHAR_ITEMS        , TheRelationBehaviour, CPPM(RexxRelation::itemsRexx), 1);
-    defineKernelMethod(CHAR_PUT          , TheRelationBehaviour, CPPM(RexxRelation::put), 2);
+    defineKernelMethod(CHAR_ITEMS        , TheRelationBehaviour, CPPM(RelationClass::itemsRexx), 1);
+    defineKernelMethod(CHAR_PUT          , TheRelationBehaviour, CPPM(RelationClass::put), 2);
     defineKernelMethod(CHAR_REMOVE       , TheRelationBehaviour, CPPM(RexxHashTableCollection::removeRexx), 1);
-    defineKernelMethod(CHAR_REMOVEITEM   , TheRelationBehaviour, CPPM(RexxRelation::removeItemRexx), 2);
-    defineKernelMethod(CHAR_SUPPLIER     , TheRelationBehaviour, CPPM(RexxRelation::supplier), 1);
+    defineKernelMethod(CHAR_REMOVEITEM   , TheRelationBehaviour, CPPM(RelationClass::removeItemRexx), 2);
+    defineKernelMethod(CHAR_SUPPLIER     , TheRelationBehaviour, CPPM(RelationClass::supplier), 1);
     defineKernelMethod(CHAR_ALLITEMS     , TheRelationBehaviour, CPPM(RexxHashTableCollection::allItems), 0);
     defineKernelMethod(CHAR_ALLINDEXES   , TheRelationBehaviour, CPPM(RexxHashTableCollection::allIndexes), 0);
     defineKernelMethod("UNIQUEINDEXES"   , TheRelationBehaviour, CPPM(RexxHashTableCollection::uniqueIndexes), 0);
     defineKernelMethod(CHAR_EMPTY        , TheRelationBehaviour, CPPM(RexxHashTableCollection::empty), 0);
     defineKernelMethod(CHAR_ISEMPTY      , TheRelationBehaviour, CPPM(RexxHashTableCollection::isEmptyRexx), 0);
-    defineKernelMethod("REMOVEALL"       , TheRelationBehaviour, CPPM(RexxRelation::removeAll), 1);
+    defineKernelMethod("REMOVEALL"       , TheRelationBehaviour, CPPM(RelationClass::removeAll), 1);
 
                                          /* set the scope of the methods to   */
                                          /* this classes oref                 */
@@ -1164,7 +1164,7 @@ void MemoryObject::createImage()
     /***************************************************************************/
                                          /* Add the NEW methods to the class  */
                                          /* behaviour mdict                   */
-    defineKernelMethod(CHAR_NEW, TheSupplierClassBehaviour, CPPM(RexxSupplier::newRexx), A_COUNT);
+    defineKernelMethod(CHAR_NEW, TheSupplierClassBehaviour, CPPM(SupplierClass::newRexx), A_COUNT);
                                          /* set the scope of the methods to   */
                                          /* this classes oref                 */
     TheSupplierClassBehaviour->setMethodDictionaryScope(TheSupplierClass);
@@ -1173,11 +1173,11 @@ void MemoryObject::createImage()
                                          /* Add the instance methods to the   */
                                          /* instance behaviour mdict          */
 
-    defineKernelMethod(CHAR_AVAILABLE ,TheSupplierBehaviour, CPPM(RexxSupplier::available), 0);
-    defineKernelMethod(CHAR_INDEX     ,TheSupplierBehaviour, CPPM(RexxSupplier::index), 0);
-    defineKernelMethod(CHAR_NEXT      ,TheSupplierBehaviour, CPPM(RexxSupplier::next), 0);
-    defineKernelMethod(CHAR_ITEM      ,TheSupplierBehaviour, CPPM(RexxSupplier::value), 0);
-    defineKernelMethod(CHAR_INIT      ,TheSupplierBehaviour, CPPM(RexxSupplier::initRexx), 2);
+    defineKernelMethod(CHAR_AVAILABLE ,TheSupplierBehaviour, CPPM(SupplierClass::available), 0);
+    defineKernelMethod(CHAR_INDEX     ,TheSupplierBehaviour, CPPM(SupplierClass::index), 0);
+    defineKernelMethod(CHAR_NEXT      ,TheSupplierBehaviour, CPPM(SupplierClass::next), 0);
+    defineKernelMethod(CHAR_ITEM      ,TheSupplierBehaviour, CPPM(SupplierClass::value), 0);
+    defineKernelMethod(CHAR_INIT      ,TheSupplierBehaviour, CPPM(SupplierClass::initRexx), 2);
 
                                          /* set the scope of the methods to   */
                                          /* this classes oref                 */
@@ -1380,7 +1380,7 @@ void MemoryObject::createImage()
       /* These classes don't have any class methods                            */
       /*  and are not subclassed from object                                   */
 
-#define kernel_public(name, object, dir)  ((RexxDirectory *)dir)->setEntry(getGlobalName(name), (RexxObject *)object)
+#define kernel_public(name, object, dir)  ((DirectoryClass *)dir)->setEntry(getGlobalName(name), (RexxObject *)object)
 
     /* put the kernel-provided public objects in the environment directory */
     kernel_public(CHAR_ARRAY            ,TheArrayClass   ,TheEnvironment);
@@ -1443,7 +1443,7 @@ void MemoryObject::createImage()
   // CoreClasses.orx
   {
                                            /* create a kernel methods directory */
-      RexxDirectory *kernel_methods = new_directory();
+      DirectoryClass *kernel_methods = new_directory();
       ProtectedObject p1(kernel_methods);   // protect from GC
       kernel_methods->put(new MethodClass(getGlobalName(CHAR_LOCAL), CPPCode::resolveExportedMethod(CHAR_LOCAL, CPPM(RexxLocal::local), 0)), getGlobalName(CHAR_LOCAL));
 

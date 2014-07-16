@@ -76,7 +76,7 @@ class RexxHashTableCollection : public RexxObject
     RexxObject   *removeItemRexx(RexxObject *value);
     RexxObject   *allAt(RexxObject *);
     RexxObject   *indexRexx(RexxObject * value);
-    RexxSupplier *supplier();
+    SupplierClass *supplier();
     RexxObject   *merge(RexxHashTableCollection *);
     RexxArray    *allItems();
     RexxArray    *allIndexes();

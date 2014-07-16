@@ -49,7 +49,7 @@ public:
     virtual ~TranslateDispatcher() { ; }
 
     virtual void run();
-    virtual void handleError(wholenumber_t, RexxDirectory *);
+    virtual void handleError(wholenumber_t, DirectoryClass *);
 
     const char *programName;             /* REXX program to run               */
     PRXSTRING  instore;                  /* Instore array                     */
@@ -64,7 +64,7 @@ public:
     virtual ~TranslateInstoreDispatcher() { ; }
 
     virtual void run();
-    virtual void handleError(wholenumber_t, RexxDirectory *);
+    virtual void handleError(wholenumber_t, DirectoryClass *);
 
     const char *programName;             /* REXX program to run               */
     CONSTRXSTRING *source;               // the image to translate

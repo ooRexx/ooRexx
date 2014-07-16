@@ -61,7 +61,7 @@ void UninitDispatcher::run()
  *
  * @param c      The condition information for the error.
  */
-void UninitDispatcher::handleError(wholenumber_t r, RexxDirectory *c)
+void UninitDispatcher::handleError(wholenumber_t r, DirectoryClass *c)
 {
     // we just swallow this information
     activation->clearException();
@@ -74,7 +74,7 @@ void UninitDispatcher::handleError(wholenumber_t r, RexxDirectory *c)
  *
  * @param c      The condition information for the error.
  */
-void UninitDispatcher::handleError(RexxDirectory *c)
+void UninitDispatcher::handleError(DirectoryClass *c)
 {
     // we just swallow this information
     activation->clearException();

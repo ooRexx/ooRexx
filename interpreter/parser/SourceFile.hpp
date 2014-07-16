@@ -123,29 +123,29 @@ class RexxSource: public RexxInternalObject
     inline RexxString *getProgramDirectory() { return programDirectory; }
     inline RexxString *getProgramExtension() { return programExtension; }
     inline RexxString *getProgramFile() { return programFile; }
-    inline RexxDirectory *getMethods() { return unattachedMethods; };
-    inline RexxDirectory *getRoutines() { return routines; };
+    inline DirectoryClass *getMethods() { return unattachedMethods; };
+    inline DirectoryClass *getRoutines() { return routines; };
 
     inline bool        isInternalCode() { return isOldSpace(); }
 
     void        setSecurityManager(RexxObject *manager) { setField(securityManager, new SecurityManager(manager)); }
     SecurityManager *getSecurityManager() { return securityManager; }
 
-    inline RexxDirectory *getLocalRoutines() { return routines; }
-    inline RexxDirectory *getPublicRoutines() { return publicRoutines; }
-    inline void setLocalRoutines(RexxDirectory *r) { routines = r; }
-    inline void setPublicRoutines(RexxDirectory *r) { publicRoutines = r; }
+    inline DirectoryClass *getLocalRoutines() { return routines; }
+    inline DirectoryClass *getPublicRoutines() { return publicRoutines; }
+    inline void setLocalRoutines(DirectoryClass *r) { routines = r; }
+    inline void setPublicRoutines(DirectoryClass *r) { publicRoutines = r; }
 
     void addInstalledClass(RexxString *name, RexxClass *classObject, bool publicClass);
     void addInstalledRoutine(RexxString *name, RoutineClass *routineObject, bool publicRoutine);
 
-    inline RexxDirectory *getInstalledClasses() { install(); return installedClasses; }
-    inline RexxDirectory *getInstalledPublicClasses() { install(); return installedPublicClasses; }
-    inline RexxDirectory *getImportedClasses() { install(); return mergedPublicClasses; }
-    inline RexxDirectory *getInstalledRoutines() { install(); return routines; }
-    inline RexxDirectory *getInstalledPublicRoutines() { install(); return publicRoutines; }
-    inline RexxDirectory *getImportedRoutines() { install(); return mergedPublicRoutines; }
-    inline RexxDirectory *getDefinedMethods() { install(); return unattachedMethods; }
+    inline DirectoryClass *getInstalledClasses() { install(); return installedClasses; }
+    inline DirectoryClass *getInstalledPublicClasses() { install(); return installedPublicClasses; }
+    inline DirectoryClass *getImportedClasses() { install(); return mergedPublicClasses; }
+    inline DirectoryClass *getInstalledRoutines() { install(); return routines; }
+    inline DirectoryClass *getInstalledPublicRoutines() { install(); return publicRoutines; }
+    inline DirectoryClass *getImportedRoutines() { install(); return mergedPublicRoutines; }
+    inline DirectoryClass *getDefinedMethods() { install(); return unattachedMethods; }
     inline RexxArray     *getPackages() { install(); return loadedPackages; }
     inline void           setDigits(size_t d) { digits = d; }
     inline size_t         getDigits() { return digits; }
@@ -178,23 +178,23 @@ protected:
 
     // sections derived from directives
 
-    RexxDirectory *routines;             // routines found on directives
-    RexxDirectory *publicRoutines;       // PUBLIC routines directive routines
+    DirectoryClass *routines;             // routines found on directives
+    DirectoryClass *publicRoutines;       // PUBLIC routines directive routines
     RexxArray     *libraries;            // packages requiring loading
     RexxArray     *requires;             // requires directives
     RexxArray     *classes;              // classes found on directives
-    RexxDirectory *dataAssets;           // assets defined in the package
-    RexxDirectory *unattachedMethods;    // methods found on directives
+    DirectoryClass *dataAssets;           // assets defined in the package
+    DirectoryClass *unattachedMethods;    // methods found on directives
 
     // sections resolved from the install process.
 
     RexxArray     *loadedPackages;       // packages imported by this package
                                          // all public installed classes
-    RexxDirectory *installedPublicClasses;
-    RexxDirectory *installedClasses;    // entire list of installed classes
-    RexxDirectory *mergedPublicClasses;  // entire merged set of classes
+    DirectoryClass *installedPublicClasses;
+    DirectoryClass *installedClasses;    // entire list of installed classes
+    DirectoryClass *mergedPublicClasses;  // entire merged set of classes
                                          // all public required routines
-    RexxDirectory *mergedPublicRoutines;
+    DirectoryClass *mergedPublicRoutines;
 
     bool           installRequired;      // flag settings.  Make it big enough for some expansion.
 

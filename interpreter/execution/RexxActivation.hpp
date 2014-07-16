@@ -57,7 +57,7 @@
 
 class RexxInstructionCallBase;
 class ProtectedObject;
-class RexxSupplier;
+class SupplierClass;
 class PackageClass;
 class StackFrameClass;
 
@@ -101,8 +101,8 @@ class ActivationSettings
     public:
       inline ActivationSettings() {}
 
-      RexxDirectory * traps;               // enabled condition traps
-      RexxDirectory * conditionObj;        // current condition object
+      DirectoryClass * traps;               // enabled condition traps
+      DirectoryClass * conditionObj;        // current condition object
       RexxObject   ** parent_arglist;      // arguments to top level program
       size_t          parent_argcount;     // number of arguments to the top level program
       MethodClass    * parent_method;       // method object for top level
@@ -113,7 +113,7 @@ class ActivationSettings
                                            // object variable dictionary
       RexxVariableDictionary *object_variables;
       RexxString    * calltype;            // (COMMAND/METHOD/FUNCTION/ROUTINE)
-      RexxDirectory * streams;             // Directory of openned streams
+      DirectoryClass * streams;             // Directory of openned streams
       RexxString    * halt_description;    // description from a HALT condition
       SecurityManager * securityManager;   // security manager object
       RexxObject    * scope;               // scope of the method call
@@ -179,7 +179,7 @@ class ActivationSettings
    void              setDigits();
    void              setFuzz();
    void              setForm();
-   bool              trap(RexxString *, RexxDirectory *);
+   bool              trap(RexxString *, DirectoryClass *);
    void              setObjNotify(RexxMessage *);
    void              termination();
    inline void       guardOff()
@@ -220,10 +220,10 @@ class ActivationSettings
    void              setTrace(size_t, size_t);
    void              setTrace(RexxString *);
    static size_t     processTraceSetting(size_t traceSetting);
-   void              raise(RexxString *, RexxObject *, RexxString *, RexxObject *, RexxObject *, RexxDirectory *);
+   void              raise(RexxString *, RexxObject *, RexxString *, RexxObject *, RexxObject *, DirectoryClass *);
    void              toggleAddress();
    void              guardOn();
-   void              raiseExit(RexxString *, RexxObject *, RexxString *, RexxObject *, RexxObject *, RexxDirectory *);
+   void              raiseExit(RexxString *, RexxObject *, RexxString *, RexxObject *, RexxObject *, DirectoryClass *);
    RexxActivation  * senderActivation();
    RexxActivation  * external();
    void              interpret(RexxString *);
@@ -243,7 +243,7 @@ class ActivationSettings
    bool              callExternalRexx(RexxString *, RexxObject **, size_t, RexxString *, ProtectedObject &);
    RexxObject      * externalCall(RexxString *, size_t, RexxExpressionStack *, RexxString *, ProtectedObject &);
    RexxObject      * internalCall(RexxString *, RexxInstruction *, size_t, RexxExpressionStack *, ProtectedObject &);
-   RexxObject      * internalCallTrap(RexxString *, RexxInstruction *, RexxDirectory *, ProtectedObject &);
+   RexxObject      * internalCallTrap(RexxString *, RexxInstruction *, DirectoryClass *, ProtectedObject &);
    bool              callMacroSpaceFunction(RexxString *, RexxObject **, size_t, RexxString *, int, ProtectedObject &);
    static RoutineClass* getMacroCode(RexxString *macroName);
    RexxString       *resolveProgramName(RexxString *name);
@@ -266,7 +266,7 @@ class ActivationSettings
    void              resetElapsed();
    RexxString      * formatTrace(RexxInstruction *, RexxSource *);
    RexxString      * getTraceBack();
-   RexxDirectory   * local();
+   DirectoryClass   * local();
    RexxString      * formatSourcelessTraceLine(RexxString *packageName);
    RexxArray       * getStackFrames(bool skipFirst);
    inline void       implicitExit()
@@ -289,7 +289,7 @@ class ActivationSettings
    void              unwindTrap(RexxActivation *);
    RexxString      * sourceString();
    void              addLocalRoutine(RexxString *name, MethodClass *method);
-   RexxDirectory    *getPublicRoutines();
+   DirectoryClass    *getPublicRoutines();
    void              debugInterpret(RexxString *);
    bool              debugPause(RexxInstruction * instr=OREF_NULL);
    void              processClauseBoundary();
@@ -310,14 +310,14 @@ class ActivationSettings
    uint64_t          getRandomSeed(RexxInteger *);
    void              adjustRandomSeed() { random_seed += (uint64_t)(uintptr_t)this; }
    RexxVariableDictionary * getObjectVariables();
-   RexxDirectory   * getLabels();
+   DirectoryClass   * getLabels();
    RexxString      * getProgramName();
    RexxObject      * popControl();
    void              pushControl(RexxObject *);
    void              closeStreams();
    void              checkTrapTable();
    RexxObject       *resolveStream(RexxString *name, bool input, RexxString **fullName, bool *added);
-   RexxDirectory    *getStreams();
+   DirectoryClass    *getStreams();
    RexxObject       *novalueHandler(RexxString *);
    RexxVariableBase *retriever(RexxString *);
    RexxVariableBase *directRetriever(RexxString *);
@@ -356,8 +356,8 @@ class ActivationSettings
    inline void              getSettings(ActivationSettings &s) {settings = s;};
    inline void              putSettings(ActivationSettings &s) {s = settings;};
    inline RexxString      * getAddress() {return settings.current_env;};
-   inline RexxDirectory   * getConditionObj() {return settings.conditionObj;};
-   inline void              setConditionObj(RexxDirectory *condition) {settings.conditionObj = condition;};
+   inline DirectoryClass   * getConditionObj() {return settings.conditionObj;};
+   inline void              setConditionObj(DirectoryClass *condition) {settings.conditionObj = condition;};
    inline RexxInstruction * getNext() {return next;};
    inline void              setNext(RexxInstruction * v) {next=v;};
    inline void              setCurrent(RexxInstruction * v) {current=v;};
@@ -458,7 +458,7 @@ class ActivationSettings
        return settings.local_variables.getDictionary();
    }
 
-   inline RexxDirectory *getAllLocalVariables()
+   inline DirectoryClass *getAllLocalVariables()
    {
        return getLocalVariables()->getAllVariables();
    }

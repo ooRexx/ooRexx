@@ -427,7 +427,7 @@ void RexxMessage::sendNotification()
  *
  * @param _condition The error condition object.
  */
-void RexxMessage::error(RexxDirectory *_condition)
+void RexxMessage::error(DirectoryClass *_condition)
 {
     // indicate we've had an error and save the condition object in case it
     // was requested.

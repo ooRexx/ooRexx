@@ -51,13 +51,13 @@
 #include "MethodArguments.hpp"
 
 // singleton class instance
-RexxClass *RexxSupplier::classInstance = OREF_NULL;
+RexxClass *SupplierClass::classInstance = OREF_NULL;
 
 
 /**
  * Create initial class object at bootstrap time.
  */
-void RexxSupplier::createInstance()
+void SupplierClass::createInstance()
 {
     CLASS_CREATE(Supplier, "Supplier", RexxClass);
 }
@@ -70,7 +70,7 @@ void RexxSupplier::createInstance()
  *
  * @return Storage for creating a supplier object.
  */
-void *RexxSupplier::operator new(size_t size)
+void *SupplierClass::operator new(size_t size)
 {
     return new_object(size, T_Supplier);
 }
@@ -82,7 +82,7 @@ void *RexxSupplier::operator new(size_t size)
  * @param _values  The array of values.
  * @param _indexes The array of indexes
  */
-RexxSupplier::RexxSupplier(RexxArray  *_values, RexxArray  *_indexes )
+SupplierClass::SupplierClass(RexxArray  *_values, RexxArray  *_indexes )
 {
     values = _values;
     indexes = _indexes;
@@ -93,14 +93,14 @@ RexxSupplier::RexxSupplier(RexxArray  *_values, RexxArray  *_indexes )
 /**
  * No argument constructor for a supplier.
  */
-RexxSupplier::RexxSupplier()
+SupplierClass::SupplierClass()
 {
     values = OREF_NULL;
     indexes = OREF_NULL;
 }
 
 
-void RexxSupplier::live(size_t liveMark)
+void SupplierClass::live(size_t liveMark)
 {
     memory_mark(values);
     memory_mark(indexes);
@@ -108,16 +108,16 @@ void RexxSupplier::live(size_t liveMark)
 }
 
 
-void RexxSupplier::liveGeneral(MarkReason reason)
+void SupplierClass::liveGeneral(MarkReason reason)
 {
     memory_mark_general(values);
     memory_mark_general(indexes);
     memory_mark_general(objectVariables);
 }
 
-void RexxSupplier::flatten(RexxEnvelope *envelope)
+void SupplierClass::flatten(RexxEnvelope *envelope)
 {
-   setUpFlatten(RexxSupplier)
+   setUpFlatten(SupplierClass)
 
    flattenRef(values);
    flattenRef(indexes);
@@ -131,10 +131,22 @@ void RexxSupplier::flatten(RexxEnvelope *envelope)
  *
  * @return True if there are still objects to supply, false otherwise.
  */
-RexxInteger *RexxSupplier::available()
+RexxInteger *SupplierClass::available()
 {
     // test if we have an available next item
     return (position > values->size()) ? TheFalseObject : TheTrueObject;
+}
+
+
+/**
+ * Test if the supplier has a next item available.
+ *
+ * @return True if there are still objects to supply, false otherwise.
+ */
+bool SupplierClass::isAvailable()
+{
+    // test if we have an available next item
+    return (position > values->size());
 }
 
 
@@ -143,7 +155,7 @@ RexxInteger *RexxSupplier::available()
  *
  * @return Returns NOTHING
  */
-RexxObject  *RexxSupplier::next()
+RexxObject  *SupplierClass::next()
 {
     // it is an error to ask for next after we've hit the end.
     if (position > values->size())
@@ -161,7 +173,7 @@ RexxObject  *RexxSupplier::next()
  *
  * @return The associated value.
  */
-RexxObject  *RexxSupplier::value()
+RexxObject  *SupplierClass::value()
 {
     // already gone past the end the end is an error
     if (position > values->size())
@@ -184,7 +196,7 @@ RexxObject  *RexxSupplier::value()
  *
  * @return The position index.
  */
-RexxObject  *RexxSupplier::index()
+RexxObject  *SupplierClass::index()
 {
     // past the end if an error
     if (position > values->size())
@@ -225,7 +237,7 @@ RexxObject  *RexxSupplier::index()
  *
  * @return Nothing
  */
-RexxObject *RexxSupplier::initRexx(RexxArray *_values, RexxArray *_indexes)
+RexxObject *SupplierClass::initRexx(RexxArray *_values, RexxArray *_indexes)
 {
     requiredArgument(_values, ARG_ONE);           // both values are required
     requiredArgument(_indexes, ARG_TWO);
@@ -251,7 +263,39 @@ RexxObject *RexxSupplier::initRexx(RexxArray *_values, RexxArray *_indexes)
 }
 
 
-RexxObject  *RexxSupplier::newRexx(RexxObject **init_args, size_t argCount)
+/**
+ * Append a additional items to this supplier object.
+ *
+ * @param _values  The additional values to append.
+ * @param _indexes The additional indexes to append.
+ */
+void SupplierClass::append(RexxArray  *_values, RexxArray  *_indexes )
+{
+    values->appendAll(_values);
+    indexes->appendAll(indexes);
+}
+
+
+/**
+ * Append the contents of another supplier to this one.
+ *
+ * @param s      The source supplier.
+ */
+void SupplierClass::append(SupplierClass *s)
+{
+    append(s->values(), s->indexes());
+}
+
+
+/**
+ * Create a new supplier from Rexx code.
+ *
+ * @param init_args The arguments passed to the new method.
+ * @param argCount  The count of arguments.
+ *
+ * @return A new supplier object.
+ */
+RexxObject  *SupplierClass::newRexx(RexxObject **init_args, size_t argCount)
 {
     // this class is defined on the object class, but this is actually attached
     // to a class object instance.  Therefore, any use of the this pointer
@@ -259,7 +303,7 @@ RexxObject  *RexxSupplier::newRexx(RexxObject **init_args, size_t argCount)
     // any methods on this object from this method.
     RexxClass *classThis = (RexxClass *)this;
 
-    RexxObject *newObj = new RexxSupplier();
+    RexxObject *newObj = new SupplierClass();
     ProtectedObject p(newObj);
 
     // handle Rexx class completion

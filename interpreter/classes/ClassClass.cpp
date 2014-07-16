@@ -115,12 +115,11 @@ void RexxClass::live(size_t liveMark)
     memory_mark(instanceMethodDictionary);
     memory_mark(baseClass);
     memory_mark(metaClass);
-    memory_mark(metaClassMethodDictionary);
-    memory_mark(metaClassScopes);
     memory_mark(classSuperClasses);
     memory_mark(instanceSuperClasses);
     memory_mark(subClasses);
     memory_mark(source);
+    // TODO:  update the GC methods for new fields
 }
 
 
@@ -140,8 +139,6 @@ void RexxClass::liveGeneral(MarkReason reason)
     memory_mark_general(instanceMethodDictionary);
     memory_mark_general(baseClass);
     memory_mark_general(metaClass);
-    memory_mark_general(metaClassMethodDictionary);
-    memory_mark_general(metaClassScopes);
     memory_mark_general(classSuperClasses);
     memory_mark_general(instanceSuperClasses);
     memory_mark_general(subClasses);
@@ -340,16 +337,7 @@ RexxClass *RexxClass::getBaseClass()
  */
 RexxClass *RexxClass::getMetaClass()
 {
-    // Primitive classes are always the Class class.
-    if (isPrimitiveClass())
-    {
-        return TheClassClass;
-    }
-    else
-    {
-        // get the first metaclass from the list.
-        return (RexxClass *)metaClass->get(1);
-    }
+    return metaClass;
 }
 
 
@@ -554,14 +542,8 @@ void RexxClass::subClassable(bool restricted)
 
     // that's the behaviour information...now fill in other state data.
 
-    // if not the object class (which is special)
-    if (TheObjectClass != this )
-    {
-        // set up the new metaclass list
-        setField(metaClass, new_array(TheClassClass));
-        // the metaclass method dictionary list, which also pulls in scopes.
-        setField(metaClassMethodDictionary, new_array(TheClassClass->copyInstanceMethods()));
-    }
+    // All primitive methods have TheClassClass as the meta class.
+    setField(metaClass, TheClassClass);
 
     // The Baseclass for non-mixin classes is self
     setField(baseClass, this);
@@ -653,9 +635,7 @@ void RexxClass::subClassable(RexxClass *superClass, bool restricted)
 
     // now fill in some state data for the class object.
     // set up the new metaclass list
-    setField(metaClass, new_array(TheClassClass));
-    // the metaclass mdict list
-    setField(metaClassMethodDictionary, new_array(TheClassClass->copyInstanceMethods()));
+    setField(metaClass, TheClassClass);
 
     // ok, now that we've built both the instance behaviour and
     // the class behaviour, make sure we update our
@@ -663,11 +643,6 @@ void RexxClass::subClassable(RexxClass *superClass, bool restricted)
 
     setField(scopeSuperClass, instanceBehaviour->immediateSuperScope());
     setField(scopeSearchOrder, instanceBehaviour->getScopes())
-
-    // and the metaclass scopes list
-
-    // TODO:  Figure out what the metaclass scopes is used for.
-    setField(metaClassScopes, TheClassClass->copyScopes());
 
     // The Baseclass for non-mixin classes is self
     setField(baseClass, this);
@@ -906,7 +881,7 @@ MethodClass *RexxClass::method(RexxString  *method_name)
  *
  * @return A supplier for iterating the requested methods.
  */
-RexxSupplier *RexxClass::methods(RexxClass *class_object)
+SupplierClass *RexxClass::methods(RexxClass *class_object)
 {
     // if the argument is .nil, then change the scope to us.  The
     // method dictionary handles everything.
@@ -1014,15 +989,12 @@ void RexxClass::createClassBehaviour(RexxBehaviour *target_class_behaviour)
         // Object is a special case, since it is top dog.
         if (TheObjectClass != this)
         {
-            // we only process the first item in the metaclass list, since it
-            // will properly pull in the scopes for all of the rest, in the correct order.
-            RexxClass *metaclass = firstMetaClass();
             // add whichever metaclasses have not been added yet
-            if (target_class_behaviour->needsScope(metaclass))
+            if (!target_class_behaviour->hasScope(metaClass))
             {
                 // merge in the meta class method dictionary into our method dictionary.
                 // this also merges the scopes.
-                metaclass->mergeInstanceMethodDictionary(target_class_behaviour);
+                metaClass->mergeInstanceMethodDictionary(target_class_behaviour);
             }
         }
         // only merge the mdict for CLASS if this is a capable of being a metaclass
@@ -1142,7 +1114,7 @@ MethodDictionary *RexxClass::createMethodDictionary(RexxObject *sourceCollection
     // a supplier here.
     ProtectedObject p2;
     sourceCollection->sendMessage(OREF_SUPPLIERSYM, p2);
-    RexxSupplier *supplier = (RexxSupplier *)(RexxObject *)p2;
+    SupplierClass *supplier = (SupplierClass *)(RexxObject *)p2;
     for (; supplier->available() == TheTrueObject; supplier->next())
     {
         MethodClass *newMethod = (MethodClass *)supplier->value();
@@ -1487,20 +1459,11 @@ RexxClass  *RexxClass::subclass(RexxSource *source, RexxString *class_id,
     if (isMetaClass())
     {
         new_class->setMetaClass();
-        // and also update the metaclass scopes if we're not already in there
-        if (new_class->metaClassScopes->get(this) == OREF_NULL)
+        // and also update the metaclass list if we're not already in there
+        if (!new_class->metaClass->hasItem(this))
         {
             // add the class instance info to the metaclass lists
-            new_class->metaClass->addFirst(this);
-            // the metaclass mdict list
-            // TODO: a don't understand any of this!!!!!!!!!!
-            new_class->metaClassMethodDictionary->addFirst(instanceMethodDictionary);
-            // and the metaclass scopes list
-            // this is done by adding all the
-            // scope information of the new class
-            new_class->metaClassScopes->addScope(this);
-            // add the scope list for this scope
-            new_class->metaClassScopes->addClassScopes(this, new_class->metaClassScopes->allScopes());
+            new_class->metaClass = this;
         }
     }
 
@@ -1552,23 +1515,6 @@ RexxClass  *RexxClass::subclass(RexxSource *source, RexxString *class_id,
     }
 
     return new_class;
-}
-
-
-/**
- * Set a metaclass for a class.
- *
- * @param new_metaClass
- *               The new metaclass
- */
-void RexxClass::setMetaClass(RexxClass *new_metaClass)
-{
-    // We always have TheClassClass in the meta class list, but the new one is first
-    setField(metaClass, new_array(new_metaClass, TheClassClass));
-
-    // we need to keep copies of the instance methods for the metaclass.
-    setField(metaClassMethodDictionary, new_array(TheClassClass->copyInstanceMethods()));
-    metaClassMethodDictionary->addFirst(new_metaClass->instanceMethodDictionary);
 }
 
 
@@ -1693,49 +1639,34 @@ RexxClass  *RexxClass::newRexx(RexxObject **args, size_t argCount)
     {
         reportException(Error_Incorrect_method_minarg, IntegerOne);
     }
+
     // first argument is the class id...make sure it is a string value
     RexxString *class_id = (RexxString *)args[0];
     class_id = stringArgument(class_id, ARG_ONE);
     // get a copy of this class object
-    RexxClass *new_class = (RexxClass *)clone();
+    Protected<RexxClass> new_class = (RexxClass *)clone();
 
-    ProtectedObject p(new_class);
     new_class->id = class_id;
 
     // make this into an instance of the
     // meta class
     new_class->behaviour = (RexxBehaviour *)new_class->instanceBehaviour->copy();
     // don't give access to this class' class mdict
-    new_class->classMethodDictionary = new_table();
+    new_class->classMethodDictionary = new MethodDictionary();
     // make this class the superclass
     new_class->classSuperClasses = new_array(this);
     // and set the behaviour class
     new_class->behaviour->setOwningClass(this);
-    // if this is a primitive class then there isn't any metaclass info ye
+    // if this is a primitive class then there isn't any metaclass info yet
     if (isPrimitiveClass())
     {
-        // set up the new metaclass list
-        new_class->metaClass = new_array(TheClassClass);
-        // the metaclass mdict list
-        new_class->metaClassMethodDictionary = new_array(TheClassClass->copyInstanceMethods());
-        // and the metaclass scopes list
-        new_class->metaClassScopes = TheClassClass->copyScopes();
+        // if this is a primitive class, then Class is always the metaclass
+        new_class->metaClass = TheClassClass;
     }
     else
     {
-        // add this class to the new class metaclass list
-        new_class->metaClass = (RexxArray *)new_class->metaClass->copy();
-        new_class->metaClass->addFirst(this);
-        // the metaclass mdict list
-        new_class->metaClassMethodDictionary = (RexxArray *)new_class->metaClassMethodDictionary->copy();
-        new_class->metaClassMethodDictionary->addFirst(instanceMethodDictionary);
-        // and the metaclass scopes list
-        // this is done by adding all the
-        // scope information of the new class
-        new_class->metaClassScopes = new_class->copyMetaclassScopes();
-        // and update the scopes to include the metaclass scopes
-        new_class->metaClassScopes->addScope(this);
-        new_class->metaClassScopes->addClassScopes(this, behaviour->allScopes());
+        // use this non-primitive class as the metaclass
+        new_class->metaClass = this;
     }
 
     // create the subclasses list
@@ -1743,13 +1674,11 @@ RexxClass  *RexxClass::newRexx(RexxObject **args, size_t argCount)
     // set up the instance behaviour with object's instance methods
     new_class->instanceBehaviour = (RexxBehaviour *)TheObjectClass->instanceBehaviour->copy();
     // don't give access to this class' instance mdict
-    new_class->instanceMethodDictionary = new_table();
+    new_class->instanceMethodDictionary = newMethodDictionary();
     // make the instance_superclass list with OBJECT in it
     new_class->instanceSuperClasses = new_array(TheObjectClass);
     // and set the behaviour class
     new_class->instanceBehaviour->setOwningClass(TheObjectClass);
-    // and the instance behaviour scopes
-    new_class->instanceBehaviour->setScopes(new ScopeTable());
     // set the scoping info
     new_class->instanceBehaviour->addScope(TheObjectClass);
     // don't give access to this class' ovd's
@@ -1764,6 +1693,7 @@ RexxClass  *RexxClass::newRexx(RexxObject **args, size_t argCount)
     {
         new_class->setHasUninitDefined();
     }
+
     // send the new class the INIT method
     new_class->sendMessage(OREF_INIT, args + 1, argCount - 1);
     return new_class;
@@ -1774,19 +1704,18 @@ void RexxClass::createInstance()
 /* Function:  Create the initial class object                                 */
 /******************************************************************************/
 {
-    /* create a class object             */
+    // create a class object
     TheClassClass = (RexxClass *)new_object(sizeof(RexxClass));
-    /* set the instance behaviour         */
+    // set the instance behaviour
     TheClassClass->setBehaviour(TheClassClassBehaviour);
-    /* set the instance behaviour         */
+    // set the instance behaviour
     TheClassClass->setInstanceBehaviour(TheClassBehaviour);
 
     // the initial class needs to have an ID before it can be used for
     // other purposes.
     TheClassClass->id = new_string("Class");
 
-    /* tell the mobile support to just    */
-    /* make a proxy for this class        */
+    // tell the mobile support to just make a proxy for this class
     TheClassClass->makeProxiedObject();
     new (TheClassClass) RexxClass;
 }
@@ -1868,28 +1797,6 @@ void RexxClass::processNewArgs(
 ScopeTable *RexxClass::copyScopes()
 {
     return (ScopeTable *)behaviour->getScopes()->copy();
-}
-
-
-/**
- * Copy the scope table from the class meta class.
- *
- * @return The metaclass scope table.
- */
-ScopeTable *RexxClass::copyMetaclassScopes()
-{
-    return (ScopeTable *)metaClassScopes->copy();
-}
-
-
-/**
- * Get all scopes associated with a class
- *
- * @return The array of all scopes
- */
-RexxArray *RexxClass::allScopes()
-{
-    return behaviour->getScopes()->allScopes();
 }
 
 

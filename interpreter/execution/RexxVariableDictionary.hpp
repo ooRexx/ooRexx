@@ -48,7 +48,7 @@
 #include "StemClass.hpp"
 #include "RexxHashTable.hpp"
 
-class RexxSupplier;
+class SupplierClass;
 
 class RexxVariableDictionary : public RexxInternalObject
 {
@@ -107,7 +107,7 @@ class RexxVariableDictionary : public RexxInternalObject
 
     void setCompoundVariable(RexxString *stemName, RexxObject **tail, size_t tailCount, RexxObject *value);
     void dropCompoundVariable(RexxString *stemName, RexxObject **tail, size_t tailCount);
-    RexxDirectory *getAllVariables();
+    DirectoryClass *getAllVariables();
     inline void remove(RexxString *n) { contents->remove(n); }
 
     RexxVariable *nextVariable(RexxNativeActivation *);

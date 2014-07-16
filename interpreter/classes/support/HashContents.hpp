@@ -277,7 +277,7 @@ public:
 
     inline size_t items() { return itemCount; }
     inline bool isEmpty() { return itemCount == 0; }
-    bool put(RexxInternalObject *value, RexxInternalObject *index);
+    virtual bool put(RexxInternalObject *value, RexxInternalObject *index);
     bool append(RexxInternalObject *value, RexxInternalObject * index, ItemLink position);
     RexxInternalObject *remove(RexxInternalObject *index);
     void removeChainLink(ItemLink &position, ItemLink previous);
@@ -305,11 +305,13 @@ public:
     void empty();
     RexxArray *allIndexes();
     RexxArray *uniqueIndexes();
-    RexxSupplier *supplier();
+    SupplierClass *supplier();
+    SupplierClass *supplier(RexxInternalObject *index);
     void reHash(HashContents *newHash);
     bool add(RexxInternalObject *item, RexxInternalObject *index);
     bool addFront(RexxInternalObject *item, RexxInternalObject *index);
     void copyValues();
+    size_t items(RexxInternalObject item);
 
     IndexIterator iterator(RexxInternalObject *index);
     TableIterator iterator();
@@ -337,6 +339,7 @@ public:
     inline void  operator delete(void *, void *) { ; }
     inline void  operator delete(void *, size_t) { ; }
 
+    inline EqualityHashContents() { ; };
     inline IdentityHashContents(RESTORETYPE restoreType) { ; };
            IdentityHashContents(size_t entries, size_t total) : HashContents(entries, total) { }
 };
@@ -344,7 +347,7 @@ public:
 
 /**
  * A contents class that applies object equality lookup for
- * key\item equality.  Used for the identity table class.
+ * key\item equality.  Used for the table and set classes.
  */
 class EqualityHashContents : public HashContents
 {
@@ -354,6 +357,7 @@ public:
     inline void  operator delete(void *, void *) { ; }
     inline void  operator delete(void *, size_t) { ; }
 
+    inline EqualityHashContents() { ; };
     inline EqualityHashContents(RESTORETYPE restoreType) { ; };
            EqualityHashContents(size_t entries, size_t total) : HashContents(entries, total) { }
 
@@ -375,6 +379,63 @@ public:
     virtual ItemLink hashIndex(RexxInternalObject *index)
     {
         return (ItemLink)(index->hash() % bucketSize);
+    }
+};
+
+
+/**
+ * A contents class that maps the put semantics to add
+ * additional entries under the same index.  Use for the
+ * Relation and Bag classes.
+ */
+class MultiValueContents : public EqualityHashContents
+{
+public:
+        void * operator new(size_t size, size_t capacity);
+    inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };
+    inline void  operator delete(void *, void *) { ; }
+    inline void  operator delete(void *, size_t) { ; }
+
+    inline MultiValueContents() { ; };
+    inline MultiValueContents(RESTORETYPE restoreType) { ; };
+           MultiValueContents(size_t entries, size_t total) : EqualityHashContents(entries, total) { }
+
+    // remap the put method to the multi-value type
+    virtual bool put(RexxInternalObject *value, RexxInternalObject *index)
+    {
+        return addFront(value, index);
+    }
+};
+
+
+/**
+ * A contents class that is optimized for String lookups key
+ * equality.  Used for the Directory class.
+ */
+class StringHashContents : public EqualityHashContents
+{
+public:
+        void * operator new(size_t size, size_t capacity);
+    inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };
+    inline void  operator delete(void *, void *) { ; }
+    inline void  operator delete(void *, size_t) { ; }
+
+    inline StringHashContents() { ; };
+    inline StringHashContents(RESTORETYPE restoreType) { ; };
+           StringHashContents(size_t entries, size_t total) : EqualityHashContents(entries, total) { }
+
+    // default index comparison method
+    virtual bool isIndexEqual(RexxInternalObject *target, RexxInternalObject *entryIndex)
+    {
+        // compare using fast string comparisons
+        return ((RexxString *)target_->strCompare((RexxString *)entryIndex);
+    }
+
+    // Take advantage of the knowledge that indexes are all strings and
+    // do directly to the string hash method, which might be inlined.
+    virtual ItemLink hashIndex(RexxInternalObject *index)
+    {
+        return (ItemLink)(index->getStringHash() % bucketSize);
     }
 };
 

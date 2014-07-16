@@ -1138,7 +1138,7 @@ RexxArray  *RexxList::makeArrayIndices()
     return array;                        /* return the array element          */
 }
 
-RexxSupplier *RexxList::supplier()
+SupplierClass *RexxList::supplier()
 /******************************************************************************/
 /* Function:  Create a supplier object for this list                          */
 /******************************************************************************/
@@ -1150,7 +1150,7 @@ RexxSupplier *RexxList::supplier()
     indices = this->makeArrayIndices();
     values = this->makeArray();          /* get the list values               */
                                          /* return the supplier values        */
-    return(RexxSupplier *)new_supplier(values, indices);
+    return(SupplierClass *)new_supplier(values, indices);
 }
 
 RexxObject *RexxList::itemsRexx()

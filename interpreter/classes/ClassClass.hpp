@@ -97,7 +97,7 @@ class RexxClass : public RexxObject
     RexxObject *defineClassMethod(RexxString *method_name, MethodClass *newMethod);
     void        removeClassMethod(RexxString *method_name);
     MethodClass *method(RexxString *);
-    RexxSupplier *methods(RexxClass *);
+    SupplierClass *methods(RexxClass *);
     void        updateSubClasses();
     void        updateInstanceSubClasses();
     void        createClassBehaviour(RexxBehaviour *);
@@ -171,9 +171,7 @@ class RexxClass : public RexxObject
     RexxBehaviour *instanceBehaviour;
 
     RexxClass     *baseClass;          // Baseclass of this class
-    RexxArray     *metaClass;          // Metaclass(s) of this class
-                                       // meta class method dictionaries
-    RexxArray     *metaClassMethodDictionary;
+    RexxClass     *metaClass;          // Metaclass of this class
     // the super class and any inherited mixins for class
     // behaviour
     RexxArray     *classSuperClasses;

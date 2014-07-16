@@ -41,7 +41,7 @@
 #define CallbackDispatcher_included
 
 
-class RexxDirectory;
+class DirectoryClass;
 class RexxNativeActivation;
 
 class CallbackDispatcher
@@ -51,8 +51,8 @@ public:
     virtual ~CallbackDispatcher() { ; }
 
     virtual void run();
-    virtual void handleError(wholenumber_t, RexxDirectory *);
-    virtual void handleError(RexxDirectory *);
+    virtual void handleError(wholenumber_t, DirectoryClass *);
+    virtual void handleError(DirectoryClass *);
 
     inline void setContext(RexxActivity *act, RexxNativeActivation *a) { activity = act; activation = a; }
 
@@ -61,7 +61,7 @@ public:
 protected:
     RexxActivity *activity;            // the activity we're running on
     RexxNativeActivation *activation;  // the native activation we're running under
-    RexxDirectory *conditionData;      // any condition data posted due to an activity error
+    DirectoryClass *conditionData;      // any condition data posted due to an activity error
 };
 
 

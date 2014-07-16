@@ -1753,7 +1753,7 @@ RexxArray *RexxHashTable::uniqueIndexes()
 }
 
 
-RexxSupplier *RexxHashTable::supplier()
+SupplierClass *RexxHashTable::supplier()
 /******************************************************************************/
 /* Function:  create a supplier from a hash table                             */
 /******************************************************************************/
@@ -1777,7 +1777,7 @@ RexxSupplier *RexxHashTable::supplier()
         }
     }
     /* return the supplier               */
-    return(RexxSupplier *)new_supplier(values, indexes);
+    return(SupplierClass *)new_supplier(values, indexes);
 }
 
 RexxObject *RexxHashTable::index(

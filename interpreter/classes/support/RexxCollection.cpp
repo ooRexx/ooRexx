@@ -449,7 +449,7 @@ RexxObject *RexxHashTableCollection::hasItem(RexxObject *target)
 }
 
 
-RexxSupplier *RexxHashTableCollection::supplier()
+SupplierClass *RexxHashTableCollection::supplier()
 /******************************************************************************/
 /* Function:  create a table supplier                                         */
 /******************************************************************************/

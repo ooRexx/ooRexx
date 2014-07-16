@@ -60,7 +60,7 @@ void MessageDispatcher::run()
  *
  * @param c      The condition information for the error.
  */
-void MessageDispatcher::handleError(wholenumber_t r, RexxDirectory *c)
+void MessageDispatcher::handleError(wholenumber_t r, DirectoryClass *c)
 {
     // use the base error handling and set our return code to the negated error code.
     ActivityDispatcher::handleError(-r, c);

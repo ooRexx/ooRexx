@@ -2322,7 +2322,7 @@ BUILTIN(CONDITION)
         style = toupper(option->getChar(0));
     }
     /* get current trapped condition     */
-    RexxDirectory *conditionobj = context->getConditionObj();
+    DirectoryClass *conditionobj = context->getConditionObj();
 
     switch (style)
     {                     /* process various CONDITION objects */

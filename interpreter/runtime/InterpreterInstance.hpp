@@ -48,7 +48,7 @@
 #include "ActivationApiContexts.hpp"
 #include "SysInterpreterInstance.hpp"
 
-class RexxDirectory;
+class DirectoryClass;
 class CommandHandler;
 class PackageClass;
 
@@ -89,7 +89,7 @@ public:
     void exitCurrentThread();
     RexxActivity *findActivity(thread_id_t threadId);
     RexxActivity *findActivity();
-    RexxDirectory *getLocalEnvironment();
+    DirectoryClass *getLocalEnvironment();
     void copyExits(ExitHandler *target);
     void activityDeactivated(RexxActivity *activity);
     void addGlobalReference(RexxObject *o);
@@ -109,7 +109,7 @@ public:
     RexxInstance *getInstanceContext() { return &context.instanceContext; }
     RexxThreadContext *getRootThreadContext();
     RexxObject *getLocalEnvironment(RexxString *);
-    inline RexxDirectory *getLocal() { return localEnvironment; }
+    inline DirectoryClass *getLocal() { return localEnvironment; }
     void addCommandHandler(const char *name, const char *registeredName);
     void addCommandHandler(const char *name, REXXPFN entryPoint);
     CommandHandler *resolveCommandHandler(RexxString *name);
@@ -140,9 +140,9 @@ protected:
     RexxString          *searchPath;         // additional Rexx search path
     RexxList            *searchExtensions;   // extensions to search on for external calls
     void                *applicationData;    // application specific data
-    RexxDirectory       *localEnvironment;   // the current local environment
-    RexxDirectory       *commandHandlers;    // our list of command environment handlers
-    RexxDirectory       *requiresFiles;      // our list of requires files used by this instance
+    DirectoryClass       *localEnvironment;   // the current local environment
+    DirectoryClass       *commandHandlers;    // our list of command environment handlers
+    DirectoryClass       *requiresFiles;      // our list of requires files used by this instance
 
     bool terminating;                // shutdown indicator
     bool terminated;                 // last thread cleared indicator

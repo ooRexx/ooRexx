@@ -76,7 +76,7 @@ void * RexxCode::operator new(size_t size)
  * @param variable_index The number of pre-assigned variable
  *                       slots.
  */
-RexxCode::RexxCode(RexxSource *_source, RexxInstruction *_start, RexxDirectory *_labels,
+RexxCode::RexxCode(RexxSource *_source, RexxInstruction *_start, DirectoryClass *_labels,
      size_t maxstack, size_t  variable_index)
 {
     source = _source;

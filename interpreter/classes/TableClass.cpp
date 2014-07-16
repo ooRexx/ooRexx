@@ -42,10 +42,7 @@
 /*                                                                          */
 /****************************************************************************/
 #include "RexxCore.h"
-#include "IntegerClass.hpp"
 #include "TableClass.hpp"
-#include "RexxActivity.hpp"
-#include "ActivityManager.hpp"
 #include "ProtectedObject.hpp"
 #include "MethodArguments.hpp"
 
@@ -56,7 +53,7 @@ RexxClass *TableClass::classInstance = OREF_NULL;
 /**
  * Create initial class object at bootstrap time.
  */
-void RexxClass::createInstance()
+void RelationClass::createInstance()
 {
     CLASS_CREATE(Table, "Table", RexxClass);
 }
@@ -71,7 +68,7 @@ void RexxClass::createInstance()
  */
 void *TableClass::operator new (size_t size)
 {
-    return new_object(size, T_IdentityTable);
+    return new_object(size, T_Table);
 }
 
 
@@ -100,7 +97,7 @@ RexxObject *TableClass::newRexx(RexxObject **args, size_t argCount)
     size_t capacity = optionalLengthArgument(initialSize, DefaultTableSize, ARG_ONE);
 
     // create the new identity table item
-    Table *temp = new Table(capacity);
+    TableClass *temp = new TableClass(capacity);
     ProtectedObject p(temp);
     // finish setting this up.
     classThis->completeNewObject(temp, args, argCount);

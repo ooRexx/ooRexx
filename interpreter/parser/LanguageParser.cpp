@@ -265,7 +265,7 @@ RoutineClass *LanguageParser::createProgram(RexxString *name)
  *
  * @return The interpreted code.
  */
-RexxCode *LanguageParser::translateInterpret(RexxString *interpretString, RexxDirectory *labels, size_t lineNumber)
+RexxCode *LanguageParser::translateInterpret(RexxString *interpretString, DirectoryClass *labels, size_t lineNumber)
 {
     // create the appropriate array source, then the parser, then generate the
     // code.
@@ -484,7 +484,7 @@ RoutineClass *LanguageParser::generateProgram()
  * @return A RexxCode object resulting from the compilation of
  *         this interpret line.
  */
-RexxCode *LanguageParser::translateInterpret(RexxDirectory *contextLabels)
+RexxCode *LanguageParser::translateInterpret(DirectoryClass *contextLabels)
 {
     // to translate this, we use the labels from the parent context.
     labels = contextLabels;
@@ -850,7 +850,7 @@ RexxCode *LanguageParser::translateBlock()
     // get a list of all calls that might need resolution
     calls = new_array();
     // a table of variables...starting with the special variables we allocated space for.
-    variables = (RexxDirectory *)TheCommonRetrievers->copy();
+    variables = (DirectoryClass *)TheCommonRetrievers->copy();
     // restart the variable index
     variableIndex = RexxLocalVariables::FIRST_VARIABLE_INDEX;
 

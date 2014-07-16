@@ -83,6 +83,40 @@ void *EqualityHashContents::operator new(size_t size, size_t capacity)
 
 
 /**
+ * Allocate a new MultiValueContents item.
+ *
+ * @param size     The base size of the object.
+ * @param capacity The capacity in entries (must be greater than zero)
+ *
+ * @return The backing storage for a content instance.
+ */
+void *MultiValueContents::operator new(size_t size, size_t capacity)
+{
+    size_t bytes = size + (sizeof(ContentEntry) * (capacity - 1));
+
+    // now allocate the suggested bucket size
+    return new_object(bytes, T_MultiValueContents);
+}
+
+
+/**
+ * Allocate a new StringHashContents item.
+ *
+ * @param size     The base size of the object.
+ * @param capacity The capacity in entries (must be greater than zero)
+ *
+ * @return The backing storage for a content instance.
+ */
+void *StringHashContents::operator new(size_t size, size_t capacity)
+{
+    size_t bytes = size + (sizeof(ContentEntry) * (capacity - 1));
+
+    // now allocate the suggested bucket size
+    return new_object(bytes, T_StringHashContents);
+}
+
+
+/**
  * Construct a HashContent item of the given size.
  *
  * @param entries The total number of entries in the object.
@@ -606,6 +640,12 @@ RexxArray *HashContents::removeAll(RexxInternalObject *index)
  */
 RexxInternalObject *HashContents::removeItem(RexxInternalObject *value, RexxInternalObject *index)
 {
+    // if no index was given, just return the first item.
+    if (index == OREF_NULL)
+    {
+        return removeItem(value);
+    }
+
     ItemLink position;
     ItemLink previous;
 
@@ -633,6 +673,12 @@ RexxInternalObject *HashContents::removeItem(RexxInternalObject *value, RexxInte
  */
 bool HashContents::hasItem(RexxInternalObject *value, RexxInternalObject *index )
 {
+    // if the index was not specified, just locate any item.
+    if (index == OREF_NULL)
+    {
+        return hasItem(value);
+    }
+
     ItemLink position;
     ItemLink previous;
 
@@ -750,6 +796,29 @@ RexxInternalObject *HashContents::get(RexxInternalObject *index)
     }
     // return the value
     return entryValue(position);
+}
+
+
+/**
+ * Return a count of either all items, or all items with a given
+ * index.
+ *
+ * @param index  The optional index.
+ *
+ * @return The appropriate count.
+ */
+size_t HashContents::items(RexxInternalObject *index)
+{
+    // if no index, return the total count
+    if (index == OREF_NULL)
+    {
+        return items();
+    }
+
+    ItemLink position;
+
+    // get a count of matching items
+    return countAllIndex(index, position);
 }
 
 
@@ -1214,7 +1283,7 @@ RexxArray *HashContents::uniqueIndexes()
  *
  * @return A supplier instance.
  */
-RexxSupplier *HashContents::supplier()
+SupplierClass *HashContents::supplier()
 {
     // get out target count and get arrays for both the values and indexes
     size_t count = itemCount;
@@ -1254,6 +1323,37 @@ RexxSupplier *HashContents::supplier()
 
     // should never get here.
     return OREF_NULL;
+}
+
+
+/**
+ * Create a supplier for the collection.  If the index
+ * is specified, only the values associated with that index
+ * are included.
+ *
+ * @param index  The optional index value.
+ *
+ * @return An appropriate supplier object.
+ */
+SupplierClass *HashContents::supplier(RexxInternalObject *index)
+{
+    // if no index was given, return a supplier for the entire collection
+    if (index == OREF_NULL)
+    {
+        return supplier();
+    }
+
+    // get all of the items with that index
+    Protected<RexxArray> itemArray = getAll(index);
+    size_t size = itemArray->items();
+    Protected<RexxArray> indexArray = new_array(size);
+    // for the index array, we just fill in the same index value at every position
+    for (size_t i = 1; i <= size; i++)
+    {
+        indexArray->put(index, i);
+    }
+    // and finally make a supplier from the two arrays
+    return (SupplierClass *)new_supplier(itemArray, indexArray);
 }
 
 

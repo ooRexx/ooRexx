@@ -211,7 +211,7 @@ void ContextCommandHandlerDispatcher::run()
  *
  * @param c      The condition information for the error.
  */
-void ContextCommandHandlerDispatcher::handleError(RexxDirectory *c)
+void ContextCommandHandlerDispatcher::handleError(DirectoryClass *c)
 {
     // this only gets added if there is a condition
     // NB:  This is called by the native activation after re-entering the

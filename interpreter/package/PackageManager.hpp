@@ -108,16 +108,16 @@ protected:
         IMAGE_ARRAY_SIZE = IMAGE_REQUIRES
     };
 
-    static RexxDirectory *imagePackages;        // our loaded packages
-    static RexxDirectory *imagePackageRoutines; // table of functions loaded from packages
-    static RexxDirectory *imageRegisteredRoutines;  // table of functions resolved by older registration mechanisms
-    static RexxDirectory *imageLoadedRequires;      // table of previously loaded requires files
+    static DirectoryClass *imagePackages;        // our loaded packages
+    static DirectoryClass *imagePackageRoutines; // table of functions loaded from packages
+    static DirectoryClass *imageRegisteredRoutines;  // table of functions resolved by older registration mechanisms
+    static DirectoryClass *imageLoadedRequires;      // table of previously loaded requires files
 
 
-    static RexxDirectory *packages;        // our loaded packages
-    static RexxDirectory *packageRoutines; // table of functions loaded from packages
-    static RexxDirectory *registeredRoutines;  // table of functions resolved by older registration mechanisms
-    static RexxDirectory *loadedRequires;      // table of previously loaded requires files
+    static DirectoryClass *packages;        // our loaded packages
+    static DirectoryClass *packageRoutines; // table of functions loaded from packages
+    static DirectoryClass *registeredRoutines;  // table of functions resolved by older registration mechanisms
+    static DirectoryClass *loadedRequires;      // table of previously loaded requires files
 
     static RexxPackageEntry *rexxPackage;   // internal generated REXX package
 };

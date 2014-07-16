@@ -93,7 +93,7 @@ class HashCollection : public RexxObject
     RexxInternalObject   *removeItemRexx(RexxInternalObject *value);
     RexxArray            *allAtRexx(RexxInternalObject *);
     RexxInternalObject   *indexRexx(RexxInternalObject * value);
-    RexxSupplier *supplier();
+    SupplierClass *supplier();
     void          merge(HashCollection *);
     RexxArray    *allItems();
     RexxArray    *allIndexes();
@@ -141,5 +141,18 @@ class EqualityHashCollection : public HashCollection
 {
 public:
     virtual HashContents *allocateContents(size_t bucketSize, size_t capacity);
+};
+
+
+/**
+ * A hash collection subclass for all classes where
+ * equality index equality is based on string comparisons and
+ * index values are restricted to being strings.
+ */
+class StringHashCollection : public HashCollection
+{
+public:
+    virtual HashContents *allocateContents(size_t bucketSize, size_t capacity);
+    virtual void validateIndex(RexxInternalObject *index, size_t position);
 };
 #endif

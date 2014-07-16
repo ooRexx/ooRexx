@@ -456,7 +456,7 @@ MethodClass *RexxInteger::instanceMethod(RexxString  *method_name)
  *
  * @return A supplier with the appropriate method set.
  */
-RexxSupplier *RexxInteger::instanceMethods(RexxClass *class_object)
+SupplierClass *RexxInteger::instanceMethods(RexxClass *class_object)
 {
     return stringValue()->instanceMethods(class_object);
 }

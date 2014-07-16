@@ -265,7 +265,7 @@ void MethodDictionary::setMethodScope(RexxClass *scope)
  *
  * @return A supplier to iterate over the requested methods.
  */
-RexxSupplier *MethodDictionary::getMethods(RexxClass *scope)
+SupplierClass *MethodDictionary::getMethods(RexxClass *scope)
 {
     // if asking for everything.  We can't just return the supplier
     // for our table because we overload this table with scope information.
@@ -325,7 +325,7 @@ RexxSupplier *MethodDictionary::getMethods(RexxClass *scope)
     }
 
     // and return as a supplier
-    return (RexxSupplier *)new_supplier(methods, names);
+    return (SupplierClass *)new_supplier(methods, names);
 }
 
 

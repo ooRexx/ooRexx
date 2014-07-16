@@ -63,7 +63,7 @@ class RexxInstructionSignal : public RexxInstructionCallBase
     virtual void flatten(RexxEnvelope *);
 
     virtual void execute(RexxActivation *, RexxExpressionStack *);
-    virtual void resolve (RexxDirectory *);
+    virtual void resolve (DirectoryClass *);
 };
 
 
@@ -101,8 +101,8 @@ class RexxInstructionSignalOn : public RexxInstructionTrapBase
     virtual void flatten(RexxEnvelope*);
 
     virtual void execute(RexxActivation *, RexxExpressionStack *);
-    virtual void resolve(RexxDirectory *);
+    virtual void resolve(DirectoryClass *);
 
-    virtual void trap(RexxActivation *context, RexxDirectory  *conditionObj);
+    virtual void trap(RexxActivation *context, DirectoryClass  *conditionObj);
 };
 #endif

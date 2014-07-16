@@ -454,7 +454,7 @@ InstanceBlock::~InstanceBlock()
  *               The condition data structure that is populated with the
  *               condition information.
  */
-void Interpreter::decodeConditionData(RexxDirectory *conditionObj, RexxCondition *condData)
+void Interpreter::decodeConditionData(DirectoryClass *conditionObj, RexxCondition *condData)
 {
     memset(condData, 0, sizeof(RexxCondition));
     condData->code = messageNumber((RexxString *)conditionObj->at(OREF_CODE));
