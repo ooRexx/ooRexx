@@ -35,39 +35,72 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/******************************************************************************/
-/* REXX Kernel                                               TableClass.hpp   */
-/*                                                                            */
-/* Primitive Table Collection Class Definition                                */
-/*                                                                            */
-/******************************************************************************/
-#ifndef Included_TableClass
-#define Included_TableClass
+/****************************************************************************/
+/* REXX Kernel                                                              */
+/*                                                                          */
+/* The StringTable class code                                               */
+/*                                                                          */
+/****************************************************************************/
+#include "RexxCore.h"
+#include "StringTableClass.hpp"
+#include "ProtectedObject.hpp"
+#include "MethodArguments.hpp"
 
-#include "HashCollection.hpp"
+// singleton class instance
+RexxClass *StringTable::classInstance = OREF_NULL;
+
 
 /**
- * Exported table class where indexing is done using object
- * equality semantics.
- *
+ * Create initial class object at bootstrap time.
  */
-class TableClass : public EqualityHashCollection
+void StringTable::createInstance()
 {
- public:
-     void        *operator new(size_t);
-     inline void *operator new(size_t size, void *ptr) {return ptr;}
-     inline void  operator delete(void *) { ; }
-     inline void  operator delete(void *, void *) { ; }
+    CLASS_CREATE(StringTable, "StringTable", RexxClass);
+}
 
-    inline TableClass(RESTORETYPE restoreType) { ; }
-           TableClass(size_t capacity = HashCollection::DefaultTableSize) : EqualityHashCollection(capacity) { }
 
-    RexxObject *newRexx(RexxObject **, size_t);
+/**
+ * Create a new table object.
+ *
+ * @param size   the size of the object.
+ *
+ * @return Storage for creating a table object.
+ */
+void *StringTable::operator new (size_t size)
+{
+    return new_object(size, T_StringTable);
+}
 
-    static void createInstance();
-    static RexxClass *classInstance;
-};
 
-inline TableClass *new_table(size_t capacity = HashCollection::DefaultTableSize) { return new TableClass(capacity); }
+/**
+ * Create a new table instance from Rexx code.
+ *
+ * @param args     The new arguments.
+ * @param argCount The count of new arguments.
+ *
+ * @return The constructed instance.
+ */
+RexxObject *StringTable::newRexx(RexxObject **args, size_t argCount)
+{
+    // this class is defined on the object class, but this is actually attached
+    // to a class object instance.  Therefore, any use of the this pointer
+    // will be touching the wrong data.  Use the classThis pointer for calling
+    // any methods on this object from this method.
+    RexxClass *classThis = (RexxClass *)this;
 
-#endif
+    RexxObject *initialSize;
+
+    // parse the arguments
+    RexxClass::processNewArgs(args, argCount, &args, &argCount, 1, (RexxObject **)&initialSize, NULL);
+
+    // the capacity is optional, but must be a positive numeric value
+    size_t capacity = optionalLengthArgument(initialSize, DefaultTableSize, ARG_ONE);
+
+    // create the new identity table item
+    StringTable *temp = new StringTable(capacity);
+    ProtectedObject p(temp);
+    // finish setting this up.
+    classThis->completeNewObject(temp, args, argCount);
+    return temp;
+}
+

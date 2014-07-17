@@ -36,75 +36,38 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                            DirectoryClass.hpp  */
+/* REXX Kernel                                                                */
 /*                                                                            */
-/* Primitive Directory Class Definitions                                      */
+/* Primitive Table Collection Class Definition                                */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_DirectoryClass
-#define Included_DirectoryClass
+#ifndef Included_StringTableClass
+#define Included_StringTableClass
 
 #include "HashCollection.hpp"
 
-class DirectoryClass : public StringHashCollection
+/**
+ * Exported table class where indexing is done using string
+ * objects only.
+ *
+ */
+class StringTable : public EqualityHashCollection
 {
  public:
-    void        *operator new(size_t);
-    inline void *operator new(size_t size, void *ptr) {return ptr;}
-    inline void  operator delete(void *) { ; }
-    inline void  operator delete(void *, void *) { ; }
+     void        *operator new(size_t);
+     inline void *operator new(size_t size, void *ptr) {return ptr;}
+     inline void  operator delete(void *) { ; }
+     inline void  operator delete(void *, void *) { ; }
 
-    inline DirectoryClass(RESTORETYPE restoreType) { ; }
-           DirectoryClass(size_t capacity = HashCollection::DefaultTableSize) : methodTable(OREF_NULL), unknownMethod(OREF_NULL), StringHashCollection(capacity) { }
+    inline StringTable(RESTORETYPE restoreType) { ; }
+           StringTable(size_t capacity = HashCollection::DefaultTableSize) : StringHashCollection(capacity) { }
 
     RexxObject *newRexx(RexxObject **, size_t);
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(RexxEnvelope *);
-
-    virtual RexxObject *copy();
-
-    // virtual method overrides of the base collection class.
-    virtual size_t items();
-    virtual SupplierClass *supplier();
-    virtual RexxArray *allIndexes();
-    virtual RexxArray *allItems();
-    virtual bool hasIndex(RexxInternalObject *indexName);
-    virtual RexxInternalObject *remove(RexxInternalObject *entryname);
-    virtual RexxInternalObject *get(RexxInternalObject *index);
-    virtual void put(RexxInternalObject *value, RexxInternalObject *index);
-    virtual void empty();
-    virtual RexxInternalObject *getIndex(RexxInternalObject *target);
-    virtual bool hasItem(RexxInternalObject *target);
-    virtual RexxInternalObject *removeItem(RexxInternalObject *target);
-
-    // our unknown method
-    RexxInternalObject *unknown(RexxString *msgname, RexxArray *arguments);
-
-    // base implementations of extra directory methods.
-    bool hasEntry(RexxString *entryName);
-    RexxInternalObject *setEntry(RexxString *entryname, RexxInternalObject *entryobj);
-    RexxObject *entry(RexxString *index);
-
-    // stubs for additional exported directory methods.
-    RexxInternalObject *entryRexx(RexxString *entryName);
-    RexxInternalObject *hasEntryRexx(RexxString *entryName);
-    RexxInternalObject *setEntryRexx(RexxString *entryname, RexxInternalObject *entryobj);
-    RexxInternalObject *setMethodRexx(RexxString *entryname, MethodClass *methodobj);
-
-    // some private helper methods.
-    RexxInternalObject *methodTableValue(RexxInternalObject *index);
-    RexxInternalObject *unknownValue(RexxInternalObject *index);
-
-    StringTableClass  *methodTable;      // table of added methods
-    MethodClass *unknownMethod;          // unknown method entry
-
     static void createInstance();
-    // singleton class instance;
     static RexxClass *classInstance;
 };
 
-inline DirectoryClass *new_directory(size_t capacity = HashCollection::DefaultTableSize) { return new DirectoryClass(capacity); }
+inline StringTable *new_string_table(size_t capacity = HashCollection::DefaultTableSize) { return new StringTable(capacity); }
 
 #endif

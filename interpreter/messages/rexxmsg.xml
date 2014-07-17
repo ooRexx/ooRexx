@@ -4303,7 +4303,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Incorrect_method_nomatch</SymbolicName>
-        <Text>The index and value objects must be the same for PUT to an index-only collection</Text>
+        <Text>The value and index objects must be the same for PUT to an index-only collection</Text>
       </SubMessage>
       <SubMessage>
         <Code>93</Code>

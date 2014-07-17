@@ -323,10 +323,18 @@ class RexxInternalObject : public RexxVirtualBase
     virtual bool         doubleValue(double &result);
     virtual RexxNumberString *numberString();
 
-    virtual bool         isEqual(RexxObject *);
+    virtual bool         isEqual(RexxInternalObject *);
     virtual bool         isInstanceOf(RexxClass *);
     virtual MethodClass   *instanceMethod(RexxString *);
     virtual SupplierClass *instanceMethods(RexxClass *);
+
+            // compare 2 values for equality, potentially falling back on the
+            // "==" method for the test.
+            bool inline equalValue(RexxInternalObject *other)
+            {
+                // test first for direct equality, followed by value equality.
+                return (this == other) || this->isEqual(other);
+            }
 
             void         hasUninit();
             void         removedUninit();
@@ -443,7 +451,7 @@ class RexxObject : public RexxInternalObject
     RexxArray   *makeArray();
     RexxString  *stringValue();
 
-    bool         isEqual(RexxObject *);
+    bool         isEqual(RexxInternalObject *);
     bool         isInstanceOf(RexxClass *);
     RexxObject  *isInstanceOfRexx(RexxClass *);
     MethodClass   *instanceMethod(RexxString *);
@@ -529,13 +537,6 @@ class RexxObject : public RexxInternalObject
     RexxObject  *hasMethodRexx(RexxString *);
     void *getCSelf();
     void *getCSelf(RexxObject *scope);
-    // compare 2 values for equality, potentially falling back on the
-    // "==" method for the test.
-    bool inline equalValue(RexxObject *other)
-    {
-        // test first for direct equality, followed by value equality.
-        return (this == other) || this->isEqual(other);
-    }
     virtual wholenumber_t compareTo(RexxObject *);
 
     RexxObject *callOperatorMethod(size_t methodOffset, RexxObject *argument);

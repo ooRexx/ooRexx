@@ -53,7 +53,7 @@ RexxClass *TableClass::classInstance = OREF_NULL;
 /**
  * Create initial class object at bootstrap time.
  */
-void RelationClass::createInstance()
+void TableClass::createInstance()
 {
     CLASS_CREATE(Table, "Table", RexxClass);
 }

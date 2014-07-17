@@ -66,24 +66,29 @@ class HashCollection : public RexxObject
     virtual RexxArray  *makeArray();
 
     virtual HashContents *allocateContents(size_t bucketSize, size_t capacity);
-    virtual void validateIndex(RexxInternalObject *index, size_t position);
+    virtual void validateIndex(RexxInternalObject *&index, size_t position);
+    virtual void validateValueIndex(RexxInternalObject *&value, RexxInternalObject *&index, size_t position);
 
     void expandContents();
     void expandContents(size_t capacity );
     void ensureCapacity(size_t delta);
     size_t calculateBucketSize(size_t capacity);
 
-    inline RexxInternalObject *resultOrNil(RexxInternalObject *o) { return o != OREF_NULL ? o : TheNilObject; }
-
+    // virtual methods that subclasses can override to provide special behaviour.
     virtual void mergeItem(RexxInternalObject *, RexxInternalObject *);
     virtual RexxInternalObject *remove(RexxInternalObject *key);
     virtual RexxInternalObject *get(RexxInternalObject *key);
     virtual void put(RexxInternalObject *, RexxInternalObject *);
     virtual RexxInternalObject *removeItem(RexxInternalObject *value);
-    virtual bool hasItem(RexxInternalObject *);
+    virtual bool hasIndex(RexxInternalObject *);
     virtual RexxInternalObject *getIndex(RexxInternalObject * value);
+    virtual void empty();
+    virtual SupplierClass *supplier();
+    virtual RexxArray    *allItems();
+    virtual RexxArray    *allIndexes();
+    virtual size_t items() { return contents->items(); }
 
-    void          copyValues();
+    // the Exported Rexx methods.  These methods cannot be virtual methods.
     RexxInternalObject   *removeRexx(RexxInternalObject *);
     RexxInternalObject   *getRexx(RexxInternalObject *);
     RexxInternalObject   *putRexx(RexxInternalObject *, RexxInternalObject *);
@@ -93,17 +98,19 @@ class HashCollection : public RexxObject
     RexxInternalObject   *removeItemRexx(RexxInternalObject *value);
     RexxArray            *allAtRexx(RexxInternalObject *);
     RexxInternalObject   *indexRexx(RexxInternalObject * value);
-    SupplierClass *supplier();
-    void          merge(HashCollection *);
-    RexxArray    *allItems();
-    RexxArray    *allIndexes();
-    RexxArray    *uniqueIndexes();
-    RexxObject   *emptyRexx();
-    void          empty();
-    RexxObject   *isEmptyRexx();
+    SupplierClass        *supplierRexx();
+    RexxArray            *allItemsRexx();
+    RexxArray            *allIndexesRexx();
+    RexxObject           *emptyRexx();
+    RexxObject           *isEmptyRexx();
+    RexxObject           *emptyRexx();
+    RexxObject           *itemsRexx();
 
-    inline size_t items() { return contents->items(); }
-    inline bool   isEmpty() { return contents->isEmpty(); }
+    void          merge(HashCollection *);
+    RexxArray    *uniqueIndexes();
+
+    // do this based off of items(), which can be overridden
+    inline bool   isEmpty() { return items() == 0; }
 
     // minimum bucket size we'll work with
     static const size_t MinimumBucketSize = 17;
@@ -129,6 +136,9 @@ protected:
 class IdentityHashCollection : public HashCollection
 {
 public:
+            IdentityHashCollection(size_t capacity);
+    inline  IdentityHashCollection() { ; }
+
     virtual HashContents *allocateContents(size_t bucketSize, size_t capacity);
 };
 
@@ -140,6 +150,9 @@ public:
 class EqualityHashCollection : public HashCollection
 {
 public:
+            EqualityHashCollection(size_t capacity);
+    inline  EqualityHashCollection() { ; }
+
     virtual HashContents *allocateContents(size_t bucketSize, size_t capacity);
 };
 
@@ -152,7 +165,27 @@ public:
 class StringHashCollection : public HashCollection
 {
 public:
+            StringHashCollection(size_t capacity);
+    inline  StringHashCollection() { ; }
+
     virtual HashContents *allocateContents(size_t bucketSize, size_t capacity);
-    virtual void validateIndex(RexxInternalObject *index, size_t position);
+    virtual RexxInternalObject  *validateIndex(RexxInternalObject *index, size_t position);
+};
+
+
+/**
+ * A hash collection subclass for all classes where
+ * only index values are stored in the collection, not
+ * index/value pairs (i.e., Set and Bag)
+ */
+class IndexOnlyHashCollection : public EqualityHashCollection
+{
+public:
+            IndexOnlyHashCollection(size_t capacity) : EqualityHashCollection(capacity) { }
+    inline  IndexOnlyHashCollection() { ; }
+
+    virtual void validateValueIndex(RexxInternalObject *&value, RexxInternalObject *&index, size_t position);
+    virtual bool hasItem(RexxInternalObject *);
+    virtual RexxInternalObject *getIndex(RexxInternalObject * value);
 };
 #endif

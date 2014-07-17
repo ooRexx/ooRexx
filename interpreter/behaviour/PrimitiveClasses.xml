@@ -74,7 +74,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="Object" class="RexxObject" include="ObjectClass.hpp"/>
 <Class id="Class" class="RexxClass" include="ClassClass.hpp"/>
 <Class id="Array" class="RexxArray" include="ArrayClass.hpp"/>
-<Class id="Directory" class="RexxDirectory" include="DirectoryClass.hpp"/>
+<Class id="Directory" class="DirectoryClass" include="DirectoryClass.hpp"/>
 <Class id="Integer" class="RexxInteger" classclass="RexxIntegerClass" operators="true" include="IntegerClass.hpp"/>
 <Class id="List" class="RexxList" include="ListClass.hpp"/>
 <Class id="Message" class="RexxMessage" include="MessageClass.hpp"/>
@@ -84,8 +84,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="Stem" class="RexxStem" include="StemClass.hpp"/>
 <Class id="String" class="RexxString" operators="true" include="StringClass.hpp"/>
 <Class id="Supplier" class="RexxSupplier" include="SupplierClass.hpp"/>
-<Class id="Table" class="RexxTable" include="TableClass.hpp"/>
-<Class id="Relation" class="RexxRelation" include="RelationClass.hpp"/>
+<Class id="Table" class="TableClass" include="TableClass.hpp"/>
+<Class id="StringTable" class="StringTable" include="StringTableClass.hpp"/>
+<Class id="Relation" class="RelationClass" include="RelationClass.hpp"/>
 <Class id="MutableBuffer" class="RexxMutableBuffer" include="MutableBufferClass.hpp"/>
 <Class id="Pointer" class="RexxPointer" include="PointerClass.hpp"/>
 <Class id="Buffer" class="RexxBuffer" include="BufferClass.hpp"/>

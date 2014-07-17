@@ -107,10 +107,11 @@ void HashCollection::expandContents(size_t capacity )
 void HashCollection::ensureCapacity(size_t delta)
 {
     // not enough space?  time to expand.  We'll go to
-    // the current total capacity plus the delta.
+    // the current total capacity plus the delta...or the standard
+    // doubling if the delta is a small value.
     if (!contents->hasCapacity(delta))
     {
-        expandContents(contents->capacity() + delta);
+        expandContents(contents->capacity() + Numerics::maxVal(delta, contents->capacity());
     }
 }
 
@@ -235,7 +236,8 @@ RexxObject *HashCollection::copy()
  */
 RexxArray *HashCollection::makeArray()
 {
-    return contents->makeArray();
+    // hash collections always return all indexes
+    return allIndexes();
 }
 
 
@@ -247,13 +249,10 @@ RexxArray *HashCollection::makeArray()
  */
 void HashCollection::mergeItem(RexxInternalObject *value, RexxInternalObject *index)
 {
-    // try to add first.  If there is a failure,
-    // we need to expand our contents and try again
-    if (!contents->mergeItem(value, index))
-    {
-        expandContents();
-        contents->mergeItem(value, index);
-    }
+    // make sure we have room for this
+    checkFull();
+    // and add
+    contents->mergeItem(value, index);
 }
 
 
@@ -264,9 +263,29 @@ void HashCollection::mergeItem(RexxInternalObject *value, RexxInternalObject *in
  * @param index    The method index value.
  * @param position The argument position for error reporting.
  */
-void HashCollection::validateIndex(RexxInternalObject *index, size_t position)
+void HashCollection::validateIndex(RexxInternalObject *&index, size_t position)
 {
-    requiredArgument(index, position);    // make sure we have an index
+    index = requiredArgument(index, position);    // make sure we have an index
+}
+
+
+/**
+ * Validate a value/index pair.  This applies any special
+ * semantics to the pairing.  For example, for Set and Bag, we
+ * can ensure that the index and the value are the same, and set
+ * the value to the index value if it was not specified.
+ *
+ * @param value    The value argument to the method.
+ * @param index    The method index value.
+ * @param position The argument position for error reporting.  This assumes
+ *                 the value is indicated by the first position, and the
+ *                 index is one position greater.
+ */
+void HashCollection::validateValueIndex(RexxInternalObject *&value, RexxInternalObject *&index, size_t position)
+{
+    // the default is to apply existance validation to the value, and index validation to the index.
+    value = requiredArgument(value, position);        // make sure we have an value
+    validateIndex(index, position + 1);               // make sure we have an index
 }
 
 
@@ -366,8 +385,8 @@ RexxInternalObject *HashCollection::get(RexxInternalObject *key)
 RexxInternalObject *HashCollection::putRexx(RexxInternalObject *item, RexxInternalObject *index)
 {
     // validate both the index and value
-    requiredArgument(item, ARG_ONE);
-    validateIndex(index, ARG_TWO);
+    validateValueIndex(item, index, ARG_ONE);
+
     put(item, index);
     // always returns nothing
     return OREF_NULL;
@@ -388,12 +407,21 @@ RexxInternalObject *HashCollection::putRexx(RexxInternalObject *item, RexxIntern
  */
 void HashCollection::put(RexxInternalObject *value, RexxInternalObject *index)
 {
-    // try to add first.  If there is a failure,
-    // we need to expand our contents and try again
-    if (!contents->put(value, index))
+    // make sure we have room to add this
+    checkFull();
+    contents->put(value, index);
+}
+
+
+/**
+ * If the hash collection thinks it is time to expand, then
+ * increase the contents size.
+ */
+void HashCollection::checkFull()
+{
+    if (contents->isFull())
     {
         expandContents();
-        contents->put(value, index);
     }
 }
 
@@ -412,13 +440,10 @@ void HashCollection::put(RexxInternalObject *value, RexxInternalObject *index)
  */
 void HashCollection::add(RexxInternalObject *value, RexxInternalObject *index)
 {
-    // try to add first.  If there is a failure,
-    // we need to expand our contents and try again
-    if (!contents->add(value, index))
-    {
-        expandContents();
-        contents->add(value, index);
-    }
+    // make sure we have space
+    checkFull();
+    // now add the item
+    contents->add(value, index);
 }
 
 
@@ -464,7 +489,7 @@ void HashCollection::copyValues()
 RexxInternalObject *HashCollection::hasIndexRexx(RexxInternalObject *index)
 {
     validateIndex(index, ARG_ONE);
-    return hasItem(index) ? TheTrueObject : TheFalseObject;
+    return hasIndex(index) ? TheTrueObject : TheFalseObject;
 }
 
 
@@ -475,9 +500,9 @@ RexxInternalObject *HashCollection::hasIndexRexx(RexxInternalObject *index)
  *
  * @return true if the index exists, false otherwise.
  */
-bool HashCollection::hasItem(RexxInternalObject *index)
+bool HashCollection::hasIndex(RexxInternalObject *index)
 {
-    return contents->hasItem(index);
+    return contents->hasIndex(index);
 }
 
 
@@ -560,6 +585,19 @@ RexxInternalObject *HashCollection::hasItemRexx(RexxInternalObject *target)
 
 
 /**
+ * Virtual method for checking an item index.
+ *
+ * @param index  The target index.
+ *
+ * @return true if the index exists, false otherwise.
+ */
+bool HashCollection::hasItem(RexxInternalObject *index)
+{
+    return contents->hasItem(index);
+}
+
+
+/**
  * Create a collecton supplier
  *
  * @return The supplier object.
@@ -632,7 +670,7 @@ void HashCollection::empty()
  */
 RexxObject *HashCollection::isEmptyRexx()
 {
-    return contents->isEmpty() ? TheTrueObject : TheFalseObject;
+    return booleanObject(contents->isEmpty());
 }
 
 
@@ -691,6 +729,25 @@ HashContents *EqualityHashCollection::allocateContents(size_t bucketSize, size_t
 
 
 /**
+ * construct a HashCollection with a given size.
+ *
+ * @param capacity The required capacity.
+ */
+StringHashCollection::StringHashCollection(size_t capacity)
+{
+    // get a suggested bucket size for this capacity
+    // NOTE:  all of this needs to be done at the top-level constructor
+    // because of the way C++ constructors work.  As each
+    // previous contructor level gets called, the virtual function
+    // pointer gets changed to match the class of the contructor getting
+    // called.  We don't have access to our allocateContents() override
+    // until the final constructor is run.
+    size_t bucketSize = calculateBucketSize(capacity);
+    contents = allocateContents(bucketSize, bucketSize *2);
+}
+
+
+/**
  * Virtual method for allocating a new contents item for this
  * collection.  Collections with special requirements should
  * override this and return the appropriate subclass.
@@ -713,7 +770,72 @@ HashContents *StringHashCollection::allocateContents(size_t bucketSize, size_t t
  * @param index    The method index value.
  * @param position The argument position for error reporting.
  */
-void StringHashCollection::validateIndex(RexxInternalObject *index, size_t position)
+StringHashCollection::validateIndex(RexxInternalObject *&index, size_t position)
 {
-    stringArgument(index, position);    // make sure we have an index, and it is a string value.
+    index = stringArgument(index, position);    // make sure we have an index, and it is a string value.
+}
+
+
+/**
+ * Validate a value/index pair.  This applies any special
+ * semantics to the pairing that the index is optional, but if
+ * specified, it must be equal to the value).  If it is not
+ * specified, then the value will be returned as the index so
+ * that both get inserted into the table.
+ *
+ * @param value    The value argument to the method.
+ * @param index    The method index value.
+ * @param position The argument position for error reporting.  This assumes
+ *                 the value is indicated by the first position, and the
+ *                 index is one position greater.
+ */
+void IndexOnlyHashCollection::validateValueIndex(RexxInternalObject *&value, RexxInternalObject *&index, size_t position)
+{
+    // ok, the value (the first argument) is required
+    value = requiredArgument(value, position);
+
+    // index is optional, but if specified, it must be equal to
+    // the index value.
+    if (index != OREF_NULL)
+    {
+        reportException(Error_Incorrect_method_nomatch);
+    }
+
+    // make these truly the same (speeds up comparisons if they are the same object)
+    index = value;
+}
+
+
+/**
+ * Virtual method for checking an item index.  We override this
+ * for Set and Bags to search for the index rather than the item
+ * because that's a faster operation.
+ *
+ * @param index  The target index.
+ *
+ * @return true if the index exists, false otherwise.
+ */
+bool IndexOnlyHashCollection::hasItem(RexxInternalObject *index)
+{
+    return contents->hasItem(index);
+}
+
+
+/**
+ * Retrieve an index for a given item.  Which index is returned
+ * is indeterminate.  This is an override for the default
+ * behaviour.  Since the index and values are the same in
+ * index-only collections, we can safely do a get() call and
+ * get the equivalent result.  Since that is a hash search, it
+ * will be faster than doing a table scan.
+ *
+ * @param target The target object.
+ *
+ * @return The index for the target object, or .nil if no object was
+ *         found.
+ */
+RexxInternalObject *IndexOnlyHashCollection::getIndex(RexxInternalObject *target)
+{
+    // retrieve this from the hash table
+    return contents->get(target);
 }

@@ -216,13 +216,10 @@ void HashContents::flatten(RexxEnvelope *envelope)
  * @return true if was inserted ok, false if we need to expand the
  *         table.
  */
-bool HashContents::put(RexxInternalObject *value, RexxInternalObject *index)
+void HashContents::put(RexxInternalObject *value, RexxInternalObject *index)
 {
-    // indicate an addition failure if we're out of room
-    if (isFull())
-    {
-        return false;
-    }
+    // NOTE:  This depends on the caller to make sure there is
+    // room in the table for this item!
 
     // calculate the bucket position
     ItemLink position = hashIndex(index);
@@ -233,7 +230,7 @@ bool HashContents::put(RexxInternalObject *value, RexxInternalObject *index)
         setEntry(position, value, index);
         // new item, so bump the count
         itemCount++;
-        return true;
+        return;
     }
 
     ItemLink previous = NoLink;
@@ -248,7 +245,7 @@ bool HashContents::put(RexxInternalObject *value, RexxInternalObject *index)
             // everything worked, we have room.  No additional items added to
             // this table.
             setValue(position, value);
-            return true;
+            return;
         }
 
         // continue running the chain to the end of the list.
@@ -257,7 +254,7 @@ bool HashContents::put(RexxInternalObject *value, RexxInternalObject *index)
     } while (position != NoMore);
 
     // append a new value.
-    return append(value, index, previous);
+    append(value, index, previous);
 }
 
 
@@ -267,11 +264,8 @@ bool HashContents::put(RexxInternalObject *value, RexxInternalObject *index)
  * @param value    The value to add.
  * @param index    The index value.
  * @param position The position of the last link in the chain.
- *
- * @return true if we added this successfully, false if we had
- *         an overflow condition.
  */
-bool HashContents::append(RexxInternalObject *value, RexxInternalObject * index, ItemLink position)
+void HashContents::append(RexxInternalObject *value, RexxInternalObject * index, ItemLink position)
 {
     // we keep all of the free items in a chain, so we can just pull
     // the first entry off of the chain.  In theory, we've already checked
@@ -279,10 +273,12 @@ bool HashContents::append(RexxInternalObject *value, RexxInternalObject * index,
 
     ItemLink newEntry = freeChain;
 
-    // belt-and-braces...this should not occure
+    // belt-and-braces...this should not occur...but give a logic
+    // error if it does occur, since that indicates something bad has
+    // occurred.
     if (newEntry == NoMore)
     {
-        return false;
+        Interpreter::logicError("Attempt to add an object to a full Hash table");
     }
 
     // close up the chain
@@ -292,7 +288,6 @@ bool HashContents::append(RexxInternalObject *value, RexxInternalObject * index,
     setEntry(newEntry, value, index);
     // we have a new item in the list.
     itemCount++;
-    return true;
 }
 
 
@@ -303,11 +298,8 @@ bool HashContents::append(RexxInternalObject *value, RexxInternalObject * index,
  * @param value    The value to add.
  * @param index    The index value.
  * @param position The position of the chain anchor.
- *
- * @return true if we added this successfully, false if we had
- *         an overflow condition.
  */
-bool HashContents::insert(RexxInternalObject *value, RexxInternalObject * index, ItemLink position)
+void HashContents::insert(RexxInternalObject *value, RexxInternalObject * index, ItemLink position)
 {
     // we keep all of the free items in a chain, so we can just pull
     // the first entry off of the chain.  In theory, we've already checked
@@ -318,7 +310,7 @@ bool HashContents::insert(RexxInternalObject *value, RexxInternalObject * index,
     // belt-and-braces...this should not occur
     if (newEntry == NoMore)
     {
-        return false;
+        Interpreter::logicError("Attempt to add an object to a full Hash table");
     }
 
     // close up the chain
@@ -334,7 +326,6 @@ bool HashContents::insert(RexxInternalObject *value, RexxInternalObject * index,
 
     // we have a new item in the list.
     itemCount++;
-    return true;
 }
 
 
@@ -572,7 +563,7 @@ bool HashContents::locateItem(RexxInternalObject *item, ItemLink &position, Item
         previous = NoLink;
 
         // ok, run the chain searching for an index match.
-        while (isInUse(position))
+        while (position != NoMore && isInUse(position))
         {
             // have a match? return to the caller.  All of the position
             // stuff should be set now
@@ -910,7 +901,7 @@ size_t HashContents::countAllItem(RexxInternalObject *item)
         ItemLink position = i;
 
         // ok, run the chain searching for an index match.
-        while (isInUse(position))
+        while (position != NoMore && isInUse(position))
         {
             // have a match? return to the caller.  All of the position
             // stuff should be set now
@@ -957,7 +948,7 @@ RexxArray  *HashContents::allIndex(RexxInternalObject *item)
         ItemLink position = i;
 
         // ok, run the chain searching for an index match.
-        while (isInUse(position))
+        while (position != NoMore && isInUse(position))
         {
             // have a match? return to the caller.  All of the position
             // stuff should be set now
@@ -1011,6 +1002,12 @@ RexxInternalObject *HashContents::getIndex(RexxInternalObject *item)
  */
 void HashContents::merge(HashCollection *target)
 {
+
+    // since adding any item to the target collection might cause a size
+    // expansion, let's give the target some notice about how many items
+    // we're going to add so that the expansion can be handled up front.
+    target->ensureCapacity(itemCount);
+
     // loop through all of the bucket items
     for (size_t i = 0; i < bucketSize; i++)
     {
@@ -1019,7 +1016,7 @@ void HashContents::merge(HashCollection *target)
         ItemLink position = i;
 
         // ok, run the chain searching for an index match.
-        while (isInUse(position))
+        while (position != NoMore && isInUse(position))
         {
             // poke this item into the other table
             target->mergeItem(entryValue(position), entryIndex(position));
@@ -1038,6 +1035,16 @@ void HashContents::merge(HashCollection *target)
  */
 void HashContents::reMerge(HashContents *newHash)
 {
+    // one important aspect of a merge operation is keeping
+    // values with identical indexes in the same relative order
+    // after the merge (very important when merging MethodDirectories,
+    // for example.  We process the merge by running each bucket chain,
+    // and it is important that the target collection's mergeItem
+    // method adds this to the end of the chain rather than to the beginning.
+
+    // NOTE:  this merger is being doing under the assumption that the
+    // hew hash contents is larger than the current.
+
     // loop through all of the bucket items
     for (size_t i = 0; i < bucketSize; i++)
     {
@@ -1046,13 +1053,19 @@ void HashContents::reMerge(HashContents *newHash)
         ItemLink position = i;
 
         // ok, run the chain searching for an index match.
-        while (isInUse(position))
+        while (position != NoMore && isInUse(position))
         {
-            // poke this item into the other table
-            // NOTE:  Since this was after an expansion, this will be
-            // a table of a matching type.  Therefore, the PUT() method should
-            // be following the appropriate single index\multi index semantics.
-            newHash->put(entryValue(position), entryIndex(position));
+            // poke this item into the other table.  We don't know
+            // the characteristics of the target, so we might have
+            // multiple hits on any given index.  We need to perform
+            // this merge A) without losing any items in the collection and
+            // B) keeping the relative order of duplicate indexes (very
+            // important for MethodDictionaries, for example, which are
+            // dependent on ordering of items in the table).  Therefore,
+            // we do the merge by running each bucket chain and
+            // using the add() method to add each additional item to the
+            // end of the chain.
+            newHash->add(entryValue(position), entryIndex(position));
             // step to the next link in the chain
             position = nextEntry(position);
         }
@@ -1087,13 +1100,9 @@ bool HashContents::mergeItem(RexxInternalObject *item, RexxInternalObject *index
  *
  * @return true if we were able to add this (not full), false otherwise.
  */
-bool HashContents::mergePut(RexxInternalObject *item, RexxInternalObject *index)
+void HashContents::mergePut(RexxInternalObject *item, RexxInternalObject *index)
 {
-    // indicate an addition failure if we're out of room
-    if (isFull())
-    {
-        return false;
-    }
+    // NOTE:  This depends on the caller having checked that there is space.
 
     // calculate the bucket position
     ItemLink position = hashIndex(index);
@@ -1104,7 +1113,7 @@ bool HashContents::mergePut(RexxInternalObject *item, RexxInternalObject *index)
         setEntry(position, item, index);
         // new item, so bump the count
         itemCount++;
-        return true;
+        return;
     }
 
     ItemLink previous = NoLink;
@@ -1117,7 +1126,7 @@ bool HashContents::mergePut(RexxInternalObject *item, RexxInternalObject *index)
         if (isIndex(position, index))
         {
             // nothing added, but this "worked"
-            return true;
+            return;
         }
 
         // continue running the chain to the end of the list.
@@ -1127,7 +1136,7 @@ bool HashContents::mergePut(RexxInternalObject *item, RexxInternalObject *index)
     } while (position != NoMore);
 
     // This was not already in the table, so add a new value to the chain
-    return append(item, index, previous);
+    append(item, index, previous);
 }
 
 
@@ -1156,7 +1165,7 @@ RexxArray  *HashContents::allItems()
         ItemLink position = i;
 
         // ok, run the chain searching for an index match.
-        while (isInUse(position))
+        while (position != NoMore && isInUse(position))
         {
             // add to the result array, and if we've found the last match,
             // time to return.
@@ -1226,7 +1235,7 @@ RexxArray *HashContents::allIndexes()
         ItemLink position = i;
 
         // ok, run the chain searching for an index match.
-        while (isInUse(position))
+        while (position != NoMore && isInUse(position))
         {
             // add to the result array, and if we've found the last match,
             // time to return.
@@ -1258,14 +1267,14 @@ RexxArray *HashContents::uniqueIndexes()
     // TODO:  good use for a hinting version
     Protected<TableClass> indexSet = new_table();
 
-    for (size_t i = 0; i < bucketSize; i++)
+    for (size_t i = 0; i < bufcketSize; i++)
     {
         // the current bucket is the search start, and we always
         // clear out the previous value for each chain start
         ItemLink position = i;
 
         // ok, run the chain searching for an index match.
-        while (isInUse(position))
+        while (position != NoMore && isInUse(position))
         {
             // add to the result table.
             indexSet->put(TheNilObject, (RexxObject *)entryIndex(position));
@@ -1306,7 +1315,7 @@ SupplierClass *HashContents::supplier()
         ItemLink position = i;
 
         // ok, run the chain searching for an index match.
-        while (isInUse(position))
+        while (position != NoMore && isInUse(position))
         {
             // add to the result table.
             indexes->put((RexxObject *)entryIndex(position), nextIndex);
@@ -1372,7 +1381,7 @@ void HashContents::reHash(HashContents *newHash)
         ItemLink position = i;
 
         // ok, run the chain searching for an index match.
-        while (isInUse(position))
+        while (position != NoMore && isInUse(position))
         {
             // poke into the other table
             newHash->put(entryValue(position), entryIndex(position));
@@ -1396,13 +1405,9 @@ void HashContents::reHash(HashContents *newHash)
  * @return True if this was successfully added, false if the table
  *         is full.
  */
-bool HashContents::add(RexxInternalObject *item, RexxInternalObject *index)
+void HashContents::add(RexxInternalObject *item, RexxInternalObject *index)
 {
-    // indicate an addition failure if we're out of room
-    if (isFull())
-    {
-        return false;
-    }
+    // NOTE:  This depends on the caller having checked that there is space.
 
     // calculate the bucket position
     ItemLink position = hashIndex(index);
@@ -1413,7 +1418,7 @@ bool HashContents::add(RexxInternalObject *item, RexxInternalObject *index)
         setEntry(position, item, index);
         // new item, so bump the count
         itemCount++;
-        return true;
+        return;
     }
 
     ItemLink previous = NoLink;
@@ -1427,7 +1432,7 @@ bool HashContents::add(RexxInternalObject *item, RexxInternalObject *index)
     } while (position != NoMore);
 
     // append a new value.
-    return append(item, index, previous);
+    append(item, index, previous);
 }
 
 
@@ -1446,11 +1451,7 @@ bool HashContents::add(RexxInternalObject *item, RexxInternalObject *index)
  */
 bool HashContents::addFront(RexxInternalObject *item, RexxInternalObject *index)
 {
-    // indicate an addition failure if we're out of room
-    if (isFull())
-    {
-        return false;
-    }
+    // NOTE:  This depends on the caller having checked that there is space.
 
     // calculate the bucket position
     ItemLink position = hashIndex(index);
@@ -1461,11 +1462,11 @@ bool HashContents::addFront(RexxInternalObject *item, RexxInternalObject *index)
         setEntry(position, item, index);
         // new item, so bump the count
         itemCount++;
-        return true;
+        return;
     }
 
     // insert at the front of the bucket.
-    return insert(item, index, position);
+    insert(item, index, position);
 }
 
 
@@ -1481,7 +1482,7 @@ void HashContents::copyValues()
         ItemLink position = i;
 
         // ok, run the chain searching for an index match.
-        while (isInUse(position))
+        while (position != NoMore && isInUse(position))
         {
             // copy the value at every position
             setValue(position, entryValue(position)->copy());

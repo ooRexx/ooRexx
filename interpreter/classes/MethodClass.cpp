@@ -332,13 +332,20 @@ void MethodClass::setAttributes(bool _private, bool _protected, bool _guarded)
  *
  * @param pgmname  The name of the method we're creating.
  * @param source   The method source (either a string or an array).
+ * @param scope    The scope that the new method object will be given.
  * @param position The position used for reporting errors.  This is the position
  *                 of the source argument for the calling method context.
  *
  * @return The constructed method object.
  */
-MethodClass *MethodClass::newMethodObject(RexxString *pgmname, RexxObject *source, RexxObject *position)
+MethodClass *MethodClass::newMethodObject(RexxString *pgmname, RexxObject *source, RexxClass *scope, RexxObject *position)
 {
+    // this is used in contexts where an existing method object is allowed...perform this
+    // check here and just return the original object if it is already a method.
+    if (isOfClass(Method, source))
+    {
+        return ((MethodClass *)source)->newScope(scope);
+    }
     // validate, and potentially transform, the method source object.
     RexxArray *newSourceArray = processExecutableSource(source, position);
 
@@ -354,7 +361,10 @@ MethodClass *MethodClass::newMethodObject(RexxString *pgmname, RexxObject *sourc
         sourceContext = currentContext->getPackage();
     }
 
-    return LanguageParser::createMethod(pgmname, newSourceArray, sourceContext);
+    // create a method and give it the target scope
+    MethodClass *method = LanguageParser::createMethod(pgmname, newSourceArray, sourceContext);
+    method->setScope(scope);
+    return
 }
 
 

@@ -55,7 +55,7 @@ class RelationClass : public EqualityHashCollection
      inline void  operator delete(void *, void *) { ; }
 
     inline RelationClass(RESTORETYPE restoreType) { ; }
-           RelationClass(size_t capacity = HashCollection::DefaultTableSize) : EqualityHashCollection(capacity) { }
+           RelationClass(size_t capacity = HashCollection::DefaultTableSize);
 
     virtual HashContents *allocateContents(size_t bucketSize, size_t capacity);
 

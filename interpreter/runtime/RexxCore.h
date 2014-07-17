@@ -116,6 +116,9 @@ const int ARG_TEN    = 10;
 // short cut version of OrefSet().  99% of the uses specify this as the object pointer...this version
 // saves a little typing :-)
 #define setField(r, v)  OrefSet(this, this->r, v)
+// OK, I'm lazy...a version of this for nulling out a field.
+#define clearField(r) setField(r, OREF_NULL)
+
 // cleaner version for setting in another object
 #define setOtherField(o, r, v) OrefSet(o, o->r, v)
 

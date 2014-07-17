@@ -108,7 +108,7 @@ class MethodClass : public BaseExecutable
     MethodClass  *newFileRexx(RexxString *);
     MethodClass  *loadExternalMethod(RexxString *name, RexxString *descriptor);
 
-    static MethodClass  *newMethodObject(RexxString *, RexxObject *, RexxObject *);
+    static MethodClass *newMethodObject(RexxString *, RexxObject *, RexxClass *, RexxObject *);
 
     static void createInstance();
     static RexxClass *classInstance;

@@ -274,11 +274,14 @@ public:
         return totalSize;
     }
 
+    // NOTE:  put() is virtual so that specialized hash tables can
+    // override put() and change the replace vs. add semantics.
+    virtual void put(RexxInternalObject *value, RexxInternalObject *index);
 
     inline size_t items() { return itemCount; }
     inline bool isEmpty() { return itemCount == 0; }
-    virtual bool put(RexxInternalObject *value, RexxInternalObject *index);
-    bool append(RexxInternalObject *value, RexxInternalObject * index, ItemLink position);
+    void append(RexxInternalObject *value, RexxInternalObject * index, ItemLink position);
+    void insert(RexxInternalObject *value, RexxInternalObject * index, ItemLink position);
     RexxInternalObject *remove(RexxInternalObject *index);
     void removeChainLink(ItemLink &position, ItemLink previous);
     bool locateEntry(RexxInternalObject *index, ItemLink &position, ItemLink &previous);
@@ -299,8 +302,8 @@ public:
     RexxInternalObject *getIndex(RexxInternalObject *item);
     void merge(HashCollection *target);
     void reMerge(HashContents *newHash);
-    bool mergeItem(RexxInternalObject *, RexxInternalObject *index);
-    bool mergePut(RexxInternalObject *item, RexxInternalObject *index);
+    void mergeItem(RexxInternalObject *, RexxInternalObject *index);
+    void mergePut(RexxInternalObject *item, RexxInternalObject *index);
     RexxArray  *allItems();
     void empty();
     RexxArray *allIndexes();
@@ -308,8 +311,8 @@ public:
     SupplierClass *supplier();
     SupplierClass *supplier(RexxInternalObject *index);
     void reHash(HashContents *newHash);
-    bool add(RexxInternalObject *item, RexxInternalObject *index);
-    bool addFront(RexxInternalObject *item, RexxInternalObject *index);
+    void add(RexxInternalObject *item, RexxInternalObject *index);
+    void addFront(RexxInternalObject *item, RexxInternalObject *index);
     void copyValues();
     size_t items(RexxInternalObject item);
 

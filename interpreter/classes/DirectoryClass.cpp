@@ -43,7 +43,6 @@
 /******************************************************************************/
 
 #include "RexxCore.h"
-#include "StringClass.hpp"
 #include "DirectoryClass.hpp"
 #include "ArrayClass.hpp"
 #include "MethodClass.hpp"
@@ -71,8 +70,8 @@ void DirectoryClass::createInstance()
 void DirectoryClass::live(size_t liveMark)
 {
     memory_mark(contents);
-    memory_mark(method_table);
-    memory_mark(unknown_method);
+    memory_mark(methodTable);
+    memory_mark(unknownMethod);
     memory_mark(objectVariables);
 }
 
@@ -85,8 +84,8 @@ void DirectoryClass::live(size_t liveMark)
 void DirectoryClass::liveGeneral(MarkReason reason)
 {
     memory_mark_general(contents);
-    memory_mark_general(method_table);
-    memory_mark_general(unknown_method);
+    memory_mark_general(methodTable);
+    memory_mark_general(unknownMethod);
     memory_mark_general(objectVariables);
 }
 
@@ -101,8 +100,8 @@ void DirectoryClass::flatten(RexxEnvelope *envelope)
     setUpFlatten(DirectoryClass)
 
       flattenRef(contents);
-      flattenRef(method_table);
-      flattenRef(unknown_method);
+      flattenRef(methodTable);
+      flattenRef(unknownMethod);
       flattenRef(objectVariables);
 
     cleanUpFlatten
@@ -119,9 +118,9 @@ RexxObject *DirectoryClass::copy()
     // first copy via the superclass copy method
     Protected<DirectoryClass> newObj = (DirectoryClass *)HashCollection::copy();
     // if we have a method table, make a copy of that too.
-    if (method_table != OREF_NULL)
+    if (methodTable != OREF_NULL)
     {
-        newObj->method_table = (TableClass *)method_table->copy();
+        newObj->methodTable = (TableClass *)methodTable->copy();
     }
     return newObj;
 }
@@ -138,11 +137,9 @@ RexxObject *DirectoryClass::copy()
 RexxObject *DirectoryClass::entry(RexxString *index)
 {
     // do the lookup with the upper case name
-    return at(index->upper());
+    return get(index->upper());
 }
 
-
-// TODO: make sure items is a virtual method in the base class.
 
 /**
  * Return the count of items in the directory, including the
@@ -155,18 +152,17 @@ size_t DirectoryClass::items()
     // get the direct table size
     size_t count = contents->items();
     // if we have a method table, add in its count as well.
-    if (>method_table != OREF_NULL)
+    if (methodTable != OREF_NULL)
     {
-        count += this->method_table->items();
+        count += methodTable->items();
     }
     return count;
 }
 
 /**
- * TODO:  check out how the supplier override is done in the base class.
  *
- * Create a supplier for a directory, including the results of all */
- * of the SETMETHOD methods as values                              */
+ * Create a supplier for a directory, including the results of all
+ * of the SETMETHOD methods as values
  *
  * @return An appropriate supplier object.
  */
@@ -177,14 +173,14 @@ SupplierClass *DirectoryClass::supplier()
 
     // do we have a method table?  We need to include these also, which
     // requires running each of the methods to obtain the value.
-    if (method_table != OREF_NULL)
+    if (methodTable != OREF_NULL)
     {
-        Protected<RexxArray> indexes = new_array(method_table->items());
-        Protected<RexxArray> values = new_array(method_table->items());
+        Protected<RexxArray> indexes = new_array(methodTable->items());
+        Protected<RexxArray> values = new_array(methodTable->items());
 
         size_t count = 1;
 
-        HashContents::TableIterator iterator = method_table->iterator();
+        HashContents::TableIterator iterator = methodTable->iterator();
 
         for (; iterator.available(); iterator.next())
         {
@@ -205,18 +201,6 @@ SupplierClass *DirectoryClass::supplier()
 }
 
 
-// TODO:  This should be part of the baseclass overrides.
-
-RexxArray *DirectoryClass::makeArray()
-/******************************************************************************/
-/* Function:  Create an array of all of the directory indices, including those*/
-/*            of all the SETMETHOD methods.                                   */
-/******************************************************************************/
-{
-    return allIndexes();
-}
-
-
 /**
  * Create an array of all of the directory indices, including those
  * of all the SETMETHOD methods.
@@ -229,9 +213,9 @@ RexxArray *DirectoryClass::allIndexes()
     Protected<RexxArray> indexes = content->allIndexes();
 
     // if we have a method table, we need to append those indices also
-    if (method_table != OREF_NULL)
+    if (methodTable != OREF_NULL)
     {
-        indexes->appendAll(method_table->allIndexes());
+        indexes->appendAll(methodTable->allIndexes());
     }
     return result;
 }
@@ -248,13 +232,14 @@ RexxArray *DirectoryClass::allItems()
     // get the base set
     Protected<RexxArray> itemArray = content->allIndexes();
     // have a method table? we need to run the methods an append to the result
-    if (method_table != OREF_NULL)
+    if (methodTable != OREF_NULL)
     {
-        HashContents::TableIterator iterator = method_table->iterator();
+        HashContents::TableIterator iterator = methodTable->iterator();
 
         for (; iterator.available(); iterator.next())
         {
-            MethodClass *method = (MethodClass *)iterator.value_type();
+            MethodClass *method = (MethodClass *)iterator.value();
+            RexxString *name = (RexxString *)iterator.index();
 
             ProtectedObject v;
             // run the method, using the directory as the receiver
@@ -263,422 +248,157 @@ RexxArray *DirectoryClass::allItems()
             itemArray->append((RexxObject *)v);
         }
     }
-
     return itemArray;
 }
 
 
 /**
- * This is the REXX version of entry.  It issues a STRINGREQUEST
- * message to the entryname parameter if it isn't already a
- * string or a name object.  Thus, this may raise NOSTRING.
+ * Determine if the directory has an entry with this name (used
+ * without uppercasing).  This is an override of the base
+ * virtual method.
+ *
+ * @param indexName The index name.
+ *
+ * @return true if the index exists, false otherwise.
+ */
+bool DirectoryClass::hasIndex(RexxInternalObject *indexName)
+{
+    // got a value in the main contents?
+    if (contents->hasIndex(indexName))
+    {
+        return true;
+    }
+
+    // if we have a method table, check that also
+    if (methodTable != OREF_NULL)
+    {
+        return methodTable->hasIndex(indexName);
+    }
+    return false;
+}
+
+
+/**
+ * Check the directory for existance using the uppercase
+ * name.
  *
  * @param entryName The entry name.
  *
- * @return The entry value, if it has one.
+ * @return .true of the diectoy has the entry, false otherwise.
  */
-RexxObject *DirectoryClass::entryRexx(RexxString *entryName)
+bool DirectoryClass::hasEntry(RexxString *entryName)
 {
-    // make sure we have a string argument and upper case it.
-    return atRexx(stringArgument(entryName, ARG_ONE)->upper());
+    // this is just a hasIndex call with an uppercase name
+    return hasIndex(entryName->upper());
 }
 
 
 /**
- * Determine if the directory has an entry with this name (used
- * without uppercasing)
+ * Add an entry to a directory with an uppercase name.
  *
- * @param indexName
+ * @param entryname The entry name.
+ * @param entryobj  The value object.
  *
- * @return
+ * @return Returns nothing.
  */
-RexxObject *DirectoryClass::hasIndex(RexxString *indexName)
+RexxInternalObject *DirectoryClass::setEntry(RexxString *entryname, RexxInternalObject *entryobj)
 {
-    /* get as a string parameter         */
-    indexName = stringArgument(indexName, ARG_ONE);
-    /* got a value?                      */
-    if (this->contents->stringGet(indexName) != OREF_NULL)
+    // set entry is a little different than put, in that the value argument is optional.
+    // no argument is a remove operation
+    if (entryobj == OREF_NULL)
     {
-        return(RexxObject *)TheTrueObject;/* return true                       */
+        return remove(entryName->upper());
     }
-    else
-    {
-        /* have a table?                     */
-        if (this->method_table != OREF_NULL)
-        {
-            /* look for a method                 */
-            MethodClass *method = (MethodClass *)this->method_table->stringGet(indexName);
-            if (method != OREF_NULL)         /* have a method?                    */
-            {
-                /* then we have the index            */
-                return(RexxObject *)TheTrueObject;
-            }
-        }
-        /* not in the directory              */
-        return(RexxObject *)TheFalseObject;
-    }
-}
 
-
-RexxObject *DirectoryClass::hasEntry(
-    RexxString *entryName)             /* name to retrieve                  */
-/******************************************************************************/
-/* Function:  Determine if an entry exists in the directory (name will be     */
-/*            upper cased)                                                    */
-/******************************************************************************/
-{
-    /* get as a string parameter         */
-    entryName = stringArgument(entryName, ARG_ONE)->upper();
-    /* in the table?                     */
-    if (this->contents->stringGet(entryName) != OREF_NULL)
-    {
-        return(RexxObject *)TheTrueObject;/* this is true                      */
-    }
-    else
-    {
-        /* have a table?                     */
-        if (this->method_table != OREF_NULL)
-        {
-            /* look for a method                 */
-            MethodClass *method = (MethodClass *)this->method_table->stringGet(entryName);
-            if (method != OREF_NULL)         /* have a method?                    */
-            {
-                /* then we have the index            */
-                return(RexxObject *)TheTrueObject;
-            }
-        }
-        /* not in the directory              */
-        return(RexxObject *)TheFalseObject;
-    }
-}
-
-RexxObject *DirectoryClass::setEntry(
-  RexxString *entryname,               /* directory entry name              */
-  RexxObject *entryobj)                /* associated object                 */
-/******************************************************************************/
-/* Function:  Add an entry to the directory (under an upper case name)        */
-/******************************************************************************/
-{
-    /* get as a string parameter         */
-    entryname = stringArgument(entryname, ARG_ONE)->upper();
-    if (entryobj != OREF_NULL)
-    {         /* have a new value?                 */
-              /* try to place in existing hashtab  */
-        RexxHashTable *newHash = this->contents->stringPut(entryobj, entryname);
-        if (newHash  != OREF_NULL)         /* have a reallocation occur?        */
-        {
-            /* hook on the new hash table        */
-            OrefSet(this, this->contents, newHash);
-        }
-        if (this->method_table != OREF_NULL)
-        {
-            this->method_table->remove(entryname);
-        }
-    }
-    else
-    {
-        this->remove(entryname);           /* remove this entry                 */
-    }
-    return OREF_NULL;                    /* don't return a value              */
-}
-
-
-/**
- * ooRexx exported version of the directory remove method.
- *
- * @param entryname The index name.
- *
- * @return The removed item.  Returns .nil if the item did not exist
- *         in the directory.
- */
-RexxObject *DirectoryClass::removeRexx(RexxString *entryname)
-{
-    /* get as a string parameter         */
-    entryname = stringArgument(entryname, ARG_ONE);
-    RexxObject *oldVal = remove(entryname);
-    if (oldVal == OREF_NULL)
-    {
-        oldVal = TheNilObject;
-    }
-    return oldVal;
-}
-
-RexxObject *DirectoryClass::remove(
-    RexxString *entryname)             /* name to retrieve                  */
-/******************************************************************************/
-/* Function:  Remove an entry from a directory.                               */
-/******************************************************************************/
-{
-    RexxObject *oldVal = this->at(entryname);        /* go get the directory value        */
-                                           /* have a real entry?                */
-    if (this->contents->stringGet(entryname) != OREF_NULL)
-    {
-        this->contents->remove(entryname); /* remove the entry                  */
-    }
-    /* if there's a method entry, remove that one too! */
-    /* have methods?                     */
-    if (this->method_table != OREF_NULL)
-    {
-        /* remove this method                */
-        this->method_table->remove(entryname->upper());
-    }
-    return oldVal;                       /* return the directory value        */
-}
-
-RexxObject *DirectoryClass::unknown(
-  RexxString *msgname,                 /* name of unknown message           */
-  RexxArray  *arguments)               /* arguments to the message          */
-/******************************************************************************/
-/* Function:     This is the REXX version of unknown.  It invokes entry_rexx  */
-/*               instead of entry, to ensure the proper error checking and    */
-/*               return value handling is performed.                          */
-/******************************************************************************/
-{
-    /* validate the name                 */
-    RexxString *message_value = stringArgument(msgname, ARG_ONE);
-    requiredArgument(arguments, ARG_TWO);        /* need an argument array            */
-                                         /* get the length                    */
-    stringsize_t message_length = message_value->getLength();
-    /* assignment form of access?        */
-    if (message_length > 0 && message_value->getChar(message_length - 1) == '=')
-    {
-        /* get this as an array              */
-        arguments = (RexxArray  *)REQUEST_ARRAY(arguments);
-        /* not an array item or a multiple   */
-        /* dimension one, or more than one   */
-        /* argument (CHM)                    */
-        if (arguments == TheNilObject || arguments->getDimension() != 1 || arguments->size() != 1 )
-        {
-            /* raise an error                    */
-            reportException(Error_Incorrect_method_noarray, IntegerTwo);
-        }
-        /* extract the name part of the msg  */
-        message_value = (RexxString *)message_value->extract(0, message_length - 1);
-        /* do this as an assignment          */
-        return this->setEntry(message_value, arguments->get(1));
-    }
-    else                                 /* just a lookup form                */
-    {
-        return this->entryRexx(message_value);
-    }
-}
-
-RexxObject *DirectoryClass::setMethod(
-    RexxString *entryname,             /* name to set this under            */
-    MethodClass *methodobj)             /* new method argument               */
-/******************************************************************************/
-/* Function:  Add a method to the directory method table.                     */
-/******************************************************************************/
-{
-    /* get as a string parameter         */
-    entryname = stringArgument(entryname, ARG_ONE)->upper();
-    if (methodobj != OREF_NULL)          /* have a method object?             */
-    {
-        // not given as a method object already?  Could be a string
-        // or array.
-        if (!isOfClass(Method, methodobj))
-        {
-            // create a new method and set the scope
-            methodobj = MethodClass::newMethodObject(entryname, methodobj, IntegerTwo);
-            methodobj->setScope((RexxClass *)this);
-        }
-        else
-        {
-            // might return a new method if this has a scope already.
-            methodobj = methodobj->newScope((RexxClass *)this);
-        }
-        /* the unknown method?               */
-        if (entryname->strCompare(CHAR_UNKNOWN))
-        {
-            /* stash this is a special place     */
-            setField(unknown_method, methodobj);
-        }
-        else
-        {
-            /* no table yet?                     */
-            if (this->method_table == OREF_NULL)
-            {
-                /* create one                        */
-                setField(method_table, new_table());
-            }
-            /* now add the method                */
-            this->method_table->stringPut(methodobj, entryname);
-        }
-    }
-    else
-    {
-        /* the unknown method?               */
-        if (entryname->strCompare(CHAR_UNKNOWN))
-        {
-            /* cast off the unknown method       */
-            OrefSet(this, this->unknown_method, OREF_NULL);
-        }
-        else
-        {
-            /* if we have a table                */
-            if (this->method_table != OREF_NULL)
-            {
-                /* remove this entry                 */
-                this->method_table->remove(entryname);
-            }
-        }
-    }
-    this->contents->remove(entryname);   /* remove any table entry            */
-    return OREF_NULL;                    /* this always returns nothing       */
-}
-
-RexxObject *DirectoryClass::mergeItem(
-    RexxObject *_value,                /* value to add                      */
-    RexxObject *_index)                /* index to use                      */
-/******************************************************************************/
-/* Function:  Merge a single item during merge processing                     */
-/******************************************************************************/
-{
-                                       /* just add the item                 */
-    return this->put(_value, (RexxString *)_index);
-}
-
-RexxObject *DirectoryClass::at(
-    RexxString *_index)                /* index to retrieve                 */
-/******************************************************************************/
-/* Function:  Retrieve an item from a directory                               */
-/******************************************************************************/
-{
-    /* try to retrieve the value         */
-    RexxObject *result = this->contents->stringGet(_index);
-    if (result == OREF_NULL)
-    {           /* no value?                         */
-                /* have a table?                     */
-        if (this->method_table != OREF_NULL)
-        {
-            /* look for a method                 */
-            MethodClass *method = (MethodClass *)this->method_table->stringGet(_index);
-            if (method != OREF_NULL)         /* have a method?                    */
-            {
-                ProtectedObject v;
-                /* run the method                    */
-                method->run(ActivityManager::currentActivity, this, _index, NULL, 0, v);
-                return(RexxObject *)v;
-
-            }
-        }
-        /* got an unknown method?            */
-        if (this->unknown_method != OREF_NULL)
-        {
-            RexxObject *arg = _index;
-            ProtectedObject v;
-            /* run it                            */
-            this->unknown_method->run(ActivityManager::currentActivity, this, OREF_UNKNOWN, (RexxObject **)&arg, 1, v);
-            return(RexxObject *)v;
-        }
-    }
-    return result;                       /* return a result                   */
-}
-
-RexxObject *DirectoryClass::atRexx(
-    RexxString *_index)                 /* index to retrieve                 */
-/******************************************************************************/
-/* Function:     This is the REXX version of at.  It issues a                 */
-/*               STRINGREQUEST message to the index parameter if it isn't     */
-/*               already a string or a name object.  Thus, this may raise     */
-/*               NOSTRING.                                                    */
-/******************************************************************************/
-{
-    RexxObject *temp;                    /* Temporary holder for return value */
-
-                                         /* get as a string parameter         */
-    _index = stringArgument(_index, ARG_ONE);
-    // is this the .local object?  We'll need to check with the security manager
-    if (ActivityManager::getLocal() == this)
-    {
-        SecurityManager *manager = ActivityManager::currentActivity->getEffectiveSecurityManager();
-        temp = manager->checkLocalAccess(_index);
-        if (temp != OREF_NULL)
-        {
-            return temp;
-        }
-    }
-    temp = this->at(_index);             /* run real AT                       */
-                                         /* if we found nothing or the method */
-    if (temp == OREF_NULL)               /* we ran returned nothing           */
-    {
-        temp = TheNilObject;               /* return TheNilObject as a default  */
-    }
-    return temp;                         /* return the value                  */
-}
-
-RexxObject *DirectoryClass::put(
-    RexxObject *_value,                /* value to add                      */
-    RexxString *_index)                /* string index of the value         */
-/******************************************************************************/
-/* Function:  Add an item to a directory                                      */
-/******************************************************************************/
-{
-    /* get as a string parameter         */
-    _index = stringArgument(_index, ARG_TWO);
-    if (this->method_table != OREF_NULL) /* have a table?                     */
-    {
-        this->method_table->remove(_index);/* remove any method                 */
-    }
-                                           /* try to place in existing hashtab  */
-    RexxHashTable *newHash = this->contents->stringPut(_value, _index);
-    if (newHash  != OREF_NULL)           /* have a reallocation occur?        */
-    {
-        /* hook on the new hash table        */
-        OrefSet(this, this->contents, newHash);
-    }
-    return OREF_NULL;                    /* this returns nothing              */
-}
-
-void DirectoryClass::reset()
-/******************************************************************************/
-/* Function:  Reset a directory to a "pristine" empty state                   */
-/******************************************************************************/
-{
-    // empty the hashtables without reallocating.
-    contents->empty();
-    if (method_table != OREF_NULL)
-    {
-        method_table->empty();
-    }
-    // clear out the unknown method.
-    OrefSet(this, this->unknown_method, OREF_NULL);
-}
-
-
-/**
- * Empty a hash table collection.
- *
- * @return nothing
- */
-RexxObject *DirectoryClass::empty()
-{
-    reset();
+    // this is just a PUT operation with an uppercase index.
+    put(entryobj, entryname->upper());
     return OREF_NULL;
 }
 
 
 /**
- * Test if a HashTableCollection is empty.
+ * Remove an object from a directory.
  *
- * @return
+ * @param entryname The directory index.
+ *
+ * @return The removed object, if any.
  */
-bool DirectoryClass::isEmpty()
+RexxInternalObject *DirectoryClass::remove(RexxInternalObject *entryname)
 {
-    return items() == 0;
+    // the removed value might come from running a method,
+    RexxInternalObject *oldVal = get(entryname);
+
+    // remove from the contents (unconditionally)
+    contents->remove(entryName);
+
+    // if there is a method table as well, remove this entry from that.
+    if (methodTable != OREF_NULL)
+    {
+        methodTable->remove(entryName);
+    }
+    return oldVal;
 }
 
 
 /**
- * Test if a HashTableCollection is empty.
+ * Retrieve an item from a directory.
  *
- * @return
+ * @param _index The target index.
+ *
+ * @return The result value, if available.
  */
-RexxObject *DirectoryClass::isEmptyRexx()
+RexxInternalObject *DirectoryClass::get(RexxInternalObject *index)
 {
-    return items() == 0 ? TheTrueObject : TheFalseObject;
+    // first from the contents
+    RexxInternalObject *result = contents->get(index);
+    if (result == OREF_NULL)
+    {
+        // then try the method table
+        result = methodTableValue(index);
+        // now try the unknown method if we still don't have anything.
+        if (result == OREF_NULL)
+        {
+            result = unknownValue(index);
+        }
+    }
+    return result;
 }
 
+
+/**
+ * Override of the PUT method.
+ *
+ * @param value  The value to put
+ * @param index  The index of the target value
+ */
+void DirectoryClass::put(RexxInternalObject *value, RexxInternalObject *index)
+{
+    // a PUT replaces any existing value, including methods that may have been defined.
+    if (methodTable != OREF_NULL)
+    {
+        methodTable->remove(_index);
+    }
+
+    // Just forward to the existing put method.
+    return HashCollection::put(value, index);
+}
+
+
+/**
+ * Empty a hash table collection.
+ */
+void DirectoryClass::empty()
+{
+    // empty the hashtables without reallocating.
+    contents->empty();
+    if (methodTable != OREF_NULL)
+    {
+        methodTable->empty();
+    }
+    // clear out the unknown method.
+    OrefSet(this, this->unknownMethod, OREF_NULL);
+    return OREF_NULL;
+}
 
 
 /**
@@ -687,38 +407,38 @@ RexxObject *DirectoryClass::isEmptyRexx()
  *
  * @param target The target object.
  *
- * @return The index for the target object, or .nil if no object was
- *         found.
+ * @return The index for the target object NULL
  */
-RexxObject *DirectoryClass::indexRexx(RexxObject *target)
+RexxInternalObject *DirectoryClass::getIndex(RexxInternalObject *target)
 {
-    // required argument
-    requiredArgument(target, ARG_ONE);
     // retrieve this from the hash table
-    RexxObject *result = this->contents->getIndex(target);
-    // not found, return .nil
+    RexxObject *result = contents->getIndex(target);
+    // not found, check the other tables
     if (result == OREF_NULL)
     {
-        // rats, we might need to do this the hardway
-        if (this->method_table != OREF_NULL)
+        // rats, we might need to do this the hard way
+        if (methodTable != OREF_NULL)
         {
-            TableClass *methodTable = this->method_table;
+            // This is a serious pain.  We need to run the method table
+            // calling all of the methods to see if we get a return value
+            // that matches our target object.
 
-            for (HashLink i = methodTable->first(); methodTable->available(i); i = methodTable->next(i))
+            HashContents::TableIterator iterator = methodTable->iterator();
+
+            for (; iterator.available(); iterator.next())
             {
                 // we need to run each method, looking for a value that matches
-                RexxString *name = (RexxString *)methodTable->index(i);
-                MethodClass *method = (MethodClass *)methodTable->value(i);
+                RexxString *name = (RexxString *)iterator.index();
+                MethodClass *method = (MethodClass *)iterator.value();
                 ProtectedObject v;
                 method->run(ActivityManager::currentActivity, this, name, NULL, 0, v);
                 // got a match?
-                if (target->equalValue((RexxObject *)v))
+                if (target->equalValue(v))
                 {
-                    return name;    // the name is the index
+                    return name;      // the name is the index
                 }
             }
         }
-        return TheNilObject;          // the nil object is the unknown index
     }
     return result;
 }
@@ -731,11 +451,11 @@ RexxObject *DirectoryClass::indexRexx(RexxObject *target)
  *
  * @return .true if the object exists, .false otherwise.
  */
-RexxObject *DirectoryClass::hasItem(RexxObject *target)
+bool DirectoryClass::hasItem(RexxInternalObject *target)
 {
-    requiredArgument(target, ARG_ONE);
     // the lookup is more complicated, so just delegate to the index lookup code.
-    return indexRexx(target) != TheNilObject ? TheTrueObject : TheFalseObject;
+
+    return getIndex(target) != OREF_NULL;
 }
 
 
@@ -746,17 +466,207 @@ RexxObject *DirectoryClass::hasItem(RexxObject *target)
  *
  * @return .true if the object exists, .false otherwise.
  */
-RexxObject *DirectoryClass::removeItem(RexxObject *target)
+RexxInternalObject *DirectoryClass::removeItem(RexxInternalObject *target)
 {
-    requiredArgument(target, ARG_ONE);
     // the lookup is more complicated, so just delegate to the index lookup code.
-    RexxObject *i = indexRexx(target);
+    RexxIternalObject *i = getIndex(target);
     // just use the retrieved index to remove.
-    if (i != TheNilObject)
+    if (i != OREF_NULL)
     {
-        return remove((RexxString *)i);
+        return remove(i);
     }
-    return TheNilObject;     // nothing removed.
+    // nothing removed
+    return OREF_NULL;
+}
+
+
+// End of base internal API methods.  Following are the method stubs that
+// are used for building the Rexx programmer visible behaviour.  This are
+// largely stubs that call the API methods with argument validation and transformation
+// of return values added.
+
+
+/**
+ * This is the REXX version of entry.  It issues a STRINGREQUEST
+ * message to the entryname parameter if it isn't already a
+ * string or a name object.  Thus, this may raise NOSTRING.
+ *
+ * @param entryName The entry name.
+ *
+ * @return The entry value, if it has one.
+ */
+RexxInternalObject *DirectoryClass::entryRexx(RexxString *entryName)
+{
+    // validate the index item and let entry handle it (entry
+    // also takes care of the uppercase)
+    entryName = stringArgument(entryName, ARG_ONE);
+    return entry(entryName);
+}
+
+
+/**
+ * Check the directory for existance using the uppercase
+ * name.
+ *
+ * @param entryName The entry name.
+ *
+ * @return .true of the diectoy has the entry, false otherwise.
+ */
+RexxInternalObject *DirectoryClass::hasEntryRexx(RexxString *entryName)
+{
+    entryName = stringArgument(entryName, ARG_ONE);
+    // get as an uppercase string
+    return booleanObject(hasEntry(entry));
+}
+
+
+/**
+ * Add an entry to a directory with an uppercase name.
+ *
+ * @param entryname The entry name.
+ * @param entryobj  The value object.
+ *
+ * @return Returns nothing.
+ */
+RexxInternalObject *DirectoryClass::setEntryRexx(RexxString *entryname, RexxInternalObject *entryobj)
+{
+    // validate the argument and perform the base operation
+    entryName = stringArgument(entryName, ARG_ONE);
+    return setEntry(entryName);
+}
+
+
+/**
+ * This is the REXX version of unknown.  It invokes entry_rexx
+ * instead of entry, to ensure the proper error checking and
+ * return value handling is performed.
+ *
+ * @param msgname   The message name.
+ * @param arguments The message arguments
+ *
+ * @return Either a result object or nothing, depending on whether this is a set or get operation.
+ */
+RexxInternalObject *DirectoryClass::unknown(RexxString *msgname, RexxArray *arguments)
+{
+    // must have a first item and the required argument array
+    RexxString *message_value = stringArgument(msgname, ARG_ONE);
+
+    // if this is the assignment form of message
+    if (message_value->endsWith('='))
+    {
+        // make sure this is a good argument value.
+        arguments = arrayArgument(arguments, ARG_TWO)
+
+        // extract the name part of the msg
+        message_value = message_value->extract(0, message_value->getLength() - 1);
+        // do this as an assignment
+        return setEntryRexx(message_value, arguments->get(1));
+    }
+
+    // just a retrieval operation
+    return entry(message_value);
+}
+
+
+/**
+ * Set a method of executable code into a directory object.
+ *
+ * @param entryname The name this is set under
+ * @param methodobj The associated method object.
+ *
+ * @return Nothing.
+ */
+RexxInternalObject *DirectoryClass::setMethodRexx(RexxString *entryname, MethodClass *methodobj)
+{
+    entryname = stringArgument(entryname, ARG_ONE)->upper();
+    if (methodobj != OREF_NULL)
+    {
+        // make sure we have a method object for this
+        methodobj = MethodClass::newMethodObject(entryname, methodobj, this, IntegerTwo);
+
+        // the unknown method?  We keep that in a special place
+        if (entryname->strCompare(CHAR_UNKNOWN))
+        {
+            setField(unknownMethod, methodobj);
+        }
+        else
+        {
+            // create the table if this is the first addition
+            if (methodTable == OREF_NULL)
+            {
+                setField(methodTable, new_table());
+            }
+            // and add the method to the table
+            methodTable->put(methodobj, entryname);
+        }
+    }
+    // no method object given, this is a removal
+    else
+    {
+        // if unknown, remove this from the special place.
+        if (entryname->strCompare(CHAR_UNKNOWN))
+        {
+            clearField(unknownMethod);
+        }
+        else
+        {
+            // remove from the method table if we have one
+            if (methodTable != OREF_NULL)
+            {
+                methodTable->remove(entryname);
+            }
+        }
+    }
+
+    // since setting a method will also override any contents, we need to
+    // ensure the contents don't have this either.
+    contents->remove(entryname);
+    return OREF_NULL;
+}
+
+
+/**
+ * Retrieve a value from the method table, if there is one.
+ *
+ * @param index  The target index.
+ *
+ * @return The method table method result, or OREF_NULL if none.
+ */
+RexxInternalObject *DirectoryClass::methodTableValue(RexxInternalObject *index)
+{
+    // if we have a method table, look for a method and run it if there is one.
+    if (methodTable != OREF_NULL)
+    {
+        MethodClass *method = (MethodClass *)methodTable->get(index);
+        if (method != OREF_NULL)
+        {
+            ProtectedObject v;
+            method->run(ActivityManager::currentActivity, this, index, NULL, 0, v);
+            return v;
+
+        }
+    }
+    return OREF_NULL;
+}
+
+
+/**
+ * Retrieve a value via a set UNKNOWN method, if there is one.
+ *
+ * @param index  The index value.
+ *
+ * @return The value returned from an unknown method, if there is one.
+ */
+RexxInternalObject *DirectoryClass::unknownValue(RexxInternalObject *index)
+{
+    // if we have an UNKNOWN method, run it and return the result value.
+    if (unknown_Method != OREF_NULL)
+    {
+        ProtectedObject v;
+        unknownMethod->run(ActivityManager::currentActivity, this, OREF_UNKNOWN, (RexxObject **)&index, 1, v);
+        return v;
+    }
+    return OREF_NULL;
 }
 
 
@@ -768,7 +678,7 @@ RexxObject *DirectoryClass::removeItem(RexxObject *target)
  *
  * @return A new directory object.
  */
-RexxObject *DirectoryClass::newRexx(RexxObject **init_args, size_t       argCount)
+RexxObject *DirectoryClass::newRexx(RexxObject **init_args, size_t argCount)
 {
     // this class is defined on the object class, but this is actually attached
     // to a class object instance.  Therefore, any use of the this pointer
@@ -776,22 +686,19 @@ RexxObject *DirectoryClass::newRexx(RexxObject **init_args, size_t       argCoun
     // any methods on this object from this method.
     RexxClass *classThis = (RexxClass *)this;
 
-    DirectoryClass *newDirectory = new_directory();
-    ProtectedObject p(newDirectory);
+    RexxObject *initialSize;
 
-    // handle Rexx class completion
-    classThis->completeNewObject(newDirectory, init_args, argCount);
+    // parse the arguments
+    RexxClass::processNewArgs(args, argCount, &args, &argCount, 1, (RexxObject **)&initialSize, NULL);
 
-    return newDirectory;                 /* return the new directory          */
-}
+    // the capacity is optional, but must be a positive numeric value
+    size_t capacity = optionalLengthArgument(initialSize, DefaultTableSize, ARG_ONE);
 
-
-DirectoryClass *DirectoryClass::newInstance()
-/******************************************************************************/
-/* Create a new directory item                                                */
-/******************************************************************************/
-{
-                                       /* get a new object and hash         */
-    return (DirectoryClass *)new_hashCollection(RexxHashTable::DEFAULT_HASH_SIZE, sizeof(DirectoryClass), T_Directory);
+    // create the new identity table item
+    DirectoryClass *temp = new DirectoryClass(capacity);
+    ProtectedObject p(temp);
+    // finish setting this up.
+    classThis->completeNewObject(temp, args, argCount);
+    return temp;
 }
 

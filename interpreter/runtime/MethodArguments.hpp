@@ -56,12 +56,13 @@
  * @param object   The reference to check.
  * @param position the position of the argument for the error message.
  */
-inline void requiredArgument(RexxInternalObject *object, size_t position)
+inline RexxInternalObject *requiredArgument(RexxInternalObject *object, size_t position)
 {
     if (object == OREF_NULL)
     {
         missingArgument(position);
     }
+    return object;
 }
 
 
@@ -105,14 +106,15 @@ inline RexxString *stringArgument(RexxInternalObject *object, const char *name)
     return object->requiredString(name);
 }
 
-// handle an option string argument where a default argument value is provided.
+
+// handle an optional string argument where a default argument value is provided.
 inline RexxString *optionalStringArgument(RexxInternalObject *o, RexxString *d, size_t p)
 {
     return (o == OREF_NULL ? d : stringArgument(o, p));
 }
 
 
-// handle an option string argument where a default argument value is provided.
+// handle an optional string argument where a default argument value is provided.
 inline RexxString *optionalStringArgument(RexxInternalObject *o, RexxString *d, const char *p)
 {
     return (o == OREF_NULL ? d : stringArgument(o, p));
@@ -275,6 +277,8 @@ inline size_t optionalPositive(RexxInternalObject *o, size_t d, size_t p)
  *
  * @return A converted single-dimension array.
  */
+
+// TODO:  This appears not to be used in all the places where it could.
 inline RexxArray *arrayArgument(RexxInternalObject *object, size_t position)
 {
     // this is required.
@@ -379,6 +383,33 @@ inline RexxArray * REQUEST_ARRAY(RexxInternalObject *obj) { return ((obj)->reque
  *         .nil if it cannot be converted.
  */
 inline RexxInteger * REQUEST_INTEGER(RexxInternalObject *obj) { return ((obj)->requestInteger(Numerics::ARGUMENT_DIGITS));}
+
+
+/**
+ * Handy function for situations where a NULL results needs
+ * translation into .nil.
+ *
+ * @param o      The result value.
+ *
+ * @return Either the result object, or TheNilObject.
+ */
+
+// TODO:  look for opportunities to use this.
+inline RexxInternalObject *resultOrNil(RexxInternalObject *o) { return o != OREF_NULL ? o : TheNilObject; }
+
+
+/**
+ * Handy method for transforming a boolean value into Rexx method
+ * boolean return values (i.e., .true or .false).
+ *
+ * @param v      The boolean value.
+ *
+ * @return Either TheTrueObject or TheFalseObject, depending on
+ *         the argument value.
+ */
+
+// TODO:  look for opportunities to use this.
+inline RexxInternalObject *booleanObject(bool v) { return v ? TheTrueObject : TheFalseObject; }
 
 #endif
 
