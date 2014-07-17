@@ -41,10 +41,10 @@
 /* Primitive List Class Definitions                                           */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_RexxList
-#define Included_RexxList
+#ifndef Included_ListClass
+#define Included_ListClass
 
-#include "RexxListTable.hpp"
+#include "ListClassTable.hpp"
 
 #define INITIAL_LIST_SIZE     5        /* initial list allocation           */
 #define EXTEND_LIST_SIZE      5        /* amount to extend by each time     */
@@ -60,14 +60,14 @@
 #define LIST_END              ((size_t)-1) /* end of list marker                */
 #define NOT_ACTIVE            ((size_t)-2) /* free element marker               */
 
-class RexxList : public RexxObject
+class ListClass : public RexxObject
 {
-  friend class RexxListTable;
+  friend class ListTable;
  public:
     void * operator new(size_t);
     inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };
-    inline RexxList(RESTORETYPE restoreType) { ; };
-    inline RexxList() { ; }
+    inline ListClass(RESTORETYPE restoreType) { ; };
+    inline ListClass() { ; }
 
     void          init();
     void          live(size_t);
@@ -129,23 +129,18 @@ class RexxList : public RexxObject
     RexxObject   *append(RexxObject *);
     RexxArray    *weakReferenceArray();
 
-    RexxList     *newRexx(RexxObject **, size_t);
-    RexxList     *classOf(RexxObject **, size_t);
+    ListClass     *newRexx(RexxObject **, size_t);
+    ListClass     *classOf(RexxObject **, size_t);
 
     static void createInstance();
     static RexxClass *classInstance;
 
  protected:
 
-    RexxListTable *table;                 // list table  item
-    size_t first;                         // first real element index
-    size_t last;                          // last real element index
-    size_t count;                         // count of items in the list
-    size_t size;                          // element slots in the buffer
-    size_t free;                          // start of free element chain
+    ListContents *contents;               // list table  item
 };
 
 
-inline RexxList *new_list() { return new RexxList; }
+inline ListClass *new_list() { return new ListClass; }
 
 #endif

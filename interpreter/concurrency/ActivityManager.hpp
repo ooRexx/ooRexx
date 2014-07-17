@@ -112,11 +112,11 @@ protected:
     static const size_t MAX_THREAD_POOL_SIZE = 5;
 
     // activities in use
-    static RexxList         *activeActivities;
+    static ListClass         *activeActivities;
     // free activities
-    static RexxList         *availableActivities;
+    static ListClass         *availableActivities;
     // table of all activities
-    static RexxList         *allActivities;
+    static ListClass         *allActivities;
     static bool              processTerminating;  // shutdown processing started
     static size_t            interpreterInstances;  // number of times an interpreter has been created.
 

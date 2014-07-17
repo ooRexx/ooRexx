@@ -143,7 +143,7 @@ protected:
 
     RexxActivity  *reservingActivity;    // current reserving activity
     RexxHashTable *contents;             // vdict hashtable
-    RexxList *waitingActivities;         // list of waiting activities
+    ListClass *waitingActivities;         // list of waiting activities
     unsigned short flags;                // dictionary control flags
     unsigned short reserveCount;         // number of times reserved
     RexxVariableDictionary *next;        // chained object dictionary

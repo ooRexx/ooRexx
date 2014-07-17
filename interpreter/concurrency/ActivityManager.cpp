@@ -54,10 +54,10 @@ RexxActivity * volatile ActivityManager::currentActivity = OREF_NULL;
 volatile bool ActivityManager::sentinel = false;
 
 // available activities we can reuse
-RexxList *ActivityManager::availableActivities = OREF_NULL;
+ListClass *ActivityManager::availableActivities = OREF_NULL;
 
 // table of all activities
-RexxList *ActivityManager::allActivities = OREF_NULL;
+ListClass *ActivityManager::allActivities = OREF_NULL;
 
 std::deque<RexxActivity *>ActivityManager::waitingActivities;   // queue of waiting activities
 

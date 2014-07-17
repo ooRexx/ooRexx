@@ -624,7 +624,7 @@ class ActivationSettings
     int                  activation_context;
     RexxMessage         *objnotify;     // an object to notify if excep occur
                                         // LIst of Saved Local environments
-    RexxList            *environmentList;
+    ListClass            *environmentList;
     size_t               pending_count; // number of pending conditions
     RexxQueue           *handler_queue; // queue of trapped condition handler
                                         // queue of trapped conditions

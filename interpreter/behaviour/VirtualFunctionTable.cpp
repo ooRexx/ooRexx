@@ -85,7 +85,7 @@
 #include "RexxNativeCode.hpp"
 #include "CPPCode.hpp"
 #include "RexxHashTable.hpp"
-#include "RexxListTable.hpp"
+#include "ListClassTable.hpp"
 #include "RexxSmartBuffer.hpp"
 #include "HashContents.hpp"
 #include "RexxVariable.hpp"
@@ -215,7 +215,7 @@ void MemoryObject::buildVirtualFunctionTable()
    objectPtr = new (objectLoc) RexxIntegerClass(RESTOREIMAGE);
    virtualFunctionTable[T_IntegerClass] = getVftPointer(objectLoc);
 
-   objectPtr = new (objectLoc) RexxList(RESTOREIMAGE);
+   objectPtr = new (objectLoc) ListClass(RESTOREIMAGE);
    virtualFunctionTable[T_List] = getVftPointer(objectLoc);
 
    objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
@@ -374,7 +374,7 @@ void MemoryObject::buildVirtualFunctionTable()
    objectPtr = new (objectLoc) RexxHashTable(RESTOREIMAGE);
    virtualFunctionTable[T_HashTable] = getVftPointer(objectLoc);
 
-   objectPtr = new (objectLoc) RexxListTable(RESTOREIMAGE);
+   objectPtr = new (objectLoc) ListTable(RESTOREIMAGE);
    virtualFunctionTable[T_ListTable] = getVftPointer(objectLoc);
 
    objectPtr = new (objectLoc) RexxSmartBuffer(RESTOREIMAGE);

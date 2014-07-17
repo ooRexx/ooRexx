@@ -179,7 +179,7 @@ class RexxClass : public RexxObject
     RexxArray     *instanceSuperClasses;
     FlagSet<ClassFlag, 32> classFlags; // class attributes
 
-    RexxList      *subClasses;         // our list of weak referenced subclasses
+    ListClass      *subClasses;         // our list of weak referenced subclasses
     RexxSource    *source;             // source we're defined in (if any)
     RexxClass     *scopeSuperClass;    // the immediate superclass used for lookups starting from this point.
     RexxArrray    *scopeSearchOrder;   // the search order used for searches starting from this scope position.

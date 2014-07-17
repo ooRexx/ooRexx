@@ -71,7 +71,7 @@ void RexxQueue::createInstance()
  */
 void *RexxQueue::operator new(size_t size)
 {
-    RexxQueue *newQueue = (RexxQueue *)new (INITIAL_LIST_SIZE, size) RexxListTable;
+    RexxQueue *newQueue = (RexxQueue *)new (INITIAL_LIST_SIZE, size) ListTable;
     // these are handled a little differently, so we have to explicitly set our behavior (for now)
     newQueue->setBehaviour(TheQueueBehaviour);
     newQueue->init();

@@ -77,10 +77,10 @@ public:
 	public:
 		inline ~IndexIterator() {}
 
-        bool isAvailable()  { return position != NoMore; }
-        RexxInternalObject *value() { return contents->entryValue(position); }
-        RexxInternalObject *index() { return contents->entryIndex(position); }
-        void next() { position = contents->nextMatch(index, position); }
+        inline bool isAvailable()  { return position != NoMore; }
+        inline RexxInternalObject *value() { return contents->entryValue(position); }
+        inline RexxInternalObject *index() { return contents->entryIndex(position); }
+        inline void next() { position = contents->nextMatch(index, position); }
 
 	private:
         // constructor for an index iterator
@@ -103,10 +103,10 @@ public:
 	public:
 		inline ~TableIterator() {}
 
-        bool isAvailable()  { return position != NoMore; }
-        RexxInternalObject *value() { return contents->entryValue(position); }
-        RexxInternalObject *index() { return contents->entryIndex(position); }
-        void next() { position = contents->iterateNext(position, nextBucket); }
+        inline bool isAvailable()  { return position != NoMore; }
+        inline RexxInternalObject *value() { return contents->entryValue(position); }
+        inline RexxInternalObject *index() { return contents->entryIndex(position); }
+        inline void next() { position = contents->iterateNext(position, nextBucket); }
 
 	private:
         // constructor for an index iterator
@@ -255,7 +255,7 @@ public:
     // test if the table is full
     inline bool isFull()
     {
-        return freeChain != NoMore;
+        return freeChain == NoMore;
     }
 
     // check if this table can hold an additional number of items (usually used on merge operations)

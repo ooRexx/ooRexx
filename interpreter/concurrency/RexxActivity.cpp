@@ -910,11 +910,11 @@ DirectoryClass *RexxActivity::createExceptionObject(wholenumber_t  errcode,
 void RexxActivity::generateProgramInformation(DirectoryClass *exobj)
 {
     // create lists for both the stack frames and the traceback lines
-    RexxList *stackFrames = new_list();
+    ListClass *stackFrames = new_list();
                                          /* add to the exception object       */
     exobj->put(stackFrames, OREF_STACKFRAMES);
 
-    RexxList *traceback = new_list();    /* create a traceback list           */
+    ListClass *traceback = new_list();    /* create a traceback list           */
                                          /* add to the exception object       */
     exobj->put(traceback, OREF_TRACEBACK);
 
@@ -1185,7 +1185,7 @@ RexxObject *RexxActivity::display(DirectoryClass *exobj)
 /******************************************************************************/
 {
     /* get the traceback info            */
-    RexxList *trace_backList = (RexxList *)exobj->at(OREF_TRACEBACK);
+    ListClass *trace_backList = (ListClass *)exobj->at(OREF_TRACEBACK);
     if (trace_backList != OREF_NULL)     /* have a traceback?                 */
     {
         /* convert to an array               */

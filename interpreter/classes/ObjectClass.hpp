@@ -611,7 +611,7 @@ protected:
     HashCode hashValue;
 };
 
-class RexxList;
+class ListClass;
 
 
 /**

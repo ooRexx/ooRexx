@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                             RexxListTable.cpp  */
+/* REXX Kernel                                             ListTable.cpp  */
 /*                                                                            */
 /* Primitive List Table Class                                                 */
 /*                                                                            */
@@ -45,7 +45,7 @@
 #include "ListClass.hpp"
 #include "Memory.hpp"
 
-void RexxListTable::live(size_t liveMark)
+void ListTable::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
@@ -57,7 +57,7 @@ void RexxListTable::live(size_t liveMark)
     }
 }
 
-void RexxListTable::liveGeneral(MarkReason reason)
+void ListTable::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
@@ -70,12 +70,12 @@ void RexxListTable::liveGeneral(MarkReason reason)
     }
 }
 
-void   RexxListTable::flatten(RexxEnvelope *envelope)
+void   ListTable::flatten(RexxEnvelope *envelope)
 /******************************************************************************/
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
 {
-    setUpFlatten(RexxListTable)
+    setUpFlatten(ListTable)
 
     for (size_t i = this->size; i > 0 ; i--)
     {
@@ -86,19 +86,19 @@ void   RexxListTable::flatten(RexxEnvelope *envelope)
 }
 
 
-void *RexxListTable::operator new(size_t size, size_t initialSize)
+void *ListTable::operator new(size_t size, size_t initialSize)
 /******************************************************************************/
 /* Function:  Construct and initialized a new list item                       */
 /******************************************************************************/
 {
     /* Get new object                    */
-    RexxListTable *newTable = (RexxListTable *)new_object(size + sizeof(LISTENTRY) * (initialSize - 1), T_ListTable);
+    ListTable *newTable = (ListTable *)new_object(size + sizeof(LISTENTRY) * (initialSize - 1), T_ListTable);
     newTable->size = initialSize;
     return newTable;                     /* return the new list item          */
 }
 
 
-void *RexxListTable::operator new(size_t size, size_t initialSize, size_t companionSize)
+void *ListTable::operator new(size_t size, size_t initialSize, size_t companionSize)
 /******************************************************************************/
 /* Function:  Construct and initialized a new list item                       */
 /******************************************************************************/
@@ -109,9 +109,9 @@ void *RexxListTable::operator new(size_t size, size_t initialSize, size_t compan
     companionSize = Memory::roundObjectBoundary(companionSize);
     /* Get space for two objects         */
     /* Get new object                    */
-    RexxList *newList  = (RexxList *)new_object(bytes + companionSize);
+    ListClass *newList  = (ListClass *)new_object(bytes + companionSize);
                                          /* address the list table            */
-    RexxListTable *newTable = (RexxListTable *)(((char *)newList) + companionSize);
+    ListTable *newTable = (ListTable *)(((char *)newList) + companionSize);
     /* compute total size of the list    */
     /* table (allowing for possible      */
     /* over allocation by the memory     */

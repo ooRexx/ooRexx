@@ -53,7 +53,7 @@
 #include "SysSemaphore.hpp"
 
 class InterpreterInstance;
-class RexxList;
+class ListClass;
 class RexxActivity;
 
 class Interpreter
@@ -142,7 +142,7 @@ protected:
     static SysMutex  resourceLock;   // use to lock resources accessed outside of kernel global lock
     static int    initializations;   // indicates whether we're terminated or not
     static bool   timeSliceElapsed;  // indicates we've had a timer interrupt
-    static RexxList *interpreterInstances;  // the set of interpreter instances
+    static ListClass *interpreterInstances;  // the set of interpreter instances
     static bool   active;            // indicates whether the interpreter is initialized
     static RexxString *versionNumber;  // our version number information
 };

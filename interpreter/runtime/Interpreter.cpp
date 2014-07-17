@@ -60,7 +60,7 @@
 // global resource lock
 SysMutex Interpreter::resourceLock;
 
-RexxList *Interpreter::interpreterInstances = OREF_NULL;
+ListClass *Interpreter::interpreterInstances = OREF_NULL;
 
 // the local server object
 RexxObject *Interpreter::localServer = OREF_NULL;

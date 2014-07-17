@@ -1268,7 +1268,7 @@ RexxInteger  *RexxArray::sizeRexx()
  *
  * @return A new array representing the given section.
  */
-RexxArray *  RexxArray::section(size_t _start, size_t _end)
+RexxArray *RexxArray::section(size_t _start, size_t _end)
 {
     size_t newSize;                      /* Size for new array.               */
     RexxArray *newArray;                 /* The new array.                    */

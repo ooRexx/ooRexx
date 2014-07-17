@@ -208,7 +208,7 @@ void MemoryObject::createImage()
     PackageClass::createInstance();
     RexxContext::createInstance();
     RexxQueue::createInstance();
-    RexxList::createInstance();
+    ListClass::createInstance();
     RexxStem::createInstance();
     SupplierClass::createInstance();
     RexxMessage::createInstance();
@@ -450,41 +450,41 @@ void MemoryObject::createImage()
     /***************************************************************************/
 
                                          /* add the class behaviour methods   */
-    defineKernelMethod(CHAR_NEW           , TheListClassBehaviour, CPPM(RexxList::newRexx), A_COUNT);
-    defineKernelMethod(CHAR_OF            , TheListClassBehaviour, CPPM(RexxList::classOf), A_COUNT);
+    defineKernelMethod(CHAR_NEW           , TheListClassBehaviour, CPPM(ListClass::newRexx), A_COUNT);
+    defineKernelMethod(CHAR_OF            , TheListClassBehaviour, CPPM(ListClass::classOf), A_COUNT);
 
                                          /* set the scope of the methods to   */
                                          /* this classes oref                 */
     TheListClassBehaviour->setMethodDictionaryScope(TheListClass);
 
                                          /* add the instance behaviour methods*/
-    defineKernelMethod(CHAR_BRACKETS     ,TheListBehaviour, CPPM(RexxList::value), 1);
-    defineKernelMethod(CHAR_BRACKETSEQUAL,TheListBehaviour, CPPM(RexxList::put), 2);
+    defineKernelMethod(CHAR_BRACKETS     ,TheListBehaviour, CPPM(ListClass::value), 1);
+    defineKernelMethod(CHAR_BRACKETSEQUAL,TheListBehaviour, CPPM(ListClass::put), 2);
     defineKernelMethod(CHAR_MAKEARRAY    ,TheListBehaviour, CPPM(RexxObject::makeArrayRexx), 0);
-    defineKernelMethod(CHAR_AT           ,TheListBehaviour, CPPM(RexxList::value), 1);
-    defineKernelMethod(CHAR_FIRSTITEM    ,TheListBehaviour, CPPM(RexxList::firstItem), 0);
-    defineKernelMethod(CHAR_HASINDEX     ,TheListBehaviour, CPPM(RexxList::hasIndex), 1);
-    defineKernelMethod(CHAR_INSERT       ,TheListBehaviour, CPPM(RexxList::insertRexx), 2);
-    defineKernelMethod(CHAR_ITEMS        ,TheListBehaviour, CPPM(RexxList::itemsRexx), 0);
-    defineKernelMethod(CHAR_LASTITEM     ,TheListBehaviour, CPPM(RexxList::lastItem), 0);
-    defineKernelMethod(CHAR_FIRST        ,TheListBehaviour, CPPM(RexxList::firstRexx), 0);
-    defineKernelMethod(CHAR_LAST         ,TheListBehaviour, CPPM(RexxList::lastRexx), 0);
-    defineKernelMethod(CHAR_NEXT         ,TheListBehaviour, CPPM(RexxList::next), 1);
-    defineKernelMethod(CHAR_PREVIOUS     ,TheListBehaviour, CPPM(RexxList::previous), 1);
-    defineKernelMethod(CHAR_PUT          ,TheListBehaviour, CPPM(RexxList::put), 2);
-    defineKernelMethod(CHAR_REMOVE       ,TheListBehaviour, CPPM(RexxList::remove), 1);
+    defineKernelMethod(CHAR_AT           ,TheListBehaviour, CPPM(ListClass::value), 1);
+    defineKernelMethod(CHAR_FIRSTITEM    ,TheListBehaviour, CPPM(ListClass::firstItem), 0);
+    defineKernelMethod(CHAR_HASINDEX     ,TheListBehaviour, CPPM(ListClass::hasIndex), 1);
+    defineKernelMethod(CHAR_INSERT       ,TheListBehaviour, CPPM(ListClass::insertRexx), 2);
+    defineKernelMethod(CHAR_ITEMS        ,TheListBehaviour, CPPM(ListClass::itemsRexx), 0);
+    defineKernelMethod(CHAR_LASTITEM     ,TheListBehaviour, CPPM(ListClass::lastItem), 0);
+    defineKernelMethod(CHAR_FIRST        ,TheListBehaviour, CPPM(ListClass::firstRexx), 0);
+    defineKernelMethod(CHAR_LAST         ,TheListBehaviour, CPPM(ListClass::lastRexx), 0);
+    defineKernelMethod(CHAR_NEXT         ,TheListBehaviour, CPPM(ListClass::next), 1);
+    defineKernelMethod(CHAR_PREVIOUS     ,TheListBehaviour, CPPM(ListClass::previous), 1);
+    defineKernelMethod(CHAR_PUT          ,TheListBehaviour, CPPM(ListClass::put), 2);
+    defineKernelMethod(CHAR_REMOVE       ,TheListBehaviour, CPPM(ListClass::remove), 1);
     // DELETE is the same as REMOVE for the List class
-    defineKernelMethod(CHAR_DELETE       ,TheListBehaviour, CPPM(RexxList::remove), 1);
-    defineKernelMethod(CHAR_SECTION      ,TheListBehaviour, CPPM(RexxList::section), 2);
-    defineKernelMethod(CHAR_SUPPLIER     ,TheListBehaviour, CPPM(RexxList::supplier), 0);
-    defineKernelMethod(CHAR_APPEND       ,TheListBehaviour, CPPM(RexxList::append), 1);
-    defineKernelMethod(CHAR_ALLITEMS     ,TheListBehaviour, CPPM(RexxList::allItems), 0);
-    defineKernelMethod(CHAR_ALLINDEXES   ,TheListBehaviour, CPPM(RexxList::allIndexes), 0);
-    defineKernelMethod(CHAR_EMPTY        ,TheListBehaviour, CPPM(RexxList::empty), 0);
-    defineKernelMethod(CHAR_ISEMPTY      ,TheListBehaviour, CPPM(RexxList::isEmptyRexx), 0);
-    defineKernelMethod(CHAR_INDEX        ,TheListBehaviour, CPPM(RexxList::index), 1);
-    defineKernelMethod(CHAR_HASITEM      ,TheListBehaviour, CPPM(RexxList::hasItem), 1);
-    defineKernelMethod(CHAR_REMOVEITEM   ,TheListBehaviour, CPPM(RexxList::removeItem), 1);
+    defineKernelMethod(CHAR_DELETE       ,TheListBehaviour, CPPM(ListClass::remove), 1);
+    defineKernelMethod(CHAR_SECTION      ,TheListBehaviour, CPPM(ListClass::section), 2);
+    defineKernelMethod(CHAR_SUPPLIER     ,TheListBehaviour, CPPM(ListClass::supplier), 0);
+    defineKernelMethod(CHAR_APPEND       ,TheListBehaviour, CPPM(ListClass::append), 1);
+    defineKernelMethod(CHAR_ALLITEMS     ,TheListBehaviour, CPPM(ListClass::allItems), 0);
+    defineKernelMethod(CHAR_ALLINDEXES   ,TheListBehaviour, CPPM(ListClass::allIndexes), 0);
+    defineKernelMethod(CHAR_EMPTY        ,TheListBehaviour, CPPM(ListClass::empty), 0);
+    defineKernelMethod(CHAR_ISEMPTY      ,TheListBehaviour, CPPM(ListClass::isEmptyRexx), 0);
+    defineKernelMethod(CHAR_INDEX        ,TheListBehaviour, CPPM(ListClass::index), 1);
+    defineKernelMethod(CHAR_HASITEM      ,TheListBehaviour, CPPM(ListClass::hasItem), 1);
+    defineKernelMethod(CHAR_REMOVEITEM   ,TheListBehaviour, CPPM(ListClass::removeItem), 1);
                                          /* set the scope of the methods to   */
                                          /* this classes oref                 */
     TheListBehaviour->setMethodDictionaryScope(TheListClass);
@@ -689,7 +689,7 @@ void MemoryObject::createImage()
                                          /* instance method mdict             */
 
     defineKernelMethod(CHAR_MAKEARRAY     ,TheQueueBehaviour, CPPM(RexxObject::makeArrayRexx), 0);
-    defineKernelMethod(CHAR_ITEMS         ,TheQueueBehaviour, CPPM(RexxList::itemsRexx), 0);
+    defineKernelMethod(CHAR_ITEMS         ,TheQueueBehaviour, CPPM(ListClass::itemsRexx), 0);
     defineKernelMethod(CHAR_SUPPLIER      ,TheQueueBehaviour, CPPM(RexxQueue::supplier), 0);
     defineKernelMethod(CHAR_PUSH          ,TheQueueBehaviour, CPPM(RexxQueue::pushRexx), 1);
     defineKernelMethod(CHAR_PEEK          ,TheQueueBehaviour, CPPM(RexxQueue::peek), 0);
@@ -704,17 +704,17 @@ void MemoryObject::createImage()
     // REMOVE and DELETE are synonyms for the QUEUE class
     defineKernelMethod(CHAR_DELETE        ,TheQueueBehaviour, CPPM(RexxQueue::remove), 1);
     defineKernelMethod(CHAR_APPEND        ,TheQueueBehaviour, CPPM(RexxQueue::append), 1);
-    defineKernelMethod(CHAR_ALLITEMS      ,TheQueueBehaviour, CPPM(RexxList::allItems), 0);
+    defineKernelMethod(CHAR_ALLITEMS      ,TheQueueBehaviour, CPPM(ListClass::allItems), 0);
     defineKernelMethod(CHAR_ALLINDEXES    ,TheQueueBehaviour, CPPM(RexxQueue::allIndexes), 0);
-    defineKernelMethod(CHAR_EMPTY         ,TheQueueBehaviour, CPPM(RexxList::empty), 0);
-    defineKernelMethod(CHAR_ISEMPTY       ,TheQueueBehaviour, CPPM(RexxList::isEmptyRexx), 0);
+    defineKernelMethod(CHAR_EMPTY         ,TheQueueBehaviour, CPPM(ListClass::empty), 0);
+    defineKernelMethod(CHAR_ISEMPTY       ,TheQueueBehaviour, CPPM(ListClass::isEmptyRexx), 0);
     defineKernelMethod(CHAR_INDEX         ,TheQueueBehaviour, CPPM(RexxQueue::index), 1);
-    defineKernelMethod(CHAR_HASITEM       ,TheQueueBehaviour, CPPM(RexxList::hasItem), 1);
-    defineKernelMethod(CHAR_REMOVEITEM    ,TheQueueBehaviour, CPPM(RexxList::removeItem), 1);
+    defineKernelMethod(CHAR_HASITEM       ,TheQueueBehaviour, CPPM(ListClass::hasItem), 1);
+    defineKernelMethod(CHAR_REMOVEITEM    ,TheQueueBehaviour, CPPM(ListClass::removeItem), 1);
     defineKernelMethod(CHAR_FIRST         ,TheQueueBehaviour, CPPM(RexxQueue::firstRexx), 0);
-    defineKernelMethod(CHAR_FIRSTITEM     ,TheQueueBehaviour, CPPM(RexxList::firstItem), 0);
+    defineKernelMethod(CHAR_FIRSTITEM     ,TheQueueBehaviour, CPPM(ListClass::firstItem), 0);
     defineKernelMethod(CHAR_LAST          ,TheQueueBehaviour, CPPM(RexxQueue::lastRexx), 0);
-    defineKernelMethod(CHAR_LASTITEM      ,TheQueueBehaviour, CPPM(RexxList::lastItem), 0);
+    defineKernelMethod(CHAR_LASTITEM      ,TheQueueBehaviour, CPPM(ListClass::lastItem), 0);
     defineKernelMethod(CHAR_NEXT          ,TheQueueBehaviour, CPPM(RexxQueue::next), 1);
     defineKernelMethod(CHAR_PREVIOUS      ,TheQueueBehaviour, CPPM(RexxQueue::previous), 1);
     defineKernelMethod(CHAR_INSERT        ,TheQueueBehaviour, CPPM(RexxQueue::insert), 2);

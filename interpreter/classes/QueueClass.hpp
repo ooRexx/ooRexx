@@ -46,7 +46,7 @@
 
 #include "ListClass.hpp"
 
-class RexxQueue : public RexxList {
+class RexxQueue : public ListClass {
  public:
 
  void *operator new(size_t);

@@ -166,7 +166,7 @@ EXTERNMEM MemoryObject memoryObject;
 #define TheClassClass RexxClass::classInstance
 #define TheDirectoryClass DirectoryClass::classInstance
 #define TheIntegerClass RexxInteger::classInstance
-#define TheListClass RexxList::classInstance
+#define TheListClass ListClass::classInstance
 #define TheMessageClass RexxMessage::classInstance
 #define TheMethodClass MethodClass::classInstance
 #define TheRoutineClass RoutineClass::classInstance

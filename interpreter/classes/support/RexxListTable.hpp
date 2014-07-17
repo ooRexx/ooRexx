@@ -36,13 +36,13 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                             RexxListTable.hpp  */
+/* REXX Kernel                                         ListClassTable.hpp      */
 /*                                                                            */
 /* Primitive List Table Class Definitions                                     */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_RexxListTable
-#define Included_RexxListTable
+#ifndef Included_ListTable
+#define Included_ListTable
 
 #include "ObjectClass.hpp"
 
@@ -55,7 +55,7 @@ public:
 };
 
 
-class RexxListTable : public RexxInternalObject
+class ListTable : public RexxInternalObject
 {
   public:
    void * operator new(size_t, size_t);
@@ -65,17 +65,23 @@ class RexxListTable : public RexxInternalObject
    inline void operator delete(void *, size_t, size_t) { }
    inline void  operator delete(void *, void *) {;}
 
-   inline RexxListTable(RESTORETYPE restoreType) { ; };
-   inline RexxListTable() {;};
+   inline ListTable(RESTORETYPE restoreType) { ; };
+   inline ListTable() {;};
 
-   virtual void live(size_t);
-   virtual void liveGeneral(MarkReason reason);
-   virtual void flatten(RexxEnvelope *);
-   inline LISTENTRY   *getData() {return elements; };
+    class LISTENTRY
+    {
+    public:
+        RexxObject *value;                   // list element value
+        size_t next;                         // next list element in chain
+        size_t previous;                     // previous list element in chain
+    };
+
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(RexxEnvelope *);
 
  protected:
 
-   size_t size;                        /* count of list elements            */
-   LISTENTRY elements[1];              /* entry elements                    */
- };
- #endif
+    size_t size;                        // count of list element
+};
+#endif
