@@ -85,12 +85,7 @@ RexxObject *RexxQueue::pullRexx()
 /*            are available                                                   */
 /******************************************************************************/
 {
-    RexxObject *item = this->pop();                  /* remove the first item             */
-    if (item == OREF_NULL)               /* nothing there?                    */
-    {
-        item = TheNilObject;               /* use .nil instead                  */
-    }
-    return item;                         /* return the pulled item            */
+    return resultOrNil(pop());
 }
 
 RexxObject *RexxQueue::pushRexx(RexxObject *item)
@@ -327,7 +322,7 @@ RexxObject *RexxQueue::hasindex(RexxObject *_index)
                                        /* locate this entry                 */
   LISTENTRY *list_index = this->locateEntry(_index, IntegerOne);
                                        /* return an existence flag          */
-  return (( list_index != NULL) ? TheTrueObject : TheFalseObject);
+  return booleanObject(list_index != NULL);
 }
 
 RexxObject *RexxQueue::peek()
@@ -344,7 +339,7 @@ RexxObject *RexxQueue::supplier()
 /* Function:  Create a supplier for a queue object                            */
 /******************************************************************************/
 {
-    RexxArray *values = this->makeArray();          /* convert into an array             */
+    ArrayClass *values = this->makeArray();          /* convert into an array             */
     /* turn this into a supplier         */
     return new_supplier(values, OREF_NULL);
 }
@@ -357,12 +352,12 @@ RexxObject *RexxQueue::supplier()
  *
  * @return An array containing all of the queue indices.
  */
-RexxArray *RexxQueue::allIndexes()
+ArrayClass *RexxQueue::allIndexes()
 {
     // create an array and protect it.
     size_t arraysize = this->items();
 
-    RexxArray *result = new_array(arraysize);
+    ArrayClass *result = new_array(arraysize);
     ProtectedObject p(result);
 
     // now just make an array containing each index value.

@@ -136,7 +136,7 @@ RexxObject *StringUtil::containsRexx(const char *stringData, size_t length, Rexx
     size_t _range = optionalLengthArgument(range, length - _start + 1, ARG_THREE);
     /* pass on to the primitive function */
     /* and return as an integer object   */
-    return pos(stringData, length, needle, _start - 1, _range) > 0 ? TheTrueObject : TheFalseObject;
+    return booleanObject(pos(stringData, length, needle, _start - 1, _range) > 0);
 }
 
 
@@ -512,7 +512,7 @@ const char *StringUtil::locateSeparator(const char *start, const char *end, cons
  * @return An array of all strings within the buffer, with the target
  *         delimiter removed.
  */
-RexxArray *StringUtil::makearray(const char *start, size_t length, RexxString *separator)
+ArrayClass *StringUtil::makearray(const char *start, size_t length, RexxString *separator)
 {
     const char *sepData = "\n";          // set our default separator
     size_t sepSize = 1;
@@ -533,7 +533,7 @@ RexxArray *StringUtil::makearray(const char *start, size_t length, RexxString *s
     if (sepSize == 0)
     {
         // we need an array the size of the string
-        RexxArray *array = new_array(length);
+        ArrayClass *array = new_array(length);
         ProtectedObject p1(array);
         // create a string for each character and poke into the array
         for (size_t i = 0; i < length; i++, start++)
@@ -544,7 +544,7 @@ RexxArray *StringUtil::makearray(const char *start, size_t length, RexxString *s
     }
 
     // create an array of strings to return.
-    Protected<RexxArray> strings = new_array();
+    Protected<ArrayClass> strings = new_array();
     // this is the end of the string
     const char *stringEnd = start + length;
 
@@ -1084,7 +1084,6 @@ int StringUtil::valSet(const char *String, size_t Length, const char *Set, int M
 RexxObject *StringUtil::dataType(RexxString *String, char Option )
 {
     size_t      Len;                     /* validated string length           */
-    RexxObject *Answer;                  /* validation result                 */
     RexxObject *Temp;                    /* temporary value                   */
     const char *Scanp;                   /* string data pointer               */
     size_t      Count;                   /* hex nibble count                  */
@@ -1093,8 +1092,6 @@ RexxObject *StringUtil::dataType(RexxString *String, char Option )
     Len = String->getLength();           /* get validated string len          */
     Option = toupper(Option);            /* get the first character           */
 
-                                         /* assume failure on checking        */
-    Answer = TheFalseObject;
     /* get a scan pointer                */
     Scanp = String->getStringData();
 
@@ -1103,45 +1100,20 @@ RexxObject *StringUtil::dataType(RexxString *String, char Option )
 
         case RexxString::DATATYPE_ALPHANUMERIC:        /* Alphanumeric                      */
             /* all in the set?                   */
-            if (Len != 0 && !memcpbrk(Scanp, RexxString::ALPHANUM, Len))
-            {
-                /* this is a good string             */
-                Answer = TheTrueObject;
-            }
-            break;
+            return booleanObject(Len != 0 && !memcpbrk(Scanp, RexxString::ALPHANUM, Len));
 
         case RexxString::DATATYPE_BINARY:              /* Binary string                     */
             /* validate the string               */
-            if (Len == 0 || valSet(Scanp, Len, RexxString::BINARY, 4, &Count))
-            {
-                /* this is a good string             */
-                Answer = TheTrueObject;
-            }
-            break;
+            return booleanObject(Len == 0 || valSet(Scanp, Len, RexxString::BINARY, 4, &Count));
 
         case RexxString::DATATYPE_LOWERCASE:           /* Lowercase                         */
-            if (Len != 0 && !memcpbrk(Scanp, RexxString::LOWER_ALPHA, Len))
-            {
-                /* this is a good string             */
-                Answer = TheTrueObject;
-            }
-            break;
+            return booleanObject(Len != 0 && !memcpbrk(Scanp, RexxString::LOWER_ALPHA, Len));
 
         case RexxString::DATATYPE_UPPERCASE:           /* Uppercase                         */
-            if (Len != 0 && !memcpbrk(Scanp, RexxString::UPPER_ALPHA, Len))
-            {
-                /* this is a good string             */
-                Answer = TheTrueObject;
-            }
-            break;
+            return booleanObject(Len != 0 && !memcpbrk(Scanp, RexxString::UPPER_ALPHA, Len));
 
         case RexxString::DATATYPE_MIXEDCASE:           /* Mixed case                        */
-            if (Len != 0 && !memcpbrk(Scanp, RexxString::MIXED_ALPHA, Len))
-            {
-                /* this is a good string             */
-                Answer = TheTrueObject;
-            }
-            break;
+            return booleanObject(Len != 0 && !memcpbrk(Scanp, RexxString::MIXED_ALPHA, Len));
 
         case RexxString::DATATYPE_WHOLE_NUMBER:        /* Whole number                      */
             /* validate as a number              */
@@ -1151,79 +1123,44 @@ RexxObject *StringUtil::dataType(RexxString *String, char Option )
                    /* force rounding to current digits  */
                 TempNum = (RexxNumberString *)TempNum->plus(IntegerZero);
                 /* check for integer then            */
-                Answer = TempNum->isInteger();
+                return booleanObject(TempNum->isInteger());
             }
-            break;
+            return TheFalseObject;
 
         case RexxString::DATATYPE_NUMBER:              /* Number                            */
             /* validate as a number              */
             Temp = (RexxObject *)String->numberString();
-            if (Temp != OREF_NULL)           /* valid number?                     */
-            {
-                /* got a good one                    */
-                Answer = TheTrueObject;
-            }
-            break;
+            return booleanObject(Temp != OREF_NULL);
 
         case RexxString::DATATYPE_9DIGITS:             /* NUMERIC DIGITS 9 number           */
             {                                  /* good long number                  */
                 wholenumber_t temp;
-                if (String->numberValue(temp))
-                {
-                    Answer = TheTrueObject;
-                }
-                break;
+                return booleanObject(String->numberValue(temp));
             }
 
         case RexxString::DATATYPE_HEX:                 /* heXadecimal                       */
             /* validate the string               */
-            if (Len == 0 || valSet(Scanp, Len, RexxString::HEX_CHAR_STR, 2, &Count))
-            {
-                /* valid hexadecimal                 */
-                Answer = TheTrueObject;
-            }
-            break;
+            return booleanObject(Len == 0 || valSet(Scanp, Len, RexxString::HEX_CHAR_STR, 2, &Count));
 
         case RexxString::DATATYPE_SYMBOL:              /* Symbol                            */
             /* validate the symbol               */
-            if (String->isSymbol() != STRING_BAD_VARIABLE)
-            {
-                /* is a valid symbol                 */
-                Answer = TheTrueObject;
-            }
-            break;
+            return booleanObject(String->isSymbol() != STRING_BAD_VARIABLE);
 
         case RexxString::DATATYPE_VARIABLE:            /* Variable                          */
         {
             // validate the symbol
             StringSymbolType type = String->isSymbol();
             /* a valid variable type?            */
-            if (type == STRING_NAME ||
-                type == STRING_STEM ||
-                type == STRING_COMPOUND_NAME)
-            {
-                /* is a valid symbol                 */
-                Answer = TheTrueObject;
-            }
-            break;
+            return booleanObject(type == STRING_NAME || type == STRING_STEM || type == STRING_COMPOUND_NAME);
         }
 
         case RexxString::DATATYPE_LOGICAL:           // Test for a valid logical.
-            if (Len != 1 || (*Scanp != '1' && *Scanp != '0'))
-            {
-                Answer = TheFalseObject;
-            }
-            else
-            {
-                Answer = TheTrueObject;
-            }
-
-            break;
+            return booleanObject(!(Len != 1 || (*Scanp != '1' && *Scanp != '0')));
 
         default  :                         /* unsupported option                */
             reportException(Error_Incorrect_method_option, "ABCDLMNOSUVWX9", new_string((const char *)&Option,1));
     }
-    return Answer;                       /* return validation answer          */
+    return TheFalseObject;               /* return validation answer          */
 }
 
 
@@ -1570,7 +1507,7 @@ RexxString *StringUtil::subWord(const char *data, size_t length, RexxInteger *po
  *
  * @return The array containing the indicated subwords.
  */
-RexxArray *StringUtil::subWords(const char *data, size_t length, RexxInteger *position, RexxInteger *plength)
+ArrayClass *StringUtil::subWords(const char *data, size_t length, RexxInteger *position, RexxInteger *plength)
 {
                                          /* convert position to binary        */
     size_t wordPos = optionalPositionArgument(position, 1, ARG_ONE);
@@ -1601,7 +1538,7 @@ RexxArray *StringUtil::subWords(const char *data, size_t length, RexxInteger *po
     }
 
     // we make this size zero so the size and the items count will match
-    RexxArray *result = new_array((size_t)0);
+    ArrayClass *result = new_array((size_t)0);
     ProtectedObject p(result);
 
     const char *wordStart = word;                /* save start position               */
@@ -1665,12 +1602,12 @@ RexxString *StringUtil::word(const char *data, size_t length, RexxInteger *posit
  *
  * @return The string value of the word at the indicated position.
  */
-RexxArray *StringUtil::words(const char *data, size_t length)
+ArrayClass *StringUtil::words(const char *data, size_t length)
 {
     const char *word = data;             /* point to the string               */
     const char *nextSite = NULL;
 
-    RexxArray *result = new_array((size_t)0);
+    ArrayClass *result = new_array((size_t)0);
     ProtectedObject p(result);
                                        /* get the first word                */
     size_t wordLength = nextWord(&word, &length, &nextSite);

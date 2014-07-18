@@ -607,7 +607,7 @@ void RexxBehaviour::mergeMethodDictionary(TableClass *sourceDictionary)
  *
  * @return An array of the behaviour scopes.
  */
-RexxArray *RexxBehaviour::allScopes()
+ArrayClass *RexxBehaviour::allScopes()
 {
     methodDictionary->allScopes();
 }

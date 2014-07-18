@@ -86,7 +86,7 @@
  *
  * @return An executable method object.
  */
-MethodClass *LanguageParser::createMethod(RexxString *name, RexxArray *source, PackageClass *sourceContext)
+MethodClass *LanguageParser::createMethod(RexxString *name, ArrayClass *source, PackageClass *sourceContext)
 {
     // create the appropriate array source, then the parser, then generate the
     // code.
@@ -147,7 +147,7 @@ MethodClass *LanguageParser::createMethod(RexxString *name)
  *
  * @return An executable method object.
  */
-RoutineClass *LanguageParser::createRoutine(RexxString *name, RexxArray *source, PackageClass *sourceContext)
+RoutineClass *LanguageParser::createRoutine(RexxString *name, ArrayClass *source, PackageClass *sourceContext)
 {
     // create the appropriate array source, then the parser, then generate the
     // code.
@@ -225,7 +225,7 @@ RoutineClass *LanguageParser::createProgram(RexxString *name, RexxBuffer *source
  *
  * @return An executable method object.
  */
-RoutineClass *LanguageParser::createProgram(RexxString *name, RexxArray *source)
+RoutineClass *LanguageParser::createProgram(RexxString *name, ArrayClass *source)
 {
     // create the appropriate array source, then the parser, then generate the
     // code.
@@ -1331,7 +1331,7 @@ void LanguageParser::resolveDependencies()
         }
 
         // get a array for handling the ordering
-        RexxArray *classOrder = new_array(classCount);
+        ArrayClass *classOrder = new_array(classCount);
         ProtectedObject p2(classOrder);
 
         // now we repeatedly scan the pending directory looking for a class
@@ -2044,13 +2044,13 @@ void LanguageParser::setGuard()
  *
  * @return An array of the guard variable names.
  */
-RexxArray *LanguageParser::getGuard()
+ArrayClass *LanguageParser::getGuard()
 {
     // TODO:  Might want to check if the variable retrievers might be a better
     // option here.
 
     // get the indices as an array of names.
-    RexxArray *guards = guardVariables->makeArray();
+    ArrayClass *guards = guardVariables->makeArray();
     // turn off collection by tossing the table.
     guardVariables = OREF_NULL;
     return guards;
@@ -2425,7 +2425,7 @@ RexxObject *LanguageParser::parseSubExpression(int terminators )
  *
  * @return An array object holding the argument expressions.
  */
-RexxArray *LanguageParser::parseArgArray(RexxToken *firstToken, int terminators )
+ArrayClass *LanguageParser::parseArgArray(RexxToken *firstToken, int terminators )
 {
     // scan a set of arguments until we hit our terminator (likely to be
     // a ')' or ']'.  Arguments are delimited by ','
@@ -2433,7 +2433,7 @@ RexxArray *LanguageParser::parseArgArray(RexxToken *firstToken, int terminators 
 
     // The arguments are pushed on to the term stack.  We need to allocate
     // an array and copy them into the array
-    RexxArray *args = new_array(argCount);
+    ArrayClass *args = new_array(argCount);
 
     // arguments are pushed on to the term stack in reverse order, so
     // we fill from the end.  Note that missing arguments are
@@ -3204,10 +3204,10 @@ RexxObject *LanguageParser::popNTerms(size_t count)
  *
  * @return An array of the words.
  */
-RexxArray  *LanguageParser::words(RexxString *string)
+ArrayClass  *LanguageParser::words(RexxString *string)
 {
     // reduce this to an array of words... this is the easy part.
-    RexxArray *wordArray = string->subWords(OREF_NULL, OREF_NULL);
+    ArrayClass *wordArray = string->subWords(OREF_NULL, OREF_NULL);
     size_t count = wordArray->items();
 
     // it's possible this could contain nothing...just return the
@@ -3255,7 +3255,7 @@ void LanguageParser::error(int errorcode)
  * @param location  The location of the instruction in error.
  * @param subs      The message substitutions.
  */
-void LanguageParser::error(int errorcode, const SourceLocation &location, RexxArray *subs)
+void LanguageParser::error(int errorcode, const SourceLocation &location, ArrayClass *subs)
 {
     // set the error location.  This location is picked up from the
     // parse context stack frame we set up before we started

@@ -210,7 +210,7 @@ void RexxCode::run(RexxActivity *activity, MethodClass *method, RexxObject *rece
  *
  * @return An array of the code source lines.
  */
-RexxArray *RexxCode::getSource()
+ArrayClass *RexxCode::getSource()
 {
     // the source package handles this.
     return source->extractSource(location);

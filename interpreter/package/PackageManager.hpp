@@ -50,7 +50,7 @@
 class BaseCode;
 class RoutineClass;
 class ProtectedObject;
-class RexxArray;
+class ArrayClass;
 class RexxActivity;
 class RexxNativeMethod;
 class ProtectedObject;
@@ -63,8 +63,8 @@ public:
     static void liveGeneral(MarkReason reason);
 
     static void initialize();
-    static RexxArray *getImageData();
-    static void restore(RexxArray *imageArray);
+    static ArrayClass *getImageData();
+    static void restore(ArrayClass *imageArray);
     static void restore();
     static LibraryPackage    *getLibrary(RexxString *name);
     static LibraryPackage    *loadLibrary(RexxString *name);
@@ -92,7 +92,7 @@ public:
     static RoutineClass *loadRequires(RexxActivity *activity, RexxString *shortName, RexxString *resolvedName, ProtectedObject &result);
     static RoutineClass *getMacroSpaceRequires(RexxActivity *activity, RexxString *name, ProtectedObject &result, RexxObject *securityManager);
     static RoutineClass *getRequiresFile(RexxActivity *activity, RexxString *name, RexxObject *securityManager, ProtectedObject &result);
-    static RoutineClass *loadRequires(RexxActivity *activity, RexxString *name, RexxArray *data, ProtectedObject &result);
+    static RoutineClass *loadRequires(RexxActivity *activity, RexxString *name, ArrayClass *data, ProtectedObject &result);
     static RoutineClass *loadRequires(RexxActivity *activity, RexxString *name, const char *data, size_t length, ProtectedObject &result);
 
 protected:

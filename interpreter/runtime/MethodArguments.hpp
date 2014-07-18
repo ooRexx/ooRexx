@@ -279,7 +279,7 @@ inline size_t optionalPositive(RexxInternalObject *o, size_t d, size_t p)
  */
 
 // TODO:  This appears not to be used in all the places where it could.
-inline RexxArray *arrayArgument(RexxInternalObject *object, size_t position)
+inline ArrayClass *arrayArgument(RexxInternalObject *object, size_t position)
 {
     // this is required.
     if (object == OREF_NULL)
@@ -287,7 +287,7 @@ inline RexxArray *arrayArgument(RexxInternalObject *object, size_t position)
         missingArgument(position);
     }
     // force to array form
-    RexxArray *array = object->requestArray();
+    ArrayClass *array = object->requestArray();
     // not an array or not single dimension?  Error!
     if (array == TheNilObject || array->getDimension() != 1)
     {
@@ -307,7 +307,7 @@ inline RexxArray *arrayArgument(RexxInternalObject *object, size_t position)
  *
  * @return A converted single-dimension array.
  */
-inline RexxArray * arrayArgument(RexxInternalObject *object, const char *name)
+inline ArrayClass * arrayArgument(RexxInternalObject *object, const char *name)
 {
     if (object == OREF_NULL)
     {
@@ -315,7 +315,7 @@ inline RexxArray * arrayArgument(RexxInternalObject *object, const char *name)
     }
 
     // get the array form and verify we got a single-dimension array back.
-    RexxArray *array = object->requestArray();
+    ArrayClass *array = object->requestArray();
     if (array == TheNilObject || array->getDimension() != 1)
     {
         /* raise an error                    */
@@ -371,7 +371,7 @@ inline RexxString *REQUEST_STRING(RexxInternalObject *object)
  * @return The converted array value of the object or TheNilObject if
  *         if did not convert.
  */
-inline RexxArray * REQUEST_ARRAY(RexxInternalObject *obj) { return ((obj)->requestArray()); }
+inline ArrayClass * REQUEST_ARRAY(RexxInternalObject *obj) { return ((obj)->requestArray()); }
 
 /**
  * Request an object to be converted to a RexxInteger
@@ -393,8 +393,6 @@ inline RexxInteger * REQUEST_INTEGER(RexxInternalObject *obj) { return ((obj)->r
  *
  * @return Either the result object, or TheNilObject.
  */
-
-// TODO:  look for opportunities to use this.
 inline RexxInternalObject *resultOrNil(RexxInternalObject *o) { return o != OREF_NULL ? o : TheNilObject; }
 
 

@@ -117,7 +117,7 @@ class RexxString : public RexxObject
     RexxNumberString *numberString();
     RexxInteger *integerValue(size_t);
     RexxString  *makeString();
-    RexxArray   *makeArray();
+    ArrayClass   *makeArray();
     RexxString  *primitiveMakeString();
     void         copyIntoTail(RexxCompoundTail *buffer);
     RexxString  *stringValue();
@@ -207,7 +207,7 @@ class RexxString : public RexxObject
     RexxString  *delWord(RexxInteger *, RexxInteger *);
     RexxString  *space(RexxInteger *, RexxString *);
     RexxString  *subWord(RexxInteger *, RexxInteger *);
-    RexxArray   *subWords(RexxInteger *, RexxInteger *);
+    ArrayClass   *subWords(RexxInteger *, RexxInteger *);
     RexxString  *word(RexxInteger *);
     RexxInteger *wordIndex(RexxInteger *);
     RexxInteger *wordLength(RexxInteger *);
@@ -277,7 +277,7 @@ class RexxString : public RexxObject
     RexxInteger *equals(RexxString *other);
     RexxInteger *caselessEquals(RexxString *other);
 
-    RexxArray   *makeArrayRexx(RexxString *);
+    ArrayClass   *makeArrayRexx(RexxString *);
 
     StringSymbolType isSymbol();
 

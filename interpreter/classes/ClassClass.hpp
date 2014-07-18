@@ -80,9 +80,9 @@ class RexxClass : public RexxObject
     RexxClass   *getBaseClass();
     RexxClass   *getMetaClass();
     RexxClass   *getSuperClass();
-    RexxArray   *getSuperClasses();
-    RexxArray   *getClassSuperClasses() { return classSuperClasses; }
-    RexxArray   *getSubClasses();
+    ArrayClass   *getSuperClasses();
+    ArrayClass   *getClassSuperClasses() { return classSuperClasses; }
+    ArrayClass   *getSubClasses();
     void         defineMethods(TableClass *);
     void         setInstanceBehaviour(RexxBehaviour *);
     TableClass  *getInstanceBehaviourDictionary();
@@ -139,11 +139,11 @@ class RexxClass : public RexxObject
            void         addSubClass(RexxClass *);
            void         removeSubclass(RexxClass *c);
            ScopeTable  *copyScopes();
-           RexxArray   *allScopes();
+           ArrayClass   *allScopes();
            TableClass   *copyInstanceMethods();
            ScopeTable  *copyMetaclassScopes();
            RexxClass   *getSuperScope() { return scopeSuperClass; }
-           RexxArray   *getScopeOrder() { return scopeSearchOrder; }
+           ArrayClass   *getScopeOrder() { return scopeSearchOrder; }
 
     static void processNewArgs(RexxObject **, size_t, RexxObject ***, size_t *, size_t, RexxObject **, RexxObject **);
 
@@ -174,9 +174,9 @@ class RexxClass : public RexxObject
     RexxClass     *metaClass;          // Metaclass of this class
     // the super class and any inherited mixins for class
     // behaviour
-    RexxArray     *classSuperClasses;
+    ArrayClass     *classSuperClasses;
     // the super class and any inherited mixins that contribute to instance behaviour.
-    RexxArray     *instanceSuperClasses;
+    ArrayClass     *instanceSuperClasses;
     FlagSet<ClassFlag, 32> classFlags; // class attributes
 
     ListClass      *subClasses;         // our list of weak referenced subclasses

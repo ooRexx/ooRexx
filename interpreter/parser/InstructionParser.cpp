@@ -1585,7 +1585,7 @@ RexxInstruction *LanguageParser::forwardNew()
     RexxObject *message = OREF_NULL;
     RexxObject *superClass = OREF_NULL;
     RexxObject *arguments = OREF_NULL;
-    RexxArray  *array = OREF_NULL;
+    ArrayClass  *array = OREF_NULL;
 
     // and start parsing
     RexxToken *token = nextReal();
@@ -1731,7 +1731,7 @@ RexxInstruction *LanguageParser::guardNew()
     }
 
     RexxObject *expression = OREF_NULL;
-    RexxArray *variable_list = OREF_NULL;
+    ArrayClass *variable_list = OREF_NULL;
     size_t variable_count = 0;
 
 
@@ -1782,7 +1782,7 @@ RexxInstruction *LanguageParser::guardNew()
                 expression = requiredExpression(TERM_EOC, Error_Invalid_expression_guard);
 
                 // get the guard expression variable list
-                RexxArray *variable_list = getGuard();
+                ArrayClass *variable_list = getGuard();
                 variable_count = variable_list->size();
 
                 // if using GUARD WHEN, we will never wake up if there are
@@ -2582,7 +2582,7 @@ RexxInstruction *LanguageParser::pushNew()
  */
 RexxInstruction *LanguageParser::raiseNew()
 {
-    RexxArray *arrayItems = OREF_NULL;
+    ArrayClass *arrayItems = OREF_NULL;
     RexxObject *rcValue = OREF_NULL;
     RexxObject *description = OREF_NULL;
     RexxObject *additional = OREF_NULL;

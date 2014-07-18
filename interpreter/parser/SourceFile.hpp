@@ -92,11 +92,11 @@ class RexxSource: public RexxInternalObject
     size_t      sourceSize();
     RexxString *traceBack(RexxActivation *, SourceLocation &, size_t, bool);
     RexxString *extract(SourceLocation &);
-    RexxArray  *extractSource(SourceLocation &);
-    RexxArray  *extractSource();
+    ArrayClass  *extractSource(SourceLocation &);
+    ArrayClass  *extractSource();
     void        mergeRequired(RexxSource *);
     PackageClass *loadRequires(RexxActivity *activity, RexxString *target);
-    PackageClass *loadRequires(RexxActivity *activity, RexxString *target, RexxArray *s);
+    PackageClass *loadRequires(RexxActivity *activity, RexxString *target, ArrayClass *s);
     void        addPackage(PackageClass *package);
     PackageClass *getPackage();
     void        inheritSourceContext(PackageClass *source);
@@ -146,7 +146,7 @@ class RexxSource: public RexxInternalObject
     inline DirectoryClass *getInstalledPublicRoutines() { install(); return publicRoutines; }
     inline DirectoryClass *getImportedRoutines() { install(); return mergedPublicRoutines; }
     inline DirectoryClass *getDefinedMethods() { install(); return unattachedMethods; }
-    inline RexxArray     *getPackages() { install(); return loadedPackages; }
+    inline ArrayClass     *getPackages() { install(); return loadedPackages; }
     inline void           setDigits(size_t d) { digits = d; }
     inline size_t         getDigits() { return digits; }
     inline void           setForm(bool f) { form = f; }
@@ -180,15 +180,15 @@ protected:
 
     DirectoryClass *routines;             // routines found on directives
     DirectoryClass *publicRoutines;       // PUBLIC routines directive routines
-    RexxArray     *libraries;            // packages requiring loading
-    RexxArray     *requires;             // requires directives
-    RexxArray     *classes;              // classes found on directives
+    ArrayClass     *libraries;            // packages requiring loading
+    ArrayClass     *requires;             // requires directives
+    ArrayClass     *classes;              // classes found on directives
     DirectoryClass *dataAssets;           // assets defined in the package
     DirectoryClass *unattachedMethods;    // methods found on directives
 
     // sections resolved from the install process.
 
-    RexxArray     *loadedPackages;       // packages imported by this package
+    ArrayClass     *loadedPackages;       // packages imported by this package
                                          // all public installed classes
     DirectoryClass *installedPublicClasses;
     DirectoryClass *installedClasses;    // entire list of installed classes

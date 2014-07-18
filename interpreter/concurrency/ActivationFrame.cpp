@@ -94,7 +94,7 @@ BaseExecutable *InternalActivationFrame::executable()
 
 StackFrameClass *InternalActivationFrame::createStackFrame()
 {
-    RexxArray *info = new_array(name, frameMethod->getScope()->getId());
+    ArrayClass *info = new_array(name, frameMethod->getScope()->getId());
     ProtectedObject p(info);
 
     RexxString *message = activity->buildMessage(Message_Translations_compiled_method_invocation, info);

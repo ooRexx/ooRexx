@@ -225,7 +225,7 @@ typedef enum
  */
 bool LanguageParser::isDuplicateClass(RexxString *name)
 {
-    return classDependencies->hasEntry(name) == TheTrueObject;
+    return classDependencies->hasEntry(name);
 }
 
 
@@ -239,7 +239,7 @@ bool LanguageParser::isDuplicateClass(RexxString *name)
  */
 bool LanguageParser::isDuplicateRoutine(RexxString *name)
 {
-    return routines->hasEntry(name) == TheTrueObject;
+    return routines->hasEntry(name);
 }
 
 
@@ -918,7 +918,7 @@ void LanguageParser::decodeExternalMethod(RexxString *methodName, RexxString *ex
     // convert into an array of words
     // NOTE:  This method makes all of the words part of the
     // common string pool
-    RexxArray *_words = words(externalSpec);
+    ArrayClass *_words = words(externalSpec);
     // not 'LIBRARY library [entry]' form?
     if (((RexxString *)(_words->get(1)))->strCompare(CHAR_LIBRARY))
     {
@@ -1582,7 +1582,7 @@ void LanguageParser::routineDirective()
         {
             // convert external into words (this also adds the strings
             // to the common string pool)
-            RexxArray *_words = words(externalname);
+            ArrayClass *_words = words(externalname);
             // ::ROUTINE foo EXTERNAL "LIBRARY libbar [foo]"
             // NOTE:  decodeMethodLibrary doesn't really work for routines
             // because we have a second form.  Not really worth writing

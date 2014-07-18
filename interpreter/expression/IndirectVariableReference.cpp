@@ -123,14 +123,14 @@ void RexxVariableReference::flatten(RexxEnvelope *envelope)
  *
  * @return An array of variable retrievers.
  */
-RexxArray *RexxVariableReference::list(RexxActivation *context)
+ArrayClass *RexxVariableReference::list(RexxActivation *context)
 {
     // get the variable value
     RexxObject *value = variableObject->getValue(context);
     // force to string form
     Protected<RexxString> nameString = REQUEST_STRING(value);
     // get this as a list of words
-    Protected<RexxArray> list = ((RexxString *)nameString)->subWords(OREF_NULL, OREF_NULL);
+    Protected<ArrayClass> list = ((RexxString *)nameString)->subWords(OREF_NULL, OREF_NULL);
 
     size_t count = list->size();
 
@@ -176,7 +176,7 @@ RexxArray *RexxVariableReference::list(RexxActivation *context)
 void RexxVariableReference::drop(RexxActivation *context)
 {
     // evaluate into a variable list
-    RexxArray *variables = list(context);
+    ArrayClass *variables = list(context);
     ProtectedObject p(variables);
 
     size_t count = variables->size();
@@ -201,7 +201,7 @@ void RexxVariableReference::procedureExpose(RexxActivation *context, RexxActivat
     variableObject->procedureExpose(context, parent);
 
     // evaluate into a variable list
-    RexxArray *variables = list(context);
+    ArrayClass *variables = list(context);
     ProtectedObject p(variables);
 
     size_t count = variables->size();
@@ -226,7 +226,7 @@ void RexxVariableReference::expose(RexxActivation *context, RexxVariableDictiona
     // expose the variable first
     variableObject->expose(context, object_dictionary);
     // evaluate into a variable list
-    RexxArray *variables = list(context);
+    ArrayClass *variables = list(context);
     ProtectedObject p(variables);
 
     size_t count = variables->size();

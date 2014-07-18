@@ -109,7 +109,7 @@ class RexxNativeActivation : public RexxActivationBase
     void   resetNext();
     bool   fetchNext(RexxString **name, RexxObject **value);
     void   raiseCondition(RexxString *condition, RexxString *description, RexxObject *additional, RexxObject *result);
-    RexxArray *getArguments();
+    ArrayClass *getArguments();
     RexxObject *getArgument(size_t index);
     RexxObject *getSuper();
     RexxObject *getScope();
@@ -158,7 +158,7 @@ class RexxNativeActivation : public RexxActivationBase
     void reportStemError(size_t position, RexxObject *object);
     void processArguments(size_t argcount, RexxObject **arglist, uint16_t *argumentTypes, ValueDescriptor *descriptors, size_t maximumArgumentCount);
     RexxObject *valueToObject(ValueDescriptor *value);
-    RexxArray *valuesToObject(ValueDescriptor *value, size_t count);
+    ArrayClass *valuesToObject(ValueDescriptor *value, size_t count);
     bool objectToValue(RexxObject *o, ValueDescriptor *value);
     void createLocalReference(RexxObject *objr);
     void removeLocalReference(RexxObject *objr);
@@ -180,7 +180,7 @@ class RexxNativeActivation : public RexxActivationBase
     int stemSort(const char *stemname, int order, int type, size_t start, size_t end, size_t firstcol, size_t lastcol);
     inline void enableConditionTrap() { trapConditions = true; }
 
-    void forwardMessage(RexxObject *to, RexxString *msg, RexxClass *super, RexxArray *args, ProtectedObject &result);
+    void forwardMessage(RexxObject *to, RexxString *msg, RexxClass *super, ArrayClass *args, ProtectedObject &result);
     void enableConditionTraps() { trapErrors = true; }
     void disableConditionTraps() { trapErrors = false; }
     StackFrameClass *createStackFrame();
@@ -203,7 +203,7 @@ protected:
     RexxString     *msgname;             // name of the message running
     RexxActivation *activation;          // parent activation
     RexxObject    **arglist;             // copy of the argument list
-    RexxArray      *argArray;            // optionally create argument array
+    ArrayClass      *argArray;            // optionally create argument array
     IdentityTable   *savelist;       // list of saved objects
     RexxObject     *result;              // result from RexxRaise call
     ActivationType  activationType;      // the type of activation

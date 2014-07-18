@@ -94,7 +94,7 @@ protected:
     RexxString *idName;             // the internal ID name
     RexxString *metaclassName;      // name of the class meta class
     RexxString *subclassName;       // the class used for the subclassing operation.
-    RexxArray  *inheritsClasses;    // the names of inherited classes
+    ArrayClass  *inheritsClasses;    // the names of inherited classes
     TableClass  *instanceMethods;    // the methods attached to this class
     TableClass  *classMethods;       // the set of class methods
     bool        publicClass;        // this is a public class

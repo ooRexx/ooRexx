@@ -99,7 +99,7 @@ class RexxBehaviour : public RexxInternalObject
     inline void        clearMethodDictionary() { setMethodDictionary(OREF_NULL); }
     inline RexxClass  *getOwningClass()        { return owningClass;};
            void        setOwningClass(RexxClass *c);
-           RexxArray  *allScopes();
+           ArrayClass  *allScopes();
 
     inline void  setClassType(size_t n) { classType = (uint16_t)n; }
     inline size_t getClassType()  { return (size_t)classType; }

@@ -61,6 +61,7 @@ class TableClass : public EqualityHashCollection
 
     inline TableClass(RESTORETYPE restoreType) { ; }
            TableClass(size_t capacity = HashCollection::DefaultTableSize) : EqualityHashCollection(capacity) { }
+           TableClass(bool fromRexx) { }
 
     RexxObject *newRexx(RexxObject **, size_t);
 

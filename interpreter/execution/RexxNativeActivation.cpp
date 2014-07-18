@@ -466,7 +466,7 @@ void RexxNativeActivation::processArguments(size_t _argcount, RexxObject **_argl
                         case REXX_VALUE_RexxArrayObject: /* Required ARRAY object            */
                         {
                             /* force to a string value           */
-                            RexxArray *temp = arrayArgument(argument, inputIndex + 1) ;
+                            ArrayClass *temp = arrayArgument(argument, inputIndex + 1) ;
                             // if this forced a string object to be created,
                             // we need to protect it here.
                             if (temp != argument)
@@ -663,9 +663,9 @@ void RexxNativeActivation::processArguments(size_t _argcount, RexxObject **_argl
  *
  * @return The described value converted to an appropriate Rexx object.
  */
-RexxArray *RexxNativeActivation::valuesToObject(ValueDescriptor *value, size_t count)
+ArrayClass *RexxNativeActivation::valuesToObject(ValueDescriptor *value, size_t count)
 {
-    RexxArray *r = new_array(count);
+    ArrayClass *r = new_array(count);
     ProtectedObject p(r);
 
     for (size_t i = 0; i < count; i++)
@@ -755,7 +755,7 @@ RexxObject *RexxNativeActivation::valueToObject(ValueDescriptor *value)
 
         case REXX_VALUE_logical_t:                        /* logical value                     */
         {
-            return value->value.value_logical_t == 0 ? TheFalseObject : TheTrueObject;
+            return booleanObject(value->value.value_logical_t != 0);
         }
 
         case REXX_VALUE_size_t:                        /* integer value                     */
@@ -1054,7 +1054,7 @@ bool RexxNativeActivation::objectToValue(RexxObject *o, ValueDescriptor *value)
         case REXX_VALUE_RexxArrayObject: /* Required ARRAY object            */
         {
             /* force to a string value           */
-            RexxArray *temp = arrayArgument(o, 1) ;
+            ArrayClass *temp = arrayArgument(o, 1) ;
             // if this forced a string object to be created,
             // we need to protect it here.
             if (temp != o)
@@ -2434,7 +2434,7 @@ void RexxNativeActivation::raiseCondition(RexxString *condition, RexxString *des
  *
  * @return An array containing the method arguments.
  */
-RexxArray *RexxNativeActivation::getArguments()
+ArrayClass *RexxNativeActivation::getArguments()
 {
     // if we've not requested this before, convert the arguments to an
     // array object.
@@ -3261,7 +3261,7 @@ int RexxNativeActivation::stemSort(const char *stemname, int order, int type, si
  *
  * @return The message send result.
  */
-void RexxNativeActivation::forwardMessage(RexxObject *to, RexxString *msg, RexxClass *super, RexxArray *args, ProtectedObject &_result)
+void RexxNativeActivation::forwardMessage(RexxObject *to, RexxString *msg, RexxClass *super, ArrayClass *args, ProtectedObject &_result)
 {
     // process all of the non-overridden values
     if (to == OREF_NULL)
@@ -3298,7 +3298,7 @@ StackFrameClass *RexxNativeActivation::createStackFrame()
 {
     if (receiver == OREF_NULL)
     {
-        RexxArray *info = new_array(getMessageName());
+        ArrayClass *info = new_array(getMessageName());
         ProtectedObject p(info);
 
         RexxString *message = activity->buildMessage(Message_Translations_compiled_routine_invocation, info);
@@ -3307,7 +3307,7 @@ StackFrameClass *RexxNativeActivation::createStackFrame()
     }
     else
     {
-        RexxArray *info = new_array(getMessageName(), ((MethodClass *)getExecutableObject())->getScope()->getId());
+        ArrayClass *info = new_array(getMessageName(), ((MethodClass *)getExecutableObject())->getScope()->getId());
         ProtectedObject p(info);
 
         RexxString *message = activity->buildMessage(Message_Translations_compiled_method_invocation, info);

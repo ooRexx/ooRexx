@@ -184,7 +184,7 @@ void MemoryObject::createImage()
                                          /* RexxNumberString                  */
     // NOTE:  The number string class lies about its identity
     RexxNumberString::createInstance();
-    RexxArray::createInstance();
+    ArrayClass::createInstance();
 
     // The pointer class needs to be created early because other classes
     // use the instances to store information.
@@ -350,50 +350,50 @@ void MemoryObject::createImage()
     /*           ARRAY                                                         */
     /***************************************************************************/
 
-    defineKernelMethod(CHAR_NEW, TheArrayClassBehaviour, CPPM(RexxArray::newRexx), A_COUNT);
-    defineKernelMethod(CHAR_OF,  TheArrayClassBehaviour, CPPM(RexxArray::of), A_COUNT);
+    defineKernelMethod(CHAR_NEW, TheArrayClassBehaviour, CPPM(ArrayClass::newRexx), A_COUNT);
+    defineKernelMethod(CHAR_OF,  TheArrayClassBehaviour, CPPM(ArrayClass::of), A_COUNT);
                                          /* set the scope of the methods to   */
                                          /* this classes oref                 */
     TheArrayClassBehaviour->setMethodDictionaryScope(TheArrayClass);
 
-    defineKernelMethod(CHAR_BRACKETS     ,TheArrayBehaviour, CPPM(RexxArray::getRexx), A_COUNT);
-    defineKernelMethod(CHAR_BRACKETSEQUAL,TheArrayBehaviour, CPPM(RexxArray::putRexx), A_COUNT);
-    defineKernelMethod(CHAR_AT           ,TheArrayBehaviour, CPPM(RexxArray::getRexx), A_COUNT);
-    defineKernelMethod(CHAR_DIMENSION    ,TheArrayBehaviour, CPPM(RexxArray::dimension), 1);
-    defineKernelMethod("DIMENSIONS"      ,TheArrayBehaviour, CPPM(RexxArray::getDimensions), 0);
-    defineKernelMethod(CHAR_HASINDEX     ,TheArrayBehaviour, CPPM(RexxArray::hasIndexRexx), A_COUNT);
-    defineKernelMethod(CHAR_ITEMS        ,TheArrayBehaviour, CPPM(RexxArray::itemsRexx), 0);
+    defineKernelMethod(CHAR_BRACKETS     ,TheArrayBehaviour, CPPM(ArrayClass::getRexx), A_COUNT);
+    defineKernelMethod(CHAR_BRACKETSEQUAL,TheArrayBehaviour, CPPM(ArrayClass::putRexx), A_COUNT);
+    defineKernelMethod(CHAR_AT           ,TheArrayBehaviour, CPPM(ArrayClass::getRexx), A_COUNT);
+    defineKernelMethod(CHAR_DIMENSION    ,TheArrayBehaviour, CPPM(ArrayClass::dimension), 1);
+    defineKernelMethod("DIMENSIONS"      ,TheArrayBehaviour, CPPM(ArrayClass::getDimensions), 0);
+    defineKernelMethod(CHAR_HASINDEX     ,TheArrayBehaviour, CPPM(ArrayClass::hasIndexRexx), A_COUNT);
+    defineKernelMethod(CHAR_ITEMS        ,TheArrayBehaviour, CPPM(ArrayClass::itemsRexx), 0);
     defineKernelMethod(CHAR_MAKEARRAY    ,TheArrayBehaviour, CPPM(RexxObject::makeArrayRexx), 0);
-    defineKernelMethod(CHAR_PUT          ,TheArrayBehaviour, CPPM(RexxArray::putRexx), A_COUNT);
-    defineKernelMethod(CHAR_REMOVE       ,TheArrayBehaviour, CPPM(RexxArray::removeRexx), A_COUNT);
-    defineKernelMethod(CHAR_SECTION      ,TheArrayBehaviour, CPPM(RexxArray::sectionRexx), 2);
-    defineKernelMethod(CHAR_SIZE         ,TheArrayBehaviour, CPPM(RexxArray::sizeRexx), 0);
-    defineKernelMethod(CHAR_SUPPLIER     ,TheArrayBehaviour, CPPM(RexxArray::supplier), 0);
-    defineKernelMethod(CHAR_FIRST        ,TheArrayBehaviour, CPPM(RexxArray::firstRexx), 0);
-    defineKernelMethod(CHAR_FIRSTITEM    ,TheArrayBehaviour, CPPM(RexxArray::firstItem), 0);
-    defineKernelMethod(CHAR_LAST         ,TheArrayBehaviour, CPPM(RexxArray::lastRexx), 0);
-    defineKernelMethod(CHAR_LASTITEM     ,TheArrayBehaviour, CPPM(RexxArray::lastItem), 0);
-    defineKernelMethod(CHAR_NEXT         ,TheArrayBehaviour, CPPM(RexxArray::nextRexx), A_COUNT);
-    defineKernelMethod(CHAR_PREVIOUS     ,TheArrayBehaviour, CPPM(RexxArray::previousRexx), A_COUNT);
-    defineKernelMethod(CHAR_APPEND       ,TheArrayBehaviour, CPPM(RexxArray::appendRexx), 1);
-    defineKernelMethod(CHAR_MAKESTRING   ,TheArrayBehaviour, CPPM(RexxArray::makeString), 2);
-    defineKernelMethod(CHAR_TOSTRING     ,TheArrayBehaviour, CPPM(RexxArray::toString), 2);
-    defineKernelMethod(CHAR_ALLINDEXES   ,TheArrayBehaviour, CPPM(RexxArray::allIndexes), 0);
-    defineKernelMethod(CHAR_ALLITEMS     ,TheArrayBehaviour, CPPM(RexxArray::allItems), 0);
-    defineKernelMethod(CHAR_EMPTY        ,TheArrayBehaviour, CPPM(RexxArray::empty), 0);
-    defineKernelMethod(CHAR_ISEMPTY      ,TheArrayBehaviour, CPPM(RexxArray::isEmptyRexx), 0);
-    defineKernelMethod(CHAR_INDEX        ,TheArrayBehaviour, CPPM(RexxArray::index), 1);
-    defineKernelMethod(CHAR_HASITEM      ,TheArrayBehaviour, CPPM(RexxArray::hasItem), 1);
-    defineKernelMethod(CHAR_REMOVEITEM   ,TheArrayBehaviour, CPPM(RexxArray::removeItem), 1);
-    defineKernelMethod(CHAR_INSERT       ,TheArrayBehaviour, CPPM(RexxArray::insertRexx), 2);
-    defineKernelMethod(CHAR_DELETE       ,TheArrayBehaviour, CPPM(RexxArray::deleteRexx), 1);
-    defineKernelMethod("FILL"            ,TheArrayBehaviour, CPPM(RexxArray::fill), 1);
+    defineKernelMethod(CHAR_PUT          ,TheArrayBehaviour, CPPM(ArrayClass::putRexx), A_COUNT);
+    defineKernelMethod(CHAR_REMOVE       ,TheArrayBehaviour, CPPM(ArrayClass::removeRexx), A_COUNT);
+    defineKernelMethod(CHAR_SECTION      ,TheArrayBehaviour, CPPM(ArrayClass::sectionRexx), 2);
+    defineKernelMethod(CHAR_SIZE         ,TheArrayBehaviour, CPPM(ArrayClass::sizeRexx), 0);
+    defineKernelMethod(CHAR_SUPPLIER     ,TheArrayBehaviour, CPPM(ArrayClass::supplier), 0);
+    defineKernelMethod(CHAR_FIRST        ,TheArrayBehaviour, CPPM(ArrayClass::firstRexx), 0);
+    defineKernelMethod(CHAR_FIRSTITEM    ,TheArrayBehaviour, CPPM(ArrayClass::firstItem), 0);
+    defineKernelMethod(CHAR_LAST         ,TheArrayBehaviour, CPPM(ArrayClass::lastRexx), 0);
+    defineKernelMethod(CHAR_LASTITEM     ,TheArrayBehaviour, CPPM(ArrayClass::lastItem), 0);
+    defineKernelMethod(CHAR_NEXT         ,TheArrayBehaviour, CPPM(ArrayClass::nextRexx), A_COUNT);
+    defineKernelMethod(CHAR_PREVIOUS     ,TheArrayBehaviour, CPPM(ArrayClass::previousRexx), A_COUNT);
+    defineKernelMethod(CHAR_APPEND       ,TheArrayBehaviour, CPPM(ArrayClass::appendRexx), 1);
+    defineKernelMethod(CHAR_MAKESTRING   ,TheArrayBehaviour, CPPM(ArrayClass::makeString), 2);
+    defineKernelMethod(CHAR_TOSTRING     ,TheArrayBehaviour, CPPM(ArrayClass::toString), 2);
+    defineKernelMethod(CHAR_ALLINDEXES   ,TheArrayBehaviour, CPPM(ArrayClass::allIndexes), 0);
+    defineKernelMethod(CHAR_ALLITEMS     ,TheArrayBehaviour, CPPM(ArrayClass::allItems), 0);
+    defineKernelMethod(CHAR_EMPTY        ,TheArrayBehaviour, CPPM(ArrayClass::empty), 0);
+    defineKernelMethod(CHAR_ISEMPTY      ,TheArrayBehaviour, CPPM(ArrayClass::isEmptyRexx), 0);
+    defineKernelMethod(CHAR_INDEX        ,TheArrayBehaviour, CPPM(ArrayClass::index), 1);
+    defineKernelMethod(CHAR_HASITEM      ,TheArrayBehaviour, CPPM(ArrayClass::hasItem), 1);
+    defineKernelMethod(CHAR_REMOVEITEM   ,TheArrayBehaviour, CPPM(ArrayClass::removeItem), 1);
+    defineKernelMethod(CHAR_INSERT       ,TheArrayBehaviour, CPPM(ArrayClass::insertRexx), 2);
+    defineKernelMethod(CHAR_DELETE       ,TheArrayBehaviour, CPPM(ArrayClass::deleteRexx), 1);
+    defineKernelMethod("FILL"            ,TheArrayBehaviour, CPPM(ArrayClass::fill), 1);
     // there have been some problems with the quick sort used as the default sort, so map everything
     // to the stable sort.  The stable sort, in theory, uses more memory, but in practice, this is not true.
-    defineKernelMethod(CHAR_SORT         ,TheArrayBehaviour, CPPM(RexxArray::stableSortRexx), 0);
-    defineKernelMethod(CHAR_SORTWITH     ,TheArrayBehaviour, CPPM(RexxArray::stableSortWithRexx), 1);
-    defineKernelMethod(CHAR_STABLESORT   ,TheArrayBehaviour, CPPM(RexxArray::stableSortRexx), 0);
-    defineKernelMethod(CHAR_STABLESORTWITH ,TheArrayBehaviour, CPPM(RexxArray::stableSortWithRexx), 1);
+    defineKernelMethod(CHAR_SORT         ,TheArrayBehaviour, CPPM(ArrayClass::stableSortRexx), 0);
+    defineKernelMethod(CHAR_SORTWITH     ,TheArrayBehaviour, CPPM(ArrayClass::stableSortWithRexx), 1);
+    defineKernelMethod(CHAR_STABLESORT   ,TheArrayBehaviour, CPPM(ArrayClass::stableSortRexx), 0);
+    defineKernelMethod(CHAR_STABLESORTWITH ,TheArrayBehaviour, CPPM(ArrayClass::stableSortWithRexx), 1);
                                          /* set the scope of the methods to   */
                                          /* this classes oref                 */
     TheArrayBehaviour->setMethodDictionaryScope(TheArrayClass);

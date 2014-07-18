@@ -106,7 +106,7 @@ class RexxNumberString : public RexxNumberStringBase
     inline RexxNumberString *numberString() { return this; }
     RexxInteger *integerValue(size_t);
     RexxString  *makeString();
-    RexxArray   *makeArray();
+    ArrayClass   *makeArray();
     RexxInteger *hasMethod(RexxString *);
     RexxString  *primitiveMakeString();
     RexxString  *stringValue();
@@ -149,7 +149,7 @@ class RexxNumberString : public RexxNumberStringBase
     RexxObject *ceilingInternal();
     RexxObject *round();
     RexxObject *roundInternal();
-    RexxObject *unknown(RexxString *, RexxArray *);
+    RexxObject *unknown(RexxString *, ArrayClass *);
     bool        isInstanceOf(RexxClass *);
     MethodClass   *instanceMethod(RexxString *);
     SupplierClass *instanceMethods(RexxClass *);

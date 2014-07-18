@@ -191,7 +191,7 @@ RexxObject *RexxStem::getStemValue()
 
 RexxObject *RexxStem::unknown(
     RexxString *msgname,               /* unknown message name              */
-    RexxArray  *arguments)             /* message arguments                 */
+    ArrayClass  *arguments)             /* message arguments                 */
 /******************************************************************************/
 /* Function:  Forward an unknown message to the value of the stem.            */
 /******************************************************************************/
@@ -200,7 +200,7 @@ RexxObject *RexxStem::unknown(
     msgname = stringArgument(msgname, ARG_ONE);
     requiredArgument(arguments, ARG_TWO);        /* need an argument array            */
                                          /* get this as an array              */
-    arguments = (RexxArray  *)REQUEST_ARRAY(arguments);
+    arguments = (ArrayClass  *)REQUEST_ARRAY(arguments);
     if (arguments == TheNilObject)       /* didn't convert?                   */
     {
         /* raise an error                    */
@@ -250,12 +250,7 @@ RexxObject *RexxStem::hasIndex(RexxObject **tailElements, size_t argCount)
     RexxCompoundElement *compound = findCompoundVariable(&resolved_tail);
     // if there's a variable there, and it has a real value, then
     // this is true.
-    if (compound != OREF_NULL && compound->getVariableValue() != OREF_NULL)
-    {
-        return TheTrueObject;
-    }
-    // nope, we got nuttin'
-    return TheFalseObject;
+    return booleanObject(compound != OREF_NULL && compound->getVariableValue() != OREF_NULL);
 }
 
 
@@ -305,8 +300,10 @@ RexxObject *RexxStem::remove(RexxObject **tailElements, size_t argCount)
  */
 RexxObject *RexxStem::hasItem(RexxObject *target)
 {
+    // TODO:  Make primitive and Rexx versions of methods for Stem class too.
+
     RexxCompoundElement *variable = findByValue(target);
-    return variable == OREF_NULL ? TheFalseObject : TheTrueObject;
+    return booleanObject(variable != OREF_NULL);
 }
 
 
@@ -406,7 +403,7 @@ RexxObject *RexxStem::bracketEqual(
 }
 
 
-RexxArray  *RexxStem::makeArray()
+ArrayClass  *RexxStem::makeArray()
 /******************************************************************************/
 /* Function:  Extract as an array the tails of a stem.                        */
 /******************************************************************************/
@@ -655,13 +652,13 @@ void RexxStem::setCompoundVariable(
     variable->set(_value);               /* and perform the set               */
 }
 
-RexxArray *RexxStem::tailArray()
+ArrayClass *RexxStem::tailArray()
 /******************************************************************************/
 /* Function:  Return all indices as an array                                  */
 /******************************************************************************/
 {
     RexxCompoundElement *variable;       /* table variable entry              */
-    RexxArray  *array;                   /* returned array                    */
+    ArrayClass  *array;                   /* returned array                    */
     size_t      count;                   /* count of variables                */
 
     array = new_array(items());          /* get the array                     */
@@ -875,11 +872,11 @@ void RexxStem::expose(
  *
  * @return An array of all items in the stem.
  */
-RexxArray *RexxStem::allItems()
+ArrayClass *RexxStem::allItems()
 {
     // now we know how big the return result will be, get an array and
     // populate it, using the same traversal logic as before
-    RexxArray *array = new_array(items());
+    ArrayClass *array = new_array(items());
     // we index the array with a origin-one index, so we start with one this time
     size_t count = 1;
 
@@ -963,7 +960,7 @@ RexxObject *RexxStem::empty()
  */
 RexxObject *RexxStem::isEmptyRexx()
 {
-    return (items() == 0) ? TheTrueObject : TheFalseObject;
+    return booleanObject(isEmpty());
 }
 
 
@@ -984,7 +981,7 @@ bool RexxStem::isEmpty()
  *
  * @return An array of all tail names used in the stem.
  */
-RexxArray  *RexxStem::allIndexes()
+ArrayClass  *RexxStem::allIndexes()
 {
     return this->tailArray();            /* extract the array item            */
 }
@@ -1013,8 +1010,8 @@ SupplierClass *RexxStem::supplier()
     }
 
     // to create the supplier, we need 2 arrays
-    RexxArray *tailValues = new_array(count);
-    RexxArray *values = new_array(count);
+    ArrayClass *tailValues = new_array(count);
+    ArrayClass *values = new_array(count);
     count = 1;                           // we fill in using 1-based indexes
 
     variable = tails.first();
@@ -1482,7 +1479,7 @@ bool RexxStem::sort(RexxString *prefix, int order, int type, size_t _first, size
 
     // get an array item and protect it.  We need to have space for
     // the the variable anchors, the variable values, and a working buffer for the merge. */
-    RexxArray *array = new_array(bounds * 3);
+    ArrayClass *array = new_array(bounds * 3);
     ProtectedObject p1(array);
 
     size_t i;

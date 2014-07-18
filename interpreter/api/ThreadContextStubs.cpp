@@ -160,7 +160,7 @@ RexxObjectPtr RexxEntry SendMessageArray(RexxThreadContext *c, RexxObjectPtr o, 
         RexxString *message = new_upper_string(m);
         ProtectedObject p(message);
 
-        return context.ret(((RexxObject *)o)->sendMessage(message, (RexxArray *)a));
+        return context.ret(((RexxObject *)o)->sendMessage(message, (ArrayClass *)a));
     }
     catch (RexxNativeActivation *)
     {
@@ -476,7 +476,7 @@ RexxObjectPtr RexxEntry CallRoutine(RexxThreadContext *c, RexxRoutineObject r, R
     ApiContext context(c);
     try
     {
-        CallRoutineDispatcher dispatcher((RoutineClass *)r, (RexxArray *)a);
+        CallRoutineDispatcher dispatcher((RoutineClass *)r, (ArrayClass *)a);
         context.activity->run(dispatcher);
         return (RexxObjectPtr)context.ret(dispatcher.result);
     }
@@ -492,7 +492,7 @@ RexxObjectPtr RexxEntry CallProgram(RexxThreadContext *c, const char * p, RexxAr
     ApiContext context(c);
     try
     {
-        CallProgramDispatcher dispatcher(p, (RexxArray *)a);
+        CallProgramDispatcher dispatcher(p, (ArrayClass *)a);
         context.activity->run(dispatcher);
         return (RexxObjectPtr)context.ret(dispatcher.result);
     }
@@ -948,7 +948,7 @@ RexxObjectPtr RexxEntry LogicalToObject(RexxThreadContext *c, logical_t n)
     ApiContext context(c);
     try
     {
-        return n == 0 ? (RexxObjectPtr)TheFalseObject : (RexxObjectPtr)TheTrueObject;
+        return (RexxObjectPtr)booleanObject(n != 0);
     }
     catch (RexxNativeActivation *)
     {
@@ -1267,7 +1267,7 @@ RexxObjectPtr RexxEntry ArrayAt(RexxThreadContext *c, RexxArrayObject a, size_t 
         {
             reportException(Error_Incorrect_method_positive, 1);
         }
-        return (RexxObjectPtr)context.ret(((RexxArray *)a)->getApi(i));
+        return (RexxObjectPtr)context.ret(((ArrayClass *)a)->safeGet(i));
     }
     catch (RexxNativeActivation *)
     {
@@ -1285,7 +1285,7 @@ void RexxEntry ArrayPut(RexxThreadContext *c, RexxArrayObject a, RexxObjectPtr o
         {
             reportException(Error_Incorrect_method_positive, 2);
         }
-        ((RexxArray *)a)->putApi((RexxObject *)o, i);
+        ((ArrayClass *)a)->put((RexxObject *)o, i);
     }
     catch (RexxNativeActivation *)
     {
@@ -1298,7 +1298,7 @@ size_t RexxEntry ArrayAppend(RexxThreadContext *c, RexxArrayObject a, RexxObject
     ApiContext context(c);
     try
     {
-        return ((RexxArray *)a)->append((RexxObject *)o);
+        return ((ArrayClass *)a)->append((RexxObject *)o);
     }
     catch (RexxNativeActivation *)
     {
@@ -1314,7 +1314,7 @@ size_t RexxEntry ArrayAppendString(RexxThreadContext *c, RexxArrayObject a, CSTR
     {
         RexxString *str = new_string(s, (stringsize_t)l);
         ProtectedObject p(str);
-        return ((RexxArray *)a)->append(str);
+        return ((ArrayClass *)a)->append(str);
     }
     catch (RexxNativeActivation *)
     {
@@ -1328,7 +1328,7 @@ size_t RexxEntry ArraySize(RexxThreadContext *c, RexxArrayObject a)
     ApiContext context(c);
     try
     {
-        return ((RexxArray *)a)->size();
+        return ((ArrayClass *)a)->size();
     }
     catch (RexxNativeActivation *)
     {
@@ -1342,7 +1342,7 @@ size_t RexxEntry ArrayItems(RexxThreadContext *c, RexxArrayObject a)
     ApiContext context(c);
     try
     {
-        return ((RexxArray *)a)->items();
+        return ((ArrayClass *)a)->items();
     }
     catch (RexxNativeActivation *)
     {
@@ -1355,7 +1355,7 @@ size_t RexxEntry ArrayDimension(RexxThreadContext *c, RexxArrayObject a)
     ApiContext context(c);
     try
     {
-        return ((RexxArray *)a)->getDimension();
+        return ((ArrayClass *)a)->getDimension();
     }
     catch (RexxNativeActivation *)
     {
@@ -1564,7 +1564,7 @@ logical_t RexxEntry SupplierAvailable(RexxThreadContext *c, RexxSupplierObject o
     ApiContext context(c);
     try
     {
-        return ((SupplierClass *)o)->available() == TheTrueObject;
+        return ((SupplierClass *)o)->isAvailable();
     }
     catch (RexxNativeActivation *)
     {
@@ -1589,7 +1589,7 @@ RexxSupplierObject RexxEntry NewSupplier(RexxThreadContext *c, RexxArrayObject v
     ApiContext context(c);
     try
     {
-        return (RexxSupplierObject)context.ret(new_supplier((RexxArray *)values, (RexxArray *)names));
+        return (RexxSupplierObject)context.ret(new_supplier((ArrayClass *)values, (ArrayClass *)names));
     }
     catch (RexxNativeActivation *)
     {
@@ -1774,7 +1774,7 @@ void RexxEntry APIRaiseException(RexxThreadContext *c, size_t n, RexxArrayObject
     ApiContext context(c);
     try
     {
-        reportException((wholenumber_t)n, (RexxArray *)a);
+        reportException((wholenumber_t)n, (ArrayClass *)a);
     }
     catch (RexxNativeActivation *)
     {

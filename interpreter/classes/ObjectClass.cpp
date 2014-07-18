@@ -275,7 +275,7 @@ bool RexxObject::isInstanceOf(RexxClass *other)
 RexxObject *RexxObject::isInstanceOfRexx(RexxClass *other)
 {
     requiredArgument(other, ARG_ONE);
-    return isInstanceOf(other) ? TheTrueObject : TheFalseObject;
+    return booleanObject(isInstanceOf(other));
 }
 
 
@@ -429,7 +429,7 @@ RexxObject * RexxObject::strictEqual(
 {
     requiredArgument(other, ARG_ONE);            /* must have the other argument      */
                                        /* this is direct object equality    */
-    return (RexxObject *)((this == other)? TheTrueObject: TheFalseObject);
+    return booleanObject(this == other);
 }
 
 RexxObject * RexxObject::equal(RexxObject * other)
@@ -440,7 +440,7 @@ RexxObject * RexxObject::equal(RexxObject * other)
 {
   requiredArgument(other, ARG_ONE);            /* must have the other argument      */
                                        /* this is direct object equality    */
-  return (RexxObject *)((this == other)? TheTrueObject: TheFalseObject);
+  return booleanObject(this == other);
 }
 
 RexxObject *RexxObject::strictNotEqual(RexxObject *other)
@@ -449,7 +449,7 @@ RexxObject *RexxObject::strictNotEqual(RexxObject *other)
 /******************************************************************************/
 {
    requiredArgument(other, ARG_ONE);           /* first argument is required        */
-   return this != other ? TheTrueObject : TheFalseObject;
+   return booleanObject(this != other);
 }
 
 RexxObject *RexxObject::notEqual(RexxObject *other)
@@ -458,7 +458,7 @@ RexxObject *RexxObject::notEqual(RexxObject *other)
 /******************************************************************************/
 {
    requiredArgument(other, ARG_ONE);           /* first argument is required        */
-   return this != other ? TheTrueObject : TheFalseObject;
+   return booleanObject(this != other);
 }
 
 /**
@@ -617,7 +617,7 @@ MethodClass * RexxObject::checkPrivate(
     return OREF_NULL;                    /* return a failure indicator        */
 }
 
-RexxObject *RexxObject::sendMessage(RexxString *message, RexxArray *args)
+RexxObject *RexxObject::sendMessage(RexxString *message, ArrayClass *args)
 {
     ProtectedObject r;
     sendMessage(message, args, r);
@@ -680,7 +680,7 @@ RexxObject *RexxObject::sendMessage(RexxString *message, RexxObject *argument1, 
 
 void RexxObject::sendMessage(
     RexxString      *message,          /* name of the message to process    */
-    RexxArray  *arguments,             /* array of arguments                */
+    ArrayClass  *arguments,             /* array of arguments                */
     ProtectedObject &result)
 /******************************************************************************/
 /* Function:  Issue a using a set of arguments already in an array item       */
@@ -892,7 +892,7 @@ void RexxObject::processUnknown(
     {
         reportNomethod(messageName, this); /* fails, it is an error message     */
     }
-    RexxArray *argumentArray = new_array(count);    /* get an array for the arguments    */
+    ArrayClass *argumentArray = new_array(count);    /* get an array for the arguments    */
     ProtectedObject p(argumentArray);
 
     for (size_t i = 1; i <= count; i++)         /* copy the arguments into an array  */
@@ -1087,7 +1087,9 @@ RexxString *RexxObject::makeString()
 /******************************************************************************/
 {
   if (isBaseClass())             /* primitive object?                 */
+  {
     return (RexxString *)TheNilObject; /* this never converts               */
+  }
   else                                 /* process as a string request       */
   {
       return (RexxString *)sendMessage(OREF_REQUEST, OREF_STRINGSYM);
@@ -1114,24 +1116,24 @@ RexxString *RexxObject::primitiveMakeString()
   return (RexxString *)TheNilObject;   /* this never converts               */
 }
 
-RexxArray *RexxInternalObject::makeArray()
+ArrayClass *RexxInternalObject::makeArray()
 /******************************************************************************/
 /* Function:  Handle an array conversion REQUEST for an internal object       */
 /******************************************************************************/
 {
-  return (RexxArray *)TheNilObject;    /* should never occur                */
+  return (ArrayClass *)TheNilObject;    /* should never occur                */
 }
 
-RexxArray *RexxObject::makeArray()
+ArrayClass *RexxObject::makeArray()
 /******************************************************************************/
 /* Function:  Handle a string conversion REQUEST for a REXX object            */
 /******************************************************************************/
 {
   if (isBaseClass())             /* primitive object?                 */
-    return (RexxArray *)TheNilObject;  /* this never converts               */
+    return (ArrayClass *)TheNilObject;  /* this never converts               */
   else                                 /* process as a string request       */
   {
-      return (RexxArray *)sendMessage(OREF_REQUEST, OREF_ARRAYSYM);
+      return (ArrayClass *)sendMessage(OREF_REQUEST, OREF_ARRAYSYM);
   }
 }
 
@@ -1472,7 +1474,7 @@ stringsize_t RexxInternalObject::requiredNonNegative(
 }
 
 
-RexxArray *RexxInternalObject::requestArray()
+ArrayClass *RexxInternalObject::requestArray()
 /******************************************************************************/
 /* Function:  Request an array value from an object.                          */
 /******************************************************************************/
@@ -1481,7 +1483,7 @@ RexxArray *RexxInternalObject::requestArray()
     {
         if (isOfClass(Array, this))            /* already an array?                 */
         {
-            return(RexxArray *)this;        /* return directly, don't makearray  */
+            return(ArrayClass *)this;        /* return directly, don't makearray  */
         }
         else
         {
@@ -1490,7 +1492,7 @@ RexxArray *RexxInternalObject::requestArray()
     }
     else                                 /* return integer value of string    */
     {
-        return(RexxArray *)((RexxObject *)this)->sendMessage(OREF_REQUEST, OREF_ARRAYSYM);
+        return(ArrayClass *)((RexxObject *)this)->sendMessage(OREF_REQUEST, OREF_ARRAYSYM);
     }
 }
 
@@ -1579,7 +1581,7 @@ RexxInteger *RexxObject::hasMethod(RexxString *msgname)
 /******************************************************************************/
 {
                                        /* check the behaviour for the method*/
-  return (behaviour->methodLookup(msgname) != OREF_NULL) ? TheTrueObject : TheFalseObject;
+  return booleanObject(behaviour->methodLookup(msgname) != OREF_NULL);
 }
 
 RexxClass   *RexxObject::classObject()
@@ -1687,7 +1689,7 @@ RexxObject  *RexxObject::requestRexx(
  *
  * @return The method result.
  */
-RexxObject *RexxObject::sendWith(RexxObject *message, RexxArray *arguments)
+RexxObject *RexxObject::sendWith(RexxObject *message, ArrayClass *arguments)
 {
     RexxString *messageName;
     RexxObject *startScope;
@@ -1755,7 +1757,7 @@ RexxObject *RexxObject::send(RexxObject **arguments, size_t argCount)
  *
  * @return The message object.
  */
-RexxMessage *RexxObject::startWith(RexxObject *message, RexxArray *arguments)
+RexxMessage *RexxObject::startWith(RexxObject *message, ArrayClass *arguments)
 {
     // the message is required
     requiredArgument(message, ARG_ONE);
@@ -1836,7 +1838,7 @@ void RexxObject::decodeMessageName(RexxObject *target, RexxObject *message, Rexx
     if (!isOfClass(String, message))
     {
         // this must be an array
-        RexxArray *messageArray = arrayArgument(message, ARG_ONE);
+        ArrayClass *messageArray = arrayArgument(message, ARG_ONE);
 
         // must be single dimension with two arguments
         if (messageArray->getDimension() != 1 || messageArray->size() != 2)
@@ -1906,25 +1908,14 @@ RexxObject  *RexxObject::run(
 /*            behaviour.                                                    */
 /****************************************************************************/
 {
-    RexxArray  *arglist = OREF_NULL;     /* forwarded option string           */
+    ArrayClass  *arglist = OREF_NULL;     /* forwarded option string           */
     RexxObject **argumentPtr = NULL;     /* default to no arguments passed along */
     size_t argcount = 0;
 
     /* get the method object             */
     MethodClass *methobj = (MethodClass *)arguments[0];
     requiredArgument(methobj, ARG_ONE);          /* make sure we have a method        */
-    if (!isOfClass(Method, methobj))         /* this a method object?             */
-    {
-        /* create a method object            */
-        methobj = MethodClass::newMethodObject(OREF_RUN, (RexxObject *)methobj, IntegerOne);
-        /* set the correct scope             */
-        methobj->setScope((RexxClass *)TheNilObject);
-    }
-    else
-    {
-        /* ensure correct scope on method    */
-        methobj = methobj->newScope((RexxClass *)TheNilObject);
-    }
+    methobj = MethodClass::newMethodObject(OREF_RUN, (RexxObject *)methobj, (RexxClass *), TheNilObject, IntegerOne);
     // we need to save this, since we might be working off of a newly created
     // one or a copy
     ProtectedObject p(methobj);
@@ -1952,7 +1943,7 @@ RexxObject  *RexxObject::run(
                         reportException(Error_Incorrect_method_maxarg, IntegerThree);
                     }
                     /* now get the array                 */
-                    arglist = (RexxArray *)arguments[2];
+                    arglist = (ArrayClass *)arguments[2];
                     /* force to array form               */
                     arglist = REQUEST_ARRAY(arglist);
                     /* not an array?                     */
@@ -2313,7 +2304,8 @@ bool RexxObject::hasUninitMethod()
 /* Function:  Check to see if an object has an UNINIT method.                 */
 /******************************************************************************/
 {
-  return TheTrueObject == hasMethod(OREF_UNINIT);
+    // TODO:  seems like we should have a primtive version of hasMethod();
+    return TheTrueObject == hasMethod(OREF_UNINIT);
 }
 
 
@@ -2512,7 +2504,7 @@ RexxObject *RexxObject::copyRexx()
 
 RexxObject *RexxObject::unknownRexx(
     RexxString *message,               /* unknown message                   */
-    RexxArray  *arguments )            /* message arguments                 */
+    ArrayClass  *arguments )            /* message arguments                 */
 /******************************************************************************/
 /* Function:  Exported access to an object virtual function                   */
 /******************************************************************************/

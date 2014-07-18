@@ -62,21 +62,19 @@ void *ListContents::operator new(size_t size, size_t initialSize)
 
 
 /**
- * Construct a HashContent item of the given size.
+ * Construct a ListContent item of the given size.
  *
- * @param entries The total number of entries in the object.
+ * @param size   The total number of entries in the object.
  */
-ListContents::ListContents(size_t entries, size_t total)
+ListContents::ListContents(size_t size)
 {
     // clear the entire object for safety
     clearObject();
 
-    // this is the total number of slots in the table.  The
-    // optimal bucket size should already have been calculated
-    bucketSize = entries;
     // this is the total size of the bucket
-    totalSize = total;
+    totalSize = size;
 
+    // no first or last items.
     firstItem = NoMore;
     lastItem = NoMore
 
@@ -116,9 +114,10 @@ void ListContents::initializeFreeChain()
  */
 void ListContents::live(size_t liveMark)
 {
-    for (size_t index = 0; index < totalSize; index++)
+    // we only mark the active items rather than scanning the entire content area.
+    for (size_t position = firstItem; position != NoMore; position = nextEntry(position))
     {
-        memory_mark(entries[index].value);
+        memory_mark(entries[position].value);
     }
 }
 
@@ -130,9 +129,10 @@ void ListContents::live(size_t liveMark)
  */
 void ListContents::liveGeneral(MarkReason reason)
 {
-    for (size_t index = 0; index < totalSize; index++)
+    // we only mark the active items rather than scanning the entire content area.
+    for (size_t position = firstItem; position != NoMore; position = nextEntry(position))
     {
-        memory_mark_general(elements[index].value);
+        memory_mark_general(entries[position].value);
     }
 }
 
@@ -146,9 +146,10 @@ void ListContents::flatten(RexxEnvelope *envelope)
 {
     setUpFlatten(ListContents)
 
-    for (size_t i = totalSize; i > 0 ; i--)
+    // we only mark the active items rather than scanning the entire content area.
+    for (size_t position = firstItem; position != NoMore; position = nextEntry(position))
     {
-       flattenRef(elements[i - 1].value);
+        memory_mark_general(entries[position].value);
     }
 
     cleanUpFlatten
@@ -167,8 +168,7 @@ void ListContents::mergeInto(ListContents *target)
     // as large as this one.
 
     // run the chain appending each item on to the target
-    ItemLink position = firstItem;
-    while (position != NoMore)
+    for (size_t position = firstItem; position != NoMore; position = nextEntry(position))
     {
         target->append(entryValue(i));
     }
@@ -359,6 +359,12 @@ ItemLink ListContents::insertAtEnd(RexxInternalObject *value)
 }
 
 
+/**
+ * Remove an item postion from the chain and return
+ * the location to the free chain.
+ *
+ * @param item   The item position to remove.
+ */
 void ListContents::removeItem(ItemLink item)
 {
     // we have one fewer item now.
@@ -369,7 +375,7 @@ void ListContents::removeItem(ItemLink item)
     if (item == firstItem)
     {
         // first and last, this is easy.
-        if (item == firstItem)
+        if (item == lastItem)
         {
             firstItem = NoMore;
             lastItem = NoMore;
@@ -400,6 +406,41 @@ void ListContents::removeItem(ItemLink item)
 
     // put this back on the free chain
     returnToFreeChain(item);
+}
+
+
+/**
+ * Retrieve an index from the contents.
+ *
+ * @param index  The index position.
+ *
+ * @return The associated value.
+ */
+RexxInternalObject *ListContents::get(ItemLink index)
+{
+    return isIndexValid(index) ? OREF_NULL : entryValue(index);
+}
+
+
+/**
+ * Perform a PUT() operation on an existing index, replacing
+ * the existing value.
+ *
+ * @param value  The new value
+ * @param index  The index position.
+ *
+ * @return The old value or OREF_NULL if this is not a valid index.
+ */
+RexxInternalObject *ListContents::put(RexxInternalObject value, ItemLink index)
+{
+    if (!isIndexValid(index))
+    {
+        return OREF_NULL;
+    }
+
+    RexxInternalObject *oldValue = entryValue(index);
+    setValue(index, value);
+    return oldValue;
 }
 
 
@@ -515,11 +556,9 @@ RexxArray *ListContents::allItems()
 {
     RexxArray *items = new_array(items());
 
-    size_t position = firstItem;
-    while (position != NoMore)
+    for (size_t position = firstItem; position != NoMore; position = nextEntry(position))
     {
         items->append(entryValue(position));
-        position = nextEntry(position);
     }
 
     return items
@@ -535,22 +574,22 @@ RexxArray *ListContents::allIndexes()
 {
     RexxArray *items = new_array(items());
 
-    size_t position = firstItem;
-    while (position != NoMore)
+    for (size_t position = firstItem; position != NoMore; position = nextEntry(position))
     {
         items->append(new_integer(position)));
-        position = nextEntry(position);
     }
 
     return items
 }
 
 
+/**
+ * Empty the list of all contents.
+ */
 void ListContents::empty()
 {
     // clear all of the entries so we handle old-to-new properly.
-    size_t position = firstItem;
-    while (position != NoMore)
+    for (size_t position = firstItem; position != NoMore;)
     {
         // get the next link before clearing
         ItemLink next = nextEntry(position);
@@ -563,43 +602,109 @@ void ListContents::empty()
 }
 
 
+/**
+ * Find the index for a target item.
+ *
+ * @param target The target item.
+ *
+ * @return The index of the located item or NoMore if this cannot be found.
+ */
 ItemLink ListContents::getIndex(RexxInternalObject *target)
 {
-    size_t position = firstItem;
-    while (position != NoMore)
+    // scan until we get a hit.
+    for (size_t position = firstItem; position != NoMore; position = nextEntry(position))
     {
         if (target->equalValue(entryValue(position)))
         {
             return position;
         }
-        position = nextEntry(position);
     }
     return NoMore;
 }
 
 
+/**
+ * Remove an item from the collection.
+ *
+ * @param target The target item.
+ *
+ * @return The actual stored object value.
+ */
 RexxInternalObject *ListContents::removeItem(RexxInternalObject *target)
 {
-    size_t position = firstItem;
-    while (position != NoMore)
+    // scan for the item until we get a hit.  Return the object that is actually there.
+    for (size_t position = firstItem; position != NoMore; position = nextEntry(position))
     {
         if (target->equalValue(entryValue(position)))
         {
             RexxInternalObject *removed = entryValue(position);
             removeItem(position);
             return removed;
-
         }
-        position = nextEntry(position);
     }
     return OREF_NULL;
-
 }
 
 
+/**
+ * Create a supplier for the collection.
+ *
+ * @return A supplier for iterating over the collection.
+ */
 SupplierClass *ListContents::supplier()
 {
     RexxArray *indexes = allIndexes();
     RexxArray *values = allItems();
     return new_supplier(values, indices);
+}
+
+
+/**
+ * Not really part of normal list operation, but classes
+ * maintain their subclasses as a list of weak references
+ * so that subclasses can get garbage collected when no
+ * longer needed.  When the class needs to iterate over
+ * the subclasses, it needs to resolve which weak references
+ * are still valid.  This method will check the weak
+ * references and remove any stale entries.  Then it
+ * will return an array of the dereferenced objects.
+ *
+ * @return An array of the dereferenced objects.
+ */
+RexxArray *ListContents::weakReferenceArray()
+{
+    // this is a little tricky.  We allocate the result array
+    // before we process the weak references.  If we prune
+    // the stale references first and then allocate an array,
+    // we might hit a GC window that could create more stale
+    // references.
+
+    // make this larg enough to hold what is currently there.
+    // this could be more than we need, but that's fine.
+    // TODO:  make sure subclasses uses items() rather than size()
+    Protected<RexxArray> result = new_array(items());
+
+    size_t position = firstItem;
+    while (position != NoMore)
+    {
+        // get the next position before processing the current link
+        ItemLink next = nextEntry(position);
+
+        // get the reference value and see if it is still valid
+        // if not, just delink this position and allow the weak reference
+        // to be garbage collected.
+        WeakReference *ref = (WeakReference *)entryValue(position);
+        if (!ref->hasReferent())
+        {
+            removeItem(position);
+        }
+        // we have a good value, so add this to the result array.
+        else
+        {
+            result->append(ref->get());
+        }
+        // now step to the next position
+        position = next;
+    }
+    return result;
 }

@@ -211,7 +211,7 @@ void MethodDictionary::addInstanceMethod(RexxString *name, MethodClass *method)
 MethodClass *MethodDictionary::findSuperMethod(RexxString *name, RexxClass *startScope)
 {
     // get the list of scopes "visible" from this starting scope.
-    RexxArray *scopes = startScope->getScopeOrder(startScope);
+    ArrayClass *scopes = startScope->getScopeOrder(startScope);
 
     // do we have a list to search through?  Now search the matching methods
     // for one with a scope in this list.
@@ -297,8 +297,8 @@ SupplierClass *MethodDictionary::getMethods(RexxClass *scope)
         iterator.next();
     }
 
-    RexxArray *names = new_array(count);
-    RexxArray *methods = new_array(count);
+    ArrayClass *names = new_array(count);
+    ArrayClass *methods = new_array(count);
 
     count = 1;
 
@@ -336,7 +336,7 @@ SupplierClass *MethodDictionary::getMethods(RexxClass *scope)
  *
  * @return An array of scope lookup orders for this scope.
  */
-RexxArray *MethodDictionary::getScopeList()
+ArrayClass *MethodDictionary::getScopeList()
 {
     return scopeList;
 }

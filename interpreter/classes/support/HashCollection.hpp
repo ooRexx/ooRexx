@@ -63,12 +63,13 @@ class HashCollection : public RexxObject
 
     virtual RexxObject *unflatten(RexxEnvelope *);
     virtual RexxObject *copy();
-    virtual RexxArray  *makeArray();
+    virtual ArrayClass  *makeArray();
 
     virtual HashContents *allocateContents(size_t bucketSize, size_t capacity);
     virtual void validateIndex(RexxInternalObject *&index, size_t position);
     virtual void validateValueIndex(RexxInternalObject *&value, RexxInternalObject *&index, size_t position);
 
+    void initialize(size_t capacity = DefaultTableSize);
     void expandContents();
     void expandContents(size_t capacity );
     void ensureCapacity(size_t delta);
@@ -84,11 +85,12 @@ class HashCollection : public RexxObject
     virtual RexxInternalObject *getIndex(RexxInternalObject * value);
     virtual void empty();
     virtual SupplierClass *supplier();
-    virtual RexxArray    *allItems();
-    virtual RexxArray    *allIndexes();
+    virtual ArrayClass    *allItems();
+    virtual ArrayClass    *allIndexes();
     virtual size_t items() { return contents->items(); }
 
     // the Exported Rexx methods.  These methods cannot be virtual methods.
+    RexxObject           *initRexx(RexxObject *);
     RexxInternalObject   *removeRexx(RexxInternalObject *);
     RexxInternalObject   *getRexx(RexxInternalObject *);
     RexxInternalObject   *putRexx(RexxInternalObject *, RexxInternalObject *);
@@ -96,18 +98,18 @@ class HashCollection : public RexxObject
     RexxInternalObject   *hasIndexRexx(RexxInternalObject *);
     RexxInternalObject   *hasItemRexx(RexxInternalObject *);
     RexxInternalObject   *removeItemRexx(RexxInternalObject *value);
-    RexxArray            *allAtRexx(RexxInternalObject *);
+    ArrayClass            *allAtRexx(RexxInternalObject *);
     RexxInternalObject   *indexRexx(RexxInternalObject * value);
     SupplierClass        *supplierRexx();
-    RexxArray            *allItemsRexx();
-    RexxArray            *allIndexesRexx();
+    ArrayClass            *allItemsRexx();
+    ArrayClass            *allIndexesRexx();
     RexxObject           *emptyRexx();
     RexxObject           *isEmptyRexx();
     RexxObject           *emptyRexx();
     RexxObject           *itemsRexx();
 
     void          merge(HashCollection *);
-    RexxArray    *uniqueIndexes();
+    ArrayClass    *uniqueIndexes();
 
     // do this based off of items(), which can be overridden
     inline bool   isEmpty() { return items() == 0; }

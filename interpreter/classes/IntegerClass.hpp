@@ -78,7 +78,7 @@ class RexxInteger : public RexxObject
     RexxInteger *hasMethod(RexxString *);
     RexxString  *primitiveMakeString();
     RexxString  *stringValue();
-    RexxArray   *makeArray();
+    ArrayClass   *makeArray();
     bool         truthValue(int);
     virtual bool logicalValue(logical_t &);
     bool         isInstanceOf(RexxClass *);
@@ -103,7 +103,7 @@ class RexxInteger : public RexxObject
     RexxInteger *strictLessOrEqual(RexxObject *);
     RexxObject  *hashCode();
 
-    RexxObject *unknown(RexxString *, RexxArray *);
+    RexxObject *unknown(RexxString *, ArrayClass *);
     RexxObject *plus(RexxInteger *);
     RexxObject *minus(RexxInteger *);
     RexxObject *multiply(RexxInteger *);

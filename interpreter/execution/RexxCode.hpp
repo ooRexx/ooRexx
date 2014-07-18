@@ -71,7 +71,7 @@ class RexxCode : public BaseCode
    virtual void liveGeneral(MarkReason reason);
    virtual void flatten(RexxEnvelope *);
 
-   RexxArray      * getSource();
+   ArrayClass      * getSource();
    RexxObject     * setSecurityManager(RexxObject *);
    RexxString     * getProgramName();
 

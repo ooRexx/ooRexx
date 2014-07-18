@@ -947,7 +947,7 @@ PackageClass *InterpreterInstance::loadRequires(RexxActivity *activity, RexxStri
  *
  * @return The loaded package class, if located.
  */
-PackageClass *InterpreterInstance::loadRequires(RexxActivity *activity, RexxString *shortName, RexxArray *source)
+PackageClass *InterpreterInstance::loadRequires(RexxActivity *activity, RexxString *shortName, ArrayClass *source)
 {
     // if we've already loaded this in this instance, just return it.
     PackageClass *package = getRequiresFile(activity, shortName);

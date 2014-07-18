@@ -268,7 +268,7 @@ class ActivationSettings
    RexxString      * getTraceBack();
    DirectoryClass   * local();
    RexxString      * formatSourcelessTraceLine(RexxString *packageName);
-   RexxArray       * getStackFrames(bool skipFirst);
+   ArrayClass       * getStackFrames(bool skipFirst);
    inline void       implicitExit()
    {
      // at a main program level or completing an INTERPRET
@@ -433,7 +433,7 @@ class ActivationSettings
        }
    }
 
-   inline RexxArray        *getArguments() { return new_array(argcount, arglist); }
+   inline ArrayClass        *getArguments() { return new_array(argcount, arglist); }
 
    inline RexxObject      **getProgramArgumentlist() {return settings.parent_arglist;};
    inline size_t            getProgramArgumentCount() { return settings.parent_argcount; }
@@ -616,7 +616,7 @@ class ActivationSettings
     bool                 debug_pause;   // executing a debug pause
     int                  object_scope;  // reserve/release state of variables
     RexxObject          *result;        // result of execution
-    RexxArray           *trapinfo;      // current trap handler
+    ArrayClass           *trapinfo;      // current trap handler
     RexxContext         *contextObject; // the context object representing the execution context
                                         // current activation state
     int                  execution_state;

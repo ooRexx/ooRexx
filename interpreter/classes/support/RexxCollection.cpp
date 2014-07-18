@@ -130,7 +130,7 @@ RexxObject *RexxHashTableCollection::copy()
     return newObj;                       /* return the new object             */
 }
 
-RexxArray *RexxHashTableCollection::makeArray()
+ArrayClass *RexxHashTableCollection::makeArray()
 /******************************************************************************/
 /* Function:  Return all of the collection indices in an array                */
 /******************************************************************************/
@@ -348,7 +348,7 @@ RexxObject *RexxHashTableCollection::hasIndexRexx(RexxObject *_index)
                                          /* try to get the item               */
     RexxObject *_value = this->get(_index);
     /* tell caller if we succeeded       */
-    return(_value != OREF_NULL) ? (RexxObject *)TheTrueObject : (RexxObject *)TheFalseObject;
+    return booleanObject(_value != OREF_NULL));
 }
 
 
@@ -458,7 +458,7 @@ SupplierClass *RexxHashTableCollection::supplier()
     return this->contents->supplier();
 }
 
-RexxArray *RexxHashTableCollection::allItems()
+ArrayClass *RexxHashTableCollection::allItems()
 /******************************************************************************/
 /* Function:  retrieve all items of the collection.                           */
 /******************************************************************************/
@@ -466,7 +466,7 @@ RexxArray *RexxHashTableCollection::allItems()
     return this->contents->allItems();
 }
 
-RexxArray *RexxHashTableCollection::allIndexes()
+ArrayClass *RexxHashTableCollection::allIndexes()
 /******************************************************************************/
 /* Function:  retrieve all indexes of the collection.                         */
 /******************************************************************************/
@@ -479,7 +479,7 @@ RexxArray *RexxHashTableCollection::allIndexes()
  *
  * @return The set of uniqueIndexes
  */
-RexxArray *RexxHashTableCollection::uniqueIndexes()
+ArrayClass *RexxHashTableCollection::uniqueIndexes()
 {
     return this->contents->uniqueIndexes();
 }

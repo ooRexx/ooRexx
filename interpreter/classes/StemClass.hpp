@@ -90,9 +90,9 @@ class RexxStem : public RexxObject
     RexxNumberString *numberString();
     RexxInteger *integerValue(size_t);
     RexxString  *stringValue();
-    RexxArray   *makeArray();
-    RexxArray   *allItems();
-    RexxArray   *allIndexes();
+    ArrayClass   *makeArray();
+    ArrayClass   *allItems();
+    ArrayClass   *allIndexes();
     SupplierClass *supplier();
     DirectoryClass *toDirectory();
     RexxObject  *request(RexxString *);
@@ -103,7 +103,7 @@ class RexxStem : public RexxObject
 
     void        dropValue();
     RexxObject *getStemValue();
-    RexxObject *unknown (RexxString *, RexxArray *);
+    RexxObject *unknown (RexxString *, ArrayClass *);
     RexxObject *bracket (RexxObject **, size_t);
     RexxObject *bracketEqual(RexxObject **, size_t);
 
@@ -115,7 +115,7 @@ class RexxStem : public RexxObject
     RexxObject *removeItem(RexxObject *);
 
 
-    RexxString *tail(RexxArray *, size_t);
+    RexxString *tail(ArrayClass *, size_t);
     RexxObject *newRexx(RexxObject **, size_t);
     RexxObject *evaluateCompoundVariableValue(RexxActivation *context, RexxString *stemVariableName, RexxCompoundTail *resolved_tail);
     RexxObject *getCompoundVariableValue(RexxCompoundTail *resolved_tail);
@@ -128,7 +128,7 @@ class RexxStem : public RexxObject
     void        dropCompoundVariable(RexxCompoundTail *name);
     void        setCompoundVariable(RexxCompoundTail *name, RexxObject *value);
     void        setValue(RexxObject *value);
-    RexxArray  *tailArray();
+    ArrayClass  *tailArray();
     RexxCompoundElement *nextVariable(RexxNativeActivation *activation);
     RexxObject *handleNovalue(RexxActivation *context, RexxString *name, RexxObject *defaultValue, RexxCompoundElement *variable);
     void        expose(RexxCompoundElement *variable);

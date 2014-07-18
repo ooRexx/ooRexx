@@ -54,7 +54,7 @@ class RexxInstructionGuard : public RexxInstruction
     inline void operator delete(void *) { }
     inline void operator delete(void *, void *) { }
 
-    RexxInstructionGuard(RexxObject*, RexxArray *, bool);
+    RexxInstructionGuard(RexxObject*, ArrayClass *, bool);
     inline RexxInstructionGuard(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);

@@ -92,7 +92,7 @@ void RexxMessage::createInstance()
  * @param scope   The starting scope (can be OREF_NULL).
  * @param _args   An array of arguments to the message.
  */
-RexxMessage::RexxMessage(RexxObject *_target, RexxString *msgName, RexxObject *scope, RexxArray *_args)
+RexxMessage::RexxMessage(RexxObject *_target, RexxString *msgName, RexxObject *scope, ArrayClass *_args)
 {
     // default target is the specified target
     receiver = _target;
@@ -263,11 +263,7 @@ RexxObject *RexxMessage::result()
 
     // since this is requested via a method that will give an error if used
     // in an expression, return .nil if there is no return value.
-    if (resultObject == OREF_NULL)
-    {
-        return TheNilObject;
-    }
-    return resultObject;
+    return resultOrNil(resultObject);
 }
 
 
@@ -446,14 +442,7 @@ void RexxMessage::error(DirectoryClass *_condition)
 RexxObject *RexxMessage::completed()
 {
     // we're complete if we have a result or have an error.
-    if (resultReturned() || raiseError())
-    {
-        return TheTrueObject;
-    }
-    else
-    {
-        return TheFalseObject;
-    }
+    return booleanObject(resultReturned() || raiseError());
 }
 
 
@@ -466,15 +455,9 @@ RexxObject *RexxMessage::completed()
  */
 RexxObject *RexxMessage::hasError()
 {
-    if (raiseError())
-    {
-        return TheTrueObject;
-    }
-    else
-    {
-        return TheFalseObject;
-    }
+    return booleanObject(raiseError());
 }
+
 
 /**
  * Return any error condition information associated with the
@@ -486,14 +469,7 @@ RexxObject *RexxMessage::hasError()
  */
 RexxObject *RexxMessage::errorCondition()
 {
-    if (condition == OREF_NULL)
-    {
-        return TheNilObject;
-    }
-    else
-    {
-        return condition;
-    }
+    return resultOrNil(condition);
 }
 
 
@@ -527,9 +503,9 @@ RexxString *RexxMessage::messageName()
  *
  * @return A copy of the message arguments array.
  */
-RexxArray *RexxMessage::arguments()
+ArrayClass *RexxMessage::arguments()
 {
-    return (RexxArray *)args->copy();
+    return (ArrayClass *)args->copy();
 }
 
 
@@ -567,7 +543,7 @@ RexxObject *RexxMessage::newRexx(RexxObject **msgArgs, size_t argCount)
     // decode the message argument into name and scope
     RexxObject::decodeMessageName(_target, _message, msgName, _startScope);
 
-    RexxArray *argPtr;
+    ArrayClass *argPtr;
 
     // are there arguments to be sent with the message?
     if (num_args > 2 )
@@ -579,7 +555,7 @@ RexxObject *RexxMessage::newRexx(RexxObject **msgArgs, size_t argCount)
         if (optionString == OREF_NULL)
         {
             /* nope, use null array as argument  */
-            argPtr = (RexxArray *)TheNullArray->copy();
+            argPtr = (ArrayClass *)TheNullArray->copy();
         }
         else
         {
@@ -604,14 +580,14 @@ RexxObject *RexxMessage::newRexx(RexxObject **msgArgs, size_t argCount)
                 }
 
                 /* get the array of arguments        */
-                argPtr = (RexxArray *)msgArgs[3];
+                argPtr = (ArrayClass *)msgArgs[3];
                 if (argPtr == OREF_NULL)       /* no array given?                   */
                 {
                     /* this is an error                  */
                     reportException(Error_Incorrect_method_noarg, IntegerFour);
                 }
                 /* force to array form               */
-                argPtr = (RexxArray *)REQUEST_ARRAY(argPtr);
+                argPtr = (ArrayClass *)REQUEST_ARRAY(argPtr);
                 /* not an array?                     */
                 if (argPtr == TheNilObject || argPtr->getDimension() != 1)
                 {
@@ -633,7 +609,7 @@ RexxObject *RexxMessage::newRexx(RexxObject **msgArgs, size_t argCount)
     else
     {
         /* no args, use a null array.        */
-        argPtr = (RexxArray *)TheNullArray->copy();
+        argPtr = (ArrayClass *)TheNullArray->copy();
     }
     /* all args are parcelled out, go    */
     /*create the new message object...   */

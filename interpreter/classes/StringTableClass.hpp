@@ -61,6 +61,7 @@ class StringTable : public EqualityHashCollection
 
     inline StringTable(RESTORETYPE restoreType) { ; }
            StringTable(size_t capacity = HashCollection::DefaultTableSize) : StringHashCollection(capacity) { }
+           StringTable(bool fromRexx) { }
 
     RexxObject *newRexx(RexxObject **, size_t);
 

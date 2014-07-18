@@ -46,7 +46,7 @@
 
 #include "ExpressionBaseVariable.hpp"
 
-class RexxArray;
+class ArrayClass;
 
 class RexxVariableReference : public RexxVariableBase
 {
@@ -68,7 +68,7 @@ class RexxVariableReference : public RexxVariableBase
     virtual void expose(RexxActivation *, RexxVariableDictionary *);
     virtual void procedureExpose(RexxActivation *, RexxActivation *);
 
-    RexxArray *list(RexxActivation *);
+    ArrayClass *list(RexxActivation *);
 
  protected:
 

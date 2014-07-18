@@ -50,6 +50,42 @@
 
 
 /**
+ * The init method for the base.  This does delayed
+ * initialization of this object until a INIT message is
+ * received during initialization.
+ *
+ * @param initialSize
+ *               The initial list size (optional)
+ *
+ * @return Always returns nothing
+ */
+RexxObject *HashCollection::initRexx(RexxObject *initialSize)
+{
+    // the capacity is optional, but must be a positive numeric value
+    size_t capacity = optionalLengthArgument(initialSize, DefaultTableSize, ARG_ONE);
+    initialize(capacity);
+    return OREF_NULL;
+}
+
+
+/**
+ * Initialize the list contents, either directly from the
+ * low level constructor or from the INIT method.
+ *
+ * @param capacity The requested capacity.
+ */
+void HashCollection::initialize(size_t capacity)
+{
+    // only do this if we have no contents already
+    if (contents == OREF_NULL)
+    {
+        size_t bucketSize = calculateBucketSize(capacity);
+        contents = allocateContents(bucketSize, bucketSize * 2);
+    }
+}
+
+
+/**
  * Virtual method for allocating a new contents item for this
  * collection.  Collections with special requirements should
  * override this and return the appropriate subclass.
@@ -234,7 +270,7 @@ RexxObject *HashCollection::copy()
  *
  * @return An array of the collection indexes.
  */
-RexxArray *HashCollection::makeArray()
+ArrayClass *HashCollection::makeArray()
 {
     // hash collections always return all indexes
     return allIndexes();
@@ -331,7 +367,7 @@ RexxInternalObject *HashCollection::remove(RexxInternalObject *index)
  *
  * @return An array of all matching index items.
  */
-RexxArray *HashCollection::allAtRexx(RexxInternalObject *index)
+ArrayClass *HashCollection::allAtRexx(RexxInternalObject *index)
 {
     validateIndex(index, ARG_ONE);
     return contents->getAll(index);
@@ -489,7 +525,7 @@ void HashCollection::copyValues()
 RexxInternalObject *HashCollection::hasIndexRexx(RexxInternalObject *index)
 {
     validateIndex(index, ARG_ONE);
-    return hasIndex(index) ? TheTrueObject : TheFalseObject;
+    return booleanObject(hasIndex(index));
 }
 
 
@@ -580,7 +616,7 @@ RexxInternalObject *HashCollection::removeItem(RexxInternalObject *target)
 RexxInternalObject *HashCollection::hasItemRexx(RexxInternalObject *target)
 {
     requiredArgument(target, ARG_ONE);
-    return hasItem(target) ? TheTrueObject : TheFalseObject;
+    return booleanObject(hasItem(target));
 }
 
 
@@ -613,7 +649,7 @@ SupplierClass *HashCollection::supplier()
  *
  * @return An array of the items.
  */
-RexxArray *HashCollection::allItems()
+ArrayClass *HashCollection::allItems()
 {
     return contents->allItems();
 }
@@ -624,7 +660,7 @@ RexxArray *HashCollection::allItems()
  *
  * @return An array with all of the collection indexes.
  */
-RexxArray *HashCollection::allIndexes()
+ArrayClass *HashCollection::allIndexes()
 {
     return contents->allIndexes();
 }
@@ -634,7 +670,7 @@ RexxArray *HashCollection::allIndexes()
  *
  * @return The set of uniqueIndexes
  */
-RexxArray *HashCollection::uniqueIndexes()
+ArrayClass *HashCollection::uniqueIndexes()
 {
     return contents->uniqueIndexes();
 }
@@ -681,15 +717,13 @@ RexxObject *HashCollection::isEmptyRexx()
  */
 IdentityHashCollection::IdentityHashCollection(size_t capacity)
 {
-    // get a suggested bucket size for this capacity
     // NOTE:  all of this needs to be done at the top-level constructor
     // because of the way C++ constructors work.  As each
     // previous contructor level gets called, the virtual function
     // pointer gets changed to match the class of the contructor getting
     // called.  We don't have access to our allocateContents() override
     // until the final constructor is run.
-    size_t bucketSize = calculateBucketSize(capacity);
-    contents = allocateContents(bucketSize, bucketSize *2);
+    initialize(capacity);
 }
 
 
@@ -700,15 +734,13 @@ IdentityHashCollection::IdentityHashCollection(size_t capacity)
  */
 EqualityHashCollection::EqualityHashCollection(size_t capacity)
 {
-    // get a suggested bucket size for this capacity
     // NOTE:  all of this needs to be done at the top-level constructor
     // because of the way C++ constructors work.  As each
     // previous contructor level gets called, the virtual function
     // pointer gets changed to match the class of the contructor getting
     // called.  We don't have access to our allocateContents() override
     // until the final constructor is run.
-    size_t bucketSize = calculateBucketSize(capacity);
-    contents = allocateContents(bucketSize, bucketSize *2);
+    initialize(capacity);
 }
 
 
@@ -735,15 +767,13 @@ HashContents *EqualityHashCollection::allocateContents(size_t bucketSize, size_t
  */
 StringHashCollection::StringHashCollection(size_t capacity)
 {
-    // get a suggested bucket size for this capacity
     // NOTE:  all of this needs to be done at the top-level constructor
     // because of the way C++ constructors work.  As each
     // previous contructor level gets called, the virtual function
     // pointer gets changed to match the class of the contructor getting
     // called.  We don't have access to our allocateContents() override
     // until the final constructor is run.
-    size_t bucketSize = calculateBucketSize(capacity);
-    contents = allocateContents(bucketSize, bucketSize *2);
+    initialize(capacity);
 }
 
 

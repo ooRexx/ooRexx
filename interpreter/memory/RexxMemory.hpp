@@ -151,7 +151,7 @@ class MemoryObject : public RexxInternalObject
     inline RexxObject *newObject(size_t size) { return newObject(size, T_Object); }
     RexxObject *newObject(size_t size, size_t type);
     RexxObject *temporaryObject(size_t size);
-    RexxArray  *newObjects(size_t size, size_t count, size_t objectType);
+    ArrayClass  *newObjects(size_t size, size_t count, size_t objectType);
     void        reSize(RexxObject *, size_t);
     void        checkUninit();
     void        runUninits();
@@ -217,8 +217,8 @@ class MemoryObject : public RexxInternalObject
     void createImage();
     RexxString *getGlobalName(const char *value);
     void createStrings();
-    RexxArray *saveStrings();
-    void restoreStrings(RexxArray *stringArray);
+    ArrayClass *saveStrings();
+    void restoreStrings(ArrayClass *stringArray);
 
     inline void checkLiveStack() { if (!liveStack->checkRoom()) liveStackFull(); }
     inline void pushLiveStack(RexxObject *obj) { checkLiveStack(); liveStack->push(obj); }
@@ -439,7 +439,7 @@ inline void holdObject(RexxInternalObject *o) { memoryObject.holdObject((RexxObj
 inline RexxObject *new_object(size_t s) { return memoryObject.newObject(s); }
 inline RexxObject *new_object(size_t s, size_t t) { return memoryObject.newObject(s, t); }
 
-inline RexxArray *new_arrayOfObject(size_t s, size_t c, size_t t)  { return memoryObject.newObjects(s, c, t); }
+inline ArrayClass *new_arrayOfObject(size_t s, size_t c, size_t t)  { return memoryObject.newObjects(s, c, t); }
 
 
 // memory marking macros.  These are macros because they use the assumed arguments

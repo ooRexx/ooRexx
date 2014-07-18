@@ -174,11 +174,7 @@ void WeakReference::clear()
  */
 RexxObject *WeakReference::value()
 {
-    if (referentObject == OREF_NULL)
-    {
-        return TheNilObject;
-    }
-    return referentObject;
+    return resultOrNil(referentObject);
 }
 
 

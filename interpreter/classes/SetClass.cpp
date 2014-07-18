@@ -77,7 +77,32 @@ void *SetClass::operator new (size_t size)
 
 
 /**
- * Create a new table instance from Rexx code.
+ * Create a new instance of the set class (or a subclass) with
+ * the indicated size.
+ *
+ * @param size   The initial size.
+ *
+ * @return A set object of the current class and size.
+ */
+SetClass *SetClass::createSetObject(size_t size, RexxObject **init_args, size_t  argCount) )
+{
+    // this class is defined on the object class, but this is actually attached
+    // to a class object instance.  Therefore, any use of the this pointer
+    // will be touching the wrong data.  Use the classThis pointer for calling
+    // any methods on this object from this method.
+    RexxClass *classThis = (RexxClass *)this;
+
+    Protected<SetClass> newObj = new SetClass(size);
+
+    // handle Rexx class completion
+    classThis->completeNewObject(newObj, init_args, argCount);
+
+    return newObj;
+}
+
+
+/**
+ * Create a new set instance from Rexx code.
  *
  * @param args     The new arguments.
  * @param argCount The count of new arguments.
@@ -92,19 +117,41 @@ RexxObject *SetClass::newRexx(RexxObject **args, size_t argCount)
     // any methods on this object from this method.
     RexxClass *classThis = (RexxClass *)this;
 
-    RexxObject *initialSize;
-
-    // parse the arguments
-    RexxClass::processNewArgs(args, argCount, &args, &argCount, 1, (RexxObject **)&initialSize, NULL);
-
-    // the capacity is optional, but must be a positive numeric value
-    size_t capacity = optionalLengthArgument(initialSize, DefaultTableSize, ARG_ONE);
-
-    // create the new identity table item
-    SetClass *temp = new SetClass(capacity);
-    ProtectedObject p(temp);
+    // create the new identity table item (this version does not have a backing contents yet).
+    Protected<SetClass> temp = new SetClass(true);
     // finish setting this up.
     classThis->completeNewObject(temp, args, argCount);
+
+    // make sure this has been completely initialized
+    temp->initialize();
     return temp;
+}
+
+
+/**
+ * Create a list item and populate with the argument items.
+ *
+ * @param args     Pointer to the arguments.
+ * @param argCount The number of arguments.
+ *
+ * @return The populated list object.
+ */
+SetClass *SetClass::classOf(RexxObject **args, size_t  argCount)
+{
+    // create a list item of the appopriate type.
+    Protected<SetClass> newSet = newRexx(NULL, 0);
+
+    // add all of the arguments
+    for (size_t i = 0; i < argCount; i++)
+    {
+        RexxObject *item = args[i];
+        // omitted arguments not allowed here.
+        if (item == OREF_NULL)
+        {
+            reportException(Error_Incorrect_method_noarg, i + 1);
+        }
+        newSet->put(item);
+    }
+    return newSet;
 }
 

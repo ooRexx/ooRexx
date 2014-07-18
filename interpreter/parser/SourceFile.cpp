@@ -375,7 +375,7 @@ RexxString *RexxSource::traceBack(RexxActivation *activation, SourceLocation &lo
         else
         {
             // generic package message.
-            RexxArray *args = new_array(programName);
+            ArrayClass *args = new_array(programName);
             ProtectedObject p(args);
             line = ActivityManager::currentActivity->buildMessage(Message_Translations_no_source_available, args);
         }
@@ -414,7 +414,7 @@ RexxString *RexxSource::traceBack(RexxActivation *activation, SourceLocation &lo
  *
  * @return An array of the source lines.
  */
-RexxArray *RexxSource::extractSource()
+ArrayClass *RexxSource::extractSource()
 {
     // this location value gets everything.
     SourceLocation location;
@@ -437,7 +437,7 @@ RexxArray *RexxSource::extractSource()
  * @return An array of all lines (or partial lines), defined by
  *         the extract.
  */
-RexxArray *RexxSource::extractSource(SourceLocation &location )
+ArrayClass *RexxSource::extractSource(SourceLocation &location )
 {
     // the program source handles everything.
     return source->extractSourceLines(location);
@@ -835,7 +835,7 @@ void RexxSource::processInstall(RexxActivation *activation)
         setField(installedClasses, new_directory());
         /* and the public classes            */
         setField(installedPublicClasses, new_directory());
-        Protected<RexxArray> createdClasses = new_array(classes->items());
+        Protected<ArrayClass> createdClasses = new_array(classes->items());
 
         size_t count = classes->items();
         for (size_t i = 1; i <= count; i++)
@@ -895,7 +895,7 @@ PackageClass *RexxSource::loadRequires(RexxActivity *activity, RexxString *targe
  *
  * @param target The name of the ::REQUIRES
  */
-PackageClass *RexxSource::loadRequires(RexxActivity *activity, RexxString *target, RexxArray *s)
+PackageClass *RexxSource::loadRequires(RexxActivity *activity, RexxString *target, ArrayClass *s)
 {
     // we need the instance this is associated with
     InterpreterInstance *instance = activity->getInstance();
@@ -932,7 +932,7 @@ void RexxSource::addPackage(PackageClass *p)
     else
     {
         // we only add a given package item once.
-        if (loadedPackages->hasItem(p) == TheTrueObject)
+        if (loadedPackages->hasItem(p))
         {
             return;
         }

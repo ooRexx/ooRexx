@@ -49,25 +49,17 @@
 class ListContents : public RexxInternalObject
 {
   public:
-      // The type for the reference links
-      typedef size_t ItemLink;
+    // The type for the reference links
+    typedef size_t ItemLink;
 
-      // link terminator
-      static const ItemLink NoMore = SIZE_MAX;
-      // indicates not linked
-      static const ItemLink NoLink = SIZE_MAX;
-      // insert at the end (overloaded value)
-      static const ItemLink AtEnd = SIZE_MAX;
-      // insert at the beginning
-      static const ItemLink AtBeginning = SIZE_MAX - 1;
-
-    void * operator new(size_t, size_t);
-    inline void *operator new(size_t size, void *objectPtr) { return objectPtr; };
-    inline void operator delete(void *, size_t) { }
-    inline void  operator delete(void *, void *) {;}
-
-    inline ListContents(RESTORETYPE restoreType) { ; };
-    inline ListContents() {;};
+    // link terminator
+    static const ItemLink NoMore = SIZE_MAX;
+    // indicates not linked
+    static const ItemLink NoLink = SIZE_MAX;
+    // insert at the end (overloaded value)
+    static const ItemLink AtEnd = SIZE_MAX;
+    // insert at the beginning
+    static const ItemLink AtBeginning = SIZE_MAX - 1;
 
     class ListEntry
     {
@@ -78,11 +70,48 @@ class ListContents : public RexxInternalObject
         size_t previous;                     // previous list element in chain
     };
 
+    void * operator new(size_t, size_t);
+    inline void *operator new(size_t size, void *objectPtr) { return objectPtr; };
+    inline void operator delete(void *, size_t) { }
+    inline void  operator delete(void *, void *) {;}
+
+    inline ListContents(RESTORETYPE restoreType) { ; };
+    inline ListContents() {;};
+           ListContents(size_t size);
+
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(RexxEnvelope *);
 
     void initializeFreeChain();
+    void mergeInto(ListContents *target);
+    ItemLink allocateSlot(RexxInternalOBject *value);
+
+    void insertAtEnd(ItemLink newItem);
+    void insertAtFront(ItemLink newItem);
+    void insertAfter(ItemLink newItem, ItemLink insertItem);
+    void insertBefore(ItemLink newItem, ItemLink insertItem);
+    ItemLink insert(RexxInternalObject *value, ItemLink index);
+    ItemLink insertAtBeginning(RexxInternalObject *value);
+    ItemLink insertAtEnd(RexxInternalObject *value);
+    void removeItem(ItemLink item);
+
+    RexxInternalObject *get(ItemLink index);
+    RexxInternalObject *put(RexxInternalObject value, ItemLink index);
+    RexxInternalObject *remove(ItemLink index);
+    RexxInternalObject *firstItem();
+    RexxInternalObject *lastItem();
+    ItemLink firstIndex();
+    ItemLink lastIndex();
+    ItemLink nextIndex(ItemLink item);
+    ItemLink previousIndex(ItemLink item);
+    RexxArray *allItems();
+    RexxArray *allIndexes();
+    void empty();
+    ItemLink getIndex(RexxInternalObject *target);
+    RexxInternalObject *removeItem(RexxInternalObject *target);
+    SupplierClass *supplier();
+    RexxArray *weakReferenceArray();
 
     // set the entry values for a position
     void setEntry(ItemLink position, RexxInternalObject *value);
@@ -120,7 +149,6 @@ class ListContents : public RexxInternalObject
         // clear it out
         returnToFreeChain(position);
     }
-
 
     // return an entry to the free chain
     inline void  returnToFreeChain(ItemLink position)

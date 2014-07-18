@@ -89,7 +89,7 @@ BOOL fFindConstant(const char *pszConstName, POLECLASSINFO pClsInfo, PPOLECONSTI
 RexxObjectPtr Variant2Rexx(RexxThreadContext *context, VARIANT *pVariant);
 bool Rexx2Variant(RexxThreadContext *context, RexxObjectPtr RxObject, VARIANT *pVariant, VARTYPE DestVt, size_t iArgPos);
 bool createEmptySafeArray(RexxThreadContext *, VARIANT *);
-bool RexxArray2SafeArray(RexxThreadContext *context, RexxObjectPtr RxArray, VARIANT *VarArray, size_t iArgPos);
+bool ArrayClass2SafeArray(RexxThreadContext *context, RexxObjectPtr RxArray, VARIANT *VarArray, size_t iArgPos);
 BOOL fExploreTypeAttr( ITypeInfo *pTypeInfo, TYPEATTR *pTypeAttr, POLECLASSINFO pClsInfo );
 VARTYPE getUserDefinedVT( ITypeInfo *pTypeInfo, HREFTYPE hrt );
 BOOL fExploreTypeInfo( ITypeInfo *pTypeInfo, POLECLASSINFO pClsInfo );
@@ -1412,7 +1412,7 @@ BOOL fFindConstant(const char * pszConstName, POLECLASSINFO pClsInfo, PPOLECONST
 }
 
 
-RexxObjectPtr SafeArray2RexxArray(RexxThreadContext *context, VARIANT *pVariant)
+RexxObjectPtr SafeArray2ArrayClass(RexxThreadContext *context, VARIANT *pVariant)
 {
     SAFEARRAY  *pSafeArray;
     VARTYPE     EmbeddedVT;
@@ -1590,10 +1590,10 @@ RexxObjectPtr Variant2Rexx(RexxThreadContext *context, VARIANT *pVariant)
 
     if (V_VT(pVariant) & VT_ARRAY)
     {
-        ResultObj = SafeArray2RexxArray(context, pVariant);
+        ResultObj = SafeArray2ArrayClass(context, pVariant);
         if ( ResultObj == NULLOBJECT )
         {
-            // SafeArray2RexxArray() has raised an exception.
+            // SafeArray2ArrayClass() has raised an exception.
             return NULLOBJECT;
         }
     }
@@ -1958,7 +1958,7 @@ bool Rexx2Variant(RexxThreadContext *context, RexxObjectPtr _RxObject, VARIANT *
     /* or maybe this is an array? */
     if (context->IsArray(RxObject))
     {
-        return RexxArray2SafeArray(context, RxObject, pVariant, iArgPos); // byRefCheck!!!!
+        return ArrayClass2SafeArray(context, RxObject, pVariant, iArgPos); // byRefCheck!!!!
     }
 
     /* if no target type is specified try original REXX types */
@@ -2129,7 +2129,7 @@ bool createEmptySafeArray(RexxThreadContext *context, VARIANT *VarArray)
 }
 
 
-bool RexxArray2SafeArray(RexxThreadContext *context, RexxObjectPtr RxArray, VARIANT *VarArray, size_t iArgPos)
+bool ArrayClass2SafeArray(RexxThreadContext *context, RexxObjectPtr RxArray, VARIANT *VarArray, size_t iArgPos)
 {
     wholenumber_t   lDimensions;
     PLONG           lpIndices;              // vector of indices
@@ -2199,7 +2199,7 @@ bool RexxArray2SafeArray(RexxThreadContext *context, RexxObjectPtr RxArray, VARI
             // put j-th index in msg array
             context->ArrayPut(argArray, context->WholeNumberToObject(lpIndices[j]+1), j+1);
         }
-        /* get item from RexxArray */
+        /* get item from ArrayClass */
         RexxItem = context->SendMessage1(RxArray, "AT", argArray);
 
         /* convert it into a VARIANT */

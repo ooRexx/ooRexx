@@ -61,7 +61,7 @@ void MemoryObject::createStrings()
 }
 
 
-RexxArray *MemoryObject::saveStrings()
+ArrayClass *MemoryObject::saveStrings()
 /******************************************************************************/
 /* Function:  Create all globally available string objects                    */
 /******************************************************************************/
@@ -76,7 +76,7 @@ RexxArray *MemoryObject::saveStrings()
   #include "GlobalNames.h"             /* now create the strings            */
 
   // get an array to contain all of the string values
-  RexxArray *stringArray = new_array(stringCount);
+  ArrayClass *stringArray = new_array(stringCount);
                                        /* redefine the GLOBAL_NAME macro    */
                                        /* to save each string in the array  */
                                        /* at its relative offset            */
@@ -89,7 +89,7 @@ RexxArray *MemoryObject::saveStrings()
   return stringArray;                  // and return the saved string array
 }
 
-void MemoryObject::restoreStrings(RexxArray *stringArray)
+void MemoryObject::restoreStrings(ArrayClass *stringArray)
 /******************************************************************************/
 /* Function:  Create all globally available string objects                    */
 /******************************************************************************/

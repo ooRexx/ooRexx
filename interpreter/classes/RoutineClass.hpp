@@ -65,7 +65,7 @@ public:
     virtual void runProgram(RexxActivity *activity, RexxObject **arguments, size_t argCount, ProtectedObject &result);
 
     RexxObject   *callRexx(RexxObject **, size_t);
-    RexxObject   *callWithRexx(RexxArray *);
+    RexxObject   *callWithRexx(ArrayClass *);
 
     RexxBuffer *save();
     void save(PRXSTRING outBuffer);

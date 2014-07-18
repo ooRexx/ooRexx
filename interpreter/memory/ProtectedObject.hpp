@@ -173,9 +173,9 @@ class ProtectedObject : public ProtectedBase
         return (MethodClass *)protectedObject;
     }
 
-    inline operator RexxArray *()
+    inline operator ArrayClass *()
     {
-        return (RexxArray *)protectedObject;
+        return (ArrayClass *)protectedObject;
     }
 
     // this conversion helps the parsing process protect objects

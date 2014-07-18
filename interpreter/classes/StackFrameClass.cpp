@@ -82,7 +82,7 @@ void *StackFrameClass::operator new(size_t size)
  *
  * @param a      The activation we're attached to.
  */
-StackFrameClass::StackFrameClass(const char *ty, RexxString *n, BaseExecutable *e, RexxObject *tg, RexxArray *a, RexxString *t, size_t l)
+StackFrameClass::StackFrameClass(const char *ty, RexxString *n, BaseExecutable *e, RexxObject *tg, ArrayClass *a, RexxString *t, size_t l)
 {
     type = ty;
     name = n;
@@ -204,11 +204,7 @@ RexxString *StackFrameClass::getTraceLine()
  */
 RexxObject *StackFrameClass::getExecutable()
 {
-    if (executable == OREF_NULL)
-    {
-        return TheNilObject;
-    }
-    return executable;
+    return resultOrNil(executable);
 }
 
 /**
@@ -234,7 +230,7 @@ RexxObject *StackFrameClass::getLine()
  * @return An array of arguments.  Returns an empty array if no
  *         arguments.
  */
-RexxArray *StackFrameClass::getArguments()
+ArrayClass *StackFrameClass::getArguments()
 {
     if (arguments == OREF_NULL)
     {
@@ -270,11 +266,7 @@ RexxSource *StackFrameClass::getSourceObject()
  */
 RexxObject *StackFrameClass::getTarget()
 {
-    if (target == OREF_NULL)
-    {
-        return TheNilObject;
-    }
-    return target;
+    return resultOrNil(target);
 }
 
 /**

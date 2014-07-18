@@ -66,7 +66,7 @@ public:
 class CallRoutineDispatcher : public ActivityDispatcher
 {
 public:
-    inline CallRoutineDispatcher(RoutineClass *r, RexxArray *a) : ActivityDispatcher(), routine(r), arguments(a) { ; }
+    inline CallRoutineDispatcher(RoutineClass *r, ArrayClass *a) : ActivityDispatcher(), routine(r), arguments(a) { ; }
     virtual ~CallRoutineDispatcher() { ; }
 
     virtual void run();
@@ -75,14 +75,14 @@ public:
 
 protected:
     RoutineClass *routine;           // target routine
-    RexxArray    *arguments;         // the argument array (can be NULL)
+    ArrayClass    *arguments;         // the argument array (can be NULL)
 };
 
 
 class CallProgramDispatcher : public ActivityDispatcher
 {
 public:
-    inline CallProgramDispatcher(const char *p, RexxArray *a) : ActivityDispatcher(), program(p), arguments(a) { ; }
+    inline CallProgramDispatcher(const char *p, ArrayClass *a) : ActivityDispatcher(), program(p), arguments(a) { ; }
     virtual ~CallProgramDispatcher() { ; }
 
     virtual void run();
@@ -91,7 +91,7 @@ public:
 
 protected:
     const char   *program;           // target routine
-    RexxArray    *arguments;         // the argument array (can be NULL)
+    ArrayClass    *arguments;         // the argument array (can be NULL)
 };
 
 

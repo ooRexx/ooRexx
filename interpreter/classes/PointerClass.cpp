@@ -77,7 +77,7 @@ RexxObject *RexxPointer::equal(RexxObject *other)
         return TheFalseObject;
     }
 
-    return this->pointer() == ((RexxPointer *)other)->pointer() ? TheTrueObject : TheFalseObject;
+    return booleanObject(pointer() == ((RexxPointer *)other)->pointer());
 }
 
 
@@ -97,7 +97,7 @@ RexxObject *RexxPointer::notEqual(RexxObject *other)
         return TheTrueObject;
     }
 
-    return this->pointer() != ((RexxPointer *)other)->pointer() ? TheTrueObject : TheFalseObject;
+    return booleanObject(pointer() != ((RexxPointer *)other)->pointer());
 }
 
 
@@ -162,5 +162,5 @@ RexxString *RexxPointer::stringValue()
  */
 RexxObject *RexxPointer::isNull()
 {
-    return pointer() == NULL ? TheTrueObject : TheFalseObject;
+    return booleanObject(pointer() == NULL);
 }

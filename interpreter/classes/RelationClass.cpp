@@ -106,19 +106,13 @@ RexxObject *RelationClass::newRexx(RexxObject **args, size_t argCount)
     // any methods on this object from this method.
     RexxClass *classThis = (RexxClass *)this;
 
-    RexxObject *initialSize;
-
-    // parse the arguments
-    RexxClass::processNewArgs(args, argCount, &args, &argCount, 1, (RexxObject **)&initialSize, NULL);
-
-    // the capacity is optional, but must be a positive numeric value
-    size_t capacity = optionalLengthArgument(initialSize, DefaultTableSize, ARG_ONE);
-
-    // create the new identity table item
-    RelationClass *temp = new RelationClass(capacity);
-    ProtectedObject p(temp);
+    // create the new identity table item (this version does not have a backing contents yet).
+    Protected<RelationClass> temp = new RelationClass(true);
     // finish setting this up.
     classThis->completeNewObject(temp, args, argCount);
+
+    // make sure this has been completely initialized
+    temp->initialize();
     return temp;
 }
 
@@ -194,13 +188,7 @@ RexxInternalObject *RelationClass::removeItemRexx(RexxInternalObject *value, Rex
 {
     requiredArgument(_value, ARG_ONE);            /* make sure we have a value         */
     RexxInternalObject item = contents->removeItem(value, index);
-
-    // if nothing was removed, return .nil
-    if (item == OREF_NULL)
-    {
-        item = TheNilObject;
-    }
-    return item;
+    return resultOrNil(item);
 }
 
 
@@ -216,7 +204,7 @@ RexxInternalObject *RelationClass::removeItemRexx(RexxInternalObject *value, Rex
 RexxInternalObject *RelationClass::hasItemRexx(RexxInternalObject *value, RexxInternalObject *index)
 {
     requiredArgument(_value, ARG_ONE);
-    return contents->hasItem(value, index) ? TheTrueObject : TheFalseObject;
+    return booleanObject(contents->hasItem(value, index));
 }
 
 

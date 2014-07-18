@@ -197,7 +197,7 @@ void MemoryObject::buildVirtualFunctionTable()
    objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
    virtualFunctionTable[T_ClassClass] = getVftPointer(objectLoc);
 
-   objectPtr = new (objectLoc) RexxArray(RESTOREIMAGE);
+   objectPtr = new (objectLoc) ArrayClass(RESTOREIMAGE);
    virtualFunctionTable[T_Array] = getVftPointer(objectLoc);
 
    objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);

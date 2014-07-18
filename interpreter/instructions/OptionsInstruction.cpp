@@ -78,7 +78,7 @@ void RexxInstructionOptions::execute(RexxActivation *context, RexxExpressionStac
 // processing framework is here.
 #if 0
     // break up into an array of words
-    RexxArray *words = stringValue->subWords(OREF_NULL, OREF_NULL)l
+    ArrayClass *words = stringValue->subWords(OREF_NULL, OREF_NULL)l
     size_t wordCount = words->size();
 
     for (size_t i = 1; i <= wordCount ;i++)

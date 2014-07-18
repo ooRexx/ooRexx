@@ -141,8 +141,8 @@ class RexxActivity : public RexxInternalObject
     bool        raiseCondition(RexxString *, RexxObject *, RexxString *, RexxObject *, RexxObject *);
     bool        raiseCondition(DirectoryClass *);
     DirectoryClass *createConditionObject(RexxString *, RexxObject *, RexxString *, RexxObject *, RexxObject *);
-    void        raiseException(wholenumber_t, RexxString *, RexxArray *, RexxObject *);
-    DirectoryClass *createExceptionObject(wholenumber_t, RexxString *, RexxArray *, RexxObject *);
+    void        raiseException(wholenumber_t, RexxString *, ArrayClass *, RexxObject *);
+    DirectoryClass *createExceptionObject(wholenumber_t, RexxString *, ArrayClass *, RexxObject *);
     void        generateProgramInformation(DirectoryClass *exObj);
     void        reportAnException(wholenumber_t, const char *);
     void        reportAnException(wholenumber_t, const char *, const char *);
@@ -165,8 +165,8 @@ class RexxActivity : public RexxInternalObject
     void        raisePropagate(DirectoryClass *);
     RexxObject *display(DirectoryClass *);
     RexxObject *displayDebug(DirectoryClass *);
-    RexxString *buildMessage(wholenumber_t, RexxArray *);
-    RexxString *messageSubstitution(RexxString *, RexxArray *);
+    RexxString *buildMessage(wholenumber_t, ArrayClass *);
+    RexxString *messageSubstitution(RexxString *, ArrayClass *);
     void        run();
     void        run(RexxMessage *target);
     void        checkActivationStack();
@@ -179,7 +179,7 @@ class RexxActivity : public RexxInternalObject
     void        unwindToDepth(size_t depth);
     void        unwindToFrame(RexxActivation *frame);
     void        cleanupStackFrame(RexxActivationBase *poppedStackFrame);
-    RexxArray  *generateStackFrames(bool skipFirst);
+    ArrayClass  *generateStackFrames(bool skipFirst);
     RexxActivity *spawnReply();
 
     void        exitKernel();

@@ -170,7 +170,7 @@ RexxString *RexxNumberString::makeString()
  *
  * @return The results of our string representation's makearray.
  */
-RexxArray *RexxNumberString::makeArray()
+ArrayClass *RexxNumberString::makeArray()
 {
   return stringValue()->makeArray();     // have the string value handle this
 }
@@ -2627,7 +2627,7 @@ void RexxNumberString::formatUnsignedInt64(uint64_t integer)
 }
 
 
-RexxObject *RexxNumberString::unknown(RexxString *msgname, RexxArray *arguments)
+RexxObject *RexxNumberString::unknown(RexxString *msgname, ArrayClass *arguments)
 /******************************************************************************/
 /* Function:  Forward all unknown messages to the numberstring's string       */
 /*            representation                                                  */
@@ -2898,7 +2898,7 @@ RexxInteger *RexxNumberString::equal(RexxObject *other)
     {
         return TheFalseObject;
     }
-    return (comp(other) == 0) ? TheTrueObject : TheFalseObject;
+    return booleanObject(comp(other) == 0);
 }
 
 RexxInteger *RexxNumberString::notEqual(RexxObject *other)
@@ -2910,7 +2910,7 @@ RexxInteger *RexxNumberString::notEqual(RexxObject *other)
     {
         return TheTrueObject;
     }
-    return (comp(other) != 0) ? TheTrueObject : TheFalseObject;
+    return booleanObject((comp(other) != 0);
 }
 
 RexxInteger *RexxNumberString::isGreaterThan(RexxObject *other)
@@ -2922,7 +2922,7 @@ RexxInteger *RexxNumberString::isGreaterThan(RexxObject *other)
     {
         return TheFalseObject;
     }
-    return (comp(other) > 0) ? TheTrueObject : TheFalseObject;
+    return booleanObject((comp(other) > 0);
 }
 
 RexxInteger *RexxNumberString::isLessThan(RexxObject *other)
@@ -2934,7 +2934,7 @@ RexxInteger *RexxNumberString::isLessThan(RexxObject *other)
     {
         return TheFalseObject;
     }
-    return (comp(other) < 0) ? TheTrueObject : TheFalseObject;
+    return booleanObject((comp(other) < 0);
 }
 
 RexxInteger *RexxNumberString::isGreaterOrEqual(RexxObject *other)
@@ -2946,7 +2946,7 @@ RexxInteger *RexxNumberString::isGreaterOrEqual(RexxObject *other)
     {
         return TheFalseObject;
     }
-    return (comp(other) >= 0) ? TheTrueObject : TheFalseObject;
+    return booleanObject((comp(other) >= 0);
 }
 
 RexxInteger *RexxNumberString::isLessOrEqual(RexxObject *other)
@@ -2958,7 +2958,7 @@ RexxInteger *RexxNumberString::isLessOrEqual(RexxObject *other)
     {
         return TheFalseObject;
     }
-    return (comp(other) <= 0) ? TheTrueObject : TheFalseObject;
+    return booleanObject((comp(other) <= 0);
 }
 
 
@@ -2985,7 +2985,7 @@ RexxInteger *RexxNumberString::strictEqual(RexxObject *other)
     {
         return TheFalseObject;
     }
-    return (strictComp(other) == 0) ? TheTrueObject : TheFalseObject;
+    return booleanObject((strictComp(other) == 0);
 }
 
 RexxInteger *RexxNumberString::strictNotEqual(RexxObject *other)
@@ -2997,7 +2997,7 @@ RexxInteger *RexxNumberString::strictNotEqual(RexxObject *other)
     {
         return TheTrueObject;
     }
-    return (strictComp(other) != 0) ? TheTrueObject : TheFalseObject;
+    return booleanObject((strictComp(other) != 0);
 }
 
 
@@ -3010,7 +3010,7 @@ RexxInteger *RexxNumberString::strictGreaterThan(RexxObject *other)
     {
         return TheFalseObject;
     }
-    return (strictComp(other) > 0) ? TheTrueObject : TheFalseObject;
+    return booleanObject((strictComp(other) > 0);
 }
 
 RexxInteger *RexxNumberString::strictLessThan(RexxObject *other)
@@ -3022,7 +3022,8 @@ RexxInteger *RexxNumberString::strictLessThan(RexxObject *other)
     {
         return TheFalseObject;
     }
-    return (strictComp(other) < 0) ? TheTrueObject : TheFalseObject;
+    // TODO:  move the Nil test into comp() and strictComp()
+    return booleanObject(strictComp(other) < 0);
 }
 
 RexxInteger *RexxNumberString::strictGreaterOrEqual(RexxObject *other)
@@ -3034,7 +3035,7 @@ RexxInteger *RexxNumberString::strictGreaterOrEqual(RexxObject *other)
     {
         return TheFalseObject;
     }
-    return (strictComp(other) >= 0) ? TheTrueObject : TheFalseObject;
+    return booleanObject(strictComp(other) >= 0);
 }
 
 RexxInteger *RexxNumberString::strictLessOrEqual(RexxObject *other)
@@ -3046,7 +3047,7 @@ RexxInteger *RexxNumberString::strictLessOrEqual(RexxObject *other)
     {
         return TheFalseObject;
     }
-    return (strictComp(other) <= 0) ? TheTrueObject : TheFalseObject;
+    return booleanObject(strictComp(other) <= 0);
 }
 
 RexxNumberString *RexxNumberString::plus(RexxObject *right)

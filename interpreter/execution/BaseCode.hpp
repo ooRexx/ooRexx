@@ -57,7 +57,7 @@ public:
     virtual void run(RexxActivity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
     virtual void call(RexxActivity *, RoutineClass *, RexxString *,  RexxObject **, size_t, RexxString *, RexxString *, int, ProtectedObject &);
     virtual void call(RexxActivity *, RoutineClass *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
-    virtual RexxArray *getSource();
+    virtual ArrayClass *getSource();
     virtual RexxObject *setSecurityManager(RexxObject *manager);
     virtual RexxSource *getSourceObject();
     virtual RexxClass *findClass(RexxString *className);
@@ -82,17 +82,17 @@ class BaseExecutable : public RexxObject
 public:
     inline RexxSource *getSourceObject() { return code->getSourceObject(); };
     inline BaseCode   *getCode() { return code; }
-    RexxArray  *getSource() { return code->getSource(); }
+    ArrayClass  *getSource() { return code->getSource(); }
     PackageClass *getPackage();
 
-    RexxArray *source();
+    ArrayClass *source();
     RexxClass *findClass(RexxString *className);
     BaseExecutable *setSourceObject(RexxSource *s);
     RexxString *getName() { return executableName; }
     void detachSource();
-    static RexxArray *processExecutableSource(RexxObject *source, RexxObject *position);
+    static ArrayClass *processExecutableSource(RexxObject *source, RexxObject *position);
     static void processNewExecutableArgs(RexxObject **&init_args, size_t &argCount, RexxString *&name,
-        Protected<RexxArray> &sourceArray, PackageClass *&sourceContext);
+        Protected<ArrayClass> &sourceArray, PackageClass *&sourceContext);
 
 protected:
 

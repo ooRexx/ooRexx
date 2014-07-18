@@ -591,7 +591,7 @@ bool HashContents::locateItem(RexxInternalObject *item, ItemLink &position, Item
  *
  * @return An array of all matching items.
  */
-RexxArray *HashContents::removeAll(RexxInternalObject *index)
+ArrayClass *HashContents::removeAll(RexxInternalObject *index)
 {
     ItemLink position;
     ItemLink previous = NoLink;
@@ -599,7 +599,7 @@ RexxArray *HashContents::removeAll(RexxInternalObject *index)
     // get a count of matching items
     size_t count = countAllIndex(index, position);
     // get a result array
-    RexxArray *result = new_array(count);
+    ArrayClass *result = new_array(count);
 
     // if we have items to copy, run the chain and copy the index matches
     for (size_t i = 1; i <= count; i++)
@@ -764,7 +764,7 @@ RexxInternalObject *HashContents::nextItem(RexxInternalObject *value, RexxIntern
     // the pair was not found...so see if we can find any value with this index
     // for a method table, this generally means it was added via setMethod().
     RexxInternalObject *scope = get(index);
-    return scope == OREF_NULL ? TheNilObject : scope;
+    return resultOrNil(scope);
 }
 
 
@@ -820,7 +820,7 @@ size_t HashContents::items(RexxInternalObject *index)
  *
  * @return An array containing all matching entries (zero length if none)
  */
-RexxArray  *HashContents::getAll(RexxInternalObject *index)
+ArrayClass  *HashContents::getAll(RexxInternalObject *index)
 {
     ItemLink position;
     ItemLink previous = NoLink;
@@ -828,7 +828,7 @@ RexxArray  *HashContents::getAll(RexxInternalObject *index)
     // get a count of matching items
     size_t count = countAllIndex(index, position);
     // get a result array
-    RexxArray *result = new_array(count);
+    ArrayClass *result = new_array(count);
 
     // if we have items to copy, run the chain and copy the index matches
     for (size_t i = 1; i <= count; i++)
@@ -926,12 +926,12 @@ size_t HashContents::countAllItem(RexxInternalObject *item)
  *
  * @return An array of all matching indexes.
  */
-RexxArray  *HashContents::allIndex(RexxInternalObject *item)
+ArrayClass  *HashContents::allIndex(RexxInternalObject *item)
 {
     // count all of the items first so we know how large the array
     // needs to be.
     size_t count = countAllItem(item);
-    RexxArray *result = new_array(count);
+    ArrayClass *result = new_array(count);
 
     // no need to search again if we don't have any matches
     if (count == 0)
@@ -1145,10 +1145,10 @@ void HashContents::mergePut(RexxInternalObject *item, RexxInternalObject *index)
  *
  * @return An array containing all of the items.
  */
-RexxArray  *HashContents::allItems()
+ArrayClass  *HashContents::allItems()
 {
     // get an array to hold the result
-    RexxArray *result = new_array(itemCount);
+    ArrayClass *result = new_array(itemCount);
 
     // no need to search again if we don't have any matches
     if (itemCount == 0)
@@ -1215,10 +1215,10 @@ void HashContents::empty()
  *
  * @return An array of all indexes.
  */
-RexxArray *HashContents::allIndexes()
+ArrayClass *HashContents::allIndexes()
 {
     // get an array to hold the result
-    RexxArray *result = new_array(itemCount);
+    ArrayClass *result = new_array(itemCount);
 
     // no need to search again if we don't have any matches
     if (itemCount == 0)
@@ -1259,7 +1259,7 @@ RexxArray *HashContents::allIndexes()
  *
  * @return An array with the set of unique index values
  */
-RexxArray *HashContents::uniqueIndexes()
+ArrayClass *HashContents::uniqueIndexes()
 {
     // for tables with no duplicates, this is the same as allIndexes.
     // however, this method is only exposed for relations/bags, so we'll
@@ -1297,8 +1297,8 @@ SupplierClass *HashContents::supplier()
     // get out target count and get arrays for both the values and indexes
     size_t count = itemCount;
 
-    RexxArray *values = new_array(count);
-    RexxArray *indexes = new_array(count);
+    ArrayClass *values = new_array(count);
+    ArrayClass *indexes = new_array(count);
 
     // if this is empty, no need to scan the table
     if (count == 0)
@@ -1353,9 +1353,9 @@ SupplierClass *HashContents::supplier(RexxInternalObject *index)
     }
 
     // get all of the items with that index
-    Protected<RexxArray> itemArray = getAll(index);
+    Protected<ArrayClass> itemArray = getAll(index);
     size_t size = itemArray->items();
-    Protected<RexxArray> indexArray = new_array(size);
+    Protected<ArrayClass> indexArray = new_array(size);
     // for the index array, we just fill in the same index value at every position
     for (size_t i = 1; i <= size; i++)
     {

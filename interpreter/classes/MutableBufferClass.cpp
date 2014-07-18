@@ -594,7 +594,7 @@ RexxString *RexxMutableBuffer::makeString()
  *
  * @return The string object converted to an array using default arguments.
  */
-RexxArray  *RexxMutableBuffer::makeArray()
+ArrayClass  *RexxMutableBuffer::makeArray()
 {
     // forward to the Rexx version with default arguments
     return this->makeArrayRexx(OREF_NULL);
@@ -717,7 +717,7 @@ RexxObject *RexxMutableBuffer::caselessContains(RexxString  *needle, RexxInteger
     size_t _range = optionalLengthArgument(range, getLength() - _start + 1, ARG_THREE);
     /* pass on to the primitive function */
     /* and return as an integer object   */
-    return StringUtil::caselessPos(getStringData(), getLength(), needle , _start - 1, _range) > 0 ? TheTrueObject : TheFalseObject;
+    return booleanObject(StringUtil::caselessPos(getStringData(), getLength(), needle , _start - 1, _range) > 0);
 }
 
 
@@ -763,7 +763,7 @@ RexxString *RexxMutableBuffer::subchar(RexxInteger *positionArg)
 }
 
 
-RexxArray *RexxMutableBuffer::makeArrayRexx(RexxString *div)
+ArrayClass *RexxMutableBuffer::makeArrayRexx(RexxString *div)
 /******************************************************************************/
 /* Function:  Split string into an array                                      */
 /******************************************************************************/
@@ -1262,7 +1262,7 @@ RexxInteger *RexxMutableBuffer::match(RexxInteger *start_, RexxString *other, Re
         reportException(Error_Incorrect_method_length, len);
     }
 
-    return primitiveMatch(_start, other, offset, len) ? TheTrueObject : TheFalseObject;
+    return booleanObject(primitiveMatch(_start, other, offset, len));
 }
 
 
@@ -1305,7 +1305,7 @@ RexxInteger *RexxMutableBuffer::caselessMatch(RexxInteger *start_, RexxString *o
         reportException(Error_Incorrect_method_length, len);
     }
 
-    return primitiveCaselessMatch(_start, other, offset, len) ? TheTrueObject : TheFalseObject;
+    return booleanObject(primitiveCaselessMatch(_start, other, offset, len));
 }
 
 
@@ -1480,7 +1480,7 @@ RexxString *RexxMutableBuffer::subWord(RexxInteger *position, RexxInteger *pleng
  *         available within the given range, this returns an empty
  *         array.
  */
-RexxArray *RexxMutableBuffer::subWords(RexxInteger *position, RexxInteger *plength)
+ArrayClass *RexxMutableBuffer::subWords(RexxInteger *position, RexxInteger *plength)
 {
     return StringUtil::subWords(getStringData(), getLength(), position, plength);
 }
@@ -1563,7 +1563,7 @@ RexxInteger *RexxMutableBuffer::wordPos(RexxString  *phrase, RexxInteger *pstart
  */
 RexxObject *RexxMutableBuffer::containsWord(RexxString  *phrase, RexxInteger *pstart)
 {
-    return StringUtil::wordPos(getStringData(), getLength(), phrase, pstart) > 0 ? TheTrueObject : TheFalseObject;
+    return booleanObject(StringUtil::wordPos(getStringData(), getLength(), phrase, pstart) > 0);
 }
 
 
@@ -1591,7 +1591,7 @@ RexxInteger *RexxMutableBuffer::caselessWordPos(RexxString  *phrase, RexxInteger
  */
 RexxObject *RexxMutableBuffer::caselessContainsWord(RexxString  *phrase, RexxInteger *pstart)
 {
-    return StringUtil::caselessWordPos(getStringData(), getLength(), phrase, pstart) > 0 ? TheTrueObject : TheFalseObject;
+    return booleanObject(StringUtil::caselessWordPos(getStringData(), getLength(), phrase, pstart) > 0);
 }
 
 

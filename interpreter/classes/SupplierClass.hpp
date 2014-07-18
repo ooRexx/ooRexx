@@ -53,7 +53,7 @@ class SupplierClass : public RexxObject
     inline void  operator delete(void *) {;}
 
     inline SupplierClass(RESTORETYPE restoreType) { ; };
-    SupplierClass(RexxArray  *, RexxArray  *);
+    SupplierClass(ArrayClass  *, ArrayClass  *);
     SupplierClass();
 
 
@@ -66,11 +66,11 @@ class SupplierClass : public RexxObject
     RexxObject  *next();
     RexxObject  *value();
     RexxObject  *index();
-    RexxObject  *initRexx(RexxArray *values, RexxArray *indexes);
+    RexxObject  *initRexx(ArrayClass *values, ArrayClass *indexes);
     RexxObject  *newRexx(RexxObject **, size_t);
-    RexxArray   *indexes() {return indexes; }
-    RexxArray   *values() {return values; }
-    void         append(RexxArray *, RexxArray *);
+    ArrayClass   *indexes() {return indexes; }
+    ArrayClass   *values() {return values; }
+    void         append(ArrayClass *, ArrayClass *);
     void         append(RexxSuppler *);
 
     static void createInstance();
@@ -78,11 +78,11 @@ class SupplierClass : public RexxObject
 
  protected:
 
-    RexxArray  *values;                 // array of values
-    RexxArray  *indexes;                // array of indexes
+    ArrayClass  *values;                 // array of values
+    ArrayClass  *indexes;                // array of indexes
     size_t position;                    // current array position
 };
 
-inline SupplierClass *new_supplier(RexxArray *values, RexxArray *indexes) { return new SupplierClass(values, indexes); }
+inline SupplierClass *new_supplier(ArrayClass *values, ArrayClass *indexes) { return new SupplierClass(values, indexes); }
 
 #endif

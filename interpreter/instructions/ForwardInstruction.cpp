@@ -59,7 +59,7 @@
  * @param a      The args specified via the ARRAY() option.
  * @param c      the continue/return flag.
  */
-RexxInstructionForward::RexxInstructionForward(RexxObject * t, RexxObject *m, RexxObject *s, RexxObject *args, RexxArray *a, bool c)
+RexxInstructionForward::RexxInstructionForward(RexxObject * t, RexxObject *m, RexxObject *s, RexxObject *args, ArrayClass *a, bool c)
 {
     target = t;
     message = m;
@@ -170,7 +170,7 @@ void RexxInstructionForward::execute(RexxActivation *context, RexxExpressionStac
     {
         // we need to evaluate this argument, then get as an array
         RexxObject *temp = arguments->evaluate(context, stack);
-        RexxArray *argArray = REQUEST_ARRAY(temp);
+        ArrayClass *argArray = REQUEST_ARRAY(temp);
         // protect this on the stack too
         stack->push(argArray);
         // make sure we got an acceptable array back.

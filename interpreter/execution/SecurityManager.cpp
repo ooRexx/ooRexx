@@ -173,7 +173,7 @@ bool SecurityManager::checkProtectedMethod(RexxObject *target, RexxString *messa
 
     securityArgs->put(target, OREF_OBJECTSYM);
     securityArgs->put(messageName, OREF_NAME);
-    RexxArray *argumentArray = new_array(count, arguments);
+    ArrayClass *argumentArray = new_array(count, arguments);
     securityArgs->put(argumentArray, OREF_ARGUMENTS);
     if (callSecurityManager(OREF_METHODNAME, securityArgs))
     {
@@ -207,7 +207,7 @@ bool SecurityManager::checkFunctionCall(RexxString *functionName, size_t count, 
     ProtectedObject p(securityArgs);
 
     securityArgs->put(functionName, OREF_NAME);
-    RexxArray *argumentArray = new_array(count, arguments);
+    ArrayClass *argumentArray = new_array(count, arguments);
     securityArgs->put(argumentArray, OREF_ARGUMENTS);
     if (callSecurityManager(OREF_CALL, securityArgs))
     {

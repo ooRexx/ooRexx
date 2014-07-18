@@ -735,7 +735,7 @@ void RexxActivity::reportAnException(
  * @param additional The message substitution parameters.
  * @param result     The message result.
  */
-void RexxActivity::raiseException(wholenumber_t  errcode, RexxString *description, RexxArray *additional, RexxObject *result)
+void RexxActivity::raiseException(wholenumber_t  errcode, RexxString *description, ArrayClass *additional, RexxObject *result)
 /******************************************************************************/
 /* This routine is used for SYNTAX conditions only.                           */
 /*                                                                            */
@@ -809,7 +809,7 @@ void RexxActivity::raiseException(wholenumber_t  errcode, RexxString *descriptio
  * @return The created exception dictionary.
  */
 DirectoryClass *RexxActivity::createExceptionObject(wholenumber_t  errcode,
-    RexxString *description, RexxArray *additional, RexxObject *result )
+    RexxString *description, ArrayClass *additional, RexxObject *result )
 /******************************************************************************/
 /* This routine is used for SYNTAX conditions only.                           */
 /*                                                                            */
@@ -971,10 +971,10 @@ void RexxActivity::generateProgramInformation(DirectoryClass *exobj)
  *
  * @return An array of the stack frames in the call context.
  */
-RexxArray *RexxActivity::generateStackFrames(bool skipFirst)
+ArrayClass *RexxActivity::generateStackFrames(bool skipFirst)
 {
     // create lists for both the stack frames and the traceback lines
-    RexxArray *stackFrames = new_array((size_t)0);
+    ArrayClass *stackFrames = new_array((size_t)0);
     ProtectedObject p(stackFrames);
 
     ActivationFrame *frame = activationFrames;
@@ -1006,7 +1006,7 @@ RexxArray *RexxActivity::generateStackFrames(bool skipFirst)
  *
  * @return The message with the substitution values inserted.
  */
-RexxString *RexxActivity::buildMessage(wholenumber_t messageCode, RexxArray *substitutions)
+RexxString *RexxActivity::buildMessage(wholenumber_t messageCode, ArrayClass *substitutions)
 {
     /* retrieve the secondary message    */
     RexxString *message = SystemInterpreter::getMessageText(messageCode);
@@ -1022,7 +1022,7 @@ RexxString *RexxActivity::buildMessage(wholenumber_t messageCode, RexxArray *sub
 
 RexxString *RexxActivity::messageSubstitution(
     RexxString *message,               /* REXX error message                */
-    RexxArray  *additional )           /* substitution information          */
+    ArrayClass  *additional )           /* substitution information          */
 /******************************************************************************/
 /* Function:  Perform any required message substitutions on the secondary     */
 /*            error message.                                                  */
@@ -1134,7 +1134,7 @@ void RexxActivity::reraiseException(DirectoryClass *exobj)
                                            /* retrieve the secondary message    */
         RexxString *message = SystemInterpreter::getMessageText(errornumber);
         /* Retrieve any additional parameters*/
-        RexxArray *additional = (RexxArray *)exobj->at(OREF_ADDITIONAL);
+        ArrayClass *additional = (ArrayClass *)exobj->at(OREF_ADDITIONAL);
         /* do required substitutions         */
         message = this->messageSubstitution(message, additional);
         /* replace the original message text */
@@ -1189,7 +1189,7 @@ RexxObject *RexxActivity::display(DirectoryClass *exobj)
     if (trace_backList != OREF_NULL)     /* have a traceback?                 */
     {
         /* convert to an array               */
-        RexxArray *trace_back = trace_backList->makeArray();
+        ArrayClass *trace_back = trace_backList->makeArray();
         ProtectedObject p(trace_back);
         /* get the traceback size            */
         size_t tracebackSize = trace_back->size();

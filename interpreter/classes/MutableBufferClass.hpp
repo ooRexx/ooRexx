@@ -84,8 +84,8 @@ class RexxMutableBuffer : public RexxObject
 
     RexxInteger       *getBufferSize() { return new_integer(bufferLength); }
     RexxObject        *setBufferSize(RexxInteger*);
-    RexxArray         *makeArrayRexx(RexxString *div);
-    RexxArray         *makeArray();
+    ArrayClass         *makeArrayRexx(RexxString *div);
+    ArrayClass         *makeArray();
     RexxString        *makeString();
     RexxString        *primitiveMakeString();
     RexxInteger       *countStrRexx(RexxString *needle);
@@ -103,7 +103,7 @@ class RexxMutableBuffer : public RexxObject
     RexxInteger *caselessMatchChar(RexxInteger *position_, RexxString *matchSet);
     RexxInteger *verify(RexxString *, RexxString *, RexxInteger *, RexxInteger *);
     RexxString  *subWord(RexxInteger *, RexxInteger *);
-    RexxArray   *subWords(RexxInteger *, RexxInteger *);
+    ArrayClass   *subWords(RexxInteger *, RexxInteger *);
     RexxString  *word(RexxInteger *);
     RexxInteger *wordIndex(RexxInteger *);
     RexxInteger *wordLength(RexxInteger *);

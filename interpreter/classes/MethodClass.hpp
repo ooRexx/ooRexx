@@ -52,7 +52,7 @@ class RexxSource;
 class RexxActivity;
 class MethodClass;
 class ProtectedObject;
-class RexxArray;
+class ArrayClass;
 class RexxClass;
 class PackageClass;
 

@@ -56,7 +56,7 @@ class RexxHashTableCollection : public RexxObject
     virtual RexxObject * unflatten(RexxEnvelope *);
     virtual RexxObject * makeProxy(RexxEnvelope *);
     virtual RexxObject * copy();
-    virtual RexxArray  * makeArray();
+    virtual ArrayClass  * makeArray();
 
     virtual RexxObject *mergeItem(RexxObject *, RexxObject *);
     virtual RexxObject *remove(RexxObject *key);
@@ -78,9 +78,9 @@ class RexxHashTableCollection : public RexxObject
     RexxObject   *indexRexx(RexxObject * value);
     SupplierClass *supplier();
     RexxObject   *merge(RexxHashTableCollection *);
-    RexxArray    *allItems();
-    RexxArray    *allIndexes();
-    RexxArray    *uniqueIndexes();
+    ArrayClass    *allItems();
+    ArrayClass    *allIndexes();
+    ArrayClass    *uniqueIndexes();
     RexxObject   *empty();
     RexxObject   *isEmptyRexx();
     bool          isEmpty();

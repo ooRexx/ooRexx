@@ -922,14 +922,7 @@ BUILTIN(ARG)
                     return TheFalseObject;     /* can't be true                     */
                 }
                                                  /* have a real argument?             */
-                else if (arglist[position - 1] == OREF_NULL)
-                {
-                    return TheFalseObject;     /* nope, this is false also          */
-                }
-                else
-                {
-                    return TheTrueObject;      /* have a real argument              */
-                }
+                return booleanObject(arglist[position - 1] == OREF_NULL);
                 break;
 
             case 'O':                        /* argument 'O'mitted?               */
@@ -939,14 +932,7 @@ BUILTIN(ARG)
                     return TheTrueObject;      /* must be omitted                   */
                 }
                                                  /* have a real argument?             */
-                else if (arglist[position - 1] == OREF_NULL)
-                {
-                    return TheTrueObject;        /* this is omitted also              */
-                }
-                else
-                {
-                    return TheFalseObject;     /* have a real argument              */
-                }
+                return booleanObject(arglist[position - 1] == OREF_NULL);
                 break;
 
             case 'N':                        /* 'N'ormal processing?              */
@@ -1615,7 +1601,7 @@ BUILTIN(VAR)
     else
     {                               /* need to perform lookup            */
                                     /* get the variable value            */
-        return retriever->exists(context) ? TheTrueObject : TheFalseObject;
+        return booleanObject(retriever->exists(context));
     }
 }
 

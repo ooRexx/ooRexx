@@ -66,7 +66,7 @@ public:
     static RexxClass *classInstance;
 
     RexxString *getName();
-    RexxArray *getSource();
+    ArrayClass *getSource();
     RexxString *getSourceLine(size_t);
     RexxInteger *getSourceSize();
     RexxString *getSourceLineRexx(RexxObject *);
@@ -79,8 +79,8 @@ public:
     DirectoryClass *getRoutines();
     DirectoryClass *getPublicRoutines();
     DirectoryClass *getImportedRoutines();
-    RexxArray     *getImportedPackages();
-    PackageClass  *loadPackage(RexxString *name, RexxArray *source);
+    ArrayClass     *getImportedPackages();
+    PackageClass  *loadPackage(RexxString *name, ArrayClass *source);
     RexxObject    *addPackage(PackageClass *package);
     RexxClass     *findClass(RexxString *name);
     RexxClass     *findClassRexx(RexxString *name);

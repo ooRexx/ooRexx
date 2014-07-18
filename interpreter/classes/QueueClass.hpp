@@ -66,7 +66,7 @@ class RexxQueue : public ListClass {
  RexxObject *newRexx(RexxObject **, size_t);
  RexxQueue  *ofRexx(RexxObject **, size_t);
  RexxObject *append(RexxObject *);
- RexxArray  *allIndexes();
+ ArrayClass  *allIndexes();
  RexxObject *index(RexxObject *);
  RexxObject *firstRexx();
  RexxObject *lastRexx();

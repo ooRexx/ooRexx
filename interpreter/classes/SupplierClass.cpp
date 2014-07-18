@@ -82,7 +82,7 @@ void *SupplierClass::operator new(size_t size)
  * @param _values  The array of values.
  * @param _indexes The array of indexes
  */
-SupplierClass::SupplierClass(RexxArray  *_values, RexxArray  *_indexes )
+SupplierClass::SupplierClass(ArrayClass  *_values, ArrayClass  *_indexes )
 {
     values = _values;
     indexes = _indexes;
@@ -134,7 +134,7 @@ void SupplierClass::flatten(RexxEnvelope *envelope)
 RexxInteger *SupplierClass::available()
 {
     // test if we have an available next item
-    return (position > values->size()) ? TheFalseObject : TheTrueObject;
+    return booleanObject(isAvailable());
 }
 
 
@@ -146,7 +146,7 @@ RexxInteger *SupplierClass::available()
 bool SupplierClass::isAvailable()
 {
     // test if we have an available next item
-    return (position > values->size());
+    return (position <= values->size());
 }
 
 
@@ -182,12 +182,8 @@ RexxObject  *SupplierClass::value()
     }
 
     // get the value, but make sure we at least return .nil
-    RexxObject *_value = values->get(position);
-    if (_value == OREF_NULL)
-    {
-        _value = TheNilObject;
-    }
-    return _value;
+    RexxObject *value = values->get(position);
+    return resultOrNil(value);
 }
 
 
@@ -218,12 +214,7 @@ RexxObject  *SupplierClass::index()
     else
     {
         // get the current value and return .nil if nothing is there.
-        RexxObject *_value = indexes->get(position);
-        if (_value == OREF_NULL)
-        {
-            return TheNilObject;
-        }
-        return _value;
+        return resultOrNil(indexes->get(position));
     }
 }
 
@@ -237,19 +228,19 @@ RexxObject  *SupplierClass::index()
  *
  * @return Nothing
  */
-RexxObject *SupplierClass::initRexx(RexxArray *_values, RexxArray *_indexes)
+RexxObject *SupplierClass::initRexx(ArrayClass *_values, ArrayClass *_indexes)
 {
     requiredArgument(_values, ARG_ONE);           // both values are required
     requiredArgument(_indexes, ARG_TWO);
 
     // now verify both values
-    RexxArray *new_values = REQUEST_ARRAY(_values);
-    RexxArray *new_indexes = REQUEST_ARRAY(_indexes);
-    if (new_values == (RexxArray  *)TheNilObject || new_values->getDimension() != 1)
+    ArrayClass *new_values = REQUEST_ARRAY(_values);
+    ArrayClass *new_indexes = REQUEST_ARRAY(_indexes);
+    if (new_values == (ArrayClass  *)TheNilObject || new_values->getDimension() != 1)
     {
         reportException(Error_Incorrect_method_noarray, values);
     }
-    if (new_indexes == (RexxArray  *)TheNilObject || new_indexes->getDimension() != 1)
+    if (new_indexes == (ArrayClass  *)TheNilObject || new_indexes->getDimension() != 1)
     {
         reportException(Error_Incorrect_method_noarray, indexes);
     }
@@ -269,7 +260,7 @@ RexxObject *SupplierClass::initRexx(RexxArray *_values, RexxArray *_indexes)
  * @param _values  The additional values to append.
  * @param _indexes The additional indexes to append.
  */
-void SupplierClass::append(RexxArray  *_values, RexxArray  *_indexes )
+void SupplierClass::append(ArrayClass  *_values, ArrayClass  *_indexes )
 {
     values->appendAll(_values);
     indexes->appendAll(indexes);

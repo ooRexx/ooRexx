@@ -69,7 +69,7 @@ void RexxStartDispatcher::run()
 
     savedObjects.add(name);              /* protect from garbage collect      */
     // get an array version of the arguments and protect
-    RexxArray *new_arglist = new_array(argcount);
+    ArrayClass *new_arglist = new_array(argcount);
     savedObjects.add(new_arglist);
 
     // for compatibility reasons, if this is a command invocation and there is a leading blank

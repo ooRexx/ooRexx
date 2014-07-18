@@ -126,7 +126,7 @@ RexxInteger *RexxString::caselessAbbrev(RexxString *info, RexxInteger *_length)
         return TheFalseObject;
     }
     /* do the comparison                 */
-    return(StringUtil::caselessCompare(this->getStringData(), info->getStringData(), len2) == 0) ? TheTrueObject : TheFalseObject;
+    return booleanObject(StringUtil::caselessCompare(this->getStringData(), info->getStringData(), len2) == 0));
 }
 
 
@@ -624,7 +624,7 @@ RexxObject *RexxString::caselessContains(RexxString *needle, RexxInteger *pstart
     size_t _range = optionalLengthArgument(range, getLength() - _start + 1, ARG_THREE);
     /* pass on to the primitive function */
     /* and return as an integer object   */
-    return StringUtil::caselessPos(getStringData(), getLength(), needle , _start - 1, _range) > 0 ? TheTrueObject : TheFalseObject;
+    return booleanObject(StringUtil::caselessPos(getStringData(), getLength(), needle , _start - 1, _range) > 0);
 }
 
 
@@ -793,7 +793,7 @@ RexxInteger *RexxString::match(RexxInteger *start_, RexxString *other, RexxInteg
         reportException(Error_Incorrect_method_length, len);
     }
 
-    return primitiveMatch(_start, other, offset, len) ? TheTrueObject : TheFalseObject;
+    return booleanObject(primitiveMatch(_start, other, offset, len));
 }
 
 
@@ -836,7 +836,7 @@ RexxInteger *RexxString::caselessMatch(RexxInteger *start_, RexxString *other, R
         reportException(Error_Incorrect_method_length, len);
     }
 
-    return primitiveCaselessMatch(_start, other, offset, len) ? TheTrueObject : TheFalseObject;
+    return booleanObject(primitiveCaselessMatch(_start, other, offset, len));
 }
 
 

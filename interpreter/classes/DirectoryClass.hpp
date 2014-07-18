@@ -68,8 +68,8 @@ class DirectoryClass : public StringHashCollection
     // virtual method overrides of the base collection class.
     virtual size_t items();
     virtual SupplierClass *supplier();
-    virtual RexxArray *allIndexes();
-    virtual RexxArray *allItems();
+    virtual ArrayClass *allIndexes();
+    virtual ArrayClass *allItems();
     virtual bool hasIndex(RexxInternalObject *indexName);
     virtual RexxInternalObject *remove(RexxInternalObject *entryname);
     virtual RexxInternalObject *get(RexxInternalObject *index);
@@ -80,7 +80,7 @@ class DirectoryClass : public StringHashCollection
     virtual RexxInternalObject *removeItem(RexxInternalObject *target);
 
     // our unknown method
-    RexxInternalObject *unknown(RexxString *msgname, RexxArray *arguments);
+    RexxInternalObject *unknown(RexxString *msgname, ArrayClass *arguments);
 
     // base implementations of extra directory methods.
     bool hasEntry(RexxString *entryName);

@@ -197,7 +197,7 @@ RexxObjectPtr RexxEntry ForwardMessage(RexxMethodContext *c, RexxObjectPtr o, CS
     {
         RexxString *message = n == NULL ? OREF_NULL : new_upper_string(n);
         ProtectedObject result(context.activity);
-        context.context->forwardMessage((RexxObject *)o, message, (RexxClass *)clazz, (RexxArray *)a, result);
+        context.context->forwardMessage((RexxObject *)o, message, (RexxClass *)clazz, (ArrayClass *)a, result);
         return context.ret((RexxObject *)result);
     }
     catch (RexxNativeActivation *)

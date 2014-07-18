@@ -47,14 +47,14 @@
 #include "MethodClass.hpp"
 
 class RexxSource;
-class RexxArray;
+class ArrayClass;
 
 class StackFrameClass : public RexxObject
 {
 public:
     void *operator new(size_t);
     inline void *operator new(size_t size, void *ptr) { return ptr; };
-    StackFrameClass(const char *type, RexxString *name, BaseExecutable *p, RexxObject *target, RexxArray *arguments, RexxString *t, size_t l);
+    StackFrameClass(const char *type, RexxString *name, BaseExecutable *p, RexxObject *target, ArrayClass *arguments, RexxString *t, size_t l);
     inline StackFrameClass(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
@@ -70,7 +70,7 @@ public:
     RexxObject *getTarget();
     RexxObject *getLine();
     RexxString *getTraceLine();
-    RexxArray  *getArguments();
+    ArrayClass  *getArguments();
     RexxSource *getSourceObject();
     virtual     RexxString  *makeString();
     virtual     RexxString  *stringValue();
@@ -91,7 +91,7 @@ protected:
     RexxString *name;               // the name of the item at that stack frame instance
     BaseExecutable *executable;     // the executable associated with this frame instance
     RexxObject *target;             // the target object, if a message send
-    RexxArray *arguments;           // arguments to the method/routine
+    ArrayClass *arguments;           // arguments to the method/routine
     size_t          line;           // the frame line position (MAX_SIZE indicates no line available)
     RexxString *traceLine;          // a tracing line
 };

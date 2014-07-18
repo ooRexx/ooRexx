@@ -41,30 +41,22 @@
 /* Primitive Array Class Definitions                                          */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_RexxArray
-#define Included_RexxArray
+#ifndef Included_ArrayClass
+#define Included_ArrayClass
 
-
-// TODO:  Get rid of these defines
-#define RaiseBoundsNone     0x00000000
-#define RaiseBoundsUpper    0x00000001
-#define RaiseBoundsInvalid  0x00000002
-#define RaiseBoundsTooMany  0x00000004
-#define RaiseBoundsAll      0x0000000F
-#define ExtendUpper         0x00000010
 
 
 typedef struct copyElementParm
 {
    size_t firstChangedDimension;
-   RexxArray *newArray;
-   RexxArray *newDimArray;
-   RexxArray *oldDimArray;
+   ArrayClass *newArray;
+   ArrayClass *newDimArray;
+   ArrayClass *oldDimArray;
    size_t deltaDimSize;
    size_t copyElements;
    size_t skipElements;
-   RexxObject **startNew;
-   RexxObject **startOld;
+   RexxInternalObject **startNew;
+   RexxInternalObject **startOld;
 } COPYELEMENTPARM;
 
 
@@ -92,23 +84,33 @@ class BaseSortComparator
  public:
     inline BaseSortComparator() { }
 
-    virtual wholenumber_t compare(RexxObject *first, RexxObject *second);
+    virtual wholenumber_t compare(RexxInternalObject *first, RexxInternalObject *second);
 };
 
 
 class WithSortComparator : public BaseSortComparator
 {
 public:
-    inline WithSortComparator(RexxObject *c) : comparator(c) { }
-    virtual wholenumber_t compare(RexxObject *first, RexxObject *second);
+    inline WithSortComparator(RexxInternalObject *c) : comparator(c) { }
+    virtual wholenumber_t compare(RexxInternalObject *first, RexxInternalObject *second);
 protected:
     RexxObject *comparator;
 };
 
 
-class RexxArray : public RexxObject
+class ArrayClass : public RexxObject
 {
  public:
+
+    enum
+    {
+        RaiseBoundsNone    = 0x00000000,
+        RaiseBoundsUpper   = 0x00000001,
+        RaiseBoundsInvalid = 0x00000002,
+        RaiseBoundsTooMany = 0x00000004,
+        RaiseBoundsAll     = 0x0000000F,
+        ExtendUpper        = 0x00000010,
+    } IndexFlags;
 
     inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };
     void * operator new(size_t, size_t, size_t = ARRAY_DEFAULT_SIZE);
@@ -116,15 +118,15 @@ class RexxArray : public RexxObject
     inline void operator delete(void *, void *) {;}
     inline void operator delete(void *, size_t, size_t) {;}
 
-    inline RexxArray(RESTORETYPE restoreType) { ; };
-    inline RexxArray() { ; };
-    inline RexxArray(RexxObject *o1) { put(o1, 1); }
-    inline RexxArray(RexxObject *o1, RexxObject *o2) { put(o1, 1); put(o2, 2); }
-    inline RexxArray(RexxObject *o1, RexxObject *o2, RexxObject *o3) { put(o1, 1); put(o2, 2); put(o3, 3); }
-    inline RexxArray(RexxObject *o1, RexxObject *o2, RexxObject *o3, RexxObject *o4) { put(o1, 1); put(o2, 2); put(o3, 3); put(o4, 4); }
-           RexxArray(RexxObject **o, size_t c);
+    inline ArrayClass(RESTORETYPE restoreType) { ; };
+    inline ArrayClass() { ; };
+    inline ArrayClass(RexxInternalObject *o1) { put(o1, 1); }
+    inline ArrayClass(RexxInternalObject *o1, RexxInternalObject *o2) { put(o1, 1); put(o2, 2); }
+    inline ArrayClass(RexxInternalObject *o1, RexxInternalObject *o2, RexxInternalObject *o3) { put(o1, 1); put(o2, 2); put(o3, 3); }
+    inline ArrayClass(RexxInternalObject *o1, RexxInternalObject *o2, RexxInternalObject *o3, RexxInternalObject *o4) { put(o1, 1); put(o2, 2); put(o3, 3); put(o4, 4); }
+           ArrayClass(RexxInternalObject **o, size_t c);
 
-    inline ~RexxArray() { ; };
+    inline ~ArrayClass() { ; };
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
@@ -132,9 +134,9 @@ class RexxArray : public RexxObject
 
     virtual RexxObject *copy();
 
-    RexxArray   *makeArray();
-    RexxArray   *allItems();
-    RexxArray   *allIndexes();
+    ArrayClass   *makeArray();
+    ArrayClass   *allItems();
+    ArrayClass   *allIndexes();
     RexxString  *toString(RexxString *, RexxString *);
     RexxString  *makeString(RexxString *, RexxString *);
 // Temporary bypass for problems with arrays being automatically coerced to
@@ -142,44 +144,43 @@ class RexxArray : public RexxObject
 #if 0
     RexxString  *primitiveMakeString();
 #endif
-    RexxObject  *getRexx(RexxObject **, size_t);
-    RexxObject  *getApi(size_t pos);
-    void         put(RexxObject * eref, size_t pos);
+    RexxInternalObject  *getRexx(RexxObject **, size_t);
+    RexxInternalObject  *safeGet(size_t pos);
+    void         put(RexxInternalObject * eref, size_t pos);
     RexxObject  *putRexx(RexxObject **, size_t);
-    void         putApi(RexxObject * eref, size_t pos);
-    RexxObject  *remove(size_t);
-    RexxObject  *removeRexx(RexxObject **, size_t);
-    RexxObject  *appendRexx(RexxObject *);
-    size_t       append(RexxObject *);
-    void         appendAll(RexxArray *);
+    void         putApi(RexxInternalObject * eref, size_t pos);
+    RexxInternalObject  *remove(size_t);
+    RexxInternalObject  *removeRexx(RexxObject **, size_t);
+    RexxObject  *appendRexx(RexxInternalObject *);
+    size_t       append(RexxInternalObject *);
+    void         appendAll(ArrayClass *);
     void         setExpansion(RexxObject * expansion);
     RexxInteger *available(size_t position);
     bool         validateIndex(RexxObject **, size_t, size_t, size_t, stringsize_t &);
     RexxInteger *sizeRexx();
     RexxObject  *firstRexx();
     RexxObject  *lastRexx();
-    RexxObject  *firstItem();
-    RexxObject  *lastItem();
+    RexxInternalObject  *firstItem();
+    RexxInternalObject  *lastItem();
     size_t       lastIndex();
     RexxObject  *nextRexx(RexxObject **, size_t);
     RexxObject  *previousRexx(RexxObject **, size_t);
-    RexxArray   *section(size_t, size_t);
+    ArrayClass   *section(size_t, size_t);
     RexxObject  *sectionRexx(RexxObject *, RexxObject *);
     RexxObject  *sectionSubclass(size_t, size_t);
     bool         hasIndexNative(size_t);
     RexxObject  *hasIndexRexx(RexxObject **, size_t);
-    bool         hasIndexApi(size_t);
-    size_t       items();
+    inline size_t items() { return itemCount; }
     RexxObject  *itemsRexx();
     RexxObject  *dimension(RexxObject *);
     RexxObject  *getDimensions();
     size_t       getDimension();
     RexxObject  *supplier();
-    RexxObject  *join(RexxArray *);
-    RexxArray   *extend(size_t);
+    RexxObject  *join(ArrayClass *);
+    ArrayClass   *extend(size_t);
     void         shrink(size_t);
-    size_t       indexOf(RexxObject *);
-    RexxArray   *extendMulti(RexxObject **, size_t, size_t);
+    size_t       indexOf(RexxInternalObject *);
+    ArrayClass   *extendMulti(RexxObject **, size_t, size_t);
     void         resize();
     void         ensureSpace(size_t newSize);
     RexxObject  *newRexx(RexxObject **, size_t);
@@ -188,64 +189,107 @@ class RexxArray : public RexxObject
     bool         isEmpty();
     RexxObject  *isEmptyRexx();
     RexxObject  *fill(RexxObject *);
-    RexxObject  *index(RexxObject *);
-    RexxObject  *hasItem(RexxObject *);
-    RexxObject  *removeItem(RexxObject *);
-    wholenumber_t sortCompare(RexxObject *comparator, RexxObject *left, RexxObject *right);
-    RexxArray   *stableSortRexx();
-    RexxArray   *stableSortWithRexx(RexxObject *comparator);
-    RexxObject  *insertRexx(RexxObject *_value, RexxObject *index);
-    size_t       insert(RexxObject *_value, size_t index);
-    RexxObject  *deleteRexx(RexxObject *index);
-    RexxObject  *deleteItem(size_t index);
+    RexxObject  *index(RexxInternalObject *);
+    RexxObject  *hasItem(RexxInternalObject *);
+    RexxInternalObject  *removeItem(RexxInternalObject *);
+    wholenumber_t sortCompare(RexxObject *comparator, RexxInternalObject *left, RexxInternalObject *right);
+    ArrayClass   *stableSortRexx();
+    ArrayClass   *stableSortWithRexx(RexxObject *comparator);
+    RexxObject  *insertRexx(RexxInternalObject *_value, RexxObject *index);
+    size_t       insert(RexxInternalObject *_value, size_t index);
+    RexxInternalObject  *deleteRexx(RexxInternalObject *index);
+    RexxInternalObject  *deleteItem(size_t index);
 
-    inline size_t       addLast(RexxObject *item) { return this->insert(item, this->size() + 1); }
-    inline size_t       addFirst(RexxObject *item) { return this->insert(item, 1); }
-    inline size_t       insertAfter(RexxObject *item, size_t index) { return this->insert(item, index); }
-    inline RexxArray   *array() { return this->makeArray(); }
-    inline size_t       size() { return this->expansionArray->arraySize; }
-    inline RexxObject  *get(size_t pos) { return (this->data())[pos-1];}
-    inline RexxObject **data() { return this->expansionArray->objects; }
-    inline RexxObject **data(size_t pos) { return &((this->data())[pos-1]);}
-    inline RexxArray   *getExpansion() { return this->expansionArray; }
-    size_t              findSingleIndexItem(RexxObject *item);
+    inline size_t       addLast(RexxInternalObject *item) { return insert(item, size() + 1); }
+    inline size_t       addFirst(RexxInternalObject *item) { return insert(item, 1); }
+    inline size_t       insertAfter(RexxInternalObject *item, size_t index) { return insert(item, index); }
+    inline ArrayClass   *array() { return makeArray(); }
+    inline size_t       size() { return expansionArray->arraySize; }
+    inline bool         isOccupied(size_t pos) { return get(pos) != OREF_NULL; }
+    inline bool         isInbounds(size_t pos) { return pos > 0 && pos <= size(); }
+
+    // check if we need to update the itemcount when writing to a given position.
+    inline void         checkSetItemCount(size_t pos)
+    {
+        if (!isOccupied(pos))
+        {
+            itemCount++;
+        }
+    }
+    // check if clearing an index position affects the last item position
+    inline void         checkClearItemCount(size_t pos)
+    {
+        if (pos == lastItem)
+        {
+            updateLastItem();
+        }
+    }
+
+    // check if we need to update the itemcount when writing a given position.
+    inline void         checkClearItemCount(size_t pos)
+    {
+        if (isOccupied(pos))
+        {
+            itemCount--;
+        }
+    }
+
+    // check if we need to update the lastItem position after adding an object to a position
+    inline void         checkLastItem(size_t pos)
+    {
+        if (pos > lastItem)
+        {
+            lastItem = pos;
+        }
+    }
+
+    inline RexxInternalObject  *get(size_t pos) { return (data())[pos-1];}
+    inline RexxInternalObject **data() { return expansionArray->objects; }
+    inline RexxInternalObject **data(size_t pos) { return &((data())[pos-1]);}
+    inline ArrayClass   *getExpansion() { return expansionArray; }
+    size_t              findSingleIndexItem(RexxInternalObject *item);
     RexxObject *        indexToArray(size_t idx);
     RexxObject *        convertIndex(size_t idx);
 
-    inline bool isMultiDimensional() { return this->dimensions != OREF_NULL && this->dimensions->size() != 1; }
+    inline bool isMultiDimensional() { return dimensions != OREF_NULL && dimensions->size() != 1; }
     inline bool isSingleDimensional() { return !isMultiDimensional(); }
     inline bool hasExpanded() { return expansionArray != this; }
 
-    static RexxArray *createMultidimensional(RexxObject **dims, size_t count, RexxClass *);
+    static ArrayClass *createMultidimensional(RexxObject **dims, size_t count, RexxClass *);
+    static inline ArrayClass *createMultidimensional(ArrayClass *dims, RexxClass *)
+    {
+        return createMultidimensional(dims->data(), dims->items());
+    }
 
     static void createInstance();
     // singleton class instance;
     static RexxClass *classInstance;
-    static RexxArray *nullArray;
+    static ArrayClass *nullArray;
 
 
  protected:
 
-    void         mergeSort(BaseSortComparator &comparator, RexxArray *working, size_t left, size_t right);
-    void         merge(BaseSortComparator &comparator, RexxArray *working, size_t left, size_t mid, size_t right);
-    static void  arraycopy(RexxArray *source, size_t start, RexxArray *target, size_t index, size_t count);
-    size_t       find(BaseSortComparator &comparator, RexxObject *val, int bnd, size_t left, size_t right);
+    void         mergeSort(BaseSortComparator &comparator, ArrayClass *working, size_t left, size_t right);
+    void         merge(BaseSortComparator &comparator, ArrayClass *working, size_t left, size_t mid, size_t right);
+    static void  arraycopy(ArrayClass *source, size_t start, ArrayClass *target, size_t index, size_t count);
+    size_t       find(BaseSortComparator &comparator, RexxInternalObject *val, int bnd, size_t left, size_t right);
     void         openGap(size_t index, size_t elements);
     void         closeGap(size_t index, size_t elements);
-    inline RexxObject **slotAddress(size_t index) { return &(this->data()[index - 1]); }
+    inline RexxInternalObject **slotAddress(size_t index) { return &(data()[index - 1]); }
     inline size_t       dataSize() { return ((char *)slotAddress(size() + 1)) - ((char *)data()); }
 
 
-    static const size_t MAX_FIXEDARRAY_SIZE;  // maximum size we can handle
-    static const size_t ARRAY_MIN_SIZE;       // the minimum size we allocate.
-    static const size_t ARRAY_DEFAULT_SIZE;   // default size for ooRexx allocation
+    static const size_t MaxFixedArraySize;    // maximum size we can handle
+    static const size_t MinimumArraySize;     // the minimum size we allocate.
+    static const size_t DefaultArraySize;     // default size for ooRexx allocation
 
-    size_t arraySize;                   /* current size of array         */
-    size_t maximumSize;                 /* Maximum size array can grow   */
-    size_t lastElement;                 // location of last set element
-    RexxArray *dimensions;              /* Array containing dimensions - null if 1-dimensional */
-    RexxArray *expansionArray;          /* actual array containing data  */
-    RexxObject  *objects[1];            /* Data.                         */
+    size_t arraySize;                   // current logical size of the array
+    size_t maximumSize;                 // The allocation size of the array
+    size_t lastItem;                    // location of last set element
+    size_t itemCount;                   // the count of items in the array
+    ArrayClass *dimensions;             // Array containing dimensions - null if 1-dimensional
+    ArrayClass *expansionArray;         // actual array containing data (will be self-referential originall)
+    RexxInternalObject *objects[1];     // the start of the array of stored objects.
 };
 
 
@@ -254,9 +298,9 @@ class RexxArray : public RexxObject
  *
  * @return A new array.
  */
-inline RexxArray *new_array()
+inline ArrayClass *new_array()
 {
-    return new ((size_t)0) RexxArray;
+    return new ((size_t)0) ArrayClass;
 }
 
 
@@ -267,9 +311,9 @@ inline RexxArray *new_array()
  *
  * @return The new array item.
  */
-inline RexxArray *new_array(size_t s)
+inline ArrayClass *new_array(size_t s)
 {
-    return new (s) RexxArray;
+    return new (s) ArrayClass;
 }
 
 
@@ -281,9 +325,9 @@ inline RexxArray *new_array(size_t s)
  *
  * @return A new array object.
  */
-inline RexxArray *new_array(size_t s, RexxObject **o)
+inline ArrayClass *new_array(size_t s, RexxInternalObject **o)
 {
-    return new (s) RexxArray(o, s);
+    return new (s) ArrayClass(o, s);
 }
 
 
@@ -294,9 +338,9 @@ inline RexxArray *new_array(size_t s, RexxObject **o)
  *
  * @return A new array object.
  */
-inline RexxArray *new_array(RexxObject *o1)
+inline ArrayClass *new_array(RexxInternalObject *o1)
 {
-    return new (1) RexxArray(o1);
+    return new (1) ArrayClass(o1);
 }
 
 
@@ -308,9 +352,9 @@ inline RexxArray *new_array(RexxObject *o1)
  *
  * @return A new array object.
  */
-inline RexxArray *new_array(RexxObject *o1, RexxObject *o2)
+inline ArrayClass *new_array(RexxInternalObject *o1, RexxInternalObject *o2)
 {
-    return new (2) RexxArray(o1, o2);
+    return new (2) ArrayClass(o1, o2);
 }
 
 
@@ -323,9 +367,9 @@ inline RexxArray *new_array(RexxObject *o1, RexxObject *o2)
  *
  * @return A new array object.
  */
-inline RexxArray *new_array(RexxObject *o1, RexxObject *o2, RexxObject *o3)
+inline ArrayClass *new_array(RexxInternalObject *o1, RexxInternalObject *o2, RexxInternalObject *o3)
 {
-    return new (3) RexxArray(o1, o2, o3);
+    return new (3) ArrayClass(o1, o2, o3);
 }
 
 
@@ -339,9 +383,9 @@ inline RexxArray *new_array(RexxObject *o1, RexxObject *o2, RexxObject *o3)
  *
  * @return A new array object.
  */
-inline RexxArray *new_array(RexxObject *o1, RexxObject *o2, RexxObject *o3, RexxObject *o4)
+inline ArrayClass *new_array(RexxInternalObject *o1, RexxInternalObject *o2, RexxInternalObject *o3, RexxInternalObject *o4)
 {
-    return new (4) RexxArray(o1, o2, o3, o4);
+    return new (4) ArrayClass(o1, o2, o3, o4);
 }
 
  #endif

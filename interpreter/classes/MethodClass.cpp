@@ -274,7 +274,7 @@ RexxObject *MethodClass::setProtectedRexx()
  */
 RexxObject *MethodClass::isGuardedRexx( )
 {
-    return isGuarded() ? TheTrueObject : TheFalseObject;
+    return booleanObject(isGuarded());
 }
 
 
@@ -285,7 +285,7 @@ RexxObject *MethodClass::isGuardedRexx( )
  */
 RexxObject *MethodClass::isPrivateRexx( )
 {
-    return isPrivate() ? TheTrueObject : TheFalseObject;
+    return booleanObject(isPrivate());
 }
 
 
@@ -296,7 +296,7 @@ RexxObject *MethodClass::isPrivateRexx( )
  */
 RexxObject *MethodClass::isProtectedRexx( )
 {
-    return isProtected() ? TheTrueObject : TheFalseObject;
+    return booleanObject(isProtected());
 }
 
 
@@ -347,7 +347,7 @@ MethodClass *MethodClass::newMethodObject(RexxString *pgmname, RexxObject *sourc
         return ((MethodClass *)source)->newScope(scope);
     }
     // validate, and potentially transform, the method source object.
-    RexxArray *newSourceArray = processExecutableSource(source, position);
+    ArrayClass *newSourceArray = processExecutableSource(source, position);
 
     // this method is called when methods are added to class, object, directory, etc.
     // we want to inherit from the current execution source context if we can.
@@ -386,7 +386,7 @@ MethodClass *MethodClass::newRexx(RexxObject **init_args, size_t argCount)
     RexxClass *classThis = (RexxClass *)this;
 
     RexxString *programName;
-    Protected<RexxArray> sourceArray;
+    Protected<ArrayClass> sourceArray;
     PackageClass *sourceContext;
 
     // parse all of the options
@@ -441,7 +441,7 @@ MethodClass *MethodClass::loadExternalMethod(RexxString *name, RexxString *descr
     name = stringArgument(name, "name");
     descriptor = stringArgument(descriptor, "descriptor");
     // convert external into words
-    RexxArray *_words = StringUtil::words(descriptor->getStringData(), descriptor->getLength());
+    ArrayClass *_words = StringUtil::words(descriptor->getStringData(), descriptor->getLength());
     ProtectedObject p(_words);
     // "LIBRARY libbar [foo]"
     if (((RexxString *)(_words->get(1)))->strCompare(CHAR_LIBRARY))

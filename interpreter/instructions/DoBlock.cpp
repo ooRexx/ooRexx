@@ -119,7 +119,7 @@ void RexxDoBlock::liveGeneral(MarkReason reason)
 bool RexxDoBlock::checkOver(RexxActivation *context, RexxExpressionStack *stack)
 {
     // the array was stored in the too field
-    RexxArray *overArray = (RexxArray *)to;
+    ArrayClass *overArray = (ArrayClass *)to;
     // are we past the end of the array?
     if (overArray->size() < forCount)
     {

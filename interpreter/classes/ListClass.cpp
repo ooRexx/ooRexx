@@ -65,17 +65,61 @@ void ListClass::createInstance()
 
 
 /**
- * Create a copy of a list table item.
+ * construct a list object with the given size.
  *
- * @return The object copy.
+ * @param capacity The required capacity.
  */
-RexxObject *ListClass::copy()
+ListClass::ListClass(size_t capacity)
 {
-    // make a copy of ourself (also copies the object variables)
-    ListClass *newlist = (ListClass *)this->RexxObject::copy();
-    // copy the backing contents
-    newlist->table = (ListContents *)contents->copy();
-    return newlist;
+    initialize(capacity);
+}
+
+
+/**
+ * Dummy constructor for a List instance created via the new
+ * method.  Initialization is delayed until the INIT method is
+ * called.
+ *
+ * @param fromRexx A dummy argument to create a different signature for
+ *                 the dummy form.
+ */
+ListClass::ListClass(bool fromRexx) { }
+/**
+ * The init method for this class.  This does delayed
+ * initialization of this object until a INIT message is
+ * received during initialization.
+ *
+ * @param initialSize
+ *               The initial list size (optional)
+ *
+ * @return Always returns nothing
+ */
+RexxObject *ListClass::initRexx(RexxObject *initialSize)
+{
+    // the capacity is optional, but must be a positive numeric value
+    size_t capacity = optionalLengthArgument(initialSize, DefaultListSize, ARG_ONE);
+    initialize(capacity);
+    return OREF_NULL;
+}
+
+
+/**
+ * Initialize the list contents, either directly from the
+ * low level constructor or from the INIT method.
+ *
+ * @param capacity The requested capacity.
+ */
+void ListClass::initialize(size_t capacity)
+{
+    // only do this if we have no contents already
+    if (contents == OREF_NULL)
+    {
+        // we don't want to create a zero sized contents, so cap the
+        // minimum size at the default
+        capacity = Numerics::maxVal(capacity, DefaultListSize);
+        // and allocate the initial contents item.
+        contents = new (capacity) ListContents(capacity);
+    }
 }
 
 
@@ -116,6 +160,21 @@ void ListClass::flatten(RexxEnvelope *envelope)
     flattenRef(objectVariables);
 
     cleanUpFlatten
+}
+
+
+/**
+ * Create a copy of a list table item.
+ *
+ * @return The object copy.
+ */
+RexxObject *ListClass::copy()
+{
+    // make a copy of ourself (also copies the object variables)
+    ListClass *newlist = (ListClass *)this->RexxObject::copy();
+    // copy the backing contents
+    newlist->table = (ListContents *)contents->copy();
+    return newlist;
 }
 
 
@@ -255,6 +314,19 @@ void ListClass::checkFull()
 
 
 /**
+ * Utility method for formatting an index value into an object.
+ *
+ * @param index  The index to return.
+ *
+ * @return Either an integer version of the index or TheNilObject if the index is out of bounds.
+ */
+RexxObject *ListClass::indexObject(ItemLink index)
+{
+    return indexObject(index);
+}
+
+
+/**
  * Put a value into the list, replacing the existing value.
  *
  * @param value  The value to insert.
@@ -268,9 +340,7 @@ RexxInternalObject *ListClass::putRexx(RexxInternalObject *value, RexxObject *ar
 
     // do the actual replacement.
     put(value, index);
-    /* replace the value                 */
-    OrefSet(this->table, element->value, _value);
-    return OREF_NULL;                    /* return nothing at all             */
+    return OREF_NULL;
 }
 
 
@@ -284,7 +354,34 @@ void ListClass::put(RexxInternalObject *value, size_t index)
 {
     // make sure we have enough space to add and then
     // have the contents add this.
+    checkFull();
     contents->put(value, index);
+}
+
+
+/**
+ * Get a value from the list at the provided index.
+ *
+ * @param index  The target index.
+ *
+ * @return returns nothing.
+ */
+RexxInternalObject *ListClass::getRexx(RexxObject *argIndex)
+{
+    ItemLink index = validateIndex(value, ARG_TWO);
+
+    return resultOrNil(get(index));
+}
+
+
+/**
+ * Low level API for getting a value from the list
+ *
+ * @param index  The index position (non-validated).
+ */
+RexxInternalObject *ListClass::get(size_t index)
+{
+    return contents->get(index);
 }
 
 
@@ -325,7 +422,8 @@ ListClass *ListClass::section(size_t index, size_t count)
     while (index != NoMore && count-- > 0)
     {
         // append to the list
-        result->append(entryValue(index));
+        result->append(contents->get(index));
+        index = contents->nextIndex(index);
     }
     return result;
 }
@@ -344,6 +442,7 @@ RexxObject *ListClass::insertRexx(RexxInternalObject *value, RexxObject *index)
 {
     // figure out where to insert.
     ItemLink insertionPoint = validateInsertionIndex(index, ARG_TWO);
+
     // insert, and return the insertion index as an object.
     return new_integer(insert(value, insertionPoint));
 }
@@ -496,7 +595,7 @@ RexxInternalObject *ListClass::lastItem()
  */
 RexxInternalObject *ListClass::firstRexx()
 {
-    return isEmpty() ? TheNilObject : new_integer(firstIndex());
+    return indexObject(firstIndex());
 }
 
 
@@ -519,7 +618,7 @@ size_t ListClass::firstIndex()
  */
 RexxObject *ListClass::lastRexx()
 {
-    return isEmpty() ? TheNilObject : new_integer(lastIndex());
+    return indexObject(lastIndex()));
 }
 
 
@@ -535,19 +634,31 @@ size_t ListClass::lastIndex()
 }
 
 
+/**
+ * Step from a given index to the next element in the list.
+ *
+ * @param index  The starting index
+ *
+ * @return The indext of the next item, or .nil if their is no next item.
+ */
 RexxObject *ListClass::nextRexx(RexxObject *index)
 {
     ItemLink argIndex = validateIndex(index, ARG_ONE);
-    ItemLink next = nextIndex(argIndex);
-    return next == NoMore ? TheNilObject : new_integer(next);
+    return indexObject(nextIndex(argIndex));
 }
 
 
+/**
+ * Step from a given index to the next element in the list.
+ *
+ * @param index  The starting index
+ *
+ * @return The indext of the next item, or .nil if their is no next item.
+ */
 RexxObject *ListClass::previousRexx(RexxObject *index)
 {
     ItemLink argIndex = validateIndex(index, ARG_ONE);
-    ItemLink previous = previousIndex(argIndex);
-    return previous == NoMore ? TheNilObject : new_integer(previous);
+    return indexObject(previousIndex(argIndex));
 }
 
 
@@ -585,20 +696,51 @@ size_t ListClass::previousIndex(size_t _index)
 }
 
 
+/**
+ * Test if the list has a given index value.
+ *
+ * @param index  The target index.
+ *
+ * @return True if this is a valid index in this list, false
+ *         otherwise.
+ */
 RexxObject *ListClass::hasIndexRexx(RexxObject *index)
 {
     ItemLink argIndex = validateIndex(index, ARG_ONE);
-    return booleanObject(argIndex != NoLink);
+    return booleanObject(hasIndex(argIndex));
 }
 
 
-RexxArray *ListClass::requestArray()
+/**
+ * Low-level test of index existance.
+ *
+ * @param index  The target index.
+ *
+ * @return true if the index exists, false otherwise.
+ */
+bool ListClass::hasIndex(size_t index)
+{
+    return contents->isIndexValid(index);
+}
+
+
+/**
+ * Process a request to convert this list to an array.
+ *
+ * @return An array containing all of the list items, in the current order.
+ */
+ArrayClass *ListClass::requestArray()
 {
     return allItems();
 }
 
 
-RexxArray *ListClass::makeArray()
+/**
+ * Process a request to convert this list to an array.
+ *
+ * @return An array containing all of the list items, in the current order.
+ */
+ArrayClass *ListClass::makeArray()
 {
     return allItems();           // this is just all of the array items.
 }
@@ -610,7 +752,7 @@ RexxArray *ListClass::makeArray()
  *
  * @return An array with the list elements.
  */
-RexxArray *ListClass::allItems()
+ArrayClass *ListClass::allItems()
 {
     return contents->allItems();
 }
@@ -624,9 +766,13 @@ RexxArray *ListClass::allItems()
 RexxObject *ListClass::emptyRexx()
 {
     empty();
+    return OREF_NULL;
 }
 
 
+/**
+ * Low-level API for emptying a list.
+ */
 void ListClass::empty()
 {
     contents->empty();
@@ -661,7 +807,7 @@ bool ListClass::isEmpty()
  *
  * @return An array with the list elements.
  */
-RexxArray *ListClass::allIndexes()
+ArrayClass *ListClass::allIndexes()
 {
     return contents->allIndexes()
 }
@@ -680,10 +826,17 @@ RexxObject *ListClass::indexRexx(RexxInternalObject *target)
     // we require the index to be there.
     requiredArgument(target, ARG_ONE);
     ItemLink itemIndex = getIndex(target);
-    return itemIndex == NoMore ? TheNilObject : new_integer(itemIndex);
+    return indexObject(itemIndex);
 }
 
 
+/**
+ * Get the index associated with a value stored in the list.
+ *
+ * @param target The search item.
+ *
+ * @return The index, or NoMore if no matching item is found.
+ */
 size_t ListClass::getIndex(RexxInternalObject *target)
 
 /**
@@ -735,81 +888,61 @@ RexxInternalObject *ListClass::removeItemRexx(RexxInternalObject *target)
 }
 
 
+/**
+ * Remove an Item from the list.
+ *
+ * @param target The search item.
+ *
+ * @return The existing item.
+ */
 RexxInternalObject *ListClass::removeItem(RexxInternalObject *target)
 {
     return contents->removeItem(target);
 }
 
 
+/**
+ * Return a supplier for iterating over the list contents.
+ *
+ * @return A supplier for the current list.
+ */
 SupplierClass *ListClass::supplier()
 {
     return contents->supplier();
-
-    RexxArray *values;                   /* array of value items              */
-    RexxArray *indices;                  /* array of index items              */
-
-                                         /* and all of the indices            */
-    indices = this->makeArrayIndices();
-    values = this->makeArray();          /* get the list values               */
-                                         /* return the supplier values        */
-    return(SupplierClass *)new_supplier(values, indices);
 }
 
 
+/**
+ * The Rexx version of the list items() method.
+ *
+ * @return The count of items in the list.
+ */
 RexxObject *ListClass::itemsRexx()
 {
     return new_integer(items());
 }
 
 
+/**
+ * Low-level items function.
+ *
+ * @return The count of items in the list.
+ */
 size_t ListClass::items()
 {
     return contents->items();
 }
 
 
-RexxArray *ListClass::weakReferenceArray()
-/******************************************************************************/
-/* Function:  Scan the list removing all cleared weak reference objects,      */
-/*            and return an array of the dereferenced week array objects.     */
-/******************************************************************************/
+/**
+ * Scan the list and dereference the weak references,
+ * returning an array of all of the active objects.
+ *
+ * @return An array with the active references.
+ */
+ArrayClass *ListClass::weakReferenceArray()
 {
-    LISTENTRY *element;                  /* current working entry             */
-
-    size_t i = this->firstIndex();              /* point to the first element        */
-    size_t itemCount = this->count;
-    while (itemCount--)                  /* step through the array elements   */
-    {
-        element = ENTRY_POINTER(i);      /* get the next item                 */
-        // step to the next element now, so we can remove this one
-        i = element->next;
-
-        // get the reference value
-        WeakReference *ref = (WeakReference *)element->value;
-        // has the referenced object gone out of scope?
-        if (ref->get() == OREF_NULL)
-        {
-            // remove this element from the list...note that this also
-            // decrements the count, which will effect the number of
-            // loop iterations.
-            primitiveRemove(element);
-        }
-    }
-
-    // we've removed the dead references, so make a second pass copying
-    // the real values into the returned array
-    RexxArray *array = (RexxArray *)new_array(this->count);
-    i = this->firstIndex();              /* point to the first element        */
-    for (size_t j = 1; j <= this->count; j++) /* step through the array elements   */
-    {
-        element = ENTRY_POINTER(i);      /* get the next item                 */
-                                         /* copy over to the array            */
-        // get the reference value
-        WeakReference *ref = (WeakReference *)element->value;
-        array->put(ref->get(), j);
-        i = element->next;               /* get the next pointer              */
-    }
-    return array;                        /* return the array element          */
+    return contents->weakReferenceArray();
 }
 
 
@@ -829,14 +962,16 @@ ListClass *ListClass::newRexx(RexxObject **init_args, size_t  argCount)
     // any methods on this object from this method.
     RexxClass *classThis = (RexxClass *)this;
 
-
-    // TODO: add intial size stuff here
-    ListClass *newList = new ListClass;
-    ProtectedObject p(newList);
+    // this version does not create the contents
+    Protected<ListClass> newList = new ListClass(true);
 
     // handle Rexx class completion
     classThis->completeNewObject(newList, init_args, argCount);
 
+    // this is a hedge against someone not forwarding the INIT method
+    // to the base list class in their subclass INIT method.  This can
+    // prevent some crashes.
+    newList->initialize();
     return newList;
 }
 
@@ -851,8 +986,12 @@ ListClass *ListClass::newRexx(RexxObject **init_args, size_t  argCount)
  */
 ListClass *ListClass::classOf(RexxObject **args, size_t  argCount)
 {
+    // it would be nice to create an object of the size we need, but
+    // that is a little complicated from this code.  It's probably not
+    // worth the effort because normally an OF() call has a relatively
+    // small number of arguments.
+
     // create a list item of the appopriate type.
-    // TODO: work out how to specify the initial size
     Protected<ListClass> newList = newRexx(NULL, 0);
 
     // add all of the arguments

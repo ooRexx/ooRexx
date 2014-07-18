@@ -183,7 +183,7 @@ RexxString *ProgramSource::extract(SourceLocation &location )
  * @return An array of the source lines. The first and last lines
  *         might be partial lines from the source.
  */
-RexxArray *ProgramSource::extractSourceLines(SourceLocation &location )
+ArrayClass *ProgramSource::extractSourceLines(SourceLocation &location )
 {
     // not traceable means no source, so just return a null string regardless
     if (!isTraceable())
@@ -224,7 +224,7 @@ RexxArray *ProgramSource::extractSourceLines(SourceLocation &location )
         }
 
         // get the result array
-        RexxArray *source = new_array(location.getEndLine() - location.getLineNumber() + 1);
+        ArrayClass *source = new_array(location.getEndLine() - location.getLineNumber() + 1);
         ProtectedObject p(source);
 
         // is this just one one line?  This is easy

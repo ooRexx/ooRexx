@@ -61,6 +61,7 @@ class SetClass : public IndexOnlyHashCollection
 
     inline SetClass(RESTORETYPE restoreType) { ; }
            SetClass(size_t capacity = HashCollection::DefaultTableSize) : IndexOnlyHashCollection(capacity) { }
+           SetClass(bool fromRexx) { }
 
     RexxObject *newRexx(RexxObject **, size_t);
     RexxObject *classOf(RexxObject **, size_t);

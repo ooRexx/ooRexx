@@ -588,7 +588,7 @@ void MemoryObject::restoreImage()
     RexxObject *endPointer = (RexxObject *)(restoredImage + imageSize);
 
     // the save array is the 1st object in the buffer
-    RexxArray *saveArray = (RexxArray *)objectPointer;
+    ArrayClass *saveArray = (ArrayClass *)objectPointer;
 
     // now loop through the image buffer fixing up the objects.
     while (objectPointer < endPointer)
@@ -641,7 +641,7 @@ void MemoryObject::restoreImage()
     TheEnvironment = (DirectoryClass *)saveArray->get(saveArray_ENV);
     // restore all of the primitive behaviour data...right now, these are
     // all default values.
-    RexxArray *primitiveBehaviours = (RexxArray *)saveArray->get(saveArray_PBEHAV);
+    ArrayClass *primitiveBehaviours = (ArrayClass *)saveArray->get(saveArray_PBEHAV);
     for (size_t i = 0; i <= T_Last_Exported_Class; i++)
     {
         /* behaviours into this array        */
@@ -654,16 +654,16 @@ void MemoryObject::restoreImage()
     TheTrueObject  = (RexxInteger *)saveArray->get(saveArray_TRUE);
     TheFalseObject = (RexxInteger *)saveArray->get(saveArray_FALSE);
     TheNilObject   = saveArray->get(saveArray_NIL);
-    TheNullArray   = (RexxArray *)saveArray->get(saveArray_NULLA);
+    TheNullArray   = (ArrayClass *)saveArray->get(saveArray_NULLA);
     TheNullPointer   = (RexxPointer *)saveArray->get(saveArray_NULLPOINTER);
     TheClassClass  = (RexxClass *)saveArray->get(saveArray_CLASS);
     TheCommonRetrievers = (DirectoryClass *)saveArray->get(saveArray_COMMON_RETRIEVERS);
 
     // restore the global strings
-    memoryObject.restoreStrings((RexxArray *)saveArray->get(saveArray_NAME_STRINGS));
+    memoryObject.restoreStrings((ArrayClass *)saveArray->get(saveArray_NAME_STRINGS));
     // make sure we have a working thread context
     RexxActivity::initializeThreadContext();
-    PackageManager::restore((RexxArray *)saveArray->get(saveArray_PACKAGES));
+    PackageManager::restore((ArrayClass *)saveArray->get(saveArray_PACKAGES));
 }
 
 
@@ -863,7 +863,7 @@ RexxObject *MemoryObject::newObject(size_t requestLength, size_t type)
 }
 
 
-RexxArray  *MemoryObject::newObjects(
+ArrayClass  *MemoryObject::newObjects(
                 size_t         size,
                 size_t         count,
                 size_t         objectType)
@@ -883,11 +883,11 @@ RexxArray  *MemoryObject::newObjects(
     size_t totalSize;                      /* total size allocated              */
     RexxObject *prototype;                 /* our first prototype object        */
 
-    RexxArray  *arrayOfObjects;
+    ArrayClass  *arrayOfObjects;
     RexxObject *largeObject;
 
     /* Get array object to contain all the objects.. */
-    arrayOfObjects = (RexxArray *)new_array(count);
+    arrayOfObjects = (ArrayClass *)new_array(count);
 
     /* Get one LARGE object, that we will parcel up into the smaller */
     /* objects over allocate by the size of one minimum object so we */
@@ -1210,7 +1210,7 @@ void MemoryObject::saveImage()
     // get an array to hold all special objects.  This will be the first object
     // copied into the image buffer and allows us to recover all of the important
     // image objects at restore time.
-    RexxArray *saveArray = new_array(saveArray_highest);
+    ArrayClass *saveArray = new_array(saveArray_highest);
     // Note:  A this point, we don't have an activity we can use ProtectedObject to save
     // this with, so we need to use GlobalProtectedObject();
     GlobalProtectedObject p(saveArray);
@@ -1232,7 +1232,7 @@ void MemoryObject::saveImage()
 
     // create an array for all of the primitive behaviours and fill it with
     // pointers to our primitive behaviours (only the exported ones need this).
-    RexxArray *primitive_behaviours= (RexxArray *)new_array(T_Last_Exported_Class + 1);
+    ArrayClass *primitive_behaviours= (ArrayClass *)new_array(T_Last_Exported_Class + 1);
     for (size_t i = 0; i <= T_Last_Exported_Class; i++)
     {
         primitive_behaviours->put((RexxObject *)RexxBehaviour::getPrimitiveBehaviour(i), i + 1);

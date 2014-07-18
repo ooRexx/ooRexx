@@ -104,11 +104,7 @@ BaseExecutable *BaseExecutable::setSourceObject(RexxSource *s)
 PackageClass *BaseExecutable::getPackage()
 {
     PackageClass *package = code->getPackage();
-    if (package == OREF_NULL)
-    {
-        return (PackageClass *)TheNilObject;
-    }
-    return package;
+    return resultOrNil(package);
 }
 
 
@@ -117,7 +113,7 @@ PackageClass *BaseExecutable::getPackage()
  *
  * @return An array of the source lines
  */
-RexxArray *BaseExecutable::source()
+ArrayClass *BaseExecutable::source()
 {
     return code->getSource();
 }
@@ -142,9 +138,9 @@ void BaseExecutable::detachSource()
  *
  * @return An array of the source lines.
  */
-RexxArray *BaseExecutable::processExecutableSource(RexxObject *source, RexxObject *position)
+ArrayClass *BaseExecutable::processExecutableSource(RexxObject *source, RexxObject *position)
 {
-    Protected<RexxArray> sourceArray;
+    Protected<ArrayClass> sourceArray;
 
     // if this is a string object, then convert to a a single element array.
     if (isString(source))
@@ -156,7 +152,7 @@ RexxArray *BaseExecutable::processExecutableSource(RexxObject *source, RexxObjec
         // request this as an array.  If not convertable, then we'll use it as a string
         sourceArray = source->requestArray();
         // couldn't convert?
-        if (sourceArray == (RexxArray *)TheNilObject)
+        if (sourceArray == (ArrayClass *)TheNilObject)
         {
             // get the string representation
             RexxString *sourceString = source->makeString();
@@ -217,7 +213,7 @@ RexxArray *BaseExecutable::processExecutableSource(RexxObject *source, RexxObjec
  *                  The optional source context this should inherit from.
  */
 void BaseExecutable::processNewExecutableArgs(RexxObject **&init_args, size_t &argCount, RexxString *&name,
-     Protected<RexxArray> &sourceArray, PackageClass *&sourceContext)
+     Protected<ArrayClass> &sourceArray, PackageClass *&sourceContext)
 {
     RexxObject *pgmname;                 // method name
     RexxObject *source;                  // Array or string object
@@ -351,10 +347,10 @@ void BaseCode::call(RexxActivity *activity, RoutineClass *routine, RexxString *m
  *
  * @return A null array.
  */
-RexxArray *BaseCode::getSource()
+ArrayClass *BaseCode::getSource()
 {
                                        /* this is always a null array       */
-    return (RexxArray *)TheNullArray->copy();
+    return (ArrayClass *)TheNullArray->copy();
 }
 
 

@@ -239,7 +239,7 @@ RexxString *RexxString::subWord(RexxInteger *position, RexxInteger *plength)
  *         available within the given range, this returns an empty
  *         array.
  */
-RexxArray *RexxString::subWords(RexxInteger *position, RexxInteger *plength)
+ArrayClass *RexxString::subWords(RexxInteger *position, RexxInteger *plength)
 {
     return StringUtil::subWords(getStringData(), getLength(), position, plength);
 }
@@ -303,7 +303,7 @@ RexxInteger *RexxString::wordPos(RexxString  *phrase, RexxInteger *pstart)
  */
 RexxObject *RexxString::containsWord(RexxString  *phrase, RexxInteger *pstart)
 {
-    return StringUtil::wordPos(getStringData(), getLength(), phrase, pstart) > 0 ? TheTrueObject : TheFalseObject;
+    return booleanObject(StringUtil::wordPos(getStringData(), getLength(), phrase, pstart) > 0);
 }
 
 
@@ -331,7 +331,7 @@ RexxInteger *RexxString::caselessWordPos(RexxString  *phrase, RexxInteger *pstar
  */
 RexxObject *RexxString::caselessContainsWord(RexxString  *phrase, RexxInteger *pstart)
 {
-    return StringUtil::caselessWordPos(getStringData(), getLength(), phrase, pstart)  > 0 ? TheTrueObject : TheFalseObject;
+    return booleanObject(StringUtil::caselessWordPos(getStringData(), getLength(), phrase, pstart)  > 0);
 }
 
 

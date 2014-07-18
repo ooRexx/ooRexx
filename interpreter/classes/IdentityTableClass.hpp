@@ -48,8 +48,8 @@
 
 /**
  * Exported table class where indexing is done using object
- * identity.
-                                                             */
+ * identity
+ */
 class IdentityTable : public IdentityHashCollection
 {
  public:
@@ -60,6 +60,7 @@ class IdentityTable : public IdentityHashCollection
 
     inline IdentityTable(RESTORETYPE restoreType) { ; }
            IdentityTable(size_t capacity) : IdentityHashCollection(capacity) { }
+           IdentityTable(bool fromRexx) { }
 
     RexxObject *newRexx(RexxObject **, size_t);
 

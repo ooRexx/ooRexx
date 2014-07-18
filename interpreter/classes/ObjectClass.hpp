@@ -204,7 +204,7 @@ typedef RexxObject *  (RexxObject::*PCPPM4)(RexxObject *, RexxObject *, RexxObje
 typedef RexxObject *  (RexxObject::*PCPPM5)(RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
 typedef RexxObject *  (RexxObject::*PCPPM6)(RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
 typedef RexxObject *  (RexxObject::*PCPPM7)(RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
-typedef RexxObject *  (RexxObject::*PCPPMA1)(RexxArray *);
+typedef RexxObject *  (RexxObject::*PCPPMA1)(ArrayClass *);
 typedef RexxObject *  (RexxObject::*PCPPMC1)(RexxObject **, size_t);
 
 // pointer to a method function
@@ -313,7 +313,7 @@ class RexxInternalObject : public RexxVirtualBase
     virtual RexxString  *makeString();
     virtual void         copyIntoTail(RexxCompoundTail *buffer);
     virtual RexxString  *primitiveMakeString();
-    virtual RexxArray   *makeArray();
+    virtual ArrayClass   *makeArray();
     virtual RexxString  *stringValue();
     virtual RexxInteger *integerValue(size_t);
     virtual bool         numberValue(wholenumber_t &result, size_t precision);
@@ -354,7 +354,7 @@ class RexxInternalObject : public RexxVirtualBase
             RexxInteger *requestInteger(size_t);
             bool         requestNumber(wholenumber_t &, size_t);
             bool         requestUnsignedNumber(stringsize_t &, size_t);
-            RexxArray   *requestArray();
+            ArrayClass   *requestArray();
 
     ObjectHeader header;              /* memory management header          */
     RexxBehaviour *behaviour;         /* the object's behaviour            */
@@ -423,7 +423,7 @@ class RexxObject : public RexxInternalObject
 
     virtual RexxObject  *defMethod(RexxString *, MethodClass *, RexxString *a = OREF_NULL);
     virtual RexxString  *defaultName();
-    virtual RexxObject  *unknown(RexxString *msg, RexxArray *args){return OREF_NULL;};
+    virtual RexxObject  *unknown(RexxString *msg, ArrayClass *args){return OREF_NULL;};
     virtual RexxInteger *hasMethod(RexxString *msg);
             bool         hasUninitMethod();
 
@@ -448,7 +448,7 @@ class RexxObject : public RexxInternalObject
     RexxString  *makeString();
     RexxString  *primitiveMakeString();
     void         copyIntoTail(RexxCompoundTail *buffer);
-    RexxArray   *makeArray();
+    ArrayClass   *makeArray();
     RexxString  *stringValue();
 
     bool         isEqual(RexxInternalObject *);
@@ -465,9 +465,9 @@ class RexxObject : public RexxInternalObject
     RexxObject  *unsetMethod(RexxString *);
     RexxObject  *requestRexx(RexxString *);
     RexxMessage *start(RexxObject **, size_t);
-    RexxMessage *startWith(RexxObject *, RexxArray *);
+    RexxMessage *startWith(RexxObject *, ArrayClass *);
     RexxObject  *send(RexxObject **, size_t);
-    RexxObject  *sendWith(RexxObject *, RexxArray *);
+    RexxObject  *sendWith(RexxObject *, ArrayClass *);
     RexxMessage *startCommon(RexxObject *message, RexxObject **arguments, size_t argCount);
     static void decodeMessageName(RexxObject *target, RexxObject *message, RexxString *&messageName, RexxObject *&startScope);
     RexxString  *oref();
@@ -479,7 +479,7 @@ class RexxObject : public RexxInternalObject
     MethodClass  *checkPrivate(MethodClass *);
     void         processUnknown(RexxString *, RexxObject **, size_t, ProtectedObject &);
     void         processProtectedMethod(RexxString *, MethodClass *, RexxObject **, size_t, ProtectedObject &);
-    void         sendMessage(RexxString *, RexxArray *, ProtectedObject &);
+    void         sendMessage(RexxString *, ArrayClass *, ProtectedObject &);
     inline void  sendMessage(RexxString *message, ProtectedObject &result) { this->messageSend(message, OREF_NULL, 0, result); };
     inline void  sendMessage(RexxString *message, RexxObject **args, size_t argCount, ProtectedObject &result) { this->messageSend(message, args, argCount, result); };
     inline void  sendMessage(RexxString *message, RexxObject *argument1, ProtectedObject &result)
@@ -489,7 +489,7 @@ class RexxObject : public RexxInternalObject
     void         sendMessage(RexxString *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, ProtectedObject &);
     void         sendMessage(RexxString *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, ProtectedObject&);
 
-    RexxObject  *sendMessage(RexxString *, RexxArray *);
+    RexxObject  *sendMessage(RexxString *, ArrayClass *);
     RexxObject  *sendMessage(RexxString *message);
     RexxObject  *sendMessage(RexxString *message, RexxObject **args, size_t argCount);
     RexxObject  *sendMessage(RexxString *message, RexxObject *argument1);
@@ -533,7 +533,7 @@ class RexxObject : public RexxInternalObject
     RexxObject  *makeArrayRexx();
     RexxString  *defaultNameRexx();
     RexxObject  *copyRexx();
-    RexxObject  *unknownRexx(RexxString *, RexxArray *);
+    RexxObject  *unknownRexx(RexxString *, ArrayClass *);
     RexxObject  *hasMethodRexx(RexxString *);
     void *getCSelf();
     void *getCSelf(RexxObject *scope);

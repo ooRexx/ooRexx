@@ -221,10 +221,10 @@ void OverLoop::setup( RexxActivation *context,
     context->traceResult(result);
     // if this is already an array item, request the non-sparse version
 
-    RexxArray *array;
+    ArrayClass *array;
     if (isOfClass(Array, result))
     {
-        array = ((RexxArray *)result)->makeArray();
+        array = ((ArrayClass *)result)->makeArray();
     }
     else
     {

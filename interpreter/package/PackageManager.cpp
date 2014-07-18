@@ -92,9 +92,9 @@ void PackageManager::initialize()
  *
  * @return An array of the items added to the saved image.
  */
-RexxArray *PackageManager::getImageData()
+ArrayClass *PackageManager::getImageData()
 {
-    RexxArray *imageArray = new_array(IMAGE_ARRAY_SIZE);
+    ArrayClass *imageArray = new_array(IMAGE_ARRAY_SIZE);
     imageArray->put(packages, IMAGE_PACKAGES);
     imageArray->put(packageRoutines, IMAGE_PACKAGE_ROUTINES);
     imageArray->put(registeredRoutines, IMAGE_REGISTERED_ROUTINES);
@@ -109,7 +109,7 @@ RexxArray *PackageManager::getImageData()
  *
  * @param imageArray The array we placed in the save image originally.
  */
-void PackageManager::restore(RexxArray *imageArray)
+void PackageManager::restore(ArrayClass *imageArray)
 {
     // The memory manager is not initialized yet, so we just store the references
     // at this point.  A little later, we'll replace these with copies.
@@ -546,12 +546,12 @@ RexxObject *PackageManager::addRegisteredRoutine(RexxString *name, RexxString *m
     {
         // See if this is resolvable in this context.  If we got it,
         // return 0, the false object.
-        return getLoadedRoutine(name) != OREF_NULL ? TheFalseObject : TheTrueObject;
+        return booleanObject(getLoadedRoutine(name) == OREF_NULL);
     }
 
     // ok, this is not a converted new-style package.  Now try registering the function and
     // resolving it in this process.  This will also add this to the local cache
-    return resolveRoutine(name, module, proc) != OREF_NULL ? TheFalseObject : TheTrueObject;
+    return booleanObject(resolveRoutine(name, module, proc) == OREF_NULL);
 }
 
 
@@ -580,7 +580,7 @@ RexxObject *PackageManager::dropRegisteredRoutine(RexxString *name)
         // just allow this to pass through to Rexxapi.  If this was truely registered
         // instead of loaded implicitly, this will remove the entry.  Otherwise, it will
         // return false.
-        return RexxDeregisterFunction(functionName) == 0 ? TheFalseObject : TheTrueObject;
+        return booleanObject(RexxDeregisterFunction(functionName) != 0);
     }
 }
 
@@ -611,7 +611,7 @@ RexxObject *PackageManager::queryRegisteredRoutine(RexxString *name)
         UnsafeBlock releaser;
         // just allow this to pass through to Rexxapi.  If this was truly registered
         // instead of loaded implicitly, it will find it.
-        return RexxQueryFunction(functionName) != 0 ? TheTrueObject : TheFalseObject;
+        return booleanObject(RexxQueryFunction(functionName) != 0);
     }
 }
 
@@ -834,7 +834,7 @@ RoutineClass *PackageManager::getRequiresFile(RexxActivity *activity, RexxString
  *
  * @return The return Routine instance.
  */
-RoutineClass *PackageManager::loadRequires(RexxActivity *activity, RexxString *name, RexxArray *data, ProtectedObject &result)
+RoutineClass *PackageManager::loadRequires(RexxActivity *activity, RexxString *name, ArrayClass *data, ProtectedObject &result)
 {
     // first check this using the specified name.
     RoutineClass *code = checkRequiresCache(name, result);

@@ -579,7 +579,7 @@ protected:
 };
 
 
-inline RexxArray *new_arrayOfTokens(size_t n) { return memoryObject.newObjects(sizeof(RexxToken), n, T_Token); }
+inline ArrayClass *new_arrayOfTokens(size_t n) { return memoryObject.newObjects(sizeof(RexxToken), n, T_Token); }
 inline RexxToken *new_token(TokenClass c, TokenSubclass s, RexxString *v, SourceLocation &l) { return new RexxToken (c, l, s, v); }
 
 #endif

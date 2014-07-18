@@ -88,19 +88,13 @@ RexxObject *StringTable::newRexx(RexxObject **args, size_t argCount)
     // any methods on this object from this method.
     RexxClass *classThis = (RexxClass *)this;
 
-    RexxObject *initialSize;
-
-    // parse the arguments
-    RexxClass::processNewArgs(args, argCount, &args, &argCount, 1, (RexxObject **)&initialSize, NULL);
-
-    // the capacity is optional, but must be a positive numeric value
-    size_t capacity = optionalLengthArgument(initialSize, DefaultTableSize, ARG_ONE);
-
-    // create the new identity table item
-    StringTable *temp = new StringTable(capacity);
-    ProtectedObject p(temp);
+    // create the new identity table item (this version does not have a backing contents yet).
+    Protected<StringTable> temp = new StringTable(true);
     // finish setting this up.
     classThis->completeNewObject(temp, args, argCount);
+
+    // make sure this has been completely initialized
+    temp->initialize();
     return temp;
 }
 

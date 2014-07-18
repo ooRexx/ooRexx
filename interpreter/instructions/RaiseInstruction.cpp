@@ -81,7 +81,7 @@ RexxInstructionRaise::RexxInstructionRaise(RexxString *_condition, RexxObject *_
     // is this the array form?  We need to copy the expressions
     if (flags[raise_array])
     {
-        RexxArray *arrayItems = (RexxArray *)_additional;
+        ArrayClass *arrayItems = (ArrayClass *)_additional;
 
         arrayCount = arrayItems->size();
         // copy each of the argument expressions
@@ -220,7 +220,7 @@ void RexxInstructionRaise::execute(RexxActivation *context, RexxExpressionStack 
             // ones that have been specified
             if (additional[i] != OREF_NULL)
             {
-                ((RexxArray *)_additional)->put((additional[i])->evaluate(context, stack), i + 1);
+                ((ArrayClass *)_additional)->put((additional[i])->evaluate(context, stack), i + 1);
             }
         }
     }
@@ -266,7 +266,7 @@ void RexxInstructionRaise::execute(RexxActivation *context, RexxExpressionStack 
         {
             // get the array version, and it must be single dimension.
             _additional = REQUEST_ARRAY(_additional);
-            if (_additional == TheNilObject || ((RexxArray *)_additional)->getDimension() != 1)
+            if (_additional == TheNilObject || ((ArrayClass *)_additional)->getDimension() != 1)
             {
                 reportException(Error_Execution_syntax_additional);
             }

@@ -171,10 +171,10 @@ RexxToken *RexxClause::newToken(TokenClass classId, TokenSubclass subclass, Rexx
     if (free > size)
     {
         // allocate a bunch of additional token objects.
-        RexxArray *newTokens = new_arrayOfObject(sizeof(RexxToken), EXTEND_SIZE, T_Token);
+        ArrayClass *newTokens = new_arrayOfObject(sizeof(RexxToken), EXTEND_SIZE, T_Token);
         ProtectedObject p(newTokens);
         // join this to our existing array
-        tokens = (RexxArray *)tokens->join(newTokens);
+        tokens = (ArrayClass *)tokens->join(newTokens);
         size += EXTEND_SIZE;
     }
 

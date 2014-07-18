@@ -136,7 +136,7 @@ RexxString *RexxInteger::makeString()
  *
  * @return The results of our string representation's makearray.
  */
-RexxArray *RexxInteger::makeArray()
+ArrayClass *RexxInteger::makeArray()
 {
   return this->stringValue()->makeArray();     // have the string value handle this
 }
@@ -406,7 +406,7 @@ bool RexxInteger::logicalValue(logical_t &result)
 
 RexxObject *RexxInteger::unknown(
     RexxString *msgname,               /* unknown message name              */
-    RexxArray *arguments)              /* arguments to the unknown message  */
+    ArrayClass *arguments)              /* arguments to the unknown message  */
 /******************************************************************************/
 /* Function:  Intercept unknown messages to an integer object and reissue     */
 /*            them against the string value.                                  */
@@ -723,7 +723,7 @@ RexxInteger *RexxInteger::strictEqual(
     {
         return TheFalseObject;
     }
-    return this->strictComp(other) == 0 ? TheTrueObject : TheFalseObject;
+    return booleanObject(strictComp(other) == 0);
 }
 
 
@@ -738,7 +738,7 @@ RexxInteger *RexxInteger::strictNotEqual(
         return TheTrueObject;
     }
                                        /* return strict compare result      */
-    return (this->strictComp(other) != 0) ? TheTrueObject : TheFalseObject;
+    return booleanObject(strictComp(other) != 0);
 }
 
 RexxInteger *RexxInteger::equal(
@@ -751,7 +751,7 @@ RexxInteger *RexxInteger::equal(
     {
         return TheFalseObject;
     }
-    return this->comp(other) == 0 ? TheTrueObject : TheFalseObject;
+    return booleanObject(comp(other) == 0);
 }
 
 RexxInteger *RexxInteger::notEqual(
@@ -764,7 +764,7 @@ RexxInteger *RexxInteger::notEqual(
     {
         return TheTrueObject;
     }
-    return this->comp(other) != 0 ? TheTrueObject : TheFalseObject;
+    return booleanObject(comp(other) != 0);
 }
 
 RexxInteger *RexxInteger::isGreaterThan(
@@ -777,7 +777,7 @@ RexxInteger *RexxInteger::isGreaterThan(
     {
         return TheFalseObject;
     }
-    return this->comp(other) > 0 ? TheTrueObject : TheFalseObject;
+    return booleanObject(comp(other) > 0);
 }
 
 RexxInteger *RexxInteger::isLessThan(
@@ -790,7 +790,7 @@ RexxInteger *RexxInteger::isLessThan(
     {
         return TheFalseObject;
     }
-    return this->comp(other) < 0 ? TheTrueObject : TheFalseObject;
+    return booleanObject(comp(other) < 0);
 }
 
 RexxInteger *RexxInteger::isGreaterOrEqual(
@@ -803,7 +803,7 @@ RexxInteger *RexxInteger::isGreaterOrEqual(
     {
         return TheFalseObject;
     }
-    return this->comp(other) >= 0 ? TheTrueObject : TheFalseObject;
+    return booleanObject(comp(other) >= 0);
 }
 
 RexxInteger *RexxInteger::isLessOrEqual(
@@ -816,7 +816,7 @@ RexxInteger *RexxInteger::isLessOrEqual(
     {
         return TheFalseObject;
     }
-    return this->comp(other) <= 0 ? TheTrueObject : TheFalseObject;
+    return booleanObject(comp(other) <= 0);
 }
 
 
@@ -830,7 +830,7 @@ RexxInteger *RexxInteger::strictGreaterThan(
     {
         return TheFalseObject;
     }
-    return this->strictComp(other) > 0 ? TheTrueObject : TheFalseObject;
+    return booleanObject(strictComp(other) > 0);
 }
 
 RexxInteger *RexxInteger::strictLessThan(
@@ -843,7 +843,7 @@ RexxInteger *RexxInteger::strictLessThan(
     {
         return TheFalseObject;
     }
-    return this->strictComp(other) < 0 ? TheTrueObject : TheFalseObject;
+    return booleanObject(strictComp(other) < 0);
 }
 
 RexxInteger *RexxInteger::strictGreaterOrEqual(
@@ -856,7 +856,7 @@ RexxInteger *RexxInteger::strictGreaterOrEqual(
     {
         return TheFalseObject;
     }
-    return this->strictComp(other) >= 0 ? TheTrueObject : TheFalseObject;
+    return booleanObject(strictComp(other) >= 0);
 }
 
 RexxInteger *RexxInteger::strictLessOrEqual(
@@ -869,7 +869,7 @@ RexxInteger *RexxInteger::strictLessOrEqual(
     {
         return TheFalseObject;
     }
-    return this->strictComp(other) <= 0 ? TheTrueObject : TheFalseObject;
+    return booleanObject(strictComp(other) <= 0);
 }
 
 RexxObject *RexxInteger::notOp()
@@ -878,7 +878,7 @@ RexxObject *RexxInteger::notOp()
 /******************************************************************************/
 {
                                        /* perform the operation             */
-  return this->truthValue(Error_Logical_value_method) ? TheFalseObject : TheTrueObject;
+  return booleanObject(truthValue(Error_Logical_value_method));
 }
 
 RexxObject *RexxInteger::operatorNot(
@@ -888,7 +888,7 @@ RexxObject *RexxInteger::operatorNot(
 /******************************************************************************/
 {
                                        /* perform the operation             */
-  return this->truthValue(Error_Logical_value_method) ? TheFalseObject : TheTrueObject;
+  return booleanValue(!truthValue(Error_Logical_value_method));
 }
 
 RexxObject *RexxInteger::andOp(
@@ -897,13 +897,11 @@ RexxObject *RexxInteger::andOp(
 /* Function:  Logically AND two objects together                              */
 /******************************************************************************/
 {
-  RexxObject *otherTruth;              /* truth value of the other object   */
-
-  requiredArgument(other, ARG_ONE);            /* make sure the argument is there   */
-                                       /* validate the boolean              */
-  otherTruth = other->truthValue(Error_Logical_value_method) ? TheTrueObject : TheFalseObject;
-                                       /* perform the operation             */
-  return (!this->truthValue(Error_Logical_value_method)) ? TheFalseObject : otherTruth;
+    requiredArgument(other, ARG_ONE);            /* make sure the argument is there   */
+                                         /* validate the boolean              */
+    RexxObject *otherTruth = booleanObject(other->truthValue(Error_Logical_value_method));
+                                         /* perform the operation             */
+    return (!truthValue(Error_Logical_value_method)) ? TheFalseObject : otherTruth;
 }
 
 RexxObject *RexxInteger::orOp(
@@ -912,13 +910,11 @@ RexxObject *RexxInteger::orOp(
 /* Function:  Logically OR two objects together                               */
 /******************************************************************************/
 {
-  RexxObject *otherTruth;              /* truth value of the other object   */
-
-  requiredArgument(other, ARG_ONE);            /* make sure the argument is there   */
-                                       /* validate the boolean              */
-  otherTruth = other->truthValue(Error_Logical_value_method) ? TheTrueObject : TheFalseObject;
-                                       /* perform the operation             */
-  return (this->truthValue(Error_Logical_value_method)) ? TheTrueObject : otherTruth;
+    requiredArgument(other, ARG_ONE);            /* make sure the argument is there   */
+                                         /* validate the boolean              */
+    RexxObject *otherTruth = booleanObject(other->truthValue(Error_Logical_value_method));
+                                         /* perform the operation             */
+    return truthValue(Error_Logical_value_method) ? TheTrueObject : otherTruth;
 }
 
 RexxObject *RexxInteger::xorOp(
@@ -927,15 +923,19 @@ RexxObject *RexxInteger::xorOp(
 /* Function:  Logically XOR two objects together                              */
 /******************************************************************************/
 {
-  requiredArgument(other, ARG_ONE);            /* make sure the argument is there   */
-                                       /* get as a boolean                  */
-  bool truth = other->truthValue(Error_Logical_value_method);
-                                       /* first one false?                  */
-  if (!this->truthValue(Error_Logical_value_method))
-                                       /* value is always the second        */
-    return truth ? TheTrueObject : TheFalseObject;
-  else                                 /* value is inverse of second        */
-    return (truth) ? TheFalseObject : TheTrueObject;
+    requiredArgument(other, ARG_ONE);            /* make sure the argument is there   */
+    /* get as a boolean                  */
+    bool truth = other->truthValue(Error_Logical_value_method);
+    /* first one false?                  */
+    if (!truthValue(Error_Logical_value_method))
+    {
+        /* value is always the second        */
+        return booleanObject(truth);
+    }
+    else                                 /* value is inverse of second        */
+    {
+        return booleanObject(!truth);
+    }
 }
 
 RexxObject *RexxInteger::abs()
@@ -943,16 +943,20 @@ RexxObject *RexxInteger::abs()
 /* Function:  Take the absolute value of an integer object                    */
 /******************************************************************************/
 {
-                                       /* working under the default digits? */
- if (number_digits() == Numerics::DEFAULT_DIGITS) {
-     /* if we're already positive, this is a quick return */
-     if (value >= 0) {
-         return this;
-     }
-     return new_integer(-value);       /* return as an integer object       */
- }
- else
-   return this->numberString()->abs(); /* do a numberstring operation       */
+    /* working under the default digits? */
+    if (number_digits() == Numerics::DEFAULT_DIGITS)
+    {
+        /* if we're already positive, this is a quick return */
+        if (value >= 0)
+        {
+            return this;
+        }
+        return new_integer(-value);       /* return as an integer object       */
+    }
+    else
+    {
+        return this->numberString()->abs(); /* do a numberstring operation       */
+    }
 }
 
 RexxObject *RexxInteger::sign()

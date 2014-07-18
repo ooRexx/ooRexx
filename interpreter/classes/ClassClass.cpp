@@ -219,7 +219,7 @@ bool RexxClass::isEqual(RexxObject *other)
     if (behaviour->isPrimitive())
     {
         // can compare at primitive level
-        return equal(other) == TheTrueObject;
+        return isEqual(other);
     }
     else
     {
@@ -253,7 +253,7 @@ RexxObject *RexxClass::equal(RexxObject *other)
     else
     {
         // this is a direct identity compare
-        return((this == other) ? TheTrueObject: TheFalseObject);
+        return booleanObject(this == other);
     }
 }
 
@@ -280,7 +280,7 @@ RexxObject *RexxClass::notEqual(RexxObject *other)
     }
     else
     {
-        return((this != other) ? TheTrueObject: TheFalseObject);
+        return booleanObject(this != other);
     }
 }
 
@@ -292,7 +292,7 @@ RexxObject *RexxClass::notEqual(RexxObject *other)
  */
 RexxInteger *RexxClass::queryMixinClass()
 {
-    return isMixinClass() ? TheTrueObject : TheFalseObject;
+    return booleanObject(isMixinClass());
 }
 
 
@@ -374,10 +374,10 @@ RexxClass *RexxClass::getSuperClass()
  *
  * @return An array containing all of the superclasses.
  */
-RexxArray *RexxClass::getSuperClasses()
+ArrayClass *RexxClass::getSuperClasses()
 {
     // return a copy so it can't be modified.
-    return (RexxArray *)instanceSuperClasses->copy();
+    return (ArrayClass *)instanceSuperClasses->copy();
 }
 
 
@@ -386,7 +386,7 @@ RexxArray *RexxClass::getSuperClasses()
  *
  * @return An array of the subclasses.
  */
-RexxArray *RexxClass::getSubClasses()
+ArrayClass *RexxClass::getSubClasses()
 {
     // remove any gc classes from the list now, and return the array
     return subClasses->weakReferenceArray();
@@ -424,9 +424,9 @@ void RexxClass::defineMethods(TableClass *newMethods)
         RexxString *method_name = (RexxString *)iterator.index();
         // if this is the Nil object, that's an override.  Make it OREF_NULL.
         RexxObject *method = (MethodClass *)iterator.value();
-        if (_method == TheNilObject)
+        if (method == TheNilObject)
         {
-            _method = OREF_NULL;
+            method = OREF_NULL;
         }
         // define this method
         behaviour->define(method_name, OREF_NULL);
@@ -801,7 +801,7 @@ void RexxClass::removeClassMethod(RexxString *method_name)
     behaviour->deleteMethod(method_name);
 
     // propagate to all subclasses
-    RexxArray *subclass_list = getSubClasses();
+    ArrayClass *subclass_list = getSubClasses();
     for (size_t i = 1; i < subclass_list->size(); i++)
     {
         ((RexxClass *)subclass_list->get(i))->removeClassMethod(method_name);
@@ -928,7 +928,7 @@ void  RexxClass::updateSubClasses()
 
     // we're updated, now nudge each of our subclasses
     // to let them know they need to update too.
-    Protected<RexxArray> subClassList = getSubClasses();
+    Protected<ArrayClass> subClassList = getSubClasses();
     for (size_t index = 1; index <= subClassList->size(); index++)
     {
         // each of our subclasses will do the same thing we just did
@@ -948,7 +948,7 @@ void RexxClass::updateInstanceSubClasses()
     createInstanceBehaviour(instanceBehaviour);
 
     // tell all of our subclasses to do this same step
-    Protected<RexxArray> subClassList = getSubClasses();
+    Protected<ArrayClass> subClassList = getSubClasses();
     for (size_t index = 1; index <= subClassList->size(); index++)
     {
         ((RexxClass *)subClassList->get(index))->updateInstanceSubClasses();
@@ -1564,7 +1564,7 @@ bool RexxClass::isCompatibleWith(RexxClass *other)
 RexxObject *RexxClass::isSubclassOf(RexxClass *other)
 {
     requiredArgument(other, ARG_ONE);            // must have the other argument
-    return isCompatibleWith(other) ? TheTrueObject : TheFalseObject;
+    return booleanObject(isCompatibleWith(other));
 }
 
 
@@ -1611,12 +1611,7 @@ RexxObject *RexxClass::getPackage()
     PackageClass *package = source->getPackage();
     // it is possible the source does not have a package object (internal classes
     // are in this category)
-    if (package == OREF_NULL)
-    {
-        return TheNilObject;
-    }
-
-    return package;
+    return resultOrNil(package);
 }
 
 

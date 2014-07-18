@@ -175,8 +175,8 @@ SupplierClass *DirectoryClass::supplier()
     // requires running each of the methods to obtain the value.
     if (methodTable != OREF_NULL)
     {
-        Protected<RexxArray> indexes = new_array(methodTable->items());
-        Protected<RexxArray> values = new_array(methodTable->items());
+        Protected<ArrayClass> indexes = new_array(methodTable->items());
+        Protected<ArrayClass> values = new_array(methodTable->items());
 
         size_t count = 1;
 
@@ -207,10 +207,10 @@ SupplierClass *DirectoryClass::supplier()
  *
  * @return An array containing all of the directory indices.
  */
-RexxArray *DirectoryClass::allIndexes()
+ArrayClass *DirectoryClass::allIndexes()
 {
     // get the base set
-    Protected<RexxArray> indexes = content->allIndexes();
+    Protected<ArrayClass> indexes = content->allIndexes();
 
     // if we have a method table, we need to append those indices also
     if (methodTable != OREF_NULL)
@@ -227,10 +227,10 @@ RexxArray *DirectoryClass::allIndexes()
  *
  * @return An array of all item values.
  */
-RexxArray *DirectoryClass::allItems()
+ArrayClass *DirectoryClass::allItems()
 {
     // get the base set
-    Protected<RexxArray> itemArray = content->allIndexes();
+    Protected<ArrayClass> itemArray = content->allIndexes();
     // have a method table? we need to run the methods an append to the result
     if (methodTable != OREF_NULL)
     {
@@ -546,7 +546,7 @@ RexxInternalObject *DirectoryClass::setEntryRexx(RexxString *entryname, RexxInte
  *
  * @return Either a result object or nothing, depending on whether this is a set or get operation.
  */
-RexxInternalObject *DirectoryClass::unknown(RexxString *msgname, RexxArray *arguments)
+RexxInternalObject *DirectoryClass::unknown(RexxString *msgname, ArrayClass *arguments)
 {
     // must have a first item and the required argument array
     RexxString *message_value = stringArgument(msgname, ARG_ONE);
@@ -686,19 +686,13 @@ RexxObject *DirectoryClass::newRexx(RexxObject **init_args, size_t argCount)
     // any methods on this object from this method.
     RexxClass *classThis = (RexxClass *)this;
 
-    RexxObject *initialSize;
-
-    // parse the arguments
-    RexxClass::processNewArgs(args, argCount, &args, &argCount, 1, (RexxObject **)&initialSize, NULL);
-
-    // the capacity is optional, but must be a positive numeric value
-    size_t capacity = optionalLengthArgument(initialSize, DefaultTableSize, ARG_ONE);
-
-    // create the new identity table item
-    DirectoryClass *temp = new DirectoryClass(capacity);
-    ProtectedObject p(temp);
+    // create the new identity table item (this version does not have a backing contents yet).
+    Protected<DirectoryClass> temp = new DirectoryClass(true);
     // finish setting this up.
     classThis->completeNewObject(temp, args, argCount);
+
+    // make sure this has been completely initialized
+    temp->initialize();
     return temp;
 }
 

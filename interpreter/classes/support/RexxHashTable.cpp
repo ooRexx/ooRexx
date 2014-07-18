@@ -331,7 +331,7 @@ RexxObject *RexxHashTable::removeAll(RexxObject *_index)
     // get a count of matching items
     size_t count = countAll(_index);
     HashLink position = hashIndex(_index);         /* calculate the hash slot           */
-    RexxArray *result = new_array(count);           /* get proper size result array      */
+    ArrayClass *result = new_array(count);           /* get proper size result array      */
     // only copy if we have something to remove
     if (count > 0)
     {
@@ -855,7 +855,7 @@ RexxObject *RexxHashTable::primitiveNextItem(
     return TheNilObject;                 /* item was not found                */
 }
 
-RexxArray  *RexxHashTable::getAll(
+ArrayClass  *RexxHashTable::getAll(
     RexxObject *_index)                 /* target index                      */
 /******************************************************************************/
 /* Function:  Get all elements with a specified index as an array             */
@@ -864,7 +864,7 @@ RexxArray  *RexxHashTable::getAll(
     // get a count of matching items
     size_t count = countAll(_index);
     HashLink position = hashIndex(_index);         /* calculate the hash slot           */
-    RexxArray *result = new_array(count);           /* get proper size result array      */
+    ArrayClass *result = new_array(count);           /* get proper size result array      */
     // only copy if we have something to copy
     if (count > 0)
     {
@@ -916,7 +916,7 @@ size_t RexxHashTable::countAll(RexxObject *_index)
     }
 }
 
-RexxArray  *RexxHashTable::primitiveGetAll(
+ArrayClass  *RexxHashTable::primitiveGetAll(
     RexxObject *_index)                 /* target index                      */
 /******************************************************************************/
 /* Function:  Get all elements with a specified index as an array             */
@@ -940,10 +940,10 @@ RexxArray  *RexxHashTable::primitiveGetAll(
     else
     {
         /* no elements found                 */
-        return(RexxArray *)TheNullArray->copy();
+        return(ArrayClass *)TheNullArray->copy();
     }
 
-    RexxArray *result = new_array(count);           /* get proper size result array      */
+    ArrayClass *result = new_array(count);           /* get proper size result array      */
     size_t i = 1;                               /* start at the first element        */
     position = hashPrimitiveIndex(_index);  /* calculate the hash slot           */
     do
@@ -959,7 +959,7 @@ RexxArray  *RexxHashTable::primitiveGetAll(
     return result;                       /* return the result array           */
 }
 
-RexxArray *RexxHashTable::stringGetAll(
+ArrayClass *RexxHashTable::stringGetAll(
     RexxString *_index)                 /* target index                      */
 /******************************************************************************/
 /* Function:  Return an array of all value with the same index (using string  */
@@ -988,10 +988,10 @@ RexxArray *RexxHashTable::stringGetAll(
     else
     {
         /* no elements found                 */
-        return(RexxArray *)TheNullArray->copy();
+        return(ArrayClass *)TheNullArray->copy();
     }
 
-    RexxArray *result = new_array(count);           /* get proper size result array      */
+    ArrayClass *result = new_array(count);           /* get proper size result array      */
     size_t i = 1;                               /* start at the first element        */
     position = hashIndex(_index);        /* calculate the hash slot           */
     do
@@ -1009,7 +1009,7 @@ RexxArray *RexxHashTable::stringGetAll(
     return result;                       /* return the result array           */
 }
 
-RexxArray  *RexxHashTable::allIndex(
+ArrayClass  *RexxHashTable::allIndex(
     RexxObject *_value)                 /* target value item                 */
 /******************************************************************************/
 /* Function:  Return all index items that match the associated value          */
@@ -1032,7 +1032,7 @@ RexxArray  *RexxHashTable::allIndex(
         }
     }
 
-    RexxArray *result = new_array(count);           /* get proper size result array      */
+    ArrayClass *result = new_array(count);           /* get proper size result array      */
     size_t j = 1;                               /* start at the first element        */
     /* loop through them all             */
     for (i = this->totalSlotsSize(); i > 0; i--)
@@ -1599,12 +1599,12 @@ RexxObject *RexxHashTable::replace(
     return OREF_NULL;                    /* always return nothing             */
 }
 
-RexxArray  *RexxHashTable::allItems()
+ArrayClass  *RexxHashTable::allItems()
 /******************************************************************************/
 /* Function:  Create an array containing the hash table values                */
 /******************************************************************************/
 {
-    RexxArray *result = new_array(items());         /* get a new array                   */
+    ArrayClass *result = new_array(items());         /* get a new array                   */
     size_t j = 0;                               /* set the insertion point           */
     /* loop through all of the items     */
     for (size_t i = 0; i < this->totalSlotsSize(); i++)
@@ -1708,12 +1708,12 @@ bool RexxHashTable::isEmpty()
 
 
 
-RexxArray *RexxHashTable::allIndexes()
+ArrayClass *RexxHashTable::allIndexes()
 /******************************************************************************/
 /* Function:  Create an array containing the hash table indexes.              */
 /******************************************************************************/
 {
-    RexxArray *result = new_array(items());         /* get a new array                   */
+    ArrayClass *result = new_array(items());         /* get a new array                   */
     size_t j = 0;                               /* set the insertion point           */
     /* loop through all of the items     */
     for (size_t i = 0; i < this->totalSlotsSize(); i++)
@@ -1734,7 +1734,7 @@ RexxArray *RexxHashTable::allIndexes()
  *
  * @return An array with the set of unique index values
  */
-RexxArray *RexxHashTable::uniqueIndexes()
+ArrayClass *RexxHashTable::uniqueIndexes()
 {
     TableClass *indexSet = new_table();
     ProtectedObject p(indexSet);
@@ -1760,8 +1760,8 @@ SupplierClass *RexxHashTable::supplier()
 {
     size_t count = items();                     /* no items yet                      */
 
-    RexxArray *values = new_array(count);           /* get a new array                   */
-    RexxArray *indexes = new_array(count);          /* and an index array                */
+    ArrayClass *values = new_array(count);           /* get a new array                   */
+    ArrayClass *indexes = new_array(count);          /* and an index array                */
     size_t j = 1;                               /* set the insertion point           */
     /* loop through all of the items     */
     for (size_t i = 0; i < this->totalSlotsSize(); i++)

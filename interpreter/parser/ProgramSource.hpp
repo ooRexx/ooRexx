@@ -110,7 +110,7 @@ public:
     RexxString *getStringLine(size_t lineNumber);
     RexxString *getStringLine(size_t position, size_t startOffset, size_t endOffset = SIZE_MAX);
     RexxString *extract(SourceLocation &location);
-    RexxArray  *extractSourceLines(SourceLocation &location);
+    ArrayClass  *extractSourceLines(SourceLocation &location);
 
 protected:
 
@@ -197,7 +197,7 @@ class ArrayProgramSource: public ProgramSource
     void *operator new(size_t);
     inline void  operator delete(void *) { ; }
 
-    ArrayProgramSource(RexxArray *a, size_t adjust = 0) : interpretAdjust(adjust), array(a), ProgramSource() { };
+    ArrayProgramSource(ArrayClass *a, size_t adjust = 0) : interpretAdjust(adjust), array(a), ProgramSource() { };
     inline ArrayProgramSource(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
@@ -212,7 +212,7 @@ class ArrayProgramSource: public ProgramSource
  protected:
 
     size_t interpretAdjust;  // if this is an interpret, we fudge the line positions
-    RexxArray  *array;       // the array where the source data is installed
+    ArrayClass  *array;       // the array where the source data is installed
 };
 
 #endif

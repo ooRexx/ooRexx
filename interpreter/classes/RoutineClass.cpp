@@ -213,7 +213,7 @@ RexxObject *RoutineClass::callRexx(RexxObject **args, size_t count)
  *
  * @return The call result (if any).
  */
-RexxObject *RoutineClass::callWithRexx(RexxArray *args)
+RexxObject *RoutineClass::callWithRexx(ArrayClass *args)
 {
     // this is required and must be an array
     args = arrayArgument(args, ARG_ONE);
@@ -491,7 +491,7 @@ RoutineClass *RoutineClass::newRexx(RexxObject **init_args, size_t argCount)
     RexxClass *classThis = (RexxClass *)this;
 
     RexxString *programName;
-    Protected<RexxArray> sourceArray;
+    Protected<ArrayClass> sourceArray;
     PackageClass *sourceContext;
 
     // parse all of the options
@@ -549,7 +549,7 @@ RoutineClass *RoutineClass::loadExternalRoutine(RexxString *name, RexxString *de
     descriptor = stringArgument(descriptor, "descriptor");
 
     // convert external into words
-    Protected<RexxArray> words = StringUtil::words(descriptor->getStringData(), descriptor->getLength());
+    Protected<ArrayClass> words = StringUtil::words(descriptor->getStringData(), descriptor->getLength());
     // "LIBRARY libbar [foo]"
     if (((RexxString *)(words->get(1)))->strCompare(CHAR_LIBRARY))
     {
@@ -574,12 +574,7 @@ RoutineClass *RoutineClass::loadExternalRoutine(RexxString *name, RexxString *de
 
         // create a new native method
         RoutineClass *routine = PackageManager::loadRoutine(library, entry);
-        // raise an exception if this entry point is not found.
-        if (routine == OREF_NULL)
-        {
-             return (RoutineClass *)TheNilObject;
-        }
-        return routine;
+        return (RoutineClass *)resultOrNil(routine);
     }
     else
     {

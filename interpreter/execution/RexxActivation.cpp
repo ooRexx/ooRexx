@@ -663,7 +663,7 @@ void RexxActivation::processTraps()
     while (i--)                          /* while pending conditions          */
     {
         /* get the handler off the queue     */
-        RexxArray *trapHandler = (RexxArray *)handler_queue->pullRexx();
+        ArrayClass *trapHandler = (ArrayClass *)handler_queue->pullRexx();
         /* condition in DELAY state?         */
         if ((RexxString *)trapState((RexxString *)trapHandler->get(3)) == OREF_DELAY)
         {
@@ -1616,7 +1616,7 @@ void RexxActivation::raise(
         else
         {
             /* go raise the error                */
-            ActivityManager::currentActivity->raiseException(((RexxInteger *)rc)->getValue(), description, (RexxArray *)additional, resultObj);
+            ActivityManager::currentActivity->raiseException(((RexxInteger *)rc)->getValue(), description, (ArrayClass *)additional, resultObj);
         }
     }
     else
@@ -2058,7 +2058,7 @@ RexxString * RexxActivation::trapState(
     if (settings.traps != OREF_NULL)
     {
         /* see if this trap is enabled       */
-        RexxArray *traphandler = (RexxArray *)settings.traps->at(condition);
+        ArrayClass *traphandler = (ArrayClass *)settings.traps->at(condition);
         if (traphandler != OREF_NULL)      /* have a trap for this?             */
         {
             /* get the trap state                */
@@ -2077,7 +2077,7 @@ void RexxActivation::trapDelay(
 {
     checkTrapTable();              /* make sure we've got the tables    */
                                          /* see if this one is enabled        */
-    RexxArray *traphandler = (RexxArray *)settings.traps->at(condition);
+    ArrayClass *traphandler = (ArrayClass *)settings.traps->at(condition);
     if (traphandler != OREF_NULL)        /* have a trap for this?             */
     {
         traphandler->put(OREF_DELAY, 2);   /* change the trap state             */
@@ -2093,7 +2093,7 @@ void RexxActivation::trapUndelay(
 {
     checkTrapTable();              /* make sure we've got the tables    */
                                          /* see if this one is enabled        */
-    RexxArray *traphandler = (RexxArray *)settings.traps->at(condition);
+    ArrayClass *traphandler = (ArrayClass *)settings.traps->at(condition);
     if (traphandler != OREF_NULL)        /* have a trap for this?             */
     {
         traphandler->put(OREF_ON, 2);      /* change the trap state             */
@@ -2135,7 +2135,7 @@ bool RexxActivation::trap(             /* trap a condition                  */
         objnotify->error(exception_object);
     }
     bool handled = false;                     /* not handled yet                   */
-    RexxArray *traphandler = OREF_NULL;       /* no traps to process yet           */
+    ArrayClass *traphandler = OREF_NULL;       /* no traps to process yet           */
     if (debug_pause)
     {             /* working from the debug prompt?    */
                   /* non-terminal condition?           */
@@ -2153,12 +2153,12 @@ bool RexxActivation::trap(             /* trap a condition                  */
         return false;                      /* can't very well handle this!      */
     }
                                            /* see if this one is enabled        */
-    traphandler = (RexxArray *)settings.traps->at(condition);
+    traphandler = (ArrayClass *)settings.traps->at(condition);
 
     if (traphandler == OREF_NULL)
     {      /* not there?  try for an ANY handler*/
            /* get this from the same table      */
-        traphandler = (RexxArray *)settings.traps->at(OREF_ANY);
+        traphandler = (ArrayClass *)settings.traps->at(OREF_ANY);
         if (traphandler != OREF_NULL)
         {    /* have an any handler?              */
              /* get the handler info              */
@@ -3146,7 +3146,7 @@ void RexxActivation::traceEntry()
     // both
     settings.flags |= source_traced;
 
-    RexxArray *info = OREF_NULL;
+    ArrayClass *info = OREF_NULL;
 
     if (isMethod())
     {
@@ -4295,7 +4295,7 @@ RexxObject *RexxActivation::getLocalEnvironment(RexxString *name)
 StackFrameClass *RexxActivation::createStackFrame()
 {
     const char *type = StackFrameClass::FRAME_METHOD;
-    RexxArray *arguments = OREF_NULL;
+    ArrayClass *arguments = OREF_NULL;
     RexxObject *target = OREF_NULL;
 
     if (isInterpret())
@@ -4347,21 +4347,21 @@ RexxString *RexxActivation::formatSourcelessTraceLine(RexxString *packageName)
     // if this is a method invocation, then we can give the method name and scope.
     if (isMethod())
     {
-        RexxArray *info = new_array(getMessageName(), scope->getId(), packageName);
+        ArrayClass *info = new_array(getMessageName(), scope->getId(), packageName);
         ProtectedObject p(info);
 
         return activity->buildMessage(Message_Translations_sourceless_method_invocation, info);
     }
     else if (isRoutine())
     {
-        RexxArray *info = new_array(getMessageName(), packageName);
+        ArrayClass *info = new_array(getMessageName(), packageName);
         ProtectedObject p(info);
 
         return activity->buildMessage(Message_Translations_sourceless_routine_invocation, info);
     }
     else
     {
-        RexxArray *info = new_array(packageName);
+        ArrayClass *info = new_array(packageName);
         ProtectedObject p(info);
 
         return activity->buildMessage(Message_Translations_sourceless_program_invocation, info);
@@ -4374,7 +4374,7 @@ RexxString *RexxActivation::formatSourcelessTraceLine(RexxString *packageName)
  *
  * @return A list of the stackframes.
  */
-RexxArray *RexxActivation::getStackFrames(bool skipFirst)
+ArrayClass *RexxActivation::getStackFrames(bool skipFirst)
 {
     return activity->generateStackFrames(skipFirst);
 }

@@ -226,7 +226,7 @@ RexxString  *RexxString::makeString()
  *
  * @return The string object converted to an array using default arguments.
  */
-RexxArray  *RexxString::makeArray()
+ArrayClass  *RexxString::makeArray()
 {
     // forward to the Rexx version with default arguments
     return makeArrayRexx(OREF_NULL);
@@ -622,10 +622,6 @@ wholenumber_t RexxString::comp(RexxObject *other)
                                          /* call to NumberString succeeds or  */
                                          /* we will get into a loop.          */
     requiredArgument(other, ARG_ONE);            /* make sure we have a real argument */
-    if (other == TheNilObject)           // all conditionals return .false when compared to .nil
-    {
-        return false;
-    }
                                          /* try and convert both numbers      */
     if (((firstNum = fastNumberString()) != OREF_NULL) && ((secondNum = other->numberString()) != OREF_NULL ))
     {
@@ -1024,7 +1020,7 @@ RexxObject *RexxString::format(RexxObject *Integers, RexxObject *Decimals, RexxO
  */
 RexxInteger *RexxString::equals(RexxString *other)
 {
-    return primitiveIsEqual(other) ? TheTrueObject : TheFalseObject;
+    return booleanObject(primitiveIsEqual(other));
 }
 
 /**
@@ -1037,7 +1033,7 @@ RexxInteger *RexxString::equals(RexxString *other)
  */
 RexxInteger *RexxString::caselessEquals(RexxString *other)
 {
-    return primitiveCaselessIsEqual(other) ? TheTrueObject : TheFalseObject;
+    return booleanObject(primitiveCaselessIsEqual(other));
 }
 
 
@@ -1047,7 +1043,7 @@ RexxInteger *RexxString::strictEqual(RexxObject *other)
 /*            if sent with no other object                                    */
 /******************************************************************************/
 {
-    return primitiveIsEqual(other) ? TheTrueObject : TheFalseObject;
+    return booleanObject(primitiveIsEqual(other));
 }
 
 RexxInteger *RexxString::strictNotEqual(RexxObject *other)
@@ -1055,7 +1051,7 @@ RexxInteger *RexxString::strictNotEqual(RexxObject *other)
 /* Function:  Strict ("\==") inequality operator                              */
 /******************************************************************************/
 {
-    return !primitiveIsEqual(other) ? TheTrueObject : TheFalseObject;
+    return booleanObject(!primitiveIsEqual(other));
 }
 
 RexxInteger *RexxString::equal(RexxObject *other)
@@ -1067,7 +1063,7 @@ RexxInteger *RexxString::equal(RexxObject *other)
     {
         return TheFalseObject;
     }
-    return ((comp(other) == 0) ? TheTrueObject : TheFalseObject);
+    return booleanObject(comp(other) == 0);
 }
 
 RexxInteger *RexxString::notEqual(RexxObject *other)
@@ -1079,7 +1075,7 @@ RexxInteger *RexxString::notEqual(RexxObject *other)
     {
         return TheTrueObject;
     }
-    return ((comp(other) != 0) ? TheTrueObject : TheFalseObject);
+    return booleanObject(comp(other) != 0);
 }
 
 RexxInteger *RexxString::isGreaterThan(RexxObject *other)
@@ -1091,7 +1087,7 @@ RexxInteger *RexxString::isGreaterThan(RexxObject *other)
     {
         return TheFalseObject;
     }
-    return ((comp(other) > 0) ? TheTrueObject : TheFalseObject);
+    return booleanObject(comp(other) > 0);
 }
 
 RexxInteger *RexxString::isLessThan(RexxObject *other)
@@ -1103,7 +1099,7 @@ RexxInteger *RexxString::isLessThan(RexxObject *other)
     {
         return TheFalseObject;
     }
-    return ((comp(other) < 0) ? TheTrueObject : TheFalseObject);
+    return booleanObject(comp(other) < 0);
 }
 
 RexxInteger *RexxString::isGreaterOrEqual(RexxObject *other)
@@ -1115,7 +1111,7 @@ RexxInteger *RexxString::isGreaterOrEqual(RexxObject *other)
     {
         return TheFalseObject;
     }
-    return ((comp(other) >= 0) ? TheTrueObject : TheFalseObject);
+    return booleanObject(comp(other) >= 0);
 }
 
 RexxInteger *RexxString::isLessOrEqual(RexxObject *other)
@@ -1127,7 +1123,7 @@ RexxInteger *RexxString::isLessOrEqual(RexxObject *other)
     {
         return TheFalseObject;
     }
-    return ((comp(other) <= 0) ? TheTrueObject : TheFalseObject);
+    return booleanObject(comp(other) <= 0);
 }
 
 RexxInteger *RexxString::strictGreaterThan(RexxObject *other)
@@ -1139,7 +1135,7 @@ RexxInteger *RexxString::strictGreaterThan(RexxObject *other)
     {
         return TheFalseObject;
     }
-    return (strictComp(other) > 0) ? TheTrueObject : TheFalseObject;
+    return booleanObject(strictComp(other) > 0);
 }
 
 RexxInteger *RexxString::strictLessThan(RexxObject *other)
@@ -1151,7 +1147,7 @@ RexxInteger *RexxString::strictLessThan(RexxObject *other)
     {
         return TheFalseObject;
     }
-    return (strictComp(other) < 0) ? TheTrueObject : TheFalseObject;
+    return booleanObject(strictComp(other) < 0);
 }
 
 RexxInteger *RexxString::strictGreaterOrEqual(RexxObject *other)
@@ -1163,7 +1159,7 @@ RexxInteger *RexxString::strictGreaterOrEqual(RexxObject *other)
     {
         return TheFalseObject;
     }
-    return (strictComp(other) >= 0) ? TheTrueObject : TheFalseObject;
+    return booleanObject(strictComp(other) >= 0);
 }
 
 RexxInteger *RexxString::strictLessOrEqual(RexxObject *other)
@@ -1175,7 +1171,7 @@ RexxInteger *RexxString::strictLessOrEqual(RexxObject *other)
     {
         return TheFalseObject;
     }
-    return (strictComp(other) <= 0) ? TheTrueObject : TheFalseObject;
+    return booleanObject(strictComp(other) <= 0);
 }
 
 RexxString *RexxString::concat(RexxString *other)
@@ -1789,7 +1785,7 @@ RexxObject *RexxString::andOp(RexxObject *other)
 
     requiredArgument(other, ARG_ONE);            /* make sure the argument is there   */
                                          /* validate the boolean              */
-    otherTruth = other->truthValue(Error_Logical_value_method) ? TheTrueObject : TheFalseObject;
+    otherTruth = booleanObject(other->truthValue(Error_Logical_value_method));
     /* perform the operation             */
     return(!truthValue(Error_Logical_value_method)) ? TheFalseObject : otherTruth;
 }
@@ -1803,7 +1799,7 @@ RexxObject *RexxString::orOp(RexxObject *other)
 
     requiredArgument(other, ARG_ONE);            /* make sure the argument is there   */
                                          /* validate the boolean              */
-    otherTruth = other->truthValue(Error_Logical_value_method) ? TheTrueObject : TheFalseObject;
+    otherTruth = booleanObject(other->truthValue(Error_Logical_value_method));
     /* perform the operation             */
     return(truthValue(Error_Logical_value_method)) ? TheTrueObject : otherTruth;
 }
@@ -1820,15 +1816,15 @@ RexxObject *RexxString::xorOp(RexxObject *other)
     if (!truthValue(Error_Logical_value_method))
     {
         /* value is always the second        */
-        return truth ? TheTrueObject : TheFalseObject;
+        return booleanObject(truth);
     }
     else                                 /* value is inverse of second        */
     {
-        return(truth) ? TheFalseObject : TheTrueObject;
+        return booleanObject(!truth);
     }
 }
 
-RexxArray *RexxString::makeArrayRexx(RexxString *div)
+ArrayClass *RexxString::makeArrayRexx(RexxString *div)
 /******************************************************************************/
 /* Function:  Split string into an array                                      */
 /******************************************************************************/
@@ -1842,7 +1838,7 @@ RexxObject *RexxString::notOp()
 /* Function:  Logical NOT of a string                                         */
 /******************************************************************************/
 {
-  return truthValue(Error_Logical_value_method) ? (RexxObject *)TheFalseObject : (RexxObject *)TheTrueObject;
+  return booleanObject(!truthValue(Error_Logical_value_method));
 }
 
 RexxObject *RexxString::operatorNot(RexxObject *other)
@@ -1850,7 +1846,7 @@ RexxObject *RexxString::operatorNot(RexxObject *other)
 /* Function:  Logical NOT of a string                                         */
 /******************************************************************************/
 {
-  return truthValue(Error_Logical_value_method) ? (RexxObject *)TheFalseObject : (RexxObject *)TheTrueObject;
+  return booleanObject(!truthValue(Error_Logical_value_method));
 }
 
 RexxObject *RexxString::isInteger()

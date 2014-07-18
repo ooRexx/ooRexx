@@ -133,7 +133,7 @@ RexxString *PackageClass::getName()
  *
  * @return The entire array of source lines.
  */
-RexxArray *PackageClass::getSource()
+ArrayClass *PackageClass::getSource()
 {
     return source->extractSource();
 }
@@ -334,12 +334,12 @@ DirectoryClass *PackageClass::getMethods()
  *
  * @return An array of the added packages.
  */
-RexxArray *PackageClass::getImportedPackages()
+ArrayClass *PackageClass::getImportedPackages()
 {
-    RexxArray *packages = source->getPackages();
+    ArrayClass *packages = source->getPackages();
     if (packages != OREF_NULL)
     {
-        return (RexxArray *)packages->copy();
+        return (ArrayClass *)packages->copy();
     }
     else
     {
@@ -356,7 +356,7 @@ RexxArray *PackageClass::getImportedPackages()
  *
  * @return The loaded package object.
  */
-PackageClass *PackageClass::loadPackage(RexxString *name, RexxArray *s)
+PackageClass *PackageClass::loadPackage(RexxString *name, ArrayClass *s)
 {
     // make sure we have a valid name and delegate to the source object
     name = stringArgument(name, 1);
@@ -514,11 +514,7 @@ RoutineClass *PackageClass::findRoutineRexx(RexxString *name)
 {
     name = stringArgument(name, "name");
     RoutineClass *routine = findRoutine(name);
-    if (routine == OREF_NULL)
-    {
-        return (RoutineClass *)TheNilObject;
-    }
-    return routine;
+    return (RoutineClass *)resultOrNil(routine);
 }
 
 
@@ -578,7 +574,7 @@ PackageClass *PackageClass::newRexx(RexxObject **init_args, size_t argCount)
     else
     {
         // add this to the instance context
-        RexxArray *sourceArray = arrayArgument(_source, "source");
+        ArrayClass *sourceArray = arrayArgument(_source, "source");
         package = instance->loadRequires(activity, nameString, sourceArray);
     }
 
@@ -604,7 +600,7 @@ RexxObject *PackageClass::loadLibrary(RexxString *name)
     // have we already loaded this package?
     // may need to bootstrap it up first.
     LibraryPackage *package = PackageManager::loadLibrary(name);
-    return package == NULL ? TheFalseObject : TheTrueObject;
+    return booleanObject(package == NULL);
 }
 
 

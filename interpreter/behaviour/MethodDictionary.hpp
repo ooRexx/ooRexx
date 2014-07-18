@@ -75,7 +75,7 @@ class MethodDictionary: public EqualityHashCollection
  protected:
 
     TableClass *instanceMethods;     // any methods defined on this instance
-    RexxArray  *scopeList;           // the list of scope value order use for lookups
+    ArrayClass  *scopeList;           // the list of scope value order use for lookups
 };
 
 #endif

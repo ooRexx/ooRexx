@@ -48,7 +48,7 @@ void ProtectedSet::add(RexxObject *o)
     {
         protectedObject = new_array();
     }
-    RexxArray *saveTable = (RexxArray *)protectedObject;
+    ArrayClass *saveTable = (ArrayClass *)protectedObject;
     saveTable->append(o);
 }
 

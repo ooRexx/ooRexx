@@ -61,6 +61,7 @@ class BagClass : public IndexOnlyHashCollection
 
     inline BagClass(RESTORETYPE restoreType) { ; }
            BagClass(size_t capacity = HashCollection::DefaultTableSize);
+           BagClass(bool fromRexx) { }
 
     virtual HashContents *allocateContents(size_t bucketSize, size_t capacity);
 

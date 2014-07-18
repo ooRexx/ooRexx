@@ -45,7 +45,7 @@
 #define Included_StringUtil
 
 class RexxInteger;
-class RexxArray;
+class ArrayClass;
 
 class StringUtil
 {
@@ -59,7 +59,7 @@ public:
     static size_t lastPos(const char *stringData, size_t hastackLen, RexxString  *needle, size_t _start, size_t _range);
     static const char *lastPos(const char *needle, size_t needleLen, const char *haystack, size_t haystackLen);
     static RexxString *subchar(const char *stringData, size_t stringLength, RexxInteger *positionArg);
-    static RexxArray *makearray(const char *start, size_t length, RexxString *separator);
+    static ArrayClass *makearray(const char *start, size_t length, RexxString *separator);
     static size_t caselessLastPos(const char *stringData, size_t hastackLen, RexxString  *needle, size_t _start, size_t range);
     static const char * caselessLastPos(const char *needle, size_t needleLen, const char *haystack, size_t haystackLen);
     static int caselessCompare(const char *, const char *, size_t);
@@ -83,13 +83,13 @@ public:
     static size_t memPos(const char *string, size_t length, char target);
     static RexxInteger *verify(const char *data, size_t stringLen, RexxString  *ref, RexxString  *option, RexxInteger *_start, RexxInteger *range);
     static RexxString *subWord(const char *data, size_t length, RexxInteger *position, RexxInteger *plength);
-    static RexxArray *subWords(const char *data, size_t length, RexxInteger *position, RexxInteger *plength);
+    static ArrayClass *subWords(const char *data, size_t length, RexxInteger *position, RexxInteger *plength);
     static RexxString *word(const char *data, size_t length, RexxInteger *position);
     static RexxInteger *wordIndex(const char *data, size_t length, RexxInteger *position);
     static RexxInteger *wordLength(const char *data, size_t length, RexxInteger *position);
     static stringsize_t wordPos(const char *data, size_t length, RexxString  *phrase, RexxInteger *pstart);
     static stringsize_t caselessWordPos(const char *data, size_t length, RexxString  *phrase, RexxInteger *pstart);
-    static RexxArray   *words(const char *data, size_t length);
+    static ArrayClass   *words(const char *data, size_t length);
     static const char  *locateSeparator(const char *start, const char *end, const char *sepData, size_t sepLength);
 
     static inline bool matchCharacter(char ch, const char *charSet, size_t len)

@@ -57,7 +57,7 @@ class RexxInstructionForward : public RexxInstruction
 
     inline RexxInstructionForward() { ; }
     inline RexxInstructionForward(RESTORETYPE restoreType) { ; }
-           RexxInstructionForward(RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxArray *, bool);
+           RexxInstructionForward(RexxObject *, RexxObject *, RexxObject *, RexxObject *, ArrayClass *, bool);
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
@@ -72,6 +72,6 @@ class RexxInstructionForward : public RexxInstruction
     RexxObject * message;                // forward message override
     RexxObject * superClass;             // message super class override
     RexxObject * arguments;              // argument expression
-    RexxArray  * array;                  // argument array specification
+    ArrayClass  * array;                  // argument array specification
 };
 #endif

@@ -131,7 +131,7 @@ class RexxObject;
 class RexxClass;
 class DirectoryClass;
 class RexxIntegerClass;
-class RexxArray;
+class ArrayClass;
 class MemoryObject;
 class RexxString;
 
@@ -162,7 +162,7 @@ EXTERNMEM MemoryObject memoryObject;
 
 // short hand references to internal class objects.
 
-#define TheArrayClass RexxArray::classInstance
+#define TheArrayClass ArrayClass::classInstance
 #define TheClassClass RexxClass::classInstance
 #define TheDirectoryClass DirectoryClass::classInstance
 #define TheIntegerClass RexxInteger::classInstance
@@ -196,7 +196,7 @@ EXTERNMEM MemoryObject memoryObject;
 
 #define TheNilObject RexxNilObject::nilObject
 
-#define TheNullArray RexxArray::nullArray
+#define TheNullArray ArrayClass::nullArray
 
 #define TheFalseObject RexxInteger::falseObject
 #define TheTrueObject RexxInteger::trueObject

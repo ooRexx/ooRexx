@@ -84,7 +84,7 @@ class RexxClause : public RexxInternalObject
     SourceLocation clauseLocation;       // position of the clause
     size_t current;                      // index of current token of clause
     size_t first;                        // first token of clause
-    RexxArray  *tokens;                  // array of tokens in the clause
+    ArrayClass  *tokens;                  // array of tokens in the clause
     size_t size;                         // size of token array
     size_t free;                         // location of first free token
 };

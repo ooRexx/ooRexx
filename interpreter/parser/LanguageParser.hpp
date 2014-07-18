@@ -171,10 +171,10 @@ class LanguageParser: public RexxInternalObject
     void        addLabel(RexxInstruction *, RexxString *);
     RexxInstruction *findLabel(RexxString *);
     void        setGuard();
-    RexxArray  *getGuard();
+    ArrayClass  *getGuard();
     void        addBlock();
     RexxVariableBase *getRetriever(RexxString *);
-    RexxArray  *words(RexxString *);
+    ArrayClass  *words(RexxString *);
     inline void        reclaimClause()  { flags.set(reclaimed); };
     inline bool        atEnd() { return !flags.test(reclaimed) && !moreLines(); };
 
@@ -324,7 +324,7 @@ class LanguageParser: public RexxInternalObject
     RexxObject *parseExpression(int);
     RexxObject *parseSubExpression(int);
     size_t      parseArgList(RexxToken *, int);
-    RexxArray  *parseArgArray(RexxToken *, int);
+    ArrayClass  *parseArgArray(RexxToken *, int);
     RexxObject *parseFunction(RexxToken *, RexxToken *);
     RexxObject *parseCollectionMessage(RexxToken *, RexxObject *);
     RexxObject *parseMessage(RexxObject *, bool, int);
@@ -348,7 +348,7 @@ class LanguageParser: public RexxInternalObject
     void        error(int, RexxObject *);
     void        error(int, RexxObject *, RexxObject *);
     void        error(int, RexxObject *, RexxObject *, RexxObject *);
-    void        error(int errorcode, const SourceLocation &location, RexxArray *subs);
+    void        error(int errorcode, const SourceLocation &location, ArrayClass *subs);
     void        errorLine(int, RexxInstruction *);
     void        errorPosition(int, RexxToken *);
     void        errorToken(int, RexxToken *);
@@ -386,14 +386,14 @@ class LanguageParser: public RexxInternalObject
 
     // static methods for creating/processing different Rexx executables.
 
-    static MethodClass *createMethod(RexxString *name, RexxArray *source, PackageClass *sourceContext);
+    static MethodClass *createMethod(RexxString *name, ArrayClass *source, PackageClass *sourceContext);
     static MethodClass *createMethod(RexxString *name, RexxBuffer *source);
     static MethodClass *createMethod(RexxString *name);
-    static RoutineClass *createRoutine(RexxString *name, RexxArray *source, PackageClass *sourceContext);
+    static RoutineClass *createRoutine(RexxString *name, ArrayClass *source, PackageClass *sourceContext);
     static RoutineClass *createRoutine(RexxString *name, RexxBuffer *source);
     static RoutineClass *createRoutine(RexxString *name);
     static RoutineClass *createProgram(RexxString *name, RexxBuffer *source);
-    static RoutineClass *createProgram(RexxString *name, RexxArray *source);
+    static RoutineClass *createProgram(RexxString *name, ArrayClass *source);
     static RoutineClass *createProgram(RexxString *name);
     static RoutineClass *restoreFromMacroSpace(RexxString *name);
     static RoutineClass *processInstore(PRXSTRING instore, RexxString * name);
@@ -470,9 +470,9 @@ protected:
     DirectoryClass   *unattachedMethods;  // methods not associated with any class
     DirectoryClass   *routines;           // routines defined by ::routine directives.
     DirectoryClass   *publicRoutines;     // routines defined by ::routine directives.
-    RexxArray       *requires;           // list of ::requires directories, in order of appearance.
-    RexxArray       *libraries;          // libraries identified on a ::requires directive.
-    RexxArray       *classes;            // list of installed ::class directives.
+    ArrayClass       *requires;           // list of ::requires directories, in order of appearance.
+    ArrayClass       *libraries;          // libraries identified on a ::requires directive.
+    ArrayClass       *classes;            // list of installed ::class directives.
 
                                          // start of block parsing section
 
@@ -483,7 +483,7 @@ protected:
     DirectoryClass   *labels;             // root of associated label list
     IdentityTable *guardVariables;   // exposed variables in guard list
     DirectoryClass   *exposedVariables;   // root of exposed variables list
-    RexxArray       *calls;              // root of call list
+    ArrayClass       *calls;              // root of call list
 
     size_t           currentStack;       // current expression stack depth
     size_t           maxStack;           // maximum stack depth
