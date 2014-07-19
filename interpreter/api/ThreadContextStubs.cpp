@@ -287,7 +287,7 @@ logical_t RexxEntry HasMethod(RexxThreadContext *c, RexxObjectPtr o, CSTRING n)
         RexxString *name = new_upper_string(n);
         ProtectedObject p(name);
         // convert the name to a string instance, and check the environments.
-        return ((RexxObject *)o)->hasMethod(name) == TheTrueObject;
+        return ((RexxObject *)o)->hasMethod(name);
 
     }
     catch (RexxNativeActivation *)

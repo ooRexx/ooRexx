@@ -107,7 +107,7 @@ class RexxNumberString : public RexxNumberStringBase
     RexxInteger *integerValue(size_t);
     RexxString  *makeString();
     ArrayClass   *makeArray();
-    RexxInteger *hasMethod(RexxString *);
+    bool         hasMethod(RexxString *);
     RexxString  *primitiveMakeString();
     RexxString  *stringValue();
     bool         truthValue(int);

@@ -1575,16 +1575,22 @@ RexxString  *RexxObject::defaultName()
     return defaultname;                  /* return that value                 */
 }
 
-RexxInteger *RexxObject::hasMethod(RexxString *msgname)
-/******************************************************************************/
-/* Function:  Check for the presense of a method on the object                */
-/******************************************************************************/
+
+/**
+ * Check for the presence of a method on an object.
+ *
+ * @param msgname The target message name.
+ *
+ * @return true if the object has the method, false otherwise.
+ */
+bool RexxObject::hasMethod(RexxString *msgname)
 {
                                        /* check the behaviour for the method*/
   return booleanObject(behaviour->methodLookup(msgname) != OREF_NULL);
 }
 
-RexxClass   *RexxObject::classObject()
+
+RexxClass *RexxObject::classObject()
 /******************************************************************************/
 /* Function:  Return the class object associated with an object               */
 /******************************************************************************/
@@ -2292,7 +2298,7 @@ void RexxObject::uninit()
 /* Function:  Exported Object INIT method                                     */
 /******************************************************************************/
 {
-  if (TheTrueObject == hasMethod(OREF_UNINIT))
+  if (hasMethod(OREF_UNINIT))
   {
       sendMessage(OREF_UNINIT);
   }
@@ -2304,8 +2310,7 @@ bool RexxObject::hasUninitMethod()
 /* Function:  Check to see if an object has an UNINIT method.                 */
 /******************************************************************************/
 {
-    // TODO:  seems like we should have a primtive version of hasMethod();
-    return TheTrueObject == hasMethod(OREF_UNINIT);
+    return hasMethod(OREF_UNINIT);
 }
 
 
@@ -2513,14 +2518,13 @@ RexxObject *RexxObject::unknownRexx(
   return unknown(message, arguments);
 }
 
-RexxObject *RexxObject::hasMethodRexx(
-    RexxString *message )              /* method name                       */
+RexxObject *RexxObject::hasMethodRexx(RexxString *message )
 /******************************************************************************/
 /* Function:  Exported access to an object virtual function                   */
 /******************************************************************************/
 {
   message = stringArgument(message, ARG_ONE)->upper();
-  return hasMethod(message);     /* forward to the virtual function   */
+  return booleanObject(hasMethod(message));
 }
 
 void RexxInternalObject::printObject()

@@ -260,10 +260,9 @@ ItemLink ListClass::requiredIndex(RexxObject *index, size_t position)
  */
 void ListClass::expandContents()
 {
-    // just double the bucket size...or there abouts
-
-    // TODO:  need to cap out the increment value...
-    expandContents(contents->capacity() * 2);
+    // just double the bucket size...until we reach the max expansion size, then
+    // use smaller increments after that.
+    expandContents(contents->capacity() + Numerics::minValue(contents->capacity(), MaxExpansionSize));
 }
 
 

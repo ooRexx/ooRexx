@@ -145,8 +145,6 @@ void RexxInstructionParse::execute(RexxActivation *context, RexxExpressionStack 
 
     // default different pieces of source data information
     RexxObject *value = OREF_NULLSTRING;
-    // TODO:  A small helper class that encapsulates this mode of argument passing
-    // might be useful.
     RexxObject **argList = OREF_NULL;
     size_t argCount = 0;
 

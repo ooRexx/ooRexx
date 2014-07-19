@@ -75,7 +75,7 @@ class RexxInteger : public RexxObject
     RexxInteger *integerValue(size_t);
     RexxString  *makeString();
     void         copyIntoTail(RexxCompoundTail *);
-    RexxInteger *hasMethod(RexxString *);
+    bool         hasMethod(RexxString *);
     RexxString  *primitiveMakeString();
     RexxString  *stringValue();
     ArrayClass   *makeArray();

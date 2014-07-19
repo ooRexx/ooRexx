@@ -127,7 +127,7 @@ RexxString *RexxInteger::makeString()
 /* Function:  Handle a REQUEST('STRING') request for a REXX integer object    */
 /******************************************************************************/
 {
-  return this->stringValue();          /* return the string value           */
+  return stringValue();          /* return the string value           */
 }
 
 
@@ -138,16 +138,16 @@ RexxString *RexxInteger::makeString()
  */
 ArrayClass *RexxInteger::makeArray()
 {
-  return this->stringValue()->makeArray();     // have the string value handle this
+  return stringValue()->makeArray();     // have the string value handle this
 }
 
-RexxInteger *RexxInteger::hasMethod(RexxString *methodName)
+bool RexxInteger::hasMethod(RexxString *methodName)
 /******************************************************************************/
 /* Function:  Handle a HASMETHOD request for an integer                       */
 /******************************************************************************/
 {
                                        /* return the string value's answer  */
-  return this->stringValue()->hasMethod(methodName);
+    return stringValue()->hasMethod(methodName);
 }
 
 RexxString *RexxInteger::primitiveMakeString()
@@ -155,19 +155,19 @@ RexxString *RexxInteger::primitiveMakeString()
 /* Function:  Handle a REQUEST('STRING') request for a REXX integer object    */
 /******************************************************************************/
 {
-    if (this->stringrep != OREF_NULL)    /* have a string already?            */
+    if (stringrep != OREF_NULL)    /* have a string already?            */
     {
-        return this->stringrep;            /* return it directly                */
+        return stringrep;            /* return it directly                */
     }
     char        stringBuffer[32];        /* integer formatting buffer         */
                                            /* convert value into string         */
-    Numerics::formatWholeNumber(this->value, stringBuffer);
+    Numerics::formatWholeNumber(value, stringBuffer);
 
     /* return as a string                */
     RexxString *string = new_string(stringBuffer, strlen(stringBuffer));
     /* cache this away for later         */
-    OrefSet(this, this->stringrep, string);
-    this->setHasReferences();            // now have references that need marking
+    OrefSet(this, stringrep, string);
+    setHasReferences();            // now have references that need marking
     return string;                       /* return the new string             */
 }
 
@@ -176,19 +176,19 @@ RexxString *RexxInteger::stringValue()
 /* Function:  Return the string value for an integer                          */
 /******************************************************************************/
 {
-    if (this->stringrep != OREF_NULL)    /* have a string already?            */
+    if (stringrep != OREF_NULL)    /* have a string already?            */
     {
-        return this->stringrep;            /* return it directly                */
+        return stringrep;            /* return it directly                */
     }
 
     char        stringBuffer[32];        /* integer formatting buffer         */
                                            /* convert value into string         */
-    Numerics::formatWholeNumber(this->value, stringBuffer);
+    Numerics::formatWholeNumber(value, stringBuffer);
     /* return as a string                */
     RexxString *string = new_string(stringBuffer, strlen(stringBuffer));
     /* cache this away for later         */
-    OrefSet(this, this->stringrep, string);
-    this->setHasReferences();            /* we now have references            */
+    OrefSet(this, stringrep, string);
+    setHasReferences();            /* we now have references            */
     return string;                       /* return the new string             */
 }
 
@@ -197,7 +197,7 @@ void RexxInteger::copyIntoTail(RexxCompoundTail *tail)
 /* Function:  Copy the value of an integer into a compound variable name      */
 /******************************************************************************/
 {
-    if (this->stringrep != OREF_NULL)  /* have a string already?            */
+    if (stringrep != OREF_NULL)  /* have a string already?            */
     {
         /* copying directly from an existing string rep is faster */
         /* than formatting a new value and copying. */
@@ -206,7 +206,7 @@ void RexxInteger::copyIntoTail(RexxCompoundTail *tail)
     }
     char        stringBuffer[32];        /* integer formatting buffer         */
     /* convert value into string         */
-    Numerics::formatWholeNumber(this->value, stringBuffer);
+    Numerics::formatWholeNumber(value, stringBuffer);
     /* append this to the buffer         */
     tail->append(stringBuffer, strlen(stringBuffer));
 }
@@ -217,14 +217,14 @@ RexxNumberString *RexxInteger::numberString()
 /* Function:  Convert an integer into a numberstring value                    */
 /******************************************************************************/
 {
-    if (this->stringrep != OREF_NULL)    /* have a cached string value?       */
+    if (stringrep != OREF_NULL)    /* have a cached string value?       */
     {
         /* use its numberstring value        */
-        return this->stringrep->numberString();
+        return stringrep->numberString();
     }
     else                                 /* create a new numberstring         */
     {
-        return(RexxNumberString *)new_numberstringFromWholenumber((wholenumber_t)this->value);
+        return(RexxNumberString *)new_numberstringFromWholenumber((wholenumber_t)value);
     }
 }
 
@@ -240,7 +240,7 @@ RexxNumberString *RexxInteger::numberString()
 bool RexxInteger::doubleValue(double &result)
 {
     // just let the compiler convert
-    result = (double)this->wholeNumber();
+    result = (double)wholeNumber();
     return true;
 }
 
@@ -349,8 +349,8 @@ void RexxInteger::setString(
 /******************************************************************************/
 {
                                        /* set the strign                    */
-   OrefSet(this, this->stringrep, string);
-   this->setHasReferences();           /* we now have references            */
+   OrefSet(this, stringrep, string);
+   setHasReferences();           /* we now have references            */
 }
 
 bool RexxInteger::truthValue(
@@ -359,11 +359,11 @@ bool RexxInteger::truthValue(
 /* Function:  Determine the truth value of an integer object                  */
 /******************************************************************************/
 {
-    if (this->value == 0)                /* have a zero?                      */
+    if (value == 0)                /* have a zero?                      */
     {
         return false;                      /* this is false                     */
     }
-    else if (this->value != 1)           /* how about a one?                  */
+    else if (value != 1)           /* how about a one?                  */
     {
         reportException(errorcode, this);/* report the error                  */
     }
@@ -381,12 +381,12 @@ bool RexxInteger::truthValue(
  */
 bool RexxInteger::logicalValue(logical_t &result)
 {
-    if (this->value == 0)                /* have a zero?                      */
+    if (value == 0)                /* have a zero?                      */
     {
         result = false;                  // this is false and the conversion worked
         return true;
     }
-    else if (this->value == 1)           /* how about a one?                  */
+    else if (value == 1)           /* how about a one?                  */
     {
         result = true;                   // this is true and the conversion worked
         return true;
@@ -413,7 +413,7 @@ RexxObject *RexxInteger::unknown(
 /******************************************************************************/
 {
                                        /* just reissue this                 */
-  return this->stringValue()->sendMessage(msgname, arguments);
+  return stringValue()->sendMessage(msgname, arguments);
 }
 
 
@@ -471,7 +471,7 @@ RexxString *RexxInteger::concatBlank(
   requiredArgument(other, ARG_ONE);            /* this is required                  */
   other = REQUEST_STRING(other);       /* ensure a string value             */
                                        /* do the concatenate                */
-  return this->stringValue()->concatWith(other, ' ');
+  return stringValue()->concatWith(other, ' ');
 }
 
 RexxString *RexxInteger::concat(
@@ -483,7 +483,7 @@ RexxString *RexxInteger::concat(
   requiredArgument(other, ARG_ONE);            /* this is required                  */
   other = REQUEST_STRING(other);       /* ensure a string value             */
                                        /* do the concatenate                */
-  return this->stringValue()->concat(other);
+  return stringValue()->concat(other);
 }
 
 RexxObject *RexxInteger::plus(
@@ -501,7 +501,7 @@ RexxObject *RexxInteger::plus(
   else {                               /* binary                            */
     if (isOfClass(Integer, other)) {       /* adding two integers together?     */
                                        /* add the numbers                   */
-      wholenumber_t tempVal = this->value + other->value;
+      wholenumber_t tempVal = value + other->value;
                                        /* result still within range?        */
       if (tempVal <= Numerics::MAX_WHOLENUMBER && tempVal >= Numerics::MIN_WHOLENUMBER)
         return new_integer(tempVal);   /* return as an integer number       */
@@ -523,12 +523,12 @@ RexxObject *RexxInteger::minus(
     return integer_forward(this, minus, other);
 
   if (other == OREF_NULL) {            /* unary subtraction operator        */
-    return new_integer(-this->value);  /* and return a new integer          */
+    return new_integer(-value);  /* and return a new integer          */
   }
   else {                               /* binary subtraction operation      */
     if (isOfClass(Integer, other)) {       /* subtracting two integers?         */
                                        /* subtract the numbers              */
-      wholenumber_t tempVal = this->value - other->value;
+      wholenumber_t tempVal = value - other->value;
                                        /* result still within range?        */
       if (tempVal <= Numerics::MAX_WHOLENUMBER && tempVal >= Numerics::MIN_WHOLENUMBER)
         return new_integer(tempVal);   /* return as an integer number       */
@@ -551,10 +551,10 @@ RexxObject *RexxInteger::multiply(
   requiredArgument(other, ARG_ONE);            /* make sure the argument is there   */
                                        /* is the other an integer and will  */
                                        /* the result be in a good range?    */
-  if (isOfClass(Integer, other) && Numerics::abs(this->value) <= 99999 && Numerics::abs(other->value) <= 9999)
+  if (isOfClass(Integer, other) && Numerics::abs(value) <= 99999 && Numerics::abs(other->value) <= 9999)
   {
     /* multiply directly                 */
-    return new_integer(this->value * other->value);
+    return new_integer(value * other->value);
   }
   else                                 /* do the slow way                   */
     return integer_forward(this, multiply, other);
@@ -587,7 +587,7 @@ RexxObject *RexxInteger::integerDivide(
     if (other->value != 0)
     {
         // do the division directly
-        return new_integer(this->value / other->value);
+        return new_integer(value / other->value);
     }
     else                               /* yes, raise error.                 */
       reportException(Error_Overflow_zero);
@@ -614,7 +614,7 @@ RexxObject *RexxInteger::remainder(
     if (other->value != 0)
     {
       // we can do this directly
-      return new_integer(this->value % other->value);
+      return new_integer(value % other->value);
     }
     else                               /* yes, raise error.                 */
       reportException(Error_Overflow_zero);
@@ -641,17 +641,17 @@ bool RexxInteger::isEqual(
 /*            only strict equality, not greater or less than values.          */
 /******************************************************************************/
 {
-  if (this->isSubClassOrEnhanced())      /* not a primitive?                  */
+  if (isSubClassOrEnhanced())      /* not a primitive?                  */
   {
                                        /* do the full lookup compare        */
-      return this->sendMessage(OREF_STRICT_EQUAL, other)->truthValue(Error_Logical_value_method);
+      return sendMessage(OREF_STRICT_EQUAL, other)->truthValue(Error_Logical_value_method);
   }
 
   if (isOfClass(Integer, other))           /* two integers?                     */
                                        /* just directly compare the values  */
-    return this->value == ((RexxInteger *)other)->value;
+    return value == ((RexxInteger *)other)->value;
                                        /* go do a string compare            */
-  return this->stringValue()->isEqual(other);
+  return stringValue()->isEqual(other);
 }
 
 wholenumber_t RexxInteger::strictComp(
@@ -667,9 +667,9 @@ wholenumber_t RexxInteger::strictComp(
   requiredArgument(other, ARG_ONE);            /* make sure this is really there    */
   if (isOfClass(Integer, other))           /* string compare is simple          */
                                        /* just return their difference      */
-    return this->value - ((RexxInteger *)other)->value;
+    return value - ((RexxInteger *)other)->value;
   else                                 /* go do a string compare            */
-    return this->stringValue()->strictComp((RexxString *)other);
+    return stringValue()->strictComp((RexxString *)other);
 }
 
 
@@ -686,14 +686,14 @@ wholenumber_t RexxInteger::comp(RexxObject *other)
 {
     requiredArgument(other, ARG_ONE);            /* make sure this is really there    */
                                          /* able to compare here?             */
-    if (this->isSameType(other) && number_digits() == Numerics::DEFAULT_DIGITS)
+    if (isSameType(other) && number_digits() == Numerics::DEFAULT_DIGITS)
     {
         /* just return the difference        */
-        return this->value - ((RexxInteger *)other)->value;
+        return value - ((RexxInteger *)other)->value;
     }
     else                                 /* do a numberstring compare         */
     {
-        return this->numberString()->comp(other);
+        return numberString()->comp(other);
     }
 }
 
@@ -707,7 +707,7 @@ wholenumber_t RexxInteger::comp(RexxObject *other)
 RexxObject *RexxInteger::hashCode()
 {
     // get the hash value, which is actually derived from the integer string value
-    HashCode hashVal = this->hash();
+    HashCode hashVal = hash();
     return new_string((char *)&hashVal, sizeof(HashCode));
 }
 
@@ -955,7 +955,7 @@ RexxObject *RexxInteger::abs()
     }
     else
     {
-        return this->numberString()->abs(); /* do a numberstring operation       */
+        return numberString()->abs(); /* do a numberstring operation       */
     }
 }
 
@@ -966,9 +966,9 @@ RexxObject *RexxInteger::sign()
 {
   RexxObject *result;                  /* returned result                   */
 
- if (this->value > 0)                  /* positive number?                  */
+ if (value > 0)                  /* positive number?                  */
    result = IntegerOne;                /* result is "1"                     */
- else if (this->value < 0)             /* negative number?                  */
+ else if (value < 0)             /* negative number?                  */
   result = new_integer(-1);            /* result is "-1"                    */
  else
   result = IntegerZero;                /* exactly zero                      */
@@ -990,12 +990,12 @@ RexxObject *RexxInteger::Max(
                                        /* are we using default digits?      */
   if (number_digits() != Numerics::DEFAULT_DIGITS )
                                        /* nope, we can't do integer max.    */
-   return this->numberString()->Max(args, argCount);
+   return numberString()->Max(args, argCount);
 
   if (argCount < 1)                    /* no comparisons to do?             */
     return (RexxObject *)this;         /* just return this as the result    */
 
-  maxvalue = this->value;              /* assume first number is our max.   */
+  maxvalue = value;              /* assume first number is our max.   */
 
                                        /* check each numbers to see if      */
                                        /* larger than the max.              */
@@ -1016,7 +1016,7 @@ RexxObject *RexxInteger::Max(
                                          /* not all integers, convert into a  */
                                          /* NumberString, and let NumberString*/
                                          /* figure this out.                  */
-      return this->numberString()->Max(args, argCount);
+      return numberString()->Max(args, argCount);
     }
   }
 
@@ -1037,12 +1037,12 @@ RexxObject *RexxInteger::Min(
                                        /* are we using default digits?      */
   if (number_digits() != Numerics::DEFAULT_DIGITS )
                                        /* nope, we can't do integer max.    */
-   return this->numberString()->Min(args, argCount);
+   return numberString()->Min(args, argCount);
 
   if (argCount < 1)                    /* no comparisons to do?             */
     return (RexxObject *)this;         /* just return this as the result    */
 
-  minvalue = this->value;              /* assume first number is our min.   */
+  minvalue = value;              /* assume first number is our min.   */
 
                                        /* check each numbers to see if      */
                                        /* larger than the max.              */
@@ -1063,7 +1063,7 @@ RexxObject *RexxInteger::Min(
                                          /* not all integers, convert into a  */
                                          /* NumberString, and let NumberString*/
                                          /* figure this out.                  */
-      return this->numberString()->Min(args, argCount);
+      return numberString()->Min(args, argCount);
     }
   }
 
@@ -1077,7 +1077,7 @@ RexxObject *RexxInteger::trunc(
 /******************************************************************************/
 {
                                        /* just forward to numberstring      */
-  return this->numberString()->trunc(decimals);
+  return numberString()->trunc(decimals);
 }
 
 /**
@@ -1122,7 +1122,7 @@ RexxObject *RexxInteger::format(
 /* Function:  Act as a front end for the actual FORMAT REXX method            */
 /******************************************************************************/
 {
-  return this->numberString()->formatRexx(Integers, Decimals, MathExp, ExpTrigger);
+  return numberString()->formatRexx(Integers, Decimals, MathExp, ExpTrigger);
 }
 
 RexxObject *RexxInteger::d2c(
@@ -1132,7 +1132,7 @@ RexxObject *RexxInteger::d2c(
 /******************************************************************************/
 {
                                        /* format as a string value          */
-  return this->numberString()->d2xD2c(length, true);
+  return numberString()->d2xD2c(length, true);
 }
 
 RexxObject *RexxInteger::d2x(
@@ -1142,7 +1142,7 @@ RexxObject *RexxInteger::d2x(
 /******************************************************************************/
 {
                                        /* format as a string value          */
-  return this->numberString()->d2xD2c(length, false);
+  return numberString()->d2xD2c(length, false);
 }
 
 RexxObject  *RexxInteger::evaluate(

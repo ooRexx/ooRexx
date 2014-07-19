@@ -277,8 +277,6 @@ inline size_t optionalPositive(RexxInternalObject *o, size_t d, size_t p)
  *
  * @return A converted single-dimension array.
  */
-
-// TODO:  This appears not to be used in all the places where it could.
 inline ArrayClass *arrayArgument(RexxInternalObject *object, size_t position)
 {
     // this is required.
@@ -405,8 +403,6 @@ inline RexxInternalObject *resultOrNil(RexxInternalObject *o) { return o != OREF
  * @return Either TheTrueObject or TheFalseObject, depending on
  *         the argument value.
  */
-
-// TODO:  look for opportunities to use this.
 inline RexxInternalObject *booleanObject(bool v) { return v ? TheTrueObject : TheFalseObject; }
 
 #endif

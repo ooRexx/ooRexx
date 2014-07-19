@@ -119,7 +119,8 @@ void RexxClass::live(size_t liveMark)
     memory_mark(instanceSuperClasses);
     memory_mark(subClasses);
     memory_mark(source);
-    // TODO:  update the GC methods for new fields
+    memory_mark(scopeSuperClass);
+    memory_mark(scopeSearchOrder);
 }
 
 
@@ -143,7 +144,11 @@ void RexxClass::liveGeneral(MarkReason reason)
     memory_mark_general(instanceSuperClasses);
     memory_mark_general(subClasses);
     memory_mark_general(source);
+    memory_mark(scopeSuperClass);
+    memory_mark(scopeSearchOrder);
 }
+
+// TODO:  no flatten method for classes?
 
 
 /**

@@ -169,6 +169,8 @@ class RexxClass : public RexxObject
     MethodDictionary *classMethodDictionary;
     // instances of this class will be given this behaviour.
     RexxBehaviour *instanceBehaviour;
+    // methods defined at this class level.
+    MethodDictionary instanceMethodDictionary;
 
     RexxClass     *baseClass;          // Baseclass of this class
     RexxClass     *metaClass;          // Metaclass of this class

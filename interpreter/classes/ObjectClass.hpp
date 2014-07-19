@@ -323,8 +323,8 @@ class RexxInternalObject : public RexxVirtualBase
     virtual bool         doubleValue(double &result);
     virtual RexxNumberString *numberString();
 
-    virtual bool         isEqual(RexxInternalObject *);
-    virtual bool         isInstanceOf(RexxClass *);
+    virtual bool           isEqual(RexxInternalObject *);
+    virtual bool           isInstanceOf(RexxClass *);
     virtual MethodClass   *instanceMethod(RexxString *);
     virtual SupplierClass *instanceMethods(RexxClass *);
 
@@ -424,7 +424,8 @@ class RexxObject : public RexxInternalObject
     virtual RexxObject  *defMethod(RexxString *, MethodClass *, RexxString *a = OREF_NULL);
     virtual RexxString  *defaultName();
     virtual RexxObject  *unknown(RexxString *msg, ArrayClass *args){return OREF_NULL;};
-    virtual RexxInteger *hasMethod(RexxString *msg);
+    virtual bool        *hasMethod(RexxString *msg);
+            RexxInteger *hasMethodRexx(RexxString *msg);
             bool         hasUninitMethod();
 
     RexxObject *init();

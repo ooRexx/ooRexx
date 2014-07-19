@@ -175,7 +175,7 @@ ArrayClass *RexxNumberString::makeArray()
   return stringValue()->makeArray();     // have the string value handle this
 }
 
-RexxInteger *RexxNumberString::hasMethod(RexxString *methodName)
+bool RexxNumberString::hasMethod(RexxString *methodName)
 /******************************************************************************/
 /* Function:  Handle a HASMETHOD request for an integer                       */
 /******************************************************************************/
@@ -3022,7 +3022,6 @@ RexxInteger *RexxNumberString::strictLessThan(RexxObject *other)
     {
         return TheFalseObject;
     }
-    // TODO:  move the Nil test into comp() and strictComp()
     return booleanObject(strictComp(other) < 0);
 }
 

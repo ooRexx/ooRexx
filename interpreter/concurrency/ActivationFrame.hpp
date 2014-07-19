@@ -47,7 +47,9 @@ class StackFrameClass;
 class LanguageParser;
 
 
-// TODO: document what each of these frame classes do.
+/**
+ * The base class for all stack frames.
+ */
 class ActivationFrame
 {
 friend class RexxActivity;
@@ -80,6 +82,9 @@ friend class RexxActivity;
 };
 
 
+/**
+ * A stack frame representing running Rexx code.
+ */
 class RexxActivationFrame : public ActivationFrame
 {
  public:
@@ -96,6 +101,9 @@ class RexxActivationFrame : public ActivationFrame
 };
 
 
+/**
+ * A stack frame representing running native code.
+ */
 class NativeActivationFrame : public ActivationFrame
 {
  public:
@@ -112,6 +120,9 @@ class NativeActivationFrame : public ActivationFrame
 };
 
 
+/**
+ * A frame representing an internal C++ method call.
+ */
 class InternalActivationFrame : public ActivationFrame
 {
  public:
