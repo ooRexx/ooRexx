@@ -186,7 +186,7 @@ void RexxEnvelope::flattenReference(void *newThisVoid, size_t newSelf, void *obj
  *
  * @return The buffer containing the flattened object.
  */
-RexxBuffer *RexxEnvelope::pack(RexxObject *_receiver)
+BufferClass *RexxEnvelope::pack(RexxObject *_receiver)
 {
     RexxObject *flattenObj;              /* flattened object                  */
     RexxObject *newSelf;                 /* the flattened envelope            */
@@ -242,7 +242,7 @@ RexxBuffer *RexxEnvelope::pack(RexxObject *_receiver)
 
     // now unwrap the smart buffer and fix the length of the real buffer
     // behind it to the size we've written to it.
-    RexxBuffer *letter = buffer->getBuffer();
+    BufferClass *letter = buffer->getBuffer();
     letter->setDataLength(buffer->getDataLength());
     return letter;
 }
@@ -258,7 +258,7 @@ RexxBuffer *RexxEnvelope::pack(RexxObject *_receiver)
  *                   The starting data location in the buffer.
  * @param dataLength The length of the data to unflatten
  */
-void RexxEnvelope::puff(RexxBuffer *sourceBuffer, char *startPointer, size_t dataLength)
+void RexxEnvelope::puff(BufferClass *sourceBuffer, char *startPointer, size_t dataLength)
 {
     // this will mark the last object of our range
     RexxObject *lastObject = sourceBuffer->nextObject();

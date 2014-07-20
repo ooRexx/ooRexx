@@ -234,7 +234,7 @@ bool Numerics::objectToWholeNumber(RexxObject *source, wholenumber_t &result, wh
     else
     {
         // get this as a numberstring (which it might already be)
-        RexxNumberString *nString = source->numberString();
+        NumberString *nString = source->numberString();
         // not convertible to number string?  get out now
         if (nString == OREF_NULL)
         {
@@ -277,7 +277,7 @@ bool Numerics::objectToSignedInteger(RexxObject *source, ssize_t &result, ssize_
     else
     {
         // get this as a numberstring (which it might already be)
-        RexxNumberString *nString = source->numberString();
+        NumberString *nString = source->numberString();
         // not convertible to number string?  get out now
         if (nString == OREF_NULL)
         {
@@ -326,7 +326,7 @@ bool Numerics::objectToStringSize(RexxObject *source, stringsize_t &result, stri
     else
     {
         // get this as a numberstring (which it might already be)
-        RexxNumberString *nString = source->numberString();
+        NumberString *nString = source->numberString();
         // not convertible to number string?  get out now
         if (nString == OREF_NULL)
         {
@@ -375,7 +375,7 @@ bool Numerics::objectToUnsignedInteger(RexxObject *source, size_t &result, size_
     else
     {
         // get this as a numberstring (which it might already be)
-        RexxNumberString *nString = source->numberString();
+        NumberString *nString = source->numberString();
         // not convertible to number string?  get out now
         if (nString == OREF_NULL)
         {
@@ -422,7 +422,7 @@ bool Numerics::objectToInt64(RexxObject *source, int64_t &result)
     else
     {
         // get this as a numberstring (which it might already be)
-        RexxNumberString *nString = source->numberString();
+        NumberString *nString = source->numberString();
         // not convertible to number string?  get out now
         if (nString == OREF_NULL)
         {
@@ -454,7 +454,7 @@ RexxObject *Numerics::int64Object(RexxObject *source)
     else
     {
         // get this as a numberstring (which it might already be)
-        RexxNumberString *nString = source->numberString();
+        NumberString *nString = source->numberString();
         // not convertible to number string?  get out now
         if (nString == OREF_NULL)
         {
@@ -501,7 +501,7 @@ bool Numerics::objectToUnsignedInt64(RexxObject *source, uint64_t &result)
     else
     {
         // get this as a numberstring (which it might already be)
-        RexxNumberString *nString = source->numberString();
+        NumberString *nString = source->numberString();
         // not convertible to number string?  get out now
         if (nString == OREF_NULL)
         {

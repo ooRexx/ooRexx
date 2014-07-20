@@ -45,7 +45,7 @@
 #define Included_RexxCompoundTable
 
 
-class RexxStem;
+class StemClass;
 class RexxCompoundElement;
                                            /* macros for embedding within the stem object */
 #define markCompoundTable() { \
@@ -70,11 +70,11 @@ class RexxCompoundElement;
  */
 class RexxCompoundTable
 {
- friend class RexxStem;
+ friend class StemClass;
  public:
     inline RexxCompoundTable() { ; };
     void         copyFrom(RexxCompoundTable &other);
-    void         init(RexxStem *parent);
+    void         init(StemClass *parent);
     void         clear();
     inline RexxCompoundElement *get(RexxCompoundTail *name) { return findEntry(name); }
     RexxCompoundElement *findEntry(RexxCompoundTail *tail);
@@ -86,13 +86,13 @@ class RexxCompoundTable
     RexxCompoundElement *findLeaf(RexxCompoundElement *node);
     RexxCompoundElement *next(RexxCompoundElement *node);
 
-    void         setParent(RexxStem *parent);
+    void         setParent(StemClass *parent);
     void         setRoot(RexxCompoundElement *newRoot);
 
 protected:
 
     RexxCompoundElement *root;               /* the root node */
-    RexxStem *parent;                        /* link back to the hosting stem */
+    StemClass *parent;                        /* link back to the hosting stem */
 };
 
 #endif

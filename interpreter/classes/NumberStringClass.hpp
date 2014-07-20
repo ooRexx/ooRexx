@@ -41,8 +41,8 @@
 /* Primitive NumberString Class Definitions                                   */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_RexxNumberString
-#define Included_RexxNumberString
+#ifndef Included_NumberString
+#define Included_NumberString
 
 #include "Numerics.hpp"
 #include "NumberStringMath.hpp"
@@ -52,9 +52,9 @@
                                             /*  at NumDigits, avoid double rounding */
 
 
-class RexxNumberStringBase : public RexxObject
+class NumberStringBase : public RexxObject
 {
- friend class RexxNumberString;
+ friend class NumberString;
 public:
     typedef enum
     {
@@ -63,7 +63,7 @@ public:
     } NumberFlag;
 
 
-    inline RexxNumberStringBase() { ; }
+    inline NumberStringBase() { ; }
 
     void   mathRound(char *);
     char  *stripLeadingZeros(char *);
@@ -80,7 +80,7 @@ public:
 };
 
 
-class RexxNumberString : public RexxNumberStringBase
+class NumberString : public NumberStringBase
 {
    public:
     void         *operator new(size_t, size_t);
@@ -90,9 +90,9 @@ class RexxNumberString : public RexxNumberStringBase
     inline void   operator delete(void *, void *) { }
 
 
-    RexxNumberString(size_t) ;
-    RexxNumberString(size_t, size_t) ;
-    inline RexxNumberString(RESTORETYPE restoreType) { ; };
+    NumberString(size_t) ;
+    NumberString(size_t, size_t) ;
+    inline NumberString(RESTORETYPE restoreType) { ; };
     virtual HashCode getHashValue();
     void        live(size_t);
     void        liveGeneral(MarkReason reason);
@@ -103,7 +103,7 @@ class RexxNumberString : public RexxNumberStringBase
     bool         unsignedNumberValue(stringsize_t &result, size_t precision);
     bool         unsignedNumberValue(stringsize_t &result);
     bool         doubleValue(double &result);
-    inline RexxNumberString *numberString() { return this; }
+    inline NumberString *numberString() { return this; }
     RexxInteger *integerValue(size_t);
     RexxString  *makeString();
     ArrayClass   *makeArray();
@@ -130,11 +130,11 @@ class RexxNumberString : public RexxNumberStringBase
     RexxInteger *strictLessOrEqual(RexxObject *);
     RexxObject  *hashCode();
 
-    RexxNumberString *clone();
+    NumberString *clone();
     void        setString(RexxString *);
     void        roundUp(int);
     RexxString *formatRexx(RexxObject *, RexxObject *, RexxObject *, RexxObject *);
-    RexxString *formatInternal(size_t, size_t, size_t, size_t, RexxNumberString *, size_t, bool);
+    RexxString *formatInternal(size_t, size_t, size_t, size_t, NumberString *, size_t, bool);
     RexxObject *operatorNot(RexxObject *);
     RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
     RexxObject *getValue(RexxActivation *context);
@@ -154,7 +154,7 @@ class RexxNumberString : public RexxNumberStringBase
     MethodClass   *instanceMethod(RexxString *);
     SupplierClass *instanceMethods(RexxClass *);
     RexxClass  *classObject();
-    inline RexxNumberString *checkNumber(size_t digits)
+    inline NumberString *checkNumber(size_t digits)
     {
        if (length > digits)            // is the length larger than digits()?
        {
@@ -165,8 +165,8 @@ class RexxNumberString : public RexxNumberStringBase
        return this;                          // no adjustment required
     }
 
-    RexxNumberString *prepareNumber(size_t, bool);
-    RexxNumberString *prepareOperatorNumber(size_t, size_t, bool);
+    NumberString *prepareNumber(size_t, bool);
+    NumberString *prepareOperatorNumber(size_t, size_t, bool);
     void              adjustPrecision(char *, size_t);
     void              adjustPrecision();
     inline void       checkPrecision() { if (length > numDigits) adjustPrecision(); }
@@ -202,22 +202,22 @@ class RexxNumberString : public RexxNumberStringBase
     void  formatInt64(int64_t integer);
     void  formatUnsignedInt64(uint64_t integer);
 
-    RexxNumberString *addSub(RexxNumberString *, unsigned int, size_t);
-    RexxNumberString *plus(RexxObject *);
-    RexxNumberString *minus(RexxObject *);
-    RexxNumberString *multiply(RexxObject *);
-    RexxNumberString *divide(RexxObject *);
-    RexxNumberString *integerDivide(RexxObject *);
-    RexxNumberString *remainder(RexxObject *);
-    RexxNumberString *power(RexxObject *);
-    RexxNumberString *Multiply(RexxNumberString *);
-    RexxNumberString *Division(RexxNumberString *, unsigned int);
-    RexxNumberString *abs();
+    NumberString *addSub(NumberString *, unsigned int, size_t);
+    NumberString *plus(RexxObject *);
+    NumberString *minus(RexxObject *);
+    NumberString *multiply(RexxObject *);
+    NumberString *divide(RexxObject *);
+    NumberString *integerDivide(RexxObject *);
+    NumberString *remainder(RexxObject *);
+    NumberString *power(RexxObject *);
+    NumberString *Multiply(NumberString *);
+    NumberString *Division(NumberString *, unsigned int);
+    NumberString *abs();
     RexxInteger *Sign();
     RexxObject  *notOp();
-    RexxNumberString *Max(RexxObject **, size_t);
-    RexxNumberString *Min(RexxObject **, size_t);
-    RexxNumberString *maxMin(RexxObject **, size_t, unsigned int);
+    NumberString *Max(RexxObject **, size_t);
+    NumberString *Min(RexxObject **, size_t);
+    NumberString *maxMin(RexxObject **, size_t, unsigned int);
     RexxObject *isInteger();
     RexxString *d2c(RexxObject *);
     RexxString *d2x(RexxObject *);
@@ -239,27 +239,27 @@ class RexxNumberString : public RexxNumberStringBase
 
     static PCPPM operatorMethods[];
 
-    static RexxNumberString *newInstanceFromDouble(double);
-    static RexxNumberString *newInstanceFromDouble(double, size_t);
-    static RexxNumberString *newInstanceFromFloat(float);
-    static RexxNumberString *newInstanceFromWholenumber(wholenumber_t);
-    static RexxNumberString *newInstanceFromInt64(int64_t);
-    static RexxNumberString *newInstanceFromUint64(uint64_t);
-    static RexxNumberString *newInstanceFromStringsize(stringsize_t);
-    static RexxNumberString *newInstance(const char *, stringsize_t);
+    static NumberString *newInstanceFromDouble(double);
+    static NumberString *newInstanceFromDouble(double, size_t);
+    static NumberString *newInstanceFromFloat(float);
+    static NumberString *newInstanceFromWholenumber(wholenumber_t);
+    static NumberString *newInstanceFromInt64(int64_t);
+    static NumberString *newInstanceFromUint64(uint64_t);
+    static NumberString *newInstanceFromStringsize(stringsize_t);
+    static NumberString *newInstance(const char *, stringsize_t);
 
 
     static void createInstance();
     static RexxClass *classInstance;
 
     static size_t highBits(size_t);
-    static void  subtractNumbers( RexxNumberString *larger, const char *largerPtr, wholenumber_t aLargerExp,
-                                  RexxNumberString *smaller, const char *smallerPtr, wholenumber_t aSmallerExp,
-                                  RexxNumberString *result, char **resultPtr);
+    static void  subtractNumbers( NumberString *larger, const char *largerPtr, wholenumber_t aLargerExp,
+                                  NumberString *smaller, const char *smallerPtr, wholenumber_t aSmallerExp,
+                                  NumberString *result, char **resultPtr);
     static char *addMultiplier( char *, size_t, char *, int);
     static char *subtractDivisor(char *data1, size_t length1, char *data2, size_t length2, char *result, int Mult);
-    static char *multiplyPower(char *leftPtr, RexxNumberStringBase *left, char *rightPtr, RexxNumberStringBase *right, char *OutPtr, size_t OutLen, size_t NumberDigits);
-    static char *dividePower(char *AccumPtr, RexxNumberStringBase *Accum, char *Output, size_t NumberDigits);
+    static char *multiplyPower(char *leftPtr, NumberStringBase *left, char *rightPtr, NumberStringBase *right, char *OutPtr, size_t OutLen, size_t NumberDigits);
+    static char *dividePower(char *AccumPtr, NumberStringBase *Accum, char *Output, size_t NumberDigits);
     static char *addToBaseSixteen(int, char *, char *);
     static char *addToBaseTen(int, char *, char *);
     static char *multiplyBaseSixteen(char *, char *);
@@ -271,44 +271,44 @@ class RexxNumberString : public RexxNumberStringBase
 };
 
 
-inline RexxNumberString *new_numberstring(const char *s, stringsize_t l)
+inline NumberString *new_numberstring(const char *s, stringsize_t l)
 {
-    return RexxNumberString::newInstance(s, l);
+    return NumberString::newInstance(s, l);
 }
 
-inline RexxNumberString *new_numberstringFromWholenumber(wholenumber_t n)
+inline NumberString *new_numberstringFromWholenumber(wholenumber_t n)
 {
-    return RexxNumberString::newInstanceFromWholenumber(n);
+    return NumberString::newInstanceFromWholenumber(n);
 }
 
-inline RexxNumberString *new_numberstringFromStringsize(stringsize_t n)
+inline NumberString *new_numberstringFromStringsize(stringsize_t n)
 {
-    return RexxNumberString::newInstanceFromStringsize(n);
+    return NumberString::newInstanceFromStringsize(n);
 }
 
-inline RexxNumberString *new_numberstringFromInt64(int64_t n)
+inline NumberString *new_numberstringFromInt64(int64_t n)
 {
-    return RexxNumberString::newInstanceFromInt64(n);
+    return NumberString::newInstanceFromInt64(n);
 }
 
-inline RexxNumberString *new_numberstringFromUint64(uint64_t n)
+inline NumberString *new_numberstringFromUint64(uint64_t n)
 {
-    return RexxNumberString::newInstanceFromUint64(n);
+    return NumberString::newInstanceFromUint64(n);
 }
 
-inline RexxNumberString *new_numberstringFromDouble(double n)
+inline NumberString *new_numberstringFromDouble(double n)
 {
-    return RexxNumberString::newInstanceFromDouble(n);
+    return NumberString::newInstanceFromDouble(n);
 }
 
-inline RexxNumberString *new_numberstringFromDouble(double n, size_t p)
+inline NumberString *new_numberstringFromDouble(double n, size_t p)
 {
-    return RexxNumberString::newInstanceFromDouble(n, p);
+    return NumberString::newInstanceFromDouble(n, p);
 }
 
-inline RexxNumberString *new_numberstringFromFloat(float n)
+inline NumberString *new_numberstringFromFloat(float n)
 {
-    return RexxNumberString::newInstanceFromFloat(n);
+    return NumberString::newInstanceFromFloat(n);
 }
 
 #endif

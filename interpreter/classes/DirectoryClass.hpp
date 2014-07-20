@@ -85,7 +85,7 @@ class DirectoryClass : public StringHashCollection
     // base implementations of extra directory methods.
     bool hasEntry(RexxString *entryName);
     RexxInternalObject *setEntry(RexxString *entryname, RexxInternalObject *entryobj);
-    RexxObject *entry(RexxString *index);
+    RexxInternalObject *entry(RexxString *index);
 
     // stubs for additional exported directory methods.
     RexxInternalObject *entryRexx(RexxString *entryName);

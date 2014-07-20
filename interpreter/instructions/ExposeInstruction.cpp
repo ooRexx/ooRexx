@@ -54,7 +54,7 @@
  * @param variable_list
  *                 The queue of the variable retrievers (in reverse order).
  */
-RexxInstructionExpose::RexxInstructionExpose(size_t varCount, RexxQueue  *variable_list)
+RexxInstructionExpose::RexxInstructionExpose(size_t varCount, QueueClass  *variable_list)
 {
     // get the variable size
     variableCount = varCount;

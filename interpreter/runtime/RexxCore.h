@@ -167,23 +167,23 @@ EXTERNMEM MemoryObject memoryObject;
 #define TheDirectoryClass DirectoryClass::classInstance
 #define TheIntegerClass RexxInteger::classInstance
 #define TheListClass ListClass::classInstance
-#define TheMessageClass RexxMessage::classInstance
+#define TheMessageClass MessageClass::classInstance
 #define TheMethodClass MethodClass::classInstance
 #define TheRoutineClass RoutineClass::classInstance
 #define ThePackageClass PackageClass::classInstance
 #define TheRexxContextClass RexxContext::classInstance
-#define TheNumberStringClass RexxNumberString::classInstance
+#define TheNumberStringClass NumberString::classInstance
 #define TheObjectClass RexxObject::classInstance
-#define TheQueueClass RexxQueue::classInstance
-#define TheStemClass RexxStem::classInstance
+#define TheQueueClass QueueClass::classInstance
+#define TheStemClass StemClass::classInstance
 #define TheStringClass RexxString::classInstance
-#define TheMutableBufferClass RexxMutableBuffer::classInstance
+#define TheMutableBufferClass MutableBuffer::classInstance
 #define TheSupplierClass SupplierClass::classInstance
 #define TheTableClass TableClass::classInstance
 #define TheIdentityTableClass IdentityTable::classInstance
 #define TheRelationClass RelationClass::classInstance
-#define ThePointerClass RexxPointer::classInstance
-#define TheBufferClass RexxBuffer::classInstance
+#define ThePointerClass PointerClass::classInstance
+#define TheBufferClass BufferClass::classInstance
 #define TheWeakReferenceClass WeakReference::classInstance
 #define TheStackFrameClass StackFrameClass::classInstance
 
@@ -200,7 +200,7 @@ EXTERNMEM MemoryObject memoryObject;
 
 #define TheFalseObject RexxInteger::falseObject
 #define TheTrueObject RexxInteger::trueObject
-#define TheNullPointer RexxPointer::nullPointer
+#define TheNullPointer PointerClass::nullPointer
 
 #define IntegerZero RexxInteger::integerZero
 #define IntegerOne RexxInteger::integerOne

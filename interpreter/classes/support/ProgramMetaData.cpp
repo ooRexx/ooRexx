@@ -57,7 +57,7 @@ const char * compiledHeader = "/**/@REXX";
  *
  * @return The storage allocated for the new instance.
  */
-void *ProgramMetaData::operator new (size_t size, RexxBuffer *buff)
+void *ProgramMetaData::operator new (size_t size, BufferClass *buff)
 {
     // allocate a new buffer for this
     return SystemInterpreter::allocateResultMemory(buff->getDataLength() + size - sizeof(char[4]));
@@ -69,7 +69,7 @@ void *ProgramMetaData::operator new (size_t size, RexxBuffer *buff)
  *
  * @param image  The image buffer.
  */
-ProgramMetaData::ProgramMetaData(RexxBuffer *image)
+ProgramMetaData::ProgramMetaData(BufferClass *image)
 {
     // add the leading header
     strcpy(fileTag, compiledHeader);
@@ -151,11 +151,11 @@ size_t ProgramMetaData::getHeaderSize()
 
 
 /**
- * Extract the following data as a RexxBuffer object.
+ * Extract the following data as a BufferClass object.
  *
  * @return The extracted buffer object.
  */
-RexxBuffer *ProgramMetaData::extractBufferData()
+BufferClass *ProgramMetaData::extractBufferData()
 {
     return new_buffer(imageData, imageSize);
 }
@@ -208,7 +208,7 @@ bool ProgramMetaData::validate(bool &badVersion)
  * @param handle  The handle of the output file.
  * @param program The program buffer data (also written out).
  */
-void ProgramMetaData::write(FILE *handle, RexxBuffer *program)
+void ProgramMetaData::write(FILE *handle, BufferClass *program)
 {
     fwrite(this, 1, getHeaderSize(), handle);
     /* and finally the flattened method  */
@@ -222,10 +222,10 @@ void ProgramMetaData::write(FILE *handle, RexxBuffer *program)
  *
  * @param handle The input file handle.
  *
- * @return A RexxBuffer instance containing the program data, or OREF_NULL
+ * @return A BufferClass instance containing the program data, or OREF_NULL
  *         if the file is not a valid image.
  */
-RexxBuffer *ProgramMetaData::read(RexxString *fileName, FILE *handle)
+BufferClass *ProgramMetaData::read(RexxString *fileName, FILE *handle)
 {
     bool badVersion = false;
 
@@ -279,7 +279,7 @@ RexxBuffer *ProgramMetaData::read(RexxString *fileName, FILE *handle)
             }
         }
     }
-    RexxBuffer *buffer = new_buffer(imageSize);
+    BufferClass *buffer = new_buffer(imageSize);
     fread(buffer->getData(), 1, imageSize, handle);
     return buffer;
 }

@@ -65,7 +65,7 @@
 #include <stdlib.h>            /* needed for miscellaneous functions */
 #include <string.h>            /* needed for string functions        */
 #include "rexx.h"              /* needed for queue functions & codes */
-#include "RexxMessageNumbers.h"
+#include "MessageClassNumbers.h"
 
 #define RXQUEUE_CLEAR    -2    /* used for queue mode CLEAR flag     */
 #define BAD_MESSAGE      -6    /* Exit RC for message not found.     */

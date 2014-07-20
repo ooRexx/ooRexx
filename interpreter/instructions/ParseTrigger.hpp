@@ -68,7 +68,7 @@ class RexxTrigger : public RexxInternalObject
     inline void  operator delete(void *, size_t) { }
     inline void  operator delete(void *, void *) { ; }
 
-    RexxTrigger(ParseTriggerType, RexxObject *, size_t, RexxQueue *);
+    RexxTrigger(ParseTriggerType, RexxObject *, size_t, QueueClass *);
     inline RexxTrigger(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);

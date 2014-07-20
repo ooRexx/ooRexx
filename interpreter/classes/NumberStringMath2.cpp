@@ -51,7 +51,7 @@
 #include "ActivityManager.hpp"
 #include "MethodArguments.hpp"
 
-char *RexxNumberString::addMultiplier(
+char *NumberString::addMultiplier(
     char *top,                        /* data pointer of "top" number      */
     size_t topLen,                     /* length of the top number          */
     char *AccumPtr,                   /* output accumulator location       */
@@ -95,12 +95,12 @@ char *RexxNumberString::addMultiplier(
     return ++AccumPtr;                    /* return pointer to start of Accum. */
 }
 
-RexxNumberString *RexxNumberString::Multiply(RexxNumberString *other)
+NumberString *NumberString::Multiply(NumberString *other)
 /*********************************************************************/
 /* Function:  Multiply two NumberString objects                      */
 /*********************************************************************/
 {
-    RexxNumberString *left, *right, *result, *LargeNum, *SmallNum;
+    NumberString *left, *right, *result, *LargeNum, *SmallNum;
     char *ResultPtr, *AccumPtr, *Current, *OutPtr;
     char MultChar;
     size_t AccumLen;
@@ -185,7 +185,7 @@ RexxNumberString *RexxNumberString::Multiply(RexxNumberString *other)
     }
 
                                              /* go get the new object.            */
-    result = (RexxNumberString *)new_numberstring(NULL, AccumLen);
+    result = (NumberString *)new_numberstring(NULL, AccumLen);
     /* get the result exponent           */
     result->exp = LargeNum->exp + SmallNum->exp + ExtraDigit;
     /* Compute the Sign                  */
@@ -197,7 +197,7 @@ RexxNumberString *RexxNumberString::Multiply(RexxNumberString *other)
     return result;                        /* return computed value.            */
 }                                      /* All done,                         */
 
-char *RexxNumberString::subtractDivisor(char *data1, size_t length1,
+char *NumberString::subtractDivisor(char *data1, size_t length1,
                        char *data2, size_t length2,
                        char *result, int Mult)
 /*********************************************************************/
@@ -286,20 +286,20 @@ char *RexxNumberString::subtractDivisor(char *data1, size_t length1,
 }
 
 
-RexxNumberString *RexxNumberString::Division(RexxNumberString *other, unsigned int DivOP)
+NumberString *NumberString::Division(NumberString *other, unsigned int DivOP)
 /*********************************************************************/
 /* Function:  Divide two numbers                                     */
 /*********************************************************************/
 {
-    RexxNumberString *left, *right;
-    RexxNumberStringBase *Accum;          /* dummy accumulator object          */
-    RexxNumberStringBase *SaveLeft;       /* dummy operator object             */
-    RexxNumberStringBase *SaveRight;      /* dummy operator object             */
+    NumberString *left, *right;
+    NumberStringBase *Accum;          /* dummy accumulator object          */
+    NumberStringBase *SaveLeft;       /* dummy operator object             */
+    NumberStringBase *SaveRight;      /* dummy operator object             */
                                           /* buffers for dummy arguments       */
-    char AccumBuffer[sizeof(RexxNumberStringBase)];
-    char SaveLeftBuffer[sizeof(RexxNumberStringBase)];
-    char SaveRightBuffer[sizeof(RexxNumberStringBase)];
-    RexxNumberString   *result;
+    char AccumBuffer[sizeof(NumberStringBase)];
+    char SaveLeftBuffer[sizeof(NumberStringBase)];
+    char SaveRightBuffer[sizeof(NumberStringBase)];
+    NumberString   *result;
     char *Num1, *Num2;
     char *resultPtr, *Output, *rightPtr, *leftPtr, *SaveLeftPtr, *SaveRightPtr;
     wholenumber_t   multiplier, rc;
@@ -330,12 +330,12 @@ RexxNumberString *RexxNumberString::Division(RexxNumberString *other, unsigned i
     else if (!this->sign)
     {               /* is left number Zero?              */
                     /*  yes, just return a zero.         */
-        return(RexxNumberString *)IntegerZero;
+        return(NumberString *)IntegerZero;
     }
     /* set up address of temporaries     */
-    Accum = (RexxNumberStringBase *)AccumBuffer;
-    SaveLeft = (RexxNumberStringBase *)SaveLeftBuffer;
-    SaveRight = (RexxNumberStringBase *)SaveRightBuffer;
+    Accum = (NumberStringBase *)AccumBuffer;
+    SaveLeft = (NumberStringBase *)SaveLeftBuffer;
+    SaveRight = (NumberStringBase *)SaveRightBuffer;
     NumberDigits = number_digits();       /* get current digits setting.       */
                                           /* make sure we've got good copy of  */
                                           /*  our working numbers              */
@@ -350,7 +350,7 @@ RexxNumberString *RexxNumberString::Division(RexxNumberString *other, unsigned i
         if (DivOP == OT_INT_DIVIDE)
         {       /* Are we doing % (integer Divide)?  */
                 /* yes, result is zero.              */
-            return(RexxNumberString *)IntegerZero;
+            return(NumberString *)IntegerZero;
         }
         else
         {
@@ -388,9 +388,9 @@ RexxNumberString *RexxNumberString::Division(RexxNumberString *other, unsigned i
     memset(rightPtr + right->length, '\0', totalDigits - right->length);
     resultPtr = Output;                   /* Set up result, point to end of    */
                                           /* make copies of right number info  */
-    memcpy((void *)SaveRight, (void *)right, sizeof(RexxNumberStringBase));
+    memcpy((void *)SaveRight, (void *)right, sizeof(NumberStringBase));
     /* make copies of left number info   */
-    memcpy((void *)SaveLeft, (void *)left, sizeof(RexxNumberStringBase));
+    memcpy((void *)SaveLeft, (void *)left, sizeof(NumberStringBase));
     if (DivOP == OT_REMAINDER)
     {          /* Are we doing remainder divide?    */
         SaveLeftPtr  = leftPtr;              /* Save initial pointers to left     */
@@ -618,7 +618,7 @@ RexxNumberString *RexxNumberString::Division(RexxNumberString *other, unsigned i
             else
             {
                 /* result is 0, just return it.      */
-                return(RexxNumberString *)IntegerZero;
+                return(NumberString *)IntegerZero;
             }
         }
         /* no digits in result, remainder is */
@@ -662,10 +662,10 @@ RexxNumberString *RexxNumberString::Division(RexxNumberString *other, unsigned i
         {
             /* no digits in result answer is     */
             /* zero.                             */
-            return(RexxNumberString *)IntegerZero;
+            return(NumberString *)IntegerZero;
         }
     }                                    /* End final processing              */
-    result = new (Accum->length) RexxNumberString (Accum->length);
+    result = new (Accum->length) NumberString (Accum->length);
 
     result->length = Accum->length;      /* set length of result              */
     result->exp = Accum->exp;            /* set exponent of result.           */
@@ -675,7 +675,7 @@ RexxNumberString *RexxNumberString::Division(RexxNumberString *other, unsigned i
     return result;                       /* all done, return to caller.       */
 }
 
-RexxNumberString *RexxNumberString::power(RexxObject *PowerObj)
+NumberString *NumberString::power(RexxObject *PowerObj)
 /*********************************************************************/
 /*   Function:          Perform the Arithmetic power operation       */
 /*********************************************************************/
@@ -685,9 +685,9 @@ RexxNumberString *RexxNumberString::power(RexxObject *PowerObj)
     size_t  NumberDigits;
     char   *Accum, *AccumPtr, *OutPtr, *TempPtr;
     bool    NegativePower;
-    RexxNumberStringBase *AccumObj;
-    RexxNumberString     *left;
-    RexxNumberString     *result;
+    NumberStringBase *AccumObj;
+    NumberString     *left;
+    NumberString     *result;
     size_t NumBits;
     size_t    AccumLen;
 
@@ -721,12 +721,12 @@ RexxNumberString *RexxNumberString::power(RexxObject *PowerObj)
         else if (powerValue == 0)           /* Is power value zero?              */
         {
             /*  yes, return value of one         */
-            return(RexxNumberString *)IntegerOne;
+            return(NumberString *)IntegerOne;
         }
         else                                /* otherwise power was positive      */
         {
             /*       return value of zero        */
-            return(RexxNumberString *)IntegerZero;
+            return(NumberString *)IntegerZero;
         }
 
     }                                    /* Will the result exponent overflow?*/
@@ -747,8 +747,8 @@ RexxNumberString *RexxNumberString::power(RexxObject *PowerObj)
     {               /* a non-zero power value?           */
                     /* yes, do the power operation.      */
                     /* get storage for Accumulator data. */
-        AccumObj = (RexxNumberStringBase *)buffer_alloc(sizeof(RexxNumberStringBase));
-        memcpy((void *)AccumObj, (void *)left, sizeof(RexxNumberStringBase));
+        AccumObj = (NumberStringBase *)buffer_alloc(sizeof(NumberStringBase));
+        memcpy((void *)AccumObj, (void *)left, sizeof(NumberStringBase));
         /* initialize the Accumulator object.*/
         /* this has all data of NumberString */
         /* except the digits data            */
@@ -800,7 +800,7 @@ RexxNumberString *RexxNumberString::power(RexxObject *PowerObj)
                 /*  Acummulator.                     */
                 /* go do multiply.  AccumPtr will get*/
                 /* assigned result of multiply       */
-                AccumPtr = multiplyPower(AccumPtr, AccumObj, left->number, (RexxNumberStringBase *) left, OutPtr, AccumLen, NumberDigits);
+                AccumPtr = multiplyPower(AccumPtr, AccumObj, left->number, (NumberStringBase *) left, OutPtr, AccumLen, NumberDigits);
                 /* We now call AdjustNumber to make  */
                 /* sure we stay within the required  */
                 /* precision and move the Accum      */
@@ -854,7 +854,7 @@ RexxNumberString *RexxNumberString::power(RexxObject *PowerObj)
 
         /* get new numberString Object for   */
         /* result length. No initial Data    */
-        result = new (AccumObj->length) RexxNumberString (AccumObj->length);
+        result = new (AccumObj->length) NumberString (AccumObj->length);
 
         result->sign = AccumObj->sign;      /* fill in the data of result from   */
         result->exp  = AccumObj->exp;       /*  AccumObj.                        */
@@ -865,13 +865,13 @@ RexxNumberString *RexxNumberString::power(RexxObject *PowerObj)
     else
     {                             /* Power value is zero.              */
                                   /* result is 1.                      */
-        result = (RexxNumberString *)IntegerOne;
+        result = (NumberString *)IntegerOne;
     }
     return result;                       /* return our result object.         */
 }
 
-char *RexxNumberString::multiplyPower(char *leftPtr, RexxNumberStringBase *left,
-                     char *rightPtr, RexxNumberStringBase *right,
+char *NumberString::multiplyPower(char *leftPtr, NumberStringBase *left,
+                     char *rightPtr, NumberStringBase *right,
                      char *OutPtr, size_t OutLen, size_t NumberDigits)
 /*********************************************************************/
 /*   Function:  Multiply numbers for the power operation             */
@@ -930,13 +930,13 @@ char *RexxNumberString::multiplyPower(char *leftPtr, RexxNumberStringBase *left,
     return AccumPtr;                      /* return Pointer to result digits.  */
 }                                      /* All done,                         */
 
-char *RexxNumberString::dividePower(char *AccumPtr, RexxNumberStringBase *Accum, char *Output, size_t NumberDigits)
+char *NumberString::dividePower(char *AccumPtr, NumberStringBase *Accum, char *Output, size_t NumberDigits)
 /*********************************************************************/
 /*   Function:  Invert number from the power operation               */
 /*********************************************************************/
 {
-    RexxNumberStringBase *left;
-    char  leftBuffer[sizeof(RexxNumberStringBase)];
+    NumberStringBase *left;
+    char  leftBuffer[sizeof(NumberStringBase)];
     char *Num1, *Num2;
     char *resultPtr, *leftPtr, *result;
     int   multiplier, rc;
@@ -960,7 +960,7 @@ char *RexxNumberString::dividePower(char *AccumPtr, RexxNumberStringBase *Accum,
     resultPtr = result;                   /* Set up the result, point to end of*/
                                           /*  data.                            */
                                           /* address the static part           */
-    left = (RexxNumberStringBase *)leftBuffer;
+    left = (NumberStringBase *)leftBuffer;
 
     /* length of left starts same as     */
     /* Accum                             */

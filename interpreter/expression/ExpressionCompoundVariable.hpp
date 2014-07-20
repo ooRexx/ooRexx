@@ -46,7 +46,7 @@
 
 #include "ExpressionBaseVariable.hpp"
 
-class RexxQueue;
+class QueueClass;
 
 /**
  * Expression object representing a compound variable.  This
@@ -62,7 +62,7 @@ class RexxCompoundVariable : public RexxVariableBase
     inline void  operator delete(void *, size_t) { ; }
     inline void  operator delete(void *, void *) { ; }
 
-    RexxCompoundVariable(RexxString *, size_t, RexxQueue *, size_t);
+    RexxCompoundVariable(RexxString *, size_t, QueueClass *, size_t);
     inline RexxCompoundVariable(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);

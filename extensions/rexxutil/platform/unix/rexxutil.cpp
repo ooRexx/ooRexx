@@ -4877,7 +4877,7 @@ size_t RexxEntry SysSetFileDateTime(const char *name, size_t numargs, CONSTRXSTR
 }
 
 
-size_t RexxEntry RexxStemSort(const char *stemname, int order, int type,
+size_t RexxEntry StemClassSort(const char *stemname, int order, int type,
     size_t start, size_t end, size_t firstcol, size_t lastcol);
 
 /*************************************************************************
@@ -4987,7 +4987,7 @@ size_t RexxEntry SysStemSort(const char *name, size_t numargs, CONSTRXSTRING arg
     } /* endif */
 
     /* the sorting is done in the interpreter */
-    if (!RexxStemSort(stemName, sortOrder, sortType, first, last, firstCol, lastCol)) {
+    if (!StemClassSort(stemName, sortOrder, sortType, first, last, firstCol, lastCol)) {
         sprintf(retstr->strptr, "-1");
         retstr->strlength = 2;
         return INVALID_ROUTINE;

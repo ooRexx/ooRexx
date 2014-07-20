@@ -221,7 +221,7 @@ void MemoryObject::buildVirtualFunctionTable()
    objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
    virtualFunctionTable[T_ListClass] = getVftPointer(objectLoc);
 
-   objectPtr = new (objectLoc) RexxMessage(RESTOREIMAGE);
+   objectPtr = new (objectLoc) MessageClass(RESTOREIMAGE);
    virtualFunctionTable[T_Message] = getVftPointer(objectLoc);
 
    objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
@@ -233,19 +233,19 @@ void MemoryObject::buildVirtualFunctionTable()
    objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
    virtualFunctionTable[T_MethodClass] = getVftPointer(objectLoc);
 
-   objectPtr = new (objectLoc) RexxNumberString(RESTOREIMAGE);
+   objectPtr = new (objectLoc) NumberString(RESTOREIMAGE);
    virtualFunctionTable[T_NumberString] = getVftPointer(objectLoc);
 
    objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
    virtualFunctionTable[T_NumberStringClass] = getVftPointer(objectLoc);
 
-   objectPtr = new (objectLoc) RexxQueue(RESTOREIMAGE);
+   objectPtr = new (objectLoc) QueueClass(RESTOREIMAGE);
    virtualFunctionTable[T_Queue] = getVftPointer(objectLoc);
 
    objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
    virtualFunctionTable[T_QueueClass] = getVftPointer(objectLoc);
 
-   objectPtr = new (objectLoc) RexxStem(RESTOREIMAGE);
+   objectPtr = new (objectLoc) StemClass(RESTOREIMAGE);
    virtualFunctionTable[T_Stem] = getVftPointer(objectLoc);
 
    objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
@@ -275,19 +275,19 @@ void MemoryObject::buildVirtualFunctionTable()
    objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
    virtualFunctionTable[T_RelationClass] = getVftPointer(objectLoc);
 
-   objectPtr = new (objectLoc) RexxMutableBuffer(RESTOREIMAGE);
+   objectPtr = new (objectLoc) MutableBuffer(RESTOREIMAGE);
    virtualFunctionTable[T_MutableBuffer] = getVftPointer(objectLoc);
 
    objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
    virtualFunctionTable[T_MutableBufferClass] = getVftPointer(objectLoc);
 
-   objectPtr = new (objectLoc) RexxPointer(RESTOREIMAGE);
+   objectPtr = new (objectLoc) PointerClass(RESTOREIMAGE);
    virtualFunctionTable[T_Pointer] = getVftPointer(objectLoc);
 
    objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
    virtualFunctionTable[T_PointerClass] = getVftPointer(objectLoc);
 
-   objectPtr = new (objectLoc) RexxBuffer(RESTOREIMAGE);
+   objectPtr = new (objectLoc) BufferClass(RESTOREIMAGE);
    virtualFunctionTable[T_Buffer] = getVftPointer(objectLoc);
 
    objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
@@ -395,7 +395,7 @@ void MemoryObject::buildVirtualFunctionTable()
    objectPtr = new (objectLoc) RexxCompoundVariable(RESTOREIMAGE);
    virtualFunctionTable[T_CompoundVariableTerm] = getVftPointer(objectLoc);
 
-   objectPtr = new (objectLoc) RexxStemVariable(RESTOREIMAGE);
+   objectPtr = new (objectLoc) StemClassVariable(RESTOREIMAGE);
    virtualFunctionTable[T_StemVariableTerm] = getVftPointer(objectLoc);
 
    objectPtr = new (objectLoc) RexxDotVariable(RESTOREIMAGE);

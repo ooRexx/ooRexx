@@ -278,7 +278,7 @@ RexxObject *RoutineClass::setSecurityManager(RexxObject *manager)
  *
  * @return The flattened object.
  */
-RexxBuffer *RoutineClass::save()
+BufferClass *RoutineClass::save()
 {
     // TODO:  I suspect we really should do this on a copied version
     // so we don't lose the source connection.
@@ -301,7 +301,7 @@ RexxBuffer *RoutineClass::save()
 void RoutineClass::save(PRXSTRING outBuffer)
 {
     ProtectedObject p(this);
-    RexxBuffer *methodBuffer = save();  /* flatten the routine               */
+    BufferClass *methodBuffer = save();  /* flatten the routine               */
     // create a full buffer of the data, plus the information header.
     ProgramMetaData *data = new (methodBuffer) ProgramMetaData(methodBuffer);
     // we just hand this buffer of data right over...that's all, we're done.
@@ -326,7 +326,7 @@ void RoutineClass::save(const char *filename)
     ProtectedObject p(this);
 
     // save to a flattened buffer
-    RexxBuffer *buffer = save();
+    BufferClass *buffer = save();
     ProtectedObject p2(buffer);
 
     // create an image header
@@ -352,7 +352,7 @@ void RoutineClass::save(const char *filename)
 RoutineClass *RoutineClass::restore(const char *data, size_t length)
 {
     // create a buffer object and restore from it
-    RexxBuffer *buffer = new_buffer(data, length);
+    BufferClass *buffer = new_buffer(data, length);
     ProtectedObject p(buffer);
     return restore(buffer, buffer->getData(), length);
 }
@@ -368,7 +368,7 @@ RoutineClass *RoutineClass::restore(const char *data, size_t length)
  *
  * @return A restored Routine object.
  */
-RoutineClass *RoutineClass::restore(RexxBuffer *buffer, char *startPointer, size_t length)
+RoutineClass *RoutineClass::restore(BufferClass *buffer, char *startPointer, size_t length)
 {
     // get an envelope and puff up the object
     Protected<RexxEnvelope> envelope  = new RexxEnvelope;
@@ -387,7 +387,7 @@ RoutineClass *RoutineClass::restore(RexxBuffer *buffer, char *startPointer, size
  *
  * @return The inflated Routine object, if valid.
  */
-RoutineClass *RoutineClass::restore(RexxString *fileName, RexxBuffer *buffer)
+RoutineClass *RoutineClass::restore(RexxString *fileName, BufferClass *buffer)
 {
     const char *data = buffer->getData();
 
@@ -460,7 +460,7 @@ RoutineClass *RoutineClass::restore(RXSTRING *inData, RexxString *name)
         }
         return OREF_NULL;
     }
-    RexxBuffer *bufferData = metaData->extractBufferData();
+    BufferClass *bufferData = metaData->extractBufferData();
     ProtectedObject p(bufferData);
     // we're restoring from the beginning of this.
     RoutineClass *routine = restore(bufferData, bufferData->getData(), metaData->getImageSize());

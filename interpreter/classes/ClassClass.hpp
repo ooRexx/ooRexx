@@ -88,8 +88,8 @@ class RexxClass : public RexxObject
     TableClass  *getInstanceBehaviourDictionary();
     TableClass  *getBehaviourDictionary();
     RexxString *defaultName();
-    void        subClassable(bool);
-    void        subClassable(RexxClass *superClass, bool restricted);
+    void        buildFinalClassBehaviour();
+    void        buildFinalClassBehaviour(RexxClass *superClass);
     void        mergeSuperClassScopes(RexxBehaviour *target_instance_behaviour);
     RexxObject *defineMethod(RexxString *, MethodClass *);
     RexxObject *defineMethods(TableClass *);

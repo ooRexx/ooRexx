@@ -62,7 +62,7 @@ class WeakReference;
 class IdentityTable;
 class GlobalProtectedObject;
 class MapTable;
-class RexxBuffer;
+class BufferClass;
 
 #ifdef _DEBUG
 class MemoryObject;
@@ -159,7 +159,7 @@ class MemoryObject : public RexxInternalObject
     void        addUninitObject(RexxObject *obj);
     bool        isPendingUninit(RexxObject *obj);
     inline void checkUninitQueue() { if (pendingUninits > 0) runUninits(); }
-    RexxObject *unflattenObjectBuffer(RexxBuffer *sourceBuffer, char *startPointer, size_t dataLength);
+    RexxObject *unflattenObjectBuffer(BufferClass *sourceBuffer, char *startPointer, size_t dataLength);
     void        unflattenProxyObjects(RexxEnvelope *envelope, RexxObject *firstObject, RexxObject *endObject);
 
     void        markObjects();
@@ -207,7 +207,7 @@ class MemoryObject : public RexxInternalObject
     void        setUpMemoryTables(MapTable *old2newTable);
     void        collectAndUninit(bool clearStack);
     void        lastChanceUninit();
-    inline DirectoryClass *getGlobalStrings() { return globalStrings; }
+    inline StringTable *getGlobalStrings() { return globalStrings; }
     void        addWeakReference(WeakReference *ref);
     void        checkWeakReferences();
 
@@ -239,10 +239,13 @@ class MemoryObject : public RexxInternalObject
     GlobalProtectedObject *protectedObjects;  // specially protected objects
 
     DirectoryClass *environment;      // global environment
-    DirectoryClass *commonRetrievers; // statically defined requires
-    DirectoryClass *kernel;           // the kernel directory
-    DirectoryClass *system;           // the system directory
-    DirectoryClass *functionsDir;     // statically defined requires
+    StringTable    *commonRetrievers; // statically defined requires
+
+    // TODO:  Do we really need both of these?  What are they really used for?
+    StringTable    *kernel;           // the kernel directory
+    StringTable    *system;           // the system directory
+
+    StringTable    *functionsDir;     // statically defined requires
 
 
 private:
@@ -310,7 +313,7 @@ enum
 
     char *restoredImage;                 // our restored image.
 
-    DirectoryClass *globalStrings;        // table of global strings
+    StringTable   *globalStrings;        // table of global strings
 };
 
 

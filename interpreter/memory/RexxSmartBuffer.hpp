@@ -60,12 +60,12 @@
 
   inline size_t getCurrent() {return this->current;}
   inline size_t getDataLength() { return this->current; }
-  inline RexxBuffer *getBuffer() {return this->buffer;}
-  inline void setBuffer(RexxBuffer *b) {this->buffer = b;}
+  inline BufferClass *getBuffer() {return this->buffer;}
+  inline void setBuffer(BufferClass *b) {this->buffer = b;}
   size_t space();
 
  protected:
   size_t current;                     /* current offset for copies         */
-  RexxBuffer *buffer;                 /* current buffer object             */
+  BufferClass *buffer;                 /* current buffer object             */
  };
 #endif

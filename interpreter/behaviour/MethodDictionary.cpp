@@ -136,6 +136,46 @@ void MethodDictionary::defineMethod(RexxString *methodName, MethodClass *method)
 
 
 /**
+ * Add or completely replace a method in the method dictionary.
+ * This is used during construction of the primitive classes
+ * during image construction.  We might be replacing a method
+ * inherited from another class, so we want to ensure that any
+ * existing method by that name is completely removed.
+ *
+ * @param methodName The target method name.
+ * @param method     The method object to add.
+ */
+void MethodDictionary::replaceMethod(RexxString *methodName, MethodClass *method)
+{
+    // We only use this to add methods, not hide them, so this is fairly simple. We
+    // just put the new method into the table.
+    put(method, methodName);
+}
+
+
+/**
+ * Overlay a collection of methods on top of this dictionary.
+ * At this time, we're just adding the entries to the table.
+ * These will be updated with correct scopes later.
+ *
+ * @param source The source method dictionary.
+ */
+void MethodDictionary::replaceMethods(MethodDictionary *source)
+{
+    // use an iterator to traverse the table
+    HashContents::TableIterator iterator = source->iterator();
+
+    while (iterator.isAvailable())
+    {
+        // copy these methods over any of our own.
+        MethodClass *method = (MethodClass *)iterator.value();
+        RexxString *name = (RexxString *name)iterator.name();
+        replaceMethod(name, method);
+    }
+}
+
+
+/**
  * Remove a method from the main method dictionary
  *
  * @param methodName The target method name.
@@ -145,6 +185,20 @@ void MethodDictionary::defineMethod(RexxString *methodName, MethodClass *method)
 bool MethodDictionary::removeMethod(RexxString *methodName)
 {
     return remove(methodName) != OREF_NULL;
+}
+
+
+/**
+ * Block a method from execution by inserting a .nil
+ * into the dictionary.  This is only used while constructing
+ * the initial table and unconditionally places .nil under
+ * the target name.
+ *
+ * @param methodName The method name to hid.
+ */
+void MethodDictionary::hideMethod(RexxString *methodName)
+{
+    put(TheNilObject, methodName)
 }
 
 
@@ -221,10 +275,14 @@ MethodClass *MethodDictionary::findSuperMethod(RexxString *name, RexxClass *star
     while (iterator.isAvailable())
     {
         MethodClass *method = (MethodClass *)iterator.value();
-        // if this methos has a scope that's in the allowed list, return it.
-        if (scopes->hasItem(method->getScope()))
+        // we might have .nil in here as well as method objects.
+        if (method != (MethodClass *)TheNilObject)
         {
-            return method
+            // if this methos has a scope that's in the allowed list, return it.
+            if (scopes->hasItem(method->getScope()))
+            {
+                return method
+            }
         }
         // step to the next item.
         iterator.next();
@@ -247,9 +305,15 @@ void MethodDictionary::setMethodScope(RexxClass *scope)
     while (iterator.isAvailable())
     {
         MethodClass *method = (MethodClass *)iterator.value();
-        if (isOfClass(Method, method))
+        // we might have .nil in here as well as method objects.
+        if (method != (MethodClass *)TheNilObject)
         {
-            method->setScope(scope);
+            // this is generally used while constructing the primitive classes
+            // to set all methods in a method dictionary to the owning class scope.
+            // because we can "inherit" methods enmass from other class behaviours,
+            // we need to use newScope() to set the scope and replace the instance
+            // in the table with the returned version.
+            iterator.replace(method->newScope(scope));
         }
         // step to the next item.
         iterator.next();
@@ -285,7 +349,7 @@ SupplierClass *MethodDictionary::getMethods(RexxClass *scope)
     {
         MethodClass *method = (MethodClass *)iterator.value();
         // we're only interested in the real method objects.
-        if (isOfClass(Method, option))
+        if (isOfClass(Method, method))
         {
             // only count if this is a scope match
             if (scope == OREF_NULL || method->isScope(scope))
@@ -310,7 +374,7 @@ SupplierClass *MethodDictionary::getMethods(RexxClass *scope)
     {
         MethodClass *method = (MethodClass *)iterator.value();
         // we're only interested in the real method objects.
-        if (isOfClass(Method, option))
+        if (isOfClass(Method, method))
         {
             // only count if this is a scope match
             if (scope == OREF_NULL || method->isScope(scope))

@@ -71,7 +71,7 @@ class RexxInteger : public RexxObject
     bool         unsignedNumberValue(stringsize_t &result, size_t precision);
     bool         unsignedNumberValue(stringsize_t &result);
     bool         doubleValue(double &result);
-    RexxNumberString *numberString();
+    NumberString *numberString();
     RexxInteger *integerValue(size_t);
     RexxString  *makeString();
     void         copyIntoTail(RexxCompoundTail *);

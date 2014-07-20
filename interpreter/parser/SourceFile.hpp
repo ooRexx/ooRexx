@@ -113,7 +113,7 @@ class RexxSource: public RexxInternalObject
 
     bool        isTraceable();
     RexxString *getLine(size_t position);
-    void        attachSource(RexxBuffer *s);
+    void        attachSource(BufferClass *s);
 
     inline bool        needsInstallation() { return installRequired; }
     inline void        setNeedsInstallation() { installRequired = true; }

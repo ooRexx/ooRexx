@@ -177,20 +177,20 @@ void MethodClass::run(RexxActivity *activity, RexxObject *receiver, RexxString *
  *
  * @return The new method object with the new scope.
  */
-MethodClass *MethodClass::newScope(RexxClass  *_scope)
+MethodClass *MethodClass::newScope(RexxClass *newClass)
 {
     // if this doesn't have a scope yet, we can just override what's here
     // and return the same method instance.
     if (scope == OREF_NULL)
     {
-        setField(scope, _scope);
+        setField(scope, newClass);
         return this;
     }
     else
     {
         // we need to return a copy of the method with the scope set
         MethodClass *newMethod= (MethodClass *)copy();
-        setOtherField(newMethod, scope, _scope);
+        setOtherField(newMethod, scope, newClass);
         return newMethod;
     }
 }

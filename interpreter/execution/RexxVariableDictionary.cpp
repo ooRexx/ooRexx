@@ -163,7 +163,7 @@ void RexxVariableDictionary::dropStemVariable(RexxString *name)
     {
         variable->drop();
         /* create a new stem element and set this */
-        variable->set(new RexxStem(name));
+        variable->set(new StemClass(name));
     }
 }
 
@@ -180,7 +180,7 @@ RexxCompoundElement *RexxVariableDictionary::getCompoundVariable(
     /* new tail for compound             */
     RexxCompoundTail resolved_tail(this, tail, tailCount);
 
-    RexxStem *stem_table = getStem(stemName);      /* get the stem entry from this dictionary */
+    StemClass *stem_table = getStem(stemName);      /* get the stem entry from this dictionary */
     /* get the compound variable         */
     return stem_table->getCompoundVariable(&resolved_tail);
 }
@@ -198,7 +198,7 @@ RexxObject *RexxVariableDictionary::getCompoundVariableValue(
     /* new tail for compound             */
     RexxCompoundTail resolved_tail(this, tail, tailCount);
 
-    RexxStem *stem_table = getStem(stemName);      /* get the stem entry from this dictionary */
+    StemClass *stem_table = getStem(stemName);      /* get the stem entry from this dictionary */
     /* get the value from the stem...we pass OREF_NULL */
     /* for the dictionary to bypass NOVALUE handling */
     return stem_table->evaluateCompoundVariableValue(OREF_NULL, stemName, &resolved_tail);
@@ -223,7 +223,7 @@ RexxObject *RexxVariableDictionary::getCompoundVariableRealValue(RexxString *ste
     /* new tail for compound             */
     RexxCompoundTail resolved_tail(this, tail, tailCount);
 
-    RexxStem *stem_table = getStem(stem);          /* get the stem entry from this dictionary */
+    StemClass *stem_table = getStem(stem);          /* get the stem entry from this dictionary */
     /* get the value from the stem...we pass OREF_NULL */
     /* for the dictionary to bypass NOVALUE handling */
     return stem_table->getCompoundVariableRealValue(&resolved_tail);
@@ -285,7 +285,7 @@ RexxVariable *RexxVariableDictionary::createStemVariable(
 /******************************************************************************/
 {
     RexxVariable *variable =  new_variable(stemName); /* make a new variable entry         */
-    RexxStem *stemtable = new RexxStem (stemName); /* create a stem object as value     */
+    StemClass *stemtable = new StemClass (stemName); /* create a stem object as value     */
     /* the stem object is the value of   */
     /* stem variable                     */
     variable->set((RexxObject *)stemtable);
@@ -586,7 +586,7 @@ void RexxVariableDictionary::setCompoundVariable(RexxString *stemName, RexxObjec
                                          /* new tail for compound             */
     RexxCompoundTail resolved_tail(this, tail, tailCount);
 
-    RexxStem *stem_table = getStem(stemName);      /* get the stem entry from this dictionary */
+    StemClass *stem_table = getStem(stemName);      /* get the stem entry from this dictionary */
                                          /* and set the value                 */
     stem_table->setCompoundVariable(&resolved_tail, value);
 }
@@ -605,7 +605,7 @@ void RexxVariableDictionary::dropCompoundVariable(RexxString *stemName, RexxObje
                                          /* new tail for compound             */
     RexxCompoundTail resolved_tail(this, tail, tailCount);
 
-    RexxStem *stem_table = getStem(stemName);      /* get the stem entry from this dictionary */
+    StemClass *stem_table = getStem(stemName);      /* get the stem entry from this dictionary */
                                          /* and set the value                 */
     stem_table->dropCompoundVariable(&resolved_tail);
 }
@@ -644,7 +644,7 @@ RexxVariableBase  *RexxVariableDictionary::getVariableRetriever(
             /* if it is a stem                   */
         case STRING_STEM:
             /* create a new stem retriever       */
-            return(RexxVariableBase *)new RexxStemVariable(variable, 0);
+            return(RexxVariableBase *)new StemClassVariable(variable, 0);
             /* if it is a compound               */
         case STRING_COMPOUND_NAME:
             /* create a new compound retriever   */
@@ -784,7 +784,7 @@ RexxObject *RexxVariableDictionary::buildCompoundVariable(
     /* processing to decompose the name  */
     /* into its component parts          */
 
-    RexxQueue *tails = new_queue();      /* get a new list for the tails      */
+    QueueClass *tails = new_queue();      /* get a new list for the tails      */
     ProtectedObject p1(tails);
     position++;                          /* step past previous period         */
     length--;                            /* adjust the length                 */

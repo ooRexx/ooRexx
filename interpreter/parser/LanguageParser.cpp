@@ -107,7 +107,7 @@ MethodClass *LanguageParser::createMethod(RexxString *name, ArrayClass *source, 
  *
  * @return An executable method object.
  */
-MethodClass *LanguageParser::createMethod(RexxString *name, RexxBuffer *source)
+MethodClass *LanguageParser::createMethod(RexxString *name, BufferClass *source)
 {
     // create the appropriate array source, then the parser, then generate the
     // code.
@@ -187,7 +187,7 @@ RoutineClass *LanguageParser::createRoutine(RexxString *name)
  *
  * @return An executable method object.
  */
-RoutineClass *LanguageParser::createRoutine(RexxString *name, RexxBuffer *source)
+RoutineClass *LanguageParser::createRoutine(RexxString *name, BufferClass *source)
 {
     // create the appropriate array source, then the parser, then generate the
     // code.
@@ -206,7 +206,7 @@ RoutineClass *LanguageParser::createRoutine(RexxString *name, RexxBuffer *source
  *
  * @return An executable method object.
  */
-RoutineClass *LanguageParser::createProgram(RexxString *name, RexxBuffer *source)
+RoutineClass *LanguageParser::createProgram(RexxString *name, BufferClass *source)
 {
     // create the appropriate array source, then the parser, then generate the
     // code.
@@ -1586,22 +1586,22 @@ RexxVariableBase *LanguageParser::addSimpleVariable(RexxString *varname)
  *
  * @return A retriever for the specified variable.
  */
-RexxStemVariable *LanguageParser::addStem(RexxString *stemName)
+StemClassVariable *LanguageParser::addStem(RexxString *stemName)
 {
     // like with normal variables, we might have this already cached.
-    RexxStemVariable *retriever = (RexxStemVariable *)(variables->fastAt(stemName));
+    StemClassVariable *retriever = (StemClassVariable *)(variables->fastAt(stemName));
     if (retriever == OREF_NULL)
     {
         if (!isInterpret())
         {
             // non-interpret uses an allocated stack frame slot
             variableIndex++;
-            retriever = new RexxStemVariable(stemName, variableIndex);
+            retriever = new StemClassVariable(stemName, variableIndex);
         }
         else
         {
             // interpret uses dynamic lookup
-            retriever = new RexxStemVariable(stemName, 0);
+            retriever = new StemClassVariable(stemName, 0);
         }
         variables->put((RexxObject *)retriever, stemName);
     }
@@ -1655,7 +1655,7 @@ RexxCompoundVariable *LanguageParser::addCompound(RexxString *name)
     // create a Rexx string version of the stem name and retrieve this
     // from the
     RexxString *stemName = new_string(start, _position - start + 1);
-    RexxStemVariable *stemRetriever = addStem(stemName);
+    StemClassVariable *stemRetriever = addStem(stemName);
 
     ProtectedObject p(stemRetriever);
 
@@ -1951,7 +1951,7 @@ RexxVariableBase *LanguageParser::getRetriever(RexxString *name)
 
         // stem name.
         case STRING_STEM:
-            return (RexxVariableBase *)new RexxStemVariable(name, 0);
+            return (RexxVariableBase *)new StemClassVariable(name, 0);
             break;
 
         // compound name...more complicated.
@@ -3628,7 +3628,7 @@ RoutineClass *LanguageParser::processInstore(PRXSTRING instore, RexxString * nam
             // reattach it to the routine for tracing/error reporting.
             if (instore[0].strptr != NULL)
             {
-                RexxBuffer *source_buffer = new_buffer(instore[0]);
+                BufferClass *source_buffer = new_buffer(instore[0]);
                 routine->getSourceObject()->attachSource(source_buffer);
             }
             return routine;                  /* go return it                      */
@@ -3638,7 +3638,7 @@ RoutineClass *LanguageParser::processInstore(PRXSTRING instore, RexxString * nam
     // flatten the program for reuse.
     if (instore[0].strptr != NULL)
     {
-        RexxBuffer *source_buffer = new_buffer(instore[0]);
+        BufferClass *source_buffer = new_buffer(instore[0]);
 
         // translate the source
         Protected<RoutineClass> routine = createProgram(name, source_buffer);
@@ -3685,7 +3685,7 @@ RoutineClass *LanguageParser::restoreFromMacroSpace(RexxString *name)
 RoutineClass *LanguageParser::createProgramFromFile(RexxString *filename)
 {
     // load the file into a buffer
-    RexxBuffer *program_buffer = SystemInterpreter::readProgram(filename->getStringData());
+    BufferClass *program_buffer = SystemInterpreter::readProgram(filename->getStringData());
     // if this failed, report an error now.
     if (program_buffer == OREF_NULL)
     {

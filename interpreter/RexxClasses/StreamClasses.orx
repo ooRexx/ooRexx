@@ -60,7 +60,7 @@
 .environment~setentry('OUTPUTSTREAM', .OutputStream)
 .environment~setentry('INPUTOUTPUTSTREAM', .InputOutputStream)
 .environment~setentry('STREAMSUPPLIER', .StreamSupplier)
-.environment~setentry('REXXQUEUE', .RexxQueue)
+.environment~setentry('RexxQueue', .RexxQueue)
 .environment~setentry('FILE', .File)
 
 -- mixin class objects used for stream types

@@ -41,23 +41,23 @@
 /* Primitive MutableBuffer Class Definition                                   */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_RexxMutableBuffer
-#define Included_RexxMutableBuffer
+#ifndef Included_MutableBuffer
+#define Included_MutableBuffer
 
 #include "StringClass.hpp"
 #include "IntegerClass.hpp"
 #include "BufferClass.hpp"
 
 
-class RexxMutableBuffer : public RexxObject
+class MutableBuffer : public RexxObject
 {
  public:
     inline void       *operator new(size_t size, void *ptr){return ptr;};
            void       *operator new(size_t size);
 
-                       RexxMutableBuffer();
-                       RexxMutableBuffer(size_t, size_t);
-    inline             RexxMutableBuffer(RESTORETYPE restoreType) { ; };
+                       MutableBuffer();
+                       MutableBuffer(size_t, size_t);
+    inline             MutableBuffer(RESTORETYPE restoreType) { ; };
 
     virtual void       live(size_t);
     virtual void       liveGeneral(MarkReason reason);
@@ -68,11 +68,11 @@ class RexxMutableBuffer : public RexxObject
 
     RexxObject        *lengthRexx();
 
-    RexxMutableBuffer *append(RexxObject*);
-    RexxMutableBuffer *insert(RexxObject*, RexxObject*, RexxObject*, RexxObject*);
-    RexxMutableBuffer *overlay(RexxObject*, RexxObject*, RexxObject*, RexxObject*);
-    RexxMutableBuffer *replaceAt(RexxObject *str, RexxObject *pos, RexxObject *len, RexxObject *pad);
-    RexxMutableBuffer *mydelete(RexxObject*, RexxObject*);
+    MutableBuffer *append(RexxObject*);
+    MutableBuffer *insert(RexxObject*, RexxObject*, RexxObject*, RexxObject*);
+    MutableBuffer *overlay(RexxObject*, RexxObject*, RexxObject*, RexxObject*);
+    MutableBuffer *replaceAt(RexxObject *str, RexxObject *pos, RexxObject *len, RexxObject *pad);
+    MutableBuffer *mydelete(RexxObject*, RexxObject*);
     RexxString        *substr(RexxInteger *startPosition, RexxInteger *len, RexxString *pad);
     RexxInteger       *lastPos(RexxString *needle, RexxInteger *_start, RexxInteger *_range);
     RexxInteger       *posRexx(RexxString *needle, RexxInteger *_start, RexxInteger *_range);
@@ -90,11 +90,11 @@ class RexxMutableBuffer : public RexxObject
     RexxString        *primitiveMakeString();
     RexxInteger       *countStrRexx(RexxString *needle);
     RexxInteger       *caselessCountStrRexx(RexxString *needle);
-    RexxMutableBuffer *changeStr(RexxString *needle, RexxString *newNeedle, RexxInteger *countArg);
-    RexxMutableBuffer *caselessChangeStr(RexxString *needle, RexxString *newNeedle, RexxInteger *countArg);
-    RexxMutableBuffer *upper(RexxInteger *_start, RexxInteger *_length);
-    RexxMutableBuffer *lower(RexxInteger *_start, RexxInteger *_length);
-    RexxMutableBuffer *translate(RexxString *tableo, RexxString *tablei, RexxString *pad, RexxInteger *, RexxInteger *);
+    MutableBuffer *changeStr(RexxString *needle, RexxString *newNeedle, RexxInteger *countArg);
+    MutableBuffer *caselessChangeStr(RexxString *needle, RexxString *newNeedle, RexxInteger *countArg);
+    MutableBuffer *upper(RexxInteger *_start, RexxInteger *_length);
+    MutableBuffer *lower(RexxInteger *_start, RexxInteger *_length);
+    MutableBuffer *translate(RexxString *tableo, RexxString *tablei, RexxString *pad, RexxInteger *, RexxInteger *);
     RexxInteger *match(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_);
     RexxInteger *caselessMatch(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_);
     bool primitiveMatch(stringsize_t start, RexxString *other, stringsize_t offset, stringsize_t len);
@@ -112,8 +112,8 @@ class RexxMutableBuffer : public RexxObject
     RexxInteger *caselessWordPos(RexxString *, RexxInteger *);
     RexxObject  *containsWord(RexxString *, RexxInteger *);
     RexxObject  *caselessContainsWord(RexxString *, RexxInteger *);
-    RexxMutableBuffer *delWord(RexxInteger *position, RexxInteger *plength);
-    RexxMutableBuffer *space(RexxInteger *space_count, RexxString  *pad);
+    MutableBuffer *delWord(RexxInteger *position, RexxInteger *plength);
+    MutableBuffer *space(RexxInteger *space_count, RexxString  *pad);
 
     inline const char *getStringData() { return data->getData(); }
     inline size_t      getLength()     { return dataLength; }
@@ -128,7 +128,7 @@ class RexxMutableBuffer : public RexxObject
     inline size_t getCapacity() { return bufferLength; }
            char *setCapacity(size_t newLength);
 
-           RexxMutableBuffer *newRexx(RexxObject**, size_t);
+           MutableBuffer *newRexx(RexxObject**, size_t);
 
     static const size_t DEFAULT_BUFFER_LENGTH = 256;
 
@@ -140,6 +140,6 @@ class RexxMutableBuffer : public RexxObject
      size_t             bufferLength;    /* buffer length                   */
      size_t             defaultSize;     /* default size when emptied       */
      size_t             dataLength;      // current length of data
-     RexxBuffer        *data;            /* buffer used for the data        */
+     BufferClass        *data;            /* buffer used for the data        */
 };
 #endif

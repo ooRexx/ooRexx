@@ -51,13 +51,13 @@
 #include "MethodArguments.hpp"
 
 // singleton class instance
-RexxClass *RexxNumberString::classInstance = OREF_NULL;
+RexxClass *NumberString::classInstance = OREF_NULL;
 
 
 /**
  * Create initial class object at bootstrap time.
  */
-void RexxNumberString::createInstance()
+void NumberString::createInstance()
 {
     CLASS_CREATE(NumberString, "String", RexxClass);
 }
@@ -68,7 +68,7 @@ void RexxNumberString::createInstance()
  *
  * @param len    The length we require for the value.
  */
-RexxNumberString::RexxNumberString(size_t len)
+NumberString::NumberString(size_t len)
 {
     setNumericSettings(number_digits(), number_form());
     sign = 1;
@@ -82,20 +82,20 @@ RexxNumberString::RexxNumberString(size_t len)
  * @param len       The length of value we need to accomodate
  * @param precision The precision to be used for formatting.
  */
-RexxNumberString::RexxNumberString(size_t len, size_t precision)
+NumberString::NumberString(size_t len, size_t precision)
 {
     setNumericSettings(precision, number_form());
     sign = 1;
     length = len;
 }
 
-RexxNumberString *RexxNumberString::clone()
+NumberString *NumberString::clone()
 /******************************************************************************/
 /* Function:  low level copy of a number string object                        */
 /******************************************************************************/
 {
     /* first clone ourselves             */
-    RexxNumberString *newObj = (RexxNumberString *)RexxInternalObject::clone();
+    NumberString *newObj = (NumberString *)RexxInternalObject::clone();
     /* don't keep the original string    */
     OrefSet(newObj, newObj->stringObject, OREF_NULL);
     /* or the OVD fields                 */
@@ -109,12 +109,12 @@ RexxNumberString *RexxNumberString::clone()
  *
  * @return The calculated string hash for the string.
  */
-HashCode RexxNumberString::getHashValue()
+HashCode NumberString::getHashValue()
 {
     return stringValue()->getHashValue();
 }
 
-void RexxNumberString::live(size_t liveMark)
+void NumberString::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
@@ -123,7 +123,7 @@ void RexxNumberString::live(size_t liveMark)
     memory_mark(stringObject);
 }
 
-void RexxNumberString::liveGeneral(MarkReason reason)
+void NumberString::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
@@ -132,12 +132,12 @@ void RexxNumberString::liveGeneral(MarkReason reason)
     memory_mark_general(stringObject);
 }
 
-void RexxNumberString::flatten(RexxEnvelope *envelope)
+void NumberString::flatten(RexxEnvelope *envelope)
 /******************************************************************************/
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
 {
-    setUpFlatten(RexxNumberString)
+    setUpFlatten(NumberString)
 
     flattenRef(objectVariables);
     flattenRef(stringObject);
@@ -145,7 +145,7 @@ void RexxNumberString::flatten(RexxEnvelope *envelope)
     cleanUpFlatten
 }
 
-void RexxNumberString::setString(
+void NumberString::setString(
     RexxString *stringObj )            /* new string value                  */
 /******************************************************************************/
 /* Function:  Set the number string's string value                            */
@@ -156,7 +156,7 @@ void RexxNumberString::setString(
    setHasReferences();           /* we now have to garbage collect    */
 }
 
-RexxString *RexxNumberString::makeString()
+RexxString *NumberString::makeString()
 /******************************************************************************/
 /* Function:  Handle a REQUEST('STRING') request for a REXX numberstring      */
 /******************************************************************************/
@@ -170,12 +170,12 @@ RexxString *RexxNumberString::makeString()
  *
  * @return The results of our string representation's makearray.
  */
-ArrayClass *RexxNumberString::makeArray()
+ArrayClass *NumberString::makeArray()
 {
   return stringValue()->makeArray();     // have the string value handle this
 }
 
-bool RexxNumberString::hasMethod(RexxString *methodName)
+bool NumberString::hasMethod(RexxString *methodName)
 /******************************************************************************/
 /* Function:  Handle a HASMETHOD request for an integer                       */
 /******************************************************************************/
@@ -184,7 +184,7 @@ bool RexxNumberString::hasMethod(RexxString *methodName)
     return stringValue()->hasMethod(methodName);
 }
 
-RexxString *RexxNumberString::primitiveMakeString()
+RexxString *NumberString::primitiveMakeString()
 /******************************************************************************/
 /* Function:  Handle a REQUEST('STRING') request for a REXX numberstring      */
 /******************************************************************************/
@@ -196,7 +196,7 @@ RexxString *RexxNumberString::primitiveMakeString()
     return stringValue();          /* return the string value           */
 }
 
-RexxString *RexxNumberString::stringValue()
+RexxString *NumberString::stringValue()
 /******************************************************************************/
 /* Function:  Convert a number string to a string object                      */
 /******************************************************************************/
@@ -478,7 +478,7 @@ RexxString *RexxNumberString::stringValue()
 }
 
 
-bool RexxNumberString::numberValue(wholenumber_t &result)
+bool NumberString::numberValue(wholenumber_t &result)
 /******************************************************************************/
 /* Function:  Convert a number string to a wholenumber value                  */
 /******************************************************************************/
@@ -487,7 +487,7 @@ bool RexxNumberString::numberValue(wholenumber_t &result)
     return numberValue(result, Numerics::DEFAULT_DIGITS);
 }
 
-bool RexxNumberString::unsignedNumberValue(stringsize_t &result)
+bool NumberString::unsignedNumberValue(stringsize_t &result)
 /******************************************************************************/
 /* Function:  Convert a number string to a unsigned whole number value        */
 /******************************************************************************/
@@ -496,7 +496,7 @@ bool RexxNumberString::unsignedNumberValue(stringsize_t &result)
     return unsignedNumberValue(result, Numerics::DEFAULT_DIGITS);
 }
 
-bool RexxNumberString::numberValue(wholenumber_t &result, size_t numDigits)
+bool NumberString::numberValue(wholenumber_t &result, size_t numDigits)
 /******************************************************************************/
 /* Function:  Convert a number string to a number value                       */
 /******************************************************************************/
@@ -569,7 +569,7 @@ bool RexxNumberString::numberValue(wholenumber_t &result, size_t numDigits)
     return true;
 }
 
-bool RexxNumberString::unsignedNumberValue(stringsize_t &result, size_t numDigits)
+bool NumberString::unsignedNumberValue(stringsize_t &result, size_t numDigits)
 /******************************************************************************/
 /* Function:  Convert a number string to an unsigned number value             */
 /******************************************************************************/
@@ -647,7 +647,7 @@ bool RexxNumberString::unsignedNumberValue(stringsize_t &result, size_t numDigit
     return true;
 }
 
-bool RexxNumberString::doubleValue(double &result)
+bool NumberString::doubleValue(double &result)
 /******************************************************************************/
 /* Function:  Convert a number string to a double                             */
 /******************************************************************************/
@@ -661,7 +661,7 @@ bool RexxNumberString::doubleValue(double &result)
     return true;
 }
 
-RexxInteger *RexxNumberString::integerValue(
+RexxInteger *NumberString::integerValue(
     size_t digits )                    /* required precision                */
 /******************************************************************************/
 /* Function:  convert a number string to an integer object                    */
@@ -682,7 +682,7 @@ RexxInteger *RexxNumberString::integerValue(
 /*********************************************************************/
 /*   Function:  Convert the numberstring to unsigned value           */
 /*********************************************************************/
-bool  RexxNumberString::createUnsignedValue(const char *thisnum, stringsize_t intlength, int carry, wholenumber_t exponent, size_t maxValue, size_t &result)
+bool  NumberString::createUnsignedValue(const char *thisnum, stringsize_t intlength, int carry, wholenumber_t exponent, size_t maxValue, size_t &result)
 {
     // if the exponent multiplier would cause an overflow, there's no point in doing
     // anything here
@@ -756,7 +756,7 @@ bool  RexxNumberString::createUnsignedValue(const char *thisnum, stringsize_t in
 /*********************************************************************/
 /*   Function:  Convert the numberstring to unsigned value           */
 /*********************************************************************/
-bool  RexxNumberString::createUnsignedInt64Value(const char *thisnum, stringsize_t intlength, int carry, wholenumber_t exponent, uint64_t maxValue, uint64_t &result)
+bool  NumberString::createUnsignedInt64Value(const char *thisnum, stringsize_t intlength, int carry, wholenumber_t exponent, uint64_t maxValue, uint64_t &result)
 {
     // if the exponent multiplier would cause an overflow, there's no point in doing
     // anything here
@@ -828,7 +828,7 @@ bool  RexxNumberString::createUnsignedInt64Value(const char *thisnum, stringsize
 }
 
 
-bool RexxNumberString::checkIntegerDigits(stringsize_t numDigits, stringsize_t &numberLength,
+bool NumberString::checkIntegerDigits(stringsize_t numDigits, stringsize_t &numberLength,
     wholenumber_t &numberExponent, bool &carry)
 /******************************************************************************/
 /* Function:  Check that a numberstring is convertable into an integer value  */
@@ -908,7 +908,7 @@ bool RexxNumberString::checkIntegerDigits(stringsize_t numDigits, stringsize_t &
 }
 
 
-bool RexxNumberString::int64Value(int64_t *result, stringsize_t numDigits)
+bool NumberString::int64Value(int64_t *result, stringsize_t numDigits)
 /******************************************************************************/
 /* Function:  Convert a number string to a int64 value                        */
 /******************************************************************************/
@@ -1008,7 +1008,7 @@ bool RexxNumberString::int64Value(int64_t *result, stringsize_t numDigits)
 }
 
 
-bool RexxNumberString::unsignedInt64Value(uint64_t *result, stringsize_t numDigits)
+bool NumberString::unsignedInt64Value(uint64_t *result, stringsize_t numDigits)
 /******************************************************************************/
 /* Function:  Convert a number string to a int64 value                        */
 /******************************************************************************/
@@ -1076,7 +1076,7 @@ bool RexxNumberString::unsignedInt64Value(uint64_t *result, stringsize_t numDigi
 }
 
 
-bool  RexxNumberString::truthValue(
+bool  NumberString::truthValue(
     int   errorcode )                  /* error to raise if not good        */
 /******************************************************************************/
 /* Function:  Return a truth value boolean for a number string                */
@@ -1103,7 +1103,7 @@ bool  RexxNumberString::truthValue(
  *
  * @return true if this converted ok, false for an invalid logical.
  */
-bool RexxNumberString::logicalValue(logical_t &result)
+bool NumberString::logicalValue(logical_t &result)
 {
     if (sign == 0 )                /* exactly zero?                     */
     {
@@ -1271,7 +1271,7 @@ void fill_digits(                      /* create a string of digits         */
     }
 }
 
-RexxObject *RexxNumberString::trunc(
+RexxObject *NumberString::trunc(
   RexxObject *decimal_digits)          /* number of decimal digits        */
 /******************************************************************************/
 /* Function:  Truncate a number to given decimal digit count                  */
@@ -1283,7 +1283,7 @@ RexxObject *RexxNumberString::trunc(
     return prepareNumber(number_digits(), ROUND)->truncInternal(needed_digits);
 }
 
-RexxObject *RexxNumberString::truncInternal(
+RexxObject *NumberString::truncInternal(
   size_t needed_digits)                /* number of decimal digits          */
 /******************************************************************************/
 /* Function:  Truncate a number to given decimal digit count                  */
@@ -1462,7 +1462,7 @@ RexxObject *RexxNumberString::truncInternal(
  *
  * @return The numeric floor of this value.
  */
-RexxObject *RexxNumberString::floor()
+RexxObject *NumberString::floor()
 {
     /* round to current digits setting   */
     return prepareNumber(number_digits(), ROUND)->floorInternal();
@@ -1474,7 +1474,7 @@ RexxObject *RexxNumberString::floor()
  * @return A string value of the floor, with appropriate
  *         formatting for the function.
  */
-RexxObject *RexxNumberString::floorInternal()
+RexxObject *NumberString::floorInternal()
 {
     // if this is exactly zero, then the floor is always zero
     if (sign == 0)
@@ -1591,7 +1591,7 @@ RexxObject *RexxNumberString::floorInternal()
  *
  * @return The numeric ceiling of this value.
  */
-RexxObject *RexxNumberString::ceiling()
+RexxObject *NumberString::ceiling()
 {
     /* round to current digits setting   */
     return prepareNumber(number_digits(), ROUND)->ceilingInternal();
@@ -1603,7 +1603,7 @@ RexxObject *RexxNumberString::ceiling()
  * @return A string value of the ceiling, with appropriate
  *         formatting for the function.
  */
-RexxObject *RexxNumberString::ceilingInternal()
+RexxObject *NumberString::ceilingInternal()
 {
     // if this is exactly zero, then the ceiling is always zero
     if (sign == 0)
@@ -1719,7 +1719,7 @@ RexxObject *RexxNumberString::ceilingInternal()
  *
  * @return The rounded value
  */
-RexxObject *RexxNumberString::round()
+RexxObject *NumberString::round()
 {
     /* round to current digits setting   */
     return prepareNumber(number_digits(), ROUND)->roundInternal();
@@ -1730,7 +1730,7 @@ RexxObject *RexxNumberString::round()
  *
  * @return A string value of the rounded number.
  */
-RexxObject *RexxNumberString::roundInternal()
+RexxObject *NumberString::roundInternal()
 {
     // if this is exactly zero, then the rounded value is always zero
     if (sign == 0)
@@ -1822,7 +1822,7 @@ RexxObject *RexxNumberString::roundInternal()
 }
 
 
-RexxString  *RexxNumberString::formatRexx(
+RexxString  *NumberString::formatRexx(
   RexxObject *Integers,                /* space for integer part            */
   RexxObject *Decimals,                /* number of decimals required       */
   RexxObject *MathExp,                 /* the exponent size                 */
@@ -1853,12 +1853,12 @@ RexxString  *RexxNumberString::formatRexx(
     return prepareNumber(digits, ROUND)->formatInternal(integers, decimals, mathexp, exptrigger, this, digits, form);
 }
 
-RexxString *RexxNumberString::formatInternal(
+RexxString *NumberString::formatInternal(
     size_t      integers,                /* space for integer part          */
     size_t      decimals,                /* number of decimals required     */
     size_t      mathexp,                 /* the exponent size               */
     size_t      exptrigger,              /* the exponent trigger            */
-    RexxNumberString *original,          /* oringial NumStr                 */
+    NumberString *original,          /* oringial NumStr                 */
     size_t      digits,                  /* digits to format to             */
     bool        form)                    /* form to format to               */
 /******************************************************************************/
@@ -2239,7 +2239,7 @@ RexxString *RexxNumberString::formatInternal(
     return result;                       /* return the result                 */
 }
 
-int RexxNumberString::format(const char *_number, size_t _length)
+int NumberString::format(const char *_number, size_t _length)
 /******************************************************************************/
 /* Function : Format the string data into a numberstring.                     */
 /*            NOTE: now that a scan is done first the is some cleanup that can*/
@@ -2486,7 +2486,7 @@ int RexxNumberString::format(const char *_number, size_t _length)
     return 0;                           /* All done !!                       */
 }
 
-void RexxNumberString::formatNumber(wholenumber_t integer)
+void NumberString::formatNumber(wholenumber_t integer)
 /******************************************************************************/
 /* Function : Format the integer num into a numberstring.                     */
 /******************************************************************************/
@@ -2508,7 +2508,7 @@ void RexxNumberString::formatNumber(wholenumber_t integer)
     }
 }
 
-void RexxNumberString::formatUnsignedNumber(size_t integer)
+void NumberString::formatUnsignedNumber(size_t integer)
 /******************************************************************************/
 /* Function : Format the integer num into a numberstring.                     */
 /******************************************************************************/
@@ -2537,7 +2537,7 @@ void RexxNumberString::formatUnsignedNumber(size_t integer)
 }
 
 
-void RexxNumberString::formatInt64(int64_t integer)
+void NumberString::formatInt64(int64_t integer)
 /******************************************************************************/
 /* Function : Format the integer num into a numberstring.                     */
 /******************************************************************************/
@@ -2593,7 +2593,7 @@ void RexxNumberString::formatInt64(int64_t integer)
 }
 
 
-void RexxNumberString::formatUnsignedInt64(uint64_t integer)
+void NumberString::formatUnsignedInt64(uint64_t integer)
 /******************************************************************************/
 /* Function : Format the integer num into a numberstring.                     */
 /******************************************************************************/
@@ -2627,7 +2627,7 @@ void RexxNumberString::formatUnsignedInt64(uint64_t integer)
 }
 
 
-RexxObject *RexxNumberString::unknown(RexxString *msgname, ArrayClass *arguments)
+RexxObject *NumberString::unknown(RexxString *msgname, ArrayClass *arguments)
 /******************************************************************************/
 /* Function:  Forward all unknown messages to the numberstring's string       */
 /*            representation                                                  */
@@ -2645,7 +2645,7 @@ RexxObject *RexxNumberString::unknown(RexxString *msgname, ArrayClass *arguments
  *
  * @return True if the string value is an instance of the target class.
  */
-bool RexxNumberString::isInstanceOf(RexxClass *other)
+bool NumberString::isInstanceOf(RexxClass *other)
 {
     return stringValue()->isInstanceOf(other);
 }
@@ -2659,7 +2659,7 @@ bool RexxNumberString::isInstanceOf(RexxClass *other)
  *
  * @return The method object that implements the object method.
  */
-MethodClass *RexxNumberString::instanceMethod(RexxString  *method_name)
+MethodClass *NumberString::instanceMethod(RexxString  *method_name)
 {
     return stringValue()->instanceMethod(method_name);
 }
@@ -2676,13 +2676,13 @@ MethodClass *RexxNumberString::instanceMethod(RexxString  *method_name)
  *
  * @return A supplier with the appropriate method set.
  */
-SupplierClass *RexxNumberString::instanceMethods(RexxClass *class_object)
+SupplierClass *NumberString::instanceMethods(RexxClass *class_object)
 {
     return stringValue()->instanceMethods(class_object);
 }
 
 
-RexxString *RexxNumberString::concatBlank(RexxObject *other)
+RexxString *NumberString::concatBlank(RexxObject *other)
 /******************************************************************************/
 /* Function:  Blank concatenation operator                                    */
 /******************************************************************************/
@@ -2690,7 +2690,7 @@ RexxString *RexxNumberString::concatBlank(RexxObject *other)
     return stringValue()->concatBlank(other);
 }
 
-RexxString *RexxNumberString::concat(RexxObject *other)
+RexxString *NumberString::concat(RexxObject *other)
 /******************************************************************************/
 /* Function:  Normal concatentation operator                                  */
 /******************************************************************************/
@@ -2700,22 +2700,22 @@ RexxString *RexxNumberString::concat(RexxObject *other)
                                        /* numberstring operator forwarders  */
                                        /* to process string operators       */
 
-RexxObject *RexxNumberString::orOp(RexxObject *operand)
+RexxObject *NumberString::orOp(RexxObject *operand)
 {
   return (RexxObject *)stringValue()->orOp(operand);
 }
 
-RexxObject *RexxNumberString::andOp(RexxObject *operand)
+RexxObject *NumberString::andOp(RexxObject *operand)
 {
   return (RexxObject *)stringValue()->andOp(operand);
 }
 
-RexxObject *RexxNumberString::xorOp(RexxObject *operand)
+RexxObject *NumberString::xorOp(RexxObject *operand)
 {
   return (RexxObject *)stringValue()->xorOp(operand);
 }
 
-bool RexxNumberString::isEqual(
+bool NumberString::isEqual(
     RexxObject *other)                 /* other comparison object           */
 /******************************************************************************/
 /* Function:  Primitive strict equal\not equal method.  This determines       */
@@ -2731,7 +2731,7 @@ bool RexxNumberString::isEqual(
     return stringValue()->isEqual(other);
 }
 
-wholenumber_t RexxNumberString::strictComp(RexxObject *other)
+wholenumber_t NumberString::strictComp(RexxObject *other)
 /******************************************************************************/
 /* Function:  Compare the two values.                                         */
 /*                                                                            */
@@ -2746,7 +2746,7 @@ wholenumber_t RexxNumberString::strictComp(RexxObject *other)
    return stringValue()->strictComp(other);
 }
 
-wholenumber_t RexxNumberString::comp(
+wholenumber_t NumberString::comp(
     RexxObject *right)                 /* right hand side of compare      */
 /******************************************************************************/
 /* Function:  Do a value comparison of two number strings for the non-strict  */
@@ -2757,7 +2757,7 @@ wholenumber_t RexxNumberString::comp(
 /*             a value > 0 when this is larger than other                     */
 /******************************************************************************/
 {
-    RexxNumberString *rightNumber;       /* converted right hand number     */
+    NumberString *rightNumber;       /* converted right hand number     */
     wholenumber_t      aLexp;            /* adjusted left exponent            */
     wholenumber_t     aRexp;             /* adjusted right exponent           */
     size_t    aLlen;                     /* adjusted left length              */
@@ -2889,7 +2889,7 @@ wholenumber_t RexxNumberString::comp(
     }
 }
 
-RexxInteger *RexxNumberString::equal(RexxObject *other)
+RexxInteger *NumberString::equal(RexxObject *other)
 /******************************************************************************/
 /* Function:  non-strict "=" operator                                         */
 /******************************************************************************/
@@ -2901,7 +2901,7 @@ RexxInteger *RexxNumberString::equal(RexxObject *other)
     return booleanObject(comp(other) == 0);
 }
 
-RexxInteger *RexxNumberString::notEqual(RexxObject *other)
+RexxInteger *NumberString::notEqual(RexxObject *other)
 /******************************************************************************/
 /* Function:  non-strict "\=" operator                                        */
 /******************************************************************************/
@@ -2913,7 +2913,7 @@ RexxInteger *RexxNumberString::notEqual(RexxObject *other)
     return booleanObject((comp(other) != 0);
 }
 
-RexxInteger *RexxNumberString::isGreaterThan(RexxObject *other)
+RexxInteger *NumberString::isGreaterThan(RexxObject *other)
 /******************************************************************************/
 /* Function:  non-strict ">" operator                                         */
 /******************************************************************************/
@@ -2925,7 +2925,7 @@ RexxInteger *RexxNumberString::isGreaterThan(RexxObject *other)
     return booleanObject((comp(other) > 0);
 }
 
-RexxInteger *RexxNumberString::isLessThan(RexxObject *other)
+RexxInteger *NumberString::isLessThan(RexxObject *other)
 /******************************************************************************/
 /* Function:  non-strict "<" operator                                         */
 /******************************************************************************/
@@ -2937,7 +2937,7 @@ RexxInteger *RexxNumberString::isLessThan(RexxObject *other)
     return booleanObject((comp(other) < 0);
 }
 
-RexxInteger *RexxNumberString::isGreaterOrEqual(RexxObject *other)
+RexxInteger *NumberString::isGreaterOrEqual(RexxObject *other)
 /******************************************************************************/
 /* Function:  non-strict ">=" operator                                        */
 /******************************************************************************/
@@ -2949,7 +2949,7 @@ RexxInteger *RexxNumberString::isGreaterOrEqual(RexxObject *other)
     return booleanObject((comp(other) >= 0);
 }
 
-RexxInteger *RexxNumberString::isLessOrEqual(RexxObject *other)
+RexxInteger *NumberString::isLessOrEqual(RexxObject *other)
 /******************************************************************************/
 /* Function:  non-strict "<=" operator                                        */
 /******************************************************************************/
@@ -2968,14 +2968,14 @@ RexxInteger *RexxNumberString::isLessOrEqual(RexxObject *other)
  *
  * @return A string version of the hash (generally holds binary characters).
  */
-RexxObject *RexxNumberString::hashCode()
+RexxObject *NumberString::hashCode()
 {
     // get the hash value, which is actually derived from the integer string value
     HashCode h = hash();
     return new_string((const char *)&h, sizeof(HashCode));
 }
 
-RexxInteger *RexxNumberString::strictEqual(RexxObject *other)
+RexxInteger *NumberString::strictEqual(RexxObject *other)
 /******************************************************************************/
 /* Function:  Perform the primitive level "==" compare, including the hash    */
 /*            value processing.                                               */
@@ -2988,7 +2988,7 @@ RexxInteger *RexxNumberString::strictEqual(RexxObject *other)
     return booleanObject((strictComp(other) == 0);
 }
 
-RexxInteger *RexxNumberString::strictNotEqual(RexxObject *other)
+RexxInteger *NumberString::strictNotEqual(RexxObject *other)
 /******************************************************************************/
 /* Function:  Strict inequality operation                                     */
 /******************************************************************************/
@@ -3001,7 +3001,7 @@ RexxInteger *RexxNumberString::strictNotEqual(RexxObject *other)
 }
 
 
-RexxInteger *RexxNumberString::strictGreaterThan(RexxObject *other)
+RexxInteger *NumberString::strictGreaterThan(RexxObject *other)
 /******************************************************************************/
 /* Function:  strict ">>" operator                                            */
 /******************************************************************************/
@@ -3013,7 +3013,7 @@ RexxInteger *RexxNumberString::strictGreaterThan(RexxObject *other)
     return booleanObject((strictComp(other) > 0);
 }
 
-RexxInteger *RexxNumberString::strictLessThan(RexxObject *other)
+RexxInteger *NumberString::strictLessThan(RexxObject *other)
 /******************************************************************************/
 /* Function:  strict "<<" operator                                            */
 /******************************************************************************/
@@ -3025,7 +3025,7 @@ RexxInteger *RexxNumberString::strictLessThan(RexxObject *other)
     return booleanObject(strictComp(other) < 0);
 }
 
-RexxInteger *RexxNumberString::strictGreaterOrEqual(RexxObject *other)
+RexxInteger *NumberString::strictGreaterOrEqual(RexxObject *other)
 /******************************************************************************/
 /* Function:  strict ">>=" operator                                           */
 /******************************************************************************/
@@ -3037,7 +3037,7 @@ RexxInteger *RexxNumberString::strictGreaterOrEqual(RexxObject *other)
     return booleanObject(strictComp(other) >= 0);
 }
 
-RexxInteger *RexxNumberString::strictLessOrEqual(RexxObject *other)
+RexxInteger *NumberString::strictLessOrEqual(RexxObject *other)
 /******************************************************************************/
 /* Function:  strict "<<=" operator                                           */
 /******************************************************************************/
@@ -3049,7 +3049,7 @@ RexxInteger *RexxNumberString::strictLessOrEqual(RexxObject *other)
     return booleanObject(strictComp(other) <= 0);
 }
 
-RexxNumberString *RexxNumberString::plus(RexxObject *right)
+NumberString *NumberString::plus(RexxObject *right)
 /********************************************************************/
 /* Function:  Add two number strings                                */
 /********************************************************************/
@@ -3058,7 +3058,7 @@ RexxNumberString *RexxNumberString::plus(RexxObject *right)
     {            /* Is this a dyadic operation?       */
                  /* get a numberstring object from    */
                  /*right                              */
-        RexxNumberString *rightNumber = right->numberString();
+        NumberString *rightNumber = right->numberString();
         if (rightNumber == OREF_NULL)      /* is the operand numeric?           */
         {
             /* nope, this is an error            */
@@ -3085,7 +3085,7 @@ RexxNumberString *RexxNumberString::plus(RexxObject *right)
     }
 }
 
-RexxNumberString *RexxNumberString::minus(RexxObject *right)
+NumberString *NumberString::minus(RexxObject *right)
 /********************************************************************/
 /* Function:  Subtraction between two numbers                       */
 /********************************************************************/
@@ -3094,7 +3094,7 @@ RexxNumberString *RexxNumberString::minus(RexxObject *right)
     {            /* Is this a dyadic operation?       */
                  /* get a numberstring object from    */
                  /*right                              */
-        RexxNumberString *rightNumber = right->numberString();
+        NumberString *rightNumber = right->numberString();
         if (rightNumber == OREF_NULL)      /* is the operand numeric?           */
         {
             /* nope, this is an error            */
@@ -3106,14 +3106,14 @@ RexxNumberString *RexxNumberString::minus(RexxObject *right)
     else
     {
         /* need to copy and reformat         */
-        RexxNumberString *result = prepareOperatorNumber(number_digits(), number_digits(), ROUND);
+        NumberString *result = prepareOperatorNumber(number_digits(), number_digits(), ROUND);
         /* invert the sign of our copy.      */
         result->sign = -(result->sign);
         return result;                       /* return addition result            */
     }
 }
 
-RexxNumberString *RexxNumberString::multiply(RexxObject *right)
+NumberString *NumberString::multiply(RexxObject *right)
 /********************************************************************/
 /* Function:  Multiply two numbers                                  */
 /********************************************************************/
@@ -3121,7 +3121,7 @@ RexxNumberString *RexxNumberString::multiply(RexxObject *right)
     requiredArgument(right, ARG_ONE);            /* must have an argument             */
                                          /* get a numberstring object from    */
                                          /*right                              */
-    RexxNumberString *rightNumber = right->numberString();
+    NumberString *rightNumber = right->numberString();
     if (rightNumber == OREF_NULL)        /* is the operand numeric?           */
     {
         /* nope, this is an error            */
@@ -3130,7 +3130,7 @@ RexxNumberString *RexxNumberString::multiply(RexxObject *right)
     return Multiply(rightNumber);  /* go do the multiply                */
 }
 
-RexxNumberString *RexxNumberString::divide(RexxObject *right)
+NumberString *NumberString::divide(RexxObject *right)
 /********************************************************************/
 /* Function:  Divide two numbers                                    */
 /********************************************************************/
@@ -3139,7 +3139,7 @@ RexxNumberString *RexxNumberString::divide(RexxObject *right)
 
                                          /* get a numberstring object from    */
                                          /*right                              */
-    RexxNumberString *rightNumber = right->numberString();
+    NumberString *rightNumber = right->numberString();
     if (rightNumber == OREF_NULL)        /* is the operand numeric?           */
     {
         /* nope, this is an error            */
@@ -3149,7 +3149,7 @@ RexxNumberString *RexxNumberString::divide(RexxObject *right)
     return Division(rightNumber, OT_DIVIDE);
 }
 
-RexxNumberString *RexxNumberString::integerDivide(RexxObject *right)
+NumberString *NumberString::integerDivide(RexxObject *right)
 /********************************************************************/
 /* Function:  Integer division between two numbers                  */
 /********************************************************************/
@@ -3157,7 +3157,7 @@ RexxNumberString *RexxNumberString::integerDivide(RexxObject *right)
     requiredArgument(right, ARG_ONE);            /* must have an argument             */
                                          /* get a numberstring object from    */
                                          /*right                              */
-    RexxNumberString *rightNumber = right->numberString();
+    NumberString *rightNumber = right->numberString();
     if (rightNumber == OREF_NULL)        /* is the operand numeric?           */
     {
         /* nope, this is an error            */
@@ -3167,7 +3167,7 @@ RexxNumberString *RexxNumberString::integerDivide(RexxObject *right)
     return Division(rightNumber, OT_INT_DIVIDE);
 }
 
-RexxNumberString *RexxNumberString::remainder(RexxObject *right)
+NumberString *NumberString::remainder(RexxObject *right)
 /********************************************************************/
 /* Function:  Remainder division between two numbers                */
 /********************************************************************/
@@ -3176,7 +3176,7 @@ RexxNumberString *RexxNumberString::remainder(RexxObject *right)
 
                                          /* get a numberstring object from    */
                                          /*right                              */
-    RexxNumberString *rightNumber = right->numberString();
+    NumberString *rightNumber = right->numberString();
     if (rightNumber == OREF_NULL)        /* is the operand numeric?           */
     {
         /* nope, this is an error            */
@@ -3186,12 +3186,12 @@ RexxNumberString *RexxNumberString::remainder(RexxObject *right)
     return Division(rightNumber, OT_REMAINDER);
 }
 
-RexxNumberString *RexxNumberString::abs()
+NumberString *NumberString::abs()
 /********************************************************************/
 /* Function:  Return the absolute value of a number                 */
 /********************************************************************/
 {
-    RexxNumberString *NewNumber = clone();            /* copy the number                   */
+    NumberString *NewNumber = clone();            /* copy the number                   */
     /* inherit the current numeric settings and perform rounding, if */
     /* necessary */
     NewNumber->setupNumber();
@@ -3200,19 +3200,19 @@ RexxNumberString *RexxNumberString::abs()
     return NewNumber;                     /* and return                        */
 }
 
-RexxInteger *RexxNumberString::Sign()
+RexxInteger *NumberString::Sign()
 /********************************************************************/
 /* Function:  Return the sign of a number                           */
 /********************************************************************/
 {
-    RexxNumberString *NewNumber = clone();            /* copy the number                   */
+    NumberString *NewNumber = clone();            /* copy the number                   */
     /* inherit the current numeric settings and perform rounding, if */
     /* necessary */
     NewNumber->setupNumber();
     return new_integer(NewNumber->sign);  /* just return the sign value        */
 }
 
-RexxObject  *RexxNumberString::notOp()
+RexxObject  *NumberString::notOp()
 /********************************************************************/
 /* Function:  Logical not of a number string value                  */
 /********************************************************************/
@@ -3220,7 +3220,7 @@ RexxObject  *RexxNumberString::notOp()
    return stringValue()->notOp();
 }
 
-RexxObject  *RexxNumberString::operatorNot(RexxObject *right)
+RexxObject  *NumberString::operatorNot(RexxObject *right)
 /********************************************************************/
 /* Function:  Polymorphic NOT operator method                       */
 /********************************************************************/
@@ -3228,7 +3228,7 @@ RexxObject  *RexxNumberString::operatorNot(RexxObject *right)
    return stringValue()->notOp();
 }
 
-RexxNumberString *RexxNumberString::Max(
+NumberString *NumberString::Max(
     RexxObject **args,                 /* array of comparison values        */
     size_t argCount)                   /* count of arguments                */
 /********************************************************************/
@@ -3238,7 +3238,7 @@ RexxNumberString *RexxNumberString::Max(
    return maxMin(args, argCount, OT_MAX);
 }
 
-RexxNumberString *RexxNumberString::Min(
+NumberString *NumberString::Min(
     RexxObject **args,                 /* array of comparison values        */
     size_t argCount)                   /* count of arguments                */
 /********************************************************************/
@@ -3248,7 +3248,7 @@ RexxNumberString *RexxNumberString::Min(
    return maxMin(args, argCount, OT_MIN);
 }
 
-RexxObject *RexxNumberString::isInteger()
+RexxObject *NumberString::isInteger()
 /******************************************************************************/
 /* This method determines if the formatted numberstring is s true integer     */
 /* string.  That is, its not of the form 1.00E3 but 10000                     */
@@ -3264,7 +3264,7 @@ RexxObject *RexxNumberString::isInteger()
 /*   Function:          Round up a number as a result of the chopping*/
 /*                        digits off of the number during init.      */
 /*********************************************************************/
-void RexxNumberString::roundUp(int MSDigit)
+void NumberString::roundUp(int MSDigit)
 {
     int  carry;
     char *InPtr;
@@ -3303,7 +3303,7 @@ void RexxNumberString::roundUp(int MSDigit)
     }
 }
 
-RexxString *RexxNumberString::d2x(
+RexxString *NumberString::d2x(
      RexxObject *_length)               /* result length                     */
 /******************************************************************************/
 /* Function:  Convert a valid numberstring to a hex string.                   */
@@ -3313,7 +3313,7 @@ RexxString *RexxNumberString::d2x(
     return d2xD2c(_length, false);
 }
 
-RexxString *RexxNumberString::d2c(
+RexxString *NumberString::d2c(
      RexxObject *_length)               /* result length                     */
 /******************************************************************************/
 /* Function:  Convert a valid numberstring to a character string.             */
@@ -3324,7 +3324,7 @@ RexxString *RexxNumberString::d2c(
 }
 
 
-RexxObject *RexxNumberString::evaluate(
+RexxObject *NumberString::evaluate(
      RexxActivation *context,          /* current activation context        */
      RexxExpressionStack *stack )      /* evaluation stack                  */
 /******************************************************************************/
@@ -3338,7 +3338,7 @@ RexxObject *RexxNumberString::evaluate(
     return this;                         /* also return the result            */
 }
 
-RexxString *RexxNumberString::d2xD2c(
+RexxString *NumberString::d2xD2c(
      RexxObject *_length,              /* result length                     */
      bool  type )                      /* D2C or D2X flag                   */
 /******************************************************************************/
@@ -3357,7 +3357,7 @@ RexxString *RexxNumberString::d2xD2c(
     size_t     PadSize;                  /* needed padding                    */
     size_t     CurrentDigits;            /* current digits setting            */
     size_t     TargetLength;             /* length of current number          */
-    RexxBuffer *Target;                  /* formatted number                  */
+    BufferClass *Target;                  /* formatted number                  */
     RexxString *Retval;                  /* returned result                   */
 
 
@@ -3560,7 +3560,7 @@ RexxString *RexxNumberString::d2xD2c(
 }
 
 
-RexxObject  *RexxNumberString::getValue(
+RexxObject  *NumberString::getValue(
     RexxActivation *context)           /* current activation context        */
 /******************************************************************************/
 /* Function:  Polymorphic get_value function used with expression terms       */
@@ -3570,7 +3570,7 @@ RexxObject  *RexxNumberString::getValue(
 }
 
 
-RexxObject  *RexxNumberString::getValue(
+RexxObject  *NumberString::getValue(
     RexxVariableDictionary *context)   /* current activation context        */
 /******************************************************************************/
 /* Function:  Polymorphic get_value function used with expression terms       */
@@ -3580,7 +3580,7 @@ RexxObject  *RexxNumberString::getValue(
 }
 
 
-RexxObject  *RexxNumberString::getRealValue(
+RexxObject  *NumberString::getRealValue(
     RexxActivation *context)           /* current activation context        */
 /******************************************************************************/
 /* Function:  Polymorphic get_value function used with expression terms       */
@@ -3590,7 +3590,7 @@ RexxObject  *RexxNumberString::getRealValue(
 }
 
 
-RexxObject  *RexxNumberString::getRealValue(
+RexxObject  *NumberString::getRealValue(
     RexxVariableDictionary *context)   /* current activation context        */
 /******************************************************************************/
 /* Function:  Polymorphic get_value function used with expression terms       */
@@ -3599,7 +3599,7 @@ RexxObject  *RexxNumberString::getRealValue(
     return (RexxObject *)this;           /* just return this value            */
 }
 
-RexxClass   *RexxNumberString::classObject()
+RexxClass   *NumberString::classObject()
 /******************************************************************************/
 /* Function:  Return the String class object for numberstring instances       */
 /******************************************************************************/
@@ -3608,28 +3608,28 @@ RexxClass   *RexxNumberString::classObject()
   return TheStringClass;
 }
 
-void  *RexxNumberString::operator new(size_t size, size_t length)
+void  *NumberString::operator new(size_t size, size_t length)
 /******************************************************************************/
 /* Function:  Create a new NumberString object                                */
 /******************************************************************************/
 {
-    RexxNumberString *newNumber = (RexxNumberString *)new_object(size + length, T_NumberString);
+    NumberString *newNumber = (NumberString *)new_object(size + length, T_NumberString);
     /* initialize the new object         */
     newNumber->setHasNoReferences();     /* Let GC know no to bother with LIVE*/
     return newNumber;                    /* return the new numberstring       */
 }
 
-RexxNumberString *RexxNumberString::newInstance(const char *number, stringsize_t len)
+NumberString *NumberString::newInstance(const char *number, stringsize_t len)
 /******************************************************************************/
 /* Function:  Create a new number string object                               */
 /******************************************************************************/
 {
-    RexxNumberString *newNumber;
+    NumberString *newNumber;
 
     if (number == NULL)
     {                /* asking for a dummy string?        */
                      /* allocate a new string             */
-        newNumber = new (len) RexxNumberString (len);
+        newNumber = new (len) NumberString (len);
         /* make it a zero value              */
         newNumber->setZero();
         return newNumber;                  /* return this now                   */
@@ -3644,7 +3644,7 @@ RexxNumberString *RexxNumberString::newInstance(const char *number, stringsize_t
     {
         /* looks to be valid.  get a new     */
         /* format it                         */
-        newNumber = new (len) RexxNumberString (len);
+        newNumber = new (len) NumberString (len);
         /* now see if the data actually is   */
         /*  a number and fill in actual data */
         /* NOTE: even though a scan has been */
@@ -3659,7 +3659,7 @@ RexxNumberString *RexxNumberString::newInstance(const char *number, stringsize_t
     return newNumber;
 }
 
-RexxNumberString *RexxNumberString::newInstanceFromFloat(float num)
+NumberString *NumberString::newInstanceFromFloat(float num)
 /******************************************************************************/
 /* Function:  Create a numberstring object from a floating point number       */
 /******************************************************************************/
@@ -3667,7 +3667,7 @@ RexxNumberString *RexxNumberString::newInstanceFromFloat(float num)
     return newInstanceFromDouble((double)num, number_digits());
 }
 
-RexxNumberString *RexxNumberString::newInstanceFromDouble(double number)
+NumberString *NumberString::newInstanceFromDouble(double number)
 /******************************************************************************/
 /* Function:  Create a NumberString from a double value                       */
 /******************************************************************************/
@@ -3685,23 +3685,23 @@ RexxNumberString *RexxNumberString::newInstanceFromDouble(double number)
  *
  * @return The formatted number, as a numberstring value.
  */
-RexxNumberString *RexxNumberString::newInstanceFromDouble(double number, size_t precision)
+NumberString *NumberString::newInstanceFromDouble(double number, size_t precision)
 {
     // make a nan value a string value
     if (isnan(number))
     {
-        return (RexxNumberString *)new_string("nan");
+        return (NumberString *)new_string("nan");
     }
     else if (number == +HUGE_VAL)
     {
-        return (RexxNumberString *)new_string("+infinity");
+        return (NumberString *)new_string("+infinity");
     }
     else if (number == -HUGE_VAL)
     {
-        return (RexxNumberString *)new_string("-infinity");
+        return (NumberString *)new_string("-infinity");
     }
 
-    RexxNumberString *result;
+    NumberString *result;
     size_t resultLen;
     /* Max length of double str is       */
     /*  22, make 30 just to be safe      */
@@ -3711,97 +3711,97 @@ RexxNumberString *RexxNumberString::newInstanceFromDouble(double number, size_t 
     sprintf(doubleStr, "%.*g", (int)(precision + 2), number);
     resultLen = strlen(doubleStr);       /* Compute length of floatString     */
                                          /* Create new NumberString           */
-    result = new (resultLen) RexxNumberString (resultLen, precision);
+    result = new (resultLen) NumberString (resultLen, precision);
     /* now format as a numberstring      */
     result->format(doubleStr, resultLen);
     return result->prepareNumber(precision, ROUND);
 }
 
-RexxNumberString *RexxNumberString::newInstanceFromWholenumber(wholenumber_t integer)
+NumberString *NumberString::newInstanceFromWholenumber(wholenumber_t integer)
 /******************************************************************************/
 /* Function:  Create a NumberString object from a wholenumber_t value         */
 /******************************************************************************/
 {
     // the size of the integer depends on the platform, 32-bit or 64-bit.
     // ARGUMENT_DIGITS ensures the correct value
-    RexxNumberString *newNumber = new (Numerics::ARGUMENT_DIGITS) RexxNumberString (Numerics::ARGUMENT_DIGITS);
+    NumberString *newNumber = new (Numerics::ARGUMENT_DIGITS) NumberString (Numerics::ARGUMENT_DIGITS);
     newNumber->formatNumber(integer);      /* format the number               */
     return newNumber;
 }
 
-RexxNumberString *RexxNumberString::newInstanceFromStringsize(stringsize_t integer)
+NumberString *NumberString::newInstanceFromStringsize(stringsize_t integer)
 /******************************************************************************/
 /* Function:  Create a NumberString object from a size_t value                */
 /******************************************************************************/
 {
     // the size of the integer depends on the platform, 32-bit or 64-bit.
     // ARGUMENT_DIGITS ensures the correct value
-    RexxNumberString *newNumber = new (Numerics::ARGUMENT_DIGITS) RexxNumberString (Numerics::ARGUMENT_DIGITS);
+    NumberString *newNumber = new (Numerics::ARGUMENT_DIGITS) NumberString (Numerics::ARGUMENT_DIGITS);
     newNumber->formatUnsignedNumber(integer);     /* format the number        */
     return newNumber;
 }
 
 
-RexxNumberString *RexxNumberString::newInstanceFromInt64(int64_t integer)
+NumberString *NumberString::newInstanceFromInt64(int64_t integer)
 /******************************************************************************/
 /* Function:  Create a NumberString object from a signed 64 bit number        */
 /******************************************************************************/
 {
     // this give us space for entire binary range of the int64_t number.
-    RexxNumberString *newNumber = new (Numerics::DIGITS64) RexxNumberString (Numerics::DIGITS64);
+    NumberString *newNumber = new (Numerics::DIGITS64) NumberString (Numerics::DIGITS64);
     newNumber->formatInt64(integer);  /* format the number                    */
     return newNumber;
 }
 
 
-RexxNumberString *RexxNumberString::newInstanceFromUint64(uint64_t integer)
+NumberString *NumberString::newInstanceFromUint64(uint64_t integer)
 /******************************************************************************/
 /* Function:  Create a NumberString object from an unsigned 64 bit number     */
 /******************************************************************************/
 {
     // this give us space for entire binary range of the uint64_t number.
-    RexxNumberString *newNumber = new (Numerics::DIGITS64) RexxNumberString (Numerics::DIGITS64);
+    NumberString *newNumber = new (Numerics::DIGITS64) NumberString (Numerics::DIGITS64);
     newNumber->formatUnsignedInt64(integer);  /* format the number            */
     return newNumber;
 }
 
                                        /* numberstring operator methods     */
-PCPPM RexxNumberString::operatorMethods[] =
+PCPPM NumberString::operatorMethods[] =
 {
    NULL,                               /* first entry not used              */
-   (PCPPM)&RexxNumberString::plus,
-   (PCPPM)&RexxNumberString::minus,
-   (PCPPM)&RexxNumberString::multiply,
-   (PCPPM)&RexxNumberString::divide,
-   (PCPPM)&RexxNumberString::integerDivide,
-   (PCPPM)&RexxNumberString::remainder,
-   (PCPPM)&RexxNumberString::power,
-   (PCPPM)&RexxNumberString::concat,
-   (PCPPM)&RexxNumberString::concat, /* Duplicate entry neccessary        */
-   (PCPPM)&RexxNumberString::concatBlank,
-   (PCPPM)&RexxNumberString::equal,
-   (PCPPM)&RexxNumberString::notEqual,
-   (PCPPM)&RexxNumberString::isGreaterThan,
-   (PCPPM)&RexxNumberString::isLessOrEqual,
-   (PCPPM)&RexxNumberString::isLessThan,
-   (PCPPM)&RexxNumberString::isGreaterOrEqual,
+   (PCPPM)&NumberString::plus,
+   (PCPPM)&NumberString::minus,
+   (PCPPM)&NumberString::multiply,
+   (PCPPM)&NumberString::divide,
+   (PCPPM)&NumberString::integerDivide,
+   (PCPPM)&NumberString::remainder,
+   (PCPPM)&NumberString::power,
+   (PCPPM)&NumberString::concat,
+   (PCPPM)&NumberString::concat, /* Duplicate entry neccessary        */
+   (PCPPM)&NumberString::concatBlank,
+   (PCPPM)&NumberString::equal,
+   (PCPPM)&NumberString::notEqual,
+   (PCPPM)&NumberString::isGreaterThan,
+   (PCPPM)&NumberString::isLessOrEqual,
+   (PCPPM)&NumberString::isLessThan,
+   (PCPPM)&NumberString::isGreaterOrEqual,
                            /* Duplicate entry neccessary        */
-   (PCPPM)&RexxNumberString::isGreaterOrEqual,
-   (PCPPM)&RexxNumberString::isLessOrEqual,
-   (PCPPM)&RexxNumberString::strictEqual,
-   (PCPPM)&RexxNumberString::strictNotEqual,
-   (PCPPM)&RexxNumberString::strictGreaterThan,
-   (PCPPM)&RexxNumberString::strictLessOrEqual,
-   (PCPPM)&RexxNumberString::strictLessThan,
-   (PCPPM)&RexxNumberString::strictGreaterOrEqual,
+   (PCPPM)&NumberString::isGreaterOrEqual,
+   (PCPPM)&NumberString::isLessOrEqual,
+   (PCPPM)&NumberString::strictEqual,
+   (PCPPM)&NumberString::strictNotEqual,
+   (PCPPM)&NumberString::strictGreaterThan,
+   (PCPPM)&NumberString::strictLessOrEqual,
+   (PCPPM)&NumberString::strictLessThan,
+   (PCPPM)&NumberString::strictGreaterOrEqual,
                            /* Duplicate entry neccessary        */
-   (PCPPM)&RexxNumberString::strictGreaterOrEqual,
-   (PCPPM)&RexxNumberString::strictLessOrEqual,
-   (PCPPM)&RexxNumberString::notEqual,
+   (PCPPM)&NumberString::strictGreaterOrEqual,
+   (PCPPM)&NumberString::strictLessOrEqual,
+   (PCPPM)&NumberString::notEqual,
                            /* Duplicate entry neccessary        */
-   (PCPPM)&RexxNumberString::notEqual,
-   (PCPPM)&RexxNumberString::andOp,
-   (PCPPM)&RexxNumberString::orOp,
-   (PCPPM)&RexxNumberString::xorOp,
-   (PCPPM)&RexxNumberString::operatorNot,
+   (PCPPM)&NumberString::notEqual,
+   (PCPPM)&NumberString::andOp,
+   (PCPPM)&NumberString::orOp,
+   (PCPPM)&NumberString::xorOp,
+   (PCPPM)&NumberString::operatorNot,
 };

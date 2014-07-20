@@ -873,7 +873,7 @@ RoutineClass *PackageManager::loadRequires(RexxActivity *activity, RexxString *n
         return resolved;
     }
 
-    Protected<RexxBuffer> buffer = new_buffer(data, length);
+    Protected<BufferClass> buffer = new_buffer(data, length);
 
     RoutineClass *code = LanguageParser::createProgram(name, buffer);
     result = code;

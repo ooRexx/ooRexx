@@ -794,7 +794,7 @@ RexxReturnCode REXXENTRY RexxOpenQueue (
 typedef RexxReturnCode (REXXENTRY *PFNREXXOPENQUEUE)(CONSTANT_STRING, size_t);
 
 
-/***    RexxQueueExists - Check for the existance of an external data queue */
+/***    QueueClassExists - Check for the existance of an external data queue */
 
 RexxReturnCode REXXENTRY RexxQueueExists (
         CONSTANT_STRING);                      /* Name of queue to be deleted */

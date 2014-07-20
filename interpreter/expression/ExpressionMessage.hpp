@@ -56,7 +56,7 @@ class RexxExpressionMessage : public RexxVariableBase
     inline void  operator delete(void *, size_t) { ; }
     inline void  operator delete(void *, void *) { ; }
 
-    RexxExpressionMessage(RexxObject *, RexxString *, RexxObject *, size_t, RexxQueue *, bool);
+    RexxExpressionMessage(RexxObject *, RexxString *, RexxObject *, size_t, QueueClass *, bool);
     inline RexxExpressionMessage(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);

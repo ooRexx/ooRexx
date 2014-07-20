@@ -84,6 +84,8 @@ ListClass::ListClass(size_t capacity)
  *                 the dummy form.
  */
 ListClass::ListClass(bool fromRexx) { }
+
+
 /**
  * The init method for this class.  This does delayed
  * initialization of this object until a INIT message is
@@ -837,6 +839,10 @@ RexxObject *ListClass::indexRexx(RexxInternalObject *target)
  * @return The index, or NoMore if no matching item is found.
  */
 size_t ListClass::getIndex(RexxInternalObject *target)
+{
+    return contents->getindex(target);
+}
+
 
 /**
  * Tests whether there is an object with the given value in the
@@ -846,28 +852,24 @@ size_t ListClass::getIndex(RexxInternalObject *target)
  *
  * @return .true if there is a match, .false otherwise.
  */
-RexxObject *ListClass::hasItem(RexxObject *target)
+RexxObject *ListClass::hasItemRexx(RexxInternalObject *target)
 {
     // we require the index to be there.
     requiredArgument(target, ARG_ONE);
-
-    // ok, now run the list looking for the target item
-    size_t nextEntry = this->first;
-    for (size_t i = 1; i <= this->count; i++)
-    {
-        LISTENTRY *element = ENTRY_POINTER(nextEntry);
-        // if we got a match, return the item
-        if (target->equalValue(element->value))
-        {
-            return TheTrueObject;
-        }
-        nextEntry = element->next;
-    }
-    // no match
-    return TheFalseObject;
+    return booleanObject(contents->hasItem(target));
 }
+
+
+/**
+ * Test of the list contains a given target object.
+ *
+ * @param target The target object.
+ *
+ * @return true if the object is found, false otherwise.
+ */
+bool ListClass::hasItem(RexxInternalObject *target)
 {
-    return contents->getindex(target);
+    return contents->hasItem(target);
 }
 
 

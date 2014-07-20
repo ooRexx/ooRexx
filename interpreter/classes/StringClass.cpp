@@ -262,7 +262,7 @@ bool RexxString::numberValue(wholenumber_t &result, stringsize_t digits)
         return requestString()->numberValue(result, digits);
     }
                                          /* get the string value's long value */
-    RexxNumberString *numberstring = fastNumberString();
+    NumberString *numberstring = fastNumberString();
     if (numberstring != OREF_NULL )      /* convert ok?                       */
     {
                                          /* convert to integer with proper    */
@@ -283,7 +283,7 @@ bool RexxString::numberValue(wholenumber_t &result)
         return requestString()->numberValue(result);
     }
                                          /* get the string value's long value */
-    RexxNumberString *numberstring = fastNumberString();
+    NumberString *numberstring = fastNumberString();
     if (numberstring != OREF_NULL )      /* convert ok?                       */
     {
                                          /* convert to integer with proper    */
@@ -305,7 +305,7 @@ bool RexxString::unsignedNumberValue(stringsize_t &result, stringsize_t digits)
         return requestString()->unsignedNumberValue(result, digits);
     }
                                          /* get the string value's long value */
-    RexxNumberString *numberstring = fastNumberString();
+    NumberString *numberstring = fastNumberString();
     if (numberstring != OREF_NULL )      /* convert ok?                       */
     {
                                          /* convert to integer with proper    */
@@ -327,7 +327,7 @@ bool RexxString::unsignedNumberValue(stringsize_t &result)
         return requestString()->unsignedNumberValue(result);
     }
                                          /* get the string value's long value */
-    RexxNumberString *numberstring = fastNumberString();
+    NumberString *numberstring = fastNumberString();
     if (numberstring != OREF_NULL )      /* convert ok?                       */
     {
                                          /* convert to integer with proper    */
@@ -342,7 +342,7 @@ bool RexxString::doubleValue(double &result)
 /* Function:  Convert a string object to a double value                       */
 /******************************************************************************/
 {
-    RexxNumberString *numberDouble = fastNumberString(); /* convert String to Numberstring    */
+    NumberString *numberDouble = fastNumberString(); /* convert String to Numberstring    */
     if (numberDouble != OREF_NULL)       /* Did we get a numberstring?        */
     {
         return numberDouble->doubleValue(result);/* Yup, convert it to double         */
@@ -373,7 +373,7 @@ bool RexxString::doubleValue(double &result)
 }
 
 
-RexxNumberString *RexxString::numberString()
+NumberString *RexxString::numberString()
 /******************************************************************************/
 /* Function:   Convert a String Object into a Number Object                   */
 /******************************************************************************/
@@ -395,7 +395,7 @@ RexxNumberString *RexxString::numberString()
     {          /* not truly a string type?          */
         newSelf = requestString();   /* do the conversion                 */
                                            /* get a new numberstring Obj        */
-        OrefSet(this, numberStringValue, (RexxNumberString *)new_numberstring(newSelf->getStringData(), newSelf->getLength()));
+        OrefSet(this, numberStringValue, (NumberString *)new_numberstring(newSelf->getStringData(), newSelf->getLength()));
         if (numberStringValue != OREF_NULL)     /* Did number convert OK?            */
         {
             setHasReferences();     /* Make sure we are sent Live...     */
@@ -404,7 +404,7 @@ RexxNumberString *RexxString::numberString()
     else
     {                               /* real primitive string             */
                                     /* get a new numberstring Obj        */
-        OrefSet(this, numberStringValue, (RexxNumberString *)new_numberstring(getStringData(), getLength()));
+        OrefSet(this, numberStringValue, (NumberString *)new_numberstring(getStringData(), getLength()));
         if (numberStringValue == OREF_NULL)     /* Did number convert OK?            */
         {
             setNonNumeric();           /* mark as a nonnumeric              */
@@ -419,7 +419,7 @@ RexxNumberString *RexxString::numberString()
     return numberStringValue;           /* return the numberString Object.   */
 }
 
-RexxNumberString *RexxString::createNumberString()
+NumberString *RexxString::createNumberString()
 /******************************************************************************/
 /* Function:   Convert a String Object into a Number Object                   */
 /******************************************************************************/
@@ -428,7 +428,7 @@ RexxNumberString *RexxString::createNumberString()
     {          /* not truly a string type?          */
         RexxString *newSelf = requestString();   /* do the conversion                 */
                                            /* get a new numberstring Obj        */
-        OrefSet(newSelf, newSelf->numberStringValue, (RexxNumberString *)new_numberstring(newSelf->getStringData(), newSelf->getLength()));
+        OrefSet(newSelf, newSelf->numberStringValue, (NumberString *)new_numberstring(newSelf->getStringData(), newSelf->getLength()));
         /* save the number string            */
         if (newSelf->numberStringValue != OREF_NULL)     /* Did number convert OK?            */
         {
@@ -439,7 +439,7 @@ RexxNumberString *RexxString::createNumberString()
     else
     {                               /* real primitive string             */
                                     /* get a new numberstring Obj        */
-        OrefSet(this, numberStringValue, (RexxNumberString *)new_numberstring(getStringData(), getLength()));
+        OrefSet(this, numberStringValue, (NumberString *)new_numberstring(getStringData(), getLength()));
         if (numberStringValue == OREF_NULL)     /* Did number convert OK?            */
         {
             setNonNumeric();           /* mark as a nonnumeric              */
@@ -600,8 +600,8 @@ wholenumber_t RexxString::comp(RexxObject *other)
 /******************************************************************************/
 {
     RexxString *second;                  /* string value of other             */
-    RexxNumberString *firstNum;          /* numberstring value of this        */
-    RexxNumberString *secondNum;         /* numberstring value of other       */
+    NumberString *firstNum;          /* numberstring value of this        */
+    NumberString *secondNum;         /* numberstring value of other       */
     const char *firstStart;              /* comparison start pointer          */
     const char *secondStart;             /* other start pointer               */
     size_t firstLen;                     /* this compare length               */
@@ -746,10 +746,10 @@ wholenumber_t RexxString::strictComp(RexxObject *otherObj)
 
 RexxObject *RexxString::plus(RexxObject *right_term)
 /******************************************************************************/
-/* Function:  String addition...performed by RexxNumberString                 */
+/* Function:  String addition...performed by NumberString                 */
 /******************************************************************************/
 {
-    RexxNumberString *numstr;            /* converted number string           */
+    NumberString *numstr;            /* converted number string           */
 
                                          /* non-numeric?                      */
     if ((numstr = fastNumberString()) == OREF_NULL)
@@ -762,10 +762,10 @@ RexxObject *RexxString::plus(RexxObject *right_term)
 
 RexxObject *RexxString::minus(RexxObject *right_term)
 /******************************************************************************/
-/* Function:  String subtraction...performed by RexxNumberString              */
+/* Function:  String subtraction...performed by NumberString              */
 /******************************************************************************/
 {
-    RexxNumberString *numstr;            /* converted number string           */
+    NumberString *numstr;            /* converted number string           */
 
                                          /* non-numeric?                      */
     if ((numstr = fastNumberString()) == OREF_NULL)
@@ -778,10 +778,10 @@ RexxObject *RexxString::minus(RexxObject *right_term)
 
 RexxObject *RexxString::multiply(RexxObject *right_term)
 /******************************************************************************/
-/* Function:  String multiplication...performed by RexxNumberString           */
+/* Function:  String multiplication...performed by NumberString           */
 /******************************************************************************/
 {
-    RexxNumberString *numstr;            /* converted number string           */
+    NumberString *numstr;            /* converted number string           */
 
                                          /* non-numeric?                      */
     if ((numstr = fastNumberString()) == OREF_NULL)
@@ -794,10 +794,10 @@ RexxObject *RexxString::multiply(RexxObject *right_term)
 
 RexxObject *RexxString::divide(RexxObject *right_term)
 /******************************************************************************/
-/* Function:  String division...performed by RexxNumberString                 */
+/* Function:  String division...performed by NumberString                 */
 /******************************************************************************/
 {
-    RexxNumberString *numstr;            /* converted number string           */
+    NumberString *numstr;            /* converted number string           */
 
                                          /* non-numeric?                      */
     if ((numstr = fastNumberString()) == OREF_NULL)
@@ -810,10 +810,10 @@ RexxObject *RexxString::divide(RexxObject *right_term)
 
 RexxObject *RexxString::integerDivide(RexxObject *right_term)
 /******************************************************************************/
-/* Function:  String division...performed by RexxNumberString                 */
+/* Function:  String division...performed by NumberString                 */
 /******************************************************************************/
 {
-    RexxNumberString *numstr;            /* converted number string           */
+    NumberString *numstr;            /* converted number string           */
 
                                          /* non-numeric?                      */
     if ((numstr = fastNumberString()) == OREF_NULL)
@@ -826,10 +826,10 @@ RexxObject *RexxString::integerDivide(RexxObject *right_term)
 
 RexxObject *RexxString::remainder(RexxObject *right_term)
 /******************************************************************************/
-/* Function:  String division...performed by RexxNumberString                 */
+/* Function:  String division...performed by NumberString                 */
 /******************************************************************************/
 {
-    RexxNumberString *numstr;            /* converted number string           */
+    NumberString *numstr;            /* converted number string           */
 
                                          /* non-numeric?                      */
     if ((numstr = fastNumberString()) == OREF_NULL)
@@ -842,10 +842,10 @@ RexxObject *RexxString::remainder(RexxObject *right_term)
 
 RexxObject *RexxString::power(RexxObject *right_term)
 /******************************************************************************/
-/* Function:  String division...performed by RexxNumberString                 */
+/* Function:  String division...performed by NumberString                 */
 /******************************************************************************/
 {
-    RexxNumberString *numstr;            /* converted number string           */
+    NumberString *numstr;            /* converted number string           */
 
                                          /* non-numeric?                      */
     if ((numstr = fastNumberString()) == OREF_NULL)
@@ -858,10 +858,10 @@ RexxObject *RexxString::power(RexxObject *right_term)
 
 RexxObject *RexxString::abs()
 /******************************************************************************/
-/* Function:  String absolute value...performed by RexxNumberString           */
+/* Function:  String absolute value...performed by NumberString           */
 /******************************************************************************/
 {
-    RexxNumberString *numstr;            /* converted number string           */
+    NumberString *numstr;            /* converted number string           */
 
                                          /* non-numeric?                      */
     if ((numstr = fastNumberString()) == OREF_NULL)
@@ -874,10 +874,10 @@ RexxObject *RexxString::abs()
 
 RexxObject *RexxString::sign()
 /******************************************************************************/
-/* Function:  String sign value...performed by RexxNumberString               */
+/* Function:  String sign value...performed by NumberString               */
 /******************************************************************************/
 {
-    RexxNumberString *numstr;            /* converted number string           */
+    NumberString *numstr;            /* converted number string           */
 
                                          /* non-numeric?                      */
     if ((numstr = fastNumberString()) == OREF_NULL)
@@ -890,10 +890,10 @@ RexxObject *RexxString::sign()
 
 RexxObject *RexxString::Max(RexxObject **arguments, size_t argCount)
 /******************************************************************************/
-/* Function:  String max value...performed by RexxNumberString                */
+/* Function:  String max value...performed by NumberString                */
 /******************************************************************************/
 {
-    RexxNumberString *numstr;            /* converted number string           */
+    NumberString *numstr;            /* converted number string           */
 
                                          /* non-numeric?                      */
     if ((numstr = fastNumberString()) == OREF_NULL)
@@ -907,10 +907,10 @@ RexxObject *RexxString::Max(RexxObject **arguments, size_t argCount)
 
 RexxObject *RexxString::Min(RexxObject **arguments, size_t argCount)
 /******************************************************************************/
-/* Function:  String min value...performed by RexxNumberString                */
+/* Function:  String min value...performed by NumberString                */
 /******************************************************************************/
 {
-    RexxNumberString *numstr;            /* converted number string           */
+    NumberString *numstr;            /* converted number string           */
 
                                          /* non-numeric?                      */
     if ((numstr = fastNumberString()) == OREF_NULL)
@@ -924,10 +924,10 @@ RexxObject *RexxString::Min(RexxObject **arguments, size_t argCount)
 
 RexxObject *RexxString::trunc(RexxInteger *decimals)
 /******************************************************************************/
-/* Function:  String Trunc...performed by RexxNumberString                    */
+/* Function:  String Trunc...performed by NumberString                    */
 /******************************************************************************/
 {
-    RexxNumberString *numstr;            /* converted number string           */
+    NumberString *numstr;            /* converted number string           */
 
                                          /* non-numeric?                      */
     if ((numstr = fastNumberString()) == OREF_NULL)
@@ -945,7 +945,7 @@ RexxObject *RexxString::trunc(RexxInteger *decimals)
  */
 RexxObject *RexxString::floor()
 {
-    RexxNumberString *numstr;            /* converted number string           */
+    NumberString *numstr;            /* converted number string           */
 
                                          /* non-numeric?                      */
     if ((numstr = fastNumberString()) == OREF_NULL)
@@ -963,7 +963,7 @@ RexxObject *RexxString::floor()
  */
 RexxObject *RexxString::ceiling()
 {
-    RexxNumberString *numstr;            /* converted number string           */
+    NumberString *numstr;            /* converted number string           */
 
                                          /* non-numeric?                      */
     if ((numstr = fastNumberString()) == OREF_NULL)
@@ -981,7 +981,7 @@ RexxObject *RexxString::ceiling()
  */
 RexxObject *RexxString::round()
 {
-    RexxNumberString *numstr;            /* converted number string           */
+    NumberString *numstr;            /* converted number string           */
 
                                          /* non-numeric?                      */
     if ((numstr = fastNumberString()) == OREF_NULL)
@@ -994,10 +994,10 @@ RexxObject *RexxString::round()
 
 RexxObject *RexxString::format(RexxObject *Integers, RexxObject *Decimals, RexxObject *MathExp, RexxObject *ExpTrigger)
 /******************************************************************************/
-/* Function:  String Format...performed by RexxNumberString                   */
+/* Function:  String Format...performed by NumberString                   */
 /******************************************************************************/
 {
-    RexxNumberString *numstr;            /* converted number string           */
+    NumberString *numstr;            /* converted number string           */
 
                                          /* non-numeric?                      */
     if ((numstr = fastNumberString()) == OREF_NULL)
@@ -1703,7 +1703,7 @@ RexxInteger *RexxString::integerValue(
 /*            failures.                                                       */
 /******************************************************************************/
 {
-    RexxNumberString *numberStr;         /* string's numberstring version     */
+    NumberString *numberStr;         /* string's numberstring version     */
     RexxInteger *newInteger;             /* returned integer string           */
 
                                          /* Force String conversion through   */
@@ -1732,7 +1732,7 @@ void RexxString::setNumberString(RexxObject *NumberRep)
 /******************************************************************************/
 {
 
-    OrefSet(this, numberStringValue, (RexxNumberString *)NumberRep);
+    OrefSet(this, numberStringValue, (NumberString *)NumberRep);
 
     if (NumberRep != OREF_NULL)          /* actually get one?                 */
     {

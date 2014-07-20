@@ -180,7 +180,7 @@ class ActivationSettings
    void              setFuzz();
    void              setForm();
    bool              trap(RexxString *, DirectoryClass *);
-   void              setObjNotify(RexxMessage *);
+   void              setObjNotify(MessageClass *);
    void              termination();
    inline void       guardOff()
     {
@@ -306,7 +306,7 @@ class ActivationSettings
    void              pushEnvironment(RexxObject *);
    RexxObject      * popEnvironment();
    void              processTraps();
-   void              mergeTraps(RexxQueue *, RexxQueue *);
+   void              mergeTraps(QueueClass *, QueueClass *);
    uint64_t          getRandomSeed(RexxInteger *);
    void              adjustRandomSeed() { random_seed += (uint64_t)(uintptr_t)this; }
    RexxVariableDictionary * getObjectVariables();
@@ -481,16 +481,16 @@ class ActivationSettings
        return target;
    }
 
-   inline RexxStem *getLocalStem(RexxString *name, size_t index)
+   inline StemClass *getLocalStem(RexxString *name, size_t index)
    {
-       return (RexxStem *)getLocalStemVariable(name, index)->getVariableValue();
+       return (StemClass *)getLocalStemVariable(name, index)->getVariableValue();
    }
 
    inline void dropLocalStem(RexxString *name, size_t index)
    {
        RexxVariable *stemVar = getLocalStemVariable(name, index);
        // create a new stem element and set this
-       stemVar->set(new RexxStem(name));
+       stemVar->set(new StemClass(name));
    }
 
    inline bool localStemVariableExists(RexxString *stemName, size_t index)
@@ -622,13 +622,13 @@ class ActivationSettings
     int                  execution_state;
                                         // type of activation activity
     int                  activation_context;
-    RexxMessage         *objnotify;     // an object to notify if excep occur
+    MessageClass         *objnotify;     // an object to notify if excep occur
                                         // LIst of Saved Local environments
     ListClass            *environmentList;
     size_t               pending_count; // number of pending conditions
-    RexxQueue           *handler_queue; // queue of trapped condition handler
+    QueueClass           *handler_queue; // queue of trapped condition handler
                                         // queue of trapped conditions
-    RexxQueue           *condition_queue;
+    QueueClass           *condition_queue;
     uint64_t             random_seed;   // random number seed
     bool                 random_set;    // random seed has been set
     size_t               blockNest;     // block instruction nesting level

@@ -50,13 +50,13 @@
 #include "MethodArguments.hpp"
 
 // singleton class instance
-RexxClass *RexxQueue::classInstance = OREF_NULL;
+RexxClass *QueueClass::classInstance = OREF_NULL;
 
 
 /**
  * Create initial class object at bootstrap time.
  */
-void RexxQueue::createInstance()
+void QueueClass::createInstance()
 {
     CLASS_CREATE(Queue, "Queue", RexxClass);
 }
@@ -69,13 +69,36 @@ void RexxQueue::createInstance()
  *
  * @return An initialized queue object.
  */
-void *RexxQueue::operator new(size_t size)
+void *QueueClass::operator new(size_t size, size_t capacity, size_t maxSize)
 {
-    RexxQueue *newQueue = (RexxQueue *)new (INITIAL_LIST_SIZE, size) ListTable;
-    // these are handled a little differently, so we have to explicitly set our behavior (for now)
-    newQueue->setBehaviour(TheQueueBehaviour);
-    newQueue->init();
-    return newQueue;
+    // we're really allocating an array item
+    return (void *)RexxArray::allocateNewObject(size, capacity, maxSize, T_Queue);
+}
+
+
+/**
+ * Process and validate a queue index.  This overrides the base
+ * array class validation to disable the multi-dimensional
+ * support.  If the index is out of bounds in any dimension it
+ * will either return false or raise an error, depending on the
+ * bounds checking parameter.
+ *
+ * @param index      The array of objects representing the index.
+ * @param indexCount The count of index items.
+ * @param argPosition  The argument position (used for error
+ *               reporting)
+ * @param boundsError Flags indicating how bounds errors should
+ *                   be handled.
+ * @param position   The returned flattened index pointing to the actual
+ *                   item in the array.
+ *
+ * @return true if this was a valid index (within bounds) based
+ *         on the bounds checking flags.
+ */
+bool ArrayClass::validateIndex(RexxObject **index, size_t indexCount,
+    size_t argPosition, size_t boundsError, stringsize_t &position)
+{
+    return validateSingleDimensionIndex(index, indexCount, argPosition, boundsError, position);
 }
 
 
@@ -85,7 +108,7 @@ void *RexxQueue::operator new(size_t size)
  *
  * @return The popped item, or .nil if the queue is empty.
  */
-RexxObject *RexxQueue::pullRexx()
+RexxInternalObject *QueueClass::pullRexx()
 {
     return resultOrNil(pop());
 }
@@ -98,7 +121,7 @@ RexxObject *RexxQueue::pullRexx()
  *
  * @return Returns nothing.
  */
-RexxObject *RexxQueue::pushRexx(RexxObject *item)
+RexxObject *QueueClass::pushRexx(RexxInternalObject *item)
 {
     requiredArgument(item, ARG_ONE);
     push(item);
@@ -106,24 +129,105 @@ RexxObject *RexxQueue::pushRexx(RexxObject *item)
 }
 
 
-RexxObject *RexxQueue::queueRexx(RexxObject *item)
-/******************************************************************************/
-/* Function:  Push an item onto the queue                                     */
-/******************************************************************************/
+/**
+ * Queue an item on this queue.
+ *
+ * @param item   The item to add to the queue.
+ *
+ * @return Returns nothing.
+ */
+RexxObject *QueueClass::queueRexx(RexxInternalObject *item)
 {
-  requiredArgument(item, ARG_ONE);             /* make sure we have an argument     */
-                                       /* add to the end of the queue       */
-  this->queue(item);
-  return OREF_NULL;                    /* return nothing                    */
+    requiredArgument(item, ARG_ONE);
+
+    queue(item);
+    return OREF_NULL;
 }
 
 
-RexxObject *RexxQueue::peek()
-/******************************************************************************/
-/* Function:  Return the first element of the queue without removing it       */
-/******************************************************************************/
+/**
+ * Return the first item of the queue without removing it.
+ *
+ * @return The first object from the queue.
+ */
+RexxInternalObject *QueueClass::peek()
 {
     return firstItem();
+}
+
+
+/**
+ * The Rexx stub for the Queue PUT method. replaces the Array
+ * version because it has slightly different semantics for index
+ * validation.  The only valid indexes are those within range
+ * and the size is not adjusted for a put out of bounds.
+ *
+ * @param arguments The array of all arguments sent to the
+ *                  method (variable arguments allowed
+ *                  here...the first argument is the item being
+ *                  added, all other arguments are the index).
+ * @param argCount  The number of arguments in the method call.
+ *
+ * @return Always return nothing.
+ */
+RexxObject *QueueClass::putRexx(RexxInternalObject *value, RexxObject *index)
+{
+    requiredArgument(value, ARG_ONE);
+
+    // Validate the index argument, but don't allow expansion.
+    size_t position;
+    if (!validateIndex(arguments + 1, argCount - 1, ARG_TWO, IndexAccess, position))
+    {
+        reportException(Error_Incorrect_method_index, index);
+    }
+
+    // set the new value and return nothing
+    put(value, position);
+    return OREF_NULL;
+}
+
+
+/**
+ * The Rexx stub for the Queue REMOVE method. Replaces the Array
+ * version because for the Queue class, remove and delete are
+ * the same thing.
+ *
+ *
+ * @param arguments Pointer to the index arguments.
+ * @param argCount  The count of index arguments.
+ *
+ * @return The removed object, if any.  Returns .nil if there
+ *         is no item at the index position.
+ *
+ * @return Always return nothing.
+ */
+RexxInternalObject *QueueClass::removeRexx(RexxObject **arguments, size_t argCount)
+{
+    // just reroute to the real operation
+    return deleteRexx(arguments, argCount);
+}
+
+
+/**
+ * The init method for this class.  This does delayed
+ * initialization of this object until a INIT message is
+ * received during initialization.
+ *
+ * @param initialSize
+ *               The initial list size (optional)
+ *
+ * @return Always returns nothing
+ */
+RexxObject *QueueClass::initRexx(RexxObject *initialSize)
+{
+    // It would be nice to do this expansion in the new method, but it sort
+    // of messes up subclasses (e.g. CircularQueue) if we steal the first new
+    // argument.  We will set the capacity here, even if it means an immediate expansion
+
+    // the capacity is optional, but must be a positive numeric value
+    size_t capacity = optionalLengthArgument(initialSize, DefaultListSize, ARG_ONE);
+    ensureSpace(capacity);
+    return OREF_NULL;
 }
 
 
@@ -135,10 +239,7 @@ RexxObject *RexxQueue::peek()
  *
  * @return A new instance of the queue class.
  */
-RexxObject *RexxQueue::newRexx(RexxObject **init_args, size_t argCount)
-/******************************************************************************/
-/* Function:  Create an instance of a queue                                   */
-/******************************************************************************/
+RexxObject *QueueClass::newRexx(RexxObject **init_args, size_t argCount)
 {
     // this class is defined on the object class, but this is actually attached
     // to a class object instance.  Therefore, any use of the this pointer
@@ -146,8 +247,7 @@ RexxObject *RexxQueue::newRexx(RexxObject **init_args, size_t argCount)
     // any methods on this object from this method.
     RexxClass *classThis = (RexxClass *)this;
 
-    RexxObject *newObj =  new RexxQueue;
-    ProtectedObject p(newObj);
+    Protected<RexxObject> *newObj = new QueueClass;
 
     // handle Rexx class completion
     classThis->completeNewObject(newObj, init_args, argCount);
@@ -163,11 +263,10 @@ RexxObject *RexxQueue::newRexx(RexxObject **init_args, size_t argCount)
  *
  * @return An instance of the queue class populated with objects.
  */
-RexxQueue *RexxQueue::ofRexx(RexxObject **args, size_t argCount)
+QueueClass *QueueClass::ofRexx(RexxObject **args, size_t argCount)
 {
     // create a queue object.
-    RexxQueue *newQueue = (RexxQueue *)RexxQueue::newRexx(NULL, 0);
-    ProtectedObject p(newQueue);
+    Protected<QueueClass> newQueue = (QueueClass *)QueueClass::newRexx(NULL, 0);
 
     for (size_t i = 0; i < argCount; i++)
     {
@@ -177,7 +276,7 @@ RexxQueue *RexxQueue::ofRexx(RexxObject **args, size_t argCount)
         {
             reportException(Error_Incorrect_method_noarg, i + 1);
         }
-        newQueue->addLast(item);
+        newQueue->append(item);
     }
     return newQueue;
 }

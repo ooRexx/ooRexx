@@ -56,7 +56,7 @@
  *                 The queue holding the variables (held in reverse order
  *                 of appearance on the instruction).
  */
-RexxInstructionProcedure::RexxInstructionProcedure(size_t varCount, RexxQueue *variable_list)
+RexxInstructionProcedure::RexxInstructionProcedure(size_t varCount, QueueClass *variable_list)
 {
     variableCount = varCount;
     // get all of the variable retrievers, in reverse order.

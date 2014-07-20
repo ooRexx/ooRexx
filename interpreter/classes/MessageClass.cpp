@@ -56,7 +56,7 @@
 #include "MethodArguments.hpp"
 
 // singleton class instance
-RexxClass *RexxMessage::classInstance = OREF_NULL;
+RexxClass *MessageClass::classInstance = OREF_NULL;
 
 
 /**
@@ -66,7 +66,7 @@ RexxClass *RexxMessage::classInstance = OREF_NULL;
  *
  * @return The storage for the object in question.
  */
-void *RexxMessage::operator new(size_t size)
+void *MessageClass::operator new(size_t size)
 {
     return new_object(size, T_Message);
 }
@@ -75,7 +75,7 @@ void *RexxMessage::operator new(size_t size)
 /**
  * Create initial class object at bootstrap time.
  */
-void RexxMessage::createInstance()
+void MessageClass::createInstance()
 {
     CLASS_CREATE(Message, "Message", RexxClass);
 }
@@ -92,7 +92,7 @@ void RexxMessage::createInstance()
  * @param scope   The starting scope (can be OREF_NULL).
  * @param _args   An array of arguments to the message.
  */
-RexxMessage::RexxMessage(RexxObject *_target, RexxString *msgName, RexxObject *scope, ArrayClass *_args)
+MessageClass::MessageClass(RexxObject *_target, RexxString *msgName, RexxObject *scope, ArrayClass *_args)
 {
     // default target is the specified target
     receiver = _target;
@@ -110,7 +110,7 @@ RexxMessage::RexxMessage(RexxObject *_target, RexxString *msgName, RexxObject *s
  *
  * @param liveMark The current live mark.
  */
-void RexxMessage::live(size_t liveMark)
+void MessageClass::live(size_t liveMark)
 {
     memory_mark(receiver);
     memory_mark(target);
@@ -133,7 +133,7 @@ void RexxMessage::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void RexxMessage::liveGeneral(MarkReason reason)
+void MessageClass::liveGeneral(MarkReason reason)
 {
     memory_mark_general(receiver);
     memory_mark_general(target);
@@ -154,9 +154,9 @@ void RexxMessage::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope that will hold the flattened object.
  */
-void RexxMessage::flatten(RexxEnvelope *envelope)
+void MessageClass::flatten(RexxEnvelope *envelope)
 {
-    setUpFlatten(RexxMessage)
+    setUpFlatten(MessageClass)
 
     flattenRef(receiver);
     flattenRef(target);
@@ -181,7 +181,7 @@ void RexxMessage::flatten(RexxEnvelope *envelope)
  *
  * @return Instruction message type that returns nothing.
  */
-RexxObject *RexxMessage::notify(RexxMessage *_message)
+RexxObject *MessageClass::notify(MessageClass *_message)
 {
     // this is a required argument
     if ( message == OREF_NULL)
@@ -221,7 +221,7 @@ RexxObject *RexxMessage::notify(RexxMessage *_message)
  *
  * @return The result object (if any)
  */
-RexxObject *RexxMessage::result()
+RexxObject *MessageClass::result()
 {
     // did running this message cause an error?  If so, we raise the same error
     // condition here.
@@ -274,7 +274,7 @@ RexxObject *RexxMessage::result()
  *
  * @return Returns the message result.
  */
-RexxObject *RexxMessage::send(RexxObject *_receiver)
+RexxObject *MessageClass::send(RexxObject *_receiver)
 {
     // only one send per customer...
     if (msgSent())
@@ -345,7 +345,7 @@ RexxObject *RexxMessage::send(RexxObject *_receiver)
  *
  * @return returns nothing as a instruction message send.
  */
-RexxObject *RexxMessage::start(RexxObject *_receiver)
+RexxObject *MessageClass::start(RexxObject *_receiver)
 {
     // We can only send this once, so if it has already been used
     // or is dispatched for sending, this is an error.
@@ -379,7 +379,7 @@ RexxObject *RexxMessage::start(RexxObject *_receiver)
 /**
  * Notify all interested parties after this message completed.
  */
-void RexxMessage::sendNotification()
+void MessageClass::sendNotification()
 {
     // we're no longer interested in any errors that occur.
     ActivityManager::currentActivity->getTopStackFrame()->setObjNotify(OREF_NULL);
@@ -404,7 +404,7 @@ void RexxMessage::sendNotification()
         for (size_t i = 1; i <= count; i++)
         {
             // get each message and give them a poke.
-            RexxMessage *waitingMessage = (RexxMessage *)interestedParties->get(i);
+            MessageClass *waitingMessage = (MessageClass *)interestedParties->get(i);
             // trigger the message object in a cascade
             waitingMessage->send(OREF_NULL);
         }
@@ -423,7 +423,7 @@ void RexxMessage::sendNotification()
  *
  * @param _condition The error condition object.
  */
-void RexxMessage::error(DirectoryClass *_condition)
+void MessageClass::error(DirectoryClass *_condition)
 {
     // indicate we've had an error and save the condition object in case it
     // was requested.
@@ -439,7 +439,7 @@ void RexxMessage::error(DirectoryClass *_condition)
  *
  * @return .true if this has completed, .false otherwise.
  */
-RexxObject *RexxMessage::completed()
+RexxObject *MessageClass::completed()
 {
     // we're complete if we have a result or have an error.
     return booleanObject(resultReturned() || raiseError());
@@ -453,7 +453,7 @@ RexxObject *RexxMessage::completed()
  * @return True if the message has terminated with an error condition,
  *         false if it is still running or has completed without error.
  */
-RexxObject *RexxMessage::hasError()
+RexxObject *MessageClass::hasError()
 {
     return booleanObject(raiseError());
 }
@@ -467,7 +467,7 @@ RexxObject *RexxMessage::hasError()
  * @return Any condition object from a terminating error, or .nil if
  *         there was no error or the message is still running.
  */
-RexxObject *RexxMessage::errorCondition()
+RexxObject *MessageClass::errorCondition()
 {
     return resultOrNil(condition);
 }
@@ -480,7 +480,7 @@ RexxObject *RexxMessage::errorCondition()
  *
  * @return The current message target.
  */
-RexxObject *RexxMessage::messageTarget()
+RexxObject *MessageClass::messageTarget()
 {
     return receiver;
 
@@ -492,7 +492,7 @@ RexxObject *RexxMessage::messageTarget()
  *
  * @return The string name of the message.
  */
-RexxString *RexxMessage::messageName()
+RexxString *MessageClass::messageName()
 {
     return message;
 }
@@ -503,7 +503,7 @@ RexxString *RexxMessage::messageName()
  *
  * @return A copy of the message arguments array.
  */
-ArrayClass *RexxMessage::arguments()
+ArrayClass *MessageClass::arguments()
 {
     return (ArrayClass *)args->copy();
 }
@@ -517,7 +517,7 @@ ArrayClass *RexxMessage::arguments()
  *
  * @return A new instance of the .Message class.
  */
-RexxObject *RexxMessage::newRexx(RexxObject **msgArgs, size_t argCount)
+RexxObject *MessageClass::newRexx(RexxObject **msgArgs, size_t argCount)
 {
     // this class is defined on the object class, but this is actually attached
     // to a class object instance.  Therefore, any use of the this pointer
@@ -613,7 +613,7 @@ RexxObject *RexxMessage::newRexx(RexxObject **msgArgs, size_t argCount)
     }
     /* all args are parcelled out, go    */
     /*create the new message object...   */
-    RexxMessage *newMessage = new RexxMessage(_target, msgName, _startScope, argPtr);
+    MessageClass *newMessage = new MessageClass(_target, msgName, _startScope, argPtr);
     ProtectedObject p(newMessage);
 
     // handle Rexx class completion

@@ -134,7 +134,7 @@ RexxObject *DirectoryClass::copy()
  *
  * @return The indexed item, or OREF_NULL if the index was not found.
  */
-RexxObject *DirectoryClass::entry(RexxString *index)
+RexxInternalObject *DirectoryClass::entry(RexxString *index)
 {
     // do the lookup with the upper case name
     return get(index->upper());

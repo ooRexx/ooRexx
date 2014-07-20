@@ -51,7 +51,7 @@
  * objects only.
  *
  */
-class StringTable : public EqualityHashCollection
+class StringTable : public StringHashCollection
 {
  public:
      void        *operator new(size_t);

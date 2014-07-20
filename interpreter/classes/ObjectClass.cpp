@@ -155,6 +155,19 @@ RexxObject * RexxInternalObject::makeProxy(RexxEnvelope *envelope)
 }
 
 
+/**
+ * Set the object virtual function table and behaviour
+ * to a particular type designation.
+ *
+ * @param type   The internal type number.
+ */
+inline void setObjectType(size_t type)
+{
+    sevVirtualFunctions(virtualFunctionTable[objectType]);
+    setBehaviour(RexxBehaviour::getPrimitiveBehaviour(objectType));
+}
+
+
 bool RexxInternalObject::isEqual(
     RexxObject *other )                /* other object for comparison       */
 /******************************************************************************/
@@ -966,7 +979,7 @@ RexxInteger * RexxInternalObject::integerValue(
   return (RexxInteger *)TheNilObject;  /* give a "safe" default here        */
 }
 
-RexxNumberString * RexxInternalObject::numberString()
+NumberString * RexxInternalObject::numberString()
 /******************************************************************************/
 /* Function:  convert an internal object to a numberstring representation     */
 /******************************************************************************/
@@ -1029,7 +1042,7 @@ RexxInteger * RexxObject::integerValue(
   return REQUEST_STRING(this)->integerValue(precision);
 }
 
-RexxNumberString * RexxObject::numberString()
+NumberString * RexxObject::numberString()
 /******************************************************************************/
 /* Function:  convert a standard object to a numberstring representation      */
 /******************************************************************************/
@@ -1763,7 +1776,7 @@ RexxObject *RexxObject::send(RexxObject **arguments, size_t argCount)
  *
  * @return The message object.
  */
-RexxMessage *RexxObject::startWith(RexxObject *message, ArrayClass *arguments)
+MessageClass *RexxObject::startWith(RexxObject *message, ArrayClass *arguments)
 {
     // the message is required
     requiredArgument(message, ARG_ONE);
@@ -1784,7 +1797,7 @@ RexxMessage *RexxObject::startWith(RexxObject *message, ArrayClass *arguments)
  *
  * @return The count of arguments.
  */
-RexxMessage *RexxObject::start(RexxObject **arguments, size_t argCount)
+MessageClass *RexxObject::start(RexxObject **arguments, size_t argCount)
 {
     if (argCount < 1 )                   /* no arguments?                     */
     {
@@ -1809,7 +1822,7 @@ RexxMessage *RexxObject::start(RexxObject **arguments, size_t argCount)
  *
  * @return The message object spun off to process this message.
  */
-RexxMessage *RexxObject::startCommon(RexxObject *message, RexxObject **arguments, size_t argCount)
+MessageClass *RexxObject::startCommon(RexxObject *message, RexxObject **arguments, size_t argCount)
 {
     RexxString *messageName;
     RexxObject *startScope;
@@ -1817,7 +1830,7 @@ RexxMessage *RexxObject::startCommon(RexxObject *message, RexxObject **arguments
     decodeMessageName(this, message, messageName, startScope);
 
     /* Create the new message object.    */
-    RexxMessage *newMessage = new RexxMessage(this, messageName, startScope, new_array(argCount, arguments));
+    MessageClass *newMessage = new MessageClass(this, messageName, startScope, new_array(argCount, arguments));
     ProtectedObject p(newMessage);
     newMessage->start(OREF_NULL);        /* Tell the message object to start  */
     return newMessage;                   /* return the new message object     */
@@ -2260,6 +2273,7 @@ RexxString *RexxObject::id()
 /******************************************************************************/
 {
     /* get the class                     */
+    // TODO:  This should be a method in the behaviour class.
     RexxClass *createClass = behaviourObject()->getOwningClass();
     if (createClass == OREF_NULL)        /* no class object?                  */
     {
@@ -2271,12 +2285,15 @@ RexxString *RexxObject::id()
     }
 }
 
-RexxObject *RexxObject::init()
-/******************************************************************************/
-/* Function:  Exported Object INIT method                                     */
-/******************************************************************************/
+
+/**
+ * Default Object init method, which is really a NOP.
+ *
+ * @return Returns nothing.
+ */
+RexxObject *RexxObject::initRexx()
 {
-  return OREF_NULL;                    /* this is basically a no-op         */
+    return OREF_NULL;
 }
 
 
@@ -2542,7 +2559,12 @@ RexxNilObject::RexxNilObject()
 {
     // use the initial identify hash and save this.
     hashValue = identityHash();
+    // TODO:  Should memory have a special table of proxied objects?  Not
+    // really relevant currently, since we don't really use proxies.
+    // we are a special proxy object.
+    makeProxiedObject();
 }
+
 
 /**
  * Override of the default hash value method.
@@ -2569,13 +2591,13 @@ void *RexxObject::getCSelf()
         // if this is a pointer, then unwrapper the value
         if (C_self->isInstanceOf(ThePointerClass))
         {
-            return ((RexxPointer *)C_self)->pointer();
+            return ((PointerClass *)C_self)->pointer();
         }
         // this could be a containing buffer instance as well
         else if (C_self->isInstanceOf(TheBufferClass))
         {
             // return a pointer to the buffer beginning
-            return(void *)((RexxBuffer *)C_self)->getData();
+            return(void *)((BufferClass *)C_self)->getData();
         }
     }
     return NULL;                     /* no object available               */
@@ -2603,13 +2625,13 @@ void *RexxObject::getCSelf(RexxObject *scope)
             // if this is a pointer, then unwrapper the value
             if (C_self->isInstanceOf(ThePointerClass))
             {
-                return ((RexxPointer *)C_self)->pointer();
+                return ((PointerClass *)C_self)->pointer();
             }
             // this could be a containing buffer instance as well
             else if (C_self->isInstanceOf(TheBufferClass))
             {
                 // return a pointer to the buffer beginning
-                return(void *)((RexxBuffer *)C_self)->getData();
+                return(void *)((BufferClass *)C_self)->getData();
             }
         }
         // step to the next scope

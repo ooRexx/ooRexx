@@ -45,7 +45,7 @@
 #define Included_RexxEnvelope
 
 class RexxSmartBuffer;
-class RexxBuffer;
+class BufferClass;
 class MapTable;
 
 
@@ -64,8 +64,8 @@ class RexxEnvelope : public RexxInternalObject
     virtual void liveGeneral(MarkReason reason);
 
     void flattenReference(void *, size_t, void *);
-    RexxBuffer *pack(RexxObject *);
-    void        puff(RexxBuffer *, char *, size_t length);
+    BufferClass *pack(RexxObject *);
+    void        puff(BufferClass *, char *, size_t length);
     size_t queryObj(RexxObject *);
     size_t copyBuffer(RexxObject *);
     void   rehash();

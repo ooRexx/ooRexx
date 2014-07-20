@@ -90,7 +90,7 @@ void * RexxCompoundVariable::operator new(size_t size, size_t tailCount)
  * @param _tailCount The count of the tail elements.
  */
 RexxCompoundVariable::RexxCompoundVariable(RexxString * _stemName,
-    size_t index, RexxQueue *tailList, size_t _tailCount)
+    size_t index, QueueClass *tailList, size_t _tailCount)
 {
     tailCount = _tailCount;
     stemName = _stemName;
@@ -173,7 +173,7 @@ RexxObject *build(RexxString * variable_name, bool direct )
     // now decompose the tail into its component pieces.
     // storing them in a queue object that will be used to create a
     // new compound variable instance.
-    RexxQueue *tails = new_queue();
+    QueueClass *tails = new_queue();
     ProtectedObject p2(tails);
 
     // step over the period
@@ -393,7 +393,7 @@ void RexxCompoundVariable::procedureExpose(RexxActivation *context, RexxActivati
     RexxCompoundElement *variable = parent->exposeLocalCompoundVariable(stemName, stemIndex, (RexxObject **)&tails[0], tailCount);
     // get the stem index from the current level.  This may end up
     // creating the stem that holds the exposed value.
-    RexxStem *stem_table = context->getLocalStem(stemName, stemIndex);
+    StemClass *stem_table = context->getLocalStem(stemName, stemIndex);
     // have the stem expose this
     stem_table->expose(variable);
     // trace resolved compound name
@@ -411,7 +411,7 @@ void RexxCompoundVariable::procedureExpose(RexxActivation *context, RexxActivati
 void RexxCompoundVariable::expose(RexxActivation *context, RexxVariableDictionary *object_dictionary)
 {
     // get the stem in the source dictionary
-    RexxStem *source_stem = object_dictionary->getStem(stemName);
+    StemClass *source_stem = object_dictionary->getStem(stemName);
     // new tail for the compound variable
     RexxCompoundTail resolved_tail(context, &tails[0], tailCount);
     // first get (and possible create) the compound variable in the
@@ -419,7 +419,7 @@ void RexxCompoundVariable::expose(RexxActivation *context, RexxVariableDictionar
     RexxCompoundElement *variable = source_stem->exposeCompoundVariable(&resolved_tail);
     // get the stem index from the current level.  This may end up
     // creating the stem that holds the exposed value.
-    RexxStem *stem_table = context->getLocalStem(stemName, stemIndex);
+    StemClass *stem_table = context->getLocalStem(stemName, stemIndex);
     // have the stem expose this
     stem_table->expose(variable);
     // trace resolved compound name

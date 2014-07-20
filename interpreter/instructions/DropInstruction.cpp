@@ -58,7 +58,7 @@
  *                 The list of variables, a queue with the variables
  *                 stored in reverse order.
  */
-RexxInstructionDrop::RexxInstructionDrop(size_t varCount, RexxQueue *variable_list)
+RexxInstructionDrop::RexxInstructionDrop(size_t varCount, QueueClass *variable_list)
 {
     // copy each of the variables from the queue into the object storage.
     // the copy is done back to front because the queue has them in LIFO order.

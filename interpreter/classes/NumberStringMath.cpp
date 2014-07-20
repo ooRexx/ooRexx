@@ -52,13 +52,13 @@
 #include "ProtectedObject.hpp"
 
 
-RexxNumberString *RexxNumberString::maxMin(RexxObject **args, size_t argCount, unsigned int operation)
+NumberString *NumberString::maxMin(RexxObject **args, size_t argCount, unsigned int operation)
 /*********************************************************************/
 /* Function:  Process the MAX and MIN builtin functions and methods  */
 /*********************************************************************/
 {
     size_t arg;
-    RexxNumberString *compobj, *maxminobj;
+    NumberString *compobj, *maxminobj;
     RexxInteger *compResult;
     RexxObject *nextObject;
     size_t saveFuzz, saveDigits;
@@ -126,7 +126,7 @@ RexxNumberString *RexxNumberString::maxMin(RexxObject **args, size_t argCount, u
                /*  assign and protect our next      */
                /*  MAX/MIN                          */
                 p = compobj;
-                maxminobj = (RexxNumberString *)compobj;
+                maxminobj = (NumberString *)compobj;
             }
         }
         else
@@ -146,7 +146,7 @@ RexxNumberString *RexxNumberString::maxMin(RexxObject **args, size_t argCount, u
     return maxminobj;                     /* now return it.                    */
 }
 
-void RexxNumberStringBase::mathRound(
+void NumberStringBase::mathRound(
     char  *NumPtr)                     /* first digit to round up           */
 /*********************************************************************/
 /* Function:  Adjust a a number string object to correct NUMERIC     */
@@ -204,7 +204,7 @@ void RexxNumberStringBase::mathRound(
     return;
 }
 
-void RexxNumberString::adjustPrecision()
+void NumberString::adjustPrecision()
 /*********************************************************************/
 /* Function:  Adjust the precision of a number to the given digits   */
 /*********************************************************************/
@@ -242,7 +242,7 @@ void RexxNumberString::adjustPrecision()
     return;                               /* just return to caller.            */
 }
 
-size_t RexxNumberString::highBits(size_t number)
+size_t NumberString::highBits(size_t number)
 /*********************************************************************/
 /* Function:  Determine high order bit position of an unsigned       */
 /*            number setting.                                        */
@@ -267,7 +267,7 @@ size_t RexxNumberString::highBits(size_t number)
     return HighBit;                       /* return count.                     */
 }
 
-char *RexxNumberStringBase::adjustNumber(
+char *NumberStringBase::adjustNumber(
     char *NumPtr,                      /* pointer to number data            */
     char  *result,                     /* result location                   */
     size_t resultLen,                  /* result length                     */
@@ -301,7 +301,7 @@ char *RexxNumberStringBase::adjustNumber(
     }
 }
 
-char *RexxNumberStringBase::stripLeadingZeros(
+char *NumberStringBase::stripLeadingZeros(
     char *AccumPtr)                    /* current accumulator position      */
 /*********************************************************************/
 /* Function:  Remove all leading zeros from a number                 */
@@ -317,7 +317,7 @@ char *RexxNumberStringBase::stripLeadingZeros(
     return AccumPtr;                      /* return pointer to 1st non-zero    */
 }
 
-void RexxNumberString::adjustPrecision(char *resultPtr, size_t NumberDigits)
+void NumberString::adjustPrecision(char *resultPtr, size_t NumberDigits)
 /*********************************************************************/
 /* Function:  Adjust the precision of a number to the given digits   */
 /*********************************************************************/
@@ -381,14 +381,14 @@ void RexxNumberString::adjustPrecision(char *resultPtr, size_t NumberDigits)
 }
 
 
-RexxNumberString *RexxNumberString::prepareNumber(size_t NumberDigits, bool rounding)
+NumberString *NumberString::prepareNumber(size_t NumberDigits, bool rounding)
 /*********************************************************************/
 /* Function:  Create new copy of supplied object and make sure the   */
 /*            number is computed to correct digits setting           */
 /*********************************************************************/
 {
     /* clone ourselves                   */
-    RexxNumberString *newObj = clone();
+    NumberString *newObj = clone();
     if (newObj->length > NumberDigits)
     {
         // NOTE:  This version does NOT raise a LOSTDIGITS condition, since it
@@ -425,14 +425,14 @@ RexxNumberString *RexxNumberString::prepareNumber(size_t NumberDigits, bool roun
  *
  * @return A new number object no longer than the target length.
  */
-RexxNumberString *RexxNumberString::prepareOperatorNumber(size_t targetLength, size_t numberDigits, bool rounding)
+NumberString *NumberString::prepareOperatorNumber(size_t targetLength, size_t numberDigits, bool rounding)
 /*********************************************************************/
 /* Function:  Create new copy of supplied object and make sure the   */
 /*            number is computed to correct digits setting           */
 /*********************************************************************/
 {
     /* clone ourselves                   */
-    RexxNumberString *newObj = clone();
+    NumberString *newObj = clone();
     if (newObj->length > numberDigits)
     {  /* is the length larger than digits()*/
        /* raise a numeric condition, may    */
@@ -457,15 +457,15 @@ RexxNumberString *RexxNumberString::prepareOperatorNumber(size_t targetLength, s
 }
 
 
-RexxNumberString *RexxNumberString::addSub(
-  RexxNumberString *other,             /* other addition/subtract target    */
+NumberString *NumberString::addSub(
+  NumberString *other,             /* other addition/subtract target    */
   unsigned int operation,              /* add or subtract operation         */
   size_t NumberDigits )                /* precision to use                  */
 /*********************************************************************/
 /* Function:  Add or subtract two normalized numbers                 */
 /*********************************************************************/
 {
-    RexxNumberString *left, *right, *result, *temp1;
+    NumberString *left, *right, *result, *temp1;
     char  *leftPtr,*rightPtr,*resultPtr;
     char  *resultBuffer = NULL;
     int   right_sign, carry, addDigit, rc;
@@ -600,7 +600,7 @@ RexxNumberString *RexxNumberString::addSub(
     }
 
     ResultSize = maxLength;               /* size will be NUMERIC DIGITS + 1   */
-    result = (RexxNumberString *) new (ResultSize) RexxNumberString (ResultSize);
+    result = (NumberString *) new (ResultSize) NumberString (ResultSize);
 
     result->sign = 0;                     /* make sure all values are zero     */
     result->exp=0;                        /* to start with ...                 */
@@ -962,14 +962,14 @@ RexxNumberString *RexxNumberString::addSub(
 
 }
 
-void RexxNumberString::subtractNumbers(
-    RexxNumberString *larger,          /* larger numberstring object        */
+void NumberString::subtractNumbers(
+    NumberString *larger,          /* larger numberstring object        */
     const char       *largerPtr,       /* pointer to last digit in larger   */
     wholenumber_t     aLargerExp,      /* adjusted exponent of larger       */
-    RexxNumberString *smaller,         /* smaller numberstring object       */
+    NumberString *smaller,         /* smaller numberstring object       */
     const char       *smallerPtr,      /* pointer to last digit in smaller  */
     wholenumber_t     aSmallerExp,     /* adjusted exponent of smaller      */
-    RexxNumberString *result,          /* result numberstring object        */
+    NumberString *result,          /* result numberstring object        */
     char            **presultPtr)      /* last number in result             */
 /*********************************************************************/
 /* Function:  Subtract two numbers.  The second number is subtracted */
@@ -1112,7 +1112,7 @@ void RexxNumberString::subtractNumbers(
     return;
 }
 
-char *RexxNumberString::addToBaseSixteen(
+char *NumberString::addToBaseSixteen(
   int      Digit,                      /* digit to add                      */
   char    *Value,                      /* number to add                     */
   char    *HighDigit )                 /* highest digit location            */
@@ -1146,7 +1146,7 @@ char *RexxNumberString::addToBaseSixteen(
     }
 }
 
-char *RexxNumberString::multiplyBaseSixteen(
+char *NumberString::multiplyBaseSixteen(
   char *     Accum,                    /* number to multiply                */
   char *     HighDigit )               /* current high water mark           */
 /*********************************************************************/
@@ -1182,7 +1182,7 @@ char *RexxNumberString::multiplyBaseSixteen(
     return OutPtr;                       /* return new high water mark        */
 }
 
-char *RexxNumberString::addToBaseTen(
+char *NumberString::addToBaseTen(
   int      Digit,                      /* digit to add                      */
   char    *Accum,                      /* number to add                     */
   char    *HighDigit )                 /* highest digit location            */
@@ -1220,7 +1220,7 @@ char *RexxNumberString::addToBaseTen(
     }
 }
 
-char *RexxNumberString::multiplyBaseTen(
+char *NumberString::multiplyBaseTen(
   char *      Accum,                    /* number to multiply                */
   char *      HighDigit )               /* current high water mark           */
 

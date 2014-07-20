@@ -80,7 +80,7 @@ class ListClass : public RexxObject
     size_t nextIndex(size_t index);
     size_t previousIndex(size_t _index);
     bool hasIndex(size_t index);
-    bool hasIndex(size_t index);
+    bool hasItem(RexxInternalObject *target);
     ArrayClass *allItems();
     void empty();
     bool isEmpty();
@@ -88,34 +88,6 @@ class ListClass : public RexxObject
     ArrayClass *allIndexes();
     size_t getIndex(RexxInternalObject *target);
 
-    /**
-     * Tests whether there is an object with the given value in the
-     * list.
-     *
-     * @param target The target value.
-     *
-     * @return .true if there is a match, .false otherwise.
-     */
-    RexxObject *ListClass::hasItem(RexxObject *target)
-    {
-        // we require the index to be there.
-        requiredArgument(target, ARG_ONE);
-
-        // ok, now run the list looking for the target item
-        size_t nextEntry = this->first;
-        for (size_t i = 1; i <= this->count; i++)
-        {
-            LISTENTRY *element = ENTRY_POINTER(nextEntry);
-            // if we got a match, return the item
-            if (target->equalValue(element->value))
-            {
-                return TheTrueObject;
-            }
-            nextEntry = element->next;
-        }
-        // no match
-        return TheFalseObject;
-    }
     RexxInternalObject *removeItem(RexxInternalObject *target);
     SupplierClass *supplier();
     size_t items();
@@ -141,6 +113,7 @@ class ListClass : public RexxObject
     RexxObject *indexRexx(RexxInternalObject *target);
     RexxInternalObject *removeItemRexx(RexxInternalObject *target);
     RexxObject *itemsRexx();
+    RexxObject *hasItemRexx(RexxInternalObject *target);
 
     // Class related methods
     ListClass     *newRexx(RexxObject **, size_t);

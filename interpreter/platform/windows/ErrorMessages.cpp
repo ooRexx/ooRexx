@@ -35,7 +35,7 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-#include "RexxMessageNumbers.h"
+#include "MessageClassNumbers.h"
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "SystemInterpreter.hpp"

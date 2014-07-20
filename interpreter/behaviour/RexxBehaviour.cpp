@@ -285,14 +285,82 @@ void RexxBehaviour::copyBehaviour(RexxBehaviour *source)
  *
  * @return The created method object.
  */
-void RexxBehaviour::defineMethod(const char *name, PCPPM entryPoint, size_t arguments)
+RexxMethod *RexxBehaviour::defineMethod(const char *name, PCPPM entryPoint, size_t arguments, const char *entryPointName)
 {
     // we're doing this during an image build, so make sure we use the interned string name.
     RexxString *n = memoryObject.getGlobalName(name);
     // create a method object using the resolved method pointer.
-    MethodClass *method = new MethodClass(n, CPPCode::resolveExportedMethod(name, entryPoint, arguments));
-    // now add this to the method dictionary
-    defineMethod(n, method);
+    MethodClass *method = new MethodClass(n, CPPCode::resolveExportedMethod(name, entryPoint, arguments, entryPointName));
+    // now add this to the method dictionary, ensuring it is the only method by this name.
+    replaceMethod(n, method);
+    // we need the created method object if adding modifiers after creation.
+    return method;
+}
+
+
+/**
+ * Block use of an inherited method by adding TheNilObject
+ * as an entry in the table.
+ *
+ * @param name   The target name.
+ */
+void RexxBehaviour::hideMethod(const char *name)
+{
+    // we're doing this during an image build, so make sure we use the interned string name.
+    RexxString *n = memoryObject.getGlobalName(name);
+    // create a method dictionary if we don't have one yet.
+    if (methodDictionary == OREF_NULL)
+    {
+        setField(methodDictionary, new MethodDictionary());
+    }
+
+    methodDictionary->hideMethod(n, method)
+}
+
+
+/**
+ * Add a method to the method dictionary during image setup.
+ * This occurs while we are constructing the instance behaviours
+ * of the different classes.  If we've inherited a set of
+ * methods from another class and then define a replacement
+ * method, we want to completely replace the inherited method
+ * rather than leave it in the method dictionary.
+ *
+ * @param methodName The method name.
+ * @param method     The target method object.
+ */
+void RexxBehaviour::replaceMethod(RexxString *methodName, MethodClass *method)
+{
+    // create a method dictionary if we don't have one yet.
+    if (methodDictionary == OREF_NULL)
+    {
+        setField(methodDictionary, new MethodDictionary());
+    }
+
+    methodDictionary->replaceMethod(methodName, method)
+}
+
+
+/**
+ * Inherit a set of instance methods from another behaviour.
+ * This occurs early in building up the primitive classes,
+ * so we just update the defintions at this point.  Completion
+ * of the processing will get methods of the correct scope
+ * created.
+ *
+ * @param source The source behaviour we're inheriting from.
+ */
+void RexxBehaviour::inheritInstanceMethods(RexxBehaviour *source)
+{
+    // create a method dictionary if we don't have one yet.
+    if (methodDictionary == OREF_NULL)
+    {
+        setField(methodDictionary, new MethodDictionary());
+    }
+    // have this merge all of the methods from the other dictionary into
+    // ours.  This will replace any existing methods (although we generally
+    // only use this on an empty dictionary).
+    methodDictionary->replaceMethods(source->getMethodDictionary());
 }
 
 

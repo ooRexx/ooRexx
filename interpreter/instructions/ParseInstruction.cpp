@@ -68,7 +68,7 @@
  *               The source of the parsing templates.
  */
 RexxInstructionParse::RexxInstructionParse(RexxObject *sourceExpression, InstructionSubKeyword string_source,
-    FlagSet<ParseFlags, 32> flags, size_t templateCount, RexxQueue *parse_template )
+    FlagSet<ParseFlags, 32> flags, size_t templateCount, QueueClass *parse_template )
 {
     expression = sourceExpression;
     parseFlags = flags;

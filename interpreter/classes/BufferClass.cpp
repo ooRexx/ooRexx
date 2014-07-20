@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -47,12 +47,13 @@
 #include "BufferClass.hpp"
 
 
-RexxClass *RexxBuffer::classInstance = OREF_NULL;   // singleton class instance
+RexxClass *BufferClass::classInstance = OREF_NULL;   // singleton class instance
 
-void RexxBuffer::createInstance()
-/******************************************************************************/
-/* Function:  Create initial bootstrap objects                                */
-/******************************************************************************/
+
+/**
+ * Initial bootstrap of the buffer class object.
+ */
+void BufferClass::createInstance()
 {
     CLASS_CREATE(Buffer, "Buffer", RexxClass);
 }
@@ -66,7 +67,7 @@ void RexxBuffer::createInstance()
  *
  * @return The new buffer object.
  */
-void *RexxBuffer::operator new(size_t size, size_t length)
+void *BufferClass::operator new(size_t size, size_t length)
 {
     return new_object(size + length, T_Buffer);
 }
@@ -81,7 +82,7 @@ void *RexxBuffer::operator new(size_t size, size_t length)
  *
  * @return Always raises an error.
  */
-RexxObject *RexxBuffer::newRexx(RexxObject **args, size_t argc)
+RexxObject *BufferClass::newRexx(RexxObject **args, size_t argc)
 {
     // we do not allow these to be allocated from Rexx code...
     reportException(Error_Unsupported_new_method, ((RexxClass *)this)->getId());
@@ -89,32 +90,27 @@ RexxObject *RexxBuffer::newRexx(RexxObject **args, size_t argc)
 }
 
 
-RexxBuffer *RexxBuffer::expand(
-    size_t l)                            /* minimum space needed              */
-/******************************************************************************/
-/* Function:  Create a larger buffer and copy existing data into it           */
-/******************************************************************************/
+/**
+ * Create a larger buffer and copy existing data into it
+ *
+ * @param l      The new buffer size.
+ *
+ * @return A new buffer object of the expanded size.  All existing
+ *         data from the target buffer is copied into the new buffer.
+ */
+BufferClass *BufferClass::expand(size_t l)
 {
-    RexxBuffer * newBuffer;              /* returned new buffer               */
+    BufferClass * newBuffer;
 
-                                         /* we will either return a buffer    */
-                                         /* twice the size of the current     */
-                                         /* buffer, or this size of           */
-                                         /* current(this)buffer + requested   */
-                                         /* minimum length.                   */
-    if (l > this->getBufferSize())       /* need more than double?            */
-    {
-        /* increase by the requested amount  */
-        newBuffer = new_buffer(this->getBufferSize() + l);
-    }
-    else                                 /* just double the existing length   */
-    {
-        newBuffer = new_buffer(this->getBufferSize() * 2);
-    }
-    /* have new buffer, so copy data from*/
-    /* current buffer into new buffer.   */
-    memcpy(newBuffer->getData(), this->getData(), this->getDataLength());
-    return newBuffer;                    /* all done, return new buffer       */
 
+    // we will either return a buffer twice the size of the current
+    // buffer, or this size of current(this)buffer + requested
+    // minimum length.
+
+    l = Numerics::minValue(l, getBufferSize());
+
+    BufferClass *newBuffer = new_buffer(getBufferSize() + l);
+    // have new buffer, so copy data from current buffer into new buffer.
+    newBuffer->copyData(0, getData(), getDataLength());
+    return newBuffer;
 }
-

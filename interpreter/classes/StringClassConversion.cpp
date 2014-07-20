@@ -252,7 +252,7 @@ RexxString *RexxString::d2c(RexxInteger *_length)
 /******************************************************************************/
 {
     /* convert to a numberstring         */
-    RexxNumberString *numberstring = this->numberString();
+    NumberString *numberstring = this->numberString();
     if (numberstring == OREF_NULL)       /* not a valid number?               */
     {
         /* report this                       */
@@ -268,7 +268,7 @@ RexxString *RexxString::d2x(RexxInteger *_length)
 /******************************************************************************/
 {
     /* convert to a numberstring         */
-    RexxNumberString *numberstring = this->numberString();
+    NumberString *numberstring = this->numberString();
     if (numberstring == OREF_NULL)       /* not a valid number?               */
     {
         /* report this                       */
@@ -326,7 +326,7 @@ RexxString *RexxString::x2dC2d(RexxInteger *_length,
     size_t     DecLength;                /* length of accumulator             */
     size_t     TempLength;               /* length of accumulator             */
     RexxString *Retval;                  /* function return value             */
-    RexxBuffer *Buffer;                  /* first math buffer                 */
+    BufferClass *Buffer;                  /* first math buffer                 */
     size_t     CurrentDigits;            /* current digits setting            */
 
     CurrentDigits = number_digits();     /* get the current digits setting    */
@@ -461,20 +461,20 @@ RexxString *RexxString::x2dC2d(RexxInteger *_length,
 
     Scan = StringPtr;                    /* point to the string               */
                                          /* allocate a temp buffer            */
-    Buffer = (RexxBuffer *)new_buffer(CurrentDigits + RexxNumberString::OVERFLOWSPACE + 1);
+    Buffer = (BufferClass *)new_buffer(CurrentDigits + NumberString::OVERFLOWSPACE + 1);
     /* set accumulator pointer           */
-    Accumulator = Buffer->getData() + CurrentDigits + RexxNumberString::OVERFLOWSPACE;
+    Accumulator = Buffer->getData() + CurrentDigits + NumberString::OVERFLOWSPACE;
     /* clear the buffer                  */
-    memset(Buffer->getData(), '\0', CurrentDigits + RexxNumberString::OVERFLOWSPACE + 1);
+    memset(Buffer->getData(), '\0', CurrentDigits + NumberString::OVERFLOWSPACE + 1);
     HighDigit = Accumulator - 1;         /* set initial high point            */
 
     while (StringLength--)
     {             /* while more digits                 */
         ch = *Scan++;                      /* get the character                 */
                                            /* add high order nibble             */
-        HighDigit = RexxNumberString::addToBaseTen((ch & 0xf0) >> 4, Accumulator, HighDigit);
+        HighDigit = NumberString::addToBaseTen((ch & 0xf0) >> 4, Accumulator, HighDigit);
         /* multiply by 16                    */
-        HighDigit = RexxNumberString::multiplyBaseTen(Accumulator, HighDigit);
+        HighDigit = NumberString::multiplyBaseTen(Accumulator, HighDigit);
         /* get accumulator length            */
         DecLength = (Accumulator - HighDigit);
         if (DecLength > CurrentDigits)
@@ -489,11 +489,11 @@ RexxString *RexxString::x2dC2d(RexxInteger *_length,
             }
         }
         /* add high order nibble             */
-        HighDigit = RexxNumberString::addToBaseTen(ch & 0x0f, Accumulator, HighDigit);
+        HighDigit = NumberString::addToBaseTen(ch & 0x0f, Accumulator, HighDigit);
         if (StringLength != 0)             /* not the last one?                 */
         {
             /* multiply by 16                    */
-            HighDigit = RexxNumberString::multiplyBaseTen(Accumulator, HighDigit);
+            HighDigit = NumberString::multiplyBaseTen(Accumulator, HighDigit);
         }
         /* get accumulator length            */
         DecLength = (Accumulator - HighDigit);

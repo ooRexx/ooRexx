@@ -49,7 +49,7 @@
 #include "LanguageParser.hpp"
 #include "BufferClass.hpp"
 
-class RexxBuffer;
+class BufferClass;
 
 class RexxCompoundTail
 {
@@ -174,6 +174,6 @@ class RexxCompoundTail
      char   *current;                    // current write position
      char    buffer[LanguageParser::MAX_SYMBOL_LENGTH];  // the default buffer
      RexxString  *value;                 // a created string value
-     Protected<RexxBuffer> temp;         // potential temporary buffer
+     Protected<BufferClass> temp;         // potential temporary buffer
  };
 #endif

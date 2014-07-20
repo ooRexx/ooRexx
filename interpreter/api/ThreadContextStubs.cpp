@@ -510,7 +510,7 @@ RexxMethodObject RexxEntry NewMethod(RexxThreadContext *c, CSTRING n, CSTRING s,
     {
         RexxString *name = new_string(n);
         ProtectedObject p(name);
-        RexxBuffer *source = new_buffer(s, l);
+        BufferClass *source = new_buffer(s, l);
         ProtectedObject p2(source);
         // convert the name to a string instance, and check the environments.
         return (RexxMethodObject)context.ret(LanguageParser::createMethod(name, source));
@@ -529,7 +529,7 @@ RexxRoutineObject RexxEntry NewRoutine(RexxThreadContext *c, CSTRING n, CSTRING 
     {
         RexxString *name = new_string(n);
         ProtectedObject p(name);
-        RexxBuffer *source = new_buffer(s, l);
+        BufferClass *source = new_buffer(s, l);
         ProtectedObject p2(source);
         // convert the name to a string instance, and check the environments.
         return (RexxRoutineObject)context.ret(LanguageParser::createRoutine(name, source));
@@ -1447,7 +1447,7 @@ POINTER RexxEntry BufferData(RexxThreadContext *c, RexxBufferObject b)
     ApiContext context(c);
     try
     {
-        return (POINTER)((RexxBuffer *)b)->getData();
+        return (POINTER)((BufferClass *)b)->getData();
     }
     catch (RexxNativeActivation *)
     {
@@ -1460,7 +1460,7 @@ size_t RexxEntry BufferLength(RexxThreadContext *c, RexxBufferObject b)
     ApiContext context(c);
     try
     {
-        return ((RexxBuffer *)b)->getDataLength();
+        return ((BufferClass *)b)->getDataLength();
     }
     catch (RexxNativeActivation *)
     {
@@ -1499,7 +1499,7 @@ POINTER RexxEntry PointerValue(RexxThreadContext *c, RexxPointerObject o)
     ApiContext context(c);
     try
     {
-        return (POINTER)((RexxPointer *)o)->pointer();
+        return (POINTER)((PointerClass *)o)->pointer();
     }
     catch (RexxNativeActivation *)
     {
@@ -1604,13 +1604,13 @@ RexxStemObject RexxEntry NewStem(RexxThreadContext *c, CSTRING n)
     {
         if (n == NULL)
         {
-            return (RexxStemObject)context.ret(new RexxStem(OREF_NULL));
+            return (RexxStemObject)context.ret(new StemClass(OREF_NULL));
         }
         else
         {
             RexxString *name = new_string(n);
             ProtectedObject p(name);
-            return (RexxStemObject)context.ret(new RexxStem(name));
+            return (RexxStemObject)context.ret(new StemClass(name));
         }
 
     }
@@ -1625,7 +1625,7 @@ void RexxEntry SetStemElement(RexxThreadContext *c, RexxStemObject s, CSTRING n,
     ApiContext context(c);
     try
     {
-        ((RexxStem *)s)->setElement(n, (RexxObject *)v);
+        ((StemClass *)s)->setElement(n, (RexxObject *)v);
     }
     catch (RexxNativeActivation *)
     {
@@ -1637,7 +1637,7 @@ RexxObjectPtr RexxEntry GetStemElement(RexxThreadContext *c, RexxStemObject s, C
     ApiContext context(c);
     try
     {
-        return context.ret(((RexxStem *)s)->getElement(n));
+        return context.ret(((StemClass *)s)->getElement(n));
     }
     catch (RexxNativeActivation *)
     {
@@ -1650,7 +1650,7 @@ void RexxEntry DropStemElement(RexxThreadContext *c, RexxStemObject s, CSTRING n
     ApiContext context(c);
     try
     {
-        ((RexxStem *)s)->dropElement(n);
+        ((StemClass *)s)->dropElement(n);
     }
     catch (RexxNativeActivation *)
     {
@@ -1662,7 +1662,7 @@ void RexxEntry SetStemArrayElement(RexxThreadContext *c, RexxStemObject s, size_
     ApiContext context(c);
     try
     {
-        ((RexxStem *)s)->setElement((size_t )i, (RexxObject *)v);
+        ((StemClass *)s)->setElement((size_t )i, (RexxObject *)v);
     }
     catch (RexxNativeActivation *)
     {
@@ -1674,7 +1674,7 @@ RexxObjectPtr RexxEntry GetStemArrayElement(RexxThreadContext *c, RexxStemObject
     ApiContext context(c);
     try
     {
-        return context.ret(((RexxStem *)s)->getElement((size_t)i));
+        return context.ret(((StemClass *)s)->getElement((size_t)i));
     }
     catch (RexxNativeActivation *)
     {
@@ -1687,7 +1687,7 @@ void RexxEntry DropStemArrayElement(RexxThreadContext *c, RexxStemObject s, size
     ApiContext context(c);
     try
     {
-        ((RexxStem *)s)->dropElement((size_t)i);
+        ((StemClass *)s)->dropElement((size_t)i);
     }
     catch (RexxNativeActivation *)
     {
@@ -1699,7 +1699,7 @@ RexxDirectoryObject RexxEntry GetAllStemElements(RexxThreadContext *c, RexxStemO
     ApiContext context(c);
     try
     {
-        return (RexxDirectoryObject)context.ret(((RexxStem *)s)->toDirectory());
+        return (RexxDirectoryObject)context.ret(((StemClass *)s)->toDirectory());
     }
     catch (RexxNativeActivation *)
     {
@@ -1712,7 +1712,7 @@ RexxObjectPtr RexxEntry GetStemValue(RexxThreadContext *c, RexxStemObject s)
     ApiContext context(c);
     try
     {
-        return context.ret(((RexxStem *)s)->getStemValue());
+        return context.ret(((StemClass *)s)->getStemValue());
     }
     catch (RexxNativeActivation *)
     {
@@ -1865,7 +1865,7 @@ POINTER RexxEntry MutableBufferData(RexxThreadContext *c, RexxMutableBufferObjec
     ApiContext context(c);
     try
     {
-        return (POINTER)((RexxMutableBuffer *)b)->getData();
+        return (POINTER)((MutableBuffer *)b)->getData();
     }
     catch (RexxNativeActivation *)
     {
@@ -1878,7 +1878,7 @@ size_t RexxEntry MutableBufferLength(RexxThreadContext *c, RexxMutableBufferObje
     ApiContext context(c);
     try
     {
-        return ((RexxMutableBuffer *)b)->getLength();
+        return ((MutableBuffer *)b)->getLength();
     }
     catch (RexxNativeActivation *)
     {
@@ -1891,7 +1891,7 @@ size_t RexxEntry SetMutableBufferLength(RexxThreadContext *c, RexxMutableBufferO
     ApiContext context(c);
     try
     {
-        return ((RexxMutableBuffer *)b)->setDataLength(length);
+        return ((MutableBuffer *)b)->setDataLength(length);
     }
     catch (RexxNativeActivation *)
     {
@@ -1904,7 +1904,7 @@ size_t RexxEntry MutableBufferCapacity(RexxThreadContext *c, RexxMutableBufferOb
     ApiContext context(c);
     try
     {
-        return ((RexxMutableBuffer *)b)->getCapacity();
+        return ((MutableBuffer *)b)->getCapacity();
     }
     catch (RexxNativeActivation *)
     {
@@ -1917,7 +1917,7 @@ POINTER RexxEntry SetMutableBufferCapacity(RexxThreadContext *c, RexxMutableBuff
     ApiContext context(c);
     try
     {
-        return (POINTER)((RexxMutableBuffer *)b)->setCapacity(length);
+        return (POINTER)((MutableBuffer *)b)->setCapacity(length);
     }
     catch (RexxNativeActivation *)
     {
@@ -1930,7 +1930,7 @@ RexxMutableBufferObject RexxEntry NewMutableBuffer(RexxThreadContext *c, size_t 
     ApiContext context(c);
     try
     {
-        return (RexxMutableBufferObject)context.ret((RexxObject *)new RexxMutableBuffer(l, l));
+        return (RexxMutableBufferObject)context.ret((RexxObject *)new MutableBuffer(l, l));
     }
     catch (RexxNativeActivation *)
     {

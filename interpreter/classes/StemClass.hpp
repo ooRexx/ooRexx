@@ -41,8 +41,8 @@
 /* Primitive Stem Class Definitions                                           */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_RexxStem
-#define Included_RexxStem
+#ifndef Included_StemClass
+#define Included_StemClass
 
 #include "RexxCompoundElement.hpp"
 #include "RexxCompoundTable.hpp"
@@ -67,14 +67,14 @@ class RexxNativeActivation;
  };
 
 
-class RexxStem : public RexxObject
+class StemClass : public RexxObject
 {
   friend class RexxCompoundTable;
   public:
     void *operator new (size_t);
     inline void *operator new(size_t size, void *ptr) {return ptr;};
-    RexxStem(RexxString *);
-    inline RexxStem(RESTORETYPE restoreType) { ; };
+    StemClass(RexxString *);
+    inline StemClass(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
@@ -87,7 +87,7 @@ class RexxStem : public RexxObject
     bool         unsignedNumberValue(stringsize_t &result, size_t precision);
     bool         unsignedNumberValue(stringsize_t &result);
     bool         doubleValue(double &result);
-    RexxNumberString *numberString();
+    NumberString *numberString();
     RexxInteger *integerValue(size_t);
     RexxString  *stringValue();
     ArrayClass   *makeArray();

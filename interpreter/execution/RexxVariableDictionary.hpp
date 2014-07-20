@@ -70,7 +70,7 @@ class RexxVariableDictionary : public RexxInternalObject
     RexxObject  *realValue(RexxString *name);
     void         add(RexxVariable *, RexxString *);
     void         put(RexxVariable *, RexxString *);
-    inline RexxStem    *getStem(RexxString *stemName) { return (RexxStem *)getStemVariable(stemName)->getVariableValue(); }
+    inline StemClass    *getStem(RexxString *stemName) { return (StemClass *)getStemVariable(stemName)->getVariableValue(); }
     RexxVariable *createStemVariable(RexxString *stemName);
     RexxVariable *createVariable(RexxString *stemName);
 

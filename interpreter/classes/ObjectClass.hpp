@@ -56,9 +56,9 @@ class RexxInternalStack;
 class SupplierClass;
 class RexxEnvelope;
 class RexxVariableDictionary;
-class RexxNumberString;
+class NumberString;
 class MethodClass;
-class RexxMessage;
+class MessageClass;
 class ProtectedObject;
 class SecurityManager;
 class BaseExecutable;
@@ -266,6 +266,12 @@ class RexxInternalObject : public RexxVirtualBase
     inline void   setInitHeader(size_t s, size_t markword)  { header.initHeader(s, markword); }
     inline void   setInitHeader(size_t markword)  { header.initHeader(markword); }
 
+    inline void setObjectType(size_t type);
+    {
+        sevVirtualFunctions(virtualFunctionTable[objectType]);
+        setBehaviour(RexxBehaviour::getPrimitiveBehaviour(objectType));
+    }
+
     inline void   setObjectLive(size_t markword)  { header.setObjectMark(markword); }
     inline void   setHasReferences() { header.setHasReferences(); }
     inline void   setHasNoReferences() { header.setHasNoReferences(); }
@@ -321,7 +327,7 @@ class RexxInternalObject : public RexxVirtualBase
     virtual bool         unsignedNumberValue(stringsize_t &result, size_t precision);
     virtual bool         unsignedNumberValue(stringsize_t &result);
     virtual bool         doubleValue(double &result);
-    virtual RexxNumberString *numberString();
+    virtual NumberString *numberString();
 
     virtual bool           isEqual(RexxInternalObject *);
     virtual bool           isInstanceOf(RexxClass *);
@@ -405,6 +411,8 @@ class RexxObject : public RexxInternalObject
         clearObject();
     }
 
+
+
     inline void initializeNewObject(size_t mark, void *vft, RexxBehaviour *b)
     {
         // we need to make this a function object of some type in case
@@ -428,7 +436,7 @@ class RexxObject : public RexxInternalObject
             RexxInteger *hasMethodRexx(RexxString *msg);
             bool         hasUninitMethod();
 
-    RexxObject *init();
+    RexxObject *initRexx();
     void        uninit();
 
     virtual void live(size_t);
@@ -444,7 +452,7 @@ class RexxObject : public RexxInternalObject
     virtual bool unsignedNumberValue(stringsize_t &result, size_t precision);
     virtual bool unsignedNumberValue(stringsize_t &result);
     virtual bool doubleValue(double &result);
-    RexxNumberString *numberString();
+    NumberString *numberString();
     RexxInteger *integerValue(size_t);
     RexxString  *makeString();
     RexxString  *primitiveMakeString();
@@ -465,11 +473,11 @@ class RexxObject : public RexxInternalObject
     RexxObject  *setMethod(RexxString *, MethodClass *, RexxString *a = OREF_NULL);
     RexxObject  *unsetMethod(RexxString *);
     RexxObject  *requestRexx(RexxString *);
-    RexxMessage *start(RexxObject **, size_t);
-    RexxMessage *startWith(RexxObject *, ArrayClass *);
+    MessageClass *start(RexxObject **, size_t);
+    MessageClass *startWith(RexxObject *, ArrayClass *);
     RexxObject  *send(RexxObject **, size_t);
     RexxObject  *sendWith(RexxObject *, ArrayClass *);
-    RexxMessage *startCommon(RexxObject *message, RexxObject **arguments, size_t argCount);
+    MessageClass *startCommon(RexxObject *message, RexxObject **arguments, size_t argCount);
     static void decodeMessageName(RexxObject *target, RexxObject *message, RexxString *&messageName, RexxObject *&startScope);
     RexxString  *oref();
     RexxObject  *pmdict();
@@ -636,7 +644,7 @@ public:
     virtual void setFuzz(size_t) {;};
     virtual void setForm(bool) {;}
     virtual bool trap(RexxString *, DirectoryClass *) {return false;};
-    virtual void setObjNotify(RexxMessage *) {;};
+    virtual void setObjNotify(MessageClass *) {;};
     virtual void termination(){;};
     virtual SecurityManager *getSecurityManager() = 0;
     virtual bool isForwarded() { return false; }

@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                RexxPointer.cpp */
+/* REXX Kernel                                                PointerClass.cpp */
 /*                                                                            */
 /* Primitive Pointer Class                                                    */
 /*                                                                            */
@@ -47,14 +47,14 @@
 #include "MethodArguments.hpp"
 
 
-RexxClass *RexxPointer::classInstance = OREF_NULL;   // singleton class instance
-RexxPointer *RexxPointer::nullPointer = OREF_NULL;   // single version of a null pointer
+RexxClass *PointerClass::classInstance = OREF_NULL;   // singleton class instance
+PointerClass *PointerClass::nullPointer = OREF_NULL;   // single version of a null pointer
 
 
 /**
  * Perform class bootstrap activities.
  */
-void RexxPointer::createInstance()
+void PointerClass::createInstance()
 {
     CLASS_CREATE(Pointer, "Pointer", RexxClass);
     TheNullPointer = new_pointer(NULL);       // a NULL pointer object
@@ -68,7 +68,7 @@ void RexxPointer::createInstance()
  *
  * @return True if the two objects are equal, false otherwise.
  */
-RexxObject *RexxPointer::equal(RexxObject *other)
+RexxObject *PointerClass::equal(RexxObject *other)
 {
     requiredArgument(other, ARG_ONE);            /* must have the other argument      */
 
@@ -77,7 +77,7 @@ RexxObject *RexxPointer::equal(RexxObject *other)
         return TheFalseObject;
     }
 
-    return booleanObject(pointer() == ((RexxPointer *)other)->pointer());
+    return booleanObject(pointer() == ((PointerClass *)other)->pointer());
 }
 
 
@@ -88,7 +88,7 @@ RexxObject *RexxPointer::equal(RexxObject *other)
  *
  * @return True if the two objects are equal, false otherwise.
  */
-RexxObject *RexxPointer::notEqual(RexxObject *other)
+RexxObject *PointerClass::notEqual(RexxObject *other)
 {
     requiredArgument(other, ARG_ONE);            /* must have the other argument      */
 
@@ -97,14 +97,14 @@ RexxObject *RexxPointer::notEqual(RexxObject *other)
         return TheTrueObject;
     }
 
-    return booleanObject(pointer() != ((RexxPointer *)other)->pointer());
+    return booleanObject(pointer() != ((PointerClass *)other)->pointer());
 }
 
 
 /**
  * Override of the default hash value method.
  */
-HashCode RexxPointer::getHashValue()
+HashCode PointerClass::getHashValue()
 {
     // generate a hash from the pointer value...but obscure this a touch to get
     // a better bit distribution
@@ -119,7 +119,7 @@ HashCode RexxPointer::getHashValue()
  *
  * @return A new object configured for a pointer object.
  */
-void *RexxPointer::operator new(size_t size)
+void *PointerClass::operator new(size_t size)
 {
     RexxObject *newObject = new_object(size, T_Pointer);
     newObject->setHasNoReferences();     // this has no references
@@ -136,7 +136,7 @@ void *RexxPointer::operator new(size_t size)
  *
  * @return No return, raises an exception.
  */
-RexxObject *RexxPointer::newRexx(RexxObject **args, size_t argc)
+RexxObject *PointerClass::newRexx(RexxObject **args, size_t argc)
 {
     // we do not allow these to be allocated from Rexx code...
     reportException(Error_Unsupported_new_method, ((RexxClass *)this)->getId());
@@ -149,7 +149,7 @@ RexxObject *RexxPointer::newRexx(RexxObject **args, size_t argc)
  *
  * @return The character string value.
  */
-RexxString *RexxPointer::stringValue()
+RexxString *PointerClass::stringValue()
 {
     return Numerics::pointerToString(pointer());
 }
@@ -160,7 +160,7 @@ RexxString *RexxPointer::stringValue()
  *
  * @return True if the pointer value is NULL, false for non-null.
  */
-RexxObject *RexxPointer::isNull()
+RexxObject *PointerClass::isNull()
 {
     return booleanObject(pointer() == NULL);
 }

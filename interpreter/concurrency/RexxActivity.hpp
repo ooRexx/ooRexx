@@ -168,7 +168,7 @@ class RexxActivity : public RexxInternalObject
     RexxString *buildMessage(wholenumber_t, ArrayClass *);
     RexxString *messageSubstitution(RexxString *, ArrayClass *);
     void        run();
-    void        run(RexxMessage *target);
+    void        run(MessageClass *target);
     void        checkActivationStack();
     void        updateFrameMarkers();
     void        pushStackFrame(RexxActivationBase *new_activation);
@@ -336,7 +336,7 @@ class RexxActivity : public RexxInternalObject
     RexxActivationStack   frameStack;   // our stack used for activation frames
     DirectoryClass      *conditionobj;   // condition object for killed activi
     TableClass          *requiresTable;  // Current ::REQUIRES being installed
-    RexxMessage        *dispatchMessage;  // a message object to run on this thread
+    MessageClass        *dispatchMessage;  // a message object to run on this thread
 
 
     // the activation frame stack.  This stack is one RexxActivation or

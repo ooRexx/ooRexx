@@ -203,7 +203,7 @@ void RexxVariable::setStem(RexxObject *value)
     else
     {
         // create a new stem object as value
-        RexxStem *stem_table = new RexxStem (variable_name);
+        StemClass *stem_table = new StemClass (variable_name);
         set(stem_table);                   // overlay the reference stem object
         stem_table->setValue(value);       // set the default value
     }

@@ -63,7 +63,7 @@
 class InterpreterInstance;
 class RexxActivation;
 class RexxDateTime;
-class RexxBuffer;
+class BufferClass;
 
 class SystemInterpreter
 {
@@ -101,7 +101,7 @@ public:
     static bool invokeExternalFunction(RexxActivation *, RexxActivity *, RexxString *, RexxObject **, size_t, RexxString *, ProtectedObject &);
     static void validateAddressName(RexxString *name );
     static void loadImage(char **imageBuffer, size_t *imageSize);
-    static RexxBuffer *readProgram(const char *file_name);
+    static BufferClass *readProgram(const char *file_name);
 
     static sigset_t oldmask;       // masks used for setting signal handlers
     static sigset_t newmask;

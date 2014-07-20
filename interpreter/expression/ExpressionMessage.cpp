@@ -86,7 +86,7 @@ void *RexxExpressionMessage::operator new(size_t size, size_t argCount)
  *                 A flag indicating if this is a ~ or ~~ operation.
  */
 RexxExpressionMessage::RexxExpressionMessage(RexxObject *_target, RexxString *name,
-    RexxObject *_super, size_t argCount, RexxQueue *arglist, bool double_form)
+    RexxObject *_super, size_t argCount, QueueClass *arglist, bool double_form)
 {
     messageName = name;
     target = _target;

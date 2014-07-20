@@ -1405,7 +1405,7 @@ void RexxNativeActivation::callRegisteredRoutine(RoutineClass *_routine, Registe
     // activation saved objects.
     if (count > MAX_NATIVE_ARGUMENTS)
     {
-        RexxBuffer *argBuffer = new_buffer(sizeof(CONSTRXSTRING) * count);
+        BufferClass *argBuffer = new_buffer(sizeof(CONSTRXSTRING) * count);
         // this keeps the buffer alive until the activation is popped.
         createLocalReference(argBuffer);
         argPtr = (CONSTRXSTRING *)argBuffer->getData();
@@ -1974,7 +1974,7 @@ void *RexxNativeActivation::pointer(
         return NULL;
     }
     // just unwrap thee pointer
-    return ((RexxPointer *)object)->pointer();
+    return ((PointerClass *)object)->pointer();
 }
 
 
@@ -2291,7 +2291,7 @@ bool RexxNativeActivation::fetchNext(
 {
     RexxVariable *variable;              /* retrieved variable value          */
     RexxCompoundElement *compound;       /* retrieved variable value          */
-    RexxStem     *stemVar;               /* a potential stem variable collection */
+    StemClass     *stemVar;               /* a potential stem variable collection */
 
                                          /* starting off fresh?               */
     if (nextCurrent() == OREF_NULL)
@@ -2311,7 +2311,7 @@ bool RexxNativeActivation::fetchNext(
         variable = nextStem();             /* see if we're processing a stem variable */
         if (variable != OREF_NULL)          /* were we in the middle of processing a stem? */
         {
-            stemVar = (RexxStem *)variable->getVariableValue();
+            stemVar = (StemClass *)variable->getVariableValue();
             compound = stemVar->nextVariable(this);
             if (compound != OREF_NULL)     /* if we still have elements here */
             {
@@ -2345,7 +2345,7 @@ bool RexxNativeActivation::fetchNext(
             {
                 /* we are now on a stem              */
                 setNextStem(variable);
-                setCompoundElement(((RexxStem *)variable_value)->first());
+                setCompoundElement(((StemClass *)variable_value)->first());
                 /* set up an iterator for the stem   */
             }
             else                             /* found a real variable             */
@@ -2495,18 +2495,18 @@ RexxObject *RexxNativeActivation::getScope()
  * @return A resolved stem object.  Returns a NULLOBJECT if there is
  *         a resolution problem.
  */
-RexxStem *RexxNativeActivation::resolveStemVariable(RexxObject *s)
+StemClass *RexxNativeActivation::resolveStemVariable(RexxObject *s)
 {
     // is this a stem already?
     if (isStem(s))
     {
-        return (RexxStem *)s;
+        return (StemClass *)s;
     }
 
     /* force to a string value           */
     RexxString *temp = stringArgument(s, 1);
     // see if we can retrieve this stem
-    return (RexxStem *)getContextStem(temp);
+    return (StemClass *)getContextStem(temp);
 }
 
 
@@ -3216,7 +3216,7 @@ int RexxNativeActivation::stemSort(const char *stemname, int order, int type, si
         RexxString *variable = new_string(stemname);
         ProtectedObject p1(variable);
         /* and get a retriever for this variable */
-        RexxStemVariable *retriever = (RexxStemVariable *)RexxVariableDictionary::getVariableRetriever(variable);
+        StemClassVariable *retriever = (StemClassVariable *)RexxVariableDictionary::getVariableRetriever(variable);
 
         /* this must be a stem variable in order for the sorting to work. */
 

@@ -212,7 +212,7 @@ void RexxInteger::copyIntoTail(RexxCompoundTail *tail)
 }
 
 
-RexxNumberString *RexxInteger::numberString()
+NumberString *RexxInteger::numberString()
 /******************************************************************************/
 /* Function:  Convert an integer into a numberstring value                    */
 /******************************************************************************/
@@ -224,7 +224,7 @@ RexxNumberString *RexxInteger::numberString()
     }
     else                                 /* create a new numberstring         */
     {
-        return(RexxNumberString *)new_numberstringFromWholenumber((wholenumber_t)value);
+        return(NumberString *)new_numberstringFromWholenumber((wholenumber_t)value);
     }
 }
 

@@ -114,7 +114,7 @@ class RexxString : public RexxObject
     bool         unsignedNumberValue(stringsize_t &result, size_t precision);
     bool         unsignedNumberValue(stringsize_t &result);
     bool         doubleValue(double &result);
-    RexxNumberString *numberString();
+    NumberString *numberString();
     RexxInteger *integerValue(size_t);
     RexxString  *makeString();
     ArrayClass   *makeArray();
@@ -309,9 +309,9 @@ class RexxString : public RexxObject
            void  copyToRxstring(RXSTRING &r);
     inline bool  endsWith(char c) const { return length > 0 && stringData[length - 1] == c; }
 
-    RexxNumberString *createNumberString();
+    NumberString *createNumberString();
 
-    inline RexxNumberString *fastNumberString()
+    inline NumberString *fastNumberString()
     {
         // already converted?  Done!
         if (numberStringValue != OREF_NULL)
@@ -497,7 +497,7 @@ class RexxString : public RexxObject
 
     HashCode hashValue;                      // stored has value
     size_t length;                           // string length
-    RexxNumberString *numberStringValue;     // lookaside information
+    NumberString *numberStringValue;     // lookaside information
     FlagSet<StringFlag, 32> attributes;      // string attributes
     char stringData[4];                      // Start of the string data part
 };

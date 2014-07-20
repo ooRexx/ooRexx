@@ -42,7 +42,6 @@
 /*                                                                            */
 /******************************************************************************/
 
-#include <stdarg.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "ListClass.hpp"
@@ -491,7 +490,7 @@ MethodDictionary *RexxClass::getBehaviourDictionary()
  *                   creation, so we delay setting this attribute until the
  *                   class is fully constructed.
  */
-void RexxClass::subClassable(bool restricted)
+void RexxClass::buildFinalClassBehaviour(bool restricted)
 {
     // get a copy of the class instance
     // behaviour mdict before the merge
@@ -596,12 +595,8 @@ void RexxClass::subClassable(bool restricted)
  *
  * @param superClass The immediate superclass of the created
  *                   class.
- * @param restricted Whether we should turn the RexxRestricted flag on at this time.
- *                   Some classes get additional customization after initial
- *                   creation, so we delay setting this attribute until the
- *                   class is fully constructed.
  */
-void RexxClass::subClassable(RexxClass *superClass, bool restricted)
+void RexxClass::buildFinalClassBehaviour(RexxClass *superClass)
 {
     // get a copy of the class instance behaviour mdict before the merge
     // with OBJECT.  This unmerged mdict is kept in this class's

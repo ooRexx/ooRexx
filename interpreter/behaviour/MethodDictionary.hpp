@@ -50,7 +50,7 @@
  * Exported table class where indexing is done using object
  * identity
  */
-class MethodDictionary: public EqualityHashCollection
+class MethodDictionary: publicStringHashCollection
 {
  public:
      void        *operator new(size_t);
@@ -59,7 +59,7 @@ class MethodDictionary: public EqualityHashCollection
      inline void  operator delete(void *, void *) { ; }
 
     inline MethodDictionary(RESTORETYPE restoreType) { ; }
-           MethodDictionary(size_t capacity = DefaultTableSize) : instanceMethods(OREF_NULL), EqualityHashCollection(capacity) { }
+           MethodDictionary(size_t capacity = DefaultTableSize) : instanceMethods(OREF_NULL), StringHashCollection(capacity) { }
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);

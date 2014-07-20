@@ -2316,9 +2316,9 @@ RexxInstruction *LanguageParser::parseNew(InstructionSubKeyword argPull)
     // we create multiple lists here.  The different parsing templates are
     // pushed on the subTerms stack, while lists of variables are pushed on to the terms
     // stack.  Referencing them via more descriptive variable names will make this clearer.
-    RexxQueue *parse_template = subTerms;
+    QueueClass *parse_template = subTerms;
     int templateCount = 0;
-    RexxQueue *_variables = terms;
+    QueueClass *_variables = terms;
     int variableCount = 0;
 
     RexxToken *token = nextReal();
@@ -3363,8 +3363,8 @@ RexxInstruction *LanguageParser::useNew()
     // we accumulate 2 sets of data here, so we need 2 queues to push them in
     // if this is the SIMPLE version, the second queue will be empty.
     size_t variableCount = 0;
-    Protected<RexxQueue> variable_list = new_queue();         // we might be parsing message terms, so we can't use the subterms list.
-    Protected<RexxQueue> defaults_list = new_queue();
+    Protected<QueueClass> variable_list = new_queue();         // we might be parsing message terms, so we can't use the subterms list.
+    Protected<QueueClass> defaults_list = new_queue();
     token = nextReal();                  /* get the next token                */
 
     bool allowOptionals = false;  // we don't allow trailing optionals unless the list ends with "..."

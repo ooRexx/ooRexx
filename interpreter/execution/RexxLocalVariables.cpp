@@ -275,7 +275,7 @@ RexxVariable *RexxLocalVariables::lookupStemVariable(RexxString *name, size_t in
             /* add this to the variable cache */
             locals[index] = variable;
             /* create a stem object as value     */
-            RexxStem *stemtable = new RexxStem(name);
+            StemClass *stemtable = new StemClass(name);
             /* the stem object is the value of   */
             /* stem variable                     */
             variable->set((RexxObject *)stemtable);

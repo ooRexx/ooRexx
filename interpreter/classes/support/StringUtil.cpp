@@ -1087,7 +1087,7 @@ RexxObject *StringUtil::dataType(RexxString *String, char Option )
     RexxObject *Temp;                    /* temporary value                   */
     const char *Scanp;                   /* string data pointer               */
     size_t      Count;                   /* hex nibble count                  */
-    RexxNumberString *TempNum;
+    NumberString *TempNum;
 
     Len = String->getLength();           /* get validated string len          */
     Option = toupper(Option);            /* get the first character           */
@@ -1121,7 +1121,7 @@ RexxObject *StringUtil::dataType(RexxString *String, char Option )
             if (TempNum != OREF_NULL)
             {      /* valid number?                     */
                    /* force rounding to current digits  */
-                TempNum = (RexxNumberString *)TempNum->plus(IntegerZero);
+                TempNum = (NumberString *)TempNum->plus(IntegerZero);
                 /* check for integer then            */
                 return booleanObject(TempNum->isInteger());
             }

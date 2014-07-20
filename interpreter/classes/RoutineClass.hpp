@@ -67,7 +67,7 @@ public:
     RexxObject   *callRexx(RexxObject **, size_t);
     RexxObject   *callWithRexx(ArrayClass *);
 
-    RexxBuffer *save();
+    BufferClass *save();
     void save(PRXSTRING outBuffer);
     void save(const char *filename);
     RexxObject  *setSecurityManager(RexxObject *);
@@ -78,11 +78,11 @@ public:
 
     // various static classes for reading from a file and restoring potential
     // compiled images.
-    static RoutineClass *restore(RexxBuffer *, char *, size_t length);
+    static RoutineClass *restore(BufferClass *, char *, size_t length);
     static RoutineClass *restore(const char *data, size_t length);
-    static RoutineClass *restore(RexxString *fileName, RexxBuffer *buffer);
+    static RoutineClass *restore(RexxString *fileName, BufferClass *buffer);
     static RoutineClass *restoreFromMacroSpace(RexxString *name);
-    static RoutineClass *restore(RexxBuffer *buffer);
+    static RoutineClass *restore(BufferClass *buffer);
     static RoutineClass *restore(RXSTRING *inData, RexxString *name);
 
     static void createInstance();

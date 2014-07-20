@@ -1381,7 +1381,7 @@ void RexxActivity::run()
  *
  * @param target The target message object.
  */
-void RexxActivity::run(RexxMessage *target)
+void RexxActivity::run(MessageClass *target)
 {
     dispatchMessage = target;
 
@@ -1760,7 +1760,7 @@ void RexxActivity::checkDeadLock(
                                        /* waiting on a message object?      */
     if (isOfClass(Message, waitingObject))
                                        /* get the activity message is on    */
-      owningActivity = ((RexxMessage *)waitingObject)->getActivity();
+      owningActivity = ((MessageClass *)waitingObject)->getActivity();
     else
                                        /* get the locking activity for vdict*/
       owningActivity = ((RexxVariableDictionary *)waitingObject)->getReservingActivity();

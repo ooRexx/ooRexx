@@ -119,7 +119,7 @@ protected:
 
 
 /**
- * A program source where the data is stored in a RexxBuffer
+ * A program source where the data is stored in a BufferClass
  * object.
  */
 class BufferProgramSource: public ProgramSource
@@ -130,7 +130,7 @@ class BufferProgramSource: public ProgramSource
     void *operator new(size_t);
     inline void  operator delete(void *) { ; }
 
-    BufferProgramSource(RexxBuffer *b) : buffer(b), descriptorArea(OREF_NULL), ProgramSource() { }
+    BufferProgramSource(BufferClass *b) : buffer(b), descriptorArea(OREF_NULL), ProgramSource() { }
     inline BufferProgramSource(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
@@ -151,13 +151,13 @@ class BufferProgramSource: public ProgramSource
 
 protected:
 
-    RexxBuffer *descriptorArea;   // our table of line descriptors
-    RexxBuffer *buffer;           // the buffer where the source data is installed
+    BufferClass *descriptorArea;   // our table of line descriptors
+    BufferClass *buffer;           // the buffer where the source data is installed
 };
 
 
 /**
- * A program source where the data is stored in a RexxBuffer
+ * A program source where the data is stored in a BufferClass
  * object read from a file.
  */
 class FileProgramSource: public BufferProgramSource

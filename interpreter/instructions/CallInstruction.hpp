@@ -108,7 +108,7 @@ class RexxInstructionCall : public RexxInstructionCallBase
     inline void operator delete(void *) { }
     inline void operator delete(void *, void *) { }
 
-    RexxInstructionCall(RexxString *, size_t, RexxQueue *, BuiltinCode);
+    RexxInstructionCall(RexxString *, size_t, QueueClass *, BuiltinCode);
     inline RexxInstructionCall(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
@@ -138,7 +138,7 @@ class RexxInstructionDynamicCall : public RexxInstructionDynamicCallBase
     inline void operator delete(void *) { }
     inline void operator delete(void *, void *) { }
 
-    RexxInstructionDynamicCall(RexxObject *, size_t, RexxQueue *);
+    RexxInstructionDynamicCall(RexxObject *, size_t, QueueClass *);
     inline RexxInstructionDynamicCall(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);

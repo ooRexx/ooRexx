@@ -56,7 +56,7 @@ class RexxExpressionFunction : public RexxInternalObject
     inline void  operator delete(void *, size_t) { ; }
     inline void  operator delete(void *, void *) { ; }
 
-    RexxExpressionFunction(RexxString *, size_t, RexxQueue *, BuiltinCode);
+    RexxExpressionFunction(RexxString *, size_t, QueueClass *, BuiltinCode);
     inline RexxExpressionFunction(RESTORETYPE restoreType) { ; };
 
     virtual void        live(size_t);

@@ -655,7 +655,7 @@ void MemoryObject::restoreImage()
     TheFalseObject = (RexxInteger *)saveArray->get(saveArray_FALSE);
     TheNilObject   = saveArray->get(saveArray_NIL);
     TheNullArray   = (ArrayClass *)saveArray->get(saveArray_NULLA);
-    TheNullPointer   = (RexxPointer *)saveArray->get(saveArray_NULLPOINTER);
+    TheNullPointer   = (PointerClass *)saveArray->get(saveArray_NULLPOINTER);
     TheClassClass  = (RexxClass *)saveArray->get(saveArray_CLASS);
     TheCommonRetrievers = (DirectoryClass *)saveArray->get(saveArray_COMMON_RETRIEVERS);
 
@@ -952,8 +952,8 @@ ArrayClass  *MemoryObject::newObjects(
 
     prototype = largeObject;
 
-    /* IH: Object gets a valid state for the mark and sweep process. */
-    /* Otherwise OrefOK (CHECKOREFS) will fail */
+    // make sure this objects get a valid vft and behaviour immediately, otherwise
+    // GC could have problems if triggered before other initialization completes.
 
     // initialize the hash table object
     largeObject->initializeNewObject(objSize, markWord, virtualFunctionTable[objectType], RexxBehaviour::getPrimitiveBehaviour(objectType));
@@ -1353,7 +1353,7 @@ void MemoryObject::tracingMark(RexxObject *root, MarkReason reason)
  *
  * @return The first "real" object in the buffer.
  */
-RexxObject *MemoryObject::unflattenObjectBuffer(RexxBuffer *sourceBuffer, char *startPointer, size_t dataLength)
+RexxObject *MemoryObject::unflattenObjectBuffer(BufferClass *sourceBuffer, char *startPointer, size_t dataLength)
 {
     // get an end pointer
     RexxObject *endPointer = (RexxObject *)(startPointer + dataLength);

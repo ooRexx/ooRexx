@@ -73,7 +73,7 @@ void *RexxExpressionLogical::operator new(size_t size, size_t  count)
  * @param count  The number of expressions in the list.
  * @param list   The accumulated list of expressions.
  */
-RexxExpressionLogical::RexxExpressionLogical(size_t count, RexxQueue *list)
+RexxExpressionLogical::RexxExpressionLogical(size_t count, QueueClass *list)
 {
     expressionCount = count;
 

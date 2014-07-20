@@ -1029,7 +1029,7 @@ void RexxSource::addInstalledRoutine(RexxString *name, RoutineClass *routineObje
  *
  * @param s      The Buffer with the source code in original form.
  */
-void RexxSource::attachSource(RexxBuffer *s)
+void RexxSource::attachSource(BufferClass *s)
 {
     // replace the current source object (likely the dummy one)
     source = new BufferProgramSource(s);

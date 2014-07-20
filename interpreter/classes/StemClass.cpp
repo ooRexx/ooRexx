@@ -55,13 +55,13 @@
 #include "MethodArguments.hpp"
 
 // singleton class instance
-RexxClass *RexxStem::classInstance = OREF_NULL;
+RexxClass *StemClass::classInstance = OREF_NULL;
 
 
 /**
  * Create initial class object at bootstrap time.
  */
-void RexxStem::createInstance()
+void StemClass::createInstance()
 {
     CLASS_CREATE(Stem, "Stem", RexxClass);
 }
@@ -72,21 +72,11 @@ void RexxStem::createInstance()
  *
  * @param name   The name of the stem (optional)
  */
-RexxStem::RexxStem(RexxString *name)
-/******************************************************************************/
-/* Function:  Initialize a STEM class item                                    */
-/******************************************************************************/
+StemClass::StemClass(RexxString *name)
 {
-    // if not give an explicit value, we use a null string.
-    if (name == OREF_NULL)
-    {
-        name = OREF_NULLSTRING;
-    }
-    // use the string form of the supplied name.
-    else
-    {
-        name = stringArgument(name, ARG_ONE);
-    }
+    // get the name as a real string...we default to a null string.
+    name = optionalStringArgument(name, OREF_NULLSTRING, ARG_ONE);
+
     stemName = name;
     value = name;
     // initialize the tail table so it knows who owns it.
@@ -95,14 +85,15 @@ RexxStem::RexxStem(RexxString *name)
     dropped = true;
 }
 
-RexxObject *RexxStem::copy()
+
+RexxObject *StemClass::copy()
 /******************************************************************************/
 /* Function:  Copy a stem collection object                                   */
 /******************************************************************************/
 {
     /* make a copy of ourself (this also */
     /* copies the object variables       */
-    RexxStem *newObj = (RexxStem *)this->RexxObject::copy();
+    StemClass *newObj = (StemClass *)this->RexxObject::copy();
     ProtectedObject p(newObj);
     newObj->copyFrom(tails);             /* have the tail table copy itself   */
     return newObj;                       /* return the new object             */
@@ -113,14 +104,14 @@ RexxObject *RexxStem::copy()
  *
  * @param _tails The source tail collection.
  */
-void RexxStem::copyFrom(RexxCompoundTable &_tails)
+void StemClass::copyFrom(RexxCompoundTable &_tails)
 {
     tails.init(this);
     tails.copyFrom(_tails);
 }
 
 
-void RexxStem::live(size_t liveMark)
+void StemClass::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
@@ -131,7 +122,7 @@ void RexxStem::live(size_t liveMark)
     markCompoundTable();
 }
 
-void RexxStem::liveGeneral(MarkReason reason)
+void StemClass::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
@@ -142,12 +133,12 @@ void RexxStem::liveGeneral(MarkReason reason)
     markGeneralCompoundTable();
 }
 
-void RexxStem::flatten(RexxEnvelope *envelope)
+void StemClass::flatten(RexxEnvelope *envelope)
 /******************************************************************************/
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
 {
-  setUpFlatten(RexxStem)
+  setUpFlatten(StemClass)
 
    flattenRef(value);
    flattenRef(stemName);
@@ -157,7 +148,7 @@ void RexxStem::flatten(RexxEnvelope *envelope)
   cleanUpFlatten
 }
 
-void RexxStem::setValue(
+void StemClass::setValue(
     RexxObject *_value)                 /* new variable value                */
 /******************************************************************************/
 /* Function:  Set a new stem default value                                    */
@@ -167,7 +158,7 @@ void RexxStem::setValue(
     this->dropped = false;               /* now have an explict value         */
 }
 
-void RexxStem::dropValue()
+void StemClass::dropValue()
 /******************************************************************************/
 /* Function:  Drop a stem value -- this reinitializes it                      */
 /******************************************************************************/
@@ -183,13 +174,13 @@ void RexxStem::dropValue()
  *
  * @return The default stem value.
  */
-RexxObject *RexxStem::getStemValue()
+RexxObject *StemClass::getStemValue()
 {
     return value;
 }
 
 
-RexxObject *RexxStem::unknown(
+RexxObject *StemClass::unknown(
     RexxString *msgname,               /* unknown message name              */
     ArrayClass  *arguments)             /* message arguments                 */
 /******************************************************************************/
@@ -210,7 +201,7 @@ RexxObject *RexxStem::unknown(
     return this->value->sendMessage(msgname, arguments);
 }
 
-RexxObject *RexxStem::bracket(
+RexxObject *StemClass::bracket(
     RexxObject **tailElements,         /* tail elements                     */
     size_t      argCount)              /* number of tail elements           */
 /******************************************************************************/
@@ -238,7 +229,7 @@ RexxObject *RexxStem::bracket(
  * @return True if the fully resolved tail exists in the stem, false
  *         otherwise.
  */
-RexxObject *RexxStem::hasIndex(RexxObject **tailElements, size_t argCount)
+RexxObject *StemClass::hasIndex(RexxObject **tailElements, size_t argCount)
 {
     if (argCount == 0)
     {
@@ -264,7 +255,7 @@ RexxObject *RexxStem::hasIndex(RexxObject **tailElements, size_t argCount)
  * @return The removed object.  If nothing was removed, this returns
  *         .nil.
  */
-RexxObject *RexxStem::remove(RexxObject **tailElements, size_t argCount)
+RexxObject *StemClass::remove(RexxObject **tailElements, size_t argCount)
 {
     // if asked to remove the default value, reset this back to the name
     if (argCount == 0)
@@ -298,7 +289,7 @@ RexxObject *RexxStem::remove(RexxObject **tailElements, size_t argCount)
  *
  * @return .true if the object is in the collection, .false otherwise.
  */
-RexxObject *RexxStem::hasItem(RexxObject *target)
+RexxObject *StemClass::hasItem(RexxObject *target)
 {
     // TODO:  Make primitive and Rexx versions of methods for Stem class too.
 
@@ -315,7 +306,7 @@ RexxObject *RexxStem::hasItem(RexxObject *target)
  *
  * @return .true if the object is in the collection, .false otherwise.
  */
-RexxObject *RexxStem::removeItem(RexxObject *target)
+RexxObject *StemClass::removeItem(RexxObject *target)
 {
     RexxCompoundElement *compound = findByValue(target);
     // if there's a variable there, and it has a real value, then
@@ -338,7 +329,7 @@ RexxObject *RexxStem::removeItem(RexxObject *target)
  *
  * @return The tail name for the match, or .nil if it was not found.
  */
-RexxObject *RexxStem::index(RexxObject *target)
+RexxObject *StemClass::index(RexxObject *target)
 {
     RexxCompoundElement *variable = findByValue(target);
     if (variable != OREF_NULL)
@@ -354,13 +345,13 @@ RexxObject *RexxStem::index(RexxObject *target)
  * @return The count of items in the collection, not counting the
  *         default value.
  */
-RexxObject *RexxStem::itemsRexx()
+RexxObject *StemClass::itemsRexx()
 {
     return new_integer(items());
 }
 
 
-RexxObject *RexxStem::bracketEqual(
+RexxObject *StemClass::bracketEqual(
     RexxObject **tailElements,         /* tail elements                     */
     size_t      argCount)              /* number of tail elements           */
 /******************************************************************************/
@@ -403,7 +394,7 @@ RexxObject *RexxStem::bracketEqual(
 }
 
 
-ArrayClass  *RexxStem::makeArray()
+ArrayClass  *StemClass::makeArray()
 /******************************************************************************/
 /* Function:  Extract as an array the tails of a stem.                        */
 /******************************************************************************/
@@ -411,7 +402,7 @@ ArrayClass  *RexxStem::makeArray()
     return this->tailArray();            /* extract the array item            */
 }
 
-RexxString *RexxStem::stringValue()
+RexxString *StemClass::stringValue()
 /******************************************************************************/
 /* Function:  Forward string request on to the default value                  */
 /******************************************************************************/
@@ -420,7 +411,7 @@ RexxString *RexxStem::stringValue()
     return (RexxString *)this->value->stringValue();
 }
 
-bool RexxStem::numberValue(wholenumber_t &result, stringsize_t digits)
+bool StemClass::numberValue(wholenumber_t &result, stringsize_t digits)
 /******************************************************************************/
 /* Function:  Convert a REXX object to a long value                           */
 /******************************************************************************/
@@ -428,7 +419,7 @@ bool RexxStem::numberValue(wholenumber_t &result, stringsize_t digits)
     return value->numberValue(result, digits);
 }
 
-bool RexxStem::numberValue(wholenumber_t &result)
+bool StemClass::numberValue(wholenumber_t &result)
 /******************************************************************************/
 /* Function:  Convert a REXX object to a long value                           */
 /******************************************************************************/
@@ -436,7 +427,7 @@ bool RexxStem::numberValue(wholenumber_t &result)
     return value->numberValue(result);
 }
 
-bool RexxStem::unsignedNumberValue(stringsize_t &result, stringsize_t digits)
+bool StemClass::unsignedNumberValue(stringsize_t &result, stringsize_t digits)
 /******************************************************************************/
 /* Function:  Convert a REXX object to a long value                           */
 /******************************************************************************/
@@ -444,7 +435,7 @@ bool RexxStem::unsignedNumberValue(stringsize_t &result, stringsize_t digits)
     return value->unsignedNumberValue(result, digits);
 }
 
-bool RexxStem::unsignedNumberValue(stringsize_t &result)
+bool StemClass::unsignedNumberValue(stringsize_t &result)
 /******************************************************************************/
 /* Function:  Convert a REXX object to a long value                           */
 /******************************************************************************/
@@ -452,7 +443,7 @@ bool RexxStem::unsignedNumberValue(stringsize_t &result)
     return value->unsignedNumberValue(result);
 }
 
-bool RexxStem::doubleValue(double &result)
+bool StemClass::doubleValue(double &result)
 /******************************************************************************/
 /* Function:  Convert a primitive internal object to a double value           */
 /******************************************************************************/
@@ -460,7 +451,7 @@ bool RexxStem::doubleValue(double &result)
     return value->doubleValue(result);
 }
 
-RexxNumberString *RexxStem::numberString()
+NumberString *StemClass::numberString()
 /******************************************************************************/
 /* Function:  Forward numberstring request on to the default value            */
 /******************************************************************************/
@@ -469,7 +460,7 @@ RexxNumberString *RexxStem::numberString()
    return this->value->numberString();
 }
 
-RexxInteger *RexxStem::integerValue(size_t precision)
+RexxInteger *StemClass::integerValue(size_t precision)
 /******************************************************************************/
 /* Function:  Forward integer request on to the default value                 */
 /******************************************************************************/
@@ -478,7 +469,7 @@ RexxInteger *RexxStem::integerValue(size_t precision)
     return this->value->integerValue(precision);
 }
 
-RexxObject *RexxStem::request(
+RexxObject *StemClass::request(
     RexxString *makeclass)             /* required class name               */
 /******************************************************************************/
 /* Function:  Forward all REQUEST messages on to the default value            */
@@ -506,7 +497,7 @@ RexxObject *RexxStem::request(
     return(RexxObject *)result;
 }
 
-RexxObject *RexxStem::newRexx(
+RexxObject *StemClass::newRexx(
     RexxObject **init_args,           /* subclass init arguments           */
     size_t       argCount)            /* the number of arguments           */
 /******************************************************************************/
@@ -522,7 +513,7 @@ RexxObject *RexxStem::newRexx(
 
 
     RexxClass::processNewArgs(init_args, argCount, &init_args, &argCount, 1, (RexxObject **)&name, NULL);
-    RexxObject *newObj = new RexxStem ((RexxString *)name);
+    RexxObject *newObj = new StemClass ((RexxString *)name);
     ProtectedObject p(newObj);
 
     // handle Rexx class completion
@@ -530,7 +521,7 @@ RexxObject *RexxStem::newRexx(
     return newObj;
 }
 
-void *RexxStem::operator new(size_t size)
+void *StemClass::operator new(size_t size)
 /******************************************************************************/
 /* Function:  Create a new stem object                                        */
 /******************************************************************************/
@@ -540,7 +531,7 @@ void *RexxStem::operator new(size_t size)
 }
 
 
-RexxCompoundElement *RexxStem::getCompoundVariable(
+RexxCompoundElement *StemClass::getCompoundVariable(
     RexxCompoundTail *name)             /* tail name                         */
 /******************************************************************************/
 /* Function:  Get an item from the variable dictionary, adding a new empty    */
@@ -552,7 +543,7 @@ RexxCompoundElement *RexxStem::getCompoundVariable(
 }
 
 
-RexxCompoundElement *RexxStem::exposeCompoundVariable(
+RexxCompoundElement *StemClass::exposeCompoundVariable(
     RexxCompoundTail *name)             /* tail name                         */
 /******************************************************************************/
 /* Function:  Get an item from the variable dictionary, adding a new empty    */
@@ -583,7 +574,7 @@ RexxCompoundElement *RexxStem::exposeCompoundVariable(
 }
 
 
-RexxCompoundElement *RexxStem::findCompoundVariable(
+RexxCompoundElement *StemClass::findCompoundVariable(
     RexxCompoundTail *name)             /* tail name                         */
 /******************************************************************************/
 /* Function:  Get an item from the variable dictionary, without creating a    */
@@ -600,7 +591,7 @@ RexxCompoundElement *RexxStem::findCompoundVariable(
 }
 
 
-void RexxStem::dropCompoundVariable(
+void StemClass::dropCompoundVariable(
     RexxCompoundTail *name)             /* tail name                         */
 /******************************************************************************/
 /* Function:  Mark a variable as dropped.                                     */
@@ -611,7 +602,7 @@ void RexxStem::dropCompoundVariable(
 }
 
 
-RexxCompoundElement *RexxStem::nextVariable(
+RexxCompoundElement *StemClass::nextVariable(
   RexxNativeActivation *activation)    /* Hosting Native Act.               */
 /******************************************************************************/
 /* Function:  Return the "next" variable of a variable traversal              */
@@ -640,7 +631,7 @@ RexxCompoundElement *RexxStem::nextVariable(
     return OREF_NULL;                    /* return end of table indicator     */
 }
 
-void RexxStem::setCompoundVariable(
+void StemClass::setCompoundVariable(
     RexxCompoundTail *name,            /* tail name                         */
     RexxObject *_value)                /* value to assign to variable name  */
 /******************************************************************************/
@@ -652,7 +643,7 @@ void RexxStem::setCompoundVariable(
     variable->set(_value);               /* and perform the set               */
 }
 
-ArrayClass *RexxStem::tailArray()
+ArrayClass *StemClass::tailArray()
 /******************************************************************************/
 /* Function:  Return all indices as an array                                  */
 /******************************************************************************/
@@ -678,7 +669,7 @@ ArrayClass *RexxStem::tailArray()
     return array;                        /* return the array item             */
 }
 
-RexxObject *RexxStem::evaluateCompoundVariableValue(
+RexxObject *StemClass::evaluateCompoundVariableValue(
      RexxActivation *context,           /* the evaluation context (can be NULL) */
      RexxString *stemVariableName,     // the stem variable name this was evaluated from (used for noValue)
      RexxCompoundTail *resolved_tail)   /* the search tail                   */
@@ -730,7 +721,7 @@ RexxObject *RexxStem::evaluateCompoundVariableValue(
     return _value;                       /* and finally return the value */
 }
 
-RexxObject *RexxStem::getCompoundVariableValue(
+RexxObject *StemClass::getCompoundVariableValue(
      RexxCompoundTail *resolved_tail)   /* the search tail                   */
 /******************************************************************************/
 /* Function:  Retrieve a compound variable, returning the default value if the*/
@@ -780,7 +771,7 @@ RexxObject *RexxStem::getCompoundVariableValue(
  * @return The variable value, or OREF_NULL if the variable does not
  *         have an explicit value.
  */
-RexxObject *RexxStem::getCompoundVariableRealValue(RexxCompoundTail *resolved_tail)
+RexxObject *StemClass::getCompoundVariableRealValue(RexxCompoundTail *resolved_tail)
 {
     // first resolve the compound variable.
     RexxVariable *variable = findCompoundVariable(resolved_tail);
@@ -803,7 +794,7 @@ RexxObject *RexxStem::getCompoundVariableRealValue(RexxCompoundTail *resolved_ta
 
 
 
-RexxObject *RexxStem::realCompoundVariableValue(
+RexxObject *StemClass::realCompoundVariableValue(
      RexxCompoundTail *resolved_tail)   /* the search tail                   */
 /******************************************************************************/
 /* Function:  Retrieve a compound variable, returning the default value if the*/
@@ -830,7 +821,7 @@ RexxObject *RexxStem::realCompoundVariableValue(
 }
 
 
-RexxObject *RexxStem::handleNovalue(
+RexxObject *StemClass::handleNovalue(
     RexxActivation *context,           /* the execution context for the request */
     RexxString *name,                  // the fully resolved compound name
     RexxObject *defaultValue,          // the default value to use
@@ -854,7 +845,7 @@ RexxObject *RexxStem::handleNovalue(
 }
 
 
-void RexxStem::expose(
+void StemClass::expose(
     RexxCompoundElement *old_variable) /* the parent compound variable     */
 /******************************************************************************/
 /* Function:  Retrieve a compound variable, returning the default value if the*/
@@ -872,7 +863,7 @@ void RexxStem::expose(
  *
  * @return An array of all items in the stem.
  */
-ArrayClass *RexxStem::allItems()
+ArrayClass *StemClass::allItems()
 {
     // now we know how big the return result will be, get an array and
     // populate it, using the same traversal logic as before
@@ -899,7 +890,7 @@ ArrayClass *RexxStem::allItems()
  *
  * @return The compound item for the located element.
  */
-RexxCompoundElement *RexxStem::findByValue(RexxObject *target)
+RexxCompoundElement *StemClass::findByValue(RexxObject *target)
 {
     RexxCompoundElement *variable = tails.first();
     while (variable != OREF_NULL)
@@ -921,7 +912,7 @@ RexxCompoundElement *RexxStem::findByValue(RexxObject *target)
  *
  * @return The number of non-dropped items.
  */
-size_t RexxStem::items()
+size_t StemClass::items()
 {
     size_t count = 0;
 
@@ -946,7 +937,7 @@ size_t RexxStem::items()
  *
  * @return Nothing.
  */
-RexxObject *RexxStem::empty()
+RexxObject *StemClass::empty()
 {
     tails.clear();      // just clear the tails.
     return OREF_NULL;
@@ -958,7 +949,7 @@ RexxObject *RexxStem::empty()
  *
  * @return True if the stem is empty, false otherwise.
  */
-RexxObject *RexxStem::isEmptyRexx()
+RexxObject *StemClass::isEmptyRexx()
 {
     return booleanObject(isEmpty());
 }
@@ -969,7 +960,7 @@ RexxObject *RexxStem::isEmptyRexx()
  *
  * @return True if the stem is empty, false otherwise.
  */
-bool RexxStem::isEmpty()
+bool StemClass::isEmpty()
 {
     return (items() == 0);
 }
@@ -981,7 +972,7 @@ bool RexxStem::isEmpty()
  *
  * @return An array of all tail names used in the stem.
  */
-ArrayClass  *RexxStem::allIndexes()
+ArrayClass  *StemClass::allIndexes()
 {
     return this->tailArray();            /* extract the array item            */
 }
@@ -993,7 +984,7 @@ ArrayClass  *RexxStem::allIndexes()
  *
  * @return A supplier instance.
  */
-SupplierClass *RexxStem::supplier()
+SupplierClass *StemClass::supplier()
 {
     // essentially the same logic as allItems(), but both the item and the
     // tail value are accumulated.
@@ -1036,7 +1027,7 @@ SupplierClass *RexxStem::supplier()
  *
  * @return A directory instance.
  */
-DirectoryClass *RexxStem::toDirectory()
+DirectoryClass *StemClass::toDirectory()
 {
     DirectoryClass *result = new_directory();
     ProtectedObject p1(result);
@@ -1062,7 +1053,7 @@ DirectoryClass *RexxStem::toDirectory()
  * @param tail   The index of the target value.
  * @param value  The new value to assign.
  */
-void RexxStem::setElement(const char *_tail, RexxObject *_value)
+void StemClass::setElement(const char *_tail, RexxObject *_value)
 {
     RexxCompoundTail resolved_tail(_tail);
     RexxVariable *variable = getCompoundVariable(&resolved_tail);
@@ -1077,7 +1068,7 @@ void RexxStem::setElement(const char *_tail, RexxObject *_value)
  * @param tail   The index of the target value.
  * @param value  The new value to assign.
  */
-void RexxStem::setElement(size_t _tail, RexxObject *_value)
+void StemClass::setElement(size_t _tail, RexxObject *_value)
 {
     RexxCompoundTail resolved_tail(_tail);
     RexxVariable *variable = getCompoundVariable(&resolved_tail);
@@ -1093,7 +1084,7 @@ void RexxStem::setElement(size_t _tail, RexxObject *_value)
  * @return The object value.  If the stem element does not exist or
  *         has been dropped, this returns OREF_NULL.
  */
-RexxObject *RexxStem::getElement(size_t _tail)
+RexxObject *StemClass::getElement(size_t _tail)
 {
 
     RexxCompoundTail resolved_tail(_tail);
@@ -1109,7 +1100,7 @@ RexxObject *RexxStem::getElement(size_t _tail)
  * @return The object value.  If the stem element does not exist or
  *         has been dropped, this returns OREF_NULL.
  */
-RexxObject *RexxStem::getElement(const char *_tail)
+RexxObject *StemClass::getElement(const char *_tail)
 {
 
     RexxCompoundTail resolved_tail(_tail);
@@ -1126,7 +1117,7 @@ RexxObject *RexxStem::getElement(const char *_tail)
  * @return The variable value.  Returns OREF_NULL if not assigned or
  *         dropped.
  */
-RexxObject *RexxStem::getElement(RexxCompoundTail *resolved_tail)
+RexxObject *StemClass::getElement(RexxCompoundTail *resolved_tail)
 {
     // see if we have a variable...if we do, return its value (a dropped variable
     // has a value of OREF_NULL).  If not found, return OREF_NULL;
@@ -1144,7 +1135,7 @@ RexxObject *RexxStem::getElement(RexxCompoundTail *resolved_tail)
  *
  * @param tail   The direct tail value.
  */
-void RexxStem::dropElement(size_t _tail)
+void StemClass::dropElement(size_t _tail)
 {
 
     RexxCompoundTail resolved_tail(_tail);
@@ -1157,7 +1148,7 @@ void RexxStem::dropElement(size_t _tail)
  *
  * @param tail   The direct tail value.
  */
-void RexxStem::dropElement(const char *_tail)
+void StemClass::dropElement(const char *_tail)
 {
 
     RexxCompoundTail resolved_tail(_tail);
@@ -1172,7 +1163,7 @@ void RexxStem::dropElement(const char *_tail)
  * @param resolved_tail
  *               The target tail element.
  */
-void RexxStem::dropElement(RexxCompoundTail *resolved_tail)
+void StemClass::dropElement(RexxCompoundTail *resolved_tail)
 {
     RexxCompoundElement *variable = findCompoundVariable(resolved_tail);
     if (variable != OREF_NULL)
@@ -1189,7 +1180,7 @@ void RexxStem::dropElement(RexxCompoundTail *resolved_tail)
  *
  * @return The fully resolved string name of the element.
  */
-RexxString *RexxStem::createCompoundName(RexxCompoundTail *tailPart)
+RexxString *StemClass::createCompoundName(RexxCompoundTail *tailPart)
 {
     return tailPart->createCompoundName(stemName);
 }
@@ -1252,7 +1243,7 @@ int compare_desc_i_cols(SortData *sd, RexxString *arg1, RexxString *arg2)
  * @param left       The left bound of the partition.
  * @param right      The right bounds of the parition.
  */
-void RexxStem::mergeSort(SortData *sd, int (*comparator)(SortData *, RexxString *, RexxString *), RexxString **strings, RexxString **working, size_t left, size_t right)
+void StemClass::mergeSort(SortData *sd, int (*comparator)(SortData *, RexxString *, RexxString *), RexxString **strings, RexxString **working, size_t left, size_t right)
 {
     size_t len = right - left + 1;
     // use insertion sort for small arrays
@@ -1289,7 +1280,7 @@ void RexxStem::mergeSort(SortData *sd, int (*comparator)(SortData *, RexxString 
  * @param mid        The midpoint for the merge.
  * @param right      The right bound of merge (inclusive).
  */
-void RexxStem::merge(SortData *sd, int (*comparator)(SortData *, RexxString *, RexxString *), RexxString **strings, RexxString **working, size_t left, size_t mid, size_t right)
+void StemClass::merge(SortData *sd, int (*comparator)(SortData *, RexxString *, RexxString *), RexxString **strings, RexxString **working, size_t left, size_t mid, size_t right)
 {
     size_t leftEnd = mid - 1;
     // merging
@@ -1357,7 +1348,7 @@ void RexxStem::merge(SortData *sd, int (*comparator)(SortData *, RexxString *, R
  * @param index  The target copy index
  * @param count  The number of items to count.
  */
-void RexxStem::arraycopy(RexxString **source, size_t start, RexxString **target, size_t index, size_t count)
+void StemClass::arraycopy(RexxString **source, size_t start, RexxString **target, size_t index, size_t count)
 {
     for (size_t i = start; i < start + count; i++)
     {
@@ -1382,7 +1373,7 @@ void RexxStem::arraycopy(RexxString **source, size_t start, RexxString **target,
  *
  * @return The insertion point.
  */
-size_t RexxStem::find(SortData *sd, int (*comparator)(SortData *, RexxString *, RexxString *), RexxString **strings, RexxString *val, int limit, size_t left, size_t right)
+size_t StemClass::find(SortData *sd, int (*comparator)(SortData *, RexxString *, RexxString *), RexxString **strings, RexxString *val, int limit, size_t left, size_t right)
 {
     size_t checkPoint = left;
     size_t delta = 1;
@@ -1427,7 +1418,7 @@ size_t RexxStem::find(SortData *sd, int (*comparator)(SortData *, RexxString *, 
 }
 
 
-bool RexxStem::sort(RexxString *prefix, int order, int type, size_t _first, size_t last, size_t firstcol, size_t lastcol)
+bool StemClass::sort(RexxString *prefix, int order, int type, size_t _first, size_t last, size_t firstcol, size_t lastcol)
 /******************************************************************************/
 /* Function:  Sort elements of a stem variable as if it was an array.  This   */
 /*            routine assumes that element ".0" of the stem contains a size   */

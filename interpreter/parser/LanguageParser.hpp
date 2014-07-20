@@ -67,7 +67,7 @@ class RexxExpressionStack;
 class StackFrameClass;
 class ProgramSource;
 class RexxVariableBase;
-class RexxStemVariable;
+class StemClassVariable;
 
 
 // handy defines for simplifying creation of instruction types.
@@ -161,7 +161,7 @@ class LanguageParser: public RexxInternalObject
     inline void        resetPosition(size_t p) { clause->reset(p); }
 
     RexxVariableBase *addSimpleVariable(RexxString *);
-    RexxStemVariable  *addStem(RexxString *);
+    StemClassVariable  *addStem(RexxString *);
     RexxCompoundVariable *addCompound(RexxString *);
     void        expose(RexxString *);
     RexxString *commonString(RexxString *);
@@ -387,12 +387,12 @@ class LanguageParser: public RexxInternalObject
     // static methods for creating/processing different Rexx executables.
 
     static MethodClass *createMethod(RexxString *name, ArrayClass *source, PackageClass *sourceContext);
-    static MethodClass *createMethod(RexxString *name, RexxBuffer *source);
+    static MethodClass *createMethod(RexxString *name, BufferClass *source);
     static MethodClass *createMethod(RexxString *name);
     static RoutineClass *createRoutine(RexxString *name, ArrayClass *source, PackageClass *sourceContext);
-    static RoutineClass *createRoutine(RexxString *name, RexxBuffer *source);
+    static RoutineClass *createRoutine(RexxString *name, BufferClass *source);
     static RoutineClass *createRoutine(RexxString *name);
-    static RoutineClass *createProgram(RexxString *name, RexxBuffer *source);
+    static RoutineClass *createProgram(RexxString *name, BufferClass *source);
     static RoutineClass *createProgram(RexxString *name, ArrayClass *source);
     static RoutineClass *createProgram(RexxString *name);
     static RoutineClass *restoreFromMacroSpace(RexxString *name);
@@ -461,10 +461,10 @@ protected:
     PushThroughStack *holdStack;         // stack for holding temporaries
     DirectoryClass   *literals;           // root of associated literal list
     DirectoryClass   *strings;            // common pool of created strings
-    RexxQueue       *control;            // queue of control structures
-    RexxQueue       *terms;              // stack of expression terms
-    RexxQueue       *subTerms;           // stack for arguments lists, et al.
-    RexxQueue       *operators;          // stack of expression terms
+    QueueClass       *control;            // queue of control structures
+    QueueClass       *terms;              // stack of expression terms
+    QueueClass       *subTerms;           // stack for arguments lists, et al.
+    QueueClass       *operators;          // stack of expression terms
     ClassDirective  *activeClass;        // currently active ::CLASS directive
     DirectoryClass   *classDependencies;  // directory of named ::class directives
     DirectoryClass   *unattachedMethods;  // methods not associated with any class

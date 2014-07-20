@@ -67,7 +67,7 @@
  *                   An index for a potential builtin function call.
  */
 RexxInstructionCall::RexxInstructionCall(RexxString *name, size_t argCount,
-    RexxQueue  *argList, BuiltinCode builtin_index)
+    QueueClass  *argList, BuiltinCode builtin_index)
 {
     targetName = name;
     builtinIndex = builtin_index;
@@ -227,7 +227,7 @@ void RexxInstructionCall::execute(RexxActivation *context, RexxExpressionStack *
  * @param argList  A queue of the arguments (stored in reverse evaluation order)
  */
 RexxInstructionDynamicCall::RexxInstructionDynamicCall(RexxObject *expr, size_t argCount,
-    RexxQueue  *argList)
+    QueueClass  *argList)
 {
     dynamicName = expr;
     argumentCount = argCount;

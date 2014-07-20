@@ -85,7 +85,7 @@ void *RexxExpressionFunction::operator new(size_t size, size_t argCount)
  * @param index      A potential builtin function index.
  */
 RexxExpressionFunction::RexxExpressionFunction(RexxString *function_name,
-    size_t argCount, RexxQueue *argList, BuiltinCode index)
+    size_t argCount, QueueClass *argList, BuiltinCode index)
 {
     functionName = function_name;
     builtinIndex = index;

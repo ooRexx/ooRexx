@@ -45,7 +45,7 @@
 #define Included_RexxExpressionLogical
 
 class LanguageParser;
-class RexxQueue;
+class QueueClass;
 
 class RexxExpressionLogical : public RexxInternalObject
 {
@@ -55,7 +55,7 @@ class RexxExpressionLogical : public RexxInternalObject
     inline void  operator delete(void *, void *) {;}
     inline void  operator delete(void *, size_t) {;}
 
-    RexxExpressionLogical(size_t, RexxQueue *);
+    RexxExpressionLogical(size_t, QueueClass *);
     inline RexxExpressionLogical(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);

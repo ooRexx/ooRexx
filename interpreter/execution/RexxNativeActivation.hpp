@@ -52,7 +52,7 @@ class TrappingDispatcher;
 class RexxNativeMethod;
 class RexxNativeRoutine;
 class RegisteredRoutine;
-class RexxStem;
+class StemClass;
 class SupplierClass;
 class StackFrameClass;
 class IdentityTable;
@@ -113,7 +113,7 @@ class RexxNativeActivation : public RexxActivationBase
     RexxObject *getArgument(size_t index);
     RexxObject *getSuper();
     RexxObject *getScope();
-    RexxStem *resolveStemVariable(RexxObject *s);
+    StemClass *resolveStemVariable(RexxObject *s);
     RexxClass *findClass(RexxString *className);
     RexxClass *findCallerClass(RexxString *className);
 

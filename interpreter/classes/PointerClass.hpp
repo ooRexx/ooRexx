@@ -36,17 +36,17 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                RexxPointer.hpp */
+/* REXX Kernel                                                PointerClass.hpp */
 /*                                                                            */
 /* Primitive Pointer Class Definitions                                        */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_RexxPointer
-#define Included_RexxPointer
+#ifndef Included_PointerClass
+#define Included_PointerClass
 
 #include "ObjectClass.hpp"
 
-class RexxPointer : public RexxObject
+class PointerClass : public RexxObject
 {
 public:
     inline void *operator new(size_t, void *ptr) { return ptr; }
@@ -54,9 +54,9 @@ public:
     void *operator new(size_t);
     inline void  operator delete(void *) { ; }
 
-    inline RexxPointer() { pointerData = NULL; };
-    inline RexxPointer(void *ptr)  { pointerData = ptr; };
-    inline RexxPointer(RESTORETYPE restoreType) { ; };
+    inline PointerClass() { pointerData = NULL; };
+    inline PointerClass(void *ptr)  { pointerData = ptr; };
+    inline PointerClass(RESTORETYPE restoreType) { ; };
     inline void *pointer() { return pointerData; }
 
     RexxObject  *equal(RexxObject *);
@@ -71,7 +71,7 @@ public:
     static void createInstance();
 
     static RexxClass *classInstance;   // singleton class instance
-    static RexxPointer *nullPointer;   // single version of a null pointer
+    static PointerClass *nullPointer;   // single version of a null pointer
 
 protected:
 
@@ -79,9 +79,9 @@ protected:
 };
 
 
-inline RexxPointer *new_pointer(void *p)
+inline PointerClass *new_pointer(void *p)
 {
 
-    return new RexxPointer(p);
+    return new PointerClass(p);
 }
 #endif

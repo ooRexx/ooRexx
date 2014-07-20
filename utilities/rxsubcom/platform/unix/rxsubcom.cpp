@@ -59,7 +59,7 @@
                                        /* old msg constants replaced!*/
 #include "RexxInternalApis.h"          /* Get private REXXAPI API's         */
 #include "RexxErrorCodes.h"
-#include "RexxMessageNumbers.h"
+#include "MessageClassNumbers.h"
 
 #define REXXMESSAGEFILE    "rexx.cat"
 

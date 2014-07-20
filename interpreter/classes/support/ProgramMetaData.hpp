@@ -40,26 +40,26 @@
 
 #include "SystemInterpreter.hpp"
 
-class RexxBuffer;
+class BufferClass;
 
 class ProgramMetaData
 {
 public:
-    void *operator new (size_t size, RexxBuffer *buff);
-    void operator delete (void *p, RexxBuffer *buff) { SystemInterpreter::releaseResultMemory(p); }
+    void *operator new (size_t size, BufferClass *buff);
+    void operator delete (void *p, BufferClass *buff) { SystemInterpreter::releaseResultMemory(p); }
 
     ProgramMetaData();
-    ProgramMetaData(RexxBuffer *);
+    ProgramMetaData(BufferClass *);
     ProgramMetaData(size_t size);
 
     size_t getDataSize();
     size_t getHeaderSize();
-    RexxBuffer *extractBufferData();
+    BufferClass *extractBufferData();
     char *getImageData();
     size_t getImageSize() { return imageSize; }
     bool validate(bool &);
-    void write(FILE *handle, RexxBuffer *program);
-    RexxBuffer *read(RexxString *name, FILE *handle);
+    void write(FILE *handle, BufferClass *program);
+    BufferClass *read(RexxString *name, FILE *handle);
 
 protected:
     enum

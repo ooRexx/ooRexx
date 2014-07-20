@@ -79,7 +79,7 @@ public:
     void addWhen(RexxInstructionIf *);
     void setOtherwise(RexxInstructionOtherwise *);
 
-    RexxQueue                *whenList;  // list of WHEN end targets
+    QueueClass                *whenList;  // list of WHEN end targets
     RexxInstructionOtherwise *otherwise; // OTHERWISE matching the SELECT
 };
 

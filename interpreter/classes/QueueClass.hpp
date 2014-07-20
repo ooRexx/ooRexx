@@ -50,35 +50,19 @@ class QueueClass : public ArrayClass
 {
  public:
 
-     void *operator new(size_t);
+     void * operator new(size_t, size_t = DefaultArraySize, size_t = DefaultArraySize);
      inline void *operator new(size_t size, void *ptr) {return ptr;};
 
-     inline RexxQueue() {;};
-     inline RexxQueue(RESTORETYPE restoreType) { ; };
+     inline QueueClass() {;};
+     inline QueueClass(RESTORETYPE restoreType) { ; };
 
-     RexxObject *pullRexx();
-     RexxObject *pushRexx(RexxObject *);
-     RexxObject *queueRexx(RexxObject *);
-     LISTENTRY *locateEntry(RexxObject *, RexxObject *);
-     RexxObject *put(RexxObject *, RexxObject *);
-     RexxObject *at(RexxObject *);
-     RexxObject *remove(RexxObject *);
-     RexxObject *hasindex(RexxObject *);
-     RexxObject *peek();
-     RexxObject *supplier();
-     RexxObject *newRexx(RexxObject **, size_t);
-     RexxQueue  *ofRexx(RexxObject **, size_t);
-     RexxObject *append(RexxObject *);
-     ArrayClass  *allIndexes();
-     RexxObject *index(RexxObject *);
-     RexxObject *firstRexx();
-     RexxObject *lastRexx();
-     RexxObject *next(RexxObject *);
-     RexxObject *previous(RexxObject *);
-     size_t      entryToIndex(size_t target);
-     RexxObject *insert(RexxObject *, RexxObject *);
-     RexxObject   *section(RexxObject *, RexxObject *);
-     RexxObject   *sectionSubclass(LISTENTRY *, size_t);
+     RexxInternalObject *pullRexx();
+     RexxObject *pushRexx(RexxInternalObject *item);
+     RexxObject *queueRexx(RexxInternalObject *item);
+     RexxInternalObject *peek();
+     RexxObject *putRexx(RexxInternalObject *value, RexxObject *index);
+     RexxInternalObject *removeRexx(RexxObject **arguments, size_t argCount);
+     RexxObject *initRexx(RexxObject *initialSize);
 
      inline RexxInternalObject *pop() { return removeFirst();};
      inline RexxInternalObject *pull() { return removeFirst();};
@@ -89,5 +73,5 @@ class QueueClass : public ArrayClass
      static RexxClass *classInstance;
 };
 
-inline RexxQueue *new_queue() { return new RexxQueue; }
+inline QueueClass *new_queue() { return new QueueClass; }
 #endif

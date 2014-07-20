@@ -66,7 +66,7 @@ class ArrayClass : public RexxObject
      * Array internal class for performing recursive copies
      * for multi-dimensional arrays
      */
-    typedef class ElementCopyier
+    typedef class ElementCopier
     {
     public;
 
@@ -131,7 +131,9 @@ class ArrayClass : public RexxObject
     };
 
     inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };
-    void * operator new(size_t, size_t, size_t = ARRAY_DEFAULT_SIZE);
+    void * operator new(size_t, size_t = DefaultArraySize, size_t = DefaultArraySize);
+
+    static RexxInternalObject *allocateNewObject(size_t size, size_t items, size_t maxSize, size_t type);
 
     inline void operator delete(void *, void *) {;}
     inline void operator delete(void *, size_t, size_t) {;}
@@ -170,7 +172,8 @@ class ArrayClass : public RexxObject
     void         appendAll(ArrayClass *);
     void         setExpansion(RexxObject * expansion);
     RexxInteger *available(size_t position);
-    bool         validateIndex(RexxObject **, size_t, size_t, size_t, stringsize_t &);
+    // virtual so subclasses can screen out multidimensional support.
+    virtual bool validateIndex(RexxObject **, size_t, size_t, size_t, stringsize_t &);
     inline bool  validateIndex(RexxObject *i, size_t start, size_t flags, stringsize_t &p) { return validateIndex(&i, 1, start, flags, p); }
     RexxInteger *sizeRexx();
     RexxObject  *firstRexx();
@@ -187,10 +190,10 @@ class ArrayClass : public RexxObject
     RexxObject  *hasIndexRexx(RexxObject **, size_t);
     inline size_t items() { return itemCount; }
     RexxObject  *itemsRexx();
-    RexxObject  *dimension(RexxObject *);
-    RexxObject  *getDimensions();
+    RexxObject  *dimensionRexx(RexxObject *);
+    RexxObject  *getDimensionsRexx();
     size_t       getDimension();
-    RexxObject  *supplier();
+    SupplierClass *supplier();
     RexxObject  *join(ArrayClass *);
     ArrayClass   *extend(size_t);
     size_t       indexOf(RexxInternalObject *);

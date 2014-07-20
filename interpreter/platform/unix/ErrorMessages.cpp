@@ -77,8 +77,8 @@ typedef struct msgEntry {              /* define for error table entries    */
  int    msgid;                         /* error message number              */
 } ERROR_MESSAGE;
 
-#include "RexxMessageNumbers.h"        /* include  definition of errorcodes */
-#include "RexxMessageTable.h"          /* include actual table definition   */
+#include "MessageClassNumbers.h"        /* include  definition of errorcodes */
+#include "MessageClassTable.h"          /* include actual table definition   */
 
 #ifdef LINUX
 //#define SECOND_PARAMETER MCLoadAll   /* different sign. Lin-AIX           */

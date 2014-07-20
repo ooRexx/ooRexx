@@ -61,7 +61,7 @@
  *                 The list of variable objects.
  * @param defaults The list of defaults to apply to arguments.
  */
-RexxInstructionUseStrict::RexxInstructionUseStrict(size_t count, bool strict, bool extraAllowed, RexxQueue *variable_list, RexxQueue *defaults)
+RexxInstructionUseStrict::RexxInstructionUseStrict(size_t count, bool strict, bool extraAllowed, QueueClass *variable_list, QueueClass *defaults)
 {
     // set the variable count and the option flag
     variableCount = count;

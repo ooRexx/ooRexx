@@ -1695,7 +1695,7 @@ BUILTIN(ABS)
     else if (isOfClass(NumberString, argument))
     { /* how about already numeric?        */
         /* we can process this without conversion */
-        return((RexxNumberString *)argument)->abs();
+        return((NumberString *)argument)->abs();
     }
     /* force to a string object          */
     RexxString *n = required_string(ABS, n);
@@ -1719,7 +1719,7 @@ BUILTIN(SIGN)
     else if (isOfClass(NumberString, argument))
     { /* how about already numeric?        */
         /* we can process this without conversion */
-        return((RexxNumberString *)argument)->Sign();
+        return((NumberString *)argument)->Sign();
     }
     /* force to a string object          */
     RexxString *n = required_string(SIGN, n);
@@ -1763,7 +1763,7 @@ BUILTIN(MAX)
     if (isOfClass(NumberString, argument))
     { /* how about already numeric?        */
         /* we can process this without conversion */
-        return((RexxNumberString *)argument)->Max(stack->arguments(argcount - 1), argcount - 1);
+        return((NumberString *)argument)->Max(stack->arguments(argcount - 1), argcount - 1);
     }
     /* get the target string             */
     RexxString *target = required_string(MAX, target);
@@ -1783,7 +1783,7 @@ BUILTIN(MIN)
     if (isOfClass(NumberString, argument))
     { /* how about already numeric?        */
         /* we can process this without conversion */
-        return((RexxNumberString *)argument)->Min(stack->arguments(argcount - 1), argcount - 1);
+        return((NumberString *)argument)->Min(stack->arguments(argcount - 1), argcount - 1);
     }
     /* get the target string             */
     RexxString *target = required_string(MIN, target);
@@ -1881,7 +1881,7 @@ BUILTIN(LINEIN)
         if (context->getActivity()->callPullExit(context, result))
         {
             /* get the default output stream     */
-            RexxObject *stream = context->getLocalEnvironment(OREF_REXXQUEUE);
+            RexxObject *stream = context->getLocalEnvironment(OREF_QueueClass);
             /* pull from the queue               */
             return stream->sendMessage(OREF_LINEIN);
         }
@@ -1972,7 +1972,7 @@ BUILTIN(LINEOUT)
             if (string != OREF_NULL)
             {       /* have an actual string to write?   */
                     /* get the default output stream     */
-                RexxObject *stream = context->getLocalEnvironment(OREF_REXXQUEUE);
+                RexxObject *stream = context->getLocalEnvironment(OREF_QueueClass);
                 /* push onto the queue               */
                 return stream->sendMessage(OREF_QUEUENAME, string);
             }
@@ -2083,7 +2083,7 @@ BUILTIN(LINES)
     if (check_queue(name))
     {             /* is this "QUEUE:"                  */
                   /* get the default output stream     */
-        RexxObject *stream = context->getLocalEnvironment(OREF_REXXQUEUE);
+        RexxObject *stream = context->getLocalEnvironment(OREF_QueueClass);
         /* return count on the queue         */
         result = stream->sendMessage(OREF_QUEUED);
     }
@@ -2276,7 +2276,7 @@ BUILTIN(QUEUED)
                                          /* get the default output stream     */
     if (context->getActivity()->callQueueSizeExit(context, queuesize))
     {
-        RexxObject *queue = context->getLocalEnvironment(OREF_REXXQUEUE);
+        RexxObject *queue = context->getLocalEnvironment(OREF_QueueClass);
         /* return count on the queue         */
         return queue->sendMessage(OREF_QUEUED);
     }

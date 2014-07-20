@@ -75,7 +75,7 @@ void  *RexxTrigger::operator new(size_t size, size_t variableCount)
  * @param _variables The list of variables to assign.
  */
 RexxTrigger::RexxTrigger(ParseTriggerType type, RexxObject *_value, size_t _variableCount,
-    RexxQueue  *_variables)
+    QueueClass  *_variables)
 {
     triggerType = type;
     variableCount = _variableCount;

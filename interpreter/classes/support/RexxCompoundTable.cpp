@@ -53,7 +53,7 @@
  *
  * @param parentStem Our stem parent.
  */
-void RexxCompoundTable::init(RexxStem *parentStem)
+void RexxCompoundTable::init(StemClass *parentStem)
 {
     // record the parent object and clear out the root element.
     setParent(parentStem);
@@ -324,11 +324,11 @@ RexxCompoundElement *RexxCompoundTable::next(
 }
 
 
-void RexxCompoundTable::setParent(RexxStem *parentStem)
+void RexxCompoundTable::setParent(StemClass *parentStem)
 /******************************************************************************/
 /* Function:  Set the parent for a compound table.  N.B., this cannot be an   */
 /* inline method because of circular header file dependencies between         */
-/* RexxCompoundTable and RexxStem.                                            */
+/* RexxCompoundTable and StemClass.                                            */
 /******************************************************************************/
 {
     // We are embedded in the parent stem as the tails item. By setting this
@@ -343,7 +343,7 @@ void RexxCompoundTable::setRoot(RexxCompoundElement *newRoot)
 /******************************************************************************/
 /* Function:  Set the root node for a compound table.  N.B., this cannot be an*/
 /* inline method because of circular header file dependencies between         */
-/* RexxCompoundTable and RexxStem.                                            */
+/* RexxCompoundTable and StemClass.                                            */
 /******************************************************************************/
 {
     // NOTE:  This seems a little weird, but we're doing the set using the parent

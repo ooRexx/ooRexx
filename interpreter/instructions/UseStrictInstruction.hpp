@@ -62,7 +62,7 @@ class RexxInstructionUseStrict : public RexxInstruction
     inline void  operator delete(void *) { }
     inline void  operator delete(void *, void *) { }
 
-    RexxInstructionUseStrict(size_t, bool, bool, RexxQueue *, RexxQueue *);
+    RexxInstructionUseStrict(size_t, bool, bool, QueueClass *, QueueClass *);
     inline RexxInstructionUseStrict(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);

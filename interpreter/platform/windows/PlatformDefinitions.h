@@ -116,11 +116,6 @@
 #define BASEIMAGELOAD "CoreClasses.orx"
 
 /******************************************************************************/
-/* REQUIRED:  Name of the file used to store the external message repository  */
-/******************************************************************************/
-#define REXXMESSAGEFILE    "winatab.rc"
-
-/******************************************************************************/
 /* REQUIRED:  define the path delimiter and end of line information           */
 /* appropriate for this file system.                                          */
 /******************************************************************************/

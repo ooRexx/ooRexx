@@ -52,7 +52,7 @@ class RexxInstructionProcedure : public RexxInstruction {
     inline void  operator delete(void *) { }
     inline void operator delete(void *, void *) { }
 
-    RexxInstructionProcedure(size_t, RexxQueue *);
+    RexxInstructionProcedure(size_t, QueueClass *);
     inline RexxInstructionProcedure(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);

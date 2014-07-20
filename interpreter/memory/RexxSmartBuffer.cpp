@@ -52,7 +52,7 @@ RexxSmartBuffer::RexxSmartBuffer(size_t startSize)
 {
                                        /* default initial buffersize, 1 page*/
                                        /* for buffer + data.                */
-    OrefSet(this, this->buffer, (RexxBuffer *)new_buffer(startSize));
+    OrefSet(this, this->buffer, (BufferClass *)new_buffer(startSize));
 }
 
 void RexxSmartBuffer::live(size_t liveMark)

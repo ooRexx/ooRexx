@@ -41,8 +41,8 @@
 /* Primitive Expression Stem Class Definitions                                */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_RexxStemVariable
-#define Included_RexxStemVariable
+#ifndef Included_StemClassVariable
+#define Included_StemClassVariable
 
 #include "ExpressionBaseVariable.hpp"
 
@@ -51,7 +51,7 @@
  * performs all of the normal operations expected from
  * an expression term or variable accessor.
  */
-class RexxStemVariable : public RexxVariableBase
+class StemClassVariable : public RexxVariableBase
 {
  public:
     void *operator new(size_t);
@@ -59,8 +59,8 @@ class RexxStemVariable : public RexxVariableBase
     inline void  operator delete(void *) { ; }
     inline void  operator delete(void *, void *) { ; }
 
-    inline RexxStemVariable(RESTORETYPE restoreType) { ; };
-    RexxStemVariable(RexxString *, size_t);
+    inline StemClassVariable(RESTORETYPE restoreType) { ; };
+    StemClassVariable(RexxString *, size_t);
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);

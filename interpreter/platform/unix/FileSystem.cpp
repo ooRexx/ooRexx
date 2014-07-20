@@ -186,7 +186,7 @@ void SystemInterpreter::loadImage(char **imageBuffer, size_t *imageSize)
 }
 
 
-RexxBuffer *SystemInterpreter::readProgram(const char *file_name)
+BufferClass *SystemInterpreter::readProgram(const char *file_name)
 /*******************************************************************/
 /* Function:  Read a program into a buffer                         */
 /*******************************************************************/
@@ -204,7 +204,7 @@ RexxBuffer *SystemInterpreter::readProgram(const char *file_name)
         buffersize = ftell(handle);          /* get the file size                 */
         fseek(handle, 0, SEEK_SET);          /* seek back to the file beginning   */
     }
-    RexxBuffer *buffer = new_buffer(buffersize);     /* get a buffer object               */
+    BufferClass *buffer = new_buffer(buffersize);     /* get a buffer object               */
     ProtectedObject p(buffer);
     {
         UnsafeBlock releaser;

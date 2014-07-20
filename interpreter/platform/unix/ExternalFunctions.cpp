@@ -407,7 +407,7 @@ RexxObject *SystemInterpreter::pushEnvironment(RexxActivation *context)
  */
 RexxObject *SystemInterpreter::popEnvironment(RexxActivation *context)
 {
-    RexxBuffer *Current =  (RexxBuffer *)context->popEnvironment();/*  block, if ixisted.               */
+    BufferClass *Current =  (BufferClass *)context->popEnvironment();/*  block, if ixisted.               */
     if (TheNilObject == Current)         /* nothing saved?                    */
     {
         return TheFalseObject;             /* return failure value              */
@@ -435,7 +435,7 @@ RexxObject *SystemInterpreter::popEnvironment(RexxActivation *context)
 
 RexxObject *SystemInterpreter::buildEnvlist()
 {
-    RexxBuffer *newBuffer;               /* Buffer object to hold env  */
+    BufferClass *newBuffer;               /* Buffer object to hold env  */
     char      **Environment;             /* environment pointer        */
     size_t      size = 0;                /* size of the new buffer     */
     char       *curr_dir;                /* current directory          */

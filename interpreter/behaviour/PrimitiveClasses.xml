@@ -73,14 +73,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Exported>
 <Class id="Object" class="RexxObject" include="ObjectClass.hpp"/>
 <Class id="Class" class="RexxClass" include="ClassClass.hpp"/>
-<Class id="Array" class="RexxArray" include="ArrayClass.hpp"/>
+<Class id="Array" class="ArrayClass" include="ArrayClass.hpp"/>
 <Class id="Directory" class="DirectoryClass" include="DirectoryClass.hpp"/>
 <Class id="Integer" class="RexxInteger" classclass="RexxIntegerClass" operators="true" include="IntegerClass.hpp"/>
-<Class id="List" class="RexxList" include="ListClass.hpp"/>
+<Class id="List" class="ListClass" include="ListClass.hpp"/>
 <Class id="Message" class="RexxMessage" include="MessageClass.hpp"/>
 <Class id="Method" class="MethodClass" include="MethodClass.hpp"/>
 <Class id="NumberString" class="RexxNumberString" operators="true" include="NumberStringClass.hpp"/>
-<Class id="Queue" class="RexxQueue" include="QueueClass.hpp"/>
+<Class id="Queue" class="QueueClass" include="QueueClass.hpp"/>
 <Class id="Stem" class="RexxStem" include="StemClass.hpp"/>
 <Class id="String" class="RexxString" operators="true" include="StringClass.hpp"/>
 <Class id="Supplier" class="RexxSupplier" include="SupplierClass.hpp"/>
@@ -96,10 +96,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="RexxContext" class="RexxContext" include="ContextClass.hpp"/>
 <Class id="IdentityTable" class="IdentityTable" include="IdentityTableClass.hpp"/>
 <Class id="StackFrame" class="StackFrameClass" include="StackFrameClass.hpp"/>
+<Class id="SetClass" class="SetClass" include="SetClass.hpp"/>
+<Class id="BagClass" class="BagClass" include="BagClass.hpp"/>
 </Exported>
 <Internal>
 <Class id="NilObject" class="RexxNilObject" include="ObjectClass.hpp"/>
 <Class id="Behaviour" class="RexxBehaviour" include="RexxBehaviour.hpp"/>
+<Class id="MethodDictionary" class="MethodDictionary" include="MethodDictionary.hpp"/>
 <Class id="ScopeTable" class="ScopeTable" include="ScopeTable.hpp"/>
 <Class id="RexxSource" class="RexxSource" include="SourceFile.hpp"/>
 <Class id="LibraryPackage" class="LibraryPackage" include="LibraryPackage.hpp"/>

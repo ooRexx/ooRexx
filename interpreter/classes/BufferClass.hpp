@@ -41,14 +41,14 @@
 /* Primitive Buffer Class Definitions                                         */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_RexxBuffer
-#define Included_RexxBuffer
+#ifndef Included_BufferClass
+#define Included_BufferClass
 
-class RexxBufferBase : public RexxObject
+class BufferClassBase : public RexxObject
 {
 public:
 
-    inline RexxBufferBase() {;};
+    inline BufferClassBase() {;};
 
     inline size_t getDataLength() { return this->dataLength; }
     inline size_t getBufferSize() { return this->bufferSize; }
@@ -88,7 +88,7 @@ protected:
 };
 
 
-class RexxBuffer : public RexxBufferBase
+class BufferClass : public BufferClassBase
 {
 public:
     void *operator new(size_t, size_t);
@@ -96,7 +96,7 @@ public:
     inline void  operator delete(void *, size_t) { ; }
     inline void  operator delete(void *, void *) { ; }
 
-    inline RexxBuffer(size_t length)
+    inline BufferClass(size_t length)
     {
         // initialize the length values
         bufferSize = length;
@@ -105,9 +105,9 @@ public:
         setHasNoReferences();
     }
 
-    inline RexxBuffer(RESTORETYPE restoreType) { ; }
+    inline BufferClass(RESTORETYPE restoreType) { ; }
 
-    RexxBuffer *expand(size_t);
+    BufferClass *expand(size_t);
     RexxObject *newRexx(RexxObject **args, size_t argc);
     virtual char *getData() { return data; }
 
@@ -120,25 +120,25 @@ protected:
 };
 
 
- inline RexxBuffer *new_buffer(size_t s) { return new (s) RexxBuffer(s); }
- inline RexxBuffer *new_buffer(CONSTRXSTRING &r)
- {
-     RexxBuffer *b = new_buffer(r.strlength);
-     b->copyData(r);
-     return b;
- }
+inline BufferClass *new_buffer(size_t s) { return new (s) BufferClass(s); }
+inline BufferClass *new_buffer(CONSTRXSTRING &r)
+{
+    BufferClass *b = new_buffer(r.strlength);
+    b->copyData(r);
+    return b;
+}
 
- inline RexxBuffer *new_buffer(RXSTRING &r)
- {
-     RexxBuffer *b = new_buffer(r.strlength);
-     b->copyData(r);
-     return b;
- }
+inline BufferClass *new_buffer(RXSTRING &r)
+{
+    BufferClass *b = new_buffer(r.strlength);
+    b->copyData(r);
+    return b;
+}
 
- inline RexxBuffer *new_buffer(const char *data, size_t length)
- {
-     RexxBuffer *b = new_buffer(length);
-     b->copyData(0, data, length);
-     return b;
- }
+inline BufferClass *new_buffer(const char *data, size_t length)
+{
+    BufferClass *b = new_buffer(length);
+    b->copyData(0, data, length);
+    return b;
+}
 #endif

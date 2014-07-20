@@ -53,7 +53,7 @@
 
 class InterpreterInstance;
 class RexxDateTime;
-class RexxBuffer;
+class BufferClass;
 
 class SystemInterpreter
 {
@@ -94,7 +94,7 @@ public:
     static bool invokeExternalFunction(RexxActivation *, RexxActivity *, RexxString *, RexxObject **, size_t, RexxString *, ProtectedObject &);
     static void validateAddressName(RexxString *name );
     static void loadImage(char **imageBuffer, size_t *imageSize);
-    static RexxBuffer *readProgram(const char *file_name);
+    static BufferClass *readProgram(const char *file_name);
     static bool processSignal(DWORD dwCtrlType);
 
     static ULONG exceptionHostProcessId;

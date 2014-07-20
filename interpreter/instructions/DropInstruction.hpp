@@ -53,7 +53,7 @@ class RexxInstructionDrop : public RexxInstruction
     inline void operator delete(void *) { }
     inline void operator delete(void *, void *) { }
 
-    RexxInstructionDrop(size_t, RexxQueue *);
+    RexxInstructionDrop(size_t, QueueClass *);
     inline RexxInstructionDrop(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);

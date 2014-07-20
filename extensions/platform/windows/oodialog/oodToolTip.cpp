@@ -138,7 +138,7 @@ static RexxStringObject mousemsg2name(RexxThreadContext *c, uint32_t msg)
  *           The Rexx buffer object will not be protected anywhere, so it will
  *           immediately be elgible for garbage collection
  */
-static RexxBufferObject rexxBufferForToolInfo(RexxMethodContext *c, LPTOOLINFO *ppTI, bool allocTextBuf)
+static RexxBufferObject BufferClassForToolInfo(RexxMethodContext *c, LPTOOLINFO *ppTI, bool allocTextBuf)
 {
     RexxBufferObject tiBuf = c->NewBuffer(sizeof(TOOLINFO));
     if ( tiBuf == NULLOBJECT )
@@ -1607,7 +1607,7 @@ RexxMethod2(RexxObjectPtr, tt_enumTools, OPTIONAL_uint32_t, index, CSELF, pCSelf
     }
 
     LPTOOLINFO       pTI;
-    RexxBufferObject tiBuf = rexxBufferForToolInfo(context, &pTI, true);
+    RexxBufferObject tiBuf = BufferClassForToolInfo(context, &pTI, true);
     if ( tiBuf == NULLOBJECT )
     {
         goto done_out;
@@ -1696,7 +1696,7 @@ RexxMethod1(RexxObjectPtr, tt_getCurrentTool, CSELF, pCSelf)
     }
 
     LPTOOLINFO       pTI;
-    RexxBufferObject tiBuf = rexxBufferForToolInfo(context, &pTI, true);
+    RexxBufferObject tiBuf = BufferClassForToolInfo(context, &pTI, true);
     if ( tiBuf == NULLOBJECT )
     {
         goto done_out;
@@ -2064,7 +2064,7 @@ RexxMethod3(RexxObjectPtr, tt_getToolInfo, RexxObjectPtr, toolHwnd, OPTIONAL_Rex
     }
 
     LPTOOLINFO       pTI;
-    RexxBufferObject tiBuf = rexxBufferForToolInfo(context, &pTI, true);
+    RexxBufferObject tiBuf = BufferClassForToolInfo(context, &pTI, true);
     if ( tiBuf == NULLOBJECT )
     {
         goto done_out;
@@ -3050,7 +3050,7 @@ RexxMethod2(RexxObjectPtr, ti_forHitTest_cls, RexxObjectPtr, hwndObj, OSELF, sel
     RexxObjectPtr result = TheNilObj;
     LPTOOLINFO    pTI;
 
-    RexxBufferObject tiBuf  = rexxBufferForToolInfo(context, &pTI, false);
+    RexxBufferObject tiBuf  = BufferClassForToolInfo(context, &pTI, false);
     if ( tiBuf == NULLOBJECT )
     {
         goto done_out;
@@ -3099,7 +3099,7 @@ RexxMethod3(RexxObjectPtr, ti_forID_cls, RexxObjectPtr, hwndObj, OPTIONAL_RexxOb
     RexxObjectPtr result = TheNilObj;
     LPTOOLINFO    pTI;
 
-    RexxBufferObject tiBuf  = rexxBufferForToolInfo(context, &pTI, false);
+    RexxBufferObject tiBuf  = BufferClassForToolInfo(context, &pTI, false);
     if ( tiBuf == NULLOBJECT )
     {
         goto done_out;
@@ -3204,7 +3204,7 @@ RexxMethod7(RexxObjectPtr, ti_init, RexxObjectPtr, hwndObj, OPTIONAL_RexxObjectP
     }
 
     LPTOOLINFO       pTI;
-    RexxBufferObject bufObj = rexxBufferForToolInfo(context, &pTI, false);
+    RexxBufferObject bufObj = BufferClassForToolInfo(context, &pTI, false);
     if ( bufObj == NULLOBJECT )
     {
         goto done_out;

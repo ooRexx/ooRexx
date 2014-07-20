@@ -260,6 +260,23 @@ RexxObject *ArrayClass::of(RexxObject **args, size_t argCount)
  */
 void *ArrayClass::operator new(size_t size, size_t items, size_t maxSize)
 {
+    // use the common allocation routine.
+    return allocateObject(size, items, maxSize, T_Array);
+}
+
+
+/**
+ * Common routine for use by Array and subclass operator methods.
+ *
+ * @param size    The base object size.
+ * @param items   The number of items we wish to hold.
+ * @param maxSize The maximum size to allocate.
+ * @param type    The Rexx class type code for this object.
+ *
+ * @return A newly allocated object.
+ */
+RexxArray *ArrayClass::allocateNewObject(size_t size, size_t items, size_t maxSize, size_t type)
+{
     size_t bytes = size;
     // we never create below a minimum size
     maxSize = Numerics::maxVal(maxSize, MinimumArraySize);
@@ -269,7 +286,7 @@ void *ArrayClass::operator new(size_t size, size_t items, size_t maxSize)
     // the first item is contained in the base object allocation.
     bytes += sizeof(RexxInternalObject *) * (maxSize - 1);
     // now allocate the new object with that size.
-    ArrayClass *newArray = (ArrayClass *)new_object(bytes, T_Array);
+    ArrayClass *newArray = (ArrayClass *)new_object(bytes, type);
 
     // now fill in the various control bits.  Ideally, this
     // really should be done in the constructor, but that gets really too
@@ -631,7 +648,6 @@ RexxObject *ArrayClass::fill(RexxInternalObject *value)
 {
     requiredArgument(value, ARG_ONE);
 
-
     for (size_t i = 1; i <= size(); i++)
     {
         // set the item using the fast version...we
@@ -985,7 +1001,7 @@ RexxInternalObject *ArrayClass::remove(size_t index)
  * @return The removed object, if any.  Returns .nil if there
  *         is no item at the index position.
  */
-RexxObject *ArrayClass::removeRexx(RexxObject **arguments, size_t argCount)
+RexxInternalObject *ArrayClass::removeRexx(RexxObject **arguments, size_t argCount)
 {
     size_t position;
     // if this position doesn't validate, just return .nil
@@ -1026,7 +1042,7 @@ size_t ArrayClass::getDimension()
  * @return An array item with one size item for each dimension of the
  *         array.
  */
-ArrayClass *ArrayClass::getDimensions()
+ArrayClass *ArrayClass::getDimensionsRexx()
 {
     // if it is a single dimension array, return an array with the size
     // as a single item
@@ -1049,7 +1065,7 @@ ArrayClass *ArrayClass::getDimensions()
  *
  * @return The size of the dimension...returns 0 for any unknown ones.
  */
-RexxObject *ArrayClass::dimension(RexxObject *target)
+RexxObject *ArrayClass::dimensionRexx(RexxObject *target)
 {
     // if no target specified, then we return the number of dimensions.
     // it is possible that the number of dimensions have not been determined yet,
@@ -1112,7 +1128,7 @@ RexxObject *ArrayClass::dimension(RexxObject *target)
  *
  * @return an appropriate supplier.
  */
-RexxObject *ArrayClass::supplier()
+SupplierClass *ArrayClass::supplier()
 {
     size_t slotCount = size();            // get the array size
     size_t itemCount = items();           // and the actual count in the array
@@ -1817,12 +1833,12 @@ RexxString *ArrayClass::toString(RexxString *format, RexxString *separator)
     ArrayClass *newArray;                  /* New array                         */
     RexxString *newString;
     RexxString *line_end_string;          /* converted substitution value      */
-    RexxMutableBuffer *mutbuffer;
+    MutableBuffer *mutbuffer;
     RexxObject *item;                     /* inserted value item               */
     int i_form = 0;                       /* 1 == line, 2 == char              */
 
     // we build up in a mutable buffer
-    Protected<RexxMutableBuffer> mutbuffer = new RexxMutableBuffer();
+    Protected<MutableBuffer> mutbuffer = new MutableBuffer();
     // convert into a non-sparse single dimension array item.
     Protected<ArrayClass> newArray = makeArray();
 
@@ -2175,6 +2191,8 @@ RexxInternalObject *ArrayClass::removeItem(RexxInternalObject *target)
     // remove the item at the location
     return remove(index);
 }
+
+
 
 
 /**

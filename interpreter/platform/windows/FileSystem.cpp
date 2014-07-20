@@ -175,7 +175,7 @@ void SystemInterpreter::loadImage(char **imageBuffer, size_t *imageSize )
 }
 
 
-RexxBuffer *SystemInterpreter::readProgram(
+BufferClass *SystemInterpreter::readProgram(
   const char *file_name)               /* program file name                 */
 /*******************************************************************/
 /* Function:  Read a program into a buffer                         */
@@ -183,7 +183,7 @@ RexxBuffer *SystemInterpreter::readProgram(
 {
   HANDLE        fileHandle;             /* open file access handle           */
   size_t   buffersize;                 /* size of read buffer               */
-  RexxBuffer * buffer;                 /* buffer object to read file into   */
+  BufferClass * buffer;                 /* buffer object to read file into   */
   BY_HANDLE_FILE_INFORMATION   status; /* file status information           */
   DWORD        bytesRead;              /* number of bytes read              */
 

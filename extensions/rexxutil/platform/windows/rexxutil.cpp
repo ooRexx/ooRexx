@@ -5963,7 +5963,7 @@ RexxRoutine2(RexxObjectPtr, SysGetFileDateTime, CSTRING, name, CSTRING, selector
 }
 
 
-RexxReturnCode REXXENTRY RexxStemSort(const char *stemname, int order, int type,
+RexxReturnCode REXXENTRY StemClassSort(const char *stemname, int order, int type,
     size_t start, size_t end, size_t firstcol, size_t lastcol);
 
 /*************************************************************************
@@ -6087,7 +6087,7 @@ size_t RexxEntry SysStemSort(const char *name, size_t numargs, CONSTRXSTRING arg
     }
 
     // the sorting is done in the interpreter
-    if ( !RexxStemSort(stemName, sortOrder, sortType, first, last, firstCol, lastCol) )
+    if ( !StemClassSort(stemName, sortOrder, sortType, first, last, firstCol, lastCol) )
     {
         sprintf(retstr->strptr, "-1");
         retstr->strlength = 2;

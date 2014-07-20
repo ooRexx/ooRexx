@@ -42,19 +42,19 @@
 
 #include "ActivityDispatcher.hpp"
 
-class RexxMessage;
+class MessageClass;
 
 class MessageDispatcher : public ActivityDispatcher
 {
 public:
-    inline MessageDispatcher(RexxMessage *m) : ActivityDispatcher(), message(m) { ; }
+    inline MessageDispatcher(MessageClass *m) : ActivityDispatcher(), message(m) { ; }
     virtual ~MessageDispatcher() { ; }
 
     virtual void run();
     virtual void handleError(wholenumber_t, DirectoryClass *);
 
 protected:
-    RexxMessage *message;         // the dispatchable message
+    MessageClass *message;         // the dispatchable message
 };
 
 

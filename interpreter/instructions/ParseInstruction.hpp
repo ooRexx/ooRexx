@@ -49,7 +49,7 @@
 #include "FlagSet.hpp"
 #include "Token.hpp"
 
-class RexxQueue;
+class QueueClass;
 
 typedef enum
 {
@@ -66,7 +66,7 @@ class RexxInstructionParse : public RexxInstruction
     inline void operator delete(void *, void *) { }
 
     RexxInstructionParse(RexxObject *expr, InstructionSubKeyword source,
-        FlagSet<ParseFlags, 32>, size_t templateCount, RexxQueue *parse_template);
+        FlagSet<ParseFlags, 32>, size_t templateCount, QueueClass *parse_template);
     inline RexxInstructionParse(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);

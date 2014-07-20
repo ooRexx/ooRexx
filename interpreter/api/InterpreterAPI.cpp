@@ -404,7 +404,7 @@ RexxReturnCode RexxEntry RexxVariablePool(PSHVBLOCK pshvblock)
  *
  * @return The sort return code result.
  */
-RexxReturnCode RexxEntry RexxStemSort(const char *stemname, int order, int type,
+RexxReturnCode RexxEntry StemClassSort(const char *stemname, int order, int type,
     size_t start, size_t end, size_t firstcol, size_t lastcol)
 {
     NativeContextBlock context;
