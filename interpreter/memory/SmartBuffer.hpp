@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -36,52 +36,40 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                        RexxInternalStack.hpp   */
+/* REXX Kernel                                           SmartBuffer.hpp  */
 /*                                                                            */
-/* Primitive Expression Stack Class Definitions                               */
+/* Primitive Smart Buffer Class Definitions                                   */
 /*                                                                            */
 /******************************************************************************/
+#ifndef Included_SmartBuffer
+#define Included_SmartBuffer
 
-#ifndef Included_RexxInternalStack
-#define Included_RexxInternalStack
-
-class RexxInternalStack : public RexxInternalObject {
+class SmartBuffer : public RexxInternalObject
+{
  public:
-  inline void *operator new(size_t size, void *ptr) { return ptr; }
-  inline void  operator delete(void *) { ; }
-  inline void  operator delete(void *, void *) { ; }
+    void *operator new(size_t);
+    inline void *operator new(size_t size, void *ptr) {return ptr;};
+    inline void  operator delete(void *) { ; }
+    inline void  operator delete(void *, void *) { ; }
 
-  RexxInternalStack() { ; }
-  inline RexxInternalStack(RESTORETYPE restoreType) { ; }
-  void live(size_t);
-  void liveGeneral(MarkReason reason);
-  void flatten(RexxEnvelope *);
+    SmartBuffer(size_t);
+    inline SmartBuffer(RESTORETYPE restoreType) { ; };
 
-  inline void         push(RexxObject *value) { *(++this->top) = value; };
-  inline RexxObject * pop() { return *(this->top--); };
-  inline RexxObject * fastPop() { return *(this->top--); };
-  inline void         replace(size_t offset, RexxObject *value) { *(this->top - offset) = value; };
-  inline size_t       getSize() {return this->size;};
-  inline RexxObject * getTop()  {return *(this->top);};
-  inline void         popn(size_t c) {this->top -= c;};
-  inline void         clear() {this->top = this->stack;};
-  inline RexxObject * peek(size_t v) {return *(this->top - v);};
-  inline RexxObject **pointer(size_t v) {return (this->top - v); };
-  inline size_t       location() {return this->top - this->stack;};
-  inline void         setTop(size_t v) {this->top = this->stack + v;};
-  inline void         toss() { this->top--; };
-  inline bool         isEmpty() { return top == stack; }
-  inline bool         isFull() { return top >= stack + size; }
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(Envelope*);
 
-  static RexxInternalStack *newInstance(size_t s);
+    size_t copyData(void *, size_t);
 
-protected:
+    inline size_t getCurrent() {return this->current;}
+    inline size_t getDataLength() { return this->current; }
+    inline BufferClass *getBuffer() {return this->buffer;}
+    inline void setBuffer(BufferClass *b) {this->buffer = b;}
+    size_t space();
 
-  size_t size;                         /* size of the expstack              */
-  RexxObject **top;                    /* current expstack top location     */
-  RexxObject *stack[1];                /* actual stack values               */
+ protected:
+
+    size_t current;                     // current offset for copies
+    BufferClass *buffer;                // current buffer object
 };
-
-
-inline RexxInternalStack *new_internalstack(size_t s) { return RexxInternalStack::newInstance(s); }
 #endif

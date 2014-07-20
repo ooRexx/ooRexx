@@ -154,7 +154,7 @@ void ListClass::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope we're flattening into.
  */
-void ListClass::flatten(RexxEnvelope *envelope)
+void ListClass::flatten(Envelope *envelope)
 {
     setUpFlatten(ListClass)
 

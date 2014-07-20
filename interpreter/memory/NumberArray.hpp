@@ -36,70 +36,54 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                          ClassDirective.hpp    */
 /*                                                                            */
-/* A class definition stored in a package to manage class creation.           */
+/* Simple object for attaching an array of numeric values to an object        */
+/* instance (for example, array dimensions).  Keeps us from needing to keep   */
+/* arrays of integer objects to store numeric information.                    */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_ClassDirective
-#define Included_ClassDirective
+#ifndef Included_NumberArray
+#define Included_NumberArray
 
-#include "RexxDirective.hpp"
+#include "ObjectClass.hpp"
 
-class DirectoryClass;
-class RexxClass;
 
-class ClassDirective : public RexxDirective
+/**
+ * A mapping class for keeping non-object values with
+ * an object that are indexed like an array.
+ */
+class NumberArray : public RexxInternalObject
 {
- friend class RexxSource;
+ friend class MapTable;
  public:
-           void *operator new(size_t);
-    inline void *operator new(size_t size, void *objectPtr) { return objectPtr; }
-    inline void  operator delete(void *) { }
-    inline void  operator delete(void *, void *) { }
 
-    ClassDirective(RexxString *, RexxString *, RexxClause *);
-    inline ClassDirective(RESTORETYPE restoreType) { ; };
+    void *operator new(size_t base, size_t entries);
+    inline void  operator delete(void *, size_t) {;}
+    inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };
+    inline void   operator delete(void *, void *) { ; }
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+    NumberArray(size_t entries);
+    inline NumberArray(RESTORETYPE restoreType) { ; };
 
-    inline RexxString *getName() { return publicName; }
-    RexxClass *install(RexxSource *source, RexxActivation *activation);
+    inline void clear() { memset((void *)&entries[0], sizeof(size_t) * totalSize, 0); }
+    inline bool inBounds(size_t index) { return index > 0 && index < totalSize; }
+    size_t       size() { return totalSize; };
 
-    void addDependencies(DirectoryClass *class_directives);
-    void checkDependency(RexxString *name, DirectoryClass *class_directives);
-    bool dependenciesResolved();
-    void removeDependency(RexxString *name);
+    size_t       get(size_t index) { return inBounds(index) ? entries[index - 1] : 0; }
+    bool         put(size_t value, size_t index) { if (inBounds(index)) { entries[index - 1] = value; }}
 
-    inline RexxString *getMetaClass() { return metaclassName; }
-    inline void setMetaClass(RexxString *m) { OrefSet(this, this->metaclassName, m); }
-    inline RexxString *getSubClass() { return subclassName; }
-    inline void setSubClass(RexxString *m) { OrefSet(this, this->subclassName, m); }
-    inline void setMixinClass(RexxString *m) { OrefSet(this, this->subclassName, m); mixinClass = true; }
-    inline void setPublic() { publicClass = true; }
-    void addInherits(RexxString *name);
-    void addMethod(RexxString *name, MethodClass *method, bool classMethod);
-    void addConstantMethod(RexxString *name, MethodClass *method);
-    bool checkDuplicateMethod(RexxString *name, bool classMethod);
+    // access the value of a field
+    inline size_t &operator[] (size_t index)
+    {
+        return entries[index];
+    }
 
+    ArrayClass  *toArray();
 
 protected:
 
-    TableClass *getClassMethods();
-    TableClass *getInstanceMethods();
-
-    RexxString *publicName;         // the published name of the class
-    RexxString *idName;             // the internal ID name
-    RexxString *metaclassName;      // name of the class meta class
-    RexxString *subclassName;       // the class used for the subclassing operation.
-    ArrayClass  *inheritsClasses;    // the names of inherited classes
-    TableClass  *instanceMethods;    // the methods attached to this class
-    TableClass  *classMethods;       // the set of class methods
-    bool        publicClass;        // this is a public class
-    bool        mixinClass;         // this is a mixin class
-    DirectoryClass *dependencies;    // in-package dependencies
+    size_t   totalSize;                 // total size of the table, including the overflow area
+    size_t   entries[1];                // the stored numeric values
 };
 
 #endif

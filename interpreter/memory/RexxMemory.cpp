@@ -648,7 +648,6 @@ void MemoryObject::restoreImage()
         RexxBehaviour::primitiveBehaviours[i].restore((RexxBehaviour *)primitiveBehaviours->get(i + 1));
     }
 
-    TheKernel      = (DirectoryClass *)saveArray->get(saveArray_KERNEL);
     TheSystem      = (DirectoryClass *)saveArray->get(saveArray_SYSTEM);
     TheFunctionsDirectory = (DirectoryClass *)saveArray->get(saveArray_FUNCTIONS);
     TheTrueObject  = (RexxInteger *)saveArray->get(saveArray_TRUE);
@@ -1217,7 +1216,6 @@ void MemoryObject::saveImage()
 
     // Add all elements needed in
     saveArray->put((RexxObject *)TheEnvironment,   saveArray_ENV);
-    saveArray->put((RexxObject *)TheKernel,        saveArray_KERNEL);
     saveArray->put((RexxObject *)TheTrueObject,    saveArray_TRUE);
     saveArray->put((RexxObject *)TheFalseObject,   saveArray_FALSE);
     saveArray->put((RexxObject *)TheNilObject,     saveArray_NIL);
@@ -1441,7 +1439,7 @@ RexxObject *MemoryObject::unflattenObjectBuffer(BufferClass *sourceBuffer, char 
  *                  The first object of the buffer.
  * @param endObject The end location for the buffer (actually the first object past the end of the buffer).
  */
-void MemoryObject::unflattenProxyObjects(RexxEnvelope *envelope, RexxObject *firstObject, RexxObject *endObject)
+void MemoryObject::unflattenProxyObjects(Envelope *envelope, RexxObject *firstObject, RexxObject *endObject)
 {
     // switch to an unflattening mark handler.
     EnvelopeMarkHandler markHandler(envelope);
@@ -1620,13 +1618,43 @@ RexxString *MemoryObject::getGlobalName(const char *value)
     }
 
     // now see if we have this string in the table already
-    RexxString *result = (RexxString *)globalStrings->at(stringValue);
+    RexxString *result = (RexxString *)globalStrings->get(stringValue);
     if (result != OREF_NULL)
     {
         return result;                       // return the previously created one
     }
-    /* add this to the table             */
-    globalStrings->put((RexxObject *)stringValue, stringValue);
+    // add this to the table
+    globalStrings->put(stringValue, stringValue);
+    return stringValue;              // return the newly created one
+}
+
+
+/**
+ * Add a string to the global name table, in uppercase
+ *
+ * @param value  The new value to add.
+ *
+ * @return The single instance of this string.
+ */
+RexxString *MemoryObject::getUpperGlobalName(const char *value)
+{
+    // see if we have a global table.  If not collecting currently,
+    // just return the non-unique value
+
+    RexxString *stringValue = new_upper_string(value);
+    if (globalStrings == OREF_NULL)
+    {
+        return stringValue;                /* just return the string            */
+    }
+
+    // now see if we have this string in the table already
+    RexxString *result = (RexxString *)globalStrings->get(stringValue);
+    if (result != OREF_NULL)
+    {
+        return result;                       // return the previously created one
+    }
+    // add this to the table
+    globalStrings->put(stringValue, stringValue);
     return stringValue;              // return the newly created one
 }
 

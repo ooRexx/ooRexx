@@ -64,7 +64,7 @@ class StemClassVariable : public RexxVariableBase
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(RexxEnvelope *);
+    virtual void flatten(Envelope *);
 
     // overrides of RexxInternalObject evaluaton methods
     virtual RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);

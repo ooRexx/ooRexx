@@ -55,7 +55,7 @@
 #include "DirectoryClass.hpp"
 #include "ProtectedObject.hpp"
 #include "BufferClass.hpp"
-#include "RexxSmartBuffer.hpp"
+#include "SmartBuffer.hpp"
 #include "ProgramMetaData.hpp"
 #include "Utilities.hpp"
 #include "PackageManager.hpp"
@@ -136,7 +136,7 @@ void RoutineClass::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope that will hold the flattened object.
  */
-void RoutineClass::flatten(RexxEnvelope *envelope)
+void RoutineClass::flatten(Envelope *envelope)
 {
     setUpFlatten(RoutineClass)
 
@@ -286,7 +286,7 @@ BufferClass *RoutineClass::save()
     // detach the source from this routine object before saving
     detachSource();
 
-    RexxEnvelope *envelope = new RexxEnvelope;
+    Envelope *envelope = new Envelope;
     ProtectedObject p(envelope);
     // now pack into an envelope;
     return envelope->pack(this);
@@ -371,7 +371,7 @@ RoutineClass *RoutineClass::restore(const char *data, size_t length)
 RoutineClass *RoutineClass::restore(BufferClass *buffer, char *startPointer, size_t length)
 {
     // get an envelope and puff up the object
-    Protected<RexxEnvelope> envelope  = new RexxEnvelope;
+    Protected<Envelope> envelope  = new Envelope;
     envelope->puff(buffer, startPointer, length);
     // the envelope receiver object is our return value.
     return (RoutineClass *)envelope->getReceiver();

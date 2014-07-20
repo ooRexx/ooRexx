@@ -45,10 +45,10 @@
 #define Included_RexxActivity
 
 #include "ListClass.hpp"
-#include "RexxInternalStack.hpp"
+#include "InternalStack.hpp"
 #include "RexxActivationStack.hpp"
 #include "ExpressionStack.hpp"
-#include "RexxInternalStack.hpp"
+#include "InternalStack.hpp"
 #include "RexxLocalVariables.hpp"
 #include "SourceLocation.hpp"
 #include "ExitHandler.hpp"
@@ -343,7 +343,7 @@ class RexxActivity : public RexxInternalObject
     // RexxNativeActivation for every level of the call stack.  The activationStackSize
     // is the current size of the stack (which is expanded, if necessary).  The
     // activationStackDepth is the current count of frames in the stack.
-    RexxInternalStack  *activations;
+    InternalStack *activations;
     size_t   activationStackSize;
     size_t   stackFrameDepth;
 

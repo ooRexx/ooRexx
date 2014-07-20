@@ -45,7 +45,7 @@
 #include "ObjectClass.hpp"
 #include "StringClass.hpp"
 #include "BufferClass.hpp"
-#include "RexxSmartBuffer.hpp"
+#include "SmartBuffer.hpp"
 #include "DirectoryClass.hpp"
 #include "RexxVariableDictionary.hpp"
 #include "ArrayClass.hpp"
@@ -123,7 +123,7 @@ void RexxObject::liveGeneral(MarkReason reason)
  *
  * @param envelope the target envelope we're flatting in.
  */
-void RexxObject::flatten(RexxEnvelope *envelope)
+void RexxObject::flatten(Envelope *envelope)
 {
     setUpFlatten(RexxObject)
 
@@ -140,7 +140,7 @@ void RexxObject::flatten(RexxEnvelope *envelope)
  *
  * @return The proxy object, which is usually a name.
  */
-RexxObject * RexxInternalObject::makeProxy(RexxEnvelope *envelope)
+RexxObject * RexxInternalObject::makeProxy(Envelope *envelope)
 {
     // we are generally only called if the class is marked as a proxy class.
     // we recognize .nil, but don't handle any other special objects here.

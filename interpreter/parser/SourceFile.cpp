@@ -170,7 +170,7 @@ void RexxSource::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope that will hold the flattened object.
  */
-void RexxSource::flatten (RexxEnvelope *envelope)
+void RexxSource::flatten (Envelope *envelope)
 {
     setUpFlatten(RexxSource)
 

@@ -224,7 +224,7 @@ void HashCollection::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope we're flattening into.
  */
-void HashCollection::flatten(RexxEnvelope *envelope)
+void HashCollection::flatten(Envelope *envelope)
 {
     setUpFlatten(HashCollection)
 
@@ -240,7 +240,7 @@ void HashCollection::flatten(RexxEnvelope *envelope)
  *
  * @param envelope The envelope that is handling the unflatten.
  */
-RexxObject *HashCollection::unflatten(RexxEnvelope *envelope)
+RexxObject *HashCollection::unflatten(Envelope *envelope)
 {
     // just add this as a table to the envelope.
     envelope->addTable(this);

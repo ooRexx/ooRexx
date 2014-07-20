@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -43,81 +43,103 @@
 /******************************************************************************/
 #include "RexxCore.h"
 #include "BufferClass.hpp"
-#include "RexxSmartBuffer.hpp"
+#include "SmartBuffer.hpp"
 
-RexxSmartBuffer::RexxSmartBuffer(size_t startSize)
-/******************************************************************************/
-/* Function:  Initialize a smart buffer object                                */
-/******************************************************************************/
+
+/**
+ * Allocate storage for a SmartBuffer object.
+ *
+ * @param size   The size of the SmartBuffer data.
+ *
+ * @return Storage for creating a buffer instance.
+ */
+void   *SmartBuffer::operator new(size_t size)
 {
-                                       /* default initial buffersize, 1 page*/
-                                       /* for buffer + data.                */
-    OrefSet(this, this->buffer, (BufferClass *)new_buffer(startSize));
+    return new_object(size, T_SmartBuffer);
 }
 
-void RexxSmartBuffer::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
+
+/**
+ * Initialize a new SmartBuffer object.
+ *
+ * @param startSize The initial buffer size.
+ */
+SmartBuffer::SmartBuffer(size_t startSize)
+{
+    buffer = new_buffer(startSize));
+}
+
+
+/**
+ * Normal garbage collection live marking
+ *
+ * @param liveMark The current live mark.
+ */
+void SmartBuffer::live(size_t liveMark)
 {
     memory_mark(buffer);
 }
-void RexxSmartBuffer::liveGeneral(MarkReason reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
+
+
+/**
+ * Generalized object marking.
+ *
+ * @param reason The reason for this live marking operation.
+ */
+void SmartBuffer::liveGeneral(MarkReason reason)
 {
     memory_mark_general(buffer);
 }
 
-void RexxSmartBuffer::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
+
+/**
+ * Flatten the table contents as part of a saved program.
+ *
+ * @param envelope The envelope we're flattening into.
+ */
+void SmartBuffer::flatten(Envelope *envelope)
 {
-    setUpFlatten(RexxSmartBuffer)
+    setUpFlatten(SmartBuffer)
 
     flattenRef(buffer);
 
     cleanUpFlatten
 }
 
-size_t RexxSmartBuffer::copyData(
-    void *start,                       /* data to be copied                 */
-    size_t length)                     /* length to copy                    */
-/******************************************************************************/
-/* Function:  Copy data into the buffer at the very end.                      */
-/******************************************************************************/
+
+/**
+ * Copy data into the buffer at the very end.
+ *
+ * @param start  The data to be copied.
+ * @param length The length of data to copy.
+ *
+ * @return The offset of the copied data.
+ */
+size_t SmartBuffer::copyData(void *start, size_t length)
 {
-    if (this->space() < length)          /* enough room in buffer for data?   */
+    // not enough room to copy this?  Get a bigger backing buffer
+    if (space() < length)
     {
-        /* not big enough, tell buffer to    */
-        /* make itself bigger, and assign    */
-        /* new buffer                        */
-        OrefSet(this, this->buffer, this->buffer->expand(length));
+        setField(buffer, buffer->expand(length));
     }
-    this->buffer->copyData(this->current, (char *)start, length);
 
-    size_t dataLoc = this->current;      /* save start location of copied data*/
-                                         /* bump pointer to end of copied     */
-                                         /* data, (prepare for next copy)     */
-    this->current = this->current + length;
-    return dataLoc;                      /* return location of copied data    */
+    // copy the data into the buffer
+    buffer->copyData(current, (char *)start, length);
+
+    // bump the copy location, but return the offset of of where
+    // this data was copied.
+    size_t dataLoc = current;
+    current = current + length;
+    return dataLoc;
 }
 
-void   *RexxSmartBuffer::operator new(size_t size)
-/******************************************************************************/
-/* Function:  Create a new translator object                                  */
-/******************************************************************************/
+/**
+ * Calculate the available space for the buffer.
+ *
+ * @return The size remaining in our backing buffer.
+ */
+size_t SmartBuffer::space()
 {
-    return new_object(size, T_SmartBuffer);        /* get storage for a new object      */
-}
-
-size_t RexxSmartBuffer::space()
-/******************************************************************************/
-/* Function:  Return the space remaining in the buffer                        */
-/******************************************************************************/
-{
-    return this->buffer->getBufferSize() - this->current;
+    return buffer->getBufferSize() - current;
 }
 

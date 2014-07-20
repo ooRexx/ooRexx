@@ -185,7 +185,7 @@ void RexxHashTable::liveGeneral(MarkReason reason)
     }
 }
 
-void RexxHashTable::flatten(RexxEnvelope *envelope)
+void RexxHashTable::flatten(Envelope *envelope)
 /******************************************************************************/
 /* Function:  Flatten an object                                               */
 /******************************************************************************/

@@ -101,7 +101,7 @@ void RexxInstructionDoCount::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope that will hold the flattened object.
  */
-void RexxInstructionDoCount::flatten(RexxEnvelope *envelope)
+void RexxInstructionDoCount::flatten(Envelope *envelope)
 {
     setUpFlatten(RexxInstructionDoCount)
 
@@ -212,7 +212,7 @@ void RexxInstructionDoCountUntil::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope that will hold the flattened object.
  */
-void RexxInstructionDoCountUntil::flatten(RexxEnvelope *envelope)
+void RexxInstructionDoCountUntil::flatten(Envelope *envelope)
 {
     setUpFlatten(RexxInstructionDoCountUntil)
 

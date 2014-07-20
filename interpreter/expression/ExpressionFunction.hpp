@@ -61,7 +61,7 @@ class RexxExpressionFunction : public RexxInternalObject
 
     virtual void        live(size_t);
     virtual void        liveGeneral(MarkReason reason);
-    virtual void        flatten(RexxEnvelope *);
+    virtual void        flatten(Envelope *);
 
     virtual RexxObject *evaluate(RexxActivation*, RexxExpressionStack *);
 

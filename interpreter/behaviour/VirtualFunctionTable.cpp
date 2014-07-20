@@ -86,7 +86,7 @@
 #include "CPPCode.hpp"
 #include "RexxHashTable.hpp"
 #include "ListClassTable.hpp"
-#include "RexxSmartBuffer.hpp"
+#include "SmartBuffer.hpp"
 #include "HashContents.hpp"
 #include "RexxVariable.hpp"
 #include "RexxVariableDictionary.hpp"
@@ -141,13 +141,13 @@
 #include "ParseTrigger.hpp"
 #include "ProgramSource.hpp"
 #include "RexxMemory.hpp"
-#include "RexxInternalStack.hpp"
+#include "InternalStack.hpp"
 #include "MemoryStack.hpp"
 #include "RexxActivity.hpp"
 #include "RexxActivation.hpp"
 #include "RexxNativeActivation.hpp"
 #include "RexxActivationStack.hpp"
-#include "RexxEnvelope.hpp"
+#include "Envelope.hpp"
 #include "LanguageParser.hpp"
 #include "Clause.hpp"
 #include "Token.hpp"
@@ -377,7 +377,7 @@ void MemoryObject::buildVirtualFunctionTable()
    objectPtr = new (objectLoc) ListTable(RESTOREIMAGE);
    virtualFunctionTable[T_ListTable] = getVftPointer(objectLoc);
 
-   objectPtr = new (objectLoc) RexxSmartBuffer(RESTOREIMAGE);
+   objectPtr = new (objectLoc) SmartBuffer(RESTOREIMAGE);
    virtualFunctionTable[T_SmartBuffer] = getVftPointer(objectLoc);
 
    objectPtr = new (objectLoc) HashContents(RESTOREIMAGE);
@@ -608,7 +608,7 @@ void MemoryObject::buildVirtualFunctionTable()
    objectPtr = new (objectLoc) RexxObject(RESTOREIMAGE);
    virtualFunctionTable[T_Memory] = getVftPointer(objectLoc);
 
-   objectPtr = new (objectLoc) RexxInternalStack(RESTOREIMAGE);
+   objectPtr = new (objectLoc) InternalStack(RESTOREIMAGE);
    virtualFunctionTable[T_InternalStack] = getVftPointer(objectLoc);
 
    objectPtr = new (objectLoc) LiveStack(RESTOREIMAGE);
@@ -629,7 +629,7 @@ void MemoryObject::buildVirtualFunctionTable()
    objectPtr = new (objectLoc) RexxActivationFrameBuffer(RESTOREIMAGE);
    virtualFunctionTable[T_ActivationFrameBuffer] = getVftPointer(objectLoc);
 
-   objectPtr = new (objectLoc) RexxEnvelope(RESTOREIMAGE);
+   objectPtr = new (objectLoc) Envelope(RESTOREIMAGE);
    virtualFunctionTable[T_Envelope] = getVftPointer(objectLoc);
 
    objectPtr = new (objectLoc) LanguageParser(RESTOREIMAGE);

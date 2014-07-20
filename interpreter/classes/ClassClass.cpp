@@ -157,7 +157,7 @@ void RexxClass::liveGeneral(MarkReason reason)
  *
  * @return A string proxy name for this object.
  */
-RexxObject *RexxClass::makeProxy(RexxEnvelope *envelope)
+RexxObject *RexxClass::makeProxy(Envelope *envelope)
 {
     return new_proxy(id->getStringData());
 }
@@ -411,9 +411,9 @@ void RexxClass::addSubClass(RexxClass *subClass)
 }
 
 
-
 /**
- * Add a full table of methods to a class definition.
+ * Add a full table of methods to a class definition.  This is
+ * only used during the initial image build.
  *
  * @param newMethods The new methods to add.
  */
@@ -433,7 +433,37 @@ void RexxClass::defineMethods(TableClass *newMethods)
             method = OREF_NULL;
         }
         // define this method
-        behaviour->define(method_name, OREF_NULL);
+        behaviour->define(method_name, method);
+    }
+    return OREF_NULL;
+}
+
+
+/**
+ * Inherit the instance methods from another class definition.
+ * This is not an true inherit operation where the class is part
+ * of the hierarchy.  This directly grabs the instance methods
+ * defined directly by the other class and merges them into the
+ * class method dictionary.  This is a special method that is
+ * only done during the initial image build.
+ *
+ * @param newMethods The new methods to add.
+ */
+void RexxClass::inheritInstanceMethods(RexxClass *source)
+{
+    MethodDictionary *sourceMethods = source->instanceMethodDictionary;
+
+    // loop through the table with an iterator.
+    HashContents::TableIterator iterator = sourceMethods->iterator();
+
+    while (iterator.isAvailable())
+    {
+        // get the name and the value, then add to this class object
+        RexxString *methodName = (RexxString *)iterator.index();
+        // if this is the Nil object, that's an override.  Make it OREF_NULL.
+        RexxObject *method = (MethodClass *)iterator.value();
+        // define this method
+        behaviour->define(methodName, method);
     }
 }
 

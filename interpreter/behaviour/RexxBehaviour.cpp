@@ -158,7 +158,7 @@ void RexxBehaviour::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope we're flattening into.
  */
-void RexxBehaviour::flatten(RexxEnvelope *envelope)
+void RexxBehaviour::flatten(Envelope *envelope)
 {
     setUpFlatten(RexxBehaviour)
 

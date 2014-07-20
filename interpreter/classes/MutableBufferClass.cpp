@@ -188,7 +188,7 @@ void MutableBuffer::liveGeneral(MarkReason reason)
 }
 
 
-void MutableBuffer::flatten(RexxEnvelope *envelope)
+void MutableBuffer::flatten(Envelope *envelope)
 /******************************************************************************/
 /* Function:  Flatten a mutable buffer                                        */
 /******************************************************************************/

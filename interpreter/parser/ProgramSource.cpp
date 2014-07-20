@@ -44,7 +44,7 @@
 #include "ProgramSource.hpp"
 #include "ProtectedObject.hpp"
 #include "BufferClass.hpp"
-#include "RexxSmartBuffer.hpp"
+#include "SmartBuffer.hpp"
 #include "SystemInterpreter.hpp"
 
 
@@ -297,7 +297,7 @@ void BufferProgramSource::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope used for the data.
  */
-void BufferProgramSource::flatten(RexxEnvelope *envelope)
+void BufferProgramSource::flatten(Envelope *envelope)
 {
     setUpFlatten(BufferProgramSource)
       flattenRef(descriptorArea);
@@ -345,7 +345,7 @@ void BufferProgramSource::buildDescriptors()
 
     // allocate a smart buffer to hold the line descriptors.  This will expand
     // as necessary as we add data to this
-    RexxSmartBuffer *indices = new RexxSmartBuffer(1024);
+    SmartBuffer *indices = new SmartBuffer(1024);
     ProtectedObject p(indices);
 
     LineDescriptor descriptor;
@@ -547,7 +547,7 @@ void ArrayProgramSource::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope used for the data.
  */
-void ArrayProgramSource::flatten(RexxEnvelope *envelope)
+void ArrayProgramSource::flatten(Envelope *envelope)
 {
     setUpFlatten(ArrayProgramSource)
       flattenRef(array);
@@ -683,7 +683,7 @@ void FileProgramSource::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope used for the data.
  */
-void FileProgramSource::flatten(RexxEnvelope *envelope)
+void FileProgramSource::flatten(Envelope *envelope)
 {
     setUpFlatten(FileProgramSource)
       flattenRef(descriptorArea);

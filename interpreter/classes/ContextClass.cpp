@@ -123,7 +123,7 @@ void RexxContext::liveGeneral(MarkReason reason)
  *
  * @param envelope The flattening envelope.
  */
-void RexxContext::flatten(RexxEnvelope *envelope)
+void RexxContext::flatten(Envelope *envelope)
 {
     setUpFlatten(RexxContext)
 

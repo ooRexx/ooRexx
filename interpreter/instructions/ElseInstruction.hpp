@@ -61,7 +61,7 @@ class RexxInstructionElse : public RexxInstructionSet
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(RexxEnvelope*);
+    virtual void flatten(Envelope*);
 
     virtual void execute(RexxActivation *, RexxExpressionStack *);
     virtual void setEndInstruction(RexxInstructionEndIf *);

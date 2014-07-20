@@ -1400,7 +1400,7 @@ void RexxActivity::checkActivationStack()
     if (stackFrameDepth == activationStackSize)
     {
         // allocate a larger stack
-        RexxInternalStack *newstack = new_internalstack(activationStackSize + ACT_STACK_SIZE);
+        InternalStack *newstack = new_internalstack(activationStackSize + ACT_STACK_SIZE);
         // now copy all of the entries over to the new frame stack
         for (size_t i = activationStackSize; i != 0; i--)
         {

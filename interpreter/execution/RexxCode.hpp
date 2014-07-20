@@ -69,7 +69,7 @@ class RexxCode : public BaseCode
 
    virtual void live(size_t);
    virtual void liveGeneral(MarkReason reason);
-   virtual void flatten(RexxEnvelope *);
+   virtual void flatten(Envelope *);
 
    ArrayClass      * getSource();
    RexxObject     * setSecurityManager(RexxObject *);

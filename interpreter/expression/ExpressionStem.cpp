@@ -105,7 +105,7 @@ void StemClassVariable::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope that will hold the flattened object.
  */
-void StemClassVariable::flatten(RexxEnvelope *envelope)
+void StemClassVariable::flatten(Envelope *envelope)
 {
     setUpFlatten(StemClassVariable)
 

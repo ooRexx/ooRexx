@@ -57,7 +57,7 @@ public:
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(RexxEnvelope*);
+    virtual void flatten(Envelope*);
 
     virtual void call(RexxActivity *,  RexxString *,  RexxObject **, size_t, RexxString *, RexxString *, int, ProtectedObject &);
     virtual void call(RexxActivity *,  RexxString *,  RexxObject **, size_t, ProtectedObject &);

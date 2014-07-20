@@ -144,7 +144,7 @@ void StackFrameClass::liveGeneral(MarkReason reason)
     memory_mark_general(objectVariables);
 }
 
-void StackFrameClass::flatten(RexxEnvelope *envelope)
+void StackFrameClass::flatten(Envelope *envelope)
 /******************************************************************************/
 /* Function:  Flatten an object                                               */
 /******************************************************************************/

@@ -127,7 +127,7 @@ RexxObject * ArrayClass::newRexx(RexxObject **arguments, size_t argCount)
         // a dimension array so dimension cannot be changed later.
         if (totalSize == 0)
         {
-            temp->dimensions = new_array(IntegerZero);
+            temp->dimensions = new (1) NumberArray(1);
         }
 
         // finish the class initialization and init calls.
@@ -171,7 +171,7 @@ size_t ArrayClass::validateSize(RexxObject *size, size_t position)
 ArrayClass *ArrayClass::createMultidimensional(RexxObject **dims, size_t count, RexxClass *classThis)
 {
     // Working with a multi-dimension array, so get a dimension array
-    Protected<ArrayClass> dim_array = new_array(count);
+    Protected<NumberArray> dim_array = new (count) NumberArray(count);
 
     // we need to calculate total size needed for this array
     // since we multiply each additional size in, start with a zeroth size of 1
@@ -195,7 +195,7 @@ ArrayClass *ArrayClass::createMultidimensional(RexxObject **dims, size_t count, 
 
         // add this to our dimensions array, using a new integer object so
         // we know what is there.
-        dim_array->put(new_integer(currentSize), i + 1);
+        dim_array->put(currentSize, i + 1);
     }
 
     // a final sanity check for out of bounds
@@ -410,7 +410,7 @@ void ArrayClass::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope we're flattening into.
  */
-void ArrayClass::flatten(RexxEnvelope *envelope)
+void ArrayClass::flatten(Envelope *envelope)
 {
     setUpFlatten(ArrayClass)
 
@@ -1053,7 +1053,7 @@ ArrayClass *ArrayClass::getDimensionsRexx()
     else
     {
         // return a copy of the dimensions array
-        return dimensions->copy();
+        return dimensions->toArray();
     }
 }
 
@@ -1117,7 +1117,7 @@ RexxObject *ArrayClass::dimensionRexx(RexxObject *target)
         // return the specific dimension value
         else
         {
-            return dimensions->get(position);
+            return new_integer(dimensions->get(position));
         }
     }
 }
@@ -1347,7 +1347,7 @@ bool ArrayClass::validateMultiDimensionIndex(RexxObject **index, size_t indexCou
             position = positionArgument(value, argPosition + i);
 
             // get the current dimension
-            size_t dimension = ((RexxInteger *)dimensions->get(i))->getValue();
+            size_t dimension = *dimensions[i];
             // is this position larger than the current dimension?  Check how
             // the out of bounds situation should be handled.
             if (position > dimension)
@@ -2124,11 +2124,9 @@ RexxObject* ArrayClass::indexToArray(size_t idx)
     // do work with.
     idx--;
     // get the number of dimensions specified.
-    size_t dims = dimensions();
+    size_t dims = dimensions->size();
     // get an array we fill in as we go
-    ArrayClass * index = new_array(dims);
-
-    ProtectedObject p(index);
+    Protected<ArrayClass> index = new_array(dims);
 
     for (size_t i = dims; i > 0; i--)
     {
@@ -2242,7 +2240,7 @@ size_t ArrayClass::dimensionSize(size_t i)
     {
         return 0;
     }
-    return (size_t)((RexxInteger *)dimensions->get(i))->value();
+    return dimensions->get(i);
 }
 
 
@@ -2296,7 +2294,7 @@ void ElementCopier::copyElements(size_t newDimension)
         // to be applied when we return back
         if (newDimSize > oldDimSize)
         {
-            for (size_t i = newArray->dimensions(), skipAmount = 1; i > newDimension; i--)
+            for (size_t i = newArray->getDimensions(), skipAmount = 1; i > newDimension; i--)
             {
                 skipAmount *= newArray->dimensionSize(i);
             }
@@ -2325,11 +2323,10 @@ void ElementCopier::copyElements(size_t newDimension)
 void ArrayClass::extendMulti(RexxObject **index, size_t indexCount, size_t argPosition)
 {
     // our new dimensions array will be the same as the number of indexes.
-    Protected<ArrayClass> newDimArray = new_array(indexCount);
-    ProtectedObject p(newDimArray);
+    Protected<NumberArray> newDimArray = new (indexCount) NumberArray(indexCount);
 
     // used for optimizing the copy operations
-    size_t firstChangedDimensions = dimensions() + 1;
+    size_t firstChangedDimensions = getDimensions() + 1;
 
     // extending from a single dimension into multi-dimension?
     // the subscripts determine everything.
@@ -2345,7 +2342,7 @@ void ArrayClass::extendMulti(RexxObject **index, size_t indexCount, size_t argPo
             // parse them as position arguments.  Validate each one
             // and just copy into the dimensions array
             size_t dimensionSize = positionArgument(index[i], i + 1);
-            newDimArray->put(new_integer(dimensionSize), i + 1);
+            newDimArray->put(dimensionSize, i + 1);
         }
     }
     else
@@ -2375,7 +2372,7 @@ void ArrayClass::extendMulti(RexxObject **index, size_t indexCount, size_t argPo
 
     // Now create the new array for this dimension.  This also
     // creates the dimensions array in the new array
-    Protected<ArrayClass> newArray = new_array(indexCount, newDimArray->data());
+    Protected<ArrayClass> newArray = new_array(indexCount, newDimArray);
 
 
     // anything in the original?
@@ -2388,7 +2385,7 @@ void ArrayClass::extendMulti(RexxObject **index, size_t indexCount, size_t argPo
         size_t accumSize = 1;
         // For all dimensions before the first to change, we can
         // move things in bulk....
-        for (size_t i = dimensions(); i > firstChangedDimension; i--)
+        for (size_t i = getDimensions(); i > firstChangedDimension; i--)
         {
             accumSize *= dimensionSize(i);
         }

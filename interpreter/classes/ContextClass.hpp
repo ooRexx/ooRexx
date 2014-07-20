@@ -60,7 +60,7 @@ public:
 
     void live(size_t);
     void liveGeneral(MarkReason reason);
-    void flatten(RexxEnvelope*);
+    void flatten(Envelope*);
 
     RexxContext(RexxActivation *);
     inline RexxContext(RESTORETYPE restoreType) { ; };

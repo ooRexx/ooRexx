@@ -201,7 +201,7 @@ void AttributeGetterCode::liveGeneral(MarkReason reason)
     memory_mark_general(attribute);
 }
 
-void AttributeGetterCode::flatten(RexxEnvelope *envelope)
+void AttributeGetterCode::flatten(Envelope *envelope)
 /******************************************************************************/
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
@@ -337,7 +337,7 @@ void ConstantGetterCode::liveGeneral(MarkReason reason)
     memory_mark_general(constantValue);
 }
 
-void ConstantGetterCode::flatten(RexxEnvelope *envelope)
+void ConstantGetterCode::flatten(Envelope *envelope)
 /******************************************************************************/
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
@@ -425,7 +425,7 @@ void AbstractCode::run(RexxActivity *activity, MethodClass *method, RexxObject *
 #include "MethodClass.hpp"
 #include "RoutineClass.hpp"
 #include "PackageClass.hpp"
-#include "RexxEnvelope.hpp"
+#include "Envelope.hpp"
 #include "MessageClass.hpp"
 #include "StemClass.hpp"
 #include "RexxMisc.hpp"

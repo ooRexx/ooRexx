@@ -482,7 +482,7 @@ void RexxVariableDictionary::liveGeneral(MarkReason reason)
 }
 
 
-void RexxVariableDictionary::flatten(RexxEnvelope *envelope)
+void RexxVariableDictionary::flatten(Envelope *envelope)
 /******************************************************************************/
 /* Function:  Flatten an object                                               */
 /******************************************************************************/

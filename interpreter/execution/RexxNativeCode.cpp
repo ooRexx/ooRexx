@@ -83,7 +83,7 @@ void RexxNativeCode::liveGeneral(MarkReason reason)
 }
 
 
-void RexxNativeCode::flatten(RexxEnvelope *envelope)
+void RexxNativeCode::flatten(Envelope *envelope)
 /******************************************************************************/
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
@@ -184,7 +184,7 @@ void RexxNativeMethod::liveGeneral(MarkReason reason)
 }
 
 
-void RexxNativeMethod::flatten(RexxEnvelope *envelope)
+void RexxNativeMethod::flatten(Envelope *envelope)
 /******************************************************************************/
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
@@ -210,7 +210,7 @@ void RexxNativeRoutine::liveGeneral(MarkReason reason)
 }
 
 
-void RexxNativeRoutine::flatten(RexxEnvelope *envelope)
+void RexxNativeRoutine::flatten(Envelope *envelope)
 /******************************************************************************/
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
@@ -236,7 +236,7 @@ void RegisteredRoutine::liveGeneral(MarkReason reason)
 }
 
 
-void RegisteredRoutine::flatten(RexxEnvelope *envelope)
+void RegisteredRoutine::flatten(Envelope *envelope)
 /******************************************************************************/
 /* Function:  Flatten an object                                               */
 /******************************************************************************/

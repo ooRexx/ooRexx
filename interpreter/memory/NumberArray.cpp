@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -36,36 +36,56 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                           RexxSmartBuffer.hpp  */
+/* REXX Kernel                                                                */
 /*                                                                            */
-/* Primitive Smart Buffer Class Definitions                                   */
+/* Simple class for storing arrays of numeric values                          */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_RexxSmartBuffer
-#define Included_RexxSmartBuffer
+#include "RexxCore.h"
+#include "NumberArray.hpp"
 
- class RexxSmartBuffer : public RexxInternalObject {
-  public:
-  void *operator new(size_t);
-  inline void *operator new(size_t size, void *ptr) {return ptr;};
-  inline void  operator delete(void *) { ; }
-  inline void  operator delete(void *, void *) { ; }
 
-  RexxSmartBuffer(size_t);
-  inline RexxSmartBuffer(RESTORETYPE restoreType) { ; };
-  void live(size_t);
-  void liveGeneral(MarkReason reason);
-  void flatten(RexxEnvelope*);
-  size_t copyData(void *, size_t);
+/**
+ * Allocate a new NumberArray item.
+ *
+ * @param size    The base object size.
+ * @param entries The number of entries we need space for.
+ *
+ * @return The storage for creating a NumberArray
+ */
+void *NumberArray::operator new(size_t size, size_t entries)
+{
+   size_t bytes = size + (sizeof(size_t) * (entries - 1));
+   return new_object(bytes, T_NumberArray);
+}
 
-  inline size_t getCurrent() {return this->current;}
-  inline size_t getDataLength() { return this->current; }
-  inline BufferClass *getBuffer() {return this->buffer;}
-  inline void setBuffer(BufferClass *b) {this->buffer = b;}
-  size_t space();
 
- protected:
-  size_t current;                     /* current offset for copies         */
-  BufferClass *buffer;                 /* current buffer object             */
- };
-#endif
+/**
+ * Construct a NumberArray item of the given size.
+ *
+ * @param entries The total number of entries in the object.
+ */
+NumberArray::NumberArray(size_t entries)
+{
+    totalSize = entries;
+    // this object has no references requiring marking
+    setHasNoReferences();
+}
+
+
+/**
+ * Return this array as a real Rexx array filled with
+ * Integer objects.
+ *
+ * @return An object representation of this array.
+ */
+ArrayClass *NumberArray::toArray()
+{
+    ArrayClass *newArray = new_array(size());
+
+    for (size_t i = 1; i <= size(); i++)
+    {
+        newArray->put(new_integer(get(i)), i);
+    }
+    return newArray;
+}

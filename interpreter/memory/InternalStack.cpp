@@ -36,77 +36,70 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                         RexxInternalStack.c    */
+/* REXX Kernel                                                                */
 /*                                                                            */
 /* Primitive Internal Use Stack Class                                         */
 /*                                                                            */
 /******************************************************************************/
 #include "RexxCore.h"
 #include "StringClass.hpp"
-#include "RexxInternalStack.hpp"
+#include "InternalStack.hpp"
 
-void RexxInternalStack::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
+
+
+/**
+ * Allocate storage for a new internal stack.
+ *
+ * @param size      The base object size.
+ * @param stackSize The required entries in the stack.
+ *
+ * @return Storage for a new stack item.
+ */
+void *InternalStack::operator new(size_t size, size_t stackSize)
 {
-   RexxObject **entry;                 /* marked stack entry                */
+    return new_object(size + (stackSize * sizeof(RexxObject *)), T_InternalStack);
+}
 
-                                       /* loop through the stack entries    */
-   for (entry = this->stack; entry <= this->top; entry++)
+
+/**
+ * Allocate storage for a new internal stack.
+ *
+ * @param size      The base object size.
+ * @param stackSize The required entries in the stack.
+ *
+ * @return Storage for a new stack item.
+ */
+void *InternalStack::InternalStack(size_t stackSize)
+{
+    size = stackSize;
+    top  = stack;
+    stack[0] = OREF_NULL;
+}
+
+/**
+ * Normal garbage collection live marking
+ *
+ * @param liveMark The current live mark.
+ */
+void InternalStack::live(size_t liveMark)
+{
+   for (RexxObject **entry = stack; entry <= top; entry++)
    {
-       memory_mark(*entry);              /* marking each one                  */
+       memory_mark(*entry);
    }
 }
 
-void RexxInternalStack::liveGeneral(MarkReason reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
-{
-   RexxObject **entry;                 /* marked stack entry                */
 
-                                       /* loop through the stack entries    */
-   for (entry = this->stack; entry <= this->top; entry++)
+/**
+ * Generalized object marking.
+ *
+ * @param reason The reason for this live marking operation.
+ */
+void InternalStack::liveGeneral(MarkReason reason)
+{
+   for (RexxObject **entry = stack; entry <= top; entry++)
    {
-       memory_mark_general(*entry);      /* marking each one                  */
+       memory_mark_general(*entry);
    }
-}
-
-void RexxInternalStack::flatten(RexxEnvelope * envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
-{
-  setUpFlatten(RexxInternalStack)
-
-  size_t i;                            /* pointer for scanning stack entries*/
-  size_t count;                        /* number of elements                */
-
-  count = this->top - this->stack;     /* get the total count               */
-                                       /* loop through the stack entries    */
-   for (i = 0; i < count; i++)
-   {
-       flattenRef(stack[i]);
-   }
-  cleanUpFlatten
-}
-
-RexxInternalStack *RexxInternalStack::newInstance(
-    size_t stackSize)                 /* stack size                        */
-/******************************************************************************/
-/* Function:  Create a new expression stack                                   */
-/******************************************************************************/
-{
-  RexxInternalStack* newObj;          /* newly create stack                */
-
-                                       /* Get new object                    */
-  newObj = (RexxInternalStack *)new_object(sizeof(RexxInternalStack) + (stackSize * sizeof(RexxObject *)), T_InternalStack);
-  newObj->size = stackSize;            /* set the size                      */
-  newObj->top  = newObj->stack;        /* set the top element               */
-                                       /* set marker for "end of object" to */
-                                       /* protect against stack overflow    */
-  newObj->stack[0] = OREF_NULL;        /* clear out the first element       */
-  return newObj;                       /* return the new stack item         */
 }
 

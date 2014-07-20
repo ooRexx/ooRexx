@@ -70,7 +70,7 @@ void ListTable::liveGeneral(MarkReason reason)
     }
 }
 
-void   ListTable::flatten(RexxEnvelope *envelope)
+void   ListTable::flatten(Envelope *envelope)
 /******************************************************************************/
 /* Function:  Flatten an object                                               */
 /******************************************************************************/

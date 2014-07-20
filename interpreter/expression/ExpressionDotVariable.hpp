@@ -63,7 +63,7 @@ class RexxDotVariable : public RexxVariableBase
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(RexxEnvelope *);
+    virtual void flatten(Envelope *);
 
     // part ov RexxVariableBase...rest of the methods default
     virtual RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);

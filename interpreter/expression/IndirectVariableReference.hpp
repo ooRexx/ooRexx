@@ -61,7 +61,7 @@ class RexxVariableReference : public RexxVariableBase
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(RexxEnvelope *);
+    virtual void flatten(Envelope *);
 
     // methods implemented from RexxVariableBase
     virtual void drop(RexxActivation *);

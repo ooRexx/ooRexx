@@ -101,7 +101,7 @@ void RexxInstructionControlledDo::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope that will hold the flattened object.
  */
-void RexxInstructionControlledDo::flatten(RexxEnvelope *envelope)
+void RexxInstructionControlledDo::flatten(Envelope *envelope)
 {
     setUpFlatten(RexxInstructionControlledDo)
 
@@ -216,7 +216,7 @@ void RexxInstructionControlledDoUntil::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope that will hold the flattened object.
  */
-void RexxInstructionControlledDoUntil::flatten(RexxEnvelope *envelope)
+void RexxInstructionControlledDoUntil::flatten(Envelope *envelope)
 {
     setUpFlatten(RexxInstructionControlledDoUntil)
 

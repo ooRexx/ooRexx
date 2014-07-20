@@ -135,7 +135,7 @@ class BufferProgramSource: public ProgramSource
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(RexxEnvelope *);
+    virtual void flatten(Envelope *);
 
     // virtual definitions
     virtual void setup();
@@ -175,7 +175,7 @@ class FileProgramSource: public BufferProgramSource
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(RexxEnvelope *);
+    virtual void flatten(Envelope *);
 
     // virtual definitions
     virtual void setup();
@@ -202,7 +202,7 @@ class ArrayProgramSource: public ProgramSource
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(RexxEnvelope *);
+    virtual void flatten(Envelope *);
 
     virtual void setup();
     virtual void getLine(size_t lineNumber, const char *&data, size_t &length);

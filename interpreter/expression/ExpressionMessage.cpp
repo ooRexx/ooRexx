@@ -132,7 +132,7 @@ void RexxExpressionMessage::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope that will hold the flattened object.
  */
-void RexxExpressionMessage::flatten(RexxEnvelope *envelope)
+void RexxExpressionMessage::flatten(Envelope *envelope)
 {
     setUpFlatten(RexxExpressionMessage)
 

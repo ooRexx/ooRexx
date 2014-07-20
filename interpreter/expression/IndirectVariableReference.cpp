@@ -105,7 +105,7 @@ void RexxVariableReference::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope that will hold the flattened object.
  */
-void RexxVariableReference::flatten(RexxEnvelope *envelope)
+void RexxVariableReference::flatten(Envelope *envelope)
 {
     setUpFlatten(RexxVariableReference)
 

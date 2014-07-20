@@ -81,8 +81,8 @@ class RexxString : public RexxObject
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(RexxEnvelope *envelope);
-    virtual RexxObject *unflatten(RexxEnvelope *);
+    virtual void flatten(Envelope *envelope);
+    virtual RexxObject *unflatten(Envelope *);
 
     virtual HashCode hash();
     virtual HashCode getHashValue();

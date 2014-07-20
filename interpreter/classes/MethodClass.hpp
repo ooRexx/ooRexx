@@ -72,12 +72,12 @@ class MethodClass : public BaseExecutable
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(RexxEnvelope*);
+    virtual void flatten(Envelope*);
 
     void         run(RexxActivity *,  RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
     MethodClass *newScope(RexxClass  *);
     void         setScope(RexxClass  *);
-    RexxSmartBuffer  *saveMethod();
+    SmartBuffer  *saveMethod();
     RexxObject  *setUnguardedRexx();
     RexxObject  *setGuardedRexx();
     RexxObject  *setPrivateRexx();

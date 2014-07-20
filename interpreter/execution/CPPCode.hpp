@@ -89,7 +89,7 @@ public:
     inline AttributeGetterCode(RESTORETYPE restoreType) { ; };
     void live(size_t);
     void liveGeneral(MarkReason reason);
-    void flatten(RexxEnvelope*);
+    void flatten(Envelope*);
 
     void run(RexxActivity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
 
@@ -129,7 +129,7 @@ public:
     inline ConstantGetterCode(RESTORETYPE restoreType) { }
     void live(size_t);
     void liveGeneral(MarkReason reason);
-    void flatten(RexxEnvelope*);
+    void flatten(Envelope*);
 
     void run(RexxActivity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
 

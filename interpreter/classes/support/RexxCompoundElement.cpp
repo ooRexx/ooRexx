@@ -73,7 +73,7 @@ void RexxCompoundElement::liveGeneral(MarkReason reason)
     memory_mark_general(real_element);
 }
 
-void RexxCompoundElement::flatten(RexxEnvelope *envelope)
+void RexxCompoundElement::flatten(Envelope *envelope)
 /******************************************************************************/
 /* Function:  Flatten an object                                               */
 /******************************************************************************/

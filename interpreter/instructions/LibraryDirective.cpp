@@ -102,7 +102,7 @@ void LibraryDirective::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope we're flattening into.
  */
-void LibraryDirective::flatten(RexxEnvelope *envelope)
+void LibraryDirective::flatten(Envelope *envelope)
 {
     setUpFlatten(LibraryDirective)
 

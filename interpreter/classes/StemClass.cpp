@@ -86,18 +86,20 @@ StemClass::StemClass(RexxString *name)
 }
 
 
+/**
+ * Copy a stem collection object.
+ *
+ * @return A copy of the stem object.
+ */
 RexxObject *StemClass::copy()
-/******************************************************************************/
-/* Function:  Copy a stem collection object                                   */
-/******************************************************************************/
 {
-    /* make a copy of ourself (this also */
-    /* copies the object variables       */
-    StemClass *newObj = (StemClass *)this->RexxObject::copy();
-    ProtectedObject p(newObj);
-    newObj->copyFrom(tails);             /* have the tail table copy itself   */
-    return newObj;                       /* return the new object             */
+    // do the base object copy
+    Protected<StemClass> newObj = (StemClass *)RexxObject::copy();
+    // have the object copy the tail table
+    newObj->copyFrom(tails);
+    return newObj;
 }
+
 
 /**
  * Copy the tails from another stem object into this stem.
@@ -106,15 +108,20 @@ RexxObject *StemClass::copy()
  */
 void StemClass::copyFrom(RexxCompoundTable &_tails)
 {
+    // initialize the tails so that it points back to the correct parent
+    // table.
     tails.init(this);
+    // and perform the copy operation
     tails.copyFrom(_tails);
 }
 
 
+/**
+ * Generalized object marking.
+ *
+ * @param reason The reason for this live marking operation.
+ */
 void StemClass::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
     memory_mark(value);
     memory_mark(stemName);
@@ -122,10 +129,13 @@ void StemClass::live(size_t liveMark)
     markCompoundTable();
 }
 
+
+/**
+ * Generalized object marking.
+ *
+ * @param reason The reason for this live marking operation.
+ */
 void StemClass::liveGeneral(MarkReason reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
 {
     memory_mark_general(value);
     memory_mark_general(stemName);
@@ -133,39 +143,45 @@ void StemClass::liveGeneral(MarkReason reason)
     markGeneralCompoundTable();
 }
 
-void StemClass::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
+
+/**
+ * Flatten the table contents as part of a saved program.
+ *
+ * @param envelope The envelope we're flattening into.
+ */
+void StemClass::flatten(Envelope *envelope)
 {
-  setUpFlatten(StemClass)
+    setUpFlatten(StemClass)
 
-   flattenRef(value);
-   flattenRef(stemName);
-   flattenRef(objectVariables);
-   flattenCompoundTable();
+    flattenRef(value);
+    flattenRef(stemName);
+    flattenRef(objectVariables);
+    flattenCompoundTable();
 
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
-void StemClass::setValue(
-    RexxObject *_value)                 /* new variable value                */
-/******************************************************************************/
-/* Function:  Set a new stem default value                                    */
-/******************************************************************************/
+
+/**
+ * Set a new stem default value.
+ *
+ * @param _value The new value to set.
+ */
+void StemClass::setValue(RexxObject *_value)
 {
-    OrefSet(this, this->value, _value);  /* set the new value                 */
-    this->dropped = false;               /* now have an explict value         */
+    setField(value, _value);             // set the new value
+    dropped = false;                     // now have an explict value
 }
 
+
+/**
+ * Drop the stem value and revert to the default initial name.
+ */
 void StemClass::dropValue()
-/******************************************************************************/
-/* Function:  Drop a stem value -- this reinitializes it                      */
-/******************************************************************************/
 {
-    /* reset to the default value        */
-    OrefSet(this, this->value, this->stemName);
-    this->dropped = true;                /* no explict value any more         */
+    // revert back to the default stem value of the stem name.
+    setField(value, stemName);
+    dropped = true;                // we no longer have an explicit value
 }
 
 
@@ -180,42 +196,47 @@ RexxObject *StemClass::getStemValue()
 }
 
 
-RexxObject *StemClass::unknown(
-    RexxString *msgname,               /* unknown message name              */
-    ArrayClass  *arguments)             /* message arguments                 */
+/**
+ * Forward an unknown method to the default stem value.
+ *
+ * @param msgname   The message name.
+ * @param arguments The unknown arguments.
+ *
+ * @return The result of the forwarded message.
+ */
+RexxObject *StemClass::unknown(RexxString *msgname, ArrayClass  *arguments)
 /******************************************************************************/
 /* Function:  Forward an unknown message to the value of the stem.            */
 /******************************************************************************/
 {
-    /* validate the name                 */
+    // validate the arguments
     msgname = stringArgument(msgname, ARG_ONE);
-    requiredArgument(arguments, ARG_TWO);        /* need an argument array            */
-                                         /* get this as an array              */
-    arguments = (ArrayClass  *)REQUEST_ARRAY(arguments);
-    if (arguments == TheNilObject)       /* didn't convert?                   */
-    {
-        /* raise an error                    */
-        reportException(Error_Incorrect_method_noarray, IntegerTwo);
-    }
-    /* just send the message on          */
-    return this->value->sendMessage(msgname, arguments);
+    arguments = arrayArgument(arguments, ARG_TWO);
+    // send the message on to our current value object
+    return value->sendMessage(msgname, arguments);
 }
 
-RexxObject *StemClass::bracket(
-    RexxObject **tailElements,         /* tail elements                     */
-    size_t      argCount)              /* number of tail elements           */
-/******************************************************************************/
-/* Function:  Resolve the "stem.[a,b,c]" to the equivalent stem.a.b.c form,   */
-/*            with all of the indices taken as constants                      */
-/******************************************************************************/
+
+/**
+ * Perform a lookup on a stem object.
+ *
+ * @param tailElements
+ *                 The array of tail elements used to construct
+ *                 the tail.  All tail elements are constants at
+ *                 this point.
+ * @param argCount The count of tail arguments.
+ *
+ * @return The compound variable lookup value.
+ */
+RexxObject *StemClass::bracket(RexxObject **tailElements, size_t argCount)
 {
-    if (argCount == 0)                   /* default value request?            */
+    // no arguments just returns the default value
+    if (argCount == 0)
     {
-        return this->value;                /* just return the default value     */
+        return value;
     }
-                                           /* create a searchable tail from the array elements */
+    // create a searchable tail, and perform the lookup
     RexxCompoundTail resolved_tail(tailElements, argCount);
-    /* now look up this element */
     return evaluateCompoundVariableValue(OREF_NULL, stemName, &resolved_tail);
 }
 

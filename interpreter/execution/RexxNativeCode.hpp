@@ -56,7 +56,7 @@ class RexxNativeCode : public BaseCode
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(RexxEnvelope *envelope);
+    virtual void flatten(Envelope *envelope);
 
     virtual RexxSource *getSourceObject();
     virtual RexxClass *findClass(RexxString *className);
@@ -83,7 +83,7 @@ class RexxNativeMethod : public RexxNativeCode
     inline RexxNativeMethod(RexxString *p, RexxString *n, PNATIVEMETHOD e) : RexxNativeCode(p, n), entry(e) { }
 
     virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(RexxEnvelope *envelope);
+    virtual void flatten(Envelope *envelope);
 
     inline PNATIVEMETHOD getEntry() { return entry; }
 
@@ -119,7 +119,7 @@ class RexxNativeRoutine : public RexxRoutine
     inline RexxNativeRoutine(RexxString *p, RexxString *n, PNATIVEROUTINE e) : RexxRoutine(p, n), entry(e) { }
 
     virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(RexxEnvelope *envelope);
+    virtual void flatten(Envelope *envelope);
 
     inline PNATIVEROUTINE getEntry() { return entry; }
 
@@ -140,7 +140,7 @@ class RegisteredRoutine : public RexxRoutine
     inline void  operator delete(void *, void *) { ; }
 
     virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(RexxEnvelope *envelope);
+    virtual void flatten(Envelope *envelope);
 
     inline RegisteredRoutine(RESTORETYPE restoreType) { ; };
     RegisteredRoutine(RexxString *n, RexxRoutineHandler *e)  : RexxRoutine(OREF_NULL, n), entry(e) { }

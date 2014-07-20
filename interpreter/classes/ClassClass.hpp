@@ -66,7 +66,7 @@ class RexxClass : public RexxObject
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
 
-    virtual RexxObject *makeProxy(RexxEnvelope*);
+    virtual RexxObject *makeProxy(Envelope*);
     virtual bool        isEqual(RexxObject *);
 
     HashCode     hash();
@@ -83,7 +83,9 @@ class RexxClass : public RexxObject
     ArrayClass   *getSuperClasses();
     ArrayClass   *getClassSuperClasses() { return classSuperClasses; }
     ArrayClass   *getSubClasses();
-    void         defineMethods(TableClass *);
+    RexxObject   *defineMethods(TableClass *);
+    RexxObject   *inheritMethods(RexxClass *);
+
     void         setInstanceBehaviour(RexxBehaviour *);
     TableClass  *getInstanceBehaviourDictionary();
     TableClass  *getBehaviourDictionary();

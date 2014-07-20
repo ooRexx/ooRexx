@@ -74,7 +74,7 @@ class RexxInstruction : public RexxInternalObject
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(RexxEnvelope *);
+    virtual void flatten(Envelope *);
 
     virtual void execute(RexxActivation *, RexxExpressionStack *) { ; };
     // indicates whether this is a block instruction type that requires
@@ -173,7 +173,7 @@ class RexxInstructionExpression : public RexxInstruction
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(RexxEnvelope *);
+    virtual void flatten(Envelope *);
 
     RexxObject *evaluateExpression(RexxActivation *context, RexxExpressionStack *stack);
     RexxString *evaluateStringExpression(RexxActivation *context, RexxExpressionStack *stack);

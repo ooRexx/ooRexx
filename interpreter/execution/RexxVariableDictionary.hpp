@@ -61,7 +61,7 @@ class RexxVariableDictionary : public RexxInternalObject
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(RexxEnvelope *envelope);
+    virtual void flatten(Envelope *envelope);
 
     virtual RexxObject  *copy();
     virtual void         copyValues();

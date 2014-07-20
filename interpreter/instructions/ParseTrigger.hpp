@@ -73,7 +73,7 @@ class RexxTrigger : public RexxInternalObject
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(RexxEnvelope *);
+    virtual void flatten(Envelope *);
 
     stringsize_t integerTrigger(RexxActivation *context, RexxExpressionStack *stack);
     RexxString *stringTrigger(RexxActivation *context, RexxExpressionStack *stack);

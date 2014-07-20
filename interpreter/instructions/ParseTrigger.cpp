@@ -117,7 +117,7 @@ void RexxTrigger::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope that will hold the flattened object.
  */
-void RexxTrigger::flatten(RexxEnvelope *envelope)
+void RexxTrigger::flatten(Envelope *envelope)
 {
     setUpFlatten(RexxTrigger)
 

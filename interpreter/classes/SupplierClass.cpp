@@ -115,7 +115,7 @@ void SupplierClass::liveGeneral(MarkReason reason)
     memory_mark_general(objectVariables);
 }
 
-void SupplierClass::flatten(RexxEnvelope *envelope)
+void SupplierClass::flatten(Envelope *envelope)
 {
    setUpFlatten(SupplierClass)
 

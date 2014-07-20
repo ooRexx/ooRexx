@@ -95,7 +95,7 @@ void DirectoryClass::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope we're flattening into.
  */
-void DirectoryClass::flatten(RexxEnvelope *envelope)
+void DirectoryClass::flatten(Envelope *envelope)
 {
     setUpFlatten(DirectoryClass)
 

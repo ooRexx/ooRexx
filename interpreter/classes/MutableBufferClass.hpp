@@ -61,7 +61,7 @@ class MutableBuffer : public RexxObject
 
     virtual void       live(size_t);
     virtual void       liveGeneral(MarkReason reason);
-    virtual void       flatten(RexxEnvelope *envelope);
+    virtual void       flatten(Envelope *envelope);
 
     RexxObject        *copy();
     void               ensureCapacity(size_t addedLength);

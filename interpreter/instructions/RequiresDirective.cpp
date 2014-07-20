@@ -107,7 +107,7 @@ void RequiresDirective::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope we're flattening into.
  */
-void RequiresDirective::flatten(RexxEnvelope *envelope)
+void RequiresDirective::flatten(Envelope *envelope)
 {
     setUpFlatten(RequiresDirective)
 

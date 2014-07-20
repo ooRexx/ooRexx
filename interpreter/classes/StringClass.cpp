@@ -161,7 +161,7 @@ void RexxString::liveGeneral(MarkReason reason)
     memory_mark_general(objectVariables);
 }
 
-void RexxString::flatten(RexxEnvelope *envelope)
+void RexxString::flatten(Envelope *envelope)
 /******************************************************************************/
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
@@ -174,7 +174,7 @@ void RexxString::flatten(RexxEnvelope *envelope)
   cleanUpFlatten
 }
 
-RexxObject *RexxString::unflatten(RexxEnvelope *envelope)
+RexxObject *RexxString::unflatten(Envelope *envelope)
 /******************************************************************************/
 /* Function:  unflatten an object                                             */
 /******************************************************************************/

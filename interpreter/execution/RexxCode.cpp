@@ -121,7 +121,7 @@ void RexxCode::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope used for the data.
  */
-void RexxCode::flatten(RexxEnvelope * envelope)
+void RexxCode::flatten(Envelope * envelope)
 {
     setUpFlatten(RexxCode)
 

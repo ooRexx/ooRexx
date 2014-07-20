@@ -36,64 +36,55 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                             RexxEnvelope.hpp   */
+/* REXX Kernel                                                                */
 /*                                                                            */
-/* Primitive Envelope Class Definitions                                       */
+/* Primitive Expression Stack Class Definitions                               */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_RexxEnvelope
-#define Included_RexxEnvelope
 
-class RexxSmartBuffer;
-class BufferClass;
-class MapTable;
+#ifndef Included_InternalStack
+#define Included_InternalStack
 
-
-class RexxEnvelope : public RexxInternalObject
+class InternalStack : public RexxInternalObject
 {
-  public:
-    void *operator new(size_t);
-    inline void *operator new(size_t size, void *objectPtr) { return objectPtr; };
+ public:
+    inline void *operator new(size_t size, void *ptr) { return ptr; }
     inline void  operator delete(void *) { ; }
-    inline void  operator delete(void *, void *) {;}
+    inline void  operator delete(void *, void *) { ; }
 
-    RexxEnvelope() { }
-    inline RexxEnvelope(RESTORETYPE restoreType) { }
+    InternalStack() { ; }
+    inline InternalStack(RESTORETYPE restoreType) { ; }
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(Envelope *);
 
-    void flattenReference(void *, size_t, void *);
-    BufferClass *pack(RexxObject *);
-    void        puff(BufferClass *, char *, size_t length);
-    size_t queryObj(RexxObject *);
-    size_t copyBuffer(RexxObject *);
-    void   rehash();
-    char  *bufferStart();
-    void   associateObject(RexxObject *, size_t);
-    void   addTable(RexxObject *obj);
+    inline void         push(RexxObject *value) { *(++top) = value; };
+    inline RexxObject * pop() { return *(top--); };
+    inline RexxObject * fastPop() { return *(top--); };
+    inline void         replace(size_t offset, RexxObject *value) { *(top - offset) = value; };
+    inline size_t       getSize() {return size;};
+    inline RexxObject * getTop()  {return *(top);};
+    inline void         popn(size_t c) {top -= c;};
+    inline void         clear() {top = stack;};
+    inline RexxObject * peek(size_t v) {return *(top - v);};
+    inline RexxObject **pointer(size_t v) {return (top - v); };
+    inline size_t       location() {return top - stack;};
+    inline void         setTop(size_t v) {top = stack + v;};
+    inline void         toss() { top--; };
+    inline bool         isEmpty() { return top == stack; }
+    inline bool         isFull() { return top >= stack + size; }
 
-    inline RexxSmartBuffer *getBuffer() {return this->buffer;}
-    inline RexxObject *getReceiver() {return this->receiver;}
-    inline size_t      getCurrentOffset() { return this->currentOffset; }
-    inline MapTable *getDuptable() {return this->duptable;}
-    inline IdentityTable *getRehashtable() {return this->rehashtable;}
-
-    size_t      currentOffset;            // current flattening offset
-
-    // default size of the buffer used for flatten operations
-    static const size_t DefaultEnvelopeBuffer = (256*1024);
-    // default number initial dup table size (allow for a lot of objects)
-    static const size_t DefaultDupTableSize = 32 * 1024;
+    static InternalStack *newInstance(size_t s);
 
 protected:
 
-    RexxObject *home;
-    RexxObject *receiver;                 // object to receive the message
-    MapTable           *duptable;         // table of duplicates
-    IdentityTable  *savetable;        // table of protected objects created during flattening
-    RexxSmartBuffer *buffer;              // smart buffer wrapper
-    IdentityTable  *rehashtable;      // table to rehash
-    LiveStack  *flattenStack;             // the flattening stack
+    size_t size;                         // size of the expression stack
+    RexxObject **top;                    // current expression stack top position
+    RexxObject *stack[1];                // start of actual stack values
 };
+
+
+inline InternalStack *new_internalstack(size_t s) { return new (s) InternalStack(s); }
+
 #endif

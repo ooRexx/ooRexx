@@ -44,6 +44,7 @@
 #ifndef Included_ArrayClass
 #define Included_ArrayClass
 
+#include "NumberArray.hpp"
 
 /**
  * The implementation of the Rexx Array class.
@@ -150,7 +151,7 @@ class ArrayClass : public RexxObject
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(RexxEnvelope *);
+    virtual void flatten(Envelope *);
 
     virtual RexxObject *copy();
 
@@ -192,7 +193,8 @@ class ArrayClass : public RexxObject
     RexxObject  *itemsRexx();
     RexxObject  *dimensionRexx(RexxObject *);
     RexxObject  *getDimensionsRexx();
-    size_t       getDimension();
+    size_t       getDimensions() { return dimensions == OREF_NULL ? 1 : dimensions->size(); }
+    size_t       dimensionSize(size_t i) { return dimensions->get(i); }
     SupplierClass *supplier();
     RexxObject  *join(ArrayClass *);
     ArrayClass   *extend(size_t);
@@ -318,7 +320,7 @@ class ArrayClass : public RexxObject
     size_t maximumSize;                 // The allocation size of the array
     size_t lastItem;                    // location of last set element
     size_t itemCount;                   // the count of items in the array
-    ArrayClass *dimensions;             // Array containing dimensions - null if 1-dimensional
+    NumberArray *dimensions;            // Array containing dimensions - null if 1-dimensional
     ArrayClass *expansionArray;         // actual array containing data (will be self-referential originall)
     RexxInternalObject *objects[1];     // the start of the array of stored objects.
 };

@@ -68,7 +68,7 @@ void RexxHashTableCollection::liveGeneral(MarkReason reason)
     memory_mark_general(objectVariables);
 }
 
-void RexxHashTableCollection::flatten(RexxEnvelope *envelope)
+void RexxHashTableCollection::flatten(Envelope *envelope)
 /******************************************************************************/
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
@@ -81,7 +81,7 @@ void RexxHashTableCollection::flatten(RexxEnvelope *envelope)
     cleanUpFlatten
 }
 
-RexxObject *RexxHashTableCollection::unflatten(RexxEnvelope *envelope)
+RexxObject *RexxHashTableCollection::unflatten(Envelope *envelope)
 /******************************************************************************/
 /* Function:  unflatten an object                                             */
 /******************************************************************************/
@@ -90,7 +90,7 @@ RexxObject *RexxHashTableCollection::unflatten(RexxEnvelope *envelope)
   return this;
 }
 
-RexxObject *RexxHashTableCollection::makeProxy(RexxEnvelope *envelope)
+RexxObject *RexxHashTableCollection::makeProxy(Envelope *envelope)
 /******************************************************************************/
 /* Function:  Create a proxy object for a standard collection                 */
 /******************************************************************************/
@@ -100,10 +100,6 @@ RexxObject *RexxHashTableCollection::makeProxy(RexxEnvelope *envelope)
     if (this == TheEnvironment)          /* the environment directory         */
     {
         return new_proxy(CHAR_ENVIRONMENT);
-    }
-    else if (this == TheKernel)          /* the kernel directory              */
-    {
-        return new_proxy(CHAR_KERNEL);
     }
     else if (this == TheSystem)          /* the system directory              */
     {

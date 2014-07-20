@@ -103,7 +103,7 @@ void RexxInstructionTrace::liveGeneral(MarkReason reason)
  *
  * @param reason The reason for the marking call.
  */
-void RexxInstructionTrace::flatten(RexxEnvelope *envelope)
+void RexxInstructionTrace::flatten(Envelope *envelope)
 {
     setUpFlatten(RexxInstructionTrace)
 

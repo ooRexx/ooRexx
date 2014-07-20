@@ -96,7 +96,7 @@ class NumberString : public NumberStringBase
     virtual HashCode getHashValue();
     void        live(size_t);
     void        liveGeneral(MarkReason reason);
-    void        flatten(RexxEnvelope *);
+    void        flatten(Envelope *);
 
     bool         numberValue(wholenumber_t &result, size_t precision);
     bool         numberValue(wholenumber_t &result);

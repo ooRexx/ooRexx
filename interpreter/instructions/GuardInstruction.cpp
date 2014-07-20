@@ -95,7 +95,7 @@ void RexxInstructionGuard::liveGeneral(MarkReason reason)
     memory_mark_general_array(variableCount, variables);
 }
 
-void RexxInstructionGuard::flatten(RexxEnvelope *envelope)
+void RexxInstructionGuard::flatten(Envelope *envelope)
 {
     setUpFlatten(RexxInstructionGuard)
 

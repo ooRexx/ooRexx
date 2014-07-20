@@ -36,71 +36,64 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                          ClassDirective.hpp    */
+/* REXX Kernel                                                 Envelope.hpp   */
 /*                                                                            */
-/* A class definition stored in a package to manage class creation.           */
+/* Primitive Envelope Class Definitions                                       */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_ClassDirective
-#define Included_ClassDirective
+#ifndef Included_Envelope
+#define Included_Envelope
 
-#include "RexxDirective.hpp"
+class SmartBuffer;
+class BufferClass;
+class MapTable;
 
-class DirectoryClass;
-class RexxClass;
 
-class ClassDirective : public RexxDirective
+class Envelope : public RexxInternalObject
 {
- friend class RexxSource;
- public:
-           void *operator new(size_t);
-    inline void *operator new(size_t size, void *objectPtr) { return objectPtr; }
-    inline void  operator delete(void *) { }
-    inline void  operator delete(void *, void *) { }
+  public:
+    void *operator new(size_t);
+    inline void *operator new(size_t size, void *objectPtr) { return objectPtr; };
+    inline void  operator delete(void *) { ; }
+    inline void  operator delete(void *, void *) {;}
 
-    ClassDirective(RexxString *, RexxString *, RexxClause *);
-    inline ClassDirective(RESTORETYPE restoreType) { ; };
+    Envelope() { }
+    inline Envelope(RESTORETYPE restoreType) { }
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
 
-    inline RexxString *getName() { return publicName; }
-    RexxClass *install(RexxSource *source, RexxActivation *activation);
+    void flattenReference(void *, size_t, void *);
+    BufferClass *pack(RexxObject *);
+    void        puff(BufferClass *, char *, size_t length);
+    size_t queryObj(RexxObject *);
+    size_t copyBuffer(RexxObject *);
+    void   rehash();
+    char  *bufferStart();
+    void   associateObject(RexxObject *, size_t);
+    void   addTable(RexxObject *obj);
 
-    void addDependencies(DirectoryClass *class_directives);
-    void checkDependency(RexxString *name, DirectoryClass *class_directives);
-    bool dependenciesResolved();
-    void removeDependency(RexxString *name);
+    inline SmartBuffer *getBuffer() {return this->buffer;}
+    inline RexxObject *getReceiver() {return this->receiver;}
+    inline size_t      getCurrentOffset() { return this->currentOffset; }
+    inline MapTable *getDuptable() {return this->duptable;}
+    inline IdentityTable *getRehashtable() {return this->rehashtable;}
 
-    inline RexxString *getMetaClass() { return metaclassName; }
-    inline void setMetaClass(RexxString *m) { OrefSet(this, this->metaclassName, m); }
-    inline RexxString *getSubClass() { return subclassName; }
-    inline void setSubClass(RexxString *m) { OrefSet(this, this->subclassName, m); }
-    inline void setMixinClass(RexxString *m) { OrefSet(this, this->subclassName, m); mixinClass = true; }
-    inline void setPublic() { publicClass = true; }
-    void addInherits(RexxString *name);
-    void addMethod(RexxString *name, MethodClass *method, bool classMethod);
-    void addConstantMethod(RexxString *name, MethodClass *method);
-    bool checkDuplicateMethod(RexxString *name, bool classMethod);
+    size_t      currentOffset;            // current flattening offset
 
+    // default size of the buffer used for flatten operations
+    static const size_t DefaultEnvelopeBuffer = (256*1024);
+    // default number initial dup table size (allow for a lot of objects)
+    static const size_t DefaultDupTableSize = 32 * 1024;
 
 protected:
 
-    TableClass *getClassMethods();
-    TableClass *getInstanceMethods();
-
-    RexxString *publicName;         // the published name of the class
-    RexxString *idName;             // the internal ID name
-    RexxString *metaclassName;      // name of the class meta class
-    RexxString *subclassName;       // the class used for the subclassing operation.
-    ArrayClass  *inheritsClasses;    // the names of inherited classes
-    TableClass  *instanceMethods;    // the methods attached to this class
-    TableClass  *classMethods;       // the set of class methods
-    bool        publicClass;        // this is a public class
-    bool        mixinClass;         // this is a mixin class
-    DirectoryClass *dependencies;    // in-package dependencies
+    RexxObject *home;
+    RexxObject *receiver;                 // object to receive the message
+    MapTable           *duptable;         // table of duplicates
+    IdentityTable  *savetable;        // table of protected objects created during flattening
+    SmartBuffer *buffer;              // smart buffer wrapper
+    IdentityTable  *rehashtable;      // table to rehash
+    LiveStack  *flattenStack;             // the flattening stack
 };
-
 #endif
-

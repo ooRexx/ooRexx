@@ -132,7 +132,7 @@ void NumberString::liveGeneral(MarkReason reason)
     memory_mark_general(stringObject);
 }
 
-void NumberString::flatten(RexxEnvelope *envelope)
+void NumberString::flatten(Envelope *envelope)
 /******************************************************************************/
 /* Function:  Flatten an object                                               */
 /******************************************************************************/

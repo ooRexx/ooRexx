@@ -58,7 +58,7 @@ class RexxCompoundElement : public RexxVariable {
   inline RexxCompoundElement(RESTORETYPE restoreType) { ; };
   void         live(size_t);
   void         liveGeneral(MarkReason reason);
-  void         flatten(RexxEnvelope *);
+  void         flatten(Envelope *);
 
   inline RexxCompoundElement *realVariable() { return real_element != OREF_NULL ? real_element : this; }
   inline void setParent(RexxCompoundElement *parentElement) { OrefSet(this, this->parent, parentElement); }

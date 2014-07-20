@@ -138,7 +138,7 @@ void MethodClass::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope that will hold the flattened object.
  */
-void MethodClass::flatten(RexxEnvelope *envelope)
+void MethodClass::flatten(Envelope *envelope)
 {
     setUpFlatten(MethodClass)
 

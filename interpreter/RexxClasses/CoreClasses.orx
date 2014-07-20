@@ -42,20 +42,19 @@
 /*                                                                            */
 /******************************************************************************/
 
-use arg kernel_methods
+use arg systemEnvironment
                                        /* name the common objects           */
 .environment~objectname = "The Environment Directory"
-.kernel~objectname = "The kernel directory"
+systemEnvironment~objectname = "The System Directory"
 .nil~objectname = "The NIL object"
-
--- Add serialization support
-call "Serializable.orx"
 
 -- add string class constant methods
 .String~!define_class_method("NL", .methods~string_cls_nl)
 .String~!define_class_method("CR", .methods~string_cls_cr)
 .String~!define_class_method("TAB", .methods~string_cls_tab)
 .String~!define_class_method("NULL", .methods~string_cls_null)
+
+// TODO: Set these up as small classes that we can just pass to classes.
 
 set_methods = .table~new               /* get a table directory             */
                                        /* add the many item methods       */
@@ -104,56 +103,9 @@ server_mdict~put(.methods~server_init_instance, 'INITINSTANCE')
 
 server~!define_methods(server_mdict)
 server~!rexxdefined                     /* Mark as unchangeable          */
-.environment~setentry('!server', server)
-
-/* make references to .local return the local environment */
-.environment~setmethod('LOCAL',kernel_methods['LOCAL'])
-
+.systemEnvironment~setentry('!server', server)
 
 .Monitor~!REXXDefined                  /* define this as "unchangeable"     */
-.Set~define('PUT', .methods['PUT'])    /* add common methods to SET and BAG */
-.Set~define('[]=', .methods['PUT'])
-.Set~!REXXDefined
-
-.Bag~define('PUT', .methods['PUT'])
-.Bag~define('[]=', .methods['PUT'])
-.Bag~!REXXDefined
-
-.Array~inherit(.Serializable)
-array_methods = .Table~new
-array_methods~put(.methods~array_wo, "WRITEOBJECT")
-array_methods~put(.methods~array_ro, "READOBJECT")
-.Array~!define_methods(array_methods)
-
-.Directory~inherit(.Serializable)
-directory_methods = .Table~new
-directory_methods~put(.methods~directory_wo, "WRITEOBJECT")
-directory_methods~put(.methods~directory_ro, "READOBJECT")
-.Directory~!define_methods(directory_methods)
-
-mb_methods = .Table~new
-mb_methods~put(.methods~mutablebuffer_wo, "WRITEOBJECT")
-mb_methods~put(.methods~mutablebuffer_ro, "READOBJECT")
-.MutableBuffer~inherit(.Serializable)
-.MutableBuffer~!define_methods(mb_methods)
-
-.Relation~inherit(.Serializable)
-.Relation~!define_methods(directory_methods)
-
-.Table~inherit(.Serializable)
-.Table~!define_methods(directory_methods)
-
-.Stem~inherit(.Serializable)
-stem_methods = .Table~new
-stem_methods~put(.methods~stem_wo, "WRITEOBJECT")
-stem_methods~put(.methods~stem_ro, "READOBJECT")
-.Stem~!define_methods(stem_methods)
-
-.Queue~inherit(.Serializable)
-queue_methods = .Table~new
-queue_methods~put(.methods~queue_wo, "WRITEOBJECT")
-queue_methods~put(.methods~queue_ro, "READOBJECT")
-.Queue~!define_methods(queue_methods)
 
 .Alarm~!REXXDefined
 .CircularQueue~!REXXDefined
@@ -171,9 +123,6 @@ queue_methods~put(.methods~queue_ro, "READOBJECT")
 .environment~setentry('DATETIME', .DateTime)
 .environment~setentry('TIMESPAN', .TimeSpan)
 .environment~setentry('ARGUTIL', .ArgUtil)
-
-.environment~setEntry('SERIALIZABLE', .Serializable)
-.environment~setEntry('SERIALIZEFUNCTIONS', .SerializeFunctions)
 
 call 'StreamClasses.orx'
 
@@ -203,101 +152,8 @@ exit
 ::METHOD string_cls_null
  return "00"x
 
-/* Serializable support methods */
-::METHOD array_wo
-    use strict arg handler
-    handler~writeNumber(self~items)
-    do i over self
-        handler~writeObject(i)
-    end
 
-::METHOD array_ro
-    use strict arg handler
-    count = handler~readNumber
-    self[count] = .nil
-    do i = 1 to count
-        self[i] = handler~readObject
-    end
-
-::METHOD queue_wo
-    use strict arg handler
-    handler~writeNumber(self~items)
-    do i over self
-        handler~writeObject(i)
-    end
-
-::METHOD queue_ro
-    use strict arg handler
-    count = handler~readNumber
-    do i = 1 to count
-        self~append(handler~readObject)
-    end
-
-::METHOD stem_wo
-    use strict arg handler
-    handler~writeObject(self[])
-    handler~writeNumber(self~items)
-    do i over self
-        handler~writeObject(i)
-    end
-
-::METHOD stem_ro
-    use strict arg handler
-    self[] = handler~readObject
-    count = handler~readNumber
-    self[count] = .nil
-    do i = 1 to count
-        self[i] = handler~readObject
-    end
-
--- directory methods are also used for relation and table
-::METHOD directory_wo
-    use strict arg handler
-    handler~writeNumber(self~items)
-    content = self~supplier
-    do while content~available
-        handler~writeObject(content~index)
-        handler~writeObject(content~item)
-        content~next
-    end
-
-::METHOD directory_ro
-    use strict arg handler
-    count = handler~readNumber
-    do i = 1 to count
-        index = handler~readObject
-        item = handler~readObject
-        self[index] = item
-    end
-
-::METHOD mutablebuffer_wo
-    use strict arg handler
-    handler~writeObject(self~string)
-
-::METHOD mutablebuffer_ro
-    use strict arg handler
-    -- just append the string representation to the empty buffer
-    self~append(handler~readObject)
-
--- Methods cannot be serialized at the moment - later this code may be used.
-/*
-::METHOD method_wo
-    use strict arg handler
-    if Object~source~size = 0 then
-        raise syntax 93.900 array ("Unable to serialize method without source")
-    handler~writeNumber(self~isGuarded*4+self~isPrivate*2+self~isProtected)
-    handler~writeObject(self~source)
-
--- This does not work yet.
-::METHOD method_ro
-    use strict arg handler
-    m =    .Method~new('', Caller~FromSerializedData(arguments))
-    if mode~bitAnd(4) = 4 then m~setGuarded
-    if mode~bitAnd(2) = 2 then m~setPrivate
-    if mode~bitAnd(1) = 1 then m~setProtected
-    return m
-
-*/
+// TODO:  implement these in the C code...not that complicated.
 /*============================================================================*/
 /*    Additional S U P P L I E R methods                                      */
 /*============================================================================*/
@@ -1073,21 +929,6 @@ nomethod:
 
 
 ::CLASS 'SetCollection' MIXINCLASS Collection INHERIT Serializable
-::METHOD writeObject
-    use strict arg handler
-    handler~writeNumber(items)
-    do i over self
-        handler~writeObject(i)
-    end
-
-::METHOD readObject
-    use strict arg handler
-    count = handler~readNumber
-    do i = 1 to count
-        o = handler~readObject
-        self~put(o, o)
-    end
-
 
 -- sort comparison classes.
 ::CLASS 'Comparable' MIXINCLASS Object

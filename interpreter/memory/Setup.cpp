@@ -62,7 +62,7 @@
 #include "SupplierClass.hpp"
 #include "MethodClass.hpp"
 #include "RoutineClass.hpp"
-#include "RexxEnvelope.hpp"
+#include "Envelope.hpp"
 #include "MessageClass.hpp"
 #include "StemClass.hpp"
 #include "RexxMisc.hpp"
@@ -136,6 +136,30 @@ void MemoryObject::definePrivateKernelMethod(const char *name, RexxBehaviour * b
     MethodClass *method = behaviour->define(name, entryPoint, arguments);
     // mark the method as private
     method->setPrivate();
+}
+
+
+/**
+ * Add a object to the environment using the provided name.
+ *
+ * @param name   The name of the new environment entry.
+ * @param value  The value added.
+ */
+void MemoryObject::addToEnvironment(const char *name, RexxInternalObject *value);
+{
+    TheEnvironment->put(getUpperGlobalName(name), object);
+}
+
+
+/**
+ * Add a object to the kernel directory using the provided name.
+ *
+ * @param name   The name of the new environment entry.
+ * @param value  The value added.
+ */
+void MemoryObject::addToKernel(const char *name, RexxInternalObject *value);
+{
+    TheSystem->put(getUpperGlobalName(name), object);
 }
 
 
@@ -221,11 +245,9 @@ void MemoryObject::createImage()
     TheEnvironment = new_directory();
 
     // add kernel and system directories, and mark all of these as proxied objects.
-    TheKernel = new_directory();
-    TheSystem = new_directory();
+    TheSystem = new_string_table();
 
     TheEnvironment->makeProxiedObject();
-    TheKernel->makeProxiedObject();
     TheSystem->makeProxiedObject();
 
     // create more of the exported classes
@@ -301,8 +323,11 @@ void MemoryObject::createImage()
 // finalize a class definition where a class is subclassed from something other than object.
 #define CompleteSubclassedClassDefinition(name, subclass) The##name##Class->buildFinalClassBehaviour(The##subclass##Class);
 
-// just close off the block created by StartClassDefinition...the name is just a convenient marker
-#define EndClassDefinition(name) }
+// Add the created class object to the environment under its name and close
+// the local variable scope
+#define EndClassDefinition(name) \
+    addToEnvironment(#name, currentClass); \
+}
 
 
 // CLASS and OBJECT get some special treatment.  The process of building the final behaviour
@@ -328,6 +353,7 @@ StartClassDefinition(Class);
         AddProtectedMethod(CHAR_DEFINE, RexxClass::defineMethod, 2);
         AddProtectedMethod(CHAR_DEFINE_METHODS, RexxClass::defineMethods, 1);
         AddProtectedMethod("!DEFINE_CLASS_METHOD", RexxClass::defineClassMethod, 2);
+        AddProtectedMethod("INHERITINSTANCEMETHODS", RexxClass::inheritInstanceMethods, 1)
         AddProtectedMethod(CHAR_DELETE, RexxClass::deleteMethod, 1);
         AddMethod(CHAR_ENHANCED, RexxClass::enhanced, A_COUNT);
         AddMethod(CHAR_ID, RexxClass::getId, 0);
@@ -1368,64 +1394,32 @@ StartClassDefinition(StackFrame)
 
 EndClassDefinition(StackFrame);
 
-
     /***************************************************************************/
     /***************************************************************************/
     /***************************************************************************/
-      /* These classes don't have any class methods                            */
-      /*  and are not subclassed from object                                   */
 
-#define kernel_public(name, object, dir)  ((DirectoryClass *)dir)->setEntry(getGlobalName(name), (RexxObject *)object)
+    // now add entries to the environment
+    addToEnvironment(CHAR_ENVIRONMENT, TheEnvironment);
+    addToEnvironment(CHAR_NIL ,TheNilObject);
+    addToEnvironment(CHAR_FALSE, TheFalseObject, TheEnvironment);
+    addToEnvironment(CHAR_TRUE, TheTrueObject, TheEnvironment);
 
-    /* put the kernel-provided public objects in the environment directory */
-    kernel_public(CHAR_ARRAY            ,TheArrayClass   ,TheEnvironment);
-    kernel_public(CHAR_CLASS            ,TheClassClass   ,TheEnvironment);
-    kernel_public(CHAR_DIRECTORY        ,TheDirectoryClass ,TheEnvironment);
-    kernel_public(CHAR_LIST             ,TheListClass    ,TheEnvironment);
-    kernel_public(CHAR_MESSAGE          ,TheMessageClass ,TheEnvironment);
-    kernel_public(CHAR_METHOD           ,TheMethodClass  ,TheEnvironment);
-    kernel_public(CHAR_ROUTINE          ,TheRoutineClass ,TheEnvironment);
-    kernel_public(CHAR_PACKAGE          ,ThePackageClass ,TheEnvironment);
-    kernel_public(CHAR_REXXCONTEXT      ,TheRexxContextClass ,TheEnvironment);
-    kernel_public(CHAR_NIL              ,TheNilObject    ,TheEnvironment);
-    kernel_public(CHAR_OBJECT           ,TheObjectClass  ,TheEnvironment);
-    kernel_public(CHAR_QUEUE            ,TheQueueClass   ,TheEnvironment);
-    kernel_public(CHAR_RELATION         ,TheRelationClass,TheEnvironment);
-    kernel_public(CHAR_STRING           ,TheStringClass  ,TheEnvironment);
-    kernel_public(CHAR_MUTABLEBUFFER    ,TheMutableBufferClass  ,TheEnvironment);
-    kernel_public(CHAR_STEM             ,TheStemClass    ,TheEnvironment);
-    kernel_public(CHAR_SUPPLIER         ,TheSupplierClass,TheEnvironment);
-    kernel_public(CHAR_SYSTEM           ,TheSystem       ,TheEnvironment);
-    kernel_public(CHAR_TABLE            ,TheTableClass   ,TheEnvironment);
-    kernel_public(CHAR_IDENTITYTABLE    ,TheIdentityTableClass,TheEnvironment);
-    kernel_public(CHAR_POINTER          ,ThePointerClass ,TheEnvironment);
-    kernel_public(CHAR_BUFFER           ,TheBufferClass  ,TheEnvironment);
-    kernel_public(CHAR_WEAKREFERENCE    ,TheWeakReferenceClass  ,TheEnvironment);
-    kernel_public("STACKFRAME"          ,TheStackFrameClass  ,TheEnvironment);
+    // TODO:  Make sure INTEGER and NUMBERSTRING are removed from the environment.
 
-    kernel_public(CHAR_ENVIRONMENT      ,TheEnvironment  ,TheEnvironment);
-    kernel_public(CHAR_FALSE            ,TheFalseObject  ,TheEnvironment);
-    kernel_public(CHAR_KERNEL           ,TheKernel       ,TheEnvironment);
-    kernel_public(CHAR_TRUE             ,TheTrueObject   ,TheEnvironment);
+    // set up the kernel directory
+    addToSystem(CHAR_INTEGER, TheIntegerClass);
+    addToSystem(CHAR_NUMBERSTRING, TheNumberStringClass);
 
-    /* set up the kernel directory (MEMORY done elsewhere) */
-    kernel_public(CHAR_INTEGER          ,TheIntegerClass     , TheKernel);
-    kernel_public(CHAR_NUMBERSTRING     ,TheNumberStringClass, TheKernel);
+    addToSystem(CHAR_NULLARRAY, TheNullArray);
+    addToSystem(CHAR_NULLPOINTER, TheNullPointer);
+    addToSystem(CHAR_COMMON_RETRIEVERS, TheCommonRetrievers);
+    addToSystem(CHAR_ENVIRONMENT, TheEnvironment);
+    addToSystem(CHAR_FUNCTIONS, TheFunctionsDirectory);
 
-    kernel_public(CHAR_NULLARRAY        ,TheNullArray           ,TheKernel);
-    kernel_public(CHAR_NULLPOINTER      ,TheNullPointer         ,TheKernel);
-    kernel_public(CHAR_COMMON_RETRIEVERS,TheCommonRetrievers    ,TheKernel);
-    kernel_public(CHAR_ENVIRONMENT      ,TheEnvironment         ,TheKernel);
-    kernel_public(CHAR_FUNCTIONS        ,TheFunctionsDirectory  ,TheKernel);
-
-                                         /* set Oryx version                  */
-    kernel_public(CHAR_VERSION, Interpreter::getVersionNumber(), TheKernel);
-                                         /* set the system name               */
-    kernel_public(CHAR_NAME, SystemInterpreter::getSystemName(), TheSystem);
-                                         /* set the internal system name      */
-    kernel_public(CHAR_INTERNALNAME, SystemInterpreter::getInternalSystemName(), TheSystem);
-                                         /* and the system version info       */
-    kernel_public(CHAR_VERSION, SystemInterpreter::getSystemVersion(), TheSystem);
+    addToSystem(CHAR_VERSION, Interpreter::getVersionNumber());
+    addToSystem(CHAR_NAME, SystemInterpreter::getSystemName());
+    addToSystem(CHAR_INTERNALNAME, SystemInterpreter::getInternalSystemName());
+    addToSystem(CHAR_VERSION, SystemInterpreter::getSystemVersion());
     // initialize our thread vector for external calls.
     RexxActivity::initializeThreadContext();
 
@@ -1437,10 +1431,12 @@ EndClassDefinition(StackFrame);
   // set up the kernel methods that will be defined on OBJECT classes in
   // CoreClasses.orx
   {
-                                           /* create a kernel methods directory */
-      DirectoryClass *kernel_methods = new_directory();
-      ProtectedObject p1(kernel_methods);   // protect from GC
-      kernel_methods->put(new MethodClass(getGlobalName(CHAR_LOCAL), CPPCode::resolveExportedMethod(CHAR_LOCAL, CPPM(RexxLocal::local), 0)), getGlobalName(CHAR_LOCAL));
+      // create a method used to retrieve the .Local environment.  We set this on the
+      // .Environment directory.
+      Protected<MethodClass> localMethod = new MethodClass(getGlobalName(CHAR_LOCAL), CPPCode::resolveExportedMethod(CHAR_LOCAL, CPPM(RexxLocal::local), 0));
+
+      // add this to the environment directory.
+      TheEnvironment->setMethodRexx(getGlobalName(CHAR_LOCAL), localMethod);
 
                                            /* create the BaseClasses method and run it*/
       RexxString *symb = getGlobalName(BASEIMAGELOAD);   /* get a name version of the string  */
@@ -1453,7 +1449,8 @@ EndClassDefinition(StackFrame);
           // create an executable object for this.
           Protected<RoutineClass> loader = LanguageParser::createProgram(programName);
 
-          RexxObject *args = kernel_methods;   // temporary to avoid type-punning warnings
+          // we pass TheSystem as an argument to the core classes.
+          RexxObject *args = TheSystem;
           ProtectedObject result;
           // now create the core program objects.
           loader->runProgram(ActivityManager::currentActivity, OREF_PROGRAM, OREF_NULL, (RexxObject **)&args, 1, result);
@@ -1467,9 +1464,9 @@ EndClassDefinition(StackFrame);
   }
 
   /* define and suppress methods in the nil object */
-  TheNilObject->defMethod(getGlobalName(CHAR_COPY), (MethodClass *)TheNilObject);
-  TheNilObject->defMethod(getGlobalName(CHAR_START), (MethodClass *)TheNilObject);
-  TheNilObject->defMethod(getGlobalName(CHAR_OBJECTNAMEEQUALS), (MethodClass *)TheNilObject);
+  TheNilObject->defineMethod(getGlobalName(CHAR_COPY), (MethodClass *)TheNilObject);
+  TheNilObject->defineMethod(getGlobalName(CHAR_START), (MethodClass *)TheNilObject);
+  TheNilObject->defineMethod(getGlobalName(CHAR_OBJECTNAMEEQUALS), (MethodClass *)TheNilObject);
 
   // ok, .NIL has been constructed.  As a last step before saving the image, we need to change
   // the type identifier in the behaviour so that this will get the correct virtual function table
@@ -1492,6 +1489,9 @@ EndClassDefinition(StackFrame);
   TheTableClass->inherit(map, OREF_NULL);
   TheTableClass->setRexxDefined();
 
+  TheStringTableClass->inherit(map, OREF_NULL);
+  TheStringTableClass->setRexxDefined();
+
   TheIdentityTableClass->inherit(map, OREF_NULL);
   TheIdentityTableClass->setRexxDefined();
 
@@ -1504,6 +1504,9 @@ EndClassDefinition(StackFrame);
   TheStemClass->inherit(map, OREF_NULL);
   TheStemClass->setRexxDefined();
 
+  // TODO:  Add Set and Bag class processing here.
+
+
   RexxClass *comparable = (RexxClass *)TheEnvironment->get(getGlobalName(CHAR_COMPARABLE));
 
   TheStringClass->inherit(comparable, OREF_NULL);
@@ -1514,6 +1517,7 @@ EndClassDefinition(StackFrame);
   TheObjectClass->removeClassMethod(new_string(CHAR_DEFINE_METHODS));
   TheObjectClass->removeClassMethod(new_string(CHAR_SHRIEKREXXDEFINED));
   TheObjectClass->removeClassMethod(new_string("!DEFINE_CLASS_METHOD"));
+  TheObjectClass->removeClassMethod(new_string("INHERITINSTANCEMETHODS"));
 
   // now save the image
   memoryObject.saveImage();

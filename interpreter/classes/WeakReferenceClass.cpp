@@ -126,7 +126,7 @@ void WeakReference::liveGeneral(MarkReason reason)
     }
 }
 
-void WeakReference::flatten(RexxEnvelope *envelope)
+void WeakReference::flatten(Envelope *envelope)
 /******************************************************************************/
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
@@ -142,7 +142,7 @@ void WeakReference::flatten(RexxEnvelope *envelope)
     cleanUpFlatten
 }
 
-RexxObject *WeakReference::unflatten(RexxEnvelope *envelope)
+RexxObject *WeakReference::unflatten(Envelope *envelope)
 /******************************************************************************/
 /* Function:  unflatten an object                                             */
 /******************************************************************************/

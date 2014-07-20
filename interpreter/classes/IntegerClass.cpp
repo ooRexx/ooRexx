@@ -109,7 +109,7 @@ void RexxInteger::liveGeneral(MarkReason reason)
     memory_mark_general(stringrep);
 }
 
-void RexxInteger::flatten(RexxEnvelope *envelope)
+void RexxInteger::flatten(Envelope *envelope)
 /******************************************************************************/
 /* Function:  Flatten an object                                               */
 /******************************************************************************/

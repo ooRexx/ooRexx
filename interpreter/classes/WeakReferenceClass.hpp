@@ -66,8 +66,8 @@ public:
 
     void        live(size_t);
     void        liveGeneral(MarkReason);
-    void        flatten(RexxEnvelope *);
-    RexxObject *unflatten(RexxEnvelope *);
+    void        flatten(Envelope *);
+    RexxObject *unflatten(Envelope *);
 
     RexxObject *value();
     inline RexxObject *get() { return referentObject; }

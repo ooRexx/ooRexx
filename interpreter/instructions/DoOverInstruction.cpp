@@ -101,7 +101,7 @@ void RexxInstructionDoOver::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope that will hold the flattened object.
  */
-void RexxInstructionDoOver::flatten(RexxEnvelope *envelope)
+void RexxInstructionDoOver::flatten(Envelope *envelope)
 {
     setUpFlatten(RexxInstructionDoOver)
 
@@ -213,7 +213,7 @@ void RexxInstructionDoOverUntil::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope that will hold the flattened object.
  */
-void RexxInstructionDoOverUntil::flatten(RexxEnvelope *envelope)
+void RexxInstructionDoOverUntil::flatten(Envelope *envelope)
 {
     setUpFlatten(RexxInstructionDoOverUntil)
 

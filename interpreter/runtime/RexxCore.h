@@ -191,7 +191,6 @@ EXTERNMEM MemoryObject memoryObject;
 #define TheEnvironment memoryObject.environment
 #define TheCommonRetrievers memoryObject.commonRetrievers
 #define TheFunctionsDirectory memoryObject.functionsDir
-#define TheKernel memoryObject.kernel
 #define TheSystem memoryObject.system
 
 #define TheNilObject RexxNilObject::nilObject
@@ -230,7 +229,7 @@ EXTERNMEM MemoryObject memoryObject;
 #include "RexxMemory.hpp"                // memory next, to get OrefSet
 #include "RexxBehaviour.hpp"             // now behaviours and
 #include "ClassClass.hpp"                // classes, which everything needs
-#include "RexxEnvelope.hpp"              // envelope is needed for flattens
+#include "Envelope.hpp"              // envelope is needed for flattens
 
 /******************************************************************************/
 /* Return codes                                                               */

@@ -73,7 +73,7 @@ class MessageClass : public RexxObject
 
     virtual void  live(size_t);
     virtual void  liveGeneral(MarkReason reason);
-    virtual void  flatten(RexxEnvelope *);
+    virtual void  flatten(Envelope *);
 
     RexxObject   *notify(MessageClass *);
     RexxObject   *result();

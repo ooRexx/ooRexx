@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                             RexxEnvelope.cpp   */
+/* REXX Kernel                                                 Envelope.cpp   */
 /*                                                                            */
 /* Primitive Envelope Class                                                   */
 /*                                                                            */
@@ -46,9 +46,9 @@
 #include "MemoryStack.hpp"
 #include "StringClass.hpp"
 #include "BufferClass.hpp"
-#include "RexxSmartBuffer.hpp"
+#include "SmartBuffer.hpp"
 #include "ArrayClass.hpp"
-#include "RexxEnvelope.hpp"
+#include "Envelope.hpp"
 #include "MethodClass.hpp"
 #include "ActivityManager.hpp"
 #include "MapTable.hpp"
@@ -61,9 +61,9 @@
  *
  * @return Storage for an object.
  */
-void *RexxEnvelope::operator new(size_t size)
+void *Envelope::operator new(size_t size)
 {
-    return new_object(sizeof(RexxEnvelope), T_Envelope);
+    return new_object(sizeof(Envelope), T_Envelope);
 }
 
 
@@ -72,7 +72,7 @@ void *RexxEnvelope::operator new(size_t size)
  *
  * @param liveMark The current live mark.
  */
-void RexxEnvelope::live(size_t liveMark)
+void Envelope::live(size_t liveMark)
 {
     memory_mark(home);
     memory_mark(receiver);
@@ -91,7 +91,7 @@ void RexxEnvelope::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void RexxEnvelope::liveGeneral(MarkReason reason)
+void Envelope::liveGeneral(MarkReason reason)
 {
     memory_mark_general(home);
     memory_mark_general(receiver);
@@ -116,7 +116,7 @@ void RexxEnvelope::liveGeneral(MarkReason reason)
  * @param objRefVoid The pointer to the reference getting marked
  *                   (will also get updated)
  */
-void RexxEnvelope::flattenReference(void *newThisVoid, size_t newSelf, void *objRefVoid)
+void Envelope::flattenReference(void *newThisVoid, size_t newSelf, void *objRefVoid)
 {
     RexxObject **newThis = (RexxObject **)newThisVoid;
     RexxObject **objRef  = (RexxObject **)objRefVoid;
@@ -186,7 +186,7 @@ void RexxEnvelope::flattenReference(void *newThisVoid, size_t newSelf, void *obj
  *
  * @return The buffer containing the flattened object.
  */
-BufferClass *RexxEnvelope::pack(RexxObject *_receiver)
+BufferClass *Envelope::pack(RexxObject *_receiver)
 {
     RexxObject *flattenObj;              /* flattened object                  */
     RexxObject *newSelf;                 /* the flattened envelope            */
@@ -200,7 +200,7 @@ BufferClass *RexxEnvelope::pack(RexxObject *_receiver)
     // objects) we create during flattening.
     savetable = new_identity_table();
     duptable = new MapTable(DefaultDupTableSize);
-    buffer = new RexxSmartBuffer(DefaultEnvelopeBuffer);
+    buffer = new SmartBuffer(DefaultEnvelopeBuffer);
     // Allocate a flatten stack
     flattenStack = new (Memory::LiveStackSize, true) LiveStack (Memory::LiveStackSize);
     // we need to mark the flatten stack to protect it from GC, but we're
@@ -258,7 +258,7 @@ BufferClass *RexxEnvelope::pack(RexxObject *_receiver)
  *                   The starting data location in the buffer.
  * @param dataLength The length of the data to unflatten
  */
-void RexxEnvelope::puff(BufferClass *sourceBuffer, char *startPointer, size_t dataLength)
+void Envelope::puff(BufferClass *sourceBuffer, char *startPointer, size_t dataLength)
 {
     // this will mark the last object of our range
     RexxObject *lastObject = sourceBuffer->nextObject();
@@ -284,7 +284,7 @@ void RexxEnvelope::puff(BufferClass *sourceBuffer, char *startPointer, size_t da
  *
  * @return The offset to the object if it is in the table.
  */
-size_t RexxEnvelope::queryObj(RexxObject *obj)
+size_t Envelope::queryObj(RexxObject *obj)
 {
     return duptable->get(obj);
 }
@@ -297,7 +297,7 @@ size_t RexxEnvelope::queryObj(RexxObject *obj)
  *
  * @return The offset of the object within the buffer.
  */
-size_t RexxEnvelope::copyBuffer(RexxObject *obj)
+size_t Envelope::copyBuffer(RexxObject *obj)
 {
     // copy the object into the buffer, which might cause the buffer to
     // resize itself.
@@ -334,7 +334,7 @@ size_t RexxEnvelope::copyBuffer(RexxObject *obj)
 /**
  * Rehash flattened tables
  */
-void  RexxEnvelope::rehash()
+void  Envelope::rehash()
 {
     // do we actually have anything here?
     if (rehashtable != OREF_NULL)
@@ -354,7 +354,7 @@ void  RexxEnvelope::rehash()
  *
  * @return The pointer to the start of the buffer data.
  */
-char *RexxEnvelope::bufferStart()
+char *Envelope::bufferStart()
 {
     return buffer->getBuffer()->getData();
 }
@@ -367,7 +367,7 @@ char *RexxEnvelope::bufferStart()
  * @param flattenOffset
  *               The associated offset.
  */
-void  RexxEnvelope::associateObject(RexxObject *o, size_t flattenOffset)
+void  Envelope::associateObject(RexxObject *o, size_t flattenOffset)
 {
     // we just add this to the duptable under the original object
     // reference value.
@@ -380,7 +380,7 @@ void  RexxEnvelope::associateObject(RexxObject *o, size_t flattenOffset)
  *
  * @param obj    The object requiring a rehash.
  */
-void RexxEnvelope::addTable(RexxObject *obj)
+void Envelope::addTable(RexxObject *obj)
 {
     // The following table will be used by the table_unflatten method.
     //

@@ -59,9 +59,9 @@ class HashCollection : public RexxObject
 
     virtual void        live(size_t);
     virtual void        liveGeneral(MarkReason reason);
-    virtual void        flatten(RexxEnvelope *);
+    virtual void        flatten(Envelope *);
 
-    virtual RexxObject *unflatten(RexxEnvelope *);
+    virtual RexxObject *unflatten(Envelope *);
     virtual RexxObject *copy();
     virtual ArrayClass  *makeArray();
 

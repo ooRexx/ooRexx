@@ -109,7 +109,7 @@ void ClassDirective::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope we're flattening into.
  */
-void ClassDirective::flatten(RexxEnvelope *envelope)
+void ClassDirective::flatten(Envelope *envelope)
 {
     setUpFlatten(ClassDirective)
 

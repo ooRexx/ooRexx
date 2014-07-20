@@ -194,7 +194,7 @@ void HashContents::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope we're flattening into.
  */
-void HashContents::flatten(RexxEnvelope *envelope)
+void HashContents::flatten(Envelope *envelope)
 {
     setUpFlatten(HashContents)
     for (size_t i = 0; i < totalSize; i++)

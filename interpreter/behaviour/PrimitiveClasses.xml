@@ -116,9 +116,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="ConstantGetterCode" class="ConstantGetterCode" include="CPPCode.hpp"/>
 <Class id="AbstractCode" class="AbstractCode" include="CPPCode.hpp"/>
 
-<Class id="HashTable" class="RexxHashTable" include="RexxHashTable.hpp"/>
-<Class id="ListTable" class="RexxListTable" include="RexxListTable.hpp"/>
-<Class id="SmartBuffer" class="RexxSmartBuffer" include="RexxSmartBuffer.hpp"/>
+<Class id="SmartBuffer" class="SmartBuffer" include="SmartBuffer.hpp"/>
 <Class id="IdentityHashContents" class="IdentityHashContents" include="HashContents.hpp"/>
 <Class id="EqualityHashContents" class="EqualityHashContents" include="HashContents.hpp"/>
 
@@ -199,17 +197,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="ArrayProgramSource" class="ArrayProgramSource" include="ProgramSource.hpp"/>
 <Class id="BufferProgramSource" class="BufferProgramSource" include="ProgramSource.hpp"/>
 <Class id="FileProgramSource" class="FileProgramSource" include="ProgramSource.hpp"/>
+<Class id="NumberArray" class="NumberArray" include="NumberArray.hpp"/>
 </Internal>
 <Transient>
 <Class id="Memory" class="RexxMemory" include="RexxMemory.hpp" objectvirtual="true"/>
-<Class id="InternalStack" class="RexxInternalStack" include="RexxInternalStack.hpp"/>
+<Class id="InternalStack" class="InternalStack" include="InternalStack.hpp"/>
 <Class id="LiveStack" class="LiveStack" include="MemoryStack.hpp"/>
 <Class id="PushThroughStack" class="PushThroughStack" include="MemoryStack.hpp"/>
 <Class id="Activity" class="RexxActivity" include="RexxActivity.hpp"/>
 <Class id="Activation" class="RexxActivation" include="RexxActivation.hpp"/>
 <Class id="NativeActivation" class="RexxNativeActivation" include="RexxNativeActivation.hpp"/>
 <Class id="ActivationFrameBuffer" class="RexxActivationFrameBuffer" include="RexxActivationStack.hpp"/>
-<Class id="Envelope" class="RexxEnvelope" include="RexxEnvelope.hpp"/>
+<Class id="Envelope" class="Envelope" include="Envelope.hpp"/>
 <Class id="LanguageParser" class="LanguageParser" include="LanguageParser.hpp"/>
 <Class id="Clause" class="RexxClause" include="Clause.hpp"/>
 <Class id="Token" class="RexxToken" include="Token.hpp"/>

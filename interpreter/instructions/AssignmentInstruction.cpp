@@ -87,7 +87,7 @@ void RexxInstructionAssignment::liveGeneral(MarkReason reason)
  *
  * @param liveMark The current live mark.
  */
-void RexxInstructionAssignment::flatten(RexxEnvelope *envelope)
+void RexxInstructionAssignment::flatten(Envelope *envelope)
 {
     setUpFlatten(RexxInstructionAssignment)
 

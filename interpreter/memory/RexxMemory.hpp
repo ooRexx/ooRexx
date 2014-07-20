@@ -160,7 +160,7 @@ class MemoryObject : public RexxInternalObject
     bool        isPendingUninit(RexxObject *obj);
     inline void checkUninitQueue() { if (pendingUninits > 0) runUninits(); }
     RexxObject *unflattenObjectBuffer(BufferClass *sourceBuffer, char *startPointer, size_t dataLength);
-    void        unflattenProxyObjects(RexxEnvelope *envelope, RexxObject *firstObject, RexxObject *endObject);
+    void        unflattenProxyObjects(Envelope *envelope, RexxObject *firstObject, RexxObject *endObject);
 
     void        markObjects();
     void        markObjectsMain(RexxObject *);
@@ -171,7 +171,7 @@ class MemoryObject : public RexxInternalObject
     inline void removeHold(RexxInternalObject *obj) { saveStack->remove((RexxObject *)obj); }
     RexxObject *holdObject(RexxInternalObject *obj);
     void        saveImage();
-    void        setEnvelope(RexxEnvelope *);
+    void        setEnvelope(Envelope *);
     void        setOref(RexxInternalObject *variable, RexxInternalObject *value);
     void        memoryPoolAdded(MemorySegmentPool *);
     void        shutdown();
@@ -216,6 +216,7 @@ class MemoryObject : public RexxInternalObject
     void create();
     void createImage();
     RexxString *getGlobalName(const char *value);
+    RexxString *getUpperGlobalName(const char *value);
     void createStrings();
     ArrayClass *saveStrings();
     void restoreStrings(ArrayClass *stringArray);
@@ -259,7 +260,7 @@ private:
 enum
 {
     saveArray_ENV = 1,
-    saveArray_KERNEL,
+    saveArray_SYSTEM,
     saveArray_NAME_STRINGS,
     saveArray_TRUE,
     saveArray_FALSE,
@@ -270,7 +271,6 @@ enum
     saveArray_PACKAGES,
     saveArray_NULLA,
     saveArray_NULLPOINTER,
-    saveArray_SYSTEM,
     saveArray_FUNCTIONS,
     saveArray_COMMON_RETRIEVERS,
     saveArray_highest = saveArray_COMMON_RETRIEVERS
@@ -373,7 +373,7 @@ public:
 class EnvelopeMarkHandler : public MarkHandler
 {
 public:
-    EnvelopeMarkHandler(RexxEnvelope *e) : envelope(e) { }
+    EnvelopeMarkHandler(Envelope *e) : envelope(e) { }
 
     // pure virtual method for handling the mark operation.
     virtual void mark(RexxObject * *field, RexxObject *object)
@@ -382,7 +382,7 @@ public:
         *field = object->unflatten(envelope);
     }
 
-    RexxEnvelope *envelope;
+    Envelope *envelope;
 };
 
 

@@ -107,7 +107,7 @@ void RexxInstructionSelect::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope that will hold the flattened object.
  */
-void RexxInstructionSelect::flatten(RexxEnvelope *envelope)
+void RexxInstructionSelect::flatten(Envelope *envelope)
 {
     setUpFlatten(RexxInstructionSelect)
 
@@ -327,7 +327,7 @@ void RexxInstructionSelectCase::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope that will hold the flattened object.
  */
-void RexxInstructionSelectCase::flatten(RexxEnvelope *envelope)
+void RexxInstructionSelectCase::flatten(Envelope *envelope)
 {
     setUpFlatten(RexxInstructionSelectCase)
 

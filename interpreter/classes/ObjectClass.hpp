@@ -52,9 +52,8 @@ class RexxInteger;
 class RexxBehaviour;
 class RexxCompoundTail;
 class RexxCompoundElement;
-class RexxInternalStack;
 class SupplierClass;
-class RexxEnvelope;
+class Envelope;
 class RexxVariableDictionary;
 class NumberString;
 class MethodClass;
@@ -186,8 +185,8 @@ class RexxVirtualBase
     // are defined at this level.
     virtual void         live(size_t) {;}
     virtual void         liveGeneral(MarkReason reason) {;}
-    virtual void         flatten(RexxEnvelope *) {;}
-    virtual RexxObject  *unflatten(RexxEnvelope *) { return (RexxObject *)this; };
+    virtual void         flatten(Envelope *) {;}
+    virtual RexxObject  *unflatten(Envelope *) { return (RexxObject *)this; };
 };
 
 class RexxObject;
@@ -301,7 +300,7 @@ class RexxInternalObject : public RexxVirtualBase
     inline bool   isSameType(RexxInternalObject *o) { return behaviour == o->getObjectType(); }
     inline void   setBehaviour(RexxBehaviour *b) { behaviour = b; }
 
-    virtual RexxObject  *makeProxy(RexxEnvelope *);
+    virtual RexxObject  *makeProxy(Envelope *);
     virtual RexxObject  *copy();
     virtual RexxObject  *evaluate(RexxActivation *, RexxExpressionStack *) { return OREF_NULL; }
     virtual RexxObject  *getValue(RexxActivation *) { return OREF_NULL; }
@@ -441,7 +440,7 @@ class RexxObject : public RexxInternalObject
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(RexxEnvelope *);
+    virtual void flatten(Envelope *);
 
     RexxObject  *copy();
     HashCode     hash();

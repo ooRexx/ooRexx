@@ -67,7 +67,7 @@ class RexxCompoundVariable : public RexxVariableBase
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(RexxEnvelope *);
+    virtual void flatten(Envelope *);
 
     // evaluation method from RexxInternalObject
     virtual RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);

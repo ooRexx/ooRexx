@@ -55,7 +55,7 @@ class RexxExpressionOperator : public RexxInternalObject
     inline RexxExpressionOperator(RESTORETYPE restoreType) { ; };
     virtual void   live(size_t);
     virtual void   liveGeneral(MarkReason reason);
-    virtual void   flatten(RexxEnvelope *);
+    virtual void   flatten(Envelope *);
 
     inline const char *operatorName() { return operatorNames[oper]; }
 

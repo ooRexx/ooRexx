@@ -101,7 +101,7 @@ void RexxInstructionDoWhile::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope that will hold the flattened object.
  */
-void RexxInstructionDoWhile::flatten(RexxEnvelope *envelope)
+void RexxInstructionDoWhile::flatten(Envelope *envelope)
 {
     setUpFlatten(RexxInstructionDoWhile)
 

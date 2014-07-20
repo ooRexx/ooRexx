@@ -107,7 +107,7 @@ void RexxExpressionLogical::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope were's flattening into.
  */
-void RexxExpressionLogical::flatten(RexxEnvelope *envelope)
+void RexxExpressionLogical::flatten(Envelope *envelope)
 {
     setUpFlatten(RexxExpressionLogical)
 

@@ -105,7 +105,7 @@ void RexxInstructionForward::liveGeneral(MarkReason reason)
     memory_mark_general(array);
 }
 
-void RexxInstructionForward::flatten(RexxEnvelope *envelope)
+void RexxInstructionForward::flatten(Envelope *envelope)
 {
     setUpFlatten(RexxInstructionForward)
 

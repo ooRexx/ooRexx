@@ -93,7 +93,7 @@ void RexxInstructionEnd::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope that will hold the flattened object.
  */
-void RexxInstructionEnd::flatten(RexxEnvelope *envelope)
+void RexxInstructionEnd::flatten(Envelope *envelope)
 {
     setUpFlatten(RexxInstructionEnd)
 

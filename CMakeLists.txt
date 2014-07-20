@@ -541,10 +541,11 @@ set (memory_sources ${build_memory_dir}/DeadObject.cpp
             ${build_memory_dir}/MemorySegment.cpp
             ${build_memory_dir}/MemoryStack.cpp
             ${build_memory_dir}/MemoryStats.cpp
+            ${build_memory_dir}/NumberArray.cpp
             ${build_memory_dir}/ProtectedObject.cpp
-            ${build_memory_dir}/RexxEnvelope.cpp
-            ${build_memory_dir}/RexxInternalStack.cpp
-            ${build_memory_dir}/RexxSmartBuffer.cpp
+            ${build_memory_dir}/Envelope.cpp
+            ${build_memory_dir}/InternalStack.cpp
+            ${build_memory_dir}/SmartBuffer.cpp
             ${build_memory_dir}/UninitDispatcher.cpp
             ${build_memory_dir}/Setup.cpp
             ${build_memory_dir}/RexxMemory.cpp)
@@ -561,7 +562,7 @@ set (execution_sources ${build_execution_dir}/CPPCode.cpp
             ${build_execution_dir}/SecurityManager.cpp)
 set (behaviour_sources ${build_behaviour_dir}/PrimitiveBehaviours.cpp
             ${build_behaviour_dir}/RexxBehaviour.cpp
-            ${build_behaviour_dir}/ScopeTable.cpp
+            ${build_behaviour_dir}/MethodDictionary.cpp
             ${build_behaviour_dir}/VirtualFunctionTable.cpp)
 set (concurrency_sources ${build_concurrency_dir}/ActivityDispatcher.cpp
             ${build_concurrency_dir}/ActivityManager.cpp

@@ -106,7 +106,7 @@ void PackageClass::liveGeneral(MarkReason reason)
 }
 
 
-void PackageClass::flatten(RexxEnvelope *envelope)
+void PackageClass::flatten(Envelope *envelope)
 {
     setUpFlatten(PackageClass)
 

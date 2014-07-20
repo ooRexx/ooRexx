@@ -92,7 +92,7 @@ void RexxInstructionSignal::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope that will hold the flattened object.
  */
-void RexxInstructionSignal::flatten(RexxEnvelope *envelope)
+void RexxInstructionSignal::flatten(Envelope *envelope)
 {
     setUpFlatten(RexxInstructionSignal)
 
@@ -189,7 +189,7 @@ void RexxInstructionDynamicSignal::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope that will hold the flattened object.
  */
-void RexxInstructionDynamicSignal::flatten(RexxEnvelope *envelope)
+void RexxInstructionDynamicSignal::flatten(Envelope *envelope)
 {
     setUpFlatten(RexxInstructionDynamicSignal)
 
@@ -275,7 +275,7 @@ void RexxInstructionSignalOn::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope that will hold the flattened object.
  */
-void RexxInstructionSignalOn::flatten(RexxEnvelope *envelope)
+void RexxInstructionSignalOn::flatten(Envelope *envelope)
 {
     setUpFlatten(RexxInstructionSignalOn)
 
