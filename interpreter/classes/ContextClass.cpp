@@ -67,7 +67,6 @@ void RexxContext::createInstance()
  */
 void *RexxContext::operator new(size_t size)
 {
-    /* Get new object                    */
     return new_object(size, T_RexxContext);
 }
 
@@ -101,35 +100,25 @@ RexxObject *RexxContext::newRexx(RexxObject **args, size_t argc)
 }
 
 
+/**
+ * Generalized object marking.
+ *
+ * @param reason The reason for this live marking operation.
+ */
 void RexxContext::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
     memory_mark(activation);
 }
 
-void RexxContext::liveGeneral(MarkReason reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
-{
-    memory_mark_general(activation);
-}
-
 
 /**
- * Ensure this object does not flatten to a live object.
+ * Generalized object marking.
  *
- * @param envelope The flattening envelope.
+ * @param reason The reason for this live marking operation.
  */
-void RexxContext::flatten(Envelope *envelope)
+void RexxContext::liveGeneral(MarkReason reason)
 {
-    setUpFlatten(RexxContext)
-
-    newThis->activation = OREF_NULL;   // this never should be getting flattened, so sever the connection
-
-    cleanUpFlatten
+    memory_mark_general(activation);
 }
 
 

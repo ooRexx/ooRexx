@@ -119,7 +119,7 @@ class RexxString : public RexxObject
     RexxString  *makeString();
     ArrayClass   *makeArray();
     RexxString  *primitiveMakeString();
-    void         copyIntoTail(RexxCompoundTail *buffer);
+    void         copyIntoTail(CompoundVariableTail *buffer);
     RexxString  *stringValue();
     bool         truthValue(int);
     virtual bool logicalValue(logical_t &);
@@ -328,102 +328,132 @@ class RexxString : public RexxObject
         return createNumberString();
     }
 
-    inline int sortCompare(RexxString *other) {
+    inline int sortCompare(RexxString *other)
+    {
         size_t compareLength = length;
-        if (compareLength > other->length) {
+        if (compareLength > other->length)
+        {
             compareLength = other->length;
         }
         int result = memcmp(stringData, other->stringData, compareLength);
-        if (result == 0) {
-            if (length > other->length) {
+        if (result == 0)
+        {
+            if (length > other->length)
+            {
                 result = 1;
             }
-            else if (length < other->length) {
+            else if (length < other->length)
+            {
                 result = -1;
             }
         }
         return result;
     }
 
-    inline int sortCaselessCompare(RexxString *other) {
+    inline int sortCaselessCompare(RexxString *other)
+    {
         size_t compareLength = length;
-        if (compareLength > other->length) {
+        if (compareLength > other->length)
+        {
             compareLength = other->length;
         }
         int result = StringUtil::caselessCompare(stringData, other->stringData, compareLength);
-        if (result == 0) {
-            if (length > other->length) {
+        if (result == 0)
+        {
+            if (length > other->length)
+            {
                 result = 1;
             }
-            else if (length < other->length) {
+            else if (length < other->length)
+            {
                 result = -1;
             }
         }
         return result;
     }
 
-    inline int sortCompare(RexxString *other, size_t startCol, size_t colLength) {
+    inline int sortCompare(RexxString *other, size_t startCol, size_t colLength)
+    {
         int result = 0;
-        if ((startCol < length ) && (startCol < other->length)) {
+        if ((startCol < length ) && (startCol < other->length))
+        {
             size_t stringLength = length;
-            if (stringLength > other->length) {
+            if (stringLength > other->length)
+            {
                 stringLength = other->length;
             }
             stringLength = stringLength - startCol + 1;
             size_t compareLength = colLength;
-            if (compareLength > stringLength) {
+            if (compareLength > stringLength)
+            {
                 compareLength = stringLength;
             }
 
             result = memcmp(stringData + startCol, other->stringData + startCol, compareLength);
-            if (result == 0 && stringLength < colLength) {
-                if (length > other->length) {
+            if (result == 0 && stringLength < colLength)
+            {
+                if (length > other->length)
+                {
                     result = 1;
                 }
-                else if (length < other->length) {
+                else if (length < other->length)
+                {
                     result = -1;
                 }
             }
         }
-        else {
-            if (length == other->length) {
+        else
+        {
+            if (length == other->length)
+            {
                 result = 0;
             }
-            else {
+            else
+            {
                 result = length < other->length ? -1 : 1;
             }
         }
         return result;
     }
 
-    inline int sortCaselessCompare(RexxString *other, size_t startCol, size_t colLength) {
+    inline int sortCaselessCompare(RexxString *other, size_t startCol, size_t colLength)
+    {
         int result = 0;
-        if ((startCol < length ) && (startCol < other->length)) {
+        if ((startCol < length ) && (startCol < other->length))
+        {
             size_t stringLength = length;
-            if (stringLength > other->length) {
+            if (stringLength > other->length)
+            {
                 stringLength = other->length;
             }
             stringLength = stringLength - startCol + 1;
             size_t compareLength = colLength;
-            if (compareLength > stringLength) {
+            if (compareLength > stringLength)
+            {
                 compareLength = stringLength;
             }
 
             result = StringUtil::caselessCompare(stringData + startCol, other->stringData + startCol, compareLength);
-            if (result == 0 && stringLength < colLength) {
-                if (length > other->length) {
+            if (result == 0 && stringLength < colLength)
+            {
+                if (length > other->length)
+                {
                     result = 1;
                 }
-                else if (length < other->length) {
+                else if (length < other->length)
+                {
                     result = -1;
                 }
             }
         }
-        else {
-            if (length == other->length) {
+        else
+        {
+            if (length == other->length)
+            {
                 result = 0;
             }
-            else {
+            else
+            {
                 result = length < other->length ? -1 : 1;
             }
         }

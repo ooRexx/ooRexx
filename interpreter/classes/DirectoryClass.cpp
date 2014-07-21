@@ -127,21 +127,6 @@ RexxObject *DirectoryClass::copy()
 
 
 /**
- * Retrieve an entry from a directory, using the uppercase
- * version of the index.
- *
- * @param index The entry index.
- *
- * @return The indexed item, or OREF_NULL if the index was not found.
- */
-RexxInternalObject *DirectoryClass::entry(RexxString *index)
-{
-    // do the lookup with the upper case name
-    return get(index->upper());
-}
-
-
-/**
  * Return the count of items in the directory, including the
  * number of methods added via set method calls
  *
@@ -275,44 +260,6 @@ bool DirectoryClass::hasIndex(RexxInternalObject *indexName)
         return methodTable->hasIndex(indexName);
     }
     return false;
-}
-
-
-/**
- * Check the directory for existance using the uppercase
- * name.
- *
- * @param entryName The entry name.
- *
- * @return .true of the diectoy has the entry, false otherwise.
- */
-bool DirectoryClass::hasEntry(RexxString *entryName)
-{
-    // this is just a hasIndex call with an uppercase name
-    return hasIndex(entryName->upper());
-}
-
-
-/**
- * Add an entry to a directory with an uppercase name.
- *
- * @param entryname The entry name.
- * @param entryobj  The value object.
- *
- * @return Returns nothing.
- */
-RexxInternalObject *DirectoryClass::setEntry(RexxString *entryname, RexxInternalObject *entryobj)
-{
-    // set entry is a little different than put, in that the value argument is optional.
-    // no argument is a remove operation
-    if (entryobj == OREF_NULL)
-    {
-        return remove(entryName->upper());
-    }
-
-    // this is just a PUT operation with an uppercase index.
-    put(entryobj, entryname->upper());
-    return OREF_NULL;
 }
 
 
@@ -486,86 +433,6 @@ RexxInternalObject *DirectoryClass::removeItem(RexxInternalObject *target)
 // of return values added.
 
 
-/**
- * This is the REXX version of entry.  It issues a STRINGREQUEST
- * message to the entryname parameter if it isn't already a
- * string or a name object.  Thus, this may raise NOSTRING.
- *
- * @param entryName The entry name.
- *
- * @return The entry value, if it has one.
- */
-RexxInternalObject *DirectoryClass::entryRexx(RexxString *entryName)
-{
-    // validate the index item and let entry handle it (entry
-    // also takes care of the uppercase)
-    entryName = stringArgument(entryName, ARG_ONE);
-    return entry(entryName);
-}
-
-
-/**
- * Check the directory for existance using the uppercase
- * name.
- *
- * @param entryName The entry name.
- *
- * @return .true of the diectoy has the entry, false otherwise.
- */
-RexxInternalObject *DirectoryClass::hasEntryRexx(RexxString *entryName)
-{
-    entryName = stringArgument(entryName, ARG_ONE);
-    // get as an uppercase string
-    return booleanObject(hasEntry(entry));
-}
-
-
-/**
- * Add an entry to a directory with an uppercase name.
- *
- * @param entryname The entry name.
- * @param entryobj  The value object.
- *
- * @return Returns nothing.
- */
-RexxInternalObject *DirectoryClass::setEntryRexx(RexxString *entryname, RexxInternalObject *entryobj)
-{
-    // validate the argument and perform the base operation
-    entryName = stringArgument(entryName, ARG_ONE);
-    return setEntry(entryName);
-}
-
-
-/**
- * This is the REXX version of unknown.  It invokes entry_rexx
- * instead of entry, to ensure the proper error checking and
- * return value handling is performed.
- *
- * @param msgname   The message name.
- * @param arguments The message arguments
- *
- * @return Either a result object or nothing, depending on whether this is a set or get operation.
- */
-RexxInternalObject *DirectoryClass::unknown(RexxString *msgname, ArrayClass *arguments)
-{
-    // must have a first item and the required argument array
-    RexxString *message_value = stringArgument(msgname, ARG_ONE);
-
-    // if this is the assignment form of message
-    if (message_value->endsWith('='))
-    {
-        // make sure this is a good argument value.
-        arguments = arrayArgument(arguments, ARG_TWO)
-
-        // extract the name part of the msg
-        message_value = message_value->extract(0, message_value->getLength() - 1);
-        // do this as an assignment
-        return setEntryRexx(message_value, arguments->get(1));
-    }
-
-    // just a retrieval operation
-    return entry(message_value);
-}
 
 
 /**

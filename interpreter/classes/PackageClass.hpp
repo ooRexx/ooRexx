@@ -72,13 +72,13 @@ public:
     RexxString *getSourceLineRexx(RexxObject *);
     RexxObject  *setSecurityManager(RexxObject *);
 
-    DirectoryClass *getClasses();
-    DirectoryClass *getPublicClasses();
-    DirectoryClass *getImportedClasses();
-    DirectoryClass *getMethods();
-    DirectoryClass *getRoutines();
-    DirectoryClass *getPublicRoutines();
-    DirectoryClass *getImportedRoutines();
+    StringTable *getClasses();
+    StringTable *getPublicClasses();
+    StringTable *getImportedClasses();
+    StringTable *getMethods();
+    StringTable *getRoutines();
+    StringTable *getPublicRoutines();
+    StringTable *getImportedRoutines();
     ArrayClass     *getImportedPackages();
     PackageClass  *loadPackage(RexxString *name, ArrayClass *source);
     RexxObject    *addPackage(PackageClass *package);

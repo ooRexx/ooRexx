@@ -169,7 +169,7 @@ void MethodDictionary::replaceMethods(MethodDictionary *source)
     {
         // copy these methods over any of our own.
         MethodClass *method = (MethodClass *)iterator.value();
-        RexxString *name = (RexxString *name)iterator.name();
+        RexxString *name = (RexxString *name)iterator.index();
         replaceMethod(name, method);
     }
 }

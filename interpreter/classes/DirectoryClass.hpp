@@ -82,15 +82,8 @@ class DirectoryClass : public StringHashCollection
     // our unknown method
     RexxInternalObject *unknown(RexxString *msgname, ArrayClass *arguments);
 
-    // base implementations of extra directory methods.
-    bool hasEntry(RexxString *entryName);
-    RexxInternalObject *setEntry(RexxString *entryname, RexxInternalObject *entryobj);
-    RexxInternalObject *entry(RexxString *index);
 
     // stubs for additional exported directory methods.
-    RexxInternalObject *entryRexx(RexxString *entryName);
-    RexxInternalObject *hasEntryRexx(RexxString *entryName);
-    RexxInternalObject *setEntryRexx(RexxString *entryname, RexxInternalObject *entryobj);
     RexxInternalObject *setMethodRexx(RexxString *entryname, MethodClass *methodobj);
 
     // some private helper methods.

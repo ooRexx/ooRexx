@@ -44,7 +44,7 @@
 #include "RexxCore.h"
 #include "ArrayClass.hpp"
 #include "SourceFile.hpp"
-#include "DirectoryClass.hpp"
+#include "StringTable.hpp"
 #include "ProtectedObject.hpp"
 #include "PackageClass.hpp"
 #include "RoutineClass.hpp"
@@ -73,9 +73,6 @@ void PackageClass::createInstance()
  * @return Object storage for a new instance.
  */
 void *PackageClass::operator new (size_t size)
-/******************************************************************************/
-/* Function:  create a new method instance                                    */
-/******************************************************************************/
 {
     return new_object(size, T_Package);
 }
@@ -92,6 +89,11 @@ PackageClass::PackageClass(RexxSource *s)
 }
 
 
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
 void PackageClass::live(size_t liveMark)
 {
     memory_mark(source);
@@ -99,6 +101,13 @@ void PackageClass::live(size_t liveMark)
 }
 
 
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
 void PackageClass::liveGeneral(MarkReason reason)
 {
     memory_mark_general(source);
@@ -106,6 +115,11 @@ void PackageClass::liveGeneral(MarkReason reason)
 }
 
 
+/**
+ * Flatten a source object.
+ *
+ * @param envelope The envelope that will hold the flattened object.
+ */
 void PackageClass::flatten(Envelope *envelope)
 {
     setUpFlatten(PackageClass)
@@ -183,18 +197,18 @@ RexxInteger *PackageClass::getSourceSize()
  *
  * @return A directory of all of the classes defined by this package.
  */
-DirectoryClass *PackageClass::getClasses()
+StringTable *PackageClass::getClasses()
 {
     // we need to return a copy.  The source might necessarily have any of these,
     // so we return an empty directory if it's not there.
-    DirectoryClass *classes = source->getInstalledClasses();
+    StringTable *classes = source->getInstalledClasses();
     if (classes != OREF_NULL)
     {
-        return (DirectoryClass *)classes->copy();
+        return (StringTable *)classes->copy();
     }
     else
     {
-        return new_directory();
+        return new_string_table();
     }
 }
 
@@ -204,18 +218,19 @@ DirectoryClass *PackageClass::getClasses()
  *
  * @return A directory of the public classes.
  */
-DirectoryClass *PackageClass::getPublicClasses()
+// TODO:  String table needs to have ENTRY/SETENTRY etc. classes
+StringTable *PackageClass::getPublicClasses()
 {
     // we need to return a copy.  The source might necessarily have any of these,
     // so we return an empty directory if it's not there.
-    DirectoryClass *classes = source->getInstalledPublicClasses();
+    StringTable *classes = source->getInstalledPublicClasses();
     if (classes != OREF_NULL)
     {
-        return (DirectoryClass *)classes->copy();
+        return (StringTable *)classes->copy();
     }
     else
     {
-        return new_directory();
+        return new_string_table();
     }
 }
 
@@ -226,18 +241,18 @@ DirectoryClass *PackageClass::getPublicClasses()
  *
  * @return A directory of the imported classes.
  */
-DirectoryClass *PackageClass::getImportedClasses()
+StringTable *PackageClass::getImportedClasses()
 {
     // we need to return a copy.  The source might necessarily have any of these,
     // so we return an empty directory if it's not there.
-    DirectoryClass *classes = source->getImportedClasses();
+    StringTable *classes = source->getImportedClasses();
     if (classes != OREF_NULL)
     {
-        return (DirectoryClass *)classes->copy();
+        return (StringTable *)classes->copy();
     }
     else
     {
-        return new_directory();
+        return new_string_table();
     }
 }
 
@@ -247,18 +262,18 @@ DirectoryClass *PackageClass::getImportedClasses()
  *
  * @return A directory of the routines.
  */
-DirectoryClass *PackageClass::getRoutines()
+StringTable *PackageClass::getRoutines()
 {
     // we need to return a copy.  The source might necessarily have any of these,
     // so we return an empty directory if it's not there.
-    DirectoryClass *routines = source->getInstalledRoutines();
+    StringTable *routines = source->getInstalledRoutines();
     if (routines != OREF_NULL)
     {
-        return (DirectoryClass *)routines->copy();
+        return (StringTable *)routines->copy();
     }
     else
     {
-        return new_directory();
+        return new_string_table();
     }
 }
 
@@ -269,18 +284,18 @@ DirectoryClass *PackageClass::getRoutines()
  *
  * @return A directory holding the public routines.
  */
-DirectoryClass *PackageClass::getPublicRoutines()
+StringTable *PackageClass::getPublicRoutines()
 {
     // we need to return a copy.  The source might necessarily have any of these,
     // so we return an empty directory if it's not there.
-    DirectoryClass *routines = source->getInstalledPublicRoutines();
+    StringTable *routines = source->getInstalledPublicRoutines();
     if (routines != OREF_NULL)
     {
-        return (DirectoryClass *)routines->copy();
+        return (StringTable *)routines->copy();
     }
     else
     {
-        return new_directory();
+        return new_string_table();
     }
 }
 
@@ -291,18 +306,18 @@ DirectoryClass *PackageClass::getPublicRoutines()
  *
  * @return A directory of the imported routines.
  */
-DirectoryClass *PackageClass::getImportedRoutines()
+StringTable *PackageClass::getImportedRoutines()
 {
     // we need to return a copy.  The source might necessarily have any of these,
     // so we return an empty directory if it's not there.
-    DirectoryClass *routines = source->getImportedRoutines();
+    StringTable *routines = source->getImportedRoutines();
     if (routines != OREF_NULL)
     {
-        return (DirectoryClass *)routines->copy();
+        return (StringTable *)routines->copy();
     }
     else
     {
-        return new_directory();
+        return new_string_table();
     }
 }
 
@@ -312,18 +327,18 @@ DirectoryClass *PackageClass::getImportedRoutines()
  *
  * @return A directory of the unattached methods.
  */
-DirectoryClass *PackageClass::getMethods()
+StringTable *PackageClass::getMethods()
 {
     // we need to return a copy.  The source might necessarily have any of these,
     // so we return an empty directory if it's not there.
-    DirectoryClass *methods = source->getMethods();
+    StringTable *methods = source->getMethods();
     if (methods != OREF_NULL)
     {
-        return (DirectoryClass *)methods->copy();
+        return (StringTable *)methods->copy();
     }
     else
     {
-        return new_directory();
+        return new_string_table();
     }
 }
 

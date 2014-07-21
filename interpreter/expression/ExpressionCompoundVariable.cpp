@@ -52,7 +52,7 @@
 #include "ExpressionVariable.hpp"
 #include "RexxVariable.hpp"
 #include "ProtectedObject.hpp"
-#include "RexxCompoundTail.hpp"
+#include "CompoundVariableTail.hpp"
 
 
 /**
@@ -390,7 +390,7 @@ void RexxCompoundVariable::drop(RexxVariableDictionary *dictionary)
 void RexxCompoundVariable::procedureExpose(RexxActivation *context, RexxActivation *parent)
 {
     // first get (and possible create) the compound variable in the parent context.
-    RexxCompoundElement *variable = parent->exposeLocalCompoundVariable(stemName, stemIndex, (RexxObject **)&tails[0], tailCount);
+    CompoundTableElement *variable = parent->exposeLocalCompoundVariable(stemName, stemIndex, (RexxObject **)&tails[0], tailCount);
     // get the stem index from the current level.  This may end up
     // creating the stem that holds the exposed value.
     StemClass *stem_table = context->getLocalStem(stemName, stemIndex);
@@ -413,10 +413,10 @@ void RexxCompoundVariable::expose(RexxActivation *context, RexxVariableDictionar
     // get the stem in the source dictionary
     StemClass *source_stem = object_dictionary->getStem(stemName);
     // new tail for the compound variable
-    RexxCompoundTail resolved_tail(context, &tails[0], tailCount);
+    CompoundVariableTail resolved_tail(context, &tails[0], tailCount);
     // first get (and possible create) the compound variable in the
     // object context.
-    RexxCompoundElement *variable = source_stem->exposeCompoundVariable(&resolved_tail);
+    CompoundTableElement *variable = source_stem->exposeCompoundVariable(&resolved_tail);
     // get the stem index from the current level.  This may end up
     // creating the stem that holds the exposed value.
     StemClass *stem_table = context->getLocalStem(stemName, stemIndex);
@@ -435,7 +435,7 @@ void RexxCompoundVariable::expose(RexxActivation *context, RexxVariableDictionar
 void RexxCompoundVariable::setGuard(RexxActivation *context )
 {
     // get the variable element and add our activity to the inform list.
-    RexxCompoundElement *variable = context->getLocalCompoundVariable(stemName, stemIndex, &tails[0], tailCount);
+    CompoundTableElement *variable = context->getLocalCompoundVariable(stemName, stemIndex, &tails[0], tailCount);
     variable->inform(ActivityManager::currentActivity);
 }
 
@@ -447,7 +447,7 @@ void RexxCompoundVariable::setGuard(RexxActivation *context )
 void RexxCompoundVariable::clearGuard(RexxActivation *context )
 {
     // get the variable context and remove this activity from the watch list.
-    RexxCompoundElement *variable = context->getLocalCompoundVariable(stemName, stemIndex, &tails[0], tailCount);
+    CompoundTableElement *variable = context->getLocalCompoundVariable(stemName, stemIndex, &tails[0], tailCount);
     variable->uninform(ActivityManager::currentActivity);
 }
 

@@ -36,15 +36,16 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /****************************************************************************/
-/* REXX Kernel                                           RexxVariable.c     */
+/* REXX Kernel                                                              */
 /*                                                                          */
-/* Primitive Variable Class                                                 */
+/* The Base class for a Rexx Variable (the storage for a Rexx variable).    */
 /*                                                                          */
 /****************************************************************************/
 #include "RexxCore.h"
 #include "RexxVariable.hpp"
 #include "RexxActivity.hpp"
 #include "ActivityManager.hpp"
+
 
 /**
  * Allocate a new variable object.
@@ -67,7 +68,7 @@ void *RexxVariable::operator new(size_t size)
 void RexxVariable::live(size_t liveMark)
 {
     memory_mark(variableValue);
-    memory_mark(variable_name);
+    memory_mark(variableName);
     memory_mark(dependents);
 }
 
@@ -82,7 +83,7 @@ void RexxVariable::live(size_t liveMark)
 void RexxVariable::liveGeneral(MarkReason reason)
 {
     memory_mark_general(variableValue);
-    memory_mark_general(variable_name);
+    memory_mark_general(variableName);
     memory_mark_general(dependents);
 }
 
@@ -97,7 +98,7 @@ void RexxVariable::flatten(Envelope *envelope)
     setUpFlatten(RexxVariable)
 
      flattenRef(variableValue);
-     flattenRef(variable_name);
+     flattenRef(variableName);
      flattenRef(dependents);
 
     cleanUpFlatten
@@ -117,10 +118,10 @@ void RexxVariable::inform(RexxActivity *informee)
     if (dependents == OREF_NULL)
     {
         // use an object table for this
-        OrefSet(this, dependents, new_identity_table());
+        setField(dependents = new_identity_table();
     }
     // add this to the table as the index
-    dependents->put(TheNilObject, (RexxObject *)informee);
+    dependents->put(TheNilObject, informee);
 }
 
 
@@ -133,7 +134,7 @@ void RexxVariable::inform(RexxActivity *informee)
 void RexxVariable::uninform(RexxActivity *informee)
 {
     // remove the entry
-    dependents->remove((RexxObject *)informee);
+    dependents->remove(informee);
     // It's probably a coin flip on whether this should
     // be removed when this becomes empty.  This happens
     // because a method has used GUARD WHEN to wait on a variable.
@@ -161,6 +162,7 @@ void RexxVariable::drop()
     }
 }
 
+
 /**
  * notify all waiting activities that a variable has been updated.
  */
@@ -170,16 +172,19 @@ void RexxVariable::notify()
     // the waiting activities
     if (dependents != OREF_NULL)
     {
-        for (HashLink i = dependents->first(); dependents->available(i); i = dependents->next(i))
+        // use an iterator to traverse the table
+        HashContents::TableIterator iterator = dependents->iterator();
+
+        while (iterator.isAvailable())
         {
-            // post the event to the waiting thread
-            ((RexxActivity *)dependents->index(i))->guardPost();
+            // copy these methods over any of our own.
+            RexxActivity *activity = (RexxActivity *)iterator.index();
+            activity->guardPost();
         }
 
         // yield control and allow the waiting guard(s) to run too
         RexxActivity *activity = ActivityManager::currentActivity;
-        activity->releaseAccess();         // release the lock
-        activity->requestAccess();         // get it back again
+        activity->yieldControl();
     }
 }
 
@@ -191,7 +196,7 @@ void RexxVariable::notify()
  *
  * @param value  The value to set.
  */
-void RexxVariable::setStem(RexxObject *value)
+void RexxVariable::setStem(RexxInternalObject *value)
 {
     // if this is a stem-to-stem assignment, we replace the current variable's
     // stem object.

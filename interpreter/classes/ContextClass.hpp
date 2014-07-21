@@ -60,7 +60,6 @@ public:
 
     void live(size_t);
     void liveGeneral(MarkReason reason);
-    void flatten(Envelope*);
 
     RexxContext(RexxActivation *);
     inline RexxContext(RESTORETYPE restoreType) { ; };
@@ -87,11 +86,11 @@ public:
     static RexxClass *classInstance;   // singleton class instance
 
 protected:
+
     void checkValid();
 
     RexxActivation *activation;
 };
-
 
 #endif
 

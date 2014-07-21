@@ -50,7 +50,7 @@
 #include "RoutineClass.hpp"
 #include "PackageClass.hpp"
 #include "RexxCode.hpp"
-#include "DirectoryClass.hpp"
+#include "StringTable.hpp"
 #include "ClassDirective.hpp"
 #include "StackFrameClass.hpp"
 #include "ActivationFrame.hpp"
@@ -265,7 +265,7 @@ RoutineClass *LanguageParser::createProgram(RexxString *name)
  *
  * @return The interpreted code.
  */
-RexxCode *LanguageParser::translateInterpret(RexxString *interpretString, DirectoryClass *labels, size_t lineNumber)
+RexxCode *LanguageParser::translateInterpret(RexxString *interpretString, StringTable *labels, size_t lineNumber)
 {
     // create the appropriate array source, then the parser, then generate the
     // code.
@@ -484,7 +484,7 @@ RoutineClass *LanguageParser::generateProgram()
  * @return A RexxCode object resulting from the compilation of
  *         this interpret line.
  */
-RexxCode *LanguageParser::translateInterpret(DirectoryClass *contextLabels)
+RexxCode *LanguageParser::translateInterpret(StringTable *contextLabels)
 {
     // to translate this, we use the labels from the parent context.
     labels = contextLabels;
@@ -566,7 +566,7 @@ void LanguageParser::initializeForParsing()
     terms = new_queue();          // expression term stack
     subTerms = new_queue();       // temporary stack for holding lists of terms
     operators = new_queue();      // the operator queue
-    literals = new_directory();   // table of literal values
+    literals = new_string_table();   // table of literal values
 
     // during an image build, we have a global string table.  If this is
     // available now, use it.
@@ -574,7 +574,7 @@ void LanguageParser::initializeForParsing()
     if (strings == OREF_NULL)
     {
         // no global string table, use a local copy
-        strings = new_directory();
+        strings = new_string_table();
     }
 
     // create the singleton clause object for parsing
@@ -588,14 +588,14 @@ void LanguageParser::initializeForParsing()
  */
 void LanguageParser::initializeForDirectives()
 {
-    routines = new_directory();
-    publicRoutines = new_directory();
-    classDependencies = new_directory();
+    routines = new_string_table();
+    publicRoutines = new_string_table();
+    classDependencies = new_string_table();
     requires = new_array();
     libraries = new_array();
     classes = new_array();
     activeClass = OREF_NULL;
-    unattachedMethods = new_directory();
+    unattachedMethods = new_string_table();
 }
 
 
@@ -850,7 +850,7 @@ RexxCode *LanguageParser::translateBlock()
     // get a list of all calls that might need resolution
     calls = new_array();
     // a table of variables...starting with the special variables we allocated space for.
-    variables = (DirectoryClass *)TheCommonRetrievers->copy();
+    variables = (StringTable *)TheCommonRetrievers->copy();
     // restart the variable index
     variableIndex = RexxLocalVariables::FIRST_VARIABLE_INDEX;
 
@@ -858,13 +858,13 @@ RexxCode *LanguageParser::translateBlock()
     // only create a new set if we're not reusing.
     if (labels == OREF_NULL)
     {
-        labels = new_directory();
+        labels = new_string_table();
     }
 
     // until we need guard variables, we don't need the table
     guardVariables = OREF_NULL;
     // and we need a new set of exposed variables for each code section
-    exposedVariables = new_directory();
+    exposedVariables = new_string_table();
 
     // clear the stack accounting fields
     maxStack = 0;

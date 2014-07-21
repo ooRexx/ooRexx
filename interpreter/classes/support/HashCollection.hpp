@@ -172,6 +172,19 @@ public:
 
     virtual HashContents *allocateContents(size_t bucketSize, size_t capacity);
     virtual RexxInternalObject  *validateIndex(RexxInternalObject *index, size_t position);
+
+    // additional string oriented lookup functions
+    // base implementations of extra directory methods.
+    virtual bool hasEntry(RexxString *entryName);
+    virtual RexxInternalObject *setEntry(RexxString *entryname, RexxInternalObject *entryobj);
+    virtual RexxInternalObject *entry(RexxString *index);
+    virtual RexxInternalObject *removeEntry(RexxString *index);
+
+    // Rexx stubs for these additional functions.
+    RexxInternalObject *entryRexx(RexxString *entryName);
+    RexxInternalObject *hasEntryRexx(RexxString *entryName);
+    RexxInternalObject *setEntryRexx(RexxString *entryname, RexxInternalObject *entryobj);
+    RexxInternalObject *removeEntryRexx(RexxString *entryName);
 };
 
 

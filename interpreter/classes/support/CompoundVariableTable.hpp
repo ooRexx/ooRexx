@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -35,71 +35,69 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/****************************************************************************/
-/* REXX Kernel                                     RexxCompoundElement.cpp  */
-/*                                                                          */
-/* Primitive Compound Variable Element Class                                */
-/*                                                                          */
-/****************************************************************************/
-#include "RexxCore.h"
-#include "RexxCompoundElement.hpp"
-#include "RexxActivity.hpp"
+/******************************************************************************/
+/* REXX Kernel                                        CompoundVariableTable.hpp   */
+/*                                                                            */
+/* Balanced binary tree table for stem variables                              */
+/*                                                                            */
+/******************************************************************************/
+#ifndef Included_CompoundVariableTable
+#define Included_CompoundVariableTable
 
-void RexxCompoundElement::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
-{
-    memory_mark(variableValue);
-    memory_mark(variable_name);
-    memory_mark(dependents);
-    memory_mark(parent);
-    memory_mark(left);
-    memory_mark(right);
-    memory_mark(real_element);
+
+class StemClass;
+class CompoundTableElement;
+
+
+// macros for embedding within the stem object
+#define markCompoundTable() { \
+  memory_mark(tails.root); \
+  memory_mark(tails.parent);  \
 }
 
-void RexxCompoundElement::liveGeneral(MarkReason reason)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
-{
-    memory_mark_general(variableValue);
-    memory_mark_general(variable_name);
-    memory_mark_general(dependents);
-    memory_mark_general(parent);
-    memory_mark_general(left);
-    memory_mark_general(right);
-    memory_mark_general(real_element);
+#define markGeneralCompoundTable() { \
+  memory_mark_general(tails.root); \
+  memory_mark_general(tails.parent); \
 }
 
-void RexxCompoundElement::flatten(Envelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
-{
-    setUpFlatten(RexxCompoundElement)
-
-    flattenRef(variableValue);
-    flattenRef(variable_name);
-    flattenRef(dependents);
-    flattenRef(parent);
-    flattenRef(left);
-    flattenRef(right);
-    flattenRef(real_element);
-
-    cleanUpFlatten
+#define flattenCompoundTable() { \
+  flattenRef(tails.root); \
+  flattenRef(tails.parent); \
 }
 
 
-RexxCompoundElement *RexxCompoundElement::newInstance(
-    RexxString *name)                  /* the name of the variable          */
-/****************************************************************************/
-/* Function:  Create a new REXX compound variable object                    */
-/****************************************************************************/
+/**
+ * Compound table object embedded within a Stem object.
+ * This is not a Rexx internal object, but rather a
+ * helper object used as a field within another object
+ */
+class CompoundVariableTable
 {
-    /* Get new object                    */
-    RexxCompoundElement *newObj = (RexxCompoundElement *)new_object(sizeof(RexxCompoundElement), T_CompoundElement);
-    newObj->variable_name = name;        /* fill in the name                  */
-    return newObj;                       /* return the new object             */
-}
+ friend class StemClass;
+ public:
+    inline CompoundVariableTable() { ; };
+
+    void copyFrom(CompoundVariableTable &other);
+    void init(StemClass *parent);
+    void clear();
+
+    inline CompoundTableElement *get(CompoundVariableTail &name) { return findEntry(name); }
+    CompoundTableElement *findEntry(CompoundVariableTail &tail);
+    CompoundTableElement *findEntry(CompoundVariableTail &tail, bool create);
+    CompoundTableElement *findEntry(RexxString *tail, bool create = false);
+    void balance(CompoundTableElement *node);
+    void moveNode(CompoundTableElement *&anchor, bool toright);
+    CompoundTableElement *first();
+    CompoundTableElement *findLeaf(CompoundTableElement *node);
+    CompoundTableElement *next(CompoundTableElement *node);
+
+    void setParent(StemClass *parent);
+    void setRoot(CompoundTableElement *newRoot);
+
+protected:
+
+    CompoundTableElement *root;               // the root node
+    StemClass *parent;                        // link back to the hosting stem
+};
+
+#endif

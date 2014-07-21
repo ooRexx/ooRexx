@@ -51,7 +51,7 @@
 #include "RexxDateTime.hpp"
 #include "RexxCode.hpp"
 #include "ActivityManager.hpp"
-#include "RexxCompoundTail.hpp"
+#include "CompoundVariableTail.hpp"
 #include "ContextClass.hpp"
 
 
@@ -256,7 +256,7 @@ class ActivationSettings
    size_t            currentLine();
    void              arguments(RexxObject *);
    void              traceValue(RexxObject *, int);
-   void              traceCompoundValue(int prefix, RexxString *stemName, RexxObject **tails, size_t tailCount, RexxCompoundTail *tail);
+   void              traceCompoundValue(int prefix, RexxString *stemName, RexxObject **tails, size_t tailCount, CompoundVariableTail *tail);
    void              traceCompoundValue(int prefix, RexxString *stem, RexxObject **tails, size_t tailCount, const char *marker, RexxObject * value);
    void              traceTaggedValue(int prefix, const char *tagPrefix, bool quoteTag, RexxString *tag, const char *marker, RexxObject * value);
    void              traceOperatorValue(int prefix, const char *tag, RexxObject *value);
@@ -387,7 +387,7 @@ class ActivationSettings
        { if (settings.intermediate_trace) { traceOperatorValue(TRACE_PREFIX_PREFIX, n, v); } };
    inline void              traceAssignment(RexxString *n, RexxObject *v)
        { if (settings.intermediate_trace) { traceTaggedValue(TRACE_PREFIX_ASSIGNMENT, NULL, false, n, ASSIGNMENT_MARKER, v); } };
-   inline void              traceCompoundName(RexxString *stemVar, RexxObject **tails, size_t tailCount, RexxCompoundTail *tail) { if (settings.intermediate_trace) traceCompoundValue(TRACE_PREFIX_COMPOUND, stemVar, tails, tailCount, VALUE_MARKER, tail->createCompoundName(stemVar)); };
+   inline void              traceCompoundName(RexxString *stemVar, RexxObject **tails, size_t tailCount, CompoundVariableTail *tail) { if (settings.intermediate_trace) traceCompoundValue(TRACE_PREFIX_COMPOUND, stemVar, tails, tailCount, VALUE_MARKER, tail->createCompoundName(stemVar)); };
    inline void              traceCompoundName(RexxString *stemVar, RexxObject **tails, size_t tailCount, RexxString *tail) { if (settings.intermediate_trace) traceCompoundValue(TRACE_PREFIX_COMPOUND, stemVar, tails, tailCount, VALUE_MARKER, stemVar->concat(tail)); };
    inline void              traceCompound(RexxString *stemVar, RexxObject **tails, size_t tailCount, RexxObject *value) { if (settings.intermediate_trace) traceCompoundValue(TRACE_PREFIX_VARIABLE, stemVar, tails, tailCount, VALUE_MARKER, value); };
    inline void              traceCompoundAssignment(RexxString *stemVar, RexxObject **tails, size_t tailCount, RexxObject *value) { if (settings.intermediate_trace) traceCompoundValue(TRACE_PREFIX_ASSIGNMENT, stemVar, tails, tailCount, ASSIGNMENT_MARKER, value); };
@@ -534,8 +534,8 @@ class ActivationSettings
    RexxObject *evaluateLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount);
    RexxObject *getLocalCompoundVariableValue(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount);
    RexxObject *getLocalCompoundVariableRealValue(RexxString *localstem, size_t index, RexxObject **tail, size_t tailCount);
-   RexxCompoundElement *getLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount);
-   RexxCompoundElement *exposeLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount);
+   CompoundTableElement *getLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount);
+   CompoundTableElement *exposeLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount);
    bool localCompoundVariableExists(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount);
    void assignLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount, RexxObject *value);
    void setLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount, RexxObject *value);

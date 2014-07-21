@@ -118,7 +118,7 @@ class RexxVariableDictionary : public RexxInternalObject
     void         release(RexxActivity *);
     bool         transfer(RexxActivity *);
 
-    RexxCompoundElement *getCompoundVariable(RexxString *stemName, RexxObject **tail, size_t tailCount);
+    CompoundTableElement *getCompoundVariable(RexxString *stemName, RexxObject **tail, size_t tailCount);
     RexxObject  *getCompoundVariableValue(RexxString *stemName, RexxObject **tail, size_t tailCount);
     RexxObject  *getCompoundVariableRealValue(RexxString *stem, RexxObject **tail, size_t tailCount);
 

@@ -3101,7 +3101,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>949</term>
 <listitem>
-<para>The index and value objects must be the same for PUT to an index-only collection</para>
+<para>The value and index objects must be the same for PUT to an index-only collection</para>
 </listitem>
 </varlistentry>
 <varlistentry>

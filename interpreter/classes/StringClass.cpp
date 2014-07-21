@@ -48,7 +48,7 @@
 #include "RexxActivity.hpp"
 #include "ProtectedObject.hpp"
 #include "StringUtil.hpp"
-#include "RexxCompoundTail.hpp"
+#include "CompoundVariableTail.hpp"
 #include "SystemInterpreter.hpp"
 #include "MethodArguments.hpp"
 
@@ -233,7 +233,7 @@ ArrayClass  *RexxString::makeArray()
 }
 
 
-void RexxString::copyIntoTail(RexxCompoundTail *tail)
+void RexxString::copyIntoTail(CompoundVariableTail *tail)
 /******************************************************************************/
 /* Function:  Handle a tail construction request for an internal object       */
 /******************************************************************************/

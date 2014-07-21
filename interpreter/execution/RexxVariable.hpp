@@ -69,7 +69,7 @@ class RexxVariable : public RexxInternalObject
     void         uninform(RexxActivity *);
     void         setStem(RexxObject *);
 
-    inline void set(RexxObject *value)
+    inline void set(RexxInternalObject *value)
     {
         setField(variableValue, value);
         if (dependents != OREF_NULL)
@@ -78,8 +78,8 @@ class RexxVariable : public RexxInternalObject
         }
     };
 
-    inline RexxObject *getVariableValue() { return variableValue; };
-    inline RexxObject *getResolvedValue() { return variableValue != OREF_NULL ? variableValue : (RexxObject *)variable_name; };
+    inline RexxInternalObject *getVariableValue() { return variableValue; };
+    inline RexxInternalObject *getResolvedValue() { return variableValue != OREF_NULL ? variableValue : (RexxObject *)variable_name; };
     inline RexxString *getName() { return variable_name; }
     inline void setName(RexxString *name) { OrefSet(this, variable_name, name); }
 
@@ -91,7 +91,7 @@ class RexxVariable : public RexxInternalObject
         dependents = OREF_NULL;           /* and the dependents                */
     }
 
-    // Note:  This does not use OrefSet since it will only occur with
+    // Note:  This does not use setField() since it will only occur with
     // local variables that can never be part of oldspace;
     inline void setCreator(RexxActivation *creatorActivation) { creator = creatorActivation; }
     inline RexxVariable *getNext() { return (RexxVariable *)variableValue; }
@@ -101,10 +101,10 @@ class RexxVariable : public RexxInternalObject
 
 protected:
 
-    RexxString *variable_name;           // the name of the variable
-    RexxObject *variableValue;           // the assigned value of the variable.
+    RexxString *variableName;            // the name of the variable
+    RexxInternalObject *variableValue;   // the assigned value of the variable.
     RexxActivation *creator;             // the activation that created this variable
-    IdentityTable  *dependents;      // guard expression dependents
+    IdentityTable  *dependents;          // guard expression dependents
 };
 
 

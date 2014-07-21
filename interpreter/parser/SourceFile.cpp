@@ -45,7 +45,7 @@
 #include "SourceFile.hpp"
 #include "StringClass.hpp"
 #include "ArrayClass.hpp"
-#include "DirectoryClass.hpp"
+#include "StringTable.hpp"
 #include "RexxActivity.hpp"
 #include "RexxActivation.hpp"
 #include "ProgramSource.hpp"
@@ -477,7 +477,7 @@ void RexxSource::mergeRequired(RexxSource *source)
         // first merged attempt?  Create our directory
         if (mergedPublicRoutines == OREF_NULL)
         {
-            setField(mergedPublicRoutines, new_directory());
+            setField(mergedPublicRoutines, new_string_table());
         }
         // loop through the list of routines
         for (HashLink i = source->mergedPublicRoutines->first(); source->mergedPublicRoutines->available(i); i = source->mergedPublicRoutines->next(i))
@@ -494,7 +494,7 @@ void RexxSource::mergeRequired(RexxSource *source)
         // first merged attempt?  Create out directory
         if (mergedPublicRoutines == OREF_NULL)
         {
-            setField(mergedPublicRoutines, new_directory());
+            setField(mergedPublicRoutines, new_string_table());
         }
         // now copy all of the direct routines
         for (HashLink i = source->publicRoutines->first(); source->publicRoutines->available(i); i = source->publicRoutines->next(i))
@@ -509,7 +509,7 @@ void RexxSource::mergeRequired(RexxSource *source)
     {
         if (mergedPublicClasses == OREF_NULL)
         {
-            setField(mergedPublicClasses, new_directory());
+            setField(mergedPublicClasses, new_string_table());
         }
         for (HashLink i = source->mergedPublicClasses->first(); source->mergedPublicClasses->available(i); i = source->mergedPublicClasses->next(i))
         {
@@ -523,7 +523,7 @@ void RexxSource::mergeRequired(RexxSource *source)
     {
         if (mergedPublicClasses == OREF_NULL)
         {
-            setField(mergedPublicClasses, new_directory());
+            setField(mergedPublicClasses, new_string_table());
         }
         for (HashLink i = source->installedPublicClasses->first(); source->installedPublicClasses->available(i); i = source->installedPublicClasses->next(i))
         {
@@ -832,9 +832,9 @@ void RexxSource::processInstall(RexxActivation *activation)
     if (classes != OREF_NULL)
     {
         /* get an installed classes directory*/
-        setField(installedClasses, new_directory());
+        setField(installedClasses, new_string_table());
         /* and the public classes            */
-        setField(installedPublicClasses, new_directory());
+        setField(installedPublicClasses, new_string_table());
         Protected<ArrayClass> createdClasses = new_array(classes->items());
 
         size_t count = classes->items();
@@ -976,7 +976,7 @@ void RexxSource::addInstalledClass(RexxString *name, RexxClass *classObject, boo
     // make sure we have this created
     if (installedClasses == OREF_NULL)
     {
-        setField(installedClasses, new_directory());
+        setField(installedClasses, new_string_table());
     }
     installedClasses->setEntry(name, classObject);
     if (publicClass)
@@ -984,7 +984,7 @@ void RexxSource::addInstalledClass(RexxString *name, RexxClass *classObject, boo
         // make sure we have this created also
         if (installedPublicClasses == OREF_NULL)
         {
-            setField(installedPublicClasses, new_directory());
+            setField(installedPublicClasses, new_string_table());
         }
         installedPublicClasses->setEntry(name, classObject);
     }
@@ -1007,7 +1007,7 @@ void RexxSource::addInstalledRoutine(RexxString *name, RoutineClass *routineObje
     // make sure we have this created
     if (routines == OREF_NULL)
     {
-        setField(routines, new_directory());
+        setField(routines, new_string_table());
     }
     routines->setEntry(name, routineObject);
     if (publicRoutine)
@@ -1015,7 +1015,7 @@ void RexxSource::addInstalledRoutine(RexxString *name, RoutineClass *routineObje
         // make sure we have this created
         if (publicRoutines == OREF_NULL)
         {
-            setField(publicRoutines, new_directory());
+            setField(publicRoutines, new_string_table());
         }
         publicRoutines->setEntry(name, routineObject);
     }

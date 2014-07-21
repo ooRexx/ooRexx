@@ -137,11 +137,11 @@ class RexxNativeActivation : public RexxActivationBase
     inline void clearException() { conditionObj = OREF_NULL; }
     void checkConditions();
     inline RexxVariableDictionary *nextCurrent()     {return this->nextcurrent;}
-    inline RexxCompoundElement *compoundElement() {return this->compoundelement; }
+    inline CompoundTableElement *compoundElement() {return this->compoundelement; }
     inline void        setNextVariable(size_t value)           {this->nextvariable = value;}
     inline void        setNextCurrent(RexxVariableDictionary *vdict)     {this->nextcurrent = vdict;}
     inline void        setNextStem(RexxVariable *stemVar)     {this->nextstem = stemVar;}
-    inline void        setCompoundElement(RexxCompoundElement *element)     {this->compoundelement = element;}
+    inline void        setCompoundElement(CompoundTableElement *element)     {this->compoundelement = element;}
     inline RexxObject *getSelf() { return receiver; }
     inline RexxActivity *getActivity() { return activity; }
     virtual bool isStackBase();
@@ -213,7 +213,7 @@ protected:
     RexxVariableDictionary *objectVariables;
     size_t          nextvariable;        // next variable to retrieve
     RexxVariableDictionary *nextcurrent; // current processed vdict
-    RexxCompoundElement *compoundelement;// current compound variable value
+    CompoundTableElement *compoundelement;// current compound variable value
     RexxVariable   *nextstem;            // our working stem variable
     size_t          argcount;            // size of the argument list
     bool            vpavailable;         // Variable pool access flag

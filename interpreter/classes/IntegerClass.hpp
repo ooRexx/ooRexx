@@ -47,9 +47,6 @@
 #include "NumberStringClass.hpp"
 
 void integer_create ();
-#define INTEGERCACHELOW  -10
-#define INTEGERCACHESIZE 100
-#define MAX_INTEGER_LENGTH 10
 
 class RexxIntegerClass;
 
@@ -74,7 +71,7 @@ class RexxInteger : public RexxObject
     NumberString *numberString();
     RexxInteger *integerValue(size_t);
     RexxString  *makeString();
-    void         copyIntoTail(RexxCompoundTail *);
+    void         copyIntoTail(CompoundVariableTail *);
     bool         hasMethod(RexxString *);
     RexxString  *primitiveMakeString();
     RexxString  *stringValue();
@@ -165,6 +162,9 @@ class RexxInteger : public RexxObject
     static RexxInteger *integerNine;
     static RexxInteger *integerMinusOne;
 
+    static const int IntegerCacheLow = -10;
+    static const int IntegerCacheSize = 100;
+
 protected:
 
     RexxString *stringrep;              /* integer string representation     */
@@ -182,9 +182,9 @@ class RexxIntegerClass : public RexxClass
 
     inline RexxInteger *newCache(wholenumber_t value)
     {
-        if (value >= INTEGERCACHELOW && value < INTEGERCACHESIZE)
+        if (value >= IntegerCacheLow && value < IntegerCacheSize)
         {
-            return integercache[value - INTEGERCACHELOW];
+            return integercache[value - IntegerCacheLow];
         }
         else
         {
@@ -197,8 +197,8 @@ class RexxIntegerClass : public RexxClass
 
     void initCache();
 
-    // array of fast aloocation integers 0-99
-    RexxInteger *integercache[INTEGERCACHESIZE - INTEGERCACHELOW];
+    // array of fast aloocation integers -10 to 90
+    RexxInteger *integercache[IntegerCacheSize - IntegerCacheLow];
 };
 
 

@@ -57,7 +57,7 @@
 #include "ExpressionDotVariable.hpp"
 #include "ProtectedObject.hpp"
 #include "SupplierClass.hpp"
-#include "RexxCompoundTail.hpp"
+#include "CompoundVariableTail.hpp"
 #include "SourceFile.hpp"
 #include "LanguageParser.hpp"
 
@@ -168,7 +168,7 @@ void RexxVariableDictionary::dropStemVariable(RexxString *name)
 }
 
 
-RexxCompoundElement *RexxVariableDictionary::getCompoundVariable(
+CompoundTableElement *RexxVariableDictionary::getCompoundVariable(
      RexxString *stemName,             /* name of stem for compound         */
      RexxObject **tail,                /* tail of the compound element      */
      size_t      tailCount)            /* number of tail pieces             */
@@ -178,7 +178,7 @@ RexxCompoundElement *RexxVariableDictionary::getCompoundVariable(
 /******************************************************************************/
 {
     /* new tail for compound             */
-    RexxCompoundTail resolved_tail(this, tail, tailCount);
+    CompoundVariableTail resolved_tail(this, tail, tailCount);
 
     StemClass *stem_table = getStem(stemName);      /* get the stem entry from this dictionary */
     /* get the compound variable         */
@@ -196,7 +196,7 @@ RexxObject *RexxVariableDictionary::getCompoundVariableValue(
 /******************************************************************************/
 {
     /* new tail for compound             */
-    RexxCompoundTail resolved_tail(this, tail, tailCount);
+    CompoundVariableTail resolved_tail(this, tail, tailCount);
 
     StemClass *stem_table = getStem(stemName);      /* get the stem entry from this dictionary */
     /* get the value from the stem...we pass OREF_NULL */
@@ -221,7 +221,7 @@ RexxObject *RexxVariableDictionary::getCompoundVariableRealValue(RexxString *ste
      RexxObject **tail, size_t tailCount)
 {
     /* new tail for compound             */
-    RexxCompoundTail resolved_tail(this, tail, tailCount);
+    CompoundVariableTail resolved_tail(this, tail, tailCount);
 
     StemClass *stem_table = getStem(stem);          /* get the stem entry from this dictionary */
     /* get the value from the stem...we pass OREF_NULL */
@@ -584,7 +584,7 @@ RexxVariableDictionary *RexxVariableDictionary::newInstance(
 void RexxVariableDictionary::setCompoundVariable(RexxString *stemName, RexxObject **tail, size_t tailCount, RexxObject *value)
 {
                                          /* new tail for compound             */
-    RexxCompoundTail resolved_tail(this, tail, tailCount);
+    CompoundVariableTail resolved_tail(this, tail, tailCount);
 
     StemClass *stem_table = getStem(stemName);      /* get the stem entry from this dictionary */
                                          /* and set the value                 */
@@ -603,7 +603,7 @@ void RexxVariableDictionary::setCompoundVariable(RexxString *stemName, RexxObjec
 void RexxVariableDictionary::dropCompoundVariable(RexxString *stemName, RexxObject **tail, size_t tailCount)
 {
                                          /* new tail for compound             */
-    RexxCompoundTail resolved_tail(this, tail, tailCount);
+    CompoundVariableTail resolved_tail(this, tail, tailCount);
 
     StemClass *stem_table = getStem(stemName);      /* get the stem entry from this dictionary */
                                          /* and set the value                 */

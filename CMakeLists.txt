@@ -491,11 +491,10 @@ set (interpreter_api_sources ${build_interpreter_api_dir}/CallContextStubs.cpp
 set (classes_support_sources ${build_classes_support_dir}/HashCollection.cpp
             ${build_classes_support_dir}/HashContents.cpp
             ${build_classes_support_dir}/ProgramMetaData.cpp
-            ${build_classes_support_dir}/RexxCompoundElement.cpp
-            ${build_classes_support_dir}/RexxCompoundTable.cpp
-            ${build_classes_support_dir}/RexxCompoundTail.cpp
+            ${build_classes_support_dir}/CompoundTableElement.cpp
+            ${build_classes_support_dir}/CompoundVariableTable.cpp
+            ${build_classes_support_dir}/CompoundVariableTail.cpp
             ${build_classes_support_dir}/RexxDateTime.cpp
-            ${build_classes_support_dir}/RexxListTable.cpp
             ${build_classes_support_dir}/StringUtil.cpp)
 set (classes_sources ${build_classes_dir}/ArrayClass.cpp
             ${build_classes_dir}/BagClass.cpp

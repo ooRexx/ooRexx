@@ -81,16 +81,16 @@ public:
         inline RexxInternalObject *value() { return contents->entryValue(position); }
         inline RexxInternalObject *index() { return contents->entryIndex(position); }
         inline void replace(RexxInternalObject v) { contents->setValue(position, v); }
-        inline void next() { position = contents->nextMatch(index, position); }
+        inline void next() { contents->nextMatch(indexValue, position); }
 
 	private:
         // constructor for an index iterator
 		IndexIterator(HashContents *c, RexxInternalObject *i, ItemLink p)
-            : contents(c), index(i), position(p) { }
+            : contents(c), indexValue(i), position(p) { }
 
         HashContents *contents;
-        RexxInternalObject *index(i);
-        ItemLink position(p);
+        RexxInternalObject *indexValue;
+        ItemLink position;
 	};
 
 
@@ -112,11 +112,11 @@ public:
 
 	private:
         // constructor for an index iterator
-		TableIterator(HashContents *c, ItemLink p, ItemLink nextBucket)
-            : contents(c), index(i), position(p) { }
+		TableIterator(HashContents *c, ItemLink p, ItemLink n)
+            : contents(c), position(p), nextBucket(n) { }
 
         HashContents *contents;
-        ItemLink position(p);
+        ItemLink position;
         ItemLink nextBucket;
 	};
 
@@ -289,7 +289,8 @@ public:
     bool locateEntry(RexxInternalObject *index, ItemLink &position, ItemLink &previous);
     bool locateEntry(RexxInternalObject *index, RexxInternalObject *item, ItemLink &position, ItemLink &previous);
     bool locateItem(RexxInternalObject *item, ItemLink &position, ItemLink &previous);
-    bool nextMatch(RexxInternalObject *index, ItemLink &position);
+    void nextMatch(RexxInternalObject *index, ItemLink &position);
+    void iterateNext(ItemLink &position, ItemLink &nextBucket);
     ArrayClass *removeAll(RexxInternalObject *index);
     RexxInternalObject *removeItem(RexxInternalObject *value, RexxInternalObject *index);
     bool hasItem(RexxInternalObject *value, RexxInternalObject *index );

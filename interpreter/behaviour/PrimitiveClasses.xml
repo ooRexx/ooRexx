@@ -191,7 +191,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="LibraryDirective" class="LibraryDirective" include="LibraryDirective.hpp"/>
 <Class id="RequiresDirective" class="RequiresDirective" include="RequiresDirective.hpp"/>
 
-<Class id="CompoundElement" class="RexxCompoundElement" include="RexxCompoundElement.hpp"/>
+<Class id="CompoundElement" class="CompoundTableElement" include="CompoundTableElement.hpp"/>
 <Class id="ParseTrigger" class="RexxTrigger" include="ParseTrigger.hpp"/>
 <Class id="ProgramSource" class="ProgramSource" include="ProgramSource.hpp"/>
 <Class id="ArrayProgramSource" class="ArrayProgramSource" include="ProgramSource.hpp"/>

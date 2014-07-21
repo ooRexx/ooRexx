@@ -161,10 +161,10 @@ RexxObject * RexxInternalObject::makeProxy(Envelope *envelope)
  *
  * @param type   The internal type number.
  */
-inline void setObjectType(size_t type)
+void setObjectType(size_t type)
 {
-    sevVirtualFunctions(virtualFunctionTable[objectType]);
-    setBehaviour(RexxBehaviour::getPrimitiveBehaviour(objectType));
+    setVirtualFunctions(memoryObject.virtualFunctionTable[type]);
+    setBehaviour(RexxBehaviour::getPrimitiveBehaviour(type));
 }
 
 
@@ -1078,7 +1078,7 @@ RexxString *RexxInternalObject::makeString()
 }
 
 
-void RexxInternalObject::copyIntoTail(RexxCompoundTail *tail)
+void RexxInternalObject::copyIntoTail(CompoundVariableTail *tail)
 /******************************************************************************/
 /* Function:  Handle a tail construction request for an internal object       */
 /******************************************************************************/
@@ -1110,7 +1110,7 @@ RexxString *RexxObject::makeString()
 }
 
 
-void RexxObject::copyIntoTail(RexxCompoundTail *tail)
+void RexxObject::copyIntoTail(CompoundVariableTail *tail)
 /******************************************************************************/
 /* Function:  Handle a tail construction request for an internal object       */
 /******************************************************************************/
@@ -1137,18 +1137,24 @@ ArrayClass *RexxInternalObject::makeArray()
   return (ArrayClass *)TheNilObject;    /* should never occur                */
 }
 
+
+/**
+ * Handle an array conversion for a REXX object.
+ *
+ * @return The converted array, or TheNilObject for no result returned.
+ */
 ArrayClass *RexxObject::makeArray()
-/******************************************************************************/
-/* Function:  Handle a string conversion REQUEST for a REXX object            */
-/******************************************************************************/
 {
-  if (isBaseClass())             /* primitive object?                 */
-    return (ArrayClass *)TheNilObject;  /* this never converts               */
-  else                                 /* process as a string request       */
-  {
-      return (ArrayClass *)sendMessage(OREF_REQUEST, OREF_ARRAYSYM);
-  }
+    if (isBaseClass())
+    {
+        return (ArrayClass *)TheNilObject;
+    }
+    else
+    {
+        return (ArrayClass *)resultOrNil(sendMessage(OREF_REQUEST, OREF_ARRAYSYM));
+    }
 }
+
 
 RexxString *RexxInternalObject::requestString()
 /******************************************************************************/
@@ -2540,8 +2546,8 @@ RexxObject *RexxObject::hasMethodRexx(RexxString *message )
 /* Function:  Exported access to an object virtual function                   */
 /******************************************************************************/
 {
-  message = stringArgument(message, ARG_ONE)->upper();
-  return booleanObject(hasMethod(message));
+    message = stringArgument(message, ARG_ONE)->upper();
+    return booleanObject(hasMethod(message));
 }
 
 void RexxInternalObject::printObject()

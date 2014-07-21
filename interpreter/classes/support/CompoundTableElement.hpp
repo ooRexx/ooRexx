@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -36,51 +36,68 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                     RexxCompoundElement.hpp    */
+/* REXX Kernel                                     CompoundTableElement.hpp   */
 /*                                                                            */
-/* Primitive CompoundVariable Class Definition                                */
+/* An element that is part of the balanced binary tree managed by a           */
+/* CompoundVariableTable                                                      */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_RexxCompoundElement
-#define Included_RexxCompoundElement
+#ifndef Included_CompoundTableElement
+#define Included_CompoundTableElement
 
 #include "RexxVariable.hpp"
 #include "StringClass.hpp"
 
-class RexxCompoundElement : public RexxVariable {
- friend class RexxCompoundTable;        // allow the compound table to access innards.
+class CompoundTableElement : public RexxVariable
+{
+ friend class CompoundVariableTable;        // allow the compound table to access innards.
 
  public:
-  inline void *operator new(size_t size, void *ptr) { return ptr; };
-  inline void  operator delete(void *) { ; }
-  inline void  operator delete(void *, void *) { ; }
+    inline void *operator new(size_t size, void *ptr) { return ptr; };
+    inline void  operator delete(void *) { ; }
+    inline void  operator delete(void *, void *) { ; }
 
-  inline RexxCompoundElement(RESTORETYPE restoreType) { ; };
-  void         live(size_t);
-  void         liveGeneral(MarkReason reason);
-  void         flatten(Envelope *);
+    inline CompoundTableElement(RESTORETYPE restoreType) { ; };
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(Envelope *);
 
-  inline RexxCompoundElement *realVariable() { return real_element != OREF_NULL ? real_element : this; }
-  inline void setParent(RexxCompoundElement *parentElement) { OrefSet(this, this->parent, parentElement); }
-  inline void setLeft(RexxCompoundElement *leftChild) { OrefSet(this, this->left, leftChild); }
-  inline void setRight(RexxCompoundElement *rightChild) { OrefSet(this, this->right, rightChild); }
-  inline void expose(RexxCompoundElement *real) { OrefSet(this, this->real_element, real); }
-  inline RexxString *createCompoundName(RexxString *stemName) { return stemName->concat(getName()); }
-  inline void setValue(RexxObject *value) { set(value); }
+    inline CompoundTableElement *realVariable() { return realElement != OREF_NULL ? realElement : this; }
+    inline void setParent(CompoundTableElement *parentElement) { setField(parent, parentElement); }
+    inline void setLeft(CompoundTableElement *leftChild) { setField(left, leftChild); }
+    inline void setRight(CompoundTableElement *rightChild) { setField(right, rightChild); }
 
-  static RexxCompoundElement *newInstance(RexxString *name);
+    inline bool isRightChild(CompoundTableElement *n)  { return right == n; }
+    inline bool isLeftChild(CompoundTableElement *n)  { return left == n; }
+    // hook up a node to a child based on last traversal position.
+    inline void setChild(int rc, CompoundTableElement *child)
+    {
+        if (rc > 0)
+        {
+            setRight(child);
+        }
+        else
+        {
+            setLeft(child);
+        }
+    }
+    inline void expose(CompoundTableElement *real) { setField(realElement, real); }
+    inline RexxString *createCompoundName(RexxString *stemName) { return stemName->concat(getName()); }
+    inline void setValue(RexxInternalObject *value) { set(value); }
+
+    static CompoundTableElement *newInstance(RexxString *name);
 
 protected:
 
-  RexxCompoundElement *left;             /* the left child */
-  RexxCompoundElement *right;            /* the right child */
-  RexxCompoundElement *parent;           /* the parent entry to this node */
-  unsigned short leftdepth;               /* depth on the left side */
-  unsigned short rightdepth;              /* depth on the right side */
-  RexxCompoundElement *real_element;      /* a potential expose indirection */
+    CompoundTableElement *left;             // the left child
+    CompoundTableElement *right;            // the right child
+    CompoundTableElement *parent;           // the parent entry to this node
+    unsigned short leftDepth;               // depth on the left side
+    unsigned short rightDepth;              // depth on the right side
+    CompoundTableElement *realElement;      // a potential expose indirection
 };
 
 
-inline RexxCompoundElement *new_compoundElement(RexxString *s) { return RexxCompoundElement::newInstance(s); }
+inline CompoundTableElement *new_compoundElement(RexxString *s) { return new CompoundTableElement(s); }
 
 #endif

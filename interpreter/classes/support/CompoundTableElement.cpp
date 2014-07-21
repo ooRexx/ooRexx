@@ -35,53 +35,95 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/******************************************************************************/
-/* REXX Kernel                                         ListClassTable.hpp      */
-/*                                                                            */
-/* Primitive List Table Class Definitions                                     */
-/*                                                                            */
-/******************************************************************************/
-#ifndef Included_ListTable
-#define Included_ListTable
+/****************************************************************************/
+/* REXX Kernel                                    CompoundTableElement.cpp  */
+/*                                                                          */
+/* Primitive Compound Variable Element Class                                */
+/*                                                                          */
+/****************************************************************************/
+#include "RexxCore.h"
+#include "CompoundTableElement.hpp"
+#include "RexxActivity.hpp"
 
-#include "ObjectClass.hpp"
 
-class LISTENTRY
+/**
+ * Allocate a new compound table element object.
+ *
+ * @param size   The size of the object.
+ *
+ * @return Storage for creating the object.
+ */
+void *RexxVariable::operator new(size_t size)
 {
-public:
-    RexxObject *value;                   // list element value
-    size_t next;                         // next list element in chain
-    size_t previous;                     // previous list element in chain
-};
+    return new_object(size, T_CompoundElement);
+}
 
 
-class ListTable : public RexxInternalObject
+/**
+ * Initialize a new CompoundTableElement
+ *
+ * @param name   The name of the tail element.
+ */
+CompoundTableElement::CompoundTableElement(RexxString *name)
 {
-  public:
-   void * operator new(size_t, size_t);
-   void * operator new(size_t, size_t, size_t);
-   inline void *operator new(size_t size, void *objectPtr) { return objectPtr; };
-   inline void operator delete(void *, size_t) { }
-   inline void operator delete(void *, size_t, size_t) { }
-   inline void  operator delete(void *, void *) {;}
+    variableName = name;
+}
 
-   inline ListTable(RESTORETYPE restoreType) { ; };
-   inline ListTable() {;};
 
-    class LISTENTRY
-    {
-    public:
-        RexxObject *value;                   // list element value
-        size_t next;                         // next list element in chain
-        size_t previous;                     // previous list element in chain
-    };
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
+void CompoundTableElement::live(size_t liveMark)
+{
+    memory_mark(variableValue);
+    memory_mark(variableName);
+    memory_mark(dependents);
+    memory_mark(parent);
+    memory_mark(left);
+    memory_mark(right);
+    memory_mark(realElement);
+}
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
 
- protected:
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
+void CompoundTableElement::liveGeneral(MarkReason reason)
+{
+    memory_mark_general(variableValue);
+    memory_mark_general(variableName);
+    memory_mark_general(dependents);
+    memory_mark_general(parent);
+    memory_mark_general(left);
+    memory_mark_general(right);
+    memory_mark_general(realElement);
+}
 
-    size_t size;                        // count of list element
-};
-#endif
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
+void CompoundTableElement::flatten(Envelope *envelope)
+{
+    setUpFlatten(CompoundTableElement)
+
+    flattenRef(variableValue);
+    flattenRef(variableName);
+    // We do not want to flatten a table of activities, so
+    // null that out.
+    dependents = OREF_NULL;
+    flattenRef(parent);
+    flattenRef(left);
+    flattenRef(right);
+    flattenRef(realElement);
+
+    cleanUpFlatten
+}

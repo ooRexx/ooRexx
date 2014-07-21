@@ -196,7 +196,7 @@ class RexxActivity : public RexxInternalObject
     void        relinquish();
     bool        halt(RexxString *);
     bool        setTrace(bool);
-    void        yieldControl();
+    inline void yieldControl() { releaseAccess(); requestAccess(); }
     void        yield();
     void        releaseAccess();
     void        requestAccess();

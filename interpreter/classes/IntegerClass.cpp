@@ -47,7 +47,7 @@
 #include "RexxActivation.hpp"
 #include "RexxActivity.hpp"
 #include "Numerics.hpp"
-#include "RexxCompoundTail.hpp"
+#include "CompoundVariableTail.hpp"
 #include "MethodArguments.hpp"
 
 
@@ -83,19 +83,26 @@ HashCode RexxInteger::getHashValue()
 }
 
 
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
 void RexxInteger::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
     memory_mark(objectVariables);
     memory_mark(stringrep);
 }
 
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
 void RexxInteger::liveGeneral(MarkReason reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
 {
     // if this integer is part of the image, force the
     // string rep and the numberstring version to be created.  This
@@ -109,10 +116,13 @@ void RexxInteger::liveGeneral(MarkReason reason)
     memory_mark_general(stringrep);
 }
 
+
+/**
+ * Flatten a source object.
+ *
+ * @param envelope The envelope that will hold the flattened object.
+ */
 void RexxInteger::flatten(Envelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
 {
     setUpFlatten(RexxInteger)
 
@@ -122,12 +132,15 @@ void RexxInteger::flatten(Envelope *envelope)
     cleanUpFlatten
 }
 
+
+/**
+ * Handle a REQUEST('STRING') request for a REXX integer object
+ *
+ * @return The string value of the integer object.
+ */
 RexxString *RexxInteger::makeString()
-/******************************************************************************/
-/* Function:  Handle a REQUEST('STRING') request for a REXX integer object    */
-/******************************************************************************/
 {
-  return stringValue();          /* return the string value           */
+    return stringValue();
 }
 
 
@@ -141,88 +154,99 @@ ArrayClass *RexxInteger::makeArray()
   return stringValue()->makeArray();     // have the string value handle this
 }
 
+
+/**
+ * Spoofed version of the standard hasMethod method.  This
+ * will forward the request to the object's string representation.
+ *
+ * @param methodName The target name of the method.
+ *
+ * @return .true if the object has the method, .false otherwise.
+ */
 bool RexxInteger::hasMethod(RexxString *methodName)
-/******************************************************************************/
-/* Function:  Handle a HASMETHOD request for an integer                       */
-/******************************************************************************/
 {
                                        /* return the string value's answer  */
     return stringValue()->hasMethod(methodName);
 }
 
+
+/**
+ * Low level processing for a REQUEST('STRING') request.
+ *
+ * @return The string representation for this object.
+ */
 RexxString *RexxInteger::primitiveMakeString()
 /******************************************************************************/
 /* Function:  Handle a REQUEST('STRING') request for a REXX integer object    */
 /******************************************************************************/
 {
-    if (stringrep != OREF_NULL)    /* have a string already?            */
+    // if we've already created a string representation, just return it immediately
+    if (stringrep != OREF_NULL)
     {
-        return stringrep;            /* return it directly                */
+        return stringrep;
     }
-    char        stringBuffer[32];        /* integer formatting buffer         */
-                                           /* convert value into string         */
+
+    // convert this into an ASCII-Z string, then into a string object.
+    char        stringBuffer[32];
     Numerics::formatWholeNumber(value, stringBuffer);
 
-    /* return as a string                */
+    // and make the object version of this
     RexxString *string = new_string(stringBuffer, strlen(stringBuffer));
-    /* cache this away for later         */
-    OrefSet(this, stringrep, string);
+    // save this for later requests.  If used once, we're likely to use it
+    // again.
+    setField(stringrep, string);
     setHasReferences();            // now have references that need marking
-    return string;                       /* return the new string             */
+    return string;
 }
 
+
+/**
+ * Return a string value for an integer object.
+ *
+ * @return The object string value.
+ */
 RexxString *RexxInteger::stringValue()
-/******************************************************************************/
-/* Function:  Return the string value for an integer                          */
-/******************************************************************************/
 {
-    if (stringrep != OREF_NULL)    /* have a string already?            */
-    {
-        return stringrep;            /* return it directly                */
-    }
-
-    char        stringBuffer[32];        /* integer formatting buffer         */
-                                           /* convert value into string         */
-    Numerics::formatWholeNumber(value, stringBuffer);
-    /* return as a string                */
-    RexxString *string = new_string(stringBuffer, strlen(stringBuffer));
-    /* cache this away for later         */
-    OrefSet(this, stringrep, string);
-    setHasReferences();            /* we now have references            */
-    return string;                       /* return the new string             */
+    return primitiveStringValue();
 }
 
-void RexxInteger::copyIntoTail(RexxCompoundTail *tail)
-/******************************************************************************/
-/* Function:  Copy the value of an integer into a compound variable name      */
-/******************************************************************************/
+
+/**
+ * Copy the value of an integer into a compound variable name
+ *
+ * @param tail   The compound tail we're adding to.
+ */
+void RexxInteger::copyIntoTail(CompoundVariableTail &tail)
 {
-    if (stringrep != OREF_NULL)  /* have a string already?            */
+    // if we have a string already, just have it copy itself
+    if (stringrep != OREF_NULL)
     {
-        /* copying directly from an existing string rep is faster */
-        /* than formatting a new value and copying. */
-        tail->append(stringrep->getStringData(), stringrep->getLength());
+        stringrep->copyIntoTail(tail);
         return;
     }
-    char        stringBuffer[32];        /* integer formatting buffer         */
-    /* convert value into string         */
+    // we will format as a string, but skip creating a string object
+    char        stringBuffer[32];
+    // convert value into ASCII-Z string and append to the buffer.
     Numerics::formatWholeNumber(value, stringBuffer);
-    /* append this to the buffer         */
     tail->append(stringBuffer, strlen(stringBuffer));
 }
 
 
+/**
+ * Convert an integer into a number string.
+ *
+ * @return The number string version of the integer.
+ */
 NumberString *RexxInteger::numberString()
-/******************************************************************************/
-/* Function:  Convert an integer into a numberstring value                    */
-/******************************************************************************/
 {
+    // if we have a string representation, use its numberstring value to
+    // all values remain in sync.
     if (stringrep != OREF_NULL)    /* have a cached string value?       */
     {
-        /* use its numberstring value        */
         return stringrep->numberString();
     }
-    else                                 /* create a new numberstring         */
+    // create a numberstring version directly from the integer.
+    else
     {
         return(NumberString *)new_numberstringFromWholenumber((wholenumber_t)value);
     }
@@ -256,11 +280,10 @@ bool RexxInteger::doubleValue(double &result)
  */
 bool RexxInteger::numberValue(wholenumber_t &result)
 {
-                                       /* is the long value expressable as a*/
-                                       /*  whole number in REXX term.       */
+    // is the long value expressable as a whole number in REXX term.
     if (Numerics::abs(value) > Numerics::MAX_WHOLENUMBER)
     {
-        return false;                    /* nope, not a valid long.           */
+        return false;                    // nope, not a valid long.
     }
     result = value;                      // return the value
     return true;                         // this was convertable
@@ -279,8 +302,7 @@ bool RexxInteger::numberValue(wholenumber_t &result)
  */
 bool RexxInteger::numberValue(wholenumber_t &result, size_t digits)
 {
-                                       /* is the long value expressable as a*/
-                                       /*  whole number in REXX term.       */
+    // is this expressable as a number under the current digits value?
     if (digits < Numerics::DEFAULT_DIGITS && Numerics::abs(value) >= Numerics::validMaxWhole[digits - 1])
     {
         return false;                      /* nope, not a valid long.           */
@@ -323,51 +345,59 @@ bool RexxInteger::unsignedNumberValue(stringsize_t &result)
  */
 bool RexxInteger::unsignedNumberValue(stringsize_t &result, size_t digits)
 {
-                                       /* is the long value expressable as a*/
-                                       /*  whole number in REXX term.       */
+    // valid as a unsigned number in the current digits range?
     if (value < 0 || (digits < Numerics::DEFAULT_DIGITS && value >= Numerics::validMaxWhole[digits - 1]))
     {
-        return false;                      /* nope, not a valid long.           */
+        return false;
     }
     result = wholeNumber();              // return the value
     return true;                         // this was convertable
 }
 
-RexxInteger *RexxInteger::integerValue(
-    size_t digits)                     /* required precision (ignored)      */
-/******************************************************************************/
-/* Function:  Convert an integer to an integer (real easy!)                   */
-/******************************************************************************/
+
+/**
+ * Convert an integer to an integer (real easy!)
+ *
+ * @param digits The digits setting.
+ *
+ * @return The integer value of this integer...which is us.
+ */
+RexxInteger *RexxInteger::integerValue(size_t digits)
 {
-  return this;                         /* just return directly              */
+  return this;
 }
 
-void RexxInteger::setString(
-    RexxString *string )               /* new string value                  */
-/******************************************************************************/
-/* Function:  Add a string value to the string look-a-side.                   */
-/******************************************************************************/
+
+/**
+ * Set the integer string value.
+ *
+ * @param string The new string value.
+ */
+void RexxInteger::setString(RexxString *string )
 {
-                                       /* set the strign                    */
-   OrefSet(this, stringrep, string);
-   setHasReferences();           /* we now have references            */
+    setField(stringrep, string);
+    setHasReferences();
 }
 
-bool RexxInteger::truthValue(
-    int   errorcode )                  /* error to raise if not good        */
-/******************************************************************************/
-/* Function:  Determine the truth value of an integer object                  */
-/******************************************************************************/
+
+/**
+ * Determine the truth value of an integer object
+ *
+ * @param errorcode The error code to issue.
+ *
+ * @return either true or false, based on the validation.
+ */
+bool RexxInteger::truthValue(int errorcode)
 {
-    if (value == 0)                /* have a zero?                      */
+    if (value == 0)
     {
-        return false;                      /* this is false                     */
+        return false;
     }
-    else if (value != 1)           /* how about a one?                  */
+    else if (value != 1)
     {
-        reportException(errorcode, this);/* report the error                  */
+        reportException(errorcode, this);
     }
-    return true;                         /* this is true                      */
+    return true;
 }
 
 
@@ -1211,9 +1241,9 @@ RexxObject  *RexxInteger::getRealValue(
  */
 void RexxIntegerClass::initCache()
 {
-     for (int i=INTEGERCACHELOW; i<INTEGERCACHESIZE; i++ )
+     for (int i = IntegerCacheLow; i < IntegerCacheSize; i++ )
      {
-         integercache[i - INTEGERCACHELOW] = new  RexxInteger (i);
+         integercache[i - IntegerCacheLow] = new  RexxInteger (i);
          // force the item to create its string value too.  This can save
          // us a lot of time when string indices are used for compound
          // variables and also eliminate a bunch of old-new table
@@ -1221,7 +1251,7 @@ void RexxIntegerClass::initCache()
 
          // because the numberstring value is required for operations, we
          // also generate that as well to avoid the oldspace/newspace operations.
-         integercache[i - INTEGERCACHELOW]->stringValue()->numberString();
+         integercache[i - IntegerCacheLow]->stringValue()->numberString();
      }
 }
 
@@ -1236,9 +1266,9 @@ void RexxIntegerClass::live(size_t liveMark)
     RexxClass::live(liveMark);     // do RexxClass level marking
 
     // mark the cache array
-    for (int i = INTEGERCACHELOW; i < INTEGERCACHESIZE ;i++ )
+    for (int i = IntegerCacheLow; i < IntegerCacheSize ;i++ )
     {
-         memory_mark(integercache[i - INTEGERCACHELOW]);
+         memory_mark(integercache[i - IntegerCacheLow]);
     }
 }
 
@@ -1247,9 +1277,9 @@ void RexxIntegerClass::liveGeneral(MarkReason reason)
     RexxClass::liveGeneral(reason);// do RexxClass level marking
 
     // mark the cache array
-    for (int i = INTEGERCACHELOW; i < INTEGERCACHESIZE ;i++ )
+    for (int i = IntegerCacheLow; i < IntegerCacheSize ;i++ )
     {
-         memory_mark_general(integercache[i - INTEGERCACHELOW]);
+         memory_mark_general(integercache[i - IntegerCacheLow]);
     }
 }
 

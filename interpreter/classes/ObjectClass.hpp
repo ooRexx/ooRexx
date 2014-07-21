@@ -50,8 +50,8 @@
 class RexxObject;
 class RexxInteger;
 class RexxBehaviour;
-class RexxCompoundTail;
-class RexxCompoundElement;
+class CompoundVariableTail;
+class CompoundTableElement;
 class SupplierClass;
 class Envelope;
 class RexxVariableDictionary;
@@ -265,11 +265,7 @@ class RexxInternalObject : public RexxVirtualBase
     inline void   setInitHeader(size_t s, size_t markword)  { header.initHeader(s, markword); }
     inline void   setInitHeader(size_t markword)  { header.initHeader(markword); }
 
-    inline void setObjectType(size_t type);
-    {
-        sevVirtualFunctions(virtualFunctionTable[objectType]);
-        setBehaviour(RexxBehaviour::getPrimitiveBehaviour(objectType));
-    }
+           void setObjectType(size_t type);
 
     inline void   setObjectLive(size_t markword)  { header.setObjectMark(markword); }
     inline void   setHasReferences() { header.setHasReferences(); }
@@ -316,7 +312,7 @@ class RexxInternalObject : public RexxVirtualBase
     virtual bool         truthValue(int);
     virtual bool         logicalValue(logical_t &);
     virtual RexxString  *makeString();
-    virtual void         copyIntoTail(RexxCompoundTail *buffer);
+    virtual void         copyIntoTail(CompoundVariableTail *buffer);
     virtual RexxString  *primitiveMakeString();
     virtual ArrayClass   *makeArray();
     virtual RexxString  *stringValue();
@@ -432,7 +428,7 @@ class RexxObject : public RexxInternalObject
     virtual RexxString  *defaultName();
     virtual RexxObject  *unknown(RexxString *msg, ArrayClass *args){return OREF_NULL;};
     virtual bool        *hasMethod(RexxString *msg);
-            RexxInteger *hasMethodRexx(RexxString *msg);
+            RexxObject  *hasMethodRexx(RexxString *);
             bool         hasUninitMethod();
 
     RexxObject *initRexx();
@@ -455,7 +451,7 @@ class RexxObject : public RexxInternalObject
     RexxInteger *integerValue(size_t);
     RexxString  *makeString();
     RexxString  *primitiveMakeString();
-    void         copyIntoTail(RexxCompoundTail *buffer);
+    void         copyIntoTail(CompoundVariableTail *buffer);
     ArrayClass   *makeArray();
     RexxString  *stringValue();
 
@@ -542,7 +538,6 @@ class RexxObject : public RexxInternalObject
     RexxString  *defaultNameRexx();
     RexxObject  *copyRexx();
     RexxObject  *unknownRexx(RexxString *, ArrayClass *);
-    RexxObject  *hasMethodRexx(RexxString *);
     void *getCSelf();
     void *getCSelf(RexxObject *scope);
     virtual wholenumber_t compareTo(RexxObject *);

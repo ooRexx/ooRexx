@@ -438,15 +438,13 @@ bool HashContents::locateEntry(RexxInternalObject *index, ItemLink &position, It
  * @param index    The target entry index.
  * @param position The starting position for the search (the
  *                 last match)
- *
- * @return true if the item is located, false for a failure
  */
-bool HashContents::nextMatch(RexxInternalObject *index, ItemLink &position)
+void HashContents::nextMatch(RexxInternalObject *index, ItemLink &position)
 {
     // got a bad call here.
     if (position == NoMore)
     {
-        return false;
+        return;
     }
 
     // step to the next position
@@ -458,7 +456,7 @@ bool HashContents::nextMatch(RexxInternalObject *index, ItemLink &position)
         // if this is a match, we're done
         if (isIndex(position, index))
         {
-            return true;
+            return;
         }
         // step to the next position
         position = nextEntry(position);
@@ -466,7 +464,7 @@ bool HashContents::nextMatch(RexxInternalObject *index, ItemLink &position)
 
     // hit the end of the chain, we don't have this item
     // (position also marks this as the end)
-    return false;
+    return;
 }
 
 
@@ -476,7 +474,7 @@ bool HashContents::nextMatch(RexxInternalObject *index, ItemLink &position)
  * @param position   The starting position.
  * @param nextBucket The next bucket to step to once this chain is used up.
  */
-void HashContents::iterateNext(ItemLink &position, ItemLink nextBucket)
+void HashContents::iterateNext(ItemLink &position, ItemLink &nextBucket)
 {
     // have a good current position...step to the next chain item.
     if (position != NoMore)
@@ -499,6 +497,8 @@ void HashContents::iterateNext(ItemLink &position, ItemLink nextBucket)
             return;
         }
     }
+    // make sure this is marked as a failure
+    position = NoMore;
 }
 
 

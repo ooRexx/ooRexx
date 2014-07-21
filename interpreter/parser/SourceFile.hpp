@@ -123,29 +123,29 @@ class RexxSource: public RexxInternalObject
     inline RexxString *getProgramDirectory() { return programDirectory; }
     inline RexxString *getProgramExtension() { return programExtension; }
     inline RexxString *getProgramFile() { return programFile; }
-    inline DirectoryClass *getMethods() { return unattachedMethods; };
-    inline DirectoryClass *getRoutines() { return routines; };
+    inline StringTable *getMethods() { return unattachedMethods; };
+    inline StringTable *getRoutines() { return routines; };
 
     inline bool        isInternalCode() { return isOldSpace(); }
 
     void        setSecurityManager(RexxObject *manager) { setField(securityManager, new SecurityManager(manager)); }
     SecurityManager *getSecurityManager() { return securityManager; }
 
-    inline DirectoryClass *getLocalRoutines() { return routines; }
-    inline DirectoryClass *getPublicRoutines() { return publicRoutines; }
-    inline void setLocalRoutines(DirectoryClass *r) { routines = r; }
-    inline void setPublicRoutines(DirectoryClass *r) { publicRoutines = r; }
+    inline StringTable *getLocalRoutines() { return routines; }
+    inline StringTable *getPublicRoutines() { return publicRoutines; }
+    inline void setLocalRoutines(StringTable *r) { routines = r; }
+    inline void setPublicRoutines(StringTable *r) { publicRoutines = r; }
 
     void addInstalledClass(RexxString *name, RexxClass *classObject, bool publicClass);
     void addInstalledRoutine(RexxString *name, RoutineClass *routineObject, bool publicRoutine);
 
-    inline DirectoryClass *getInstalledClasses() { install(); return installedClasses; }
-    inline DirectoryClass *getInstalledPublicClasses() { install(); return installedPublicClasses; }
-    inline DirectoryClass *getImportedClasses() { install(); return mergedPublicClasses; }
-    inline DirectoryClass *getInstalledRoutines() { install(); return routines; }
-    inline DirectoryClass *getInstalledPublicRoutines() { install(); return publicRoutines; }
-    inline DirectoryClass *getImportedRoutines() { install(); return mergedPublicRoutines; }
-    inline DirectoryClass *getDefinedMethods() { install(); return unattachedMethods; }
+    inline StringTable *getInstalledClasses() { install(); return installedClasses; }
+    inline StringTable *getInstalledPublicClasses() { install(); return installedPublicClasses; }
+    inline StringTable *getImportedClasses() { install(); return mergedPublicClasses; }
+    inline StringTable *getInstalledRoutines() { install(); return routines; }
+    inline StringTable *getInstalledPublicRoutines() { install(); return publicRoutines; }
+    inline StringTable *getImportedRoutines() { install(); return mergedPublicRoutines; }
+    inline StringTable *getDefinedMethods() { install(); return unattachedMethods; }
     inline ArrayClass     *getPackages() { install(); return loadedPackages; }
     inline void           setDigits(size_t d) { digits = d; }
     inline size_t         getDigits() { return digits; }
@@ -178,23 +178,23 @@ protected:
 
     // sections derived from directives
 
-    DirectoryClass *routines;             // routines found on directives
-    DirectoryClass *publicRoutines;       // PUBLIC routines directive routines
+    StringTable *routines;                // routines found on directives
+    StringTable *publicRoutines;          // PUBLIC routines directive routines
     ArrayClass     *libraries;            // packages requiring loading
     ArrayClass     *requires;             // requires directives
     ArrayClass     *classes;              // classes found on directives
-    DirectoryClass *dataAssets;           // assets defined in the package
-    DirectoryClass *unattachedMethods;    // methods found on directives
+    StringTable *dataAssets;              // assets defined in the package
+    StringTable *unattachedMethods;       // methods found on directives
 
     // sections resolved from the install process.
 
     ArrayClass     *loadedPackages;       // packages imported by this package
-                                         // all public installed classes
-    DirectoryClass *installedPublicClasses;
-    DirectoryClass *installedClasses;    // entire list of installed classes
-    DirectoryClass *mergedPublicClasses;  // entire merged set of classes
-                                         // all public required routines
-    DirectoryClass *mergedPublicRoutines;
+                                          // all public installed classes
+    StringTable *installedPublicClasses;
+    StringTable *installedClasses;        // entire list of installed classes
+    StringTable *mergedPublicClasses;     // entire merged set of classes
+                                          // all public required routines
+    StringTable *mergedPublicRoutines;
 
     bool           installRequired;      // flag settings.  Make it big enough for some expansion.
 

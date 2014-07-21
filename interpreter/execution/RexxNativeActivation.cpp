@@ -2290,7 +2290,7 @@ bool RexxNativeActivation::fetchNext(
 /******************************************************************************/
 {
     RexxVariable *variable;              /* retrieved variable value          */
-    RexxCompoundElement *compound;       /* retrieved variable value          */
+    CompoundTableElement *compound;       /* retrieved variable value          */
     StemClass     *stemVar;               /* a potential stem variable collection */
 
                                          /* starting off fresh?               */

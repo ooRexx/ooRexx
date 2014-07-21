@@ -660,6 +660,9 @@ StartClassDefinition(Queue);
         AddMethod(CHAR_QUEUE, QueueClass::queueRexx, 1);
         AddMethod(CHAR_PUT, QueueClass::putRexx, 2);
         AddMethod(CHAR_REMOVE, QueueClass::removeRexx, 1);
+        // the queue size is always the number of items, so remap that call
+        // to the array items method.
+        AddMethod(CHAR_SIZE, ArrayClass::items, 0);
 
     CompleteMethodDefinitions();
 
@@ -737,6 +740,12 @@ StartClassDefinition(StringTable);
         // most of the hash collection methods can be inherited
         InheritInstanceMethods(IdentityTable);
 
+        AddMethod(CHAR_UNKNOWN, ObjectClass::unknown, 2);
+        AddMethod(CHAR_ENTRY, StringHashCollection::entryRexx, 1);
+        AddMethod(CHAR_HASENTRY, StringHashCollection::hasEntry, 1);
+        AddMethod(CHAR_SETENTRY, StringHashCollection::setEntry, 2);
+        AddMethod("RemoveEntry", StringHashCollection::removeEntry, 1);
+
     CompleteMethodDefinitions();
 
     CompleteClassDefinition(StringTable);
@@ -776,14 +785,9 @@ StartClassDefinition(Directory)
     CompleteClassMethodDefinitions();
 
     // many of the hash collection methods can be inherited
-        InheritInstanceMethods(IdentityTable);
+        InheritInstanceMethods(StringTable);
 
-        AddMethod(CHAR_UNKNOWN, DirectoryClass::unknown, 2);
         AddMethod(CHAR_INIT, DirectoryClass::initRexx, 1);
-
-        AddMethod(CHAR_ENTRY, DirectoryClass::entryRexx, 1);
-        AddMethod(CHAR_HASENTRY, DirectoryClass::hasEntry, 1);
-        AddMethod(CHAR_SETENTRY, DirectoryClass::setEntry, 2);
 
         AddProtectedMethod(CHAR_SETMETHOD, DirectoryClass::setMethodRexx, 2);
         AddProtectedMethod(CHAR_UNSETMETHOD, DirectoryClass::removeRexx, 1);
