@@ -49,7 +49,7 @@
 #include "FlagSet.hpp"
 
 class RexxSource;
-class RexxActivity;
+class Activity;
 class MethodClass;
 class ProtectedObject;
 class ArrayClass;
@@ -74,7 +74,7 @@ class MethodClass : public BaseExecutable
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(Envelope*);
 
-    void         run(RexxActivity *,  RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
+    void         run(Activity *,  RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
     MethodClass *newScope(RexxClass  *);
     void         setScope(RexxClass  *);
     SmartBuffer  *saveMethod();

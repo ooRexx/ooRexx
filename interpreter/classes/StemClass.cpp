@@ -45,8 +45,8 @@
 #include "StringClass.hpp"
 #include "ArrayClass.hpp"
 #include "RexxActivation.hpp"
-#include "RexxNativeActivation.hpp"
-#include "RexxVariableDictionary.hpp"
+#include "NativeActivation.hpp"
+#include "VariableDictionary.hpp"
 #include "RexxVariable.hpp"
 #include "SupplierClass.hpp"
 #include "DirectoryClass.hpp"
@@ -678,7 +678,7 @@ void StemClass::dropCompoundVariable(
 
 
 CompoundTableElement *StemClass::nextVariable(
-  RexxNativeActivation *activation)    /* Hosting Native Act.               */
+  NativeActivation *activation)    /* Hosting Native Act.               */
 /******************************************************************************/
 /* Function:  Return the "next" variable of a variable traversal              */
 /******************************************************************************/

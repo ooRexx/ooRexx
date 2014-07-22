@@ -46,9 +46,9 @@
 #include "StringClass.hpp"
 #include "DirectoryClass.hpp"
 #include "ArrayClass.hpp"
-#include "RexxVariableDictionary.hpp"
+#include "VariableDictionary.hpp"
 #include "RexxActivation.hpp"
-#include "RexxActivity.hpp"
+#include "Activity.hpp"
 #include "ExpressionBaseVariable.hpp"
 #include "SourceFile.hpp"
 #include "BuiltinFunctions.hpp"
@@ -1552,7 +1552,7 @@ BUILTIN(SYMBOL)
                                          /* get the variable name             */
     RexxString *name = required_string(SYMBOL, name);
     /* get a variable retriever          */
-    RexxVariableBase *variable = RexxVariableDictionary::getVariableRetriever(name);
+    RexxVariableBase *variable = VariableDictionary::getVariableRetriever(name);
     if (variable == OREF_NULL)           /* invalid variable name?            */
     {
                                          /* return the 'BAD' result           */
@@ -1589,7 +1589,7 @@ BUILTIN(VAR)
                                          /* get the variable name             */
     RexxString *variable = required_string(VAR, name);
     /* get a variable retriever          */
-    RexxVariableBase *retriever = RexxVariableDictionary::getVariableRetriever(variable);
+    RexxVariableBase *retriever = VariableDictionary::getVariableRetriever(variable);
     if (retriever == OREF_NULL)          /* invalid variable name?            */
     {
         return TheFalseObject;           /* return the 'BAD' result           */
@@ -1627,7 +1627,7 @@ BUILTIN(VALUE)
     if (selector == OREF_NULL)           /* have a selector?                  */
     {
         /* get a variable retriever          */
-        RexxVariableBase *retriever = RexxVariableDictionary::getVariableRetriever(variable);
+        RexxVariableBase *retriever = VariableDictionary::getVariableRetriever(variable);
         // this could an invalid name, or we might be trying to assign a value to a non-variable
         // symbol.
         if (retriever == OREF_NULL || (newvalue != OREF_NULL && !assignable))

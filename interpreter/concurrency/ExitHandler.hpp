@@ -47,7 +47,7 @@
 #include "RexxCore.h"
 #include "CallbackDispatcher.hpp"
 
-class RexxActivity;
+class Activity;
 
 class ExitHandler
 {
@@ -64,7 +64,7 @@ public:
         entryPoint = NULL;
     }
 
-    int call(RexxActivity *activity, RexxActivation *activation, int major, int minor, void *parms);
+    int call(Activity *activity, RexxActivation *activation, int major, int minor, void *parms);
     inline ExitHandler & operator= (ExitHandler &o)
     {
         entryPoint = o.entryPoint;

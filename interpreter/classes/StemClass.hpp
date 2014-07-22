@@ -57,7 +57,7 @@
 class SupplierClass;
 class DirectoryClass;
 class CompoundVariableTail;
-class RexxNativeActivation;
+class NativeActivation;
 
  class SortData
  {
@@ -129,7 +129,7 @@ class StemClass : public RexxObject
     void        setCompoundVariable(CompoundVariableTail &name, RexxObject *value);
     void        setValue(RexxInternalObject *value);
     ArrayClass  *tailArray();
-    CompoundTableElement *nextVariable(RexxNativeActivation *activation);
+    CompoundTableElement *nextVariable(NativeActivation *activation);
     RexxObject *handleNovalue(RexxActivation *context, RexxString *name, RexxObject *defaultValue, CompoundTableElement *variable);
     void        expose(CompoundTableElement &variable);
     bool        sort(RexxString *prefix, int order, int type, size_t start, size_t end, size_t firstcol, size_t lastcol);

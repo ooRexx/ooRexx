@@ -44,8 +44,8 @@
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "RexxActivation.hpp"
-#include "RexxActivity.hpp"
-#include "RexxVariableDictionary.hpp"
+#include "Activity.hpp"
+#include "VariableDictionary.hpp"
 #include "RexxVariable.hpp"
 #include "ExpressionVariable.hpp"
 
@@ -151,7 +151,7 @@ RexxObject  *RexxSimpleVariable::evaluate(RexxActivation *context, RexxExpressio
  *
  * @return The variable value.
  */
-RexxObject *RexxSimpleVariable::getValue(RexxVariableDictionary *dictionary)
+RexxObject *RexxSimpleVariable::getValue(VariableDictionary *dictionary)
 /******************************************************************************/
 /* Function:  retrieve a simple variable's value (notready condition will     */
 /*            not be raised)                                                  */
@@ -198,7 +198,7 @@ RexxObject  *RexxSimpleVariable::getValue(RexxActivation *context)
  * @return The variable value, or OREF_NULL if the variable is not
  *         assigned.
  */
-RexxObject  *RexxSimpleVariable::getRealValue(RexxVariableDictionary *dictionary)
+RexxObject  *RexxSimpleVariable::getRealValue(VariableDictionary *dictionary)
 {
     RexxVariable *variable = dictionary->getVariable(variableName);
     return variable->getVariableValue();
@@ -228,7 +228,7 @@ RexxObject  *RexxSimpleVariable::getRealValue(RexxActivation *context)
  * @param dictionary The target variable dictionary.
  * @param value      The new value.
  */
-void RexxSimpleVariable::set(RexxVariableDictionary *dictionary, RexxObject *value )
+void RexxSimpleVariable::set(VariableDictionary *dictionary, RexxObject *value )
 {
     RexxVariable *variable = dictionary->getVariable(variableName);
     variable->set(value);
@@ -290,7 +290,7 @@ void RexxSimpleVariable::drop(RexxActivation *context)
  *
  * @param dictionary The target dictionary
  */
-void RexxSimpleVariable::drop(RexxVariableDictionary *dictionary)
+void RexxSimpleVariable::drop(VariableDictionary *dictionary)
 {
     RexxVariable *variable = dictionary->getVariable(variableName);
     variable->drop();
@@ -344,7 +344,7 @@ void RexxSimpleVariable::procedureExpose(RexxActivation *context, RexxActivation
  * @param object_dictionary
  *                The target variable dictionary from the method scope.
  */
-void RexxSimpleVariable::expose(RexxActivation *context, RexxVariableDictionary *object_dictionary)
+void RexxSimpleVariable::expose(RexxActivation *context, VariableDictionary *object_dictionary)
 {
     // get the old variable entry
     RexxVariable *old_variable = object_dictionary->getVariable(variableName);

@@ -55,7 +55,7 @@
 #include "StringClass.hpp"
 // #include "RexxNativeAPI.h"                      /*  THUTHUREXX native interface*/
 #include "DirectoryClass.hpp"
-#include "RexxActivity.hpp"
+#include "Activity.hpp"
 #include "RexxActivation.hpp"
 #include "ActivityManager.hpp"
 #include "PointerClass.hpp"

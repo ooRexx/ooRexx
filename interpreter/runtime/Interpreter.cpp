@@ -259,7 +259,7 @@ int Interpreter::createInstance(RexxInstance *&instance, RexxThreadContext *&thr
         instance = newInstance->getInstanceContext();
         threadContext = newInstance->getRootThreadContext();
         // we need to ensure we release the kernel lock before returning
-        RexxActivity *activity = newInstance->getRootActivity();
+        Activity *activity = newInstance->getRootActivity();
         activity->releaseAccess();
         // the activity needs to be in a deactivated state when we return.
         activity->deactivate();
@@ -304,7 +304,7 @@ InterpreterInstance *Interpreter::createInterpreterInstance(RexxOption *options)
 
     // get a new root activity for this instance.  This might result in pushing a prior level down the
     // stack
-    RexxActivity *rootActivity = ActivityManager::getRootActivity();
+    Activity *rootActivity = ActivityManager::getRootActivity();
     // ok, we have an active activity here, so now we can allocate a new instance and bootstrap everything.
     InterpreterInstance *instance = new InterpreterInstance();
 

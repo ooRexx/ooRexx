@@ -63,10 +63,10 @@ class RexxVariable : public RexxInternalObject
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(Envelope *);
 
-    void         inform(RexxActivity *);
+    void         inform(Activity *);
     void         drop();
     void         notify();
-    void         uninform(RexxActivity *);
+    void         uninform(Activity *);
     void         setStem(RexxObject *);
 
     inline void set(RexxInternalObject *value)

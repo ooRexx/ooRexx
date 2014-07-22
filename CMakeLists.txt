@@ -554,10 +554,10 @@ set (execution_sources ${build_execution_dir}/CPPCode.cpp
             ${build_execution_dir}/BaseCode.cpp
             ${build_execution_dir}/RexxCode.cpp
             ${build_execution_dir}/RexxLocalVariables.cpp
-            ${build_execution_dir}/RexxNativeActivation.cpp
-            ${build_execution_dir}/RexxNativeCode.cpp
+            ${build_execution_dir}/NativeActivation.cpp
+            ${build_execution_dir}/NativeCode.cpp
             ${build_execution_dir}/RexxVariable.cpp
-            ${build_execution_dir}/RexxVariableDictionary.cpp
+            ${build_execution_dir}/VariableDictionary.cpp
             ${build_execution_dir}/SecurityManager.cpp)
 set (behaviour_sources ${build_behaviour_dir}/PrimitiveBehaviours.cpp
             ${build_behaviour_dir}/RexxBehaviour.cpp
@@ -571,7 +571,7 @@ set (concurrency_sources ${build_concurrency_dir}/ActivityDispatcher.cpp
             ${build_concurrency_dir}/ExitHandler.cpp
             ${build_concurrency_dir}/CommandHandler.cpp
             ${build_concurrency_dir}/MessageDispatcher.cpp
-            ${build_concurrency_dir}/RexxActivity.cpp
+            ${build_concurrency_dir}/Activity.cpp
             ${build_concurrency_dir}/RexxStartDispatcher.cpp
             ${build_concurrency_dir}/TranslateDispatcher.cpp)
 set (expression_sources ${build_expression_dir}/BuiltinFunctions.cpp

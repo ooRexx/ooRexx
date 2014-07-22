@@ -43,7 +43,7 @@
 /****************************************************************************/
 #include "RexxCore.h"
 #include "RexxVariable.hpp"
-#include "RexxActivity.hpp"
+#include "Activity.hpp"
 #include "ActivityManager.hpp"
 
 
@@ -111,7 +111,7 @@ void RexxVariable::flatten(Envelope *envelope)
  *
  * @param informee The requesting activity.
  */
-void RexxVariable::inform(RexxActivity *informee)
+void RexxVariable::inform(Activity *informee)
 {
     // we don't typically have a dependents list until the
     // first time this is needed
@@ -131,7 +131,7 @@ void RexxVariable::inform(RexxActivity *informee)
  *
  * @param informee The activity requesting removal.
  */
-void RexxVariable::uninform(RexxActivity *informee)
+void RexxVariable::uninform(Activity *informee)
 {
     // remove the entry
     dependents->remove(informee);
@@ -178,12 +178,12 @@ void RexxVariable::notify()
         while (iterator.isAvailable())
         {
             // copy these methods over any of our own.
-            RexxActivity *activity = (RexxActivity *)iterator.index();
+            Activity *activity = (Activity *)iterator.index();
             activity->guardPost();
         }
 
         // yield control and allow the waiting guard(s) to run too
-        RexxActivity *activity = ActivityManager::currentActivity;
+        Activity *activity = ActivityManager::currentActivity;
         activity->yieldControl();
     }
 }

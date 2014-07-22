@@ -45,10 +45,10 @@
 #include "StringClass.hpp"
 #include "ArrayClass.hpp"
 #include "RexxCode.hpp"
-#include "RexxNativeCode.hpp"
-#include "RexxActivity.hpp"
+#include "NativeCode.hpp"
+#include "Activity.hpp"
 #include "RexxActivation.hpp"
-#include "RexxNativeActivation.hpp"
+#include "NativeActivation.hpp"
 #include "RoutineClass.hpp"
 #include "PackageClass.hpp"
 #include "SourceFile.hpp"
@@ -157,7 +157,7 @@ void RoutineClass::flatten(Envelope *envelope)
  * @param argcount The argument count.
  * @param result   The result object used to pass the value back.
  */
-void RoutineClass::call(RexxActivity *activity, RexxString *routineName, RexxObject**argPtr,
+void RoutineClass::call(Activity *activity, RexxString *routineName, RexxObject**argPtr,
     size_t argcount, ProtectedObject &result)
 {
     // just forward this to the code object
@@ -180,7 +180,7 @@ void RoutineClass::call(RexxActivity *activity, RexxString *routineName, RexxObj
  * @param context  The context of the call (internal call, interpret, etc.)
  * @param result
  */
-void RoutineClass::call(RexxActivity *activity, RexxString *routineName,
+void RoutineClass::call(Activity *activity, RexxString *routineName,
     RexxObject**argPtr, size_t argcount, RexxString *calltype,
     RexxString *environment, int context, ProtectedObject &result)
 {
@@ -236,7 +236,7 @@ RexxObject *RoutineClass::callWithRexx(ArrayClass *args)
  * @param argCount  The count of arguments.
  * @param result    A protected object used to pass back the result.
  */
-void RoutineClass::runProgram(RexxActivity *activity, RexxString * calltype,
+void RoutineClass::runProgram(Activity *activity, RexxString * calltype,
     RexxString * environment, RexxObject **arguments, size_t       argCount,
     ProtectedObject &result)
 {
@@ -253,7 +253,7 @@ void RoutineClass::runProgram(RexxActivity *activity, RexxString * calltype,
  * @param argCount  The count of arguments.
  * @param result    A ProtectedObject used to return (and protect) the result.
  */
-void RoutineClass::runProgram(RexxActivity *activity, RexxObject **arguments,
+void RoutineClass::runProgram(Activity *activity, RexxObject **arguments,
     size_t argCount, ProtectedObject &result)
 {
     code->call(activity, this, executableName, arguments, argCount, OREF_COMMAND, activity->getInstance()->getDefaultEnvironment(), PROGRAMCALL, result);

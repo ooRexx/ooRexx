@@ -42,7 +42,7 @@
 /*                                                                            */
 /******************************************************************************/
 #include "RexxCore.h"
-#include "RexxActivity.hpp"
+#include "Activity.hpp"
 #include "ActivityManager.hpp"
 #include "BufferClass.hpp"
 

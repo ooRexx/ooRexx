@@ -47,7 +47,7 @@
 #include "RexxCore.h"
 #include "TrappingDispatcher.hpp"
 
-class RexxActivity;
+class Activity;
 
 class UninitDispatcher : public TrappingDispatcher
 {

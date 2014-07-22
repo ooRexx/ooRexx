@@ -40,7 +40,7 @@
 #include "ActivityDispatcher.hpp"
 #include "Interpreter.hpp"
 #include "InterpreterInstance.hpp"
-#include "RexxActivity.hpp"
+#include "Activity.hpp"
 
 
 /**

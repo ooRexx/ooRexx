@@ -48,7 +48,7 @@
 #include "ArrayClass.hpp"
 
 class ProtectedObject;
-class RexxActivity;
+class Activity;
 
 class RexxExpressionStack
 {
@@ -68,7 +68,7 @@ class RexxExpressionStack
     RexxInteger *optionalIntegerArg(size_t, size_t, const char *);
     RexxObject * requiredBigIntegerArg(size_t, size_t, const char *);
     RexxObject * optionalBigIntegerArg(size_t, size_t, const char *);
-    void         migrate(RexxActivity *);
+    void         migrate(Activity *);
 
     inline void setFrame(RexxObject **frames, size_t items) { stack = frames; size = items; top = stack; *top = OREF_NULL; }
 

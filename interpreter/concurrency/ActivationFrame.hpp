@@ -38,10 +38,10 @@
 #ifndef ActivationFrame_Included
 #define ActivationFrame_Included
 
-#include "RexxActivity.hpp"
+#include "Activity.hpp"
 
 class RexxActivation;
-class RexxNativeActivation;
+class NativeActivation;
 class MethodClass;
 class StackFrameClass;
 class LanguageParser;
@@ -52,9 +52,9 @@ class LanguageParser;
  */
 class ActivationFrame
 {
-friend class RexxActivity;
+friend class Activity;
  public:
-    inline ActivationFrame(RexxActivity *a) : activity(a)
+    inline ActivationFrame(Activity *a) : activity(a)
     {
         // it would be better to have the activity class do this, but because
         // we're doing this with inline methods, we run into a bit of a
@@ -78,7 +78,7 @@ friend class RexxActivity;
  protected:
 
     ActivationFrame *next;             // the next activation frame in the chain
-    RexxActivity *activity;            // the activity we're running on
+    Activity *activity;            // the activity we're running on
 };
 
 
@@ -88,7 +88,7 @@ friend class RexxActivity;
 class RexxActivationFrame : public ActivationFrame
 {
  public:
-    inline RexxActivationFrame(RexxActivity *a, RexxActivation *context) : ActivationFrame(a), activation(context) { }
+    inline RexxActivationFrame(Activity *a, RexxActivation *context) : ActivationFrame(a), activation(context) { }
 
     virtual RexxString *messageName();
     virtual BaseExecutable *executable();
@@ -107,7 +107,7 @@ class RexxActivationFrame : public ActivationFrame
 class NativeActivationFrame : public ActivationFrame
 {
  public:
-    inline NativeActivationFrame(RexxActivity *a, RexxNativeActivation *context) : ActivationFrame(a), activation(context) { }
+    inline NativeActivationFrame(Activity *a, NativeActivation *context) : ActivationFrame(a), activation(context) { }
 
     virtual RexxString *messageName();
     virtual BaseExecutable *executable();
@@ -116,7 +116,7 @@ class NativeActivationFrame : public ActivationFrame
 
  protected:
 
-    RexxNativeActivation *activation;        // the activation backing this frame
+    NativeActivation *activation;        // the activation backing this frame
 };
 
 
@@ -126,7 +126,7 @@ class NativeActivationFrame : public ActivationFrame
 class InternalActivationFrame : public ActivationFrame
 {
  public:
-    inline InternalActivationFrame(RexxActivity *a, RexxString *n, RexxObject *t, MethodClass *m, RexxObject **args, size_t c)
+    inline InternalActivationFrame(Activity *a, RexxString *n, RexxObject *t, MethodClass *m, RexxObject **args, size_t c)
         : ActivationFrame(a), name(n), target(t), frameMethod(m), argPtr(args), count(c) { }
 
     virtual RexxString *messageName();
@@ -152,7 +152,7 @@ class InternalActivationFrame : public ActivationFrame
 class CompileActivationFrame : public ActivationFrame
 {
  public:
-    inline CompileActivationFrame(RexxActivity *a, LanguageParser *p) : ActivationFrame(a), parser(p) { }
+    inline CompileActivationFrame(Activity *a, LanguageParser *p) : ActivationFrame(a), parser(p) { }
 
     virtual RexxString *messageName();
     virtual BaseExecutable *executable();

@@ -46,11 +46,11 @@
 
 #include "RexxCore.h"
 #include "SysLibrary.hpp"
-#include "RexxNativeCode.hpp"
+#include "NativeCode.hpp"
 #include "CallbackDispatcher.hpp"
 
 class PackageManager;
-class RexxNativeMethod;
+class NativeMethod;
 
 typedef RexxPackageEntry * (RexxEntry *PACKAGE_LOADER)();
 
@@ -75,7 +75,7 @@ public:
     void   loadRoutines(RexxRoutineEntry *table);
     RexxMethodEntry *locateMethodEntry(RexxString *name);
     RexxRoutineEntry *locateRoutineEntry(RexxString *name);
-    RexxNativeMethod *resolveMethod(RexxString *name);
+    NativeMethod *resolveMethod(RexxString *name);
     RoutineClass *resolveRoutine(RexxString *name);
     PNATIVEMETHOD resolveMethodEntry(RexxString *name);
     PNATIVEROUTINE resolveRoutineEntry(RexxString *name);

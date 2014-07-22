@@ -61,7 +61,7 @@ public:
     inline CPPCode(RESTORETYPE restoreType) { ; };
     void liveGeneral(MarkReason reason);
 
-    void run(RexxActivity *, MethodClass *, RexxObject *, RexxString *, RexxObject **, size_t, ProtectedObject &);
+    void run(Activity *, MethodClass *, RexxObject *, RexxString *, RexxObject **, size_t, ProtectedObject &);
 
     static CPPCode *resolveExportedMethod(const char *name, PCPPM targetMethod, size_t argcount, const char* entryPointName);
     // The table of exported methods.
@@ -91,7 +91,7 @@ public:
     void liveGeneral(MarkReason reason);
     void flatten(Envelope*);
 
-    void run(RexxActivity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
+    void run(Activity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
 
 protected:
     RexxVariableBase *attribute;      /* method attribute info             */
@@ -111,7 +111,7 @@ public:
     inline AttributeSetterCode(RexxVariableBase *a) : AttributeGetterCode(a) { }
     inline AttributeSetterCode(RESTORETYPE restoreType) : AttributeGetterCode(restoreType) { }
 
-    void run(RexxActivity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t,  ProtectedObject &);
+    void run(Activity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t,  ProtectedObject &);
 };
 
 
@@ -131,7 +131,7 @@ public:
     void liveGeneral(MarkReason reason);
     void flatten(Envelope*);
 
-    void run(RexxActivity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
+    void run(Activity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
 
 protected:
     RexxObject *constantValue;        // the returned constant value
@@ -151,7 +151,7 @@ public:
     inline AbstractCode() { }
     inline AbstractCode(RESTORETYPE restoreType) { }
 
-    void run(RexxActivity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
+    void run(Activity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
 };
 
 #endif

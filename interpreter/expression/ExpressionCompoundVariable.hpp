@@ -72,20 +72,20 @@ class RexxCompoundVariable : public RexxVariableBase
     // evaluation method from RexxInternalObject
     virtual RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
     virtual RexxObject *getValue(RexxActivation *context);
-    virtual RexxObject *getValue(RexxVariableDictionary *context);
-    virtual RexxObject *getRealValue(RexxVariableDictionary *);
+    virtual RexxObject *getValue(VariableDictionary *context);
+    virtual RexxObject *getRealValue(VariableDictionary *);
     virtual RexxObject *getRealValue(RexxActivation *);
 
     // RexxVariabeBase methods to perform variable operations
     virtual bool exists(RexxActivation *);
     virtual void set(RexxActivation *, RexxObject *) ;
-    virtual void set(RexxVariableDictionary *, RexxObject *);
+    virtual void set(VariableDictionary *, RexxObject *);
     virtual void assign(RexxActivation *, RexxObject *);
     virtual void drop(RexxActivation *);
-    virtual void drop(RexxVariableDictionary *);
+    virtual void drop(VariableDictionary *);
     virtual void setGuard(RexxActivation *);
     virtual void clearGuard(RexxActivation *);
-    virtual void expose(RexxActivation *,  RexxVariableDictionary *);
+    virtual void expose(RexxActivation *,  VariableDictionary *);
     virtual void procedureExpose(RexxActivation *, RexxActivation *);
 
     // implemented only for compound variables.

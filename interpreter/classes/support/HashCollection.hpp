@@ -73,7 +73,10 @@ class HashCollection : public RexxObject
     void expandContents();
     void expandContents(size_t capacity );
     void ensureCapacity(size_t delta);
-    size_t calculateBucketSize(size_t capacity);
+    void checkFull();
+    static size_t calculateBucketSize(size_t capacity);
+    HashContents::TableIterator interator();
+    HashContents::IndexIterator interator(RexxInternalObject *index);
 
     // virtual methods that subclasses can override to provide special behaviour.
     virtual void mergeItem(RexxInternalObject *, RexxInternalObject *);

@@ -51,8 +51,8 @@ class BaseCode;
 class RoutineClass;
 class ProtectedObject;
 class ArrayClass;
-class RexxActivity;
-class RexxNativeMethod;
+class Activity;
+class NativeMethod;
 class ProtectedObject;
 class PackageClass;
 
@@ -69,8 +69,8 @@ public:
     static LibraryPackage    *getLibrary(RexxString *name);
     static LibraryPackage    *loadLibrary(RexxString *name);
     static void        unload();
-    static RexxNativeMethod  *resolveMethod(RexxString *packageName, RexxString *methodName);
-    static RexxNativeMethod  *loadMethod(RexxString *packageName, RexxString *methodName);
+    static NativeMethod  *resolveMethod(RexxString *packageName, RexxString *methodName);
+    static NativeMethod  *loadMethod(RexxString *packageName, RexxString *methodName);
     static RoutineClass *resolveRoutine(RexxString *function, RexxString *packageName, RexxString *procedure);
     static RoutineClass *resolveRoutine(RexxString *packageName, RexxString *function);
     static RoutineClass *loadRoutine(RexxString *packageName, RexxString *function);
@@ -86,14 +86,14 @@ public:
     static RexxObject *addRegisteredRoutine(RexxString *name, RexxString *module, RexxString *proc);
     static RexxObject *dropRegisteredRoutine(RexxString *name);
     static RexxObject *queryRegisteredRoutine(RexxString *name);
-    static bool        callNativeRoutine(RexxActivity *activity, RexxString *name,
+    static bool        callNativeRoutine(Activity *activity, RexxString *name,
         RexxObject **arguments, size_t argcount, ProtectedObject &result);
 
-    static RoutineClass *loadRequires(RexxActivity *activity, RexxString *shortName, RexxString *resolvedName, ProtectedObject &result);
-    static RoutineClass *getMacroSpaceRequires(RexxActivity *activity, RexxString *name, ProtectedObject &result, RexxObject *securityManager);
-    static RoutineClass *getRequiresFile(RexxActivity *activity, RexxString *name, RexxObject *securityManager, ProtectedObject &result);
-    static RoutineClass *loadRequires(RexxActivity *activity, RexxString *name, ArrayClass *data, ProtectedObject &result);
-    static RoutineClass *loadRequires(RexxActivity *activity, RexxString *name, const char *data, size_t length, ProtectedObject &result);
+    static RoutineClass *loadRequires(Activity *activity, RexxString *shortName, RexxString *resolvedName, ProtectedObject &result);
+    static RoutineClass *getMacroSpaceRequires(Activity *activity, RexxString *name, ProtectedObject &result, RexxObject *securityManager);
+    static RoutineClass *getRequiresFile(Activity *activity, RexxString *name, RexxObject *securityManager, ProtectedObject &result);
+    static RoutineClass *loadRequires(Activity *activity, RexxString *name, ArrayClass *data, ProtectedObject &result);
+    static RoutineClass *loadRequires(Activity *activity, RexxString *name, const char *data, size_t length, ProtectedObject &result);
 
 protected:
 

@@ -1586,22 +1586,22 @@ RexxVariableBase *LanguageParser::addSimpleVariable(RexxString *varname)
  *
  * @return A retriever for the specified variable.
  */
-StemClassVariable *LanguageParser::addStem(RexxString *stemName)
+RexxStemVariable *LanguageParser::addStem(RexxString *stemName)
 {
     // like with normal variables, we might have this already cached.
-    StemClassVariable *retriever = (StemClassVariable *)(variables->fastAt(stemName));
+    RexxStemVariable *retriever = (RexxStemVariable *)(variables->fastAt(stemName));
     if (retriever == OREF_NULL)
     {
         if (!isInterpret())
         {
             // non-interpret uses an allocated stack frame slot
             variableIndex++;
-            retriever = new StemClassVariable(stemName, variableIndex);
+            retriever = new RexxStemVariable(stemName, variableIndex);
         }
         else
         {
             // interpret uses dynamic lookup
-            retriever = new StemClassVariable(stemName, 0);
+            retriever = new RexxStemVariable(stemName, 0);
         }
         variables->put((RexxObject *)retriever, stemName);
     }
@@ -1655,7 +1655,7 @@ RexxCompoundVariable *LanguageParser::addCompound(RexxString *name)
     // create a Rexx string version of the stem name and retrieve this
     // from the
     RexxString *stemName = new_string(start, _position - start + 1);
-    StemClassVariable *stemRetriever = addStem(stemName);
+    RexxStemVariable *stemRetriever = addStem(stemName);
 
     ProtectedObject p(stemRetriever);
 
@@ -1951,12 +1951,12 @@ RexxVariableBase *LanguageParser::getRetriever(RexxString *name)
 
         // stem name.
         case STRING_STEM:
-            return (RexxVariableBase *)new StemClassVariable(name, 0);
+            return (RexxVariableBase *)new RexxStemVariable(name, 0);
             break;
 
         // compound name...more complicated.
         case STRING_COMPOUND_NAME:
-            return (RexxVariableBase *)RexxVariableDictionary::buildCompoundVariable(name, true);
+            return (RexxVariableBase *)VariableDictionary::buildCompoundVariable(name, true);
             break;
 
         default:

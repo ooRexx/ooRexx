@@ -46,7 +46,7 @@
 #include "RexxActivation.hpp"
 #include "DropInstruction.hpp"
 #include "ExpressionBaseVariable.hpp"
-#include "RexxActivity.hpp"
+#include "Activity.hpp"
 #include "BufferClass.hpp"
 
 

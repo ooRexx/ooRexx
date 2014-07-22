@@ -87,7 +87,7 @@ void RexxLocalVariables::liveGeneral(MarkReason reason)
 }
 
 
-void RexxLocalVariables::migrate(RexxActivity *activity)
+void RexxLocalVariables::migrate(Activity *activity)
 /******************************************************************************/
 /* Function:  Migrate the expression stack to a new activity                  */
 /******************************************************************************/

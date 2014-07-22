@@ -68,14 +68,14 @@
 # include <sched.h>
 #endif
 
-class RexxActivity;
+class Activity;
 
 class SysActivity
 {
 public:
     inline SysActivity() : threadId(0) { }
     inline bool equals(thread_id_t t) { return threadId == t; }
-    void create(RexxActivity *activity, size_t stackSize);
+    void create(Activity *activity, size_t stackSize);
     void close();
     void useCurrentThread();
     char *getStackBase(size_t stackSize);

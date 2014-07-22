@@ -59,10 +59,10 @@ public:
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(Envelope*);
 
-    virtual void call(RexxActivity *,  RexxString *,  RexxObject **, size_t, RexxString *, RexxString *, int, ProtectedObject &);
-    virtual void call(RexxActivity *,  RexxString *,  RexxObject **, size_t, ProtectedObject &);
-    virtual void runProgram(RexxActivity *activity, RexxString * calltype, RexxString * environment, RexxObject **arguments, size_t argCount, ProtectedObject &result);
-    virtual void runProgram(RexxActivity *activity, RexxObject **arguments, size_t argCount, ProtectedObject &result);
+    virtual void call(Activity *,  RexxString *,  RexxObject **, size_t, RexxString *, RexxString *, int, ProtectedObject &);
+    virtual void call(Activity *,  RexxString *,  RexxObject **, size_t, ProtectedObject &);
+    virtual void runProgram(Activity *activity, RexxString * calltype, RexxString * environment, RexxObject **arguments, size_t argCount, ProtectedObject &result);
+    virtual void runProgram(Activity *activity, RexxObject **arguments, size_t argCount, ProtectedObject &result);
 
     RexxObject   *callRexx(RexxObject **, size_t);
     RexxObject   *callWithRexx(ArrayClass *);

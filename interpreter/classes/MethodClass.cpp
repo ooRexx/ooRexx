@@ -45,10 +45,10 @@
 #include "StringClass.hpp"
 #include "ArrayClass.hpp"
 #include "RexxCode.hpp"
-#include "RexxNativeCode.hpp"
-#include "RexxActivity.hpp"
+#include "NativeCode.hpp"
+#include "Activity.hpp"
 #include "RexxActivation.hpp"
-#include "RexxNativeActivation.hpp"
+#include "NativeActivation.hpp"
 #include "MethodClass.hpp"
 #include "SourceFile.hpp"
 #include "DirectoryClass.hpp"
@@ -161,7 +161,7 @@ void MethodClass::flatten(Envelope *envelope)
  * @param count    The argument count.
  * @param result   The result object used to pass a result back.
  */
-void MethodClass::run(RexxActivity *activity, RexxObject *receiver, RexxString *msgname,
+void MethodClass::run(Activity *activity, RexxObject *receiver, RexxString *msgname,
     RexxObject **argPtr, size_t count, ProtectedObject &result)
 {
     // just forward this to the code object
@@ -466,7 +466,7 @@ MethodClass *MethodClass::loadExternalMethod(RexxString *name, RexxString *descr
             reportException(Error_Translation_bad_external, descriptor);
         }
         // get the native code for this library
-        RexxNativeCode *nmethod = PackageManager::loadMethod(library, entry);
+        NativeCode *nmethod = PackageManager::loadMethod(library, entry);
         // raise an exception if this entry point is not found.
         if (nmethod == OREF_NULL)
         {

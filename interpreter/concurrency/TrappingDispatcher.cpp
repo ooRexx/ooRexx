@@ -40,8 +40,8 @@
 #include "TrappingDispatcher.hpp"
 #include "Interpreter.hpp"
 #include "InterpreterInstance.hpp"
-#include "RexxActivity.hpp"
-#include "RexxNativeActivation.hpp"
+#include "Activity.hpp"
+#include "NativeActivation.hpp"
 
 
 /**

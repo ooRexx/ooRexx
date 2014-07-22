@@ -59,7 +59,7 @@
  */
 void *threadFnc(void *args)
 {
-    ((RexxActivity *)args)->runThread();
+    ((Activity *)args)->runThread();
     return NULL;
 }
 
@@ -77,7 +77,7 @@ void SysActivity::close()
  * @param activity  The activity that will run on this thread.
  * @param stackSize The desired stack size.
  */
-void SysActivity::create(RexxActivity *activity, size_t stackSize)
+void SysActivity::create(Activity *activity, size_t stackSize)
 {
     int             rc;
     pthread_attr_t  newThreadAttr;

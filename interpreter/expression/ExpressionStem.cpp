@@ -46,7 +46,7 @@
 #include "StringClass.hpp"
 #include "RexxActivation.hpp"
 #include "RexxVariable.hpp"
-#include "RexxVariableDictionary.hpp"
+#include "VariableDictionary.hpp"
 #include "StemClass.hpp"
 #include "ExpressionStem.hpp"
 
@@ -58,7 +58,7 @@
  *
  * @return Storage for creating the object.
  */
-void *StemClassVariable::operator new(size_t size)
+void *RexxStemVariable::operator new(size_t size)
 {
     return new_object(size, T_StemVariableTerm);
 }
@@ -70,7 +70,7 @@ void *StemClassVariable::operator new(size_t size)
  * @param name      The name of the stem (including the period)
  * @param var_index The index of the variable slot in the current stack frame.
  */
-StemClassVariable::StemClassVariable(RexxString *name, size_t var_index)
+RexxStemVariable::RexxStemVariable(RexxString *name, size_t var_index)
 {
     stemName = name;
 }
@@ -81,7 +81,7 @@ StemClassVariable::StemClassVariable(RexxString *name, size_t var_index)
  *
  * @param liveMark The current live mark.
  */
-void StemClassVariable::live(size_t liveMark)
+void RexxStemVariable::live(size_t liveMark)
 {
     memory_mark(stemName);
 }
@@ -94,7 +94,7 @@ void StemClassVariable::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void StemClassVariable::liveGeneral(MarkReason reason)
+void RexxStemVariable::liveGeneral(MarkReason reason)
 {
     memory_mark_general(stemName);
 }
@@ -105,9 +105,9 @@ void StemClassVariable::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope that will hold the flattened object.
  */
-void StemClassVariable::flatten(Envelope *envelope)
+void RexxStemVariable::flatten(Envelope *envelope)
 {
-    setUpFlatten(StemClassVariable)
+    setUpFlatten(RexxStemVariable)
 
     flattenRef(stemName);
 
@@ -123,7 +123,7 @@ void StemClassVariable::flatten(Envelope *envelope)
  *
  * @return The variable value (which will be a Stem object instance.)
  */
-RexxObject  *StemClassVariable::evaluate(RexxActivation *context, RexxExpressionStack *stack )
+RexxObject  *RexxStemVariable::evaluate(RexxActivation *context, RexxExpressionStack *stack )
 {
     // look up the name
     RexxObject *value = context->getLocalStem(stemName, stemIndex);
@@ -145,7 +145,7 @@ RexxObject  *StemClassVariable::evaluate(RexxActivation *context, RexxExpression
  *
  * @return The current stem variable contents.
  */
-RexxObject  *StemClassVariable::getValue(RexxVariableDictionary *dictionary)
+RexxObject  *RexxStemVariable::getValue(VariableDictionary *dictionary)
 {
     // just look up the stem
     return dictionary->getStem(stemName);
@@ -159,7 +159,7 @@ RexxObject  *StemClassVariable::getValue(RexxVariableDictionary *dictionary)
  *
  * @return The variable value (a stem object).
  */
-RexxObject  *StemClassVariable::getValue(RexxActivation *context)
+RexxObject  *RexxStemVariable::getValue(RexxActivation *context)
 {
     return context->getLocalStem(stemName, stemIndex);
 }
@@ -173,7 +173,7 @@ RexxObject  *StemClassVariable::getValue(RexxActivation *context)
  *
  * @return The stem object representing this variable.
  */
-RexxObject  *StemClassVariable::getRealValue(RexxVariableDictionary *dictionary)
+RexxObject  *RexxStemVariable::getRealValue(VariableDictionary *dictionary)
 {
     return dictionary->getStem(stemName);
 }
@@ -187,7 +187,7 @@ RexxObject  *StemClassVariable::getRealValue(RexxVariableDictionary *dictionary)
  *
  * @return The stem object representing this variable.
  */
-RexxObject  *StemClassVariable::getRealValue(RexxActivation *context)
+RexxObject  *RexxStemVariable::getRealValue(RexxActivation *context)
 {
     return context->getLocalStem(stemName, stemIndex);
 }
@@ -200,7 +200,7 @@ RexxObject  *StemClassVariable::getRealValue(RexxActivation *context)
  * @param context The variable context.
  * @param value   The new value.
  */
-void StemClassVariable::set(RexxActivation *context, RexxObject *value )
+void RexxStemVariable::set(RexxActivation *context, RexxObject *value )
 {
     // Look up the stem
     RexxVariable *variable = context->getLocalStemVariable(stemName, stemIndex);
@@ -215,7 +215,7 @@ void StemClassVariable::set(RexxActivation *context, RexxObject *value )
  * @param dictionary The target variable dictionary.
  * @param value      The new variable value.
  */
-void StemClassVariable::set(RexxVariableDictionary  *dictionary, RexxObject *value )
+void RexxStemVariable::set(VariableDictionary  *dictionary, RexxObject *value )
 {
     // look up the stem variable in the dictionary
     RexxVariable *variable = dictionary->getStemVariable(stemName);
@@ -231,7 +231,7 @@ void StemClassVariable::set(RexxVariableDictionary  *dictionary, RexxObject *val
  *
  * @return true if the variable exists, false otherwise.
  */
-bool StemClassVariable::exists(RexxActivation *context)
+bool RexxStemVariable::exists(RexxActivation *context)
 {
     return context->localStemVariableExists(stemName, stemIndex);
 }
@@ -244,7 +244,7 @@ bool StemClassVariable::exists(RexxActivation *context)
  * @param context The current execution context.
  * @param value   The new value.
  */
-void StemClassVariable::assign(RexxActivation *context, RexxObject *value )
+void RexxStemVariable::assign(RexxActivation *context, RexxObject *value )
 {
     // get the stem variable
     RexxVariable *variable = context->getLocalStemVariable(stemName, stemIndex);
@@ -260,7 +260,7 @@ void StemClassVariable::assign(RexxActivation *context, RexxObject *value )
  *
  * @param context The current execution context.
  */
-void StemClassVariable::drop(RexxActivation *context)
+void RexxStemVariable::drop(RexxActivation *context)
 {
     context->dropLocalStem(stemName, stemIndex);
 }
@@ -271,7 +271,7 @@ void StemClassVariable::drop(RexxActivation *context)
  *
  * @param dictionary The target dictionary
  */
-void StemClassVariable::drop(RexxVariableDictionary *dictionary)
+void RexxStemVariable::drop(VariableDictionary *dictionary)
 {
     // dropping the stem name is sufficient
     dictionary->dropStemVariable(stemName);
@@ -284,7 +284,7 @@ void StemClassVariable::drop(RexxVariableDictionary *dictionary)
  * @param context The current execution context.
  * @param parent  The parent execution context (source of the variable.)
  */
-void StemClassVariable::procedureExpose(RexxActivation *context, RexxActivation *parent)
+void RexxStemVariable::procedureExpose(RexxActivation *context, RexxActivation *parent)
 {
     // get the old variable entry
     RexxVariable *old_variable = parent->getLocalStemVariable(stemName, stemIndex);
@@ -310,7 +310,7 @@ void StemClassVariable::procedureExpose(RexxActivation *context, RexxActivation 
  * @param object_dictionary
  *                The source object scope variable dictionary.
  */
-void StemClassVariable::expose(RexxActivation *context, RexxVariableDictionary *object_dictionary)
+void RexxStemVariable::expose(RexxActivation *context, VariableDictionary *object_dictionary)
 {
     // get the old variable entry (will create if first request)
     RexxVariable *old_stem = object_dictionary->getStemVariable(stemName);
@@ -324,7 +324,7 @@ void StemClassVariable::expose(RexxActivation *context, RexxVariableDictionary *
  *
  * @param context The current execution context.
  */
-void StemClassVariable::setGuard(RexxActivation *context)
+void RexxStemVariable::setGuard(RexxActivation *context)
 {
     // get the variable and ask for our activity to be notified.
     RexxVariable *variable = context->getLocalStemVariable(stemName, stemIndex);
@@ -337,7 +337,7 @@ void StemClassVariable::setGuard(RexxActivation *context)
  *
  * @param context The current execution context.
  */
-void StemClassVariable::clearGuard(RexxActivation *context )
+void RexxStemVariable::clearGuard(RexxActivation *context )
 {
     // look up the variable and remove the inform status for this activity.
     RexxVariable *variable = context->getLocalStemVariable(stemName, stemIndex);
@@ -360,7 +360,7 @@ void StemClassVariable::clearGuard(RexxActivation *context )
  *
  * @return The success/failure indicator.
  */
-bool StemClassVariable::sort(RexxActivation *context, RexxString *prefix,
+bool RexxStemVariable::sort(RexxActivation *context, RexxString *prefix,
     int order, int type, size_t start, size_t end, size_t firstcol, size_t lastcol)
 {
     // get the stem variable and ask it's value to perform the sort

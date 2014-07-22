@@ -41,8 +41,8 @@
 /* Primitive Expression Stem Class Definitions                                */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_StemClassVariable
-#define Included_StemClassVariable
+#ifndef Included_RexxStemVariable
+#define Included_RexxStemVariable
 
 #include "ExpressionBaseVariable.hpp"
 
@@ -51,7 +51,7 @@
  * performs all of the normal operations expected from
  * an expression term or variable accessor.
  */
-class StemClassVariable : public RexxVariableBase
+class RexxStemVariable : public RexxVariableBase
 {
  public:
     void *operator new(size_t);
@@ -59,8 +59,8 @@ class StemClassVariable : public RexxVariableBase
     inline void  operator delete(void *) { ; }
     inline void  operator delete(void *, void *) { ; }
 
-    inline StemClassVariable(RESTORETYPE restoreType) { ; };
-    StemClassVariable(RexxString *, size_t);
+    inline RexxStemVariable(RESTORETYPE restoreType) { ; };
+    RexxStemVariable(RexxString *, size_t);
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
@@ -68,21 +68,21 @@ class StemClassVariable : public RexxVariableBase
 
     // overrides of RexxInternalObject evaluaton methods
     virtual RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
-    RexxObject *getValue(RexxVariableDictionary *);
+    RexxObject *getValue(VariableDictionary *);
     RexxObject *getValue(RexxActivation *);
-    RexxObject *getRealValue(RexxVariableDictionary *);
+    RexxObject *getRealValue(VariableDictionary *);
     RexxObject *getRealValue(RexxActivation *);
 
     // overrides of RexxVariableBase methods
     virtual bool exists(RexxActivation *);
     virtual void set(RexxActivation *, RexxObject *) ;
-    virtual void set(RexxVariableDictionary *, RexxObject *) ;
+    virtual void set(VariableDictionary *, RexxObject *) ;
     virtual void assign(RexxActivation *, RexxObject *);
     virtual void drop(RexxActivation *);
-    virtual void drop(RexxVariableDictionary *);
+    virtual void drop(VariableDictionary *);
     virtual void setGuard(RexxActivation *);
     virtual void clearGuard(RexxActivation *);
-    virtual void expose(RexxActivation *, RexxVariableDictionary *);
+    virtual void expose(RexxActivation *, VariableDictionary *);
     virtual void procedureExpose(RexxActivation *, RexxActivation *);
 
     // class-specific methods

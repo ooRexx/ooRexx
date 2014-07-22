@@ -46,7 +46,7 @@
 #include "PackageManager.hpp"
 #include "LibraryPackage.hpp"
 #include "Interpreter.hpp"
-#include "RexxNativeCode.hpp"
+#include "NativeCode.hpp"
 #include "DirectoryClass.hpp"
 #include "ActivityManager.hpp"
 #include "RoutineClass.hpp"
@@ -239,7 +239,7 @@ LibraryPackage *PackageManager::loadLibrary(RexxString *name)
  * @return A Native method that represents this package entry.  Returns
  *         NULL if not found.
  */
-RexxNativeMethod *PackageManager::resolveMethod(RexxString *packageName, RexxString *methodName)
+NativeMethod *PackageManager::resolveMethod(RexxString *packageName, RexxString *methodName)
 {
     // have we already loaded this package?
     // may need to bootstrap it up first.
@@ -261,7 +261,7 @@ RexxNativeMethod *PackageManager::resolveMethod(RexxString *packageName, RexxStr
  * @return A Native method that represents this package entry.  Returns
  *         NULL if not found.
  */
-RexxNativeMethod *PackageManager::loadMethod(RexxString *packageName, RexxString *methodName)
+NativeMethod *PackageManager::loadMethod(RexxString *packageName, RexxString *methodName)
 {
     // have we already loaded this package?
     // may need to bootstrap it up first.
@@ -651,7 +651,7 @@ void PackageManager::unload()
  * @return true if we located and successfully called this function.  false
  *         means the function is not located as a native function.
  */
-bool PackageManager::callNativeRoutine(RexxActivity *activity, RexxString *name,
+bool PackageManager::callNativeRoutine(Activity *activity, RexxString *name,
     RexxObject **arguments, size_t argcount, ProtectedObject &result)
 {
     // all of our tables use uppercase names...make this a case-insensitive lookup
@@ -693,7 +693,7 @@ bool PackageManager::callNativeRoutine(RexxActivity *activity, RexxString *name,
  *
  * @return The package routine (also returned in the result protected object).
  */
-RoutineClass *PackageManager::loadRequires(RexxActivity *activity, RexxString *shortName, RexxString *resolvedName, ProtectedObject &result)
+RoutineClass *PackageManager::loadRequires(Activity *activity, RexxString *shortName, RexxString *resolvedName, ProtectedObject &result)
 {
     result = OREF_NULL;
 
@@ -775,7 +775,7 @@ RoutineClass *PackageManager::loadRequires(RexxActivity *activity, RexxString *s
  *
  * @return The located ::REQUIRES file.
  */
-RoutineClass *PackageManager::getMacroSpaceRequires(RexxActivity *activity, RexxString *name, ProtectedObject &result, RexxObject *securityManager)
+RoutineClass *PackageManager::getMacroSpaceRequires(Activity *activity, RexxString *name, ProtectedObject &result, RexxObject *securityManager)
 {
     // make sure we're not stuck in a circular reference
     activity->checkRequires(name);
@@ -807,7 +807,7 @@ RoutineClass *PackageManager::getMacroSpaceRequires(RexxActivity *activity, Rexx
  *
  * @return The return Routine instance.
  */
-RoutineClass *PackageManager::getRequiresFile(RexxActivity *activity, RexxString *name, RexxObject *securityManager, ProtectedObject &result)
+RoutineClass *PackageManager::getRequiresFile(Activity *activity, RexxString *name, RexxObject *securityManager, ProtectedObject &result)
 {
     // make sure we're not stuck in a circular reference
     activity->checkRequires(name);
@@ -834,7 +834,7 @@ RoutineClass *PackageManager::getRequiresFile(RexxActivity *activity, RexxString
  *
  * @return The return Routine instance.
  */
-RoutineClass *PackageManager::loadRequires(RexxActivity *activity, RexxString *name, ArrayClass *data, ProtectedObject &result)
+RoutineClass *PackageManager::loadRequires(Activity *activity, RexxString *name, ArrayClass *data, ProtectedObject &result)
 {
     // first check this using the specified name.
     RoutineClass *code = checkRequiresCache(name, result);
@@ -864,7 +864,7 @@ RoutineClass *PackageManager::loadRequires(RexxActivity *activity, RexxString *n
  *
  * @return The return Routine instance.
  */
-RoutineClass *PackageManager::loadRequires(RexxActivity *activity, RexxString *name, const char *data, size_t length, ProtectedObject &result)
+RoutineClass *PackageManager::loadRequires(Activity *activity, RexxString *name, const char *data, size_t length, ProtectedObject &result)
 {
     // first check this using the specified name.
     RoutineClass *resolved = checkRequiresCache(name, result);

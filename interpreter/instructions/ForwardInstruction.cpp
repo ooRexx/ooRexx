@@ -44,7 +44,7 @@
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "ArrayClass.hpp"
-#include "RexxVariableDictionary.hpp"
+#include "VariableDictionary.hpp"
 #include "RexxActivation.hpp"
 #include "ForwardInstruction.hpp"
 #include "MethodArguments.hpp"

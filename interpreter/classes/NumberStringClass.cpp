@@ -3571,7 +3571,7 @@ RexxObject  *NumberString::getValue(
 
 
 RexxObject  *NumberString::getValue(
-    RexxVariableDictionary *context)   /* current activation context        */
+    VariableDictionary *context)   /* current activation context        */
 /******************************************************************************/
 /* Function:  Polymorphic get_value function used with expression terms       */
 /******************************************************************************/
@@ -3591,7 +3591,7 @@ RexxObject  *NumberString::getRealValue(
 
 
 RexxObject  *NumberString::getRealValue(
-    RexxVariableDictionary *context)   /* current activation context        */
+    VariableDictionary *context)   /* current activation context        */
 /******************************************************************************/
 /* Function:  Polymorphic get_value function used with expression terms       */
 /******************************************************************************/

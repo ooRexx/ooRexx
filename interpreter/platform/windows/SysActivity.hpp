@@ -48,7 +48,7 @@
 #include "windows.h"
 #include <stdio.h>
 
-class RexxActivity;
+class Activity;
 
 class SysActivity
 {
@@ -57,7 +57,7 @@ public:
 
     inline SysActivity() : threadId(0), hThread(NULL) { }
     inline bool equals(thread_id_t t) { return threadId == t; }
-    void create(RexxActivity *activity, size_t stackSize);
+    void create(Activity *activity, size_t stackSize);
     void close();
     void useCurrentThread();
     bool validateThread();

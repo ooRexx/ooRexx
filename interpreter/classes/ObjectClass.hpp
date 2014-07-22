@@ -54,14 +54,14 @@ class CompoundVariableTail;
 class CompoundTableElement;
 class SupplierClass;
 class Envelope;
-class RexxVariableDictionary;
+class VariableDictionary;
 class NumberString;
 class MethodClass;
 class MessageClass;
 class ProtectedObject;
 class SecurityManager;
 class BaseExecutable;
-class RexxActivity;
+class Activity;
 
 
 typedef size_t HashCode;               // a hash code value
@@ -300,9 +300,9 @@ class RexxInternalObject : public RexxVirtualBase
     virtual RexxObject  *copy();
     virtual RexxObject  *evaluate(RexxActivation *, RexxExpressionStack *) { return OREF_NULL; }
     virtual RexxObject  *getValue(RexxActivation *) { return OREF_NULL; }
-    virtual RexxObject  *getValue(RexxVariableDictionary *) { return OREF_NULL; }
+    virtual RexxObject  *getValue(VariableDictionary *) { return OREF_NULL; }
     virtual RexxObject  *getRealValue(RexxActivation *) { return OREF_NULL; }
-    virtual RexxObject  *getRealValue(RexxVariableDictionary *) { return OREF_NULL; }
+    virtual RexxObject  *getRealValue(VariableDictionary *) { return OREF_NULL; }
     virtual void         uninit() {;}
     virtual HashCode     hash()  { return getHashValue(); }
     virtual HashCode     getHashValue()  { return identityHash(); }
@@ -507,7 +507,7 @@ class RexxObject : public RexxInternalObject
     void         setObjectVariable(RexxString *, RexxObject *, RexxObject *);
     RexxObject  *getObjectVariable(RexxString *);
     RexxObject  *getObjectVariable(RexxString *, RexxObject *);
-    void         addObjectVariables(RexxVariableDictionary *);
+    void         addObjectVariables(VariableDictionary *);
     void         copyObjectVariables(RexxObject *newObject);
     RexxObject  *superScope(RexxObject *);
     MethodClass  *superMethod(RexxString *, RexxObject *);
@@ -518,9 +518,9 @@ class RexxObject : public RexxInternalObject
     const char  *idString();
     RexxString  *id();
     MethodClass  *methodLookup(RexxString *name );
-    RexxVariableDictionary *getObjectVariables(RexxObject *);
-    void guardOn(RexxActivity *activity, RexxObject *scope);
-    void guardOff(RexxActivity *activity, RexxObject *scope);
+    VariableDictionary *getObjectVariables(RexxObject *);
+    void guardOn(Activity *activity, RexxObject *scope);
+    void guardOff(Activity *activity, RexxObject *scope);
     RexxObject  *equal(RexxObject *);
     RexxObject  *notEqual(RexxObject *other);
     RexxObject  *strictEqual(RexxObject *);
@@ -579,7 +579,7 @@ class RexxObject : public RexxInternalObject
     koper  (operator_xor)
     koper  (operator_not)
 
-    RexxVariableDictionary *objectVariables;   // set of object variables
+    VariableDictionary *objectVariables;   // set of object variables
 
     static PCPPM operatorMethods[];
 
@@ -666,7 +666,7 @@ protected:
 class GuardLock
 {
 public:
-    inline GuardLock(RexxActivity *a, RexxObject *o, RexxObject *s) : activity(a), target(o), scope(s)
+    inline GuardLock(Activity *a, RexxObject *o, RexxObject *s) : activity(a), target(o), scope(s)
     {
         // just acquire the scope
         target->guardOn(activity, scope);
@@ -679,7 +679,7 @@ public:
 
 private:
 
-    RexxActivity *activity;  // the activity we're running on
+    Activity *activity;  // the activity we're running on
     RexxObject *target;      // the target object for the lock
     RexxObject *scope;       // the scope of the required guard lock
 };

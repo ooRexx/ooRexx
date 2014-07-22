@@ -44,7 +44,7 @@
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "RexxActivation.hpp"
-#include "RexxActivity.hpp"
+#include "Activity.hpp"
 #include "QueueInstruction.hpp"
 
 

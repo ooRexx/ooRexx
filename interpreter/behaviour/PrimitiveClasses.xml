@@ -107,9 +107,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="RexxSource" class="RexxSource" include="SourceFile.hpp"/>
 <Class id="LibraryPackage" class="LibraryPackage" include="LibraryPackage.hpp"/>
 <Class id="RexxCode" class="RexxCode" include="RexxCode.hpp"/>
-<Class id="NativeMethod" class="RexxNativeMethod" include="RexxNativeCode.hpp"/>
-<Class id="NativeRoutine" class="RexxNativeRoutine" include="RexxNativeCode.hpp"/>
-<Class id="RegisteredRoutine" class="RegisteredRoutine" include="RexxNativeCode.hpp"/>
+<Class id="NativeMethod" class="NativeMethod" include="NativeCode.hpp"/>
+<Class id="NativeRoutine" class="NativeRoutine" include="NativeCode.hpp"/>
+<Class id="RegisteredRoutine" class="RegisteredRoutine" include="NativeCode.hpp"/>
 <Class id="CPPCode" class="CPPCode" include="CPPCode.hpp"/>
 <Class id="AttributeGetterCode" class="AttributeGetterCode" include="CPPCode.hpp"/>
 <Class id="AttributeSetterCode" class="AttributeSetterCode" include="CPPCode.hpp"/>
@@ -204,9 +204,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="InternalStack" class="InternalStack" include="InternalStack.hpp"/>
 <Class id="LiveStack" class="LiveStack" include="MemoryStack.hpp"/>
 <Class id="PushThroughStack" class="PushThroughStack" include="MemoryStack.hpp"/>
-<Class id="Activity" class="RexxActivity" include="RexxActivity.hpp"/>
+<Class id="Activity" class="Activity" include="Activity.hpp"/>
 <Class id="Activation" class="RexxActivation" include="RexxActivation.hpp"/>
-<Class id="NativeActivation" class="RexxNativeActivation" include="RexxNativeActivation.hpp"/>
+<Class id="NativeActivation" class="NativeActivation" include="NativeActivation.hpp"/>
 <Class id="ActivationFrameBuffer" class="RexxActivationFrameBuffer" include="RexxActivationStack.hpp"/>
 <Class id="Envelope" class="Envelope" include="Envelope.hpp"/>
 <Class id="LanguageParser" class="LanguageParser" include="LanguageParser.hpp"/>

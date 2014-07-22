@@ -46,7 +46,7 @@
 #include "NumberStringClass.hpp"
 #include "ArrayClass.hpp"
 #include "BufferClass.hpp"
-#include "RexxActivity.hpp"
+#include "Activity.hpp"
 #include "NumberStringMath.hpp"
 #include "ActivityManager.hpp"
 #include "MethodArguments.hpp"

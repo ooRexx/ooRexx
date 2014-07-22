@@ -39,7 +39,7 @@
 #include "RexxCore.h"
 #include "ActivationFrame.hpp"
 #include "RexxActivation.hpp"
-#include "RexxNativeActivation.hpp"
+#include "NativeActivation.hpp"
 #include "StackFrameClass.hpp"
 
 RexxString *RexxActivationFrame::messageName()

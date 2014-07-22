@@ -42,7 +42,7 @@
 
 
 class DirectoryClass;
-class RexxNativeActivation;
+class NativeActivation;
 
 class ActivityDispatcher
 {
@@ -57,15 +57,15 @@ public:
     virtual void invoke(RexxOption *);
     virtual void invoke(PRXSYSEXIT exits, const char *env);
 
-    inline void setContext(RexxActivity *act, RexxNativeActivation *a) { activity = act; activation = a; }
+    inline void setContext(Activity *act, NativeActivation *a) { activity = act; activation = a; }
 
     wholenumber_t  rc;                 // error return code
     DirectoryClass *conditionData;      // any condition data posted due to an activity error
 
 protected:
 
-    RexxActivity *activity;            // the activity we're running on
-    RexxNativeActivation *activation;  // the native activation we're running under
+    Activity *activity;            // the activity we're running on
+    NativeActivation *activation;  // the native activation we're running under
 };
 
 

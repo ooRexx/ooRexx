@@ -49,7 +49,7 @@
 
 #include "RexxCore.h"                    /* global REXX declarations     */
 #include "StringClass.hpp"
-#include "RexxActivity.hpp"
+#include "Activity.hpp"
 #include "ActivityManager.hpp"
 #include "ProtectedObject.hpp"
 #include "RexxInternalApis.h"          /* Get private REXXAPI API's         */

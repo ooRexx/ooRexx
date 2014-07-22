@@ -43,7 +43,7 @@
 /******************************************************************************/
 #include "RexxCore.h"
 #include "StringClass.hpp"
-#include "RexxActivity.hpp"
+#include "Activity.hpp"
 #include "RexxActivation.hpp"
 #include "SayInstruction.hpp"
 

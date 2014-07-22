@@ -42,7 +42,7 @@
 #include "RoutineClass.hpp"
 #include "SystemInterpreter.hpp"
 #include "InterpreterInstance.hpp"
-#include "RexxNativeActivation.hpp"
+#include "NativeActivation.hpp"
 #include "LanguageParser.hpp"
 
 

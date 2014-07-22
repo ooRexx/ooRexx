@@ -85,7 +85,7 @@ void RexxExpressionStack::liveGeneral(MarkReason reason)
  *
  * @param activity The new activity.
  */
-void RexxExpressionStack::migrate(RexxActivity *activity)
+void RexxExpressionStack::migrate(Activity *activity)
 {
     RexxObject **oldFrame = stack;
     // allocate a new frame

@@ -294,7 +294,7 @@ void BaseExecutable::processNewExecutableArgs(RexxObject **&init_args, size_t &a
  * @param arguments The argument pointer.
  * @param result    The returned result.
  */
-void BaseCode::run(RexxActivity *activity, MethodClass *method, RexxObject *receiver, RexxString *msgname, RexxObject **arguments, size_t argCount, ProtectedObject &result)
+void BaseCode::run(Activity *activity, MethodClass *method, RexxObject *receiver, RexxString *msgname, RexxObject **arguments, size_t argCount, ProtectedObject &result)
 {
     // The subcasses decide which of run and call are allowed
     reportException(Error_Interpretation);
@@ -316,7 +316,7 @@ void BaseCode::run(RexxActivity *activity, MethodClass *method, RexxObject *rece
  *                  etc.)
  * @param result    The returned result.
  */
-void BaseCode::call(RexxActivity *activity, RoutineClass *routine, RexxString *msgname, RexxObject **arguments, size_t argcount, RexxString *ct, RexxString *env, int context, ProtectedObject &result)
+void BaseCode::call(Activity *activity, RoutineClass *routine, RexxString *msgname, RexxObject **arguments, size_t argcount, RexxString *ct, RexxString *env, int context, ProtectedObject &result)
 {
     // the default for this is the simplified call.   This is used by Rexx code to make calls to
     // both Rexx programs and native routines, so the polymorphism simplifies the processing.
@@ -333,7 +333,7 @@ void BaseCode::call(RexxActivity *activity, RoutineClass *routine, RexxString *m
  * @param argcount  The count of arguments.
  * @param result    The returned result.
  */
-void BaseCode::call(RexxActivity *activity, RoutineClass *routine, RexxString *msgname, RexxObject **arguments, size_t argcount, ProtectedObject &result)
+void BaseCode::call(Activity *activity, RoutineClass *routine, RexxString *msgname, RexxObject **arguments, size_t argcount, ProtectedObject &result)
 {
     // The subcasses decide which of run and call are allowed
     reportException(Error_Interpretation);

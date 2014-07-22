@@ -59,7 +59,7 @@ void SysActivity::close()
 DWORD WINAPI dispatch_activity_function(void * arguments)
 {
     // hand this off to the thread object
-    ((RexxActivity *)arguments)->runThread();
+    ((Activity *)arguments)->runThread();
     return 0;
 }
 
@@ -71,7 +71,7 @@ DWORD WINAPI dispatch_activity_function(void * arguments)
  * @param activity  The activity we're creating on.
  * @param stackSize The required stack size.
  */
-void SysActivity::create(RexxActivity *activity, size_t stackSize)
+void SysActivity::create(Activity *activity, size_t stackSize)
 {
     DWORD res;
 

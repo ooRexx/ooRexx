@@ -40,7 +40,7 @@
 #include "MessageDispatcher.hpp"
 #include "ProtectedObject.hpp"
 #include "MessageClass.hpp"
-#include "RexxNativeActivation.hpp"
+#include "NativeActivation.hpp"
 
 
 /**

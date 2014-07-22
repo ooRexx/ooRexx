@@ -47,7 +47,7 @@
 #include "StringClass.hpp"
 #include "MutableBufferClass.hpp"
 #include "DirectoryClass.hpp"
-#include "RexxActivity.hpp"
+#include "Activity.hpp"
 #include "IntegerClass.hpp"
 #include "ArrayClass.hpp"
 #include "TableClass.hpp"
@@ -313,7 +313,7 @@ void  MemoryObject::runUninits()
     pendingUninits = 0;
 
     // get the current activity for running the uninits
-    RexxActivity *activity = ActivityManager::currentActivity;
+    Activity *activity = ActivityManager::currentActivity;
 
     /* uninitTabe exists, run UNINIT     */
     for (iterTable = uninitTable->first();
@@ -661,18 +661,18 @@ void MemoryObject::restoreImage()
     // restore the global strings
     memoryObject.restoreStrings((ArrayClass *)saveArray->get(saveArray_NAME_STRINGS));
     // make sure we have a working thread context
-    RexxActivity::initializeThreadContext();
+    Activity::initializeThreadContext();
     PackageManager::restore((ArrayClass *)saveArray->get(saveArray_PACKAGES));
 }
 
 
+/**
+ * Main live marking routine for normal garbage collection.
+ * This starts the process by marking the key root objects.
+ *
+ * @param liveMark The current live mark.
+ */
 void MemoryObject::live(size_t liveMark)
-/******************************************************************************/
-/* Arguments:  None                                                           */
-/*                                                                            */
-/*  Returned:  Nothing                                                        */
-/*                                                                            */
-/******************************************************************************/
 {
     // Mark the save stack first, since it will be pulled off of
     // the stack after everything else.  This will give other
@@ -684,7 +684,6 @@ void MemoryObject::live(size_t liveMark)
     memory_mark(globalStrings);
     memory_mark(environment);
     memory_mark(commonRetrievers);
-    memory_mark(kernel);
     memory_mark(system);
 
     // now call the various subsystem managers to mark their references
@@ -702,6 +701,7 @@ void MemoryObject::live(size_t liveMark)
     }
 }
 
+
 void MemoryObject::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Arguments:  None                                                           */
@@ -710,13 +710,12 @@ void MemoryObject::liveGeneral(MarkReason reason)
 /*                                                                            */
 /******************************************************************************/
 {
-    memory_mark_general(saveStack);/* Mark the save stack last, to give it a chance to clear out entries */
+    memory_mark_general(saveStack);
     memory_mark_general(old2new);
     memory_mark_general(variableCache);
     memory_mark_general(globalStrings);
     memory_mark_general(environment);
     memory_mark_general(commonRetrievers);
-    memory_mark_general(kernel);
     memory_mark_general(system);
 
     // now call the various subsystem managers to mark their references

@@ -47,9 +47,9 @@
 #include "BufferClass.hpp"
 #include "SmartBuffer.hpp"
 #include "DirectoryClass.hpp"
-#include "RexxVariableDictionary.hpp"
+#include "VariableDictionary.hpp"
 #include "ArrayClass.hpp"
-#include "RexxActivity.hpp"
+#include "Activity.hpp"
 #include "RexxActivation.hpp"
 #include "MessageClass.hpp"
 #include "MethodClass.hpp"
@@ -2116,7 +2116,7 @@ void RexxInternalObject::removedUninit()
  */
 RexxObject *RexxObject::getObjectVariable(RexxString *name)
 {
-    RexxVariableDictionary *dictionary = objectVariables;
+    VariableDictionary *dictionary = objectVariables;
     while (dictionary != OREF_NULL)
     {
         // see if this dictionary has the variable
@@ -2148,7 +2148,7 @@ RexxObject * RexxObject::getObjectVariable(
         scope = this;                      /* no, we use our own.               */
     }
                                            /* get the ovd for our scope level   */
-    RexxVariableDictionary *ovd = getObjectVariables(scope);
+    VariableDictionary *ovd = getObjectVariables(scope);
     return ovd->realValue(name);         /* get the real variable value       */
 }
 
@@ -2166,7 +2166,7 @@ void RexxObject::setObjectVariable(
         scope = this;                      /* no, we use our own.               */
     }
     /* get the ovd for our scope level   */
-    RexxVariableDictionary *ovd = getObjectVariables(scope);
+    VariableDictionary *ovd = getObjectVariables(scope);
     ovd->set(name, value);               /* do the variable assignment      */
 }
 
@@ -2176,7 +2176,7 @@ void RexxObject::setObjectVariable(
  *
  * @param dictionary The new dictionary.
  */
-void RexxObject::addObjectVariables(RexxVariableDictionary *dictionary)
+void RexxObject::addObjectVariables(VariableDictionary *dictionary)
 {
     // chain any existing dictionaries off of the new one
     dictionary->setNextDictionary(objectVariables);
@@ -2203,13 +2203,13 @@ MethodClass * RexxObject::superMethod(
   return behaviour->superMethod(msgName, startScope);
 }
 
-RexxVariableDictionary * RexxObject::getObjectVariables(
+VariableDictionary * RexxObject::getObjectVariables(
     RexxObject *scope)                 /* required dictionary scope         */
 /******************************************************************************/
 /* Function:   Retrieve an object dictionary for a given scope                */
 /******************************************************************************/
 {
-    RexxVariableDictionary *dictionary = objectVariables;        /* get the head of the chain         */
+    VariableDictionary *dictionary = objectVariables;        /* get the head of the chain         */
     while (dictionary != OREF_NULL)
     {    /* search for a scope match          */
         /* if we've found a match, return it */
@@ -2236,9 +2236,9 @@ RexxVariableDictionary * RexxObject::getObjectVariables(
  * @param activity The activity we're running on.
  * @param scope    The scope that needs to be locked.
  */
-void RexxObject::guardOn(RexxActivity *activity, RexxObject *scope)
+void RexxObject::guardOn(Activity *activity, RexxObject *scope)
 {
-    RexxVariableDictionary *vdict = getObjectVariables(scope);
+    VariableDictionary *vdict = getObjectVariables(scope);
     vdict->reserve(activity);
 }
 
@@ -2249,9 +2249,9 @@ void RexxObject::guardOn(RexxActivity *activity, RexxObject *scope)
  * @param activity The activity we're running on.
  * @param scope    The scope that needs to be released.
  */
-void RexxObject::guardOff(RexxActivity *activity, RexxObject *scope)
+void RexxObject::guardOff(Activity *activity, RexxObject *scope)
 {
-    RexxVariableDictionary *vdict = getObjectVariables(scope);
+    VariableDictionary *vdict = getObjectVariables(scope);
     vdict->release(activity);
 }
 

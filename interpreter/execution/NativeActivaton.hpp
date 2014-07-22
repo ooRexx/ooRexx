@@ -36,30 +36,29 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                      RexxNativeActivation.hpp  */
+/* REXX Kernel                                      NativeActivation.hpp  */
 /*                                                                            */
 /* Primitive Native Activation Class Definitions                              */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_RexxNativeActivation
-#define Included_RexxNativeActivation
+#ifndef Included_NativeActivation
+#define Included_NativeActivation
 
-#include "RexxActivity.hpp"
-class RexxNativeCode;
+#include "Activity.hpp"
+class NativeCode;
 class ActivityDispatcher;
 class CallbackDispatcher;
 class TrappingDispatcher;
-class RexxNativeMethod;
-class RexxNativeRoutine;
+class NativeMethod;
+class NativeRoutine;
 class RegisteredRoutine;
 class StemClass;
 class SupplierClass;
 class StackFrameClass;
 class IdentityTable;
 
-#define MAX_NATIVE_ARGUMENTS 16
 
-class RexxNativeActivation : public RexxActivationBase
+class NativeActivation : public RexxActivationBase
 {
    public:
            void *operator new(size_t);
@@ -67,21 +66,21 @@ class RexxNativeActivation : public RexxActivationBase
     inline void  operator delete(void *, void *) { ; }
     inline void  operator delete(void *) { ; }
 
-    inline RexxNativeActivation(RESTORETYPE restoreType) { ; };
-           RexxNativeActivation();
-           RexxNativeActivation(RexxActivity *_activity, RexxActivation *_activation);
-           RexxNativeActivation(RexxActivity *_activity);
+    inline NativeActivation(RESTORETYPE restoreType) { ; };
+           NativeActivation();
+           NativeActivation(Activity *_activity, RexxActivation *_activation);
+           NativeActivation(Activity *_activity);
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
 
-    virtual void run(MethodClass *_method, RexxNativeMethod *_code, RexxObject  *_receiver,
+    virtual void run(MethodClass *_method, NativeMethod *_code, RexxObject  *_receiver,
         RexxString  *_msgname, RexxObject **_arglist, size_t _argcount, ProtectedObject &resultObj);
 
     void run(ActivityDispatcher &dispatcher);
     void run(CallbackDispatcher &dispatcher);
     void run(TrappingDispatcher &dispatcher);
-    RexxVariableDictionary *methodVariables();
+    VariableDictionary *methodVariables();
     bool   isInteger(RexxObject *);
     wholenumber_t signedIntegerValue(RexxObject *o, size_t position, wholenumber_t maxValue, wholenumber_t minValue);
     stringsize_t unsignedIntegerValue(RexxObject *o, size_t position, stringsize_t maxValue);
@@ -105,9 +104,9 @@ class RexxNativeActivation : public RexxActivationBase
     void   guardOn();
     void   enableVariablepool();
     void   disableVariablepool();
-    bool   trap (RexxString *, DirectoryClass *);
+    bool   trap(RexxString *, DirectoryClass *);
     void   resetNext();
-    bool   fetchNext(RexxString **name, RexxObject **value);
+    bool   fetchNext(RexxString *&name, RexxObject *&value);
     void   raiseCondition(RexxString *condition, RexxString *description, RexxObject *additional, RexxObject *result);
     ArrayClass *getArguments();
     RexxObject *getArgument(size_t index);
@@ -117,13 +116,13 @@ class RexxNativeActivation : public RexxActivationBase
     RexxClass *findClass(RexxString *className);
     RexxClass *findCallerClass(RexxString *className);
 
-    inline void   termination() { this->guardOff();}
+    inline void   termination() { guardOff();}
 
     void   accessCallerContext();
-    inline bool        getVpavailable()   {return this->vpavailable;}
-    inline RexxString *getMessageName()   {return this->msgname;}
-    inline size_t      nextVariable()     {return this->nextvariable;}
-    inline RexxVariable *nextStem()       {return this->nextstem;}
+    inline bool        isVariablePoolEnabled()   {return variablePoolEnabled;}
+    inline RexxString *getMessageName()   {return msgname;}
+    inline size_t      nextVariable()     {return nextvariable;}
+    inline RexxVariable *nextStem()       {return nextstem;}
     RexxObject *getContextStem(RexxString *name);
     RexxObject *getContextVariable(const char *name);
     void dropContextVariable(const char *name);
@@ -136,14 +135,8 @@ class RexxNativeActivation : public RexxActivationBase
     inline DirectoryClass *getConditionInfo() { return conditionObj; }
     inline void clearException() { conditionObj = OREF_NULL; }
     void checkConditions();
-    inline RexxVariableDictionary *nextCurrent()     {return this->nextcurrent;}
-    inline CompoundTableElement *compoundElement() {return this->compoundelement; }
-    inline void        setNextVariable(size_t value)           {this->nextvariable = value;}
-    inline void        setNextCurrent(RexxVariableDictionary *vdict)     {this->nextcurrent = vdict;}
-    inline void        setNextStem(RexxVariable *stemVar)     {this->nextstem = stemVar;}
-    inline void        setCompoundElement(CompoundTableElement *element)     {this->compoundelement = element;}
     inline RexxObject *getSelf() { return receiver; }
-    inline RexxActivity *getActivity() { return activity; }
+    inline Activity *getActivity() { return activity; }
     virtual bool isStackBase();
     virtual RexxActivation *getRexxContext();
     BaseExecutable *getRexxContextExecutable();
@@ -162,7 +155,7 @@ class RexxNativeActivation : public RexxActivationBase
     bool objectToValue(RexxObject *o, ValueDescriptor *value);
     void createLocalReference(RexxObject *objr);
     void removeLocalReference(RexxObject *objr);
-    void callNativeRoutine(RoutineClass *routine, RexxNativeRoutine *code, RexxString *functionName,
+    void callNativeRoutine(RoutineClass *routine, NativeRoutine *code, RexxString *functionName,
         RexxObject **list, size_t count, ProtectedObject &result);
     void callRegisteredRoutine(RoutineClass *routine, RegisteredRoutine *code, RexxString *functionName,
         RexxObject **list, size_t count, ProtectedObject &resultObj);
@@ -185,41 +178,42 @@ class RexxNativeActivation : public RexxActivationBase
     void disableConditionTraps() { trapErrors = false; }
     StackFrameClass *createStackFrame();
 
+
+    static const size_t MaxNativeArguments = 16;
+
 protected:
 
     typedef enum
     {
-        PROGRAM_ACTIVATION,            // toplevel program entry
-        METHOD_ACTIVATION,             // normal method call
-        FUNCTION_ACTIVATION,           // function call activation
-        DISPATCHER_ACTIVATION,         // running a top-level dispatcher
-        CALLBACK_ACTIVATION,           // running a callback, such as an exit
-        TRAPPING_ACTIVATION,           // running a protected method call, such as an uninit
+        PROGRAM_ACTIVATION,              // toplevel program entry
+        METHOD_ACTIVATION,               // normal method call
+        FUNCTION_ACTIVATION,             // function call activation
+        DISPATCHER_ACTIVATION,           // running a top-level dispatcher
+        CALLBACK_ACTIVATION,             // running a callback, such as an exit
+        TRAPPING_ACTIVATION,             // running a protected method call, such as an uninit
     } ActivationType;
 
-    RexxActivity   *activity;            // current activity
-    RexxNativeCode *code;                // the code object controlling the target
+    Activity   *activity;            // current activity
+    NativeCode *code;                // the code object controlling the target
     RexxObject     *receiver;            // the object receiving the message
     RexxString     *msgname;             // name of the message running
     RexxActivation *activation;          // parent activation
     RexxObject    **arglist;             // copy of the argument list
-    ArrayClass      *argArray;            // optionally create argument array
-    IdentityTable   *savelist;       // list of saved objects
+    ArrayClass      *argArray;           // optionally create argument array
+    IdentityTable   *savelist;           // list of saved objects
     RexxObject     *result;              // result from RexxRaise call
     ActivationType  activationType;      // the type of activation
-    DirectoryClass  *conditionObj;        // potential condition object
+    DirectoryClass  *conditionObj;       // potential condition object
     SecurityManager *securityManager;    // our active security manager
                                          // running object variable pool
-    RexxVariableDictionary *objectVariables;
-    size_t          nextvariable;        // next variable to retrieve
-    RexxVariableDictionary *nextcurrent; // current processed vdict
-    CompoundTableElement *compoundelement;// current compound variable value
-    RexxVariable   *nextstem;            // our working stem variable
+    VariableDictionary *objectVariables;
     size_t          argcount;            // size of the argument list
-    bool            vpavailable;         // Variable pool access flag
     int             object_scope;        // reserve/release state of variables
     bool            stackBase;           // this is a stack base marker
     bool            trapErrors;          // we're trapping errors from external callers
     bool            trapConditions;      // trap any raised conditions
+    bool            variablePoolEnabled; // Variable pool access flag
+                                         // our iterator for the variable pool next function
+    VariableDictionary::VariableIterator iterator;
 };
 #endif

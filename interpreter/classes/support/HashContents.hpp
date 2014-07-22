@@ -108,7 +108,7 @@ public:
         inline RexxInternalObject *value() { return contents->entryValue(position); }
         inline RexxInternalObject *index() { return contents->entryIndex(position); }
         inline void replace(RexxInternalObject v) { contents->setValue(position, v); }
-        inline void next() { position = contents->iterateNext(position, nextBucket); }
+        inline void next() { contents->iterateNext(position, nextBucket); }
 
 	private:
         // constructor for an index iterator
@@ -345,7 +345,7 @@ public:
     inline void  operator delete(void *, void *) { ; }
     inline void  operator delete(void *, size_t) { ; }
 
-    inline EqualityHashContents() { ; };
+    inline IdentityHashContents() { ; };
     inline IdentityHashContents(RESTORETYPE restoreType) { ; };
            IdentityHashContents(size_t entries, size_t total) : HashContents(entries, total) { }
 };
@@ -407,7 +407,7 @@ public:
            MultiValueContents(size_t entries, size_t total) : EqualityHashContents(entries, total) { }
 
     // remap the put method to the multi-value type
-    virtual bool put(RexxInternalObject *value, RexxInternalObject *index)
+    virtual void put(RexxInternalObject *value, RexxInternalObject *index)
     {
         return addFront(value, index);
     }

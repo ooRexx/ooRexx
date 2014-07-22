@@ -45,7 +45,7 @@
 #ifndef Included_RexxLocalVariables
 #define Included_RexxLocalVariables
 
-#include "RexxVariableDictionary.hpp"
+#include "VariableDictionary.hpp"
 #include "FlagSet.hpp"
 
 
@@ -82,7 +82,7 @@ class RexxLocalVariables
 
     void live(size_t);
     void liveGeneral(MarkReason reason);
-    void migrate(RexxActivity *);
+    void migrate(Activity *);
 
     /* NOTE:  we add one because the size is actually the index */
     /* number of the last variable in the cache.   The zero-th */
@@ -104,7 +104,7 @@ class RexxLocalVariables
 
     void createDictionary();
 
-    inline RexxVariableDictionary *getDictionary()
+    inline VariableDictionary *getDictionary()
     {
         if (dictionary == OREF_NULL) {
             createDictionary();
@@ -155,8 +155,8 @@ class RexxLocalVariables
     inline bool       isNested() { return flags[NESTED_INTERNAL]; }
 
     inline void       procedure(RexxActivation *activation) { owner = activation; dictionary = OREF_NULL;  clearNested(); }
-    inline void       setDictionary(RexxVariableDictionary *dict) { dictionary = dict; }
-    inline RexxVariableDictionary *getNestedDictionary() { return dictionary; }
+    inline void       setDictionary(VariableDictionary *dict) { dictionary = dict; }
+    inline VariableDictionary *getNestedDictionary() { return dictionary; }
 
     static const size_t FIRST_VARIABLE_INDEX = VARIABLE_SIGL;
 
@@ -166,6 +166,6 @@ class RexxLocalVariables
     size_t size;                         // size of the expstack
     RexxActivation *owner;               // the owning activation
     RexxVariable **locals;               // the frame of local variables
-    RexxVariableDictionary *dictionary;  // dictionary used for dynamic lookups
+    VariableDictionary *dictionary;  // dictionary used for dynamic lookups
 };
 #endif

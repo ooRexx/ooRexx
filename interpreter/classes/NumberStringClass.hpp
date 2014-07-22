@@ -138,9 +138,9 @@ class NumberString : public NumberStringBase
     RexxObject *operatorNot(RexxObject *);
     RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
     RexxObject *getValue(RexxActivation *context);
-    RexxObject *getValue(RexxVariableDictionary *dictionary);
+    RexxObject *getValue(VariableDictionary *dictionary);
     RexxObject *getRealValue(RexxActivation *);
-    RexxObject *getRealValue(RexxVariableDictionary *);
+    RexxObject *getRealValue(VariableDictionary *);
     RexxObject *trunc(RexxObject *);
     RexxObject *truncInternal(size_t);
     RexxObject *floor();

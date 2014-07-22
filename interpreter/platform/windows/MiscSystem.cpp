@@ -43,7 +43,7 @@
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "DirectoryClass.hpp"
-#include "RexxActivity.hpp"
+#include "Activity.hpp"
 #include "RexxActivation.hpp"
 #include "PointerClass.hpp"
 #include <stdlib.h>

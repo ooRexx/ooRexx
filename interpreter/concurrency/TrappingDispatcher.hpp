@@ -42,7 +42,7 @@
 
 
 class DirectoryClass;
-class RexxNativeActivation;
+class NativeActivation;
 
 class TrappingDispatcher
 {
@@ -54,13 +54,13 @@ public:
     virtual void handleError(wholenumber_t, DirectoryClass *);
     virtual void handleError(DirectoryClass *);
 
-    inline void setContext(RexxActivity *act, RexxNativeActivation *a) { activity = act; activation = a; }
+    inline void setContext(Activity *act, NativeActivation *a) { activity = act; activation = a; }
 
     wholenumber_t  rc;                 // error return code
 
 protected:
-    RexxActivity *activity;            // the activity we're running on
-    RexxNativeActivation *activation;  // the native activation we're running under
+    Activity *activity;            // the activity we're running on
+    NativeActivation *activation;  // the native activation we're running under
     DirectoryClass *conditionData;      // any condition data posted due to an activity error
 };
 

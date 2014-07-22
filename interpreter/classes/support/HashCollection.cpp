@@ -711,6 +711,61 @@ RexxObject *HashCollection::isEmptyRexx()
 
 
 /**
+ * Return an iterator for this collection.
+ *
+ * @return An iterator for the hash contens.
+ */
+HashContents::TableIterator HashCollection::iterator()
+{
+    return contents->iterator();
+}
+
+
+/**
+ * Return an iterator for all elements with a given index
+ *
+ * @return An iterator for the hash contens.
+ */
+HashContents::IndexIterator HashCollection::iterator(RexxInternalObject *index)
+{
+    return contents->iterator(index);
+}
+
+
+/**
+ * construct a HashCollection with a given size.
+ *
+ * @param capacity The required capacity.
+ */
+StringHashCollection::StringHashCollection(size_t capacity)
+{
+    // NOTE:  all of this needs to be done at the top-level constructor
+    // because of the way C++ constructors work.  As each
+    // previous contructor level gets called, the virtual function
+    // pointer gets changed to match the class of the contructor getting
+    // called.  We don't have access to our allocateContents() override
+    // until the final constructor is run.
+    initialize(capacity);
+}
+
+
+/**
+ * Virtual method for allocating a new contents item for this
+ * collection.  Collections with special requirements should
+ * override this and return the appropriate subclass.
+ *
+ * @param bucketSize The bucket size of the collection.
+ * @param totalSize  The total capacity of the collection.
+ *
+ * @return A new HashContents object appropriate for this collection type.
+ */
+HashContents *StringHashCollection::allocateContents(size_t bucketSize, size_t totalSize)
+{
+    return new (totalSize) StringHashContents(bucketSize, totalSize);
+}
+
+
+/**
  * Retrieve an entry from a directory, using the uppercase
  * version of the index.
  *
@@ -926,39 +981,6 @@ EqualityHashCollection::EqualityHashCollection(size_t capacity)
 HashContents *EqualityHashCollection::allocateContents(size_t bucketSize, size_t totalSize)
 {
     return new (totalSize) EqualityHashContents(bucketSize, totalSize);
-}
-
-
-/**
- * construct a HashCollection with a given size.
- *
- * @param capacity The required capacity.
- */
-StringHashCollection::StringHashCollection(size_t capacity)
-{
-    // NOTE:  all of this needs to be done at the top-level constructor
-    // because of the way C++ constructors work.  As each
-    // previous contructor level gets called, the virtual function
-    // pointer gets changed to match the class of the contructor getting
-    // called.  We don't have access to our allocateContents() override
-    // until the final constructor is run.
-    initialize(capacity);
-}
-
-
-/**
- * Virtual method for allocating a new contents item for this
- * collection.  Collections with special requirements should
- * override this and return the appropriate subclass.
- *
- * @param bucketSize The bucket size of the collection.
- * @param totalSize  The total capacity of the collection.
- *
- * @return A new HashContents object appropriate for this collection type.
- */
-HashContents *StringHashCollection::allocateContents(size_t bucketSize, size_t totalSize)
-{
-    return new (totalSize) StringHashContents(bucketSize, totalSize);
 }
 
 

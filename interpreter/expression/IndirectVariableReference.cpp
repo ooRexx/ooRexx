@@ -45,8 +45,8 @@
 #include "StringClass.hpp"
 #include "ArrayClass.hpp"
 #include "RexxActivation.hpp"
-#include "RexxActivity.hpp"
-#include "RexxVariableDictionary.hpp"
+#include "Activity.hpp"
+#include "VariableDictionary.hpp"
 #include "IndirectVariableReference.hpp"
 #include "MethodArguments.hpp"
 
@@ -155,7 +155,7 @@ ArrayClass *RexxVariableReference::list(RexxActivation *context)
             reportException(Error_Invalid_variable_number, variable_name);
         }
         // now convert into a variable reference
-        RexxVariableBase *retriever = RexxVariableDictionary::getVariableRetriever(variable_name);
+        RexxVariableBase *retriever = VariableDictionary::getVariableRetriever(variable_name);
         // if it did not convert (invalid characters, for example), report this
         if (retriever == OREF_NULL)
         {
@@ -221,7 +221,7 @@ void RexxVariableReference::procedureExpose(RexxActivation *context, RexxActivat
  * @param object_dictionary
  *                The source object scope variable dictionary.
  */
-void RexxVariableReference::expose(RexxActivation *context, RexxVariableDictionary *object_dictionary)
+void RexxVariableReference::expose(RexxActivation *context, VariableDictionary *object_dictionary)
 {
     // expose the variable first
     variableObject->expose(context, object_dictionary);

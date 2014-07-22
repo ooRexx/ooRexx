@@ -230,7 +230,7 @@ bool SecurityManager::checkFunctionCall(RexxString *functionName, size_t count, 
  *
  * @return true if the security manager handled this call, false otherwise.
  */
-bool SecurityManager::checkCommand(RexxActivity *activity, RexxString *address, RexxString *command, ProtectedObject &result, ProtectedObject &condition)
+bool SecurityManager::checkCommand(Activity *activity, RexxString *address, RexxString *command, ProtectedObject &result, ProtectedObject &condition)
 {
     // no method here
     if (manager == OREF_NULL)

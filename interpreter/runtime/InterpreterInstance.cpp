@@ -128,7 +128,7 @@ void InterpreterInstance::liveGeneral(MarkReason reason)
  *                 The default address environment for this interpreter instance.  Each
  *                 active interpreter instance can define its own default environment.
  */
-void InterpreterInstance::initialize(RexxActivity *activity, RexxOption *options)
+void InterpreterInstance::initialize(Activity *activity, RexxOption *options)
 {
     rootActivity = activity;
     allActivities = new_list();
@@ -183,7 +183,7 @@ void InterpreterInstance::setSecurityManager(RexxObject *m)
  */
 int InterpreterInstance::attachThread(RexxThreadContext *&attachedContext)
 {
-    RexxActivity *activity = attachThread();
+    Activity *activity = attachThread();
     attachedContext = activity->getThreadContext();
     // When we attach, we get the current lock.  We need to ensure we
     // release this before returning control to the outside world.
@@ -197,10 +197,10 @@ int InterpreterInstance::attachThread(RexxThreadContext *&attachedContext)
  *
  * @return The attached activity.
  */
-RexxActivity *InterpreterInstance::attachThread()
+Activity *InterpreterInstance::attachThread()
 {
     // first check for an existing activity
-    RexxActivity *activity = findActivity();
+    Activity *activity = findActivity();
     // do we have this?  we can just return it
     if (activity != OREF_NULL)
     {
@@ -232,7 +232,7 @@ RexxActivity *InterpreterInstance::attachThread()
  *
  * @return true if this worked ok.
  */
-bool InterpreterInstance::detachThread(RexxActivity *activity)
+bool InterpreterInstance::detachThread(Activity *activity)
 {
     // if the thread in question is not found, is not an attached thread, or
     // the thread is currently busy, this fails
@@ -290,10 +290,10 @@ bool InterpreterInstance::detachThread()
  *
  * @return The attached activity.
  */
-RexxActivity *InterpreterInstance::spawnActivity(RexxActivity *parent)
+Activity *InterpreterInstance::spawnActivity(Activity *parent)
 {
     // create a new activity
-    RexxActivity *activity = ActivityManager::createNewActivity(parent);
+    Activity *activity = ActivityManager::createNewActivity(parent);
     // associate the thread with this instance
     activity->addToInstance(this);
     // add this to the activities list
@@ -314,7 +314,7 @@ RexxActivity *InterpreterInstance::spawnActivity(RexxActivity *parent)
  * @return true if the activity was added to the pool, false if the
  *         activity should continue with termination.
  */
-bool InterpreterInstance::poolActivity(RexxActivity *activity)
+bool InterpreterInstance::poolActivity(Activity *activity)
 {
     ResourceSection lock;
     // detach from this instance
@@ -347,7 +347,7 @@ bool InterpreterInstance::poolActivity(RexxActivity *activity)
  * @return The associated activity, or OREF_NULL if the current thread
  *         is not attached.
  */
-RexxActivity *InterpreterInstance::findActivity(thread_id_t threadId)
+Activity *InterpreterInstance::findActivity(thread_id_t threadId)
 {
     // this is a critical section
     ResourceSection lock;
@@ -358,7 +358,7 @@ RexxActivity *InterpreterInstance::findActivity(thread_id_t threadId)
          listIndex != LIST_END;
          listIndex = allActivities->previousIndex(listIndex) )
     {
-        RexxActivity *activity = (RexxActivity *)allActivities->getValue(listIndex);
+        Activity *activity = (Activity *)allActivities->getValue(listIndex);
         // this should never happen, but we never return suspended threads
         if (activity->isThread(threadId) && !activity->isSuspended())
         {
@@ -375,7 +375,7 @@ RexxActivity *InterpreterInstance::findActivity(thread_id_t threadId)
  *
  * @return The target activity.
  */
-RexxActivity *InterpreterInstance::findActivity()
+Activity *InterpreterInstance::findActivity()
 {
     return findActivity(SysActivity::queryThreadID());
 }
@@ -388,9 +388,9 @@ RexxActivity *InterpreterInstance::findActivity()
  * @return The activity object associated with this thread/instance
  *         combination.
  */
-RexxActivity *InterpreterInstance::enterOnCurrentThread()
+Activity *InterpreterInstance::enterOnCurrentThread()
 {
-    RexxActivity *activity;
+    Activity *activity;
     {
         ResourceSection lock;              // lock the outer control block access
         // attach this thread to the current activity
@@ -414,7 +414,7 @@ void InterpreterInstance::exitCurrentThread()
 {
     // find the current activity and deactivate it, and
     // release the kernel lock.
-    RexxActivity *activity = findActivity();
+    Activity *activity = findActivity();
     activity->exitCurrentThread();
 }
 
@@ -430,7 +430,7 @@ void InterpreterInstance::removeInactiveActivities()
     // If there are any items left, those are activities we can't release yet.
     for (size_t i = 0; i < count; i++)
     {
-        RexxActivity *activity = (RexxActivity *)allActivities->removeFirstItem();
+        Activity *activity = (Activity *)allActivities->removeFirstItem();
         if (activity->isActive())
         {
             allActivities->append((RexxObject *)activity);
@@ -453,7 +453,7 @@ void InterpreterInstance::removeInactiveActivities()
 bool InterpreterInstance::terminate()
 {
     // if our current activity is not the root one, we can't do that
-    RexxActivity *current = findActivity();
+    Activity *current = findActivity();
     // we also can't be doing active work on the root thread
     if (current != rootActivity || rootActivity->isActive())
     {
@@ -554,7 +554,7 @@ bool InterpreterInstance::haltAllActivities(RexxString *name)
     {
                                          /* Get the next message object to    */
                                          /*process                            */
-        RexxActivity *activity = (RexxActivity *)allActivities->getValue(listIndex);
+        Activity *activity = (Activity *)allActivities->getValue(listIndex);
         // only halt the active ones
         if (activity->isActive())
         {
@@ -579,7 +579,7 @@ void InterpreterInstance::traceAllActivities(bool on)
     {
                                          /* Get the next message object to    */
                                          /*process                            */
-        RexxActivity *activity = (RexxActivity *)allActivities->getValue(listIndex);
+        Activity *activity = (Activity *)allActivities->getValue(listIndex);
         // only activate the active ones
         if (activity->isActive())
         {
@@ -826,7 +826,7 @@ CommandHandler *InterpreterInstance::resolveCommandHandler(RexxString *name)
  * @return The loaded requires file, or OREF_NULL if this instance
  *         has not used the file yet.
  */
-PackageClass *InterpreterInstance::getRequiresFile(RexxActivity *activity, RexxString *name)
+PackageClass *InterpreterInstance::getRequiresFile(Activity *activity, RexxString *name)
 {
     WeakReference *ref = (WeakReference *)requiresFiles->get(name);
     if (ref != OREF_NULL)
@@ -871,7 +871,7 @@ void InterpreterInstance::addRequiresFile(RexxString *shortName, RexxString *ful
  * @param name     The name of the requires file.
  * @param code     The routine instance to run.
  */
-void InterpreterInstance::runRequires(RexxActivity *activity, RexxString *name, RoutineClass *code)
+void InterpreterInstance::runRequires(Activity *activity, RexxString *name, RoutineClass *code)
 {
     ProtectedObject dummy;
 
@@ -892,7 +892,7 @@ void InterpreterInstance::runRequires(RexxActivity *activity, RexxString *name, 
  *
  * @return The loaded package class, if located.
  */
-PackageClass *InterpreterInstance::loadRequires(RexxActivity *activity, RexxString *shortName, RexxString *fullName)
+PackageClass *InterpreterInstance::loadRequires(Activity *activity, RexxString *shortName, RexxString *fullName)
 {
 
     // if we've already loaded this in this instance, just return it.
@@ -947,7 +947,7 @@ PackageClass *InterpreterInstance::loadRequires(RexxActivity *activity, RexxStri
  *
  * @return The loaded package class, if located.
  */
-PackageClass *InterpreterInstance::loadRequires(RexxActivity *activity, RexxString *shortName, ArrayClass *source)
+PackageClass *InterpreterInstance::loadRequires(Activity *activity, RexxString *shortName, ArrayClass *source)
 {
     // if we've already loaded this in this instance, just return it.
     PackageClass *package = getRequiresFile(activity, shortName);
@@ -990,7 +990,7 @@ PackageClass *InterpreterInstance::loadRequires(RexxActivity *activity, RexxStri
  *
  * @return The loaded package class, if located.
  */
-PackageClass *InterpreterInstance::loadRequires(RexxActivity *activity, RexxString *shortName, const char *data, size_t length)
+PackageClass *InterpreterInstance::loadRequires(Activity *activity, RexxString *shortName, const char *data, size_t length)
 {
     // if we've already loaded this in this instance, just return it.
     PackageClass *package = getRequiresFile(activity, shortName);

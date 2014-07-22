@@ -46,7 +46,7 @@
 #include "LibraryPackage.hpp"
 #include "PackageManager.hpp"
 #include "Interpreter.hpp"
-#include "RexxNativeCode.hpp"
+#include "NativeCode.hpp"
 #include "DirectoryClass.hpp"
 #include "RoutineClass.hpp"
 #include "ProtectedObject.hpp"
@@ -269,7 +269,7 @@ void LibraryPackage::loadRoutines(RexxRoutineEntry *table)
         }
         else
         {
-            func = new RexxNativeRoutine(libraryName, routineName, (PNATIVEROUTINE)table->entryPoint);
+            func = new NativeRoutine(libraryName, routineName, (PNATIVEROUTINE)table->entryPoint);
         }
 
         RoutineClass *routine = new RoutineClass(routineName, func);
@@ -354,9 +354,9 @@ RexxRoutineEntry *LibraryPackage::locateRoutineEntry(RexxString *name)
  *
  * @param name   Name of the target method.
  *
- * @return A RexxNativeCode object for this method, if located.
+ * @return A NativeCode object for this method, if located.
  */
-RexxNativeMethod *LibraryPackage::resolveMethod(RexxString *name)
+NativeMethod *LibraryPackage::resolveMethod(RexxString *name)
 {
     // create our methods table if not yet created.
     if (methods == OREF_NULL)
@@ -365,7 +365,7 @@ RexxNativeMethod *LibraryPackage::resolveMethod(RexxString *name)
     }
 
     // see if this is in the table yet.
-    RexxNativeMethod *code = (RexxNativeMethod *)methods->at(name);
+    NativeMethod *code = (NativeMethod *)methods->at(name);
     if (code == OREF_NULL)
     {
         // find the package definition
@@ -373,7 +373,7 @@ RexxNativeMethod *LibraryPackage::resolveMethod(RexxString *name)
         // if we found one with this name, create a native method out of it.
         if (entry != NULL)
         {
-            code = new RexxNativeMethod(libraryName, name, (PNATIVEMETHOD)entry->entryPoint);
+            code = new NativeMethod(libraryName, name, (PNATIVEMETHOD)entry->entryPoint);
             methods->put((RexxObject *)code, name);
             return code;
         }
@@ -390,7 +390,7 @@ RexxNativeMethod *LibraryPackage::resolveMethod(RexxString *name)
  *
  * @param name   Name of the target method.
  *
- * @return A RexxNativeCode object for this method, if located.
+ * @return A NativeCode object for this method, if located.
  */
 RoutineClass *LibraryPackage::resolveRoutine(RexxString *name)
 {

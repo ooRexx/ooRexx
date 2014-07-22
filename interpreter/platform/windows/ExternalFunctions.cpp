@@ -55,7 +55,7 @@
 #include "RexxCore.h"                         /* global REXX definitions        */
 #include "StringClass.hpp"
 #include "ArrayClass.hpp"
-#include "RexxActivity.hpp"
+#include "Activity.hpp"
 #include "RexxActivation.hpp"
 #include "MethodClass.hpp"
 #include "SourceFile.hpp"
@@ -254,7 +254,7 @@ RexxRoutine2(RexxStringObject, sysFilespec, CSTRING, option, CSTRING, name)
 /******************************************************************************/
 bool SystemInterpreter::invokeExternalFunction(
   RexxActivation * activation,         /* Current Activation                */
-  RexxActivity   * activity,           /* activity in use                   */
+  Activity   * activity,           /* activity in use                   */
   RexxString     * target,             /* Name of external function         */
   RexxObject    ** arguments,          /* Argument array                    */
   size_t           argcount,           /* count of arguments                */

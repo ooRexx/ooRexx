@@ -51,7 +51,7 @@
 #include "SupplierClass.hpp"
 #include "ClassClass.hpp"
 #include "MethodClass.hpp"
-#include "RexxActivity.hpp"
+#include "Activity.hpp"
 #include "ActivityManager.hpp"
 #include "ProtectedObject.hpp"
 #include "WeakReferenceClass.hpp"

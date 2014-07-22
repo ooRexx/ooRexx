@@ -40,7 +40,7 @@
 #include "TranslateDispatcher.hpp"
 #include "RoutineClass.hpp"
 #include "ProtectedObject.hpp"
-#include "RexxNativeActivation.hpp"
+#include "NativeActivation.hpp"
 #include "LanguageParser.hpp"
 
 

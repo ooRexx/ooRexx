@@ -46,7 +46,7 @@
 #include "QueueClass.hpp"
 #include "DirectoryClass.hpp"
 #include "RexxActivation.hpp"
-#include "RexxActivity.hpp"
+#include "Activity.hpp"
 #include "ParseInstruction.hpp"
 #include "ParseTrigger.hpp"
 #include "ParseTarget.hpp"

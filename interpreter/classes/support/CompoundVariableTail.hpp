@@ -55,7 +55,7 @@ class CompoundVariableTail
 {
   public:
    // build up a tail using a variable dictionary for resolving variable references
-   inline CompoundVariableTail(RexxVariableDictionary *dictionary, RexxObject **tails, size_t tailCount)
+   inline CompoundVariableTail(VariableDictionary *dictionary, RexxObject **tails, size_t tailCount)
    {
        init();                                  // do the common initialization
        buildTail(dictionary, tails, tailCount); // build the full tail up
@@ -154,7 +154,7 @@ class CompoundVariableTail
        value = OREF_NULL;                       // and no string value yet
    }
 
-   void buildTail(RexxVariableDictionary *dictionary, RexxObject **tails, size_t tailCount);
+   void buildTail(VariableDictionary *dictionary, RexxObject **tails, size_t tailCount);
    void buildTail(RexxActivation *context, RexxObject **tails, size_t tailCount);
    void buildTail(RexxObject **tails, size_t count);
    void buildTail(RexxString *tail);

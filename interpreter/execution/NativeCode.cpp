@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                         RexxNativeMethod.cpp   */
+/* REXX Kernel                                         NativeMethod.cpp   */
 /*                                                                            */
 /* Primitive Method Class                                                     */
 /*                                                                            */
@@ -44,13 +44,13 @@
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "DirectoryClass.hpp"
-#include "RexxNativeActivation.hpp"
-#include "RexxNativeCode.hpp"
+#include "NativeActivation.hpp"
+#include "NativeCode.hpp"
 #include "SourceFile.hpp"
 #include "PackageManager.hpp"
 
 
-RexxNativeCode::RexxNativeCode(RexxString *_package, RexxString *_name)
+NativeCode::NativeCode(RexxString *_package, RexxString *_name)
 {
     // and this is the information needed to resolve this again after an
     // image restore
@@ -61,7 +61,7 @@ RexxNativeCode::RexxNativeCode(RexxString *_package, RexxString *_name)
 }
 
 
-void RexxNativeCode::live(size_t liveMark)
+void NativeCode::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
@@ -72,7 +72,7 @@ void RexxNativeCode::live(size_t liveMark)
 }
 
 
-void RexxNativeCode::liveGeneral(MarkReason reason)
+void NativeCode::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
@@ -83,12 +83,12 @@ void RexxNativeCode::liveGeneral(MarkReason reason)
 }
 
 
-void RexxNativeCode::flatten(Envelope *envelope)
+void NativeCode::flatten(Envelope *envelope)
 /******************************************************************************/
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
 {
-    setUpFlatten(RexxNativeMethod)
+    setUpFlatten(NativeMethod)
 
     flattenRef(package);
     flattenRef(name);
@@ -105,7 +105,7 @@ void RexxNativeCode::flatten(Envelope *envelope)
  *
  * @return The returned class.
  */
-RexxClass *RexxNativeCode::findClass(RexxString *className)
+RexxClass *NativeCode::findClass(RexxString *className)
 {
     // if there is a source object attached, have it resolve things.  Otherwise, go back to the default.
     if (source != OREF_NULL)
@@ -124,7 +124,7 @@ RexxClass *RexxNativeCode::findClass(RexxString *className)
  *
  * @return Either the same object, or a new copy of the code object.
  */
-BaseCode *RexxNativeCode::setSourceObject(RexxSource *s)
+BaseCode *NativeCode::setSourceObject(RexxSource *s)
 {
     if (source == OREF_NULL)
     {
@@ -133,7 +133,7 @@ BaseCode *RexxNativeCode::setSourceObject(RexxSource *s)
     }
     else
     {
-        RexxNativeCode *codeCopy = (RexxNativeCode *)this->copy();
+        NativeCode *codeCopy = (NativeCode *)this->copy();
         OrefSet(codeCopy, codeCopy->source, s);
         return codeCopy;
     }
@@ -147,7 +147,7 @@ BaseCode *RexxNativeCode::setSourceObject(RexxSource *s)
  *
  * @return The parent source instance.
  */
-RexxSource *RexxNativeCode::getSourceObject()
+RexxSource *NativeCode::getSourceObject()
 {
     return source;
 }
@@ -160,7 +160,7 @@ RexxSource *RexxNativeCode::getSourceObject()
  *
  * @return The source security manager.
  */
-SecurityManager *RexxNativeCode::getSecurityManager()
+SecurityManager *NativeCode::getSecurityManager()
 {
     if (source != OREF_NULL)
     {
@@ -170,7 +170,7 @@ SecurityManager *RexxNativeCode::getSecurityManager()
 }
 
 
-void RexxNativeMethod::liveGeneral(MarkReason reason)
+void NativeMethod::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
@@ -180,23 +180,23 @@ void RexxNativeMethod::liveGeneral(MarkReason reason)
     {
         entry = NULL;
     }
-    RexxNativeCode::liveGeneral(reason);
+    NativeCode::liveGeneral(reason);
 }
 
 
-void RexxNativeMethod::flatten(Envelope *envelope)
+void NativeMethod::flatten(Envelope *envelope)
 /******************************************************************************/
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
 {
-  setUpFlatten(RexxNativeMethod)
+  setUpFlatten(NativeMethod)
    newThis->entry = NULL;
-   RexxNativeCode::flatten(envelope);
+   NativeCode::flatten(envelope);
   cleanUpFlatten
 }
 
 
-void RexxNativeRoutine::liveGeneral(MarkReason reason)
+void NativeRoutine::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
@@ -206,18 +206,18 @@ void RexxNativeRoutine::liveGeneral(MarkReason reason)
     {
         entry = NULL;
     }
-    RexxNativeCode::liveGeneral(reason);
+    NativeCode::liveGeneral(reason);
 }
 
 
-void RexxNativeRoutine::flatten(Envelope *envelope)
+void NativeRoutine::flatten(Envelope *envelope)
 /******************************************************************************/
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
 {
-  setUpFlatten(RexxNativeRoutine)
+  setUpFlatten(NativeRoutine)
    newThis->entry = NULL;
-   RexxNativeCode::flatten(envelope);
+   NativeCode::flatten(envelope);
   cleanUpFlatten
 }
 
@@ -232,7 +232,7 @@ void RegisteredRoutine::liveGeneral(MarkReason reason)
     {
         entry = NULL;
     }
-    RexxNativeCode::liveGeneral(reason);
+    NativeCode::liveGeneral(reason);
 }
 
 
@@ -243,7 +243,7 @@ void RegisteredRoutine::flatten(Envelope *envelope)
 {
   setUpFlatten(RegisteredRoutine)
    newThis->entry = NULL;
-   RexxNativeCode::flatten(envelope);
+   NativeCode::flatten(envelope);
   cleanUpFlatten
 }
 
@@ -260,7 +260,7 @@ void RegisteredRoutine::flatten(Envelope *envelope)
  * @param argPtr   The pointer to the arguments.
  * @param result   The protected object used to return the result.
  */
-void RexxNativeMethod::run(RexxActivity *activity, MethodClass *method, RexxObject *receiver, RexxString *messageName,
+void NativeMethod::run(Activity *activity, MethodClass *method, RexxObject *receiver, RexxString *messageName,
     RexxObject **argPtr, size_t count, ProtectedObject &result)
 {
     // if this is NULL currently, we need to lazy resolve this entry
@@ -271,14 +271,14 @@ void RexxNativeMethod::run(RexxActivity *activity, MethodClass *method, RexxObje
     }
 
     // create a new native activation
-    RexxNativeActivation *newNActa = ActivityManager::newNativeActivation(activity);
+    NativeActivation *newNActa = ActivityManager::newNativeActivation(activity);
     activity->pushStackFrame(newNActa);   /* push it on the activity stack     */
                                        /* and go run it                     */
     newNActa->run(method, this, receiver, messageName, argPtr, count, result);
 }
 
 
-void * RexxNativeMethod::operator new(
+void * NativeMethod::operator new(
      size_t      size)                 /* object size                       */
 /****************************************************************************/
 /* Function:  Create a new Native method                                    */
@@ -298,7 +298,7 @@ void * RexxNativeMethod::operator new(
  * @param argPtr   The pointer to the arguments.
  * @param result   The protected object used to return the result.
  */
-void RexxNativeRoutine::call(RexxActivity *activity, RoutineClass *routine, RexxString *functionName, RexxObject **argPtr, size_t count, ProtectedObject &result)
+void NativeRoutine::call(Activity *activity, RoutineClass *routine, RexxString *functionName, RexxObject **argPtr, size_t count, ProtectedObject &result)
 {
     // if this is NULL currently, we need to lazy resolve this entry
     if (entry == NULL)
@@ -308,14 +308,14 @@ void RexxNativeRoutine::call(RexxActivity *activity, RoutineClass *routine, Rexx
     }
 
     // create a new native activation
-    RexxNativeActivation *newNActa = ActivityManager::newNativeActivation(activity);
+    NativeActivation *newNActa = ActivityManager::newNativeActivation(activity);
     activity->pushStackFrame(newNActa);   /* push it on the activity stack     */
                                        /* and go run it                     */
     newNActa->callNativeRoutine(routine, this, functionName, argPtr, count, result);
 }
 
 
-void * RexxNativeRoutine::operator new(
+void * NativeRoutine::operator new(
      size_t      size)                 /* object size                       */
 /****************************************************************************/
 /* Function:  Create a new Native method                                    */
@@ -335,7 +335,7 @@ void * RexxNativeRoutine::operator new(
  * @param argPtr   The pointer to the arguments.
  * @param result   The protected object used to return the result.
  */
-void RegisteredRoutine::call(RexxActivity *activity, RoutineClass *routine, RexxString *functionName, RexxObject **argPtr, size_t count, ProtectedObject &result)
+void RegisteredRoutine::call(Activity *activity, RoutineClass *routine, RexxString *functionName, RexxObject **argPtr, size_t count, ProtectedObject &result)
 {
     // if this is NULL currently, we need to lazy resolve this entry
     if (entry == NULL)
@@ -345,7 +345,7 @@ void RegisteredRoutine::call(RexxActivity *activity, RoutineClass *routine, Rexx
     }
 
     // create a new native activation
-    RexxNativeActivation *newNActa = ActivityManager::newNativeActivation(activity);
+    NativeActivation *newNActa = ActivityManager::newNativeActivation(activity);
     activity->pushStackFrame(newNActa);   /* push it on the activity stack     */
                                        /* and go run it                     */
     newNActa->callRegisteredRoutine(routine, this, functionName, argPtr, count, result);

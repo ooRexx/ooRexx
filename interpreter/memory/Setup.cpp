@@ -66,11 +66,11 @@
 #include "MessageClass.hpp"
 #include "StemClass.hpp"
 #include "RexxMisc.hpp"
-#include "RexxNativeCode.hpp"
-#include "RexxActivity.hpp"
+#include "NativeCode.hpp"
+#include "Activity.hpp"
 #include "ActivityManager.hpp"
-#include "RexxNativeActivation.hpp"
-#include "RexxVariableDictionary.hpp"
+#include "NativeActivation.hpp"
+#include "VariableDictionary.hpp"
 #include "ExpressionVariable.hpp"
 #include "RexxLocalVariables.hpp"
 #include "ProtectedObject.hpp"
@@ -131,7 +131,7 @@ void MemoryObject::defineProtectedMethod(const char *name, RexxBehaviour * behav
  *                   method.
  * @param arguments  The method argument style (argument count or array indicator).
  */
-void MemoryObject::definePrivateKernelMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments)
+void MemoryObject::definePrivateMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments)
 {
     MethodClass *method = behaviour->define(name, entryPoint, arguments);
     // mark the method as private
@@ -145,7 +145,7 @@ void MemoryObject::definePrivateKernelMethod(const char *name, RexxBehaviour * b
  * @param name   The name of the new environment entry.
  * @param value  The value added.
  */
-void MemoryObject::addToEnvironment(const char *name, RexxInternalObject *value);
+void MemoryObject::addToEnvironment(const char *name, RexxInternalObject *value)
 {
     TheEnvironment->put(getUpperGlobalName(name), object);
 }
@@ -157,7 +157,7 @@ void MemoryObject::addToEnvironment(const char *name, RexxInternalObject *value)
  * @param name   The name of the new environment entry.
  * @param value  The value added.
  */
-void MemoryObject::addToKernel(const char *name, RexxInternalObject *value);
+void MemoryObject::addToSystem(const char *name, RexxInternalObject *value)
 {
     TheSystem->put(getUpperGlobalName(name), object);
 }
@@ -1425,7 +1425,7 @@ EndClassDefinition(StackFrame);
     addToSystem(CHAR_INTERNALNAME, SystemInterpreter::getInternalSystemName());
     addToSystem(CHAR_VERSION, SystemInterpreter::getSystemVersion());
     // initialize our thread vector for external calls.
-    RexxActivity::initializeThreadContext();
+    Activity::initializeThreadContext();
 
 /******************************************************************************/
 /*      Complete the image build process, calling BaseClasses to establish    */

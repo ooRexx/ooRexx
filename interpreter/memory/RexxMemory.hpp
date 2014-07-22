@@ -36,9 +36,9 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                       RexxMemory.hpp           */
+/*                                                   RexxMemory.hpp           */
 /*                                                                            */
-/* Primitive Memory management definitions                                    */
+/* Interpreter memory management subsystem                                    */
 /*                                                                            */
 /******************************************************************************/
 
@@ -232,21 +232,18 @@ class MemoryObject : public RexxInternalObject
         ((RexxObject *)o)->setObjectLive(mark);
     }
 
-    static void *virtualFunctionTable[]; // table of virtual functions
-    static PCPPM exportedMethods[];      // start of exported methods table
+    static void *virtualFunctionTable[];     // table of virtual functions
+    static PCPPM exportedMethods[];          // start of exported methods table
 
-    size_t markWord;                     // current marking counter
-    RexxVariable *variableCache;         // our cache of variable objects
-    GlobalProtectedObject *protectedObjects;  // specially protected objects
+    size_t markWord;                         // current marking counter
+    RexxVariable *variableCache;             // our cache of variable objects
+    GlobalProtectedObject *protectedObjects; // specially protected objects
 
-    DirectoryClass *environment;      // global environment
-    StringTable    *commonRetrievers; // statically defined requires
+    DirectoryClass *environment;             // global environment
+    StringTable    *commonRetrievers;        // statically defined requires
 
-    // TODO:  Do we really need both of these?  What are they really used for?
-    StringTable    *kernel;           // the kernel directory
-    StringTable    *system;           // the system directory
-
-    StringTable    *functionsDir;     // statically defined requires
+    StringTable    *system;                  // the system directory...anchors stuff we don't want to expose in environment
+    StringTable    *functionsDir;            // statically defined requires
 
 
 private:
@@ -283,15 +280,17 @@ enum
     void setMarkHandler(MarkHandler *h) { currentMarkHandler = h; }
     void resetMarkHandler() { currentMarkHandler = &defaultMarkHandler; }
 
-    static void defineKernelMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments);
-    static void defineProtectedKernelMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments);
-    static void definePrivateKernelMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments);
+    void defineMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments);
+    void defineProtectedMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments);
+    void definePrivateMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments);
+    void addToEnvironment(const char *name, RexxInternalObject *value);
+    void addToSystem(const char *name, RexxInternalObject *value);
 
     LiveStack  *liveStack;               // stack used for memory marking
     PushThroughStack *saveStack;         // our temporary protection stack
 
-    MapTable           *old2new;         // the table for tracking old2new references.
-    IdentityTable  *uninitTable;     // the table of objects with uninit methods
+    MapTable         *old2new;           // the table for tracking old2new references.
+    IdentityTable    *uninitTable;       // the table of objects with uninit methods
     size_t            pendingUninits;    // objects waiting to have uninits run
     bool              processingUninits; // true when we are processing the uninit table
     WeakReference    *weakReferenceList; // list of active weak references
@@ -312,7 +311,6 @@ enum
     size_t collections;                  // number of garbage collections
 
     char *restoredImage;                 // our restored image.
-
     StringTable   *globalStrings;        // table of global strings
 };
 

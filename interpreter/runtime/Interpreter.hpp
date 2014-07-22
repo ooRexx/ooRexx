@@ -54,7 +54,7 @@
 
 class InterpreterInstance;
 class ListClass;
-class RexxActivity;
+class Activity;
 
 class Interpreter
 {
@@ -202,7 +202,7 @@ public:
     InstanceBlock(PRXSYSEXIT exits, const char *env);
     ~InstanceBlock();
 
-    RexxActivity         *activity;    // our current activity
+    Activity         *activity;    // our current activity
     InterpreterInstance  *instance;    // potential interpreter instance
 };
 

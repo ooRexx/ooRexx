@@ -188,9 +188,9 @@ class RexxString : public RexxObject
     RexxString *extract(size_t offset, size_t sublength) { return newString(getStringData() + offset, sublength); }
     RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
     RexxObject *getValue(RexxActivation *);
-    RexxObject *getValue(RexxVariableDictionary *);
+    RexxObject *getValue(VariableDictionary *);
     RexxObject *getRealValue(RexxActivation *);
-    RexxObject *getRealValue(RexxVariableDictionary *);
+    RexxObject *getRealValue(VariableDictionary *);
                                         /* the following methods are in    */
                                         /* OKBSUBS                         */
     RexxString  *center(RexxInteger *, RexxString *);

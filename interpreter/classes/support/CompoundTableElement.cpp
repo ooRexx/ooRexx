@@ -43,7 +43,7 @@
 /****************************************************************************/
 #include "RexxCore.h"
 #include "CompoundTableElement.hpp"
-#include "RexxActivity.hpp"
+#include "Activity.hpp"
 
 
 /**

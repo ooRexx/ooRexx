@@ -49,7 +49,7 @@
 #include "RexxInstruction.hpp"
 #include "ExpressionFunction.hpp"
 #include "Token.hpp"
-#include "RexxActivity.hpp"
+#include "Activity.hpp"
 #include "ProtectedObject.hpp"
 
 

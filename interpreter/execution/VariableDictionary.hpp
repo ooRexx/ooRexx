@@ -1,0 +1,275 @@
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/*                                                                            */
+/* This program and the accompanying materials are made available under       */
+/* the terms of the Common Public License v1.0 which accompanies this         */
+/* distribution. A copy is also available at the following address:           */
+/* http://www.oorexx.org/license.html                                         */
+/*                                                                            */
+/* Redistribution and use in source and binary forms, with or                 */
+/* without modification, are permitted provided that the following            */
+/* conditions are met:                                                        */
+/*                                                                            */
+/* Redistributions of source code must retain the above copyright             */
+/* notice, this list of conditions and the following disclaimer.              */
+/* Redistributions in binary form must reproduce the above copyright          */
+/* notice, this list of conditions and the following disclaimer in            */
+/* the documentation and/or other materials provided with the distribution.   */
+/*                                                                            */
+/* Neither the name of Rexx Language Association nor the names                */
+/* of its contributors may be used to endorse or promote products             */
+/* derived from this software without specific prior written permission.      */
+/*                                                                            */
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS          */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   */
+/* OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,      */
+/* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   */
+/* TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,        */
+/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY     */
+/* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    */
+/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
+/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+/******************************************************************************/
+/* REXX Kernel                                   VariableDictionary.hpp   */
+/*                                                                            */
+/* Primitive Variable Dictionary Class Definition                             */
+/*                                                                            */
+/******************************************************************************/
+#ifndef Included_VariableDictionary
+#define Included_VariableDictionary
+
+#include "RexxVariable.hpp"
+#include "StemClass.hpp"
+#include "HashContents.hpp"
+
+class SupplierClass;
+
+class VariableDictionary : public RexxInternalObject
+{
+ public:
+
+     /**
+      * an iterator for iterating over all entries of the variable
+      * dictionary.  This will iterate over both simple and compound
+      * variables.
+      */
+     class VariableIterator
+     {
+         friend class VariableDictionary;
+
+     public:
+         inline ~VariableIterator() {}
+
+         inline bool isAvailable()
+         {
+             if (dictionary == OREF_NULL)
+             {
+                 return false;
+             }
+
+             if (currentStem != OREF_NULL && stemIterator.isAvailable())
+             {
+                 return true;
+             }
+             // unconditionally clear this
+             currentStem = OREF_NULL;
+             return dictionaryIterator.isAvailable();
+         }
+
+         inline RexxInternalObject *value()
+         {
+             if (currentStem != OREF_NULL)
+             {
+                 return stemIterator.value();
+             }
+
+             return ((RexxVariable *)dictionaryIterator.value())->getVariableValue();
+         }
+
+         inline RexxString *name()
+         {
+             if (currentStem != OREF_NULL)
+             {
+                 // need to construct this name from the stem variable name and the tail
+                 return (RexxString *)stemIterator.name((RexxString *)dictionaryIterator.index());
+             }
+
+             return (RexxString *)dictionaryIterator.index();
+         }
+
+         inline void next()
+         {
+             if (currentStem != OREF_NULL)
+             {
+                 // step and then check if we have anything left.  If not, we need to
+                 // revert to normal iteration mode
+                 stemIterator.next();
+                 if (stemIterator.isAvailable())
+                 {
+                     return;
+                 }
+                 // switch back to the main collection
+                 currentStem = OREF_NULL;
+             }
+             // this is a little more complicated.  We need to step
+             // to the next variable and determine if this is a stem variable so
+             // we can switch iteration modes.
+             dictionaryIterator.next();
+             if (dictionaryIterator.isAvailable())
+             {
+                 // if we've hit a stem variable, switch the iterator to
+                 // the stem version.  We don't return the STEM variable in the
+                 // iteration, thankfully.
+                 RexxVariable *variable = (RexxVariable *)value;
+                 if (variable->isStem())
+                 {
+                     currentStem = (StemClass *)variable->getVariableValue();
+                     stemIterator = currentStem->iterator();
+                 }
+             }
+         }
+
+         // explicitly terminate an iterator
+         void terminate()
+         {
+             dictionary = OREF_NULL;
+             currentStem = OREF_NULL;
+         }
+
+         // indicate if this is an active iterator or not.
+         bool isActive()
+         {
+             return dictionary != OREF_NULL;
+         }
+
+     private:
+         // constructor for an index iterator
+         VariableIterator(VariableDictionay *d)
+         {
+             dictionary = d;
+             dictionaryIterator = dictionaryIterator->iterator();
+             currentStem = OREF_NULL;
+         }
+
+         VariableDictionay *dictionary;
+         HashContents::TableIterator dictionaryIterator;
+         StemClass *currentStem;
+         CompoundVariableTable::TableIterator stemIterator;
+     };
+
+
+    inline void  *operator new(size_t size, void *ptr) { return ptr; };
+    inline void  operator delete(void *) { }
+    inline void  operator delete(void *, void *) { }
+
+    inline VariableDictionary(RESTORETYPE restoreType) { ; };
+
+    HashContents *allocateContents(size_t bucketSize, size_t capacity);
+
+    void initialize(size_t capacity = DefaultTableSize);
+    void expandContents();
+    void expandContents(size_t capacity );
+    void ensureCapacity(size_t delta);
+    void checkFull();
+
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(Envelope *envelope);
+
+    virtual RexxObject  *copy();
+    virtual void         copyValues();
+            VariableDictionary *deepCopy();
+
+    RexxInternalObject  *realValue(RexxString *name);
+    void         add(RexxVariable *, RexxString *);
+    void         put(RexxVariable *, RexxString *);
+    inline StemClass    *getStem(RexxString *stemName) { return (StemClass *)getStemVariable(stemName)->getVariableValue(); }
+    RexxVariable *createStemVariable(RexxString *stemName);
+    RexxVariable *createVariable(RexxString *stemName);
+
+    // resolve a variable name entry
+    inline RexxVariable *resolveVariable(RexxString *name)
+    {
+        return (RexxVariable *)contents->get(name);
+    }
+
+    // get a variable entry, creating a new one if necessary
+    inline RexxVariable *getVariable(RexxString *name)
+    {
+        // find the entry
+        RexxVariable *variable = resolveVariable(name);
+        if (variable == OREF_NULL)
+        {
+            // create a new one if not there.
+            variable = createVariable(name);
+        }
+        return variable;
+    }
+
+    // resolve a stem variable entry, creating a new one if not found
+    inline RexxVariable *getStemVariable(RexxString *stemName)
+    {
+        RexxVariable *variable = resolveVariable(stemName);
+        if (variable == OREF_NULL)
+        {
+            variable = createStemVariable(stemName);
+        }
+        return variable;
+    }
+
+    void setCompoundVariable(RexxString *stemName, RexxObject **tail, size_t tailCount, RexxInternalObject *value);
+    void dropCompoundVariable(RexxString *stemName, RexxObject **tail, size_t tailCount);
+    StringTable *getAllVariables();
+    inline void remove(RexxString *n) { contents->remove(n); }
+
+    RexxVariable *nextVariable(NativeActivation *);
+    void         set(RexxString *, RexxObject *);
+    void         drop(RexxString *);
+    void         dropStemVariable(RexxString *);
+    void         reserve(Activity *);
+    void         release(Activity *);
+    bool         transfer(Activity *);
+
+    CompoundTableElement *getCompoundVariable(RexxString *stemName, RexxObject **tail, size_t tailCount);
+    RexxObject  *getCompoundVariableValue(RexxString *stemName, RexxObject **tail, size_t tailCount);
+    RexxObject  *getCompoundVariableRealValue(RexxString *stem, RexxObject **tail, size_t tailCount);
+
+    RexxObject  *realStemValue(RexxString *stemName);
+
+    inline bool isScope(RexxClass *otherScope) { return scope == otherScope; }
+    inline VariableDictionary *getNextDictionary() { return next; }
+    inline Activity *getReservingActivity() { return reservingActivity; }
+
+    void setNextDictionary(VariableDictionary *next);
+    TableIterator iterator();
+
+    static const size_t DefaultObjectDictionarySize = 7;
+
+    static RexxVariableBase *getVariableRetriever(RexxString  *variable);
+    static RexxVariableBase *getDirectVariableRetriever(RexxString  *variable);
+    static RexxObject *buildCompoundVariable(RexxString * variable_name, bool direct);
+
+    static VariableDictionary *newInstance(size_t);
+    static VariableDictionary *newInstance(RexxObject *);
+
+protected:
+
+    Activity  *reservingActivity;    // current reserving activity
+    StringHashContents *contents;        // variable dictionary contents
+    ArrayClass *waitingActivities;       // list of waiting activities
+    unsigned short flags;                // dictionary control flags
+    unsigned short reserveCount;         // number of times reserved
+    VariableDictionary *nextDictionary;  // chained object dictionary
+    RexxClass *scope;                    // scopy of this object dictionary
+};
+
+
+inline VariableDictionary *new_variableDictionary(size_t s) { return VariableDictionary::newInstance(s); }
+inline VariableDictionary *new_objectVariableDictionary(RexxObject *s) { return VariableDictionary::newInstance(s); }
+#endif

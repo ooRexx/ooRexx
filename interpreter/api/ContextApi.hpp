@@ -46,9 +46,9 @@
 #define ContextApi_Included
 
 #include "RexxCore.h"
-#include "RexxNativeActivation.hpp"
+#include "NativeActivation.hpp"
 #include "ActivationApiContexts.hpp"
-#include "RexxActivity.hpp"
+#include "Activity.hpp"
 
 /**
  * A stack-based API context object used for API stubs.
@@ -174,11 +174,11 @@ public:
     /**
      * The activity used for the API callback.
      */
-    RexxActivity *activity;
+    Activity *activity;
     /**
      * The top-level API context.
      */
-    RexxNativeActivation *context;
+    NativeActivation *context;
 
     /**
      * Indicates whether we need to release the lock on return.

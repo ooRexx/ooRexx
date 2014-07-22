@@ -47,7 +47,7 @@
 #include "RexxActivation.hpp"
 #include "RexxInstruction.hpp"
 #include "ExpressionLogical.hpp"
-#include "RexxActivity.hpp"
+#include "Activity.hpp"
 #include "BuiltinFunctions.hpp"
 #include "LanguageParser.hpp"
 

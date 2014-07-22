@@ -44,7 +44,7 @@
 
 #include "RexxCore.h"
 #include "ContextApi.hpp"
-#include "RexxNativeActivation.hpp"
+#include "NativeActivation.hpp"
 #include "SupplierClass.hpp"
 #include "Interpreter.hpp"
 #include "MethodClass.hpp"
@@ -60,7 +60,7 @@ RexxArrayObject RexxEntry GetCallArguments(RexxCallContext *c)
     {
         return (RexxArrayObject)context.context->getArguments();
     }
-    catch (RexxNativeActivation *)
+    catch (NativeActivation *)
     {
     }
     return NULLOBJECT;
@@ -73,7 +73,7 @@ RexxObjectPtr RexxEntry GetCallArgument(RexxCallContext *c, stringsize_t i)
     {
         return (RexxObjectPtr)context.context->getArgument(i);
     }
-    catch (RexxNativeActivation *)
+    catch (NativeActivation *)
     {
     }
     return NULLOBJECT;
@@ -86,7 +86,7 @@ CSTRING RexxEntry GetRoutineName(RexxCallContext *c)
     {
         return (CSTRING)context.context->getMessageName()->getStringData();
     }
-    catch (RexxNativeActivation *)
+    catch (NativeActivation *)
     {
     }
     return NULL;
@@ -99,7 +99,7 @@ RexxRoutineObject RexxEntry GetCurrentRoutine(RexxCallContext *c)
     {
         return (RexxRoutineObject)context.context->getExecutable();
     }
-    catch (RexxNativeActivation *)
+    catch (NativeActivation *)
     {
     }
     return NULL;
@@ -112,7 +112,7 @@ void RexxEntry SetContextVariable(RexxCallContext *c, CSTRING n, RexxObjectPtr v
     {
         context.context->setContextVariable((const char *)n, (RexxObject *)v);
     }
-    catch (RexxNativeActivation *)
+    catch (NativeActivation *)
     {
     }
 }
@@ -124,7 +124,7 @@ RexxObjectPtr RexxEntry GetContextVariable(RexxCallContext *c, CSTRING n)
     {
         return (RexxObjectPtr)context.context->getContextVariable((const char *)n);
     }
-    catch (RexxNativeActivation *)
+    catch (NativeActivation *)
     {
     }
     return NULLOBJECT;
@@ -137,7 +137,7 @@ void RexxEntry DropContextVariable(RexxCallContext *c, CSTRING n)
     {
         context.context->dropContextVariable((const char *)n);
     }
-    catch (RexxNativeActivation *)
+    catch (NativeActivation *)
     {
     }
 }
@@ -149,7 +149,7 @@ RexxDirectoryObject RexxEntry GetAllContextVariables(RexxCallContext *c)
     {
         return (RexxDirectoryObject)context.ret(context.context->getAllContextVariables());
     }
-    catch (RexxNativeActivation *)
+    catch (NativeActivation *)
     {
     }
     return NULLOBJECT;
@@ -162,7 +162,7 @@ RexxStemObject RexxEntry ResolveStemVariable(RexxCallContext *c, RexxObjectPtr s
     {
         return (RexxStemObject)context.context->resolveStemVariable((RexxObject *)s);
     }
-    catch (RexxNativeActivation *)
+    catch (NativeActivation *)
     {
         // this may throw an exception, so clear it out.  The null return is the
         // failure indication.
@@ -179,7 +179,7 @@ void RexxEntry InvalidRoutine(RexxCallContext *c)
         // raise an exception which will be reraised when the caller returns.
         reportException(Error_Incorrect_call_external, context.context->getMessageName());
     }
-    catch (RexxNativeActivation *)
+    catch (NativeActivation *)
     {
     }
 }
@@ -191,7 +191,7 @@ void RexxEntry SetExitContextVariable(RexxExitContext *c, CSTRING n, RexxObjectP
     {
         context.context->setContextVariable((const char *)n, (RexxObject *)v);
     }
-    catch (RexxNativeActivation *)
+    catch (NativeActivation *)
     {
     }
 }
@@ -203,7 +203,7 @@ RexxObjectPtr RexxEntry GetExitContextVariable(RexxExitContext *c, CSTRING n)
     {
         return (RexxObjectPtr)context.context->getContextVariable((const char *)n);
     }
-    catch (RexxNativeActivation *)
+    catch (NativeActivation *)
     {
     }
     return NULLOBJECT;
@@ -216,7 +216,7 @@ void RexxEntry DropExitContextVariable(RexxExitContext *c, CSTRING n)
     {
         context.context->dropContextVariable((const char *)n);
     }
-    catch (RexxNativeActivation *)
+    catch (NativeActivation *)
     {
     }
 }
@@ -228,7 +228,7 @@ RexxDirectoryObject RexxEntry GetAllExitContextVariables(RexxExitContext *c)
     {
         return (RexxDirectoryObject)context.ret(context.context->getAllContextVariables());
     }
-    catch (RexxNativeActivation *)
+    catch (NativeActivation *)
     {
     }
     return NULLOBJECT;
@@ -242,7 +242,7 @@ RexxObjectPtr RexxEntry GetExitCallerContext(RexxExitContext *c)
     {
         return (RexxObjectPtr)context.ret(context.context->getRexxContextObject());
     }
-    catch (RexxNativeActivation *)
+    catch (NativeActivation *)
     {
     }
     return NULLOBJECT;
@@ -255,7 +255,7 @@ stringsize_t RexxEntry GetContextDigits(RexxCallContext *c)
     {
         return context.context->digits();
     }
-    catch (RexxNativeActivation *)
+    catch (NativeActivation *)
     {
     }
     return 0;
@@ -268,7 +268,7 @@ stringsize_t RexxEntry GetContextFuzz(RexxCallContext *c)
     {
         return context.context->fuzz();
     }
-    catch (RexxNativeActivation *)
+    catch (NativeActivation *)
     {
     }
     return 0;
@@ -281,7 +281,7 @@ logical_t RexxEntry GetContextForm(RexxCallContext *c)
     {
         return context.context->form() ? true : false;
     }
-    catch (RexxNativeActivation *)
+    catch (NativeActivation *)
     {
     }
     return false;
@@ -294,7 +294,7 @@ RexxObjectPtr RexxEntry GetCallerContext(RexxCallContext *c)
     {
         return (RexxObjectPtr)context.ret(context.context->getRexxContextObject());
     }
-    catch (RexxNativeActivation *)
+    catch (NativeActivation *)
     {
     }
     return NULLOBJECT;
@@ -310,7 +310,7 @@ RexxClassObject RexxEntry FindCallContextClass(RexxCallContext *c, CSTRING n)
         RexxString *name = new_upper_string(n);
         return (RexxClassObject)context.ret(context.context->findCallerClass(name));
     }
-    catch (RexxNativeActivation *)
+    catch (NativeActivation *)
     {
     }
     return NULLOBJECT;
@@ -319,7 +319,7 @@ RexxClassObject RexxEntry FindCallContextClass(RexxCallContext *c, CSTRING n)
 
 END_EXTERN_C()
 
-CallContextInterface RexxActivity::callContextFunctions =
+CallContextInterface Activity::callContextFunctions =
 {
     CALL_INTERFACE_VERSION,
     GetCallArguments,
@@ -339,7 +339,7 @@ CallContextInterface RexxActivity::callContextFunctions =
     FindCallContextClass
 };
 
-ExitContextInterface RexxActivity::exitContextFunctions =
+ExitContextInterface Activity::exitContextFunctions =
 {
     EXIT_INTERFACE_VERSION,
     SetExitContextVariable,

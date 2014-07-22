@@ -47,7 +47,7 @@
 #include "RexxCore.h"
 #include "CallbackDispatcher.hpp"
 
-class RexxActivity;
+class Activity;
 
 class CommandHandler : public RexxInternalObject
 {
@@ -61,7 +61,7 @@ public:
     inline CommandHandler(REXXPFN e) : entryPoint(e) { type = DIRECT; }
     inline CommandHandler(const char *n) : entryPoint(NULL) { type = UNRESOLVED; resolve(n); }
 
-    void call(RexxActivity *activity, RexxActivation *activation, RexxString *address, RexxString *command, ProtectedObject &rc, ProtectedObject &condition);
+    void call(Activity *activity, RexxActivation *activation, RexxString *address, RexxString *command, ProtectedObject &rc, ProtectedObject &condition);
     void resolve(const char *name);
     inline bool isResolved() { return type != UNRESOLVED; }
 
@@ -82,13 +82,13 @@ protected:
 class CommandHandlerDispatcher : public CallbackDispatcher
 {
 public:
-    CommandHandlerDispatcher(RexxActivity * a, REXXPFN e, RexxString *c);
+    CommandHandlerDispatcher(Activity * a, REXXPFN e, RexxString *c);
     virtual ~CommandHandlerDispatcher() { ; }
 
     virtual void run();
     void complete(RexxString *command, ProtectedObject &result, ProtectedObject &condition);
 
-    RexxActivity *activity;               // the activity we're dispatching on
+    Activity *activity;               // the activity we're dispatching on
     REXXPFN    entryPoint;                // resolved exit entry point
     CONSTRXSTRING  rxstrcmd;              // invoked command
     RXSTRING       retstr;                // passed back result

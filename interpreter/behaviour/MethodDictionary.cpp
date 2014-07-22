@@ -302,7 +302,7 @@ void MethodDictionary::setMethodScope(RexxClass *scope)
     // use an iterator to traverse the table
     HashContents::TableIterator iterator = contents->iterator();
 
-    while (iterator.isAvailable())
+    for (; iterator.isAvailable(); iterator.nextEntry())
     {
         MethodClass *method = (MethodClass *)iterator.value();
         // we might have .nil in here as well as method objects.
@@ -315,8 +315,6 @@ void MethodDictionary::setMethodScope(RexxClass *scope)
             // in the table with the returned version.
             iterator.replace(method->newScope(scope));
         }
-        // step to the next item.
-        iterator.next();
     }
 }
 

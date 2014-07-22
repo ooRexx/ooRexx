@@ -55,6 +55,10 @@
 // singleton class instance
 RexxClass *PackageClass::classInstance = OREF_NULL;
 
+// TODO:  Get rid of the SourceFile class and move all of that code into the package
+// class.  It doesn't make sense any more to have the separate class now that
+// the parsing code has been moved out.  Really simplifies a few things.
+
 
 /**
  * Create initial class object at bootstrap time.
@@ -568,7 +572,7 @@ PackageClass *PackageClass::newRexx(RexxObject **init_args, size_t argCount)
     RexxObject *_source;                 //  Array or string object
     size_t initCount = 0;                // count of arguments we pass along
 
-    RexxActivity *activity = ActivityManager::currentActivity;
+    Activity *activity = ActivityManager::currentActivity;
     InterpreterInstance *instance = activity->getInstance();
 
     // parse the arguments

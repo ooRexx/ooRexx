@@ -37,18 +37,18 @@
 /*----------------------------------------------------------------------------*/
 
 #include "RexxCore.h"
-#include "RexxActivity.hpp"
+#include "Activity.hpp"
 #include "RexxActivation.hpp"
 #include "DirectoryClass.hpp"
 #include "ActivityManager.hpp"
 #include "Interpreter.hpp"
 #include "ProtectedObject.hpp"
 #include "InterpreterInstance.hpp"
-#include "RexxNativeActivation.hpp"
+#include "NativeActivation.hpp"
 #include "SysActivity.hpp"
 
 // The currently active activity.
-RexxActivity * volatile ActivityManager::currentActivity = OREF_NULL;
+Activity * volatile ActivityManager::currentActivity = OREF_NULL;
 
 // this is a volatile variable used to ensure instruction ordering
 volatile bool ActivityManager::sentinel = false;
@@ -59,7 +59,7 @@ ListClass *ActivityManager::availableActivities = OREF_NULL;
 // table of all activities
 ListClass *ActivityManager::allActivities = OREF_NULL;
 
-std::deque<RexxActivity *>ActivityManager::waitingActivities;   // queue of waiting activities
+std::deque<Activity *>ActivityManager::waitingActivities;   // queue of waiting activities
 
 // process shutting down flag
 bool ActivityManager::processTerminating = false;
@@ -117,7 +117,7 @@ void ActivityManager::liveGeneral(MarkReason reason)
  * @param waitingAct The activity to queue up.
  * @param release    If true, the kernel lock should be released on completion.
  */
-void ActivityManager::addWaitingActivity(RexxActivity *waitingAct, bool release )
+void ActivityManager::addWaitingActivity(Activity *waitingAct, bool release )
 {
     ResourceSection lock;                // need the control block locks
 
@@ -245,7 +245,7 @@ void ActivityManager::shutdown()
  *
  * @return The newly created activation.
  */
-RexxActivation *ActivityManager::newActivation(RexxActivity *activity, RoutineClass *routine, RexxCode *code, RexxString *calltype, RexxString *environment, int context)
+RexxActivation *ActivityManager::newActivation(Activity *activity, RoutineClass *routine, RexxCode *code, RexxString *calltype, RexxString *environment, int context)
 {
     // in heavily multithreaded environments, the activation cache is a source for race conditions
     // that can lead to crashes.  Just unconditionally create a new actvation
@@ -265,7 +265,7 @@ RexxActivation *ActivityManager::newActivation(RexxActivity *activity, RoutineCl
  *
  * @return The newly created activation.
  */
-RexxActivation *ActivityManager::newActivation(RexxActivity *activity, RexxActivation *parent, RexxCode *code, int context)
+RexxActivation *ActivityManager::newActivation(Activity *activity, RexxActivation *parent, RexxCode *code, int context)
 {
     // in heavily multithreaded environments, the activation cache is a source for race conditions
     // that can lead to crashes.  Just unconditionally create a new actvation
@@ -283,7 +283,7 @@ RexxActivation *ActivityManager::newActivation(RexxActivity *activity, RexxActiv
  *
  * @return The newly created activation.
  */
-RexxActivation *ActivityManager::newActivation(RexxActivity *activity, MethodClass *method, RexxCode *code)
+RexxActivation *ActivityManager::newActivation(Activity *activity, MethodClass *method, RexxCode *code)
 {
     // in heavily multithreaded environments, the activation cache is a source for race conditions
     // that can lead to crashes.  Just unconditionally create a new actvation
@@ -299,11 +299,11 @@ RexxActivation *ActivityManager::newActivation(RexxActivity *activity, MethodCla
  *
  * @return The newly created activation.
  */
-RexxNativeActivation *ActivityManager::newNativeActivation(RexxActivity *activity, RexxActivation *parent)
+NativeActivation *ActivityManager::newNativeActivation(Activity *activity, RexxActivation *parent)
 {
     // in heavily multithreaded environments, the activation cache is a source for race conditions
     // that can lead to crashes.  Just unconditionally create a new actvation
-    return new RexxNativeActivation(activity, parent);
+    return new NativeActivation(activity, parent);
 }
 
 
@@ -314,11 +314,11 @@ RexxNativeActivation *ActivityManager::newNativeActivation(RexxActivity *activit
  *
  * @return The newly created activation.
  */
-RexxNativeActivation *ActivityManager::newNativeActivation(RexxActivity *activity)
+NativeActivation *ActivityManager::newNativeActivation(Activity *activity)
 {
     // in heavily multithreaded environments, the activation cache is a source for race conditions
     // that can lead to crashes.  Just unconditionally create a new actvation
-    return new RexxNativeActivation(activity);
+    return new NativeActivation(activity);
 }
 
 
@@ -327,16 +327,16 @@ RexxNativeActivation *ActivityManager::newNativeActivation(RexxActivity *activit
  *
  * @return The created (or pooled) activity object.
  */
-RexxActivity *ActivityManager::createNewActivity()
+Activity *ActivityManager::createNewActivity()
 {
     ResourceSection lock;                // lock the control information
         /* try to get one from the free table*/
-    RexxActivity *activity =  (RexxActivity *)availableActivities->removeFirstItem();
+    Activity *activity =  (Activity *)availableActivities->removeFirstItem();
     if (activity == OREF_NULL)
     {
         lock.release();                    // release lock while creating new activity
                                            /* Create a new activity object      */
-        activity = new RexxActivity(true);
+        activity = new Activity(true);
         lock.reacquire();                  // need this back again
                                            /* Add this activity to the table of */
                                            /* in use activities and the global  */
@@ -358,10 +358,10 @@ RexxActivity *ActivityManager::createNewActivity()
  *
  * @return
  */
-RexxActivity *ActivityManager::createCurrentActivity()
+Activity *ActivityManager::createCurrentActivity()
 {
     // create an activity object without creating a new thread
-    RexxActivity *activity = new RexxActivity(false);
+    Activity *activity = new Activity(false);
     ResourceSection lock;                // lock the control information
                                        /* Add this activity to the table of */
                                        /* in use activities and the global  */
@@ -380,10 +380,10 @@ RexxActivity *ActivityManager::createCurrentActivity()
  *
  * @return A new activity.
  */
-RexxActivity *ActivityManager::createNewActivity(RexxActivity *parent)
+Activity *ActivityManager::createNewActivity(Activity *parent)
 {
     // create a new activity with the same priority as the parent
-    RexxActivity *activity = createNewActivity();
+    Activity *activity = createNewActivity();
     // copy any needed settings from the parent
     activity->inheritSettings(parent);
     return activity;
@@ -396,12 +396,12 @@ void ActivityManager::clearActivityPool()
 /*             the process goes away.                                         */
 /******************************************************************************/
 {
-    RexxActivity *activity = (RexxActivity *)availableActivities->removeFirstItem();
+    Activity *activity = (Activity *)availableActivities->removeFirstItem();
     while (activity != OREF_NULL)
     {
         // terminate this thread
         activity->terminatePoolActivity();
-        activity = (RexxActivity *)availableActivities->removeFirstItem();
+        activity = (Activity *)availableActivities->removeFirstItem();
     }
 }
 
@@ -417,7 +417,7 @@ void ActivityManager::clearActivityPool()
  * @return true if this was pooled, false if the thread should not wait for
  *         more work.
  */
-bool ActivityManager::poolActivity(RexxActivity *activity)
+bool ActivityManager::poolActivity(Activity *activity)
 {
     // are we shutting down or have too many threads in the pool?
     if (processTerminating || availableActivities->items() > MAX_THREAD_POOL_SIZE)
@@ -448,7 +448,7 @@ bool ActivityManager::haltActivity(
     ResourceSection lock;
     // locate the activity associated with this thread_id.  If not found, return
     // a failure.
-    RexxActivity *activity = findActivity(thread_id);
+    Activity *activity = findActivity(thread_id);
     if (activity != OREF_NULL)
     {
         return activity->halt(description);
@@ -467,7 +467,7 @@ bool ActivityManager::setActivityTrace(
     ResourceSection lock;
     // locate the activity associated with this thread_id.  If not found, return
     // a failure.
-    RexxActivity *activity = findActivity(thread_id);
+    Activity *activity = findActivity(thread_id);
     if (activity != OREF_NULL)
     {
         return activity->setTrace(on_or_off);
@@ -483,7 +483,7 @@ void ActivityManager::yieldCurrentActivity()
 {
     ResourceSection lock;
 
-    RexxActivity *activity = ActivityManager::currentActivity;
+    Activity *activity = ActivityManager::currentActivity;
     if (activity != OREF_NULL)
     {
         activity->yield();
@@ -491,7 +491,7 @@ void ActivityManager::yieldCurrentActivity()
 }
 
 
-RexxActivity *ActivityManager::findActivity(thread_id_t threadId)
+Activity *ActivityManager::findActivity(thread_id_t threadId)
 /******************************************************************************/
 /* Function:  Locate the activity associated with a thread                    */
 /******************************************************************************/
@@ -506,7 +506,7 @@ RexxActivity *ActivityManager::findActivity(thread_id_t threadId)
          listIndex != LIST_END;
          listIndex = allActivities->previousIndex(listIndex) )
     {
-        RexxActivity *activity = (RexxActivity *)allActivities->getValue(listIndex);
+        Activity *activity = (Activity *)allActivities->getValue(listIndex);
         // this should never happen, but we never return suspended threads
         if (activity->isThread(threadId) && !activity->isSuspended())
         {
@@ -517,7 +517,7 @@ RexxActivity *ActivityManager::findActivity(thread_id_t threadId)
 }
 
 
-RexxActivity *ActivityManager::findActivity()
+Activity *ActivityManager::findActivity()
 /******************************************************************************/
 /* Function:  Locate the activity associated with a thread                    */
 /******************************************************************************/
@@ -602,7 +602,7 @@ bool ActivityManager::lockKernelImmediate()
  * @param activityObject
  *               The released activity.
  */
-void ActivityManager::returnActivity(RexxActivity *activityObject)
+void ActivityManager::returnActivity(Activity *activityObject)
 /******************************************************************************/
 /* Function:  Return access to an activity previously obtained from           */
 /*            getActivity().  This will handle activity nesting and also      */
@@ -616,7 +616,7 @@ void ActivityManager::returnActivity(RexxActivity *activityObject)
         allActivities->removeItem((RexxObject *)activityObject);
         // if we ended up pushing an old activity down when we attached this
         // thread, then we need to restore the old thread to active state.
-        RexxActivity *oldActivity = activityObject->getNestedActivity();
+        Activity *oldActivity = activityObject->getNestedActivity();
         if (oldActivity != OREF_NULL)
         {
             oldActivity->setSuspended(false);
@@ -633,7 +633,7 @@ void ActivityManager::returnActivity(RexxActivity *activityObject)
  * @param activityObject
  *               The released activity.
  */
-void ActivityManager::activityEnded(RexxActivity *activityObject)
+void ActivityManager::activityEnded(Activity *activityObject)
 {
     // START OF CRITICAL SECTION
     {
@@ -657,18 +657,18 @@ void ActivityManager::activityEnded(RexxActivity *activityObject)
  *
  * @return The newly created activity.
  */
-RexxActivity *ActivityManager::getRootActivity()
+Activity *ActivityManager::getRootActivity()
 {
     // it's possible we already have an activity active for this thread.  That
     // most likely occurs in nested RexxStart() calls.  Get that activity first,
     // and if we have one, we'll need to push this down.
-    RexxActivity *oldActivity = findActivity();
+    Activity *oldActivity = findActivity();
 
     // we need to lock the kernel to have access to the memory manager to
     // create this activity.
     lockKernel();
                                    /* Get a new activity object.        */
-    RexxActivity *activityObject = createCurrentActivity();
+    Activity *activityObject = createCurrentActivity();
     unlockKernel();                /* release kernel semaphore          */
     // mark this as the root activity for an interpreter instance.  Some operations
     // are only permitted from the root threads.
@@ -701,7 +701,7 @@ RexxActivity *ActivityManager::getRootActivity()
  * return a root activity when an interpreter instance
  * terminates.
  */
-void ActivityManager::returnRootActivity(RexxActivity *activity)
+void ActivityManager::returnRootActivity(Activity *activity)
 {
     // detach this from the instance.  This will also reactivate
     // and nested activity that's been pushed down.
@@ -724,11 +724,11 @@ void ActivityManager::returnRootActivity(RexxActivity *activity)
  * @return Either an existing activity, or a new activity created for
  *         this thread.
  */
-RexxActivity *ActivityManager::attachThread()
+Activity *ActivityManager::attachThread()
 {
     // it's possible we already have an activity active for this thread.  That
     // most likely occurs in nested RexxStart() calls.
-    RexxActivity *oldActivity = findActivity();
+    Activity *oldActivity = findActivity();
     // we have an activity created for this thread already.  The interpreter instance
     // should already have handled the case of an attach for an already attached thread.
     // so we're going to have a new activity to create, and potentially an existing one to
@@ -736,7 +736,7 @@ RexxActivity *ActivityManager::attachThread()
     // we need to lock the kernel to have access to the memory manager to
     // create this activity.
     lockKernel();
-    RexxActivity *activityObject = createCurrentActivity();
+    Activity *activityObject = createCurrentActivity();
     // Do we have a nested interpreter call occurring on the same thread?  We need to
     // mark the old activity as suspended, and chain this to the new activity.
     if (oldActivity != OREF_NULL)
@@ -767,11 +767,11 @@ RexxActivity *ActivityManager::attachThread()
  *
  * @return The activity for this thread.
  */
-RexxActivity *ActivityManager::getActivity()
+Activity *ActivityManager::getActivity()
 {
     // it's possible we already have an activity active for this thread.  That
     // most likely occurs in nested RexxStart() calls.
-    RexxActivity *activityObject = findActivity();
+    Activity *activityObject = findActivity();
     if (activityObject == OREF_NULL)     /* Nope, 1st time through here.      */
     {
         // this is an error....not sure how to handle this.
@@ -789,7 +789,7 @@ RexxActivity *ActivityManager::getActivity()
  *
  * @param activity The current active activity.
  */
-void ActivityManager::relinquish(RexxActivity *activity)
+void ActivityManager::relinquish(Activity *activity)
 {
     // if we have waiting activities, then let one of them
     // in next.
@@ -856,7 +856,7 @@ NativeContextBlock::NativeContextBlock()
         activity = instance->getRootActivity();
 
     }
-    self = (RexxNativeActivation *)activity->getTopStackFrame();
+    self = (NativeActivation *)activity->getTopStackFrame();
 }
 
 

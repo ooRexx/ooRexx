@@ -48,7 +48,7 @@
 #include "RexxCore.h"
 #include "IntegerClass.hpp"
 #include "ArrayClass.hpp"
-#include "RexxActivity.hpp"
+#include "Activity.hpp"
 #include "MessageClass.hpp"
 #include "MethodClass.hpp"
 #include "StringClass.hpp"

@@ -45,7 +45,7 @@
 #include "StringClass.hpp"
 #include "DirectoryClass.hpp"
 #include "RexxActivation.hpp"
-#include "RexxActivity.hpp"
+#include "Activity.hpp"
 #include "ProtectedObject.hpp"
 #include "StringUtil.hpp"
 #include "CompoundVariableTail.hpp"
@@ -1955,7 +1955,7 @@ RexxObject  *RexxString::getValue(
 
 
 RexxObject  *RexxString::getValue(
-    RexxVariableDictionary *context)   /* current activation context        */
+    VariableDictionary *context)   /* current activation context        */
 /******************************************************************************/
 /* Function:  Polymorphic get_value function used with expression terms       */
 /******************************************************************************/
@@ -1975,7 +1975,7 @@ RexxObject  *RexxString::getRealValue(
 
 
 RexxObject  *RexxString::getRealValue(
-    RexxVariableDictionary *context)   /* current activation context        */
+    VariableDictionary *context)   /* current activation context        */
 /******************************************************************************/
 /* Function:  Polymorphic get_value function used with expression terms       */
 /******************************************************************************/

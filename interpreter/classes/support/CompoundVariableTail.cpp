@@ -97,7 +97,7 @@ void CompoundVariableTail::buildUnresolvedTail(RexxObject **tails, size_t count)
  * @param tails
  * @param tailCount
  */
-void CompoundVariableTail::buildTail(RexxVariableDictionary *dictionary, RexxObject **tails, size_t tailCount)
+void CompoundVariableTail::buildTail(VariableDictionary *dictionary, RexxObject **tails, size_t tailCount)
 {
     // a single element is easiest, and common enough that we optimize for it.
     if (tailCount == 1)

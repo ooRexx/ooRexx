@@ -46,8 +46,8 @@
 
 #include "RexxCore.h"
 
-class RexxActivity;
-class RexxNativeActivation;
+class Activity;
+class NativeActivation;
 class InterpreterInstance;
 
 // structure used to hand out a thread context structure for this
@@ -65,26 +65,26 @@ typedef struct
 typedef struct
 {
     RexxThreadContext threadContext;        // the thread context structure used for the API
-    RexxActivity *owningActivity;           // a pointer back to the owning activity
+    Activity *owningActivity;           // a pointer back to the owning activity
 } ActivityContext;
 
 // and similar structures for other API context structures
 typedef struct
 {
     RexxMethodContext threadContext;        // the thread context structure used for the API
-    RexxNativeActivation *context;          // a pointer back to the owning activation
+    NativeActivation *context;          // a pointer back to the owning activation
 } MethodContext;
 
 typedef struct
 {
     RexxCallContext   threadContext;        // the thread context structure used for the API
-    RexxNativeActivation *context;          // a pointer back to the owning activation
+    NativeActivation *context;          // a pointer back to the owning activation
 } CallContext;
 
 typedef struct
 {
     RexxExitContext   threadContext;        // the thread context structure used for the API
-    RexxNativeActivation *context;          // a pointer back to the owning activation
+    NativeActivation *context;          // a pointer back to the owning activation
 } ExitContext;
 
 
@@ -95,7 +95,7 @@ typedef struct
  *
  * @return The activity object the context is associated with.
  */
-inline RexxActivity *contextToActivity(RexxThreadContext *c)
+inline Activity *contextToActivity(RexxThreadContext *c)
 {
     return ((ActivityContext *)c)->owningActivity;
 }
@@ -108,7 +108,7 @@ inline RexxActivity *contextToActivity(RexxThreadContext *c)
  *
  * @return The activity object the context is associated with.
  */
-inline RexxActivity *contextToActivity(RexxCallContext *c)
+inline Activity *contextToActivity(RexxCallContext *c)
 {
     return ((ActivityContext *)(c->threadContext))->owningActivity;
 }
@@ -121,7 +121,7 @@ inline RexxActivity *contextToActivity(RexxCallContext *c)
  *
  * @return The activity object the context is associated with.
  */
-inline RexxActivity *contextToActivity(RexxMethodContext *c)
+inline Activity *contextToActivity(RexxMethodContext *c)
 {
     return ((ActivityContext *)(c->threadContext))->owningActivity;
 }
@@ -134,7 +134,7 @@ inline RexxActivity *contextToActivity(RexxMethodContext *c)
  *
  * @return The activity object the context is associated with.
  */
-inline RexxActivity *contextToActivity(RexxExitContext *c)
+inline Activity *contextToActivity(RexxExitContext *c)
 {
     return ((ActivityContext *)(c->threadContext))->owningActivity;
 }

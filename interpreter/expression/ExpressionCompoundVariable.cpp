@@ -45,9 +45,9 @@
 #include "StringClass.hpp"
 #include "QueueClass.hpp"
 #include "StemClass.hpp"
-#include "RexxVariableDictionary.hpp"
+#include "VariableDictionary.hpp"
 #include "RexxActivation.hpp"
-#include "RexxActivity.hpp"
+#include "Activity.hpp"
 #include "ExpressionCompoundVariable.hpp"
 #include "ExpressionVariable.hpp"
 #include "RexxVariable.hpp"
@@ -255,7 +255,7 @@ RexxObject * RexxCompoundVariable::evaluate(RexxActivation *context, RexxExpress
  *
  * @return The compound variable value (note, no stack pushing here).
  */
-RexxObject  *RexxCompoundVariable::getValue(RexxVariableDictionary *dictionary)
+RexxObject  *RexxCompoundVariable::getValue(VariableDictionary *dictionary)
 {
     // the dictionary handles the details
     return dictionary->getCompoundVariableValue(stemName, &tails[0], tailCount);
@@ -284,7 +284,7 @@ RexxObject  *RexxCompoundVariable::getValue(RexxActivation *context)
  * @return The variable value, or OREF_NULL if the variable is not
  *         assigned.
  */
-RexxObject  *RexxCompoundVariable::getRealValue(RexxVariableDictionary *dictionary)
+RexxObject  *RexxCompoundVariable::getRealValue(VariableDictionary *dictionary)
 {
     return dictionary->getCompoundVariableRealValue(stemName, &tails[0], tailCount);
 }
@@ -325,7 +325,7 @@ void RexxCompoundVariable::set(RexxActivation *context, RexxObject *value)
  * @param dictionary The variable dictionary context for the set operation.
  * @param value      The new variable value.
  */
-void RexxCompoundVariable::set(RexxVariableDictionary *dictionary, RexxObject *value)
+void RexxCompoundVariable::set(VariableDictionary *dictionary, RexxObject *value)
 {
     dictionary->setCompoundVariable(stemName, &tails[0], tailCount, value);
 }
@@ -373,7 +373,7 @@ void RexxCompoundVariable::drop(RexxActivation *context)
  *
  * @param dictionary The target dictionary
  */
-void RexxCompoundVariable::drop(RexxVariableDictionary *dictionary)
+void RexxCompoundVariable::drop(VariableDictionary *dictionary)
 {
     dictionary->dropCompoundVariable(stemName, &tails[0], tailCount);
 }
@@ -408,7 +408,7 @@ void RexxCompoundVariable::procedureExpose(RexxActivation *context, RexxActivati
  * @param stack   The current evaluation stack.
  * @param object_dictionary
  */
-void RexxCompoundVariable::expose(RexxActivation *context, RexxVariableDictionary *object_dictionary)
+void RexxCompoundVariable::expose(RexxActivation *context, VariableDictionary *object_dictionary)
 {
     // get the stem in the source dictionary
     StemClass *source_stem = object_dictionary->getStem(stemName);

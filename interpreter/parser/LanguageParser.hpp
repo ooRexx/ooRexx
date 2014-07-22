@@ -67,7 +67,7 @@ class RexxExpressionStack;
 class StackFrameClass;
 class ProgramSource;
 class RexxVariableBase;
-class StemClassVariable;
+class RexxStemVariable;
 
 
 // handy defines for simplifying creation of instruction types.
@@ -161,7 +161,7 @@ class LanguageParser: public RexxInternalObject
     inline void        resetPosition(size_t p) { clause->reset(p); }
 
     RexxVariableBase *addSimpleVariable(RexxString *);
-    StemClassVariable  *addStem(RexxString *);
+    RexxStemVariable  *addStem(RexxString *);
     RexxCompoundVariable *addCompound(RexxString *);
     void        expose(RexxString *);
     RexxString *commonString(RexxString *);

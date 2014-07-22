@@ -46,7 +46,7 @@
 #include "StringClass.hpp"
 #include "ArrayClass.hpp"
 #include "StringTable.hpp"
-#include "RexxActivity.hpp"
+#include "Activity.hpp"
 #include "RexxActivation.hpp"
 #include "ProgramSource.hpp"
 #include "PackageClass.hpp"
@@ -635,7 +635,7 @@ RoutineClass *RexxSource::findRoutine(RexxString *routineName)
  * @return The fully resolved string name of the target program, if one is
  *         located.
  */
-RexxString *RexxSource::resolveProgramName(RexxActivity *activity, RexxString *name)
+RexxString *RexxSource::resolveProgramName(Activity *activity, RexxString *name)
 {
     return activity->getInstance()->resolveProgramName(name, programDirectory, programExtension);
 }
@@ -866,7 +866,7 @@ void RexxSource::processInstall(RexxActivation *activation)
  * @param instruction
  *               The directive instruction being processed.
  */
-PackageClass *RexxSource::loadRequires(RexxActivity *activity, RexxString *target)
+PackageClass *RexxSource::loadRequires(Activity *activity, RexxString *target)
 {
     // we need the instance this is associated with
     InterpreterInstance *instance = activity->getInstance();
@@ -895,7 +895,7 @@ PackageClass *RexxSource::loadRequires(RexxActivity *activity, RexxString *targe
  *
  * @param target The name of the ::REQUIRES
  */
-PackageClass *RexxSource::loadRequires(RexxActivity *activity, RexxString *target, ArrayClass *s)
+PackageClass *RexxSource::loadRequires(Activity *activity, RexxString *target, ArrayClass *s)
 {
     // we need the instance this is associated with
     InterpreterInstance *instance = activity->getInstance();

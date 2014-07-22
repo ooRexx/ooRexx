@@ -93,7 +93,7 @@ const int ARG_TEN    = 10;
 //
 // OrefSet (or the setField() shorter version) needs to be used to set values in any object that
 // a) might be part of the saved imaged (transient objects like the LanguageParser, RexxActivation,
-// and RexxActivity are examples of classes that are not...any class that is visible to the Rexx programmer
+// and Activity are examples of classes that are not...any class that is visible to the Rexx programmer
 // are classes that will be part of the image, as well as any of the instruction/expresson objects
 // created by the LanguageParser).  Note that as a general rule, fields that are set in an object's constructor
 // do not need this...the object, by definition, is being newly created and cannot be part of the saved image.

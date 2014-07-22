@@ -91,14 +91,14 @@ class RexxCode : public BaseCode
    inline DirectoryClass *getMethods() { return source->getMethods(); };
    inline DirectoryClass *getRoutines() { return source->getRoutines(); };
    inline RoutineClass *findRoutine(RexxString *n) { return source->findRoutine(n); }
-   inline RexxString *resolveProgramName(RexxActivity *activity, RexxString *name) { return source->resolveProgramName(activity, name); }
+   inline RexxString *resolveProgramName(Activity *activity, RexxString *name) { return source->resolveProgramName(activity, name); }
    inline void        mergeRequired(RexxSource *s) { source->mergeRequired(s); }
           RexxCode *interpret(RexxString *source, size_t lineNumber);
 
    // overrides for BaseCode classes
-   virtual void run(RexxActivity *, MethodClass *, RexxObject *, RexxString *, RexxObject **,  size_t, ProtectedObject &);
-   virtual void call(RexxActivity *, RoutineClass *, RexxString *,  RexxObject **, size_t, RexxString *, RexxString *, int, ProtectedObject &);
-   virtual void call(RexxActivity *, RoutineClass *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
+   virtual void run(Activity *, MethodClass *, RexxObject *, RexxString *, RexxObject **,  size_t, ProtectedObject &);
+   virtual void call(Activity *, RoutineClass *, RexxString *,  RexxObject **, size_t, RexxString *, RexxString *, int, ProtectedObject &);
+   virtual void call(Activity *, RoutineClass *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
 
 protected:
 

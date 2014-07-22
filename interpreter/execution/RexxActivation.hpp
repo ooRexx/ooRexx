@@ -111,7 +111,7 @@ class ActivationSettings
       RexxString    * alternate_env;       // alternate address environment
       RexxString    * msgname;             // message sent to the receiver
                                            // object variable dictionary
-      RexxVariableDictionary *object_variables;
+      VariableDictionary *object_variables;
       RexxString    * calltype;            // (COMMAND/METHOD/FUNCTION/ROUTINE)
       DirectoryClass * streams;             // Directory of openned streams
       RexxString    * halt_description;    // description from a HALT condition
@@ -163,9 +163,9 @@ class ActivationSettings
 
    inline RexxActivation(RESTORETYPE restoreType) { ; };
    RexxActivation();
-   RexxActivation(RexxActivity* _activity, MethodClass *_method, RexxCode *_code);
-   RexxActivation(RexxActivity *_activity, RoutineClass *_routine, RexxCode *_code, RexxString *calltype, RexxString *env, int context);
-   RexxActivation(RexxActivity *_activity, RexxActivation *_parent, RexxCode *_code, int context);
+   RexxActivation(Activity* _activity, MethodClass *_method, RexxCode *_code);
+   RexxActivation(Activity *_activity, RoutineClass *_routine, RexxCode *_code, RexxString *calltype, RexxString *env, int context);
+   RexxActivation(Activity *_activity, RexxActivation *_parent, RexxCode *_code, int context);
 
    void live(size_t);
    void liveGeneral(MarkReason reason);
@@ -309,7 +309,7 @@ class ActivationSettings
    void              mergeTraps(QueueClass *, QueueClass *);
    uint64_t          getRandomSeed(RexxInteger *);
    void              adjustRandomSeed() { random_seed += (uint64_t)(uintptr_t)this; }
-   RexxVariableDictionary * getObjectVariables();
+   VariableDictionary * getObjectVariables();
    DirectoryClass   * getLabels();
    RexxString      * getProgramName();
    RexxObject      * popControl();
@@ -349,7 +349,7 @@ class ActivationSettings
    inline bool              tracingIntermediates() {return settings.intermediate_trace;};
    inline void              clearTraceSettings() { settings.flags &= ~trace_flags; settings.intermediate_trace = false; }
    inline bool              tracingResults() {return (settings.flags&trace_results) != 0; }
-   inline RexxActivity    * getActivity() {return activity;};
+   inline Activity    * getActivity() {return activity;};
    inline RexxString      * getMessageName() {return settings.msgname;};
    inline RexxString      * getCallname() {return settings.msgname;};
    inline RexxInstruction * getCurrent() {return current;};
@@ -453,7 +453,7 @@ class ActivationSettings
    RexxObject *getContextReturnStatus();
    StackFrameClass *createStackFrame();
 
-   inline RexxVariableDictionary *getLocalVariables()
+   inline VariableDictionary *getLocalVariables()
    {
        return settings.local_variables.getDictionary();
    }
@@ -593,7 +593,7 @@ class ActivationSettings
        }
    }
 
-   inline void setLocalVariableDictionary(RexxVariableDictionary *dict) {settings.local_variables.setDictionary(dict); }
+   inline void setLocalVariableDictionary(VariableDictionary *dict) {settings.local_variables.setDictionary(dict); }
 
    // the default trace flag values used for new activations.
    static const size_t default_trace_flags;
@@ -606,7 +606,7 @@ class ActivationSettings
     RexxSource          *sourceObject;  // the source object associated with this instance
     RexxClass           *scope;         // scope of any active method call
     RexxObject          *receiver;      // target of a message invocation
-    RexxActivity        *activity;      // current running activation
+    Activity        *activity;      // current running activation
     RexxActivation      *parent;        // previous running activation for internal call/interpret
     RexxObject         **arglist;       // activity argument list
     size_t               argcount;      // the count of arguments

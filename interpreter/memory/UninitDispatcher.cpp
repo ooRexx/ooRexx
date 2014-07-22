@@ -39,9 +39,9 @@
 
 #include "RexxCore.h"
 #include "UninitDispatcher.hpp"
-#include "RexxActivity.hpp"
+#include "Activity.hpp"
 #include "ActivityManager.hpp"
-#include "RexxNativeActivation.hpp"
+#include "NativeActivation.hpp"
 
 
 

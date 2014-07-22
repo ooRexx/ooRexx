@@ -887,14 +887,14 @@ void LanguageParser::optionsDirective()
  */
 MethodClass *LanguageParser::createNativeMethod(RexxString *name, RexxString *library, RexxString *procedure)
 {
-    RexxNativeCode *nmethod = PackageManager::resolveMethod(library, procedure);
+    NativeCode *nmethod = PackageManager::resolveMethod(library, procedure);
     // raise an exception if this entry point is not found.
     if (nmethod == OREF_NULL)
     {
          syntaxError(Error_External_name_not_found_method, procedure);
     }
     // this might return a different object if this has been used already
-    nmethod = (RexxNativeCode *)nmethod->setSourceObject(package);
+    nmethod = (NativeCode *)nmethod->setSourceObject(package);
     // turn into a real method object
     return new MethodClass(name, nmethod);
 }

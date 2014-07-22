@@ -41,7 +41,7 @@
 #include "ActivityManager.hpp"
 #include "ProtectedObject.hpp"
 #include "Interpreter.hpp"
-#include "RexxVariableDictionary.hpp"
+#include "VariableDictionary.hpp"
 #include "ActivationFrame.hpp"
 
 
@@ -101,7 +101,7 @@ void CPPCode::liveGeneral(MarkReason reason)
  * @param count    The argument count.
  * @param result   The returned result.
  */
-void CPPCode::run(RexxActivity *activity, MethodClass *method, RexxObject *receiver, RexxString *messageName,
+void CPPCode::run(Activity *activity, MethodClass *method, RexxObject *receiver, RexxString *messageName,
     RexxObject **argPtr, size_t count, ProtectedObject &result)
 {
     InternalActivationFrame frame(activity, messageName, receiver, method, argPtr, count);
@@ -226,7 +226,7 @@ void AttributeGetterCode::flatten(Envelope *envelope)
  * @param count    The argument count.
  * @param result   The returned result.
  */
-void AttributeGetterCode::run(RexxActivity *activity, MethodClass *method, RexxObject *receiver, RexxString *messageName,
+void AttributeGetterCode::run(Activity *activity, MethodClass *method, RexxObject *receiver, RexxString *messageName,
     RexxObject **argPtr, size_t count, ProtectedObject &result)
 {
     // validate the number of arguments
@@ -241,7 +241,7 @@ void AttributeGetterCode::run(RexxActivity *activity, MethodClass *method, RexxO
     }
     else {
         // get the variable pool and get the guard lock
-        RexxVariableDictionary *objectVariables = receiver->getObjectVariables(method->getScope());
+        VariableDictionary *objectVariables = receiver->getObjectVariables(method->getScope());
         objectVariables->reserve(activity);
         result = attribute->getValue(objectVariables);
         // and ensure we release this afterwards
@@ -276,7 +276,7 @@ void *AttributeSetterCode::operator new(size_t size)
  * @param count    The argument count.
  * @param result   The returned result.
  */
-void AttributeSetterCode::run(RexxActivity *activity, MethodClass *method, RexxObject *receiver, RexxString *messageName,
+void AttributeSetterCode::run(Activity *activity, MethodClass *method, RexxObject *receiver, RexxString *messageName,
     RexxObject **argPtr, size_t count, ProtectedObject &result)
 {
     // validate the number of arguments
@@ -297,7 +297,7 @@ void AttributeSetterCode::run(RexxActivity *activity, MethodClass *method, RexxO
     }
     else {
         // get the variable pool and get the guard lock
-        RexxVariableDictionary *objectVariables = receiver->getObjectVariables(method->getScope());
+        VariableDictionary *objectVariables = receiver->getObjectVariables(method->getScope());
         objectVariables->reserve(activity);
         // go set the attribue
         attribute->set(objectVariables, argPtr[0]);
@@ -362,7 +362,7 @@ void ConstantGetterCode::flatten(Envelope *envelope)
  * @param count    The argument count.
  * @param result   The returned result.
  */
-void ConstantGetterCode::run(RexxActivity *activity, MethodClass *method, RexxObject *receiver, RexxString *messageName,
+void ConstantGetterCode::run(Activity *activity, MethodClass *method, RexxObject *receiver, RexxString *messageName,
     RexxObject **argPtr, size_t count, ProtectedObject &result)
 {
     // validate the number of arguments
@@ -400,7 +400,7 @@ void *AbstractCode::operator new(size_t size)
  * @param count    The argument count.
  * @param result   The returned result.
  */
-void AbstractCode::run(RexxActivity *activity, MethodClass *method, RexxObject *receiver, RexxString *messageName,
+void AbstractCode::run(Activity *activity, MethodClass *method, RexxObject *receiver, RexxString *messageName,
     RexxObject **argPtr, size_t count, ProtectedObject &result)
 {
     reportException(Error_Incorrect_method_abstract, messageName);
@@ -429,11 +429,11 @@ void AbstractCode::run(RexxActivity *activity, MethodClass *method, RexxObject *
 #include "MessageClass.hpp"
 #include "StemClass.hpp"
 #include "RexxMisc.hpp"
-#include "RexxNativeCode.hpp"
-#include "RexxActivity.hpp"
+#include "NativeCode.hpp"
+#include "Activity.hpp"
 #include "ActivityManager.hpp"
-#include "RexxNativeActivation.hpp"
-#include "RexxVariableDictionary.hpp"
+#include "NativeActivation.hpp"
+#include "VariableDictionary.hpp"
 #include "ExpressionVariable.hpp"
 #include "RexxLocalVariables.hpp"
 #include "ProtectedObject.hpp"

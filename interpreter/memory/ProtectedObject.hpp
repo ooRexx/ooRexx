@@ -38,7 +38,7 @@
 #ifndef ProtectedObject_Included
 #define ProtectedObject_Included
 
-#include "RexxActivity.hpp"
+#include "Activity.hpp"
 #include "ActivityManager.hpp"
 
 class RexxInstruction;
@@ -48,7 +48,7 @@ class RexxInstruction;
  */
 class ProtectedBase
 {
-friend class RexxActivity;
+friend class Activity;
 public:
     inline ProtectedBase()
     {
@@ -69,7 +69,7 @@ public:
         }
     }
 
-    inline ProtectedBase(RexxActivity *a) : activity(a)
+    inline ProtectedBase(Activity *a) : activity(a)
     {
         // it would be better to have the activity class do this, but because
         // we're doing this with inline methods, we run into a bit of a
@@ -104,7 +104,7 @@ public:
 protected:
 
     ProtectedBase  *next;                // the pointer protected by the object
-    RexxActivity   *activity;            // the activity we're running on
+    Activity   *activity;            // the activity we're running on
 };
 
 
@@ -116,9 +116,9 @@ class ProtectedObject : public ProtectedBase
 {
  public:
     inline ProtectedObject() : protectedObject(OREF_NULL), ProtectedBase() { }
-    inline ProtectedObject(RexxActivity *a) : protectedObject(OREF_NULL), ProtectedBase(a) { }
+    inline ProtectedObject(Activity *a) : protectedObject(OREF_NULL), ProtectedBase(a) { }
     inline ProtectedObject(RexxInternalObject *o) : protectedObject(o), ProtectedBase() { }
-    inline ProtectedObject(RexxInternalObject *o, RexxActivity *a) : protectedObject(o), ProtectedBase(a) { }
+    inline ProtectedObject(RexxInternalObject *o, Activity *a) : protectedObject(o), ProtectedBase(a) { }
     inline ~ProtectedObject()
     {
         if (protectedObject != OREF_NULL)
@@ -210,7 +210,7 @@ class ProtectedSet : public ProtectedObject
 {
 public:
     inline ProtectedSet() : ProtectedObject() { }
-    inline ProtectedSet(RexxActivity *a) : ProtectedObject(a) { }
+    inline ProtectedSet(Activity *a) : ProtectedObject(a) { }
     inline ~ProtectedSet() { }
 
     void add(RexxObject *);
@@ -221,9 +221,9 @@ template <class objType> class Protected : public ProtectedBase
 {
 public:
     inline Protected() : protectedObject(OREF_NULL), ProtectedBase() { }
-    inline Protected(RexxActivity *a) : protectedObject(OREF_NULL), ProtectedBase(a) { }
+    inline Protected(Activity *a) : protectedObject(OREF_NULL), ProtectedBase(a) { }
     inline Protected(objType *o) : protectedObject(o), ProtectedBase() { }
-    inline Protected(objType *o, RexxActivity *a) : protectedObject(o), ProtectedBase(a) { }
+    inline Protected(objType *o, Activity *a) : protectedObject(o), ProtectedBase(a) { }
 
     inline ~Protected()
     {

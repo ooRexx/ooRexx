@@ -143,7 +143,7 @@ void RexxCode::flatten(Envelope * envelope)
  * @param argcount The count of arguments,
  * @param result   The returned result.
  */
-void RexxCode::call(RexxActivity *activity, RoutineClass *routine, RexxString *msgname, RexxObject**argPtr, size_t argcount, ProtectedObject &result)
+void RexxCode::call(Activity *activity, RoutineClass *routine, RexxString *msgname, RexxObject**argPtr, size_t argcount, ProtectedObject &result)
 {
     // just forward to the more general method
     call(activity, routine, msgname, argPtr, argcount, OREF_SUBROUTINE, OREF_NULL, EXTERNALCALL, result);
@@ -165,7 +165,7 @@ void RexxCode::call(RexxActivity *activity, RoutineClass *routine, RexxString *m
  * @param result   A protected object for passing the return
  *                 value back.
  */
-void RexxCode::call(RexxActivity *activity, RoutineClass *routine, RexxString *routineName,
+void RexxCode::call(Activity *activity, RoutineClass *routine, RexxString *routineName,
     RexxObject**argPtr, size_t argcount, RexxString *calltype, RexxString *environment,
     int context, ProtectedObject &result)
 {
@@ -191,7 +191,7 @@ void RexxCode::call(RexxActivity *activity, RoutineClass *routine, RexxString *r
  * @param result   A protected object for passing the return
  *                 value back.
  */
-void RexxCode::run(RexxActivity *activity, MethodClass *method, RexxObject *receiver,
+void RexxCode::run(Activity *activity, MethodClass *method, RexxObject *receiver,
     RexxString *msgname, RexxObject**argPtr, size_t argcount, ProtectedObject &result)
 {
     // create a new activation object and push it on the top of the stack.

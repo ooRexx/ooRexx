@@ -75,6 +75,32 @@ class CompoundVariableTable
 {
  friend class StemClass;
  public:
+    /**
+     * an iterator for iterating over all entries of the table
+     */
+    class TableIterator
+    {
+        friend class CompoundVariableTable;
+
+    public:
+        inline ~TableIterator() {}
+
+        inline bool isAvailable()  { return current != OREF_NULL; }
+        inline RexxInternalObject *value() { return current->getVariableValue(); }
+        inline RexxString *name() { return current->getName(); }
+        inline RexxString *name(RexxString *stemName) { return current->createCompoundName(stemName); }
+        inline void replace(RexxInternalObject v) { current->setValue(v); }
+        inline void next() { contents.next(current)); }
+
+    private:
+        // constructor for an index iterator
+        TableIterator(CompoundVariableTable &c)
+            : contents(c) { current = contents.first(); }
+
+        CompoundVariableTable &contents;
+        CompoundVariableElement *current;
+    };
+
     inline CompoundVariableTable() { ; };
 
     void copyFrom(CompoundVariableTable &other);

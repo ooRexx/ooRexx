@@ -43,7 +43,7 @@
 /******************************************************************************/
 #include "RexxCore.h"
 #include "CommandHandler.hpp"
-#include "RexxNativeActivation.hpp"
+#include "NativeActivation.hpp"
 #include "RexxInternalApis.h"
 #include "ProtectedObject.hpp"
 #include "SystemInterpreter.hpp"
@@ -93,7 +93,7 @@ void CommandHandler::resolve(const char *handlerName)
  * @param result     The returned RC value.
  * @param condition  A potential returned condition object.
  */
-void CommandHandler::call(RexxActivity *activity, RexxActivation *activation, RexxString *address, RexxString *command, ProtectedObject &result, ProtectedObject &condition)
+void CommandHandler::call(Activity *activity, RexxActivation *activation, RexxString *address, RexxString *command, ProtectedObject &result, ProtectedObject &condition)
 {
     if (type == REGISTERED_NAME)
     {
@@ -112,7 +112,7 @@ void CommandHandler::call(RexxActivity *activity, RexxActivation *activation, Re
     }
 }
 
-CommandHandlerDispatcher::CommandHandlerDispatcher(RexxActivity *a, REXXPFN e, RexxString *command)
+CommandHandlerDispatcher::CommandHandlerDispatcher(Activity *a, REXXPFN e, RexxString *command)
 {
     activity = a;      // needed for raising conditions
     entryPoint = e;             // the call point

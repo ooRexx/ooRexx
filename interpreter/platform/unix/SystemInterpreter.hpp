@@ -98,7 +98,7 @@ public:
     static RexxString *getMessageText(wholenumber_t code);
     static bool valueFunction(RexxString *name, RexxObject *newValue, RexxString *selector, RexxObject *&result);
     static RexxString *getDefaultAddressName();
-    static bool invokeExternalFunction(RexxActivation *, RexxActivity *, RexxString *, RexxObject **, size_t, RexxString *, ProtectedObject &);
+    static bool invokeExternalFunction(RexxActivation *, Activity *, RexxString *, RexxObject **, size_t, RexxString *, ProtectedObject &);
     static void validateAddressName(RexxString *name );
     static void loadImage(char **imageBuffer, size_t *imageSize);
     static BufferClass *readProgram(const char *file_name);

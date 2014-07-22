@@ -45,7 +45,7 @@
 #include "StringClass.hpp"
 #include "ArrayClass.hpp"
 #include "RexxActivation.hpp"
-#include "RexxActivity.hpp"
+#include "Activity.hpp"
 #include "Numerics.hpp"
 #include "CompoundVariableTail.hpp"
 #include "MethodArguments.hpp"
@@ -1201,7 +1201,7 @@ RexxObject  *RexxInteger::getValue(
 
 
 RexxObject  *RexxInteger::getValue(
-    RexxVariableDictionary *context)   /* current activation context        */
+    VariableDictionary *context)   /* current activation context        */
 /******************************************************************************/
 /* Function:  Polymorphic get_value function used with expression terms       */
 /******************************************************************************/
@@ -1221,7 +1221,7 @@ RexxObject  *RexxInteger::getRealValue(
 
 
 RexxObject  *RexxInteger::getRealValue(
-    RexxVariableDictionary *context)   /* current activation context        */
+    VariableDictionary *context)   /* current activation context        */
 /******************************************************************************/
 /* Function:  Polymorphic get_value function used with expression terms       */
 /******************************************************************************/

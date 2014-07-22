@@ -36,13 +36,13 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                              RexxActivity.hpp  */
+/* REXX Kernel                                              Activity.hpp  */
 /*                                                                            */
 /* Primitive Activity Class Definitions                                       */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_RexxActivity
-#define Included_RexxActivity
+#ifndef Included_Activity
+#define Included_Activity
 
 #include "ListClass.hpp"
 #include "InternalStack.hpp"
@@ -115,7 +115,7 @@ typedef enum
 // used only internally, can be moved to a differnet value, if the using code is adapted accordingly
 #define LAST_EXIT (RXNOOFEXITS - 1)    /* top bound of the exits            */
 
-class RexxActivity : public RexxInternalObject
+class Activity : public RexxInternalObject
 {
   friend class ProtectedBase;
   friend class ActivationFrame;
@@ -125,9 +125,9 @@ class RexxActivity : public RexxInternalObject
     inline void  operator delete(void *) { ; }
     inline void  operator delete(void *, void *) { ; }
 
-    inline RexxActivity(RESTORETYPE restoreType) { ; };
-    RexxActivity();
-    RexxActivity(bool);
+    inline Activity(RESTORETYPE restoreType) { ; };
+    Activity();
+    Activity(bool);
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
@@ -180,7 +180,7 @@ class RexxActivity : public RexxInternalObject
     void        unwindToFrame(RexxActivation *frame);
     void        cleanupStackFrame(RexxActivationBase *poppedStackFrame);
     ArrayClass  *generateStackFrames(bool skipFirst);
-    RexxActivity *spawnReply();
+    Activity *spawnReply();
 
     void        exitKernel();
     void        enterKernel();
@@ -189,7 +189,7 @@ class RexxActivity : public RexxInternalObject
     void        guardWait();
     void        guardPost();
     void        guardSet();
-    void        checkDeadLock(RexxActivity *);
+    void        checkDeadLock(Activity *);
     void        postDispatch();
     void        kill(DirectoryClass *);
     void        joinKernelQueue();
@@ -254,14 +254,14 @@ class RexxActivity : public RexxInternalObject
     inline void setSuspended(bool s) { suspended = s; }
     inline bool isInterpreterRoot() { return interpreterRoot; }
     inline void setInterpreterRoot() { interpreterRoot = true; }
-    inline void setNestedActivity(RexxActivity *a) { nestedActivity = a; }
-    inline RexxActivity *getNestedActivity() { return nestedActivity; }
+    inline void setNestedActivity(Activity *a) { nestedActivity = a; }
+    inline Activity *getNestedActivity() { return nestedActivity; }
     inline bool isAttached() { return attached; }
            void validateThread();
 
     SecurityManager *getEffectiveSecurityManager();
     SecurityManager *getInstanceSecurityManager();
-    void inheritSettings(RexxActivity *parent);
+    void inheritSettings(Activity *parent);
     void setupExits();
     void enterCurrentThread();
     void exitCurrentThread();
@@ -286,7 +286,7 @@ class RexxActivity : public RexxInternalObject
            MethodClass *getLastMethod();
 
     inline RexxThreadContext *getThreadContext() { return &threadContext.threadContext; }
-    inline RexxNativeActivation *getApiContext() { return (RexxNativeActivation *)topStackFrame; }
+    inline NativeActivation *getApiContext() { return (NativeActivation *)topStackFrame; }
 
     inline void allocateStackFrame(RexxExpressionStack *stack, size_t entries)
     {
@@ -314,9 +314,9 @@ class RexxActivity : public RexxInternalObject
     void setExitHandler(int exitNum, const char *e) { getExitHandler(exitNum).resolve(e); }
     void setExitHandler(RXSYSEXIT &e) { getExitHandler(e.sysexit_code).resolve(e.sysexit_name); }
     RexxString *resolveProgramName(RexxString *, RexxString *, RexxString *);
-    void createMethodContext(MethodContext &context, RexxNativeActivation *owner);
-    void createCallContext(CallContext &context, RexxNativeActivation *owner);
-    void createExitContext(ExitContext &context, RexxNativeActivation *owner);
+    void createMethodContext(MethodContext &context, NativeActivation *owner);
+    void createCallContext(CallContext &context, NativeActivation *owner);
+    void createExitContext(ExitContext &context, NativeActivation *owner);
     RexxObject *getLocalEnvironment(RexxString *name);
     DirectoryClass *getLocal();
     CommandHandler *resolveCommandHandler(RexxString *);
@@ -332,7 +332,7 @@ class RexxActivity : public RexxInternalObject
 
     InterpreterInstance *instance;      // the interpreter we're running under
     ActivityContext      threadContext; // the handed out activity context
-    RexxActivity *oldActivity;          // pushed nested activity
+    Activity *oldActivity;          // pushed nested activity
     RexxActivationStack   frameStack;   // our stack used for activation frames
     DirectoryClass      *conditionobj;   // condition object for killed activi
     TableClass          *requiresTable;  // Current ::REQUIRES being installed
@@ -340,7 +340,7 @@ class RexxActivity : public RexxInternalObject
 
 
     // the activation frame stack.  This stack is one RexxActivation or
-    // RexxNativeActivation for every level of the call stack.  The activationStackSize
+    // NativeActivation for every level of the call stack.  The activationStackSize
     // is the current size of the stack (which is expanded, if necessary).  The
     // activationStackDepth is the current count of frames in the stack.
     InternalStack *activations;
@@ -350,9 +350,9 @@ class RexxActivity : public RexxInternalObject
     // the following two fields represent the current top of the activation stack
     // and the top Rexx frame in the stack.  Generally, if executing Rexx code,
     // then currentRexxFrame == topStackFrame.  If we're at the base of the stack
-    // topStackFrame will be the root stack element (a RexxNativeActivation instance)
+    // topStackFrame will be the root stack element (a NativeActivation instance)
     // and the currentRexxFrame will be OREF_NULL.  If we've made a callout from a
-    // Rexx context, then the topStackFrame will be the RexxNativeActivation that
+    // Rexx context, then the topStackFrame will be the NativeActivation that
     // made the callout and the currentRexxFrame will be the predecessor frame.
     RexxActivation     *currentRexxFrame;
     RexxActivationBase *topStackFrame;
@@ -377,7 +377,7 @@ class RexxActivity : public RexxInternalObject
     ExitHandler sysexits[LAST_EXIT];    // Array to hold system exits
     ProtectedBase *protectedObjects;    // list of stack-based object protectors
     ActivationFrame *activationFrames;  // list of stack-based object protectors
-    RexxActivity *nestedActivity;       // used to push down activities in threads with more than one instance
+    Activity *nestedActivity;       // used to push down activities in threads with more than one instance
 
     // structures containing the various interface vectors
     static RexxThreadInterface threadContextFunctions;
@@ -396,7 +396,7 @@ class RexxActivity : public RexxInternalObject
  * @return A Native activation context that is the anchor point for the
  *         API activity.
  */
-inline RexxNativeActivation *contextToActivation(RexxThreadContext *c)
+inline NativeActivation *contextToActivation(RexxThreadContext *c)
 {
     return contextToActivity(c)->getApiContext();
 }
@@ -411,7 +411,7 @@ inline RexxNativeActivation *contextToActivation(RexxThreadContext *c)
  * @return A Native activation context that is the anchor point for the
  *         API activity.
  */
-inline RexxNativeActivation *contextToActivation(RexxCallContext *c)
+inline NativeActivation *contextToActivation(RexxCallContext *c)
 {
     return ((CallContext *)c)->context;
 }
@@ -426,7 +426,7 @@ inline RexxNativeActivation *contextToActivation(RexxCallContext *c)
  * @return A Native activation context that is the anchor point for the
  *         API activity.
  */
-inline RexxNativeActivation *contextToActivation(RexxExitContext *c)
+inline NativeActivation *contextToActivation(RexxExitContext *c)
 {
     return ((ExitContext *)c)->context;
 }
@@ -441,7 +441,7 @@ inline RexxNativeActivation *contextToActivation(RexxExitContext *c)
  * @return A Native activation context that is the anchor point for the
  *         API activity.
  */
-inline RexxNativeActivation *contextToActivation(RexxMethodContext *c)
+inline NativeActivation *contextToActivation(RexxMethodContext *c)
 {
     return ((MethodContext *)c)->context;
 }

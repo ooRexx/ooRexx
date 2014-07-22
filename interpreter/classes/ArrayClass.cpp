@@ -50,7 +50,7 @@
 /*                                                                            */
 /******************************************************************************/
 #include "RexxCore.h"
-#include "RexxActivity.hpp"
+#include "Activity.hpp"
 #include "IntegerClass.hpp"
 #include "SupplierClass.hpp"
 #include "ArrayClass.hpp"

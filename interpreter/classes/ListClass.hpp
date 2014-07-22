@@ -44,7 +44,7 @@
 #ifndef Included_ListClass
 #define Included_ListClass
 
-#include "ListClassTable.hpp"
+#include "ListContents.hpp"
 
 class ListClass : public RexxObject
 {

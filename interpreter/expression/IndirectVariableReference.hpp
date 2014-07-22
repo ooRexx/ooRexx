@@ -65,7 +65,7 @@ class RexxVariableReference : public RexxVariableBase
 
     // methods implemented from RexxVariableBase
     virtual void drop(RexxActivation *);
-    virtual void expose(RexxActivation *, RexxVariableDictionary *);
+    virtual void expose(RexxActivation *, VariableDictionary *);
     virtual void procedureExpose(RexxActivation *, RexxActivation *);
 
     ArrayClass *list(RexxActivation *);

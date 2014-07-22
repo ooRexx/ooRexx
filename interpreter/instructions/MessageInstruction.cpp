@@ -44,7 +44,7 @@
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "RexxActivation.hpp"
-#include "RexxVariableDictionary.hpp"
+#include "VariableDictionary.hpp"
 #include "MessageInstruction.hpp"
 #include "ExpressionMessage.hpp"
 #include "ProtectedObject.hpp"

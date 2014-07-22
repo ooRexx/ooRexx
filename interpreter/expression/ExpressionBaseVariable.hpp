@@ -57,13 +57,13 @@ class RexxVariableBase : public RexxInternalObject
 
     virtual bool exists(RexxActivation *) { return false; }
     virtual void set(RexxActivation *, RexxObject *) {;}
-    virtual void set(RexxVariableDictionary *, RexxObject *) {;}
+    virtual void set(VariableDictionary *, RexxObject *) {;}
     virtual void assign(RexxActivation *, RexxObject *) {;}
     virtual void drop(RexxActivation *) {;}
-    virtual void drop(RexxVariableDictionary *) {;}
+    virtual void drop(VariableDictionary *) {;}
     virtual void setGuard(RexxActivation *) {;}
     virtual void clearGuard(RexxActivation *) {;}
-    virtual void expose(RexxActivation *, RexxVariableDictionary *) {;}
+    virtual void expose(RexxActivation *, VariableDictionary *) {;}
     virtual void procedureExpose(RexxActivation *, RexxActivation *) {;}
 };
 

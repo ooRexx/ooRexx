@@ -95,8 +95,8 @@ class RexxSource: public RexxInternalObject
     ArrayClass  *extractSource(SourceLocation &);
     ArrayClass  *extractSource();
     void        mergeRequired(RexxSource *);
-    PackageClass *loadRequires(RexxActivity *activity, RexxString *target);
-    PackageClass *loadRequires(RexxActivity *activity, RexxString *target, ArrayClass *s);
+    PackageClass *loadRequires(Activity *activity, RexxString *target);
+    PackageClass *loadRequires(Activity *activity, RexxString *target, ArrayClass *s);
     void        addPackage(PackageClass *package);
     PackageClass *getPackage();
     void        inheritSourceContext(PackageClass *source);
@@ -106,7 +106,7 @@ class RexxSource: public RexxInternalObject
     RexxClass  *findClass(RexxString *);
     RexxClass  *findInstalledClass(RexxString *name);
     RexxClass  *findPublicClass(RexxString *name);
-    RexxString *resolveProgramName(RexxActivity *activity, RexxString *name);
+    RexxString *resolveProgramName(Activity *activity, RexxString *name);
     void        processInstall(RexxActivation *);
     void        install();
     RexxInstruction *sourceNewObject(size_t, RexxBehaviour *, int);

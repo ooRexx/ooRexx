@@ -43,7 +43,7 @@
 /******************************************************************************/
 #include "RexxCore.h"
 #include "ContextApi.hpp"
-#include "RexxNativeActivation.hpp"
+#include "NativeActivation.hpp"
 #include "ProtectedObject.hpp"
 #include "MethodClass.hpp"
 
@@ -56,7 +56,7 @@ RexxArrayObject RexxEntry GetMethodArguments(RexxMethodContext *c)
     {
         return (RexxArrayObject)context.context->getArguments();
     }
-    catch (RexxNativeActivation *)
+    catch (NativeActivation *)
     {
     }
     return NULLOBJECT;
@@ -69,7 +69,7 @@ RexxObjectPtr RexxEntry GetMethodArgument(RexxMethodContext *c, stringsize_t i)
     {
         return (RexxObjectPtr)context.context->getArgument(i);
     }
-    catch (RexxNativeActivation *)
+    catch (NativeActivation *)
     {
     }
     return NULLOBJECT;
@@ -82,7 +82,7 @@ RexxMethodObject RexxEntry GetCurrentMethod(RexxMethodContext *c)
     {
         return (RexxMethodObject)context.context->getExecutable();
     }
-    catch (RexxNativeActivation *)
+    catch (NativeActivation *)
     {
     }
     return NULL;
@@ -95,7 +95,7 @@ CSTRING RexxEntry GetMessageName(RexxMethodContext *c)
     {
         return (CSTRING)context.context->getMessageName()->getStringData();
     }
-    catch (RexxNativeActivation *)
+    catch (NativeActivation *)
     {
     }
     return NULL;
@@ -108,7 +108,7 @@ RexxObjectPtr RexxEntry GetSelf(RexxMethodContext *c)
     {
         return (RexxObjectPtr)context.context->getSelf();
     }
-    catch (RexxNativeActivation *)
+    catch (NativeActivation *)
     {
     }
     return NULLOBJECT;
@@ -121,7 +121,7 @@ POINTER RexxEntry GetCSelf(RexxMethodContext *c)
     {
         return context.context->cself();
     }
-    catch (RexxNativeActivation *)
+    catch (NativeActivation *)
     {
     }
     return NULLOBJECT;
@@ -134,7 +134,7 @@ RexxClassObject RexxEntry GetSuper(RexxMethodContext *c)
     {
         return (RexxClassObject)context.context->getSuper();
     }
-    catch (RexxNativeActivation *)
+    catch (NativeActivation *)
     {
     }
     return NULLOBJECT;
@@ -147,7 +147,7 @@ RexxObjectPtr RexxEntry GetScope(RexxMethodContext *c)
     {
         return (RexxObjectPtr)context.context->getScope();
     }
-    catch (RexxNativeActivation *)
+    catch (NativeActivation *)
     {
     }
     return NULLOBJECT;
@@ -160,7 +160,7 @@ void RexxEntry SetObjectVariable(RexxMethodContext *c, CSTRING n, RexxObjectPtr 
     {
         context.context->setObjectVariable(n, (RexxObject *)v);
     }
-    catch (RexxNativeActivation *)
+    catch (NativeActivation *)
     {
     }
 }
@@ -172,7 +172,7 @@ RexxObjectPtr RexxEntry GetObjectVariable(RexxMethodContext *c, CSTRING n)
     {
         return (RexxObjectPtr)context.context->getObjectVariable(n);
     }
-    catch (RexxNativeActivation *)
+    catch (NativeActivation *)
     {
     }
     return NULLOBJECT;
@@ -185,7 +185,7 @@ void RexxEntry DropObjectVariable(RexxMethodContext *c, CSTRING n)
     {
         context.context->dropObjectVariable(n);
     }
-    catch (RexxNativeActivation *)
+    catch (NativeActivation *)
     {
     }
 }
@@ -200,7 +200,7 @@ RexxObjectPtr RexxEntry ForwardMessage(RexxMethodContext *c, RexxObjectPtr o, CS
         context.context->forwardMessage((RexxObject *)o, message, (RexxClass *)clazz, (ArrayClass *)a, result);
         return context.ret((RexxObject *)result);
     }
-    catch (RexxNativeActivation *)
+    catch (NativeActivation *)
     {
     }
     return NULLOBJECT;
@@ -213,7 +213,7 @@ void RexxEntry SetGuardOn(RexxMethodContext *c)
     {
         context.context->guardOn();
     }
-    catch (RexxNativeActivation *)
+    catch (NativeActivation *)
     {
     }
 }
@@ -225,7 +225,7 @@ void RexxEntry SetGuardOff(RexxMethodContext *c)
     {
         context.context->guardOff();
     }
-    catch (RexxNativeActivation *)
+    catch (NativeActivation *)
     {
     }
 }
@@ -239,7 +239,7 @@ RexxClassObject RexxEntry FindContextClass(RexxMethodContext *c, CSTRING n)
         RexxString *name = new_upper_string(n);
         return (RexxClassObject)context.ret(context.context->findClass(name));
     }
-    catch (RexxNativeActivation *)
+    catch (NativeActivation *)
     {
     }
     return NULLOBJECT;
@@ -248,7 +248,7 @@ RexxClassObject RexxEntry FindContextClass(RexxMethodContext *c, CSTRING n)
 END_EXTERN_C()
 
 
-MethodContextInterface RexxActivity::methodContextFunctions =
+MethodContextInterface Activity::methodContextFunctions =
 {
     METHOD_INTERFACE_VERSION,
     GetMethodArguments,

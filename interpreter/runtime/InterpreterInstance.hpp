@@ -71,30 +71,30 @@ public:
     void        liveGeneral(MarkReason);
 
     RexxString *getDefaultEnvironment() { return defaultEnvironment; }
-    RexxActivity *getRootActivity() { return rootActivity; }
+    Activity *getRootActivity() { return rootActivity; }
 
     InterpreterInstance(ExitHandler *handlers);
-    void addActivity(RexxActivity *);
-    void removeActivity(RexxActivity *);
-    void initialize(RexxActivity *activity, RexxOption *options);
+    void addActivity(Activity *);
+    void removeActivity(Activity *);
+    void initialize(Activity *activity, RexxOption *options);
     bool terminate();
     void waitForCompletion();
     void attachToProcess();
-    RexxActivity *enterOnCurrentThread();
-    RexxActivity *attachThread();
+    Activity *enterOnCurrentThread();
+    Activity *attachThread();
     int attachThread(RexxThreadContext *&attachedContext);
     bool detachThread();
-    bool detachThread(RexxActivity *activity);
-    RexxActivity *spawnActivity(RexxActivity *parent);
+    bool detachThread(Activity *activity);
+    Activity *spawnActivity(Activity *parent);
     void exitCurrentThread();
-    RexxActivity *findActivity(thread_id_t threadId);
-    RexxActivity *findActivity();
+    Activity *findActivity(thread_id_t threadId);
+    Activity *findActivity();
     DirectoryClass *getLocalEnvironment();
     void copyExits(ExitHandler *target);
-    void activityDeactivated(RexxActivity *activity);
+    void activityDeactivated(Activity *activity);
     void addGlobalReference(RexxObject *o);
     void removeGlobalReference(RexxObject *o);
-    bool poolActivity(RexxActivity *activity);
+    bool poolActivity(Activity *activity);
     ExitHandler &getExitHandler(int exitNum) {  return exits[exitNum - 1]; }
     void setExitHandler(int exitNum, REXXPFN e) { getExitHandler(exitNum).setEntryPoint(e); }
     void setExitHandler(int exitNum, const char *e) { getExitHandler(exitNum).resolve(e); }
@@ -113,11 +113,11 @@ public:
     void addCommandHandler(const char *name, const char *registeredName);
     void addCommandHandler(const char *name, REXXPFN entryPoint);
     CommandHandler *resolveCommandHandler(RexxString *name);
-    PackageClass *getRequiresFile(RexxActivity *activity, RexxString *name);
-    PackageClass *loadRequires(RexxActivity *activity, RexxString *shortName, ArrayClass *source);
-    PackageClass *loadRequires(RexxActivity *activity, RexxString *shortName, RexxString *fullName);
-    PackageClass *loadRequires(RexxActivity *activity, RexxString *shortName, const char *data, size_t length);
-    void          runRequires(RexxActivity *activity, RexxString *name, RoutineClass *code);
+    PackageClass *getRequiresFile(Activity *activity, RexxString *name);
+    PackageClass *loadRequires(Activity *activity, RexxString *shortName, ArrayClass *source);
+    PackageClass *loadRequires(Activity *activity, RexxString *shortName, RexxString *fullName);
+    PackageClass *loadRequires(Activity *activity, RexxString *shortName, const char *data, size_t length);
+    void          runRequires(Activity *activity, RexxString *name, RoutineClass *code);
     void          addRequiresFile(RexxString *shortName, RexxString *fullName, PackageClass *package);
     inline void   setupProgram(RexxActivation *activation)
     {
@@ -132,7 +132,7 @@ protected:
     InstanceContext      context;            // our externalizied instance context
     SysInterpreterInstance sysInstance;      // our platform specific helper
 
-    RexxActivity        *rootActivity;       // the initial activity
+    Activity        *rootActivity;       // the initial activity
     SecurityManager     *securityManager;    // the security manager for our instance
     ListClass            *allActivities;      // all activities associated with this instance
     IdentityTable   *globalReferences;   // our global reference table

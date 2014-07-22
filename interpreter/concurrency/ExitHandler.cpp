@@ -39,7 +39,7 @@
 
 #include "RexxCore.h"
 #include "ExitHandler.hpp"
-#include "RexxActivity.hpp"
+#include "Activity.hpp"
 #include "ActivityManager.hpp"
 #include "RexxInternalApis.h"
 
@@ -56,7 +56,7 @@
  *
  * @return The exit handler return code.
  */
-int ExitHandler::call(RexxActivity *activity, RexxActivation *activation, int function, int subfunction, void *parms)
+int ExitHandler::call(Activity *activity, RexxActivation *activation, int function, int subfunction, void *parms)
 {
     if (type == REGISTERED_NAME)
     {

@@ -60,9 +60,9 @@
 #include "MethodClass.hpp"
 #include "RexxCode.hpp"
 #include "ArrayClass.hpp"
-#include "RexxNativeActivation.hpp"
+#include "NativeActivation.hpp"
 #include "RexxActivation.hpp"
-#include "RexxActivity.hpp"
+#include "Activity.hpp"
 #include "SourceFile.hpp"
 
 #include "APIDefinitions.h"

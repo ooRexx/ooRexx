@@ -52,9 +52,9 @@
 #include "StringClass.hpp"
 #include "BufferClass.hpp"
 #include "DirectoryClass.hpp"
-#include "RexxVariableDictionary.hpp"
+#include "VariableDictionary.hpp"
 #include "RexxActivation.hpp"
-#include "RexxActivity.hpp"
+#include "Activity.hpp"
 #include "MethodClass.hpp"
 #include "MessageClass.hpp"
 #include "RexxCode.hpp"
@@ -156,7 +156,7 @@ RexxActivation::RexxActivation()
  * @param _method   The method being invoked.
  * @param _code     The code to execute.
  */
-RexxActivation::RexxActivation(RexxActivity* _activity, MethodClass * _method, RexxCode *_code)
+RexxActivation::RexxActivation(Activity* _activity, MethodClass * _method, RexxCode *_code)
 {
     clearObject();                 /* start with a fresh object         */
     activity = _activity;          /* save the activity pointer         */
@@ -229,7 +229,7 @@ RexxActivation::RexxActivation(RexxActivity* _activity, MethodClass * _method, R
  *                  parent code object.
  * @param context   The type of call being made.
  */
-RexxActivation::RexxActivation(RexxActivity *_activity, RexxActivation *_parent, RexxCode *_code, int context)
+RexxActivation::RexxActivation(Activity *_activity, RexxActivation *_parent, RexxCode *_code, int context)
 {
     clearObject();                 /* start with a fresh object         */
     activity = _activity;          /* save the activity pointer         */
@@ -302,7 +302,7 @@ RexxActivation::RexxActivation(RexxActivity *_activity, RexxActivation *_parent,
  * @param env       The default address environment
  * @param context   The type of call context.
  */
-RexxActivation::RexxActivation(RexxActivity *_activity, RoutineClass *_routine, RexxCode *_code,
+RexxActivation::RexxActivation(Activity *_activity, RoutineClass *_routine, RexxCode *_code,
     RexxString *calltype, RexxString *env, int context)
 {
     clearObject();                 /* start with a fresh object         */
@@ -391,7 +391,7 @@ RexxObject * RexxActivation::run(RexxObject *_receiver, RexxString *msgname, Rex
     // add the frame to the execution stack
     RexxActivationFrame frame(activity, this);
 
-    RexxActivity      *oldActivity;      /* old activity                      */
+    Activity      *oldActivity;      /* old activity                      */
 #ifndef FIXEDTIMERS                      /* currently disabled                */
     size_t             instructionCount; /* instructions without yielding     */
 #endif
@@ -1231,7 +1231,7 @@ void RexxActivation::expose(
 /******************************************************************************/
 {
     /* get the variable set for this object */
-    RexxVariableDictionary * object_variables = getObjectVariables();
+    VariableDictionary * object_variables = getObjectVariables();
 
     /* now expose each individual variable */
     for (size_t i = 0; i < count; i++)
@@ -1647,7 +1647,7 @@ void RexxActivation::raise(
 }
 
 
-RexxVariableDictionary * RexxActivation::getObjectVariables()
+VariableDictionary * RexxActivation::getObjectVariables()
 /******************************************************************************/
 /* Function:  Return the associated object variables vdict                    */
 /******************************************************************************/

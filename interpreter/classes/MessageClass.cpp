@@ -47,11 +47,11 @@
 #include "ArrayClass.hpp"
 #include "ListClass.hpp"
 #include "MethodClass.hpp"
-#include "RexxActivity.hpp"
+#include "Activity.hpp"
 #include "RexxActivation.hpp"
-#include "RexxNativeActivation.hpp"
+#include "NativeActivation.hpp"
 #include "MessageClass.hpp"
-#include "RexxNativeCode.hpp"
+#include "NativeCode.hpp"
 #include "ProtectedObject.hpp"
 #include "MethodArguments.hpp"
 
@@ -283,7 +283,7 @@ RexxObject *MessageClass::send(RexxObject *_receiver)
     }
 
     // we need the current activity to handle this
-    RexxActivity *myActivity = ActivityManager::currentActivity;
+    Activity *myActivity = ActivityManager::currentActivity;
     // if we are waiting for things to start on another activity, this
     // is also a reuse.
     if (startPending() && myActivity != startActivity )
@@ -365,8 +365,8 @@ RexxObject *MessageClass::start(RexxObject *_receiver)
     }
 
     // spawn a new activity off of the old activity
-    RexxActivity *oldActivity = ActivityManager::currentActivity;
-    RexxActivity *newActivity = oldActivity->spawnReply();
+    Activity *oldActivity = ActivityManager::currentActivity;
+    Activity *newActivity = oldActivity->spawnReply();
     // mark which activity we're running on, then dispatch the message
     // on the new activity (which is sitting waiting for work to perform)
     setField(startActivity, newActivity);
@@ -390,7 +390,7 @@ void MessageClass::sendNotification()
         for (size_t i = 1; i <= count; i++)
         {
             // get each activity and give them a poke.
-            RexxActivity *waitingActivity = (RexxActivity *)waitingActivities->get(i);
+            Activity *waitingActivity = (Activity *)waitingActivities->get(i);
             waitingActivity->postDispatch();
         }
         // clear the list so that we don't anchor those activities needlessly
