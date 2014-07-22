@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                        CompoundVariableTable.hpp   */
+/* REXX Kernel                                    CompoundVariableTable.hpp   */
 /*                                                                            */
 /* Balanced binary tree table for stem variables                              */
 /*                                                                            */
@@ -47,7 +47,6 @@
 
 class StemClass;
 class CompoundTableElement;
-
 
 // macros for embedding within the stem object
 #define markCompoundTable() { \

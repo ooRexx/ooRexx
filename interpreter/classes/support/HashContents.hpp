@@ -44,6 +44,8 @@
 #ifndef Included_HashContents
 #define Included_HashContents
 
+#include "StringClass.hpp"
+
 class HashCollection;
 
 /**
@@ -434,14 +436,14 @@ public:
     virtual bool isIndexEqual(RexxInternalObject *target, RexxInternalObject *entryIndex)
     {
         // compare using fast string comparisons
-        return ((RexxString *)target_->strCompare((RexxString *)entryIndex);
+        return ((RexxString *)target)->memCompare((RexxString *)entryIndex);
     }
 
     // Take advantage of the knowledge that indexes are all strings and
     // do directly to the string hash method, which might be inlined.
     virtual ItemLink hashIndex(RexxInternalObject *index)
     {
-        return (ItemLink)(index->getStringHash() % bucketSize);
+        return (ItemLink)(((RexxString *)index)->getStringHash() % bucketSize);
     }
 };
 

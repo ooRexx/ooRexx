@@ -50,12 +50,9 @@
 /*                                                                            */
 /******************************************************************************/
 #include "RexxCore.h"
-#include "Activity.hpp"
-#include "IntegerClass.hpp"
-#include "SupplierClass.hpp"
 #include "ArrayClass.hpp"
+#include "SupplierClass.hpp"
 #include "MutableBufferClass.hpp"
-#include "ActivityManager.hpp"
 #include "ProtectedObject.hpp"
 #include "MethodArguments.hpp"
 
@@ -2764,3 +2761,5 @@ wholenumber_t WithSortComparator::compare(RexxObject *first, RexxObject *second)
     }
     return comparison;
 }
+
+

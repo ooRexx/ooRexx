@@ -46,6 +46,8 @@
 
 #include "ListContents.hpp"
 
+class RexxObject;
+
 class ListClass : public RexxObject
 {
   friend class ListTable;
@@ -60,7 +62,7 @@ class ListClass : public RexxObject
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(Envelope *);
 
-    virtual void RexxObject *copy();
+    virtual RexxObject *copy();
     virtual ArrayClass *makeArray();
     virtual ArrayClass *requestArray();
 
@@ -70,7 +72,7 @@ class ListClass : public RexxObject
     ListClass *section(size_t index, size_t count);
     size_t insert(RexxInternalObject *value, size_t insertionPoint);
     size_t addLast(RexxInternalObject *value);
-    size_t addFirst(RexxObject *value);
+    size_t addFirst(RexxInternalObject *value);
     size_t append(RexxInternalObject *value);
     RexxInternalObject *remove(size_t index);
     RexxInternalObject *firstItem();
@@ -84,7 +86,6 @@ class ListClass : public RexxObject
     ArrayClass *allItems();
     void empty();
     bool isEmpty();
-    RexxObject *isEmptyRexx();
     ArrayClass *allIndexes();
     size_t getIndex(RexxInternalObject *target);
 
@@ -132,14 +133,14 @@ class ListClass : public RexxObject
 
     // internal support methods
     void initialize(size_t capacity);
-    ItemLink validateIndex(RexxObject *index, size_t position);
-    ItemLink validateInsertionIndex(RexxObject *index, size_t position);
-    ItemLink requiredIndex(RexxObject *index, size_t position);
+    ListContents::ItemLink validateIndex(RexxObject *index, size_t position);
+    ListContents::ItemLink validateInsertionIndex(RexxObject *index, size_t position);
+    ListContents::ItemLink requiredIndex(RexxObject *index, size_t position);
     void expandContents();
     void expandContents(size_t capacity );
     void ensureCapacity(size_t delta);
     void checkFull();
-    RexxObject *indexObject(ItemLink index);
+    RexxObject *indexObject(ListContents::ItemLink index);
 
     ListContents *contents;               // list table  item
 };

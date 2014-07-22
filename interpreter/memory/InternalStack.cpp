@@ -69,12 +69,13 @@ void *InternalStack::operator new(size_t size, size_t stackSize)
  *
  * @return Storage for a new stack item.
  */
-void *InternalStack::InternalStack(size_t stackSize)
+InternalStack::InternalStack(size_t stackSize)
 {
     size = stackSize;
     top  = stack;
     stack[0] = OREF_NULL;
 }
+
 
 /**
  * Normal garbage collection live marking

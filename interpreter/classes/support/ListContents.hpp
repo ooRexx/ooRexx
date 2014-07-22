@@ -64,7 +64,7 @@ class ListContents : public RexxInternalObject
     class ListEntry
     {
      public:
-        inline bool isAvailable() { return index == OREF_NULL; }
+        inline bool isAvailable() { return value == OREF_NULL; }
         RexxInternalObject *value;           // list element value
         size_t next;                         // next list element in chain
         size_t previous;                     // previous list element in chain
@@ -81,11 +81,11 @@ class ListContents : public RexxInternalObject
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(RexxEnvelope *);
+    virtual void flatten(Envelope *);
 
     void initializeFreeChain();
     void mergeInto(ListContents *target);
-    ItemLink allocateSlot(RexxInternalOBject *value);
+    ItemLink allocateSlot(RexxInternalObject *value);
 
     void insertAtEnd(ItemLink newItem);
     void insertAtFront(ItemLink newItem);
@@ -99,19 +99,19 @@ class ListContents : public RexxInternalObject
     RexxInternalObject *get(ItemLink index);
     RexxInternalObject *put(RexxInternalObject value, ItemLink index);
     RexxInternalObject *remove(ItemLink index);
-    RexxInternalObject *firstItem();
-    RexxInternalObject *lastItem();
+    RexxInternalObject *getFirstItem();
+    RexxInternalObject *getLastItem();
     ItemLink firstIndex();
     ItemLink lastIndex();
     ItemLink nextIndex(ItemLink item);
     ItemLink previousIndex(ItemLink item);
-    RexxArray *allItems();
-    RexxArray *allIndexes();
+    ArrayClass *allItems();
+    ArrayClass *allIndexes();
     void empty();
     ItemLink getIndex(RexxInternalObject *target);
     RexxInternalObject *removeItem(RexxInternalObject *target);
     SupplierClass *supplier();
-    RexxArray *weakReferenceArray();
+    ArrayClass *weakReferenceArray();
 
     // set the entry values for a position
     void setEntry(ItemLink position, RexxInternalObject *value);
@@ -142,7 +142,7 @@ class ListContents : public RexxInternalObject
         }
         if (entries[position].next != NoMore)
         {
-            entries[entries[position].next] = previous;
+            entries[entries[position].next].previous = previous;
         }
 
         // move the removed item back to the free chain and
@@ -168,7 +168,7 @@ class ListContents : public RexxInternalObject
     inline bool isItem(ItemLink position, RexxInternalObject *item)
     {
         // default comparison is object identity
-        return item->isEqual(entryValue(position))
+        return item->isEqual(entryValue(position));
     }
 
     // check if an entry is availabe

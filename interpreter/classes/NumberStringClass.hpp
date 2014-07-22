@@ -44,12 +44,9 @@
 #ifndef Included_NumberString
 #define Included_NumberString
 
+#include "FlagSet.hpp"
 #include "Numerics.hpp"
 #include "NumberStringMath.hpp"
-#include "FlagSet.hpp"
-
-
-                                            /*  at NumDigits, avoid double rounding */
 
 
 class NumberStringBase : public RexxObject

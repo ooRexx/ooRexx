@@ -44,9 +44,7 @@
 #ifndef Included_StemClass
 #define Included_StemClass
 
-#include "CompoundTableElement.hpp"
 #include "CompoundVariableTable.hpp"
-#include "ExpressionStem.hpp"
 
 #define SORT_CASESENSITIVE 0
 #define SORT_CASEIGNORE    1
@@ -55,9 +53,8 @@
 #define SORT_DECENDING 1
 
 class SupplierClass;
-class DirectoryClass;
 class CompoundVariableTail;
-class NativeActivation;
+class StringTable;
 
  class SortData
  {
@@ -67,6 +64,9 @@ class NativeActivation;
  };
 
 
+/**
+ * Implementation of a Stem Object.
+ */
 class StemClass : public RexxObject
 {
   friend class CompoundVariableTable;
@@ -129,7 +129,6 @@ class StemClass : public RexxObject
     void        setCompoundVariable(CompoundVariableTail &name, RexxObject *value);
     void        setValue(RexxInternalObject *value);
     ArrayClass  *tailArray();
-    CompoundTableElement *nextVariable(NativeActivation *activation);
     RexxObject *handleNovalue(RexxActivation *context, RexxString *name, RexxObject *defaultValue, CompoundTableElement *variable);
     void        expose(CompoundTableElement &variable);
     bool        sort(RexxString *prefix, int order, int type, size_t start, size_t end, size_t firstcol, size_t lastcol);

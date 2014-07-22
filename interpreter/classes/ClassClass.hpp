@@ -50,6 +50,9 @@
 class RexxSource;
 class PackageClass;
 class SourceTable;
+class TableClass;
+class ArrayClass;
+class MethodDictionary;
 
 class RexxClass : public RexxObject
 {
@@ -69,43 +72,49 @@ class RexxClass : public RexxObject
     virtual RexxObject *makeProxy(Envelope*);
     virtual bool        isEqual(RexxObject *);
 
-    HashCode     hash();
-    HashCode     getHashValue();
-    RexxObject * equal(RexxObject *);
-    RexxObject * strictEqual(RexxObject *);
-    RexxObject * notEqual(RexxObject *);
-    RexxObject * setRexxDefined();
-    RexxInteger *queryMixinClass();
-    RexxString  *getId();
-    RexxClass   *getBaseClass();
-    RexxClass   *getMetaClass();
-    RexxClass   *getSuperClass();
-    ArrayClass   *getSuperClasses();
-    ArrayClass   *getClassSuperClasses() { return classSuperClasses; }
-    ArrayClass   *getSubClasses();
-    RexxObject   *defineMethods(TableClass *);
-    RexxObject   *inheritMethods(RexxClass *);
+    virtual HashCode     hash();
+    virtual HashCode     getHashValue();
+    virtual RexxObject * equal(RexxObject *);
+    virtual RexxObject * strictEqual(RexxObject *);
+    virtual RexxObject * notEqual(RexxObject *);
 
-    void         setInstanceBehaviour(RexxBehaviour *);
-    TableClass  *getInstanceBehaviourDictionary();
-    TableClass  *getBehaviourDictionary();
-    RexxString *defaultName();
+    // start of methods used only during image build
+    RexxObject * setRexxDefined();
     void        buildFinalClassBehaviour();
     void        buildFinalClassBehaviour(RexxClass *superClass);
     void        mergeSuperClassScopes(RexxBehaviour *target_instance_behaviour);
     RexxObject *defineMethod(RexxString *, MethodClass *);
-    RexxObject *defineMethods(TableClass *);
     RexxObject *deleteMethod(RexxString *);
     RexxObject *defineClassMethod(RexxString *method_name, MethodClass *newMethod);
     void        removeClassMethod(RexxString *method_name);
-    MethodClass *method(RexxString *);
-    SupplierClass *methods(RexxClass *);
+    RexxObject *defineMethods(TableClass *);
+    RexxObject *inheritMethods(RexxClass *);
+
+    // methods for building class behaviours
     void        updateSubClasses();
     void        updateInstanceSubClasses();
     void        createClassBehaviour(RexxBehaviour *);
     void        createInstanceBehaviour(RexxBehaviour *);
     void        methodDictionaryMerge(TableClass *, TableClass *);
     TableClass  *methodDictionaryCreate(TableClass *, RexxClass *);
+
+    RexxInteger *queryMixinClass();
+    RexxString  *getId();
+    RexxClass   *getBaseClass();
+    RexxClass   *getMetaClass();
+    RexxClass   *getSuperClass();
+    ArrayClass  *getSuperClasses();
+    ArrayClass  *getClassSuperClasses() { return classSuperClasses; }
+    ArrayClass  *getSubClasses();
+
+    void         setInstanceBehaviour(RexxBehaviour *);
+    TableClass  *getInstanceBehaviourDictionary();
+    TableClass  *getBehaviourDictionary();
+    RexxString  *defaultName();
+
+    MethodClass *method(RexxString *);
+
+    SupplierClass *methods(RexxClass *);
     RexxObject *inherit(RexxClass *, RexxClass *);
     RexxObject *uninherit(RexxClass *);
     RexxObject *enhanced(RexxObject **, size_t);
@@ -117,7 +126,7 @@ class RexxClass : public RexxObject
     void        setMetaClass(RexxClass *);
     bool        isCompatibleWith(RexxClass *other);
     RexxObject *isSubclassOf(RexxClass *other);
-    RexxString  *defaultNameRexx();
+    RexxString *defaultNameRexx();
     void        setSource(RexxSource *s);
     RexxSource *getSource();
     RexxObject *getPackage();
@@ -140,12 +149,8 @@ class RexxClass : public RexxObject
     inline void         setMetaClass() { classFlags.set(META_CLASS); }
            void         addSubClass(RexxClass *);
            void         removeSubclass(RexxClass *c);
-           ScopeTable  *copyScopes();
-           ArrayClass   *allScopes();
-           TableClass   *copyInstanceMethods();
-           ScopeTable  *copyMetaclassScopes();
            RexxClass   *getSuperScope() { return scopeSuperClass; }
-           ArrayClass   *getScopeOrder() { return scopeSearchOrder; }
+           ArrayClass  *getScopeOrder() { return scopeSearchOrder; }
 
     static void processNewArgs(RexxObject **, size_t, RexxObject ***, size_t *, size_t, RexxObject **, RexxObject **);
 
@@ -172,7 +177,7 @@ class RexxClass : public RexxObject
     // instances of this class will be given this behaviour.
     RexxBehaviour *instanceBehaviour;
     // methods defined at this class level.
-    MethodDictionary instanceMethodDictionary;
+    MethodDictionary *instanceMethodDictionary;
 
     RexxClass     *baseClass;          // Baseclass of this class
     RexxClass     *metaClass;          // Metaclass of this class
@@ -183,9 +188,9 @@ class RexxClass : public RexxObject
     ArrayClass     *instanceSuperClasses;
     FlagSet<ClassFlag, 32> classFlags; // class attributes
 
-    ListClass      *subClasses;         // our list of weak referenced subclasses
+    ListClass     *subClasses;         // our list of weak referenced subclasses
     RexxSource    *source;             // source we're defined in (if any)
     RexxClass     *scopeSuperClass;    // the immediate superclass used for lookups starting from this point.
-    RexxArrray    *scopeSearchOrder;   // the search order used for searches starting from this scope position.
+    ArrayClass    *scopeSearchOrder;   // the search order used for searches starting from this scope position.
 };
 #endif

@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                   VariableDictionary.hpp   */
+/* REXX Kernel                                       VariableDictionary.hpp   */
 /*                                                                            */
 /* Primitive Variable Dictionary Class Definition                             */
 /*                                                                            */
@@ -44,10 +44,11 @@
 #ifndef Included_VariableDictionary
 #define Included_VariableDictionary
 
+#include "CompoundVariableTable.hpp"
 #include "RexxVariable.hpp"
-#include "StemClass.hpp"
 #include "HashContents.hpp"
 
+class StemClass;
 class SupplierClass;
 
 class VariableDictionary : public RexxInternalObject
@@ -150,14 +151,14 @@ class VariableDictionary : public RexxInternalObject
 
      private:
          // constructor for an index iterator
-         VariableIterator(VariableDictionay *d)
+         VariableIterator(VariableDictionary *d)
          {
              dictionary = d;
              dictionaryIterator = dictionaryIterator->iterator();
              currentStem = OREF_NULL;
          }
 
-         VariableDictionay *dictionary;
+         VariableDictionary *dictionary;
          HashContents::TableIterator dictionaryIterator;
          StemClass *currentStem;
          CompoundVariableTable::TableIterator stemIterator;
@@ -189,7 +190,7 @@ class VariableDictionary : public RexxInternalObject
     RexxInternalObject  *realValue(RexxString *name);
     void         add(RexxVariable *, RexxString *);
     void         put(RexxVariable *, RexxString *);
-    inline StemClass    *getStem(RexxString *stemName) { return (StemClass *)getStemVariable(stemName)->getVariableValue(); }
+    inline StemClass *getStem(RexxString *stemName) { return (StemClass *)getStemVariable(stemName)->getVariableValue(); }
     RexxVariable *createStemVariable(RexxString *stemName);
     RexxVariable *createVariable(RexxString *stemName);
 

@@ -45,9 +45,7 @@
 #ifndef Included_RexxLocalVariables
 #define Included_RexxLocalVariables
 
-#include "VariableDictionary.hpp"
 #include "FlagSet.hpp"
-
 
 /**
  * Predefined index values for a stack frame.
@@ -106,7 +104,8 @@ class RexxLocalVariables
 
     inline VariableDictionary *getDictionary()
     {
-        if (dictionary == OREF_NULL) {
+        if (dictionary == OREF_NULL)
+        {
             createDictionary();
         }
         return dictionary;

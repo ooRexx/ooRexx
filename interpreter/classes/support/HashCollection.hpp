@@ -108,7 +108,6 @@ class HashCollection : public RexxObject
     ArrayClass            *allIndexesRexx();
     RexxObject           *emptyRexx();
     RexxObject           *isEmptyRexx();
-    RexxObject           *emptyRexx();
     RexxObject           *itemsRexx();
 
     void          merge(HashCollection *);

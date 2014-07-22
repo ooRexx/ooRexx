@@ -46,7 +46,7 @@
 #define Included_MemoryObject
 
 #include "Memory.hpp"
-#include "MemoryStack.hpp"              // classes, so pull them in next.
+#include "MemoryStack.hpp"
 #include "SysSemaphore.hpp"
 #include "IdentityTableClass.hpp"
 
@@ -63,6 +63,7 @@ class IdentityTable;
 class GlobalProtectedObject;
 class MapTable;
 class BufferClass;
+class StringTable;
 
 #ifdef _DEBUG
 class MemoryObject;

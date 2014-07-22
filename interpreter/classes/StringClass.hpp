@@ -299,7 +299,7 @@ class RexxString : public RexxObject
     inline void  setHasLower() { attributes.set(STRING_HASLOWER);}
     inline bool  nonNumeric() const {return attributes[STRING_NONNUMERIC];}
     inline void  setNonNumeric() { attributes.set(STRING_NONNUMERIC);}
-    inline bool  strCompare(const char * s) const {return memCompare((s), strlen(s));}
+    inline bool  strCompare(const char * s) const { return memCompare((s), strlen(s)); }
     inline bool  strCaselessCompare(const char * s) const { return (size_t)length == strlen(s) && Utilities::strCaselessCompare(s, stringData) == 0;}
     inline bool  memCompare(const char * s, size_t l) const { return l == length && memcmp(s, stringData, l) == 0; }
     inline bool  memCompare(RexxString *other) const { return other->length == length && memcmp(other->stringData, stringData, length) == 0; }

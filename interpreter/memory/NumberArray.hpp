@@ -45,9 +45,6 @@
 #ifndef Included_NumberArray
 #define Included_NumberArray
 
-#include "ObjectClass.hpp"
-
-
 /**
  * A mapping class for keeping non-object values with
  * an object that are indexed like an array.

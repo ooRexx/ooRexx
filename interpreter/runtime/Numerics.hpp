@@ -138,8 +138,11 @@ public:
     static RexxString *pointerToString(void *);
 
     static inline bool isValid(wholenumber_t v) { return v <= Numerics::MAX_WHOLENUMBER && v >= Numerics::MIN_WHOLENUMBER; }
-    static inline bool isValid(int64_t v) { return v <= Numerics::MAX_WHOLENUMBER && v >= Numerics::MIN_WHOLENUMBER; }
-    static inline bool isValid(wholenumber_t v, size_t digits)  {return digits >= DEFAULT_DIGITS || abs(value) < validMaxWhole[digits - 1]; }
+    // this has a different name because when compiling for 64-bit, wholenumber_t and int64_t are the same and
+    // the compiler complains.  The first is for validating a whole number value, the second is for validating an
+    // explicit 64-bit value.
+    static inline bool isValid64Bit(int64_t v) { return v <= Numerics::MAX_WHOLENUMBER && v >= Numerics::MIN_WHOLENUMBER; }
+    static inline bool isValid(wholenumber_t v, size_t digits)  {return digits >= DEFAULT_DIGITS || abs(v) < validMaxWhole[digits - 1]; }
 
 
 protected:

@@ -117,8 +117,6 @@ class RexxBehaviour : public RexxInternalObject
     inline void  setInternalClass() { behaviourFlags.set(INTERNAL_CLASS); };
     inline void  setTransientClass() { behaviourFlags.set(TRANSIENT_CLASS); };
 
-    inline bool  hasScope(RexxClass *scope) { return instanceMethodDictionary->hasScope(scope); }
-
     inline RexxBehaviour *getSavedPrimitiveBehaviour()
     {
         uintptr_t behaviourID = getClassType();

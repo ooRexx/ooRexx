@@ -45,6 +45,7 @@
 #define Included_RexxInteger
 
 #include "NumberStringClass.hpp"
+#include "ClassClass.hpp"
 
 void integer_create ();
 
@@ -162,9 +163,6 @@ class RexxInteger : public RexxObject
     static RexxInteger *integerNine;
     static RexxInteger *integerMinusOne;
 
-    static const int IntegerCacheLow = -10;
-    static const int IntegerCacheSize = 100;
-
 protected:
 
     RexxString *stringrep;              /* integer string representation     */
@@ -179,6 +177,9 @@ class RexxIntegerClass : public RexxClass
     RexxIntegerClass(RESTORETYPE restoreType) { ; };
     inline RexxIntegerClass(const char *id , RexxBehaviour *classBehaviour, RexxBehaviour *instanceBehaviour) :
         RexxClass(id, classBehaviour, instanceBehaviour) { }
+
+    static const int IntegerCacheLow = -10;
+    static const int IntegerCacheSize = 100;
 
     inline RexxInteger *newCache(wholenumber_t value)
     {

@@ -427,7 +427,7 @@ class RexxObject : public RexxInternalObject
     virtual RexxObject  *defMethod(RexxString *, MethodClass *, RexxString *a = OREF_NULL);
     virtual RexxString  *defaultName();
     virtual RexxObject  *unknown(RexxString *msg, ArrayClass *args){return OREF_NULL;};
-    virtual bool        *hasMethod(RexxString *msg);
+    virtual bool         hasMethod(RexxString *msg);
             RexxObject  *hasMethodRexx(RexxString *);
             bool         hasUninitMethod();
 
@@ -447,13 +447,13 @@ class RexxObject : public RexxInternalObject
     virtual bool unsignedNumberValue(stringsize_t &result, size_t precision);
     virtual bool unsignedNumberValue(stringsize_t &result);
     virtual bool doubleValue(double &result);
-    NumberString *numberString();
-    RexxInteger *integerValue(size_t);
-    RexxString  *makeString();
-    RexxString  *primitiveMakeString();
-    void         copyIntoTail(CompoundVariableTail *buffer);
-    ArrayClass   *makeArray();
-    RexxString  *stringValue();
+    virtual NumberString *numberString();
+    virtual RexxInteger *integerValue(size_t);
+    virtual RexxString  *makeString();
+    virtual RexxString  *primitiveMakeString();
+    virtual void         copyIntoTail(CompoundVariableTail *buffer);
+    virtual ArrayClass   *makeArray();
+    virtual RexxString  *stringValue();
 
     bool         isEqual(RexxInternalObject *);
     bool         isInstanceOf(RexxClass *);

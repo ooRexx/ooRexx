@@ -168,29 +168,40 @@ void setObjectType(size_t type)
 }
 
 
-bool RexxInternalObject::isEqual(
-    RexxObject *other )                /* other object for comparison       */
-/******************************************************************************/
-/* Function:  primitive level equality method used by the hash collection     */
-/*            classes for determining equality.                               */
-/******************************************************************************/
+/**
+ * primitive level equality method used by the hash collection
+ * classes for determining equality.  The comparison is
+ * done based on object identity (pointer value).
+ *
+ * @param other  The comparison object.
+ *
+ * @return true if the objects are equal, false otherwise.
+ */
+bool RexxInternalObject::isEqual(RexxObject *other )
 {
     return ((RexxObject *)this) == other;/* simple identity equality          */
 }
 
-bool RexxObject::isEqual(
-    RexxObject *other )                /* other object for comparison       */
-/******************************************************************************/
-/* Function:  primitive level equality method used by the hash collection     */
-/*            classes for determining equality.                               */
-/******************************************************************************/
+
+/**
+ * The rexx object override for the isequal method.  This will
+ * either compare using the pointers or for non-primitive objects,
+ * will call the == method to compare.
+ *
+ * @param other  The object to compare against.
+ *
+ * @return true if the objects compare equal, false otherwise.
+ */
+bool RexxObject::isEqual(RexxObject *other)
 {
-    if (isBaseClass())               /* not a primitive?                  */
+    // if this is not a subclass, we can just directly compare the pointers.
+    if (isBaseClass())
     {
-                                           /* simple identity equality          */
-        return ((RexxObject *)this) == other;
+        return this == other;
     }
-    else                                 /* return truth value of a compare   */
+    // we need to invoke the "==" method and process the true value
+    // of the result
+    else
     {
         ProtectedObject result;
         sendMessage(OREF_STRICT_EQUAL, other, result);
@@ -236,12 +247,14 @@ wholenumber_t RexxObject::compareTo(RexxObject *other )
     ProtectedObject result;
 
     sendMessage(OREF_COMPARETO, other, result);
+    // the result is required
     if ((RexxObject *)result == OREF_NULL)
     {
         reportException(Error_No_result_object_message, OREF_COMPARETO);
     }
     wholenumber_t comparison;
 
+    // the comparison value is a signed number, it has to convert
     if (!((RexxObject *)result)->numberValue(comparison))
     {
         reportException(Error_Invalid_whole_number_compareto, (RexxObject *)result);
