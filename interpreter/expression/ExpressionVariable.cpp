@@ -124,7 +124,7 @@ void RexxSimpleVariable::flatten(Envelope *envelope)
  *
  * @return The variable value (also pushed on stack)
  */
-RexxObject  *RexxSimpleVariable::evaluate(RexxActivation *context, RexxExpressionStack *stack)
+RexxObject  *RexxSimpleVariable::evaluate(RexxActivation *context, ExpressionStack *stack)
 {
     // look up the variable
     RexxVariable *variable = context->getLocalVariable(variableName, index);

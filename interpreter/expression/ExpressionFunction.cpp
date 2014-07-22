@@ -172,7 +172,7 @@ void RexxExpressionFunction::resolve(DirectoryClass *labels)
  *
  * @return The function return value.
  */
-RexxObject *RexxExpressionFunction::evaluate(RexxActivation *context, RexxExpressionStack *stack )
+RexxObject *RexxExpressionFunction::evaluate(RexxActivation *context, ExpressionStack *stack )
 {
     // save the top of the stack for popping values off later.
     size_t stacktop = stack->location();

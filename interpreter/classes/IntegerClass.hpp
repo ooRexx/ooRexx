@@ -125,7 +125,7 @@ class RexxInteger : public RexxObject
     RexxObject *format(RexxObject *, RexxObject *, RexxObject *, RexxObject *);
     RexxObject *d2c(RexxObject *);
     RexxObject *d2x(RexxObject *);
-    RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
+    RexxObject *evaluate(RexxActivation *, ExpressionStack *);
     RexxObject *getValue(RexxActivation *);
     RexxObject *getValue(VariableDictionary *);
     RexxObject *getRealValue(RexxActivation *);

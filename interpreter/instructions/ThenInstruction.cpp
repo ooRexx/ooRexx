@@ -127,7 +127,7 @@ void RexxInstructionThen::flatten(Envelope *envelope)
  * @param context The current execution context.
  * @param stack   The current evaluation stack.
  */
-void RexxInstructionThen::execute(RexxActivation *context, RexxExpressionStack *stack )
+void RexxInstructionThen::execute(RexxActivation *context, ExpressionStack *stack )
 {
     // Like an ELSE, not much going on here.  We indent, trace the instruction,
     // then bump the indent one more level for the instruction that follows the THEN.

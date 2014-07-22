@@ -62,7 +62,7 @@ class RexxSimpleVariable : public RexxVariableBase
     virtual void flatten(Envelope *);
 
     // RexxInternalObject evaluation methods
-    virtual RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
+    virtual RexxObject *evaluate(RexxActivation *, ExpressionStack *);
     virtual RexxObject *getValue(VariableDictionary *);
     virtual RexxObject *getValue(RexxActivation *);
     virtual RexxObject *getRealValue(VariableDictionary *);

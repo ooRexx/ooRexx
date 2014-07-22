@@ -55,7 +55,7 @@
  * @param doblock The context doblock useds to store loop state data.
  */
 void ForLoop::setup(RexxActivation *context,
-        RexxExpressionStack *stack, RexxDoBlock *doblock, bool forKeyword)
+        ExpressionStack *stack, RexxDoBlock *doblock, bool forKeyword)
 {
     // we might not have anything here, but we need to set
     // a marker in the doblock so we know not to use this
@@ -114,7 +114,7 @@ void ForLoop::setup(RexxActivation *context,
  * @param doblock The context doblock useds to store loop state data.
  */
 void ControlledLoop::setup( RexxActivation *context,
-     RexxExpressionStack *stack, RexxDoBlock *doblock)
+     ExpressionStack *stack, RexxDoBlock *doblock)
 {
     // evaluate the initial expression
     RexxObject *_initial = initial->evaluate(context, stack);
@@ -211,7 +211,7 @@ void ControlledLoop::setup( RexxActivation *context,
  * @param doblock The context doblock useds to store loop state data.
  */
 void OverLoop::setup( RexxActivation *context,
-     RexxExpressionStack *stack, RexxDoBlock *doblock)
+     ExpressionStack *stack, RexxDoBlock *doblock)
 {
     // evaluate the array target
     RexxObject* result = target->evaluate(context, stack);
@@ -257,7 +257,7 @@ void OverLoop::setup( RexxActivation *context,
  *
  * @return true if the WHILE condition passes, false if it fails.
  */
-bool WhileUntilLoop::checkWhile(RexxActivation *context, RexxExpressionStack *stack )
+bool WhileUntilLoop::checkWhile(RexxActivation *context, ExpressionStack *stack )
 {
     // evaluate the condition and trace
     RexxObject *result = conditional->evaluate(context, stack);
@@ -291,7 +291,7 @@ bool WhileUntilLoop::checkWhile(RexxActivation *context, RexxExpressionStack *st
  *
  * @return true if the WHILE condition passes, false if it fails.
  */
-bool WhileUntilLoop::checkUntil(RexxActivation *context, RexxExpressionStack *stack )
+bool WhileUntilLoop::checkUntil(RexxActivation *context, ExpressionStack *stack )
 {
     // evaluate the condition and trace
     RexxObject *result = conditional->evaluate(context, stack);

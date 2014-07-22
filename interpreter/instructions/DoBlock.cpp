@@ -116,7 +116,7 @@ void RexxDoBlock::liveGeneral(MarkReason reason)
  * @return true if we should perform this iteration of the loop,
  *         false otherwise.
  */
-bool RexxDoBlock::checkOver(RexxActivation *context, RexxExpressionStack *stack)
+bool RexxDoBlock::checkOver(RexxActivation *context, ExpressionStack *stack)
 {
     // the array was stored in the too field
     ArrayClass *overArray = (ArrayClass *)to;
@@ -155,7 +155,7 @@ bool RexxDoBlock::checkOver(RexxActivation *context, RexxExpressionStack *stack)
  * @return True if the loop should continue, false if we've hit
  *         a termination condition.
  */
-bool RexxDoBlock::checkControl(RexxActivation *context, RexxExpressionStack *stack, bool increment )
+bool RexxDoBlock::checkControl(RexxActivation *context, ExpressionStack *stack, bool increment )
 {
     // get the control variable value and trace
     RexxObject *result = control->getValue(context);

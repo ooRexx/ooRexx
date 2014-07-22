@@ -47,13 +47,12 @@
 #include "ActivityManager.hpp"
 
 
-
 /**
  * Perform garbage collection on a live object.
  *
  * @param liveMark The current live mark.
  */
-void RexxExpressionStack::live(size_t liveMark)
+void ExpressionStack::live(size_t liveMark)
 {
     // mark all current entries on the stack.
     for (RexxObject **entry = stack; entry <= top; entry++)
@@ -70,7 +69,7 @@ void RexxExpressionStack::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void RexxExpressionStack::liveGeneral(MarkReason reason)
+void ExpressionStack::liveGeneral(MarkReason reason)
 {
     // mark all current entries on the stack.
     for (RexxObject **entry = stack; entry <= top; entry++)
@@ -85,7 +84,7 @@ void RexxExpressionStack::liveGeneral(MarkReason reason)
  *
  * @param activity The new activity.
  */
-void RexxExpressionStack::migrate(Activity *activity)
+void ExpressionStack::migrate(Activity *activity)
 {
     RexxObject **oldFrame = stack;
     // allocate a new frame
@@ -104,7 +103,7 @@ void RexxExpressionStack::migrate(Activity *activity)
  * @param max      The max count for this expression.
  * @param function The function name.
  */
-void RexxExpressionStack::expandArgs(size_t argcount, size_t min, size_t max, const char *function )
+void ExpressionStack::expandArgs(size_t argcount, size_t min, size_t max, const char *function )
 {
     // handle checks for min and max argument counts
     if (argcount < min)
@@ -140,7 +139,7 @@ void RexxExpressionStack::expandArgs(size_t argcount, size_t min, size_t max, co
  *
  * @return The argument String value.
  */
-RexxString *RexxExpressionStack::requiredStringArg(size_t position)
+RexxString *ExpressionStack::requiredStringArg(size_t position)
 {
     // get the argument from the stack.  If this is a true
     // string, just return directly.
@@ -165,7 +164,7 @@ RexxString *RexxExpressionStack::requiredStringArg(size_t position)
  *
  * @return The string version of this object.
  */
-RexxString *RexxExpressionStack::optionalStringArg(size_t  position)
+RexxString *ExpressionStack::optionalStringArg(size_t  position)
 {
     // this is an optional argument, we just return the null value if it
     // isn't there.
@@ -198,7 +197,7 @@ RexxString *RexxExpressionStack::optionalStringArg(size_t  position)
  *
  * @return The argument as an integer object.
  */
-RexxInteger *RexxExpressionStack::requiredIntegerArg(size_t position,
+RexxInteger *ExpressionStack::requiredIntegerArg(size_t position,
      size_t argcount, const char *function)
 {
     // if the argument is an integer already, this is a quick return.
@@ -234,7 +233,7 @@ RexxInteger *RexxExpressionStack::requiredIntegerArg(size_t position,
  *
  * @return The argument as an integer object.
  */
-RexxInteger *RexxExpressionStack::optionalIntegerArg(size_t position, size_t argcount, const char *function)
+RexxInteger *ExpressionStack::optionalIntegerArg(size_t position, size_t argcount, const char *function)
 {
     // this is optional, so we can return null.
     RexxObject *argument = peek(position);
@@ -272,7 +271,7 @@ RexxInteger *RexxExpressionStack::optionalIntegerArg(size_t position, size_t arg
  * @return An object that can be converted to a 64-bit value for
  *         pass-on to a native function.
  */
-RexxObject *RexxExpressionStack::requiredBigIntegerArg(size_t position, size_t argcount, const char *function)
+RexxObject *ExpressionStack::requiredBigIntegerArg(size_t position, size_t argcount, const char *function)
 {
     RexxObject *argument = peek(position);
     // get this in the form of an object that is valid as a 64-bit integer, ready to
@@ -300,7 +299,7 @@ RexxObject *RexxExpressionStack::requiredBigIntegerArg(size_t position, size_t a
  * @return An object that can be converted to a 64-bit value for
  *         pass-on to a native function.
  */
-RexxObject *RexxExpressionStack::optionalBigIntegerArg(size_t position, size_t argcount, const char *function)
+RexxObject *ExpressionStack::optionalBigIntegerArg(size_t position, size_t argcount, const char *function)
 {
     RexxObject *argument = peek(position);
     if (argument == OREF_NULL)

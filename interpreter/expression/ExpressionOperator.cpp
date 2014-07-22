@@ -176,7 +176,7 @@ void RexxExpressionOperator::flatten(Envelope *envelope)
  *
  * @return The operation result object.
  */
-RexxObject *RexxBinaryOperator::evaluate(RexxActivation *context, RexxExpressionStack *stack )
+RexxObject *RexxBinaryOperator::evaluate(RexxActivation *context, ExpressionStack *stack )
 {
     // evaluate both expression terms
     RexxObject *left = left_term->evaluate(context, stack);
@@ -200,7 +200,7 @@ RexxObject *RexxBinaryOperator::evaluate(RexxActivation *context, RexxExpression
  *
  * @return The operation result.
  */
-RexxObject *RexxUnaryOperator::evaluate(RexxActivation *context, RexxExpressionStack *stack )
+RexxObject *RexxUnaryOperator::evaluate(RexxActivation *context, ExpressionStack *stack )
 {
     // we only have a single term to evaluate
     RexxObject *term = left_term->evaluate(context, stack);

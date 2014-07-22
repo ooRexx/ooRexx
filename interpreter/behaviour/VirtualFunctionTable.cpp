@@ -149,7 +149,7 @@
 #include "Activity.hpp"
 #include "RexxActivation.hpp"
 #include "NativeActivation.hpp"
-#include "RexxActivationStack.hpp"
+#include "ActivationStack.hpp"
 #include "Envelope.hpp"
 #include "LanguageParser.hpp"
 #include "Clause.hpp"
@@ -650,7 +650,7 @@ void MemoryObject::buildVirtualFunctionTable()
    objectPtr = new (objectLoc) NativeActivation(RESTOREIMAGE);
    virtualFunctionTable[T_NativeActivation] = getVftPointer(objectLoc);
 
-   objectPtr = new (objectLoc) RexxActivationFrameBuffer(RESTOREIMAGE);
+   objectPtr = new (objectLoc) ActivationFrameBuffer(RESTOREIMAGE);
    virtualFunctionTable[T_ActivationFrameBuffer] = getVftPointer(objectLoc);
 
    objectPtr = new (objectLoc) Envelope(RESTOREIMAGE);

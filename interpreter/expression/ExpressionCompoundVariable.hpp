@@ -70,7 +70,7 @@ class RexxCompoundVariable : public RexxVariableBase
     virtual void flatten(Envelope *);
 
     // evaluation method from RexxInternalObject
-    virtual RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
+    virtual RexxObject *evaluate(RexxActivation *, ExpressionStack *);
     virtual RexxObject *getValue(RexxActivation *context);
     virtual RexxObject *getValue(VariableDictionary *context);
     virtual RexxObject *getRealValue(VariableDictionary *);

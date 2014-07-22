@@ -125,7 +125,7 @@ void RexxInstructionForward::flatten(Envelope *envelope)
  * @param context The current execution context.
  * @param stack   The current evaluation stack.
  */
-void RexxInstructionForward::execute(RexxActivation *context, RexxExpressionStack *stack)
+void RexxInstructionForward::execute(RexxActivation *context, ExpressionStack *stack)
 {
     context->traceInstruction(this);
     // only allowed in method contexts.

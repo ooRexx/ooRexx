@@ -61,7 +61,7 @@
  * @param s          The evaluation stack.
  */
 void RexxTarget::init(RexxObject *_string, RexxObject **_arglist, size_t _argcount,
-    FlagSet<ParseFlags, 32>_translate, bool multiple, RexxActivation *context, RexxExpressionStack *s)
+    FlagSet<ParseFlags, 32>_translate, bool multiple, RexxActivation *context, ExpressionStack *s)
 {
     translate = _translate;
     arglist = _arglist;

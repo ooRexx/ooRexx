@@ -65,7 +65,7 @@ RexxInstructionOptions::RexxInstructionOptions(RexxObject *_expression)
  * @param context The current execution context.
  * @param stack   The current evaluation stack.
  */
-void RexxInstructionOptions::execute(RexxActivation *context, RexxExpressionStack *stack)
+void RexxInstructionOptions::execute(RexxActivation *context, ExpressionStack *stack)
 {
     // even though we don't support anything, we still trace the evaluation and
     // raise any errors if they occure.

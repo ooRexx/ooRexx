@@ -63,7 +63,7 @@ class RexxExpressionMessage : public RexxVariableBase
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(Envelope *);
 
-    virtual RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
+    virtual RexxObject *evaluate(RexxActivation *, ExpressionStack *);
     virtual void assign(RexxActivation *, RexxObject *);
 
     void makeAssignment(LanguageParser *parser);

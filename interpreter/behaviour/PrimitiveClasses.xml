@@ -207,7 +207,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="Activity" class="Activity" include="Activity.hpp"/>
 <Class id="Activation" class="RexxActivation" include="RexxActivation.hpp"/>
 <Class id="NativeActivation" class="NativeActivation" include="NativeActivation.hpp"/>
-<Class id="ActivationFrameBuffer" class="RexxActivationFrameBuffer" include="RexxActivationStack.hpp"/>
+<Class id="ActivationFrameBuffer" class="ActivationFrameBuffer" include="ActivationStack.hpp"/>
 <Class id="Envelope" class="Envelope" include="Envelope.hpp"/>
 <Class id="LanguageParser" class="LanguageParser" include="LanguageParser.hpp"/>
 <Class id="Clause" class="RexxClause" include="Clause.hpp"/>

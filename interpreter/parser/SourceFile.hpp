@@ -58,7 +58,7 @@ class RexxCode;
 class PackageClass;
 class ClassDirective;
 class RexxActivation;
-class RexxExpressionStack;
+class ExpressionStack;
 class StackFrameClass;
 
 

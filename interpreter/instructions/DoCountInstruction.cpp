@@ -128,7 +128,7 @@ void RexxInstructionDoCount::flatten(Envelope *envelope)
  * @param stack   The current evaluation stack.
  * @param doblock The doblock associated with this loop instance.
  */
-void RexxInstructionDoCount::setup(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock)
+void RexxInstructionDoCount::setup(RexxActivation *context, ExpressionStack *stack, RexxDoBlock *doblock)
 {
     // perform the DO OVER initialization
     forLoop.setup(context, stack, doblock, false);
@@ -148,7 +148,7 @@ void RexxInstructionDoCount::setup(RexxActivation *context, RexxExpressionStack 
  * @return true if we should execute the loop block, false if
  *         we should terminate the loop.
  */
-bool RexxInstructionDoCount::iterate(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock, bool first)
+bool RexxInstructionDoCount::iterate(RexxActivation *context, ExpressionStack *stack, RexxDoBlock *doblock, bool first)
 {
     return doblock->checkFor();
 }
@@ -244,7 +244,7 @@ void RexxInstructionDoCountUntil::flatten(Envelope *envelope)
  * @return true if we should execute the loop block, false if
  *         we should terminate the loop.
  */
-bool RexxInstructionDoCountUntil::iterate(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock, bool first)
+bool RexxInstructionDoCountUntil::iterate(RexxActivation *context, ExpressionStack *stack, RexxDoBlock *doblock, bool first)
 {
     // we don't check the UNTIL condition on the first iteration
     if (first)
@@ -287,7 +287,7 @@ RexxInstructionDoCountWhile::RexxInstructionDoCountWhile(RexxString *l, ForLoop 
  * @return true if we should execute the loop block, false if
  *         we should terminate the loop.
  */
-bool RexxInstructionDoCountWhile::iterate(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock, bool first)
+bool RexxInstructionDoCountWhile::iterate(RexxActivation *context, ExpressionStack *stack, RexxDoBlock *doblock, bool first)
 {
     return doblock->checkFor() && whileLoop.checkWhile(context, stack);
 }

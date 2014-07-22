@@ -65,7 +65,7 @@ public:
     virtual void flatten(Envelope*);
 
     // required by RexxInstructon
-    virtual void execute(RexxActivation *, RexxExpressionStack *);
+    virtual void execute(RexxActivation *, ExpressionStack *);
 
     // required by RexxBlockinstruction;
     virtual void matchEnd(RexxInstructionEnd *, LanguageParser *);
@@ -99,7 +99,7 @@ public:
     virtual void flatten(Envelope*);
 
     // required by RexxInstructon
-    virtual void execute(RexxActivation *, RexxExpressionStack *);
+    virtual void execute(RexxActivation *, ExpressionStack *);
 
     RexxObject *caseExpr;  // the SELECT CASE expression.
 };

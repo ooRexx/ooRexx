@@ -47,14 +47,14 @@
 
 #include "RexxCore.h"
 
-class NumericSettings                  // "global" numeric settings         */
+class NumericSettings                      // "global" numeric settings
 {
     public:
       NumericSettings();
-      size_t digits;                       /* numeric digits setting            */
-      size_t fuzz;                         /* numeric fuzz setting              */
-      bool form;                           /* numeric form setting              */
-};                                         /* global activation settings        */
+      size_t digits;                       // numeric digits setting
+      size_t fuzz;                         // numeric fuzz setting
+      bool form;                           // numeric form setting
+};                                         // global activation settings
 
 
 class Numerics
@@ -136,6 +136,10 @@ public:
     }
 
     static RexxString *pointerToString(void *);
+
+    static inline bool isValid(wholenumber_t v) { return v <= Numerics::MAX_WHOLENUMBER && v >= Numerics::MIN_WHOLENUMBER; }
+    static inline bool isValid(int64_t v) { return v <= Numerics::MAX_WHOLENUMBER && v >= Numerics::MIN_WHOLENUMBER; }
+    static inline bool isValid(wholenumber_t v, size_t digits)  {return digits >= DEFAULT_DIGITS || abs(value) < validMaxWhole[digits - 1]; }
 
 
 protected:

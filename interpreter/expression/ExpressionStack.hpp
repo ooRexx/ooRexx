@@ -42,21 +42,21 @@
 /*                                                                            */
 /******************************************************************************/
 
-#ifndef Included_RexxExpressionStack
-#define Included_RexxExpressionStack
+#ifndef Included_ExpressionStack
+#define Included_ExpressionStack
 
 #include "ArrayClass.hpp"
 
 class ProtectedObject;
 class Activity;
 
-class RexxExpressionStack
+class ExpressionStack
 {
  public:
 
     inline void *operator new(size_t size, void *ptr) { return ptr;};
-    RexxExpressionStack(RexxObject **frames, size_t items) { stack = frames; size = items; top = stack; }
-    RexxExpressionStack() { stack = OREF_NULL; size = 0; top = stack; }
+    ExpressionStack(RexxObject **frames, size_t items) { stack = frames; size = items; top = stack; }
+    ExpressionStack() { stack = OREF_NULL; size = 0; top = stack; }
 
     void live(size_t);
     void liveGeneral(MarkReason reason);

@@ -51,7 +51,7 @@
  * @param context The current execution context.
  * @param stack   The current evaluation stack.
  */
-void RexxInstructionLabel::execute(RexxActivation *context, RexxExpressionStack *stack )
+void RexxInstructionLabel::execute(RexxActivation *context, ExpressionStack *stack )
 {
     // Labels don't really do much directly, but they do trace and they
     // will pause if in debug mode.

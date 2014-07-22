@@ -298,7 +298,7 @@ class RexxInternalObject : public RexxVirtualBase
 
     virtual RexxObject  *makeProxy(Envelope *);
     virtual RexxObject  *copy();
-    virtual RexxObject  *evaluate(RexxActivation *, RexxExpressionStack *) { return OREF_NULL; }
+    virtual RexxObject  *evaluate(RexxActivation *, ExpressionStack *) { return OREF_NULL; }
     virtual RexxObject  *getValue(RexxActivation *) { return OREF_NULL; }
     virtual RexxObject  *getValue(VariableDictionary *) { return OREF_NULL; }
     virtual RexxObject  *getRealValue(RexxActivation *) { return OREF_NULL; }

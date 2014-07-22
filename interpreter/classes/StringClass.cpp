@@ -1910,7 +1910,7 @@ RexxObject *RexxString::isInteger()
 
 RexxObject *RexxString::evaluate(
     RexxActivation      *context,      /* current activation context        */
-    RexxExpressionStack *stack )       /* evaluation stack                  */
+    ExpressionStack *stack )       /* evaluation stack                  */
 /******************************************************************************/
 /* Function:  Polymorphic method that makes string a polymorphic expression   */
 /*            term for string literals.                                       */

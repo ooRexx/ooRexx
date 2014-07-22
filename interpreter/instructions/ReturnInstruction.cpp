@@ -63,7 +63,7 @@ RexxInstructionReturn::RexxInstructionReturn(RexxObject *_expression)
  * @param context The current execution context.
  * @param stack   The current evaluation stack.
  */
-void RexxInstructionReturn::execute(RexxActivation *context, RexxExpressionStack *stack)
+void RexxInstructionReturn::execute(RexxActivation *context, ExpressionStack *stack)
 {
     // trace the instruction if needed.
     context->traceInstruction(this);

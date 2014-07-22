@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                       RexxActivationStack.c    */
+/* REXX Kernel                                                                */
 /*                                                                            */
 /* Primitive Activation Frame Stack support classes                           */
 /*                                                                            */
@@ -47,96 +47,125 @@
 /*        used to maintain this situation.                                    */
 /*                                                                            */
 /******************************************************************************/
+
 #include "RexxCore.h"
-#include "RexxActivationStack.hpp"
+#include "ActivationStack.hpp"
 
 
-void RexxActivationFrameBuffer::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
+
+/**
+ * Allocate memory for a new frame buffer.
+ *
+ * @param size    The base size of the object.
+ * @param entries The number of entries we need to allocate space for.
+ *
+ * @return The backing storage for a frame buffer.
+ */
+void *ActivationFrameBuffer::operator new(size_t size, size_t entries)
+{
+    return new_object(size + (entries * sizeof(RexxObject *)), T_ActivationFrameBuffer);
+}
+
+
+/**
+ * Constructor for a frame buffer.
+ *
+ * @param entries The number of entries in the frame buffer.
+ */
+ActivationFrameBuffer::ActivationFrameBuffer(size_t entries)
+{
+    size = entries;
+    next = 0;
+    previous = OREF_NULL;
+}
+
+
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
+void ActivationFrameBuffer::live(size_t liveMark)
 {
     // we only mark housekeeping type fields.  The main buffer
     // entries are marked by the owning activations.
     memory_mark(previous);
 }
 
-void RexxActivationFrameBuffer::liveGeneral(MarkReason reason)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
+void ActivationFrameBuffer::liveGeneral(MarkReason reason)
 {
     memory_mark_general(previous);
 }
 
-void RexxActivationStack::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
+
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
+void ActivationStack::live(size_t liveMark)
 {
     memory_mark(current);
     memory_mark(unused);
 }
 
-void RexxActivationStack::liveGeneral(MarkReason reason)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
+void ActivationStack::liveGeneral(MarkReason reason)
 {
     memory_mark_general(current);
     memory_mark_general(unused);
 }
 
-void RexxActivationStack::init()
-/******************************************************************************/
-/* Function:  Initialize a frame stack for a new activity.                    */
-/******************************************************************************/
+
+/**
+ * Initialize a frame stack for a new activity.
+ */
+void ActivationStack::init()
 {
-    /* create a new frame buffer with the default size. */
     current = new_activationFrameBuffer(DefaultFrameBufferSize);
     unused = OREF_NULL;
 }
 
-void RexxActivationStack::expandCapacity(size_t entries)
-/******************************************************************************/
-/* Function:  Expand the capacity of the stack to add at least entries        */
-/*            additional values on the stack.                                 */
-/******************************************************************************/
+
+/**
+ * Expand the capacity of the stack to add at least entries
+ * additional values on the stack.
+ *
+ * @param entries
+ */
+void ActivationStack::expandCapacity(size_t entries)
 {
-    RexxActivationFrameBuffer *next;
+    ActivationFrameBuffer *next;
     entries = Numerics::maxVal(entries, (stringsize_t)DefaultFrameBufferSize);
-    /* do we have an unused one we're holding ready that has enough */
-    /* room? */
+    // do we have an unused one we're holding ready that has enough room?
     if (unused != OREF_NULL && unused->hasCapacity(entries))
     {
-        /* just activate this one for use */
+        // just activate this one for use
         next = unused;
         unused = OREF_NULL;
     }
     else
     {
-        /* create a new frame buffer */
+        // create a new frame buffer
         next = new_activationFrameBuffer(entries);
     }
-    /* chain the existing buffer off of the new one */
+    // chain the existing buffer off of the new one
     next->push(current);
-    /* set this up as the new current stack */
+    // set this up as the new current stack
     current = next;
-}
-
-
-RexxActivationFrameBuffer *RexxActivationFrameBuffer::newInstance(
-    size_t entries)                   /* space for entries in the fame     */
-/******************************************************************************/
-/* Function:  Create a new expression stack                                   */
-/******************************************************************************/
-{
-  RexxActivationFrameBuffer *newObj;   /* newly created buffer              */
-
-                                       /* Get new object                    */
-  newObj = (RexxActivationFrameBuffer *)new_object(sizeof(RexxActivationFrameBuffer) + (entries * sizeof(RexxObject *)), T_ActivationFrameBuffer);
-  newObj->size = entries;              /* set the size                      */
-  newObj->next = 0;                    /* set the top element               */
-  newObj->previous = OREF_NULL;        /* no previous element yet           */
-  return newObj;                       /* return the new stack item         */
 }

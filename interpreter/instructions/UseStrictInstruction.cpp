@@ -153,7 +153,7 @@ void RexxInstructionUseStrict::flatten(Envelope *envelope)
  * @param context The current execution context.
  * @param stack   The current evaluation stack.
  */
-void RexxInstructionUseStrict::execute(RexxActivation *context, RexxExpressionStack *stack)
+void RexxInstructionUseStrict::execute(RexxActivation *context, ExpressionStack *stack)
 {
     // trace if necessary
     context->traceInstruction(this);

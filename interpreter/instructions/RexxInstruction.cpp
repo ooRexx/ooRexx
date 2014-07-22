@@ -188,7 +188,7 @@ void RexxInstructionExpression::flatten(Envelope *envelope)
  * @return The expression result, or OREF_NULL if there is no
  *         expression to evaluate.
  */
-RexxObject *RexxInstructionExpression::evaluateExpression(RexxActivation *context, RexxExpressionStack *stack)
+RexxObject *RexxInstructionExpression::evaluateExpression(RexxActivation *context, ExpressionStack *stack)
 {
     // if we have an expression value, evaluate it.
     if (expression != OREF_NULL)
@@ -214,7 +214,7 @@ RexxObject *RexxInstructionExpression::evaluateExpression(RexxActivation *contex
  * @return The expression result, or OREF_NULL if there is no
  *         expression to evaluate.
  */
-RexxString *RexxInstructionExpression::evaluateStringExpression(RexxActivation *context, RexxExpressionStack *stack)
+RexxString *RexxInstructionExpression::evaluateStringExpression(RexxActivation *context, ExpressionStack *stack)
 {
     // if we have an expression value, evaluate it.
     if (expression != OREF_NULL)

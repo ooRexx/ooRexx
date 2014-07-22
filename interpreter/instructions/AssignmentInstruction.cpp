@@ -108,7 +108,7 @@ void RexxInstructionAssignment::flatten(Envelope *envelope)
  * @param context The current execution context.
  * @param stack   The current evaluation stack.
  */
-void RexxInstructionAssignment::execute(RexxActivation *context, RexxExpressionStack *stack)
+void RexxInstructionAssignment::execute(RexxActivation *context, ExpressionStack *stack)
 {
     // if tracing?  handle this via the slower path
     if (context->tracingInstructions())

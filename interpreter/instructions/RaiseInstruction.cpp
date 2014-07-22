@@ -161,7 +161,7 @@ void RexxInstructionRaise::flatten(Envelope *envelope)
  * @param context The current execution context.
  * @param stack   The current context evaluation stack.
  */
-void RexxInstructionRaise::execute(RexxActivation *context, RexxExpressionStack *stack)
+void RexxInstructionRaise::execute(RexxActivation *context, ExpressionStack *stack)
 {
     // trace if needed
     context->traceInstruction(this);

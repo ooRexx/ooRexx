@@ -77,7 +77,7 @@ class ForLoop
          memory_mark_general(forCount);
      }
 
-     void setup(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock, bool forKeyword);
+     void setup(RexxActivation *context, ExpressionStack *stack, RexxDoBlock *doblock, bool forKeyword);
 
     RexxObject       *forCount;          // number of iterations
 };
@@ -117,7 +117,7 @@ class ControlledLoop : public ForLoop
     }
 
 
-    void setup(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock);
+    void setup(RexxActivation *context, ExpressionStack *stack, RexxDoBlock *doblock);
 
     RexxVariableBase *control;           // control variable retriever
     RexxObject       *initial;           // initial control expression
@@ -148,7 +148,7 @@ class OverLoop
     }
 
     void setup(RexxActivation *context,
-        RexxExpressionStack *stack, RexxDoBlock *doblock);
+        ExpressionStack *stack, RexxDoBlock *doblock);
 
     RexxVariableBase *control;           // control variable retriever
     RexxObject *      target;            // supplier for the array we do over
@@ -175,8 +175,8 @@ public:
         memory_mark_general(conditional);
     }
 
-    bool checkWhile(RexxActivation *context, RexxExpressionStack *stack);
-    bool checkUntil(RexxActivation *context, RexxExpressionStack *stack);
+    bool checkWhile(RexxActivation *context, ExpressionStack *stack);
+    bool checkUntil(RexxActivation *context, ExpressionStack *stack);
 
     RexxObject *conditional;      // a while or until condition
 };

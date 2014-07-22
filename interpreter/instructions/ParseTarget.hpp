@@ -55,7 +55,7 @@ class RexxTarget
     inline RexxTarget() { ; }
     inline RexxTarget (RESTORETYPE restoreType) { ; };
 
-    void        init (RexxObject *, RexxObject **, size_t, FlagSet<ParseFlags, 32>, bool, RexxActivation *, RexxExpressionStack *);
+    void        init (RexxObject *, RexxObject **, size_t, FlagSet<ParseFlags, 32>, bool, RexxActivation *, ExpressionStack *);
     void        next(RexxActivation *);
     void        moveToEnd();
     void        forward(stringsize_t);
@@ -74,7 +74,7 @@ class RexxTarget
 
     RexxString * string;                 // current string being parsed
     RexxObject **arglist;                // argument list for PARSE ARG
-    RexxExpressionStack *stack;          // context expression stack (used for anchoring values for GC).
+    ExpressionStack *stack;          // context expression stack (used for anchoring values for GC).
     size_t  stackTop;                    // top location of the epxression stack
     size_t  argcount;                    // count of arguments if PARSE ARG
     size_t  next_argument;               // next PARSE ARG argument

@@ -109,7 +109,7 @@ void RexxInstructionBaseDo::flatten(Envelope *envelope)
  * @param context The current execution context.
  * @param stack   The current evaluation stack.
  */
-void RexxInstructionBaseDo::execute(RexxActivation *context, RexxExpressionStack *stack)
+void RexxInstructionBaseDo::execute(RexxActivation *context, ExpressionStack *stack)
 {
     // trace on entry
     context->traceInstruction(this);
@@ -141,7 +141,7 @@ void RexxInstructionBaseDo::execute(RexxActivation *context, RexxExpressionStack
  * @param stack   The current evaluation stack.
  * @param doblock The doblock associated with this loop instance.
  */
-void RexxInstructionBaseDo::reExecute(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock)
+void RexxInstructionBaseDo::reExecute(RexxActivation *context, ExpressionStack *stack, RexxDoBlock *doblock)
 {
     // change control to the top of the loop
     context->setNext(nextInstruction);
@@ -169,7 +169,7 @@ void RexxInstructionBaseDo::reExecute(RexxActivation *context, RexxExpressionSta
  * @param stack   The current evaluation stack.
  * @param doblock The doblock associated with this loop instance.
  */
-void RexxInstructionBaseDo::setup(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock)
+void RexxInstructionBaseDo::setup(RexxActivation *context, ExpressionStack *stack, RexxDoBlock *doblock)
 {
     // default is no setup
     return;
@@ -189,7 +189,7 @@ void RexxInstructionBaseDo::setup(RexxActivation *context, RexxExpressionStack *
  * @return true if we should execute the loop block, false if
  *         we should terminate the loop.
  */
-bool RexxInstructionBaseDo::iterate(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock, bool first)
+bool RexxInstructionBaseDo::iterate(RexxActivation *context, ExpressionStack *stack, RexxDoBlock *doblock, bool first)
 {
     // the default is basically a DO FOREVER loop.
     return true;

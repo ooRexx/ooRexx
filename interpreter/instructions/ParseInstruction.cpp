@@ -133,7 +133,7 @@ void RexxInstructionParse::flatten(Envelope *envelope)
  * @param context The current execution context.
  * @param stack   The current evaluation stack.
  */
-void RexxInstructionParse::execute(RexxActivation *context, RexxExpressionStack *stack )
+void RexxInstructionParse::execute(RexxActivation *context, ExpressionStack *stack )
 {
     // trace if necessary
     context->traceInstruction(this);

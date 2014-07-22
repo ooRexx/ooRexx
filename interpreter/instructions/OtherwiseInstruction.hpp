@@ -57,6 +57,6 @@ class RexxInstructionOtherwise : public RexxInstruction
     inline RexxInstructionOtherwise(RESTORETYPE restoreType) { ; };
 
     virtual bool isBlock() { return true; }
-    virtual void execute(RexxActivation *, RexxExpressionStack *);
+    virtual void execute(RexxActivation *, ExpressionStack *);
 };
 #endif

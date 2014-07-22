@@ -119,7 +119,7 @@ void RexxInstructionTrace::flatten(Envelope *envelope)
  * @param context The current execution context.
  * @param stack   The current evaluation stack.
  */
-void RexxInstructionTrace::execute(RexxActivation *context, RexxExpressionStack *stack)
+void RexxInstructionTrace::execute(RexxActivation *context, ExpressionStack *stack)
 {
     // trace if needed.
     context->traceInstruction(this);

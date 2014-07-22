@@ -120,7 +120,7 @@ void RexxDotVariable::flatten(Envelope * envelope)
  *
  * @return The dot symbol value.
  */
-RexxObject * RexxDotVariable::evaluate(RexxActivation *context, RexxExpressionStack *stack )
+RexxObject * RexxDotVariable::evaluate(RexxActivation *context, ExpressionStack *stack )
 {
     // try first from the environment
     RexxObject *result = context->resolveDotVariable(variableName);

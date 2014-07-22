@@ -123,7 +123,7 @@ void RexxStemVariable::flatten(Envelope *envelope)
  *
  * @return The variable value (which will be a Stem object instance.)
  */
-RexxObject  *RexxStemVariable::evaluate(RexxActivation *context, RexxExpressionStack *stack )
+RexxObject  *RexxStemVariable::evaluate(RexxActivation *context, ExpressionStack *stack )
 {
     // look up the name
     RexxObject *value = context->getLocalStem(stemName, stemIndex);

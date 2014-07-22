@@ -110,7 +110,7 @@ void RexxInstructionEnd::flatten(Envelope *envelope)
  * @param context The current execution context.
  * @param stack   The current evaluation stack.
  */
-void RexxInstructionEnd::execute(RexxActivation *context, RexxExpressionStack *stack )
+void RexxInstructionEnd::execute(RexxActivation *context, ExpressionStack *stack )
 {
     // SIGNAL will disable all active block instructions, so it is possible that
     // this END has been encountered without its corresponding block instruction actually

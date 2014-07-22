@@ -60,7 +60,7 @@ RexxInstructionQueue::RexxInstructionQueue(RexxObject *_expression)
  * @param context The current execution context.
  * @param stack   The current evaluation stack.
  */
-void RexxInstructionQueue::execute(RexxActivation *context, RexxExpressionStack *stack )
+void RexxInstructionQueue::execute(RexxActivation *context, ExpressionStack *stack )
 {
     // trace if necessary.
     context->traceInstruction(this);

@@ -66,7 +66,7 @@ class RexxDotVariable : public RexxVariableBase
     virtual void flatten(Envelope *);
 
     // part ov RexxVariableBase...rest of the methods default
-    virtual RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
+    virtual RexxObject *evaluate(RexxActivation *, ExpressionStack *);
     virtual RexxObject *getValue(RexxActivation *);
 
  protected:

@@ -68,7 +68,7 @@ RexxInstructionNumeric::RexxInstructionNumeric(RexxObject *_expression, FlagSet<
  * @param context The current execution context.
  * @param stack   The current evaluation stack.
  */
-void RexxInstructionNumeric::execute(RexxActivation *context, RexxExpressionStack *stack )
+void RexxInstructionNumeric::execute(RexxActivation *context, ExpressionStack *stack )
 {
     // trace if necessary
     context->traceInstruction(this);

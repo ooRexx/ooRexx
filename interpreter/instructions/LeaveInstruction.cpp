@@ -107,7 +107,7 @@ void RexxInstructionLeave::flatten(Envelope *envelope)
  * @param context The current excution context.
  * @param stack   The current evaluation stack.
  */
-void RexxInstructionLeave::execute(RexxActivation *context, RexxExpressionStack *stack )
+void RexxInstructionLeave::execute(RexxActivation *context, ExpressionStack *stack )
 {
     context->traceInstruction(this);
 

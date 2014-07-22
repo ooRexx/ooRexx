@@ -3326,7 +3326,7 @@ RexxString *NumberString::d2c(
 
 RexxObject *NumberString::evaluate(
      RexxActivation *context,          /* current activation context        */
-     RexxExpressionStack *stack )      /* evaluation stack                  */
+     ExpressionStack *stack )      /* evaluation stack                  */
 /******************************************************************************/
 /* Function:  Polymorphic method that makes numberstring a polymorphic        */
 /*            expression term for literals                                    */

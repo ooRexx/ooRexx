@@ -153,7 +153,7 @@ void RexxExpressionMessage::flatten(Envelope *envelope)
  *
  * @return The message result.
  */
-RexxObject *RexxExpressionMessage::evaluate(RexxActivation *context, RexxExpressionStack *stack)
+RexxObject *RexxExpressionMessage::evaluate(RexxActivation *context, ExpressionStack *stack)
 {
     // evaluate the target object
     RexxObject *_target = target->evaluate(context, stack);
@@ -249,7 +249,7 @@ void RexxExpressionMessage::assign(RexxActivation *context, RexxObject *value)
 {
     // the stack is not passed to assignment operations but fortunately, we can
     // get that from the context.
-    RexxExpressionStack *stack = context->getStack();
+    ExpressionStack *stack = context->getStack();
 
     // evaluate the target (protected on the stack)
     RexxObject *_target = target->evaluate(context, stack);

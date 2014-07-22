@@ -67,7 +67,7 @@ class RexxStemVariable : public RexxVariableBase
     virtual void flatten(Envelope *);
 
     // overrides of RexxInternalObject evaluaton methods
-    virtual RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
+    virtual RexxObject *evaluate(RexxActivation *, ExpressionStack *);
     RexxObject *getValue(VariableDictionary *);
     RexxObject *getValue(RexxActivation *);
     RexxObject *getRealValue(VariableDictionary *);

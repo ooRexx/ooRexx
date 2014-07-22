@@ -50,7 +50,7 @@
  * @param context The current execution context.
  * @param stack   The current evaluation stack.
  */
-void RexxInstructionNop::execute(RexxActivation *context, RexxExpressionStack *stack )
+void RexxInstructionNop::execute(RexxActivation *context, ExpressionStack *stack )
 {
     // NOP doesn't do anything, but it does trace itself and support a debug pause.
     context->traceInstruction(this);

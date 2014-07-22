@@ -65,7 +65,7 @@ RexxInstructionInterpret::RexxInstructionInterpret(RexxObject *_expression)
  * @param context The current program execution context.
  * @param stack   The current expression evaluation stack.
  */
-void RexxInstructionInterpret::execute(RexxActivation *context, RexxExpressionStack *stack )
+void RexxInstructionInterpret::execute(RexxActivation *context, ExpressionStack *stack )
 {
     context->traceInstruction(this);
 

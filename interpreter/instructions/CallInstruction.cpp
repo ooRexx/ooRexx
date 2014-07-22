@@ -155,7 +155,7 @@ void RexxInstructionCall::resolve(DirectoryClass *labels)
  * @param context The current program execution context.
  * @param stack   The current context expression stack.
  */
-void RexxInstructionCall::execute(RexxActivation *context, RexxExpressionStack *stack)
+void RexxInstructionCall::execute(RexxActivation *context, ExpressionStack *stack)
 {
     // perform a stack space check here.
     ActivityManager::currentActivity->checkStackSpace();
@@ -292,7 +292,7 @@ void RexxInstructionDynamicCall::flatten(Envelope *envelope)
  * @param context The current program execution context.
  * @param stack   The current context evaluation stack.
  */
-void RexxInstructionDynamicCall::execute(RexxActivation *context, RexxExpressionStack *stack)
+void RexxInstructionDynamicCall::execute(RexxActivation *context, ExpressionStack *stack)
 {
     // perform a stack space check here.
     ActivityManager::currentActivity->checkStackSpace();
@@ -485,7 +485,7 @@ void RexxInstructionCallOn::resolve(DirectoryClass *labels)
  * @param context The current program context.
  * @param stack   The current context evaluation stack.
  */
-void RexxInstructionCallOn::execute(RexxActivation *context, RexxExpressionStack *stack)
+void RexxInstructionCallOn::execute(RexxActivation *context, ExpressionStack *stack)
 {
     // do trace stuff.
     context->traceInstruction(this);

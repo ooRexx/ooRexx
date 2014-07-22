@@ -241,8 +241,8 @@ class ActivationSettings
    void              trapDelay(RexxString *);
    void              trapUndelay(RexxString *);
    bool              callExternalRexx(RexxString *, RexxObject **, size_t, RexxString *, ProtectedObject &);
-   RexxObject      * externalCall(RexxString *, size_t, RexxExpressionStack *, RexxString *, ProtectedObject &);
-   RexxObject      * internalCall(RexxString *, RexxInstruction *, size_t, RexxExpressionStack *, ProtectedObject &);
+   RexxObject      * externalCall(RexxString *, size_t, ExpressionStack *, RexxString *, ProtectedObject &);
+   RexxObject      * internalCall(RexxString *, RexxInstruction *, size_t, ExpressionStack *, ProtectedObject &);
    RexxObject      * internalCallTrap(RexxString *, RexxInstruction *, DirectoryClass *, ProtectedObject &);
    bool              callMacroSpaceFunction(RexxString *, RexxObject **, size_t, RexxString *, int, ProtectedObject &);
    static RoutineClass* getMacroCode(RexxString *macroName);
@@ -363,7 +363,7 @@ class ActivationSettings
    inline void              setCurrent(RexxInstruction * v) {current=v;};
    inline bool              inDebug() { return ((settings.flags&trace_debug) != 0) && !debug_pause;}
 
-   inline RexxExpressionStack * getStack() {return &stack; };
+   inline ExpressionStack * getStack() {return &stack; };
 
    virtual NumericSettings *getNumericSettings();
    virtual RexxActivation  *getRexxContext();
@@ -601,7 +601,7 @@ class ActivationSettings
  protected:
 
     ActivationSettings   settings;      // inherited REXX settings
-    RexxExpressionStack  stack;         // current evaluation stack
+    ExpressionStack  stack;         // current evaluation stack
     RexxCode            *code;          // rexx method object
     RexxSource          *sourceObject;  // the source object associated with this instance
     RexxClass           *scope;         // scope of any active method call

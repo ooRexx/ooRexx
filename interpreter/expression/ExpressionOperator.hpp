@@ -80,7 +80,7 @@ class RexxBinaryOperator : public RexxExpressionOperator
         : RexxExpressionOperator(op, left, right) { ; }
     inline RexxBinaryOperator(RESTORETYPE restoreType) { ; };
 
-    virtual RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
+    virtual RexxObject *evaluate(RexxActivation *, ExpressionStack *);
 };
 
 
@@ -95,6 +95,6 @@ class RexxUnaryOperator : public RexxExpressionOperator {
         : RexxExpressionOperator(op, left, OREF_NULL) { ; }
     inline RexxUnaryOperator(RESTORETYPE restoreType) { ; };
 
-    virtual RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
+    virtual RexxObject *evaluate(RexxActivation *, ExpressionStack *);
 };
 #endif

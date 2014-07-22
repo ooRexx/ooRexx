@@ -63,7 +63,7 @@ RexxInstructionReply::RexxInstructionReply(RexxObject *_expression)
  * @param context The current execution context.
  * @param stack   The current evaluation stack.
  */
-void RexxInstructionReply::execute(RexxActivation *context, RexxExpressionStack *stack)
+void RexxInstructionReply::execute(RexxActivation *context, ExpressionStack *stack)
 {
     context->traceInstruction(this);
     // REPLY is only valid in a method invocation.

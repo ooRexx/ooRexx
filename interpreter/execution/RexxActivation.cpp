@@ -500,7 +500,7 @@ RexxObject * RexxActivation::run(RexxObject *_receiver, RexxString *msgname, Rex
     {
         try
         {
-            RexxExpressionStack *localStack = &stack;                /* load up the stack                 */
+            ExpressionStack *localStack = &stack;                /* load up the stack                 */
 #ifndef FIXEDTIMERS                    /* currently disabled                */
             instructionCount = 0;                /* no instructions yet               */
 #endif
@@ -2592,7 +2592,7 @@ bool RexxActivation::callMacroSpaceFunction(RexxString * target, RexxObject **_a
  * @return The function result (also returned in the resultObj protected
  *         object reference.
  */
-RexxObject *RexxActivation::externalCall(RexxString *target, size_t _argcount, RexxExpressionStack *_stack,
+RexxObject *RexxActivation::externalCall(RexxString *target, size_t _argcount, ExpressionStack *_stack,
     RexxString *calltype, ProtectedObject &resultObj)
 {
     /* get the arguments array           */
@@ -2837,7 +2837,7 @@ void RexxActivation::loadLibrary(RexxString *target, RexxInstruction *instructio
  * @return The return value object
  */
 RexxObject * RexxActivation::internalCall(RexxString *name, RexxInstruction *target,
-    size_t _argcount, RexxExpressionStack *_stack, ProtectedObject &returnObject)
+    size_t _argcount, ExpressionStack *_stack, ProtectedObject &returnObject)
 {
     RexxActivation * newActivation;      /* new activation for call           */
     size_t           lineNum;            /* line number of the call           */

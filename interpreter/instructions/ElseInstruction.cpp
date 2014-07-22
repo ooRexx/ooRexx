@@ -110,7 +110,7 @@ void RexxInstructionElse::flatten(Envelope *envelope)
  * @param context The current execution context.
  * @param stack   The current evaluation stack.
  */
-void RexxInstructionElse::execute(RexxActivation *context, RexxExpressionStack *stack )
+void RexxInstructionElse::execute(RexxActivation *context, ExpressionStack *stack )
 {
     // executing an ELSE is not very complicated.  We indent a little, trace the instruction
     // then indent again for the instruction that follows the ELSE.

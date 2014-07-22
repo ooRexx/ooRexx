@@ -137,7 +137,7 @@ void RexxTrigger::flatten(Envelope *envelope)
  *
  * @return The converted integer value.
  */
-stringsize_t RexxTrigger::integerTrigger(RexxActivation *context, RexxExpressionStack *stack)
+stringsize_t RexxTrigger::integerTrigger(RexxActivation *context, ExpressionStack *stack)
 {
     // if we have a value that requires evaluation, get the value and trace.
     RexxObject *trigger = value->evaluate(context, stack);
@@ -166,7 +166,7 @@ stringsize_t RexxTrigger::integerTrigger(RexxActivation *context, RexxExpression
  *
  * @return A true string version of the object.
  */
-RexxString *RexxTrigger::stringTrigger(RexxActivation *context, RexxExpressionStack *stack)
+RexxString *RexxTrigger::stringTrigger(RexxActivation *context, ExpressionStack *stack)
 {
     // if we have a value that requires evaluation, get the value and trace.
     RexxObject *trigger = value->evaluate(context, stack);
@@ -186,7 +186,7 @@ RexxString *RexxTrigger::stringTrigger(RexxActivation *context, RexxExpressionSt
  * @param stack   The current evaluation stack.
  * @param target  The current parsing context.
  */
-void RexxTrigger::parse(RexxActivation *context, RexxExpressionStack *stack,
+void RexxTrigger::parse(RexxActivation *context, ExpressionStack *stack,
     RexxTarget *target )
 {
     // perform the trigger operaitons

@@ -128,7 +128,7 @@ void RexxInstructionSignal::resolve(DirectoryClass *labels)
  * @param context The current program context.
  * @param stack   The expression stack
  */
-void RexxInstructionSignal::execute(RexxActivation *context, RexxExpressionStack *stack)
+void RexxInstructionSignal::execute(RexxActivation *context, ExpressionStack *stack)
 {
     // trace the instruction if necessary
     context->traceInstruction(this);
@@ -206,7 +206,7 @@ void RexxInstructionDynamicSignal::flatten(Envelope *envelope)
  * @param context The current program context.
  * @param stack   The expression stack
  */
-void RexxInstructionDynamicSignal::execute(RexxActivation *context, RexxExpressionStack *stack)
+void RexxInstructionDynamicSignal::execute(RexxActivation *context, ExpressionStack *stack)
 {
     // trace the instruction if necessary
     context->traceInstruction(this);
@@ -296,7 +296,7 @@ void RexxInstructionSignalOn::flatten(Envelope *envelope)
  * @param context The current program context.
  * @param stack   The current context evaluation stack.
  */
-void RexxInstructionSignalOn::execute(RexxActivation *context, RexxExpressionStack *stack)
+void RexxInstructionSignalOn::execute(RexxActivation *context, ExpressionStack *stack)
 {
     // do trace stuff.
     context->traceInstruction(this);

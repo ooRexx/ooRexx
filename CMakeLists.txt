@@ -550,7 +550,7 @@ set (memory_sources ${build_memory_dir}/DeadObject.cpp
             ${build_memory_dir}/RexxMemory.cpp)
 set (execution_sources ${build_execution_dir}/CPPCode.cpp
             ${build_execution_dir}/RexxActivation.cpp
-            ${build_execution_dir}/RexxActivationStack.cpp
+            ${build_execution_dir}/RexxActivation.cpp
             ${build_execution_dir}/BaseCode.cpp
             ${build_execution_dir}/RexxCode.cpp
             ${build_execution_dir}/RexxLocalVariables.cpp

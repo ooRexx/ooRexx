@@ -67,7 +67,7 @@ class RexxInstructionBaseDo : public RexxBlockInstruction
 
     // required by RexxInstruction.  For most subclasses, the default
     // is sufficient.
-    virtual void execute(RexxActivation *, RexxExpressionStack *);
+    virtual void execute(RexxActivation *, ExpressionStack *);
 
     // methods required by RexxBlockInstruction;
     virtual void matchEnd(RexxInstructionEnd *, LanguageParser *);
@@ -77,12 +77,12 @@ class RexxInstructionBaseDo : public RexxBlockInstruction
     virtual bool isLoop() { return true; };
 
     // specific to Do loops.  Most subclasses can rely on the default
-    virtual void reExecute(RexxActivation *, RexxExpressionStack *, RexxDoBlock *);
+    virtual void reExecute(RexxActivation *, ExpressionStack *, RexxDoBlock *);
     virtual void terminate(RexxActivation *, RexxDoBlock *);
 
     // most loops will want to override these two
-    virtual void setup(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock);
-    virtual bool iterate(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock, bool first);
+    virtual void setup(RexxActivation *context, ExpressionStack *stack, RexxDoBlock *doblock);
+    virtual bool iterate(RexxActivation *context, ExpressionStack *stack, RexxDoBlock *doblock, bool first);
 
     void matchLabel(RexxInstructionEnd *end, LanguageParser *source );
     void handleDebugPause(RexxActivation *context, RexxDoBlock *doblock);
@@ -107,7 +107,7 @@ class RexxInstructionSimpleDo : public RexxInstructionBaseDo
            RexxInstructionSimpleDo(RexxString *l);
 
     // required by RexxInstruction
-    virtual void execute(RexxActivation *, RexxExpressionStack *);
+    virtual void execute(RexxActivation *, ExpressionStack *);
 
     // methods required by RexxBlockInstruction;
     virtual bool isLoop() { return false; }
@@ -155,8 +155,8 @@ class RexxInstructionDoOver : public RexxInstructionBaseDo
     virtual void flatten(Envelope *);
 
     // Methods needed for loop iteration
-    virtual void setup(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock);
-    virtual bool iterate(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock, bool first);
+    virtual void setup(RexxActivation *context, ExpressionStack *stack, RexxDoBlock *doblock);
+    virtual bool iterate(RexxActivation *context, ExpressionStack *stack, RexxDoBlock *doblock, bool first);
 
  protected:
 
@@ -185,7 +185,7 @@ class RexxInstructionDoOverUntil : public RexxInstructionDoOver
     virtual void flatten(Envelope *);
 
     // Methods needed for loop iteration
-    virtual bool iterate(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock, bool first);
+    virtual bool iterate(RexxActivation *context, ExpressionStack *stack, RexxDoBlock *doblock, bool first);
 
 protected:
 
@@ -210,7 +210,7 @@ class RexxInstructionDoOverWhile : public RexxInstructionDoOverUntil
            RexxInstructionDoOverWhile(RexxString *l, OverLoop &o, WhileUntilLoop &w);
 
     // Methods needed for loop iteration
-    virtual bool iterate(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock, bool first);
+    virtual bool iterate(RexxActivation *context, ExpressionStack *stack, RexxDoBlock *doblock, bool first);
 };
 
 
@@ -235,8 +235,8 @@ class RexxInstructionControlledDo: public RexxInstructionBaseDo
     virtual void flatten(Envelope *);
 
     // Methods needed for loop iteration
-    virtual void setup(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock);
-    virtual bool iterate(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock, bool first);
+    virtual void setup(RexxActivation *context, ExpressionStack *stack, RexxDoBlock *doblock);
+    virtual bool iterate(RexxActivation *context, ExpressionStack *stack, RexxDoBlock *doblock, bool first);
 
  protected:
 
@@ -264,7 +264,7 @@ class RexxInstructionControlledDoUntil : public RexxInstructionControlledDo
     virtual void flatten(Envelope *);
 
     // Methods needed for loop iteration
-    virtual bool iterate(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock, bool first);
+    virtual bool iterate(RexxActivation *context, ExpressionStack *stack, RexxDoBlock *doblock, bool first);
 
  protected:
 
@@ -287,7 +287,7 @@ class RexxInstructionControlledDoWhile : public RexxInstructionControlledDoUntil
     inline RexxInstructionControlledDoWhile(RESTORETYPE restoreType) { ; };
            RexxInstructionControlledDoWhile(RexxString *l, ControlledLoop &c, WhileUntilLoop &w);
 
-    virtual bool iterate(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock, bool first);
+    virtual bool iterate(RexxActivation *context, ExpressionStack *stack, RexxDoBlock *doblock, bool first);
 };
 
 
@@ -311,7 +311,7 @@ class RexxInstructionDoWhile: public RexxInstructionBaseDo
     virtual void flatten(Envelope *);
 
     // Methods needed for loop iteration
-    virtual bool iterate(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock, bool first);
+    virtual bool iterate(RexxActivation *context, ExpressionStack *stack, RexxDoBlock *doblock, bool first);
 
  protected:
 
@@ -335,7 +335,7 @@ class RexxInstructionDoUntil : public RexxInstructionDoWhile
     inline RexxInstructionDoUntil(RESTORETYPE restoreType) { ; };
            RexxInstructionDoUntil(RexxString *l, WhileUntilLoop &w);
 
-    virtual bool iterate(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock, bool first);
+    virtual bool iterate(RexxActivation *context, ExpressionStack *stack, RexxDoBlock *doblock, bool first);
 };
 
 
@@ -360,8 +360,8 @@ class RexxInstructionDoCount : public RexxInstructionBaseDo
     virtual void flatten(Envelope *);
 
     // Methods needed for loop iteration
-    virtual void setup(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock);
-    virtual bool iterate(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock, bool first);
+    virtual void setup(RexxActivation *context, ExpressionStack *stack, RexxDoBlock *doblock);
+    virtual bool iterate(RexxActivation *context, ExpressionStack *stack, RexxDoBlock *doblock, bool first);
 
  protected:
 
@@ -389,7 +389,7 @@ class RexxInstructionDoCountUntil : public RexxInstructionDoCount
     virtual void flatten(Envelope *);
 
     // Methods needed for loop iteration
-    virtual bool iterate(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock, bool first);
+    virtual bool iterate(RexxActivation *context, ExpressionStack *stack, RexxDoBlock *doblock, bool first);
 
  protected:
 
@@ -414,6 +414,6 @@ class RexxInstructionDoCountWhile : public RexxInstructionDoCountUntil
            RexxInstructionDoCountWhile(RexxString *l, ForLoop &f, WhileUntilLoop &w);
 
     // Methods needed for loop iteration
-    virtual bool iterate(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock, bool first);
+    virtual bool iterate(RexxActivation *context, ExpressionStack *stack, RexxDoBlock *doblock, bool first);
 };
 #endif

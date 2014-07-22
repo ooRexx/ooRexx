@@ -76,7 +76,7 @@ class RexxInstruction : public RexxInternalObject
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(Envelope *);
 
-    virtual void execute(RexxActivation *, RexxExpressionStack *) { ; };
+    virtual void execute(RexxActivation *, ExpressionStack *) { ; };
     // indicates whether this is a block instruction type that requires
     // a matching END
     virtual bool isBlock() { return false; }
@@ -175,8 +175,8 @@ class RexxInstructionExpression : public RexxInstruction
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(Envelope *);
 
-    RexxObject *evaluateExpression(RexxActivation *context, RexxExpressionStack *stack);
-    RexxString *evaluateStringExpression(RexxActivation *context, RexxExpressionStack *stack);
+    RexxObject *evaluateExpression(RexxActivation *context, ExpressionStack *stack);
+    RexxString *evaluateStringExpression(RexxActivation *context, ExpressionStack *stack);
 
  protected:
     RexxObject *expression;              // expression to evaluate

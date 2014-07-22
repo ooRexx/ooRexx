@@ -63,7 +63,7 @@ RexxInstructionExit::RexxInstructionExit(RexxObject *_expression)
  * @param context The current program activation context.
  * @param stack   The current expression stack.
  */
-void RexxInstructionExit::execute(RexxActivation *context, RexxExpressionStack *stack)
+void RexxInstructionExit::execute(RexxActivation *context, ExpressionStack *stack)
 {
     context->traceInstruction(this);
     // evaluate the optional expression and exit.

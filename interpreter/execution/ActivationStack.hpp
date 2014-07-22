@@ -36,32 +36,38 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                       RexxActivationStack.hpp  */
+/* REXX Kernel                                                                */
 /*                                                                            */
 /* Primitive Activation Stack Frame Definitions                               */
 /*                                                                            */
 /******************************************************************************/
 
-#ifndef Included_RexxActivationStack
-#define Included_RexxActivationStack
+#ifndef Included_ActivationStack
+#define Included_ActivationStack
 
 
-class RexxActivationFrameBuffer : public RexxInternalObject
+/**
+ * A frame buffer used to as backing for an activation
+ * expression stack and variable frame.
+ */
+class ActivationFrameBuffer : public RexxInternalObject
 {
     public:
+     inline void *operator new(size_t size, size_t entries);
      inline void *operator new(size_t size, void *ptr) { return ptr;};
-     inline void  operator delete(void *) { ; }
      inline void  operator delete(void *, void *) { ; }
 
-     RexxActivationFrameBuffer() { ; }
-     inline RexxActivationFrameBuffer(RESTORETYPE restoreType) { ; }
-     void live(size_t);
-     void liveGeneral(MarkReason reason);
+     ActivationFrameBuffer() { ; }
+     ActivationFrameBuffer(size_t entries);
+     inline ActivationFrameBuffer(RESTORETYPE restoreType) { ; }
+
+     virtual void live(size_t);
+     virtual void liveGeneral(MarkReason reason);
 
      inline bool hasCapacity(size_t entries) { return size - next >= entries; }
-     inline RexxObject **allocateFrame(size_t entries)
+     inline RexxInternalObject **allocateFrame(size_t entries)
      {
-         RexxObject **frame = &buffer[next];
+         RexxInternalObject **frame = &buffer[next];
          next += entries;
          return frame;
      }
@@ -76,7 +82,7 @@ class RexxActivationFrameBuffer : public RexxInternalObject
          next = frame - &buffer[0];
      }
 
-     inline void push(RexxActivationFrameBuffer *p)
+     inline void push(ActivationFrameBuffer *p)
      {
          previous = p;    // chain this up
      }
@@ -84,27 +90,30 @@ class RexxActivationFrameBuffer : public RexxInternalObject
 
      inline void reset() { next = 0; }    // reset a cached frame buffer
 
-     inline RexxActivationFrameBuffer *getPrevious() { return previous; }
-
-     static RexxActivationFrameBuffer *newInstance(size_t);
+     inline ActivationFrameBuffer *getPrevious() { return previous; }
 
 protected:
 
      size_t size;                        // size of the buffer (in slots)
      size_t next;                        // location of next allocation
-     RexxActivationFrameBuffer *previous;// previous entry in the stack
-     RexxObject *buffer[1];              // start of the buffer location
+     ActivationFrameBuffer *previous;    // previous entry in the stack
+     RexxInternalObject *buffer[1];      // start of the buffer location
 };
 
 
-class RexxActivationStack
+/**
+ * Special stack for managing the stack frames used by the
+ * activations running on an Activity.
+ */
+class ActivationStack
 {
  public:
 
     enum { DefaultFrameBufferSize = 2048 };
 
     inline void *operator new(size_t size, void *ptr) { return ptr;};
-    RexxActivationStack() { ; }
+    ActivationStack() { ; }
+
     void live(size_t);
     void liveGeneral(MarkReason reason);
 
@@ -114,39 +123,40 @@ class RexxActivationStack
     inline void ensureCapacity(size_t entries) { if (!current->hasCapacity(entries)) { expandCapacity(entries); } }
     inline RexxObject **allocateFrame(size_t entries)
     {
-        /* make sure we have space first */
+        // make sure we have space first
         ensureCapacity(entries);
-        /* now allocate from the current stack buffer */
+        // now allocate from the current stack buffer
         return current->allocateFrame(entries);
     }
     void releaseFrame(RexxObject **frame)
     {
-        /* we may be popping back one or more buffers.  We deactivate */
-        /* the newer ones */
-        while (!current->contains(frame)) {
-            /* we need to pop at least one buffer off of the stack */
-            RexxActivationFrameBuffer *released = current;
+        // we may be popping back one or more buffers.  We deactivate the newer ones
+        while (!current->contains(frame))
+        {
+            // we need to pop at least one buffer off of the stack
+            ActivationFrameBuffer *released = current;
             current = released->getPrevious();
-            /* we'll keep at least one buffer around for reuse.  If */
-            /* we've already got one in the cache, just let this one */
-            /* get GCed. */
-            if (unused == OREF_NULL) {
+            // we'll keep at least one buffer around for reuse.  If
+            // we've already got one in the cache, just let this one
+            // get GCed.
+            if (unused == OREF_NULL)
+            {
                 unused = released;
                 unused->reset();   // reset to clean state
             }
         }
 
-        /* now back this up to the release point */
+        // now back this up to the release point
         current->releaseFrame(frame);
     }
 
 protected:
 
-    RexxActivationFrameBuffer *current;
-    RexxActivationFrameBuffer *unused;
+    ActivationFrameBuffer *current;     // our current frame buffer
+    ActivationFrameBuffer *unused;      // our cached unused buffer(s)
 };
 
 
-inline RexxActivationFrameBuffer *new_activationFrameBuffer(size_t s) { return RexxActivationFrameBuffer::newInstance(s); }
+inline ActivationFrameBuffer *new_activationFrameBuffer(size_t s) { return new (s) ActivationFrameBuffer(s); }
 
 #endif

@@ -127,7 +127,7 @@ void RexxInstructionSelect::flatten(Envelope *envelope)
  * @param context The current execution context.
  * @param stack   The current evaluation stack.
  */
-void RexxInstructionSelect::execute(RexxActivation *context, RexxExpressionStack *stack)
+void RexxInstructionSelect::execute(RexxActivation *context, ExpressionStack *stack)
 {
     context->traceInstruction(this);
 
@@ -348,7 +348,7 @@ void RexxInstructionSelectCase::flatten(Envelope *envelope)
  * @param context The current execution context.
  * @param stack   The current evaluation stack.
  */
-void RexxInstructionSelectCase::execute(RexxActivation *context, RexxExpressionStack *stack)
+void RexxInstructionSelectCase::execute(RexxActivation *context, ExpressionStack *stack)
 {
     context->traceInstruction(this);
 

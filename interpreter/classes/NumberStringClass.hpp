@@ -136,7 +136,7 @@ class NumberString : public NumberStringBase
     RexxString *formatRexx(RexxObject *, RexxObject *, RexxObject *, RexxObject *);
     RexxString *formatInternal(size_t, size_t, size_t, size_t, NumberString *, size_t, bool);
     RexxObject *operatorNot(RexxObject *);
-    RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
+    RexxObject *evaluate(RexxActivation *, ExpressionStack *);
     RexxObject *getValue(RexxActivation *context);
     RexxObject *getValue(VariableDictionary *dictionary);
     RexxObject *getRealValue(RexxActivation *);

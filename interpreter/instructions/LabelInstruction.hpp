@@ -52,6 +52,6 @@ class RexxInstructionLabel : public RexxInstruction {
     inline RexxInstructionLabel() {;};
     inline RexxInstructionLabel(RESTORETYPE restoreType) { ; };
 
-    virtual void execute(RexxActivation *, RexxExpressionStack *);
+    virtual void execute(RexxActivation *, ExpressionStack *);
 };
 #endif

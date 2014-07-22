@@ -129,7 +129,7 @@ void RexxInstructionDrop::flatten(Envelope *envelope)
  * @param context The current execution context.
  * @param stack   The current evaluation stack.
  */
-void RexxInstructionDrop::execute(RexxActivation *context, RexxExpressionStack *stack)
+void RexxInstructionDrop::execute(RexxActivation *context, ExpressionStack *stack)
 {
     // trace if necessary
     context->traceInstruction(this);

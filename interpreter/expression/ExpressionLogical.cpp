@@ -124,7 +124,7 @@ void RexxExpressionLogical::flatten(Envelope *envelope)
  *
  * @return The result of the operation, either .true or .false.
  */
-RexxObject *RexxExpressionLogical::evaluate(RexxActivation *context, RexxExpressionStack *stack)
+RexxObject *RexxExpressionLogical::evaluate(RexxActivation *context, ExpressionStack *stack)
 {
     // loop through the expression list evaulating and then testing for the
     // logical value

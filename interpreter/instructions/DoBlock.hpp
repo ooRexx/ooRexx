@@ -77,8 +77,8 @@ class RexxDoBlock : public RexxInternalObject
     inline RexxObject *getCase() { return to; }
     inline size_t getIndent() { return indent; };
     inline bool checkFor() { return (forCount--) > 0; };
-           bool checkControl(RexxActivation *context, RexxExpressionStack *stack, bool increment);
-           bool checkOver(RexxActivation *context, RexxExpressionStack *stack);
+           bool checkControl(RexxActivation *context, ExpressionStack *stack, bool increment);
+           bool checkOver(RexxActivation *context, ExpressionStack *stack);
 
 
 protected:

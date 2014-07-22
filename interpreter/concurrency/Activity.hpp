@@ -46,7 +46,7 @@
 
 #include "ListClass.hpp"
 #include "InternalStack.hpp"
-#include "RexxActivationStack.hpp"
+#include "ActivationStack.hpp"
 #include "ExpressionStack.hpp"
 #include "InternalStack.hpp"
 #include "RexxLocalVariables.hpp"
@@ -288,7 +288,7 @@ class Activity : public RexxInternalObject
     inline RexxThreadContext *getThreadContext() { return &threadContext.threadContext; }
     inline NativeActivation *getApiContext() { return (NativeActivation *)topStackFrame; }
 
-    inline void allocateStackFrame(RexxExpressionStack *stack, size_t entries)
+    inline void allocateStackFrame(ExpressionStack *stack, size_t entries)
     {
         stack->setFrame(frameStack.allocateFrame(entries), entries);
     }
@@ -333,7 +333,7 @@ class Activity : public RexxInternalObject
     InterpreterInstance *instance;      // the interpreter we're running under
     ActivityContext      threadContext; // the handed out activity context
     Activity *oldActivity;          // pushed nested activity
-    RexxActivationStack   frameStack;   // our stack used for activation frames
+    ActivationStack   frameStack;   // our stack used for activation frames
     DirectoryClass      *conditionobj;   // condition object for killed activi
     TableClass          *requiresTable;  // Current ::REQUIRES being installed
     MessageClass        *dispatchMessage;  // a message object to run on this thread

@@ -73,7 +73,7 @@ class RexxInstructionParse : public RexxInstruction
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(Envelope*);
 
-    void execute(RexxActivation *, RexxExpressionStack *);
+    void execute(RexxActivation *, ExpressionStack *);
 
  protected:
     FlagSet<ParseFlags, 32>  parseFlags;         // parsing control flags

@@ -125,7 +125,7 @@ const int ARG_TEN    = 10;
 
 
 // forward declaration of commonly used classes
-class RexxExpressionStack;
+class ExpressionStack;
 class RexxActivation;
 class RexxObject;
 class RexxClass;

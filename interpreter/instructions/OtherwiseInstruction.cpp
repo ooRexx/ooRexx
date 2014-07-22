@@ -51,7 +51,7 @@ RexxInstructionOtherwise::RexxInstructionOtherwise(RexxToken *token)
     setLocation(token->getLocation());
 }
 
-void RexxInstructionOtherwise::execute(RexxActivation *context, RexxExpressionStack *stack )
+void RexxInstructionOtherwise::execute(RexxActivation *context, ExpressionStack *stack )
 {
     // if there are no blocks active, we've probably had a SIGNAL instruction that
     // jumped into the middle of something.

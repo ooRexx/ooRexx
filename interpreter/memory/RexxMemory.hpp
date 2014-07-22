@@ -53,7 +53,7 @@
 // this can be enabled to switch on memory profiling info
 //#define MEMPROFILE
 
-class RexxActivationFrameBuffer;
+class ActivationFrameBuffer;
 class MemorySegment;
 class MemorySegmentPool;
 class MethodClass;

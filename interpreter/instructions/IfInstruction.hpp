@@ -58,7 +58,7 @@ class RexxInstructionIf : public RexxInstructionSet
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(Envelope*);
 
-    virtual void execute(RexxActivation *, RexxExpressionStack *);
+    virtual void execute(RexxActivation *, ExpressionStack *);
     // We consider this a control instruction only if it is an IF.
     // WHENs are part of SELECT and thus not a top-level control type.
     virtual bool isControl() { return isType(KEYWORD_IF) ; }
@@ -85,6 +85,6 @@ class RexxInstructionCaseWhen : public RexxInstructionIf
     RexxInstructionCaseWhen() { };
     inline RexxInstructionCaseWhen(RESTORETYPE restoreType) { ; };
 
-    virtual void execute(RexxActivation *, RexxExpressionStack *);
+    virtual void execute(RexxActivation *, ExpressionStack *);
 };
 #endif

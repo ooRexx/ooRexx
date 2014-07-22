@@ -56,6 +56,6 @@ class RexxInstructionOptions : public RexxInstructionExpression
     inline RexxInstructionOptions(RESTORETYPE restoreType) { ; };
     RexxInstructionOptions(RexxObject *);
 
-    virtual void execute(RexxActivation *, RexxExpressionStack *);
+    virtual void execute(RexxActivation *, ExpressionStack *);
 };
 #endif

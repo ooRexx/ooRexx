@@ -129,7 +129,7 @@ void RexxInstructionEndIf::flatten(Envelope *envelope)
  * @param context The current execution context.
  * @param stack   The current evaluation stack.
  */
-void RexxInstructionEndIf::execute(RexxActivation *context, RexxExpressionStack *stack)
+void RexxInstructionEndIf::execute(RexxActivation *context, ExpressionStack *stack)
 {
     // end of a WHEN block?  This means we've executed a WHEN clause of a SELECT,
     // which terminates the SELECT.  The next instruction is the one after the closing

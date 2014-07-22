@@ -66,7 +66,7 @@ RexxInstructionCommand::RexxInstructionCommand(RexxObject *_expression)
  * @param context The current program activation context.
  * @param stack   The current expression stack.
  */
-void RexxInstructionCommand::execute(RexxActivation *context, RexxExpressionStack *stack )
+void RexxInstructionCommand::execute(RexxActivation *context, ExpressionStack *stack )
 {
     context->traceCommand(this);
 

@@ -60,7 +60,7 @@ class RexxInstructionAssignment : public RexxInstruction
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(Envelope *);
 
-    virtual void execute(RexxActivation *, RexxExpressionStack *);
+    virtual void execute(RexxActivation *, ExpressionStack *);
 
  protected:
 

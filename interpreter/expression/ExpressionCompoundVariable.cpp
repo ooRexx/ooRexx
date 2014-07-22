@@ -239,7 +239,7 @@ RexxObject *build(RexxString * variable_name, bool direct )
  *
  * @return The compound variable value.
  */
-RexxObject * RexxCompoundVariable::evaluate(RexxActivation *context, RexxExpressionStack *stack )
+RexxObject * RexxCompoundVariable::evaluate(RexxActivation *context, ExpressionStack *stack )
 {
     // the context does the real evaluation work
     RexxObject *value = context->evaluateLocalCompoundVariable(stemName, stemIndex, &tails[0], tailCount);

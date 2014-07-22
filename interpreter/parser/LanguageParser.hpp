@@ -63,7 +63,7 @@ class RexxCode;
 class PackageClass;
 class ClassDirective;
 class RexxActivation;
-class RexxExpressionStack;
+class ExpressionStack;
 class StackFrameClass;
 class ProgramSource;
 class RexxVariableBase;
@@ -84,7 +84,7 @@ typedef enum
 } ParsingFlags;
 
 // builtin function code prototype
-typedef RexxObject *builtin_func(RexxActivation *, size_t, RexxExpressionStack *);
+typedef RexxObject *builtin_func(RexxActivation *, size_t, ExpressionStack *);
 // pointer to a builtin function
 typedef builtin_func *pbuiltin;
 

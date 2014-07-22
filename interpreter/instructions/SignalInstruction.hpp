@@ -62,7 +62,7 @@ class RexxInstructionSignal : public RexxInstructionCallBase
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(Envelope *);
 
-    virtual void execute(RexxActivation *, RexxExpressionStack *);
+    virtual void execute(RexxActivation *, ExpressionStack *);
     virtual void resolve (DirectoryClass *);
 };
 
@@ -82,7 +82,7 @@ class RexxInstructionDynamicSignal : public RexxInstructionDynamicCallBase
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(Envelope*);
 
-    virtual void execute(RexxActivation *, RexxExpressionStack *);
+    virtual void execute(RexxActivation *, ExpressionStack *);
 };
 
 
@@ -100,7 +100,7 @@ class RexxInstructionSignalOn : public RexxInstructionTrapBase
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(Envelope*);
 
-    virtual void execute(RexxActivation *, RexxExpressionStack *);
+    virtual void execute(RexxActivation *, ExpressionStack *);
     virtual void resolve(DirectoryClass *);
 
     virtual void trap(RexxActivation *context, DirectoryClass  *conditionObj);

@@ -68,7 +68,7 @@ RexxInstructionSimpleDo::RexxInstructionSimpleDo(RexxString *l)
  * @param context The current execution context.
  * @param stack   The current evaluation stack.
  */
-void RexxInstructionSimpleDo::execute(RexxActivation *context, RexxExpressionStack *stack)
+void RexxInstructionSimpleDo::execute(RexxActivation *context, ExpressionStack *stack)
 {
     // trace on entry
     context->traceInstruction(this);

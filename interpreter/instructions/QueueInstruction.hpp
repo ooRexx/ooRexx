@@ -55,6 +55,6 @@ class RexxInstructionQueue : public RexxInstructionExpression
     inline RexxInstructionQueue(RESTORETYPE restoreType) { ; };
     RexxInstructionQueue(RexxObject *);
 
-    virtual void execute(RexxActivation *, RexxExpressionStack *);
+    virtual void execute(RexxActivation *, ExpressionStack *);
 };
 #endif

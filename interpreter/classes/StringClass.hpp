@@ -186,7 +186,7 @@ class RexxString : public RexxObject
     RexxObject *isInteger();
     RexxObject *logicalOperation(RexxObject *, RexxObject *, unsigned int);
     RexxString *extract(size_t offset, size_t sublength) { return newString(getStringData() + offset, sublength); }
-    RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
+    RexxObject *evaluate(RexxActivation *, ExpressionStack *);
     RexxObject *getValue(RexxActivation *);
     RexxObject *getValue(VariableDictionary *);
     RexxObject *getRealValue(RexxActivation *);
