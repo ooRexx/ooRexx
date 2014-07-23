@@ -95,6 +95,7 @@ class RexxBehaviour : public RexxInternalObject
     MethodDictionary *copyMethodDictionary();
 
     inline MethodDictionary *getMethodDictionary()   { return methodDictionary; };
+    inline bool hasInstanceMethods() { return methodDictionary == OREF_NULL ? false : methodDictionary->hasInstanceMethods(); }
            void        setMethodDictionary(MethodDictionary *m);
     inline void        clearMethodDictionary() { setMethodDictionary(OREF_NULL); }
     inline RexxClass  *getOwningClass()        { return owningClass;};

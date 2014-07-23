@@ -72,9 +72,11 @@ class MethodDictionary: publicStringHashCollection
         return scopeTable == OREF_NULL ? OREF_NULL : scopeTable->findSuperScope();
     }
 
+    inline bool hasInstanceMethods() { return instanceMethods != OREF_NULL; }
+
  protected:
 
-    TableClass *instanceMethods;     // any methods defined on this instance
+    StringTable *instanceMethods;     // any methods defined on this instance
     ArrayClass  *scopeList;           // the list of scope value order use for lookups
 };
 

@@ -448,8 +448,8 @@ RexxInternalObject *DirectoryClass::setMethodRexx(RexxString *entryname, MethodC
     entryname = stringArgument(entryname, ARG_ONE)->upper();
     if (methodobj != OREF_NULL)
     {
-        // make sure we have a method object for this
-        methodobj = MethodClass::newMethodObject(entryname, methodobj, this, IntegerTwo);
+        // make sure we have a method object for this.  The scope is .nil to indicate object scope.
+        methodobj = MethodClass::newMethodObject(entryname, methodobj, TheNilObject, IntegerTwo);
 
         // the unknown method?  We keep that in a special place
         if (entryname->strCompare(CHAR_UNKNOWN))

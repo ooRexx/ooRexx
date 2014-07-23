@@ -152,25 +152,25 @@ class MemoryObject : public RexxInternalObject
     inline RexxObject *newObject(size_t size) { return newObject(size, T_Object); }
     RexxObject *newObject(size_t size, size_t type);
     RexxObject *temporaryObject(size_t size);
-    ArrayClass  *newObjects(size_t size, size_t count, size_t objectType);
-    void        reSize(RexxObject *, size_t);
+    ArrayClass *newObjects(size_t size, size_t count, size_t objectType);
+    void        reSize(RexxInternalObject *, size_t);
     void        checkUninit();
     void        runUninits();
-    void        removeUninitObject(RexxObject *obj);
-    void        addUninitObject(RexxObject *obj);
-    bool        isPendingUninit(RexxObject *obj);
+    void        removeUninitObject(RexxInternalObject *obj);
+    void        addUninitObject(RexxInternalObject *obj);
+    bool        isPendingUninit(RexxInternalObject *obj);
     inline void checkUninitQueue() { if (pendingUninits > 0) runUninits(); }
     RexxObject *unflattenObjectBuffer(BufferClass *sourceBuffer, char *startPointer, size_t dataLength);
     void        unflattenProxyObjects(Envelope *envelope, RexxObject *firstObject, RexxObject *endObject);
 
     void        markObjects();
-    void        markObjectsMain(RexxObject *);
-    void        mark(RexxObject *);
+    void        markObjectsMain(RexxInternalObject *);
+    void        mark(RexxInternalObject *);
     void        markGeneral(void *);
-    void        tracingMark(RexxObject *root, MarkReason reason);
+    void        tracingMark(RexxInternalObject *root, MarkReason reason);
     void        collect();
-    inline void removeHold(RexxInternalObject *obj) { saveStack->remove((RexxObject *)obj); }
-    RexxObject *holdObject(RexxInternalObject *obj);
+    inline void removeHold(RexxInternalObject *obj) { saveStack->remove(obj); }
+    RexxInternalObject *holdObject(RexxInternalObject *obj);
     void        saveImage();
     void        setEnvelope(Envelope *);
     void        setOref(RexxInternalObject *variable, RexxInternalObject *value);
@@ -197,9 +197,9 @@ class MemoryObject : public RexxInternalObject
   #endif
     }
 
-    inline void logObjectStats(RexxObject *obj) { imageStats->logObject(obj); }
-    inline void pushSaveStack(RexxObject *obj) { saveStack->push(obj); }
-    inline void removeSavedObject(RexxObject *obj) { saveStack->remove(obj); }
+    inline void logObjectStats(RexxInternalObject *obj) { imageStats->logObject(obj); }
+    inline void pushSaveStack(RexxInternalObject *obj) { saveStack->push(obj); }
+    inline void removeSavedObject(RexxInternalObject *obj) { saveStack->remove(obj); }
     inline void clearSaveStack() { saveStack->clear(); }
 
     void        checkAllocs();
@@ -223,14 +223,14 @@ class MemoryObject : public RexxInternalObject
     void restoreStrings(ArrayClass *stringArray);
 
     inline void checkLiveStack() { if (!liveStack->checkRoom()) liveStackFull(); }
-    inline void pushLiveStack(RexxObject *obj) { checkLiveStack(); liveStack->push(obj); }
-    inline RexxObject * popLiveStack() { return (RexxObject *)liveStack->pop(); }
+    inline void pushLiveStack(RexxInternalObject *obj) { checkLiveStack(); liveStack->push(obj); }
+    inline RexxInternalObject * popLiveStack() { return liveStack->pop(); }
     inline void bumpMarkWord() { markWord ^= ObjectHeader::MarkMask; }
 
     // set the live mark in an object referenced by a void pointer
     static inline void setObjectLive(void *o, size_t mark)
     {
-        ((RexxObject *)o)->setObjectLive(mark);
+        ((RexxInternalObject *)o)->setObjectLive(mark);
     }
 
     static void *virtualFunctionTable[];     // table of virtual functions

@@ -314,7 +314,7 @@ class RexxInternalObject : public RexxVirtualBase
     virtual RexxString  *makeString();
     virtual void         copyIntoTail(CompoundVariableTail *buffer);
     virtual RexxString  *primitiveMakeString();
-    virtual ArrayClass   *makeArray();
+    virtual ArrayClass  *makeArray();
     virtual RexxString  *stringValue();
     virtual RexxInteger *integerValue(size_t);
     virtual bool         numberValue(wholenumber_t &result, size_t precision);
@@ -339,7 +339,6 @@ class RexxInternalObject : public RexxVirtualBase
 
             void         hasUninit();
             void         removedUninit();
-            void         printObject();
             RexxObject  *clone();
 
             RexxString  *requiredString(size_t);
@@ -355,7 +354,7 @@ class RexxInternalObject : public RexxVirtualBase
             RexxInteger *requestInteger(size_t);
             bool         requestNumber(wholenumber_t &, size_t);
             bool         requestUnsignedNumber(stringsize_t &, size_t);
-            ArrayClass   *requestArray();
+            ArrayClass  *requestArray();
 
     ObjectHeader header;              /* memory management header          */
     RexxBehaviour *behaviour;         /* the object's behaviour            */
@@ -424,7 +423,7 @@ class RexxObject : public RexxInternalObject
 
     virtual ~RexxObject(){;};
 
-    virtual RexxObject  *defMethod(RexxString *, MethodClass *, RexxString *a = OREF_NULL);
+    virtual RexxObject  *defineMethod(RexxString *, MethodClass *, RexxString *a = OREF_NULL);
     virtual RexxString  *defaultName();
     virtual RexxObject  *unknown(RexxString *msg, ArrayClass *args){return OREF_NULL;};
     virtual bool         hasMethod(RexxString *msg);
@@ -438,21 +437,8 @@ class RexxObject : public RexxInternalObject
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(Envelope *);
 
-    RexxObject  *copy();
-    HashCode     hash();
-    bool         truthValue(int);
-    virtual bool logicalValue(logical_t &);
-    virtual bool numberValue(wholenumber_t &result, size_t precision);
-    virtual bool numberValue(wholenumber_t &result);
-    virtual bool unsignedNumberValue(stringsize_t &result, size_t precision);
-    virtual bool unsignedNumberValue(stringsize_t &result);
-    virtual bool doubleValue(double &result);
-    virtual NumberString *numberString();
-    virtual RexxInteger *integerValue(size_t);
-    virtual RexxString  *makeString();
-    virtual RexxString  *primitiveMakeString();
-    virtual void         copyIntoTail(CompoundVariableTail *buffer);
-    virtual ArrayClass   *makeArray();
+    virtual RexxObject  *copy();
+    virtual HashCode     hash();
     virtual RexxString  *stringValue();
 
     bool         isEqual(RexxInternalObject *);
@@ -474,8 +460,6 @@ class RexxObject : public RexxInternalObject
     RexxObject  *sendWith(RexxObject *, ArrayClass *);
     MessageClass *startCommon(RexxObject *message, RexxObject **arguments, size_t argCount);
     static void decodeMessageName(RexxObject *target, RexxObject *message, RexxString *&messageName, RexxObject *&startScope);
-    RexxString  *oref();
-    RexxObject  *pmdict();
     RexxObject  *run(RexxObject **, size_t);
 
     void         messageSend(RexxString *, RexxObject **, size_t, ProtectedObject &);
@@ -503,10 +487,10 @@ class RexxObject : public RexxInternalObject
     RexxObject  *sendMessage(RexxString *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
 
                                       // Following are internal OREXX methods
-    RexxObject  *defMethods(DirectoryClass *);
+    RexxObject  *defineMethods(DirectoryClass *);
     void         setObjectVariable(RexxString *, RexxObject *, RexxObject *);
     RexxObject  *getObjectVariable(RexxString *);
-    RexxObject  *getObjectVariable(RexxString *, RexxObject *);
+    RexxObject  *getObjectVariable(RexxString *, RexxClass *);
     void         addObjectVariables(VariableDictionary *);
     void         copyObjectVariables(RexxObject *newObject);
     RexxObject  *superScope(RexxObject *);
@@ -515,8 +499,6 @@ class RexxObject : public RexxInternalObject
     RexxObject  *setMdict(RexxObject *);
     inline RexxBehaviour *behaviourObject() { return this->behaviour; }
 
-    const char  *idString();
-    RexxString  *id();
     MethodClass  *methodLookup(RexxString *name );
     VariableDictionary *getObjectVariables(RexxObject *);
     void guardOn(Activity *activity, RexxObject *scope);

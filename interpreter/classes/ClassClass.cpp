@@ -710,35 +710,34 @@ RexxObject *RexxClass::defineMethod(RexxString *method_name, MethodClass *method
     method_name = stringArgument(method_name, ARG_ONE);
     Protected<RexxString> dictionaryName = method_name->upper();
 
+    Protected<MethodClass> method_object;
+
     // if the second argument is omitted, then we are "hiding"
     // this method definition.  We add the method object to the
     // method dictionary as .nil, which will cause a lookup failure
     // when an attempt is made to invoke this method.
-    if ( OREF_NULL == method_object)
+    if (OREF_NULL == method_object)
     {
         method_object = (MethodClass *)TheNilObject;
     }
     // We need to convert this into a method object if it is not
     // one already.  .nil is a special case (same as an omitted argument)
-    else if (TheNilObject != method_object && !isOfClass(Method, method_object))
+    else if (TheNilObject != method_object)
     {
-        method_object = MethodClass::newMethodObject(method_name, method_object, IntegerTwo);
+        method_object = MethodClass::newMethodObject(method_name, method_object, this, IntegerTwo);
     }
-    // if we have a real method object, then we need to set the scope
+    // if we have a real method object, then the scope has already been set
     // and alse check if this is an uninit method, which is a special case.
     if (TheNilObject != method_object)
     {
-        method_object = method_object->newScope(this);
         if (method_name->strCompare(CHAR_UNINIT))
         {
             setHasUninitDefined();
         }
     }
 
-    ProtectedObject p(method_object);
-
     // make a copy of the instance behaviour so any previous objects
-    // aren't enhanced                   */
+    // aren't enhanced
     setField(instanceBehaviour, (RexxBehaviour *)instanceBehaviour->copy());
     // add method to the instance method dictionary
     instanceMethodDictionary->defineMethod(dictionaryName, method_object);
@@ -1158,17 +1157,8 @@ MethodDictionary *RexxClass::createMethodDictionary(RexxObject *sourceCollection
         if (newMethod != (MethodClass *)TheNilObject)
         {
             // if this isn't a method object already, try to create one
-            if (!isOfClass(Method, newMethod))
-            {
-                newMethod = MethodClass::newMethodObject(method_name, newMethod, IntegerOne);
-                newMethod->setScope(scope);
-            }
-            else
-            {
-                // if we have a method object, this might already be
-                // attached to a class.  newScope might return a copy to us.
-                newMethod = newMethod->newScope(scope);
-            }
+            newMethod = MethodClass::newMethodObject(method_name, newMethod, this, IntegerOne);
+            newMethod->setScope(scope);
         }
         // now add the method to the target dictionary
         newDictionary->addMethod(table_method_name, newMethod);

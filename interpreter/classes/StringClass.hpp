@@ -328,6 +328,19 @@ class RexxString : public RexxObject
         return createNumberString();
     }
 
+    // helper method for extracting a hash code value from a string formatted version
+    inline HashCode stringToHashCode()
+    {
+        if (getStringLength() < sizeof(HashCode))
+        {
+            // too short, just return the strings hash code
+            return hashValue;
+        }
+        // return the first n characters of the string as a hash code.
+        return *((HashCode *)getStringData());
+
+    }
+
     inline int sortCompare(RexxString *other)
     {
         size_t compareLength = length;

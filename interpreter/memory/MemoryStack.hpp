@@ -69,7 +69,7 @@ class LiveStack : public RexxInternalObject
 
     // the position is origin zero, relative to the top, which is an empty slot.  So, position 0
     // is the top element, 1 is the penultimate elements, etc.
-    inline RexxObject *get(size_t pos)
+    inline RexxInternalObject *get(size_t pos)
     {
         // we only return something if within the bounds
         if (pos < top)
@@ -90,7 +90,7 @@ class LiveStack : public RexxInternalObject
      *
      * @return
      */
-    inline void push(RexxObject *obj)
+    inline void push(RexxInternalObject *obj)
     {
         // we have no overrun protection here.  The using piece either
         // needs to accurately predict how large the stack needs to be or
@@ -105,7 +105,7 @@ class LiveStack : public RexxInternalObject
      *
      * @return The popped object (or OREF_NULL if we're empty)
      */
-    RexxObject *pop()
+    RexxInternalObject *pop()
     {
         // protect from an underrun
         if (top == 0)
@@ -120,15 +120,15 @@ class LiveStack : public RexxInternalObject
 
     inline bool        checkRoom() { return top < size; }
     inline size_t      stackSize() { return size; };
-    inline RexxObject *stackTop() { return top == 0 ? OREF_NULL : stack[top - 1]; };
-    inline void        copyEntries(LiveStack *other) { memcpy((char *)stack, (char *)other->stack, other->size * sizeof(RexxObject *)); top = other->top; }
-    inline void        clear() { memset(stack, 0, sizeof(RexxObject*) * size); }
+    inline RexxInternalObject *stackTop() { return top == 0 ? OREF_NULL : stack[top - 1]; };
+    inline void        copyEntries(LiveStack *other) { memcpy((char *)stack, (char *)other->stack, other->size * sizeof(RexxInternalObject *)); top = other->top; }
+    inline void        clear() { memset(stack, 0, sizeof(RexxInternalObject*) * size); }
 
  protected:
 
     size_t   size;                      // the stack size
     size_t   top;                       // the next position we push on the stack
-    RexxObject *stack[1];               // the stack entries
+    RexxInternalObject *stack[1];       // the stack entries
 };
 
 
@@ -157,7 +157,7 @@ class PushThroughStack : public RexxInternalObject
 
     // the position is origin zero, relative to the current.  Current
     // is the position of the last item pushed on to the stack.
-    inline RexxObject *get(size_t pos)
+    inline RexxInternalObject *get(size_t pos)
     {
         // if they a really searching back, reduce it modulo size.
         pos = pos % size;
@@ -183,7 +183,7 @@ class PushThroughStack : public RexxInternalObject
      *
      * @return
      */
-    inline void push(RexxObject *obj)
+    inline void push(RexxInternalObject *obj)
     {
         // this will wrap, as necessary, wiping out the reference at the bottom of the stack
         incrementCurrent();
@@ -197,10 +197,10 @@ class PushThroughStack : public RexxInternalObject
      *
      * @return The popped object (or OREF_NULL if we're empty)
      */
-    RexxObject *pop()
+    RexxInternalObject *pop()
     {
         // get the current referenced item
-        RexxObject *obj = stack[current];
+        RexxInternalObject *obj = stack[current];
         // because we make everything in the stack and this is used for GC
         // protection, null out the removed entry
         stack[current] = OREF_NULL;
@@ -211,7 +211,7 @@ class PushThroughStack : public RexxInternalObject
     LiveStack  *reallocate(size_t increment);
 
     inline size_t      stackSize() { return size; };
-    inline RexxObject *stackTop() { return stack[current]; };
+    inline RexxInternalObject *stackTop() { return stack[current]; };
 
     // increment and decrement will wrap
     inline void        decrementCurrent() { current = (current == 0) ? size - 1 : current - 1; }
@@ -226,7 +226,7 @@ class PushThroughStack : public RexxInternalObject
 
     size_t   size;                      // the stack size
     size_t   current;                   // the last object on the stack (starts as if OREF_NULL had been written first)
-    RexxObject *stack[1];               // the stack entries
+    RexxInternalObject *stack[1];       // the stack entries
 };
 
 #endif
