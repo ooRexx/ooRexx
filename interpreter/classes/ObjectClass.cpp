@@ -443,7 +443,7 @@ HashCode RexxObject::hash()
         // the default version sends us a string containing binary data.
         // if the string is long enough for that, we reverse the process.  Otherwise,
         // we'll just take the hash code from the string object.
-        return ((RexxObject *)result)->stringValue()->stringToHashCode();
+        return ((RexxObject *)result)->stringValue()->getObjectHashCode();
     }
 }
 

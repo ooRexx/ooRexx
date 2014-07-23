@@ -54,6 +54,7 @@
 #include "ExitHandler.hpp"
 #include "ActivationApiContexts.hpp"
 #include "SysActivity.hpp"
+#include "StringTableClass.hpp"
 
 
 
@@ -272,11 +273,11 @@ class Activity : public RexxInternalObject
     inline RexxActivation *getCurrentRexxFrame() {return currentRexxFrame;}
     inline RexxActivationBase *getTopStackFrame() { return topStackFrame; }
     inline size_t getActivationDepth() { return stackFrameDepth; }
-    inline NumericSettings *getNumericSettings () {return this->numericSettings;}
-    inline RexxObject *runningRequires(RexxString *program) {return this->requiresTable->stringGet(program);}
-    inline void        addRunningRequires(RexxString *program) { this->requiresTable->stringAdd((RexxObject *)program, program);}
-    inline void        removeRunningRequires(RexxObject *program) {this->requiresTable->remove(program);}
-    inline void        resetRunningRequires() {this->requiresTable->reset();}
+    inline NumericSettings *getNumericSettings () {return numericSettings;}
+    inline RexxInternalObject *runningRequires(RexxString *program) {return requiresTable->get(program);}
+    inline void        addRunningRequires(RexxString *program) { requiresTable->put(program, program);}
+    inline void        removeRunningRequires(RexxInternalObject *program) { requiresTable->remove(program);}
+    inline void        resetRunningRequires() { requiresTable->empty();}
     inline bool        checkRequires(RexxString *n) { return runningRequires(n) != OREF_NULL; }
     inline void        waitForDispatch() { runsem.wait(); }
     inline void        clearWait()  { runsem.reset(); }
@@ -293,12 +294,12 @@ class Activity : public RexxInternalObject
         stack->setFrame(frameStack.allocateFrame(entries), entries);
     }
 
-    inline RexxObject **allocateFrame(size_t entries)
+    inline RexxInternalObject **allocateFrame(size_t entries)
     {
         return frameStack.allocateFrame(entries);
     }
 
-    inline void releaseStackFrame(RexxObject **frame)
+    inline void releaseStackFrame(RexxInternalObject **frame)
     {
         frameStack.releaseFrame(frame);
     }
@@ -330,12 +331,12 @@ class Activity : public RexxInternalObject
     inline void disableExit(int exitNum) { getExitHandler(exitNum).disable(); }
 
 
-    InterpreterInstance *instance;      // the interpreter we're running under
-    ActivityContext      threadContext; // the handed out activity context
-    Activity *oldActivity;          // pushed nested activity
-    ActivationStack   frameStack;   // our stack used for activation frames
-    DirectoryClass      *conditionobj;   // condition object for killed activi
-    TableClass          *requiresTable;  // Current ::REQUIRES being installed
+    InterpreterInstance *instance;         // the interpreter we're running under
+    ActivityContext      threadContext;    // the handed out activity context
+    Activity *oldActivity;                 // pushed nested activity
+    ActivationStack      frameStack;       // our stack used for activation frames
+    DirectoryClass      *conditionobj;     // condition object for killed activi
+    StringTable         *requiresTable;    // Current ::REQUIRES being installed
     MessageClass        *dispatchMessage;  // a message object to run on this thread
 
 

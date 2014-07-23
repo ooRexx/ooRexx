@@ -287,7 +287,7 @@ inline ArrayClass *arrayArgument(RexxInternalObject *object, size_t position)
     // force to array form
     ArrayClass *array = object->requestArray();
     // not an array or not single dimension?  Error!
-    if (array == TheNilObject || array->getDimension() != 1)
+    if (array == TheNilObject || array->isMultiDimensional())
     {
         reportException(Error_Execution_noarray, (RexxObject *)object);
     }
@@ -314,7 +314,7 @@ inline ArrayClass * arrayArgument(RexxInternalObject *object, const char *name)
 
     // get the array form and verify we got a single-dimension array back.
     ArrayClass *array = object->requestArray();
-    if (array == TheNilObject || array->getDimension() != 1)
+    if (array == TheNilObject || array->isMultiDimensional())
     {
         /* raise an error                    */
         reportException(Error_Invalid_argument_noarray, name);

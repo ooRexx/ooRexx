@@ -44,7 +44,6 @@
 #ifndef Included_CompoundVariableTable
 #define Included_CompoundVariableTable
 
-
 class StemClass;
 class CompoundTableElement;
 
@@ -82,22 +81,23 @@ class CompoundVariableTable
         friend class CompoundVariableTable;
 
     public:
+        inline TableIterator() : contents(OREF_NULL), current(OREF_NULL) { }
         inline ~TableIterator() {}
 
         inline bool isAvailable()  { return current != OREF_NULL; }
-        inline RexxInternalObject *value() { return current->getVariableValue(); }
-        inline RexxString *name() { return current->getName(); }
-        inline RexxString *name(RexxString *stemName) { return current->createCompoundName(stemName); }
-        inline void replace(RexxInternalObject v) { current->setValue(v); }
-        inline void next() { contents.next(current)); }
+        inline RexxInternalObject *value();
+        inline RexxString *name();
+        inline RexxString *name(RexxString *stemName);
+        inline void replace(RexxInternalObject v);
+        inline void next() { contents->next(current); }
 
     private:
         // constructor for an index iterator
-        TableIterator(CompoundVariableTable &c)
-            : contents(c) { current = contents.first(); }
+        TableIterator(CompoundVariableTable *c)
+            : contents(c) { current = contents->first(); }
 
-        CompoundVariableTable &contents;
-        CompoundVariableElement *current;
+        CompoundVariableTable *contents;
+        CompoundTableElement  *current;
     };
 
     inline CompoundVariableTable() { ; };

@@ -60,16 +60,28 @@ class NumericSettings                      // "global" numeric settings
 class Numerics
 {
 public:
-    static const wholenumber_t MAX_WHOLENUMBER;
-    static const wholenumber_t MIN_WHOLENUMBER;
+#ifdef __REXX64__
+    static const wholenumber_t Numerics::MAX_WHOLENUMBER = __INT64_C(999999999999999999);
+    static const wholenumber_t Numerics::MIN_WHOLENUMBER = __INT64_C(-999999999999999999);
+    // the digits setting used internally for function/method arguments to allow
+    // for the full range
+    static const size_t Numerics::ARGUMENT_DIGITS  = ((size_t)18);
+    // this is the digits setting for full size binary settings
+    static const size_t Numerics::SIZE_DIGITS  = ((size_t)20);
+#else
+    static const wholenumber_t Numerics::MAX_WHOLENUMBER = 999999999;
+    static const wholenumber_t Numerics::MIN_WHOLENUMBER = -999999999;
+        // the digits setting used internally for function/method arguments to allow
+        // for the full binary value range
+    static const size_t Numerics::ARGUMENT_DIGITS  = ((size_t)9);
+    // this is the digits setting for full size binary settings
+    static const size_t Numerics::SIZE_DIGITS  = ((size_t)10);
+#endif
+
     static const wholenumber_t MAX_EXPONENT;
     static const wholenumber_t MIN_EXPONENT;
     static const size_t DEFAULT_DIGITS;
     // a digits setting for full range integer conversion
-    static const size_t ARGUMENT_DIGITS;
-    // the digits setting used internally for function/method arguments to allow
-    // for the full range
-    static const size_t SIZE_DIGITS;
     static const size_t  MAX_STRINGSIZE;
 
     // max numeric digits value for explicit 64-bit conversions

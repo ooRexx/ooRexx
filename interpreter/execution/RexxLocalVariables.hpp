@@ -46,6 +46,7 @@
 #define Included_RexxLocalVariables
 
 #include "FlagSet.hpp"
+#include "VariableDictionary.hpp"
 
 /**
  * Predefined index values for a stack frame.
@@ -86,7 +87,7 @@ class RexxLocalVariables
     /* number of the last variable in the cache.   The zero-th */
     /* element is used to trigger cache lookup failures. */
     inline void init(RexxActivation *creator, size_t poolSize) { owner = creator; size = poolSize + 1; dictionary = OREF_NULL; flags.reset(); }
-    inline void setFrame(RexxObject **frame)
+    inline void setFrame(RexxInternalObject **frame)
     {
         locals = (RexxVariable **)frame;
         memset(locals, 0, sizeof(RexxVariable *) * size);
@@ -113,8 +114,7 @@ class RexxLocalVariables
 
     inline void putVariable(RexxVariable *variable, size_t index)
     {
-        /* this may be a dynamic addition, so we might not know the */
-        /* index. */
+        // this may be a dynamic addition, so we might not know the index
         if (index != 0)
         {
             locals[index] = variable;

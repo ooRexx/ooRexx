@@ -55,8 +55,8 @@ class RexxVariable : public RexxInternalObject
     inline void  operator delete(void *, void *) {;}
     inline void  operator delete(void *) { }
 
-    inline RexxVariable() : variable_name(OREF_NULL), variableValue(OREF_NULL), creator(OREF_NULL), dependents(OREF_NULL) {;};
-    inline RexxVariable(RexxString *n) : variable_name(n), variableValue(OREF_NULL), creator(OREF_NULL), dependents(OREF_NULL) {;};
+    inline RexxVariable() : variableName(OREF_NULL), variableValue(OREF_NULL), creator(OREF_NULL), dependents(OREF_NULL) {;};
+    inline RexxVariable(RexxString *n) : variableName(n), variableValue(OREF_NULL), creator(OREF_NULL), dependents(OREF_NULL) {;};
     inline RexxVariable(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
@@ -79,15 +79,15 @@ class RexxVariable : public RexxInternalObject
     };
 
     inline RexxInternalObject *getVariableValue() { return variableValue; };
-    inline RexxInternalObject *getResolvedValue() { return variableValue != OREF_NULL ? variableValue : (RexxObject *)variable_name; };
-    inline RexxString *getName() { return variable_name; }
-    inline void setName(RexxString *name) { OrefSet(this, variable_name, name); }
+    inline RexxInternalObject *getResolvedValue() { return variableValue != OREF_NULL ? variableValue : (RexxObject *)variableName; };
+    inline RexxString *getName() { return variableName; }
+    inline void setName(RexxString *name) { setField(variableName, name); }
 
     inline void reset(RexxString *name)
     {
         creator       = OREF_NULL;        /* this is unowned                   */
         variableValue = OREF_NULL;        /* clear out the hash value          */
-        variable_name = name;             /* fill in the name                  */
+        variableName  = name;             /* fill in the name                  */
         dependents = OREF_NULL;           /* and the dependents                */
     }
 
@@ -97,7 +97,7 @@ class RexxVariable : public RexxInternalObject
     inline RexxVariable *getNext() { return (RexxVariable *)variableValue; }
     inline void cache(RexxVariable *next) { reset(OREF_NULL); variableValue = (RexxObject *)next; }
     inline bool isLocal(RexxActivation *act) { return act == creator; }
-    inline bool isStem() { return variable_name->endsWith('.'); }
+    inline bool isStem() { return variableName->endsWith('.'); }
 
 protected:
 

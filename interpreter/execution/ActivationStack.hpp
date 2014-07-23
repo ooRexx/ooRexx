@@ -56,6 +56,7 @@ class ActivationFrameBuffer : public RexxInternalObject
      inline void *operator new(size_t size, size_t entries);
      inline void *operator new(size_t size, void *ptr) { return ptr;};
      inline void  operator delete(void *, void *) { ; }
+     inline void  operator delete(void *, size_t) { ; }
 
      ActivationFrameBuffer() { ; }
      ActivationFrameBuffer(size_t entries);
@@ -72,12 +73,12 @@ class ActivationFrameBuffer : public RexxInternalObject
          return frame;
      }
 
-     inline bool contains(RexxObject **frame)
+     inline bool contains(RexxInternalObject **frame)
      {
          return frame >= &buffer[0] && frame <= &buffer[size];
      }
 
-     inline void releaseFrame(RexxObject **frame)
+     inline void releaseFrame(RexxInternalObject **frame)
      {
          next = frame - &buffer[0];
      }
@@ -121,14 +122,14 @@ class ActivationStack
     void expandCapacity(size_t entries);
 
     inline void ensureCapacity(size_t entries) { if (!current->hasCapacity(entries)) { expandCapacity(entries); } }
-    inline RexxObject **allocateFrame(size_t entries)
+    inline RexxInternalObject **allocateFrame(size_t entries)
     {
         // make sure we have space first
         ensureCapacity(entries);
         // now allocate from the current stack buffer
         return current->allocateFrame(entries);
     }
-    void releaseFrame(RexxObject **frame)
+    void releaseFrame(RexxInternalObject **frame)
     {
         // we may be popping back one or more buffers.  We deactivate the newer ones
         while (!current->contains(frame))

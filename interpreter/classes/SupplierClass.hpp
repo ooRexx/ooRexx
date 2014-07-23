@@ -44,6 +44,9 @@
 #ifndef Included_SupplierClass
 #define Included_SupplierClass
 
+class RexxInteger;
+class ArrayClass;
+
 class SupplierClass : public RexxObject
 {
  public:
@@ -61,17 +64,17 @@ class SupplierClass : public RexxObject
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(Envelope *);
 
-    bool         isAvailable()
+    bool         isAvailable();
     RexxInteger *available();
     RexxObject  *next();
     RexxObject  *value();
     RexxObject  *index();
     RexxObject  *initRexx(ArrayClass *values, ArrayClass *indexes);
     RexxObject  *newRexx(RexxObject **, size_t);
-    ArrayClass   *indexes() {return indexes; }
-    ArrayClass   *values() {return values; }
+    ArrayClass  *getIndexes() { return indexes; }
+    ArrayClass  *getValues() { return values; }
     void         append(ArrayClass *, ArrayClass *);
-    void         append(RexxSuppler *);
+    void         append(SupplierClass *);
 
     static void createInstance();
     static RexxClass *classInstance;
@@ -80,7 +83,7 @@ class SupplierClass : public RexxObject
 
     ArrayClass  *values;                 // array of values
     ArrayClass  *indexes;                // array of indexes
-    size_t position;                    // current array position
+    size_t position;                     // current array position
 };
 
 inline SupplierClass *new_supplier(ArrayClass *values, ArrayClass *indexes) { return new SupplierClass(values, indexes); }

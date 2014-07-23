@@ -56,7 +56,7 @@ class ObjectStats
     inline ObjectStats() : count(0), size(0) {}
 
     inline void clear() { count = 0; size = 0; }
-    inline void logObject(RexxObject *obj) { count++; size += obj->getObjectSize(); }
+    inline void logObject(RexxInternalObject *obj) { count++; size += obj->getObjectSize(); }
     void   printStats(int type);
 
   protected:
@@ -103,7 +103,7 @@ class MemoryStats
         normalStats("Normal allocation segment set"),
         largeStats("Large allocation segment pool") {}
 
-    void logObject(RexxObject *obj);
+    void logObject(RexxInternalObject *obj);
     void printSavedImageStats();
     void printMemoryStats();
     void clear();

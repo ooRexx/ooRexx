@@ -74,23 +74,6 @@ void RexxString::createInstance()
 }
 
 
-HashCode RexxString::hash()
-/******************************************************************************/
-/* Function:  retrieve the hash value of a string object                      */
-/******************************************************************************/
-{
-    if (!isString(this))            /*  a nonprimitive object?           */
-    {
-        /* see if == overridden.             */
-        return sendMessage(OREF_STRICT_EQUAL)->requestString()->getStringHash();
-    }
-    else
-    {
-        return getHashValue();       /* return the string hash            */
-    }
-}
-
-
 /**
  * Get the primitive hash value of this String object.
  *
@@ -136,20 +119,24 @@ HashCode RexxString::getObjectHashCode()
 }
 
 
-
+/**
+ * Normal garbage collection live marking
+ *
+ * @param liveMark The current live mark.
+ */
 void RexxString::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
     memory_mark(numberStringValue);
     memory_mark(objectVariables);
 }
 
+
+/**
+ * Generalized object marking.
+ *
+ * @param reason The reason for this live marking operation.
+ */
 void RexxString::liveGeneral(MarkReason reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
 {
     // if this string is part of the image, generate the numberstring value now
     // if possible to avoid oldspace/newspace cross references at trun time.
@@ -161,27 +148,35 @@ void RexxString::liveGeneral(MarkReason reason)
     memory_mark_general(objectVariables);
 }
 
+
+/**
+ * Flatten the table contents as part of a saved program.
+ *
+ * @param envelope The envelope we're flattening into.
+ */
 void RexxString::flatten(Envelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
 {
-  setUpFlatten(RexxString)
+    setUpFlatten(RexxString)
 
-   flattenRef(numberStringValue);
-   flattenRef(objectVariables);
+    flattenRef(numberStringValue);
+    flattenRef(objectVariables);
 
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
+
+/**
+ * unflatten an object
+ *
+ * @param envelope The envelope owning the object currently.
+ *
+ * @return A potential replacement object if this is a proxy.
+ */
 RexxObject *RexxString::unflatten(Envelope *envelope)
-/******************************************************************************/
-/* Function:  unflatten an object                                             */
-/******************************************************************************/
 {
+    // if this has been proxied, then retrieve our target object from the environment
     if (isProxyObject())
-    {        /* is this a proxy object?              */
-        // just perform an environment lookup
+    {
         return TheEnvironment->entry(this);
     }
     else
@@ -191,35 +186,45 @@ RexxObject *RexxString::unflatten(Envelope *envelope)
     }
 }
 
+
+/**
+ * Return the primitive string value of this object
+ *
+ * @return Unless subclassed, directly returns the string value.
+ */
 RexxString *RexxString::stringValue()
-/******************************************************************************/
-/* Function:  Return the primitive string value of this object                */
-/******************************************************************************/
 {
-    if (isOfClass(String, this))             /* already a primitive string?       */
+    if (isOfClass(String, this))
     {
-        return this;                       /* just return our selves            */
+        return this;
     }
-    else                                 /* need to build a new string        */
+    else
     {
+        // need to return a real string object, so create one from the string data.
         return new_string(getStringData(), getLength());
     }
 }
 
+
+/**
+ * Handle a REQUEST('STRING') request for a REXX string object
+ *
+ * @return A string version of this string.
+ */
 RexxString  *RexxString::makeString()
-/******************************************************************************/
-/* Function:  Handle a REQUEST('STRING') request for a REXX string object     */
-/******************************************************************************/
 {
-    if (isBaseClass())             /* really a primitive string?        */
+    // the base class is easy
+    if (isBaseClass())
     {
-        return this;                       /* this is easy                      */
+        return this;
     }
-    else                                 /* need to create a new string       */
+    else
     {
+        // return a true string object if this is a subclass.
         return new_string(getStringData(), getLength());
     }
 }
+
 
 /**
  * Baseclass optimization for handling request array calls.
@@ -233,119 +238,142 @@ ArrayClass  *RexxString::makeArray()
 }
 
 
+/**
+ * Copy a string value into to a compound variable tail.
+ *
+ * @param tail   The target tail object.
+ */
 void RexxString::copyIntoTail(CompoundVariableTail *tail)
-/******************************************************************************/
-/* Function:  Handle a tail construction request for an internal object       */
-/******************************************************************************/
 {
-                                       /* copy this directly into the tail */
     tail->append(getStringData(), getLength());
 }
 
 
+/**
+ * Handle a REQUEST('STRING') request for a REXX string object
+ *
+ * @return Just returns the target string object.
+ */
 RexxString  *RexxString::primitiveMakeString()
-/******************************************************************************/
-/* Function:  Handle a REQUEST('STRING') request for a REXX string object     */
-/******************************************************************************/
 {
-    return this;                         /* this is easy                      */
+    return this;
 }
 
+
+/**
+ * Convert a string object to a whole number value.  Returns false if
+ * it will not convert.
+ *
+ * @param result the return whole number result
+ * @param digits the digits value for the conversion.
+ *
+ * @return true if this converted successfully.
+ */
 bool RexxString::numberValue(wholenumber_t &result, stringsize_t digits)
-/******************************************************************************/
-/* Function:  Convert a string object to a long value.  Returns false         */
-/*            it will not convert.                                            */
-/******************************************************************************/
 {
-    if (!(isString(this)))               /* subclassed string object?         */
+    // convert based off of requested string value.
+    if (!isBaseClass())
     {
         return requestString()->numberValue(result, digits);
     }
-                                         /* get the string value's long value */
-    NumberString *numberstring = fastNumberString();
-    if (numberstring != OREF_NULL )      /* convert ok?                       */
+
+    // get a number string for this string.  If we validated ok,
+    // then convert that to an integer value.
+    NumberString *numberstring = numberString();
+    if (numberstring != OREF_NULL )
     {
-                                         /* convert to integer with proper    */
-                                         /* precision                         */
         return numberstring->numberValue(result, digits);
     }
-    return false;                        /* return the "not value long" value */
+    return false;
 }
 
+
+/**
+ * Convert a string object to a whole number value.  Returns false if
+ * it will not convert.
+ *
+ * @param result the return whole number result
+ *
+ * @return true if this converted successfully.
+ */
 bool RexxString::numberValue(wholenumber_t &result)
-/******************************************************************************/
-/* Function:  Convert a string object to a long value.  Returns false         */
-/*            it will not convert.                                            */
-/******************************************************************************/
 {
-    if (!(isString(this)))               /* subclassed string object?         */
+    if (!isBaseClass())
     {
         return requestString()->numberValue(result);
     }
-                                         /* get the string value's long value */
-    NumberString *numberstring = fastNumberString();
-    if (numberstring != OREF_NULL )      /* convert ok?                       */
+
+    NumberString *numberstring = numberString();
+    if (numberstring != OREF_NULL )
     {
-                                         /* convert to integer with proper    */
-                                         /* precision                         */
         return numberstring->numberValue(result);
     }
-    return false;                        /* return the "not value long" value */
+    return false;
 }
 
 
+/**
+ * Convert a string object to an unsigned number value.  Returns
+ * false if it will not convert.
+ *
+ * @param result the return whole number result
+ * @param digits the digits value for the conversion.
+ *
+ * @return true if this converted successfully.
+ */
 bool RexxString::unsignedNumberValue(stringsize_t &result, stringsize_t digits)
-/******************************************************************************/
-/* Function:  Convert a string object to a long value.  Returns false         */
-/*            it will not convert.                                            */
-/******************************************************************************/
 {
-    if (!(isString(this)))               /* subclassed string object?         */
+    if (!isBaseClass())
     {
         return requestString()->unsignedNumberValue(result, digits);
     }
-                                         /* get the string value's long value */
-    NumberString *numberstring = fastNumberString();
-    if (numberstring != OREF_NULL )      /* convert ok?                       */
+    NumberString *numberstring = numberString();
+    if (numberstring != OREF_NULL )
     {
-                                         /* convert to integer with proper    */
-                                         /* precision                         */
         return numberstring->unsignedNumberValue(result, digits);
     }
-    return false;                        /* return the "not value long" value */
+    return false;
 }
 
 
+/**
+ * Convert a string object to an unsigned number value.  Returns
+ * false if it will not convert.
+ *
+ * @param result the return whole number result
+ *
+ * @return true if this converted successfully.
+ */
 bool RexxString::unsignedNumberValue(stringsize_t &result)
-/******************************************************************************/
-/* Function:  Convert a string object to a long value.  Returns false         */
-/*            it will not convert.                                            */
-/******************************************************************************/
 {
-    if (!(isString(this)))               /* subclassed string object?         */
+    if (!isBaseClass())
     {
         return requestString()->unsignedNumberValue(result);
     }
-                                         /* get the string value's long value */
-    NumberString *numberstring = fastNumberString();
-    if (numberstring != OREF_NULL )      /* convert ok?                       */
+
+    NumberString *numberstring = numberString();
+    if (numberstring != OREF_NULL )
     {
-                                         /* convert to integer with proper    */
-                                         /* precision                         */
         return numberstring->unsignedNumberValue(result);
     }
-    return false;                        /* return the "not value long" value */
+    return false;
 }
 
+
+/**
+ * Convert a string object to a double value.  Returns false if
+ * it will not convert.
+ *
+ * @param result the return whole number result
+ *
+ * @return true if this converted successfully.
+ */
 bool RexxString::doubleValue(double &result)
-/******************************************************************************/
-/* Function:  Convert a string object to a double value                       */
-/******************************************************************************/
 {
-    NumberString *numberDouble = fastNumberString(); /* convert String to Numberstring    */
-    if (numberDouble != OREF_NULL)       /* Did we get a numberstring?        */
+    NumberString *numberDouble = numberString();
+    if (numberDouble != OREF_NULL)
     {
-        return numberDouble->doubleValue(result);/* Yup, convert it to double         */
+        return numberDouble->doubleValue(result);
     }
     // non numeric, so this could be one of the special cases
     if (strCompare("nan"))
@@ -369,89 +397,53 @@ bool RexxString::doubleValue(double &result)
         result = -HUGE_VAL;
         return true;
     }
-    return false;                      /* not number string, so NODOUBLE    */
+    return false;
 }
 
 
+/**
+ * Convert a String Object into a Number Object
+ *
+ * @return The converted numeric value.
+ */
 NumberString *RexxString::numberString()
-/******************************************************************************/
-/* Function:   Convert a String Object into a Number Object                   */
-/******************************************************************************/
 {
-    RexxString       *newSelf;           /* converted string value            */
-
-    if (nonNumeric())              /* Did we already try and convert to */
+    // we might have one already, so reuse it.
+    if (numberStringValue != OREF_NULL)
     {
-        /* to a numberstring and fail?       */
-        return OREF_NULL;                   /* Yes, no need to try agian.        */
-    }
-
-    if (numberStringValue != OREF_NULL) /* see if we have already converted  */
-    {
-        return numberStringValue;         /* return the numberString Object.   */
-    }
-
-    if (!isOfClass(String, this))
-    {          /* not truly a string type?          */
-        newSelf = requestString();   /* do the conversion                 */
-                                           /* get a new numberstring Obj        */
-        OrefSet(this, numberStringValue, (NumberString *)new_numberstring(newSelf->getStringData(), newSelf->getLength()));
-        if (numberStringValue != OREF_NULL)     /* Did number convert OK?            */
-        {
-            setHasReferences();     /* Make sure we are sent Live...     */
-        }
-    }
-    else
-    {                               /* real primitive string             */
-                                    /* get a new numberstring Obj        */
-        OrefSet(this, numberStringValue, (NumberString *)new_numberstring(getStringData(), getLength()));
-        if (numberStringValue == OREF_NULL)     /* Did number convert OK?            */
-        {
-            setNonNumeric();           /* mark as a nonnumeric              */
-        }
-        else
-        {
-            setHasReferences();        /* Make sure we are sent Live...     */
-                                             /* connect the string and number     */
-            numberStringValue->setString(this);
-        }
-    }
-    return numberStringValue;           /* return the numberString Object.   */
-}
-
-NumberString *RexxString::createNumberString()
-/******************************************************************************/
-/* Function:   Convert a String Object into a Number Object                   */
-/******************************************************************************/
-{
-    if (!isOfClass(String, this))
-    {          /* not truly a string type?          */
-        RexxString *newSelf = requestString();   /* do the conversion                 */
-                                           /* get a new numberstring Obj        */
-        OrefSet(newSelf, newSelf->numberStringValue, (NumberString *)new_numberstring(newSelf->getStringData(), newSelf->getLength()));
-        /* save the number string            */
-        if (newSelf->numberStringValue != OREF_NULL)     /* Did number convert OK?            */
-        {
-            newSelf->setHasReferences();     /* Make sure we are sent Live...     */
-        }
-        return newSelf->numberStringValue;
-    }
-    else
-    {                               /* real primitive string             */
-                                    /* get a new numberstring Obj        */
-        OrefSet(this, numberStringValue, (NumberString *)new_numberstring(getStringData(), getLength()));
-        if (numberStringValue == OREF_NULL)     /* Did number convert OK?            */
-        {
-            setNonNumeric();           /* mark as a nonnumeric              */
-        }
-        else
-        {
-            setHasReferences();        /* Make sure we are sent Live...     */
-                                             /* connect the string and number     */
-            numberStringValue->setString(this);
-        }
         return numberStringValue;
     }
+
+    // already tried and failed?  Return failure immediately.
+    if (nonNumeric())
+    {
+        return OREF_NULL;
+    }
+    // a subclassed type?  Do this the long way
+    if (!isBaseClass())
+        // get the request string value and create the number string from that value.
+        // we set this in our value
+        RexxString *newSelf = requestString();
+        setField(numberStringValue, (NumberString *)new_numberstring(newSelf->getStringData(), newSelf->getLength()));
+    }
+    else
+    {
+        // generate the numberstring directly
+        setField(numberStringValue, (NumberString *)new_numberstring(getStringData(), getLength()));
+    }
+    // mark as non-numeric if we could not create this so we won't try again.
+    if (numberStringValue == OREF_NULL)
+    {
+        setNonNumeric();
+    }
+    else
+    {
+        // we have a numberstring now, so turn on reference marking for this object.
+        setHasReferences();
+        // set our string value into the numberstring as well.
+        numberStringValue->setString(this);
+    }
+    return numberStringValue;
 }
 
 
@@ -623,7 +615,7 @@ wholenumber_t RexxString::comp(RexxObject *other)
                                          /* we will get into a loop.          */
     requiredArgument(other, ARG_ONE);            /* make sure we have a real argument */
                                          /* try and convert both numbers      */
-    if (((firstNum = fastNumberString()) != OREF_NULL) && ((secondNum = other->numberString()) != OREF_NULL ))
+    if (((firstNum = numberString()) != OREF_NULL) && ((secondNum = other->numberString()) != OREF_NULL ))
     {
         /* yes, send converted numbers and do*/
         /* the compare                       */
@@ -744,20 +736,24 @@ wholenumber_t RexxString::strictComp(RexxObject *otherObj)
     return result;                       /* finished, return our result       */
 }
 
+
+// simple macro for generating the arithmetic operator methods, which
+// are essentially identical except for the final method call.
+#define ArithmeticOperator(method)  \
+    NumberString numstr = numberString(); \
+    if (numstr == OREF_NULL)              \
+    {                                     \
+        reportException(Error_Conversion_operator, this); \
+    }                                     \
+    return numstr->method(right_term);
+
+
 RexxObject *RexxString::plus(RexxObject *right_term)
 /******************************************************************************/
 /* Function:  String addition...performed by NumberString                 */
 /******************************************************************************/
 {
-    NumberString *numstr;            /* converted number string           */
-
-                                         /* non-numeric?                      */
-    if ((numstr = fastNumberString()) == OREF_NULL)
-    {
-        /* this is a conversion error        */
-        reportException(Error_Conversion_operator, this);
-    }
-    return numstr->plus(right_term);     /* have numberstring do this         */
+    ArithmeticOperator(plus);
 }
 
 RexxObject *RexxString::minus(RexxObject *right_term)
@@ -765,63 +761,34 @@ RexxObject *RexxString::minus(RexxObject *right_term)
 /* Function:  String subtraction...performed by NumberString              */
 /******************************************************************************/
 {
-    NumberString *numstr;            /* converted number string           */
-
-                                         /* non-numeric?                      */
-    if ((numstr = fastNumberString()) == OREF_NULL)
-    {
-        /* this is a conversion error        */
-        reportException(Error_Conversion_operator, this);
-    }
-    return numstr->minus(right_term);    /* have numberstring do this         */
+    ArithmeticOperator(minus);
 }
+
 
 RexxObject *RexxString::multiply(RexxObject *right_term)
 /******************************************************************************/
 /* Function:  String multiplication...performed by NumberString           */
 /******************************************************************************/
 {
-    NumberString *numstr;            /* converted number string           */
-
-                                         /* non-numeric?                      */
-    if ((numstr = fastNumberString()) == OREF_NULL)
-    {
-        /* this is a conversion error        */
-        reportException(Error_Conversion_operator, this);
-    }
-    return numstr->multiply(right_term); /* have numberstring do this         */
+    ArithmeticOperator(multiply);
 }
+
 
 RexxObject *RexxString::divide(RexxObject *right_term)
 /******************************************************************************/
 /* Function:  String division...performed by NumberString                 */
 /******************************************************************************/
 {
-    NumberString *numstr;            /* converted number string           */
-
-                                         /* non-numeric?                      */
-    if ((numstr = fastNumberString()) == OREF_NULL)
-    {
-        /* this is a conversion error        */
-        reportException(Error_Conversion_operator, this);
-    }
-    return numstr->divide(right_term);   /* have numberstring do this         */
+    ArithmeticOperator(divide);
 }
+
 
 RexxObject *RexxString::integerDivide(RexxObject *right_term)
 /******************************************************************************/
 /* Function:  String division...performed by NumberString                 */
 /******************************************************************************/
 {
-    NumberString *numstr;            /* converted number string           */
-
-                                         /* non-numeric?                      */
-    if ((numstr = fastNumberString()) == OREF_NULL)
-    {
-        /* this is a conversion error        */
-        reportException(Error_Conversion_operator, this);
-    }
-    return numstr->integerDivide(right_term); /* have numberstring do this         */
+    ArithmeticOperator(integerDivide);
 }
 
 RexxObject *RexxString::remainder(RexxObject *right_term)
@@ -829,15 +796,7 @@ RexxObject *RexxString::remainder(RexxObject *right_term)
 /* Function:  String division...performed by NumberString                 */
 /******************************************************************************/
 {
-    NumberString *numstr;            /* converted number string           */
-
-                                         /* non-numeric?                      */
-    if ((numstr = fastNumberString()) == OREF_NULL)
-    {
-        /* this is a conversion error        */
-        reportException(Error_Conversion_operator, this);
-    }
-    return numstr->remainder(right_term);     /* have numberstring do this         */
+    ArithmeticOperator(remainder);
 }
 
 RexxObject *RexxString::power(RexxObject *right_term)
@@ -845,31 +804,27 @@ RexxObject *RexxString::power(RexxObject *right_term)
 /* Function:  String division...performed by NumberString                 */
 /******************************************************************************/
 {
-    NumberString *numstr;            /* converted number string           */
-
-                                         /* non-numeric?                      */
-    if ((numstr = fastNumberString()) == OREF_NULL)
-    {
-        /* this is a conversion error        */
-        reportException(Error_Conversion_operator, this);
-    }
-    return numstr->power(right_term);    /* have numberstring do this         */
+    ArithmeticOperator(abs);
 }
+
+
+// simple macro for generating the arithmetic methods, which
+// are essentially identical except for the final method call.
+#define ArithmeticMethod(method, name)  \
+    NumberString numstr = numberString(); \
+    if (numstr == OREF_NULL)              \
+    {                                     \
+        reportException(Error_Incorrect_method_string_nonumber, name, this); \
+    }                                     \
+    return numstr->method;
+
 
 RexxObject *RexxString::abs()
 /******************************************************************************/
 /* Function:  String absolute value...performed by NumberString           */
 /******************************************************************************/
 {
-    NumberString *numstr;            /* converted number string           */
-
-                                         /* non-numeric?                      */
-    if ((numstr = fastNumberString()) == OREF_NULL)
-    {
-        /* this is a conversion error        */
-        reportException(Error_Incorrect_method_string_nonumber, CHAR_ABS, this);
-    }
-    return numstr->abs();                /* have numberstring do this         */
+    ArithmeticMethod(abs(), "ABS");
 }
 
 RexxObject *RexxString::sign()
@@ -877,15 +832,7 @@ RexxObject *RexxString::sign()
 /* Function:  String sign value...performed by NumberString               */
 /******************************************************************************/
 {
-    NumberString *numstr;            /* converted number string           */
-
-                                         /* non-numeric?                      */
-    if ((numstr = fastNumberString()) == OREF_NULL)
-    {
-        /* this is a conversion error        */
-        reportException(Error_Incorrect_method_string_nonumber, CHAR_SIGN, this);
-    }
-    return numstr->Sign();               /* have numberstring do this         */
+    ArithmeticMethod(Sign(), "SIGN");
 }
 
 RexxObject *RexxString::Max(RexxObject **arguments, size_t argCount)
@@ -893,16 +840,7 @@ RexxObject *RexxString::Max(RexxObject **arguments, size_t argCount)
 /* Function:  String max value...performed by NumberString                */
 /******************************************************************************/
 {
-    NumberString *numstr;            /* converted number string           */
-
-                                         /* non-numeric?                      */
-    if ((numstr = fastNumberString()) == OREF_NULL)
-    {
-        /* this is a conversion error        */
-        reportException(Error_Incorrect_method_string_nonumber, CHAR_ORXMAX, this);
-    }
-    /* have numberstring do this         */
-    return numstr->Max(arguments, argCount);
+    ArithmeticMethod(Max(arguments, argCount), "MAX");
 }
 
 RexxObject *RexxString::Min(RexxObject **arguments, size_t argCount)
@@ -910,16 +848,7 @@ RexxObject *RexxString::Min(RexxObject **arguments, size_t argCount)
 /* Function:  String min value...performed by NumberString                */
 /******************************************************************************/
 {
-    NumberString *numstr;            /* converted number string           */
-
-                                         /* non-numeric?                      */
-    if ((numstr = fastNumberString()) == OREF_NULL)
-    {
-        /* this is a conversion error        */
-        reportException(Error_Incorrect_method_string_nonumber, CHAR_ORXMIN, this);
-    }
-    /* have numberstring do this         */
-    return numstr->Min(arguments, argCount);
+    ArithmeticMethod(Min(arguments, argCount), "MIN");
 }
 
 RexxObject *RexxString::trunc(RexxInteger *decimals)
@@ -927,16 +856,9 @@ RexxObject *RexxString::trunc(RexxInteger *decimals)
 /* Function:  String Trunc...performed by NumberString                    */
 /******************************************************************************/
 {
-    NumberString *numstr;            /* converted number string           */
-
-                                         /* non-numeric?                      */
-    if ((numstr = fastNumberString()) == OREF_NULL)
-    {
-        /* this is a conversion error        */
-        reportException(Error_Incorrect_method_string_nonumber, CHAR_TRUNC, this);
-    }
-    return numstr->trunc(decimals);      /* have numberstring do this         */
+    ArithmeticMethod(trunc(decimals), "TRUNC");
 }
+
 
 /**
  * The String class version of the floor method.
@@ -945,16 +867,9 @@ RexxObject *RexxString::trunc(RexxInteger *decimals)
  */
 RexxObject *RexxString::floor()
 {
-    NumberString *numstr;            /* converted number string           */
-
-                                         /* non-numeric?                      */
-    if ((numstr = fastNumberString()) == OREF_NULL)
-    {
-        /* this is a conversion error        */
-        reportException(Error_Incorrect_method_string_nonumber, "FLOOR", this);
-    }
-    return numstr->floor();      /* have numberstring do this         */
+    ArithmeticMethod(floor(), "FLOOR");
 }
+
 
 /**
  * The String class version of the ceiling method.
@@ -963,15 +878,7 @@ RexxObject *RexxString::floor()
  */
 RexxObject *RexxString::ceiling()
 {
-    NumberString *numstr;            /* converted number string           */
-
-                                         /* non-numeric?                      */
-    if ((numstr = fastNumberString()) == OREF_NULL)
-    {
-        /* this is a conversion error        */
-        reportException(Error_Incorrect_method_string_nonumber, "CEILING", this);
-    }
-    return numstr->ceiling();      /* have numberstring do this         */
+    ArithmeticMethod(ceiling(), "CEILING");
 }
 
 /**
@@ -981,32 +888,16 @@ RexxObject *RexxString::ceiling()
  */
 RexxObject *RexxString::round()
 {
-    NumberString *numstr;            /* converted number string           */
-
-                                         /* non-numeric?                      */
-    if ((numstr = fastNumberString()) == OREF_NULL)
-    {
-        /* this is a conversion error        */
-        reportException(Error_Incorrect_method_string_nonumber, "ROUND", this);
-    }
-    return numstr->round();      /* have numberstring do this         */
+    ArithmeticMethod(round(), "ROUND");
 }
 
-RexxObject *RexxString::format(RexxObject *Integers, RexxObject *Decimals, RexxObject *MathExp, RexxObject *ExpTrigger)
+
+RexxObject *RexxString::format(RexxObject *integers, RexxObject *decimals, RexxObject *mathExp, RexxObject *expTrigger)
 /******************************************************************************/
 /* Function:  String Format...performed by NumberString                   */
 /******************************************************************************/
 {
-    NumberString *numstr;            /* converted number string           */
-
-                                         /* non-numeric?                      */
-    if ((numstr = fastNumberString()) == OREF_NULL)
-    {
-        /* this is a conversion error        */
-        reportException(Error_Incorrect_method_string_nonumber, CHAR_FORMAT, this);
-    }
-    /* have numberstring do this         */
-    return numstr->formatRexx(Integers, Decimals, MathExp, ExpTrigger);
+    ArithmeticMethod(formatRexx(integers, decimals, mathExp, expTrigger), "FORMAT");
 }
 
 
@@ -1022,6 +913,7 @@ RexxInteger *RexxString::equals(RexxString *other)
 {
     return booleanObject(primitiveIsEqual(other));
 }
+
 
 /**
  * The string equals() method, which does a strict caseless
@@ -1162,6 +1054,7 @@ RexxInteger *RexxString::strictGreaterOrEqual(RexxObject *other)
     return booleanObject(strictComp(other) >= 0);
 }
 
+
 RexxInteger *RexxString::strictLessOrEqual(RexxObject *other)
 /******************************************************************************/
 /* Function:  Strict less than or equal to operatore ("<<=" or "\>>")         */
@@ -1173,6 +1066,7 @@ RexxInteger *RexxString::strictLessOrEqual(RexxObject *other)
     }
     return booleanObject(strictComp(other) <= 0);
 }
+
 
 RexxString *RexxString::concat(RexxString *other)
 /******************************************************************************/
@@ -1709,7 +1603,7 @@ RexxInteger *RexxString::integerValue(
                                          /* Force String conversion through   */
                                          /* NumberString                      */
                                          /* get the number string version     */
-    if ((numberStr = fastNumberString()) != OREF_NULL )
+    if ((numberStr = numberString()) != OREF_NULL )
     {
         /* try for an integer                */
         newInteger = numberStr->integerValue(digits);

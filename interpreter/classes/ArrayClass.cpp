@@ -60,10 +60,6 @@
 RexxClass *ArrayClass::classInstance = OREF_NULL;
 ArrayClass *ArrayClass::nullArray = OREF_NULL;
 
-const size_t ArrayClass::MAX_FIXEDARRAY_SIZE = (Numerics::MAX_WHOLENUMBER/10) + 1;
-const size_t ArrayClass::ARRAY_MIN_SIZE = 4;
-const size_t ArrayClass::ARRAY_DEFAULT_SIZE = 10;    // we use a larger default for ooRexx allocated arrays
-
 /**
  * Create initial class object at bootstrap time.
  */
@@ -86,7 +82,7 @@ void ArrayClass::createInstance()
  *
  * @return An allocated Array item of the target class.
  */
-RexxObject * ArrayClass::newRexx(RexxObject **arguments, size_t argCount)
+RexxObject *ArrayClass::newRexx(RexxInternalObject **arguments, size_t argCount)
 {
     // this method is defined as an instance method, but this is actually attached
     // to a class object instance.  Therefore, any use of the this pointer
@@ -97,7 +93,7 @@ RexxObject * ArrayClass::newRexx(RexxObject **arguments, size_t argCount)
     // creating an array of the default size?
     if (argCount == 0)
     {
-        Protected<ArrayClass> temp = new (0, ARRAY_DEFAULT_SIZE) ArrayClass;
+        Protected<ArrayClass> temp = new (0, DefaultArraySize) ArrayClass;
         // finish setting this up.
         classThis->completeNewObject(temp);
         return temp;
@@ -107,7 +103,7 @@ RexxObject * ArrayClass::newRexx(RexxObject **arguments, size_t argCount)
     // an array of sizes to create a multi-dimension array.
     if (argCount == 1)
     {
-        RexxObject *currentDim = arguments[0];
+        RexxInternalObject *currentDim = arguments[0];
         // specified as an array of dimensions?
         // this gets special handling
         if (currentDim != OREF_NULL && isOfClass(Array, currentDim))
@@ -137,6 +133,34 @@ RexxObject * ArrayClass::newRexx(RexxObject **arguments, size_t argCount)
 
 
 /**
+ * Rexx accessible version of the OF method.
+ *
+ * @param args     The pointer to the OF arguments.
+ * @param argCount The count of arguments.
+ *
+ * @return A new array of the target class, populated with the argument objects.
+ */
+RexxObject *ArrayClass::of(RexxInternalObject **args, size_t argCount)
+{
+    // this method is defined as an instance method, but this is actually attached
+    // to a class object instance.  Therefore, any use of the this pointer
+    // will be touching the wrong data.  Use the classThis pointer for calling
+    // any methods on this object from this method.
+    RexxClass *classThis = (RexxClass *)this;
+
+    // create, and fill in the array item.  Make sure we create one with the specific
+    // size for the added items.  The completeNewObject call will turn this into
+    // the correct class if this is a subclass getting created.  The constructor
+    // fills in the array before we call init (cheating a bit, but I don't care!)
+    Protected<ArrayClass> newArray = new (argCount) ArrayClass(args, argCount);
+
+    // finish the class initialization and init calls.
+    classThis->completeNewObject(newArray);
+    return newArray;
+}
+
+
+/**
  * Validate an array size item.  This converts to binary
  * and checks limits.
  *
@@ -144,12 +168,12 @@ RexxObject * ArrayClass::newRexx(RexxObject **arguments, size_t argCount)
  *
  * @return The size, converted to binary.
  */
-size_t ArrayClass::validateSize(RexxObject *size, size_t position)
+size_t ArrayClass::validateSize(RexxInternalObject *size, size_t position)
 {
     // Make sure it's an integer
     size_t totalSize = size->requiredNonNegative(position, number_digits());
 
-    if (totalSize >= MAX_FIXEDARRAY_SIZE)
+    if (totalSize >= MaxFixedArraySize)
     {
         reportException(Error_Incorrect_method_array_too_big);
     }
@@ -165,7 +189,7 @@ size_t ArrayClass::validateSize(RexxObject *size, size_t position)
  *
  * @return The created array
  */
-ArrayClass *ArrayClass::createMultidimensional(RexxObject **dims, size_t count, RexxClass *classThis)
+ArrayClass *ArrayClass::createMultidimensional(RexxInternalObject **dims, size_t count, RexxClass *classThis)
 {
     // Working with a multi-dimension array, so get a dimension array
     Protected<NumberArray> dim_array = new (count) NumberArray(count);
@@ -179,11 +203,11 @@ ArrayClass *ArrayClass::createMultidimensional(RexxObject **dims, size_t count, 
         // ...a dimension of 0 really does not make sense, right, but does work.
         // this creates a multi-dimensional array of zero size which will get resized
         // on the first assignment.  Doesn't really make sense, but it's perfectly legal.
-        RexxObject *currentDim = dims[i];
+        RexxInternalObject *currentDim = dims[i];
         size_t currentSize = currentDim->requiredNonNegative(i + 1);
         // going to do an overflow?  By dividing, we can detect a
         // wrap situation.
-        if (curSize != 0 && ((MaxFixedArraySize / currentSize) < totalSize))
+        if (currentSize != 0 && ((MaxFixedArraySize / currentSize) < totalSize))
         {
             reportException(Error_Incorrect_method_array_too_big);
         }
@@ -214,34 +238,6 @@ ArrayClass *ArrayClass::createMultidimensional(RexxObject **dims, size_t count, 
 }
 
 
-/**
- * Rexx accessible version of the OF method.
- *
- * @param args     The pointer to the OF arguments.
- * @param argCount The count of arguments.
- *
- * @return A new array of the target class, populated with the argument objects.
- */
-RexxObject *ArrayClass::of(RexxObject **args, size_t argCount)
-{
-    // this method is defined as an instance method, but this is actually attached
-    // to a class object instance.  Therefore, any use of the this pointer
-    // will be touching the wrong data.  Use the classThis pointer for calling
-    // any methods on this object from this method.
-    RexxClass *classThis = (RexxClass *)this;
-
-    // create, and fill in the array item.  Make sure we create one with the specific
-    // size for the added items.  The completeNewObject call will turn this into
-    // the correct class if this is a subclass getting created.  The constructor
-    // fills in the array before we call init (cheating a bit, but I don't care!)
-    Protected<ArrayClass> newArray = new (argCount) ArrayClass(args, argCount);
-
-    // finish the class initialization and init calls.
-    classThis->completeNewObject(newArray);
-    return newArray;
-}
-
-
 // End of Class methods for the Array class
 
 
@@ -258,7 +254,7 @@ RexxObject *ArrayClass::of(RexxObject **args, size_t argCount)
 void *ArrayClass::operator new(size_t size, size_t items, size_t maxSize)
 {
     // use the common allocation routine.
-    return allocateObject(size, items, maxSize, T_Array);
+    return allocateNewObject(size, items, maxSize, T_Array);
 }
 
 
@@ -272,7 +268,7 @@ void *ArrayClass::operator new(size_t size, size_t items, size_t maxSize)
  *
  * @return A newly allocated object.
  */
-RexxArray *ArrayClass::allocateNewObject(size_t size, size_t items, size_t maxSize, size_t type)
+ArrayClass *ArrayClass::allocateNewObject(size_t size, size_t items, size_t maxSize, size_t type)
 {
     size_t bytes = size;
     // we never create below a minimum size

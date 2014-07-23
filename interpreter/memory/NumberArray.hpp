@@ -62,7 +62,7 @@ class NumberArray : public RexxInternalObject
     NumberArray(size_t entries);
     inline NumberArray(RESTORETYPE restoreType) { ; };
 
-    inline void clear() { memset((void *)&entries[0], sizeof(size_t) * totalSize, 0); }
+    inline void clear() { memset((void *)&entries[0], (int) (sizeof(size_t) * totalSize), 0); }
     inline bool inBounds(size_t index) { return index > 0 && index < totalSize; }
     size_t       size() { return totalSize; };
 

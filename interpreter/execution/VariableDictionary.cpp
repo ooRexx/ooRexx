@@ -956,3 +956,40 @@ VariableIterator VariableDictionary::iterator()
     // the iterator handles all of the details
     return VariableIterator(this);
 }
+
+
+/**
+ * Step to the next position while iterating through a
+ * variable dictionary.
+ */
+inline void VariableDictonary::VariableIterator::next()
+{
+    if (currentStem != OREF_NULL)
+    {
+        // step and then check if we have anything left.  If not, we need to
+        // revert to normal iteration mode
+        stemIterator.next();
+        if (stemIterator.isAvailable())
+        {
+            return;
+        }
+        // switch back to the main collection
+        currentStem = OREF_NULL;
+    }
+    // this is a little more complicated.  We need to step
+    // to the next variable and determine if this is a stem variable so
+    // we can switch iteration modes.
+    dictionaryIterator.next();
+    if (dictionaryIterator.isAvailable())
+    {
+        // if we've hit a stem variable, switch the iterator to
+        // the stem version.  We don't return the STEM variable in the
+        // iteration, thankfully.
+        RexxVariable *variable = (RexxVariable *)value();
+        if (variable->isStem())
+        {
+            currentStem = (StemClass *)variable->getVariableValue();
+            stemIterator = currentStem->iterator();
+        }
+    }
+}

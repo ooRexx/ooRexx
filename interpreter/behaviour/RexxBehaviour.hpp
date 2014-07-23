@@ -46,8 +46,6 @@
 
 #include "FlagSet.hpp"
 
-class MethodDictionary;
-
 
 /**
  * The class that defines base object behaviour (i.e., what methods can be invoked)
@@ -95,7 +93,7 @@ class RexxBehaviour : public RexxInternalObject
     MethodDictionary *copyMethodDictionary();
 
     inline MethodDictionary *getMethodDictionary()   { return methodDictionary; };
-    inline bool hasInstanceMethods() { return methodDictionary == OREF_NULL ? false : methodDictionary->hasInstanceMethods(); }
+           bool        hasInstanceMethods();
            void        setMethodDictionary(MethodDictionary *m);
     inline void        clearMethodDictionary() { setMethodDictionary(OREF_NULL); }
     inline RexxClass  *getOwningClass()        { return owningClass;};

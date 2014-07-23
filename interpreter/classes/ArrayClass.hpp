@@ -45,6 +45,7 @@
 #define Included_ArrayClass
 
 #include "NumberArray.hpp"
+#include "Numerics.hpp"
 
 /**
  * The implementation of the Rexx Array class.
@@ -67,9 +68,9 @@ class ArrayClass : public RexxObject
      * Array internal class for performing recursive copies
      * for multi-dimensional arrays
      */
-    typedef class ElementCopier
+    class ElementCopier
     {
-    public;
+     public:
 
        inline void copy() { copyElement(1); }
        void copyElement(size_t newDimension);
@@ -125,7 +126,7 @@ class ArrayClass : public RexxObject
     class WithSortComparator : public BaseSortComparator
     {
     public:
-        inline WithSortComparator(RexxInternalObject *c) : comparator(c) { }
+        inline WithSortComparator(RexxObject *c) : comparator(c) { }
         virtual wholenumber_t compare(RexxInternalObject *first, RexxInternalObject *second);
     protected:
         RexxObject *comparator;
@@ -163,31 +164,31 @@ class ArrayClass : public RexxObject
     RexxString   *primitiveMakeString();
     RexxInternalObject  *getRexx(RexxObject **, size_t);
     RexxInternalObject  *safeGet(size_t pos);
-    void         put(RexxInternalObject * eref, size_t pos);
-    RexxObject  *putRexx(RexxObject **, size_t);
-    void         putApi(RexxInternalObject * eref, size_t pos);
+    void          put(RexxInternalObject * eref, size_t pos);
+    RexxObject   *putRexx(RexxObject **, size_t);
+    void          putApi(RexxInternalObject * eref, size_t pos);
     RexxInternalObject  *remove(size_t);
     RexxInternalObject  *removeRexx(RexxObject **, size_t);
-    RexxObject  *appendRexx(RexxInternalObject *);
-    size_t       append(RexxInternalObject *);
-    void         appendAll(ArrayClass *);
-    void         setExpansion(RexxObject * expansion);
-    RexxInteger *available(size_t position);
+    RexxObject   *appendRexx(RexxInternalObject *);
+    size_t        append(RexxInternalObject *);
+    void          appendAll(ArrayClass *);
+    void          setExpansion(RexxObject * expansion);
+    RexxInteger  *available(size_t position);
     // virtual so subclasses can screen out multidimensional support.
-    virtual bool validateIndex(RexxObject **, size_t, size_t, size_t, stringsize_t &);
-    inline bool  validateIndex(RexxObject *i, size_t start, size_t flags, stringsize_t &p) { return validateIndex(&i, 1, start, flags, p); }
-    RexxInteger *sizeRexx();
-    RexxObject  *firstRexx();
-    RexxObject  *lastRexx();
-    RexxInternalObject  *firstItem();
-    RexxInternalObject  *lastItem();
+    virtual bool  validateIndex(RexxObject **, size_t, size_t, size_t, stringsize_t &);
+    inline bool   validateIndex(RexxObject *i, size_t start, size_t flags, stringsize_t &p) { return validateIndex(&i, 1, start, flags, p); }
+    RexxInteger  *sizeRexx();
+    RexxObject   *firstRexx();
+    RexxObject   *lastRexx();
+    RexxInternalObject  *getFirstItem();
+    RexxInternalObject  *getLastItem();
     size_t       lastIndex();
+    size_t       firstIndex();
     RexxObject  *nextRexx(RexxObject **, size_t);
     RexxObject  *previousRexx(RexxObject **, size_t);
     ArrayClass   *section(size_t, size_t);
     RexxObject  *sectionRexx(RexxObject *, RexxObject *);
     RexxObject  *sectionSubclass(size_t, size_t);
-    bool         hasIndex(size_t);
     RexxObject  *hasIndexRexx(RexxObject **, size_t);
     inline size_t items() { return itemCount; }
     RexxObject  *itemsRexx();
@@ -198,6 +199,7 @@ class ArrayClass : public RexxObject
     SupplierClass *supplier();
     RexxObject  *join(ArrayClass *);
     ArrayClass   *extend(size_t);
+    static size_t validateSize(RexxInternalObject *size, size_t position);
     size_t       indexOf(RexxInternalObject *);
     ArrayClass   *extendMulti(RexxObject **, size_t, size_t);
     void         resize();
@@ -212,8 +214,8 @@ class ArrayClass : public RexxObject
     }
     inline bool isFixedDimension() { return dimensions != OREF_NULL || size() != 0; }
 
-    RexxObject  *newRexx(RexxObject **, size_t);
-    RexxObject  *of(RexxObject **, size_t);
+    RexxObject  *newRexx(RexxInternalObject **, size_t);
+    RexxObject  *of(RexxInternalObject **, size_t);
     RexxObject  *empty();
     bool         isEmpty();
     RexxObject  *isEmptyRexx();
@@ -224,24 +226,25 @@ class ArrayClass : public RexxObject
     wholenumber_t sortCompare(RexxObject *comparator, RexxInternalObject *left, RexxInternalObject *right);
     ArrayClass   *stableSortRexx();
     ArrayClass   *stableSortWithRexx(RexxObject *comparator);
-    RexxObject  *insertRexx(RexxInternalObject *_value, RexxObject *index);
-    size_t       insert(RexxInternalObject *_value, size_t index);
+    RexxObject  *insertRexx(RexxInternalObject *value, RexxObject *index);
+    size_t       insert(RexxInternalObject *value, size_t index);
     RexxInternalObject  *deleteRexx(RexxInternalObject *index);
     RexxInternalObject  *deleteItem(size_t index);
 
     inline size_t       addLast(RexxInternalObject *item) { return append(item); }
     inline size_t       addFirst(RexxInternalObject *item) { return insert(item, 1); }
-    inline size_t       removeLast(RexxInternalObject *item) { return remove(item, lastIndex()); }
-    inline size_t       removeFirst(RexxInternalObject *item) { return insert(item, 1); }
+    inline RexxInternalObject *removeLast() { return remove(lastIndex()); }
+    inline RexxInternalObject *removeFirst() { return deleteItem(firstIndex()); }
     inline size_t       insertAfter(RexxInternalObject *item, size_t index) { return insert(item, index); }
-    inline ArrayClass   *array() { return makeArray(); }
+    inline ArrayClass  *array() { return makeArray(); }
     inline size_t       size() { return expansionArray->arraySize; }
     inline bool         isOccupied(size_t pos) { return get(pos) != OREF_NULL; }
     inline bool         isInbounds(size_t pos) { return pos > 0 && pos <= size(); }
     inline bool         hasIndex(size_t pos) { return isInbounds(pos) && isOccupied(pos); }
+           void         updateLastItem();
 
     // check if we need to update the itemcount when writing to a given position.
-    inline void         checkSetItemCount(size_t pos)
+    inline void checkSetItemCount(size_t pos)
     {
         if (!isOccupied(pos))
         {
@@ -249,7 +252,7 @@ class ArrayClass : public RexxObject
         }
     }
     // check if clearing an index position affects the last item position
-    inline void         checkClearItemCount(size_t pos)
+    inline void checkClearLastItem(size_t pos)
     {
         if (pos == lastItem)
         {
@@ -258,7 +261,7 @@ class ArrayClass : public RexxObject
     }
 
     // check if we need to update the itemcount when writing a given position.
-    inline void         checkClearItemCount(size_t pos)
+    inline void checkClearItemCount(size_t pos)
     {
         if (isOccupied(pos))
         {
@@ -267,7 +270,7 @@ class ArrayClass : public RexxObject
     }
 
     // check if we need to update the lastItem position after adding an object to a position
-    inline void         checkLastItem(size_t pos)
+    inline void checkLastItem(size_t pos)
     {
         if (pos > lastItem)
         {
@@ -287,10 +290,10 @@ class ArrayClass : public RexxObject
     inline bool isSingleDimensional() { return !isMultiDimensional(); }
     inline bool hasExpanded() { return expansionArray != this; }
 
-    static ArrayClass *createMultidimensional(RexxObject **dims, size_t count, RexxClass *);
-    static inline ArrayClass *createMultidimensional(ArrayClass *dims, RexxClass *)
+    static ArrayClass *createMultidimensional(RexxInternalObject **dims, size_t count, RexxClass *);
+    static inline ArrayClass *createMultidimensional(ArrayClass *dims, RexxClass *c)
     {
-        return createMultidimensional(dims->data(), dims->items());
+        return createMultidimensional(dims->data(), dims->items(), c);
     }
 
     static void createInstance();
@@ -311,7 +314,7 @@ class ArrayClass : public RexxObject
     inline size_t       dataSize() { return ((char *)slotAddress(size() + 1)) - ((char *)data()); }
 
     // maximum size we can handle
-    static const size_t MaxFixedArraySize = (Numerics::MAX_WHOLENUMBER/10) + 1;
+    static const size_t MaxFixedArraySize = (Numerics::MAX_WHOLENUMBER / 10) + 1;
     static const size_t MinimumArraySize = 8;      // the minimum size we allocate.
     static const size_t DefaultArraySize = 16;     // default size for ooRexx allocation
     static const size_t MaximumExtendSize = 100;   // maximum "extra" size we tack on when extending

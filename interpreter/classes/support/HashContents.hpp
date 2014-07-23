@@ -104,6 +104,7 @@ public:
 		friend class HashContents;
 
 	public:
+        inline TableIterator() : contents(OREF_NULL), position(0), nextBucket(0) { }
 		inline ~TableIterator() {}
 
         inline bool isAvailable()  { return position != NoMore; }

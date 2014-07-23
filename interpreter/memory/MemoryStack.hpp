@@ -217,10 +217,10 @@ class PushThroughStack : public RexxInternalObject
     inline void        decrementCurrent() { current = (current == 0) ? size - 1 : current - 1; }
     inline void        incrementCurrent() { if (++current >= size) current = 0; }
 
-    inline void        copyEntries(PushThroughStack *other) { memcpy((char *)stack, other->stack, other->size * sizeof(RexxObject *)); current = other->current; }
-    inline void        clear() { memset(stack, 0, sizeof(RexxObject*) * size); }
+    inline void        copyEntries(PushThroughStack *other) { memcpy((char *)stack, other->stack, other->size * sizeof(RexxInternalObject *)); current = other->current; }
+    inline void        clear() { memset(stack, 0, sizeof(RexxInternalObject*) * size); }
            void        extend(size_t);
-           void        remove(RexxObject *, bool search = false);
+           void        remove(RexxInternalObject *, bool search = false);
 
  protected:
 

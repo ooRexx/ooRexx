@@ -84,7 +84,6 @@ class RexxString : public RexxObject
     virtual void flatten(Envelope *envelope);
     virtual RexxObject *unflatten(Envelope *);
 
-    virtual HashCode hash();
     virtual HashCode getHashValue();
 
     inline HashCode getStringHash()
@@ -308,38 +307,6 @@ class RexxString : public RexxObject
     inline void  toRxstring(RXSTRING &r) { r.strptr = getWritableData(); r.strlength = getLength(); }
            void  copyToRxstring(RXSTRING &r);
     inline bool  endsWith(char c) const { return length > 0 && stringData[length - 1] == c; }
-
-    NumberString *createNumberString();
-
-    inline NumberString *fastNumberString()
-    {
-        // already converted?  Done!
-        if (numberStringValue != OREF_NULL)
-        {
-            return numberStringValue;
-        }
-        // did we already try to convert and fail?
-        if (nonNumeric())
-        {
-            return OREF_NULL;
-        }
-
-        // build the value (if possible)
-        return createNumberString();
-    }
-
-    // helper method for extracting a hash code value from a string formatted version
-    inline HashCode stringToHashCode()
-    {
-        if (getStringLength() < sizeof(HashCode))
-        {
-            // too short, just return the strings hash code
-            return hashValue;
-        }
-        // return the first n characters of the string as a hash code.
-        return *((HashCode *)getStringData());
-
-    }
 
     inline int sortCompare(RexxString *other)
     {

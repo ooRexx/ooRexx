@@ -695,3 +695,15 @@ MethodDictionary *RexxBehaviour::copyMethodDictionary()
     }
     return (MethodDictionary *)methodDictionary->copy();
 }
+
+
+/**
+ * Test if the behaviour has additional instance methods defined.
+ *
+ * @return true if the object has specific instance methods, defined,
+ *         false otherwise.
+ */
+bool RexxBehaviour::hasInstanceMethods()
+{
+    return methodDictionary == OREF_NULL ? false : methodDictionary->hasInstanceMethods();
+}

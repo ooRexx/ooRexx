@@ -498,3 +498,47 @@ CompoundTableElement *CompoundVariableTable::findEntry(CompoundVariableTail &tai
     // not found
     return OREF_NULL;
 }
+
+
+/**
+ * Get the value from a compound table iterator.
+ *
+ * @return The current variable value.
+ */
+RexxInternalObject *CompoundVariableTable::TableIteratorvalue::value()
+{
+    return current->getVariableValue();
+}
+
+
+/**
+ * Get the name from a compound table iterator.
+ *
+ * @return The current variable name.
+ */
+RexxInternalObject *CompoundVariableTable::TableIteratorvalue::name()
+{
+    return current->getName();
+}
+
+
+/**
+ * Get the full compound name from a compound table iterator.
+ *
+ * @return The current variable name.
+ */
+RexxInternalObject *CompoundVariableTable::TableIteratorvalue::name(RexxString *stemName)
+{
+    return current->createCompoundName(stemName);
+}
+
+
+/**
+ * Get the full compound name from a compound table iterator.
+ *
+ * @return The current variable name.
+ */
+void CompoundVariableTable::TableIteratorvalue::replace(RexxInternalObject *v)
+{
+    return current->getValue(v);
+}

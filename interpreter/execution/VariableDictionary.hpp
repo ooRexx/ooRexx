@@ -50,6 +50,7 @@
 
 class StemClass;
 class SupplierClass;
+class RexxVariableBase;
 
 class VariableDictionary : public RexxInternalObject
 {
@@ -104,37 +105,7 @@ class VariableDictionary : public RexxInternalObject
              return (RexxString *)dictionaryIterator.index();
          }
 
-         inline void next()
-         {
-             if (currentStem != OREF_NULL)
-             {
-                 // step and then check if we have anything left.  If not, we need to
-                 // revert to normal iteration mode
-                 stemIterator.next();
-                 if (stemIterator.isAvailable())
-                 {
-                     return;
-                 }
-                 // switch back to the main collection
-                 currentStem = OREF_NULL;
-             }
-             // this is a little more complicated.  We need to step
-             // to the next variable and determine if this is a stem variable so
-             // we can switch iteration modes.
-             dictionaryIterator.next();
-             if (dictionaryIterator.isAvailable())
-             {
-                 // if we've hit a stem variable, switch the iterator to
-                 // the stem version.  We don't return the STEM variable in the
-                 // iteration, thankfully.
-                 RexxVariable *variable = (RexxVariable *)value;
-                 if (variable->isStem())
-                 {
-                     currentStem = (StemClass *)variable->getVariableValue();
-                     stemIterator = currentStem->iterator();
-                 }
-             }
-         }
+         inline void next();
 
          // explicitly terminate an iterator
          void terminate()
@@ -154,7 +125,7 @@ class VariableDictionary : public RexxInternalObject
          VariableIterator(VariableDictionary *d)
          {
              dictionary = d;
-             dictionaryIterator = dictionaryIterator->iterator();
+             dictionaryIterator = dictionary->contents->iterator();
              currentStem = OREF_NULL;
          }
 
@@ -173,7 +144,7 @@ class VariableDictionary : public RexxInternalObject
 
     HashContents *allocateContents(size_t bucketSize, size_t capacity);
 
-    void initialize(size_t capacity = DefaultTableSize);
+    void initialize(size_t capacity = DefaultObjectDictionarySize);
     void expandContents();
     void expandContents(size_t capacity );
     void ensureCapacity(size_t delta);
@@ -229,7 +200,6 @@ class VariableDictionary : public RexxInternalObject
     StringTable *getAllVariables();
     inline void remove(RexxString *n) { contents->remove(n); }
 
-    RexxVariable *nextVariable(NativeActivation *);
     void         set(RexxString *, RexxObject *);
     void         drop(RexxString *);
     void         dropStemVariable(RexxString *);
@@ -244,11 +214,11 @@ class VariableDictionary : public RexxInternalObject
     RexxObject  *realStemValue(RexxString *stemName);
 
     inline bool isScope(RexxClass *otherScope) { return scope == otherScope; }
-    inline VariableDictionary *getNextDictionary() { return next; }
+    inline VariableDictionary *getNextDictionary() { return nextDictionary; }
     inline Activity *getReservingActivity() { return reservingActivity; }
 
     void setNextDictionary(VariableDictionary *next);
-    TableIterator iterator();
+    VariableIterator iterator();
 
     static const size_t DefaultObjectDictionarySize = 7;
 
