@@ -82,8 +82,8 @@ void ForLoop::setup(RexxActivation *context,
     else
     {
         // first get the string version and force numeric rounding rules.
-        RexxString *strResult = REQUEST_STRING(result);
-        /* force rounding                    */
+        RexxString *strResult = result->requestString();
+        // force rounding
         RexxObject *rounded = strResult->callOperatorMethod(OPERATOR_PLUS, OREF_NULL);
         context->traceResult(rounded);
         // now convert the rounded value to an integer, if possible
@@ -97,7 +97,6 @@ void ForLoop::setup(RexxActivation *context,
     // This must be a non-negative value.
     if (count < 0)
     {
-        /* report an exception               */
         reportException(forKeyword ? Error_Invalid_whole_number_for : Error_Invalid_whole_number_repeat, result);
     }
 
@@ -230,10 +229,10 @@ void OverLoop::setup( RexxActivation *context,
     {
         // some other type of collection, use the less direct means
         // of requesting an array
-        array = REQUEST_ARRAY(result);
+        array = result->requestArray();
         // raise an error if this did not convert ok, or we got
         // back something other than a real Rexx array.
-        if (array == TheNilObject || !isOfClass(Array, array) )
+        if (!isOfClass(Array, array))
         {
             reportException(Error_Execution_noarray, result);
         }

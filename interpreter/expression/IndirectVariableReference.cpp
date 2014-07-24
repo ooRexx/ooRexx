@@ -128,7 +128,7 @@ ArrayClass *RexxVariableReference::list(RexxActivation *context)
     // get the variable value
     RexxObject *value = variableObject->getValue(context);
     // force to string form
-    Protected<RexxString> nameString = REQUEST_STRING(value);
+    Protected<RexxString> nameString = value->requestString();
     // get this as a list of words
     Protected<ArrayClass> list = ((RexxString *)nameString)->subWords(OREF_NULL, OREF_NULL);
 

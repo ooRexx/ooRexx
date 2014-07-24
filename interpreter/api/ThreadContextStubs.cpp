@@ -1000,7 +1000,7 @@ RexxStringObject RexxEntry ObjectToString(RexxThreadContext *c, RexxObjectPtr o)
     ApiContext context(c);
     try
     {
-        return (RexxStringObject)context.ret(REQUEST_STRING((RexxObject *)o));
+        return (RexxStringObject)context.ret(((RexxObject *)o)->requestString());
     }
     catch (NativeActivation *)
     {
@@ -1013,7 +1013,7 @@ CSTRING RexxEntry ObjectToStringValue(RexxThreadContext *c, RexxObjectPtr o)
     ApiContext context(c);
     try
     {
-        RexxString *temp = REQUEST_STRING((RexxObject *)o);
+        RexxString *temp = ((RexxObject *)o)->requestString();
         context.ret(temp);
         return (CSTRING)temp->getStringData();
     }

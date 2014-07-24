@@ -100,14 +100,11 @@ RexxObject *BufferClass::newRexx(RexxObject **args, size_t argc)
  */
 BufferClass *BufferClass::expand(size_t l)
 {
-    BufferClass * newBuffer;
-
-
     // we will either return a buffer twice the size of the current
     // buffer, or this size of current(this)buffer + requested
     // minimum length.
 
-    l = Numerics::minValue(l, getBufferSize());
+    l = Numerics::minVal(l, getBufferSize());
 
     BufferClass *newBuffer = new_buffer(getBufferSize() + l);
     // have new buffer, so copy data from current buffer into new buffer.

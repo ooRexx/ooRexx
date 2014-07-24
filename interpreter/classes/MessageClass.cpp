@@ -517,6 +517,8 @@ ArrayClass *MessageClass::arguments()
  *
  * @return A new instance of the .Message class.
  */
+
+// TODO: finish cleaning this up...got some error checking issues.
 RexxObject *MessageClass::newRexx(RexxObject **msgArgs, size_t argCount)
 {
     // this class is defined on the object class, but this is actually attached
@@ -587,11 +589,10 @@ RexxObject *MessageClass::newRexx(RexxObject **msgArgs, size_t argCount)
                     reportException(Error_Incorrect_method_noarg, IntegerFour);
                 }
                 /* force to array form               */
-                argPtr = (ArrayClass *)REQUEST_ARRAY(argPtr);
+                argPtr = argPtr->requestArray(); ;
                 /* not an array?                     */
-                if (argPtr == TheNilObject || argPtr->getDimension() != 1)
+                if (argPtr == TheNilObject || argPtr->isMultiDimensional())
                 {
-                    /* raise an error                    */
                     reportException(Error_Incorrect_method_noarray, msgArgs[3]);
                 }
             }

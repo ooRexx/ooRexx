@@ -230,20 +230,8 @@ RexxObject  *SupplierClass::index()
  */
 RexxObject *SupplierClass::initRexx(ArrayClass *_values, ArrayClass *_indexes)
 {
-    requiredArgument(_values, ARG_ONE);           // both values are required
-    requiredArgument(_indexes, ARG_TWO);
-
-    // now verify both values
-    ArrayClass *new_values = REQUEST_ARRAY(_values);
-    ArrayClass *new_indexes = REQUEST_ARRAY(_indexes);
-    if (new_values == (ArrayClass  *)TheNilObject || new_values->getDimension() != 1)
-    {
-        reportException(Error_Incorrect_method_noarray, values);
-    }
-    if (new_indexes == (ArrayClass  *)TheNilObject || new_indexes->getDimension() != 1)
-    {
-        reportException(Error_Incorrect_method_noarray, indexes);
-    }
+    ArrayClass *new_values = arrayArgument(_values, ARG_ONE);           // both values are required
+    ArrayClass *new_indexs = arrayArgument(_indexes, ARG_TWO);
 
     // technically, we could probably directly assign these since this really is a constructor,
     // but it doesn't hurt to use these here.

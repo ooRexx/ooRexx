@@ -447,10 +447,16 @@ NumberString *RexxString::numberString()
 }
 
 
+/**
+ * Get a section of a string and copy it into a buffer
+ *
+ * @param startPos The starting offset within the string.
+ * @param buffer   the location to copy to.
+ * @param bufl     The size of the buffer.
+ *
+ * @return The actualy length copied.
+ */
 size_t RexxString::copyData(size_t startPos, char *buffer, size_t bufl)
-/******************************************************************************/
-/* Function:  Get a section of a string and copy it into a buffer             */
-/******************************************************************************/
 {
     size_t copylen = 0;
 
@@ -470,27 +476,28 @@ size_t RexxString::copyData(size_t startPos, char *buffer, size_t bufl)
     return copylen;
 }
 
+
+/**
+ * Return the length of a string as an integer object.
+ *
+ * @return The string length.
+ */
 RexxObject *RexxString::lengthRexx()
-/******************************************************************************/
-/* Function:  Return the length of a string as an integer object              */
-/******************************************************************************/
 {
-                                       /* return string byte length         */
     return new_integer(getLength());
 }
 
 
-bool RexxString::isEqual(
-    RexxObject *otherObj)              /* other comparison object           */
 /******************************************************************************/
 /* Function:  Primitive strict equal\not equal method.  This determines       */
 /*            only strict equality, not greater or less than values.          */
 /******************************************************************************/
+bool RexxString::isEqual(RexxObject *otherObj)
 {
-    requiredArgument(otherObj, ARG_ONE);         /* this is required.                 */
-    if (!isBaseClass())            /* not a primitive?                  */
+    requiredArgument(otherObj, ARG_ONE);
+    // if not a primitive, we need to go the full == message route.
+    if (!isBaseClass())
     {
-        /* do the full lookup compare        */
         return sendMessage(OREF_STRICT_EQUAL, otherObj)->truthValue(Error_Logical_value_method);
     }
 
@@ -499,36 +506,40 @@ bool RexxString::isEqual(
         return false;
     }
 
-    RexxString *other = REQUEST_STRING(otherObj);    /* force into string form            */
-    size_t otherLen = other->getLength();     /* get length of second string.      */
-    if (otherLen != getLength())        /* lengths different?                */
+    RexxString *other = otherObject->requestString();
+    size_t otherLen = other->getLength();
+    // the length comparison is the easiest path to failure
+    if (otherLen != getLength())
     {
-        return false;                      /* also unequal                      */
+        return false;
     }
-                                           /* now compare the actual string     */
+    // compare the string data.
     return !memcmp(getStringData(), other->getStringData(), otherLen);
 }
 
-bool RexxString::primitiveIsEqual(
-    RexxObject *otherObj)              /* other comparison object           */
-/******************************************************************************/
-/* Function:  Primitive strict equal\not equal method.  This determines       */
-/*            only strict equality, not greater or less than values.          */
-/******************************************************************************/
+
+/**
+ * Primitive strict equal\not equal method.  This determines
+ * only strict equality, not greater or less than values.
+ *
+ * @param otherObj The comparison object.
+ *
+ * @return true or false, depending on the string equality.
+ */
+bool RexxString::primitiveIsEqual(RexxObject *otherObj)
 {
-    requiredArgument(otherObj, ARG_ONE);         /* this is required.                 */
-    if (otherObj == TheNilObject)        // strings never compare equal to the NIL object
+    requiredArgument(otherObj, ARG_ONE);
+    if (otherObj == TheNilObject)
     {
         return false;
     }
 
-    RexxString *other = REQUEST_STRING(otherObj);    /* force into string form            */
-    size_t otherLen = other->getLength();            /* get length of second string.      */
-    if (otherLen != getLength())        /* lengths different?                */
+    RexxString *other = otherObj->requestString();
+    size_t otherLen = other->getLength();
+    if (otherLen != getLength())
     {
-        return false;                      /* also unequal                      */
+        return false;
     }
-                                           /* now compare the actual string     */
     return !memcmp(getStringData(), other->getStringData(), otherLen);
 }
 
@@ -548,7 +559,7 @@ bool RexxString::primitiveCaselessIsEqual(RexxObject *otherObj)
     {
         return false;
     }
-    RexxString *other = REQUEST_STRING(otherObj);
+    RexxString *other = otherObj->requestString();
     stringsize_t otherLen = other->getLength();
     // can't compare equal if different lengths
     if (otherLen != getLength())
@@ -572,7 +583,8 @@ wholenumber_t RexxString::compareTo(RexxObject *other )
 {
     if (isBaseClass())
     {
-        return compareToRexx((RexxString *)other, OREF_NULL, OREF_NULL)->getValue();
+        // there should be a faster version of this...
+        return primitiveCompareTo(stringArgument(other, ARG_ONE));
     }
     else
     {
@@ -581,83 +593,74 @@ wholenumber_t RexxString::compareTo(RexxObject *other )
 }
 
 
+/**
+ * Do a value comparison of two strings for the non-strict
+ * comparisons.  This returns for the compares:
+ *
+ *    a value < 0 when this is smaller than other
+ *    a value   0 when this is equal to other
+ *    a value > 0 when this is larger than other
+ *
+ * @param other  The object we compare against.
+ *
+ * @return the relative compare value (<0, 0, or >0)
+ */
 wholenumber_t RexxString::comp(RexxObject *other)
-/******************************************************************************/
-/* Function:  Do a value comparison of two strings for the non-strict         */
-/*            comparisons.  This returns for the compares:                    */
-/*                                                                            */
-/*             a value < 0 when this is smaller than other                    */
-/*             a value   0 when this is equal to other                        */
-/*             a value > 0 when this is larger than other                     */
-/******************************************************************************/
 {
-    RexxString *second;                  /* string value of other             */
-    NumberString *firstNum;              /* numberstring value of this        */
-    NumberString *secondNum;             /* numberstring value of other       */
-    const char *firstStart;              /* comparison start pointer          */
-    const char *secondStart;             /* other start pointer               */
-    size_t firstLen;                     /* this compare length               */
-    size_t secondLen;                    /* other compare length              */
-    wholenumber_t result;                /* compare result                    */
+    // We need to see if the objects can be Converted to NumberString Objs
+    // 1st, this way we know if the COMP method of number String will
+    // succeed.  Will only fail if an object cannot be represented as a
+    // number.  This is important since NumberString calls String to do
+    // the compare if it can't, since this is the method NumberString
+    // will call, we must make sure a call to NumberString succeeds or
+    // we will get into a loop.
+    requiredArgument(other, ARG_ONE);
+    // try and convert both numbers first.
+    NumberString *firstNum = numberString();
+    NumberString *secondNum = other->numberString();
 
-                                         /* We need to see if the objects can */
-                                         /* be Converted to NumberString Objs */
-                                         /* 1st, this way we know if the COMP */
-                                         /* method of number String will      */
-                                         /* succeed.  Will only fail if an    */
-                                         /* object cannot be represented as a */
-                                         /* number.  This is important since  */
-                                         /* NumberString calls String to do   */
-                                         /* the compare if it can't, since    */
-                                         /* this is the method NumberString   */
-                                         /* will call, we must make sure a    */
-                                         /* call to NumberString succeeds or  */
-                                         /* we will get into a loop.          */
-    requiredArgument(other, ARG_ONE);            /* make sure we have a real argument */
-                                         /* try and convert both numbers      */
-    if (((firstNum = numberString()) != OREF_NULL) && ((secondNum = other->numberString()) != OREF_NULL ))
+    // if both are valid numbers, this is a numeric comparison.
+    if (firstNum != OREF_NULL) && secondNum != OREF_NULL)
     {
-        /* yes, send converted numbers and do*/
-        /* the compare                       */
         return firstNum->comp(secondNum);
     }
-    second = REQUEST_STRING(other);      /* yes, get a string object.         */
-                                         /* objects are converted.  now strip */
-                                         /* any leading/trailing blanks.      */
 
-    firstLen = getLength();             /* get the initial length            */
-    firstStart = getStringData(); /* and starting position           */
+    // we're doing a string comparison, so get the string version of the other.
+    RexxString *second = other->requestString();
 
-    secondLen = second->getLength();          /* get length of second string.      */
-    secondStart = second->getStringData(); /* get pointer to start of data */
+    // get the string specifics
+    size_t firstLen = getLength();
+    const char *firstStart = getStringData();
 
-    /* while we have leading blanks.     */
+    size_t secondLen = second->getLength();
+    const char *secondStart = second->getStringData();
+
+    // skip over the leading white space characters in our string
     while (firstLen > 0 && (*firstStart == ch_SPACE || *firstStart == ch_TAB))
     {
-        firstStart++;                       /* ignore character and look at next */
-        firstLen--;                         /* and string is now one char less.  */
+        firstStart++;
+        firstLen--;
     }
-    /* while we have leading blanks.     */
+    // and the same for the second string
     while (secondLen > 0 && (*secondStart == ch_SPACE || *secondStart == ch_TAB))
     {
-        secondStart++;                      /* ignore character and look at next */
-        secondLen--;                        /* and string is now one char less.  */
+        secondStart++;
+        secondLen--;
     }
 
+    // done differntly depnding on which string is longer
     if (firstLen >= secondLen)
-    {         /* determine the longer string.      */
-              /* first string is larger,           */
-
-              /* do a memory compare of strings,   */
-              /* use length of smaller string.     */
-        result = memcmp(firstStart, secondStart, (size_t) secondLen);
-        /* equal but different lengths?      */
+    {
+        // compare for the shorter length
+        wholenumber_t result = memcmp(firstStart, secondStart, (size_t) secondLen);
+        // equal but differnt lengths?   We compare all the rest of the characters
+        // using blank padding.
         if ((result == 0) && (firstLen != secondLen))
         {
-            /* point to first remainder char     */
+            // point to first remainder char
             firstStart = firstStart + secondLen;
             while (firstLen-- > secondLen)
-            { /* while still have more to compare  */
+            {
                 // Need unsigned char or chars above 0x7f will compare as less than
                 // blank.
                 unsigned char current = *firstStart++;
@@ -669,20 +672,15 @@ wholenumber_t RexxString::comp(RexxObject *other)
         }
     }
 
+    // same as above, but we reverse the blank compare result
     else
-    {                               /* The length of second obj is longer*/
-                                    /* do memory compare of strings, use */
-                                    /*  length of smaller string.        */
+    {
         result = memcmp(firstStart, secondStart, (size_t) firstLen);
         if (result == 0)
-        {                /* if strings compared equal, we have*/
-                         /* we need to compare the trailing   */
-                         /* part with blanks                  */
+        {
             secondStart = secondStart + firstLen;
             while (secondLen-- > firstLen)
-            { /* while the longer string stills has*/
-                // Need unsigned char or chars above 0x7f will compare as less than
-                // blank.
+            {
                 unsigned char current = *secondStart++;
                 if (current != ch_SPACE && current != ch_TAB)
                 {
@@ -691,49 +689,52 @@ wholenumber_t RexxString::comp(RexxObject *other)
             }
         }
     }
-    return result;                       /* return the compare result         */
+    return result;
 }
 
+
+/**
+ * Do a strict comparison of two strings.  This returns:
+ *
+ *    a value < 0 when this is smaller than other
+ *    a value   0 when this is equal to other
+ *    a value > 0 when this is larger than other
+ *
+ * @param otherObj The other comparison object.
+ *
+ * @return The relative comparison result (<0, 0, >0)
+ */
 wholenumber_t RexxString::strictComp(RexxObject *otherObj)
-/******************************************************************************/
-/* Function:  Do a strict comparison of two strings.  This returns:           */
-/*                                                                            */
-/*             a value < 0 when this is smaller than other                    */
-/*             a value   0 when this is equal to other                        */
-/*             a value > 0 when this is larger than other                     */
-/******************************************************************************/
 {
-    wholenumber_t result;                /* compare result                    */
+    wholenumber_t result;
 
-    requiredArgument(otherObj, ARG_ONE);         /* this is required.                 */
-    RexxString *other = REQUEST_STRING(otherObj);    /* force into string form            */
-    size_t otherLen = other->getLength();       /* get length of second string.      */
-    const char *otherData = other->getStringData();  /* get pointer to start of data.     */
+    // get the string argument and the data/length values
+    RexxString *other = stringArgument(otherObj, ARG_ONE);
+    size_t otherLen = other->getLength();
+    const char *otherData = other->getStringData();
 
+    // if we are the longer string string, compare using the other length.  the
+    // lengths are the tie breaker.
     if (getLength() >= otherLen)
-    {      /* determine the longer string.      */
-        /* first string is larger,           */
-        /* do a memory compare of strings,   */
-        /* use length of smaller string.     */
+    {
         result = memcmp(getStringData(), otherData, (size_t) otherLen);
-        /* if strings are equal, and         */
-        /* are not equal, the self is greater*/
         if ((result == 0) && (getLength() > otherLen))
         {
             result = 1;                      /* otherwise they are equal.         */
         }
     }
+    // compare using our length...
     else
-    {                               /* The length of second obj is longer*/
-                                    /* do memory compare of strings, use */
-                                    /*  length of smaller string.        */
+    {
         result = memcmp(getStringData(), otherData, (size_t) getLength());
-        if (result == 0)                  /* if stings compared equal,         */
+        // since the other length is longer, we cannot be equal.  The other string
+        // is longer, and is considered the greater of the two.
+        if (result == 0)
         {
-            result = -1;                  /*  then the other string is bigger. */
+            result = -1;
         }
     }
-    return result;                       /* finished, return our result       */
+    return result;
 }
 
 
@@ -748,63 +749,94 @@ wholenumber_t RexxString::strictComp(RexxObject *otherObj)
     return numstr->method(right_term);
 
 
+/**
+ * String addition...performed by NumberString
+ *
+ * @param right_term The other operator term.
+ *
+ * @return The operator result
+ */
 RexxObject *RexxString::plus(RexxObject *right_term)
-/******************************************************************************/
-/* Function:  String addition...performed by NumberString                 */
-/******************************************************************************/
 {
     ArithmeticOperator(plus);
 }
 
+
+/**
+ * String subtraction...performed by NumberString
+ *
+ * @param right_term The other operator term.
+ *
+ * @return The operator result
+ */
 RexxObject *RexxString::minus(RexxObject *right_term)
-/******************************************************************************/
-/* Function:  String subtraction...performed by NumberString              */
-/******************************************************************************/
 {
     ArithmeticOperator(minus);
 }
 
 
+/**
+ * String multiplication...performed by NumberString
+ *
+ * @param right_term The other operator term.
+ *
+ * @return The operator result
+ */
 RexxObject *RexxString::multiply(RexxObject *right_term)
-/******************************************************************************/
-/* Function:  String multiplication...performed by NumberString           */
-/******************************************************************************/
 {
     ArithmeticOperator(multiply);
 }
 
 
+/**
+ * String division...performed by NumberString
+ *
+ * @param right_term The other operator term.
+ *
+ * @return The operator result
+ */
 RexxObject *RexxString::divide(RexxObject *right_term)
-/******************************************************************************/
-/* Function:  String division...performed by NumberString                 */
-/******************************************************************************/
 {
     ArithmeticOperator(divide);
 }
 
 
+/**
+ * String integer division...performed by NumberString
+ *
+ * @param right_term The other operator term.
+ *
+ * @return The operator result
+ */
 RexxObject *RexxString::integerDivide(RexxObject *right_term)
-/******************************************************************************/
-/* Function:  String division...performed by NumberString                 */
-/******************************************************************************/
 {
     ArithmeticOperator(integerDivide);
 }
 
+
+/**
+ * String remainder division...performed by NumberString
+ *
+ * @param right_term The other operator term.
+ *
+ * @return The operator result
+ */
 RexxObject *RexxString::remainder(RexxObject *right_term)
-/******************************************************************************/
-/* Function:  String division...performed by NumberString                 */
-/******************************************************************************/
 {
     ArithmeticOperator(remainder);
 }
 
+
+/**
+ * String power operator...performed by NumberString
+ *
+ * @param right_term The other operator term.
+ *
+ * @return The operator result
+ */
 RexxObject *RexxString::power(RexxObject *right_term)
-/******************************************************************************/
-/* Function:  String division...performed by NumberString                 */
-/******************************************************************************/
 {
-    ArithmeticOperator(abs);
+    ArithmeticOperator(power);
 }
 
 
@@ -817,6 +849,7 @@ RexxObject *RexxString::power(RexxObject *right_term)
         reportException(Error_Incorrect_method_string_nonumber, name, this); \
     }                                     \
     return numstr->method;
+
 
 
 RexxObject *RexxString::abs()
@@ -1116,7 +1149,7 @@ RexxString *RexxString::concatRexx(RexxObject *otherObj)
 
     requiredArgument(otherObj, ARG_ONE);         /* this is required.                 */
                                          /* ensure a string value             */
-    other = (RexxString *)REQUEST_STRING(otherObj);
+    other = otherObj->requestString();
 
     /* added error checking for NULL pointer (from NilObject) */
     if (other == OREF_NULL)
@@ -1200,22 +1233,8 @@ RexxString *RexxString::concatBlank(RexxObject *otherObj)
 
     requiredArgument(otherObj, ARG_ONE);         /* this is required.                 */
                                          /* ensure a string value             */
-    other = (RexxString *)REQUEST_STRING(otherObj);
+    other = otherObj->requestString();
 
-    /* added error checking for NULL pointer (from NilObject) */
-    if (other == OREF_NULL)
-    {
-        reportException(Error_Incorrect_method_nostring, IntegerOne);
-    }
-
-    /* ensure a string value             */
-    other = (RexxString *)REQUEST_STRING(otherObj);
-
-    /* added error checking for NULL pointer (from NilObject) */
-    if (other == OREF_NULL)
-    {
-        reportException(Error_Incorrect_method_nostring, IntegerOne);
-    }
     /* the following logic also appears  */
     /* in string_concat_with, but is     */
     /* repeated here because this is a   */

@@ -144,7 +144,7 @@ void RexxInstructionAddress::execute(RexxActivation *context, ExpressionStack *s
             // evaluate the command expression
             RexxObject *result = command->evaluate(context, stack);
             // this must be a string
-            RexxString *_command = REQUEST_STRING(result);
+            RexxString *_command = result->requestString();
             // protect this
             stack->push(_command);
             // need to trace this if on
@@ -169,7 +169,7 @@ void RexxInstructionAddress::execute(RexxActivation *context, ExpressionStack *s
     {
         // evaluate
         RexxObject *result = dynamicAddress->evaluate(context, stack);
-        RexxString *_address = REQUEST_STRING(result);
+        RexxString *_address = result->requestString();
         // protect this
         stack->push(_address);
         context->traceResult(_address);

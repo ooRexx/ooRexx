@@ -185,8 +185,8 @@ class ArrayClass : public RexxObject
     RexxInteger  *sizeRexx();
     RexxObject   *firstRexx();
     RexxObject   *lastRexx();
-    RexxInternalObject  *getFirstItem();
-    RexxInternalObject  *getLastItem();
+    RexxInternalObject *getFirstItem();
+    RexxInternalObject *getLastItem();
     size_t       lastIndex();
     size_t       firstIndex();
     size_t       nextIndex(size_t index);

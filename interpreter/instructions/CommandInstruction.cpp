@@ -75,7 +75,7 @@ void RexxInstructionCommand::execute(RexxActivation *context, ExpressionStack *s
 
     // get the expression result and convert to a string value
     RexxObject *result = expression->evaluate(context, stack);
-    RexxString *command = REQUEST_STRING(result);
+    RexxString *command = result->requestString();
     // are we tracing commands?
     if (context->tracingCommands())
     {

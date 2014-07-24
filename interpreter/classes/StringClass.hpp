@@ -270,8 +270,10 @@ class RexxString : public RexxObject
 
     RexxInteger *compareToRexx(RexxString *other, RexxInteger *start_, RexxInteger *len_);
     RexxInteger *caselessCompareToRexx(RexxString *other, RexxInteger *start_, RexxInteger *len_);
-    RexxInteger *primitiveCompareTo(RexxString *other, stringsize_t start, stringsize_t len);
-    RexxInteger *primitiveCaselessCompareTo(RexxString *other, stringsize_t start, stringsize_t len);
+    wholenumber_t primitiveCompareTo(RexxString *other, stringsize_t start, stringsize_t len);
+    wholenumber_t primitiveCaselessCompareTo(RexxString *other, stringsize_t start, stringsize_t len);
+    wholenumber_t primitiveCompareTo(RexxString *other);
+    wholenumber_t primitiveCaselessCompareTo(RexxString *other);
 
     RexxInteger *equals(RexxString *other);
     RexxInteger *caselessEquals(RexxString *other);

@@ -101,7 +101,7 @@ class MethodClass : public BaseExecutable
     inline void  setPublic()       {methodFlags.reset(PRIVATE_FLAG); };
            void  setAttributes(bool _private, bool _protected, bool _guarded);
     inline RexxClass *getScope() { return scope; }
-    inline RexxClass *isScope(RexxClass *s) {return scope == s;}
+    inline bool  isScope(RexxClass *s) {return scope == s;}
 
     inline BaseCode  *getCode()     { return code; }
     MethodClass  *newRexx(RexxObject **, size_t);

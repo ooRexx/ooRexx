@@ -46,11 +46,13 @@
 
 #include "HashCollection.hpp"
 
+class MethodClass;
+
 /**
  * Exported table class where indexing is done using object
  * identity
  */
-class MethodDictionary: publicStringHashCollection
+class MethodDictionary: public StringHashCollection
 {
  public:
      void        *operator new(size_t);
@@ -59,18 +61,33 @@ class MethodDictionary: publicStringHashCollection
      inline void  operator delete(void *, void *) { ; }
 
     inline MethodDictionary(RESTORETYPE restoreType) { ; }
-           MethodDictionary(size_t capacity = DefaultTableSize) : instanceMethods(OREF_NULL), StringHashCollection(capacity) { }
+           MethodDictionary(size_t capacity = DefaultTableSize);
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(Envelope *);
 
     virtual RexxObject *copy();
-
-    RexxClass *findSuperScope(RexxClass *cls)
-    {
-        return scopeTable == OREF_NULL ? OREF_NULL : scopeTable->findSuperScope();
-    }
+    MethodClass *getMethod(RexxString *methodName) { return (MethodClass *)get(methodName); }
+    void defineMethod(RexxString *methodName, MethodClass *method);
+    void replaceMethod(RexxString *methodName, MethodClass *method);
+    void replaceMethods(MethodDictionary *source);
+    bool removeMethod(RexxString *methodName);
+    void hideMethod(RexxString *methodName);
+    void removeInstanceMethod(RexxString *name);
+    void addInstanceMethod(RexxString *name, MethodClass *method);
+    MethodClass *findSuperMethod(RexxString *name, RexxClass *startScope);
+    void setMethodScope(RexxClass *scope);
+    SupplierClass *getMethods(RexxClass *scope);
+    ArrayClass *getScopeList() { return scopeList; }
+    RexxClass  *immediateSuperScope();
+    RexxClass  *findSuperScope(RexxClass *scope);
+    void addScope(RexxClass *scope);
+    void addMethod(RexxString *name, MethodClass *method);
+    void mergeMethods(MethodDictionary *target);
+    void mergeScopes(MethodDictionary *target);
+    void merge(MethodDictionary *target);
+    bool hasScope(RexxClass *scope);
 
     inline bool hasInstanceMethods() { return instanceMethods != OREF_NULL; }
 

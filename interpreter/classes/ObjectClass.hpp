@@ -352,7 +352,7 @@ class RexxInternalObject : public RexxVirtualBase
 
     RexxString  *requestString();
     RexxString  *requestStringNoNOSTRING();
-    RexxInteger *requestInteger(size_t);
+    RexxInteger *requestInteger(size_t digits = Numerics::ARGUMENT_DIGITS);
     bool         requestNumber(wholenumber_t &, size_t);
     bool         requestUnsignedNumber(stringsize_t &, size_t);
     ArrayClass  *requestArray();
@@ -426,7 +426,7 @@ class RexxObject : public RexxInternalObject
 
     virtual RexxObject  *defineMethod(RexxString *, MethodClass *, RexxString *a = OREF_NULL);
     virtual RexxString  *defaultName();
-    virtual RexxObject  *unknown(RexxString *msg, ArrayClass *args){return OREF_NULL;};
+    virtual RexxObject  *unknown(RexxString *msg, ArrayClass *args) {return OREF_NULL;};
     virtual bool         hasMethod(RexxString *msg);
             RexxObject  *hasMethodRexx(RexxString *);
             bool         hasUninitMethod();

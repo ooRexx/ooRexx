@@ -50,6 +50,7 @@
 class RexxSource;
 class PackageClass;
 class SourceTable;
+class StringTable;
 class TableClass;
 class ArrayClass;
 class MethodDictionary;
@@ -87,18 +88,19 @@ class RexxClass : public RexxObject
     RexxObject *deleteMethod(RexxString *);
     RexxObject *defineClassMethod(RexxString *method_name, MethodClass *newMethod);
     void        removeClassMethod(RexxString *method_name);
-    RexxObject *defineMethods(TableClass *);
-    RexxObject *inheritMethods(RexxClass *);
+    RexxObject *defineMethods(StringTable *);
+    RexxObject *inheritInstanceMethods(RexxClass *);
+
+    MethodDictionary *getInstanceBehaviourDictionary();
+    MethodDictionary *getBehaviourDictionary();
 
     // methods for building class behaviours
     void        updateSubClasses();
     void        updateInstanceSubClasses();
     void        createClassBehaviour(RexxBehaviour *);
     void        createInstanceBehaviour(RexxBehaviour *);
-    void        methodDictionaryMerge(TableClass *, TableClass *);
-    TableClass  *methodDictionaryCreate(TableClass *, RexxClass *);
 
-    RexxInteger *queryMixinClass();
+    RexxObject  *queryMixinClass();
     RexxString  *getId();
     RexxClass   *getBaseClass();
     RexxClass   *getMetaClass();
@@ -108,8 +110,6 @@ class RexxClass : public RexxObject
     ArrayClass  *getSubClasses();
 
     void         setInstanceBehaviour(RexxBehaviour *);
-    TableClass  *getInstanceBehaviourDictionary();
-    TableClass  *getBehaviourDictionary();
     RexxString  *defaultName();
 
     MethodClass *method(RexxString *);

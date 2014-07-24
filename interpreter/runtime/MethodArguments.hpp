@@ -48,7 +48,6 @@
 #define MethodArguments_Include
 
 
-
 /**
  * Check for required arguments and raise a missing argument
  * error for the given position.
@@ -305,7 +304,7 @@ inline ArrayClass *arrayArgument(RexxInternalObject *object, size_t position)
  *
  * @return A converted single-dimension array.
  */
-inline ArrayClass * arrayArgument(RexxInternalObject *object, const char *name)
+inline ArrayClass *arrayArgument(RexxInternalObject *object, const char *name)
 {
     if (object == OREF_NULL)
     {
@@ -316,7 +315,6 @@ inline ArrayClass * arrayArgument(RexxInternalObject *object, const char *name)
     ArrayClass *array = object->requestArray();
     if (array == TheNilObject || array->isMultiDimensional())
     {
-        /* raise an error                    */
         reportException(Error_Invalid_argument_noarray, name);
     }
     return array;
@@ -332,55 +330,16 @@ inline ArrayClass * arrayArgument(RexxInternalObject *object, const char *name)
  */
 inline void classArgument(RexxInternalObject *object, RexxClass *clazz, const char *name)
 {
-    if (object == OREF_NULL)             /* missing argument?                 */
+    if (object == OREF_NULL)
     {
         reportException(Error_Invalid_argument_noarg, name);
     }
-
+    // verify this is an instance of the class we require.
     if (!object->isInstanceOf(clazz))
     {
         reportException(Error_Invalid_argument_noclass, name, clazz->getId());
     }
 }
-
-
-/**
- * A function specifically for REQUESTing a STRING, since there are
- * four primitive classes that are equivalents for strings.  It will trap on
- * OREF_NULL.  This always returns a string value, going all the
- * way down the various methods of providing a string value.
- * Will also raise NOSTRING conditions.
- *
- * @param object The object we need a string value from.
- *
- * @return The string value of the object.
- */
-inline RexxString *REQUEST_STRING(RexxInternalObject *object)
-{
-    return (isOfClass(String, object) ? (RexxString *)object : (object)->requestString());
-}
-
-/**
- * Request an array version for an argument.  Will perform
- * makearray processing on the object, if needed.
- *
- * @param obj    The object to request.
- *
- * @return The converted array value of the object or TheNilObject if
- *         if did not convert.
- */
-inline ArrayClass * REQUEST_ARRAY(RexxInternalObject *obj) { return ((obj)->requestArray()); }
-
-/**
- * Request an object to be converted to a RexxInteger
- * object.  Return TheNilObject if it could not be converted.
- *
- * @param obj    The object to convert.
- *
- * @return An Integer object instance representing this object or
- *         .nil if it cannot be converted.
- */
-inline RexxInteger * REQUEST_INTEGER(RexxInternalObject *obj) { return ((obj)->requestInteger(Numerics::ARGUMENT_DIGITS));}
 
 
 /**
@@ -391,7 +350,7 @@ inline RexxInteger * REQUEST_INTEGER(RexxInternalObject *obj) { return ((obj)->r
  *
  * @return Either the result object, or TheNilObject.
  */
-inline RexxInternalObject *resultOrNil(RexxInternalObject *o) { return o != OREF_NULL ? o : TheNilObject; }
+inline RexxObject *resultOrNil(RexxInternalObject *o) { return o != OREF_NULL ? (RexxObject *)o : TheNilObject; }
 
 
 /**
@@ -403,7 +362,7 @@ inline RexxInternalObject *resultOrNil(RexxInternalObject *o) { return o != OREF
  * @return Either TheTrueObject or TheFalseObject, depending on
  *         the argument value.
  */
-inline RexxInternalObject *booleanObject(bool v) { return v ? TheTrueObject : TheFalseObject; }
+inline RexxObject *booleanObject(bool v) { return v ? TheTrueObject : TheFalseObject; }
 
 #endif
 

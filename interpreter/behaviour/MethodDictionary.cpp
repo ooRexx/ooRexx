@@ -78,15 +78,62 @@ MethodDictionary::MethodDictionary(size_t capacity)
 
 
 /**
- * Get a method object from the dictionary.
+ * Normal garbage collection live marking
  *
- * @param methodName The target method name.
- *
- * @return The method instance, or OREF_NULL if doesn't exist.
+ * @param liveMark The current live mark.
  */
-RexxMethod *MethodDictionary::getMethod(RexxString *methodName)
+void MethodDictonary::live(size_t liveMark)
 {
-    return (MethodClass *)get(methodName);
+    memory_mark(contents);
+    memory_mark(scopeList);
+    memory_mark(objectVariables);
+}
+
+
+/**
+ * Generalized object marking.
+ *
+ * @param reason The reason for this live marking operation.
+ */
+void MethodDictionary::liveGeneral(MarkReason reason)
+{
+    memory_mark_general(contents);
+    memory_mark_general(scopeList);
+    memory_mark_general(objectVariables);
+}
+
+
+/**
+ * Flatten the table contents as part of a saved program.
+ *
+ * @param envelope The envelope we're flattening into.
+ */
+void MethodDictionary::flatten(Envelope *envelope)
+{
+    setUpFlatten(HashCollection)
+
+    flattenRef(contents);
+    flattenRef(scopeList);
+    flattenRef(objectVariables);
+
+    cleanUpFlatten
+}
+
+
+/**
+ *
+ * Copy a method dictionary
+ *
+ * @return A new instance of this collection.
+ */
+RexxObject *Method::copy()
+{
+    // make a copy of the base object
+    MethodDictionary *newObj = (MethodDictionary *)RexxObject::copy();
+    // and copy the contents as well
+    newObj->contents = (HashContents *)contents->copy();
+    newObj->scopeList = (ArrayClass *)scopeList->copy();
+    return newObj;
 }
 
 
@@ -108,7 +155,7 @@ void MethodDictionary::defineMethod(RexxString *methodName, MethodClass *method)
     {
         // we need to check to see if we have an existing method.
         // how this gets handled differs depending on what we find in the table.
-        RexxMethod *tableMethod = (MethodClass *)getMethod(methodName);
+        MethodClass *tableMethod = (MethodClass *)getMethod(methodName);
         // if this is a new method, just put it into the table.
         if (tableMethods == OREF_NULL)
         {
@@ -329,14 +376,6 @@ void MethodDictionary::setMethodScope(RexxClass *scope)
  */
 SupplierClass *MethodDictionary::getMethods(RexxClass *scope)
 {
-    // if asking for everything.  We can't just return the supplier
-    // for our table because we overload this table with scope information.
-    // we need to pick out just the methods.
-    if (scope == OREF_NULL)
-    {
-
-    }
-
     // manually count first, then traverse again to fill the supplier arrays
     size_t count = 0;
 
@@ -388,19 +427,6 @@ SupplierClass *MethodDictionary::getMethods(RexxClass *scope)
 
     // and return as a supplier
     return (SupplierClass *)new_supplier(methods, names);
-}
-
-
-/**
- * Retrieve the scope list defined by this behaviour.
- *
- * @param scope  The target scope we need information for.
- *
- * @return An array of scope lookup orders for this scope.
- */
-ArrayClass *MethodDictionary::getScopeList()
-{
-    return scopeList;
 }
 
 

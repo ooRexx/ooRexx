@@ -110,7 +110,7 @@ void RexxTarget::next(RexxActivation *context)
     }
     next_argument++;
     // make sure we have a string
-    string = (RexxString *)REQUEST_STRING(string);
+    string = string->requestString();
     // now handle translation options
     if (translate[parse_upper])
     {

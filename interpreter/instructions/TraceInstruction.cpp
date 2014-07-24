@@ -149,7 +149,7 @@ void RexxInstructionTrace::execute(RexxActivation *context, ExpressionStack *sta
     {
         // evaluate, and get as a string value
         RexxObject *result = expression->evaluate(context, stack);
-        RexxString *value = REQUEST_STRING(result);
+        RexxString *value = result->requestString();
         // Even trace gets traced :-)
         context->traceResult(result);
         // again, we don't change anything if we're already in debug mode.

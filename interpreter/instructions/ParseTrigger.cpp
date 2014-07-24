@@ -175,7 +175,7 @@ RexxString *RexxTrigger::stringTrigger(RexxActivation *context, ExpressionStack 
     // NOTE:  We leave this on the stack to protect from GC until after we are finished with this.
     // trigger operations that require a string value need to pop this from the stack
     // once they are finished.
-   return REQUEST_STRING(trigger);
+   return trigger->requestString();
 }
 
 

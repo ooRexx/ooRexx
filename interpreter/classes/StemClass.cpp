@@ -1560,12 +1560,13 @@ bool StemClass::sort(RexxString *prefix, int order, int type, size_t _first, siz
         }
 
         RexxObject *nextValue = next_element->getVariableValue();
-        if (nextValue == OREF_NULL) {
+        if (nextValue == OREF_NULL)
+        {
             return false;
         }
-        /* force this to a string value. */
-        nextValue = REQUEST_STRING(nextValue);
-        /* now anchor both in the sorting array */
+        // force this to a string value.
+        nextValue = nextValue->requestString();
+        // now anchor both in the sorting array
         array->put((RexxObject *)next_element, j);
         array->put(nextValue, j + bounds);
     }

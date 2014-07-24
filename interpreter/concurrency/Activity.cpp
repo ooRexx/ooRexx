@@ -1222,7 +1222,7 @@ RexxObject *Activity::display(DirectoryClass *exobj)
     /* get the name of the program       */
     RexxString *programname = (RexxString *)exobj->at(OREF_PROGRAM);
     /* add on the error number           */
-    text = text->concatWith(REQUEST_STRING(rc), ' ');
+    text = text->concatWith(rc->requestString(), ' ');
     /* if program exists, add the name   */
     /* of the program to the message     */
     if (programname != OREF_NULL && programname != OREF_NULLSTRING)
@@ -1238,7 +1238,7 @@ RexxObject *Activity::display(DirectoryClass *exobj)
             /* Yes, add on the "line" part       */
             text = text->concatWith(SystemInterpreter::getMessageText(Message_Translations_line), ' ');
             /* add on the line number            */
-            text = text->concatWith(REQUEST_STRING(position), ' ');
+            text = text->concatWith(position->requestString(), ' ');
             /* add on the ":  "                  */
         }
     }
@@ -1291,7 +1291,7 @@ RexxObject *Activity::displayDebug(DirectoryClass *exobj)
                                        /* get the leading part              */
   text = SystemInterpreter::getMessageText(Message_Translations_debug_error);
                                        /* add on the error number           */
-  text = text->concatWith(REQUEST_STRING(exobj->at(OREF_RC)), ' ');
+  text = text->concatWith((exobj->at(OREF_RC))->requestString(), ' ');
                                        /* add on the ":  "                  */
   text = text->concatWithCstring(":  ");
                                        /* and finally the error message     */
@@ -2224,7 +2224,7 @@ bool Activity::callFunctionExit(
             if (temp != OREF_NULL)           /* got a real argument?              */
             {
                 /* force the argument to a string    */
-                temp = (RexxString *)REQUEST_STRING(temp);
+                temp = temp->requestString();
                 /* point to the string               */
                 temp->toRxstring(argrxarray[argindex]);
             }

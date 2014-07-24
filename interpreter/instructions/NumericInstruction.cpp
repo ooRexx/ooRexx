@@ -157,7 +157,7 @@ void RexxInstructionNumeric::execute(RexxActivation *context, ExpressionStack *s
         {
             // evaluate the expression and get as a string value.
             RexxObject *result = expression->evaluate(context, stack);
-            RexxString *stringResult = REQUEST_STRING(result);
+            RexxString *stringResult = result->requestString();
             context->traceResult(stringResult);
 
             //  Scientific form?
@@ -165,14 +165,13 @@ void RexxInstructionNumeric::execute(RexxActivation *context, ExpressionStack *s
             {
                 context->setForm(Numerics::FORM_SCIENTIFIC);
             }
-            // Engineering form?                 */
+            // Engineering form?
             else if (stringResult->strCompare(CHAR_ENGINEERING))
             {
                 context->setForm(Numerics::FORM_ENGINEERING);
             }
             else
             {
-                /* report an exception               */
                 reportException(Error_Invalid_subkeyword_form, result);
             }
         }

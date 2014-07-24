@@ -45,7 +45,6 @@
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "ListClass.hpp"
-#include "TableClass.hpp"
 #include "DirectoryClass.hpp"
 #include "ArrayClass.hpp"
 #include "SupplierClass.hpp"
@@ -58,7 +57,8 @@
 #include "SourceFile.hpp"
 #include "PackageClass.hpp"
 #include "MethodArguments.hpp"
-#include "ScopeTable.hpp"
+#include "MethodDictionary.hpp"
+#include "StringTableClass.hpp"
 
 
 // singleton class instance
@@ -143,8 +143,8 @@ void RexxClass::liveGeneral(MarkReason reason)
     memory_mark_general(instanceSuperClasses);
     memory_mark_general(subClasses);
     memory_mark_general(source);
-    memory_mark(scopeSuperClass);
-    memory_mark(scopeSearchOrder);
+    memory_mark_general(scopeSuperClass);
+    memory_mark_general(scopeSearchOrder);
 }
 
 // TODO:  no flatten method for classes?
@@ -294,7 +294,7 @@ RexxObject *RexxClass::notEqual(RexxObject *other)
  *
  * @return True if this is a mixin, False if not.
  */
-RexxInteger *RexxClass::queryMixinClass()
+RexxObject *RexxClass::queryMixinClass()
 {
     return booleanObject(isMixinClass());
 }
@@ -369,7 +369,7 @@ RexxClass *RexxClass::getSuperClass()
         return (RexxClass *)TheNilObject;
     }
     // get the first item from the immediate list.
-    return (RexxClass *)instanceSuperClasses->firstItem();
+    return (RexxClass *)instanceSuperClasses->getFirstItem();
 }
 
 
@@ -417,24 +417,10 @@ void RexxClass::addSubClass(RexxClass *subClass)
  *
  * @param newMethods The new methods to add.
  */
-void RexxClass::defineMethods(TableClass *newMethods)
+RexxObject *RexxClass::defineMethods(StringTable *newMethods)
 {
-    // loop through the table with an iterator.
-    HashContents::TableIterator iterator = newMethods->iterator();
-
-    while (iterator.isAvailable())
-    {
-        // get the name and the value, then add to this class object
-        RexxString *method_name = (RexxString *)iterator.index();
-        // if this is the Nil object, that's an override.  Make it OREF_NULL.
-        RexxObject *method = (MethodClass *)iterator.value();
-        if (method == TheNilObject)
-        {
-            method = OREF_NULL;
-        }
-        // define this method
-        behaviour->define(method_name, method);
-    }
+    // pass along to the behaviour
+    behaviour->defineMethods(newMethods);
     return OREF_NULL;
 }
 
@@ -449,7 +435,7 @@ void RexxClass::defineMethods(TableClass *newMethods)
  *
  * @param newMethods The new methods to add.
  */
-void RexxClass::inheritInstanceMethods(RexxClass *source)
+RexxObject *RexxClass::inheritInstanceMethods(RexxClass *source)
 {
     MethodDictionary *sourceMethods = source->instanceMethodDictionary;
 
@@ -461,10 +447,11 @@ void RexxClass::inheritInstanceMethods(RexxClass *source)
         // get the name and the value, then add to this class object
         RexxString *methodName = (RexxString *)iterator.index();
         // if this is the Nil object, that's an override.  Make it OREF_NULL.
-        RexxObject *method = (MethodClass *)iterator.value();
+        MethodClass *method = (MethodClass *)iterator.value();
         // define this method
-        behaviour->define(methodName, method);
+        behaviour->defineMethod(methodName, method);
     }
+    return OREF_NULL;
 }
 
 
@@ -496,7 +483,7 @@ MethodDictionary *RexxClass::getInstanceBehaviourDictionary()
 {
     // always return a copy of the dictionary
     // TODO:  have the behaviour class do the not there/create the dictionary test.
-    return instanceBehaviour->copyMethodictionary();
+    return instanceBehaviour->copyMethodDictionary();
 }
 
 
@@ -514,13 +501,8 @@ MethodDictionary *RexxClass::getBehaviourDictionary()
 
 /**
  * Initialize a base Rexx class.
- *
- * @param restricted Whether we should turn the RexxRestricted flag on at this time.
- *                   Some classes get additional customization after initial
- *                   creation, so we delay setting this attribute until the
- *                   class is fully constructed.
  */
-void RexxClass::buildFinalClassBehaviour(bool restricted)
+void RexxClass::buildFinalClassBehaviour()
 {
     // get a copy of the class instance
     // behaviour mdict before the merge
@@ -757,7 +739,7 @@ RexxObject *RexxClass::defineMethod(RexxString *method_name, MethodClass *method
  *
  * @return Returns nothing.
  */
-RexxObject *RexxClass::defineMethods(TableClass *newMethods)
+RexxObject *RexxClass::defineMethods(StrinTable *newMethods)
 {
     // use an iterator to traverse the table
     HashContents::TableIterator iterator = newMethods->iterator();
@@ -1147,7 +1129,7 @@ MethodDictionary *RexxClass::createMethodDictionary(RexxObject *sourceCollection
     for (; supplier->available() == TheTrueObject; supplier->next())
     {
         MethodClass *newMethod = (MethodClass *)supplier->value();
-        Protected<RexxString> method_name = REQUEST_STRING(supplier->index());;
+        Protected<RexxString> method_name = supplier->index()->requestString();;
         // we add the methods to the table in uppercase, but create method objects using
         // the original name.
         Protected<RexxString> table_method_name = method_name->upper();

@@ -983,7 +983,7 @@ RexxInteger *RexxString::compareToRexx(RexxString *other, RexxInteger *start_, R
     stringsize_t _start = optionalPositionArgument(start_, 1, ARG_TWO);
     stringsize_t len = optionalLengthArgument(len_, Numerics::maxVal(getLength(), other->getLength()) - _start + 1, ARG_THREE);
 
-    return primitiveCompareTo(other, _start, len);
+    return new_integer(primitiveCompareTo(other, _start, len));
 }
 
 
@@ -998,7 +998,7 @@ RexxInteger *RexxString::compareToRexx(RexxString *other, RexxInteger *start_, R
  * @return -1 if the target string is less than, 0 if the two strings are
  *         equal, 1 if the target string is the greater.
  */
-RexxInteger *RexxString::primitiveCompareTo(RexxString *other, stringsize_t _start, stringsize_t len)
+wholenumber_t RexxString::primitiveCompareTo(RexxString *other, stringsize_t _start, stringsize_t len)
 {
     stringsize_t myLength = getLength();
     stringsize_t otherLength = other->getLength();
@@ -1007,12 +1007,12 @@ RexxInteger *RexxString::primitiveCompareTo(RexxString *other, stringsize_t _sta
     // unless the start is
     if (_start > myLength)
     {
-        return _start > otherLength ? IntegerZero : IntegerMinusOne;
+        return _start > otherLength ? 0 : -1;
     }
     // if beyond the other length, they we're the larger
     if (_start > otherLength)
     {
-        return IntegerOne;
+        return 1;
     }
 
     _start--;      // make the starting point origin zero
@@ -1029,28 +1029,71 @@ RexxInteger *RexxString::primitiveCompareTo(RexxString *other, stringsize_t _sta
     {
         if (myLength == otherLength)
         {
-            return IntegerZero;
+            return 0;
         }
         else if (myLength > otherLength)
         {
-            return IntegerOne;
+            return 1;
         }
         else
         {
-            return IntegerMinusOne;
+            return -1;
         }
     }
     else if (result > 0)
     {
-        return IntegerOne;
+        return 1;
     }
     else
     {
-        return IntegerMinusOne;
+        return -1;
     }
 }
 
 
+/**
+ * Perform a compare of regions of two string objects.  Returns
+ * -1, 0, 1 based on the relative ordering of the two strings.
+ *
+ * @param other  The source string for the compare.
+ *
+ * @return -1 if the target string is less than, 0 if the two strings are
+ *         equal, 1 if the target string is the greater.
+ */
+wholenumber_t RexxString::primitiveCompareTo(RexxString *other)
+{
+    stringsize_t myLength = getLength();
+    stringsize_t otherLength = other->getLength();
+
+    size_t len = Numerics::minVal(stringLength*(), other->stringLength());
+
+    wholenumber_t result = memcmp(getStringData(), other->getStringData(), len);
+
+    // if they compare equal, then they are only
+    if (result == 0)
+    {
+        if (myLength == otherLength)
+        {
+            return 0;
+        }
+        else if (myLength > otherLength)
+        {
+            return 1;
+        }
+        else
+        {
+            return -1;
+        }
+    }
+    else if (result > 0)
+    {
+        return 1;
+    }
+    else
+    {
+        return -1;
+    }
+}
 
 
 /**
@@ -1069,7 +1112,7 @@ RexxInteger *RexxString::caselessCompareToRexx(RexxString *other, RexxInteger *s
     stringsize_t _start = optionalPositionArgument(start_, 1, ARG_TWO);
     stringsize_t len = optionalLengthArgument(len_, Numerics::maxVal(getLength(), other->getLength()) - _start + 1, ARG_THREE);
 
-    return primitiveCaselessCompareTo(other, _start, len);
+    return new_integer(primitiveCaselessCompareTo(other, _start, len));
 }
 
 
@@ -1086,7 +1129,7 @@ RexxInteger *RexxString::caselessCompareToRexx(RexxString *other, RexxInteger *s
  * @return -1 if the target string is less than, 0 if the two strings are
  *         equal, 1 if the target string is the greater.
  */
-RexxInteger *RexxString::primitiveCaselessCompareTo(RexxString *other, stringsize_t _start, stringsize_t len)
+wholenumber_t RexxString::primitiveCaselessCompareTo(RexxString *other, stringsize_t _start, stringsize_t len)
 {
     stringsize_t myLength = getLength();
     stringsize_t otherLength = other->getLength();
@@ -1095,12 +1138,12 @@ RexxInteger *RexxString::primitiveCaselessCompareTo(RexxString *other, stringsiz
     // unless the start is
     if (_start > myLength)
     {
-        return _start > otherLength ? IntegerZero : IntegerMinusOne;
+        return _start > otherLength ? 0 : -1;
     }
     // if beyond the other length, they we're the larger
     if (_start > otherLength)
     {
-        return IntegerOne;
+        return 1;
     }
 
     _start--;      // make the starting point origin zero
@@ -1117,23 +1160,68 @@ RexxInteger *RexxString::primitiveCaselessCompareTo(RexxString *other, stringsiz
     {
         if (myLength == otherLength)
         {
-            return IntegerZero;
+            return 0;
         }
         else if (myLength > otherLength)
         {
-            return IntegerOne;
+            return 1;
         }
         else
         {
-            return IntegerMinusOne;
+            return -1;
         }
     }
     else if (result > 0)
     {
-        return IntegerOne;
+        return 1;
     }
     else
     {
-        return IntegerMinusOne;
+        return -1;
+    }
+}
+
+
+/**
+ * Perform a compare of regions of two string objects.  Returns
+ * -1, 0, 1 based on the relative ordering of the two strings.
+ *
+ * @param other  The source string for the compare.
+ *
+ * @return -1 if the target string is less than, 0 if the two strings are
+ *         equal, 1 if the target string is the greater.
+ */
+wholenumber_t RexxString::primitiveCompareTo(RexxString *other)
+{
+    stringsize_t myLength = getLength();
+    stringsize_t otherLength = other->getLength();
+
+    size_t len = Numerics::minVal(stringLength*(), other->stringLength());
+
+    wholenumber_t result = StringUtil::caselessCompare(getStringData(), other->getStringData(), len);
+
+    // if they compare equal, then they are only
+    if (result == 0)
+    {
+        if (myLength == otherLength)
+        {
+            return 0;
+        }
+        else if (myLength > otherLength)
+        {
+            return 1;
+        }
+        else
+        {
+            return -1;
+        }
+    }
+    else if (result > 0)
+    {
+        return 1;
+    }
+    else
+    {
+        return -1;
     }
 }

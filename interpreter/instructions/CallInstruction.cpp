@@ -302,7 +302,7 @@ void RexxInstructionDynamicCall::execute(RexxActivation *context, ExpressionStac
     // it protects the expression
     RexxObject *evaluatedTarget = dynamicName->evaluate(context, stack);
     // this needs to be in string form, and protected
-    Protected<RexxString> targetName = REQUEST_STRING(evaluatedTarget);
+    Protected<RexxString> targetName = evaluatedTarget->requestString();
     context->traceResult(targetName);
 
 

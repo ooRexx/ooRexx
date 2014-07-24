@@ -247,6 +247,7 @@ RexxObject *HashCollection::unflatten(Envelope *envelope)
     return this;
 }
 
+
 /**
  * TODO:  The makeProxy object needs to be in the directory class, since that
  * is where it happens.

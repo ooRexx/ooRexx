@@ -222,7 +222,7 @@ RexxString *RexxInstructionExpression::evaluateStringExpression(RexxActivation *
         // evaluate this
         RexxObject *result = expression->evaluate(context, stack);
         // force to string form, trace, and return the string version
-        RexxString *stringResult = REQUEST_STRING(result);
+        RexxString *stringResult = result->requestString();
         context->traceResult(stringResult);
         return stringResult;
     }

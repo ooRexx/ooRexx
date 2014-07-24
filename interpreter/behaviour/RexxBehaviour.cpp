@@ -707,3 +707,31 @@ bool RexxBehaviour::hasInstanceMethods()
 {
     return methodDictionary == OREF_NULL ? false : methodDictionary->hasInstanceMethods();
 }
+
+
+/**
+ * Add a full table of methods to a class definition.  This is
+ * only used during the initial image build.
+ *
+ * @param newMethods The new methods to add.
+ */
+void RexxBehaviour::defineMethods(StringTable *newMethods)
+{
+    // loop through the table with an iterator.
+    HashContents::TableIterator iterator = newMethods->iterator();
+
+    while (iterator.isAvailable())
+    {
+        // get the name and the value, then add to this class object
+        RexxString *method_name = (RexxString *)iterator.index();
+        // if this is the Nil object, that's an override.  Make it OREF_NULL.
+        MethodClass *method = (MethodClass *)iterator.value();
+        if (method == TheNilObject)
+        {
+            method = OREF_NULL;
+        }
+        // define this method
+        defineMethod(method_name, method);
+    }
+    return OREF_NULL;
+}

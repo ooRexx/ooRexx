@@ -80,7 +80,7 @@ class DirectoryClass : public StringHashCollection
     virtual RexxInternalObject *removeItem(RexxInternalObject *target);
 
     // our unknown method
-    RexxInternalObject *unknown(RexxString *msgname, ArrayClass *arguments);
+    RexxObject *unknown(RexxString *msgname, ArrayClass *arguments);
 
 
     // stubs for additional exported directory methods.
@@ -90,7 +90,7 @@ class DirectoryClass : public StringHashCollection
     RexxInternalObject *methodTableValue(RexxInternalObject *index);
     RexxInternalObject *unknownValue(RexxInternalObject *index);
 
-    StringTableClass  *methodTable;      // table of added methods
+    StringTable *methodTable;            // table of added methods
     MethodClass *unknownMethod;          // unknown method entry
 
     static void createInstance();

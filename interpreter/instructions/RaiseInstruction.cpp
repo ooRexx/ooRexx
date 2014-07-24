@@ -188,7 +188,7 @@ void RexxInstructionRaise::execute(RexxActivation *context, ExpressionStack *sta
         // The description is a null string
         _description = OREF_NULLSTRING;
         // the RC must have a string value...this is an error if it doesn.
-        RexxString *errorcode = REQUEST_STRING(rc);
+        RexxString *errorcode = rc->requestString();
         if (errorcode == TheNilObject)
         {
             reportException(Error_Conversion_raise, rc);
@@ -265,8 +265,8 @@ void RexxInstructionRaise::execute(RexxActivation *context, ExpressionStack *sta
         if (errorCode->strCompare(CHAR_SYNTAX))
         {
             // get the array version, and it must be single dimension.
-            _additional = REQUEST_ARRAY(_additional);
-            if (_additional == TheNilObject || ((ArrayClass *)_additional)->getDimension() != 1)
+            _additional = _additional->requestArray();
+            if (_additional == TheNilObject || ((ArrayClass *)_additional)->isMultiDimensional())
             {
                 reportException(Error_Execution_syntax_additional);
             }

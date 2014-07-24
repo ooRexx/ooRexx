@@ -154,7 +154,7 @@ void RexxInstructionForward::execute(RexxActivation *context, ExpressionStack *s
     {
         // we need this as a string value...and in upper case.
         RexxObject *temp = message->evaluate(context, stack);
-        _message = REQUEST_STRING(temp)->upper();
+        _message = temp->requestString()->upper();
         // leave this on the stack.
         stack->push(_message);
     }
@@ -170,7 +170,7 @@ void RexxInstructionForward::execute(RexxActivation *context, ExpressionStack *s
     {
         // we need to evaluate this argument, then get as an array
         RexxObject *temp = arguments->evaluate(context, stack);
-        ArrayClass *argArray = REQUEST_ARRAY(temp);
+        ArrayClass *argArray = temp->requestArray();
         // protect this on the stack too
         stack->push(argArray);
         // make sure we got an acceptable array back.

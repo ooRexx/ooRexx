@@ -68,10 +68,11 @@ class RexxBehaviour : public RexxInternalObject
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(Envelope*);
-
     virtual RexxObject *copy();
+
     void         copyBehaviour(RexxBehaviour *source);
     void         defineMethod(RexxString *, MethodClass *);
+    void         defineMethods(StringTable *);
     void         defineMethod(const char *, PCPPM, size_t);
     void         addInstanceMethod(RexxString *, MethodClass *);
     void         removeInstanceMethod(RexxString *);
@@ -149,7 +150,6 @@ class RexxBehaviour : public RexxInternalObject
     static RexxBehaviour primitiveBehaviours[];
 
  protected:
-
 
     typedef enum
     {
