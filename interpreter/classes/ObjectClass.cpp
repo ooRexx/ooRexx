@@ -242,11 +242,11 @@ bool RexxInternalObject::isBaseClass()
  *
  * @return -1, 0, 1 depending on the comparison result.
  */
-wholenumber_t RexxObject::compareTo(RexxObject *other )
+wholenumber_t RexxInternalObject::compareTo(RexxInternalObject *other )
 {
     ProtectedObject result;
 
-    sendMessage(OREF_COMPARETO, other, result);
+    ((RexxObject *)this)->sendMessage(OREF_COMPARETO, other, result);
     // the result is required
     if ((RexxObject *)result == OREF_NULL)
     {

@@ -67,7 +67,7 @@ class NumberArray : public RexxInternalObject
     size_t       size() { return totalSize; };
 
     size_t       get(size_t index) { return inBounds(index) ? entries[index - 1] : 0; }
-    bool         put(size_t value, size_t index) { if (inBounds(index)) { entries[index - 1] = value; }}
+    void         put(size_t value, size_t index) { if (inBounds(index)) { entries[index - 1] = value; }}
 
     // access the value of a field
     inline size_t &operator[] (size_t index)

@@ -339,16 +339,16 @@ void MemoryObject::buildVirtualFunctionTable()
    virtualFunctionTable[T_StackFrameClass] = getVftPointer(objectLoc);
    
    objectPtr = new (objectLoc) SetClass(RESTOREIMAGE);
+   virtualFunctionTable[T_Set] = getVftPointer(objectLoc);
+   
+   objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
    virtualFunctionTable[T_SetClass] = getVftPointer(objectLoc);
    
-   objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
-   virtualFunctionTable[T_SetClassClass] = getVftPointer(objectLoc);
-   
    objectPtr = new (objectLoc) BagClass(RESTOREIMAGE);
-   virtualFunctionTable[T_BagClass] = getVftPointer(objectLoc);
+   virtualFunctionTable[T_Bag] = getVftPointer(objectLoc);
    
    objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
-   virtualFunctionTable[T_BagClassClass] = getVftPointer(objectLoc);
+   virtualFunctionTable[T_BagClass] = getVftPointer(objectLoc);
    
    objectPtr = new (objectLoc) RexxNilObject(RESTOREIMAGE);
    virtualFunctionTable[T_NilObject] = getVftPointer(objectLoc);

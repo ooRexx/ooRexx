@@ -163,6 +163,8 @@ EXTERNMEM MemoryObject memoryObject;
 // short hand references to internal class objects.
 
 #define TheArrayClass ArrayClass::classInstance
+#define TheBagClass BagClass::classInstance
+#define TheSetClass SetClass::classInstance
 #define TheClassClass RexxClass::classInstance
 #define TheDirectoryClass DirectoryClass::classInstance
 #define TheIntegerClass RexxInteger::classInstance
@@ -180,6 +182,7 @@ EXTERNMEM MemoryObject memoryObject;
 #define TheMutableBufferClass MutableBuffer::classInstance
 #define TheSupplierClass SupplierClass::classInstance
 #define TheTableClass TableClass::classInstance
+#define TheStringTableClass StringTableClass::classInstance
 #define TheIdentityTableClass IdentityTable::classInstance
 #define TheRelationClass RelationClass::classInstance
 #define ThePointerClass PointerClass::classInstance

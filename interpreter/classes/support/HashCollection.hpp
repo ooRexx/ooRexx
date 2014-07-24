@@ -204,5 +204,7 @@ public:
     virtual void validateValueIndex(RexxInternalObject *&value, RexxInternalObject *&index, size_t position);
     virtual bool hasItem(RexxInternalObject *);
     virtual RexxInternalObject *getIndex(RexxInternalObject * value);
+    virtual void put(RexxInternalObject *v) { HashCollection::put(v, v); }
+
 };
 #endif

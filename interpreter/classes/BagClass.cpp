@@ -56,7 +56,7 @@ void BagClass::createInstance()
 {
     // TODO:  simplify CLASS_CREATE() by defaulting RexxClass...and possibly generating
     // the both the create method and the static variable initializer.
-    CLASS_CREATE(BagClass, "Bag", RexxClass);
+    CLASS_CREATE(Bag, "Bag", RexxClass);
 }
 
 
@@ -69,7 +69,7 @@ void BagClass::createInstance()
  */
 void *BagClass::operator new (size_t size)
 {
-    return new_object(size, T_Set);
+    return new_object(size, T_Bag);
 }
 
 
@@ -105,31 +105,6 @@ BagClass::BagClass(size_t capacity)
 HashContents *BagClass::allocateContents(size_t bucketSize, size_t totalSize)
 {
     return new (totalSize) MultiValueContents(bucketSize, totalSize);
-}
-
-
-/**
- * Create a new instance of the set class (or a subclass) with
- * the indicated size.
- *
- * @param size   The initial size.
- *
- * @return A set object of the current class and size.
- */
-BagClass *BagClass::createBagObject(size_t size, RexxObject **init_args, size_t  argCount) )
-{
-    // this class is defined on the object class, but this is actually attached
-    // to a class object instance.  Therefore, any use of the this pointer
-    // will be touching the wrong data.  Use the classThis pointer for calling
-    // any methods on this object from this method.
-    RexxClass *classThis = (RexxClass *)this;
-
-    Protected<BagClass> newObj = new BagClass(size);
-
-    // handle Rexx class completion
-    classThis->completeNewObject(newObj, init_args, argCount);
-
-    return newObj;
 }
 
 
@@ -171,7 +146,7 @@ RexxObject *BagClass::newRexx(RexxObject **args, size_t argCount)
 BagClass *BagClass::classOf(RexxObject **args, size_t  argCount)
 {
     // create a list item of the appopriate type.
-    Protected<BagClass> newBag = newRexx(NULL, 0);
+    Protected<BagClass> newBag = (BagClass *)newRexx(NULL, 0);
 
     // add all of the arguments
     for (size_t i = 0; i < argCount; i++)

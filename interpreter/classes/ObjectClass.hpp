@@ -328,33 +328,34 @@ class RexxInternalObject : public RexxVirtualBase
     virtual bool           isInstanceOf(RexxClass *);
     virtual MethodClass   *instanceMethod(RexxString *);
     virtual SupplierClass *instanceMethods(RexxClass *);
+    virtual wholenumber_t  compareTo(RexxInternalObject *);
 
-            // compare 2 values for equality, potentially falling back on the
-            // "==" method for the test.
-            bool inline equalValue(RexxInternalObject *other)
-            {
-                // test first for direct equality, followed by value equality.
-                return (this == other) || this->isEqual(other);
-            }
+    // compare 2 values for equality, potentially falling back on the
+    // "==" method for the test.
+    bool inline equalValue(RexxInternalObject *other)
+    {
+        // test first for direct equality, followed by value equality.
+        return (this == other) || this->isEqual(other);
+    }
 
-            void         hasUninit();
-            void         removedUninit();
-            RexxObject  *clone();
+    void         hasUninit();
+    void         removedUninit();
+    RexxObject  *clone();
 
-            RexxString  *requiredString(size_t);
-            RexxString  *requiredString(const char *);
-            RexxString  *requiredString();
-            RexxInteger *requiredInteger(size_t, size_t);
-            wholenumber_t requiredNumber(size_t position, size_t precision = Numerics::ARGUMENT_DIGITS);
-            stringsize_t requiredPositive(size_t position, size_t precision = Numerics::ARGUMENT_DIGITS);
-            stringsize_t requiredNonNegative(size_t position, size_t precision = Numerics::ARGUMENT_DIGITS);
+    RexxString  *requiredString(size_t);
+    RexxString  *requiredString(const char *);
+    RexxString  *requiredString();
+    RexxInteger *requiredInteger(size_t, size_t);
+    wholenumber_t requiredNumber(size_t position, size_t precision = Numerics::ARGUMENT_DIGITS);
+    stringsize_t requiredPositive(size_t position, size_t precision = Numerics::ARGUMENT_DIGITS);
+    stringsize_t requiredNonNegative(size_t position, size_t precision = Numerics::ARGUMENT_DIGITS);
 
-            RexxString  *requestString();
-            RexxString  *requestStringNoNOSTRING();
-            RexxInteger *requestInteger(size_t);
-            bool         requestNumber(wholenumber_t &, size_t);
-            bool         requestUnsignedNumber(stringsize_t &, size_t);
-            ArrayClass  *requestArray();
+    RexxString  *requestString();
+    RexxString  *requestStringNoNOSTRING();
+    RexxInteger *requestInteger(size_t);
+    bool         requestNumber(wholenumber_t &, size_t);
+    bool         requestUnsignedNumber(stringsize_t &, size_t);
+    ArrayClass  *requestArray();
 
     ObjectHeader header;              /* memory management header          */
     RexxBehaviour *behaviour;         /* the object's behaviour            */
@@ -522,7 +523,6 @@ class RexxObject : public RexxInternalObject
     RexxObject  *unknownRexx(RexxString *, ArrayClass *);
     void *getCSelf();
     void *getCSelf(RexxObject *scope);
-    virtual wholenumber_t compareTo(RexxObject *);
 
     RexxObject *callOperatorMethod(size_t methodOffset, RexxObject *argument);
 

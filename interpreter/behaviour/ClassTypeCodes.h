@@ -104,10 +104,10 @@ typedef enum
     T_IdentityTableClass = 47,
     T_StackFrame = 48,
     T_StackFrameClass = 49,
-    T_SetClass = 50,
-    T_SetClassClass = 51,
-    T_BagClass = 52,
-    T_BagClassClass = 53,
+    T_Set = 50,
+    T_SetClass = 51,
+    T_Bag = 52,
+    T_BagClass = 53,
 
     T_Last_Exported_Class = 53,
     

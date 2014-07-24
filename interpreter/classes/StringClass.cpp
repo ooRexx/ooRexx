@@ -592,8 +592,8 @@ wholenumber_t RexxString::comp(RexxObject *other)
 /******************************************************************************/
 {
     RexxString *second;                  /* string value of other             */
-    NumberString *firstNum;          /* numberstring value of this        */
-    NumberString *secondNum;         /* numberstring value of other       */
+    NumberString *firstNum;              /* numberstring value of this        */
+    NumberString *secondNum;             /* numberstring value of other       */
     const char *firstStart;              /* comparison start pointer          */
     const char *secondStart;             /* other start pointer               */
     size_t firstLen;                     /* this compare length               */

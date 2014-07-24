@@ -96,8 +96,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="RexxContext" class="RexxContext" include="ContextClass.hpp"/>
 <Class id="IdentityTable" class="IdentityTable" include="IdentityTableClass.hpp"/>
 <Class id="StackFrame" class="StackFrameClass" include="StackFrameClass.hpp"/>
-<Class id="SetClass" class="SetClass" include="SetClass.hpp"/>
-<Class id="BagClass" class="BagClass" include="BagClass.hpp"/>
+<Class id="Set" class="SetClass" include="SetClass.hpp"/>
+<Class id="Bag" class="BagClass" include="BagClass.hpp"/>
 </Exported>
 <Internal>
 <Class id="NilObject" class="RexxNilObject" include="ObjectClass.hpp"/>

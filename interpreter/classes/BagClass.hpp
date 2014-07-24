@@ -66,7 +66,7 @@ class BagClass : public IndexOnlyHashCollection
     virtual HashContents *allocateContents(size_t bucketSize, size_t capacity);
 
     RexxObject *newRexx(RexxObject **, size_t);
-    RexxObject *classOf(RexxObject **, size_t);
+    BagClass   *classOf(RexxObject **, size_t);
 
     static void createInstance();
     static RexxClass *classInstance;
