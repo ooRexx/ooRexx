@@ -44,7 +44,6 @@
 #ifndef Included_RexxCode
 #define Included_RexxCode
 
-#include "SourceFile.hpp"
 #include "BaseCode.hpp"
 #include "RexxLocalVariables.hpp"
 
@@ -64,35 +63,33 @@ class RexxCode : public BaseCode
    // is generally off by one or two.
    const size_t MINIMUM_STACK_FRAME = 10;
 
-   RexxCode(RexxSource *s, RexxInstruction *i, DirectoryClass *l = OREF_NULL, size_t f = 0, size_t v = RexxLocalVariables::FIRST_VARIABLE_INDEX);
+   RexxCode(PackageClass *s, RexxInstruction *i, DirectoryClass *l = OREF_NULL, size_t f = 0, size_t v = RexxLocalVariables::FIRST_VARIABLE_INDEX);
    inline RexxCode(RESTORETYPE restoreType) { ; };
 
    virtual void live(size_t);
    virtual void liveGeneral(MarkReason reason);
    virtual void flatten(Envelope *);
 
-   ArrayClass      * getSource();
-   RexxObject     * setSecurityManager(RexxObject *);
-   RexxString     * getProgramName();
+   ArrayClass      *getSource();
+   RexxObject      *setSecurityManager(RexxObject *);
+   RexxString      *getProgramName();
 
-   inline RexxSource *getSourceObject() { return source; }
+   inline PackageClass *getPackageObject() { return source; }
    inline RexxInstruction *getFirstInstruction() { return start; }
    inline DirectoryClass   *getLabels() { return labels; }
    inline size_t getMaxStackSize() { return maxStack; }
    inline size_t getLocalVariableSize() { return vdictSize; }
-   inline DirectoryClass *getLocalRoutines() { return source->getLocalRoutines(); }
-   inline DirectoryClass *getPublicRoutines() { return source->getPublicRoutines(); }
-   inline void setLocalRoutines(DirectoryClass *r) { source->setLocalRoutines(r); }
-   inline void setPublicRoutines(DirectoryClass *r) { source->setPublicRoutines(r); }
+   inline StringTable *getLocalRoutines() { return source->getLocalRoutines(); }
+   inline StringTable *getPublicRoutines() { return source->getPublicRoutines(); }
    inline bool isTraceable() { return source->isTraceable(); }
    inline RexxString *extract(SourceLocation &l) { return source->extract(l); }
    inline SecurityManager *getSecurityManager() { return source->getSecurityManager(); }
    inline void        install(RexxActivation *activation) { source->install(activation); }
-   inline DirectoryClass *getMethods() { return source->getMethods(); };
-   inline DirectoryClass *getRoutines() { return source->getRoutines(); };
+   inline StringTable *getMethods() { return source->getMethods(); };
+   inline StringTable *getRoutines() { return source->getRoutines(); };
    inline RoutineClass *findRoutine(RexxString *n) { return source->findRoutine(n); }
    inline RexxString *resolveProgramName(Activity *activity, RexxString *name) { return source->resolveProgramName(activity, name); }
-   inline void        mergeRequired(RexxSource *s) { source->mergeRequired(s); }
+   inline void        mergeRequired(Package *s) { package->mergeRequired(s); }
           RexxCode *interpret(RexxString *source, size_t lineNumber);
 
    // overrides for BaseCode classes
@@ -102,11 +99,11 @@ class RexxCode : public BaseCode
 
 protected:
 
-    RexxSource      * source;            // the source this code belongs to.
-    RexxInstruction * start;             // root of instruction tree
-    SourceLocation    location;          // the full location of the code.
-    DirectoryClass   * labels;            // list of labels in this code block
-    size_t            maxStack;          // maximum stack depth
-    size_t            vdictSize;         // size of variable dictionary
+    PackageClass    *package;           // the source this code belongs to.
+    RexxInstruction *start;             // root of instruction tree
+    SourceLocation   location;          // the full location of the code.
+    StringTable     *labels;            // list of labels in this code block
+    size_t           maxStack;          // maximum stack depth
+    size_t           vdictSize;         // size of variable dictionary
 };
 #endif

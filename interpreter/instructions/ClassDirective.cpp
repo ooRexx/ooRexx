@@ -148,7 +148,7 @@ void *ClassDirective::operator new(size_t size)
  *
  * @param activation The activation we're running under for the install.
  */
-RexxClass *ClassDirective::install(RexxSource *source, RexxActivation *activation)
+RexxClass *ClassDirective::install(PackageClass *package, RexxActivation *activation)
 {
     RexxClass *metaclass = OREF_NULL;
     RexxClass *subclass = TheObjectClass;
@@ -160,7 +160,7 @@ RexxClass *ClassDirective::install(RexxSource *source, RexxActivation *activatio
     {
         // resolve the class.. This must be locatable in the
         // context of the package.
-        metaclass = source->findClass(metaclassName);
+        metaclass = package->findClass(metaclassName);
         if (metaclass == OREF_NULL)
         {
             reportException(Error_Execution_nometaclass, metaclassName);
@@ -171,7 +171,7 @@ RexxClass *ClassDirective::install(RexxSource *source, RexxActivation *activatio
     if (subclassName != OREF_NULL)
     {
         // resolve the explicit subclass
-        subclass = source->findClass(subclassName);
+        subclass = package->findClass(subclassName);
         if (subclass == OREF_NULL)
         {
             reportException(Error_Execution_noclass, subclassName);
@@ -207,7 +207,7 @@ RexxClass *ClassDirective::install(RexxSource *source, RexxActivation *activatio
             // get the next mixin class name and resolve...again, this
             // is required.
             RexxString *inheritsName = (RexxString *)inheritsClasses->get(i);
-            RexxClass *mixin = source->findClass(inheritsName);
+            RexxClass *mixin = package->findClass(inheritsName);
             if (mixin == OREF_NULL)
             {
                 reportException(Error_Execution_noclass, inheritsName);

@@ -47,7 +47,6 @@
 #include "RexxActivation.hpp"
 #include "ExpressionMessage.hpp"
 #include "Token.hpp"
-#include "SourceFile.hpp"
 #include "ProtectedObject.hpp"
 
 

@@ -77,12 +77,12 @@ RexxClass *BaseExecutable::findClass(RexxString *className)
  * @return Either the same executable object, or a new copy with the
  *         context set.
  */
-BaseExecutable *BaseExecutable::setSourceObject(RexxSource *s)
+BaseExecutable *BaseExecutable::setPackageObject(PackageClass *s)
 {
     // set this into a source object context.  If we get a
     // new object returned, we need to make a copy of the base
     // executable object also
-    BaseCode *setCode = code->setSourceObject(s);
+    BaseCode *setCode = code->setPackageObject(s);
     // we're cool if these are equal
     if (setCode == code)
     {
@@ -90,7 +90,7 @@ BaseExecutable *BaseExecutable::setSourceObject(RexxSource *s)
     }
     // make a copy of this executable, and set the new code into it.
     BaseExecutable *newBase = (BaseExecutable *)this->copy();
-    OrefSet(newBase, newBase->code, setCode);
+    newBase->code = setCode;
     return newBase;
 }
 
@@ -374,7 +374,7 @@ RexxObject *BaseCode::setSecurityManager(RexxObject *manager)
  *
  * @return
  */
-RexxSource *BaseCode::getSourceObject()
+PackageClass *BaseCode::getPackageObject()
 {
     return OREF_NULL;
 }
@@ -407,7 +407,7 @@ RexxClass *BaseCode::findClass(RexxString *className)
  *
  * @return Either the same object, or a new copy of the code object.
  */
-BaseCode *BaseCode::setSourceObject(RexxSource *s)
+BaseCode *BaseCode::setPackageObject(PackageClass *s)
 {
     return this;         // this is just a nop
 }
@@ -415,19 +415,13 @@ BaseCode *BaseCode::setSourceObject(RexxSource *s)
 
 /**
  * Retrieve the package associated with a code object.  Returns
- * OREF_NULL if this code object doesn't have a source.
+ * OREF_NULL if this code object doesn't have a package source.
  *
  * @return The associated package, or OREF_NULL.
  */
 PackageClass *BaseCode::getPackage()
 {
-    RexxSource *source = getSourceObject();
-    if (source != OREF_NULL)
-    {
-        return source->getPackage();
-    }
-
-    return OREF_NULL;
+    return getPackageObject();
 }
 
 
@@ -436,10 +430,10 @@ PackageClass *BaseCode::getPackage()
  */
 void BaseCode::detachSource()
 {
-    RexxSource *source = getSourceObject();
-    if (source != OREF_NULL)
+    PackageClass *package = getPackageObject();
+    if (package != OREF_NULL)
     {
-        source->detachSource();
+        package->detachSource();
     }
 }
 

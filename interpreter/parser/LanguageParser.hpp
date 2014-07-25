@@ -114,9 +114,9 @@ class LanguageParser: public RexxInternalObject
     RoutineClass *generateProgram();
     RoutineClass *generateRoutine(PackageClass *sourceContext = OREF_NULL);
     MethodClass *generateMethod(PackageClass *sourceContext = OREF_NULL);
-    RexxSource  *generatePackage();
+    PackageClass *generatePackage();
 
-    RexxSource  *getPackage() { return package; }
+    PackageClass *getPackage() { return package; }
 
     void         installPackage();
     StackFrameClass *createStackFrame();
@@ -447,7 +447,7 @@ protected:
 
     RexxString *name;                    // the name of the code we're translating (frequently a file name)
     ProgramSource *source;               // the source we're translating.
-    RexxSource *package;                 // the source package we're translating
+    PackageClass *package;               // the source package we're translating
     FlagSet<ParsingFlags, 32> flags;     // a set of flags with parse state
     const char *current;                 // current working line
     size_t currentLength;                // length of current line
@@ -459,31 +459,31 @@ protected:
 
     RexxCode        *mainSection;        // the main section of code before any directives
     PushThroughStack *holdStack;         // stack for holding temporaries
-    StringTable   *literals;           // root of associated literal list
-    StringTable   *strings;            // common pool of created strings
-    QueueClass       *control;            // queue of control structures
-    QueueClass       *terms;              // stack of expression terms
-    QueueClass       *subTerms;           // stack for arguments lists, et al.
-    QueueClass       *operators;          // stack of expression terms
+    StringTable   *literals;             // root of associated literal list
+    StringTable   *strings;              // common pool of created strings
+    QueueClass       *control;           // queue of control structures
+    QueueClass       *terms;             // stack of expression terms
+    QueueClass       *subTerms;          // stack for arguments lists, et al.
+    QueueClass       *operators;         // stack of expression terms
     ClassDirective  *activeClass;        // currently active ::CLASS directive
-    StringTable   *classDependencies;  // directory of named ::class directives
-    StringTable   *unattachedMethods;  // methods not associated with any class
-    StringTable   *routines;           // routines defined by ::routine directives.
-    StringTable   *publicRoutines;     // routines defined by ::routine directives.
-    ArrayClass       *requires;           // list of ::requires directories, in order of appearance.
-    ArrayClass       *libraries;          // libraries identified on a ::requires directive.
-    ArrayClass       *classes;            // list of installed ::class directives.
+    StringTable   *classDependencies;    // directory of named ::class directives
+    StringTable   *unattachedMethods;    // methods not associated with any class
+    StringTable   *routines;             // routines defined by ::routine directives.
+    StringTable   *publicRoutines;       // routines defined by ::routine directives.
+    ArrayClass       *requires;          // list of ::requires directories, in order of appearance.
+    ArrayClass       *libraries;         // libraries identified on a ::requires directive.
+    ArrayClass       *classes;           // list of installed ::class directives.
 
                                          // start of block parsing section
 
     RexxInstruction *firstInstruction;   // first instruction of parse tree
     RexxInstruction *lastInstruction;    // last instruction of parse tree
     RexxInstruction *currentInstruction; // current "protected" instruction
-    StringTable   *variables;          // root of associated variable list
-    StringTable   *labels;             // root of associated label list
-    IdentityTable *guardVariables;   // exposed variables in guard list
-    StringTable   *exposedVariables;   // root of exposed variables list
-    ArrayClass       *calls;              // root of call list
+    StringTable   *variables;            // root of associated variable list
+    StringTable   *labels;               // root of associated label list
+    IdentityTable *guardVariables;       // exposed variables in guard list
+    StringTable   *exposedVariables;     // root of exposed variables list
+    ArrayClass       *calls;             // root of call list
 
     size_t           currentStack;       // current expression stack depth
     size_t           maxStack;           // maximum stack depth

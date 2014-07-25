@@ -90,7 +90,7 @@ class RexxBehaviour : public RexxInternalObject
     void        resolveNonPrimitiveBehaviour();
 
     void        merge(RexxBehaviour *);
-    void        methodDictionaryMerge(MethodDictionary *);
+    void        mergeMethodDictionary(MethodDictionary *);
     MethodDictionary *copyMethodDictionary();
 
     inline MethodDictionary *getMethodDictionary()   { return methodDictionary; };
@@ -99,7 +99,11 @@ class RexxBehaviour : public RexxInternalObject
     inline void        clearMethodDictionary() { setMethodDictionary(OREF_NULL); }
     inline RexxClass  *getOwningClass()        { return owningClass;};
            void        setOwningClass(RexxClass *c);
-           ArrayClass  *allScopes();
+           ArrayClass *allScopes();
+           void        addScope(RexxClass *scope);
+           RexxClass  *immediateSuperScope();
+           bool        hasScope(RexxClass *scope);
+           void        addInstanceMethods(MethodDictionary *source);
 
     inline void  setClassType(size_t n) { classType = (uint16_t)n; }
     inline size_t getClassType()  { return (size_t)classType; }

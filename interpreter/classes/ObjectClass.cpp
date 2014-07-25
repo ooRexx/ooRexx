@@ -54,7 +54,6 @@
 #include "MessageClass.hpp"
 #include "MethodClass.hpp"
 #include "ExpressionBaseVariable.hpp"
-#include "SourceFile.hpp"
 #include "ProtectedObject.hpp"
 #include "PointerClass.hpp"
 #include "MethodArguments.hpp"

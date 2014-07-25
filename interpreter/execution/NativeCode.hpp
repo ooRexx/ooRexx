@@ -58,16 +58,16 @@ class NativeCode : public BaseCode
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(Envelope *envelope);
 
-    virtual RexxSource *getSourceObject();
+    virtual PackageClass *getPackageObject();
     virtual RexxClass *findClass(RexxString *className);
-    virtual BaseCode *setSourceObject(RexxSource *s);
+    virtual BaseCode *setPackageObject(PackageClass *s);
     SecurityManager *getSecurityManager();
 
 protected:
 
     RexxString *package;               // the package name
     RexxString *name;                  // the mapped method name
-    RexxSource *source;                // source this is attached to
+    PackageClass *package;             // source this is attached to
 };
 
 

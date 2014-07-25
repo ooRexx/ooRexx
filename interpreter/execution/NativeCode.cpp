@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                         NativeMethod.cpp   */
+/* REXX Kernel                                             NativeMethod.cpp   */
 /*                                                                            */
 /* Primitive Method Class                                                     */
 /*                                                                            */
@@ -46,7 +46,6 @@
 #include "DirectoryClass.hpp"
 #include "NativeActivation.hpp"
 #include "NativeCode.hpp"
-#include "SourceFile.hpp"
 #include "PackageManager.hpp"
 
 
@@ -61,6 +60,7 @@ NativeCode::NativeCode(RexxString *_package, RexxString *_name)
 }
 
 
+// TODO:  needs a cleanup pass
 void NativeCode::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
@@ -124,17 +124,17 @@ RexxClass *NativeCode::findClass(RexxString *className)
  *
  * @return Either the same object, or a new copy of the code object.
  */
-BaseCode *NativeCode::setSourceObject(RexxSource *s)
+BaseCode *NativeCode::setPackageObject(PackageClass *s)
 {
-    if (source == OREF_NULL)
+    if (package == OREF_NULL)
     {
-        OrefSet(this, this->source, s);
+        setField(package, s);
         return this;
     }
     else
     {
         NativeCode *codeCopy = (NativeCode *)this->copy();
-        OrefSet(codeCopy, codeCopy->source, s);
+        codeCopy->package = s;
         return codeCopy;
     }
 }
@@ -147,9 +147,9 @@ BaseCode *NativeCode::setSourceObject(RexxSource *s)
  *
  * @return The parent source instance.
  */
-RexxSource *NativeCode::getSourceObject()
+PackageClass *NativeCode::getPackageObject()
 {
-    return source;
+    return package;
 }
 
 

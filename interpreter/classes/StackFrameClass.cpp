@@ -248,14 +248,14 @@ ArrayClass *StackFrameClass::getArguments()
  *
  * @return The Source object instance for the stack frame.
  */
-RexxSource *StackFrameClass::getSourceObject()
+PackageClass *StackFrameClass::getPackageObject()
 {
     if (executable == OREF_NULL)
     {
         return OREF_NULL;
     }
 
-    return executable->getSourceObject();
+    return executable->getPackageObject();
 }
 
 

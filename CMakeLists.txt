@@ -641,7 +641,6 @@ set (parser_sources ${build_parser_dir}/Clause.cpp
             ${build_parser_dir}/LanguageParser.cpp
             ${build_parser_dir}/ProgramSource.cpp
             ${build_parser_dir}/Scanner.cpp
-            ${build_parser_dir}/SourceFile.cpp
             ${build_parser_dir}/Token.cpp)
 set (platform_sources ${build_interpreter_platform_dir}/ErrorMessages.cpp
             ${build_interpreter_platform_dir}/ExternalFunctions.cpp

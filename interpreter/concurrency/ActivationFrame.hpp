@@ -73,7 +73,7 @@ friend class Activity;
     virtual RexxString *messageName() = 0;
     virtual BaseExecutable *executable() = 0;
     virtual StackFrameClass *createStackFrame() = 0;
-    virtual RexxSource *getSource() = 0;
+    virtual PackageClass *getPackage() = 0;
 
  protected:
 
@@ -93,7 +93,7 @@ class RexxActivationFrame : public ActivationFrame
     virtual RexxString *messageName();
     virtual BaseExecutable *executable();
     virtual StackFrameClass *createStackFrame();
-    virtual RexxSource *getSource();
+    virtual PackageClass *getPackage();
 
  protected:
 
@@ -112,7 +112,7 @@ class NativeActivationFrame : public ActivationFrame
     virtual RexxString *messageName();
     virtual BaseExecutable *executable();
     virtual StackFrameClass *createStackFrame();
-    virtual RexxSource *getSource();
+    virtual PackageClass *getPackage();
 
  protected:
 
@@ -132,7 +132,7 @@ class InternalActivationFrame : public ActivationFrame
     virtual RexxString *messageName();
     virtual BaseExecutable *executable();
     virtual StackFrameClass *createStackFrame();
-    virtual RexxSource *getSource();
+    virtual PackageClass *getPackage();
 
  protected:
 
@@ -157,7 +157,7 @@ class CompileActivationFrame : public ActivationFrame
     virtual RexxString *messageName();
     virtual BaseExecutable *executable();
     virtual StackFrameClass *createStackFrame();
-    virtual RexxSource *getSource();
+    virtual PackageClass *getPackage();
 
 protected:
 

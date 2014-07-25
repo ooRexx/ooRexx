@@ -51,7 +51,7 @@ class RexxClass;
 
 class ClassDirective : public RexxDirective
 {
- friend class RexxSource;
+ friend class PackageClass;
  public:
            void *operator new(size_t);
     inline void *operator new(size_t size, void *objectPtr) { return objectPtr; }
@@ -66,7 +66,7 @@ class ClassDirective : public RexxDirective
     virtual void flatten(Envelope *);
 
     inline RexxString *getName() { return publicName; }
-    RexxClass *install(RexxSource *source, RexxActivation *activation);
+    RexxClass *install(PackageClass *package, RexxActivation *activation);
 
     void addDependencies(DirectoryClass *class_directives);
     void checkDependency(RexxString *name, DirectoryClass *class_directives);

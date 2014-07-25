@@ -51,7 +51,6 @@
 #include "NativeActivation.hpp"
 #include "RoutineClass.hpp"
 #include "PackageClass.hpp"
-#include "SourceFile.hpp"
 #include "DirectoryClass.hpp"
 #include "ProtectedObject.hpp"
 #include "BufferClass.hpp"

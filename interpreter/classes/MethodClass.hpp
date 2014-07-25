@@ -48,7 +48,6 @@
 #include "BaseCode.hpp"
 #include "FlagSet.hpp"
 
-class RexxSource;
 class Activity;
 class MethodClass;
 class ProtectedObject;

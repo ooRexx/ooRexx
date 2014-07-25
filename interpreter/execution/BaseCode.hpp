@@ -59,9 +59,9 @@ public:
     virtual void call(Activity *, RoutineClass *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
     virtual ArrayClass *getSource();
     virtual RexxObject *setSecurityManager(RexxObject *manager);
-    virtual RexxSource *getSourceObject();
+    virtual PackageClass *getPackageObject();
     virtual RexxClass *findClass(RexxString *className);
-    virtual BaseCode  *setSourceObject(RexxSource *s);
+    virtual BaseCode  *setPackageObject(PackageClass *s);
     virtual PackageClass *getPackage();
             void detachSource();
 };
@@ -80,7 +80,7 @@ typedef size_t (RexxEntry *PREGISTEREDROUTINE)(const char *, size_t, PCONSTRXSTR
 class BaseExecutable : public RexxObject
 {
 public:
-    inline RexxSource *getSourceObject() { return code->getSourceObject(); };
+    inline PackageClass *getPackageObject() { return code->getPackageObject(); };
     inline BaseCode   *getCode() { return code; }
     ArrayClass  *getSource() { return code->getSource(); }
     PackageClass *getPackage();

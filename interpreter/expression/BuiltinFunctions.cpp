@@ -50,7 +50,6 @@
 #include "RexxActivation.hpp"
 #include "Activity.hpp"
 #include "ExpressionBaseVariable.hpp"
-#include "SourceFile.hpp"
 #include "BuiltinFunctions.hpp"
 #include "RexxDateTime.hpp"
 #include "Numerics.hpp"
@@ -1800,8 +1799,8 @@ BUILTIN(SOURCELINE)
     fix_args(SOURCELINE);                /* check on required number of args  */
     // get the effective source object.  If we're in an interpret context, this will
     // be the one of our caller.
-    RexxSource *source = context->getEffectiveSourceObject();
-    size_t size = source->sourceSize();  /* get the program size              */
+    PackageClass *package = context->getEffectivePackageObject();
+    size_t size = package->sourceSize();  /* get the program size              */
     if (argcount == 1)                   /* asking for a specific line?       */
     {
         /* get the line number               */
@@ -1814,12 +1813,12 @@ BUILTIN(SOURCELINE)
             reportException(Error_Incorrect_call_sourceline, line_number, size);
         }
         /* get the specific line             */
-        return(RexxObject *)source->getLine(line_number);
+        return package>getLine(line_number);
     }
     else
     {
         /* just return the source size       */
-        return(RexxObject *)new_integer(size);
+        return new_integer(size);
     }
 }
 

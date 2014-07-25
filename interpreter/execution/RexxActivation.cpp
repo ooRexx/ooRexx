@@ -58,7 +58,6 @@
 #include "MethodClass.hpp"
 #include "MessageClass.hpp"
 #include "RexxCode.hpp"
-#include "SourceFile.hpp"
 #include "RexxInstruction.hpp"
 #include "CallInstruction.hpp"
 #include "DoBlock.hpp"
@@ -3507,7 +3506,7 @@ void RexxActivation::traceSourceString()
 
 RexxString *RexxActivation::formatTrace(
    RexxInstruction *  instruction,     /* instruction to trace              */
-   RexxSource      *  _source )        /* program source                    */
+   PackageClass    *  package )        /* program source                    */
 /******************************************************************************/
 /* Function:  Format a source line for traceback or tracing                   */
 /******************************************************************************/
@@ -3522,11 +3521,11 @@ RexxString *RexxActivation::formatTrace(
                                            /* (formatted for tracing)           */
     if (settings.traceindent < MAX_TRACEBACK_INDENT)
     {
-        return _source->traceBack(this, location, settings.traceindent, true);
+        return package->traceBack(this, location, settings.traceindent, true);
     }
     else
     {
-        return _source->traceBack(this, location, MAX_TRACEBACK_INDENT, true);
+        return package->traceBack(this, location, MAX_TRACEBACK_INDENT, true);
     }
 }
 

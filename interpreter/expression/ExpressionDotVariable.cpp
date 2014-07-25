@@ -45,7 +45,6 @@
 #include "StringClass.hpp"
 #include "RexxActivation.hpp"
 #include "ExpressionDotVariable.hpp"
-#include "SourceFile.hpp"
 
 
 /**

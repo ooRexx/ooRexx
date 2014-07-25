@@ -49,7 +49,6 @@
 #include "RexxActivation.hpp"
 #include "Activity.hpp"
 #include "CallInstruction.hpp"
-#include "SourceFile.hpp"
 #include "ProtectedObject.hpp"
 #include "MethodArguments.hpp"
 

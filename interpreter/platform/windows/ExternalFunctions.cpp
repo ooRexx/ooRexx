@@ -58,7 +58,6 @@
 #include "Activity.hpp"
 #include "RexxActivation.hpp"
 #include "MethodClass.hpp"
-#include "SourceFile.hpp"
 #include "RexxInternalApis.h"          /* Get private REXXAPI API's         */
 #include "ProtectedObject.hpp"
 #include "StringUtil.hpp"

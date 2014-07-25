@@ -56,7 +56,6 @@
 #include "ProtectedObject.hpp"
 #include "SupplierClass.hpp"
 #include "CompoundVariableTail.hpp"
-#include "SourceFile.hpp"
 #include "LanguageParser.hpp"
 #include "HashCollection.hpp"
 

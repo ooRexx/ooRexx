@@ -46,7 +46,7 @@
 #include "RoutineClass.hpp"
 #include "MethodClass.hpp"
 
-class RexxSource;
+class PackageClass;
 class ArrayClass;
 
 class StackFrameClass : public RexxObject
@@ -71,7 +71,7 @@ public:
     RexxObject *getLine();
     RexxString *getTraceLine();
     ArrayClass  *getArguments();
-    RexxSource *getSourceObject();
+    PackageClass *getPackageObject();
     virtual     RexxString  *makeString();
     virtual     RexxString  *stringValue();
 

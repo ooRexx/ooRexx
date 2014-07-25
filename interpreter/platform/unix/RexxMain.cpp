@@ -63,7 +63,6 @@
 #include "NativeActivation.hpp"
 #include "RexxActivation.hpp"
 #include "Activity.hpp"
-#include "SourceFile.hpp"
 
 #include "APIDefinitions.h"
 #include "Interpreter.hpp"

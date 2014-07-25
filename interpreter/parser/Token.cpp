@@ -44,7 +44,6 @@
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "Token.hpp"
-#include "SourceFile.hpp"
 #include "LanguageParser.hpp"
 
 /**

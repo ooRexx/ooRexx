@@ -44,7 +44,6 @@
 
 #include "RexxCore.h"
 #include "LanguageParser.hpp"
-#include "SourceFile.hpp"
 #include "ProgramSource.hpp"
 #include "MethodClass.hpp"
 #include "RoutineClass.hpp"
@@ -506,9 +505,9 @@ RexxCode *LanguageParser::translateInterpret(StringTable *contextLabels)
  * leave the initialization code in place for the package loader
  * to use.
  *
- * @return A RexxSource object representing the package.
+ * @return A package object representing the package.
  */
-RexxSource *LanguageParser::generatePackage()
+PackageClass *LanguageParser::generatePackage()
 {
     // initialize, and compile all of the source.
     compileSource();
@@ -545,7 +544,7 @@ void LanguageParser::compileSource()
 void LanguageParser::initializeForParsing()
 {
     // create a package object that we'll be filling in.
-    package = new RexxSource(name, source);
+    package = new PackageClass(name, source);
 
     // have the source object do any required initialization
     source->setup();

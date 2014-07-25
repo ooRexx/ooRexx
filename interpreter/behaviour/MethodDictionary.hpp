@@ -72,10 +72,12 @@ class MethodDictionary: public StringHashCollection
     void defineMethod(RexxString *methodName, MethodClass *method);
     void replaceMethod(RexxString *methodName, MethodClass *method);
     void replaceMethods(MethodDictionary *source);
+    void replaceMethods(StringTable *source);
     bool removeMethod(RexxString *methodName);
     void hideMethod(RexxString *methodName);
     void removeInstanceMethod(RexxString *name);
     void addInstanceMethod(RexxString *name, MethodClass *method);
+    void addInstanceMethods(MethodDictionary *source);
     MethodClass *findSuperMethod(RexxString *name, RexxClass *startScope);
     void setMethodScope(RexxClass *scope);
     SupplierClass *getMethods(RexxClass *scope);

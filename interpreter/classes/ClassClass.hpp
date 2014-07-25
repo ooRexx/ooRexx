@@ -47,7 +47,6 @@
 #include "FlagSet.hpp"
 
 // required for method signatures
-class RexxSource;
 class PackageClass;
 class SourceTable;
 class StringTable;
@@ -84,7 +83,7 @@ class RexxClass : public RexxObject
     void        buildFinalClassBehaviour();
     void        buildFinalClassBehaviour(RexxClass *superClass);
     void        mergeSuperClassScopes(RexxBehaviour *target_instance_behaviour);
-    RexxObject *defineMethod(RexxString *, MethodClass *);
+    RexxObject *defineMethod(RexxString *, RexxObject *);
     RexxObject *deleteMethod(RexxString *);
     RexxObject *defineClassMethod(RexxString *method_name, MethodClass *newMethod);
     void        removeClassMethod(RexxString *method_name);
@@ -99,6 +98,11 @@ class RexxClass : public RexxObject
     void        updateInstanceSubClasses();
     void        createClassBehaviour(RexxBehaviour *);
     void        createInstanceBehaviour(RexxBehaviour *);
+    void        mergeBehaviour(RexxBehaviour *target_instance_behaviour);
+    MethodDictionary *createMethodDictionary(RexxObject *sourceCollection, RexxClass *scope);
+    MethodDictionary *copyInstanceMethods();
+    void mergeInstanceMethodDictionary(RexxBehaviour *targetBehaviour);
+    void mergeClassMethodDictionary(RexxBehaviour *targetBehaviour);
 
     RexxObject  *queryMixinClass();
     RexxString  *getId();
@@ -118,18 +122,17 @@ class RexxClass : public RexxObject
     RexxObject *inherit(RexxClass *, RexxClass *);
     RexxObject *uninherit(RexxClass *);
     RexxObject *enhanced(RexxObject **, size_t);
-    RexxClass  *mixinclass(RexxSource *, RexxString *, RexxClass *, TableClass *);
-    RexxClass  *subclass(RexxSource *, RexxString *, RexxClass *, TableClass *);
-    RexxClass  *mixinclassRexx(RexxString *, RexxClass *, TableClass *);
-    RexxClass  *subclassRexx(RexxString *, RexxClass *, TableClass *);
+    RexxClass  *mixinClass(PackageClass *, RexxString *, RexxClass *, RexxObject *);
+    RexxClass  *subclass(PackageClass *, RexxString *, RexxClass *, RexxObject *);
+    RexxClass  *mixinClassRexx(RexxString *, RexxClass *, RexxObject *);
+    RexxClass  *subclassRexx(RexxString *, RexxClass *, RexxObject *);
     RexxClass  *newRexx(RexxObject **args, size_t argCount);
     void        setMetaClass(RexxClass *);
     bool        isCompatibleWith(RexxClass *other);
     RexxObject *isSubclassOf(RexxClass *other);
     RexxString *defaultNameRexx();
-    void        setSource(RexxSource *s);
-    RexxSource *getSource();
-    RexxObject *getPackage();
+    void        setPackage(PackageClass *s);
+    PackageClass *getPackage();
     void        completeNewObject(RexxObject *obj, RexxObject **initArgs = OREF_NULL, size_t argCount = 0);
 
     inline bool         isRexxDefined() { return classFlags[REXX_DEFINED]; }
@@ -151,6 +154,7 @@ class RexxClass : public RexxObject
            void         removeSubclass(RexxClass *c);
            RexxClass   *getSuperScope() { return scopeSuperClass; }
            ArrayClass  *getScopeOrder() { return scopeSearchOrder; }
+           void         checkUninit();
 
     static void processNewArgs(RexxObject **, size_t, RexxObject ***, size_t *, size_t, RexxObject **, RexxObject **);
 
@@ -174,13 +178,15 @@ class RexxClass : public RexxObject
     RexxString    *id;                 // classes will have a name string
     // class methods specific to this class.                                */
     MethodDictionary *classMethodDictionary;
-    // instances of this class will be given this behaviour.
-    RexxBehaviour *instanceBehaviour;
     // methods defined at this class level.
     MethodDictionary *instanceMethodDictionary;
+    // instances of this class will be given this behaviour (merged behaviour from
+    // superclasses/mixins
+    RexxBehaviour *instanceBehaviour;
 
     RexxClass     *baseClass;          // Baseclass of this class
     RexxClass     *metaClass;          // Metaclass of this class
+    RexxClass     *superClass;         // immediate super class of this class.
     // the super class and any inherited mixins for class
     // behaviour
     ArrayClass     *classSuperClasses;
@@ -189,7 +195,7 @@ class RexxClass : public RexxObject
     FlagSet<ClassFlag, 32> classFlags; // class attributes
 
     ListClass     *subClasses;         // our list of weak referenced subclasses
-    RexxSource    *source;             // source we're defined in (if any)
+    PackageClass  *package;            // source we're defined in (if any)
     RexxClass     *scopeSuperClass;    // the immediate superclass used for lookups starting from this point.
     ArrayClass    *scopeSearchOrder;   // the search order used for searches starting from this scope position.
 };

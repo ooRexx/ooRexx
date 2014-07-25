@@ -153,8 +153,8 @@ class ActivationSettings
 #define SCOPE_RESERVED  1
 #define SCOPE_RELEASED  0
 
- class RexxActivation : public RexxActivationBase {
-  friend class RexxSource;
+class RexxActivation : public RexxActivationBase
+{
   public:
    void *operator new(size_t);
    inline void *operator new(size_t size, void *ptr) {return ptr;};
@@ -264,7 +264,7 @@ class ActivationSettings
    void              traceClause(RexxInstruction *, int);
    void              traceEntry();
    void              resetElapsed();
-   RexxString      * formatTrace(RexxInstruction *, RexxSource *);
+   RexxString      * formatTrace(RexxInstruction *, PackageClass *);
    RexxString      * getTraceBack();
    DirectoryClass   * local();
    RexxString      * formatSourcelessTraceLine(RexxString *packageName);
@@ -322,10 +322,12 @@ class ActivationSettings
    RexxVariableBase *retriever(RexxString *);
    RexxVariableBase *directRetriever(RexxString *);
    RexxObject       *handleNovalueEvent(RexxString *name, RexxObject *defaultValue, RexxVariable *variable);
-   RexxSource       *getSourceObject() { return sourceObject; }
-   inline RexxSource *getEffectiveSourceObject() {
-       return isInterpret() ? executable->getSourceObject() : sourceObject;
+   PackageClass     *getPackageObject() { return packageObject; }
+   inline PackageClass *getEffectiveSourceObject()
+   {
+       return isInterpret() ? executable->getPackageObject() : packageObject;
    }
+
    PackageClass     *getPackage();
    RexxObject       *getLocalEnvironment(RexxString *name);
    void              setReturnStatus(int status);
@@ -601,12 +603,12 @@ class ActivationSettings
  protected:
 
     ActivationSettings   settings;      // inherited REXX settings
-    ExpressionStack  stack;         // current evaluation stack
+    ExpressionStack  stack;             // current evaluation stack
     RexxCode            *code;          // rexx method object
-    RexxSource          *sourceObject;  // the source object associated with this instance
+    PackageClass        *packageObject; // the source object associated with this instance
     RexxClass           *scope;         // scope of any active method call
     RexxObject          *receiver;      // target of a message invocation
-    Activity        *activity;      // current running activation
+    Activity            *activity;      // current running activation
     RexxActivation      *parent;        // previous running activation for internal call/interpret
     RexxObject         **arglist;       // activity argument list
     size_t               argcount;      // the count of arguments
@@ -616,13 +618,13 @@ class ActivationSettings
     bool                 debug_pause;   // executing a debug pause
     int                  object_scope;  // reserve/release state of variables
     RexxObject          *result;        // result of execution
-    ArrayClass           *trapinfo;      // current trap handler
+    ArrayClass           *trapinfo;     // current trap handler
     RexxContext         *contextObject; // the context object representing the execution context
                                         // current activation state
     int                  execution_state;
                                         // type of activation activity
     int                  activation_context;
-    MessageClass         *objnotify;     // an object to notify if excep occur
+    MessageClass         *objnotify;    // an object to notify if excep occur
                                         // LIst of Saved Local environments
     ListClass            *environmentList;
     size_t               pending_count; // number of pending conditions

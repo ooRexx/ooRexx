@@ -223,6 +223,28 @@ void MethodDictionary::replaceMethods(MethodDictionary *source)
 
 
 /**
+ * Overlay a collection of methods on top of this dictionary.
+ * At this time, we're just adding the entries to the table.
+ * These will be updated with correct scopes later.
+ *
+ * @param source The source method dictionary.
+ */
+void MethodDictionary::replaceMethods(StringTable *source)
+{
+    // use an iterator to traverse the table
+    HashContents::TableIterator iterator = source->iterator();
+
+    while (iterator.isAvailable())
+    {
+        // copy these methods over any of our own.
+        MethodClass *method = (MethodClass *)iterator.value();
+        RexxString *name = (RexxString *name)iterator.index();
+        replaceMethod(name, method);
+    }
+}
+
+
+/**
  * Remove a method from the main method dictionary
  *
  * @param methodName The target method name.
@@ -299,6 +321,26 @@ void MethodDictionary::addInstanceMethod(RexxString *name, MethodClass *method)
     // and also add to the instance dictionary, replacing any
     // existing method.
     instanceMethods->put(method, methodName);
+}
+
+
+/**
+ * Merge a collection of methods into our object instance
+ * behaviour.
+ *
+ * @param source The source method dictionary.
+ */
+void MethodDictionary::addInstanceMethods(MethodDictionary *source)
+{
+    HashContents::TableIterator iterator = source->iterator();
+
+    // add all of the source methods as instance methods.
+    for (; iterator.isAvailable(); iterator.nextEntry())
+    {
+        MethodClass *method = (MethodClass *)iterator.value();
+        RexxString *name = (RexxString *)iterator.index();
+        addInstanceMethod(name, method);
+    }
 }
 
 

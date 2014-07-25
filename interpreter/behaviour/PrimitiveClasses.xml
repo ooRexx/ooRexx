@@ -104,7 +104,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="Behaviour" class="RexxBehaviour" include="RexxBehaviour.hpp"/>
 <Class id="MethodDictionary" class="MethodDictionary" include="MethodDictionary.hpp"/>
 <Class id="ScopeTable" class="ScopeTable" include="ScopeTable.hpp"/>
-<Class id="RexxSource" class="RexxSource" include="SourceFile.hpp"/>
 <Class id="LibraryPackage" class="LibraryPackage" include="LibraryPackage.hpp"/>
 <Class id="RexxCode" class="RexxCode" include="RexxCode.hpp"/>
 <Class id="NativeMethod" class="NativeMethod" include="NativeCode.hpp"/>

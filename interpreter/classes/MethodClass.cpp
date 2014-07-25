@@ -50,7 +50,6 @@
 #include "RexxActivation.hpp"
 #include "NativeActivation.hpp"
 #include "MethodClass.hpp"
-#include "SourceFile.hpp"
 #include "DirectoryClass.hpp"
 #include "ProtectedObject.hpp"
 #include "BufferClass.hpp"

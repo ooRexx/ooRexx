@@ -43,7 +43,6 @@
 /******************************************************************************/
 #include "RexxCore.h"
 #include "StringClass.hpp"
-#include "SourceFile.hpp"
 #include "ActivityManager.hpp"
 #include "StringUtil.hpp"
 #include "LanguageParser.hpp"

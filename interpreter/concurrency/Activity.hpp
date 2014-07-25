@@ -59,7 +59,7 @@
 
 
 class ProtectedObject;                 // needed for look aheads
-class RexxSource;
+class PackageClass;
 class MethodClass;
 class InterpreterInstance;
 class ActivityDispatcher;
@@ -70,6 +70,7 @@ class ActivationFrame;
 
                                        /* interface values for the          */
                                        /* activity_queue method             */
+// TODO:  Get rid of these defines
 #define QUEUE_FIFO 1
 #define QUEUE_LIFO 2
 
@@ -77,7 +78,8 @@ class ActivationFrame;
 /* Constants used for trace prefixes                                          */
 /******************************************************************************/
 
-enum TracePrefixes {
+enum TracePrefixes
+{
     TRACE_PREFIX_CLAUSE   ,
     TRACE_PREFIX_ERROR    ,
     TRACE_PREFIX_RESULT   ,

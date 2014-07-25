@@ -56,7 +56,6 @@
 #include "ArrayClass.hpp"
 #include "TableClass.hpp"
 #include "DirectoryClass.hpp"
-#include "SourceFile.hpp"
 #include "VariableDictionary.hpp"
 #include "RexxCode.hpp"
 #include "RexxInstruction.hpp"
@@ -920,17 +919,17 @@ void Activity::generateProgramInformation(DirectoryClass *exobj)
 
     ActivationFrame *frame = activationFrames;
 
-    RexxSource *source = OREF_NULL;
+    PackageClass *package = OREF_NULL;
     StackFrameClass *firstFrame = OREF_NULL;
 
     while (frame != NULL)
     {
         StackFrameClass *stackFrame = frame->createStackFrame();
         // save the topmost source object we can find for error reporting
-        if (source == OREF_NULL && frame->getSource() != OREF_NULL)
+        if (package == OREF_NULL && frame->getPackage() != OREF_NULL)
         {
             firstFrame = stackFrame;
-            source = frame->getSource();
+            package = frame->getSource();
         }
         stackFrames->append(stackFrame);
         traceback->append(stackFrame->getTraceLine());
@@ -947,12 +946,13 @@ void Activity::generateProgramInformation(DirectoryClass *exobj)
         }
     }
 
+    // TODO:  This really should be done in the package class.
     // if we have source, and this is not part of the interpreter image,
     // add program information
-    if (source != OREF_NULL && !source->isOldSpace())             /* have source for this?             */
+    if (package != OREF_NULL && !package->isOldSpace())             /* have source for this?             */
     {
-        exobj->put(source->getProgramName(), OREF_PROGRAM);
-        exobj->put(source->getPackage(), OREF_PACKAGE);
+        exobj->put(package->getProgramName(), OREF_PROGRAM);
+        exobj->put(package->getPackage(), OREF_PACKAGE);
     }
     else
     {

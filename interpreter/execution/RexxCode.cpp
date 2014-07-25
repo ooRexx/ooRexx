@@ -46,7 +46,6 @@
 #include "ArrayClass.hpp"
 #include "DirectoryClass.hpp"
 #include "RexxInstruction.hpp"
-#include "SourceFile.hpp"
 #include "ActivityManager.hpp"
 #include "RexxActivation.hpp"
 #include "LanguageParser.hpp"
@@ -76,10 +75,10 @@ void * RexxCode::operator new(size_t size)
  * @param variable_index The number of pre-assigned variable
  *                       slots.
  */
-RexxCode::RexxCode(RexxSource *_source, RexxInstruction *_start, DirectoryClass *_labels,
+RexxCode::RexxCode(PackageClass *_package, RexxInstruction *_start, StringTable *_labels,
      size_t maxstack, size_t  variable_index)
 {
-    source = _source;
+    package = _package;
     start = _start;
     labels = _labels;
     // we add in a reasonable extra just in case the calculation got a little off.
@@ -95,7 +94,7 @@ RexxCode::RexxCode(RexxSource *_source, RexxInstruction *_start, DirectoryClass 
  */
 void RexxCode::live(size_t liveMark)
 {
-    memory_mark(source);
+    memory_mark(package);
     memory_mark(start);
     memory_mark(labels);
 }
@@ -110,7 +109,7 @@ void RexxCode::live(size_t liveMark)
  */
 void RexxCode::liveGeneral(MarkReason reason)
 {
-    memory_mark_general(source);
+    memory_mark_general(package);
     memory_mark_general(start);
     memory_mark_general(labels);
 }
@@ -125,7 +124,7 @@ void RexxCode::flatten(Envelope * envelope)
 {
     setUpFlatten(RexxCode)
 
-    flattenRef(source);
+    flattenRef(package);
     flattenRef(start);
     flattenRef(labels);
 

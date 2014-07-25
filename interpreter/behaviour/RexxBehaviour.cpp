@@ -552,11 +552,22 @@ RexxClass *RexxBehaviour::restoreClass()
  *
  * @return The following scope, or .nil if not found.
  */
-RexxObject * RexxBehaviour::superScope(RexxObject *start_scope)
+RexxClass *RexxBehaviour::superScope(RexxObject *start_scope)
 {
     return methodDictionary->findSuperScope(start_scope);
 }
 
+
+/**
+ * Get the immediate superscope defined for this behaviour.
+ *
+ * @return The superscope that a method defined by this class would
+ *         use to set the SUPER variable for lookups.
+ */
+RexxClass *RexxBehaviour::immediateSuperScope()
+{
+    return methodDictionary->immediateSuperScope();
+}
 
 
 /**
@@ -644,7 +655,7 @@ void RexxBehaviour::merge(RexxBehaviour *source_behav)
  * @param sourceDictionary
  *               The source for the merge.
  */
-void RexxBehaviour::mergeMethodDictionary(TableClass *sourceDictionary)
+void RexxBehaviour::mergeMethodDictionary(MethodDictionary *sourceDictionary)
 {
     // no source is a NOP
     if (sourceDictionary == OREF_NULL)
@@ -682,6 +693,19 @@ ArrayClass *RexxBehaviour::allScopes()
 
 
 /**
+ * Test if a scope is defined in a behaviour.
+ *
+ * @param scope  The target scope.
+ *
+ * @return True if this scope has already been added, false otherwise.
+ */
+bool RexxBehaviour::hasScope(RexxClass *scope)
+{
+    return methodDictionary->hasScope(scope);
+}
+
+
+/**
  * Make a copy of the current method dictionary.
  *
  * @return The copy of the method dictionary, or OREF_NULL if this
@@ -706,6 +730,18 @@ MethodDictionary *RexxBehaviour::copyMethodDictionary()
 bool RexxBehaviour::hasInstanceMethods()
 {
     return methodDictionary == OREF_NULL ? false : methodDictionary->hasInstanceMethods();
+}
+
+
+/**
+ * Add a collection of object-scope instance methods to
+ * a behaviour.
+ *
+ * @param source The source collection of instance methods.
+ */
+void RexxBehaviour::addInstanceMethods(MethodDictionary *source)
+{
+    methodDictionary->addInstanceMethods(source);
 }
 
 
