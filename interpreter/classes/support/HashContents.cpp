@@ -791,6 +791,23 @@ RexxInternalObject *HashContents::get(RexxInternalObject *index)
 
 
 /**
+ * Test if an index exists in the hash collection.
+ *
+ * @param index  The target index.
+ *
+ * @return True if we have an item at this index, false otherwise.
+ */
+bool HashContents::hasIndex(RexxInternalObject *index)
+{
+    ItemLink position;
+    ItemLink previous;
+
+    // go find the matching entry... return the success indicator
+    return locateEntry(index, position, previous);
+}
+
+
+/**
  * Return a count of either all items, or all items with a given
  * index.
  *

@@ -58,6 +58,7 @@
 #include "MethodArguments.hpp"
 #include "MethodDictionary.hpp"
 #include "StringTableClass.hpp"
+#include "PackageClass.hpp"
 
 
 // singleton class instance
@@ -117,7 +118,7 @@ void RexxClass::live(size_t liveMark)
     memory_mark(classSuperClasses);
     memory_mark(instanceSuperClasses);
     memory_mark(subClasses);
-    memory_mark(source);
+    memory_mark(package);
     memory_mark(scopeSuperClass);
     memory_mark(scopeSearchOrder);
 }
@@ -143,7 +144,7 @@ void RexxClass::liveGeneral(MarkReason reason)
     memory_mark_general(classSuperClasses);
     memory_mark_general(instanceSuperClasses);
     memory_mark_general(subClasses);
-    memory_mark_general(source);
+    memory_mark_general(package);
     memory_mark_general(scopeSuperClass);
     memory_mark_general(scopeSearchOrder);
 }
@@ -1566,10 +1567,10 @@ void RexxClass::setPackage(PackageClass *s)
  *         class, or .nil if this class was not created from a
  *         directive.
  */
-RexxObject *RexxClass::getPackage()
+PackageClass *RexxClass::getPackage()
 {
     // return the package we've been associated with.
-    return resultOrNil(package);
+    return (PackageClass *)resultOrNil(package);
 }
 
 

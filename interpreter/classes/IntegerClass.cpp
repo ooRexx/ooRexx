@@ -204,7 +204,8 @@ RexxString *RexxInteger::primitiveMakeString()
  */
 RexxString *RexxInteger::stringValue()
 {
-    return primitiveStringValue();
+    // funnel to the common method.
+    return primitiveMakeString();
 }
 
 
@@ -213,7 +214,7 @@ RexxString *RexxInteger::stringValue()
  *
  * @param tail   The compound tail we're adding to.
  */
-void RexxInteger::copyIntoTail(CompoundVariableTail &tail)
+void RexxInteger::copyIntoTail(CompoundVariableTail *tail)
 {
     // if we have a string already, just have it copy itself
     if (stringrep != OREF_NULL)
@@ -619,7 +620,7 @@ RexxObject *RexxInteger::multiply(RexxInteger *other)
     requiredArgument(other, ARG_ONE);
     // if the other value is an integer, we can multiply this directly if the other value is
     // an integer, but we need to do this using 64-bit math to detect overflows.
-    if (isOfClass(Integer, other)
+    if (isOfClass(Integer, other))
     {
         int64_t tempThis = (int64_t)value;
         int64_t tempOther = (int64_t)other->value;
@@ -838,7 +839,7 @@ RexxObject *RexxInteger::hashCode()
  *
  * @return .true or .false
  */
-RexxInteger *RexxInteger::strictEqual(RexxObject *other)
+RexxObject *RexxInteger::strictEqual(RexxObject *other)
 {
     if (other == TheNilObject)           // all conditionals return .false when compared to .nil
     {
@@ -848,7 +849,7 @@ RexxInteger *RexxInteger::strictEqual(RexxObject *other)
 }
 
 
-RexxInteger *RexxInteger::strictNotEqual(RexxObject *other)
+RexxObject *RexxInteger::strictNotEqual(RexxObject *other)
 {
     if (other == TheNilObject)           // all conditionals return .false when compared to .nil
     {
@@ -865,7 +866,7 @@ RexxInteger *RexxInteger::strictNotEqual(RexxObject *other)
  *
  * @return .true or .false
  */
-RexxInteger *RexxInteger::equal(RexxObject *other)
+RexxObject *RexxInteger::equal(RexxObject *other)
 {
     if (other == TheNilObject)           // all conditionals return .false when compared to .nil
     {
@@ -882,7 +883,7 @@ RexxInteger *RexxInteger::equal(RexxObject *other)
  *
  * @return .true or .false
  */
-RexxInteger *RexxInteger::notEqual(RexxObject *other)
+RexxObject *RexxInteger::notEqual(RexxObject *other)
 {
     if (other == TheNilObject)           // all conditionals return .false when compared to .nil
     {
@@ -899,7 +900,7 @@ RexxInteger *RexxInteger::notEqual(RexxObject *other)
  *
  * @return .true or .false
  */
-RexxInteger *RexxInteger::isGreaterThan(RexxObject *other)
+RexxObject *RexxInteger::isGreaterThan(RexxObject *other)
 {
     if (other == TheNilObject)           // all conditionals return .false when compared to .nil
     {
@@ -916,7 +917,7 @@ RexxInteger *RexxInteger::isGreaterThan(RexxObject *other)
  *
  * @return .true or .false
  */
-RexxInteger *RexxInteger::isLessThan(RexxObject *other)
+RexxObject *RexxInteger::isLessThan(RexxObject *other)
 {
     if (other == TheNilObject)           // all conditionals return .false when compared to .nil
     {
@@ -933,7 +934,7 @@ RexxInteger *RexxInteger::isLessThan(RexxObject *other)
  *
  * @return .true or .false
  */
-RexxInteger *RexxInteger::isGreaterOrEqual(RexxObject *other)
+RexxObject *RexxInteger::isGreaterOrEqual(RexxObject *other)
 {
     if (other == TheNilObject)           // all conditionals return .false when compared to .nil
     {
@@ -950,7 +951,7 @@ RexxInteger *RexxInteger::isGreaterOrEqual(RexxObject *other)
  *
  * @return .true or .false
  */
-RexxInteger *RexxInteger::isLessOrEqual(RexxObject *other)
+RexxObject *RexxInteger::isLessOrEqual(RexxObject *other)
 {
     if (other == TheNilObject)           // all conditionals return .false when compared to .nil
     {
@@ -967,7 +968,7 @@ RexxInteger *RexxInteger::isLessOrEqual(RexxObject *other)
  *
  * @return .true or .false
  */
-RexxInteger *RexxInteger::strictGreaterThan(RexxObject *other)
+RexxObject *RexxInteger::strictGreaterThan(RexxObject *other)
 {
     if (other == TheNilObject)           // all conditionals return .false when compared to .nil
     {
@@ -984,7 +985,7 @@ RexxInteger *RexxInteger::strictGreaterThan(RexxObject *other)
  *
  * @return .true or .false
  */
-RexxInteger *RexxInteger::strictLessThan(RexxObject *other)
+RexxObject *RexxInteger::strictLessThan(RexxObject *other)
 {
     if (other == TheNilObject)           // all conditionals return .false when compared to .nil
     {
@@ -1001,7 +1002,7 @@ RexxInteger *RexxInteger::strictLessThan(RexxObject *other)
  *
  * @return .true or .false
  */
-RexxInteger *RexxInteger::strictGreaterOrEqual(RexxObject *other)
+RexxObject *RexxInteger::strictGreaterOrEqual(RexxObject *other)
 {
     if (other == TheNilObject)           // all conditionals return .false when compared to .nil
     {
@@ -1018,7 +1019,7 @@ RexxInteger *RexxInteger::strictGreaterOrEqual(RexxObject *other)
  *
  * @return .true or .false
  */
-RexxInteger *RexxInteger::strictLessOrEqual(RexxObject *other)
+RexxObject *RexxInteger::strictLessOrEqual(RexxObject *other)
 {
     if (other == TheNilObject)           // all conditionals return .false when compared to .nil
     {
@@ -1046,7 +1047,7 @@ RexxObject *RexxInteger::notOp()
  */
 RexxObject *RexxInteger::operatorNot(RexxObject *dummy)
 {
-    return booleanValue(!truthValue(Error_Logical_value_method));
+    return booleanObject(!truthValue(Error_Logical_value_method));
 }
 
 

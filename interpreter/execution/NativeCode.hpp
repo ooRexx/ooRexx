@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                         NativeMethod.hpp   */
+/* REXX Kernel                                             NativeMethod.hpp   */
 /*                                                                            */
 /* Primitive Native Code Class Definitions                                    */
 /*                                                                            */
@@ -47,6 +47,9 @@
 #include "MethodClass.hpp"
 
 
+/**
+ * Base class for external methods and routines written in C++
+ */
 class NativeCode : public BaseCode
 {
   public:
@@ -65,12 +68,15 @@ class NativeCode : public BaseCode
 
 protected:
 
-    RexxString *package;               // the package name
+    RexxString *packageName;           // the package name
     RexxString *name;                  // the mapped method name
     PackageClass *package;             // source this is attached to
 };
 
 
+/**
+ * An external method written in C++
+ */
 class NativeMethod : public NativeCode
 {
   public:
@@ -107,6 +113,9 @@ class RexxRoutine : public NativeCode
 };
 
 
+/**
+ * An external routine written in C++
+ */
 class NativeRoutine : public RexxRoutine
 {
   public:
@@ -131,6 +140,9 @@ protected:
 };
 
 
+/**
+ * A legacy-style external routine.
+ */
 class RegisteredRoutine : public RexxRoutine
 {
   public:

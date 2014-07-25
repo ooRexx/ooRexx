@@ -76,17 +76,6 @@ ListClass::ListClass(size_t capacity)
 
 
 /**
- * Dummy constructor for a List instance created via the new
- * method.  Initialization is delayed until the INIT method is
- * called.
- *
- * @param fromRexx A dummy argument to create a different signature for
- *                 the dummy form.
- */
-ListClass::ListClass(bool fromRexx) { }
-
-
-/**
  * The init method for this class.  This does delayed
  * initialization of this object until a INIT message is
  * received during initialization.
@@ -144,7 +133,7 @@ void ListClass::live(size_t liveMark)
  */
 void ListClass::liveGeneral(MarkReason reason)
 {
-    memory_mark_general(table);
+    memory_mark_general(contents);
     memory_mark_general(objectVariables);
 }
 
@@ -158,7 +147,7 @@ void ListClass::flatten(Envelope *envelope)
 {
     setUpFlatten(ListClass)
 
-    flattenRef(table);
+    flattenRef(contents);
     flattenRef(objectVariables);
 
     cleanUpFlatten
@@ -175,7 +164,7 @@ RexxObject *ListClass::copy()
     // make a copy of ourself (also copies the object variables)
     ListClass *newlist = (ListClass *)this->RexxObject::copy();
     // copy the backing contents
-    newlist->table = (ListContents *)contents->copy();
+    newlist->contents = (ListContents *)contents->copy();
     return newlist;
 }
 
@@ -189,21 +178,23 @@ RexxObject *ListClass::copy()
  *
  * @return The validated location of the targetted entry.
  */
-ItemLink ListClass::validateIndex(RexxObject *index, size_t position)
+ListContents::ItemLink ListClass::validateIndex(RexxObject *index, size_t position)
 {
     // this is required
     requiredArgument(index, position);
-    stringsize_t    item_index;
+
+    stringsize_t item_index;
     // converted using the ARGUMENT_DIGITS value
-    if (!argument->unsignedNumberValue(value, Numerics::ARGUMENT_DIGITS))
+    if (!index->unsignedNumberValue(item_index, Numerics::ARGUMENT_DIGITS))
     {
         reportException(Error_Incorrect_method_index, index);
     }
     // if not valid, return the no link marker
-    if (!contents->validateIndex(item_index))
+    if (!contents->isIndexValid(item_index))
     {
-        return NoLink;
+        return ListContents::NoLink;
     }
+    return item_index;
 }
 
 
@@ -218,7 +209,7 @@ ItemLink ListClass::validateIndex(RexxObject *index, size_t position)
  *
  * @return The validated location of the targetted entry.
  */
-ItemLink ListClass::validateInsertionIndex(RexxObject *index, size_t position)
+ListContents::ItemLink ListClass::validateInsertionIndex(RexxObject *index, size_t position)
 {
     // this is a special index for insertion operations
     if (index == TheNilObject)
@@ -243,16 +234,16 @@ ItemLink ListClass::validateInsertionIndex(RexxObject *index, size_t position)
  *
  * @return The converted index position.
  */
-ItemLink ListClass::requiredIndex(RexxObject *index, size_t position)
+ListContents::ItemLink ListClass::requiredIndex(RexxObject *index, size_t position)
 {
     // validate
-    ItemLink convertedIndex = validateIndex(index, position);
+    ListContents::ItemLink convertedIndex = validateIndex(index, position);
     // if does not map to an item, this is an error.
-    if (convertedIndex == NoLink)
+    if (convertedIndex == ListContents::NoLink)
     {
         reportException(Error_Incorrect_method_index, index);
     }
-    return index
+    return convertedIndex;
 }
 
 
@@ -264,7 +255,7 @@ void ListClass::expandContents()
 {
     // just double the bucket size...until we reach the max expansion size, then
     // use smaller increments after that.
-    expandContents(contents->capacity() + Numerics::minValue(contents->capacity(), MaxExpansionSize));
+    expandContents(contents->capacity() + Numerics::minVal(contents->capacity(), MaxExpansionSize));
 }
 
 
@@ -276,10 +267,10 @@ void ListClass::expandContents(size_t capacity )
 {
     // allocate a new table with the requested capacity, then merge the
     // contents back into the the new one before replacing.
-    Protected<HashContents> newContents = new ListContents(capacity);
+    Protected<ListContents> newContents = new (capacity) ListContents(capacity);
     contents->mergeInto(newContents);
 
-    setField(contents, newContents;)
+    setField(contents, (ListContents *)newContents);
 }
 
 
@@ -296,7 +287,7 @@ void ListClass::ensureCapacity(size_t delta)
     // doubling if the delta is a small value.
     if (!contents->hasCapacity(delta))
     {
-        expandContents(contents->capacity() + Numerics::maxVal(delta, contents->capacity());
+        expandContents(contents->capacity() + Numerics::maxVal(delta, contents->capacity()));
     }
 }
 
@@ -321,9 +312,9 @@ void ListClass::checkFull()
  *
  * @return Either an integer version of the index or TheNilObject if the index is out of bounds.
  */
-RexxObject *ListClass::indexObject(ItemLink index)
+RexxObject *ListClass::indexObject(ListContents::ItemLink index)
 {
-    return indexObject(index);
+    return index == ListContents::NoMore ? TheNilObject : new_integer(index);
 }
 
 
@@ -337,7 +328,7 @@ RexxObject *ListClass::indexObject(ItemLink index)
  */
 RexxInternalObject *ListClass::putRexx(RexxInternalObject *value, RexxObject *argIndex)
 {
-    ItemLink index = requiredIndex(value, ARG_TWO);
+    ListContents::ItemLink index = requiredIndex(argIndex, ARG_TWO);
 
     // do the actual replacement.
     put(value, index);
@@ -369,7 +360,7 @@ void ListClass::put(RexxInternalObject *value, size_t index)
  */
 RexxInternalObject *ListClass::getRexx(RexxObject *argIndex)
 {
-    ItemLink index = validateIndex(value, ARG_TWO);
+    ListContents::ItemLink index = validateIndex(argIndex, ARG_TWO);
 
     return resultOrNil(get(index));
 }
@@ -396,11 +387,11 @@ RexxInternalObject *ListClass::get(size_t index)
  */
 RexxObject *ListClass::sectionRexx(RexxObject *argIndex, RexxObject *count)
 {
-    ItemLink index = requiredIndex(argIndex, ARG_ONE);
+    ListContents::ItemLink index = requiredIndex(argIndex, ARG_ONE);
     size_t counter = optionalLengthArgument(count, SIZE_MAX, ARG_TWO);
 
     // pass off to the lower level method
-    return section(index, count);
+    return section(index, counter);
 }
 
 
@@ -420,7 +411,7 @@ ListClass *ListClass::section(size_t index, size_t count)
     Protected<ListClass> result = new ListClass;
 
     // grab as many items as we can.
-    while (index != NoMore && count-- > 0)
+    while (index != ListContents::NoMore && count-- > 0)
     {
         // append to the list
         result->append(contents->get(index));
@@ -442,7 +433,7 @@ ListClass *ListClass::section(size_t index, size_t count)
 RexxObject *ListClass::insertRexx(RexxInternalObject *value, RexxObject *index)
 {
     // figure out where to insert.
-    ItemLink insertionPoint = validateInsertionIndex(index, ARG_TWO);
+    ListContents::ItemLink insertionPoint = validateInsertionIndex(index, ARG_TWO);
 
     // insert, and return the insertion index as an object.
     return new_integer(insert(value, insertionPoint));
@@ -473,7 +464,7 @@ size_t ListClass::insert(RexxInternalObject *value, size_t insertionPoint)
  */
 size_t ListClass::addLast(RexxInternalObject *value)
 {
-    return contents->insertAtEnd(value, ListContents::AtEnd);
+    return contents->insert(value, ListContents::AtEnd);
 }
 
 
@@ -484,9 +475,9 @@ size_t ListClass::addLast(RexxInternalObject *value)
  *
  * @return The index of the new item.
  */
-size_t ListClass::addFirst(RexxObject *value)
+size_t ListClass::addFirst(RexxInternalObject *value)
 {
-    return contents->insertAtBeginning(value, ListContents::AtEnd);
+    return contents->insert(value, ListContents::AtBeginning);
 }
 
 
@@ -523,10 +514,10 @@ RexxObject *ListClass::appendRexx(RexxInternalObject *value)
  *
  * @return The removed item.
  */
-RexxInternalObject *ListClass::removeRexx(RexxObject *index)
+RexxInternalObject *ListClass::removeRexx(RexxObject *argIndex)
 {
     // out of bounds is not an issue here...
-    ItemLink index = validateIndex(argIndex, ARG_ONE);
+    ListContents::ItemLink index = validateIndex(argIndex, ARG_ONE);
     return resultOrNil(remove(index));
 }
 
@@ -562,7 +553,7 @@ RexxInternalObject *ListClass::firstItemRexx()
  */
 RexxInternalObject *ListClass::firstItem()
 {
-    return contents->firstItem();
+    return contents->getFirstItem();
 }
 
 
@@ -585,7 +576,7 @@ RexxInternalObject *ListClass::lastItemRexx()
  */
 RexxInternalObject *ListClass::lastItem()
 {
-    return contents->lastItem();
+    return contents->getLastItem();
 }
 
 
@@ -619,7 +610,7 @@ size_t ListClass::firstIndex()
  */
 RexxObject *ListClass::lastRexx()
 {
-    return indexObject(lastIndex()));
+    return indexObject(lastIndex());
 }
 
 
@@ -642,10 +633,10 @@ size_t ListClass::lastIndex()
  *
  * @return The indext of the next item, or .nil if their is no next item.
  */
-RexxObject *ListClass::nextRexx(RexxObject *index)
+RexxObject *ListClass::nextRexx(RexxObject *argIndex)
 {
-    ItemLink argIndex = validateIndex(index, ARG_ONE);
-    return indexObject(nextIndex(argIndex));
+    ListContents::ItemLink index = validateIndex(argIndex, ARG_ONE);
+    return indexObject(nextIndex(index));
 }
 
 
@@ -656,10 +647,10 @@ RexxObject *ListClass::nextRexx(RexxObject *index)
  *
  * @return The indext of the next item, or .nil if their is no next item.
  */
-RexxObject *ListClass::previousRexx(RexxObject *index)
+RexxObject *ListClass::previousRexx(RexxObject *argIndex)
 {
-    ItemLink argIndex = validateIndex(index, ARG_ONE);
-    return indexObject(previousIndex(argIndex));
+    ListContents::ItemLink index = validateIndex(argIndex, ARG_ONE);
+    return indexObject(previousIndex(index));
 }
 
 
@@ -691,7 +682,7 @@ size_t ListClass::nextIndex(size_t index)
  * @return The index of the previous item, or NoMore if there is
  *         no previous item.
  */
-size_t ListClass::previousIndex(size_t _index)
+size_t ListClass::previousIndex(size_t index)
 {
     return contents->nextIndex(index);
 }
@@ -705,10 +696,10 @@ size_t ListClass::previousIndex(size_t _index)
  * @return True if this is a valid index in this list, false
  *         otherwise.
  */
-RexxObject *ListClass::hasIndexRexx(RexxObject *index)
+RexxObject *ListClass::hasIndexRexx(RexxObject *argIndex)
 {
-    ItemLink argIndex = validateIndex(index, ARG_ONE);
-    return booleanObject(hasIndex(argIndex));
+    ListContents::ItemLink index = validateIndex(argIndex, ARG_ONE);
+    return booleanObject(hasIndex(index));
 }
 
 
@@ -810,7 +801,7 @@ bool ListClass::isEmpty()
  */
 ArrayClass *ListClass::allIndexes()
 {
-    return contents->allIndexes()
+    return contents->allIndexes();
 }
 
 
@@ -826,7 +817,8 @@ RexxObject *ListClass::indexRexx(RexxInternalObject *target)
 {
     // we require the index to be there.
     requiredArgument(target, ARG_ONE);
-    ItemLink itemIndex = getIndex(target);
+
+    ListContents::ItemLink itemIndex = getIndex(target);
     return indexObject(itemIndex);
 }
 
@@ -840,7 +832,7 @@ RexxObject *ListClass::indexRexx(RexxInternalObject *target)
  */
 size_t ListClass::getIndex(RexxInternalObject *target)
 {
-    return contents->getindex(target);
+    return contents->getIndex(target);
 }
 
 

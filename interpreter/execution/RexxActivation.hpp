@@ -53,6 +53,7 @@
 #include "ActivityManager.hpp"
 #include "CompoundVariableTail.hpp"
 #include "ContextClass.hpp"
+#include "StemClass.hpp"
 
 
 class RexxInstructionCallBase;
@@ -73,89 +74,106 @@ inline uint64_t RANDOMIZE(uint64_t seed) { return (seed * RANDOM_FACTOR + RANDOM
                                         // size of a size_t value in bits
 const size_t SIZE_BITS = sizeof(void *) * 8;
 
-// execution_state values
-#define ACTIVE    0
-#define REPLIED   1
-#define RETURNED  2
-
-#define RETURN_STATUS_NORMAL 0
-#define RETURN_STATUS_ERROR 1
-#define RETURN_STATUS_FAILURE -1
 
 
 #define MS_PREORDER   0x01                  // Macro Space Pre-Search
 #define MS_POSTORDER  0x02                  // Macro Space Post-Search
 
-
-
-                                       // NOTE:  a template structure for
-                                       // the following is created in
-                                       // OKACTIVA.C to allow quick
-                                       // initialization of new activations.
-                                       // That template MUST be updated
-                                       // whenever the settings structure
-                                       // changes
-
+/**
+ * Main activation settings section created for easy
+ * copying between related activations.
+ */
 class ActivationSettings
 {
     public:
       inline ActivationSettings() {}
 
-      DirectoryClass * traps;               // enabled condition traps
-      DirectoryClass * conditionObj;        // current condition object
-      RexxObject   ** parent_arglist;      // arguments to top level program
-      size_t          parent_argcount;     // number of arguments to the top level program
-      MethodClass    * parent_method;       // method object for top level
-      RexxCode      * parent_code;         // source of the parent method
-      RexxString    * current_env;         // current address environment
-      RexxString    * alternate_env;       // alternate address environment
-      RexxString    * msgname;             // message sent to the receiver
+      StringTable    *traps;               // enabled condition traps
+      DirectoryClass *conditionObj;        // current condition object
+      RexxObject    **parentArgList;       // arguments to top level program
+      size_t          parentArgCount;      // number of arguments to the top level program
+      MethodClass    *parentMethod;        // method object for top level
+      RexxCode       *parentCode;          // source of the parent method
+      RexxString     *currentAddress;      // current address environment
+      RexxString     *alternateAddress;    // alternate address environment
+      RexxString     *messageName;         // message sent to the receiver
                                            // object variable dictionary
-      VariableDictionary *object_variables;
-      RexxString    * calltype;            // (COMMAND/METHOD/FUNCTION/ROUTINE)
-      DirectoryClass * streams;             // Directory of openned streams
-      RexxString    * halt_description;    // description from a HALT condition
-      SecurityManager * securityManager;   // security manager object
-      RexxObject    * scope;               // scope of the method call
+      VariableDictionary *objectVariables;
+      RexxString     *calltype;            // (COMMAND/METHOD/FUNCTION/ROUTINE)
+      StringTable    *streams;             // table of opened streams
+      RexxString     *haltDescription;     // description from a HALT condition
+      SecurityManager *securityManager;    // security manager object
+      RexxClass      *scope;               // scope of the method call
       size_t traceOption;                  // current active trace option
       size_t flags;                        // trace/numeric and other settings
-      wholenumber_t trace_skip;            // count of trace events to skip
-      int  return_status;                  // command return status
-      size_t  traceindent;                 // trace indentation
+      wholenumber_t traceSkip;             // count of trace events to skip
+      int  returnStatus;                   // command return status
+      size_t  traceIndent;                 // trace indentation
       NumericSettings numericSettings;     // globally effective settings
-      int64_t elapsed_time;                // elapsed time clock
-      RexxDateTime timestamp;              // current timestamp
-      bool intermediate_trace;             // very quick test for intermediate trace
-      RexxLocalVariables local_variables;  // the local variables for this activation
+      int64_t elapsedTime;                 // elapsed time clock
+      RexxDateTime timeStamp;              // current timestamp
+      bool intermediateTrace;              // very quick test for intermediate trace
+      RexxLocalVariables localVariables;   // the local variables for this activation
 };
 
-                                       // activation_context values
-                                       // these are done as bit settings to
-                                       // allow multiple potential values
-                                       // to be checked with a single test
-#define DEBUGPAUSE   0x00000001
-#define METHODCALL   0x00000002
-#define INTERNALCALL 0x00000004
-#define INTERPRET    0x00000008
-#define PROGRAMCALL  0x00000010
-#define EXTERNALCALL 0x00000020
 
-                                       // check for top level execution
-#define TOP_LEVEL_CALL (PROGRAMCALL | METHODCALL | EXTERNALCALL)
-                                       // non-method top level execution
-#define PROGRAM_LEVEL_CALL (PROGRAMCALL | EXTERNALCALL)
-                                       // non-method top level execution
-#define PROGRAM_OR_METHOD  (PROGRAMCALL | METHODCALL)
-                                       // call is within an activation
-#define INTERNAL_LEVEL_CALL (INTERNALCALL | INTERPRET)
-
-// object_scope values
-#define SCOPE_RESERVED  1
-#define SCOPE_RELEASED  0
-
+/**
+ * An activation of a section of Rexx code.
+ */
 class RexxActivation : public RexxActivationBase
 {
   public:
+
+    // execution_state values
+    typedef enum
+    {
+        ACTIVE,
+        REPLIED,
+        RETURNED,
+    } ExecutionState;
+
+    // command return status.
+    typedef enum
+    {
+        /**
+         * Guard scope settings.
+         */
+        RETURN_STATUS_NORMAL = 0,
+        RETURN_STATUS_ERROR = 1,
+        RETURN_STATUS_FAILURE = -1
+    }  ReturnStatus;
+
+
+    // activationContext values
+    // these are done as bit settings to
+    // allow multiple potential values
+    // to be checked with a single test
+    typedef enum
+    {
+        DEBUGPAUSE   = 0x00000001,
+        METHODCALL   = 0x00000002,
+        INTERNALCALL = 0x00000004,
+        INTERPRET    = 0x00000008,
+        PROGRAMCALL  = 0x00000010,
+        EXTERNALCALL = 0x00000020,
+                                       // check for top level execution
+        TOP_LEVEL_CALL = (PROGRAMCALL | METHODCALL | EXTERNALCALL),
+                                       // non-method top level execution
+        PROGRAM_LEVEL_CALL = (PROGRAMCALL | EXTERNALCALL),
+                                       // non-method top level execution
+        PROGRAM_OR_METHOD = (PROGRAMCALL | METHODCALL),
+                                       // call is within an activation
+        INTERNAL_LEVEL_CALL = (INTERNALCALL | INTERPRET),
+    } ActivationContext;
+
+    // guard scopy settings
+    typedef enum
+    {
+        SCOPE_RELEASED = 0,
+        SCOPE_RESERVED = 1,
+    } GuardStatus;
+
+
    void *operator new(size_t);
    inline void *operator new(size_t size, void *ptr) {return ptr;};
    inline void  operator delete(void *) { ; }
@@ -167,8 +185,9 @@ class RexxActivation : public RexxActivationBase
    RexxActivation(Activity *_activity, RoutineClass *_routine, RexxCode *_code, RexxString *calltype, RexxString *env, int context);
    RexxActivation(Activity *_activity, RexxActivation *_parent, RexxCode *_code, int context);
 
-   void live(size_t);
-   void liveGeneral(MarkReason reason);
+   virtual void live(size_t);
+   virtual void liveGeneral(MarkReason reason);
+
    RexxObject      * dispatch();
    size_t            digits();
    size_t            fuzz();
@@ -183,26 +202,25 @@ class RexxActivation : public RexxActivationBase
    void              setObjNotify(MessageClass *);
    void              termination();
    inline void       guardOff()
-    {
-                                           // currently locked?
-      if (object_scope == SCOPE_RESERVED) {
-                                           // release the variable dictionary
-        settings.object_variables->release(activity);
-                                           // set the state to released
-        object_scope = SCOPE_RELEASED;
-      }
-    }
+   {
+       // if currently locked, release the variable dictionary and change the scopey
+       if (objectScope == SCOPE_RESERVED)
+       {
+                                            // release the variable dictionary
+           settings.objectVariables->release(activity);
+           objectScope = SCOPE_RELEASED;
+       }
+   }
 
-
-   inline bool isInterpret() { return activation_context == INTERPRET; }
-   inline bool isInternalCall() { return activation_context == INTERNALCALL; }
-   inline bool isMethod() { return activation_context == METHODCALL; }
-   inline bool isRoutine() { return activation_context == EXTERNALCALL; }
-   inline bool isProgram() { return activation_context == PROGRAMCALL; }
-   inline bool isTopLevelCall() { return (activation_context & TOP_LEVEL_CALL) != 0; }
-   inline bool isProgramLevelCall() { return (activation_context & PROGRAM_LEVEL_CALL) != 0; }
-   inline bool isInternalLevelCall() { return (activation_context & INTERNAL_LEVEL_CALL) != 0; }
-   inline bool isProgramOrMethod() { return (activation_context & PROGRAM_OR_METHOD) != 0; }
+   inline bool isInterpret() { return activationContext == INTERPRET; }
+   inline bool isInternalCall() { return activationContext == INTERNALCALL; }
+   inline bool isMethod() { return activationContext == METHODCALL; }
+   inline bool isRoutine() { return activationContext == EXTERNALCALL; }
+   inline bool isProgram() { return activationContext == PROGRAMCALL; }
+   inline bool isTopLevelCall() { return (activationContext & TOP_LEVEL_CALL) != 0; }
+   inline bool isProgramLevelCall() { return (activationContext & PROGRAM_LEVEL_CALL) != 0; }
+   inline bool isInternalLevelCall() { return (activationContext & INTERNAL_LEVEL_CALL) != 0; }
+   inline bool isProgramOrMethod() { return (activationContext & PROGRAM_OR_METHOD) != 0; }
    inline bool isMethodOrRoutine() { return isMethod() || isRoutine(); }
 
    RexxObject *run(RexxObject *_receiver, RexxString *msgname, RexxObject **_arglist,
@@ -266,32 +284,32 @@ class RexxActivation : public RexxActivationBase
    void              resetElapsed();
    RexxString      * formatTrace(RexxInstruction *, PackageClass *);
    RexxString      * getTraceBack();
-   DirectoryClass   * local();
+   DirectoryClass  * local();
    RexxString      * formatSourcelessTraceLine(RexxString *packageName);
-   ArrayClass       * getStackFrames(bool skipFirst);
+   ArrayClass      * getStackFrames(bool skipFirst);
    inline void       implicitExit()
    {
-     // at a main program level or completing an INTERPRET
-     // instruction?
-     if (activation_context&TOP_LEVEL_CALL || activation_context == INTERPRET) {
-                                          // real program call?
-         if (activation_context&PROGRAM_LEVEL_CALL)
-         {
-                                          // run termination exit
-             activity->callTerminationExit(this);
-         }
-         execution_state = RETURNED;// this is an EXIT for real
-         return;                          // we're finished here
-     }
-     exitFrom(OREF_NULL);           // we've had a nested exit, we need to process this more fully
+       // at a main program level or completing an INTERPRET
+       // instruction?
+       if (activationContext&TOP_LEVEL_CALL || activationContext == INTERPRET) {
+                                            // real program call?
+           if (activationContext&PROGRAM_LEVEL_CALL)
+           {
+                                            // run termination exit
+               activity->callTerminationExit(this);
+           }
+           executionState = RETURNED;// this is an EXIT for real
+           return;                          // we're finished here
+       }
+       exitFrom(OREF_NULL);           // we've had a nested exit, we need to process this more fully
    }
 
    void              unwindTrap(RexxActivation *);
    RexxString      * sourceString();
    void              addLocalRoutine(RexxString *name, MethodClass *method);
-   DirectoryClass    *getPublicRoutines();
+   StringTable      *getPublicRoutines();
    void              debugInterpret(RexxString *);
-   bool              debugPause(RexxInstruction * instr=OREF_NULL);
+   bool              doDebugPause();
    void              processClauseBoundary();
    bool              halt(RexxString *);
    void              externalTraceOn();
@@ -308,22 +326,22 @@ class RexxActivation : public RexxActivationBase
    void              processTraps();
    void              mergeTraps(QueueClass *, QueueClass *);
    uint64_t          getRandomSeed(RexxInteger *);
-   void              adjustRandomSeed() { random_seed += (uint64_t)(uintptr_t)this; }
+   void              adjustRandomSeed() { randomSeed += (uint64_t)(uintptr_t)this; }
    VariableDictionary * getObjectVariables();
-   DirectoryClass   * getLabels();
+   StringTable     * getLabels();
    RexxString      * getProgramName();
    RexxObject      * popControl();
    void              pushControl(RexxObject *);
    void              closeStreams();
    void              checkTrapTable();
    RexxObject       *resolveStream(RexxString *name, bool input, RexxString **fullName, bool *added);
-   DirectoryClass    *getStreams();
+   StringTable      *getStreams();
    RexxObject       *novalueHandler(RexxString *);
    RexxVariableBase *retriever(RexxString *);
    RexxVariableBase *directRetriever(RexxString *);
    RexxObject       *handleNovalueEvent(RexxString *name, RexxObject *defaultValue, RexxVariable *variable);
    PackageClass     *getPackageObject() { return packageObject; }
-   inline PackageClass *getEffectiveSourceObject()
+   inline PackageClass *getEffectivePackageObject()
    {
        return isInterpret() ? executable->getPackageObject() : packageObject;
    }
@@ -333,37 +351,37 @@ class RexxActivation : public RexxActivationBase
    void              setReturnStatus(int status);
 
    inline void              setCallType(RexxString *type) {settings.calltype = type; }
-   inline void              pushBlock(RexxDoBlock *block) { block->setPrevious(dostack); dostack = block; }
-   inline void              popBlock() { RexxDoBlock *temp; temp = dostack; dostack = temp->getPrevious(); temp->setHasNoReferences(); }
-   inline RexxDoBlock     * topBlock() { return dostack; }
-   inline void              terminateBlock(size_t _indent) { popBlock(); blockNest--; settings.traceindent = _indent; }
-   inline void              terminateBlock() { settings.traceindent = dostack->getIndent(); popBlock(); blockNest--; }
-   inline void              newDo(RexxDoBlock *block) { pushBlock(block); blockNest++; settings.traceindent++;}
-   inline void              removeBlock() { blockNest--; unindent(); };
-   inline void              addBlock()    { blockNest++; indent(); };
-   inline bool              hasActiveBlocks() { return blockNest != 0; }
-   inline bool              inMethod()  {return activation_context == METHODCALL; }
-   inline void              indent() {settings.traceindent++; };
-   inline void              unindent() {if (settings.traceindent > 0) settings.traceindent--; };
-   inline void              unindentTwice() {if (settings.traceindent > 1) settings.traceindent -= 2; };
-   inline void              setIndent(size_t v) {settings.traceindent=(v); };
-   inline size_t            getIndent() {return settings.traceindent;};
-   inline bool              tracingIntermediates() {return settings.intermediate_trace;};
-   inline void              clearTraceSettings() { settings.flags &= ~trace_flags; settings.intermediate_trace = false; }
+   inline void              pushBlockInstruction(RexxDoBlock *block) { block->setPrevious(doStack); doStack = block; }
+   inline void              popBlockInstruction() { RexxDoBlock *temp; temp = doStack; doStack = temp->getPrevious(); temp->setHasNoReferences(); }
+   inline RexxDoBlock     * topBlockInstruction() { return doStack; }
+   inline void              terminateBlockInstruction(size_t _indent) { popBlockInstruction(); blockNest--; settings.traceIndent = _indent; }
+   inline void              terminateBlockInstruction() { settings.traceIndent = doStack->getIndent(); popBlockInstruction(); blockNest--; }
+   inline void              newBlockInstruction(RexxDoBlock *block) { pushBlockInstruction(block); blockNest++; settings.traceIndent++;}
+   inline void              removeBlockInstruction() { blockNest--; unindent(); };
+   inline void              addBlockInstruction()    { blockNest++; indent(); };
+   inline bool              hasActiveBlockInstructions() { return blockNest != 0; }
+   inline bool              inMethod()  {return activationContext == METHODCALL; }
+   inline void              indent() {settings.traceIndent++; };
+   inline void              unindent() {if (settings.traceIndent > 0) settings.traceIndent--; };
+   inline void              unindentTwice() {if (settings.traceIndent > 1) settings.traceIndent -= 2; };
+   inline void              setIndent(size_t v) {settings.traceIndent=(v); };
+   inline size_t            getIndent() {return settings.traceIndent;};
+   inline bool              tracingIntermediates() {return settings.intermediateTrace;};
+   inline void              clearTraceSettings() { settings.flags &= ~trace_flags; settings.intermediateTrace = false; }
    inline bool              tracingResults() {return (settings.flags&trace_results) != 0; }
-   inline Activity    * getActivity() {return activity;};
-   inline RexxString      * getMessageName() {return settings.msgname;};
-   inline RexxString      * getCallname() {return settings.msgname;};
+   inline Activity        * getActivity() {return activity;};
+   inline RexxString      * getMessageName() {return settings.messageName;};
+   inline RexxString      * getCallname() {return settings.messageName;};
    inline RexxInstruction * getCurrent() {return current;};
-   inline void              getSettings(ActivationSettings &s) {settings = s;};
-   inline void              putSettings(ActivationSettings &s) {s = settings;};
-   inline RexxString      * getAddress() {return settings.current_env;};
-   inline DirectoryClass   * getConditionObj() {return settings.conditionObj;};
+   inline void              getSettings(ActivationSettings &s) { settings = s; }
+   inline void              putSettings(ActivationSettings &s) { s = settings; }
+   inline RexxString      * getAddress() {return settings.currentAddress;};
+   inline DirectoryClass  * getConditionObj() { return settings.conditionObj; }
    inline void              setConditionObj(DirectoryClass *condition) {settings.conditionObj = condition;};
    inline RexxInstruction * getNext() {return next;};
    inline void              setNext(RexxInstruction * v) {next=v;};
    inline void              setCurrent(RexxInstruction * v) {current=v;};
-   inline bool              inDebug() { return ((settings.flags&trace_debug) != 0) && !debug_pause;}
+   inline bool              inDebug() { return ((settings.flags&trace_debug) != 0) && !debugPause;}
 
    inline ExpressionStack * getStack() {return &stack; };
 
@@ -373,26 +391,26 @@ class RexxActivation : public RexxActivationBase
    virtual RexxObject      *getReceiver();
    virtual bool             isRexxContext();
 
-   inline void              traceIntermediate(RexxObject * v, int p) { if (settings.intermediate_trace) traceValue(v, p); };
-   inline void              traceArgument(RexxObject * v) { if (settings.intermediate_trace) traceValue(v, TRACE_PREFIX_ARGUMENT); };
+   inline void              traceIntermediate(RexxObject * v, int p) { if (settings.intermediateTrace) traceValue(v, p); };
+   inline void              traceArgument(RexxObject * v) { if (settings.intermediateTrace) traceValue(v, TRACE_PREFIX_ARGUMENT); };
    inline void              traceVariable(RexxString *n, RexxObject *v)
-       { if (settings.intermediate_trace) { traceTaggedValue(TRACE_PREFIX_VARIABLE, NULL, false, n, VALUE_MARKER, v); } };
+       { if (settings.intermediateTrace) { traceTaggedValue(TRACE_PREFIX_VARIABLE, NULL, false, n, VALUE_MARKER, v); } };
    inline void              traceDotVariable(RexxString *n, RexxObject *v)
-       { if (settings.intermediate_trace) { traceTaggedValue(TRACE_PREFIX_DOTVARIABLE, ".", false, n, VALUE_MARKER, v); } };
+       { if (settings.intermediateTrace) { traceTaggedValue(TRACE_PREFIX_DOTVARIABLE, ".", false, n, VALUE_MARKER, v); } };
    inline void              traceFunction(RexxString *n, RexxObject *v)
-       { if (settings.intermediate_trace) { traceTaggedValue(TRACE_PREFIX_FUNCTION, NULL, false, n, VALUE_MARKER, v); } };
+       { if (settings.intermediateTrace) { traceTaggedValue(TRACE_PREFIX_FUNCTION, NULL, false, n, VALUE_MARKER, v); } };
    inline void              traceMessage(RexxString *n, RexxObject *v)
-       { if (settings.intermediate_trace) { traceTaggedValue(TRACE_PREFIX_MESSAGE, NULL, true, n, VALUE_MARKER, v); } };
+       { if (settings.intermediateTrace) { traceTaggedValue(TRACE_PREFIX_MESSAGE, NULL, true, n, VALUE_MARKER, v); } };
    inline void              traceOperator(const char *n, RexxObject *v)
-       { if (settings.intermediate_trace) { traceOperatorValue(TRACE_PREFIX_OPERATOR, n, v); } };
+       { if (settings.intermediateTrace) { traceOperatorValue(TRACE_PREFIX_OPERATOR, n, v); } };
    inline void              tracePrefix(const char *n, RexxObject *v)
-       { if (settings.intermediate_trace) { traceOperatorValue(TRACE_PREFIX_PREFIX, n, v); } };
+       { if (settings.intermediateTrace) { traceOperatorValue(TRACE_PREFIX_PREFIX, n, v); } };
    inline void              traceAssignment(RexxString *n, RexxObject *v)
-       { if (settings.intermediate_trace) { traceTaggedValue(TRACE_PREFIX_ASSIGNMENT, NULL, false, n, ASSIGNMENT_MARKER, v); } };
-   inline void              traceCompoundName(RexxString *stemVar, RexxObject **tails, size_t tailCount, CompoundVariableTail *tail) { if (settings.intermediate_trace) traceCompoundValue(TRACE_PREFIX_COMPOUND, stemVar, tails, tailCount, VALUE_MARKER, tail->createCompoundName(stemVar)); };
-   inline void              traceCompoundName(RexxString *stemVar, RexxObject **tails, size_t tailCount, RexxString *tail) { if (settings.intermediate_trace) traceCompoundValue(TRACE_PREFIX_COMPOUND, stemVar, tails, tailCount, VALUE_MARKER, stemVar->concat(tail)); };
-   inline void              traceCompound(RexxString *stemVar, RexxObject **tails, size_t tailCount, RexxObject *value) { if (settings.intermediate_trace) traceCompoundValue(TRACE_PREFIX_VARIABLE, stemVar, tails, tailCount, VALUE_MARKER, value); };
-   inline void              traceCompoundAssignment(RexxString *stemVar, RexxObject **tails, size_t tailCount, RexxObject *value) { if (settings.intermediate_trace) traceCompoundValue(TRACE_PREFIX_ASSIGNMENT, stemVar, tails, tailCount, ASSIGNMENT_MARKER, value); };
+       { if (settings.intermediateTrace) { traceTaggedValue(TRACE_PREFIX_ASSIGNMENT, NULL, false, n, ASSIGNMENT_MARKER, v); } };
+   inline void              traceCompoundName(RexxString *stemVar, RexxObject **tails, size_t tailCount, CompoundVariableTail *tail) { if (settings.intermediateTrace) traceCompoundValue(TRACE_PREFIX_COMPOUND, stemVar, tails, tailCount, VALUE_MARKER, tail->createCompoundName(stemVar)); };
+   inline void              traceCompoundName(RexxString *stemVar, RexxObject **tails, size_t tailCount, RexxString *tail) { if (settings.intermediateTrace) traceCompoundValue(TRACE_PREFIX_COMPOUND, stemVar, tails, tailCount, VALUE_MARKER, stemVar->concat(tail)); };
+   inline void              traceCompound(RexxString *stemVar, RexxObject **tails, size_t tailCount, RexxObject *value) { if (settings.intermediateTrace) traceCompoundValue(TRACE_PREFIX_VARIABLE, stemVar, tails, tailCount, VALUE_MARKER, value); };
+   inline void              traceCompoundAssignment(RexxString *stemVar, RexxObject **tails, size_t tailCount, RexxObject *value) { if (settings.intermediateTrace) traceCompoundValue(TRACE_PREFIX_ASSIGNMENT, stemVar, tails, tailCount, ASSIGNMENT_MARKER, value); };
    inline void              traceResult(RexxObject * v) { if ((settings.flags&trace_results)) traceValue(v, TRACE_PREFIX_RESULT); };
    inline bool              tracingInstructions() { return (settings.flags&trace_all) != 0; }
    inline bool              tracingErrors() { return (settings.flags&trace_errors) != 0; }
@@ -402,14 +420,14 @@ class RexxActivation : public RexxActivationBase
    inline void              traceCommand(RexxInstruction * v) { if ((settings.flags&trace_commands) != 0) traceClause(v, TRACE_PREFIX_CLAUSE); }
    inline bool              tracingCommands() { return (settings.flags&trace_commands) != 0; }
    inline bool              tracingAll() { return (settings.flags&trace_all) != 0; }
-   inline void              pauseInstruction() {  if ((settings.flags&(trace_all | trace_debug)) == (trace_all | trace_debug)) debugPause(); };
-   inline int               conditionalPauseInstruction() { return (((settings.flags&(trace_all | trace_debug)) == (trace_all | trace_debug)) ? debugPause(): false); };
-   inline void              pauseLabel() { if ((settings.flags&(trace_labels | trace_debug)) == (trace_labels | trace_debug)) debugPause(); };
-   inline void              pauseCommand() { if ((settings.flags&(trace_commands | trace_debug)) == (trace_commands | trace_debug)) debugPause(); };
+   inline void              pauseInstruction() {  if ((settings.flags&(trace_all | trace_debug)) == (trace_all | trace_debug)) doDebugPause(); };
+   inline int               conditionalPauseInstruction() { return (((settings.flags&(trace_all | trace_debug)) == (trace_all | trace_debug)) ? doDebugPause(): false); };
+   inline void              pauseLabel() { if ((settings.flags&(trace_labels | trace_debug)) == (trace_labels | trace_debug)) doDebugPause(); };
+   inline void              pauseCommand() { if ((settings.flags&(trace_commands | trace_debug)) == (trace_commands | trace_debug)) doDebugPause(); };
 
           SecurityManager  *getSecurityManager();
           SecurityManager  *getEffectiveSecurityManager();
-   inline bool              isTopLevel() { return (activation_context&TOP_LEVEL_CALL) != 0; }
+   inline bool              isTopLevel() { return (activationContext&TOP_LEVEL_CALL) != 0; }
    inline bool              isForwarded() { return (settings.flags&forwarded) != 0; }
    inline bool              isGuarded() { return (settings.flags&guarded_method) != 0; }
    inline void              setGuarded() { settings.flags |= guarded_method; }
@@ -424,28 +442,34 @@ class RexxActivation : public RexxActivationBase
    inline void              setElapsedTimerValid() { settings.flags &= ~elapsed_reset; }
 
 
-   inline RexxObject     ** getMethodArgumentList() {return arglist;};
-   inline size_t            getMethodArgumentCount() { return argcount; }
-   inline RexxObject *      getMethodArgument(size_t position) {
-       if (position > getMethodArgumentCount()) {
+   inline RexxObject     ** getMethodArgumentList() {return argList;};
+   inline size_t            getMethodArgumentCount() { return argCount; }
+   inline RexxObject *      getMethodArgument(size_t position)
+   {
+       if (position > getMethodArgumentCount())
+       {
            return OREF_NULL;
        }
-       else {
-           return arglist[position-1];
+       else
+       {
+           return argList[position-1];
        }
    }
 
-   inline ArrayClass        *getArguments() { return new_array(argcount, arglist); }
+   inline ArrayClass       *getArguments() { return new_array(argCount, argList); }
 
-   inline RexxObject      **getProgramArgumentlist() {return settings.parent_arglist;};
-   inline size_t            getProgramArgumentCount() { return settings.parent_argcount; }
+   inline RexxObject      **getProgramArgumentlist() {return settings.parentArgList;};
+   inline size_t            getProgramArgumentCount() { return settings.parentArgCount; }
 
-   inline RexxObject *      getProgramArgument(size_t position) {
-       if (position > getProgramArgumentCount()) {
+   inline RexxObject *      getProgramArgument(size_t position)
+   {
+       if (position > getProgramArgumentCount())
+       {
            return OREF_NULL;
        }
-       else {
-           return settings.parent_arglist[position-1];
+       else
+       {
+           return settings.parentArgList[position-1];
        }
    }
 
@@ -457,28 +481,30 @@ class RexxActivation : public RexxActivationBase
 
    inline VariableDictionary *getLocalVariables()
    {
-       return settings.local_variables.getDictionary();
+       return settings.localVariables.getDictionary();
    }
 
-   inline DirectoryClass *getAllLocalVariables()
+   inline StringTable *getAllLocalVariables()
    {
        return getLocalVariables()->getAllVariables();
    }
 
    inline RexxVariable *getLocalVariable(RexxString *name, size_t index)
    {
-       RexxVariable *target = settings.local_variables.get(index);
-       if (target == OREF_NULL) {
-           target = settings.local_variables.lookupVariable(name, index);
+       RexxVariable *target = settings.localVariables.get(index);
+       if (target == OREF_NULL)
+       {
+           target = settings.localVariables.lookupVariable(name, index);
        }
        return target;
    }
 
    inline RexxVariable *getLocalStemVariable(RexxString *name, size_t index)
    {
-       RexxVariable *target = settings.local_variables.get(index);
-       if (target == OREF_NULL) {
-           target = settings.local_variables.lookupStemVariable(name, index);
+       RexxVariable *target = settings.localVariables.get(index);
+       if (target == OREF_NULL)
+       {
+           target = settings.localVariables.lookupStemVariable(name, index);
        }
        return target;
    }
@@ -498,7 +524,7 @@ class RexxActivation : public RexxActivationBase
    inline bool localStemVariableExists(RexxString *stemName, size_t index)
    {
      // get the stem entry from this dictionary
-     RexxVariable *variable = settings.local_variables.find(stemName, index);
+     RexxVariable *variable = settings.localVariables.find(stemName, index);
      // The stem exists if the stem variable has ever been used.
      return variable != OREF_NULL;
    }
@@ -506,19 +532,19 @@ class RexxActivation : public RexxActivationBase
    inline bool localVariableExists(RexxString *name, size_t index)
    {
      // get the stem entry from this dictionary
-     RexxVariable *variable = settings.local_variables.find(name, index);
+     RexxVariable *variable = settings.localVariables.find(name, index);
      // The stem exists if the stem variable has ever been used.
      return variable != OREF_NULL && variable->getVariableValue() != OREF_NULL;
    }
 
    inline void putLocalVariable(RexxVariable *variable, size_t index)
    {
-       settings.local_variables.putVariable(variable, index);
+       settings.localVariables.putVariable(variable, index);
    }
 
    inline void updateLocalVariable(RexxVariable *variable)
    {
-       settings.local_variables.updateVariable(variable);
+       settings.localVariables.updateVariable(variable);
    }
 
    inline void setLocalVariable(RexxString *name, size_t index, RexxObject *value)
@@ -543,7 +569,7 @@ class RexxActivation : public RexxActivationBase
    void setLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount, RexxObject *value);
    void dropLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount);
 
-   inline bool novalueEnabled() { return settings.local_variables.getNovalue(); }
+   inline bool novalueEnabled() { return settings.localVariables.getNovalue(); }
 
    // The following methods be rights should be implemented by the
    // RexxMemory class, but aren't because of the difficulties of
@@ -554,11 +580,13 @@ class RexxActivation : public RexxActivationBase
    inline RexxVariable *newLocalVariable(RexxString *name)
    {
        RexxVariable *newVariable = memoryObject.variableCache;
-       if (newVariable != OREF_NULL) {
+       if (newVariable != OREF_NULL)
+       {
            memoryObject.variableCache = newVariable->getNext();
            newVariable->reset(name);
        }
-       else {
+       else
+       {
            newVariable = new_variable(name);
        }
        newVariable->setCreator(this);
@@ -576,17 +604,17 @@ class RexxActivation : public RexxActivationBase
        // if we're nested, we need to make sure that any variable
        // dictionary created at this level is propagated back to
        // the caller.
-       if (isInternalLevelCall() && settings.local_variables.isNested())
+       if (isInternalLevelCall() && settings.localVariables.isNested())
        {
-           parent->setLocalVariableDictionary(settings.local_variables.getNestedDictionary());
+           parent->setLocalVariableDictionary(settings.localVariables.getNestedDictionary());
        }
        else
        {
            // we need to cleanup the local variables and return them to the
            // cache.
-           for (size_t i = 0; i < settings.local_variables.size; i++)
+           for (size_t i = 0; i < settings.localVariables.size; i++)
            {
-               RexxVariable *var = settings.local_variables.get(i);
+               RexxVariable *var = settings.localVariables.get(i);
                if (var != OREF_NULL && var->isLocal(this))
                {
                    cacheLocalVariable(var);
@@ -595,7 +623,7 @@ class RexxActivation : public RexxActivationBase
        }
    }
 
-   inline void setLocalVariableDictionary(VariableDictionary *dict) {settings.local_variables.setDictionary(dict); }
+   inline void setLocalVariableDictionary(VariableDictionary *dict) {settings.localVariables.setDictionary(dict); }
 
    // the default trace flag values used for new activations.
    static const size_t default_trace_flags;
@@ -603,39 +631,37 @@ class RexxActivation : public RexxActivationBase
  protected:
 
     ActivationSettings   settings;      // inherited REXX settings
-    ExpressionStack  stack;             // current evaluation stack
+    ExpressionStack      stack;         // current evaluation stack
     RexxCode            *code;          // rexx method object
     PackageClass        *packageObject; // the source object associated with this instance
     RexxClass           *scope;         // scope of any active method call
     RexxObject          *receiver;      // target of a message invocation
     Activity            *activity;      // current running activation
     RexxActivation      *parent;        // previous running activation for internal call/interpret
-    RexxObject         **arglist;       // activity argument list
-    size_t               argcount;      // the count of arguments
-    RexxDoBlock         *dostack;       // stack of DO loops
+    RexxObject         **argList;       // activity argument list
+    size_t               argCount;      // the count of arguments
+    RexxDoBlock         *doStack;       // stack of DO loops
     RexxInstruction     *current;       // current execution pointer
     RexxInstruction     *next;          // next instruction to execute
-    bool                 debug_pause;   // executing a debug pause
-    int                  object_scope;  // reserve/release state of variables
+    bool                 debugPause;    // executing a debug pause
+    GuardStatus          objectScope;   // reserve/release state of variables
     RexxObject          *result;        // result of execution
-    ArrayClass           *trapinfo;     // current trap handler
+    ArrayClass          *trapInfo;      // current trap handler
     RexxContext         *contextObject; // the context object representing the execution context
                                         // current activation state
-    int                  execution_state;
+    ExecutionState       executionState;
                                         // type of activation activity
-    int                  activation_context;
-    MessageClass         *objnotify;    // an object to notify if excep occur
-                                        // LIst of Saved Local environments
-    ListClass            *environmentList;
-    size_t               pending_count; // number of pending conditions
-    QueueClass           *handler_queue; // queue of trapped condition handler
+    ActivationContext    activationContext;
+    MessageClass        *notifyObject;  // an object to notify if excep occur
+                                        // list of Saved Local environments
+    ListClass           *environmentList;
+    size_t               pendingCount;  // number of pending conditions
+    QueueClass          *handlerQueue;  // queue of trapped condition handler
                                         // queue of trapped conditions
-    QueueClass           *condition_queue;
-    uint64_t             random_seed;   // random number seed
-    bool                 random_set;    // random seed has been set
+    QueueClass          *conditionQueue;
+    uint64_t             randomSeed;    // random number seed
+    bool                 randomSet;     // random seed has been set
     size_t               blockNest;     // block instruction nesting level
-    size_t               lookaside_size;// size of the lookaside table
-
 
     // constants
 

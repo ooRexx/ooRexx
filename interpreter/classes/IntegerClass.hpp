@@ -87,18 +87,18 @@ class RexxInteger : public RexxObject
     wholenumber_t strictComp(RexxObject *);
     wholenumber_t comp(RexxObject *other);
 
-    RexxInteger *equal(RexxObject *);
-    RexxInteger *strictEqual(RexxObject *);
-    RexxInteger *notEqual(RexxObject *);
-    RexxInteger *strictNotEqual(RexxObject *);
-    RexxInteger *isGreaterThan(RexxObject *);
-    RexxInteger *isLessThan(RexxObject *);
-    RexxInteger *isGreaterOrEqual(RexxObject *);
-    RexxInteger *isLessOrEqual(RexxObject *);
-    RexxInteger *strictGreaterThan(RexxObject *);
-    RexxInteger *strictLessThan(RexxObject *);
-    RexxInteger *strictGreaterOrEqual(RexxObject *);
-    RexxInteger *strictLessOrEqual(RexxObject *);
+    RexxObject  *equal(RexxObject *);
+    RexxObject  *strictEqual(RexxObject *);
+    RexxObject  *notEqual(RexxObject *);
+    RexxObject  *strictNotEqual(RexxObject *);
+    RexxObject  *isGreaterThan(RexxObject *);
+    RexxObject  *isLessThan(RexxObject *);
+    RexxObject  *isGreaterOrEqual(RexxObject *);
+    RexxObject  *isLessOrEqual(RexxObject *);
+    RexxObject  *strictGreaterThan(RexxObject *);
+    RexxObject  *strictLessThan(RexxObject *);
+    RexxObject  *strictGreaterOrEqual(RexxObject *);
+    RexxObject  *strictLessOrEqual(RexxObject *);
     RexxObject  *hashCode();
 
     RexxObject *unknown(RexxString *, ArrayClass *);

@@ -2889,7 +2889,7 @@ wholenumber_t NumberString::comp(
     }
 }
 
-RexxInteger *NumberString::equal(RexxObject *other)
+RexxObject *NumberString::equal(RexxObject *other)
 /******************************************************************************/
 /* Function:  non-strict "=" operator                                         */
 /******************************************************************************/
@@ -2901,7 +2901,7 @@ RexxInteger *NumberString::equal(RexxObject *other)
     return booleanObject(comp(other) == 0);
 }
 
-RexxInteger *NumberString::notEqual(RexxObject *other)
+RexxObject *NumberString::notEqual(RexxObject *other)
 /******************************************************************************/
 /* Function:  non-strict "\=" operator                                        */
 /******************************************************************************/
@@ -2910,10 +2910,10 @@ RexxInteger *NumberString::notEqual(RexxObject *other)
     {
         return TheTrueObject;
     }
-    return booleanObject((comp(other) != 0);
+    return booleanObject(comp(other) != 0);
 }
 
-RexxInteger *NumberString::isGreaterThan(RexxObject *other)
+RexxObject *NumberString::isGreaterThan(RexxObject *other)
 /******************************************************************************/
 /* Function:  non-strict ">" operator                                         */
 /******************************************************************************/
@@ -2922,10 +2922,10 @@ RexxInteger *NumberString::isGreaterThan(RexxObject *other)
     {
         return TheFalseObject;
     }
-    return booleanObject((comp(other) > 0);
+    return booleanObject(comp(other) > 0);
 }
 
-RexxInteger *NumberString::isLessThan(RexxObject *other)
+RexxObject *NumberString::isLessThan(RexxObject *other)
 /******************************************************************************/
 /* Function:  non-strict "<" operator                                         */
 /******************************************************************************/
@@ -2934,10 +2934,10 @@ RexxInteger *NumberString::isLessThan(RexxObject *other)
     {
         return TheFalseObject;
     }
-    return booleanObject((comp(other) < 0);
+    return booleanObject(comp(other) < 0);
 }
 
-RexxInteger *NumberString::isGreaterOrEqual(RexxObject *other)
+RexxObject *NumberString::isGreaterOrEqual(RexxObject *other)
 /******************************************************************************/
 /* Function:  non-strict ">=" operator                                        */
 /******************************************************************************/
@@ -2946,10 +2946,10 @@ RexxInteger *NumberString::isGreaterOrEqual(RexxObject *other)
     {
         return TheFalseObject;
     }
-    return booleanObject((comp(other) >= 0);
+    return booleanObject(comp(other) >= 0);
 }
 
-RexxInteger *NumberString::isLessOrEqual(RexxObject *other)
+RexxObject *NumberString::isLessOrEqual(RexxObject *other)
 /******************************************************************************/
 /* Function:  non-strict "<=" operator                                        */
 /******************************************************************************/
@@ -2958,7 +2958,7 @@ RexxInteger *NumberString::isLessOrEqual(RexxObject *other)
     {
         return TheFalseObject;
     }
-    return booleanObject((comp(other) <= 0);
+    return booleanObject(comp(other) <= 0);
 }
 
 
@@ -2975,7 +2975,7 @@ RexxObject *NumberString::hashCode()
     return new_string((const char *)&h, sizeof(HashCode));
 }
 
-RexxInteger *NumberString::strictEqual(RexxObject *other)
+RexxObject *NumberString::strictEqual(RexxObject *other)
 /******************************************************************************/
 /* Function:  Perform the primitive level "==" compare, including the hash    */
 /*            value processing.                                               */
@@ -2985,10 +2985,10 @@ RexxInteger *NumberString::strictEqual(RexxObject *other)
     {
         return TheFalseObject;
     }
-    return booleanObject((strictComp(other) == 0);
+    return booleanObject(strictComp(other) == 0);
 }
 
-RexxInteger *NumberString::strictNotEqual(RexxObject *other)
+RexxObject *NumberString::strictNotEqual(RexxObject *other)
 /******************************************************************************/
 /* Function:  Strict inequality operation                                     */
 /******************************************************************************/
@@ -2997,11 +2997,11 @@ RexxInteger *NumberString::strictNotEqual(RexxObject *other)
     {
         return TheTrueObject;
     }
-    return booleanObject((strictComp(other) != 0);
+    return booleanObject(strictComp(other) != 0);
 }
 
 
-RexxInteger *NumberString::strictGreaterThan(RexxObject *other)
+RexxObject *NumberString::strictGreaterThan(RexxObject *other)
 /******************************************************************************/
 /* Function:  strict ">>" operator                                            */
 /******************************************************************************/
@@ -3010,10 +3010,10 @@ RexxInteger *NumberString::strictGreaterThan(RexxObject *other)
     {
         return TheFalseObject;
     }
-    return booleanObject((strictComp(other) > 0);
+    return booleanObject(strictComp(other) > 0);
 }
 
-RexxInteger *NumberString::strictLessThan(RexxObject *other)
+RexxObject *NumberString::strictLessThan(RexxObject *other)
 /******************************************************************************/
 /* Function:  strict "<<" operator                                            */
 /******************************************************************************/
@@ -3025,7 +3025,7 @@ RexxInteger *NumberString::strictLessThan(RexxObject *other)
     return booleanObject(strictComp(other) < 0);
 }
 
-RexxInteger *NumberString::strictGreaterOrEqual(RexxObject *other)
+RexxObject *NumberString::strictGreaterOrEqual(RexxObject *other)
 /******************************************************************************/
 /* Function:  strict ">>=" operator                                           */
 /******************************************************************************/
@@ -3037,7 +3037,7 @@ RexxInteger *NumberString::strictGreaterOrEqual(RexxObject *other)
     return booleanObject(strictComp(other) >= 0);
 }
 
-RexxInteger *NumberString::strictLessOrEqual(RexxObject *other)
+RexxObject *NumberString::strictLessOrEqual(RexxObject *other)
 /******************************************************************************/
 /* Function:  strict "<<=" operator                                           */
 /******************************************************************************/

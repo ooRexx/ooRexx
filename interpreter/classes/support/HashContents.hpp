@@ -298,6 +298,7 @@ public:
     RexxInternalObject *removeItem(RexxInternalObject *value, RexxInternalObject *index);
     bool hasItem(RexxInternalObject *value, RexxInternalObject *index );
     bool hasItem(RexxInternalObject *item);
+    bool hasIndex(RexxInternalObject *index);
     RexxInternalObject *removeItem(RexxInternalObject *item);
     RexxInternalObject *nextItem(RexxInternalObject *value, RexxInternalObject *index);
     RexxInternalObject *get(RexxInternalObject *index);

@@ -624,6 +624,20 @@ ItemLink ListContents::getIndex(RexxInternalObject *target)
 
 
 /**
+ * Test if the collection contains an instance of the given
+ * item.
+ *
+ * @param target The target item.
+ *
+ * @return The index of the located item or NoMore if this cannot be found.
+ */
+bool ListContents::hasItem(RexxInternalObject *target)
+{
+    return getIndex(target) != NoMore;
+}
+
+
+/**
  * Remove an item from the collection.
  *
  * @param target The target item.

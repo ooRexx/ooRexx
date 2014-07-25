@@ -47,9 +47,9 @@
 #include "DirectoryClass.hpp"
 
 
+// TODO:  This needs a cleanup pass.
 void *SecurityManager::operator new (size_t size)
 {
-                                         /* get a new method object           */
     return new_object(size, T_SecurityManager);
 }
 

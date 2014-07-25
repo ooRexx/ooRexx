@@ -87,7 +87,7 @@ public:
 
     ArrayClass *source();
     RexxClass *findClass(RexxString *className);
-    BaseExecutable *setSourceObject(RexxSource *s);
+    BaseExecutable *setPackageObject(PackageClass *s);
     RexxString *getName() { return executableName; }
     void detachSource();
     static ArrayClass *processExecutableSource(RexxObject *source, RexxObject *position);

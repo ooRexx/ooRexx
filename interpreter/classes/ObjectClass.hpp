@@ -442,7 +442,6 @@ class RexxObject : public RexxInternalObject
     virtual HashCode     hash();
     virtual RexxString  *stringValue();
 
-    bool         isEqual(RexxInternalObject *);
     bool         isInstanceOf(RexxClass *);
     RexxObject  *isInstanceOfRexx(RexxClass *);
     MethodClass   *instanceMethod(RexxString *);
@@ -460,7 +459,7 @@ class RexxObject : public RexxInternalObject
     RexxObject  *send(RexxObject **, size_t);
     RexxObject  *sendWith(RexxObject *, ArrayClass *);
     MessageClass *startCommon(RexxObject *message, RexxObject **arguments, size_t argCount);
-    static void decodeMessageName(RexxObject *target, RexxObject *message, RexxString *&messageName, RexxObject *&startScope);
+    static void decodeMessageName(RexxObject *target, RexxObject *message, RexxString *&messageName, RexxClass *&startScope);
     RexxObject  *run(RexxObject **, size_t);
 
     void         messageSend(RexxString *, RexxObject **, size_t, ProtectedObject &);

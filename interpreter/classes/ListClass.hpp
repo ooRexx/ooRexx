@@ -132,7 +132,7 @@ class ListClass : public RexxObject
  protected:
 
     // internal support methods
-    void initialize(size_t capacity);
+    void initialize(size_t capacity = ListClass::DefaultListSize);
     ListContents::ItemLink validateIndex(RexxObject *index, size_t position);
     ListContents::ItemLink validateInsertionIndex(RexxObject *index, size_t position);
     ListContents::ItemLink requiredIndex(RexxObject *index, size_t position);

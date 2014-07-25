@@ -66,6 +66,7 @@ class VariableDictionary : public RexxInternalObject
          friend class VariableDictionary;
 
      public:
+         inline VariableIterator() {}
          inline ~VariableIterator() {}
 
          inline bool isAvailable()

@@ -120,9 +120,7 @@ class NativeActivation : public RexxActivationBase
 
     void   accessCallerContext();
     inline bool        isVariablePoolEnabled()   {return variablePoolEnabled;}
-    inline RexxString *getMessageName()   {return msgname;}
-    inline size_t      nextVariable()     {return nextvariable;}
-    inline RexxVariable *nextStem()       {return nextstem;}
+    inline RexxString *getMessageName()   {return messageName;}
     RexxObject *getContextStem(RexxString *name);
     RexxObject *getContextVariable(const char *name);
     void dropContextVariable(const char *name);
@@ -145,7 +143,7 @@ class NativeActivation : public RexxActivationBase
     virtual NumericSettings *getNumericSettings();
     virtual RexxObject *getReceiver();
     virtual SecurityManager *getSecurityManager();
-    RexxSource *getSourceObject();
+    PackageClass *getPackageObject();
     inline void setStackBase() { stackBase = true; }
     void reportSignatureError();
     void reportStemError(size_t position, RexxObject *object);
@@ -193,22 +191,22 @@ protected:
         TRAPPING_ACTIVATION,             // running a protected method call, such as an uninit
     } ActivationType;
 
-    Activity   *activity;            // current activity
-    NativeCode *code;                // the code object controlling the target
+    Activity       *activity;            // current activity
+    NativeCode     *code;                // the code object controlling the target
     RexxObject     *receiver;            // the object receiving the message
-    RexxString     *msgname;             // name of the message running
+    RexxString     *messageName;         // name of the message running
     RexxActivation *activation;          // parent activation
-    RexxObject    **arglist;             // copy of the argument list
-    ArrayClass      *argArray;           // optionally create argument array
-    IdentityTable   *savelist;           // list of saved objects
+    size_t          argCount;            // size of the argument list
+    RexxObject    **argList;             // copy of the argument list
+    ArrayClass     *argArray;            // optionally create argument array
+    IdentityTable  *saveList;            // list of saved objects
     RexxObject     *result;              // result from RexxRaise call
-    ActivationType  activationType;      // the type of activation
-    DirectoryClass  *conditionObj;       // potential condition object
+    ActivationType activationType;       // the type of activation
+    DirectoryClass *conditionObj;        // potential condition object
     SecurityManager *securityManager;    // our active security manager
                                          // running object variable pool
     VariableDictionary *objectVariables;
-    size_t          argcount;            // size of the argument list
-    int             object_scope;        // reserve/release state of variables
+    int             objectScope;         // reserve/release state of variables
     bool            stackBase;           // this is a stack base marker
     bool            trapErrors;          // we're trapping errors from external callers
     bool            trapConditions;      // trap any raised conditions

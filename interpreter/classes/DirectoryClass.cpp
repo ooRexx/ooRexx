@@ -49,6 +49,7 @@
 #include "RexxActivation.hpp"
 #include "ProtectedObject.hpp"
 #include "MethodArguments.hpp"
+#include "SupplierClass.hpp"
 
 // singleton class instance
 RexxClass *DirectoryClass::classInstance = OREF_NULL;
@@ -120,7 +121,7 @@ RexxObject *DirectoryClass::copy()
     // if we have a method table, make a copy of that too.
     if (methodTable != OREF_NULL)
     {
-        newObj->methodTable = (TableClass *)methodTable->copy();
+        newObj->methodTable = (StringTable *)methodTable->copy();
     }
     return newObj;
 }
@@ -163,21 +164,19 @@ SupplierClass *DirectoryClass::supplier()
         Protected<ArrayClass> indexes = new_array(methodTable->items());
         Protected<ArrayClass> values = new_array(methodTable->items());
 
-        size_t count = 1;
-
         HashContents::TableIterator iterator = methodTable->iterator();
 
-        for (; iterator.available(); iterator.next())
+        for (; iterator.isAvailable(); iterator.next())
         {
             RexxString *name = (RexxString *)iterator.index();
-            MethodClass *method = (MethodClass *)iterator.value_type();
+            MethodClass *method = (MethodClass *)iterator.value();
 
             ProtectedObject v;
             // run the method, using the directory as the receiver
             method->run(ActivityManager::currentActivity, this, name, NULL, 0, v);
 
-            indexes->put(name, count);
-            values->put((RexxObject *)v, i);
+            indexes->append(name);
+            values->append((RexxObject *)v);
         }
         // append the method table part to the existing supplier
         supplier->append(values, indexes);
@@ -195,14 +194,14 @@ SupplierClass *DirectoryClass::supplier()
 ArrayClass *DirectoryClass::allIndexes()
 {
     // get the base set
-    Protected<ArrayClass> indexes = content->allIndexes();
+    Protected<ArrayClass> indexes = contents->allIndexes();
 
     // if we have a method table, we need to append those indices also
     if (methodTable != OREF_NULL)
     {
         indexes->appendAll(methodTable->allIndexes());
     }
-    return result;
+    return indexes;
 }
 
 
@@ -215,13 +214,13 @@ ArrayClass *DirectoryClass::allIndexes()
 ArrayClass *DirectoryClass::allItems()
 {
     // get the base set
-    Protected<ArrayClass> itemArray = content->allIndexes();
+    Protected<ArrayClass> itemArray = contents->allIndexes();
     // have a method table? we need to run the methods an append to the result
     if (methodTable != OREF_NULL)
     {
         HashContents::TableIterator iterator = methodTable->iterator();
 
-        for (; iterator.available(); iterator.next())
+        for (; iterator.isAvailable(); iterator.next())
         {
             MethodClass *method = (MethodClass *)iterator.value();
             RexxString *name = (RexxString *)iterator.index();
@@ -270,10 +269,10 @@ bool DirectoryClass::hasIndex(RexxInternalObject *indexName)
  *
  * @return The removed object, if any.
  */
-RexxInternalObject *DirectoryClass::remove(RexxInternalObject *entryname)
+RexxInternalObject *DirectoryClass::remove(RexxInternalObject *entryName)
 {
     // the removed value might come from running a method,
-    RexxInternalObject *oldVal = get(entryname);
+    RexxInternalObject *oldVal = get(entryName);
 
     // remove from the contents (unconditionally)
     contents->remove(entryName);
@@ -323,7 +322,7 @@ void DirectoryClass::put(RexxInternalObject *value, RexxInternalObject *index)
     // a PUT replaces any existing value, including methods that may have been defined.
     if (methodTable != OREF_NULL)
     {
-        methodTable->remove(_index);
+        methodTable->remove(index);
     }
 
     // Just forward to the existing put method.
@@ -343,8 +342,7 @@ void DirectoryClass::empty()
         methodTable->empty();
     }
     // clear out the unknown method.
-    OrefSet(this, this->unknownMethod, OREF_NULL);
-    return OREF_NULL;
+    setField(unknownMethod, OREF_NULL);
 }
 
 
@@ -359,7 +357,7 @@ void DirectoryClass::empty()
 RexxInternalObject *DirectoryClass::getIndex(RexxInternalObject *target)
 {
     // retrieve this from the hash table
-    RexxObject *result = contents->getIndex(target);
+    RexxInternalObject *result = contents->getIndex(target);
     // not found, check the other tables
     if (result == OREF_NULL)
     {
@@ -372,7 +370,7 @@ RexxInternalObject *DirectoryClass::getIndex(RexxInternalObject *target)
 
             HashContents::TableIterator iterator = methodTable->iterator();
 
-            for (; iterator.available(); iterator.next())
+            for (; iterator.isAvailable(); iterator.next())
             {
                 // we need to run each method, looking for a value that matches
                 RexxString *name = (RexxString *)iterator.index();
@@ -416,7 +414,7 @@ bool DirectoryClass::hasItem(RexxInternalObject *target)
 RexxInternalObject *DirectoryClass::removeItem(RexxInternalObject *target)
 {
     // the lookup is more complicated, so just delegate to the index lookup code.
-    RexxIternalObject *i = getIndex(target);
+    RexxInternalObject *i = getIndex(target);
     // just use the retrieved index to remove.
     if (i != OREF_NULL)
     {
@@ -449,7 +447,7 @@ RexxInternalObject *DirectoryClass::setMethodRexx(RexxString *entryname, MethodC
     if (methodobj != OREF_NULL)
     {
         // make sure we have a method object for this.  The scope is .nil to indicate object scope.
-        methodobj = MethodClass::newMethodObject(entryname, methodobj, TheNilObject, IntegerTwo);
+        methodobj = MethodClass::newMethodObject(entryname, methodobj, (RexxClass *)TheNilObject, IntegerTwo);
 
         // the unknown method?  We keep that in a special place
         if (entryname->strCompare(CHAR_UNKNOWN))
@@ -461,7 +459,7 @@ RexxInternalObject *DirectoryClass::setMethodRexx(RexxString *entryname, MethodC
             // create the table if this is the first addition
             if (methodTable == OREF_NULL)
             {
-                setField(methodTable, new_table());
+                setField(methodTable, new_string_table());
             }
             // and add the method to the table
             methodTable->put(methodobj, entryname);
@@ -508,7 +506,7 @@ RexxInternalObject *DirectoryClass::methodTableValue(RexxInternalObject *index)
         if (method != OREF_NULL)
         {
             ProtectedObject v;
-            method->run(ActivityManager::currentActivity, this, index, NULL, 0, v);
+            method->run(ActivityManager::currentActivity, this, (RexxString *)index, NULL, 0, v);
             return v;
 
         }
@@ -527,7 +525,7 @@ RexxInternalObject *DirectoryClass::methodTableValue(RexxInternalObject *index)
 RexxInternalObject *DirectoryClass::unknownValue(RexxInternalObject *index)
 {
     // if we have an UNKNOWN method, run it and return the result value.
-    if (unknown_Method != OREF_NULL)
+    if (unknownMethod != OREF_NULL)
     {
         ProtectedObject v;
         unknownMethod->run(ActivityManager::currentActivity, this, OREF_UNKNOWN, (RexxObject **)&index, 1, v);
@@ -556,7 +554,7 @@ RexxObject *DirectoryClass::newRexx(RexxObject **init_args, size_t argCount)
     // create the new identity table item (this version does not have a backing contents yet).
     Protected<DirectoryClass> temp = new DirectoryClass(true);
     // finish setting this up.
-    classThis->completeNewObject(temp, args, argCount);
+    classThis->completeNewObject(temp, init_args, argCount);
 
     // make sure this has been completely initialized
     temp->initialize();

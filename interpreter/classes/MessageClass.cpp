@@ -92,7 +92,7 @@ void MessageClass::createInstance()
  * @param scope   The starting scope (can be OREF_NULL).
  * @param _args   An array of arguments to the message.
  */
-MessageClass::MessageClass(RexxObject *_target, RexxString *msgName, RexxObject *scope, ArrayClass *_args)
+MessageClass::MessageClass(RexxObject *_target, RexxString *msgName, RexxClass *scope, ArrayClass *_args)
 {
     // default target is the specified target
     receiver = _target;
@@ -303,7 +303,7 @@ RexxObject *MessageClass::send(RexxObject *_receiver)
     // validate the starting scope if we've been given one
     if (startscope != OREF_NULL)
     {
-        if (!receiver->behaviour->checkScope(startscope))
+        if (!receiver->behaviour->hasScope((RexxClass *)startscope))
         {
             reportException(Error_Incorrect_method_array_noclass, IntegerTwo);
         }
@@ -517,8 +517,6 @@ ArrayClass *MessageClass::arguments()
  *
  * @return A new instance of the .Message class.
  */
-
-// TODO: finish cleaning this up...got some error checking issues.
 RexxObject *MessageClass::newRexx(RexxObject **msgArgs, size_t argCount)
 {
     // this class is defined on the object class, but this is actually attached
@@ -541,7 +539,7 @@ RexxObject *MessageClass::newRexx(RexxObject **msgArgs, size_t argCount)
     RexxObject *_message  = msgArgs[1];
     requiredArgument(_message, ARG_TWO);
     RexxString *msgName;
-    RexxObject *_startScope;
+    RexxClass *_startScope;
     // decode the message argument into name and scope
     RexxObject::decodeMessageName(_target, _message, msgName, _startScope);
 

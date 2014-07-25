@@ -363,7 +363,7 @@ MethodClass *MethodClass::newMethodObject(RexxString *pgmname, RexxObject *sourc
     // create a method and give it the target scope
     MethodClass *method = LanguageParser::createMethod(pgmname, newSourceArray, sourceContext);
     method->setScope(scope);
-    return
+    return method;
 }
 
 

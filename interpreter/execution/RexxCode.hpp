@@ -46,6 +46,7 @@
 
 #include "BaseCode.hpp"
 #include "RexxLocalVariables.hpp"
+#include "PackageClass.hpp"
 
 /**
  * The fundamental unit of Rexx code execution.  This
@@ -74,22 +75,22 @@ class RexxCode : public BaseCode
    RexxObject      *setSecurityManager(RexxObject *);
    RexxString      *getProgramName();
 
-   inline PackageClass *getPackageObject() { return source; }
+   inline PackageClass *getPackageObject() { return package; }
    inline RexxInstruction *getFirstInstruction() { return start; }
-   inline DirectoryClass   *getLabels() { return labels; }
+   inline StringTable *getLabels() { return labels; }
    inline size_t getMaxStackSize() { return maxStack; }
    inline size_t getLocalVariableSize() { return vdictSize; }
-   inline StringTable *getLocalRoutines() { return source->getLocalRoutines(); }
-   inline StringTable *getPublicRoutines() { return source->getPublicRoutines(); }
-   inline bool isTraceable() { return source->isTraceable(); }
-   inline RexxString *extract(SourceLocation &l) { return source->extract(l); }
-   inline SecurityManager *getSecurityManager() { return source->getSecurityManager(); }
-   inline void        install(RexxActivation *activation) { source->install(activation); }
-   inline StringTable *getMethods() { return source->getMethods(); };
-   inline StringTable *getRoutines() { return source->getRoutines(); };
-   inline RoutineClass *findRoutine(RexxString *n) { return source->findRoutine(n); }
-   inline RexxString *resolveProgramName(Activity *activity, RexxString *name) { return source->resolveProgramName(activity, name); }
-   inline void        mergeRequired(Package *s) { package->mergeRequired(s); }
+   inline StringTable *getLocalRoutines() { return package->getLocalRoutines(); }
+   inline StringTable *getPublicRoutines() { return package->getPublicRoutines(); }
+   inline bool isTraceable() { return package->isTraceable(); }
+   inline RexxString *extract(SourceLocation &l) { return package->extract(l); }
+   inline SecurityManager *getSecurityManager() { return package->getSecurityManager(); }
+   inline void        install(RexxActivation *activation) { package->install(activation); }
+   inline StringTable *getMethods() { return package->getMethods(); };
+   inline StringTable *getRoutines() { return package->getRoutines(); };
+   inline RoutineClass *findRoutine(RexxString *n) { return package->findRoutine(n); }
+   inline RexxString *resolveProgramName(Activity *activity, RexxString *name) { return package->resolveProgramName(activity, name); }
+   inline void        mergeRequired(PackageClass *s) { package->mergeRequired(s); }
           RexxCode *interpret(RexxString *source, size_t lineNumber);
 
    // overrides for BaseCode classes

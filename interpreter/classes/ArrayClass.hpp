@@ -401,6 +401,20 @@ inline ArrayClass *new_array(size_t s, RexxInternalObject **o)
 
 
 /**
+ * Create an array populated with objects from another source.
+ *
+ * @param s      The number of objects.
+ * @param o      The pointer to the set of objects.
+ *
+ * @return A new array object.
+ */
+inline ArrayClass *new_array(size_t s, RexxObject **o)
+{
+    return new (s) ArrayClass((RexxInternalObject **)o, s);
+}
+
+
+/**
  * Create a new array with one item.
  *
  * @param o1     The object to add to the array.

@@ -60,8 +60,9 @@ public:
     inline SecurityManager(RexxObject *m) { manager = m; }
     inline SecurityManager(RESTORETYPE restoreType) { ; };
 
-    void         live(size_t);
-    void         liveGeneral(MarkReason reason);
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+
     RexxObject  *checkLocalAccess(RexxString *index);
     RexxObject  *checkEnvironmentAccess(RexxString *index);
     bool         checkProtectedMethod(RexxObject *target, RexxString *messageName, size_t count, RexxObject **arguments, ProtectedObject &result);
@@ -72,8 +73,8 @@ public:
 
 
 protected:
-    bool         callSecurityManager(RexxString *methodName, DirectoryClass *arguments);
 
+    bool         callSecurityManager(RexxString *methodName, DirectoryClass *arguments);
     RexxObject *manager;       // the wrappered manager object
 };
 

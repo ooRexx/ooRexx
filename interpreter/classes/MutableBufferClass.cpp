@@ -1289,7 +1289,7 @@ MutableBuffer *MutableBuffer::translate(RexxString *tableo, RexxString *tablei, 
  *
  * @return True if the two regions match, false for any mismatch.
  */
-RexxInteger *MutableBuffer::match(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_)
+RexxObject *MutableBuffer::match(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_)
 {
     stringsize_t _start = positionArgument(start_, ARG_ONE);
     // the start position must be within the string bounds
@@ -1332,7 +1332,7 @@ RexxInteger *MutableBuffer::match(RexxInteger *start_, RexxString *other, RexxIn
  *
  * @return True if the two regions match, false for any mismatch.
  */
-RexxInteger *MutableBuffer::caselessMatch(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_)
+RexxObject *MutableBuffer::caselessMatch(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_)
 {
     stringsize_t _start = positionArgument(start_, ARG_ONE);
     // the start position must be within the string bounds
@@ -1424,7 +1424,7 @@ bool MutableBuffer::primitiveCaselessMatch(stringsize_t _start, RexxString *othe
  * @return true if the character at the give position is any of the characters,
  *         false if none of them match.
  */
-RexxInteger *MutableBuffer::matchChar(RexxInteger *position_, RexxString *matchSet)
+RexxObject *MutableBuffer::matchChar(RexxInteger *position_, RexxString *matchSet)
 {
     stringsize_t position = positionArgument(position_, ARG_ONE);
     // the start position must be within the string bounds
@@ -1460,7 +1460,7 @@ RexxInteger *MutableBuffer::matchChar(RexxInteger *position_, RexxString *matchS
  * @return true if the character at the give position is any of the characters,
  *         false if none of them match.
  */
-RexxInteger *MutableBuffer::caselessMatchChar(RexxInteger *position_, RexxString *matchSet)
+RexxObject *MutableBuffer::caselessMatchChar(RexxInteger *position_, RexxString *matchSet)
 {
     stringsize_t position = positionArgument(position_, ARG_ONE);
     // the start position must be within the string bounds

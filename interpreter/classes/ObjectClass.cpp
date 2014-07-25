@@ -57,6 +57,7 @@
 #include "ProtectedObject.hpp"
 #include "PointerClass.hpp"
 #include "MethodArguments.hpp"
+#include "MethodDictionary.hpp"
 
 
 // singleton class instance
@@ -160,25 +161,10 @@ RexxObject * RexxInternalObject::makeProxy(Envelope *envelope)
  *
  * @param type   The internal type number.
  */
-void setObjectType(size_t type)
+void RexxInternalObject::setObjectType(size_t type)
 {
     setVirtualFunctions(memoryObject.virtualFunctionTable[type]);
     setBehaviour(RexxBehaviour::getPrimitiveBehaviour(type));
-}
-
-
-/**
- * primitive level equality method used by the hash collection
- * classes for determining equality.  The comparison is
- * done based on object identity (pointer value).
- *
- * @param other  The comparison object.
- *
- * @return true if the objects are equal, false otherwise.
- */
-bool RexxInternalObject::isEqual(RexxObject *other )
-{
-    return ((RexxObject *)this) == other;/* simple identity equality          */
 }
 
 
@@ -191,7 +177,7 @@ bool RexxInternalObject::isEqual(RexxObject *other )
  *
  * @return true if the objects compare equal, false otherwise.
  */
-bool RexxObject::isEqual(RexxObject *other)
+bool RexxInternalObject::isEqual(RexxInternalObject *other)
 {
     // if this is not a subclass, we can just directly compare the pointers.
     if (isBaseClass())
@@ -203,7 +189,7 @@ bool RexxObject::isEqual(RexxObject *other)
     else
     {
         ProtectedObject result;
-        sendMessage(OREF_STRICT_EQUAL, other, result);
+        ((RexxObject *)this)->sendMessage(OREF_STRICT_EQUAL, (RexxObject *)other, result);
         return ((RexxObject *)result)->truthValue(Error_Logical_value_method);
     }
 }
@@ -245,7 +231,7 @@ wholenumber_t RexxInternalObject::compareTo(RexxInternalObject *other )
 {
     ProtectedObject result;
 
-    ((RexxObject *)this)->sendMessage(OREF_COMPARETO, other, result);
+    ((RexxObject *)this)->sendMessage(OREF_COMPARETO, (RexxObject *)other, result);
     // the result is required
     if ((RexxObject *)result == OREF_NULL)
     {
@@ -332,7 +318,7 @@ MethodClass *RexxObject::instanceMethod(RexxString *method_name)
     // the name must be a string...and we use it in upper case
     method_name = stringArgument(method_name, ARG_ONE)->upper();
     // retrieve the method from the dictionary
-    MethodClass *method_object = (MethodClass *)behaviour->getMethodDictionary()->stringGet(method_name);
+    MethodClass *method_object = (MethodClass *)behaviour->getMethodDictionary()->methodLookup(method_name);
     return (MethodClass *)resultOrNil(method_object);
 }
 
@@ -565,11 +551,12 @@ RexxObject *RexxObject::copy()
     // Instead of calling new_object and memcpy, ask the memory object to make
     // a copy of ourself.  This way, any header information can be correctly
     // initialized by memory.
-    Protected<RexxObject> *newObj = clone();
+    RexxObject *newObj = clone();
+    ProtectedObject p(newObj);
 
     // do we have object variables?  We need to give that opject
     // a copy of the variables
-    copyObjectVariables(newObj);
+    copyObjectVariables((RexxObject *)newObj);
 
     // have instance methods?
     if (behaviour->hasInstanceMethods())
@@ -794,7 +781,7 @@ RexxObject *RexxObject::sendMessage(RexxString *message, RexxObject *argument1, 
  */
 void RexxObject::sendMessage(RexxString *message, ArrayClass  *arguments, ProtectedObject &result)
 {
-    messageSend(message, arguments->data(), arguments->size(), result);
+    messageSend(message, (RexxObject **)arguments->data(), arguments->size(), result);
 }
 
 
@@ -1032,7 +1019,7 @@ void RexxObject::processUnknown(RexxString *messageName, RexxObject **arguments,
     }
 
     // we need to pass the arguments to the array as real arguments
-    Protected<ArrayClass> argumentArray = new_array(arguments, count);
+    Protected<ArrayClass> argumentArray = new_array(count, arguments);
 
     // we need the actual arguments in a C array.  First argument is
     // the message name, second is the array of arguments
@@ -1240,7 +1227,7 @@ ArrayClass *RexxInternalObject::makeArray()
     }
     else
     {
-        return (ArrayClass *)resultOrNil(((RexxObject *this)->sendMessage(OREF_REQUEST, OREF_ARRAYSYM));
+        return (ArrayClass *)resultOrNil(((RexxObject *)this)->sendMessage(OREF_REQUEST, OREF_ARRAYSYM));
     }
 }
 
@@ -1357,7 +1344,7 @@ RexxString *RexxInternalObject::requestStringNoNOSTRING()
  * @return The converted string value or the .nil if this did
  *         not convert.
  */
-RexxObject *RexxInternalObject::requiredString()
+RexxString *RexxInternalObject::requiredString()
 {
     // base classes can handle directly
     if (isBaseClass())
@@ -1375,7 +1362,7 @@ RexxObject *RexxInternalObject::requiredString()
             // force this to be a real string value.
             string_value = ((RexxObject *)string_value)->primitiveMakeString();
         }
-        return string_value;
+        return (RexxString *)string_value;
     }
 }
 
@@ -1421,7 +1408,7 @@ RexxString *RexxInternalObject::requiredString(const char *name)
     // if this did not convert, give the error message
     if (string_value == TheNilObject)
     {
-        reportException(Error_Invalid_argument_string, position);
+        reportException(Error_Invalid_argument_string, name);
     }
 
     // we should have a real string object here.
@@ -1464,7 +1451,7 @@ RexxInteger *RexxInternalObject::requestInteger(size_t precision )
 RexxInteger *RexxInternalObject::requiredInteger(size_t position, size_t precision)
 {
     // do the common conversion
-    RexxInteger *result = requiredInteger(precision);
+    RexxInteger *result = integerValue(precision);
 
     // if didn't convert, this is an error
     if (result == (RexxInteger *)TheNilObject)
@@ -1826,7 +1813,7 @@ RexxObject  *RexxObject::requestRexx(RexxString *className)
 RexxObject *RexxObject::sendWith(RexxObject *message, ArrayClass *arguments)
 {
     RexxString *messageName;
-    RexxObject *startScope;
+    RexxClass *startScope;
     // decode and validate the message input
     decodeMessageName(this, message, messageName, startScope);
     arguments = arrayArgument(arguments, ARG_TWO);
@@ -1864,7 +1851,7 @@ RexxObject *RexxObject::send(RexxObject **arguments, size_t argCount)
     }
 
     RexxString *messageName;
-    RexxObject *startScope;
+    RexxClass *startScope;
     // decode and validate the message input
     decodeMessageName(this, arguments[0], messageName, startScope);
 
@@ -1940,7 +1927,7 @@ MessageClass *RexxObject::start(RexxObject **arguments, size_t argCount)
 MessageClass *RexxObject::startCommon(RexxObject *message, RexxObject **arguments, size_t argCount)
 {
     RexxString *messageName;
-    RexxObject *startScope;
+    RexxClass *startScope;
     // decode and validate the message input
     decodeMessageName(this, message, messageName, startScope);
 
@@ -1962,7 +1949,7 @@ MessageClass *RexxObject::startCommon(RexxObject *message, RexxObject **argument
  * @param messageName
  * @param startScope
  */
-void RexxObject::decodeMessageName(RexxObject *target, RexxObject *message, RexxString *&messageName, RexxObject *&startScope)
+void RexxObject::decodeMessageName(RexxObject *target, RexxObject *message, RexxString *&messageName, RexxClass *&startScope)
 {
     // clear the starting scope
     startScope = OREF_NULL;
@@ -1980,8 +1967,8 @@ void RexxObject::decodeMessageName(RexxObject *target, RexxObject *message, Rexx
         }
         // get the message as a string in uppercase.
         messageName = stringArgument(messageArray->get(1), ARG_ONE)->upper();
-        startScope = messageArray->get(2);
-        requiredArgument(startScope, ARG_TWO);
+        startScope = (RexxClass *)messageArray->get(2);
+        classArgument(startScope, TheClassClass, "SCOPE");
 
         // validate the message creator now
         RexxActivationBase *activation = ActivityManager::currentActivity->getTopStackFrame();

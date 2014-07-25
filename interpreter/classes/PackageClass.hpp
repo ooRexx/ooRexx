@@ -43,6 +43,11 @@
 #ifndef Included_PackageClass
 #define Included_PackageClass
 
+#include "SecurityManager.hpp"
+
+class ProgramSource;
+
+
 /**
  * An object that represents the source context for a
  * Method or Routine object.

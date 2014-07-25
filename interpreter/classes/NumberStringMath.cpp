@@ -59,7 +59,7 @@ NumberString *NumberString::maxMin(RexxObject **args, size_t argCount, unsigned 
 {
     size_t arg;
     NumberString *compobj, *maxminobj;
-    RexxInteger *compResult;
+    RexxObject *compResult;
     RexxObject *nextObject;
     size_t saveFuzz, saveDigits;
 
@@ -104,6 +104,7 @@ NumberString *NumberString::maxMin(RexxObject **args, size_t argCount, unsigned 
                    /* digits                            */
             compobj = compobj->prepareOperatorNumber(saveDigits, saveDigits, ROUND);
 
+            // TODO:  just call the comp() method to do this.
             /* Just compare the two NumberStrings*/
             /*  See if new number is greater than*/
             /* See if we have a new MAX          */

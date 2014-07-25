@@ -47,6 +47,7 @@
 #define Included_DoBlockComponent
 
 #include "RexxCore.h"
+#include "ExpressionBaseVariable.hpp"
 
 class RexxDoBlock;
 

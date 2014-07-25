@@ -3678,78 +3678,88 @@ void RexxActivation::externalTraceOff()
 }
 
 
-bool RexxActivation::debugPause(RexxInstruction * instr)
-/******************************************************************************/
-/* Function:  Process an individual debug pause for an instruction            */
-/******************************************************************************/
+/**
+ * Process an individual debug pause for an instruction
+ *
+ * @return true if the instruction should re-execute, false otherwise.
+ */
+bool RexxActivation::doDebugPause()
 {
-    if (debug_pause)               /* instruction during debug pause?   */
+    // already in debug pause?  just skip pausing
+    if (debugPause)
     {
-        return false;                      /* just get out quick                */
+        return false;
     }
 
+    // asked to bypass...turn this off for the next time.
     if (settings.flags&debug_bypass)
     {
-        /* turn off for the next time        */
         settings.flags &= ~debug_bypass;
     }
-    /* debug pauses suppressed?          */
+    // debug pauses suppressed?  Reduce the count and turn debug pausing
+    // back on for the next time.
     else if (settings.trace_skip > 0)
     {
-        settings.trace_skip--;       /* account for this one              */
-        if (settings.trace_skip == 0)/* gone to zero?                     */
+        settings.trace_skip--;
+        if (settings.trace_skip == 0)
         {
-            /* turn tracing back on again (this  */
-            /* ensures the next pause also has   */
-            /* the instruction traced            */
+            // turn tracing back on again (this
+            // ensures the next pause also has
+            // the instruction traced
             settings.flags &= ~trace_suppress;
         }
     }
+    // normal pause
     else
     {
-        if (!code->isTraceable())    /* if we don't have real source      */
+        // if we don't have real source code for this instruction, we can't pause.
+        if (!code->isTraceable())
         {
-            return false;                    /* just ignore for this              */
+            return false;
         }
-                                             /* newly into debug mode?            */
+        // first time paused?
         if (!(settings.flags&debug_prompt_issued))
         {
-            /* write the initial prompt          */
+            // write the initial prompt and turn off for the next time.
             activity->traceOutput(this, SystemInterpreter::getMessageText(Message_Translations_debug_prompt));
-            /* remember we've issued this        */
             settings.flags |= debug_prompt_issued;
         }
-        RexxInstruction *currentInst = next;          /* save the next location target     */
+        // save the next instruction in case we're asked to re-execute
+        RexxInstruction *currentInst = next;
         for (;;)
         {
-            RexxString *response;
-            /* read a line from the screen       */
-            response = activity->traceInput(this);
-
-            if (response->getLength() == 0)       /* just a "null" line entered?       */
+            RexxString *response = activity->traceInput(this);
+            // a null line just advances
+            if (response->getLength() == 0)
             {
-                break;                         /* just end the pausing              */
+                break;
             }
-                                               /* a re-execute request?             */
+            // a re-execute request ("=")?
+            // we reset the next instruction and return an indicator that
+            // we need to re-execute.  Some instructions (e.g., block instructions)
+            // need to undo some side effects of execution.
             else if (response->getLength() == 1 && response->getChar(0) == '=')
             {
-                next = current;    /* reset the execution pointer       */
-                return true;                   /* finished (inform block instrs)    */
+                next = current;
+                return true;
             }
             else
             {
-                debugInterpret(response);/* go execute this                   */
-                if (currentInst != next) /* flow of control change?           */
+                // interpret the instruction
+                debugInterpret(response);
+                // if we've had a flow of control change, we're done.
+                if (currentInst != next)
                 {
-                    break;                       /* end of this pause                 */
+                    break;
                 }
-                                                 /* has the use changed the trace     */
-                                                 /* setting on us?                    */
+                // the trace setting may have changed on us.
                 else if (settings.flags&debug_bypass)
                 {
-                    /* turn off for the next time        */
+                    // turn off the bypass setting.  Is for situations where a
+                    // trace in normal code turns on debug.  The debug pause is
+                    // skipped until the next instruction
                     settings.flags &= ~debug_bypass;
-                    break;                       /* we also skip repausing            */
+                    break;
                 }
             }
         }

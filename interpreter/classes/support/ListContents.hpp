@@ -97,7 +97,7 @@ class ListContents : public RexxInternalObject
     void removeItem(ItemLink item);
 
     RexxInternalObject *get(ItemLink index);
-    RexxInternalObject *put(RexxInternalObject value, ItemLink index);
+    RexxInternalObject *put(RexxInternalObject *value, ItemLink index);
     RexxInternalObject *remove(ItemLink index);
     RexxInternalObject *getFirstItem();
     RexxInternalObject *getLastItem();
@@ -109,6 +109,7 @@ class ListContents : public RexxInternalObject
     ArrayClass *allIndexes();
     void empty();
     ItemLink getIndex(RexxInternalObject *target);
+    bool hasItem(RexxInternalObject *target);
     RexxInternalObject *removeItem(RexxInternalObject *target);
     SupplierClass *supplier();
     ArrayClass *weakReferenceArray();
@@ -230,6 +231,9 @@ class ListContents : public RexxInternalObject
     {
         return i < totalSize && isAvailable(i);
     }
+
+    inline size_t items() { return itemCount; }
+    inline bool isEmpty() { return itemCount == 0; }
 
  protected:
 
