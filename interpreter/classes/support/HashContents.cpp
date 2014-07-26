@@ -1045,6 +1045,40 @@ void HashContents::merge(HashCollection *target)
 
 
 /**
+ * Put the contents of this collection into another collection.
+ * This is different than merge, which does not replace existing
+ * items.
+ *
+ * @param target The target collection contents.
+ */
+void HashContents::putAll(HashCollection *target)
+{
+
+    // since adding any item to the target collection might cause a size
+    // expansion, let's give the target some notice about how many items
+    // we're going to add so that the expansion can be handled up front.
+    target->ensureCapacity(itemCount);
+
+    // loop through all of the bucket items
+    for (size_t i = 0; i < bucketSize; i++)
+    {
+        // the current bucket is the search start, and we always
+        // clear out the previous value for each chain start
+        ItemLink position = i;
+
+        // ok, run the chain searching for an index match.
+        while (position != NoMore && isInUse(position))
+        {
+            // poke this item into the other table
+            target->put(entryValue(position), entryIndex(position));
+            // step to the next link in the chain
+            position = nextEntry(position);
+        }
+    }
+}
+
+
+/**
  * Merge a hash table into another hash table after a table
  * expansion.
  *

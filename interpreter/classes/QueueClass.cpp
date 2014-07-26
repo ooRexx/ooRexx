@@ -72,7 +72,7 @@ void QueueClass::createInstance()
 void *QueueClass::operator new(size_t size, size_t capacity, size_t maxSize)
 {
     // we're really allocating an array item
-    return (void *)RexxArray::allocateNewObject(size, capacity, maxSize, T_Queue);
+    return (void *)ArrayClass::allocateNewObject(size, capacity, maxSize, T_Queue);
 }
 
 
@@ -152,7 +152,7 @@ RexxObject *QueueClass::queueRexx(RexxInternalObject *item)
  */
 RexxInternalObject *QueueClass::peek()
 {
-    return firstItem();
+    return getFirstItem();
 }
 
 
@@ -176,7 +176,7 @@ RexxObject *QueueClass::putRexx(RexxInternalObject *value, RexxObject *index)
 
     // Validate the index argument, but don't allow expansion.
     size_t position;
-    if (!validateIndex(arguments + 1, argCount - 1, ARG_TWO, IndexAccess, position))
+    if (!validateIndex(&index, 1, ARG_TWO, IndexAccess, position))
     {
         reportException(Error_Incorrect_method_index, index);
     }
@@ -201,10 +201,10 @@ RexxObject *QueueClass::putRexx(RexxInternalObject *value, RexxObject *index)
  *
  * @return Always return nothing.
  */
-RexxInternalObject *QueueClass::removeRexx(RexxObject **arguments, size_t argCount)
+RexxInternalObject *QueueClass::removeRexx(RexxObject *index)
 {
     // just reroute to the real operation
-    return deleteRexx(arguments, argCount);
+    return deleteRexx(index);
 }
 
 
@@ -225,7 +225,7 @@ RexxObject *QueueClass::initRexx(RexxObject *initialSize)
     // argument.  We will set the capacity here, even if it means an immediate expansion
 
     // the capacity is optional, but must be a positive numeric value
-    size_t capacity = optionalLengthArgument(initialSize, DefaultListSize, ARG_ONE);
+    size_t capacity = optionalLengthArgument(initialSize, DefaultArraySize, ARG_ONE);
     ensureSpace(capacity);
     return OREF_NULL;
 }
@@ -247,7 +247,7 @@ RexxObject *QueueClass::newRexx(RexxObject **init_args, size_t argCount)
     // any methods on this object from this method.
     RexxClass *classThis = (RexxClass *)this;
 
-    Protected<RexxObject> *newObj = new QueueClass;
+    Protected<QueueClass> newObj = new QueueClass;
 
     // handle Rexx class completion
     classThis->completeNewObject(newObj, init_args, argCount);

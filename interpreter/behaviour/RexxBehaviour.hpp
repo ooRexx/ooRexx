@@ -77,15 +77,16 @@ class RexxBehaviour : public RexxInternalObject
     void         addInstanceMethod(RexxString *, MethodClass *);
     void         removeInstanceMethod(RexxString *);
     MethodClass *methodObject(RexxString *);
-    MethodClass *methodLookup( RexxString *);
-    MethodClass *getMethod( RexxString *);
+    MethodClass *methodLookup(RexxString *);
+    bool         hasMethod(RexxString *name)  { return methodLookup(name) != OREF_NULL; }
+    MethodClass *getMethod(RexxString *);
     RexxObject  *deleteMethod(RexxString *);
     void         restore(RexxBehaviour *);
     RexxClass   *restoreClass();
-    RexxObject  *superScope( RexxObject *);
-    MethodClass *superMethod(RexxString *, RexxObject *);
+    RexxClass   *superScope(RexxClass *);
+    MethodClass *superMethod(RexxString *, RexxClass *);
     void         subclass(RexxBehaviour *);
-    SupplierClass *getMethods(RexxObject *scope);
+    SupplierClass *getMethods(RexxClass *scope);
 
     void        resolveNonPrimitiveBehaviour();
 

@@ -492,14 +492,24 @@ void HashCollection::add(RexxInternalObject *value, RexxInternalObject *index)
  *
  * @return Nothing.
  */
-void HashCollection::merge(HashCollection * target)
+void HashCollection::merge(HashCollection *target)
 {
-    // give the target collection a nudge about how many items we
-    // wish to add.  This will speed up the merger by potentially reducing
-    // the number of reallocations required.
-    target->ensureCapacity(contents->items());
     // and do the merger.
     return contents->merge(target);
+}
+
+
+/**
+ * put all items a collection into another similar collection.
+ *
+ * @param target The merge target.
+ *
+ * @return Nothing.
+ */
+void HashCollection::putAll(HashCollection *target)
+{
+    // and do the merger.
+    return contents->putAll(target);
 }
 
 

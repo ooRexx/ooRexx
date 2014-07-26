@@ -72,7 +72,7 @@ class ExpressionStack
 
     inline void setFrame(RexxInternalObject **frames, size_t items) { stack = frames; size = items; top = stack; *top = OREF_NULL; }
 
-    inline void send(RexxString *message, RexxObject *scope, size_t count, ProtectedObject &result) {
+    inline void send(RexxString *message, RexxClass *scope, size_t count, ProtectedObject &result) {
                    ((RexxObject *)(*(top - count)))->messageSend(message, arguments(count), count, scope, result); };
     inline void send(RexxString *message, size_t count, ProtectedObject &result) {
                    ((RexxObject *)(*(top - count)))->messageSend(message, arguments(count), count, result); };

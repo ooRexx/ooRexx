@@ -218,7 +218,7 @@ RexxObject *RoutineClass::callWithRexx(ArrayClass *args)
     args = arrayArgument(args, ARG_ONE);
 
     ProtectedObject result;
-    code->call(ActivityManager::currentActivity, this, executableName, args->data(), args->size(), result);
+    code->call(ActivityManager::currentActivity, this, executableName, args->messageArgs(), args->messageArgCount(), result);
     return (RexxObject *)result;
 }
 
@@ -239,7 +239,7 @@ void RoutineClass::runProgram(Activity *activity, RexxString * calltype,
     RexxString * environment, RexxObject **arguments, size_t       argCount,
     ProtectedObject &result)
 {
-    code->call(activity, this, executableName, arguments, argCount, calltype, environment, PROGRAMCALL, result);
+    code->call(activity, this, executableName, arguments, argCount, calltype, environment, RexxActivation::PROGRAMCALL, result);
 }
 
 
@@ -255,7 +255,7 @@ void RoutineClass::runProgram(Activity *activity, RexxString * calltype,
 void RoutineClass::runProgram(Activity *activity, RexxObject **arguments,
     size_t argCount, ProtectedObject &result)
 {
-    code->call(activity, this, executableName, arguments, argCount, OREF_COMMAND, activity->getInstance()->getDefaultEnvironment(), PROGRAMCALL, result);
+    code->call(activity, this, executableName, arguments, argCount, OREF_COMMAND, activity->getInstance()->getDefaultEnvironment(), RexxActivation::PROGRAMCALL, result);
 }
 
 
@@ -418,7 +418,7 @@ RoutineClass *RoutineClass::restore(RexxString *fileName, BufferClass *buffer)
     // this should be valid...try to restore.
     RoutineClass *routine = restore(buffer, metaData->getImageData(), metaData->getImageSize());
     // change the program name to match the file this was restored from
-    routine->getSourceObject()->setProgramName(fileName);
+    routine->getPackageObject()->setProgramName(fileName);
     return routine;
 }
 
@@ -466,7 +466,7 @@ RoutineClass *RoutineClass::restore(RXSTRING *inData, RexxString *name)
     // if this restored properly (and it should), reconnect it to the source file
     if (routine != OREF_NULL)
     {
-        routine->getSourceObject()->setProgramName(name);
+        routine->getPackageObject()->setProgramName(name);
     }
     return routine;
 }

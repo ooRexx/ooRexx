@@ -43,20 +43,24 @@
 /******************************************************************************/
 #include "RexxCore.h"
 #include "ArrayClass.hpp"
-#include "StringTable.hpp"
+#include "StringTableClass.hpp"
 #include "ProtectedObject.hpp"
 #include "PackageClass.hpp"
 #include "RoutineClass.hpp"
 #include "InterpreterInstance.hpp"
 #include "PackageManager.hpp"
 #include "MethodArguments.hpp"
+#include "ProgramSource.hpp"
+#include "RexxCode.hpp"
+#include "SysFileSystem.hpp"
+#include "RexxActivation.hpp"
+#include "DirectoryClass.hpp"
+#include "LibraryDirective.hpp"
+#include "RequiresDirective.hpp"
+#include "ClassDirective.hpp"
 
 // singleton class instance
 RexxClass *PackageClass::classInstance = OREF_NULL;
-
-// TODO:  Get rid of the SourceFile class and move all of that code into the package
-// class.  It doesn't make sense any more to have the separate class now that
-// the parsing code has been moved out.  Really simplifies a few things.
 
 
 /**
@@ -114,20 +118,20 @@ PackageClass *PackageClass::newRexx(RexxObject **init_args, size_t argCount)
     RexxClass *classThis = (RexxClass *)this;
 
     RexxObject *pgmname;                 // source name
-    RexxObject *_source;                 //  Array or string object
+    RexxObject *programSource;           //  Array or string object
     size_t initCount = 0;                // count of arguments we pass along
 
     Activity *activity = ActivityManager::currentActivity;
     InterpreterInstance *instance = activity->getInstance();
 
     // parse the arguments
-    RexxClass::processNewArgs(init_args, argCount, &init_args, &initCount, 2, (RexxObject **)&pgmname, (RexxObject **)&_source);
+    RexxClass::processNewArgs(init_args, argCount, &init_args, &initCount, 2, (RexxObject **)&pgmname, (RexxObject **)&programSource);
 
     PackageClass *package = OREF_NULL;
 
     // get the package name as a string
     RexxString *nameString = stringArgument(pgmname, "name");
-    if (_source == OREF_NULL)
+    if (programSource == OREF_NULL)
     {
         // if no directly provided source, resolve the name in the global context and have the instance
         // load the file.
@@ -138,7 +142,7 @@ PackageClass *PackageClass::newRexx(RexxObject **init_args, size_t argCount)
     else
     {
         // add this to the instance context
-        ArrayClass *sourceArray = arrayArgument(_source, "source");
+        ArrayClass *sourceArray = arrayArgument(programSource, "source");
         package = instance->loadRequires(activity, nameString, sourceArray);
     }
 
@@ -158,7 +162,7 @@ PackageClass *PackageClass::newRexx(RexxObject **init_args, size_t argCount)
 void PackageClass::live(size_t liveMark)
 {
     memory_mark(source);
-    memory_mark(parentSource);
+    memory_mark(parentPackage);
     memory_mark(programName);
     memory_mark(programDirectory);
     memory_mark(programExtension);
@@ -166,8 +170,6 @@ void PackageClass::live(size_t liveMark)
     memory_mark(securityManager);
     memory_mark(initCode);
     memory_mark(mainExecutable);
-    memory_mark(package);
-    memory_mark(parentSource);
     memory_mark(routines);
     memory_mark(publicRoutines);
     memory_mark(libraries);
@@ -175,7 +177,6 @@ void PackageClass::live(size_t liveMark)
     memory_mark(classes);
     memory_mark(dataAssets);
     memory_mark(loadedPackages);
-    memory_mark(package);
     memory_mark(unattachedMethods);
     memory_mark(loadedPackages);
     memory_mark(installedPublicClasses);
@@ -202,7 +203,7 @@ void PackageClass::liveGeneral(MarkReason reason)
     }
 
     memory_mark_general(source);
-    memory_mark_general(parentSource);
+    memory_mark_general(parentPackage);
     memory_mark_general(programName);
     memory_mark_general(programDirectory);
     memory_mark_general(programExtension);
@@ -210,8 +211,6 @@ void PackageClass::liveGeneral(MarkReason reason)
     memory_mark_general(securityManager);
     memory_mark_general(initCode);
     memory_mark_general(mainExecutable);
-    memory_mark_general(package);
-    memory_mark_general(parentSource);
     memory_mark_general(routines);
     memory_mark_general(publicRoutines);
     memory_mark_general(libraries);
@@ -219,7 +218,6 @@ void PackageClass::liveGeneral(MarkReason reason)
     memory_mark_general(classes);
     memory_mark_general(dataAssets);
     memory_mark_general(loadedPackages);
-    memory_mark_general(package);
     memory_mark_general(unattachedMethods);
     memory_mark_general(loadedPackages);
     memory_mark_general(installedPublicClasses);
@@ -241,7 +239,7 @@ void PackageClass::flatten (Envelope *envelope)
 
     securityManager = OREF_NULL;
     flattenRef(source);
-    flattenRef(parentSource);
+    flattenRef(parentPackage);
     flattenRef(programName);
     flattenRef(programDirectory);
     flattenRef(programExtension);
@@ -249,8 +247,6 @@ void PackageClass::flatten (Envelope *envelope)
     flattenRef(securityManager);
     flattenRef(initCode);
     flattenRef(mainExecutable);
-    flattenRef(package);
-    flattenRef(parentSource);
     flattenRef(routines);
     flattenRef(publicRoutines);
     flattenRef(libraries);
@@ -258,7 +254,6 @@ void PackageClass::flatten (Envelope *envelope)
     flattenRef(classes);
     flattenRef(dataAssets);
     flattenRef(loadedPackages);
-    flattenRef(package);
     flattenRef(unattachedMethods);
     flattenRef(loadedPackages);
     flattenRef(installedPublicClasses);
@@ -517,10 +512,10 @@ ArrayClass *PackageClass::extractSource(SourceLocation &location )
  *
  * @param parent The parent source context.
  */
-void PackageClass::inheritSourceContext(PackageClass *parentPackage)
+void PackageClass::inheritPackageContext(PackageClass *parent)
 {
     // set this as a parent
-    setField(parentSource, parentPackage->getSourceObject());
+    setField(parentPackage, parent);
 }
 
 
@@ -541,29 +536,22 @@ void PackageClass::mergeRequired(PackageClass *mergeSource)
         {
             setField(mergedPublicRoutines, new_string_table());
         }
-        // loop through the list of routines
-        for (HashLink i = mergeSource->mergedPublicRoutines->first(); mergeSource->mergedPublicRoutines->available(i); i = mergeSource->mergedPublicRoutines->next(i))
-        {
-            // copy the routine over
-            mergedPublicRoutines->setEntry((RexxString *)mergeSource->mergedPublicRoutines->index(i), mergeSource->mergedPublicRoutines->value(i));
-        }
-
+        // merge these together
+        mergeSource->mergedPublicRoutines->putAll(mergedPublicRoutines);
     }
 
     // now process the direct set
     if (mergeSource->publicRoutines != OREF_NULL)
     {
-        // first merged attempt?  Create out directory
+        // first merge attempt?  Create our directory...Note that the source
+        // public routines get added to our MERGED public routines
         if (mergedPublicRoutines == OREF_NULL)
         {
             setField(mergedPublicRoutines, new_string_table());
         }
 
-        // now copy all of the direct routines
-        for (HashLink i = mergeSource->publicRoutines->first(); mergeSource->publicRoutines->available(i); i = mergeSource->publicRoutines->next(i))
-        {
-            mergedPublicRoutines->setEntry((RexxString *)mergeSource->publicRoutines->index(i), mergeSource->publicRoutines->value(i));
-        }
+        // merge these together
+        mergeSource->publicRoutines->putAll(mergedPublicRoutines);
     }
 
 
@@ -574,10 +562,9 @@ void PackageClass::mergeRequired(PackageClass *mergeSource)
         {
             setField(mergedPublicClasses, new_string_table());
         }
-        for (HashLink i = mergeSource->mergedPublicClasses->first(); mergeSource->mergedPublicClasses->available(i); i = mergeSource->mergedPublicClasses->next(i))
-        {
-            mergedPublicClasses->setEntry((RexxString *)mergeSource->mergedPublicClasses->index(i), mergeSource->mergedPublicClasses->value(i));
-        }
+
+        // merge these together
+        mergeSource->mergedPublicClasses->putAll(mergedPublicClasses);
     }
 
     // the installed ones are processed second as they will overwrite the imported one, which
@@ -588,10 +575,8 @@ void PackageClass::mergeRequired(PackageClass *mergeSource)
         {
             setField(mergedPublicClasses, new_string_table());
         }
-        for (HashLink i = mergeSource->installedPublicClasses->first(); mergeSource->installedPublicClasses->available(i); i = mergeSource->installedPublicClasses->next(i))
-        {
-            mergedPublicClasses->setEntry((RexxString *)mergeSource->installedPublicClasses->index(i), mergeSource->installedPublicClasses->value(i));
-        }
+        // merge these together
+        mergeSource->installedPublicClasses->putAll(mergedPublicClasses);
     }
 }
 
@@ -609,8 +594,7 @@ RoutineClass *PackageClass::findLocalRoutine(RexxString *name)
     // if we have one locally, then return it.
     if (routines != OREF_NULL)
     {
-        /* try for a local one first         */
-        RoutineClass *result = (RoutineClass *)(routines->fastAt(name));
+        RoutineClass *result = (RoutineClass *)(routines->get(name));
         if (result != OREF_NULL)
         {
             return result;
@@ -619,9 +603,9 @@ RoutineClass *PackageClass::findLocalRoutine(RexxString *name)
 
     // we might have a chained context.  We check this after any locally
     // defined ones in this source.
-    if (parentSource != OREF_NULL)
+    if (parentPackage != OREF_NULL)
     {
-        return parentSource->findLocalRoutine(name);
+        return parentPackage->findLocalRoutine(name);
     }
     // nope, no got one
     return OREF_NULL;
@@ -640,8 +624,7 @@ RoutineClass *PackageClass::findPublicRoutine(RexxString *name)
     // if we have one locally, then return it.
     if (mergedPublicRoutines != OREF_NULL)
     {
-        /* try for a local one first         */
-        RoutineClass *result = (RoutineClass *)(mergedPublicRoutines->fastAt(name));
+        RoutineClass *result = (RoutineClass *)(mergedPublicRoutines->get(name));
         if (result != OREF_NULL)
         {
             return result;
@@ -652,9 +635,9 @@ RoutineClass *PackageClass::findPublicRoutine(RexxString *name)
     // The inherited context comes after any directly included
     // context.  In for methods or routines that are created from
     // a parent context, this will be the only thing here.
-    if (parentSource != OREF_NULL)
+    if (parentPackage != OREF_NULL)
     {
-        return parentSource->findPublicRoutine(name);
+        return parentPackage->findPublicRoutine(name);
     }
     // nope, no got one
     return OREF_NULL;
@@ -718,7 +701,7 @@ RexxClass *PackageClass::findInstalledClass(RexxString *name)
     if (installedClasses != OREF_NULL)
     {
         /* try for a local one first         */
-        RexxClass *result = (RexxClass *)(installedClasses->fastAt(name));
+        RexxClass *result = (RexxClass *)(installedClasses->get(name));
         if (result != OREF_NULL)
         {
             return result;
@@ -727,9 +710,9 @@ RexxClass *PackageClass::findInstalledClass(RexxString *name)
 
     // we might have a chained context, so check it also
     // the parents ones come after ones we define.
-    if (parentSource != OREF_NULL)
+    if (parentPackage != OREF_NULL)
     {
-        return parentSource->findInstalledClass(name);
+        return parentPackage->findInstalledClass(name);
     }
     // nope, no got one
     return OREF_NULL;
@@ -750,7 +733,7 @@ RexxClass *PackageClass::findPublicClass(RexxString *name)
     if (mergedPublicClasses != OREF_NULL)
     {
         /* try for a local one first         */
-        RexxClass *result = (RexxClass *)(mergedPublicClasses->fastAt(name));
+        RexxClass *result = (RexxClass *)(mergedPublicClasses->get(name));
         if (result != OREF_NULL)
         {
             return result;
@@ -761,9 +744,9 @@ RexxClass *PackageClass::findPublicClass(RexxString *name)
     // The inherited context comes after any directly included
     // context.  In for methods or routines that are created from
     // a parent context, this will be the only thing here.
-    if (parentSource != OREF_NULL)
+    if (parentPackage != OREF_NULL)
     {
-        return parentSource->findPublicClass(name);
+        return parentPackage->findPublicClass(name);
     }
     // nope, no got one
     return OREF_NULL;
@@ -823,8 +806,8 @@ RexxClass *PackageClass::findClass(RexxString *className)
         }
     }
 
-    /* last chance, try the environment  */
-    return(RexxClass *)(TheEnvironment->at(internalName));
+    // last chance, try the environment
+    return (RexxClass *)(TheEnvironment->entry(internalName));
 }
 
 
@@ -1004,22 +987,7 @@ void PackageClass::addPackage(PackageClass *p)
     // add this to the list and merge the information
     loadedPackages->append(p);
     // not merge all of the info from the imported package
-    mergeRequired(p->getSourceObject());
-}
-
-
-/**
- * Retrieve the package wrapper associated with this source.
- *
- * @return The package instance that fronts for this source in Rexx code.
- */
-PackageClass *PackageClass::getPackage()
-{
-    if (package == OREF_NULL)
-    {
-        setField(package, new PackageClass(this));
-    }
-    return package;
+    mergeRequired(p);
 }
 
 
@@ -1436,7 +1404,7 @@ RexxObject *PackageClass::addPublicClassRexx(RexxString *name, RexxClass *clazz)
 RexxClass *PackageClass::findClassRexx(RexxString *name)
 {
     name = stringArgument(name, "name");
-    RexxClass *cls = source->findClass(name);
+    RexxClass *cls = findClass(name);
     if (cls == OREF_NULL)
     {
         return (RexxClass *)TheNilObject;
@@ -1499,7 +1467,7 @@ RexxObject *PackageClass::loadLibraryRexx(RexxString *name)
  */
 RexxObject *PackageClass::digitsRexx()
 {
-    return new_integer(source->getDigits());
+    return new_integer(getDigits());
 }
 
 
@@ -1510,7 +1478,7 @@ RexxObject *PackageClass::digitsRexx()
  */
 RexxObject *PackageClass::fuzzRexx()
 {
-    return new_integer(source->getFuzz());
+    return new_integer(getFuzz());
 }
 
 
@@ -1521,7 +1489,7 @@ RexxObject *PackageClass::fuzzRexx()
  */
 RexxObject *PackageClass::formRexx()
 {
-    return source->getForm() == Numerics::FORM_SCIENTIFIC ? OREF_SCIENTIFIC : OREF_ENGINEERING;
+    return getForm() == Numerics::FORM_SCIENTIFIC ? OREF_SCIENTIFIC : OREF_ENGINEERING;
 }
 
 
@@ -1532,5 +1500,5 @@ RexxObject *PackageClass::formRexx()
  */
 RexxObject *PackageClass::traceRexx()
 {
-    return source->getTrace();
+    return getTrace();
 }

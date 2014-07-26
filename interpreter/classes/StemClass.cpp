@@ -53,6 +53,7 @@
 #include "StemClass.hpp"
 #include "CompoundVariableTail.hpp"
 #include "MethodArguments.hpp"
+#include "CompoundTableElement.hpp"
 
 // singleton class instance
 RexxClass *StemClass::classInstance = OREF_NULL;
@@ -101,7 +102,7 @@ RexxObject *StemClass::newRexx(RexxObject **init_args, size_t       argCount)
     RexxObject *name;
     RexxClass::processNewArgs(init_args, argCount, &init_args, &argCount, 1, (RexxObject **)&name, NULL);
 
-    Protected<RexxObject> newObj = new StemClass ((RexxString *)name);
+    Protected<StemClass> newObj = new StemClass ((RexxString *)name);
 
     // handle Rexx class completion
     classThis->completeNewObject(newObj, init_args, argCount);

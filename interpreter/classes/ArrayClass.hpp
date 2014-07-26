@@ -300,6 +300,9 @@ class ArrayClass : public RexxObject
     inline RexxInternalObject  *get(size_t pos) { return (data())[pos-1];}
     inline RexxInternalObject **data() { return expansionArray->objects; }
     inline RexxInternalObject **data(size_t pos) { return &((data())[pos-1]);}
+    inline RexxObject **messageArgs() { return (RexxObject **)data(); }
+    inline size_t       messageArgCount() { return lastItem; }
+
     inline ArrayClass   *getExpansion() { return expansionArray; }
     size_t              findSingleIndexItem(RexxInternalObject *item);
     RexxObject *        indexToArray(size_t idx);

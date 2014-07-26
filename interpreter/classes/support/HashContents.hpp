@@ -308,6 +308,7 @@ public:
     ArrayClass  *allIndex(RexxInternalObject *item);
     RexxInternalObject *getIndex(RexxInternalObject *item);
     void merge(HashCollection *target);
+    void putAll(HashCollection *target);
     void reMerge(HashContents *newHash);
     void mergeItem(RexxInternalObject *, RexxInternalObject *index);
     void mergePut(RexxInternalObject *item, RexxInternalObject *index);
@@ -321,7 +322,7 @@ public:
     void add(RexxInternalObject *item, RexxInternalObject *index);
     void addFront(RexxInternalObject *item, RexxInternalObject *index);
     void copyValues();
-    size_t items(RexxInternalObject item);
+    size_t items(RexxInternalObject *item);
 
     IndexIterator iterator(RexxInternalObject *index);
     TableIterator iterator();

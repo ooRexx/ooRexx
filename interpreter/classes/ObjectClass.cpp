@@ -781,7 +781,7 @@ RexxObject *RexxObject::sendMessage(RexxString *message, RexxObject *argument1, 
  */
 void RexxObject::sendMessage(RexxString *message, ArrayClass  *arguments, ProtectedObject &result)
 {
-    messageSend(message, (RexxObject **)arguments->data(), arguments->size(), result);
+    messageSend(message, arguments->messageArgs(), arguments->messageArgCount(), result);
 }
 
 
@@ -885,10 +885,6 @@ void RexxObject::sendMessage(RexxString *message, RexxObject *argument1, RexxObj
  * @param result    A protected object for returning the message result.
  */
 void RexxObject::messageSend(RexxString *msgname, RexxObject **arguments, size_t  count, ProtectedObject &result)
-/******************************************************************************/
-/* Function:    send a message (with message lookup) to an object.            */
-/*              All types of methods are handled and dispatched               */
-/******************************************************************************/
 {
     // check for a control stack condition
     ActivityManager::currentActivity->checkStackSpace();
@@ -935,7 +931,7 @@ void RexxObject::messageSend(RexxString *msgname, RexxObject **arguments, size_t
  * @param result     A protected object for returning the result.
  */
 void RexxObject::messageSend(RexxString *msgname, RexxObject **arguments, size_t count,
-    RexxObject *startscope, ProtectedObject &result)
+    RexxClass *startscope, ProtectedObject &result)
 {
     // perform a stack space check
     ActivityManager::currentActivity->checkStackSpace();
@@ -980,10 +976,6 @@ void RexxObject::messageSend(RexxString *msgname, RexxObject **arguments, size_t
  */
 void RexxObject::processProtectedMethod(RexxString *messageName, MethodClass *targetMethod,
     RexxObject  **arguments, size_t count, ProtectedObject &result)
-/******************************************************************************/
-/* Function:  Process an unknown message, uncluding looking for an UNKNOWN    */
-/*            method and raising a NOMETHOD condition                         */
-/******************************************************************************/
 {
     // get the current security manager
     SecurityManager *manager = ActivityManager::currentActivity->getEffectiveSecurityManager();
@@ -1616,7 +1608,7 @@ RexxString *RexxObject::objectName()
         }
     }
     // we need to make sure this is a real string value.
-    return string_value->stringValue();
+    return ((RexxString *)string_value)->stringValue();
 }
 
 
@@ -1629,7 +1621,7 @@ RexxString *RexxObject::objectName()
  */
 RexxObject  *RexxObject::objectNameEquals(RexxObject *name)
 {
-    name = requiredStringArgument(name, ARG_ONE);
+    name = stringArgument(name, ARG_ONE);
     // set the name in the object class scope
     setObjectVariable(OREF_NAME, name, TheObjectClass);
     return OREF_NULL;
@@ -1687,7 +1679,7 @@ RexxString  *RexxObject::defaultName()
 bool RexxObject::hasMethod(RexxString *msgname)
 {
 
-    return booleanObject(behaviour->methodLookup(msgname) != OREF_NULL);
+    return behaviour->hasMethod(msgname);
 }
 
 
@@ -1715,19 +1707,21 @@ RexxObject  *RexxObject::setMethod(RexxString *msgname, MethodClass *methobj, Re
 {
     // get the message name as a string
     msgname = stringArgument(msgname, ARG_ONE)->upper();
+
+    // by default, the added scope is .nil, which is the object scope.
+    RexxClass *targetScope = (RexxClass *)TheNilObject;
+
+    // TODO:  Understand what the option does...it seems like a NOP.
     if (option != OREF_NULL)
     {
         option = stringArgument(option, ARG_THREE);
-        if (!Utilities::strCaselessCompare("OBJECT", option->getStringData()))
+        if (Utilities::strCaselessCompare("OBJECT", option->getStringData()) == 0)
         {
-            // do nothing if OBJECT
+            // define this scope on the class object, not the object level.
+            targetScope = classObject();
         }
-        else if (!Utilities::strCaselessCompare("FLOAT",option->getStringData()))
-        {
-            // "FLOAT" makes option a NULL pointer, causing the old default behaviour on setMethod...
-            option = OREF_NULL;
-        }
-        else
+        // FLOAT is the only other possibility, which is the default
+        else if (Utilities::strCaselessCompare("FLOAT",option->getStringData()) != 0)
         {
             reportException(Error_Incorrect_call_list, CHAR_SETMETHOD, IntegerThree, "\"FLOAT\", \"OBJECT\"", option);
         }
@@ -1742,10 +1736,10 @@ RexxObject  *RexxObject::setMethod(RexxString *msgname, MethodClass *methobj, Re
     else
     {
         // make one from a string or array, setting the scope to .nil
-        methobj = MethodClass::newMethodObject(msgname, (RexxObject *)methobj, ((RexxClass *)TheNilObject, IntegerTwo);
+        methobj = MethodClass::newMethodObject(msgname, (RexxObject *)methobj, (RexxClass *)TheNilObject, IntegerTwo);
     }
     // define the new method
-    defineMethod(msgname, methobj, option);
+    defineInstanceMethod(msgname, methobj, targetScope);
     return OREF_NULL;
 }
 
@@ -1761,7 +1755,7 @@ RexxObject  *RexxObject::unsetMethod(RexxString *msgname)
 {
     msgname = stringArgument(msgname, ARG_ONE)->upper();
     // the behaviour does the heavy lifting here.
-    behaviour->removeMethod(msgname);
+    behaviour->deleteMethod(msgname);
     return OREF_NULL;
 }
 
@@ -1774,11 +1768,11 @@ RexxObject  *RexxObject::unsetMethod(RexxString *msgname)
  *
  * @return The converted object, or .nil of can't be converted.
  */
-RexxObject  *RexxObject::requestRexx(RexxString *className)
+RexxObject *RexxObject::requestRexx(RexxString *className)
 {
     // we need this in uppercase to search for a method name.
     className = stringArgument(className, ARG_ONE)->upper();
-    RexxString *class_id = id()->upper();
+    RexxString *class_id = behaviour->getOwningClass()->getId()->upper();
     // if the existing class id and the target name are the same, we are there already.
     if (className->strictEqual(class_id) == TheTrueObject)
     {
@@ -1821,11 +1815,11 @@ RexxObject *RexxObject::sendWith(RexxObject *message, ArrayClass *arguments)
     ProtectedObject r;
     if (startScope == OREF_NULL)
     {
-        messageSend(messageName, arguments->data(), arguments->size(), r);
+        messageSend(messageName, arguments->messageArgs(), arguments->messageArgCount(), r);
     }
     else
     {
-        messageSend(messageName, arguments->data(), arguments->size(), startScope, r);
+        messageSend(messageName, arguments->messageArgs(), arguments->messageArgCount(), startScope, r);
     }
     return (RexxObject *)r;
 }
@@ -1845,9 +1839,10 @@ RexxObject *RexxObject::sendWith(RexxObject *message, ArrayClass *arguments)
  */
 RexxObject *RexxObject::send(RexxObject **arguments, size_t argCount)
 {
-    if (argCount < 1 )                   /* no arguments?                     */
+    // we must have a message name argument
+    if (argCount < 1 )
     {
-        missingArgument(ARG_ONE);         /* Yes, this is an error.            */
+        missingArgument(ARG_ONE);
     }
 
     RexxString *messageName;
@@ -1885,7 +1880,7 @@ MessageClass *RexxObject::startWith(RexxObject *message, ArrayClass *arguments)
     // this is required and must be an array
     arguments = arrayArgument(arguments, ARG_TWO);
     // the rest is handled by code common to startWith();
-    return startCommon(message, arguments->data(), arguments->size());
+    return startCommon(message, arguments->messageArgs(), arguments->messageArgCount());
 }
 
 
@@ -1961,7 +1956,7 @@ void RexxObject::decodeMessageName(RexxObject *target, RexxObject *message, Rexx
         ArrayClass *messageArray = arrayArgument(message, ARG_ONE);
 
         // must be single dimension with two elements
-        if (messageArray->getDimension() != 1 || messageArray->size() != 2)
+        if (messageArray->isMultiDimensional() || messageArray->messageArgCount() != 2)
         {
             reportException(Error_Incorrect_method_message);
         }
@@ -2016,7 +2011,7 @@ void RexxInternalObject::hasUninit()
  */
 RexxObject *RexxObject::run(RexxObject **arguments, size_t argCount)
 {
-    ProtectedObject<ArrayClass> arglist;
+    Protected<ArrayClass> arglist;
     RexxObject **argumentPtr = NULL;
     size_t argcount = 0;
 
@@ -2049,10 +2044,10 @@ RexxObject *RexxObject::run(RexxObject **arguments, size_t argCount)
                         reportException(Error_Incorrect_method_maxarg, IntegerThree);
                     }
                     // get the argument array and make sure we have a good array
-                    arglist = arrayArgument(arguments[2], ARG_THREE);
+                    ArrayClass *arglist = arrayArgument(arguments[2], ARG_THREE);
                     // get the array specifics to pass along
-                    argumentPtr = arglist->data();
-                    argcount = arglist->size();
+                    argumentPtr = arglist->messageArgs();
+                    argcount = arglist->messageArgCount();
                     break;
                 }
 
@@ -2086,7 +2081,7 @@ RexxObject *RexxObject::run(RexxObject **arguments, size_t argCount)
  *
  * @return returns nothing.
  */
-RexxObject *RexxObject::defineMethods(DirectoryClass *methods)
+RexxObject *RexxObject::defineInstanceMethods(DirectoryClass *methods)
 {
     // use a copy of the behaviour
     setField(behaviour, (RexxBehaviour *)behaviour->copy());
@@ -2106,7 +2101,7 @@ RexxObject *RexxObject::defineMethods(DirectoryClass *methods)
         // Get the name for this method, in uppercase
         RexxString *name = (RexxString *)iterator.index();
         name = name->upper();
-        behaviour->define(name, method);
+        behaviour->defineMethod(name, method);
     }
     return OREF_NULL;
 }
@@ -2118,25 +2113,26 @@ RexxObject *RexxObject::defineMethods(DirectoryClass *methods)
  *
  * @param msgname The method name.
  * @param methobj The target method object.
+ * @param scope   The scope the new method is defined with.
  *
  * @return Returns nothing.
  */
-RexxObject *RexxObject::defineMethod(RexxString *msgname, MethodClass *methobj)
+RexxObject *RexxObject::defineInstanceMethod(RexxString *msgname, MethodClass *methobj, RexxClass *scope)
 {
     // get the method name in uppercase.
     msgname = msgname->upper();
     if (methobj != TheNilObject)
     {
-        // set a new scope on this of the object's class scope
-        methobj = methobj->newScope(classObject());
+        // set a new scope on this of the target (either .nil, or the object class)
+        methobj = methobj->newScope(scope);
     }
 
-    /* copy primitive behaviour object and define the method, a copy is made to */
-    /* ensure that we don't update the behaviour of any other object, since they*/
-    /* may have been sharing the mvd.                                           */
+    // copy primitive behaviour object and define the method, a copy is made to
+    // ensure that we don't update the behaviour of any other object, since they
+    // may have been sharing the mvd.
     setField(behaviour, (RexxBehaviour *)behaviour->copy());
     // add this to the behaviour
-    behaviour->addMethod(msgname, methobj);
+    behaviour->defineMethod(msgname, methobj);
     // adding an UNINIT method to obj?
     if (methobj != TheNilObject && msgname->strCompare(CHAR_UNINIT))
     {
@@ -2180,7 +2176,7 @@ RexxObject *RexxObject::getObjectVariable(RexxString *name)
     while (dictionary != OREF_NULL)
     {
         // see if this dictionary has the variable
-        RexxObject *val = dictionary->realValue(name);
+        RexxObject *val =(RexxObject *)dictionary->realValue(name);
         // return this if it exists
         if (val != OREF_NULL)
         {
@@ -2216,7 +2212,7 @@ RexxObject *RexxObject::getObjectVariable(RexxString *name, RexxClass *scope)
     // dictionary if we don't have one.
     VariableDictionary *ovd = getObjectVariables(scope);
     // get the variable value
-    return ovd->realValue(name);
+    return (RexxObject *)ovd->realValue(name);
 }
 
 
@@ -2453,30 +2449,26 @@ RexxObject *RexxInternalObject::clone()
 #undef operatorMethod
 #define operatorMethod(name, message) RexxObject * RexxObject::name(RexxObject *operand) \
 {\
-    ProtectedObject result;              /* returned result                   */\
-                                         /* do a real message send            */\
+    ProtectedObject result;                                                     \
     messageSend(OREF_##message, &operand, 1, result);                      \
-    if ((RexxObject *)result == OREF_NULL)   /* in an expression and need a result*/ \
+    if ((RexxObject *)result == OREF_NULL)                                           \
     {  \
-                                         /* need to raise an exception        */ \
         reportException(Error_No_result_object_message, OREF_##message); \
     }  \
-    return (RexxObject *)result;         /* return the final result           */ \
+    return (RexxObject *)result;                                                 \
 }\
 
 
 #undef prefixOperatorMethod
 #define prefixOperatorMethod(name, message) RexxObject * RexxObject::name(RexxObject *operand) \
 {\
-    ProtectedObject result;              /* returned result                   */\
-                                         /* do a real message send            */\
+    ProtectedObject result;                                                     \
     messageSend(OREF_##message, &operand, operand == OREF_NULL ? 0 : 1, result); \
-    if ((RexxObject *)result == OREF_NULL)             /* in an expression and need a result*/ \
+    if ((RexxObject *)result == OREF_NULL)                                                     \
     {  \
-                                         /* need to raise an exception        */ \
         reportException(Error_No_result_object_message, OREF_##message); \
     }  \
-    return (RexxObject *)result;         /* return the final result           */ \
+    return (RexxObject *)result;                                                 \
 }\
 
 
@@ -2689,7 +2681,7 @@ void *RexxObject::getCSelf()
  *
  * @return An unwrappered CSELF value, if one can be found.
  */
-void *RexxObject::getCSelf(RexxObject *scope)
+void *RexxObject::getCSelf(RexxClass *scope)
 {
     while (scope != TheNilObject)
     {

@@ -552,7 +552,7 @@ RexxClass *RexxBehaviour::restoreClass()
  *
  * @return The following scope, or .nil if not found.
  */
-RexxClass *RexxBehaviour::superScope(RexxObject *start_scope)
+RexxClass *RexxBehaviour::superScope(RexxClass *start_scope)
 {
     return methodDictionary->findSuperScope(start_scope);
 }
@@ -580,7 +580,7 @@ RexxClass *RexxBehaviour::immediateSuperScope()
  *
  * @return The matching method (if any)
  */
-MethodClass *RexxBehaviour::superMethod(RexxString * messageName, RexxObject * startScope)
+MethodClass *RexxBehaviour::superMethod(RexxString * messageName, RexxClass *startScope)
 {
     // delegate this to the method dictionary.
     return methodDictionary->findSuperMethod(messageName, startScope);

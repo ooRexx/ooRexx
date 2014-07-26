@@ -424,7 +424,7 @@ class RexxObject : public RexxInternalObject
 
     virtual ~RexxObject(){;};
 
-    virtual RexxObject  *defineMethod(RexxString *, MethodClass *, RexxString *a = OREF_NULL);
+    virtual RexxObject  *defineInstanceMethod(RexxString *, MethodClass *, RexxClass *);
     virtual RexxString  *defaultName();
     virtual RexxObject  *unknown(RexxString *msg, ArrayClass *args) {return OREF_NULL;};
     virtual bool         hasMethod(RexxString *msg);
@@ -463,7 +463,7 @@ class RexxObject : public RexxInternalObject
     RexxObject  *run(RexxObject **, size_t);
 
     void         messageSend(RexxString *, RexxObject **, size_t, ProtectedObject &);
-    void         messageSend(RexxString *, RexxObject **, size_t, RexxObject *, ProtectedObject &);
+    void         messageSend(RexxString *, RexxObject **, size_t, RexxClass *, ProtectedObject &);
     MethodClass  *checkPrivate(MethodClass *);
     void         processUnknown(RexxString *, RexxObject **, size_t, ProtectedObject &);
     void         processProtectedMethod(RexxString *, MethodClass *, RexxObject **, size_t, ProtectedObject &);
@@ -487,22 +487,22 @@ class RexxObject : public RexxInternalObject
     RexxObject  *sendMessage(RexxString *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
 
                                       // Following are internal OREXX methods
-    RexxObject  *defineMethods(DirectoryClass *);
-    void         setObjectVariable(RexxString *, RexxObject *, RexxObject *);
+    RexxObject  *defineInstanceMethods(DirectoryClass *);
+    void         setObjectVariable(RexxString *, RexxObject *, RexxClass *);
     RexxObject  *getObjectVariable(RexxString *);
     RexxObject  *getObjectVariable(RexxString *, RexxClass *);
     void         addObjectVariables(VariableDictionary *);
     void         copyObjectVariables(RexxObject *newObject);
-    RexxObject  *superScope(RexxObject *);
-    MethodClass  *superMethod(RexxString *, RexxObject *);
+    RexxClass   *superScope(RexxClass *);
+    MethodClass *superMethod(RexxString *, RexxClass *);
     RexxObject  *mdict();
     RexxObject  *setMdict(RexxObject *);
     inline RexxBehaviour *behaviourObject() { return this->behaviour; }
 
     MethodClass  *methodLookup(RexxString *name );
-    VariableDictionary *getObjectVariables(RexxObject *);
-    void guardOn(Activity *activity, RexxObject *scope);
-    void guardOff(Activity *activity, RexxObject *scope);
+    VariableDictionary *getObjectVariables(RexxClass *);
+    void guardOn(Activity *activity, RexxClass *scope);
+    void guardOff(Activity *activity, RexxClass *scope);
     RexxObject  *equal(RexxObject *);
     RexxObject  *notEqual(RexxObject *other);
     RexxObject  *strictEqual(RexxObject *);
@@ -521,7 +521,7 @@ class RexxObject : public RexxInternalObject
     RexxObject  *copyRexx();
     RexxObject  *unknownRexx(RexxString *, ArrayClass *);
     void *getCSelf();
-    void *getCSelf(RexxObject *scope);
+    void *getCSelf(RexxClass *scope);
 
     RexxObject *callOperatorMethod(size_t methodOffset, RexxObject *argument);
 
@@ -647,7 +647,7 @@ protected:
 class GuardLock
 {
 public:
-    inline GuardLock(Activity *a, RexxObject *o, RexxObject *s) : activity(a), target(o), scope(s)
+    inline GuardLock(Activity *a, RexxObject *o, RexxClass *s) : activity(a), target(o), scope(s)
     {
         // just acquire the scope
         target->guardOn(activity, scope);
@@ -660,9 +660,9 @@ public:
 
 private:
 
-    Activity *activity;  // the activity we're running on
+    Activity   *activity;    // the activity we're running on
     RexxObject *target;      // the target object for the lock
-    RexxObject *scope;       // the scope of the required guard lock
+    RexxClass  *scope;       // the scope of the required guard lock
 };
 
 #endif

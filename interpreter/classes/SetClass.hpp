@@ -64,7 +64,7 @@ class SetClass : public IndexOnlyHashCollection
            SetClass(bool fromRexx) { }
 
     RexxObject *newRexx(RexxObject **, size_t);
-    RexxObject *classOf(RexxObject **, size_t);
+    RexxObject *ofRexx(RexxObject **, size_t);
 
     static void createInstance();
     static RexxClass *classInstance;

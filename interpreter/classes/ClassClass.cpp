@@ -460,7 +460,7 @@ RexxObject *RexxClass::inheritInstanceMethods(RexxClass *source)
         MethodClass *method = (MethodClass *)iterator.value();
         // we just add this to the instance method dictionary for when we
         // build the behaviour
-        instanceMethodDictionary->defineMethod(methodName, method);
+        instanceMethodDictionary->addMethod(methodName, method);
     }
     return OREF_NULL;
 }
@@ -733,7 +733,7 @@ RexxObject *RexxClass::defineMethod(RexxString *method_name, RexxObject *methodS
     // aren't enhanced
     setField(instanceBehaviour, (RexxBehaviour *)instanceBehaviour->copy());
     // add method to the instance method dictionary
-    instanceMethodDictionary->defineMethod(dictionaryName, methodObject);
+    instanceMethodDictionary->addMethod(dictionaryName, methodObject);
     // any subclasses that we have need to redo their instance behaviour
     // this also updates our own behaviour table
     updateInstanceSubClasses();
@@ -757,11 +757,11 @@ RexxObject *RexxClass::defineClassMethod(RexxString *method_name, MethodClass *n
     // validate the arguments
     method_name = stringArgument(method_name, ARG_ONE)->upper();
     requiredArgument(newMethod, ARG_TWO);
-    newMethod->setScope(this);        // change the scope to the class
+    newMethod = newMethod->newScope(this);
     // now add this directly to the behaviour
-    behaviour->getMethodDictionary()->defineMethod(method_name, newMethod);
+    behaviour->defineMethod(method_name, newMethod);
     // also add to the class method dictionary
-    classMethodDictionary->defineMethod(method_name, newMethod);
+    classMethodDictionary->addMethod(method_name, newMethod);
     // called as a Rexx method, so we need a return value.
     return OREF_NULL;
 }

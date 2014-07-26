@@ -75,6 +75,6 @@ class RelationClass : public EqualityHashCollection
     static RexxClass *classInstance;
 };
 
-inline RelationClass *new_table(size_t capacity = HashCollection::DefaultTableSize) { return new RelationClass(capacity); }
+inline RelationClass *new_relation(size_t capacity = HashCollection::DefaultTableSize) { return new RelationClass(capacity); }
 
 #endif

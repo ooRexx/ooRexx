@@ -531,18 +531,6 @@ void MethodDictionary::addScope(RexxClass *scope)
 
 
 /**
- * Add the method object to the table.
- *
- * @param name   The name of the method.
- * @param method The method object.
- */
-void MethodDictionary::addMethod(RexxString *name, MethodClass *method)
-{
-    put(method, name);
-}
-
-
-/**
  * Merge our methods into another method dictionary.  Our
  * methods take precedence in the search order.
  *
@@ -560,7 +548,7 @@ void MethodDictionary::mergeMethods(MethodDictionary *target)
     while (iterator.isAvailable())
     {
         MethodClass *method = (MethodClass *)iterator.value();
-        target->addMethod(iterator.index(), method);
+        target->defineMethod(iterator.index(), method);
         // step to the next item.
         iterator.next();
     }

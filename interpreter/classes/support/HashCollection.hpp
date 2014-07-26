@@ -110,7 +110,8 @@ class HashCollection : public RexxObject
     RexxObject           *isEmptyRexx();
     RexxObject           *itemsRexx();
 
-    void          merge(HashCollection *);
+    void           merge(HashCollection *);
+    void           putAll(HashCollection *);
     ArrayClass    *uniqueIndexes();
 
     // do this based off of items(), which can be overridden

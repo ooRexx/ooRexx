@@ -69,7 +69,7 @@ class MethodDictionary: public StringHashCollection
 
     virtual RexxObject *copy();
     MethodClass *getMethod(RexxString *methodName) { return (MethodClass *)get(methodName); }
-    void defineMethod(RexxString *methodName, MethodClass *method);
+    void addMethod(RexxString *methodName, MethodClass *method);
     void replaceMethod(RexxString *methodName, MethodClass *method);
     void replaceMethods(MethodDictionary *source);
     void replaceMethods(StringTable *source);
@@ -85,7 +85,6 @@ class MethodDictionary: public StringHashCollection
     RexxClass  *immediateSuperScope();
     RexxClass  *findSuperScope(RexxClass *scope);
     void addScope(RexxClass *scope);
-    void addMethod(RexxString *name, MethodClass *method);
     void mergeMethods(MethodDictionary *target);
     void mergeScopes(MethodDictionary *target);
     void merge(MethodDictionary *target);

@@ -44,6 +44,7 @@
 #include "RexxCore.h"
 #include "RelationClass.hpp"
 #include "MethodArguments.hpp"
+#include "ProtectedObject.hpp"
 
 // singleton class instance
 RexxClass *RelationClass::classInstance = OREF_NULL;
@@ -144,7 +145,7 @@ HashContents *RelationClass::allocateContents(size_t bucketSize, size_t totalSiz
  */
 RexxInternalObject *RelationClass::removeItem(RexxInternalObject *value, RexxInternalObject *index)
 {
-    return contents->removeItem(_value, _index);
+    return contents->removeItem(value, index);
 }
 
 
@@ -186,9 +187,8 @@ RexxInternalObject *RelationClass::itemsRexx(RexxInternalObject *index)
  */
 RexxInternalObject *RelationClass::removeItemRexx(RexxInternalObject *value, RexxInternalObject *index)
 {
-    requiredArgument(_value, ARG_ONE);            /* make sure we have a value         */
-    RexxInternalObject item = contents->removeItem(value, index);
-    return resultOrNil(item);
+    requiredArgument(value,ARG_ONE);
+    return resultOrNil(contents->removeItem(value, index));
 }
 
 
@@ -203,7 +203,7 @@ RexxInternalObject *RelationClass::removeItemRexx(RexxInternalObject *value, Rex
  */
 RexxInternalObject *RelationClass::hasItemRexx(RexxInternalObject *value, RexxInternalObject *index)
 {
-    requiredArgument(_value, ARG_ONE);
+    requiredArgument(value, ARG_ONE);
     return booleanObject(contents->hasItem(value, index));
 }
 
@@ -217,7 +217,7 @@ RexxInternalObject *RelationClass::hasItemRexx(RexxInternalObject *value, RexxIn
  */
 RexxInternalObject *RelationClass::allIndexRexx(RexxInternalObject *value)
 {
-    requiredArgument(_value, ARG_ONE);
+    requiredArgument(value, ARG_ONE);
     return this->contents->allIndex(value);
 }
 
@@ -232,7 +232,7 @@ RexxInternalObject *RelationClass::allIndexRexx(RexxInternalObject *value)
 RexxInternalObject *RelationClass::allAt(RexxInternalObject *index)
 {
     requiredArgument(index, ARG_ONE);
-    return allIndex(index);
+    return contents->allIndex(index);
 }
 
 
@@ -247,6 +247,6 @@ RexxInternalObject *RelationClass::allAt(RexxInternalObject *index)
 RexxInternalObject *RelationClass::removeAll(RexxInternalObject *index)
 {
     requiredArgument(index, ARG_ONE);
-    return contents->removeAll(_index);
+    return contents->removeAll(index);
 }
 

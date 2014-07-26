@@ -68,20 +68,19 @@ public:
     static void createInstance();
     static RexxClass *classInstance;
 
-    void        setup();
-    void        extractNameInformation();
-    bool        reconnect();
-    size_t      sourceSize();
-    RexxString *traceBack(RexxActivation *, SourceLocation &, size_t, bool);
-    RexxString *extract(SourceLocation &);
-    ArrayClass  *extractSource(SourceLocation &);
-    ArrayClass  *extractSource();
-    void         mergeRequired(PackageClass *);
+    void          setup();
+    void          extractNameInformation();
+    bool          reconnect();
+    size_t        sourceSize();
+    RexxString   *traceBack(RexxActivation *, SourceLocation &, size_t, bool);
+    RexxString   *extract(SourceLocation &);
+    ArrayClass   *extractSource(SourceLocation &);
+    ArrayClass   *extractSource();
+    void          mergeRequired(PackageClass *);
     PackageClass *loadRequires(Activity *activity, RexxString *target);
     PackageClass *loadRequires(Activity *activity, RexxString *target, ArrayClass *s);
     void          addPackage(PackageClass *package);
-    PackageClass *getPackage();
-    void          inheritSourceContext(PackageClass *source);
+    void          inheritPackageContext(PackageClass *parent);
     RoutineClass *findRoutine(RexxString *);
     RoutineClass *findLocalRoutine(RexxString *);
     RoutineClass *findPublicRoutine(RexxString *);
@@ -91,26 +90,24 @@ public:
     RexxString   *resolveProgramName(Activity *activity, RexxString *name);
     void          processInstall(RexxActivation *);
     void          install();
-    RexxInstruction *sourceNewObject(size_t, RexxBehaviour *, int);
+    bool          isTraceable();
+    RexxString   *getLine(size_t position);
+    void          attachSource(BufferClass *s);
 
-    bool        isTraceable();
-    RexxString *getLine(size_t position);
-    void        attachSource(BufferClass *s);
-
-    inline bool        needsInstallation() { return installRequired; }
-    inline void        setNeedsInstallation() { installRequired = true; }
-    inline void        install(RexxActivation *activation) { if (needsInstallation()) processInstall(activation); };
-           void        setProgramName(RexxString *name);
-    inline RexxString *getProgramName() { return programName; }
-    inline RexxString *getProgramDirectory() { return programDirectory; }
-    inline RexxString *getProgramExtension() { return programExtension; }
-    inline RexxString *getProgramFile() { return programFile; }
+    inline bool         needsInstallation() { return installRequired; }
+    inline void         setNeedsInstallation() { installRequired = true; }
+    inline void         install(RexxActivation *activation) { if (needsInstallation()) processInstall(activation); };
+           void         setProgramName(RexxString *name);
+    inline RexxString  *getProgramName() { return programName; }
+    inline RexxString  *getProgramDirectory() { return programDirectory; }
+    inline RexxString  *getProgramExtension() { return programExtension; }
+    inline RexxString  *getProgramFile() { return programFile; }
     inline StringTable *getMethods() { return unattachedMethods; };
     inline StringTable *getRoutines() { return routines; };
 
     inline bool        isInternalCode() { return isOldSpace(); }
 
-    void        setSecurityManager(RexxObject *manager) { setField(securityManager, new SecurityManager(manager)); }
+    void             setSecurityManager(RexxObject *manager) { setField(securityManager, new SecurityManager(manager)); }
     SecurityManager *getSecurityManager() { return securityManager; }
 
     inline StringTable *getLocalRoutines() { return routines; }
@@ -141,6 +138,31 @@ public:
     inline size_t         getTraceFlags() { return traceFlags; }
            RexxString    *getTrace();
            void           detachSource();
+           PackageClass  *newRexx(RexxObject **init_args, size_t argCount);
+           RexxString    *getSourceLineRexx(RexxObject *position);
+           RexxInteger   *getSourceSizeRexx();
+           StringTable   *getClassesRexx();
+           StringTable   *getPublicClassesRexx();
+           StringTable   *getImportedClassesRexx();
+           StringTable   *getRoutinesRexx();
+           StringTable   *getPublicRoutinesRexx();
+           StringTable   *getImportedRoutinesRexx();
+           StringTable   *getMethodsRexx();
+           ArrayClass    *getImportedPackagesRexx();
+           PackageClass  *loadPackageRexx(RexxString *name, ArrayClass *s);
+           RexxObject    *addPackageRexx(PackageClass *package);
+           RexxObject    *addRoutineRexx(RexxString *name, RoutineClass *routine);
+           RexxObject    *addPublicRoutineRexx(RexxString *name, RoutineClass *routine);
+           RexxObject    *addClassRexx(RexxString *name, RexxClass *clazz);
+           RexxObject    *addPublicClassRexx(RexxString *name, RexxClass *clazz);
+           RexxClass     *findClassRexx(RexxString *name);
+           RoutineClass  *findRoutineRexx(RexxString *name);
+           RexxObject    *setSecurityManagerRexx(RexxObject *manager);
+           RexxObject    *loadLibraryRexx(RexxString *name);
+           RexxObject    *digitsRexx();
+           RexxObject    *fuzzRexx();
+           RexxObject    *formRexx();
+           RexxObject    *traceRexx();
 
 protected:
 
@@ -154,8 +176,6 @@ protected:
 
     RexxCode *initCode;                  // the initialization code (can be null)
     BaseExecutable *mainExecutable;      // main execution unit for this package (a method or routine)
-
-    PackageClass  *package;              // our package wrapper
     PackageClass  *parentPackage;        // a parent source context environment;
 
     // sections derived from directives
@@ -178,15 +198,15 @@ protected:
                                           // all public required routines
     StringTable *mergedPublicRoutines;
 
-    bool           installRequired;      // flag settings.  Make it big enough for some expansion.
+    bool           installRequired;       // flag settings.  Make it big enough for some expansion.
 
     // settings inherited from ::options statements
-    size_t digits;                       // numeric digits setting
-    size_t fuzz;                         // numeric fuzz setting
-    bool form;                           // numeric form setting
-    size_t traceSetting;                 // the package trace setting
-    size_t traceFlags;                   // version optimized for quick setting at startup
-    intptr_t reserved[12];               // some reserved values for compatible expansion
+    size_t digits;                        // numeric digits setting
+    size_t fuzz;                          // numeric fuzz setting
+    bool form;                            // numeric form setting
+    size_t traceSetting;                  // the package trace setting
+    size_t traceFlags;                    // version optimized for quick setting at startup
+    intptr_t reserved[12];                // some reserved values for compatible expansion
 };
 
 #endif
