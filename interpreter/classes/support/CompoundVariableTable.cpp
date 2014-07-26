@@ -45,6 +45,7 @@
 #include "CompoundVariableTable.hpp"
 #include "CompoundTableElement.hpp"
 #include "CompoundVariableTail.hpp"
+#include "StemClass.hpp"
 
 
 /**
@@ -123,7 +124,7 @@ CompoundTableElement *CompoundVariableTable::findEntry(RexxString *tail, bool cr
 CompoundTableElement *CompoundVariableTable::findEntry(CompoundVariableTail &tail, bool create)
 {
     CompoundTableElement *anchor = root;        // get our anchor position and keep a previous
-    CompountTableelement *previous = anchor;    // pointer for backing up and insertions.
+    CompoundTableElement *previous = anchor;    // pointer for backing up and insertions.
 
     int rc = 0;                                 // used for the traversal, but also used for insertion afterward
 
@@ -133,7 +134,7 @@ CompoundTableElement *CompoundVariableTable::findEntry(CompoundVariableTail &tai
         // do the name comparison with the tail
         // our comparison is done first on length, second on value.
         // the rc will be 1, 0, or -1 based on which name is the "larger".
-        rc = tail->compare(anchor->getName());
+        rc = tail.compare(anchor->getName());
         // compare greater, take the right branch
         if (rc > 0)
         {
@@ -163,7 +164,7 @@ CompoundTableElement *CompoundVariableTable::findEntry(CompoundVariableTail &tai
 
 
     // need to insert a new element into the tree
-    anchor = new_compoundElement(tail->makeString());
+    anchor = new_compoundElement(tail.makeString());
     // no previous means the tree was empty, so this is our new
     // anchor value
     if (!previous)
@@ -505,7 +506,7 @@ CompoundTableElement *CompoundVariableTable::findEntry(CompoundVariableTail &tai
  *
  * @return The current variable value.
  */
-RexxInternalObject *CompoundVariableTable::TableIteratorvalue::value()
+RexxInternalObject *CompoundVariableTable::TableIterator::value()
 {
     return current->getVariableValue();
 }
@@ -516,7 +517,7 @@ RexxInternalObject *CompoundVariableTable::TableIteratorvalue::value()
  *
  * @return The current variable name.
  */
-RexxInternalObject *CompoundVariableTable::TableIteratorvalue::name()
+RexxString *CompoundVariableTable::TableIterator::name()
 {
     return current->getName();
 }
@@ -527,7 +528,7 @@ RexxInternalObject *CompoundVariableTable::TableIteratorvalue::name()
  *
  * @return The current variable name.
  */
-RexxInternalObject *CompoundVariableTable::TableIteratorvalue::name(RexxString *stemName)
+RexxString *CompoundVariableTable::TableIterator::name(RexxString *stemName)
 {
     return current->createCompoundName(stemName);
 }
@@ -538,7 +539,7 @@ RexxInternalObject *CompoundVariableTable::TableIteratorvalue::name(RexxString *
  *
  * @return The current variable name.
  */
-void CompoundVariableTable::TableIteratorvalue::replace(RexxInternalObject *v)
+void CompoundVariableTable::TableIterator::replace(RexxInternalObject *v)
 {
-    return current->getValue(v);
+    current->setValue(v);
 }

@@ -121,6 +121,7 @@ void SupplierClass::flatten(Envelope *envelope)
 
    flattenRef(values);
    flattenRef(indexes);
+   flattenRef(objectVariables);
 
    cleanUpFlatten
 }
@@ -131,7 +132,7 @@ void SupplierClass::flatten(Envelope *envelope)
  *
  * @return True if there are still objects to supply, false otherwise.
  */
-RexxInteger *SupplierClass::available()
+RexxObject *SupplierClass::available()
 {
     // test if we have an available next item
     return booleanObject(isAvailable());
@@ -173,7 +174,7 @@ RexxObject  *SupplierClass::next()
  *
  * @return The associated value.
  */
-RexxObject  *SupplierClass::value()
+RexxInternalObject *SupplierClass::value()
 {
     // already gone past the end the end is an error
     if (position > values->size())
@@ -182,8 +183,7 @@ RexxObject  *SupplierClass::value()
     }
 
     // get the value, but make sure we at least return .nil
-    RexxObject *value = values->get(position);
-    return resultOrNil(value);
+    return resultOrNil(values->get(position));
 }
 
 
@@ -192,7 +192,7 @@ RexxObject  *SupplierClass::value()
  *
  * @return The position index.
  */
-RexxObject  *SupplierClass::index()
+RexxInternalObject *SupplierClass::index()
 {
     // past the end if an error
     if (position > values->size())
@@ -203,7 +203,7 @@ RexxObject  *SupplierClass::index()
     // the numeric position
     if (indexes == OREF_NULL)
     {
-        return(RexxObject *)new_integer(position);
+        return new_integer(position);
     }
 
     // already gone past the end of the index array?
@@ -231,7 +231,7 @@ RexxObject  *SupplierClass::index()
 RexxObject *SupplierClass::initRexx(ArrayClass *_values, ArrayClass *_indexes)
 {
     ArrayClass *new_values = arrayArgument(_values, ARG_ONE);           // both values are required
-    ArrayClass *new_indexs = arrayArgument(_indexes, ARG_TWO);
+    ArrayClass *new_indexes = arrayArgument(_indexes, ARG_TWO);
 
     // technically, we could probably directly assign these since this really is a constructor,
     // but it doesn't hurt to use these here.
@@ -251,7 +251,7 @@ RexxObject *SupplierClass::initRexx(ArrayClass *_values, ArrayClass *_indexes)
 void SupplierClass::append(ArrayClass  *_values, ArrayClass  *_indexes )
 {
     values->appendAll(_values);
-    indexes->appendAll(indexes);
+    indexes->appendAll(_indexes);
 }
 
 
@@ -262,7 +262,7 @@ void SupplierClass::append(ArrayClass  *_values, ArrayClass  *_indexes )
  */
 void SupplierClass::append(SupplierClass *s)
 {
-    append(s->values(), s->indexes());
+    append(s->getValues(), s->getIndexes());
 }
 
 

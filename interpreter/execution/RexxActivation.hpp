@@ -339,7 +339,7 @@ class RexxActivation : public RexxActivationBase
    RexxObject       *novalueHandler(RexxString *);
    RexxVariableBase *retriever(RexxString *);
    RexxVariableBase *directRetriever(RexxString *);
-   RexxObject       *handleNovalueEvent(RexxString *name, RexxObject *defaultValue, RexxVariable *variable);
+   RexxInternalObject *handleNovalueEvent(RexxString *name, RexxInternalObject *defaultValue, RexxVariable *variable);
    PackageClass     *getPackageObject() { return packageObject; }
    inline PackageClass *getEffectivePackageObject()
    {

@@ -65,10 +65,10 @@ class SupplierClass : public RexxObject
     virtual void flatten(Envelope *);
 
     bool         isAvailable();
-    RexxInteger *available();
+    RexxObject  *available();
     RexxObject  *next();
-    RexxObject  *value();
-    RexxObject  *index();
+    RexxInternalObject *value();
+    RexxInternalObject *index();
     RexxObject  *initRexx(ArrayClass *values, ArrayClass *indexes);
     RexxObject  *newRexx(RexxObject **, size_t);
     ArrayClass  *getIndexes() { return indexes; }

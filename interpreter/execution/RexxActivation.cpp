@@ -2244,9 +2244,9 @@ bool RexxActivation::trap(             /* trap a condition                  */
  *
  * @return A value for that variable.
  */
-RexxObject *RexxActivation::handleNovalueEvent(RexxString *name, RexxObject *defaultValue, RexxVariable *variable)
+RexxInternalObject *RexxActivation::handleNovalueEvent(RexxString *name, RexxInternalObject *defaultValue, RexxVariable *variable)
 {
-    RexxObject *value = novalueHandler(name);
+    RexxInternalObject *value = novalueHandler(name);
     // If the handler returns anything other than .nil, this is a
     // value
     if (value != TheNilObject)
@@ -2269,8 +2269,6 @@ RexxObject *RexxActivation::handleNovalueEvent(RexxString *name, RexxObject *def
     // the provided default value is the returned value
     return defaultValue;
 }
-
-
 
 void RexxActivation::mergeTraps(
     QueueClass  * source_condition_queue,      /* previous condition queue          */

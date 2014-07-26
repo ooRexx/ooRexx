@@ -140,6 +140,8 @@ public:
         ItemLink next;                       // next item in overflow bucket
     };
 
+    void * operator new(size_t size, size_t capacity);
+    void   operator delete(void *, size_t) { }
     inline HashContents() { ; };
            HashContents(size_t entries, size_t total);
 
@@ -345,7 +347,7 @@ protected:
 class IdentityHashContents : public HashContents
 {
 public:
-        void * operator new(size_t size, size_t capacity);
+           void * operator new(size_t size, size_t capacity);
     inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };
     inline void  operator delete(void *, void *) { ; }
     inline void  operator delete(void *, size_t) { ; }

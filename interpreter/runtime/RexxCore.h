@@ -182,7 +182,7 @@ EXTERNMEM MemoryObject memoryObject;
 #define TheMutableBufferClass MutableBuffer::classInstance
 #define TheSupplierClass SupplierClass::classInstance
 #define TheTableClass TableClass::classInstance
-#define TheStringTableClass StringTableClass::classInstance
+#define TheStringTableClass StringTable::classInstance
 #define TheIdentityTableClass IdentityTable::classInstance
 #define TheRelationClass RelationClass::classInstance
 #define ThePointerClass PointerClass::classInstance

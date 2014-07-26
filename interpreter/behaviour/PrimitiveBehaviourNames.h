@@ -120,6 +120,8 @@
 #define TheSmartBufferBehaviour      (&RexxBehaviour::primitiveBehaviours[T_SmartBuffer])
 #define TheIdentityHashContentsBehaviour      (&RexxBehaviour::primitiveBehaviours[T_IdentityHashContents])
 #define TheEqualityHashContentsBehaviour      (&RexxBehaviour::primitiveBehaviours[T_EqualityHashContents])
+#define TheMultiValueContentsBehaviour      (&RexxBehaviour::primitiveBehaviours[T_MultiValueContents])
+#define TheStringHashContentsBehaviour      (&RexxBehaviour::primitiveBehaviours[T_StringHashContents])
 #define TheVariableBehaviour      (&RexxBehaviour::primitiveBehaviours[T_Variable])
 #define TheVariableDictionaryBehaviour      (&RexxBehaviour::primitiveBehaviours[T_VariableDictionary])
 #define TheVariableTermBehaviour      (&RexxBehaviour::primitiveBehaviours[T_VariableTerm])

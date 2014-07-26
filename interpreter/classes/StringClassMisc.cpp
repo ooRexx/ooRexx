@@ -61,7 +61,7 @@ StringSymbolType RexxString::isSymbol()
     return LanguageParser::scanSymbol(this);
 }
 
-RexxInteger *RexxString::abbrev(
+RexxObject *RexxString::abbrev(
     RexxString *info,                  /* target compared value             */
     RexxInteger *_length)              /* minimum length                    */
 /******************************************************************************/
@@ -96,12 +96,12 @@ RexxInteger *RexxString::abbrev(
         /* do the comparison                 */
         rc = !(memcmp(this->getStringData(), info->getStringData(), Len2));
     }
-    /* return proper string value        */
-    return(rc) ? IntegerOne : IntegerZero;
+    // return proper string value
+    return booleanObject(rc == 0);
 }
 
 
-RexxInteger *RexxString::caselessAbbrev(RexxString *info, RexxInteger *_length)
+RexxObject *RexxString::caselessAbbrev(RexxString *info, RexxInteger *_length)
 {
     // the info must be a string value
     info = stringArgument(info, ARG_ONE);
@@ -124,8 +124,8 @@ RexxInteger *RexxString::caselessAbbrev(RexxString *info, RexxInteger *_length)
     {
         return TheFalseObject;
     }
-    /* do the comparison                 */
-    return booleanObject(StringUtil::caselessCompare(this->getStringData(), info->getStringData(), len2) == 0));
+    // do the comparison
+    return booleanObject(StringUtil::caselessCompare(this->getStringData(), info->getStringData(), len2) == 0);
 }
 
 
@@ -768,7 +768,7 @@ RexxInteger *RexxString::verify(
  *
  * @return True if the two regions match, false for any mismatch.
  */
-RexxInteger *RexxString::match(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_)
+RexxObject *RexxString::match(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_)
 {
     stringsize_t _start = positionArgument(start_, ARG_ONE);
     // the start position must be within the string bounds
@@ -811,7 +811,7 @@ RexxInteger *RexxString::match(RexxInteger *start_, RexxString *other, RexxInteg
  *
  * @return True if the two regions match, false for any mismatch.
  */
-RexxInteger *RexxString::caselessMatch(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_)
+RexxObject *RexxString::caselessMatch(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_)
 {
     stringsize_t _start = positionArgument(start_, ARG_ONE);
     // the start position must be within the string bounds
@@ -903,7 +903,7 @@ bool RexxString::primitiveCaselessMatch(stringsize_t _start, RexxString *other, 
  * @return true if the character at the give position is any of the characters,
  *         false if none of them match.
  */
-RexxInteger *RexxString::matchChar(RexxInteger *position_, RexxString *matchSet)
+RexxObject *RexxString::matchChar(RexxInteger *position_, RexxString *matchSet)
 {
     stringsize_t position = positionArgument(position_, ARG_ONE);
     // the start position must be within the string bounds
@@ -939,7 +939,7 @@ RexxInteger *RexxString::matchChar(RexxInteger *position_, RexxString *matchSet)
  * @return true if the character at the give position is any of the characters,
  *         false if none of them match.
  */
-RexxInteger *RexxString::caselessMatchChar(RexxInteger *position_, RexxString *matchSet)
+RexxObject *RexxString::caselessMatchChar(RexxInteger *position_, RexxString *matchSet)
 {
     stringsize_t position = positionArgument(position_, ARG_ONE);
     // the start position must be within the string bounds
@@ -1064,7 +1064,7 @@ wholenumber_t RexxString::primitiveCompareTo(RexxString *other)
     stringsize_t myLength = getLength();
     stringsize_t otherLength = other->getLength();
 
-    size_t len = Numerics::minVal(stringLength*(), other->stringLength());
+    size_t len = Numerics::minVal(getLength(), other->getLength());
 
     wholenumber_t result = memcmp(getStringData(), other->getStringData(), len);
 
@@ -1153,51 +1153,6 @@ wholenumber_t RexxString::primitiveCaselessCompareTo(RexxString *other, stringsi
     len = Numerics::minVal(myLength, otherLength);
 
     wholenumber_t result = StringUtil::caselessCompare(getStringData() + _start, other->getStringData() + _start, len);
-
-    // if they compare equal, then they are only
-    if (result == 0)
-    {
-        if (myLength == otherLength)
-        {
-            return 0;
-        }
-        else if (myLength > otherLength)
-        {
-            return 1;
-        }
-        else
-        {
-            return -1;
-        }
-    }
-    else if (result > 0)
-    {
-        return 1;
-    }
-    else
-    {
-        return -1;
-    }
-}
-
-
-/**
- * Perform a compare of regions of two string objects.  Returns
- * -1, 0, 1 based on the relative ordering of the two strings.
- *
- * @param other  The source string for the compare.
- *
- * @return -1 if the target string is less than, 0 if the two strings are
- *         equal, 1 if the target string is the greater.
- */
-wholenumber_t RexxString::primitiveCompareTo(RexxString *other)
-{
-    stringsize_t myLength = getLength();
-    stringsize_t otherLength = other->getLength();
-
-    size_t len = Numerics::minVal(stringLength*(), other->stringLength());
-
-    wholenumber_t result = StringUtil::caselessCompare(getStringData(), other->getStringData(), len);
 
     // if they compare equal, then they are only
     if (result == 0)

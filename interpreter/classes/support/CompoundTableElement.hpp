@@ -53,10 +53,12 @@ class CompoundTableElement : public RexxVariable
  friend class CompoundVariableTable;        // allow the compound table to access innards.
 
  public:
+           void *operator new(size_t size);
     inline void *operator new(size_t size, void *ptr) { return ptr; };
     inline void  operator delete(void *) { ; }
     inline void  operator delete(void *, void *) { ; }
 
+    inline CompoundTableElement(RexxString *name) { variableName = name; }
     inline CompoundTableElement(RESTORETYPE restoreType) { ; };
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);

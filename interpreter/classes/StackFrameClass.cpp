@@ -43,6 +43,7 @@
 /******************************************************************************/
 #include "RexxCore.h"
 #include "StackFrameClass.hpp"
+#include "MethodArguments.hpp"
 
 RexxClass *StackFrameClass::classInstance = OREF_NULL;   // singleton class instance
 

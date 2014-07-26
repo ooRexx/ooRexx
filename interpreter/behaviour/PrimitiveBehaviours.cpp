@@ -130,6 +130,8 @@ RexxBehaviour RexxBehaviour::primitiveBehaviours[T_Last_Primitive_Class + 1] =
     RexxBehaviour(T_SmartBuffer, (PCPPM *)RexxObject::operatorMethods),
     RexxBehaviour(T_IdentityHashContents, (PCPPM *)RexxObject::operatorMethods),
     RexxBehaviour(T_EqualityHashContents, (PCPPM *)RexxObject::operatorMethods),
+    RexxBehaviour(T_MultiValueContents, (PCPPM *)RexxObject::operatorMethods),
+    RexxBehaviour(T_StringHashContents, (PCPPM *)RexxObject::operatorMethods),
     RexxBehaviour(T_Variable, (PCPPM *)RexxObject::operatorMethods),
     RexxBehaviour(T_VariableDictionary, (PCPPM *)RexxObject::operatorMethods),
     RexxBehaviour(T_VariableTerm, (PCPPM *)RexxObject::operatorMethods),

@@ -63,13 +63,14 @@ class HashCollection : public RexxObject
 
     virtual RexxObject *unflatten(Envelope *);
     virtual RexxObject *copy();
-    virtual ArrayClass  *makeArray();
+    virtual ArrayClass *makeArray();
 
     virtual HashContents *allocateContents(size_t bucketSize, size_t capacity);
     virtual void validateIndex(RexxInternalObject *&index, size_t position);
     virtual void validateValueIndex(RexxInternalObject *&value, RexxInternalObject *&index, size_t position);
 
     void initialize(size_t capacity = DefaultTableSize);
+    void copyValues();
     void expandContents();
     void expandContents(size_t capacity );
     void ensureCapacity(size_t delta);
@@ -85,6 +86,7 @@ class HashCollection : public RexxObject
     virtual void put(RexxInternalObject *, RexxInternalObject *);
     virtual RexxInternalObject *removeItem(RexxInternalObject *value);
     virtual bool hasIndex(RexxInternalObject *);
+    virtual bool hasItem(RexxInternalObject *);
     virtual RexxInternalObject *getIndex(RexxInternalObject * value);
     virtual void empty();
     virtual SupplierClass *supplier();
@@ -99,7 +101,7 @@ class HashCollection : public RexxObject
     RexxInternalObject   *putRexx(RexxInternalObject *, RexxInternalObject *);
     RexxInternalObject   *addRexx(RexxInternalObject *, RexxInternalObject *);
     RexxInternalObject   *hasIndexRexx(RexxInternalObject *);
-    RexxInternalObject   *hasItemRexx(RexxInternalObject *);
+    RexxObject           *hasItemRexx(RexxInternalObject *);
     RexxInternalObject   *removeItemRexx(RexxInternalObject *value);
     ArrayClass            *allAtRexx(RexxInternalObject *);
     RexxInternalObject   *indexRexx(RexxInternalObject * value);
@@ -174,7 +176,7 @@ public:
     inline  StringHashCollection() { ; }
 
     virtual HashContents *allocateContents(size_t bucketSize, size_t capacity);
-    virtual RexxInternalObject  *validateIndex(RexxInternalObject *index, size_t position);
+    virtual void validateIndex(RexxInternalObject *&index, size_t position);
 
     // additional string oriented lookup functions
     // base implementations of extra directory methods.
@@ -182,12 +184,13 @@ public:
     virtual RexxInternalObject *setEntry(RexxString *entryname, RexxInternalObject *entryobj);
     virtual RexxInternalObject *entry(RexxString *index);
     virtual RexxInternalObject *removeEntry(RexxString *index);
+    virtual RexxObject *unknown(RexxString *msgname, ArrayClass *arguments);
 
     // Rexx stubs for these additional functions.
-    RexxInternalObject *entryRexx(RexxString *entryName);
-    RexxInternalObject *hasEntryRexx(RexxString *entryName);
-    RexxInternalObject *setEntryRexx(RexxString *entryname, RexxInternalObject *entryobj);
-    RexxInternalObject *removeEntryRexx(RexxString *entryName);
+    RexxInternalObject *entryRexx(RexxInternalObject *entryName);
+    RexxObject         *hasEntryRexx(RexxInternalObject *entryName);
+    RexxInternalObject *setEntryRexx(RexxInternalObject *entryname, RexxInternalObject *entryobj);
+    RexxInternalObject *removeEntryRexx(RexxInternalObject *entryName);
 };
 
 

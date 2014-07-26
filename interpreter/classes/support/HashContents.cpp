@@ -46,6 +46,7 @@
 #include "HashCollection.hpp"
 #include "ProtectedObject.hpp"
 #include "SupplierClass.hpp"
+#include "MethodArguments.hpp"
 
 
 /**
@@ -322,7 +323,7 @@ void HashContents::insert(RexxInternalObject *value, RexxInternalObject * index,
     // set the anchor item to the new values
     setEntry(position, value, index);
     // and chain the new entry off of this.
-    setNext(postion, newEntry);
+    setNext(position, newEntry);
 
     // we have a new item in the list.
     itemCount++;
@@ -492,7 +493,7 @@ void HashContents::iterateNext(ItemLink &position, ItemLink &nextBucket)
     {
         position = nextBucket++;
         // if this bucket position is active, we've found our match
-        if (isInuse(position))
+        if (isInUse(position))
         {
             return;
         }
@@ -1131,13 +1132,11 @@ void HashContents::reMerge(HashContents *newHash)
  *
  * @param item   The item value to merge.
  * @param index  The associated index value.
- *
- * @return true if this worked, false if we're full.
  */
-bool HashContents::mergeItem(RexxInternalObject *item, RexxInternalObject *index)
+void HashContents::mergeItem(RexxInternalObject *item, RexxInternalObject *index)
 {
     // this is a special put method...not an add and not a put with overwrite.
-    return mergePut(item, index);
+    mergePut(item, index);
 }
 
 
@@ -1318,7 +1317,7 @@ ArrayClass *HashContents::uniqueIndexes()
     // TODO:  good use for a hinting version
     Protected<TableClass> indexSet = new_table();
 
-    for (size_t i = 0; i < bufcketSize; i++)
+    for (size_t i = 0; i < bucketSize; i++)
     {
         // the current bucket is the search start, and we always
         // clear out the previous value for each chain start
@@ -1500,7 +1499,7 @@ void HashContents::add(RexxInternalObject *item, RexxInternalObject *index)
  * @return True if this was successfully added, false if the table
  *         is full.
  */
-bool HashContents::addFront(RexxInternalObject *item, RexxInternalObject *index)
+void HashContents::addFront(RexxInternalObject *item, RexxInternalObject *index)
 {
     // NOTE:  This depends on the caller having checked that there is space.
 
@@ -1591,7 +1590,7 @@ void HashContents::setValue(ItemLink position, RexxInternalObject *value)
  *
  * @return An IndexIterator item.
  */
-IndexIterator HashContents::iterator(RexxInteralObject *index)
+HashContents::IndexIterator HashContents::iterator(RexxInternalObject *index)
 {
     ItemLink position;
     ItemLink previous;
@@ -1612,7 +1611,7 @@ IndexIterator HashContents::iterator(RexxInteralObject *index)
  *
  * @return A TableIterator item.
  */
-TableIterator HashContents::iterator()
+HashContents::TableIterator HashContents::iterator()
 {
     ItemLink position = NoMore;
     ItemLink nextBucket = 0;

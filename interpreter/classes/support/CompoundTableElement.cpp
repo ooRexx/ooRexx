@@ -60,17 +60,6 @@ void *RexxVariable::operator new(size_t size)
 
 
 /**
- * Initialize a new CompoundTableElement
- *
- * @param name   The name of the tail element.
- */
-CompoundTableElement::CompoundTableElement(RexxString *name)
-{
-    variableName = name;
-}
-
-
-/**
  * Perform garbage collection on a live object.
  *
  * @param liveMark The current live mark.

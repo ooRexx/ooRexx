@@ -76,11 +76,11 @@ void CompoundVariableTail::buildUnresolvedTail(RexxObject **tails, size_t count)
             // if this is a variable, just copy the name.  Otherwise, copy the value
             if (isOfClass(VariableTerm, part))
             {
-                ((RexxSimpleVariable *)part)->getName()->copyIntoTail(*this);
+                ((RexxSimpleVariable *)part)->getName()->copyIntoTail(this);
             }
             else
             {
-                part->stringValue()->copyIntoTail(*this);
+                part->stringValue()->copyIntoTail(this);
             }
         }
     }

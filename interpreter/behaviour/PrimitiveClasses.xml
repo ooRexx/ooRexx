@@ -118,6 +118,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="SmartBuffer" class="SmartBuffer" include="SmartBuffer.hpp"/>
 <Class id="IdentityHashContents" class="IdentityHashContents" include="HashContents.hpp"/>
 <Class id="EqualityHashContents" class="EqualityHashContents" include="HashContents.hpp"/>
+<Class id="MultiValueContents" class="MultiValueContents" include="HashContents.hpp"/>
+<Class id="StringHashContents" class="StringHashContents" include="HashContents.hpp"/>
 
 <Class id="Variable" class="RexxVariable" include="RexxVariable.hpp"/>
 <Class id="VariableDictionary" class="RexxVariableDictionary" include="RexxVariableDictionary.hpp"/>

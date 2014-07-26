@@ -86,9 +86,9 @@ class CompoundVariableTable
 
         inline bool isAvailable()  { return current != OREF_NULL; }
         inline RexxInternalObject *value();
-        inline RexxString *name();
-        inline RexxString *name(RexxString *stemName);
-        inline void replace(RexxInternalObject v);
+               RexxString *name();
+               RexxString *name(RexxString *stemName);
+               void replace(RexxInternalObject *v);
         inline void next() { contents->next(current); }
 
     private:

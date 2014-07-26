@@ -147,7 +147,7 @@ void HashCollection::ensureCapacity(size_t delta)
     // doubling if the delta is a small value.
     if (!contents->hasCapacity(delta))
     {
-        expandContents(contents->capacity() + Numerics::maxVal(delta, contents->capacity());
+        expandContents(contents->capacity() + Numerics::maxVal(delta, contents->capacity()));
     }
 }
 
@@ -624,7 +624,7 @@ RexxInternalObject *HashCollection::removeItem(RexxInternalObject *target)
  *
  * @return .true if the object exists, .false otherwise.
  */
-RexxInternalObject *HashCollection::hasItemRexx(RexxInternalObject *target)
+RexxObject *HashCollection::hasItemRexx(RexxInternalObject *target)
 {
     requiredArgument(target, ARG_ONE);
     return booleanObject(hasItem(target));
@@ -814,17 +814,17 @@ RexxInternalObject *StringHashCollection::removeEntry(RexxString *index)
  *
  * @return Returns nothing.
  */
-RexxInternalObject *StringHashCollection::setEntry(RexxString *entryname, RexxInternalObject *entryobj)
+RexxInternalObject *StringHashCollection::setEntry(RexxString *entryName, RexxInternalObject *entryObj)
 {
     // set entry is a little different than put, in that the value argument is optional.
     // no argument is a remove operation
-    if (entryobj == OREF_NULL)
+    if (entryObj == OREF_NULL)
     {
         return remove(entryName->upper());
     }
 
     // this is just a PUT operation with an uppercase index.
-    put(entryobj, entryname->upper());
+    put(entryObj, entryName->upper());
     return OREF_NULL;
 }
 
@@ -853,12 +853,12 @@ bool StringHashCollection::hasEntry(RexxString *entryName)
  *
  * @return The entry value, if it has one.
  */
-RexxInternalObject *StringHashCollection::entryRexx(RexxString *entryName)
+RexxInternalObject *StringHashCollection::entryRexx(RexxInternalObject *entryName)
 {
     // validate the index item and let entry handle it (entry
     // also takes care of the uppercase)
-    entryName = validateIndex(entryName, ARG_ONE);
-    return entry(entryName);
+    validateIndex(entryName, ARG_ONE);
+    return entry((RexxString *)entryName);
 }
 
 
@@ -872,12 +872,12 @@ RexxInternalObject *StringHashCollection::entryRexx(RexxString *entryName)
  *
  * @return The removed entry value, if it has one.
  */
-RexxInternalObject *StringHashCollection::removeEntryRexx(RexxString *entryName)
+RexxInternalObject *StringHashCollection::removeEntryRexx(RexxInternalObject *entryName)
 {
     // validate the index item and let entry handle it (entry
     // also takes care of the uppercase)
-    entryName = validateIndex(entryName, ARG_ONE);
-    return removeEntry(entryName);
+    validateIndex(entryName, ARG_ONE);
+    return removeEntry((RexxString *)entryName);
 }
 
 
@@ -889,11 +889,11 @@ RexxInternalObject *StringHashCollection::removeEntryRexx(RexxString *entryName)
  *
  * @return .true of the diectoy has the entry, false otherwise.
  */
-RexxInternalObject *StringHashCollection::hasEntryRexx(RexxString *entryName)
+RexxObject *StringHashCollection::hasEntryRexx(RexxInternalObject *entryName)
 {
-    entryName = validateIndex(entryName, ARG_ONE);
+    validateIndex(entryName, ARG_ONE);
     // get as an uppercase string
-    return booleanObject(hasEntry(entry));
+    return booleanObject(hasEntry((RexxString *)entryName));
 }
 
 
@@ -905,11 +905,11 @@ RexxInternalObject *StringHashCollection::hasEntryRexx(RexxString *entryName)
  *
  * @return Returns nothing.
  */
-RexxInternalObject *StringHashCollection::setEntryRexx(RexxString *entryname, RexxInternalObject *entryobj)
+RexxInternalObject *StringHashCollection::setEntryRexx(RexxInternalObject *entryName, RexxInternalObject *entryObj)
 {
     // validate the argument and perform the base operation
-    entryName = validateIndex(entryName, ARG_ONE);
-    return setEntry(entryName);
+    validateIndex(entryName, ARG_ONE);
+    return setEntry((RexxString *)entryName, entryObj);
 }
 
 
@@ -923,7 +923,7 @@ RexxInternalObject *StringHashCollection::setEntryRexx(RexxString *entryname, Re
  *
  * @return Either a result object or nothing, depending on whether this is a set or get operation.
  */
-RexxInternalObject *StringHashCollection::unknown(RexxString *msgname, ArrayClass *arguments)
+RexxObject *StringHashCollection::unknown(RexxString *msgname, ArrayClass *arguments)
 {
     // must have a first item and the required argument array
     RexxString *message_value = stringArgument(msgname, ARG_ONE);
@@ -932,16 +932,16 @@ RexxInternalObject *StringHashCollection::unknown(RexxString *msgname, ArrayClas
     if (message_value->endsWith('='))
     {
         // make sure this is a good argument value.
-        arguments = arrayArgument(arguments, ARG_TWO)
+        arguments = arrayArgument(arguments, ARG_TWO);
 
         // extract the name part of the msg
         message_value = message_value->extract(0, message_value->getLength() - 1);
         // do this as an assignment
-        return setEntryRexx(message_value, arguments->get(1));
+        return (RexxObject *)setEntryRexx(message_value, arguments->get(1));
     }
 
     // just a retrieval operation
-    return entry(message_value);
+    return (RexxObject *)entry(message_value);
 }
 
 
@@ -1002,7 +1002,7 @@ HashContents *EqualityHashCollection::allocateContents(size_t bucketSize, size_t
  * @param index    The method index value.
  * @param position The argument position for error reporting.
  */
-StringHashCollection::validateIndex(RexxInternalObject *&index, size_t position)
+void StringHashCollection::validateIndex(RexxInternalObject *&index, size_t position)
 {
     index = stringArgument(index, position);    // make sure we have an index, and it is a string value.
 }

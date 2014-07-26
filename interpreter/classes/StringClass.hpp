@@ -130,18 +130,18 @@ class RexxString : public RexxObject
     wholenumber_t strictComp(RexxObject *);
     wholenumber_t comp(RexxObject *);
     wholenumber_t compareTo(RexxObject *);
-    RexxInteger *equal(RexxObject *);
-    RexxInteger *strictEqual(RexxObject *);
-    RexxInteger *notEqual(RexxObject *);
-    RexxInteger *strictNotEqual(RexxObject *);
-    RexxInteger *isGreaterThan(RexxObject *);
-    RexxInteger *isLessThan(RexxObject *);
-    RexxInteger *isGreaterOrEqual(RexxObject *);
-    RexxInteger *isLessOrEqual(RexxObject *);
-    RexxInteger *strictGreaterThan(RexxObject *);
-    RexxInteger *strictLessThan(RexxObject *);
-    RexxInteger *strictGreaterOrEqual(RexxObject *);
-    RexxInteger *strictLessOrEqual(RexxObject *);
+    RexxObject  *equal(RexxObject *);
+    RexxObject  *strictEqual(RexxObject *);
+    RexxObject  *notEqual(RexxObject *);
+    RexxObject  *strictNotEqual(RexxObject *);
+    RexxObject  *isGreaterThan(RexxObject *);
+    RexxObject  *isLessThan(RexxObject *);
+    RexxObject  *isGreaterOrEqual(RexxObject *);
+    RexxObject  *isLessOrEqual(RexxObject *);
+    RexxObject  *strictGreaterThan(RexxObject *);
+    RexxObject  *strictLessThan(RexxObject *);
+    RexxObject  *strictGreaterOrEqual(RexxObject *);
+    RexxObject  *strictLessOrEqual(RexxObject *);
 
     size_t      copyData(size_t, char *, size_t);
     RexxObject *lengthRexx();
@@ -219,8 +219,8 @@ class RexxString : public RexxObject
                                         /* OKBMISC                         */
     RexxString  *changeStr(RexxString *, RexxString *, RexxInteger *);
     RexxString  *caselessChangeStr(RexxString *, RexxString *, RexxInteger *);
-    RexxInteger *abbrev(RexxString *, RexxInteger *);
-    RexxInteger *caselessAbbrev(RexxString *, RexxInteger *);
+    RexxObject  *abbrev(RexxString *, RexxInteger *);
+    RexxObject  *caselessAbbrev(RexxString *, RexxInteger *);
     RexxInteger *compare(RexxString *, RexxString *);
     RexxInteger *caselessCompare(RexxString *, RexxString *);
     RexxString  *copies(RexxInteger *);
@@ -261,12 +261,12 @@ class RexxString : public RexxObject
     RexxString  *x2d(RexxInteger *);
     RexxString  *x2dC2d(RexxInteger *, bool);
 
-    RexxInteger *match(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_);
-    RexxInteger *caselessMatch(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_);
+    RexxObject  *match(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_);
+    RexxObject  *caselessMatch(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_);
     bool primitiveMatch(stringsize_t start, RexxString *other, stringsize_t offset, stringsize_t len);
     bool primitiveCaselessMatch(stringsize_t start, RexxString *other, stringsize_t offset, stringsize_t len);
-    RexxInteger *matchChar(RexxInteger *position_, RexxString *matchSet);
-    RexxInteger *caselessMatchChar(RexxInteger *position_, RexxString *matchSet);
+    RexxObject  *matchChar(RexxInteger *position_, RexxString *matchSet);
+    RexxObject  *caselessMatchChar(RexxInteger *position_, RexxString *matchSet);
 
     RexxInteger *compareToRexx(RexxString *other, RexxInteger *start_, RexxInteger *len_);
     RexxInteger *caselessCompareToRexx(RexxString *other, RexxInteger *start_, RexxInteger *len_);
@@ -275,8 +275,8 @@ class RexxString : public RexxObject
     wholenumber_t primitiveCompareTo(RexxString *other);
     wholenumber_t primitiveCaselessCompareTo(RexxString *other);
 
-    RexxInteger *equals(RexxString *other);
-    RexxInteger *caselessEquals(RexxString *other);
+    RexxObject  *equals(RexxString *other);
+    RexxObject  *caselessEquals(RexxString *other);
 
     ArrayClass   *makeArrayRexx(RexxString *);
 

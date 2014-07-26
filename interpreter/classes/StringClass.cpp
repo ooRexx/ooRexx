@@ -177,7 +177,7 @@ RexxObject *RexxString::unflatten(Envelope *envelope)
     // if this has been proxied, then retrieve our target object from the environment
     if (isProxyObject())
     {
-        return TheEnvironment->entry(this);
+        return (RexxObject *)TheEnvironment->entry(this);
     }
     else
     {
@@ -421,6 +421,7 @@ NumberString *RexxString::numberString()
     }
     // a subclassed type?  Do this the long way
     if (!isBaseClass())
+    {
         // get the request string value and create the number string from that value.
         // we set this in our value
         RexxString *newSelf = requestString();
@@ -506,7 +507,7 @@ bool RexxString::isEqual(RexxObject *otherObj)
         return false;
     }
 
-    RexxString *other = otherObject->requestString();
+    RexxString *other = otherObj->requestString();
     size_t otherLen = other->getLength();
     // the length comparison is the easiest path to failure
     if (otherLen != getLength())
@@ -620,7 +621,7 @@ wholenumber_t RexxString::comp(RexxObject *other)
     NumberString *secondNum = other->numberString();
 
     // if both are valid numbers, this is a numeric comparison.
-    if (firstNum != OREF_NULL) && secondNum != OREF_NULL)
+    if (firstNum != OREF_NULL && secondNum != OREF_NULL)
     {
         return firstNum->comp(secondNum);
     }
@@ -670,12 +671,13 @@ wholenumber_t RexxString::comp(RexxObject *other)
                 }
             }
         }
+        return result;
     }
 
     // same as above, but we reverse the blank compare result
     else
     {
-        result = memcmp(firstStart, secondStart, (size_t) firstLen);
+        wholenumber_t result = memcmp(firstStart, secondStart, (size_t) firstLen);
         if (result == 0)
         {
             secondStart = secondStart + firstLen;
@@ -688,8 +690,8 @@ wholenumber_t RexxString::comp(RexxObject *other)
                 }
             }
         }
+        return result;
     }
-    return result;
 }
 
 
@@ -741,7 +743,7 @@ wholenumber_t RexxString::strictComp(RexxObject *otherObj)
 // simple macro for generating the arithmetic operator methods, which
 // are essentially identical except for the final method call.
 #define ArithmeticOperator(method)  \
-    NumberString numstr = numberString(); \
+    NumberString *numstr = numberString(); \
     if (numstr == OREF_NULL)              \
     {                                     \
         reportException(Error_Conversion_operator, this); \
@@ -843,7 +845,7 @@ RexxObject *RexxString::power(RexxObject *right_term)
 // simple macro for generating the arithmetic methods, which
 // are essentially identical except for the final method call.
 #define ArithmeticMethod(method, name)  \
-    NumberString numstr = numberString(); \
+    NumberString *numstr = numberString(); \
     if (numstr == OREF_NULL)              \
     {                                     \
         reportException(Error_Incorrect_method_string_nonumber, name, this); \
@@ -971,7 +973,7 @@ RexxObject *RexxString::format(RexxObject *integers, RexxObject *decimals, RexxO
  *
  * @return True if the strings are equal, false for inequality.
  */
-RexxInteger *RexxString::equals(RexxString *other)
+RexxObject *RexxString::equals(RexxString *other)
 {
     return booleanObject(primitiveIsEqual(other));
 }
@@ -985,7 +987,7 @@ RexxInteger *RexxString::equals(RexxString *other)
  *
  * @return True if the strings are equal, false for inequality.
  */
-RexxInteger *RexxString::caselessEquals(RexxString *other)
+RexxObject *RexxString::caselessEquals(RexxString *other)
 {
     return booleanObject(primitiveCaselessIsEqual(other));
 }
@@ -999,7 +1001,7 @@ RexxInteger *RexxString::caselessEquals(RexxString *other)
  *
  * @return .true if equal, .false otherwise.
  */
-RexxInteger *RexxString::strictEqual(RexxObject *other)
+RexxObject *RexxString::strictEqual(RexxObject *other)
 {
     return booleanObject(primitiveIsEqual(other));
 }
@@ -1012,7 +1014,7 @@ RexxInteger *RexxString::strictEqual(RexxObject *other)
  *
  * @return .true if not equal, .false if equal.
  */
-RexxInteger *RexxString::strictNotEqual(RexxObject *other)
+RexxObject *RexxString::strictNotEqual(RexxObject *other)
 {
     return booleanObject(!primitiveIsEqual(other));
 }
@@ -1023,11 +1025,11 @@ RexxInteger *RexxString::strictNotEqual(RexxObject *other)
     if (other == TheNilObject)  \
     {                           \
         return TheFalseObject;  \
-    }                           ]
+    }                           \
     return booleanObject(comp);
 
 
-RexxInteger *RexxString::equal(RexxObject *other)
+RexxObject *RexxString::equal(RexxObject *other)
 /******************************************************************************/
 /* Function:  Non-strict ("=") string equality operator                       */
 /******************************************************************************/
@@ -1035,7 +1037,7 @@ RexxInteger *RexxString::equal(RexxObject *other)
     CompareOperator(comp(other) == 0);
 }
 
-RexxInteger *RexxString::notEqual(RexxObject *other)
+RexxObject *RexxString::notEqual(RexxObject *other)
 /******************************************************************************/
 /* Function:  Non-Strict ("\=") string inequality operator                    */
 /******************************************************************************/
@@ -1043,23 +1045,23 @@ RexxInteger *RexxString::notEqual(RexxObject *other)
     CompareOperator(comp(other) != 0);
 }
 
-RexxInteger *RexxString::isGreaterThan(RexxObject *other)
+RexxObject *RexxString::isGreaterThan(RexxObject *other)
 /******************************************************************************/
 /* Function:  Non-strict greater than operator (">")                          */
 /******************************************************************************/
 {
-    CompareOperator(booleanObject(comp(other) > 0));
+    CompareOperator(comp(other) > 0);
 }
 
-RexxInteger *RexxString::isLessThan(RexxObject *other)
+RexxObject *RexxString::isLessThan(RexxObject *other)
 /******************************************************************************/
 /* Function:  Non-strict less than operatore ("<")                            */
 /******************************************************************************/
 {
-    CompareOperator((comp(other) < 0);
+    CompareOperator(comp(other) < 0);
 }
 
-RexxInteger *RexxString::isGreaterOrEqual(RexxObject *other)
+RexxObject *RexxString::isGreaterOrEqual(RexxObject *other)
 /******************************************************************************/
 /* Function:  Non-strict greater than or equal operator (">=" or "\<")        */
 /******************************************************************************/
@@ -1067,7 +1069,7 @@ RexxInteger *RexxString::isGreaterOrEqual(RexxObject *other)
     CompareOperator(comp(other) >= 0);
 }
 
-RexxInteger *RexxString::isLessOrEqual(RexxObject *other)
+RexxObject *RexxString::isLessOrEqual(RexxObject *other)
 /******************************************************************************/
 /* Function:  Non-strict less than or equal operator ("<=" or "\>")           */
 /******************************************************************************/
@@ -1075,7 +1077,7 @@ RexxInteger *RexxString::isLessOrEqual(RexxObject *other)
     CompareOperator(comp(other) <= 0);
 }
 
-RexxInteger *RexxString::strictGreaterThan(RexxObject *other)
+RexxObject *RexxString::strictGreaterThan(RexxObject *other)
 /******************************************************************************/
 /* Function:  Strict greater than comparison (">>")                           */
 /******************************************************************************/
@@ -1083,7 +1085,7 @@ RexxInteger *RexxString::strictGreaterThan(RexxObject *other)
     CompareOperator(strictComp(other) > 0);
 }
 
-RexxInteger *RexxString::strictLessThan(RexxObject *other)
+RexxObject *RexxString::strictLessThan(RexxObject *other)
 /******************************************************************************/
 /* Function:  Strict less than comparison ("<<")                              */
 /******************************************************************************/
@@ -1091,7 +1093,7 @@ RexxInteger *RexxString::strictLessThan(RexxObject *other)
     CompareOperator(strictComp(other) < 0);
 }
 
-RexxInteger *RexxString::strictGreaterOrEqual(RexxObject *other)
+RexxObject *RexxString::strictGreaterOrEqual(RexxObject *other)
 /******************************************************************************/
 /* Function:  Strict greater than or equal to comparison (">>=" or "\<<")     */
 /******************************************************************************/
@@ -1100,7 +1102,7 @@ RexxInteger *RexxString::strictGreaterOrEqual(RexxObject *other)
 }
 
 
-RexxInteger *RexxString::strictLessOrEqual(RexxObject *other)
+RexxObject *RexxString::strictLessOrEqual(RexxObject *other)
 /******************************************************************************/
 /* Function:  Strict less than or equal to operatore ("<<=" or "\>>")         */
 /******************************************************************************/
