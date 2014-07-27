@@ -133,7 +133,7 @@ void RexxInstructionSelect::execute(RexxActivation *context, ExpressionStack *st
 
     // create an active DO block, which marks that we have an active SELECT
     // in case someone tries do SIGNAL into the middle of the instruction.
-    RexxDoBlock *doblock = new RexxDoBlock (this, context->getIndent());
+    DoBlock *doblock = new DoBlock (this, context->getIndent());
     // set the block to the top of the context stack.
     context->newDo(doblock);
     // Debug pause requires a conditional pause that terminates the block construct
@@ -162,7 +162,7 @@ bool RexxInstructionSelect::isLoop()
  * @param context The current execution context.
  * @param doblock The current doblock context.
  */
-void RexxInstructionSelect::terminate(RexxActivation *context, RexxDoBlock *doblock )
+void RexxInstructionSelect::terminate(RexxActivation *context, DoBlock *doblock )
 {
     // we terminate this doblock
     context->terminateBlock(doblock->getIndent());
@@ -354,7 +354,7 @@ void RexxInstructionSelectCase::execute(RexxActivation *context, ExpressionStack
 
     // create an active DO block, which marks that we have an active SELECT
     // in case someone tries do SIGNAL into the middle of the instruction.
-    RexxDoBlock *doblock = new RexxDoBlock (this, context->getIndent());
+    DoBlock *doblock = new DoBlock (this, context->getIndent());
     // set the block to the top of the context stack.
     context->newDo(doblock);
 

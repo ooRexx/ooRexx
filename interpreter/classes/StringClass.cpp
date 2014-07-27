@@ -1760,7 +1760,7 @@ RexxObject *RexxString::notOp()
 /* Function:  Logical NOT of a string                                         */
 /******************************************************************************/
 {
-  return booleanObject(!truthValue(Error_Logical_value_method));
+    return booleanObject(!truthValue(Error_Logical_value_method));
 }
 
 RexxObject *RexxString::operatorNot(RexxObject *other)
@@ -1768,66 +1768,7 @@ RexxObject *RexxString::operatorNot(RexxObject *other)
 /* Function:  Logical NOT of a string                                         */
 /******************************************************************************/
 {
-  return booleanObject(!truthValue(Error_Logical_value_method));
-}
-
-RexxObject *RexxString::isInteger()
-/******************************************************************************/
-/* Function:  Test if this string is an integer value                         */
-/******************************************************************************/
-{
-    const char *digitPtr;
-    size_t digitsLeft;
-
-    digitPtr = getStringData();
-    digitsLeft = getLength();
-
-    /* Skip all leading blanks           */
-    for (; digitsLeft && (*digitPtr == ch_SPACE || *digitPtr == ch_TAB); ++digitPtr, --digitsLeft) ;
-
-    if (digitsLeft)
-    {                   /* Still Digits left ?               */
-        if (*digitPtr == ch_PLUS || *digitPtr == ch_MINUS)
-        {
-            /* need to move past the sign and    */
-            /*  remove any remaining blanks.     */
-            for (++digitPtr, --digitsLeft;
-                digitsLeft && (*digitPtr == ch_SPACE || *digitPtr == ch_TAB);
-                ++digitPtr, --digitsLeft) ;
-            /* Yes, skip any blanks              */
-            if (!digitsLeft)                /* Did we reach end of data ?        */
-            {
-                /* Yes, not valid                    */
-                return TheFalseObject;
-            }
-        }
-        /* we are now ready to check for     */
-        /*digits                             */
-        for (; digitsLeft && *digitPtr >= ch_ZERO && *digitPtr <= ch_NINE;
-            ++digitPtr, --digitsLeft) ;
-        /* found our first non-digit, or end */
-        /* is it a decimal point?            */
-        if ( digitsLeft && *digitPtr == ch_PERIOD)
-        {
-            digitPtr++;                      /* Yes, see if remaining digits are 0*/
-            digitsLeft--;
-            for (; digitsLeft && *digitPtr == ch_ZERO; ++digitPtr, --digitsLeft) ;
-        }
-        /* if chars left make sure all are   */
-        /* blanks.                           */
-        for (; digitsLeft && (*digitPtr == ch_SPACE || *digitPtr == ch_TAB); ++digitPtr, --digitsLeft) ;
-        /* skipped all trailing blanks.      */
-        /* we better be at the end of the    */
-        /* string, otherwise its invalid.    */
-        if (!digitsLeft)
-        {
-            /* yes its the end, return true      */
-            return TheTrueObject;
-        }
-    }
-
-    /* all other cases are invalid....   */
-    return(RexxObject *) TheFalseObject;
+    return booleanObject(!truthValue(Error_Logical_value_method));
 }
 
 RexxObject *RexxString::evaluate(
@@ -1839,10 +1780,10 @@ RexxObject *RexxString::evaluate(
 /******************************************************************************/
 {
 
-  stack->push((RexxObject *)this);     /* place on the evaluation stack     */
+    stack->push((RexxObject *)this);     /* place on the evaluation stack     */
                                        /* trace if necessary                */
-  context->traceIntermediate((RexxObject *)this, TRACE_PREFIX_LITERAL);
-  return this;                         /* also return the result            */
+    context->traceIntermediate((RexxObject *)this, TRACE_PREFIX_LITERAL);
+    return this;                         /* also return the result            */
 }
 
 
@@ -1872,7 +1813,7 @@ RexxObject  *RexxString::getValue(
 /* Function:  Polymorphic get_value function used with expression terms       */
 /******************************************************************************/
 {
-  return (RexxObject *)this;           /* just return this value            */
+    return this;
 }
 
 
@@ -1882,7 +1823,7 @@ RexxObject  *RexxString::getValue(
 /* Function:  Polymorphic get_value function used with expression terms       */
 /******************************************************************************/
 {
-  return (RexxObject *)this;           /* just return this value            */
+    return this;
 }
 
 
@@ -1892,7 +1833,7 @@ RexxObject  *RexxString::getRealValue(
 /* Function:  Polymorphic get_value function used with expression terms       */
 /******************************************************************************/
 {
-  return (RexxObject *)this;           /* just return this value            */
+    return this;
 }
 
 
@@ -1902,7 +1843,7 @@ RexxObject  *RexxString::getRealValue(
 /* Function:  Polymorphic get_value function used with expression terms       */
 /******************************************************************************/
 {
-  return (RexxObject *)this;           /* just return this value            */
+    return this;
 }
 
 

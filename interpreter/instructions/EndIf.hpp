@@ -47,7 +47,10 @@
 
 #include "RexxInstruction.hpp"
 
-class RexxInstructionEndIf : public RexxInstructionSet {
+class RexxInstructionIf;
+
+class RexxInstructionEndIf : public RexxInstructionSet
+{
  public:
 
     inline void *operator new(size_t size, void *ptr) {return ptr;}

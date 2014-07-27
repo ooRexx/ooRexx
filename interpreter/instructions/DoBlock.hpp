@@ -42,14 +42,14 @@
 /* loops and performs loop test operations.                                   */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_RexxDoBlock
-#define Included_RexxDoBlock
+#ifndef Included_DoBlock
+#define Included_DoBlock
 
 #include "Token.hpp"
 
 class RexxBlockInstruction;
 
-class RexxDoBlock : public RexxInternalObject
+class DoBlock : public RexxInternalObject
 {
  public:
 
@@ -58,15 +58,15 @@ class RexxDoBlock : public RexxInternalObject
     inline void  operator delete(void *) { ; }
     inline void  operator delete(void *, void *) { ; }
 
-    RexxDoBlock(RexxBlockInstruction *, size_t);
-    inline RexxDoBlock(RESTORETYPE restoreType) { ; };
+    DoBlock(RexxBlockInstruction *, size_t);
+    inline DoBlock(RESTORETYPE restoreType) { ; };
 
     void live(size_t);
     void liveGeneral(MarkReason reason);
 
     inline RexxBlockInstruction * getParent() {return this->parent;};
-    inline void setPrevious(RexxDoBlock *block) { previous = block; }
-    inline RexxDoBlock *getPrevious() { return previous; }
+    inline void setPrevious(DoBlock *block) { previous = block; }
+    inline DoBlock *getPrevious() { return previous; }
 
     inline void setControl(RexxVariableBase *v) { control = v; }
     inline void setTo(RexxObject * value) {to = value;};
@@ -83,7 +83,7 @@ class RexxDoBlock : public RexxInternalObject
 
 protected:
 
-    RexxDoBlock       *previous;         // previous stacked Do Block
+    DoBlock           *previous;         // previous stacked Do Block
     RexxBlockInstruction *parent;        // parent instruction
     size_t             indent;           // base indentation
 

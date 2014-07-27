@@ -43,6 +43,7 @@
 #include "Interpreter.hpp"
 #include "VariableDictionary.hpp"
 #include "ActivationFrame.hpp"
+#include "RexxBaseVariable.hpp"
 
 
 /**
@@ -185,26 +186,35 @@ void *AttributeGetterCode::operator new(size_t size)
     return new_object(size, T_AttributeGetterCode);
 }
 
+
+/**
+ * Normal garbage collection live marking
+ *
+ * @param liveMark The current live mark.
+ */
 void AttributeGetterCode::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
     memory_mark(attribute);
 }
 
+
+/**
+ * Generalized object marking.
+ *
+ * @param reason The reason for this live marking operation.
+ */
 void AttributeGetterCode::liveGeneral(MarkReason reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
 {
     memory_mark_general(attribute);
 }
 
+
+/**
+ * Flatten the table contents as part of a saved program.
+ *
+ * @param envelope The envelope we're flattening into.
+ */
 void AttributeGetterCode::flatten(Envelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
 {
     setUpFlatten(AttributeGetterCode)
 
@@ -321,26 +331,34 @@ void *ConstantGetterCode::operator new(size_t size)
 }
 
 
+/**
+ * Normal garbage collection live marking
+ *
+ * @param liveMark The current live mark.
+ */
 void ConstantGetterCode::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
     memory_mark(constantValue);
 }
 
+
+/**
+ * Generalized object marking.
+ *
+ * @param reason The reason for this live marking operation.
+ */
 void ConstantGetterCode::liveGeneral(MarkReason reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
 {
     memory_mark_general(constantValue);
 }
 
+
+/**
+ * Flatten the table contents as part of a saved program.
+ *
+ * @param envelope The envelope we're flattening into.
+ */
 void ConstantGetterCode::flatten(Envelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
 {
   setUpFlatten(ConstantGetterCode)
 
@@ -460,12 +478,11 @@ CPPM(RexxObject::unsetMethod),
 CPPM(RexxObject::requestRexx),
 CPPM(RexxObject::makeStringRexx),
 CPPM(RexxObject::makeArrayRexx),
-CPPM(RexxInternalObject::hasUninit),
 CPPM(RexxObject::classObject),
 CPPM(RexxObject::equal),
 CPPM(RexxObject::strictEqual),
 CPPM(RexxObject::hashCode),
-CPPM(RexxObject::init),
+CPPM(RexxObject::initRexx),
 CPPM(RexxObject::strictNotEqual),
 CPPM(RexxObject::copyRexx),
 CPPM(RexxObject::defaultNameRexx),
@@ -488,7 +505,7 @@ CPPM(RexxClass::getMetaClass),
 CPPM(RexxClass::getSuperClasses),
 CPPM(RexxClass::getSuperClass),
 CPPM(RexxClass::getSubClasses),
-CPPM(RexxClass::defmeths),
+CPPM(RexxClass::defineMethods),
 CPPM(RexxClass::defineMethod),
 CPPM(RexxClass::defineMethods),
 CPPM(RexxClass::defineClassMethod),
@@ -499,7 +516,7 @@ CPPM(RexxClass::methods),
 CPPM(RexxClass::inherit),
 CPPM(RexxClass::uninherit),
 CPPM(RexxClass::enhanced),
-CPPM(RexxClass::mixinclassRexx),
+CPPM(RexxClass::mixinClassRexx),
 CPPM(RexxClass::subclassRexx),
 CPPM(RexxClass::equal),
 CPPM(RexxClass::strictEqual),
@@ -511,7 +528,7 @@ CPPM(RexxClass::newRexx),
 
 CPPM(ArrayClass::sizeRexx),             /* Array methods                     */
 CPPM(ArrayClass::itemsRexx),
-CPPM(ArrayClass::dimension),
+CPPM(ArrayClass::dimensionRexx),
 CPPM(ArrayClass::getDimensions),
 CPPM(ArrayClass::supplier),
 CPPM(ArrayClass::getRexx),
@@ -520,9 +537,9 @@ CPPM(ArrayClass::hasIndexRexx),
 CPPM(ArrayClass::sectionRexx),
 CPPM(ArrayClass::removeRexx),
 CPPM(ArrayClass::firstRexx),
-CPPM(ArrayClass::firstItem),
+CPPM(ArrayClass::getFirstItem),
 CPPM(ArrayClass::lastRexx),
-CPPM(ArrayClass::lastItem),
+CPPM(ArrayClass::getLastItem),
 CPPM(ArrayClass::nextRexx),
 CPPM(ArrayClass::previousRexx),
 CPPM(ArrayClass::appendRexx),
@@ -544,24 +561,6 @@ CPPM(ArrayClass::newRexx),
 CPPM(ArrayClass::makeString),
 CPPM(ArrayClass::of),
 
-CPPM(DirectoryClass::atRexx),           /* Directory methods                 */
-CPPM(DirectoryClass::put),
-CPPM(DirectoryClass::entryRexx),
-CPPM(DirectoryClass::hasEntry),
-CPPM(DirectoryClass::hasIndex),
-CPPM(DirectoryClass::itemsRexx),
-CPPM(RexxHashTableCollection::merge),
-CPPM(DirectoryClass::removeRexx),
-CPPM(DirectoryClass::setEntry),
-CPPM(DirectoryClass::setMethod),
-CPPM(DirectoryClass::supplier),
-CPPM(DirectoryClass::allIndexes),
-CPPM(DirectoryClass::allItems),
-CPPM(DirectoryClass::empty),
-CPPM(DirectoryClass::isEmptyRexx),
-CPPM(DirectoryClass::indexRexx),
-CPPM(DirectoryClass::hasItem),
-CPPM(DirectoryClass::removeItem),
 
 CPPM(DirectoryClass::newRexx),
 
@@ -724,7 +723,6 @@ CPPM(NumberString::orOp),
 CPPM(NumberString::xorOp),
 CPPM(NumberString::Max),
 CPPM(NumberString::Min),
-CPPM(NumberString::isInteger),
 CPPM(NumberString::d2c),
 CPPM(NumberString::d2x),
 CPPM(NumberString::d2xD2c),
@@ -803,7 +801,6 @@ CPPM(RexxString::orOp),
 CPPM(RexxString::xorOp),
 CPPM(RexxString::Max),
 CPPM(RexxString::Min),
-CPPM(RexxString::isInteger),
 CPPM(RexxString::upperRexx),
 CPPM(RexxString::lowerRexx),
 

@@ -132,7 +132,7 @@ void RexxInstructionEnd::execute(RexxActivation *context, ExpressionStack *stack
         case LOOP_BLOCK:
         {
             // get the top block from the context.
-            RexxDoBlock *doBlock = context->topBlock();
+            DoBlock *doBlock = context->topBlock();
             // For tracing the end, reset the indentation to the block beginning indent.
             // then trace.
             context->setIndent(doBlock->getIndent());

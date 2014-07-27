@@ -92,11 +92,9 @@ RexxBehaviour::RexxBehaviour(size_t newTypenum, PCPPM *operator_methods)
     header.setObjectSize(sizeof(RexxBehaviour));
     setClassType(newTypenum);
     behaviourFlags.reset();
-    scopes = OREF_NULL;
     methodDictionary = OREF_NULL;
     operatorMethods = operator_methods;
     owningClass = OREF_NULL;
-    instanceMethodDictionary = OREF_NULL;
 
     // if this is an internal class, normalize this so we can
     // restore this to the correct value if we add additional internal classes.
@@ -180,20 +178,9 @@ void RexxBehaviour::flatten(Envelope *envelope)
  *
  * @param m      The new dictionary.
  */
-void RexxBehaviour::setMethodDictionary(TableClass  *m)
+void RexxBehaviour::setMethodDictionary(MethodDictionary *m)
 {
     setField(methodDictionary, m);
-};
-
-
-/**
- * Set a new instance method dictionary in the behaviour.
- *
- * @param m      The new dictionary.
- */
-void RexxBehaviour::setInstanceMethodDictionary(TableClass * m)
-{
-    setField(instanceMethodDictionary, m);
 };
 
 
@@ -267,8 +254,6 @@ void RexxBehaviour::copyBehaviour()
 void RexxBehaviour::copyBehaviour(RexxBehaviour *source)
 {
     setField(methodDictionary, source->copyMethodDictionary());
-    setField(scopes, source->copyScopes());
-    setField(instanceMethodDictionary, source->copyInstanceMethodDictionary());
     // this is the same class as the source also
     setField(owningClass, source->owningClass);
     // copy the same operator methods.
@@ -285,7 +270,7 @@ void RexxBehaviour::copyBehaviour(RexxBehaviour *source)
  *
  * @return The created method object.
  */
-RexxMethod *RexxBehaviour::defineMethod(const char *name, PCPPM entryPoint, size_t arguments, const char *entryPointName)
+MethodClass *RexxBehaviour::defineMethod(const char *name, PCPPM entryPoint, size_t arguments, const char *entryPointName)
 {
     // we're doing this during an image build, so make sure we use the interned string name.
     RexxString *n = memoryObject.getGlobalName(name);
@@ -314,7 +299,7 @@ void RexxBehaviour::hideMethod(const char *name)
         setField(methodDictionary, new MethodDictionary());
     }
 
-    methodDictionary->hideMethod(n, method)
+    methodDictionary->hideMethod(n);
 }
 
 
@@ -337,7 +322,7 @@ void RexxBehaviour::replaceMethod(RexxString *methodName, MethodClass *method)
         setField(methodDictionary, new MethodDictionary());
     }
 
-    methodDictionary->replaceMethod(methodName, method)
+    methodDictionary->replaceMethod(methodName, method);
 }
 
 
@@ -378,7 +363,7 @@ void RexxBehaviour::defineMethod(RexxString *methodName, MethodClass *method)
         setField(methodDictionary, new MethodDictionary());
     }
 
-    methodDictionary->defineMethod(methodName, method)
+    methodDictionary->addMethod(methodName, method);
 }
 
 
@@ -425,7 +410,6 @@ MethodClass *RexxBehaviour::getMethodObject(RexxString *messageName )
 {
     // force to a string version (upper case required)
     messageName = stringArgument(messageName, ARG_ONE)->upper();
-    /* now just do a method lookup       */
     return methodLookup(messageName);
 }
 
@@ -477,7 +461,7 @@ MethodClass *RexxBehaviour::getMethod(RexxString *messageName)
  *
  * @return The deleted method, if any.
  */
-RexxObject *RexxBehaviour::deleteMethod(RexxString *messageName)
+void RexxBehaviour::deleteMethod(RexxString *messageName)
 {
     // this is a class definition we're removing, so just delete from the
     // table.
@@ -519,8 +503,6 @@ void RexxBehaviour::restore(RexxBehaviour * saved)
 
     // now pull in the method dictionary from the saved copy.
     methodDictionary = saved->getMethodDictionary();
-    // and also the scopes and defining class
-    scopes = saved->getScopes();
     owningClass = saved->getOwningClass();
 }
 
@@ -672,7 +654,7 @@ void RexxBehaviour::mergeMethodDictionary(MethodDictionary *sourceDictionary)
     else
     {
         // get a copy of the source dictionary and merge our methods into it.
-        Protected<MethodDictionary> newMethods = (MethodDictionary *)sourceDictionary->copy;
+        Protected<MethodDictionary> newMethods = (MethodDictionary *)sourceDictionary->copy();
         // merge our methods and scope into the copy
         methodDictionary->merge(newMethods);
         // and replace our existing behaviour.
@@ -688,7 +670,7 @@ void RexxBehaviour::mergeMethodDictionary(MethodDictionary *sourceDictionary)
  */
 ArrayClass *RexxBehaviour::allScopes()
 {
-    methodDictionary->allScopes();
+    return methodDictionary->allScopes();
 }
 
 
@@ -751,7 +733,7 @@ void RexxBehaviour::addInstanceMethods(MethodDictionary *source)
  *
  * @param newMethods The new methods to add.
  */
-void RexxBehaviour::defineMethods(StringTable *newMethods)
+RexxObject *RexxBehaviour::defineMethods(StringTable *newMethods)
 {
     // loop through the table with an iterator.
     HashContents::TableIterator iterator = newMethods->iterator();

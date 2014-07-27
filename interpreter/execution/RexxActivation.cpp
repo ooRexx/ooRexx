@@ -1088,7 +1088,7 @@ void RexxActivation::iterate(
 /* Function:  Process a REXX ITERATE instruction                              */
 /******************************************************************************/
 {
-    RexxDoBlock *doblock = topBlock();          /* get the first stack item          */
+    DoBlock *doblock = topBlock();          /* get the first stack item          */
 
     while (doblock != OREF_NULL)
     {       /* while still DO blocks to process  */
@@ -1140,7 +1140,7 @@ void RexxActivation::leaveLoop(
 /* Function:  Process a REXX LEAVE instruction                                */
 /******************************************************************************/
 {
-    RexxDoBlock *doblock = topBlock();          /* get the first stack item          */
+    DoBlock *doblock = topBlock();          /* get the first stack item          */
 
     while (doblock != OREF_NULL)
     {       /* while still DO blocks to process  */

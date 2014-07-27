@@ -3248,17 +3248,73 @@ NumberString *NumberString::Min(
    return maxMin(args, argCount, OT_MIN);
 }
 
-RexxObject *NumberString::isInteger()
-/******************************************************************************/
-/* This method determines if the formatted numberstring is s true integer     */
-/* string.  That is, its not of the form 1.00E3 but 10000                     */
-/******************************************************************************/
+
+/**
+ * This method determines if the formatted numberstring is s true integer
+ * string.  That is, its not of the form 1.00E3 but 1000
+ *
+ * @return true if this can be represented as a true whole number value,
+ *         false otherwise.
+ */
+bool NumberString::isInteger()
 {
-                                       /* first convert number to formatted */
-                                       /* objetc, "make it a string"        */
-                                       /* now call string to check for      */
-    return stringValue()->isInteger();
+    // easiest case...the number zero.
+    if (sign == 0)
+    {
+        return true;
+    }
+
+    // get working values of the exponent and length
+    wholenumber_t expValue = exp;
+    size_t lenValue = length;
+
+    // zero exponents is a good case too...we would only need
+    // exponential format if too long...and we've already determined
+    // that situation.
+    if (expValue == 0)
+    {
+        return true;
+    }
+
+    wholenumber_t expFactor = 0;
+    // get size of the integer part of this number
+    wholenumber_t temp = expValue + (wholenumber_t)lenValue - 1;
+    // ok, now do the exponent check...if we need one, not an integer
+    if ((temp >= (wholenumber_t)numDigits) || ((size_t)Numerics::abs(expValue) > (numDigits * 2)) )
+    {
+        return false;
+    }
+
+    // we don't need exponential notation, and this exponent value is positive, which
+    // means there are no decimals.  This is a good integer
+    if (expValue > 0)
+    {
+        return true;
+    }
+
+    // get the adjusted length (expValue is negative, so this will
+    // be less than length of the string).
+    wholenumber_t integers = expValue + (wholenumber_t)lenValue;
+    wholenumber_t decimals = lenValue - integers;
+    // we can have a number of leading zeros for a decimal number,
+    // so it is possible all of our digits are decimals.
+    if (integers < 0)
+    {
+        integers = 0;
+        decimals = lenValue;
+    }
+
+    // validate that all decimal positions are zero
+    for (size_t numIndex = (size_t)integers; numIndex < lenValue; numIndex++)
+    {
+        if (number[numIndex] != 0)
+        {
+            return false;
+        }
+    }
+    return true;
 }
+
 
 /*********************************************************************/
 /*   Function:          Round up a number as a result of the chopping*/

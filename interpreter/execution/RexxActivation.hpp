@@ -351,12 +351,12 @@ class RexxActivation : public RexxActivationBase
    void              setReturnStatus(int status);
 
    inline void              setCallType(RexxString *type) {settings.calltype = type; }
-   inline void              pushBlockInstruction(RexxDoBlock *block) { block->setPrevious(doStack); doStack = block; }
-   inline void              popBlockInstruction() { RexxDoBlock *temp; temp = doStack; doStack = temp->getPrevious(); temp->setHasNoReferences(); }
-   inline RexxDoBlock     * topBlockInstruction() { return doStack; }
+   inline void              pushBlockInstruction(DoBlock *block) { block->setPrevious(doStack); doStack = block; }
+   inline void              popBlockInstruction() { DoBlock *temp; temp = doStack; doStack = temp->getPrevious(); temp->setHasNoReferences(); }
+   inline DoBlock         * topBlockInstruction() { return doStack; }
    inline void              terminateBlockInstruction(size_t _indent) { popBlockInstruction(); blockNest--; settings.traceIndent = _indent; }
    inline void              terminateBlockInstruction() { settings.traceIndent = doStack->getIndent(); popBlockInstruction(); blockNest--; }
-   inline void              newBlockInstruction(RexxDoBlock *block) { pushBlockInstruction(block); blockNest++; settings.traceIndent++;}
+   inline void              newBlockInstruction(DoBlock *block) { pushBlockInstruction(block); blockNest++; settings.traceIndent++;}
    inline void              removeBlockInstruction() { blockNest--; unindent(); };
    inline void              addBlockInstruction()    { blockNest++; indent(); };
    inline bool              hasActiveBlockInstructions() { return blockNest != 0; }
@@ -640,7 +640,7 @@ class RexxActivation : public RexxActivationBase
     RexxActivation      *parent;        // previous running activation for internal call/interpret
     RexxObject         **argList;       // activity argument list
     size_t               argCount;      // the count of arguments
-    RexxDoBlock         *doStack;       // stack of DO loops
+    DoBlock         *doStack;       // stack of DO loops
     RexxInstruction     *current;       // current execution pointer
     RexxInstruction     *next;          // next instruction to execute
     bool                 debugPause;    // executing a debug pause

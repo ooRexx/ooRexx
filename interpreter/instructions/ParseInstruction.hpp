@@ -80,6 +80,6 @@ class RexxInstructionParse : public RexxInstruction
     InstructionSubKeyword stringSource;          // where the parsed data originates
     RexxObject       *expression;                // parse value expression
     size_t            triggerCount;              // number of triggers
-    RexxTrigger      *triggers[1];               // parsing triggers
+    ParseTrigger     *triggers[1];               // parsing triggers
 };
 #endif

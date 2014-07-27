@@ -59,7 +59,7 @@
  *
  * @return A newly allocated Rexx object.
  */
-void  *RexxTrigger::operator new(size_t size, size_t variableCount)
+void  *ParseTrigger::operator new(size_t size, size_t variableCount)
 {
     return new_object(size + (variableCount - 1) * sizeof(RexxObject *), T_ParseTrigger);
 }
@@ -74,7 +74,7 @@ void  *RexxTrigger::operator new(size_t size, size_t variableCount)
  *                   The count of variables in this parse section.
  * @param _variables The list of variables to assign.
  */
-RexxTrigger::RexxTrigger(ParseTriggerType type, RexxObject *_value, size_t _variableCount,
+ParseTrigger::ParseTrigger(ParseTriggerType type, RexxObject *_value, size_t _variableCount,
     QueueClass  *_variables)
 {
     triggerType = type;
@@ -91,7 +91,7 @@ RexxTrigger::RexxTrigger(ParseTriggerType type, RexxObject *_value, size_t _vari
  *
  * @param liveMark The current live mark.
  */
-void RexxTrigger::live(size_t liveMark)
+void ParseTrigger::live(size_t liveMark)
 {
     memory_mark(value);
     memory_mark_array(variableCount, variables);
@@ -105,7 +105,7 @@ void RexxTrigger::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void RexxTrigger::liveGeneral(MarkReason reason)
+void ParseTrigger::liveGeneral(MarkReason reason)
 {
     memory_mark_general(value);
     memory_mark_general_array(variableCount, variables);
@@ -117,9 +117,9 @@ void RexxTrigger::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope that will hold the flattened object.
  */
-void RexxTrigger::flatten(Envelope *envelope)
+void ParseTrigger::flatten(Envelope *envelope)
 {
-    setUpFlatten(RexxTrigger)
+    setUpFlatten(ParseTrigger)
 
     flattenRef(value);
     flattenArrayRefs(variableCount, variables);
@@ -137,7 +137,7 @@ void RexxTrigger::flatten(Envelope *envelope)
  *
  * @return The converted integer value.
  */
-stringsize_t RexxTrigger::integerTrigger(RexxActivation *context, ExpressionStack *stack)
+stringsize_t ParseTrigger::integerTrigger(RexxActivation *context, ExpressionStack *stack)
 {
     // if we have a value that requires evaluation, get the value and trace.
     RexxObject *trigger = value->evaluate(context, stack);
@@ -166,7 +166,7 @@ stringsize_t RexxTrigger::integerTrigger(RexxActivation *context, ExpressionStac
  *
  * @return A true string version of the object.
  */
-RexxString *RexxTrigger::stringTrigger(RexxActivation *context, ExpressionStack *stack)
+RexxString *ParseTrigger::stringTrigger(RexxActivation *context, ExpressionStack *stack)
 {
     // if we have a value that requires evaluation, get the value and trace.
     RexxObject *trigger = value->evaluate(context, stack);
@@ -186,7 +186,7 @@ RexxString *RexxTrigger::stringTrigger(RexxActivation *context, ExpressionStack 
  * @param stack   The current evaluation stack.
  * @param target  The current parsing context.
  */
-void RexxTrigger::parse(RexxActivation *context, ExpressionStack *stack,
+void ParseTrigger::parse(RexxActivation *context, ExpressionStack *stack,
     RexxTarget *target )
 {
     // perform the trigger operaitons

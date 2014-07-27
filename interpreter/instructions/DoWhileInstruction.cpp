@@ -132,7 +132,7 @@ void RexxInstructionDoWhile::flatten(Envelope *envelope)
  * @return true if we should execute the loop block, false if
  *         we should terminate the loop.
  */
-bool RexxInstructionDoWhile::iterate(RexxActivation *context, ExpressionStack *stack, RexxDoBlock *doblock, bool first)
+bool RexxInstructionDoWhile::iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first)
 {
     return whileLoop.checkWhile(context, stack);
 }
@@ -168,7 +168,7 @@ RexxInstructionDoUntil::RexxInstructionDoUntil(RexxString *l, WhileUntilLoop &w)
  * @return true if we should execute the loop block, false if
  *         we should terminate the loop.
  */
-bool RexxInstructionDoUntil::iterate(RexxActivation *context, ExpressionStack *stack, RexxDoBlock *doblock, bool first)
+bool RexxInstructionDoUntil::iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first)
 {
     // we don't check the UNTIL condition on the first iteration
     if (!first)

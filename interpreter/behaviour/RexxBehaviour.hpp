@@ -70,17 +70,23 @@ class RexxBehaviour : public RexxInternalObject
     virtual void flatten(Envelope*);
     virtual RexxObject *copy();
 
+    void         copyBehaviour();
     void         copyBehaviour(RexxBehaviour *source);
     void         defineMethod(RexxString *, MethodClass *);
-    void         defineMethods(StringTable *);
-    void         defineMethod(const char *, PCPPM, size_t);
+    RexxObject  *defineMethods(StringTable *);
+    MethodClass *defineMethod(const char *, PCPPM, size_t, const char *);
     void         addInstanceMethod(RexxString *, MethodClass *);
     void         removeInstanceMethod(RexxString *);
+    void         hideMethod(const char *name);
+    void         replaceMethod(RexxString *methodName, MethodClass *method);
+    void         inheritInstanceMethods(RexxBehaviour *source);
+    void         setMethodDictionaryScope(RexxClass *scope);
+    MethodClass *getMethodObject(RexxString *messageName );
     MethodClass *methodObject(RexxString *);
     MethodClass *methodLookup(RexxString *);
     bool         hasMethod(RexxString *name)  { return methodLookup(name) != OREF_NULL; }
     MethodClass *getMethod(RexxString *);
-    RexxObject  *deleteMethod(RexxString *);
+    void         deleteMethod(RexxString *);
     void         restore(RexxBehaviour *);
     RexxClass   *restoreClass();
     RexxClass   *superScope(RexxClass *);

@@ -64,6 +64,7 @@
 #include "MutableBufferClass.hpp"
 #include "MethodArguments.hpp"
 #include "LanguageParser.hpp"
+#include "StemClass.hpp"
 
 BEGIN_EXTERN_C()
 
@@ -436,7 +437,7 @@ RexxDirectoryObject RexxEntry GetPackageClasses(RexxThreadContext *c, RexxPackag
     ApiContext context(c);
     try
     {
-        return (RexxDirectoryObject)context.ret(((PackageClass *)m)->getClasses());
+        return (RexxDirectoryObject)context.ret(((PackageClass *)m)->getClassesRexx());
     }
     catch (NativeActivation *)
     {
@@ -449,7 +450,7 @@ RexxDirectoryObject RexxEntry GetPackagePublicClasses(RexxThreadContext *c, Rexx
     ApiContext context(c);
     try
     {
-        return (RexxDirectoryObject)context.ret(((PackageClass *)m)->getPublicClasses());
+        return (RexxDirectoryObject)context.ret(((PackageClass *)m)->getPublicClassesRexx());
     }
     catch (NativeActivation *)
     {
@@ -462,7 +463,7 @@ RexxDirectoryObject RexxEntry GetPackageMethods(RexxThreadContext *c, RexxPackag
     ApiContext context(c);
     try
     {
-        return (RexxDirectoryObject)context.ret(((PackageClass *)m)->getClasses());
+        return (RexxDirectoryObject)context.ret(((PackageClass *)m)->getMethodsRexx());
     }
     catch (NativeActivation *)
     {
@@ -622,7 +623,7 @@ POINTER RexxEntry ObjectToCSelfScoped(RexxThreadContext *c, RexxObjectPtr o, Rex
     try
     {
         // ask the object to figure this out
-        return ((RexxObject *)o)->getCSelf((RexxObject *)s);
+        return ((RexxObject *)o)->getCSelf((RexxClass *)s);
     }
     catch (NativeActivation *)
     {
@@ -1209,7 +1210,7 @@ RexxObjectPtr RexxEntry DirectoryAt(RexxThreadContext *c, RexxDirectoryObject t,
     {
         RexxString *index = new_string(i);
         ProtectedObject p(index);
-        return context.ret(((DirectoryClass *)t)->at(index));
+        return context.ret(((DirectoryClass *)t)->get(index));
     }
     catch (NativeActivation *)
     {
@@ -1355,7 +1356,7 @@ size_t RexxEntry ArrayDimension(RexxThreadContext *c, RexxArrayObject a)
     ApiContext context(c);
     try
     {
-        return ((ArrayClass *)a)->getDimension();
+        return ((ArrayClass *)a)->getDimensions();
     }
     catch (NativeActivation *)
     {

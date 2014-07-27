@@ -82,7 +82,7 @@ public:
         inline bool isAvailable()  { return position != NoMore; }
         inline RexxInternalObject *value() { return contents->entryValue(position); }
         inline RexxInternalObject *index() { return contents->entryIndex(position); }
-        inline void replace(RexxInternalObject v) { contents->setValue(position, v); }
+        inline void replace(RexxInternalObject *v) { contents->setValue(position, v); }
         inline void next() { contents->nextMatch(indexValue, position); }
 
 	private:
@@ -110,7 +110,7 @@ public:
         inline bool isAvailable()  { return position != NoMore; }
         inline RexxInternalObject *value() { return contents->entryValue(position); }
         inline RexxInternalObject *index() { return contents->entryIndex(position); }
-        inline void replace(RexxInternalObject v) { contents->setValue(position, v); }
+        inline void replace(RexxInternalObject *v) { contents->setValue(position, v); }
         inline void next() { contents->iterateNext(position, nextBucket); }
 
 	private:

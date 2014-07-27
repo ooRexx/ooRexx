@@ -49,13 +49,13 @@
 
 
 /**
- * Allocate a new RexxDoBlock object.
+ * Allocate a new DoBlock object.
  *
  * @param size   The object size
  *
  * @return Storage for this object allocated from the Rexx object heap.
  */
-void * RexxDoBlock::operator new(size_t size)
+void * DoBlock::operator new(size_t size)
 {
     return new_object(size, T_DoBlock);
 }
@@ -67,7 +67,7 @@ void * RexxDoBlock::operator new(size_t size)
  * @param _parent The instruction this represents.
  * @param _indent The current trace indentation level.
  */
-RexxDoBlock::RexxDoBlock(RexxBlockInstruction* _parent, size_t  _indent )
+DoBlock::DoBlock(RexxBlockInstruction* _parent, size_t  _indent )
 {
     parent = _parent;
     indent = _indent;
@@ -79,7 +79,7 @@ RexxDoBlock::RexxDoBlock(RexxBlockInstruction* _parent, size_t  _indent )
  *
  * @param liveMark The current live mark.
  */
-void RexxDoBlock::live(size_t liveMark)
+void DoBlock::live(size_t liveMark)
 {
     memory_mark(previous);
     memory_mark(parent);
@@ -96,7 +96,7 @@ void RexxDoBlock::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void RexxDoBlock::liveGeneral(MarkReason reason)
+void DoBlock::liveGeneral(MarkReason reason)
 {
     memory_mark_general(previous);
     memory_mark_general(parent);
@@ -116,7 +116,7 @@ void RexxDoBlock::liveGeneral(MarkReason reason)
  * @return true if we should perform this iteration of the loop,
  *         false otherwise.
  */
-bool RexxDoBlock::checkOver(RexxActivation *context, ExpressionStack *stack)
+bool DoBlock::checkOver(RexxActivation *context, ExpressionStack *stack)
 {
     // the array was stored in the too field
     ArrayClass *overArray = (ArrayClass *)to;
@@ -155,7 +155,7 @@ bool RexxDoBlock::checkOver(RexxActivation *context, ExpressionStack *stack)
  * @return True if the loop should continue, false if we've hit
  *         a termination condition.
  */
-bool RexxDoBlock::checkControl(RexxActivation *context, ExpressionStack *stack, bool increment )
+bool DoBlock::checkControl(RexxActivation *context, ExpressionStack *stack, bool increment )
 {
     // get the control variable value and trace
     RexxObject *result = control->getValue(context);

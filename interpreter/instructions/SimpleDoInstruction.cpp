@@ -73,7 +73,7 @@ void RexxInstructionSimpleDo::execute(RexxActivation *context, ExpressionStack *
     // trace on entry
     context->traceInstruction(this);
 
-    RexxDoBlock *doblock = OREF_NULL;
+    DoBlock *doblock = OREF_NULL;
 
     // if we have a label then we need to add a block to the control stack
     // so LEAVE or ITERATE can determine the block bounds.
@@ -81,7 +81,7 @@ void RexxInstructionSimpleDo::execute(RexxActivation *context, ExpressionStack *
     {
         // create an active block, and make this the top of the
         // control stack
-        doblock = new RexxDoBlock (this, context->getIndent());
+        doblock = new DoBlock (this, context->getIndent());
         context->newDo(doblock);
     }
     else

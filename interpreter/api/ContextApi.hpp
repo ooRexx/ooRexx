@@ -165,7 +165,7 @@ public:
         }
     }
 
-    inline RexxObjectPtr ret(RexxObject *o)
+    inline RexxObjectPtr ret(RexxInternalObject *o)
     {
         context->createLocalReference(o);
         return (RexxObjectPtr)o;

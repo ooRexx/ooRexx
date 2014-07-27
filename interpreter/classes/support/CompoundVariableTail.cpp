@@ -117,23 +117,23 @@ void CompoundVariableTail::buildTail(VariableDictionary *dictionary, RexxObject 
         // if this is directly a string, we can use this directly
         if (isString(_tail))
         {
-            useStringValue(rep);
+            useStringValue((RexxString *)_tail);
             return;
         }
         // some other type of object, or an integer without a string
         // rep.  We need to have it do the copy operation.
-        _tail->copyIntoTail(*this);
+        _tail->copyIntoTail(this);
         length = current - tail;             // set the final, updated length
     }
     else
     {
         // copy the first element, then the remainder of the elements
         // with a dot in between.
-        tails[0]->getValue(dictionary)->copyIntoTail(*this);
+        tails[0]->getValue(dictionary)->copyIntoTail(this);
         for (size_t i = 1; i < tailCount; i++)
         {
             addDot();
-            tails[i]->getValue(dictionary)->copyIntoTail(*this);
+            tails[i]->getValue(dictionary)->copyIntoTail(this);
         }
 
         length = current - tail;             // set the final, updated length
@@ -169,23 +169,23 @@ void CompoundVariableTail::buildTail(RexxActivation *context, RexxObject **tails
         // if this is directly a string, we can use this directly
         if (isString(_tail))
         {
-            useStringValue(rep);
+            useStringValue((RexxString *)_tail);
             return;
         }
         // some other type of object, or an integer without a string
         // rep.  We need to have it do the copy operation.
-        _tail->copyIntoTail(*this);
+        _tail->copyIntoTail(this);
         length = current - tail;             // set the final, updated length
     }
     else
     {
         // copy the first element, then the remainder of the elements
         // with a dot in between.
-        tails[0]->getValue(context)->copyIntoTail(*this);
+        tails[0]->getValue(context)->copyIntoTail(this);
         for (size_t i = 1; i < tailCount; i++)
         {
             addDot();
-            tails[i]->getValue(dictionary)->copyIntoTail(*this);
+            tails[i]->getValue(context)->copyIntoTail(this);
         }
 
         length = current - tail;             // set the final, updated length
@@ -222,23 +222,23 @@ void CompoundVariableTail::buildTail(RexxObject **tails, size_t count)
         {
             part = OREF_NULLSTRING;
         }
-        part->copyIntoTail(*this);
+        part->copyIntoTail(this);
     }
     length = current - tail;
 }
 
 
-void CompoundVariableTail::buildTail(
-    RexxString *_tail)                       /* the single string index */
-/******************************************************************************/
-/* Function:  Construct a tail from a single string index                     */
-/******************************************************************************/
+/**
+ * Construct a tail from a single string index
+ *
+ * @param _tail  The single tail value.
+ */
+void CompoundVariableTail::buildTail(RexxString *_tail)
 {
-  /* point directly to the value       */
-  this->tail = _tail->getWritableData();
-  length = _tail->getLength();          /* and the length */
-  remainder = 0;                        /* belt and braces...this will force a reallocation if we append */
-  value = _tail;                        /* save this reference in case we're asked for it later */
+    tail = _tail->getWritableData();
+    length = _tail->getLength();
+    remainder = 0;
+    value = _tail;
 }
 
 
@@ -249,7 +249,7 @@ void CompoundVariableTail::buildTail(
  */
 void CompoundVariableTail::buildTail(const char *t)
 {
-    this->tail = const_cast<char *>(t);
+    tail = const_cast<char *>(t);
     length = strlen(t);
     remainder = 0;
 }
@@ -269,7 +269,7 @@ void CompoundVariableTail::buildTail(RexxString *_tail, size_t index)
     // the tail prefix can be optional,
     if (_tail != OREF_NULL)
     {
-        _tail->copyIntoTail(*this);
+        _tail->copyIntoTail(this);
     }
 
     length = length + _tail->getLength();

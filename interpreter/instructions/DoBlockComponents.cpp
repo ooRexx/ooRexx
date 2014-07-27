@@ -55,7 +55,7 @@
  * @param doblock The context doblock useds to store loop state data.
  */
 void ForLoop::setup(RexxActivation *context,
-        ExpressionStack *stack, RexxDoBlock *doblock, bool forKeyword)
+        ExpressionStack *stack, DoBlock *doblock, bool forKeyword)
 {
     // we might not have anything here, but we need to set
     // a marker in the doblock so we know not to use this
@@ -113,7 +113,7 @@ void ForLoop::setup(RexxActivation *context,
  * @param doblock The context doblock useds to store loop state data.
  */
 void ControlledLoop::setup( RexxActivation *context,
-     ExpressionStack *stack, RexxDoBlock *doblock)
+     ExpressionStack *stack, DoBlock *doblock)
 {
     // evaluate the initial expression
     RexxObject *_initial = initial->evaluate(context, stack);
@@ -210,7 +210,7 @@ void ControlledLoop::setup( RexxActivation *context,
  * @param doblock The context doblock useds to store loop state data.
  */
 void OverLoop::setup( RexxActivation *context,
-     ExpressionStack *stack, RexxDoBlock *doblock)
+     ExpressionStack *stack, DoBlock *doblock)
 {
     // evaluate the array target
     RexxObject* result = target->evaluate(context, stack);

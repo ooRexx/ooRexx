@@ -106,7 +106,6 @@
 #define TheNilObjectBehaviour      (&RexxBehaviour::primitiveBehaviours[T_NilObject])
 #define TheBehaviourBehaviour      (&RexxBehaviour::primitiveBehaviours[T_Behaviour])
 #define TheMethodDictionaryBehaviour      (&RexxBehaviour::primitiveBehaviours[T_MethodDictionary])
-#define TheScopeTableBehaviour      (&RexxBehaviour::primitiveBehaviours[T_ScopeTable])
 #define TheLibraryPackageBehaviour      (&RexxBehaviour::primitiveBehaviours[T_LibraryPackage])
 #define TheRexxCodeBehaviour      (&RexxBehaviour::primitiveBehaviours[T_RexxCode])
 #define TheNativeMethodBehaviour      (&RexxBehaviour::primitiveBehaviours[T_NativeMethod])

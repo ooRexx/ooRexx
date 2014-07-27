@@ -132,7 +132,7 @@ void RexxInstructionControlledDo::flatten(Envelope *envelope)
  * @param stack   The current evaluation stack.
  * @param doblock The doblock associated with this loop instance.
  */
-void RexxInstructionControlledDo::setup(RexxActivation *context, ExpressionStack *stack, RexxDoBlock *doblock)
+void RexxInstructionControlledDo::setup(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock)
 {
     // perform the controlled DO setup
     controlLoop.setup(context, stack, doblock);
@@ -152,7 +152,7 @@ void RexxInstructionControlledDo::setup(RexxActivation *context, ExpressionStack
  * @return true if we should execute the loop block, false if
  *         we should terminate the loop.
  */
-bool RexxInstructionControlledDo::iterate(RexxActivation *context, ExpressionStack *stack, RexxDoBlock *doblock, bool first)
+bool RexxInstructionControlledDo::iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first)
 {
     return doblock->checkControl(context, stack, !first);
 }
@@ -252,7 +252,7 @@ void RexxInstructionControlledDoUntil::flatten(Envelope *envelope)
  * @return true if we should execute the loop block, false if
  *         we should terminate the loop.
  */
-bool RexxInstructionControlledDoUntil::iterate(RexxActivation *context, ExpressionStack *stack, RexxDoBlock *doblock, bool first)
+bool RexxInstructionControlledDoUntil::iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first)
 {
     // we don't check the UNTIL condition on the first iteration
     if (first)
@@ -296,7 +296,7 @@ RexxInstructionControlledDoWhile::RexxInstructionControlledDoWhile(RexxString *l
  * @return true if we should execute the loop block, false if
  *         we should terminate the loop.
  */
-bool RexxInstructionControlledDoWhile::iterate(RexxActivation *context, ExpressionStack *stack, RexxDoBlock *doblock, bool first)
+bool RexxInstructionControlledDoWhile::iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first)
 {
     return doblock->checkControl(context, stack, !first) && whileLoop.checkWhile(context, stack);
 }

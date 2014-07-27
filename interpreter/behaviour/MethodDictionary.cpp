@@ -44,6 +44,7 @@
 #include "RexxCore.h"
 #include "MethodDictionary.hpp"
 #include "MethodClass.hpp"
+#include "SupplierClass.hpp"
 
 /**
  * Create a new table object.
@@ -63,10 +64,8 @@ void *MethodDictionary::operator new (size_t size)
  *
  * @param capacity The desired capacity.
  */
-MethodDictionary::MethodDictionary(size_t capacity)
+MethodDictionary::MethodDictionary(size_t capacity) : StringHashCollection(capacity)
 {
-    // handle the superclass initialization
-    EqualityHashCollection(capacity);
     // Method dictionaries don't get created until we're defining/adding
     //. methods to a class.  We can assume that once created, we'll need most of the
     // items (except maybe the instance methods).
@@ -82,7 +81,7 @@ MethodDictionary::MethodDictionary(size_t capacity)
  *
  * @param liveMark The current live mark.
  */
-void MethodDictonary::live(size_t liveMark)
+void MethodDictionary::live(size_t liveMark)
 {
     memory_mark(contents);
     memory_mark(scopeList);
@@ -110,7 +109,7 @@ void MethodDictionary::liveGeneral(MarkReason reason)
  */
 void MethodDictionary::flatten(Envelope *envelope)
 {
-    setUpFlatten(HashCollection)
+    setUpFlatten(MethodDictionary)
 
     flattenRef(contents);
     flattenRef(scopeList);
@@ -126,7 +125,7 @@ void MethodDictionary::flatten(Envelope *envelope)
  *
  * @return A new instance of this collection.
  */
-RexxObject *Method::copy()
+RexxObject *MethodDictionary::copy()
 {
     // make a copy of the base object
     MethodDictionary *newObj = (MethodDictionary *)RexxObject::copy();
@@ -143,7 +142,7 @@ RexxObject *Method::copy()
  * @param methodName The target method name.
  * @param method     The method object to add.
  */
-void MethodDictionary::defineMethod(RexxString *methodName, MethodClass *method)
+void MethodDictionary::addMethod(RexxString *methodName, MethodClass *method)
 {
     // if there is no method, we're removing this method.
     // write .nil to the table
@@ -157,7 +156,7 @@ void MethodDictionary::defineMethod(RexxString *methodName, MethodClass *method)
         // how this gets handled differs depending on what we find in the table.
         MethodClass *tableMethod = (MethodClass *)getMethod(methodName);
         // if this is a new method, just put it into the table.
-        if (tableMethods == OREF_NULL)
+        if (tableMethod == OREF_NULL)
         {
             put(method, methodName);
         }
@@ -216,7 +215,7 @@ void MethodDictionary::replaceMethods(MethodDictionary *source)
     {
         // copy these methods over any of our own.
         MethodClass *method = (MethodClass *)iterator.value();
-        RexxString *name = (RexxString *name)iterator.index();
+        RexxString *name = (RexxString *)iterator.index();
         replaceMethod(name, method);
     }
 }
@@ -238,7 +237,7 @@ void MethodDictionary::replaceMethods(StringTable *source)
     {
         // copy these methods over any of our own.
         MethodClass *method = (MethodClass *)iterator.value();
-        RexxString *name = (RexxString *name)iterator.index();
+        RexxString *name = (RexxString *)iterator.index();
         replaceMethod(name, method);
     }
 }
@@ -267,7 +266,7 @@ bool MethodDictionary::removeMethod(RexxString *methodName)
  */
 void MethodDictionary::hideMethod(RexxString *methodName)
 {
-    put(TheNilObject, methodName)
+    put(TheNilObject, methodName);
 }
 
 
@@ -285,9 +284,9 @@ void MethodDictionary::removeInstanceMethod(RexxString *name)
         // to both the instance methods and the regular methods.  The
         // instance methods one allows us to track what we've added, the
         // method dictionary version is just for the lookups.
-        if (instanceMethod->remove(methodName) != OREF_NULL)
+        if (instanceMethods->remove(name) != OREF_NULL)
         {
-            remove(methodName);
+            remove(name);
         }
     }
 }
@@ -304,7 +303,7 @@ void MethodDictionary::addInstanceMethod(RexxString *name, MethodClass *method)
     // this could be our first one (rather likely, actually)
     if (instanceMethods == OREF_NULL)
     {
-        setField(instanceMethods, new_table());
+        setField(instanceMethods, new_string_table());
     }
     else
     {
@@ -312,15 +311,15 @@ void MethodDictionary::addInstanceMethod(RexxString *name, MethodClass *method)
         // if from the main dictionary also
         if (instanceMethods->hasIndex(name))
         {
-            remove(methodName);
+            remove(name);
         }
     }
 
     // add this to the front of the search order in the main dictionary
-    addFront(method, methodName);
+    addFront(method, name);
     // and also add to the instance dictionary, replacing any
     // existing method.
-    instanceMethods->put(method, methodName);
+    instanceMethods->put(method, name);
 }
 
 
@@ -335,7 +334,7 @@ void MethodDictionary::addInstanceMethods(MethodDictionary *source)
     HashContents::TableIterator iterator = source->iterator();
 
     // add all of the source methods as instance methods.
-    for (; iterator.isAvailable(); iterator.nextEntry())
+    for (; iterator.isAvailable(); iterator.next())
     {
         MethodClass *method = (MethodClass *)iterator.value();
         RexxString *name = (RexxString *)iterator.index();
@@ -354,14 +353,14 @@ void MethodDictionary::addInstanceMethods(MethodDictionary *source)
 MethodClass *MethodDictionary::findSuperMethod(RexxString *name, RexxClass *startScope)
 {
     // get the list of scopes "visible" from this starting scope.
-    ArrayClass *scopes = startScope->getScopeOrder(startScope);
+    ArrayClass *scopes = startScope->getScopeOrder();
 
     // do we have a list to search through?  Now search the matching methods
     // for one with a scope in this list.
     // use an interator that does not create a new object array.
     HashContents::IndexIterator iterator = contents->iterator(name);
 
-    while (iterator.isAvailable())
+    for (; iterator.isAvailable(); iterator.next())
     {
         MethodClass *method = (MethodClass *)iterator.value();
         // we might have .nil in here as well as method objects.
@@ -370,11 +369,9 @@ MethodClass *MethodDictionary::findSuperMethod(RexxString *name, RexxClass *star
             // if this methos has a scope that's in the allowed list, return it.
             if (scopes->hasItem(method->getScope()))
             {
-                return method
+                return method;
             }
         }
-        // step to the next item.
-        iterator.next();
     }
     // nothing found
     return OREF_NULL;
@@ -391,7 +388,7 @@ void MethodDictionary::setMethodScope(RexxClass *scope)
     // use an iterator to traverse the table
     HashContents::TableIterator iterator = contents->iterator();
 
-    for (; iterator.isAvailable(); iterator.nextEntry())
+    for (; iterator.isAvailable(); iterator.next())
     {
         MethodClass *method = (MethodClass *)iterator.value();
         // we might have .nil in here as well as method objects.
@@ -480,7 +477,7 @@ SupplierClass *MethodDictionary::getMethods(RexxClass *scope)
  * @return The immediate superclass value (return .nil for the Object
  *         class).
  */
-RexxClass *MethodDictionay::immediateSuperScope()
+RexxClass *MethodDictionary::immediateSuperScope()
 {
     // the owning class is going to be last class added to this list.
     size_t ourClass = scopeList->items();
@@ -489,7 +486,7 @@ RexxClass *MethodDictionay::immediateSuperScope()
     // handle this elsewhere.
     if (ourClass == 1)
     {
-        return TheNilObject;
+        return (RexxClass *)TheNilObject;
     }
     // return the previously added item
     return (RexxClass *)scopeList->get(ourClass - 1);
@@ -548,7 +545,7 @@ void MethodDictionary::mergeMethods(MethodDictionary *target)
     while (iterator.isAvailable())
     {
         MethodClass *method = (MethodClass *)iterator.value();
-        target->defineMethod(iterator.index(), method);
+        target->addMethod((RexxString *)iterator.index(), method);
         // step to the next item.
         iterator.next();
     }
@@ -570,7 +567,7 @@ void MethodDictionary::mergeScopes(MethodDictionary *target)
     // get added to the end of the list.
     for (size_t i = 1; i <= count; i++)
     {
-        target->addScope(scopeList->get(i));
+        target->addScope((RexxClass *)scopeList->get(i));
     }
 }
 

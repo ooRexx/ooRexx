@@ -77,19 +77,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="Directory" class="DirectoryClass" include="DirectoryClass.hpp"/>
 <Class id="Integer" class="RexxInteger" classclass="RexxIntegerClass" operators="true" include="IntegerClass.hpp"/>
 <Class id="List" class="ListClass" include="ListClass.hpp"/>
-<Class id="Message" class="RexxMessage" include="MessageClass.hpp"/>
+<Class id="Message" class="MessageClass" include="MessageClass.hpp"/>
 <Class id="Method" class="MethodClass" include="MethodClass.hpp"/>
-<Class id="NumberString" class="RexxNumberString" operators="true" include="NumberStringClass.hpp"/>
+<Class id="NumberString" class="NumberString" operators="true" include="NumberStringClass.hpp"/>
 <Class id="Queue" class="QueueClass" include="QueueClass.hpp"/>
-<Class id="Stem" class="RexxStem" include="StemClass.hpp"/>
+<Class id="Stem" class="StemClass" include="StemClass.hpp"/>
 <Class id="String" class="RexxString" operators="true" include="StringClass.hpp"/>
-<Class id="Supplier" class="RexxSupplier" include="SupplierClass.hpp"/>
+<Class id="Supplier" class="SupplierClass" include="SupplierClass.hpp"/>
 <Class id="Table" class="TableClass" include="TableClass.hpp"/>
 <Class id="StringTable" class="StringTable" include="StringTableClass.hpp"/>
 <Class id="Relation" class="RelationClass" include="RelationClass.hpp"/>
-<Class id="MutableBuffer" class="RexxMutableBuffer" include="MutableBufferClass.hpp"/>
-<Class id="Pointer" class="RexxPointer" include="PointerClass.hpp"/>
-<Class id="Buffer" class="RexxBuffer" include="BufferClass.hpp"/>
+<Class id="MutableBuffer" class="MutableBuffer" include="MutableBufferClass.hpp"/>
+<Class id="Pointer" class="PointerClass" include="PointerClass.hpp"/>
+<Class id="Buffer" class="BufferClass" include="BufferClass.hpp"/>
 <Class id="WeakReference" class="WeakReference" include="WeakReferenceClass.hpp"/>
 <Class id="Routine" class="RoutineClass" include="RoutineClass.hpp"/>
 <Class id="Package" class="PackageClass" include="PackageClass.hpp"/>
@@ -103,7 +103,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="NilObject" class="RexxNilObject" include="ObjectClass.hpp"/>
 <Class id="Behaviour" class="RexxBehaviour" include="RexxBehaviour.hpp"/>
 <Class id="MethodDictionary" class="MethodDictionary" include="MethodDictionary.hpp"/>
-<Class id="ScopeTable" class="ScopeTable" include="ScopeTable.hpp"/>
 <Class id="LibraryPackage" class="LibraryPackage" include="LibraryPackage.hpp"/>
 <Class id="RexxCode" class="RexxCode" include="RexxCode.hpp"/>
 <Class id="NativeMethod" class="NativeMethod" include="NativeCode.hpp"/>
@@ -122,7 +121,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="StringHashContents" class="StringHashContents" include="HashContents.hpp"/>
 
 <Class id="Variable" class="RexxVariable" include="RexxVariable.hpp"/>
-<Class id="VariableDictionary" class="RexxVariableDictionary" include="RexxVariableDictionary.hpp"/>
+<Class id="VariableDictionary" class="VariableDictionary" include="VariableDictionary.hpp"/>
 <Class id="VariableTerm" class="RexxSimpleVariable" include="ExpressionVariable.hpp"/>
 <Class id="CompoundVariableTerm" class="RexxCompoundVariable" include="ExpressionCompoundVariable.hpp"/>
 <Class id="StemVariableTerm" class="RexxStemVariable" include="ExpressionStem.hpp"/>
@@ -193,7 +192,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="RequiresDirective" class="RequiresDirective" include="RequiresDirective.hpp"/>
 
 <Class id="CompoundElement" class="CompoundTableElement" include="CompoundTableElement.hpp"/>
-<Class id="ParseTrigger" class="RexxTrigger" include="ParseTrigger.hpp"/>
+<Class id="ParseTrigger" class="ParseTrigger" include="ParseTrigger.hpp"/>
 <Class id="ProgramSource" class="ProgramSource" include="ProgramSource.hpp"/>
 <Class id="ArrayProgramSource" class="ArrayProgramSource" include="ProgramSource.hpp"/>
 <Class id="BufferProgramSource" class="BufferProgramSource" include="ProgramSource.hpp"/>
@@ -201,7 +200,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="NumberArray" class="NumberArray" include="NumberArray.hpp"/>
 </Internal>
 <Transient>
-<Class id="Memory" class="RexxMemory" include="RexxMemory.hpp" objectvirtual="true"/>
+<Class id="Memory" class="MemoryObject" include="RexxMemory.hpp" objectvirtual="true"/>
 <Class id="InternalStack" class="InternalStack" include="InternalStack.hpp"/>
 <Class id="LiveStack" class="LiveStack" include="MemoryStack.hpp"/>
 <Class id="PushThroughStack" class="PushThroughStack" include="MemoryStack.hpp"/>
@@ -213,7 +212,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="LanguageParser" class="LanguageParser" include="LanguageParser.hpp"/>
 <Class id="Clause" class="RexxClause" include="Clause.hpp"/>
 <Class id="Token" class="RexxToken" include="Token.hpp"/>
-<Class id="DoBlock" class="RexxDoBlock" include="DoBlock.hpp"/>
+<Class id="DoBlock" class="DoBlock" include="DoBlock.hpp"/>
 <Class id="InterpreterInstance" class="InterpreterInstance" include="InterpreterInstance.hpp"/>
 <Class id="SecurityManager" class="SecurityManager" include="SecurityManager.hpp"/>
 <Class id="CommandHandler" class="CommandHandler" include="CommandHandler.hpp"/>

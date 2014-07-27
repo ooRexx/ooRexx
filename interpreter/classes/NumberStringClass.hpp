@@ -215,7 +215,7 @@ class NumberString : public NumberStringBase
     NumberString *Max(RexxObject **, size_t);
     NumberString *Min(RexxObject **, size_t);
     NumberString *maxMin(RexxObject **, size_t, unsigned int);
-    RexxObject *isInteger();
+    bool        isInteger();
     RexxString *d2c(RexxObject *);
     RexxString *d2x(RexxObject *);
     RexxString *d2xD2c(RexxObject *, bool);
@@ -227,12 +227,13 @@ class NumberString : public NumberStringBase
     void        formatNumber(wholenumber_t);
     void        formatUnsignedNumber(size_t);
     int         format(const char *, size_t);
-    inline void        setZero() {
-                   number[0] = '\0';               /* Make value a zero.*/
-                   length = 1;                     /* Length is 1       */
-                   sign = 0;                       /* Make sign Zero.   */
-                   exp = 0;                        /* exponent is zero. */
-                }
+    inline void setZero()
+    {
+        number[0] = '\0';               // Make value a zero.
+        length = 1;                     // Length is 1
+        sign = 0;                       // Make sign Zero.
+        exp = 0;                        // exponent is zero.
+    }
 
     static PCPPM operatorMethods[];
 

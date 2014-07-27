@@ -1081,86 +1081,83 @@ int StringUtil::valSet(const char *String, size_t Length, const char *Set, int M
  *
  * @return True if this is of the indicated type, false for any mismatch.
  */
-RexxObject *StringUtil::dataType(RexxString *String, char Option )
+RexxObject *StringUtil::dataType(RexxString *string, char option )
 {
-    size_t      Len;                     /* validated string length           */
-    RexxObject *Temp;                    /* temporary value                   */
-    const char *Scanp;                   /* string data pointer               */
-    size_t      Count;                   /* hex nibble count                  */
-    NumberString *TempNum;
+    size_t len = string->getLength();
+    const char *scanp = string->getStringData();
 
-    Len = String->getLength();           /* get validated string len          */
-    Option = toupper(Option);            /* get the first character           */
+    // no process each type option
+    switch (toupper(option))
+    {
+        case RexxString::DATATYPE_ALPHANUMERIC:
+            return booleanObject(len != 0 && !memcpbrk(scanp, RexxString::ALPHANUM, len));
 
-    /* get a scan pointer                */
-    Scanp = String->getStringData();
+        case RexxString::DATATYPE_BINARY:
+        {
+            size_t count;
+            return booleanObject(len == 0 || valSet(scanp, len, RexxString::BINARY, 4, &count));
+        }
 
-    switch (Option)
-    {                    /* based on type to confirm          */
+        case RexxString::DATATYPE_LOWERCASE:
+            return booleanObject(len != 0 && !memcpbrk(scanp, RexxString::LOWER_ALPHA, len));
 
-        case RexxString::DATATYPE_ALPHANUMERIC:        /* Alphanumeric                      */
-            /* all in the set?                   */
-            return booleanObject(Len != 0 && !memcpbrk(Scanp, RexxString::ALPHANUM, Len));
+        case RexxString::DATATYPE_UPPERCASE:
+            return booleanObject(len != 0 && !memcpbrk(scanp, RexxString::UPPER_ALPHA, len));
 
-        case RexxString::DATATYPE_BINARY:              /* Binary string                     */
-            /* validate the string               */
-            return booleanObject(Len == 0 || valSet(Scanp, Len, RexxString::BINARY, 4, &Count));
+        case RexxString::DATATYPE_MIXEDCASE:
+            return booleanObject(len != 0 && !memcpbrk(scanp, RexxString::MIXED_ALPHA, len));
 
-        case RexxString::DATATYPE_LOWERCASE:           /* Lowercase                         */
-            return booleanObject(Len != 0 && !memcpbrk(Scanp, RexxString::LOWER_ALPHA, Len));
-
-        case RexxString::DATATYPE_UPPERCASE:           /* Uppercase                         */
-            return booleanObject(Len != 0 && !memcpbrk(Scanp, RexxString::UPPER_ALPHA, Len));
-
-        case RexxString::DATATYPE_MIXEDCASE:           /* Mixed case                        */
-            return booleanObject(Len != 0 && !memcpbrk(Scanp, RexxString::MIXED_ALPHA, Len));
-
-        case RexxString::DATATYPE_WHOLE_NUMBER:        /* Whole number                      */
-            /* validate as a number              */
-            TempNum = String->numberString();
-            if (TempNum != OREF_NULL)
-            {      /* valid number?                     */
-                   /* force rounding to current digits  */
-                TempNum = (NumberString *)TempNum->plus(IntegerZero);
-                /* check for integer then            */
-                return booleanObject(TempNum->isInteger());
+        case RexxString::DATATYPE_WHOLE_NUMBER:
+        {
+            // validate as a number
+            NumberString *tempNum = string->numberString();
+            // if a valid string, then force rounding and see if this
+            // is a valid integer
+            if (tempNum != OREF_NULL)
+            {
+                tempNum = (NumberString *)tempNum->plus(IntegerZero);
+                return booleanObject(tempNum->isInteger());
             }
             return TheFalseObject;
+        }
 
-        case RexxString::DATATYPE_NUMBER:              /* Number                            */
-            /* validate as a number              */
-            Temp = (RexxObject *)String->numberString();
-            return booleanObject(Temp != OREF_NULL);
+        case RexxString::DATATYPE_NUMBER:
+        {
+            // validate as a number
+            NumberString *tempNum = string->numberString();
+            return booleanObject(tempNum != OREF_NULL);
+        }
 
-        case RexxString::DATATYPE_9DIGITS:             /* NUMERIC DIGITS 9 number           */
-            {                                  /* good long number                  */
-                wholenumber_t temp;
-                return booleanObject(String->numberValue(temp));
-            }
+        case RexxString::DATATYPE_9DIGITS:
+        {
+            wholenumber_t temp;
+            return booleanObject(string->numberValue(temp));
+        }
 
-        case RexxString::DATATYPE_HEX:                 /* heXadecimal                       */
-            /* validate the string               */
-            return booleanObject(Len == 0 || valSet(Scanp, Len, RexxString::HEX_CHAR_STR, 2, &Count));
+        case RexxString::DATATYPE_HEX:
+        {
+            size_t count;
+            return booleanObject(len == 0 || valSet(scanp, len, RexxString::HEX_CHAR_STR, 2, &count));
+        }
 
-        case RexxString::DATATYPE_SYMBOL:              /* Symbol                            */
-            /* validate the symbol               */
-            return booleanObject(String->isSymbol() != STRING_BAD_VARIABLE);
+        case RexxString::DATATYPE_SYMBOL:
+            return booleanObject(string->isSymbol() != STRING_BAD_VARIABLE);
 
-        case RexxString::DATATYPE_VARIABLE:            /* Variable                          */
+        case RexxString::DATATYPE_VARIABLE:
         {
             // validate the symbol
-            StringSymbolType type = String->isSymbol();
-            /* a valid variable type?            */
+            StringSymbolType type = string->isSymbol();
+            // a valid variable type?
             return booleanObject(type == STRING_NAME || type == STRING_STEM || type == STRING_COMPOUND_NAME);
         }
 
-        case RexxString::DATATYPE_LOGICAL:           // Test for a valid logical.
-            return booleanObject(!(Len != 1 || (*Scanp != '1' && *Scanp != '0')));
+        case RexxString::DATATYPE_LOGICAL:
+            return booleanObject(!(len != 1 || (*scanp != '1' && *scanp != '0')));
 
-        default  :                         /* unsupported option                */
-            reportException(Error_Incorrect_method_option, "ABCDLMNOSUVWX9", new_string((const char *)&Option,1));
+        default  :
+            reportException(Error_Incorrect_method_option, "ABCDLMNOSUVWX9", new_string(option));
     }
-    return TheFalseObject;               /* return validation answer          */
+    return TheFalseObject;
 }
 
 

@@ -113,7 +113,7 @@ typedef enum
     LABELED_DO_BLOCK,
 } EndBlockType;
 
-class RexxDoBlock;
+class DoBlock;
 
 /**
  * Base class for all Block instruction types.  This
@@ -134,7 +134,7 @@ class RexxBlockInstruction : public RexxInstruction
     virtual EndBlockType getEndStyle() = 0;
     virtual bool isLoop() { return false; };
     virtual void matchEnd(RexxInstructionEnd *, LanguageParser *) { ; };
-    virtual void terminate(RexxActivation *, RexxDoBlock *) { ; };
+    virtual void terminate(RexxActivation *, DoBlock *) { ; };
 
     // inherited behaviour
     // NOTE: tokens on ends and label instructions are interned strings, so

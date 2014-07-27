@@ -151,8 +151,8 @@ class NativeActivation : public RexxActivationBase
     RexxObject *valueToObject(ValueDescriptor *value);
     ArrayClass *valuesToObject(ValueDescriptor *value, size_t count);
     bool objectToValue(RexxObject *o, ValueDescriptor *value);
-    void createLocalReference(RexxObject *objr);
-    void removeLocalReference(RexxObject *objr);
+    void createLocalReference(RexxInternalObject *objr);
+    void removeLocalReference(RexxInternalObject *objr);
     void callNativeRoutine(RoutineClass *routine, NativeRoutine *code, RexxString *functionName,
         RexxObject **list, size_t count, ProtectedObject &result);
     void callRegisteredRoutine(RoutineClass *routine, RegisteredRoutine *code, RexxString *functionName,

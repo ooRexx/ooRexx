@@ -89,10 +89,13 @@ class MethodDictionary: public StringHashCollection
     void mergeScopes(MethodDictionary *target);
     void merge(MethodDictionary *target);
     bool hasScope(RexxClass *scope);
+    ArrayClass *allScopes() { return scopeList; }
 
     inline bool hasInstanceMethods() { return instanceMethods != OREF_NULL; }
 
  protected:
+
+    static const size_t DefaultScopeListSize = 10;
 
     StringTable *instanceMethods;     // any methods defined on this instance
     ArrayClass  *scopeList;           // the list of scope value order use for lookups

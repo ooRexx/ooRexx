@@ -60,7 +60,7 @@ typedef enum
 class RexxTarget;
 class RexxVariableBase;
 
-class RexxTrigger : public RexxInternalObject
+class ParseTrigger : public RexxInternalObject
 {
  public:
     void        *operator new(size_t, size_t);
@@ -68,8 +68,8 @@ class RexxTrigger : public RexxInternalObject
     inline void  operator delete(void *, size_t) { }
     inline void  operator delete(void *, void *) { ; }
 
-    RexxTrigger(ParseTriggerType, RexxObject *, size_t, QueueClass *);
-    inline RexxTrigger(RESTORETYPE restoreType) { ; };
+    ParseTrigger(ParseTriggerType, RexxObject *, size_t, QueueClass *);
+    inline ParseTrigger(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);

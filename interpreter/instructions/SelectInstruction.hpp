@@ -70,7 +70,7 @@ public:
     // required by RexxBlockinstruction;
     virtual void matchEnd(RexxInstructionEnd *, LanguageParser *);
     virtual bool isLoop();
-    virtual void terminate(RexxActivation *, RexxDoBlock *);
+    virtual void terminate(RexxActivation *, DoBlock *);
 
     // all select instructions do the same thing here
     virtual EndBlockType getEndStyle() { return SELECT_BLOCK; }

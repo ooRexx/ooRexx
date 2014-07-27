@@ -1149,20 +1149,19 @@ bool NativeActivation::objectToValue(RexxObject *o, ValueDescriptor *value)
  *
  * @param objr   The object to protect.
  */
-void NativeActivation::createLocalReference(RexxObject *objr)
+void NativeActivation::createLocalReference(RexxInternalObject *objr)
 {
     // if we have a real object, then add to the list
     if (objr != OREF_NULL)
     {
         // make sure we protect this from a GC triggered by this table creation.
         ProtectedObject p1(objr);
-        if (this->savelist == OREF_NULL)     /* first saved object?               */
+        // create an identity table if this is the first reference we need to protect.
+        if (savelist == OREF_NULL)
         {
-            /* create the save list now          */
-            this->savelist = new_identity_table();
+            savelist = new_identity_table();
         }
-        /* add to the save table             */
-        this->savelist->put(objr, objr);
+        savelist->put(objr, objr);
     }
 }
 
@@ -1172,20 +1171,20 @@ void NativeActivation::createLocalReference(RexxObject *objr)
  *
  * @param objr   The object to remove.
  */
-void NativeActivation::removeLocalReference(RexxObject *objr)
+void NativeActivation::removeLocalReference(RexxInternalObject *objr)
 {
     // if the reference is non-null
-  if (objr != OREF_NULL)
-  {
-      // make sure we have a savelist before trying to remove this
-      if (savelist != OREF_NULL)
-      {
-          // NB...this is a special remove that functions using the object
-          // identify to avoid false positives or potential exceptions caused
-          // by calling EQUALS methods.
-          savelist->remove(objr);
-      }
-  }
+    if (objr != OREF_NULL)
+    {
+        // make sure we have a savelist before trying to remove this
+        if (savelist != OREF_NULL)
+        {
+            // NB...this is a special remove that functions using the object
+            // identify to avoid false positives or potential exceptions caused
+            // by calling EQUALS methods.
+            savelist->remove(objr);
+        }
+    }
 }
 
 

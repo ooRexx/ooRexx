@@ -115,7 +115,7 @@ void RexxInstructionBaseDo::execute(RexxActivation *context, ExpressionStack *st
     context->traceInstruction(this);
 
     // all we do here is create a new doblock and make it active
-    RexxDoBlock *doblock = new RexxDoBlock (this, context->getIndent());
+    DoBlock *doblock = new DoBlock (this, context->getIndent());
     context->newDo(doblock);
 
     // perform loop specific initialization
@@ -141,7 +141,7 @@ void RexxInstructionBaseDo::execute(RexxActivation *context, ExpressionStack *st
  * @param stack   The current evaluation stack.
  * @param doblock The doblock associated with this loop instance.
  */
-void RexxInstructionBaseDo::reExecute(RexxActivation *context, ExpressionStack *stack, RexxDoBlock *doblock)
+void RexxInstructionBaseDo::reExecute(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock)
 {
     // change control to the top of the loop
     context->setNext(nextInstruction);
@@ -169,7 +169,7 @@ void RexxInstructionBaseDo::reExecute(RexxActivation *context, ExpressionStack *
  * @param stack   The current evaluation stack.
  * @param doblock The doblock associated with this loop instance.
  */
-void RexxInstructionBaseDo::setup(RexxActivation *context, ExpressionStack *stack, RexxDoBlock *doblock)
+void RexxInstructionBaseDo::setup(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock)
 {
     // default is no setup
     return;
@@ -189,7 +189,7 @@ void RexxInstructionBaseDo::setup(RexxActivation *context, ExpressionStack *stac
  * @return true if we should execute the loop block, false if
  *         we should terminate the loop.
  */
-bool RexxInstructionBaseDo::iterate(RexxActivation *context, ExpressionStack *stack, RexxDoBlock *doblock, bool first)
+bool RexxInstructionBaseDo::iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first)
 {
     // the default is basically a DO FOREVER loop.
     return true;
@@ -262,7 +262,7 @@ void RexxInstructionBaseDo::matchEnd(RexxInstructionEnd *partner, LanguageParser
  * @param context The current activation context.
  * @param doblock The active deblock (if any).
  */
-void RexxInstructionBaseDo::handleDebugPause(RexxActivation *context, RexxDoBlock *doblock)
+void RexxInstructionBaseDo::handleDebugPause(RexxActivation *context, DoBlock *doblock)
 {
     // do blocks will only do the debug pause on first execution, so
     // the context needs to determine if we're at a good point.  If this is a
@@ -292,7 +292,7 @@ void RexxInstructionBaseDo::handleDebugPause(RexxActivation *context, RexxDoBloc
  * @param context The current execution context.
  * @param doblock Our doblock, provided by the context.
  */
-void RexxInstructionBaseDo::terminate(RexxActivation *context, RexxDoBlock *doblock )
+void RexxInstructionBaseDo::terminate(RexxActivation *context, DoBlock *doblock )
 {
     // reset the DO block
     context->terminateBlock(doblock->getIndent());

@@ -2331,7 +2331,7 @@ RexxInstruction *LanguageParser::parseNew(InstructionSubKeyword argPull)
             // skip this because there are no variables to assign.
             if (variableCount > 0)
             {
-                parse_template->push((RexxObject *)new (variableCount) RexxTrigger(TRIGGER_END, (RexxObject *)OREF_NULL, variableCount, _variables));
+                parse_template->push((RexxObject *)new (variableCount) ParseTrigger(TRIGGER_END, (RexxObject *)OREF_NULL, variableCount, _variables));
                 templateCount++;
             }
             variableCount = 0;               // have a new set of variables (well, we're done, really)
@@ -2344,7 +2344,7 @@ RexxInstruction *LanguageParser::parseNew(InstructionSubKeyword argPull)
         {
             if (variableCount > 0)
             {
-                parse_template->push((RexxObject *)new (variableCount) RexxTrigger(TRIGGER_END, (RexxObject *)OREF_NULL, variableCount, _variables));
+                parse_template->push((RexxObject *)new (variableCount) ParseTrigger(TRIGGER_END, (RexxObject *)OREF_NULL, variableCount, _variables));
                 templateCount++;
             }
             // now add an empty fence item to the list...make sure the count is incremented
@@ -2402,7 +2402,7 @@ RexxInstruction *LanguageParser::parseNew(InstructionSubKeyword argPull)
                     syntaxError(Error_Invalid_expression_parse);
                 }
 
-                parse_template->push((RexxObject *)new (variableCount) RexxTrigger(trigger_type,
+                parse_template->push((RexxObject *)new (variableCount) ParseTrigger(trigger_type,
                     (RexxObject *)subExpr, variableCount, _variables));
                 variableCount = 0;
                 templateCount++;
@@ -2417,7 +2417,7 @@ RexxInstruction *LanguageParser::parseNew(InstructionSubKeyword argPull)
                 }
 
                 // add a trigger of the given type.
-                parse_template->push((RexxObject *)new (variableCount) RexxTrigger(trigger_type,
+                parse_template->push((RexxObject *)new (variableCount) ParseTrigger(trigger_type,
                     addText(token), variableCount, _variables));
                 variableCount = 0;
                 templateCount++;
@@ -2444,7 +2444,7 @@ RexxInstruction *LanguageParser::parseNew(InstructionSubKeyword argPull)
                 syntaxError(Error_Invalid_expression_parse);
             }
 
-            parse_template->push((RexxObject *)new (variableCount) RexxTrigger(parseFlags[parse_caseless] ? TRIGGER_MIXED : TRIGGER_STRING,
+            parse_template->push((RexxObject *)new (variableCount) ParseTrigger(parseFlags[parse_caseless] ? TRIGGER_MIXED : TRIGGER_STRING,
                 (RexxObject *)subExpr, variableCount, _variables));
             variableCount = 0;
             templateCount++;
@@ -2453,7 +2453,7 @@ RexxInstruction *LanguageParser::parseNew(InstructionSubKeyword argPull)
         else if (token->isLiteral())
         {
 
-            parse_template->push((RexxObject *)new (variableCount) RexxTrigger(parseFlags[parse_caseless] ? TRIGGER_MIXED : TRIGGER_STRING,
+            parse_template->push((RexxObject *)new (variableCount) ParseTrigger(parseFlags[parse_caseless] ? TRIGGER_MIXED : TRIGGER_STRING,
                 addText(token), variableCount, _variables));
             variableCount = 0;
             templateCount++;
@@ -2464,7 +2464,7 @@ RexxInstruction *LanguageParser::parseNew(InstructionSubKeyword argPull)
             // absolute positioning
             if (token->isNumericSymbol())
             {
-                parse_template->push((RexxObject *)new (variableCount) RexxTrigger(TRIGGER_ABSOLUTE,
+                parse_template->push((RexxObject *)new (variableCount) ParseTrigger(TRIGGER_ABSOLUTE,
                     addText(token), variableCount, _variables));
                 variableCount = 0;
 

@@ -49,7 +49,7 @@
 #include "RexxCore.h"
 #include "ExpressionBaseVariable.hpp"
 
-class RexxDoBlock;
+class DoBlock;
 
 typedef enum
 {
@@ -78,7 +78,7 @@ class ForLoop
          memory_mark_general(forCount);
      }
 
-     void setup(RexxActivation *context, ExpressionStack *stack, RexxDoBlock *doblock, bool forKeyword);
+     void setup(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool forKeyword);
 
     RexxObject       *forCount;          // number of iterations
 };
@@ -118,7 +118,7 @@ class ControlledLoop : public ForLoop
     }
 
 
-    void setup(RexxActivation *context, ExpressionStack *stack, RexxDoBlock *doblock);
+    void setup(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock);
 
     RexxVariableBase *control;           // control variable retriever
     RexxObject       *initial;           // initial control expression
@@ -149,7 +149,7 @@ class OverLoop
     }
 
     void setup(RexxActivation *context,
-        ExpressionStack *stack, RexxDoBlock *doblock);
+        ExpressionStack *stack, DoBlock *doblock);
 
     RexxVariableBase *control;           // control variable retriever
     RexxObject *      target;            // supplier for the array we do over

@@ -103,11 +103,11 @@ class HashCollection : public RexxObject
     RexxInternalObject   *hasIndexRexx(RexxInternalObject *);
     RexxObject           *hasItemRexx(RexxInternalObject *);
     RexxInternalObject   *removeItemRexx(RexxInternalObject *value);
-    ArrayClass            *allAtRexx(RexxInternalObject *);
+    ArrayClass           *allAtRexx(RexxInternalObject *);
     RexxInternalObject   *indexRexx(RexxInternalObject * value);
     SupplierClass        *supplierRexx();
-    ArrayClass            *allItemsRexx();
-    ArrayClass            *allIndexesRexx();
+    ArrayClass           *allItemsRexx();
+    ArrayClass           *allIndexesRexx();
     RexxObject           *emptyRexx();
     RexxObject           *isEmptyRexx();
     RexxObject           *itemsRexx();
@@ -133,6 +133,7 @@ protected:
     // These are protected because we want to enable this on a case-by-case basis.
     // in appropriate subclasses.
     virtual void add(RexxInternalObject *, RexxInternalObject *);
+    virtual void addFront(RexxInternalObject *, RexxInternalObject *);
 };
 
 

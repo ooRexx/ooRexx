@@ -451,6 +451,26 @@ void HashCollection::put(RexxInternalObject *value, RexxInternalObject *index)
 
 
 /**
+ * Place an item into a hash collection using a key.
+ * This is the base virtual implementation, which uses
+ * equality semantics for the retrieveal.  Other implementations
+ * may override this.
+ *
+ * @param value The inserted value.
+ * @param index The insertion key.
+ *
+ * @return The retrieved object.  Returns OREF_NULL if the object
+ *         was not found.
+ */
+void HashCollection::addFront(RexxInternalObject *value, RexxInternalObject *index)
+{
+    // make sure we have room to add this
+    checkFull();
+    contents->addFront(value, index);
+}
+
+
+/**
  * If the hash collection thinks it is time to expand, then
  * increase the contents size.
  */

@@ -76,7 +76,7 @@ RexxInstructionParse::RexxInstructionParse(RexxObject *sourceExpression, Instruc
     triggerCount = templateCount;
     // now copy any triggerss from the sub term stack
     // NOTE:  The triggerss are in last-to-first order on the stack.
-    initializeObjectArray(templateCount, triggers, RexxTrigger, parse_template);
+    initializeObjectArray(templateCount, triggers, ParseTrigger, parse_template);
 }
 
 
@@ -221,7 +221,7 @@ void RexxInstructionParse::execute(RexxActivation *context, ExpressionStack *sta
         // a NULL trigger marks the boundary between comman delimited template
         // sections.  For PARSE ARG, this will advance to the next argument.  For
         // all other sources, this will just use "" as the string value.
-        RexxTrigger *trigger = triggers[i];
+        ParseTrigger *trigger = triggers[i];
         if (trigger == OREF_NULL)
         {
             target.next(context);
