@@ -37,50 +37,44 @@
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
 /*                                                                            */
-/* Simple object for attaching an array of numeric values to an object        */
-/* instance (for example, array dimensions).  Keeps us from needing to keep   */
-/* arrays of integer objects to store numeric information.                    */
+/* Handler for the state of a condition trap set in an activation context.    */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_NumberArray
-#define Included_NumberArray
+#ifndef Included_TrapHandler
+#define Included_TrapHandler
 
 /**
- * A mapping class for keeping non-object values with
- * an object that are indexed like an array.
+ * A handler state for a SIGNAL ON or CALL ON trap in an
+ * activation context.
  */
-class NumberArray : public RexxInternalObject
+class TrapHandler : public RexxInternalObject
 {
  public:
 
-    void *operator new(size_t base, size_t entries);
-    inline void  operator delete(void *, size_t) {;}
+    void *operator new(size_t base);
+    inline void  operator delete(void *) {;}
     inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };
     inline void   operator delete(void *, void *) { ; }
 
-    NumberArray(size_t entries);
-    inline NumberArray(RESTORETYPE restoreType) { ; };
+    TrapHandler(RexxString *condition, RexxInstructionCallBase *handler);
+    inline TrapHandler(RESTORETYPE restoreType) { ; };
 
-    inline void clear() { memset((void *)&entries[0], (int) (sizeof(size_t) * totalSize), 0); }
-    inline bool inBounds(size_t index) { return index > 0 && index < totalSize; }
-    size_t       size() { return totalSize; };
-
-    size_t       get(size_t index) { return inBounds(index) ? entries[index - 1] : 0; }
-    void         put(size_t value, size_t index) { if (inBounds(index)) { entries[index - 1] = value; }}
-
-    // access the value of a field
-    inline size_t &operator[] (size_t index)
-    {
-        return entries[index];
-    }
-
-    ArrayClass  *toArray();
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
 
 protected:
 
-    size_t   totalSize;                 // total size of the table, including the overflow area
-    size_t   entries[1];                // the stored numeric values
+    typedef enum
+    {
+        ON,
+        DELAYED,
+    } TrapState;
+
+
+    RexxString *condition;              // the condition we're handling
+    RexxInstructionCallBase *handler    // the instruction that handles this condition trap
+    TrapState state;                    // current state of the trap
+    DirectoryClass *conditionObject;    // an object associated with a active trap
 };
 
 #endif
-

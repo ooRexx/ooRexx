@@ -36,6 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
+#include <stdio.h>
 #include "RexxCore.h"
 #include "CPPCode.hpp"
 #include "ActivityManager.hpp"
@@ -43,7 +44,7 @@
 #include "Interpreter.hpp"
 #include "VariableDictionary.hpp"
 #include "ActivationFrame.hpp"
-#include "RexxBaseVariable.hpp"
+#include "ExpressionBaseVariable.hpp"
 
 
 /**
@@ -559,7 +560,7 @@ CPPM(ArrayClass::fill),
 
 CPPM(ArrayClass::newRexx),
 CPPM(ArrayClass::makeString),
-CPPM(ArrayClass::of),
+CPPM(ArrayClass::ofRexx),
 
 
 CPPM(DirectoryClass::newRexx),
@@ -601,12 +602,11 @@ CPPM(RexxInteger::ceiling),
 CPPM(RexxInteger::round),
 CPPM(RexxInteger::classObject),
 
-CPPM(ListClass::value),                 /* list methods                      */
 CPPM(ListClass::remove),
 CPPM(ListClass::firstRexx),
 CPPM(ListClass::lastRexx),
-CPPM(ListClass::next),
-CPPM(ListClass::previous),
+CPPM(ListClass::nextRexx),
+CPPM(ListClass::previousRexx),
 CPPM(ListClass::hasIndex),
 CPPM(ListClass::supplier),
 CPPM(ListClass::itemsRexx),
@@ -620,7 +620,7 @@ CPPM(ListClass::allIndexes),
 CPPM(ListClass::allItems),
 CPPM(ListClass::empty),
 CPPM(ListClass::isEmptyRexx),
-CPPM(ListClass::index),
+CPPM(ListClass::indexRexx),
 CPPM(ListClass::hasItem),
 CPPM(ListClass::removeItem),
 
@@ -663,32 +663,30 @@ CPPM(RoutineClass::newFileRexx),
 CPPM(RoutineClass::newRexx),
 CPPM(RoutineClass::loadExternalRoutine),
 
-CPPM(PackageClass::setSecurityManager),
-CPPM(PackageClass::getSource),
+CPPM(PackageClass::setSecurityManagerRexx),
 CPPM(PackageClass::getSourceLineRexx),
-CPPM(PackageClass::getSourceSize),
-CPPM(PackageClass::getClasses),
-CPPM(PackageClass::getPublicClasses),
+CPPM(PackageClass::getSourceSizeRexx),
+CPPM(PackageClass::getClassesRexx),
+CPPM(PackageClass::getPublicClassesRexx),
 CPPM(PackageClass::getImportedClasses),
 CPPM(PackageClass::getMethods),
 CPPM(PackageClass::getRoutines),
 CPPM(PackageClass::getPublicRoutines),
 CPPM(PackageClass::getImportedRoutines),
-CPPM(PackageClass::getImportedPackages),
-CPPM(PackageClass::loadPackage),
+CPPM(PackageClass::getImportedPackagesRexx),
+CPPM(PackageClass::loadPackageRexx),
 CPPM(PackageClass::addPackage),
 CPPM(PackageClass::findClassRexx),
 CPPM(PackageClass::findRoutineRexx),
-CPPM(PackageClass::addRoutine),
-CPPM(PackageClass::addPublicRoutine),
-CPPM(PackageClass::addClass),
-CPPM(PackageClass::addPublicClass),
-CPPM(PackageClass::getName),
-CPPM(PackageClass::loadLibrary),
-CPPM(PackageClass::digits),
-CPPM(PackageClass::form),
-CPPM(PackageClass::fuzz),
-CPPM(PackageClass::trace),
+CPPM(PackageClass::addRoutineRexx),
+CPPM(PackageClass::addPublicRoutineRexx),
+CPPM(PackageClass::addClassRexx),
+CPPM(PackageClass::addPublicClassRexx),
+CPPM(PackageClass::loadLibraryRexx),
+CPPM(PackageClass::digitsRexx),
+CPPM(PackageClass::formRexx),
+CPPM(PackageClass::fuzzRexx),
+CPPM(PackageClass::traceRexx),
 
 CPPM(PackageClass::newRexx),
 
@@ -736,16 +734,12 @@ CPPM(QueueClass::queueRexx),
 CPPM(QueueClass::pullRexx),
 CPPM(QueueClass::peek),
 CPPM(QueueClass::put),
-CPPM(QueueClass::at),
-CPPM(QueueClass::hasindex),
 CPPM(QueueClass::remove),
 CPPM(QueueClass::append),
 CPPM(QueueClass::allIndexes),
 CPPM(QueueClass::index),
 CPPM(QueueClass::firstRexx),
 CPPM(QueueClass::lastRexx),
-CPPM(QueueClass::next),
-CPPM(QueueClass::previous),
 CPPM(QueueClass::insert),
 CPPM(QueueClass::section),
 
@@ -856,12 +850,10 @@ CPPM(RexxString::caselessContains),
 CPPM(RexxString::containsWord),
 CPPM(RexxString::caselessContainsWord),
 
-                                          /* following methods are in OKBBITS  */
+
 CPPM(RexxString::bitAnd),
 CPPM(RexxString::bitOr),
 CPPM(RexxString::bitXor),
-
-                                          /* following methods are in OKBCONV  */
 
 CPPM(RexxString::b2x),
 CPPM(RexxString::c2d),
@@ -888,10 +880,11 @@ CPPM(RexxString::equals),
 CPPM(RexxString::caselessEquals),
 CPPM(RexxString::compareToRexx),
 CPPM(RexxString::caselessCompareToRexx),
-                                          /* End of BIF methods                */
+
 CPPM(RexxString::makeArrayRexx),
 
 CPPM(RexxString::newRexx),
+
 CPPM(MutableBuffer::newRexx),
 CPPM(MutableBuffer::lengthRexx),
 CPPM(MutableBuffer::makeArrayRexx),
@@ -943,23 +936,7 @@ CPPM(SupplierClass::initRexx),
 
 CPPM(SupplierClass::newRexx),
 
-                                       /* Table methods                     */
-CPPM(RexxHashTableCollection::removeRexx),
-CPPM(RexxHashTableCollection::getRexx),
-CPPM(RexxHashTableCollection::putRexx),
-CPPM(RexxHashTableCollection::addRexx),
-CPPM(RexxHashTableCollection::allAt),
-CPPM(RexxHashTableCollection::hasIndexRexx),
-CPPM(RexxHashTableCollection::merge),
-CPPM(RexxHashTableCollection::supplier),
-CPPM(RexxHashTableCollection::allItems),
-CPPM(RexxHashTableCollection::allIndexes),
-CPPM(RexxHashTableCollection::uniqueIndexes),
-CPPM(RexxHashTableCollection::empty),
-CPPM(RexxHashTableCollection::isEmptyRexx),
-CPPM(RexxHashTableCollection::indexRexx),
-CPPM(RexxHashTableCollection::hasItemRexx),
-CPPM(RexxHashTableCollection::removeItemRexx),
+
 
 CPPM(TableClass::itemsRexx),
 CPPM(TableClass::newRexx),
@@ -969,7 +946,6 @@ CPPM(IdentityTable::newRexx),
 CPPM(RelationClass::put),               /* Relation methods                  */
 CPPM(RelationClass::removeItemRexx),
 CPPM(RelationClass::removeAll),
-CPPM(RelationClass::allIndex),
 CPPM(RelationClass::itemsRexx),
 CPPM(RelationClass::supplier),
 CPPM(RelationClass::hasItem),
@@ -1039,7 +1015,7 @@ CPPCode *CPPCode::resolveExportedMethod(const char *name, PCPPM targetMethod, si
     }
 
     char buffer[256];
-    snprintf(buffer, sizeof(buffer), "Unresolved exported method:  %s, entrypoint: %s", name, entryPointName == NULL ? "<unknown>" : entryPointName);
+    sprintf(buffer, "Unresolved exported method:  %s, entrypoint: %s", name, entryPointName == NULL ? "<unknown>" : entryPointName);
     // this is a terminal error...problems in initial definitions
     Interpreter::logicError(buffer);
     return NULL;

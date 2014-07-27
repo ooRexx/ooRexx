@@ -218,6 +218,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="CommandHandler" class="CommandHandler" include="CommandHandler.hpp"/>
 <Class id="MapBucket" class="MapBucket" include="MapBucket.hpp"/>
 <Class id="MapTable" class="MapTable" include="MapTable.hpp"/>
+<Class id="TrapHandler" class="TrapHandler" include="TrapHandler.hpp"/>
 </Transient>
 </Classes>
 </RexxClasses>

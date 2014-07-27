@@ -550,13 +550,13 @@ set (memory_sources ${build_memory_dir}/DeadObject.cpp
             ${build_memory_dir}/RexxMemory.cpp)
 set (execution_sources ${build_execution_dir}/CPPCode.cpp
             ${build_execution_dir}/RexxActivation.cpp
-            ${build_execution_dir}/RexxActivation.cpp
             ${build_execution_dir}/BaseCode.cpp
             ${build_execution_dir}/RexxCode.cpp
             ${build_execution_dir}/RexxLocalVariables.cpp
             ${build_execution_dir}/NativeActivation.cpp
             ${build_execution_dir}/NativeCode.cpp
             ${build_execution_dir}/RexxVariable.cpp
+            ${build_execution_dir}/TrapHandler.cpp
             ${build_execution_dir}/VariableDictionary.cpp
             ${build_execution_dir}/SecurityManager.cpp)
 set (behaviour_sources ${build_behaviour_dir}/PrimitiveBehaviours.cpp

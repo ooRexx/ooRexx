@@ -182,26 +182,29 @@ class RexxActivation : public RexxActivationBase
    inline RexxActivation(RESTORETYPE restoreType) { ; };
    RexxActivation();
    RexxActivation(Activity* _activity, MethodClass *_method, RexxCode *_code);
-   RexxActivation(Activity *_activity, RoutineClass *_routine, RexxCode *_code, RexxString *calltype, RexxString *env, int context);
-   RexxActivation(Activity *_activity, RexxActivation *_parent, RexxCode *_code, int context);
+   RexxActivation(Activity *_activity, RoutineClass *_routine, RexxCode *_code, RexxString *calltype, RexxString *env, ActivationContext context);
+   RexxActivation(Activity *_activity, RexxActivation *_parent, RexxCode *_code, ActivationContext context);
 
    virtual void live(size_t);
    virtual void liveGeneral(MarkReason reason);
 
-   RexxObject      * dispatch();
-   size_t            digits();
-   size_t            fuzz();
-   bool              form();
-   void              setDigits(size_t);
-   void              setFuzz(size_t);
-   void              setForm(bool);
-   void              setDigits();
-   void              setFuzz();
-   void              setForm();
-   bool              trap(RexxString *, DirectoryClass *);
-   void              setObjNotify(MessageClass *);
-   void              termination();
-   inline void       guardOff()
+   RexxObject *dispatch();
+   size_t      digits();
+   size_t      fuzz();
+   bool        form();
+   void        setDigits(size_t);
+   void        setFuzz(size_t);
+   void        setForm(bool);
+   void        setDigits();
+   void        setFuzz();
+   void        setForm();
+   bool        trap(RexxString *, DirectoryClass *);
+   void        setObjNotify(MessageClass *);
+   void        termination();
+   void        inheritPackageSettings();
+   void        allocateStackFrame();
+   void        allocateLocalVariables();
+   inline void guardOff()
    {
        // if currently locked, release the variable dictionary and change the scopey
        if (objectScope == SCOPE_RESERVED)
@@ -287,22 +290,7 @@ class RexxActivation : public RexxActivationBase
    DirectoryClass  * local();
    RexxString      * formatSourcelessTraceLine(RexxString *packageName);
    ArrayClass      * getStackFrames(bool skipFirst);
-   inline void       implicitExit()
-   {
-       // at a main program level or completing an INTERPRET
-       // instruction?
-       if (activationContext&TOP_LEVEL_CALL || activationContext == INTERPRET) {
-                                            // real program call?
-           if (activationContext&PROGRAM_LEVEL_CALL)
-           {
-                                            // run termination exit
-               activity->callTerminationExit(this);
-           }
-           executionState = RETURNED;// this is an EXIT for real
-           return;                          // we're finished here
-       }
-       exitFrom(OREF_NULL);           // we've had a nested exit, we need to process this more fully
-   }
+   void              implicitExit();
 
    void              unwindTrap(RexxActivation *);
    RexxString      * sourceString();
@@ -324,7 +312,7 @@ class RexxActivation : public RexxActivationBase
    void              pushEnvironment(RexxObject *);
    RexxObject      * popEnvironment();
    void              processTraps();
-   void              mergeTraps(QueueClass *, QueueClass *);
+   void              mergeTraps(QueueClass *);
    uint64_t          getRandomSeed(RexxInteger *);
    void              adjustRandomSeed() { randomSeed += (uint64_t)(uintptr_t)this; }
    VariableDictionary * getObjectVariables();
@@ -655,10 +643,8 @@ class RexxActivation : public RexxActivationBase
     MessageClass        *notifyObject;  // an object to notify if excep occur
                                         // list of Saved Local environments
     ListClass           *environmentList;
-    size_t               pendingCount;  // number of pending conditions
-    QueueClass          *handlerQueue;  // queue of trapped condition handler
                                         // queue of trapped conditions
-    QueueClass          *conditionQueue;
+    QueueClass          *conditionQueue;// queue of trapped conditions
     uint64_t             randomSeed;    // random number seed
     bool                 randomSet;     // random seed has been set
     size_t               blockNest;     // block instruction nesting level
