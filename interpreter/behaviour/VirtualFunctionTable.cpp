@@ -158,6 +158,7 @@
 #include "CommandHandler.hpp"
 #include "MapBucket.hpp"
 #include "MapTable.hpp"
+#include "TrapHandler.hpp"
 
 
 void *MemoryObject::virtualFunctionTable[T_Last_Class_Type + 1] = {NULL};
@@ -680,6 +681,9 @@ void MemoryObject::buildVirtualFunctionTable()
    
    objectPtr = new (objectLoc) MapTable(RESTOREIMAGE);
    virtualFunctionTable[T_MapTable] = getVftPointer(objectLoc);
+   
+   objectPtr = new (objectLoc) TrapHandler(RESTOREIMAGE);
+   virtualFunctionTable[T_TrapHandler] = getVftPointer(objectLoc);
    
 };
 

@@ -44,6 +44,7 @@
 #define Included_PackageClass
 
 #include "SecurityManager.hpp"
+#include "PackageSetting.hpp"
 
 class ProgramSource;
 
@@ -125,15 +126,17 @@ public:
     inline StringTable *getInstalledPublicRoutines() { install(); return publicRoutines; }
     inline StringTable *getImportedRoutines() { install(); return mergedPublicRoutines; }
     inline StringTable *getDefinedMethods() { install(); return unattachedMethods; }
-    inline ArrayClass     *getPackages() { install(); return loadedPackages; }
-    inline void           setDigits(size_t d) { digits = d; }
-    inline size_t         getDigits() { return digits; }
-    inline void           setForm(bool f) { form = f; }
-    inline bool           getForm() { return form; }
-    inline void           setFuzz(size_t f) { fuzz = f; }
-    inline size_t         getFuzz() { return fuzz; }
-    inline void           setTraceSetting(const TraceSetting &s) { traceSetting = s; }
-    inline const TraceSetting &getTraceSetting() { return traceSetting; }
+    inline ArrayClass  *getPackages() { install(); return loadedPackages; }
+    inline void         setDigits(size_t d) { packageSettings.setDigits(d); }
+    inline size_t       getDigits() { return packageSettings.getDigits(); }
+    inline void         setForm(bool f) { packageSettings.setForm(f); }
+    inline bool         getForm() { return packageSettings.getForm(); }
+    inline void         setFuzz(size_t f) { packageSettings.setFuzz(f); }
+    inline size_t       getFuzz() { return packageSettings.getFuzz(); }
+    inline void         setTraceSetting(const TraceSetting &s) { packageSettings.setTraceSetting(s); }
+    inline const TraceSetting &getTraceSetting() { return packageSettings.getTraceSetting(); }
+    inline const PackageSetting &getSettings() { return packageSettings; }
+
            RexxString    *getTrace();
            void           detachSource();
            PackageClass  *newRexx(RexxObject **init_args, size_t argCount);

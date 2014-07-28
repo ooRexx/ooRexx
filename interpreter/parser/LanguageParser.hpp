@@ -68,6 +68,7 @@ class StackFrameClass;
 class ProgramSource;
 class RexxVariableBase;
 class RexxStemVariable;
+class TraceSetting;
 
 
 // handy defines for simplifying creation of instruction types.
@@ -225,6 +226,7 @@ class LanguageParser: public RexxInternalObject
     RexxInstruction *nextInstruction();
     void        isExposeValid();
     static bool parseTraceSetting(RexxString *, size_t &, size_t &, char &);
+    static bool parseTraceSetting(RexxString *value, TraceSetting &newSetting, char &badOption)
     size_t      processVariableList(InstructionKeyword);
 
     RexxInstruction *addressNew();

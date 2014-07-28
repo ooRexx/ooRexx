@@ -229,10 +229,11 @@ typedef enum
     T_CommandHandler = 162,
     T_MapBucket = 163,
     T_MapTable = 164,
+    T_TrapHandler = 165,
 
-    T_Last_Transient_Class = 164,
-    T_Last_Primitive_Class = 164,
-    T_Last_Class_Type = 164,
+    T_Last_Transient_Class = 165,
+    T_Last_Primitive_Class = 165,
+    T_Last_Class_Type = 165,
     
 } ClassTypeCode;
 

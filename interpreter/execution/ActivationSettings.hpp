@@ -95,6 +95,31 @@ class ActivationSettings
     public:
       inline ActivationSettings() {}
 
+      inline bool isForwarded() { return stateFlags[forwarded]; }
+      inline void setForwarded(bool v = true) { stateFlags[forwarded] = v; }
+      inline bool isGuarded() { return stateFlags[guardedMethod]; }
+      inline void setGuarded(bool v = true) { stateFlags[guardedMethod] = v; }
+      inline bool isDebugBypassed() { return stateFlags[debugBypass]; }
+      inline void setDebugBypass(bool v = true) { stateFlags[debugBypass] = v; }
+      inline bool isTraceSuppressed() { return stateFlags[traceSuppress]; }
+      inline void setTraceSuppressed(bool v = true) { stateFlags[traceSuppress] = v; }
+      inline bool isExternalTraceOn() { return stateFlags[traceOn]; }
+      inline void setExternalTraceOn(bool v = true) { stateFlags[traceOn] = v; }
+      inline bool isElapsedTimerReset() { return stateFlags[elapsedReset]; }
+      inline void setElapsedTimerReset(bool v = true) { stateFlags[elapsedReset] = v; }
+      inline bool isReplyIssued() { return stateFlags[replyIssued]; }
+      inline void setReplyIssued(bool v = true) { stateFlags[replyIssued] = v; }
+      inline bool areTrapsCopied() { return stateFlags[trapsCopied]; }
+      inline void setTrapsCopied(bool v = true) { stateFlags[trapsCopied] = v; }
+      inline bool haveClauseExits() { return stateFlags[clauseExits]; }
+      inline void setHaveClauseExits(bool v = true) { stateFlags[clauseExits] = v; }
+      inline bool hasTransferFailed() { return stateFlags[transferFailed]; }
+      inline void setTransferFailed(bool v = true) { stateFlags[transferFailed] = v; }
+      inline bool isProcedureValid() { return stateFlags[procedureValid]; }
+      inline void setProcedureValid(bool v = true) { stateFlags[procedureValid] = v; }
+      inline bool wasDebugPromptIssued() { return stateFlags[debugPromptIssued]; }
+      inline void setDebugPromptIssued(bool v = true) { stateFlags[debugPromptIssued] = v; }
+
       StringTable    *traps;               // enabled condition traps
       DirectoryClass *conditionObj;        // current condition object
       RexxObject    **parentArgList;       // arguments to top level program
@@ -113,7 +138,7 @@ class ActivationSettings
       SecurityManager *securityManager;    // security manager object
       RexxClass      *scope;               // scope of the method call
       PackageSetting packageSettings;      // inherited package settings
-      FlagSet<32, ActivationFlag> stateFlags;  // trace/numeric and other settings
+      FlagSet<ActivationFlag, 32> stateFlags;  // trace/numeric and other settings
       wholenumber_t traceSkip;             // count of trace events to skip
       bool intermediateTrace;              // very quick test for intermediate trace
       size_t  traceIndent;                 // trace indentation

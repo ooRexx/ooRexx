@@ -43,6 +43,9 @@
 #ifndef Included_TrapHandler
 #define Included_TrapHandler
 
+class DirectoryClass;
+class RexxActivation;
+
 /**
  * A handler state for a SIGNAL ON or CALL ON trap in an
  * activation context.
@@ -62,6 +65,17 @@ class TrapHandler : public RexxInternalObject
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
 
+    bool canHandle(RexxString *c);
+    RexxString *instructionName();
+    void setConditionObject(DirectoryClass *c);
+    bool isSignal();
+    bool isDelayed();
+    DirectoryClass *getConditionObject();
+    void trap(RexxActivation *context);
+    RexxString *getState();
+    void disable();
+    void enable();
+
 protected:
 
     typedef enum
@@ -72,7 +86,7 @@ protected:
 
 
     RexxString *condition;              // the condition we're handling
-    RexxInstructionCallBase *handler    // the instruction that handles this condition trap
+    RexxInstructionCallBase *handler;   // the instruction that handles this condition trap
     TrapState state;                    // current state of the trap
     DirectoryClass *conditionObject;    // an object associated with a active trap
 };

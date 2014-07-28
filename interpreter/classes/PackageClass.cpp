@@ -1087,7 +1087,8 @@ void PackageClass::detachSource()
  */
 RexxString *PackageClass::getTrace()
 {
-    return LanguageParser::formatTraceSetting(traceSetting);
+    // get this from the settings.
+    return packageSettings.getTrace();
 }
 
 

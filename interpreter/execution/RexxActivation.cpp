@@ -75,6 +75,8 @@
 #include "PackageClass.hpp"
 #include "RoutineClass.hpp"
 #include "LanguageParser.hpp"
+#include "TrapHandler.hpp"
+
 
 // max instructions without a yield
 const size_t MAX_INSTRUCTIONS = 100;
@@ -211,10 +213,10 @@ RexxActivation::RexxActivation(Activity *_activity, RexxActivation *_parent, Rex
     // settings as well.
     if (context == INTERNALCALL)
     {
-        settings.stateFlags[trapsCopied] = false;
-        settings.stateFlags[replyIssued] = false;
+        settings.setTrapsCopied(false);
+        settings.setReplyIssued(false);
         // invalidate the timestamp...interpret or debug pauses use the old timestamp.
-        settings.timestamp.valid = false;
+        settings.timeStamp.valid = false;
     }
 
     // this is a nested call until we issue a procedure *
@@ -310,6 +312,97 @@ RexxActivation::RexxActivation(Activity *_activity, RoutineClass *_routine, Rexx
 
 
 /**
+ * Generalized object marking.
+ *
+ * @param reason The reason for this live marking operation.
+ */
+void RexxActivation::live(size_t liveMark)
+{
+    memory_mark(previous);
+    memory_mark(executable);
+    memory_mark(scope);
+    memory_mark(code);
+    memory_mark(settings.securityManager);
+    memory_mark(receiver);
+    memory_mark(activity);
+    memory_mark(parent);
+    memory_mark(doStack);
+    // the stack and the local variables handle their own marking.
+    stack.live(liveMark);
+    settings.localVariables.live(liveMark);
+    memory_mark(current);
+    memory_mark(next);
+    memory_mark(result);
+    memory_mark(trapInfo);
+    memory_mark(objNotify);
+    memory_mark(environmentList);
+    memory_mark(conditionQueue);
+    memory_mark(settings.traps);
+    memory_mark(settings.conditionObj);
+    memory_mark(settings.parentCode);
+    memory_mark(settings.currentAddress);
+    memory_mark(settings.alternateAddress);
+    memory_mark(settings.messageName);
+    memory_mark(settings.objectVariables);
+    memory_mark(settings.calltype);
+    memory_mark(settings.streams);
+    memory_mark(settings.haltDescription);
+    memory_mark(contextObject);
+
+    // We're hold a pointer back to our arguments directly where they
+    // are created.  Since in some places, this argument list comes
+    // from the C stack, we need to handle the marker ourselves.
+    memory_mark_array(argcount, argList);
+    memory_mark_array(settings.parentArgCount, settings.parentArgList);
+}
+
+
+/**
+ * Generalized object marking.
+ *
+ * @param reason The reason for this live marking operation.
+ */
+void RexxActivation::liveGeneral(MarkReason reason)
+{
+    memory_mark_general(previous);
+    memory_mark_general(executable);
+    memory_mark_general(code);
+    memory_mark_general(settings.securityManager);
+    memory_mark_general(receiver);
+    memory_mark_general(activity);
+    memory_mark_general(parent);
+    memory_mark_general(doDtack);
+    // the stack and the local variables handle their own marking.
+    stack.liveGeneral(reason);
+    settings.localVariables.liveGeneral(reason);
+    memory_mark_general(current);
+    memory_mark_general(next);
+    memory_mark_general(result);
+    memory_mark_general(trapInfo);
+    memory_mark_general(objNotify);
+    memory_mark_general(environmentList);
+    memory_mark_general(conditionQueue);
+    memory_mark_general(settings.traps);
+    memory_mark_general(settings.conditionObj);
+    memory_mark_general(settings.parentCode);
+    memory_mark_general(settings.currentAddress);
+    memory_mark_general(settings.alternateAddress);
+    memory_mark_general(settings.messageName);
+    memory_mark_general(settings.objectVariables);
+    memory_mark_general(settings.calltype);
+    memory_mark_general(settings.streams);
+    memory_mark_general(settings.haltDescription);
+    memory_mark_general(contextObject);
+
+    // We're hold a pointer back to our arguments directly where they
+    // are created.  Since in some places, this argument list comes
+    // from the C stack, we need to handle the marking ourselves.
+    memory_mark_general_array(argCount, argList);
+    memory_mark_general_array(settings.parentArgCount, settings.parentArgList);
+}
+
+
+/**
  * Allocate a stack frame for this activation to use
  * for the evaluation stack.
  */
@@ -318,7 +411,7 @@ void RexxActivation::allocateStackFrame()
     // a live marking can happen without a properly set up stack (::live()
     // is called). Setting the NoRefBit when creating the stack avoids it.
     setHasNoReferences();
-    _activity->allocateStackFrame(&stack, code->getMaxStackSize());
+    activity->allocateStackFrame(&stack, code->getMaxStackSize());
     setHasReferences();
 }
 
@@ -339,14 +432,8 @@ void RexxActivation::allocateLocalVariables()
  */
 void RexxActivation::inheritPackageSettings()
 {
-    // and override with the package-defined settings
-
-    // TODO:  Create a NumericSettings class and a package settings class that includes the
-    // numeric settings and the trace settings.
-    settings.numericSettings.digits = packageObject->getDigits();
-    settings.numericSettings.fuzz = packageObject->getFuzz();
-    settings.numericSettings.form = packageObject->getForm();
-    setTrace(packageObject->getTraceSetting());
+    // just copy the whole initial settings piece.
+    settings.packageSettings = packageObject->getSettings();
 }
 
 
@@ -389,7 +476,7 @@ RexxObject * RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxOb
     receiver = _receiver;
     // the "msgname" can also be the name of an external routine, the label
     // name of an internal routine.
-    settings.messageName = msgname;
+    settings.messageName = name;
 
     // not a reply restart situation?  We need to do the full
     // initial setup
@@ -403,7 +490,7 @@ RexxObject * RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxOb
             // check at the end of each clause
             clauseBoundary = true;
             // remember that we have sys exits
-            settings.stateFlags[clauseExits] = true;
+            settings.setHaveClauseExits(true);
         }
         // save the argument information
         argList = _arglist;
@@ -413,8 +500,8 @@ RexxObject * RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxOb
         if (isTopLevelCall())
         {
             // save entry argument list forvariable pool fetch private access
-            settings.parent_arglist = arglist;
-            settings.parent_argcount = argcount;
+            settings.parentArgList = argList;
+            settings.parentArgCount = argCount;
             // make sure the code has resolved any class definitions, requireds, or libraries
             code->install(this);
             // set our starting code position (and the instruction used for error reporting)
@@ -466,11 +553,11 @@ RexxObject * RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxOb
     {
         // if we could not keep the guard lock when we were spun off, then
         // we need to reaquire (and potentially wait) for the lock now.
-        if (settings.stateFlags[transferFailed])
+        if (settings.hasTransferFailed())
         {
-            settings.objectVariabless->reserve(activity);
+            settings.objectVariables->reserve(activity);
             // turn off the failure flag in case we spin off again.
-            settings.stateFlags[transferFailed];
+            settings.setTransferFailed(false);
         }
     }
 
@@ -488,7 +575,7 @@ RexxObject * RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxOb
         // and we allow it when issued.
         if (start != OREF_NULL && start->isType(KEYWORD_PROCEDURE))
         {
-            settings.stateFlags[procedureValid] = true;
+            settings.setProcedureValid(true);
         }
     }
 
@@ -616,12 +703,12 @@ RexxObject * RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxOb
                 settings.localVariables.migrate(activity);
                 // if we have arguments, we need to migrate those also, as they are
                 // subject to overwriting once we return to the parent activation.
-                if (argcount > 0)
+                if (argCount > 0)
                 {
-                    RexxObject **newArguments = activity->allocateFrame(argcount);
-                    memcpy(newArguments, arglist, sizeof(RexxObject *) * argcount);
-                    arglist = newArguments;  // must be set on "this"
-                    settings.parent_arglist = newArguments;
+                    RexxObject **newArguments = (RexxObject **)activity->allocateFrame(argCount);
+                    memcpy(newArguments, argList, sizeof(RexxObject *) * argCount);
+                    argList = newArguments;  // must be set on "this"
+                    settings.parentArgList = newArguments;
                 }
 
                 // return our stack frame space back to the old activity.
@@ -637,10 +724,10 @@ RexxObject * RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxOb
                 // obtain it when we start running on the new thread.
                 if (objectScope == SCOPE_RESERVED)
                 {
-                    if (!settings.objectVariabless->transfer(activity))
+                    if (!settings.objectVariables->transfer(activity))
                     {
                         // this will tell us that we need to try grabbing this again.
-                        settings.stateFlags[transferFailed] = true;
+                        settings.setTransferFailed(true);
                     }
                 }
                 // now start the new activity running and give up control on this
@@ -665,7 +752,7 @@ RexxObject * RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxOb
 
             // do the normal between clause clean up.
             stack.clear();
-            settings.timestamp.valid = false;
+            settings.timeStamp.valid = false;
 
             // if we were in a debug pause, we had a error interpreting the
             // line typed at the pause.  We're just going to terminate this
@@ -766,8 +853,8 @@ void RexxActivation::debugSkip(wholenumber_t skipCount, bool noTrace )
     // mark the count to skip
     settings.traceSkip = skipCount;
     // turn on the skip flag to suppress the tracing.
-    settings.stateFlags[traceSuppress] = noTrace;
-    settings.stateFlags[debugBpass] = true;
+    settings.setTraceSuppressed(noTrace);
+    settings.setDebugBypass(true);
 }
 
 
@@ -779,8 +866,8 @@ void RexxActivation::debugSkip(wholenumber_t skipCount, bool noTrace )
  */
 RexxString * RexxActivation::traceSetting()
 {
-    // have the source file process this
-    return LanguageParser::formatTraceSetting(settings.traceOption);
+    // get this directly from the package settings.
+    return settings.packageSettings.getTrace();
 }
 
 
@@ -791,17 +878,17 @@ RexxString * RexxActivation::traceSetting()
  */
 void RexxActivation::setTrace(RexxString *setting)
 {
-    size_t newsetting;                   /* new trace setting                 */
-    size_t traceFlags;                   // the optimized trace flags
+    TraceSettings newSettings;
 
-    char   traceOption = 0;              // a potential bad character
+    char traceOption = 0;              // a potential bad character
 
-    if (!LanguageParser::parseTraceSetting(setting, newsetting, traceFlags, traceOption))
+    // TODO:  should this be in TraceSetting?
+    if (!LanguageParser::parseTraceSetting(setting, newSettings, traceOption))
     {
         reportException(Error_Invalid_trace_trace, new_string(&traceOption, 1));
     }
-                                       /* now change the setting            */
-    setTrace(newsetting, traceFlags);
+    // change the settings to the new value
+    setTrace(newSettings);
 }
 
 
@@ -813,7 +900,7 @@ void RexxActivation::setTrace(RexxString *setting)
 void RexxActivation::setTrace(const TraceSetting &source)
 {
     // turn off any trace suppression
-    settings.stateFlags[traceSuppress] = false;
+    settings.setTraceSuppressed(false);
     settings.traceSkip = 0;
 
     // this might just be a debug toggle request.  All other trace
@@ -822,322 +909,270 @@ void RexxActivation::setTrace(const TraceSetting &source)
     if (source.isDebugToggle())
     {
         // just flip the debug state
-        settings.traceSettings.toggleDebug();
+        settings.packageSettings.traceSettings.toggleDebug();
         // if no longer in debug mode, we need to reset the prompt issued flag
-        if (!settings.traceSettings.isDebug())
+        if (!settings.packageSettings.traceSettings.isDebug())
         {
             // flipping out of debug mode.  Reissue the debug prompt when
             // turned back on again
-            settings.stateFlags[debugPromptIssued] = false;
+            settings.setDebugPromptIssued(false);
         }
     }
     // are we in debug mode already?  A trace setting with no "?" maintains the
     // debug setting, unless it is Trace Off
-    else if (settings.traceSettings.isDebug())
+    else if (settings.packageSettings.traceSettings.isDebug())
     {
         // merge the flag settings
-        settings.traceSettings.merge(source);
+        settings.packageSettings.traceSettings.merge(source);
         // flipped out of debug mode.  Reissue the debug prompt when
         // turned back on again
-        if (!settings.traceSettings.inDebug())
+        if (!settings.packageSettings.traceSettings.isDebug())
         {
-            settings.stateFlags[debugPromptIssued] = false;
+            settings.setDebugPromptIssued(false);
         }
     }
     else
     {
         // set the new flags
-        settings.traceSettings.set(source);
+        settings.packageSettings.traceSettings.set(source);
 
     }
 
     // if tracing intermediates, turn on the special fast check flag
-    settings.intermediateTrace = settings.traceFlags.tracingIntermediates();
+    settings.intermediateTrace = settings.packageSettings.traceFlags.tracingIntermediates();
     // if we issued this from a debug prompt, let the pause handler know this changes.
     if (debugPause)
     {
-        settings.stateFlags[debugBypass] = true;
+        settings.setDebugBypass(true);
     }
 }
 
-void RexxActivation::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
+
+
+/**
+ * Process a REXX REPLY instruction
+ *
+ * @param resultObj The reply result object.
+ */
+void RexxActivation::reply(RexxObject *resultObj)
 {
-    memory_mark(previous);
-    memory_mark(executable);
-    memory_mark(scope);
-    memory_mark(code);
-    memory_mark(settings.securityManager);
-    memory_mark(receiver);
-    memory_mark(activity);
-    memory_mark(parent);
-    memory_mark(dostack);
-    // the stack and the local variables handle their own marking.
-    stack.live(liveMark);
-    settings.localVariables.live(liveMark);
-    memory_mark(current);
-    memory_mark(next);
-    memory_mark(result);
-    memory_mark(trapinfo);
-    memory_mark(objnotify);
-    memory_mark(environmentList);
-    memory_mark(handler_queue);
-    memory_mark(condition_queue);
-    memory_mark(settings.traps);
-    memory_mark(settings.conditionObj);
-    memory_mark(settings.parentCode);
-    memory_mark(settings.currentAddress);
-    memory_mark(settings.alternateAddress);
-    memory_mark(settings.msgname);
-    memory_mark(settings.objectVariabless);
-    memory_mark(settings.calltype);
-    memory_mark(settings.streams);
-    memory_mark(settings.halt_description);
-    memory_mark(contextObject);
-
-    // We're hold a pointer back to our arguments directly where they
-    // are created.  Since in some places, this argument list comes
-    // from the C stack, we need to handle the marker ourselves.
-    memory_mark_array(argcount, arglist);
-    memory_mark_array(settings.parent_argcount, settings.parent_arglist);
-}
-
-void RexxActivation::liveGeneral(MarkReason reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
-{
-    memory_mark_general(previous);
-    memory_mark_general(executable);
-    memory_mark_general(code);
-    memory_mark_general(settings.securityManager);
-    memory_mark_general(receiver);
-    memory_mark_general(activity);
-    memory_mark_general(parent);
-    memory_mark_general(dostack);
-    // the stack and the local variables handle their own marking.
-    stack.liveGeneral(reason);
-    settings.localVariables.liveGeneral(reason);
-    memory_mark_general(current);
-    memory_mark_general(next);
-    memory_mark_general(result);
-    memory_mark_general(trapinfo);
-    memory_mark_general(objnotify);
-    memory_mark_general(environmentList);
-    memory_mark_general(handler_queue);
-    memory_mark_general(condition_queue);
-    memory_mark_general(settings.traps);
-    memory_mark_general(settings.conditionObj);
-    memory_mark_general(settings.parentCode);
-    memory_mark_general(settings.currentAddress);
-    memory_mark_general(settings.alternateAddress);
-    memory_mark_general(settings.msgname);
-    memory_mark_general(settings.objectVariabless);
-    memory_mark_general(settings.calltype);
-    memory_mark_general(settings.streams);
-    memory_mark_general(settings.halt_description);
-    memory_mark_general(contextObject);
-
-    // We're hold a pointer back to our arguments directly where they
-    // are created.  Since in some places, this argument list comes
-    // from the C stack, we need to handle the marking ourselves.
-    memory_mark_general_array(argcount, arglist);
-    memory_mark_general_array(settings.parent_argcount, settings.parent_arglist);
-}
-
-
-void RexxActivation::reply(
-     RexxObject * resultObj)           /* returned REPLY result             */
-/******************************************************************************/
-/* Function:  Process a REXX REPLY instruction                                */
-/******************************************************************************/
-{
-    /* already had a reply issued?       */
-    if (settings.stateFlags[replyIssued])
+    // one reply per activation
+    if (settings.isReplyIssued())
     {
         reportException(Error_Execution_reply);
     }
-    settings.stateFlags[replyIssued] = true;/* turn on the replied flag          */
-                                         /* change execution state to         */
-    executionState = REPLIED;     /* terminate the main loop           */
-    next = OREF_NULL;              /* turn off execution engine         */
-    result = resultObj;            /* save the result value             */
+    settings.setReplyIssued(true);
+
+    // set the state to terminate the main execution loop
+    executionState = REPLIED;
+    next = OREF_NULL;
+    result = resultObj;
 }
 
 
-void RexxActivation::returnFrom(
-     RexxObject * resultObj)           /* returned RETURN/EXIT result       */
-/******************************************************************************/
-/* Function:  process a REXX RETURN instruction                               */
-/******************************************************************************/
+/**
+ * process a REXX RETURN instruction
+ *
+ * @param resultObj the return result object.
+ */
+void RexxActivation::returnFrom(RexxObject *resultObj)
 {
     // already had a reply and trying to return a result?  There is nobody
     // to receive this result, so this is an error.
-    if (settings.stateFlags[replyIssued] && resultObj != OREF_NULL)
+    if (settings.isReplyIssued() && resultObj != OREF_NULL)
     {
         reportException(Error_Execution_reply_return);
     }
-    /* processing an Interpret           */
+    // cause this level to terminate terminate the execution loop and shut down
+    executionState = RETURNED;
+    next = OREF_NULL;
+    // if this is an interpret, we really need to terminate the parent activation
     if (isInterpret())
     {
-        executionState = RETURNED;  /* this is a returned state          */
-        next = OREF_NULL;            /* turn off execution engine         */
-                                           /* cause a return in the parent      */
-        parent->returnFrom(resultObj); /* activity                          */
+        parent->returnFrom(resultObj);
     }
+    // normal termination.
     else
     {
-        executionState = RETURNED;  /* the state is returned             */
-        next = OREF_NULL;            /* turn off execution engine         */
-        result = resultObj;          /* save the return result            */
-                                           /* real program call?                */
+        // save the result object
+        result = resultObj;
+
+        // if this is a top level program, we need to call the termination exit.
         if (isProgramLevelCall())
         {
-            /* run termination exit              */
             activity->callTerminationExit(this);
         }
     }
-    /* switch debug off to avoid debug   */
-    /* pause after exit entered from an  */
+    // switch debug off to avoid debug pause after an exit or return.
     resetDebug();
 }
 
 
-void RexxActivation::iterate(
-     RexxString * name )               /* name specified on iterate         */
-/******************************************************************************/
-/* Function:  Process a REXX ITERATE instruction                              */
-/******************************************************************************/
+/**
+ * Process a REXX ITERATE instruction
+ *
+ * @param name   The optional block name for the iterate.
+ */
+void RexxActivation::iterate(RexxString *name)
 {
-    DoBlock *doblock = topBlock();          /* get the first stack item          */
+    // get the top item off of the block stack
+    DoBlock *doblock = topBlockInstruction();
 
+    // we might need to scan several levels down to find our target block instruction.
     while (doblock != OREF_NULL)
-    {       /* while still DO blocks to process  */
-        RexxBlockInstruction *loop = doblock->getParent();       /* get the actual loop instruction   */
-        if (name == OREF_NULL)             // leaving the inner-most loop?
+    {
+        // get the actual block instruction (might not be a loop, but it needs to be
+        // for an iterate
+        RexxBlockInstruction *loop = doblock->getParent();
+        // Is this a request to iterate the inner=most loop?
+        if (name == OREF_NULL)
         {
             // we only recognize LOOP constructs for this.
             if (loop->isLoop())
             {
-                /* reset the indentation             */
+                // reset the indentation
                 setIndent(doblock->getIndent());
+                // have the loop handle a re-execution.  This will
+                // determine if we continue or terminate.
                 ((RexxInstructionBaseDo *)loop)->reExecute(this, &stack, doblock);
-                return;                          /* we're finished                    */
+                return;
             }
 
         }
         // a named LEAVE can be either a labeled block or a loop.
         else if (loop->isLabel(name))
         {
+            // if we have a name match, but this is not a loop,
+            // that's a problem.
             if (!loop->isLoop())
             {
                 reportException(Error_Invalid_leave_iterate_name, name);
             }
-            /* reset the indentation             */
+            // got our target, reset the indent and do the loop.
             setIndent(doblock->getIndent());
             ((RexxInstructionBaseDo *)loop)->reExecute(this, &stack, doblock);
-            return;                          /* we're finished                    */
+            return;
         }
-        popBlock();                  /* cause termination cleanup         */
-        removeBlock();               /* remove the execution nest         */
-        doblock = topBlock();        /* get the new stack top             */
+        // terminate this block instruction and step to the
+        // the next level.
+        popBlockInstruction();
+        removeBlockInstruction();
+        doblock = topBlockInstruction();
     }
-    if (name != OREF_NULL)               /* have a name?                      */
+
+    // if we reached here, we either did not find the named
+    // block or there were no active loops at all.
+    if (name != OREF_NULL)
     {
-        /* report exception with the name    */
         reportException(Error_Invalid_leave_iteratevar, name);
     }
     else
     {
-        /* have a misplaced ITERATE          */
         reportException(Error_Invalid_leave_iterate);
     }
 }
 
 
-void RexxActivation::leaveLoop(
-     RexxString * name )               /* name specified on leave           */
-/******************************************************************************/
-/* Function:  Process a REXX LEAVE instruction                                */
-/******************************************************************************/
+/**
+ * Process a REXX LEAVE instruction
+ *
+ * @param name   The potential matching label name (can be null)
+ */
+void RexxActivation::leaveLoop(RexxString *name)
 {
-    DoBlock *doblock = topBlock();          /* get the first stack item          */
+    // scan the block stack looking for a match.
+    DoBlock *doblock = topBlockInstruction();
 
     while (doblock != OREF_NULL)
-    {       /* while still DO blocks to process  */
-        RexxBlockInstruction *loop = doblock->getParent();       /* get the actual loop instruction   */
-        if (name == OREF_NULL)             // leaving the inner-most loop?
+    {
+        // get the instruction backing the block
+        RexxBlockInstruction *loop = doblock->getParent();
+        // no name means leave the innermost block.  An unnamed
+        // LEAVE only works with loops.  If this is not a loop,
+        // keep searching for one.
+        if (name == OREF_NULL)
         {
             // we only recognize LOOP constructs for this.
             if (loop->isLoop())
             {
-                loop->terminate(this, doblock);  /* terminate the loop                */
-                return;                          /* we're finished                    */
+                loop->terminate(this, doblock);
+                return;
             }
-
         }
         // a named LEAVE can be either a labeled block or a loop.
         else if (loop->isLabel(name))
         {
-            loop->terminate(this, doblock);  /* terminate the loop                */
-            return;                          /* we're finished                    */
+            loop->terminate(this, doblock);
+            return;
         }
-        popBlock();                  /* cause termination cleanup         */
-        removeBlock();               /* remove the execution nest         */
-                                           /* get the first stack item again    */
-        doblock = topBlock();        /* get the new stack top             */
+
+        // top one is not the one we need...remove this block
+        // instruction and try the next one.
+
+        // TODO:  Why do we need both of these?  the pop should handle
+        // that.
+        popBlockInstruction();
+        removeBlockInstruction();
+        doblock = topBlockInstruction();
     }
-    if (name != OREF_NULL)               /* have a name?                      */
+
+    // if we get here, we did not find anything to leave.  This is either
+    // a problem with a mismatched name or there was no active loop available to leave.
+    if (name != OREF_NULL)
     {
-        /* report exception with the name    */
         reportException(Error_Invalid_leave_leavevar, name);
     }
     else
     {
-        /* have a misplaced LEAVE            */
         reportException(Error_Invalid_leave_leave);
     }
 }
 
+
+/**
+ * Return the line number of the current instruction
+ *
+ * @return The line number of the current instruction.
+ */
 size_t RexxActivation::currentLine()
-/******************************************************************************/
-/* Function:  Return the line number of the current instruction               */
-/******************************************************************************/
 {
-    if (current != OREF_NULL)      /* have a current line?              */
+    // we should have a current instruction.  If we don't, just return a
+    // default of 1.
+    if (current != OREF_NULL)
     {
-        return current->getLineNumber(); /* return the line number            */
+        return current->getLineNumber();
     }
     else
     {
-        return 1;                          /* error on the loading              */
+        return 1;
     }
 }
 
 
-void RexxActivation::procedureExpose(
-    RexxVariableBase **variables, size_t count)
-/******************************************************************************/
-/* Function:  Expose variables for a PROCEDURE instruction                    */
-/******************************************************************************/
+/**
+ * Execute a procedure expose instruction.
+ *
+ * @param variables The list of variables to expose.
+ * @param count     The count of variables to expose.
+ */
+void RexxActivation::procedureExpose(RexxVariableBase **variables, size_t count)
 {
-    /* procedure not allowed here?       */
-    if (!(settings.stateFlags[procedureValid]))
+    // make sure procedure is valid here
+    if (!(settings.isProcedureValid())
     {
         reportException(Error_Unexpected_procedure_call);
     }
-    /* disable further procedures        */
-    settings.stateFlags[procedureValid] = false;
+    // disable further procedure instructions
+    settings.setProcedureValid(false);
 
-    /* get a new  */
+    // allocate a new variable frame for an internal call (we inherited the
+    // caller's variable frame originally)
     activity->allocateLocalVariableFrame(&settings.localVariables);
-    /* make sure we clear out the dictionary, otherwise we'll see the */
-    /* dynamic entries from the previous level. */
+    // make sure we clear out the dictionary, otherwise we'll see the
+    // dynamic entries from the previous level.
     settings.localVariables.procedure(this);
 
-    /* now expose each individual variable */
+    // now expose each individual variable
     for (size_t i = 0; i < count; i++)
     {
         variables[i]->procedureExpose(this, parent);
@@ -1145,141 +1180,150 @@ void RexxActivation::procedureExpose(
 }
 
 
-void RexxActivation::expose(
-    RexxVariableBase **variables, size_t count)
-/******************************************************************************/
-/* Function:  Expose variables for an EXPOSE instruction                      */
-/******************************************************************************/
+/**
+ * Expose variables for an EXPOSE instruction
+ *
+ * @param variables The list of variables to expose.
+ * @param count     The variable count.
+ */
+void RexxActivation::expose(RexxVariableBase **variables, size_t count)
 {
-    /* get the variable set for this object */
-    VariableDictionary * objectVariabless = getObjectVariables();
+    // get the object variables for this object (at the current scope)
+    VariableDictionary *objectVariables = getObjectVariables();
 
-    /* now expose each individual variable */
+    // now expose each individual variable
     for (size_t i = 0; i < count; i++)
     {
-        variables[i]->expose(this, objectVariabless);
+        variables[i]->expose(this, objectVariables);
     }
 }
 
 
-RexxObject *RexxActivation::forward(
-    RexxObject  * target,              /* target object                     */
-    RexxString  * message,             /* message to send                   */
-    RexxObject  * superClass,          /* class over ride                   */
-    RexxObject ** _arguments,          /* message arguments                 */
-    size_t        _argcount,           /* count of message arguments        */
-    bool          continuing)          /* return/continue flag              */
-/******************************************************************************/
-/* Function:  Process a REXX FORWARD instruction                              */
-/******************************************************************************/
+/**
+ * Process a forward instruction.
+ *
+ * @param target     The target object.
+ * @param message    The message name.
+ * @param superClass The superclass override (if any)
+ * @param arguments  The message arguments.
+ * @param argcount   The count of message arguments.
+ * @param continuing The continue flag.
+ *
+ * @return The message result.
+ */
+RexxObject *RexxActivation::forward(RexxObject  *target, RexxString  *message,
+    RexxObject  *superClass, RexxObject **arguments, size_t argcount, bool continuing)
 {
-    if (target == OREF_NULL)             /* no target?                        */
+    // all pieces that are a note specified on the FORWARD will use the
+    // contgext values.
+    if (target == OREF_NULL)
     {
-        target = receiver;           /* use this                          */
+        target = receiver;
     }
-    if (message == OREF_NULL)            /* no message override?              */
+    if (message == OREF_NULL)
     {
-        message = settings.msgname;  /* use same message name             */
+        message = settings.messageName;
     }
-    if (_arguments == OREF_NULL)
-    {       /* no arguments given?               */
-        _arguments = arglist;        /* use the same arguments            */
-        _argcount = argcount;
+    if (arguments == OREF_NULL)
+    {
+        arguments = argList;
+        argcount = argCount;
     }
+    // if we are continuing, this is just a message send
     if (continuing)
-    {                    /* just processing the message?      */
+    {
         ProtectedObject r;
-        if (superClass == OREF_NULL)       /* no override?                      */
+        if (superClass == OREF_NULL)
         {
-            /* issue the message and return      */
-            target->messageSend(message, _arguments, _argcount, r);
+            target->messageSend(message, arguments, argcount, r);
         }
         else
         {
-            /* issue the message with override   */
-            target->messageSend(message, _arguments, _argcount, superClass, r);
+            target->messageSend(message, arguments, argcount, superClass, r);
         }
-        return(RexxObject *)r;
+        return (RexxObject *)r;
     }
+    // this activation becomes a phantom, and we issued the
+    // message as if we don't exist.
     else
-    {                               /* got to shut down and issue        */
-        settings.stateFlags[forwarded] = true; /* we are now a phantom activation   */
+    {
         // cannot return a result if a reply has already been issued.
-        if (settings.stateFlags[replyIssued]  && result != OREF_NULL)
+        if (settings.isReplyIssued()  && result != OREF_NULL)
         {
             reportException(Error_Execution_reply_exit);
         }
-        executionState = RETURNED;  /* this is an EXIT for real          */
-        next = OREF_NULL;            /* turn off execution engine         */
-                                           /* switch debug off to avoid debug   */
-                                           /* pause after exit entered from an  */
-                                           /* interactive debug prompt          */
+        // poof, we just became invisible
+        settings.setForwarded(true);
+        // we terminate the execution loop for this activation
+        executionState = RETURNED;
+        next = OREF_NULL;
+        // switch off debug for this activation so we don't pause after
+        // returning from the forward
         resetDebug();
         ProtectedObject r;
-        if (superClass == OREF_NULL)       /* no over ride?                     */
+        // now issue the message
+        if (superClass == OREF_NULL)
         {
-            /* issue the simple message          */
-            target->messageSend(message, _arguments, _argcount, r);
+            target->messageSend(message, arguments, argcount, r);
         }
         else
         {
-            /* use the full override             */
-            target->messageSend(message, _arguments, _argcount, superClass, r);
+            target->messageSend(message, arguments, argcount, superClass, r);
         }
-        result = (RexxObject *)r;    /* save the result value             */
-                                           /* already had a reply issued?       */
-        if (settings.stateFlags[replyIssued] && result != OREF_NULL)
-        {
-            reportException(Error_Execution_reply_exit);
-        }
-        termination();               /* run "program" termination method  */
-                                           /* if there are stream objects       */
-        return OREF_NULL;                  /* just return nothing               */
+        // set the return value for end-of-activation processing to handle.
+        result = (RexxObject *)r;
+        // terminate this activation
+        termination();
+        return OREF_NULL;
     }
 }
 
-void RexxActivation::exitFrom(
-     RexxObject * resultObj)           /* EXIT result                       */
-/******************************************************************************/
-/* Function:  Process a REXX exit instruction                                 */
-/******************************************************************************/
-{
-    RexxActivation *activation;          /* unwound activation                */
 
-    executionState = RETURNED;    /* this is an EXIT for real          */
-    next = OREF_NULL;              /* turn off execution engine         */
-    result = resultObj;            /* save the result value             */
+/**
+ * Process a REXX exit instruction
+ *
+ * @param resultObj The result object from the exit (optional)
+ */
+void RexxActivation::exitFrom(RexxObject * resultObj)
+{
+    // stop the loop execution
+    // TODO:  Add a method to do these four instructions.
+    executionState = RETURNED;
+    next = OREF_NULL;
+    result = resultObj;
     // switch off debug pausing
     resetDebug();
-                                         /* at a main program level?          */
+
+    // if we already had a reply issued, we can't return a result on EXIT
     if (isTopLevelCall())
     {
-        /* already had a reply issued?       */
-        if (settings.stateFlags[replyIssued] && result != OREF_NULL)
+        if (settings.isReplyIssued() && result != OREF_NULL)
         {
             reportException(Error_Execution_reply_exit);
         }
-        /* real program call?                */
+
+        // run the termination exit if we need to
         if (isProgramLevelCall())
         {
-            /* run termination exit              */
             activity->callTerminationExit(this);
         }
     }
     else
-    {                               /* internal routine or Interpret     */
-        /* start terminating with this level */
-        activation = this;
+    {
+        // start terminating with this level
+        RexxActivation *activation = this;
         do
         {
-            activation->termination();       /* make sure this level cleans up    */
-            ActivityManager::currentActivity->popStackFrame(false);     /* pop this level off                */
-                                             /* get the next level                */
+            // terminate this level
+            activation->termination();
+            // pop from the activity stack
+            ActivityManager::currentActivity->popStackFrame(false);
+            //. go to the next level
             activation = ActivityManager::currentActivity->getCurrentRexxFrame();
         } while (!activation->isTopLevel());
 
-        activation->exitFrom(resultObj);   /* tell this level to terminate      */
-                                           /* unwind and process the termination*/
+        // we are at the main program level, tell it to exit now
+        activation->exitFrom(resultObj);
         throw activation;                  // throw this as an exception to start the unwinding
     }
 }
@@ -1306,28 +1350,28 @@ void RexxActivation::implicitExit()
     exitFrom(OREF_NULL);
 }
 
-void RexxActivation::termination()
-/******************************************************************************/
-/* Function: do any cleanup due to a program terminating.                     */
-/******************************************************************************/
-{
-    guardOff();                    /* Remove any guards for this activatio*/
 
-                                         /* were there any SETLOCAL calls for */
-                                         /* this method?  And are there any   */
-                                         /* that didn't have a matching ENDLOC*/
+/**
+ * do any cleanup due to a program terminating.
+ */
+void RexxActivation::termination()
+{
+    // remove any guard locks for this activaty.
+    guardOff();
+    // have any setlocals we need to undo?
     if (environmentList != OREF_NULL && environmentList->getSize() != 0)
     {
-        /* Yes, then restore the environment */
-        /*  to the ist on added.             */
+        // restore the environment to the first version.
         SystemInterpreter::restoreEnvironment(((BufferClass *)environmentList->lastItem())->getData());
     }
-    environmentList = OREF_NULL;   /* Clear out the env list            */
-    closeStreams();                /* close any open streams            */
-    /* release the stack frame, which also releases the frame for the */
-    /* variable cache. */
+
+    environmentList = OREF_NULL;
+    // close any open streams
+    closeStreams();
+
+    // release the stack frame, which also releases the frame for the variable cache
     activity->releaseStackFrame(stack.getFrame());
-    /* do the variable termination       */
+    // do the variable termination
     cleanupLocalVariables();
     // deactivate the context object if we created one.
     if (contextObject != OREF_NULL)
@@ -1348,11 +1392,11 @@ void RexxActivation::checkTrapTable()
         settings.traps = new_string_table();
     }
     // have to copy the trap table for an internal routine call?
-    else if (isInternalCall() && !(settings.stateFlags[trapsCopied]))
+    else if (isInternalCall() && !settings.areTrapsCopied())
     {
         // copy the table and remember that we've done that
         settings.traps = (StringTable *)settings.traps->copy();
-        settings.stateFlags[trapsCopied] = true;
+        settings.setTrapsCopied(true);
     }
 }
 
@@ -1417,167 +1461,174 @@ RexxActivation * RexxActivation::external()
 }
 
 
-void RexxActivation::raiseExit(
-     RexxString    * condition,        /* condition to raise                */
-     RexxObject    * rc,               /* information assigned to RC        */
-     RexxString    * description,      /* description of the condition      */
-     RexxObject    * additional,       /* extra descriptive information     */
-     RexxObject    * resultObj,        /* return result                     */
-     DirectoryClass * conditionobj )    /* propagated condition object       */
-/******************************************************************************/
-/* Function:  Raise a condition using exit semantics for the returned value.  */
-/******************************************************************************/
+/**
+ * Raise a condition using exit semantics for the returned value.
+ *
+ * @param condition  The condition to raise.
+ * @param rc         The RC value for the condition.
+ * @param description
+ *                   The condition description
+ * @param additional The addtional information for the condition.
+ * @param resultObj  The result object.
+ * @param conditionobj
+ *                   Any propagated condition object.
+ */
+void RexxActivation::raiseExit(RexxString *condition, RexxObject *rc, RexxString *description,
+     RexxObject *additional, RexxObject *resultObj, DirectoryClass *conditionobj)
 {
-    /* not internal routine or Interpret */
-    /* instruction activation?           */
+    // if we are a top level activation already, just do the raise part now.
     if (isTopLevelCall())
     {
-        /* do the real condition raise       */
         raise(condition, rc, description, additional, resultObj, conditionobj);
-        return;                            /* return if processed               */
+        return;
     }
 
-    /* reached the top level?            */
+    // are we at the top level?  This is basically an
+    // exit instruction because there's nobody able to handle this.
     if (parent == OREF_NULL)
     {
-        exitFrom(resultObj);         /* turn into an exit instruction     */
+        exitFrom(resultObj);
     }
     else
     {
-        /* real program call?                */
+        // if we're the top level of the program, run the termination exit
         if (isProgramLevelCall())
         {
-            /* run termination exit              */
             activity->callTerminationExit(this);
         }
         ProtectedObject p(this);
-        termination();               /* remove guarded status on object   */
-        activity->popStackFrame(false); /* pop ourselves off active list     */
-        /* propogate the condition backward  */
+        // terminate the activaiton and remove from the stack
+        termination();
+        activity->popStackFrame(false);
+        // propagate to the parent
         parent->raiseExit(condition, rc, description, additional, resultObj, conditionobj);
     }
 }
 
 
-void RexxActivation::raise(
-     RexxString    * condition,        /* condition to raise                */
-     RexxObject    * rc,               /* information assigned to RC        */
-     RexxString    * description,      /* description of the condition      */
-     RexxObject    * additional,       /* extra descriptive information     */
-     RexxObject    * resultObj,        /* return result                     */
-     DirectoryClass * conditionobj )    /* propagated condition object       */
-/******************************************************************************/
-/* Function:  Raise a give REXX condition                                     */
-/******************************************************************************/
+/**
+ * Raise a condition in the context.
+ *
+ * @param condition  the condition name,
+ * @param rc         The rc value for the condition.
+ * @param description
+ *                   The condition description.
+ * @param additional any condition additional information.
+ * @param resultObj  The result object associated with the raise.
+ * @param conditionobj
+ *                   The condition object used for a propagate.
+ */
+void RexxActivation::raise(RexxString *condition, RexxObject *rc, RexxString *description,
+     RexxObject *additional, RexxObject *resultObj, DirectoryClass  conditionobj )
 {
-    bool            propagated;          /* propagated syntax condition       */
+    bool propagated = false;
 
-                                         /* propagating an existing condition?*/
+    // are we propagating an an existing condition?
     if (condition->strCompare(CHAR_PROPAGATE))
     {
-        /* get the original condition name   */
-        condition = (RexxString *)conditionobj->at(OREF_CONDITION);
-        propagated = true;                 /* this is propagated                */
-                                           /* fill in the propagation status    */
+
+        // get the original condition name
+        condition = (RexxString *)conditionobj->get(OREF_CONDITION);
+        propagated = true;
+        // fill in the propagation status
         conditionobj->put(TheTrueObject, OREF_PROPAGATED);
-        if (resultObj == OREF_NULL)        /* no result specified?              */
+        // if no result was specified, use the one from the condition object
+        if (resultObj == OREF_NULL)
         {
-            resultObj = conditionobj->at(OREF_RESULT);
+            resultObj = conditionobj->get(OREF_RESULT);
         }
     }
     else
-    {                               /* build a condition object          */
-        conditionobj = new_directory();    /* get a new directory               */
-                                           /* put in the condition name         */
-        conditionobj->put(condition, OREF_CONDITION);
-        /* fill in default description       */
-        conditionobj->put(OREF_NULLSTRING, OREF_DESCRIPTION);
-        /* fill in the propagation status    */
-        conditionobj->put(TheFalseObject, OREF_PROPAGATED);
-        propagated = false;                /* remember for later                */
-    }
-    if (rc != OREF_NULL)                 /* have an RC value?                 */
     {
-        conditionobj->put(rc, OREF_RC);    /* add to the condition argument     */
+        // build a condition object for the condition
+        conditionobj = new_directory();
+        conditionobj->put(condition, OREF_CONDITION);
+        conditionobj->put(OREF_NULLSTRING, OREF_DESCRIPTION);
+        conditionobj->put(TheFalseObject, OREF_PROPAGATED);
+        // not propagated
+        propagated = false;
     }
-    if (description != OREF_NULL)        /* any description to add?           */
+    // now fill in other pieces from the raise instruction
+    if (rc != OREF_NULL)
+    {
+        conditionobj->put(rc, OREF_RC);
+    }
+    if (description != OREF_NULL)
     {
         conditionobj->put(description, OREF_DESCRIPTION);
     }
-    if (additional != OREF_NULL)         /* or additional information         */
+    if (additional != OREF_NULL)
     {
         conditionobj->put(additional, OREF_ADDITIONAL);
     }
-    if (resultObj != OREF_NULL)          /* or a result object                */
+    if (resultObj != OREF_NULL)
     {
         conditionobj->put(resultObj, OREF_RESULT);
     }
 
-    /* fatal SYNTAX error?               */
+    // is this a SYNTAX error?  These get special handling
     if (condition->strCompare(CHAR_SYNTAX))
     {
-        ProtectedObject p(this);
+        // if propagating, terminate this level and reraise the condition
+        // with earlier levels.
         if (propagated)
-        {                  /* reraising a condition?            */
-            termination();             /* do the termination cleanup on ourselves */
-            activity->popStackFrame(false);  /* pop ourselves off active list     */
-                                             /* go propagate the condition        */
+        {
+            // protect this activation after we get popped from the stack
+            ProtectedObject p(this);
+            termination();
+            activity->popStackFrame(false);
             ActivityManager::currentActivity->reraiseException(conditionobj);
         }
         else
         {
-            /* go raise the error                */
+            // raise the error now at this level.
             ActivityManager::currentActivity->raiseException(((RexxInteger *)rc)->getValue(), description, (ArrayClass *)additional, resultObj);
         }
     }
     else
-    {                               /* normal condition trapping         */
-                                    /* get the sender object (if any)    */
+    {
         // find a predecessor Rexx activation
         RexxActivation *_sender = senderActivation();
-        /* do we have a sender that is       */
-        /* trapping this condition?          */
-        /* do we have a sender?              */
+        // see if the sender level is trapping this condition
         bool trapped = false;
         if (_sender != OREF_NULL)
         {
-            /* "tickle them" with this           */
             trapped = _sender->trap(condition, conditionobj);
         }
 
-        /* is this an untrapped halt condition?  Need to transform into a SYNTAX error */
+        // is this an untrapped HALT condition?  Need to transform into a SYNTAX error
         if (!trapped && condition->strCompare(CHAR_HALT))
         {
-                                               /* raise as a syntax error           */
             reportException(Error_Program_interrupted_condition, OREF_HALT);
         }
 
-        returnFrom(resultObj);       /* process the return part           */
-        throw this;                        /* unwind and process the termination*/
+        // process the return part, then unwind the call stack
+        returnFrom(resultObj);
+        throw this;
     }
 }
 
 
+/**
+ * Return the object variables dictionary for the current
+ * scope level.
+ *
+ * @return the target object variables.
+ */
 VariableDictionary * RexxActivation::getObjectVariables()
-/******************************************************************************/
-/* Function:  Return the associated object variables vdict                    */
-/******************************************************************************/
 {
-    /* no retrieved yet?                 */
-    if (settings.objectVariabless == OREF_NULL)
+    // not retrieved yet?  We need the dictionary from the current method scope.
+    if (settings.objectVariables == OREF_NULL)
     {
-        /* get the object variables          */
-        settings.objectVariabless = receiver->getObjectVariables(scope);
-        if (isGuarded())                   /* guarded method?                   */
+        settings.objectVariables = receiver->getObjectVariables(scope);
+        // are we a guarded method?  Get the guard lock now.
+        if (isGuarded())
         {
-            /* reserve the variable scope        */
-            settings.objectVariabless->reserve(activity);
-            /* and remember for later            */
+            settings.objectVariables->reserve(activity);
             objectScope = SCOPE_RESERVED;
         }
     }
-    /* return the vdict                  */
-    return settings.objectVariabless;
+    return settings.objectVariables;
 }
 
 
@@ -1598,7 +1649,7 @@ RexxObject *RexxActivation::resolveStream(RexxString *name, bool input, RexxStri
     {
         *added = false;           /* when caller requires stream table entry then initialize */
     }
-    DirectoryClass *streamTable = getStreams(); /* get the current stream set        */
+    StringTable *streamTable = getStreams(); /* get the current stream set        */
     if (fullName)                        /* fullName requested?               */
     {
         *fullName = name;                  /* initialize to name                */
@@ -1807,13 +1858,13 @@ void RexxActivation::guardOn()
     if (objectScope == SCOPE_RELEASED)
     {
         /* not retrieved yet?                */
-        if (settings.objectVariabless == OREF_NULL)
+        if (settings.objectVariables == OREF_NULL)
         {
             /* get the object variables          */
-            settings.objectVariabless = receiver->getObjectVariables(scope);
+            settings.objectVariables = receiver->getObjectVariables(scope);
         }
         /* lock the variable dictionary      */
-        settings.objectVariabless->reserve(activity);
+        settings.objectVariables->reserve(activity);
         /* set the state here also           */
         objectScope = SCOPE_RESERVED;
     }
@@ -2813,7 +2864,7 @@ void RexxActivation::guardWait()
     if (objectScope == SCOPE_RESERVED)
     {
         /* tell the receiver to release this */
-        settings.objectVariabless->release(activity);
+        settings.objectVariables->release(activity);
         /* and change our local state        */
         objectScope = SCOPE_RELEASED;    /* do an assignment! */
     }
@@ -2822,7 +2873,7 @@ void RexxActivation::guardWait()
     if (initial_state == SCOPE_RESERVED)
     {
         /* tell the receiver to reserve this */
-        settings.objectVariabless->reserve(activity);
+        settings.objectVariables->reserve(activity);
         /* and change our local state        */
         objectScope = SCOPE_RESERVED;    /* do an assignment! */
     }
@@ -4061,111 +4112,181 @@ PackageClass *RexxActivation::getPackage()
 }
 
 
-RexxObject *RexxActivation::evaluateLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount)
+/**
+ * Evaluate a compound variable from the local context.
+ *
+ * @param stemName  The name of the stem.
+ * @param index     The stem variable index (if known)
+ * @param tail      The evaluated tail.
+ * @param tailCount The count of tail elements.
+ *
+ * @return The value of the variable.
+ */
+RexxInternalObject *RexxActivation::evaluateLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount)
 {
-                                         /* new tail for compound             */
     CompoundVariableTail resolved_tail(this, tail, tailCount);
 
-    StemClass *stem_table = getLocalStem(stemName, index);   /* get the stem entry from this dictionary */
-    RexxObject *value = stem_table->evaluateCompoundVariableValue(this, stemName, &resolved_tail);
-    /* need to trace?                    */
+    // locate the stem variable and get the value from there.
+    StemClass *stem_table = getLocalStem(stemName, index);
+    RexxInternalObject *value = stem_table->evaluateCompoundVariableValue(this, stemName, &resolved_tail);
     if (tracingIntermediates())
     {
         traceCompoundName(stemName, tail, tailCount, &resolved_tail);
-        /* trace variable value              */
         traceCompound(stemName, tail, tailCount, value);
     }
     return value;
 }
 
 
-RexxObject *RexxActivation::getLocalCompoundVariableValue(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount)
+/**
+ * Get the value of a compound variable from the local context.
+ *
+ * @param stemName  The stem variable name.
+ * @param index     The slot index of the stem variable (if known)
+ * @param tail      The array of tail elements.
+ * @param tailCount The count of tail elements.
+ *
+ * @return The variable value (or OREF_NULL if not found)
+ */
+RexxInternalObject *RexxActivation::getLocalCompoundVariableValue(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount)
 {
-                                         /* new tail for compound             */
     CompoundVariableTail resolved_tail(this, tail, tailCount);
 
     StemClass *stem_table = getLocalStem(stemName, index);   /* get the stem entry from this dictionary */
-    return stem_table->getCompoundVariableValue(&resolved_tail);
+    return stem_table->getCompoundVariableValue(resolved_tail);
 }
 
 
+/**
+ * Get the value of a compound variable from the local context.
+ *
+ * @param stemName  The stem variable name.
+ * @param index     The slot index of the stem variable (if known)
+ * @param tail      The array of tail elements.
+ * @param tailCount The count of tail elements.
+ *
+ * @return The variable value (or OREF_NULL if not found)
+ */
 RexxObject *RexxActivation::getLocalCompoundVariableRealValue(RexxString *localstem, size_t index, RexxObject **tail, size_t tailCount)
 {
-                                         /* new tail for compound             */
     CompoundVariableTail resolved_tail(this, tail, tailCount);
 
-    StemClass *stem_table = getLocalStem(localstem, index);   /* get the stem entry from this dictionary */
-    return stem_table->getCompoundVariableRealValue(&resolved_tail);
+    StemClass *stem_table = getLocalStem(localstem, index);
+    return stem_table->getCompoundVariableRealValue(resolved_tail);
 }
 
 
+/**
+ * Get the value of a compound variable from the local context.
+ *
+ * @param stemName  The stem variable name.
+ * @param index     The slot index of the stem variable (if known)
+ * @param tail      The array of tail elements.
+ * @param tailCount The count of tail elements.
+ *
+ * @return The variable value (or OREF_NULL if not found)
+ */
 CompoundTableElement *RexxActivation::getLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount)
 {
-                                         /* new tail for compound             */
     CompoundVariableTail resolved_tail(this, tail, tailCount);
 
-    StemClass *stem_table = getLocalStem(stemName, index);   /* get the stem entry from this dictionary */
-    return stem_table->getCompoundVariable(&resolved_tail);
+    StemClass *stem_table = getLocalStem(stemName, index);
+    return stem_table->getCompoundVariable(resolved_tail);
 }
 
 
+/**
+ * Expose a compound variable in the local context.
+ *
+ * @param stemName  The stem variable name.
+ * @param index     The slot index of the stem variable (if known)
+ * @param tail      The array of tail elements.
+ * @param tailCount The count of tail elements.
+ *
+ * @return The variable value (or OREF_NULL if not found)
+ */
 CompoundTableElement *RexxActivation::exposeLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount)
 {
-                                         /* new tail for compound             */
     CompoundVariableTail resolved_tail(this, tail, tailCount);
 
-    StemClass *stem_table = getLocalStem(stemName, index);   /* get the stem entry from this dictionary */
-    return stem_table->exposeCompoundVariable(&resolved_tail);
+    StemClass *stem_table = getLocalStem(stemName, index);
+    return stem_table->exposeCompoundVariable(resolved_tail);
 }
 
 
+/**
+ * Test if a compound variable exists in the local context.
+ *
+ * @param stemName  The stem variable name.
+ * @param index     The slot index of the stem variable (if known)
+ * @param tail      The array of tail elements.
+ * @param tailCount The count of tail elements.
+ *
+ * @return true if the variable exists, false if not.
+ */
 bool RexxActivation::localCompoundVariableExists(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount)
 {
-                                         /* new tail for compound             */
     CompoundVariableTail resolved_tail(this, tail, tailCount);
 
-    StemClass *stem_table = getLocalStem(stemName, index);   /* get the stem entry from this dictionary */
-    return stem_table->compoundVariableExists(&resolved_tail);
+    StemClass *stem_table = getLocalStem(stemName, index);
+    return stem_table->compoundVariableExists(resolved_tail);
 }
 
 
-void RexxActivation::assignLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount, RexxObject *value)
+/**
+ * Perform an assignment to a compound variable in the local context.
+ *
+ * @param stemName  The stem variable name.
+ * @param index     The index of the stem variable (if known)
+ * @param tail      The array of tail elements.
+ * @param tailCount The count of tail elements.
+ * @param value     The value to assign.
+ */
+void RexxActivation::assignLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount, RexxInternalObject *value)
 {
-                                              /* new tail for compound             */
     CompoundVariableTail resolved_tail(this, tail, tailCount);
 
-    StemClass *stem_table = getLocalStem(stemName, index);   /* get the stem entry from this dictionary */
-    /* and set the value                 */
-    stem_table->setCompoundVariable(&resolved_tail, value);
-    /* trace resolved compound name */
+    StemClass *stem_table = getLocalStem(stemName, index);
+    stem_table->setCompoundVariable(resolved_tail, value);
     if (tracingIntermediates())
     {
-        traceCompoundName(stemName, tail, tailCount, &resolved_tail);
-        /* trace variable value              */
+        traceCompoundName(stemName, tail, tailCount, resolved_tail);
         traceCompoundAssignment(stemName, tail, tailCount, value);
     }
 }
 
 
-void RexxActivation::setLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount, RexxObject *value)
+/**
+ * set a compound variable in the local context.
+ *
+ * @param stemName  The stem variable name.
+ * @param index     The index of the stem variable (if known)
+ * @param tail      The array of tail elements.
+ * @param tailCount The count of tail elements.
+ * @param value     The value to assign.
+ */
+void RexxActivation::setLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount, RexxInternalObject *value)
 {
-                                              /* new tail for compound             */
     CompoundVariableTail resolved_tail(this, tail, tailCount);
 
-    StemClass *stem_table = getLocalStem(stemName, index);   /* get the stem entry from this dictionary */
-    /* and set the value                 */
+    StemClass *stem_table = getLocalStem(stemName, index);
     stem_table->setCompoundVariable(&resolved_tail, value);
 }
 
 
+/**
+ * Drop a compound variable in the local context.
+ *
+ * @param stemName  The name of the stem variable.
+ * @param index     The index (if known)
+ * @param tail      The array of tail elements.
+ * @param tailCount The count of tail elements.
+ */
 void RexxActivation::dropLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount)
 {
-                                              /* new tail for compound             */
     CompoundVariableTail resolved_tail(this, tail, tailCount);
-
-    StemClass *stem_table = getLocalStem(stemName, index);   /* get the stem entry from this dictionary */
-    /* and set the value                 */
-    stem_table->dropCompoundVariable(&resolved_tail);
+    StemClass *stem_table = getLocalStem(stemName, index);
+    stem_table->dropCompoundVariable(resolved_tail);
 }
 
 

@@ -53,7 +53,7 @@ class NumericSetting
 {
  public:
 
-    NumericSetting { }
+    NumericSetting() { }
 
     inline void setDefault()
     {
@@ -61,6 +61,15 @@ class NumericSetting
         form = Numerics::DEFAULT_FORM;
         fuzz = Numerics::DEFAULT_FUZZ;
     }
+
+    inline void   setDigits(size_t d) { digits = d; }
+    inline size_t getDigits() const { return digits; }
+    inline void   setForm(bool f) { form = f; }
+    inline bool   getForm() const { return form; }
+    inline void   setFuzz(size_t f) { fuzz = f; }
+    inline size_t getFuzz() const { return fuzz; }
+
+protected:
 
     size_t digits;                        // numeric digits setting
     size_t fuzz;                          // numeric fuzz setting

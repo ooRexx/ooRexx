@@ -41,11 +41,11 @@
 /* package instance to standardize how these settings are managed.            */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_NumericSetting
-#define Included_NumericSetting
+#ifndef Included_PackageSetting
+#define Included_PackageSetting
 
 #include "TraceSetting.hpp"
-#include "NumericSetting.hpp:
+#include "NumericSetting.hpp"
 
 /**
  * A class for processing different numeric settings
@@ -54,7 +54,7 @@ class PackageSetting
 {
  public:
 
-    PackageSetting { }
+    PackageSetting() { }
 
     // initialize the default values
     inline void setDefault()
@@ -62,6 +62,16 @@ class PackageSetting
         numericSettings.setDefault();
         traceSettings.setDefault();
     }
+
+    inline void   setDigits(size_t d) { numericSettings.setDigits(d); }
+    inline size_t getDigits() const { return numericSettings.getDigits(); }
+    inline void   setForm(bool f)  { numericSettings.setForm(f); }
+    inline bool   getForm() const { return numericSettings.getForm(); }
+    inline void   setFuzz(size_t f) { numericSettings.setFuzz(f); }
+    inline size_t getFuzz() const { return numericSettings.getFuzz(); }
+    inline void   setTraceSetting(const TraceSetting &s) { traceSettings = s; }
+    inline const  TraceSetting &getTraceSetting() const { return traceSettings; }
+    inline RexxString *getTrace() { return traceSettings.toString(); }
 
     NumericSetting numericSettings;       // the package numeric settings
     TraceSetting   traceSettings;         // the package trace setting

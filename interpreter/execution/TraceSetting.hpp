@@ -48,6 +48,8 @@
 
 #include "FlagSet.hpp"
 
+class RexxString;
+
 /**
  * A class for processing different trace settings as set by the
  * TRACE command.
@@ -93,24 +95,24 @@ class TraceSetting
     static const TraceFlags traceIntermediatesFlags;
 
     inline void clear() { flags.reset(); }
-    inline bool tracingResults() { return flags[traceResult]; }
-    inline bool inDebug() { return flags[traceDebug]; }
-    inline bool tracingAll() { return flags[traceAll]; }
-    inline bool tracingErrors() { return flags[traceErrors]; }
-    inline bool tracingFailures() { return flags[traceFailures]; }
-    inline bool tracingLabels() { return flags[traceLabels]; }
-    inline bool tracingCommands() { return flags[traceCommands]; }
-    inline bool pausingInstructions() { return flags[pauseInstructions]; }
-    inline bool pausingLabels() { return flags[pauseLabels]; }
-    inline bool pausingCommands() { return flags[pauseCommands]; }
-    inline bool isDebugToggle() { return flags[debugToggle]; }
-    inline bool isTraceOff() { return flags[traceOff]; }
+    inline bool tracingResults() const { return flags[traceResult]; }
+    inline bool isDebug() const { return flags[traceDebug]; }
+    inline bool tracingAll() const { return flags[traceAll]; }
+    inline bool tracingErrors() const { return flags[traceErrors]; }
+    inline bool tracingFailures() const { return flags[traceFailures]; }
+    inline bool tracingLabels() const { return flags[traceLabels]; }
+    inline bool tracingCommands() const { return flags[traceCommands]; }
+    inline bool pausingInstructions() const { return flags[pauseInstructions]; }
+    inline bool pausingLabels() const { return flags[pauseLabels]; }
+    inline bool pausingCommands() const { return flags[pauseCommands]; }
+    inline bool isDebugToggle() const { return flags[debugToggle]; }
+    inline bool isTraceOff() const { return flags[traceOff]; }
 
     // reset all debug settings
     inline bool resetDebug()
     {
         // turn off the debug and all pause flags
-        flags.reset(traceDebug, pauseInstructions, pauseLabels, pauseCommands),
+        flags.reset(traceDebug, pauseInstructions, pauseLabels, pauseCommands);
     }
     // turn on debug settings
     inline bool setDebug()
@@ -135,18 +137,19 @@ class TraceSetting
     }
 
     // turn tracing off
-    inline void traceOff()
+    inline void setTraceOff()
     {
         // reset all of the flags, then set the explicit Off flag
         flags.reset();
         flags[traceOff] = true;
     }
+
     // merge the flag settings, keeping existing debug settings
     inline void merge(const TraceSetting &s)
     {
         if (s.isTraceOff())
         {
-            traceOff();
+            setTraceOff();
         }
         else
         {
@@ -181,7 +184,7 @@ class TraceSetting
      *
      * @return True if all flags are off.
      */
-    inline bool isNoSetting()
+    inline bool isNoSetting() const
     {
         return flags.none();
     }
@@ -199,7 +202,7 @@ class TraceSetting
     inline void setTraceAll()
     {
         flags.reset();
-        flags = traceAllFlags();
+        flags = traceAllFlags;
     }
 
     // we're tracing just commands
@@ -244,14 +247,6 @@ class TraceSetting
         flags = defaultTraceFlags;
     }
 
-    // we're tracing just command failures
-    inline void setTraceOff()
-    {
-        flags.reset();
-        // off has an explicit setting for display
-        flags[traceOff] = true;
-    }
-
     // we're tracing results
     inline void setTraceResults()
     {
@@ -281,10 +276,11 @@ class TraceSetting
         flags[debugToggle] = true;
     }
 
+    RexxString *toString();
+
 
 protected:
 
-    size_t     setting;                  // the package trace setting (readable form)
     TraceFlags flags;                    // the flag settings associated with the selected trace.
 };
 

@@ -62,7 +62,7 @@ const TraceFlags traceIntermediatesFlags(traceAll, traceLabel, traceResult, trac
  *
  * @return The string representation of the trace setting.
  */
-RexxString *TraceSetting::formatTraceSetting()
+RexxString *TraceSetting::toString()
 {
     char         setting[3];
     setting[0] = '\0';

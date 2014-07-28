@@ -214,6 +214,7 @@
 #define TheCommandHandlerBehaviour      (&RexxBehaviour::primitiveBehaviours[T_CommandHandler])
 #define TheMapBucketBehaviour      (&RexxBehaviour::primitiveBehaviours[T_MapBucket])
 #define TheMapTableBehaviour      (&RexxBehaviour::primitiveBehaviours[T_MapTable])
+#define TheTrapHandlerBehaviour      (&RexxBehaviour::primitiveBehaviours[T_TrapHandler])
 
 
 /* -------------------------------------------------------------------------- */

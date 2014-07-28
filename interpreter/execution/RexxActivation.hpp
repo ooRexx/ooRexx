@@ -44,15 +44,15 @@
 #ifndef Included_RexxActivation
 #define Included_RexxActivation
 
-#include "ExpressionStack.hpp"           // needs expression stack
-#include "DoBlock.hpp"                   // need do block definition
-                                         // various activation settings
+#include "ExpressionStack.hpp"
+#include "DoBlock.hpp"
+
 #include "RexxCode.hpp"
 #include "ActivityManager.hpp"
 #include "CompoundVariableTail.hpp"
 #include "ContextClass.hpp"
 #include "StemClass.hpp"
-#include "ActivationSetting.hpp"
+#include "ActivationSettings.hpp"
 
 class RexxInstructionCallBase;
 class ProtectedObject;
@@ -186,7 +186,7 @@ class RexxActivation : public RexxActivationBase
    void              exitFrom(RexxObject *);
    void              procedureExpose(RexxVariableBase **variables, size_t count);
    void              expose(RexxVariableBase **variables, size_t count);
-   void              setTrace(size_t, size_t);
+   void              setTrace(const TraceSetting &);
    void              setTrace(RexxString *);
    void              raise(RexxString *, RexxObject *, RexxString *, RexxObject *, RexxObject *, DirectoryClass *);
    void              toggleAddress();
@@ -343,46 +343,46 @@ class RexxActivation : public RexxActivationBase
    inline void              traceCompoundName(RexxString *stemVar, RexxObject **tails, size_t tailCount, RexxString *tail) { if (settings.intermediateTrace) traceCompoundValue(TRACE_PREFIX_COMPOUND, stemVar, tails, tailCount, VALUE_MARKER, stemVar->concat(tail)); };
    inline void              traceCompound(RexxString *stemVar, RexxObject **tails, size_t tailCount, RexxObject *value) { if (settings.intermediateTrace) traceCompoundValue(TRACE_PREFIX_VARIABLE, stemVar, tails, tailCount, VALUE_MARKER, value); };
    inline void              traceCompoundAssignment(RexxString *stemVar, RexxObject **tails, size_t tailCount, RexxObject *value) { if (settings.intermediateTrace) traceCompoundValue(TRACE_PREFIX_ASSIGNMENT, stemVar, tails, tailCount, ASSIGNMENT_MARKER, value); };
-   inline void              clearTraceSettings() { settings.traceSettings.clear(); settings.intermediateTrace = false; }
-   inline bool              tracingResults() {return (settings.traceSettings.tracingResults(); }
-   inline bool              tracingAll() {return (settings.traceSettings.tracingAll(); }
-   inline bool              inDebug() { return settings.traceSettings.inDebug() && !debugPause;}
+   inline void              clearTraceSettings() { settings.packageSettings.traceSettings.clear(); settings.intermediateTrace = false; }
+   inline bool              tracingResults() {return settings.packageSettings.traceSettings.tracingResults(); }
+   inline bool              tracingAll() {return settings.packageSettings.traceSettings.tracingAll(); }
+   inline bool              inDebug() { return settings.packageSettings.traceSettings.isDebug() && !debugPause;}
    inline void              traceResult(RexxObject * v) { if (tracingResults()) traceValue(v, TRACE_PREFIX_RESULT); };
    inline bool              tracingInstructions() { return tracingAll(); }
-   inline bool              tracingErrors() { return settings.traceSettings.traceErrors(); }
-   inline bool              tracingFailures() { return settings.traceSettings.traceFailures(); }
+   inline bool              tracingErrors() { return settings.packageSettings.traceSettings.tracingErrors(); }
+   inline bool              tracingFailures() { return settings.packageSettings.traceSettings.tracingFailures(); }
    inline void              traceInstruction(RexxInstruction * v) { if (tracingAll()) traceClause(v, TRACE_PREFIX_CLAUSE); }
-   inline void              traceLabel(RexxInstruction * v) { if (settings.traceSettings.tracingLabels()) traceClause(v, TRACE_PREFIX_CLAUSE); };
+   inline void              traceLabel(RexxInstruction * v) { if (settings.packageSettings.traceSettings.tracingLabels()) traceClause(v, TRACE_PREFIX_CLAUSE); };
    inline void              traceCommand(RexxInstruction * v) { if (tracingCommands()) traceClause(v, TRACE_PREFIX_CLAUSE); }
-   inline bool              tracingCommands() { return settings.traceSettings.tracingCommands(); }
-   inline bool              pausingInstructions() { return (settings.traceSettings.pausingIntructions(); }
+   inline bool              tracingCommands() { return settings.packageSettings.traceSettings.tracingCommands(); }
+   inline bool              pausingInstructions() { return settings.packageSettings.traceSettings.pausingInstructions(); }
    inline void              pauseInstruction() {  if (pausingInstructions()) doDebugPause(); };
    inline int               conditionalPauseInstruction() { return pausingInstructions() ? doDebugPause(): false; };
-   inline void              pauseLabel() { if (settings.traceSettings.pausingLabels()) doDebugPause(); };
-   inline void              pauseCommand() { if (settings.traceSettings.pausingCommands()) doDebugPause(); };
+   inline void              pauseLabel() { if (settings.packageSettings.traceSettings.pausingLabels()) doDebugPause(); };
+   inline void              pauseCommand() { if (settings.packageSettings.traceSettings.pausingCommands()) doDebugPause(); };
    inline void              resetDebug()
    {
-       settings.traceSettings.resetDebug();
-       settings.stateFlags[debugBypass] = true;
+       settings.packageSettings.traceSettings.resetDebug();
+       settings.setDebugBypass(true);
    }
-   inline bool              noTracing(RexxObject *value) { return (settings.stateFlags[traceSuppress] || debugPause || value == OREF_NULL || !code->isTraceable()); }
-   inline bool              noTracing() { return (settings.stateFlags[traceSuppress] || debugPause || !code->isTraceable()); }
+   inline bool              noTracing(RexxObject *value) { return (settings.isTraceSuppressed() || debugPause || value == OREF_NULL || !code->isTraceable()); }
+   inline bool              noTracing() { return (settings.isTraceSuppressed() || debugPause || !code->isTraceable()); }
 
           SecurityManager  *getSecurityManager();
           SecurityManager  *getEffectiveSecurityManager();
    inline bool              isTopLevel() { return (activationContext&TOP_LEVEL_CALL) != 0; }
-   inline bool              isForwarded() { return settings.stateFlags[forwarded]; }
-   inline bool              isGuarded() { return settings.stateFlags[guardedmethod]; }
-   inline void              setGuarded() { settings.stateFlags.set(guardedMethod); }
+   inline bool              isForwarded() { return settings.isForwarded(); }
+   inline bool              isGuarded() { return settings.isGuarded(); }
+   inline void              setGuarded() { settings.setGuarded(true); }
 
-   inline bool              isExternalTraceOn() { return settings.stateFlags[traceOn]; }
-   inline void              setExternalTraceOn() { settings.stateFlags.set(traceOn); }
-   inline void              setExternalTraceOff() { settings.stateFlags.reset(traceOn); }
+   inline bool              isExternalTraceOn() { return settings.isExternalTraceOn(); }
+   inline void              setExternalTraceOn() { settings.setExternalTraceOn(true); }
+   inline void              setExternalTraceOff() { settings.setExternalTraceOn(false); }
           void              enableExternalTrace();
 
-   inline bool              isElapsedTimerReset() { return (settings.stateFlags[elapsedReset]; }
-   inline void              setElapsedTimerInvalid() { settings.stateFlags.set(elapsedReset); }
-   inline void              setElapsedTimerValid() { settings.stateFlags.reset(elapsedReset); }
+   inline bool              isElapsedTimerReset() { return settings.isElapsedTimerReset(); }
+   inline void              setElapsedTimerInvalid() { settings.setElapsedTimerReset(true); }
+   inline void              setElapsedTimerValid() { settings.setElapsedTimerReset(false); }
 
 
    inline RexxObject     ** getMethodArgumentList() { return argList; };
@@ -490,7 +490,7 @@ class RexxActivation : public RexxActivationBase
        settings.localVariables.updateVariable(variable);
    }
 
-   inline void setLocalVariable(RexxString *name, size_t index, RexxObject *value)
+   inline void setLocalVariable(RexxString *name, size_t index, RexxInternalObject *value)
    {
        RexxVariable *variable = getLocalVariable(name, index);
        variable->set(value);
@@ -502,14 +502,14 @@ class RexxActivation : public RexxActivationBase
        variable->drop();
    }
 
-   RexxObject *evaluateLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount);
-   RexxObject *getLocalCompoundVariableValue(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount);
-   RexxObject *getLocalCompoundVariableRealValue(RexxString *localstem, size_t index, RexxObject **tail, size_t tailCount);
+   RexxInternalObject *evaluateLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount);
+   RexxInternalObject *getLocalCompoundVariableValue(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount);
+   RexxInternalObject *getLocalCompoundVariableRealValue(RexxString *localstem, size_t index, RexxObject **tail, size_t tailCount);
    CompoundTableElement *getLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount);
    CompoundTableElement *exposeLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount);
    bool localCompoundVariableExists(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount);
-   void assignLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount, RexxObject *value);
-   void setLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount, RexxObject *value);
+   void assignLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount, RexxInternalObject *value);
+   void setLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount, RexxInternalObject *value);
    void dropLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount);
 
    inline bool novalueEnabled() { return settings.localVariables.getNovalue(); }
