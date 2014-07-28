@@ -558,7 +558,8 @@ set (execution_sources ${build_execution_dir}/CPPCode.cpp
             ${build_execution_dir}/RexxVariable.cpp
             ${build_execution_dir}/TrapHandler.cpp
             ${build_execution_dir}/VariableDictionary.cpp
-            ${build_execution_dir}/SecurityManager.cpp)
+            ${build_execution_dir}/SecurityManager.cpp
+            ${build_execution_dir}/TraceSetting.cpp)
 set (behaviour_sources ${build_behaviour_dir}/PrimitiveBehaviours.cpp
             ${build_behaviour_dir}/RexxBehaviour.cpp
             ${build_behaviour_dir}/MethodDictionary.cpp

@@ -47,14 +47,12 @@
 #include "ExpressionStack.hpp"           // needs expression stack
 #include "DoBlock.hpp"                   // need do block definition
                                          // various activation settings
-#include "RexxLocalVariables.hpp"        // local variable cache definitions
-#include "RexxDateTime.hpp"
 #include "RexxCode.hpp"
 #include "ActivityManager.hpp"
 #include "CompoundVariableTail.hpp"
 #include "ContextClass.hpp"
 #include "StemClass.hpp"
-
+#include "ActivationSetting.hpp"
 
 class RexxInstructionCallBase;
 class ProtectedObject;
@@ -63,58 +61,8 @@ class PackageClass;
 class StackFrameClass;
 
 
-/******************************************************************************/
-/* Random number generation constants                                         */
-/******************************************************************************/
-
-const uint64_t RANDOM_FACTOR = 25214903917LL;   // random multiplication factor
-const uint64_t RANDOM_ADDER = 11LL;
-                                       // randomize a seed number
-inline uint64_t RANDOMIZE(uint64_t seed) { return (seed * RANDOM_FACTOR + RANDOM_ADDER); }
-                                        // size of a size_t value in bits
-const size_t SIZE_BITS = sizeof(void *) * 8;
-
-
-
 #define MS_PREORDER   0x01                  // Macro Space Pre-Search
 #define MS_POSTORDER  0x02                  // Macro Space Post-Search
-
-/**
- * Main activation settings section created for easy
- * copying between related activations.
- */
-class ActivationSettings
-{
-    public:
-      inline ActivationSettings() {}
-
-      StringTable    *traps;               // enabled condition traps
-      DirectoryClass *conditionObj;        // current condition object
-      RexxObject    **parentArgList;       // arguments to top level program
-      size_t          parentArgCount;      // number of arguments to the top level program
-      MethodClass    *parentMethod;        // method object for top level
-      RexxCode       *parentCode;          // source of the parent method
-      RexxString     *currentAddress;      // current address environment
-      RexxString     *alternateAddress;    // alternate address environment
-      RexxString     *messageName;         // message sent to the receiver
-                                           // object variable dictionary
-      VariableDictionary *objectVariables;
-      RexxString     *calltype;            // (COMMAND/METHOD/FUNCTION/ROUTINE)
-      StringTable    *streams;             // table of opened streams
-      RexxString     *haltDescription;     // description from a HALT condition
-      SecurityManager *securityManager;    // security manager object
-      RexxClass      *scope;               // scope of the method call
-      size_t traceOption;                  // current active trace option
-      size_t flags;                        // trace/numeric and other settings
-      wholenumber_t traceSkip;             // count of trace events to skip
-      int  returnStatus;                   // command return status
-      size_t  traceIndent;                 // trace indentation
-      NumericSettings numericSettings;     // globally effective settings
-      int64_t elapsedTime;                 // elapsed time clock
-      RexxDateTime timeStamp;              // current timestamp
-      bool intermediateTrace;              // very quick test for intermediate trace
-      RexxLocalVariables localVariables;   // the local variables for this activation
-};
 
 
 /**
@@ -240,7 +188,6 @@ class RexxActivation : public RexxActivationBase
    void              expose(RexxVariableBase **variables, size_t count);
    void              setTrace(size_t, size_t);
    void              setTrace(RexxString *);
-   static size_t     processTraceSetting(size_t traceSetting);
    void              raise(RexxString *, RexxObject *, RexxString *, RexxObject *, RexxObject *, DirectoryClass *);
    void              toggleAddress();
    void              guardOn();
@@ -355,8 +302,6 @@ class RexxActivation : public RexxActivationBase
    inline void              setIndent(size_t v) {settings.traceIndent=(v); };
    inline size_t            getIndent() {return settings.traceIndent;};
    inline bool              tracingIntermediates() {return settings.intermediateTrace;};
-   inline void              clearTraceSettings() { settings.flags &= ~trace_flags; settings.intermediateTrace = false; }
-   inline bool              tracingResults() {return (settings.flags&trace_results) != 0; }
    inline Activity        * getActivity() {return activity;};
    inline RexxString      * getMessageName() {return settings.messageName;};
    inline RexxString      * getCallname() {return settings.messageName;};
@@ -369,7 +314,6 @@ class RexxActivation : public RexxActivationBase
    inline RexxInstruction * getNext() {return next;};
    inline void              setNext(RexxInstruction * v) {next=v;};
    inline void              setCurrent(RexxInstruction * v) {current=v;};
-   inline bool              inDebug() { return ((settings.flags&trace_debug) != 0) && !debugPause;}
 
    inline ExpressionStack * getStack() {return &stack; };
 
@@ -399,38 +343,49 @@ class RexxActivation : public RexxActivationBase
    inline void              traceCompoundName(RexxString *stemVar, RexxObject **tails, size_t tailCount, RexxString *tail) { if (settings.intermediateTrace) traceCompoundValue(TRACE_PREFIX_COMPOUND, stemVar, tails, tailCount, VALUE_MARKER, stemVar->concat(tail)); };
    inline void              traceCompound(RexxString *stemVar, RexxObject **tails, size_t tailCount, RexxObject *value) { if (settings.intermediateTrace) traceCompoundValue(TRACE_PREFIX_VARIABLE, stemVar, tails, tailCount, VALUE_MARKER, value); };
    inline void              traceCompoundAssignment(RexxString *stemVar, RexxObject **tails, size_t tailCount, RexxObject *value) { if (settings.intermediateTrace) traceCompoundValue(TRACE_PREFIX_ASSIGNMENT, stemVar, tails, tailCount, ASSIGNMENT_MARKER, value); };
-   inline void              traceResult(RexxObject * v) { if ((settings.flags&trace_results)) traceValue(v, TRACE_PREFIX_RESULT); };
-   inline bool              tracingInstructions() { return (settings.flags&trace_all) != 0; }
-   inline bool              tracingErrors() { return (settings.flags&trace_errors) != 0; }
-   inline bool              tracingFailures() { return (settings.flags&trace_failures) != 0; }
-   inline void              traceInstruction(RexxInstruction * v) { if (settings.flags&trace_all) traceClause(v, TRACE_PREFIX_CLAUSE); }
-   inline void              traceLabel(RexxInstruction * v) { if ((settings.flags&trace_labels) != 0) traceClause(v, TRACE_PREFIX_CLAUSE); };
-   inline void              traceCommand(RexxInstruction * v) { if ((settings.flags&trace_commands) != 0) traceClause(v, TRACE_PREFIX_CLAUSE); }
-   inline bool              tracingCommands() { return (settings.flags&trace_commands) != 0; }
-   inline bool              tracingAll() { return (settings.flags&trace_all) != 0; }
-   inline void              pauseInstruction() {  if ((settings.flags&(trace_all | trace_debug)) == (trace_all | trace_debug)) doDebugPause(); };
-   inline int               conditionalPauseInstruction() { return (((settings.flags&(trace_all | trace_debug)) == (trace_all | trace_debug)) ? doDebugPause(): false); };
-   inline void              pauseLabel() { if ((settings.flags&(trace_labels | trace_debug)) == (trace_labels | trace_debug)) doDebugPause(); };
-   inline void              pauseCommand() { if ((settings.flags&(trace_commands | trace_debug)) == (trace_commands | trace_debug)) doDebugPause(); };
+   inline void              clearTraceSettings() { settings.traceSettings.clear(); settings.intermediateTrace = false; }
+   inline bool              tracingResults() {return (settings.traceSettings.tracingResults(); }
+   inline bool              tracingAll() {return (settings.traceSettings.tracingAll(); }
+   inline bool              inDebug() { return settings.traceSettings.inDebug() && !debugPause;}
+   inline void              traceResult(RexxObject * v) { if (tracingResults()) traceValue(v, TRACE_PREFIX_RESULT); };
+   inline bool              tracingInstructions() { return tracingAll(); }
+   inline bool              tracingErrors() { return settings.traceSettings.traceErrors(); }
+   inline bool              tracingFailures() { return settings.traceSettings.traceFailures(); }
+   inline void              traceInstruction(RexxInstruction * v) { if (tracingAll()) traceClause(v, TRACE_PREFIX_CLAUSE); }
+   inline void              traceLabel(RexxInstruction * v) { if (settings.traceSettings.tracingLabels()) traceClause(v, TRACE_PREFIX_CLAUSE); };
+   inline void              traceCommand(RexxInstruction * v) { if (tracingCommands()) traceClause(v, TRACE_PREFIX_CLAUSE); }
+   inline bool              tracingCommands() { return settings.traceSettings.tracingCommands(); }
+   inline bool              pausingInstructions() { return (settings.traceSettings.pausingIntructions(); }
+   inline void              pauseInstruction() {  if (pausingInstructions()) doDebugPause(); };
+   inline int               conditionalPauseInstruction() { return pausingInstructions() ? doDebugPause(): false; };
+   inline void              pauseLabel() { if (settings.traceSettings.pausingLabels()) doDebugPause(); };
+   inline void              pauseCommand() { if (settings.traceSettings.pausingCommands()) doDebugPause(); };
+   inline void              resetDebug()
+   {
+       settings.traceSettings.resetDebug();
+       settings.stateFlags[debugBypass] = true;
+   }
+   inline bool              noTracing(RexxObject *value) { return (settings.stateFlags[traceSuppress] || debugPause || value == OREF_NULL || !code->isTraceable()); }
+   inline bool              noTracing() { return (settings.stateFlags[traceSuppress] || debugPause || !code->isTraceable()); }
 
           SecurityManager  *getSecurityManager();
           SecurityManager  *getEffectiveSecurityManager();
    inline bool              isTopLevel() { return (activationContext&TOP_LEVEL_CALL) != 0; }
-   inline bool              isForwarded() { return (settings.flags&forwarded) != 0; }
-   inline bool              isGuarded() { return (settings.flags&guarded_method) != 0; }
-   inline void              setGuarded() { settings.flags |= guarded_method; }
+   inline bool              isForwarded() { return settings.stateFlags[forwarded]; }
+   inline bool              isGuarded() { return settings.stateFlags[guardedmethod]; }
+   inline void              setGuarded() { settings.stateFlags.set(guardedMethod); }
 
-   inline bool              isExternalTraceOn() { return (settings.flags&trace_on) != 0; }
-   inline void              setExternalTraceOn() { settings.flags |= trace_on; }
-   inline void              setExternalTraceOff() { settings.flags &= ~trace_on; }
+   inline bool              isExternalTraceOn() { return settings.stateFlags[traceOn]; }
+   inline void              setExternalTraceOn() { settings.stateFlags.set(traceOn); }
+   inline void              setExternalTraceOff() { settings.stateFlags.reset(traceOn); }
           void              enableExternalTrace();
 
-   inline bool              isElapsedTimerReset() { return (settings.flags&elapsed_reset) != 0; }
-   inline void              setElapsedTimerInvalid() { settings.flags |= elapsed_reset; }
-   inline void              setElapsedTimerValid() { settings.flags &= ~elapsed_reset; }
+   inline bool              isElapsedTimerReset() { return (settings.stateFlags[elapsedReset]; }
+   inline void              setElapsedTimerInvalid() { settings.stateFlags.set(elapsedReset); }
+   inline void              setElapsedTimerValid() { settings.stateFlags.reset(elapsedReset); }
 
 
-   inline RexxObject     ** getMethodArgumentList() {return argList;};
+   inline RexxObject     ** getMethodArgumentList() { return argList; };
    inline size_t            getMethodArgumentCount() { return argCount; }
    inline RexxObject *      getMethodArgument(size_t position)
    {
@@ -613,8 +568,12 @@ class RexxActivation : public RexxActivationBase
 
    inline void setLocalVariableDictionary(VariableDictionary *dict) {settings.localVariables.setDictionary(dict); }
 
-   // the default trace flag values used for new activations.
-   static const size_t default_trace_flags;
+   static const uint64_t RANDOM_FACTOR = 25214903917LL;   // random multiplication factor
+   static const uint64_t RANDOM_ADDER = 11LL;
+                                       // randomize a seed number
+   static inline uint64_t RANDOMIZE(uint64_t seed) { return (seed * RANDOM_FACTOR + RANDOM_ADDER); }
+                                        // size of a size_t value in bits
+   static const size_t SIZE_BITS = sizeof(void *) * 8;
 
  protected:
 
@@ -628,10 +587,11 @@ class RexxActivation : public RexxActivationBase
     RexxActivation      *parent;        // previous running activation for internal call/interpret
     RexxObject         **argList;       // activity argument list
     size_t               argCount;      // the count of arguments
-    DoBlock         *doStack;       // stack of DO loops
+    DoBlock             *doStack;       // stack of DO loops
     RexxInstruction     *current;       // current execution pointer
     RexxInstruction     *next;          // next instruction to execute
     bool                 debugPause;    // executing a debug pause
+    bool                 clauseBoundary;// special flag for clause boundary checks
     GuardStatus          objectScope;   // reserve/release state of variables
     RexxObject          *result;        // result of execution
     ArrayClass          *trapInfo;      // current trap handler
@@ -645,47 +605,10 @@ class RexxActivation : public RexxActivationBase
     ListClass           *environmentList;
                                         // queue of trapped conditions
     QueueClass          *conditionQueue;// queue of trapped conditions
+    // TODO:  create a random number encapsulation class
     uint64_t             randomSeed;    // random number seed
     bool                 randomSet;     // random seed has been set
     size_t               blockNest;     // block instruction nesting level
 
-    // constants
-
-    static const size_t trace_off;           // no tracing
-    static const size_t trace_debug;         // interactive trace mode flag
-    static const size_t trace_all;           // trace all instructions
-    static const size_t trace_results;       // trace all results
-    static const size_t trace_intermediates; // trace all instructions
-    static const size_t trace_commands;      // trace all commands
-    static const size_t trace_labels;        // trace all labels
-    static const size_t trace_errors;        // trace all command errors
-    static const size_t trace_failures;      // trace all command failures
-    static const size_t trace_suppress;      // tracing is suppressed during skips
-    static const size_t trace_flags;         // all tracing flags (EXCEPT debug)
-    static const size_t trace_all_flags;     // flag set for trace all
-    static const size_t trace_results_flags; // flag set for trace results
-    static const size_t trace_intermediates_flags; // flag set for trace intermediates
-
-    static const size_t single_step;         // we are single stepping execution
-    static const size_t single_step_nested;  // this is a nested stepping
-    static const size_t debug_prompt_issued; // debug prompt already issued
-    static const size_t debug_bypass;        // skip next debug pause
-    static const size_t procedure_valid;     // procedure instruction is valid
-    static const size_t clause_boundary;     // work required at clause boundary
-    static const size_t halt_condition;      // a HALT condition occurred
-    static const size_t trace_on;            // external trace condition occurred
-    static const size_t source_traced;       // source string has been traced
-    static const size_t clause_exits;        // need to call clause boundary exits
-    static const size_t external_yield;      // activity wants us to yield
-    static const size_t forwarded;           // forward instruction active
-    static const size_t reply_issued;        // reply has already been issued
-    static const size_t set_trace_on;        // trace turned on externally
-    static const size_t set_trace_off;       // trace turned off externally
-    static const size_t traps_copied;        // copy of trap info has been made
-    static const size_t return_status_set;   // had our first host command
-    static const size_t transfer_failed;     // transfer of variable lock failure
-
-    static const size_t elapsed_reset;       // The elapsed time stamp was reset via time('r')
-    static const size_t guarded_method;      // this is a guarded method
  };
  #endif

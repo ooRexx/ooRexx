@@ -132,10 +132,8 @@ public:
     inline bool           getForm() { return form; }
     inline void           setFuzz(size_t f) { fuzz = f; }
     inline size_t         getFuzz() { return fuzz; }
-    inline void           setTraceSetting(size_t t) { traceSetting = t; }
-    inline size_t         getTraceSetting() { return traceSetting; }
-    inline void           setTraceFlags(size_t t) { traceFlags = t; }
-    inline size_t         getTraceFlags() { return traceFlags; }
+    inline void           setTraceSetting(const TraceSetting &s) { traceSetting = s; }
+    inline const TraceSetting &getTraceSetting() { return traceSetting; }
            RexxString    *getTrace();
            void           detachSource();
            PackageClass  *newRexx(RexxObject **init_args, size_t argCount);
@@ -198,14 +196,11 @@ protected:
                                           // all public required routines
     StringTable *mergedPublicRoutines;
 
-    bool           installRequired;       // flag settings.  Make it big enough for some expansion.
+    bool           installRequired;       // indicates we need to install stuff later
+
+    PackageSetting packageSettings;       // the settings we use at run time.
 
     // settings inherited from ::options statements
-    size_t digits;                        // numeric digits setting
-    size_t fuzz;                          // numeric fuzz setting
-    bool form;                            // numeric form setting
-    size_t traceSetting;                  // the package trace setting
-    size_t traceFlags;                    // version optimized for quick setting at startup
     intptr_t reserved[12];                // some reserved values for compatible expansion
 };
 

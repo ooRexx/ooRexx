@@ -72,6 +72,7 @@
 #include "ExpressionLogical.hpp"
 #include "RexxInternalApis.h"
 #include "SystemInterpreter.hpp"
+#include "TraceSetting.hpp"
 
 
 /**
@@ -797,11 +798,7 @@ void LanguageParser::translate()
     CompileActivationFrame frame(ActivityManager::currentActivity, this);
 
     // set up the package global defaults
-    package->digits = Numerics::DEFAULT_DIGITS;
-    package->form = Numerics::DEFAULT_FORM;
-    package->fuzz = Numerics::DEFAULT_FUZZ;
-    package->traceSetting = DEFAULT_TRACE_SETTING;
-    package->traceFlags = RexxActivation::default_trace_flags;
+    package->packageSettings.setDefault();
 
     // go translate the lead block.  We will figure out what type of
     // object this gets turned into later.
@@ -3487,109 +3484,113 @@ RexxObject *LanguageParser::parseLogical(int terminators)
  * @param newSetting The returned setting in binary form.
  * @param debugFlags The debug flag representation of the trace setting.
  */
-bool LanguageParser::parseTraceSetting(RexxString *value, size_t &newSetting, size_t &debugFlags, char &badOption)
+bool LanguageParser::parseTraceSetting(RexxString *value, TraceSetting &newSetting, char &badOption)
 {
-    size_t setting = TRACE_IGNORE;       // don't change trace setting yet
-    size_t debug = DEBUG_IGNORE;         // and the default debug change
+    bool setDebug = false;
 
     size_t length = value->getLength();
 
     // null string?  This just turns tracing off.
     if (length == 0)
     {
-        setting = TRACE_NORMAL;           /* use default trace setting         */
-        debug = DEBUG_OFF;                /* turn off debug mode               */
+        newSetting.traceOff();
+        return true;
     }
-    else
+
+    // turn off entirely so we know if we have just a debug toggle request.
+    newSetting.reset();
+
+    // scan the characters.  We only recognize the first characters of
+    // words, but this can also have a prefix.
+    for (size_t pos = 0; pos < length; pos++)
     {
-        // scan the characters.  We only recognize the first characters of
-        // words, but this can also have a prefix.
-        for (size_t _position = 0; _position < length; _position++)
+        switch (toupper(value->getChar(pos)))
         {
-            switch (value->getChar(_position))
-            {
-                // Toggle the debug character...we can have any number of these, we
-                // only perform an operation if we have an odd number of them.
-                case '?':
-                    if (debug == DEBUG_TOGGLE)
-                    {
-                        debug = DEBUG_IGNORE;
-                    }
-                    else
-                    {
-                        debug = DEBUG_TOGGLE;
-                    }
-                    continue;
+            // Toggle the debug character...we can have any number of these, we
+            // only perform an operation if we have an odd number of them.
+            case '?':
+                // flip the debug setting.  We figure out what to do once
+                // we've processed the whole string.
+                setDebug = !setDebug;
+                continue;
 
-                // TRACE ALL
-                case 'a':
-                case 'A':
-                    setting = TRACE_ALL;
-                    break;
+            // TRACE ALL
+            case 'A':
+                newSetting.setTraceAll();
+                break;
 
-                // TRACE COMMANDS
-                case 'c':
-                case 'C':
-                    setting = TRACE_COMMANDS;
-                    break;
+            // TRACE COMMANDS
+            case 'C':
+                newSetting.setTraceCommands();
+                break;
 
-                // TRACE LABELS
-                case 'l':
-                case 'L':
-                    setting = TRACE_LABELS;
-                    break;
+            // TRACE LABELS
+            case 'L':
+                newSetting.setTraceLabels();
+                break;
 
-                // TRACE ERRORS
-                case 'e':
-                case 'E':
-                    setting = TRACE_ERRORS;
-                    break;
+            // TRACE ERRORS
+            case 'E':
+                newSetting.setTraceErrors();
+                break;
 
-                // TRACE FAILURES
-                case 'f':
-                case 'F':
-                    setting = TRACE_FAILURES;
-                    break;
+            // TRACE FAILURES
+            case 'F':
+                newSetting.setTraceFailures();
+                break;
 
-                // TRACE NORMAL
-                case 'n':
-                case 'N':
-                    setting = TRACE_NORMAL;
-                    break;
+            // TRACE NORMAL
+            case 'N':
+                // default setting is the same as failure
+                newSetting.setTraceNormal();
+                break;
 
-                // TRACE OFF
-                case 'o':
-                case 'O':
-                    setting = TRACE_OFF;
-                    break;
+            // TRACE OFF
+            case 'O':
+                newSetting.setTraceOff();
+                break;
 
-                // TRACE RESULTS
-                case 'r':
-                case 'R':
-                    setting = TRACE_RESULTS;
-                    break;
+            // TRACE RESULTS
+            case 'R':
+                newSetting.setTraceResults();
+                break;
 
-                // TRACE INTERMEDIATES
-                case 'i':
-                case 'I':
-                    setting = TRACE_INTERMEDIATES;
-                    break;
+            // TRACE INTERMEDIATES
+            case 'I':
+                newSetting.setTraceIntermediates();
+                setting = TRACE_INTERMEDIATES;
+                break;
 
-                // unknown trace setting
-                default:
-                    // each context handles it's own error reporting, so give back the
-                    // information needed for the message.
-                    badOption = value->getChar(_position);
-                    return false;
-                    break;
-            }
-            break;                           /* non-prefix char found             */
+            // unknown trace setting
+            default:
+                // each context handles it's own error reporting, so give back the
+                // information needed for the message.
+                badOption = value->getChar(_position);
+                return false;
+                break;
+        }
+        // we break out of the loop if we get here.  Situations that
+        // need additional parsing do a continute.
+        break;
+    }
+
+    // we need to somehow set the debug setting.  If there is not other
+    // trace setting, this is a debug toggle.  Otherwise, turn on the debug flag in
+    // the setting.
+    if (setDebug)
+    {
+        if (newSetting.isNoSetting())
+        {
+            newSetting.setDebugToggle();
+        }
+        // trace OFF is special...it unconditionally turns off debug, so
+        // don't set the debug flag on if we have OFF.
+        else if (!isTraceOff())
+        {
+            // this turns on special optimization flags also.
+            newSetting.setDebug();
         }
     }
-    // return the merged setting
-    newSetting = setting | debug;
-    // create the activation-specific flags
-    debugFlags = RexxActivation::processTraceSetting(newSetting);
     return true;
 }
 
@@ -3700,34 +3701,4 @@ RoutineClass *LanguageParser::createProgramFromFile(RexxString *filename)
 
     // process this from the source
     return createProgram(filename, program_buffer);
-}
-
-
-/**
- * Format an encoded trace setting back into human readable form.
- *
- * @param setting The source setting.
- *
- * @return The string representation of the trace setting.
- */
-RexxString *LanguageParser::formatTraceSetting(size_t source)
-{
-    char         setting[3];             /* returned trace setting            */
-    setting[0] = '\0';                   /* start with a null string          */
-                                         /* debug mode?                       */
-    if (source & DEBUG_ON)
-    {
-        setting[0] = '?';                  /* add the question mark             */
-                                           /* add current trace option          */
-        setting[1] = (char)source&TRACE_SETTING_MASK;
-        /* create a string form              */
-        return new_string(setting, 2);
-    }
-    else                                 /* no debug prefix                   */
-    {
-        /* add current trace option          */
-        setting[0] = (char)source&TRACE_SETTING_MASK;
-        /* create a string form              */
-        return new_string(setting, 1);
-    }
 }

@@ -86,6 +86,38 @@ public:
 		TEnum refPos;
 	};
 
+    FlagSet() { }
+    // some constructors for creating constant sets for
+    // testing setting
+    FlagSet(const TEnum f1)
+    {
+        set(f1);
+    }
+
+    FlagSet(const TEnum f1, const TEnum f2)
+    {
+        set(f1); set(f2);
+    }
+
+    FlagSet(const TEnum f1, const TEnum f2, const TEnum f3)
+    {
+        set(f1); set(f2); set(f3);
+    }
+
+    FlagSet(const TEnum f1, const TEnum f2, const TEnum f3, const TEnum f4)
+    {
+        set(f1); set(f2); set(f3); set(f4);
+    }
+
+    FlagSet(const TEnum f1, const TEnum f2, const TEnum f3, const TEnum f4, const TEnum f5)
+    {
+        set(f1); set(f2); set(f3); set(f4); set(f5);
+    }
+
+    FlagSet(const TEnum f1, const TEnum f2, const TEnum f3, const TEnum f4, const TEnum f5, const TEnum f6)
+    {
+        set(f1); set(f2); set(f3); set(f4); set(f5); set(f6);
+    }
 
     // set a flag value to true
     inline void set(const TEnum flag, bool val = true)
@@ -101,10 +133,24 @@ public:
     }
 
 
-    // turn a flag value off
-    inline void reset(const TEnum flag)
+    // set multiple flags values on
+    inline void set(const TEnum f1, const TEnum f2)
     {
-        flags.reset(flag);
+        flags.set(f1); flags.set(f2);
+    }
+
+
+    // set multiple flag values on
+    inline void set(const TEnum f1, const TEnum f2, const TEnum f3)
+    {
+        flags.set(f1); flags.set(f2); flags.set(f3);
+    }
+
+
+    // set multiple flag values on
+    inline void set(const TEnum f1, const TEnum f2, const TEnum f3, const TEnum f4)
+    {
+        flags.set(f1); flags.set(f2); flags.set(f3); flags.set(f4);
     }
 
 
@@ -112,6 +158,33 @@ public:
     inline void reset()
     {
         flags.reset();
+    }
+
+    // turn a flag value off
+    inline void reset(const TEnum flag)
+    {
+        flags.reset(flag);
+    }
+
+
+    // turn a flag value off
+    inline void reset(const TEnum f1, const TEnum f2)
+    {
+        flags.reset(f1); flags.reset(f2);
+    }
+
+
+    // turn a flag value off
+    inline void reset(const TEnum f1, const TEnum f2, const TEnum f3)
+    {
+        flags.reset(f1); flags.reset(f2); flags.reset(f3);
+    }
+
+
+    // turn a flag value off
+    inline void reset(const TEnum f1, const TEnum f2, const TEnum f3, const TEnum f4)
+    {
+        flags.reset(f1); flags.reset(f2); flags.reset(f3); flags.reset(f4);
     }
 
 

@@ -3223,7 +3223,7 @@ RexxInstruction *LanguageParser::traceNew()
     size_t setting = TRACE_NORMAL;              // set default trace mode
     wholenumber_t debug_skip = 0;               // no skipping
     size_t trcFlags = 0;                        // no translated flags
-    RexxObject *expression = OREF_NULL;        // not expression form
+    RexxObject *expression = OREF_NULL;         // not expression form
 
     // ok, start processing for real
     RexxToken *token = nextReal();              // get the next token

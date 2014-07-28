@@ -175,8 +175,8 @@ class LanguageParser: public RexxInternalObject
     void        addBlock();
     RexxVariableBase *getRetriever(RexxString *);
     ArrayClass  *words(RexxString *);
-    inline void        reclaimClause()  { flags.set(reclaimed); };
-    inline bool        atEnd() { return !flags.test(reclaimed) && !moreLines(); };
+    inline void  reclaimClause()  { flags.set(reclaimed); };
+    inline bool  atEnd() { return !flags.test(reclaimed) && !moreLines(); };
 
            void setInterpret() { flags.set(interpret); }
     inline bool isInterpret() { return flags.test(interpret); }
@@ -399,40 +399,9 @@ class LanguageParser: public RexxInternalObject
     static RoutineClass *processInstore(PRXSTRING instore, RexxString * name);
     static RexxCode *translateInterpret(RexxString *interpretString, StringTable *labels, size_t lineNumber);
     static RoutineClass *createProgramFromFile(RexxString *filename);
-    static RexxString *formatTraceSetting(size_t source);
 
     // the table of builtin function stubs.
     static pbuiltin builtinTable[];
-
-    // Different trace setting values
-    static const size_t TRACE_ALL           = 'A';
-    static const size_t TRACE_COMMANDS      = 'C';
-    static const size_t TRACE_LABELS        = 'L';
-    static const size_t TRACE_NORMAL        = 'N';
-    static const size_t TRACE_FAILURES      = 'F';
-    static const size_t TRACE_ERRORS        = 'E';
-    static const size_t TRACE_RESULTS       = 'R';
-    static const size_t TRACE_INTERMEDIATES = 'I';
-    static const size_t TRACE_OFF           = 'O';
-    static const size_t TRACE_IGNORE        = '0';
-
-    static const size_t DEFAULT_TRACE_SETTING = TRACE_NORMAL;
-
-    // a mask for accessing just the setting information
-    static const size_t TRACE_SETTING_MASK  = 0xff;
-
-    // static constants used for setting trace interactive debug.  These get
-    // merged in with the setting value, so they must be > 256
-    static const size_t DEBUG_IGNORE      =  0x0000;
-    static const size_t DEBUG_ON          =  0x0100;
-    static const size_t DEBUG_OFF         =  0x0200;
-    static const size_t DEBUG_TOGGLE      =  0x0400;
-    static const size_t DEBUG_NOTRACE     =  0x0800;
-    // NOTE:  This is not part of the masked off settings.
-    static const size_t DEBUG_SKIP        =  0x1000;
-
-    // the mask for accessing just the debug flags
-    static const size_t TRACE_DEBUG_MASK  = 0x0f00;
 
     // an invalid 8-bit character marker.
     const unsigned int INVALID_CHARACTER = 0x100;
@@ -459,31 +428,31 @@ protected:
 
     RexxCode        *mainSection;        // the main section of code before any directives
     PushThroughStack *holdStack;         // stack for holding temporaries
-    StringTable   *literals;             // root of associated literal list
-    StringTable   *strings;              // common pool of created strings
-    QueueClass       *control;           // queue of control structures
-    QueueClass       *terms;             // stack of expression terms
-    QueueClass       *subTerms;          // stack for arguments lists, et al.
-    QueueClass       *operators;         // stack of expression terms
+    StringTable     *literals;           // root of associated literal list
+    StringTable     *strings;            // common pool of created strings
+    QueueClass      *control;            // queue of control structures
+    QueueClass      *terms;              // stack of expression terms
+    QueueClass      *subTerms;           // stack for arguments lists, et al.
+    QueueClass      *operators;          // stack of expression terms
     ClassDirective  *activeClass;        // currently active ::CLASS directive
-    StringTable   *classDependencies;    // directory of named ::class directives
-    StringTable   *unattachedMethods;    // methods not associated with any class
-    StringTable   *routines;             // routines defined by ::routine directives.
-    StringTable   *publicRoutines;       // routines defined by ::routine directives.
-    ArrayClass       *requires;          // list of ::requires directories, in order of appearance.
-    ArrayClass       *libraries;         // libraries identified on a ::requires directive.
-    ArrayClass       *classes;           // list of installed ::class directives.
+    StringTable     *classDependencies;  // directory of named ::class directives
+    StringTable     *unattachedMethods;  // methods not associated with any class
+    StringTable     *routines;           // routines defined by ::routine directives.
+    StringTable     *publicRoutines;     // routines defined by ::routine directives.
+    ArrayClass      *requires;           // list of ::requires directories, in order of appearance.
+    ArrayClass      *libraries;          // libraries identified on a ::requires directive.
+    ArrayClass      *classes;            // list of installed ::class directives.
 
                                          // start of block parsing section
 
     RexxInstruction *firstInstruction;   // first instruction of parse tree
     RexxInstruction *lastInstruction;    // last instruction of parse tree
     RexxInstruction *currentInstruction; // current "protected" instruction
-    StringTable   *variables;            // root of associated variable list
-    StringTable   *labels;               // root of associated label list
-    IdentityTable *guardVariables;       // exposed variables in guard list
-    StringTable   *exposedVariables;     // root of exposed variables list
-    ArrayClass       *calls;             // root of call list
+    StringTable     *variables;          // root of associated variable list
+    StringTable     *labels;             // root of associated label list
+    IdentityTable   *guardVariables;     // exposed variables in guard list
+    StringTable     *exposedVariables;   // root of exposed variables list
+    ArrayClass      *calls;              // root of call list
 
     size_t           currentStack;       // current expression stack depth
     size_t           maxStack;           // maximum stack depth

@@ -47,7 +47,6 @@
 /*        used to maintain this situation.                                    */
 /*                                                                            */
 /******************************************************************************/
-/******************************************************************************/
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "BufferClass.hpp"
@@ -79,54 +78,6 @@
 
 // max instructions without a yield
 const size_t MAX_INSTRUCTIONS = 100;
-
-// default template for a new activation.  This must be changed
-// whenever the settings definition changes
-
-static ActivationSettings activationSettingsTemplate;
-// constants use for different activation settings
-
-const size_t RexxActivation::trace_off           = 0x00000000; // trace nothing
-const size_t RexxActivation::trace_debug         = 0x00000001; // interactive trace mode flag
-const size_t RexxActivation::trace_all           = 0x00000002; // trace all instructions
-const size_t RexxActivation::trace_results       = 0x00000004; // trace all results
-const size_t RexxActivation::trace_intermediates = 0x00000008; // trace all instructions
-const size_t RexxActivation::trace_commands      = 0x00000010; // trace all commands
-const size_t RexxActivation::trace_labels        = 0x00000020; // trace all labels
-const size_t RexxActivation::trace_errors        = 0x00000040; // trace all command errors
-const size_t RexxActivation::trace_failures      = 0x00000080; // trace all command failures
-const size_t RexxActivation::trace_suppress      = 0x00000100; // tracing is suppressed during skips
-const size_t RexxActivation::trace_flags         = 0x000001ff; // all tracing flags
-                                                 // the default trace setting
-const size_t RexxActivation::default_trace_flags = trace_failures;
-
-// now the flag sets for different settings
-const size_t RexxActivation::trace_all_flags = (trace_all | trace_labels | trace_commands);
-const size_t RexxActivation::trace_results_flags = (trace_all | trace_labels | trace_results | trace_commands);
-const size_t RexxActivation::trace_intermediates_flags = (trace_all | trace_labels | trace_results | trace_commands | trace_intermediates);
-
-const size_t RexxActivation::single_step         = 0x00000800; // we are single stepping execution
-const size_t RexxActivation::single_step_nested  = 0x00001000; // this is a nested stepping
-const size_t RexxActivation::debug_prompt_issued = 0x00002000; // debug prompt already issued
-const size_t RexxActivation::debug_bypass        = 0x00004000; // skip next debug pause
-const size_t RexxActivation::procedure_valid     = 0x00008000; // procedure instruction is valid
-const size_t RexxActivation::clause_boundary     = 0x00010000; // work required at clause boundary
-const size_t RexxActivation::halt_condition      = 0x00020000; // a HALT condition occurred
-const size_t RexxActivation::trace_on            = 0x00040000; // external trace condition occurred
-const size_t RexxActivation::source_traced       = 0x00080000; // source string has been traced
-const size_t RexxActivation::clause_exits        = 0x00100000; // need to call clause boundary exits
-const size_t RexxActivation::external_yield      = 0x00200000; // activity wants us to yield
-const size_t RexxActivation::forwarded           = 0x00400000; // forward instruction active
-const size_t RexxActivation::reply_issued        = 0x00800000; // reply has already been issued
-const size_t RexxActivation::set_trace_on        = 0x01000000; // trace turned on externally
-const size_t RexxActivation::set_trace_off       = 0x02000000; // trace turned off externally
-const size_t RexxActivation::traps_copied        = 0x04000000; // copy of trap info has been made
-const size_t RexxActivation::return_status_set   = 0x08000000; // had our first host command
-const size_t RexxActivation::transfer_failed     = 0x10000000; // transfer of variable lock failure
-
-const size_t RexxActivation::elapsed_reset       = 0x20000000; // The elapsed time stamp was reset via time('r')
-const size_t RexxActivation::guarded_method      = 0x40000000; // this is a guarded method
-
 
 /**
  * Create a new activation object
@@ -179,11 +130,7 @@ RexxActivation::RexxActivation(Activity* _activity, MethodClass * _method, RexxC
     // get our evaluation stack
     allocateStackFrame();
 
-    // get initial settings template
-    // NOTE:  Anything that alters information in the settings must happen AFTER
-    // this point.
-    settings = activationSettingsTemplate;
-    // and override with the package-defined settings
+    // initialize from the package-defined settings
     inheritPackageSettings();
 
     if (_method->isGuarded())            // make sure we set the appropriate guarded state
@@ -253,7 +200,7 @@ RexxActivation::RexxActivation(Activity *_activity, RexxActivation *_parent, Rex
     // inherit parents settings
     _parent->putSettings(settings);
     // step the trace indentation level for this internal nesting
-    settings.traceindent++;
+    settings.traceIndent++;
     // the random seed is copied from the calling activity, this led
     // to reproducable random sequences even though no specific seed was given!
     adjustRandomSeed();
@@ -264,8 +211,8 @@ RexxActivation::RexxActivation(Activity *_activity, RexxActivation *_parent, Rex
     // settings as well.
     if (context == INTERNALCALL)
     {
-        settings.flags &= ~traps_copied;
-        settings.flags &= ~reply_issued;
+        settings.stateFlags[trapsCopied] = false;
+        settings.stateFlags[replyIssued] = false;
         // invalidate the timestamp...interpret or debug pauses use the old timestamp.
         settings.timestamp.valid = false;
     }
@@ -321,9 +268,7 @@ RexxActivation::RexxActivation(Activity *_activity, RoutineClass *_routine, Rexx
     _activity->allocateStackFrame(&stack, code->getMaxStackSize());
     setHasReferences();
 
-    // initial settings are the template version
-    settings = activationSettingsTemplate;
-    // and override with the package-defined settings
+    // initialize with the package-defined settings
     inheritPackageSettings();
 
     // save the source also
@@ -395,10 +340,13 @@ void RexxActivation::allocateLocalVariables()
 void RexxActivation::inheritPackageSettings()
 {
     // and override with the package-defined settings
+
+    // TODO:  Create a NumericSettings class and a package settings class that includes the
+    // numeric settings and the trace settings.
     settings.numericSettings.digits = packageObject->getDigits();
     settings.numericSettings.fuzz = packageObject->getFuzz();
     settings.numericSettings.form = packageObject->getForm();
-    setTrace(packageObject->getTraceSetting(), packageObject->getTraceFlags());
+    setTrace(packageObject->getTraceSetting());
 }
 
 
@@ -453,9 +401,9 @@ RexxObject * RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxOb
         if (!code->isOldSpace() && activity->isClauseExitUsed())
         {
             // check at the end of each clause
-            settings.flags |= clause_boundary;
+            clauseBoundary = true;
             // remember that we have sys exits
-            settings.flags |= clause_exits;
+            settings.stateFlags[clauseExits] = true;
         }
         // save the argument information
         argList = _arglist;
@@ -518,11 +466,11 @@ RexxObject * RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxOb
     {
         // if we could not keep the guard lock when we were spun off, then
         // we need to reaquire (and potentially wait) for the lock now.
-        if (settings.flags&transfer_failed)
+        if (settings.stateFlags[transferFailed])
         {
             settings.objectVariabless->reserve(activity);
             // turn off the failure flag in case we spin off again.
-            settings.flags &= ~transfer_failed;
+            settings.stateFlags[transferFailed];
         }
     }
 
@@ -540,7 +488,7 @@ RexxObject * RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxOb
         // and we allow it when issued.
         if (start != OREF_NULL && start->isType(KEYWORD_PROCEDURE))
         {
-            settings.flags |= procedure_valid;
+            settings.stateFlags[procedureValid] = true;
         }
     }
 
@@ -600,7 +548,7 @@ RexxObject * RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxOb
 
                 // do we need to check clause_boundary stuff?  Go do those
                 // checks.
-                if (settings.flags&clause_boundary)
+                if (clauseBoundary)
                 {
                     processClauseBoundary();
                 }
@@ -692,7 +640,7 @@ RexxObject * RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxOb
                     if (!settings.objectVariabless->transfer(activity))
                     {
                         // this will tell us that we need to try grabbing this again.
-                        settings.flags |= transfer_failed;
+                        settings.stateFlags[transferFailed] = true;
                     }
                 }
                 // now start the new activity running and give up control on this
@@ -740,7 +688,7 @@ RexxObject * RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxOb
                     // flag to check for them after instruction completiong.
                     if (!conditionQueue->isEmpty())
                     {
-                        settings.flags |= clause_boundary;
+                        clauseBoundary = true;
                     }
                 }
             }
@@ -800,32 +748,26 @@ void RexxActivation::processTraps()
 }
 
 
-void RexxActivation::debugSkip(
-    wholenumber_t skipcount,           /* clauses to skip pausing           */
-    bool notrace )                     /* tracing suppression flag          */
-/******************************************************************************/
-/* Function:  Process a numeric "debug skip" TRACE instruction to suppress    */
-/*            pauses or tracing for a given number of instructions.           */
-/******************************************************************************/
+/**
+ * Process a numeric "debug skip" TRACE instruction to suppress
+ * pauses or tracing for a given number of instructions.
+ *
+ * @param skipCount The number of clauses to skip.
+ * @param noTrace   Indicates whether we are skipping tracing as well as the pauses.
+ */
+void RexxActivation::debugSkip(wholenumber_t skipCount, bool noTrace )
 {
-    if (!debugPause)              /* not an allowed state?             */
+    // this is only allowed from a debug pause, not normal code execution
+    if (!debugPause)
     {
-        /* report the error                  */
         reportException(Error_Invalid_trace_debug);
     }
-    /* copy the execution count          */
-    settings.trace_skip = skipcount;
-    /* set the skip flag                 */
-    if (notrace)                         /* turning suppression on?           */
-    {
-        /* flip on the flag                  */
-        settings.flags |= trace_suppress;
-    }
-    else                                 /* skipping pauses only              */
-    {
-        settings.flags &= ~trace_suppress;
-    }
-    settings.flags |= debug_bypass;/* let debug prompt know of changes  */
+
+    // mark the count to skip
+    settings.traceSkip = skipCount;
+    // turn on the skip flag to suppress the tracing.
+    settings.stateFlags[traceSuppress] = noTrace;
+    settings.stateFlags[debugBpass] = true;
 }
 
 
@@ -866,170 +808,56 @@ void RexxActivation::setTrace(RexxString *setting)
 /**
  * Set a new trace setting for the context.
  *
- * @param traceOption
- *               The new trace setting option.  This includes the
- *               setting option and any debug flag options, ANDed together.
+ * @param source The trace setting source.
  */
-void RexxActivation::setTrace(size_t traceOption, size_t traceFlags)
+void RexxActivation::setTrace(const TraceSetting &source)
 {
-    /* turn off the trace suppression    */
-    settings.flags &= ~trace_suppress;
-    settings.trace_skip = 0;       /* and allow debug pauses            */
+    // turn off any trace suppression
+    settings.stateFlags[traceSuppress] = false;
+    settings.traceSkip = 0;
 
-    // we might need to transfer some information from the
-    // current settings
-    if ((traceOption&LanguageParser::DEBUG_TOGGLE) != 0)
+    // this might just be a debug toggle request.  All other trace
+    // settings remain the same, but we flip the debug state to the
+    // other mode.
+    if (source.isDebugToggle())
     {
-        // if nothing else was specified, this was a pure toggle
-        // operation, which maintains the existing settings
-        if (traceFlags == 0)
+        // just flip the debug state
+        settings.traceSettings.toggleDebug();
+        // if no longer in debug mode, we need to reset the prompt issued flag
+        if (!settings.traceSettings.isDebug())
         {
-            // pick up the existing flags
-            traceFlags = settings.flags&trace_flags;
-            traceOption = settings.traceOption;
-        }
-
-        /* switch to the opposite setting    */
-        /* already on?                       */
-        if ((settings.flags&trace_debug) != 0)
-        {
-            /* switch the setting off            */
-            traceFlags &= ~trace_debug;
-            traceOption &= ~LanguageParser::DEBUG_ON;
             // flipping out of debug mode.  Reissue the debug prompt when
             // turned back on again
-            settings.flags &= ~debug_prompt_issued;
-        }
-        else
-        {
-            // switch the setting on in both the flags and the setting
-            traceFlags |= trace_debug;
-            traceOption |= LanguageParser::DEBUG_ON;
+            settings.stateFlags[debugPromptIssued] = false;
         }
     }
     // are we in debug mode already?  A trace setting with no "?" maintains the
     // debug setting, unless it is Trace Off
-    else if ((settings.flags&trace_debug) != 0)
+    else if (settings.traceSettings.isDebug())
     {
-        if (traceFlags == 0)
+        // merge the flag settings
+        settings.traceSettings.merge(source);
+        // flipped out of debug mode.  Reissue the debug prompt when
+        // turned back on again
+        if (!settings.traceSettings.inDebug())
         {
-            // flipping out of debug mode.  Reissue the debug prompt when
-            // turned back on again
-            settings.flags &= ~debug_prompt_issued;
-        }
-        else
-        {
-            // add debug mode into the new settings if on
-            traceFlags |= trace_debug;
-            traceOption |= LanguageParser::DEBUG_ON;
+            settings.stateFlags[debugPromptIssued] = false;
         }
     }
+    else
+    {
+        // set the new flags
+        settings.traceSettings.set(source);
 
-    // save the option so it can be formatted back into a trace value
-    settings.traceOption = traceOption;
-    // clear the current trace options
-    clearTraceSettings();
-    // set the new flags
-    settings.flags |= traceFlags;
+    }
+
     // if tracing intermediates, turn on the special fast check flag
-    if ((settings.flags&trace_intermediates) != 0)
+    settings.intermediateTrace = settings.traceFlags.tracingIntermediates();
+    // if we issued this from a debug prompt, let the pause handler know this changes.
+    if (debugPause)
     {
-        /* turn on the special fast-path test */
-        settings.intermediateTrace = true;
+        settings.stateFlags[debugBypass] = true;
     }
-
-    if (debugPause)               /* issued from a debug prompt?       */
-    {
-        /* let debug prompt know of changes  */
-        settings.flags |= debug_bypass;
-    }
-}
-
-
-/**
- * Process a trace setting and reduce it to the component
- * flag settings that can be used to set defaults.
- *
- * @param traceSetting
- *               The input trace setting.
- *
- * @return The set of flags that will be set in the debug flags
- *         when trace setting change.
- */
-size_t RexxActivation::processTraceSetting(size_t traceSetting)
-{
-    size_t flags = 0;
-    switch (traceSetting & LanguageParser::TRACE_DEBUG_MASK)
-    {
-        // We've had the ? interactive debug prefix. Turn on debug
-        case LanguageParser::DEBUG_ON:
-            flags |= trace_debug;
-            break;
-
-        // Need to turn debug off
-        case LanguageParser::DEBUG_OFF:
-            flags &= ~trace_debug;
-            break;
-
-        // These two have no meaning in a staticically defined situation, so
-        // they'll need to be handled at runtime.
-        case LanguageParser::DEBUG_TOGGLE:                 // toggle interactive debug setting
-        case LanguageParser::DEBUG_IGNORE:                 // no changes to debug setting...might change trace setting.
-            break;
-    }
-
-    // now optimize the trace setting flags
-    switch (traceSetting&LanguageParser::TRACE_SETTING_MASK)
-    {
-        // Trace all instructions, labels, and commands
-        case LanguageParser::TRACE_ALL:
-            flags |= (trace_all | trace_labels | trace_commands);
-            break;
-
-        // Trace just commands
-        case LanguageParser::TRACE_COMMANDS:
-            flags |= trace_commands;
-            break;
-
-        // Trace label instructions
-        case LanguageParser::TRACE_LABELS:
-            flags |= trace_labels;
-            break;
-
-        // Trace NORMAL and TRACE FAILURES are the same...trace commands
-        // with failure return codes.
-        case LanguageParser::TRACE_NORMAL:
-        case LanguageParser::TRACE_FAILURES:
-            flags |= trace_failures;
-            break;
-
-        // Trace commands with error and failure return codes.
-        case LanguageParser::TRACE_ERRORS:
-            flags |= (trace_failures | trace_errors);
-            break;
-
-        // Trace ALL + all expression results
-        case LanguageParser::TRACE_RESULTS:
-            flags |= (trace_all | trace_labels | trace_results | trace_commands);
-            break;
-
-        // Trace RESULTS + intermediate expression values
-        case LanguageParser::TRACE_INTERMEDIATES:
-            flags |= (trace_all | trace_labels | trace_results | trace_commands | trace_intermediates);
-            break;
-
-        // Turn off all tracing, including debug options
-        case LanguageParser::TRACE_OFF:
-            flags = trace_off;
-            break;
-
-        // don't change the trace setting...used when we are only changing
-        // a debug option without changing the tracing mode (e.g., typing "trace ?" to toggle
-        // debug mode).
-        case LanguageParser::TRACE_IGNORE:
-            break;
-    }
-    return flags;
 }
 
 void RexxActivation::live(size_t liveMark)
@@ -1127,12 +955,11 @@ void RexxActivation::reply(
 /******************************************************************************/
 {
     /* already had a reply issued?       */
-    if (settings.flags&reply_issued)
+    if (settings.stateFlags[replyIssued])
     {
-        /* flag this as an error             */
         reportException(Error_Execution_reply);
     }
-    settings.flags |= reply_issued;/* turn on the replied flag          */
+    settings.stateFlags[replyIssued] = true;/* turn on the replied flag          */
                                          /* change execution state to         */
     executionState = REPLIED;     /* terminate the main loop           */
     next = OREF_NULL;              /* turn off execution engine         */
@@ -1146,10 +973,10 @@ void RexxActivation::returnFrom(
 /* Function:  process a REXX RETURN instruction                               */
 /******************************************************************************/
 {
-    /* already had a reply issued?       */
-    if (settings.flags&reply_issued && resultObj != OREF_NULL)
+    // already had a reply and trying to return a result?  There is nobody
+    // to receive this result, so this is an error.
+    if (settings.stateFlags[replyIssued] && resultObj != OREF_NULL)
     {
-        /* flag this as an error             */
         reportException(Error_Execution_reply_return);
     }
     /* processing an Interpret           */
@@ -1174,8 +1001,7 @@ void RexxActivation::returnFrom(
     }
     /* switch debug off to avoid debug   */
     /* pause after exit entered from an  */
-    settings.flags &= ~trace_debug;/* interactive debug prompt          */
-    settings.flags |= debug_bypass;/* let debug prompt know of changes  */
+    resetDebug();
 }
 
 
@@ -1298,13 +1124,12 @@ void RexxActivation::procedureExpose(
 /******************************************************************************/
 {
     /* procedure not allowed here?       */
-    if (!(settings.flags&procedure_valid))
+    if (!(settings.stateFlags[procedureValid]))
     {
-        /* raise the appropriate error!      */
         reportException(Error_Unexpected_procedure_call);
     }
     /* disable further procedures        */
-    settings.flags &= ~procedure_valid;
+    settings.stateFlags[procedureValid] = false;
 
     /* get a new  */
     activity->allocateLocalVariableFrame(&settings.localVariables);
@@ -1378,11 +1203,10 @@ RexxObject *RexxActivation::forward(
     }
     else
     {                               /* got to shut down and issue        */
-        settings.flags |= forwarded; /* we are now a phantom activation   */
-                                           /* already had a reply issued?       */
-        if (settings.flags&reply_issued  && result != OREF_NULL)
+        settings.stateFlags[forwarded] = true; /* we are now a phantom activation   */
+        // cannot return a result if a reply has already been issued.
+        if (settings.stateFlags[replyIssued]  && result != OREF_NULL)
         {
-            /* flag this as an error             */
             reportException(Error_Execution_reply_exit);
         }
         executionState = RETURNED;  /* this is an EXIT for real          */
@@ -1390,9 +1214,7 @@ RexxObject *RexxActivation::forward(
                                            /* switch debug off to avoid debug   */
                                            /* pause after exit entered from an  */
                                            /* interactive debug prompt          */
-        settings.flags &= ~trace_debug;
-        /* let debug prompt know of changes  */
-        settings.flags |= debug_bypass;
+        resetDebug();
         ProtectedObject r;
         if (superClass == OREF_NULL)       /* no over ride?                     */
         {
@@ -1406,9 +1228,8 @@ RexxObject *RexxActivation::forward(
         }
         result = (RexxObject *)r;    /* save the result value             */
                                            /* already had a reply issued?       */
-        if (settings.flags&reply_issued && result != OREF_NULL)
+        if (settings.stateFlags[replyIssued] && result != OREF_NULL)
         {
-            /* flag this as an error             */
             reportException(Error_Execution_reply_exit);
         }
         termination();               /* run "program" termination method  */
@@ -1428,17 +1249,14 @@ void RexxActivation::exitFrom(
     executionState = RETURNED;    /* this is an EXIT for real          */
     next = OREF_NULL;              /* turn off execution engine         */
     result = resultObj;            /* save the result value             */
-                                         /* switch debug off to avoid debug   */
-                                         /* pause after exit entered from an  */
-    settings.flags &= ~trace_debug;/* interactive debug prompt          */
-    settings.flags |= debug_bypass;/* let debug prompt know of changes  */
+    // switch off debug pausing
+    resetDebug();
                                          /* at a main program level?          */
     if (isTopLevelCall())
     {
         /* already had a reply issued?       */
-        if (settings.flags&reply_issued && result != OREF_NULL)
+        if (settings.stateFlags[replyIssued] && result != OREF_NULL)
         {
-            /* flag this as an error             */
             reportException(Error_Execution_reply_exit);
         }
         /* real program call?                */
@@ -1530,11 +1348,11 @@ void RexxActivation::checkTrapTable()
         settings.traps = new_string_table();
     }
     // have to copy the trap table for an internal routine call?
-    else if (isInternalCall() && !(settings.flags&traps_copied))
+    else if (isInternalCall() && !(settings.stateFlags[trapsCopied]))
     {
         // copy the table and remember that we've done that
         settings.traps = (StringTable *)settings.traps->copy();
-        settings.flags |= traps_copied;
+        settings.stateFlags[trapsCopied] = true;
     }
 }
 
@@ -2220,7 +2038,7 @@ bool RexxActivation::trap(RexxString *condition, DirectoryClass *exceptionObject
     // if we're in the act of processing a FORWARD instruction, then this
     // stack frame doesn't really exist any more.  We need to check the previous
     // stack frame to see if it can handle this.
-    if (settings.flags&forwarded)
+    if (settings.stateFlags[forwarded])
     {
         RexxActivationBase *activation = getPreviousStackFrame();
         // we can have multiple forwardings in process, so keep drilling until we
@@ -2330,7 +2148,7 @@ bool RexxActivation::trap(RexxString *condition, DirectoryClass *exceptionObject
         else
         {
             // we're going to need to process this trap at the clause boundary.
-            settings.flags |= clause_boundary;
+            clauseBoundary = true;
             // we've handled this
             return true;
         }
@@ -2518,10 +2336,10 @@ RexxObject * RexxActivation::rexxVariable(RexxString * name )
     // .RS happens in our context, so process here.
     if (name->strCompare(CHAR_RS))
     {
-        if (settings.flags&return_status_set)
+        if (settings.stateFlags[returnStatusSet])
         {
             /* returned as an integer object     */
-            return new_integer(settings.return_status);
+            return new_integer(settings.returnStatus);
         }
         else                               /* just return the name              */
         {
@@ -2623,10 +2441,10 @@ size_t RexxActivation::getContextLineNumber()
  */
 RexxObject *RexxActivation::getContextReturnStatus()
 {
-    if (settings.flags&return_status_set)
+    if (settings.stateFlags&returnStatusSet)
     {
         /* returned as an integer object     */
-        return new_integer(settings.return_status);
+        return new_integer(settings.returnStatus);
     }
     else
     {
@@ -3198,24 +3016,28 @@ RexxInteger * RexxActivation::random(
     return new_integer(minimum);        /* return the random number          */
 }
 
-static const char * trace_prefix_table[] = {  /* table of trace prefixes           */
-  "*-*",                               /* TRACE_PREFIX_CLAUSE               */
-  "+++",                               /* TRACE_PREFIX_ERROR                */
-  ">>>",                               /* TRACE_PREFIX_RESULT               */
-  ">.>",                               /* TRACE_PREFIX_DUMMY                */
-  ">V>",                               /* TRACE_PREFIX_VARIABLE             */
-  ">E>",                               /* TRACE_PREFIX_DOTVARIABLE          */
-  ">L>",                               /* TRACE_PREFIX_LITERAL              */
-  ">F>",                               /* TRACE_PREFIX_FUNCTION             */
-  ">P>",                               /* TRACE_PREFIX_PREFIX               */
-  ">O>",                               /* TRACE_PREFIX_OPERATOR             */
-  ">C>",                               /* TRACE_PREFIX_COMPOUND             */
-  ">M>",                               /* TRACE_PREFIX_MESSAGE              */
-  ">A>",                               /* TRACE_PREFIX_ARGUMENT             */
-  ">=>",                               /* TRACE_PREFIX_ASSIGNMENT           */
-  ">I>",                               /* TRACE_PREFIX_INVOCATION           */
+// table of trace prefixes
+static const char * trace_prefix_table[] =
+{
+  "*-*",                               // TRACE_PREFIX_CLAUSE
+  "+++",                               // TRACE_PREFIX_ERROR
+  ">>>",                               // TRACE_PREFIX_RESULT
+  ">.>",                               // TRACE_PREFIX_DUMMY
+  ">V>",                               // TRACE_PREFIX_VARIABLE
+  ">E>",                               // TRACE_PREFIX_DOTVARIABLE
+  ">L>",                               // TRACE_PREFIX_LITERAL
+  ">F>",                               // TRACE_PREFIX_FUNCTION
+  ">P>",                               // TRACE_PREFIX_PREFIX
+  ">O>",                               // TRACE_PREFIX_OPERATOR
+  ">C>",                               // TRACE_PREFIX_COMPOUND
+  ">M>",                               // TRACE_PREFIX_MESSAGE
+  ">A>",                               // TRACE_PREFIX_ARGUMENT
+  ">=>",                               // TRACE_PREFIX_ASSIGNMENT
+  ">I>",                               // TRACE_PREFIX_INVOCATION
 };
 
+
+// TODO get rid of these defines
                                        /* extra space required to format a  */
                                        /* result line.  This overhead is    */
                                        /* 6 leading spaces for the line     */
@@ -3243,7 +3065,7 @@ void RexxActivation::traceEntry()
     // since we're advertising the entry location up front, we want to disable
     // the normal trace-turn on notice.  We'll get one or the other, but not
     // both
-    settings.flags |= source_traced;
+    settings.stateFlags[sourceTraced] = true;
 
     ArrayClass *info = OREF_NULL;
 
@@ -3283,7 +3105,7 @@ void RexxActivation::traceValue(       /* trace an intermediate value       */
 {
     /* tracing currently suppressed or   */
     /* no value was received?            */
-    if (settings.flags&trace_suppress || debugPause || value == OREF_NULL)
+    if (noTracing(value))
     {
         return;                            /* just ignore this call             */
     }
@@ -3328,7 +3150,7 @@ void RexxActivation::traceTaggedValue(int prefix, const char *tagPrefix, bool qu
 {
     // the trace settings would normally require us to trace this, but there are conditions
     // where we just skip doing this anyway.
-    if (settings.flags&trace_suppress || debugPause || value == OREF_NULL || !code->isTraceable())
+    if (noTracing(value))
     {
         return;
     }
@@ -3418,7 +3240,7 @@ void RexxActivation::traceOperatorValue(int prefix, const char *tag, RexxObject 
 {
     // the trace settings would normally require us to trace this, but there are conditions
     // where we just skip doing this anyway.
-    if (settings.flags&trace_suppress || debugPause || value == OREF_NULL || !code->isTraceable())
+    if (noTracing(value))
     {
         return;
     }
@@ -3510,7 +3332,7 @@ void RexxActivation::traceCompoundValue(int prefix, RexxString *stemName, RexxOb
 {
     // the trace settings would normally require us to trace this, but there are conditions
     // where we just skip doing this anyway.
-    if (settings.flags&trace_suppress || debugPause || value == OREF_NULL || !code->isTraceable())
+    if (noTracing(value))
     {
         return;
     }
@@ -3579,12 +3401,12 @@ void RexxActivation::traceSourceString()
 /******************************************************************************/
 {
     /* already traced?                   */
-    if (settings.flags&source_traced)
+    if (settings.stateFlags[sourceTraced])
     {
         return;                            /* don't do it again                 */
     }
                                            /* tag this as traced                */
-    settings.flags |= source_traced;
+    settings.stateFlags[sourceTraced] = true;
     /* get the string version            */
     RexxString *string = sourceString();       /* get the source string             */
     /* get a string large enough to      */
@@ -3661,19 +3483,19 @@ void RexxActivation::processClauseBoundary()
     }
 
     // asked to yield control?
-    if (settings.flags&external_yield)
+    if (settings.stateFlags[externalYield)
     {
         // turn off the flag and give up control
-        settings.flags &= ~external_yield;
+        settings.stateFlags[externalYield] = false;
         activity->relinquish();
     }
 
     // have a halt condition?
-    if (settings.flags&halt_condition)
+    if (settings.stateFlags[haltCondition])
     {
         // flip this off and raise the condition
         // if not handled as a condition, turn into a syntax error
-        settings.flags &= ~halt_condition;
+        settings.stateFlags[haltCondition] = false;
         if (!activity->raiseCondition(OREF_HALT, OREF_NULL, settings.halt_description, OREF_NULL, OREF_NULL))
         {
             reportException(Error_Program_interrupted_condition, OREF_HALT);
@@ -3681,26 +3503,24 @@ void RexxActivation::processClauseBoundary()
     }
 
     // been asked to turn on tracing?
-    if (settings.flags&set_trace_on)
+    if (settings.stateFlags[setTraceOn])
     {
-        settings.flags &= ~set_trace_on;
+        settings.stateFlags[setTraceOn] = false;
         setExternalTraceOn();
         setTrace(LanguageParser::TRACE_RESULTS | LanguageParser::DEBUG_ON, trace_results_flags | trace_debug);
     }
 
     // maybe turing tracing off?
-    if (settings.flags&set_trace_off)
+    if (settings.stateFlags[setTraceOff])
     {
-        settings.flags &= ~set_trace_off;
+        settings.stateFlags[setTraceOff] = false;
         setExternalTraceOff();
         setTrace(LanguageParser::TRACE_OFF | LanguageParser::DEBUG_OFF, trace_off);
     }
 
-    // now see if we can turn off the boundary flag
-    if (!(settings.flags&clause_exits) && (conditionQueue == OREF_NULL || conditionQueue->isEmpty())
-    {
-        settings.flags &= ~clause_boundary;
-    }
+    // now set the boundary flag based on whether we still have pending stuff for
+    // next go around.
+    claseBoundary = (settings.stateFlags[clauseExits] && (conditionQueue == OREF_NULL || conditionQueue->isEmpty());
 }
 
 
@@ -3726,14 +3546,14 @@ void RexxActivation::enableExternalTrace()
 bool RexxActivation::halt(RexxString *description )
 {
     // if there's no halt condition pending, set this
-    if ((settings.flags&halt_condition) == 0)
+    if ((settings.stateFlags[haltCondition])
     {
-                                             /* store the description             */
-        settings.halt_description = description;
-                                             /* turn on the HALT flag             */
-        settings.flags |= halt_condition;
-                                             /* turn on clause boundary checking  */
-        settings.flags |= clause_boundary;
+        // store the description
+        settings.haltDescription = description;
+        // turn on the halt flag and also the clause boundary
+        // flag so that this gets processed.
+        settings.stateFlags[halt_condition] = true;
+        clauseBoundary = true;
         return true;
     }
     else
@@ -3743,38 +3563,36 @@ bool RexxActivation::halt(RexxString *description )
     }
 }
 
+
+/**
+ * Flip ON the externally activated TRACE bit.
+ */
 void RexxActivation::yield()
-/******************************************************************************/
-/* Function:  Flip ON the externally activated TRACE bit.                     */
-/******************************************************************************/
 {
-                                       /* turn on the yield flag            */
-  settings.flags |= external_yield;
-                                       /* turn on clause boundary checking  */
-  settings.flags |= clause_boundary;
+    settings.stateFlags[externalYield] = true;
+    clauseBoundary = true;
 }
 
+
+/**
+ * Flip ON the externally activated TRACE bit.
+ */
 void RexxActivation::externalTraceOn()
-/******************************************************************************/
-/* Function:  Flip ON the externally activated TRACE bit.                     */
-/******************************************************************************/
 {
-  settings.flags |= set_trace_on;/* turn on the tracing flag          */
-                                       /* turn on clause boundary checking  */
-  settings.flags |= clause_boundary;
-                                       /* turn on tracing                   */
-  setTrace(LanguageParser::TRACE_RESULTS | LanguageParser::DEBUG_ON, trace_results_flags | trace_debug);
+    // turn on the tracing flags and have this checked at the next clause boundary
+    settings.stateFlags[setTraceOn] = true;
+    clauseBoundary = true;
 }
 
+
+/**
+ * Flip OFF the externally activated TRACE bit.
+ */
 void RexxActivation::externalTraceOff()
-/******************************************************************************/
-/* Function:  Flip OFF the externally activated TRACE bit.                    */
-/******************************************************************************/
 {
-                                       /* turn off the tracing flag         */
-  settings.flags |= set_trace_off;
-                                       /* turn on clause boundary checking  */
-  settings.flags |= clause_boundary;
+    // turn on the tracing flags and have this checked at the next clause boundary
+    settings.stateFlags[setTraceOff] = true;
+    clauseBoundary = true;
 }
 
 
@@ -3792,21 +3610,21 @@ bool RexxActivation::doDebugPause()
     }
 
     // asked to bypass...turn this off for the next time.
-    if (settings.flags&debug_bypass)
+    if (settings.stateFlags[debugBypass])
     {
-        settings.flags &= ~debug_bypass;
+        settings.stateFlags[debugBypass] = false;
     }
     // debug pauses suppressed?  Reduce the count and turn debug pausing
     // back on for the next time.
-    else if (settings.trace_skip > 0)
+    else if (settings.traceSkip > 0)
     {
-        settings.trace_skip--;
-        if (settings.trace_skip == 0)
+        settings.traceSkip--;
+        if (settings.traceSkip == 0)
         {
             // turn tracing back on again (this
             // ensures the next pause also has
             // the instruction traced
-            settings.flags &= ~trace_suppress;
+            settings.traceFlags[traceSuppress] = false;
         }
     }
     // normal pause
@@ -3818,11 +3636,11 @@ bool RexxActivation::doDebugPause()
             return false;
         }
         // first time paused?
-        if (!(settings.flags&debug_prompt_issued))
+        if (!settings.stateFlags[debugPromptIssued])
         {
             // write the initial prompt and turn off for the next time.
             activity->traceOutput(this, SystemInterpreter::getMessageText(Message_Translations_debug_prompt));
-            settings.flags |= debug_prompt_issued;
+            settings.stateFlags[debugPromptIssued] = true;
         }
         // save the next instruction in case we're asked to re-execute
         RexxInstruction *currentInst = next;
@@ -3853,46 +3671,45 @@ bool RexxActivation::doDebugPause()
                     break;
                 }
                 // the trace setting may have changed on us.
-                else if (settings.flags&debug_bypass)
+                else if (settings.stateFlags[debugBypass])
                 {
                     // turn off the bypass setting.  Is for situations where a
                     // trace in normal code turns on debug.  The debug pause is
                     // skipped until the next instruction
-                    settings.flags &= ~debug_bypass;
+                    settings.stateFlags[debugBypass] = false;
                     break;
                 }
             }
         }
     }
-    return false;                        /* no re-execute                     */
+    // no re-execution needed
+    return false;
 }
 
-void RexxActivation::traceClause(      /* trace a REXX instruction          */
-     RexxInstruction * clause,         /* value to trace                    */
-     int               prefix )        /* prefix to use                     */
-/******************************************************************************/
-/* Function:  Trace an individual line of a source file                       */
-/******************************************************************************/
+/**
+ * Trace an individual line of a source file
+ *
+ * @param clause the clause to trace.
+ * @param prefix
+ */
+// TODO:  used a enum type for the prefix argument.
+void RexxActivation::traceClause(RexxInstruction *clause, int prefix)
 {
-    /* tracing currently suppressed?     */
-    if (settings.flags&trace_suppress || debugPause)
+    // we might be in a state where tracing is suppressed, or there's no source available.
+    if (!canTrace())
     {
-        return;                            /* just ignore this call             */
+        return;
     }
-    if (!code->isTraceable())      /* if we don't have real source      */
+    // format the trace line
+    RexxString *line = formatTrace(clause, code->getPackageObject());
+    // do we have a real source line we can trace, go output it.
+    if (line != OREF_NULL)
     {
-        return;                            /* just ignore for this              */
-    }
-                                           /* format the line                   */
-    RexxString *line = formatTrace(clause, code->getSourceObject());
-    if (line != OREF_NULL)               /* have a source line?               */
-    {
-        /* newly into debug mode?            */
-        if ((settings.flags&trace_debug && !(settings.flags&source_traced)))
+        // if we've just dropped into debug mode, we need to put out the extra context line.
+        if ((settings.traceFlags[traceDebug] && !settings.stateFlags[sourceTraced]))
         {
-            traceSourceString();       /* trace the source string           */
+            traceSourceString();
         }
-                                             /* write out the line                */
         activity->traceOutput(this, line);
     }
 }
@@ -3908,23 +3725,18 @@ void RexxActivation::traceClause(      /* trace a REXX instruction          */
  */
 void RexxActivation::command(RexxString *address, RexxString *commandString)
 {
-    bool         instruction_traced;     /* instruction has been traced       */
+    // if we are tracing command instructions, then we need to add some
+    // additional trace information afterward.  Also, if we're tracing errors or
+    // failures, we similarly need to know if the command has already been traced.
+    bool instruction_traced = tracingAll() || tracingCommands();
     ProtectedObject condition;
     ProtectedObject commandResult;
 
-                                         /* instruction already traced?       */
-    if (tracingAll() || tracingCommands())
-    {
-        instruction_traced = true;         /* remember we traced this           */
-    }
-    else
-    {
-        instruction_traced = false;        /* not traced yet                    */
-    }
-                                           /* if exit declines call             */
+    // give the command exit first pass at this.
     if (activity->callCommandExit(this, address, commandString, commandResult, condition))
     {
-        // first check for registered command handlers
+        // first check for registered command handlers.  If we have a handler, then
+        // call it.  This includes the default system command handlers.
         CommandHandler *handler = activity->resolveCommandHandler(address);
         if (handler != OREF_NULL)
         {
@@ -3932,13 +3744,14 @@ void RexxActivation::command(RexxString *address, RexxString *commandString)
         }
         else
         {
-            // No handler for this environment
+            // No handler for this environment.  Give a default return code and
+            // raise a failure condition.
             commandResult = new_integer(RXSUBCOM_NOTREG);   // just use the not registered return code
-            // raise the condition when things are done
             condition = activity->createConditionObject(OREF_FAILURENAME, (RexxObject *)commandResult, commandString, OREF_NULL, OREF_NULL);
         }
     }
 
+    // now process the command result.
     RexxObject *rc = (RexxObject *)commandResult;
     DirectoryClass *conditionObj = (DirectoryClass *)(RexxObject *)condition;
 
@@ -3949,12 +3762,12 @@ void RexxActivation::command(RexxString *address, RexxString *commandString)
     // condition object
     if (conditionObj != OREF_NULL)
     {
-        RexxObject *temp = conditionObj->at(OREF_RC);
+        RexxObject *temp = conditionObj->get(OREF_RC);
         if (temp == OREF_NULL)
         {
             // see if we have a result and make sure the condition object
             // fills this as the RC value
-            temp = conditionObj->at(OREF_RESULT);
+            temp = conditionObj->get(OREF_RESULT);
             if (temp != OREF_NULL)
             {
                 conditionObj->put(temp, OREF_RC);
@@ -3966,7 +3779,8 @@ void RexxActivation::command(RexxString *address, RexxString *commandString)
             rc = temp;
         }
 
-        RexxString *conditionName = (RexxString *)conditionObj->at(OREF_CONDITION);
+        // now check for ERROR or FAILURE conditions
+        RexxString *conditionName = (RexxString *)conditionObj->get(OREF_CONDITION);
         // check for an error or failure condition, since these get special handling
         if (conditionName->strCompare(CHAR_FAILURENAME))
         {
@@ -4000,28 +3814,26 @@ void RexxActivation::command(RexxString *address, RexxString *commandString)
     {
         // set the RC value before anything
         setLocalVariable(OREF_RC, VARIABLE_RC, rc);
-        /* tracing command errors or fails?  */
+        // tracing command errors or fails?
         if ((returnStatus == RETURN_STATUS_ERROR && tracingErrors()) ||
             (returnStatus == RETURN_STATUS_FAILURE && (tracingFailures())))
         {
-            /* trace the current instruction     */
+            // trace the current instruction
             traceClause(current, TRACE_PREFIX_CLAUSE);
-            /* then we always trace full command */
+            // then we always trace full command
             traceValue(commandString, TRACE_PREFIX_RESULT);
-            instruction_traced = true;       /* we've now traced this             */
+            // this has been traced
+            instruction_traced = true;
         }
 
         wholenumber_t rcValue;
-        /* need to trace the RC info too?    */
+        // need to trace the RC info too?
         if (instruction_traced && rc->numberValue(rcValue) && rcValue != 0)
         {
-            /* get RC as a string                */
+            // this has a special RC(val) format
             RexxString *rc_trace = rc->stringValue();
-            /* tack on the return code           */
             rc_trace = rc_trace->concatToCstring("RC(");
-            /* add the closing part              */
             rc_trace = rc_trace->concatWithCstring(")");
-            /* trace the return code             */
             traceValue(rc_trace, TRACE_PREFIX_ERROR);
         }
         // set the return status
@@ -4045,26 +3857,29 @@ void RexxActivation::command(RexxString *address, RexxString *commandString)
                 }
             }
         }
+
         // do debug pause if necessary.  necessary is defined by:  we are
-        // tracing ALL or COMMANDS, OR, we /* using TRACE NORMAL and a FAILURE
+        // tracing ALL or COMMANDS, OR, we are using TRACE NORMAL and a FAILURE
         // return code was received OR we receive an ERROR return code and
         // have TRACE ERROR in effect.
         if (instruction_traced && inDebug())
         {
-            debugPause();                /* do the debug pause                */
+            debugPause();
         }
     }
 }
+
 
 /**
  * Set the return status flag for an activation context.
  *
  * @param status The new status value.
  */
+// TODO:  use enum type here
 void RexxActivation::setReturnStatus(int status)
 {
-    settings.return_status = status;
-    settings.flags |= return_status_set;
+    settings.returnStatus = status;
+    settings.statusFlags[returnStatusSet] = true;
 }
 
 
