@@ -200,7 +200,7 @@ RexxObject *RexxExpressionFunction::evaluate(RexxActivation *context, Expression
     // if we resolved to an internal label, call that now
     if (target != OREF_NULL)
     {
-        context->internalCall(functionName, target, argumentCount, stack, result);
+        context->internalCall(functionName, target, stack->arguments(argumentCount), argumentCount, result);
     }
     // if this was resolved to a builtin, call directly
     else if (builtinIndex != NO_BUILTIN)
@@ -209,7 +209,7 @@ RexxObject *RexxExpressionFunction::evaluate(RexxActivation *context, Expression
     }
     else
     {
-        context->externalCall(functionName, argumentCount, stack, OREF_FUNCTIONNAME, result);
+        context->externalCall(functionName, stack->arguments(argumentCount), argumentCount, OREF_FUNCTIONNAME, result);
     }
 
     // functions must have a return result

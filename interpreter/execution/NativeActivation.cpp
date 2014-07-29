@@ -2083,7 +2083,7 @@ void NativeActivation::setForm(
  *
  * @return The current Numeric settings.
  */
-NumericSettings *NativeActivation::getNumericSettings()
+const NumericSettings *NativeActivation::getNumericSettings()
 {
     if (activation == OREF_NULL)
     {

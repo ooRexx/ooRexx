@@ -225,8 +225,7 @@ class LanguageParser: public RexxInternalObject
     // instruction parsing methods
     RexxInstruction *nextInstruction();
     void        isExposeValid();
-    static bool parseTraceSetting(RexxString *, size_t &, size_t &, char &);
-    static bool parseTraceSetting(RexxString *value, TraceSetting &newSetting, char &badOption)
+    static bool parseTraceSetting(RexxString *value, TraceSetting &newSetting, char &badOption);
     size_t      processVariableList(InstructionKeyword);
 
     RexxInstruction *addressNew();

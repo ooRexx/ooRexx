@@ -76,6 +76,7 @@
 #include "RoutineClass.hpp"
 #include "LanguageParser.hpp"
 #include "TrapHandler.hpp"
+#include "MethodArguments.hpp"
 
 
 // max instructions without a yield
@@ -334,7 +335,7 @@ void RexxActivation::live(size_t liveMark)
     memory_mark(next);
     memory_mark(result);
     memory_mark(trapInfo);
-    memory_mark(objNotify);
+    memory_mark(notifyObject);
     memory_mark(environmentList);
     memory_mark(conditionQueue);
     memory_mark(settings.traps);
@@ -352,7 +353,7 @@ void RexxActivation::live(size_t liveMark)
     // We're hold a pointer back to our arguments directly where they
     // are created.  Since in some places, this argument list comes
     // from the C stack, we need to handle the marker ourselves.
-    memory_mark_array(argcount, argList);
+    memory_mark_array(argCount, argList);
     memory_mark_array(settings.parentArgCount, settings.parentArgList);
 }
 
@@ -371,7 +372,7 @@ void RexxActivation::liveGeneral(MarkReason reason)
     memory_mark_general(receiver);
     memory_mark_general(activity);
     memory_mark_general(parent);
-    memory_mark_general(doDtack);
+    memory_mark_general(doStack);
     // the stack and the local variables handle their own marking.
     stack.liveGeneral(reason);
     settings.localVariables.liveGeneral(reason);
@@ -379,7 +380,7 @@ void RexxActivation::liveGeneral(MarkReason reason)
     memory_mark_general(next);
     memory_mark_general(result);
     memory_mark_general(trapInfo);
-    memory_mark_general(objNotify);
+    memory_mark_general(notifyObject);
     memory_mark_general(environmentList);
     memory_mark_general(conditionQueue);
     memory_mark_general(settings.traps);
@@ -878,7 +879,7 @@ RexxString * RexxActivation::traceSetting()
  */
 void RexxActivation::setTrace(RexxString *setting)
 {
-    TraceSettings newSettings;
+    TraceSetting newSettings;
 
     char traceOption = 0;              // a potential bad character
 
@@ -939,7 +940,7 @@ void RexxActivation::setTrace(const TraceSetting &source)
     }
 
     // if tracing intermediates, turn on the special fast check flag
-    settings.intermediateTrace = settings.packageSettings.traceFlags.tracingIntermediates();
+    settings.intermediateTrace = settings.packageSettings.traceSettings.tracingIntermediates();
     // if we issued this from a debug prompt, let the pause handler know this changes.
     if (debugPause)
     {
@@ -1158,7 +1159,7 @@ size_t RexxActivation::currentLine()
 void RexxActivation::procedureExpose(RexxVariableBase **variables, size_t count)
 {
     // make sure procedure is valid here
-    if (!(settings.isProcedureValid())
+    if (!settings.isProcedureValid())
     {
         reportException(Error_Unexpected_procedure_call);
     }
@@ -1212,7 +1213,7 @@ void RexxActivation::expose(RexxVariableBase **variables, size_t count)
  * @return The message result.
  */
 RexxObject *RexxActivation::forward(RexxObject  *target, RexxString  *message,
-    RexxObject  *superClass, RexxObject **arguments, size_t argcount, bool continuing)
+    RexxClass *superClass, RexxObject **arguments, size_t argcount, bool continuing)
 {
     // all pieces that are a note specified on the FORWARD will use the
     // contgext values.
@@ -1359,10 +1360,10 @@ void RexxActivation::termination()
     // remove any guard locks for this activaty.
     guardOff();
     // have any setlocals we need to undo?
-    if (environmentList != OREF_NULL && environmentList->getSize() != 0)
+    if (environmentList != OREF_NULL && !environmentList->isEmpty())
     {
         // restore the environment to the first version.
-        SystemInterpreter::restoreEnvironment(((BufferClass *)environmentList->lastItem())->getData());
+        SystemInterpreter::restoreEnvironment(((BufferClass *)environmentList->getLastItem())->getData());
     }
 
     environmentList = OREF_NULL;
@@ -1519,7 +1520,7 @@ void RexxActivation::raiseExit(RexxString *condition, RexxObject *rc, RexxString
  *                   The condition object used for a propagate.
  */
 void RexxActivation::raise(RexxString *condition, RexxObject *rc, RexxString *description,
-     RexxObject *additional, RexxObject *resultObj, DirectoryClass  conditionobj )
+     RexxObject *additional, RexxObject *resultObj, DirectoryClass *conditionobj )
 {
     bool propagated = false;
 
@@ -1535,7 +1536,7 @@ void RexxActivation::raise(RexxString *condition, RexxObject *rc, RexxString *de
         // if no result was specified, use the one from the condition object
         if (resultObj == OREF_NULL)
         {
-            resultObj = conditionobj->get(OREF_RESULT);
+            resultObj = (RexxObject *)conditionobj->get(OREF_RESULT);
         }
     }
     else
@@ -1639,107 +1640,113 @@ VariableDictionary * RexxActivation::getObjectVariables()
  * @param stack    The expression stack.
  * @param input    The input/output flag.
  * @param fullName The returned full name of the stream.
- * @param added    A flag indicating we added this.
+ * @param added    A flag indicating we added this.  Set this
+ *                 pointer to NULL for a lookup without adding
+ *                 to the stream table.
  *
  * @return The backing stream object for the name.
  */
 RexxObject *RexxActivation::resolveStream(RexxString *name, bool input, RexxString **fullName, bool *added)
 {
+    // when the caller requires a stream table entry, then set the initial indicator.
     if (added != NULL)
     {
-        *added = false;           /* when caller requires stream table entry then initialize */
+        added = false;
     }
-    StringTable *streamTable = getStreams(); /* get the current stream set        */
-    if (fullName)                        /* fullName requested?               */
+    StringTable *streamTable = getStreams();
+    // the default full name is the provided name.
+    if (fullName)
     {
-        *fullName = name;                  /* initialize to name                */
+        *fullName = name;
     }
-    /* if length of name is 0, then it's the same as omitted */
-    if (name == OREF_NULL || name->getLength() == 0)   /* no name?                 */
+    // if length of name is 0, then it's the same as omitted.  This is
+    // a request for either the default input or output stream.  The flag
+    // tells us which one.
+    if (name == OREF_NULL || name->getLength() == 0)
     {
-        if (input)                         /* input operation?                  */
+        if (input)
         {
-            /* get the default output stream     */
             return getLocalEnvironment(OREF_INPUT);
         }
         else
         {
-            /* get the default output stream     */
             return getLocalEnvironment(OREF_OUTPUT);
         }
     }
-    /* standard input stream?            */
+    // check for the standard input or out put streams.
     else if (name->strCaselessCompare(CHAR_STDIN) || name->strCaselessCompare(CHAR_CSTDIN))
     {
-        /* get the default output stream     */
         return getLocalEnvironment(OREF_INPUT);
     }
-    /* standard output stream?           */
     else if (name->strCaselessCompare(CHAR_STDOUT) || name->strCaselessCompare(CHAR_CSTDOUT))
     {
-        /* get the default output stream     */
         return getLocalEnvironment(OREF_OUTPUT);
     }
-    /* standard error stream?            */
     else if (name->strCaselessCompare(CHAR_STDERR) || name->strCaselessCompare(CHAR_CSTDERR))
     {
-        /* get the default output stream     */
         return getLocalEnvironment(OREF_ERRORNAME);
     }
+    // not one of the standards...go looking for a file.
     else
     {
-        /* go get the qualified name         */
+        // get the fully qualified name
         RexxString *qualifiedName = SystemInterpreter::qualifyFileSystemName(name);
-        if (fullName)                      /* fullName requested?               */
+        if (fullName)
         {
-            *fullName = qualifiedName;       /* provide qualified name            */
+            *fullName = qualifiedName;
         }
         // protect from GC
         ProtectedObject p(qualifiedName);
-        /* Note: stream name is pushed to the stack to be protected from GC;    */
-        /* e.g. it is used by the caller to remove stream from stream table.    */
-        /* The stack will be reset after the function was executed and the      */
-        /* protection is released                                               */
-        /* see if we've already opened this  */
-        RexxObject *stream = streamTable->at(qualifiedName);
-        if (stream == OREF_NULL)           /* not open                          */
+        // see if we have this in the table already.  If not opened yet, we need
+        // to try to open it.
+        RexxObject *stream = (RexxObject *)streamTable->get(qualifiedName);
+        if (stream == OREF_NULL)
         {
+            // do the security manager check first.
             SecurityManager *manager = getEffectiveSecurityManager();
             stream = manager->checkStreamAccess(qualifiedName);
             if (stream != OREF_NULL)
             {
                 streamTable->put(stream, qualifiedName);
-                return stream;               /* return the stream object          */
+                return stream;
             }
-            /* get the stream class              */
-            RexxObject *streamClass = TheEnvironment->at(OREF_STREAM);
-            /* create a new stream object        */
+            // create an instance of the stream class and create a new
+            // instance
+            // TODO:  replace this with a REXX package lookup once that is done.
+            RexxObject *streamClass = (RexxObject *)TheEnvironment->get(OREF_STREAM);
             stream = streamClass->sendMessage(OREF_NEW, name);
 
-            if (added)                       /* open the stream?   begin          */
+            // if we're requested to add this to the table, add it in and return the indicator.
+            if (added)
             {
-                /* add to the streams table          */
                 streamTable->put(stream, qualifiedName);
-                *added = true;                 /* mark it as added to stream table  */
+                *added = true;
             }
         }
-        return stream;                       /* return the stream object          */
+        return stream;
     }
 }
 
-DirectoryClass *RexxActivation::getStreams()
-/******************************************************************************/
-/* Function:  Return the associated object variables stream table             */
-/******************************************************************************/
+
+/**
+ * Return the associated object variables stream table
+ *
+ * @return The table of opened streams.
+ */
+StringTable *RexxActivation::getStreams()
 {
-    /* not created yet?                  */
+    // first request for a stream object?  We need to
+    // create the table.
     if (settings.streams == OREF_NULL)
     {
-        /* first entry into here?            */
+        // if we are a top-level program or a method call,
+        // we just set a new directory.  NOTE:  For legacy reasons,
+        // external routine calls need to inherit the table
+        // from the main program context, so this is not a
+        // isTopLevelCall() test.
         if (isProgramOrMethod())
         {
-            /* always use a new directory        */
-            settings.streams = new_directory();
+            settings.streams = new_string_table();
         }
         else
         {
@@ -1748,202 +1755,199 @@ DirectoryClass *RexxActivation::getStreams()
             RexxActivationBase *callerFrame = getPreviousStackFrame();
             if (callerFrame == OREF_NULL || !callerFrame->isRexxContext())
             {
-                settings.streams = new_directory();
+                settings.streams = new_string_table();
             }
             else
             {
 
-                /* alway's use caller's for internal */
-                /* call, external call or interpret  */
+                // alway's use caller's for internal call, external call or interpret
                 settings.streams = ((RexxActivation *)callerFrame)->getStreams();
             }
         }
     }
-    return settings.streams;       /* return the stream table           */
+    return settings.streams;
 }
 
-void RexxActivation::signalTo(
-     RexxInstruction * target )        /* target instruction                */
-/******************************************************************************/
-/* Function:  Signal to a targer instruction                                  */
-/******************************************************************************/
+
+/**
+ * Signal to a target instruction
+ *
+ * @param target The target of the signal instruction.
+ */
+void RexxActivation::signalTo(RexxInstruction *target)
 {
-    /* internal routine or Interpret     */
-    /* instruction activation?           */
+    // if this is an interpret or debug pause, we need to shut this
+    // activation down and have the parent execute the signal.
     if (isInterpret())
     {
-        executionState = RETURNED;  /* signal interpret termination      */
-        next = OREF_NULL;            /* turn off execution engine         */
-        parent->signalTo(target);    /* propogate the signal backward     */
+        executionState = RETURNED;
+        next = OREF_NULL;
+        parent->signalTo(target);
     }
+    // need to clean up some things in a SIGNAL.  Start with
+    // setting the SIGL variable to the current linenumber, then
+    // clear out all of our block instruction states
     else
     {
-        /* initialize the SIGL variable      */
-        size_t lineNum = current->getLineNumber();/* get the instruction line number   */
+        size_t lineNum = current->getLineNumber();
         setLocalVariable(OREF_SIGL, VARIABLE_SIGL, new_integer(lineNum));
-        next = target;               /* set the new target location       */
-        dostack = OREF_NULL;         /* clear the do loop stack           */
-        blockNest = 0;               /* no more active blocks             */
-        settings.traceindent = 0;    /* reset trace indentation           */
+        // the target is the next instruction we execute.
+        next = target;
+        doStack = OREF_NULL;
+        blockNest = 0;
+        settings.traceIndent = 0;
     }
 }
 
+
+/**
+ * Toggle the address setting between the current and alternate
+ */
 void RexxActivation::toggleAddress()
-/******************************************************************************/
-/* Function:  Toggle the address setting between the current and alternate    */
-/******************************************************************************/
 {
-    RexxString *temp = settings.currentAddress;   /* save the current environment      */
-    /* make the alternate the current    */
+    RexxString *temp = settings.currentAddress;
     settings.currentAddress = settings.alternateAddress;
-    settings.alternateAddress = temp; /* old current is now the alternate  */
+    settings.alternateAddress = temp;
 }
 
 
-void RexxActivation::setAddress(
-                               RexxString * address )             /* new address environment           */
-/******************************************************************************/
-/* Function:  Set the new current address, moving the current one to the      */
-/*            alternate address                                               */
-/******************************************************************************/
+/**
+ * Set the new current address, moving the current one to the
+ * alternate address
+ *
+ * @param address The new address setting.  The current setting becomes
+ *                the alternate.
+ */
+void RexxActivation::setAddress(RexxString *address)
 {
-    /* old current is now the alternate  */
     settings.alternateAddress = settings.currentAddress;
-    settings.currentAddress = address;/* set new current environment       */
+    settings.currentAddress = address;
 }
 
 
-void RexxActivation::setDefaultAddress(
-                                      RexxString * address )             /* new address environment           */
-/******************************************************************************/
-/* Function:  Set up a default address environment so that both the primary   */
-/*            and the alternate address are the same value                    */
-/******************************************************************************/
+/**
+ * Set up a default address environment so that both the primary
+ * and the alternate address are the same value
+ *
+ * @param address The new default address name.
+ */
+void RexxActivation::setDefaultAddress(RexxString *address)
 {
-    /* old current is the new one        */
     settings.alternateAddress = address;
-    settings.currentAddress = address;/* set new current environment       */
+    settings.currentAddress = address;
 }
 
 
-void RexxActivation::signalValue(
-    RexxString * name )                /* target label name                 */
-/******************************************************************************/
-/* Function:  Signal to a computed label target                               */
-/******************************************************************************/
+/**
+ * Signal to a computed label target
+ *
+ * @param name   The computed string name.
+ */
+void RexxActivation::signalValue(RexxString *name)
 {
-    RexxInstruction *target = OREF_NULL;                  /* no target yet                     */
-    DirectoryClass *labels = getLabels();          /* get the labels                    */
-    if (labels != OREF_NULL)             /* have labels?                      */
+    RexxInstruction *target = OREF_NULL;
+    // get the label table from the current code context.
+    // we might not have any labels in the code, so
+    // only perform the lookup if the table is there.
+
+    StringTable *labels = getLabels();
+    if (labels != OREF_NULL)
     {
-        /* look up label and go to normal    */
-        /* signal processing                 */
-        target = (RexxInstruction *)labels->at(name);
+        target = (RexxInstruction *)labels->get(name);
     }
-    if (target == OREF_NULL)             /* unknown label?                    */
+
+    // no table or an unknown label?  Raise the error now.
+    if (target == OREF_NULL)
     {
-        /* raise an error                    */
         reportException(Error_Label_not_found_name, name);
     }
-    signalTo(target);              /* now switch to the label location  */
+    // continue processing like a normal signal instruction.
+    signalTo(target);
 }
 
 
+/**
+ * Turn on the activation guarded state
+ */
 void RexxActivation::guardOn()
-/******************************************************************************/
-/* Function:  Turn on the activations guarded state                           */
-/******************************************************************************/
 {
-    /* currently in unguarded state?     */
+    // a guard on request while already guarded is a nop.
     if (objectScope == SCOPE_RELEASED)
     {
-        /* not retrieved yet?                */
+        // first access to the scope object variables?  Go get the variables.
         if (settings.objectVariables == OREF_NULL)
         {
-            /* get the object variables          */
             settings.objectVariables = receiver->getObjectVariables(scope);
         }
-        /* lock the variable dictionary      */
+        // now lock the dictionary and flip our state.
         settings.objectVariables->reserve(activity);
-        /* set the state here also           */
         objectScope = SCOPE_RESERVED;
     }
 }
 
+
+/**
+ * Return the current digits setting
+ *
+ * @return The package digits setting
+ */
 size_t RexxActivation::digits()
-/******************************************************************************/
-/* Function:  Return the current digits setting                               */
-/******************************************************************************/
 {
-    return settings.numericSettings.digits;
+    return settings.packageSettings.getDigits();
 }
 
+
+/**
+ * Return the current fuzz setting
+ *
+ * @return The package fuzz setting
+ */
 size_t RexxActivation::fuzz()
-/******************************************************************************/
-/* Function:  Return the current fuzz setting                                 */
-/******************************************************************************/
 {
-    return settings.numericSettings.fuzz;
+    return settings.packageSettings.getFuzz();
 }
 
+
+/**
+ * Return the current form setting
+ *
+ * @return The package form setting
+ */
 bool RexxActivation::form()
-/******************************************************************************/
-/* Function:  Return the current FORM setting                                 */
-/******************************************************************************/
 {
-    return settings.numericSettings.form;
+    return settings.packageSettings.getForm();
 }
+
 
 /**
- * Set the digits setting to the package-defined default
+ * Set a new digits setting
+ *
+ * @param digitsVal The new digits value.
  */
-void RexxActivation::setDigits()
-{
-    setDigits(packageObject->getDigits());
-}
-
 void RexxActivation::setDigits(size_t digitsVal)
-/******************************************************************************/
-/* Function:  Set a new digits setting                                        */
-/******************************************************************************/
 {
-    settings.numericSettings.digits = digitsVal;
+    settings.packageSettings.setDigits(digitsVal);
 }
+
 
 /**
- * Set the fuzz setting to the package-defined default
+ * Set a new fuzz setting
+ *
+ * @param fuzzVal   The new fuzz value.
  */
-void RexxActivation::setFuzz()
-{
-    setFuzz(packageObject->getFuzz());
-}
-
-
-
 void RexxActivation::setFuzz(size_t fuzzVal)
-/******************************************************************************/
-/* Function:  Set a new FUZZ setting                                          */
-/******************************************************************************/
 {
-    settings.numericSettings.fuzz = fuzzVal;
+    settings.packageSettings.setFuzz(fuzzVal);
 }
 
 /**
- * Set the form setting to the package-defined default
+ * Set a new form setting
+ *
+ * @param formVal   The new form setting
  */
-void RexxActivation::setForm()
-{
-    setForm(packageObject->getForm());
-}
-
-
-
 void RexxActivation::setForm(bool formVal)
-/******************************************************************************/
-/* Function:  Set the new current NUMERIC FORM setting                        */
-/******************************************************************************/
 {
-    settings.numericSettings.form = formVal;
+    settings.packageSettings.setForm(formVal);
 }
 
 
@@ -1987,9 +1991,9 @@ bool RexxActivation::isRexxContext()
  *
  * @return The new numeric settings.
  */
-NumericSettings *RexxActivation::getNumericSettings()
+const NumericSettings *RexxActivation::getNumericSettings()
 {
-    return &(settings.numericSettings);
+    return &settings.packageSettings.numericSettings;
 }
 
 
@@ -2024,7 +2028,7 @@ RexxString *RexxActivation::trapState(RexxString *condition)
     if (settings.traps != OREF_NULL)
     {
         // see if the trap is enabled, if we have this, query the state
-        TrapHandler *trapHandler = settings.traps->get(condition);
+        TrapHandler *trapHandler = (TrapHandler *)settings.traps->get(condition);
         if (trapHandler != OREF_NULL)
         {
             return trapHandler->getState();
@@ -2044,8 +2048,8 @@ void RexxActivation::trapDelay(RexxString * condition)
 {
     checkTrapTable();
     // if we have a trap, put it into the delay state
-    TrapHandler *traphandler = (TrapHandler *)settings.traps->get(condition);
-    if (traphandler != OREF_NULL)
+    TrapHandler *trapHandler = (TrapHandler *)settings.traps->get(condition);
+    if (trapHandler != OREF_NULL)
     {
         trapHandler->disable();
     }
@@ -2061,8 +2065,8 @@ void RexxActivation::trapUndelay(RexxString * condition)
 {
     checkTrapTable();
     // if we have a trap, put it into the delay state
-    TrapHandler *traphandler = (TrapHandler *)settings.traps->get(condition);
-    if (traphandler != OREF_NULL)
+    TrapHandler *trapHandler = (TrapHandler *)settings.traps->get(condition);
+    if (trapHandler != OREF_NULL)
     {
         trapHandler->enable();
     }
@@ -2089,7 +2093,7 @@ bool RexxActivation::trap(RexxString *condition, DirectoryClass *exceptionObject
     // if we're in the act of processing a FORWARD instruction, then this
     // stack frame doesn't really exist any more.  We need to check the previous
     // stack frame to see if it can handle this.
-    if (settings.stateFlags[forwarded])
+    if (settings.isForwarded())
     {
         RexxActivationBase *activation = getPreviousStackFrame();
         // we can have multiple forwardings in process, so keep drilling until we
@@ -2099,7 +2103,7 @@ bool RexxActivation::trap(RexxString *condition, DirectoryClass *exceptionObject
             // we've found a non-ghost frame, so have it try to handle this.
             if (!activation->isForwarded())
             {
-                return activation->trap(condition, exception_object);
+                return activation->trap(condition, exceptionObject);
             }
             activation = activation->getPreviousStackFrame();
         }
@@ -2108,9 +2112,9 @@ bool RexxActivation::trap(RexxString *condition, DirectoryClass *exceptionObject
     }
     // do we need to notify a message object of a syntax error?
     // send it the notification message.
-    if (objnotify != OREF_NULL && condition->strCompare(CHAR_SYNTAX))
+    if (notifyObject != OREF_NULL && condition->strCompare(CHAR_SYNTAX))
     {
-        objnotify->error(exception_object);
+        notifyObject->error(exceptionObject);
     }
 
     // are we in a debug pause?  ignore any condition other than a syntax error.
@@ -2122,7 +2126,7 @@ bool RexxActivation::trap(RexxString *condition, DirectoryClass *exceptionObject
         }
         // display the errors encountered during debug, then do the
         // error unwind to terminate the debug pause activation.
-        activity->displayDebug(exception_object);
+        activity->displayDebug(exceptionObject);
         throw this;
     }
     // no trap table set yet?  can't handle this
@@ -2147,7 +2151,7 @@ bool RexxActivation::trap(RexxString *condition, DirectoryClass *exceptionObject
         }
     }
     // if the condition is being trapped, do the CALL or SIGNAL
-    if (traphandler != OREF_NULL)
+    if (trapHandler != OREF_NULL)
     {
         // if this is a halt condition, we might need to call the system exit.
         if (condition->strCompare(CHAR_HALT))
@@ -2155,27 +2159,18 @@ bool RexxActivation::trap(RexxString *condition, DirectoryClass *exceptionObject
             activity->callHaltClearExit(this);
         }
 
-        /* get the handler info              */
-        RexxInstructionCallBase *handler = (RexxInstructionCallBase *)traphandler->get(1);
-        // no condition queue yet?           */
+        // create a pending queue if we don't have one yet
         if (conditionQueue == OREF_NULL)
         {
-            // create a pending queue
             conditionQueue = new_queue();
         }
 
-        RexxString *instruction = OREF_CALL;
-        if (handler->isType(KEYWORD_SIGNAL_ON))
-        {
-            instruction = OREF_SIGNAL;       /* this is trapped by a SIGNAL       */
-        }
-                                             /* add the instruction trap info     */
+        // add the instruction trap info
         exceptionObject->put(trapHandler->instructionName(), OREF_INSTRUCTION);
         // set the condition object into the traphandler
         trapHandler->setConditionObject(exceptionObject);
         // add the handler to the condition queue
         conditionQueue->append(trapHandler);
-        pendingConditions++;
         // clear this from the activity if we're trapping this here
         activity->clearCurrentCondition();
 
@@ -2264,8 +2259,7 @@ void RexxActivation::mergeTraps(QueueClass *sourceConditionQueue)
         else
         {
             // copy all of the items over.
-            size_t items = sourcConditionQueue->item();
-            while (items--)
+            while (!sourceConditionQueue->isEmpty())
             {
                 conditionQueue->append(sourceConditionQueue->pull());
             }
@@ -2283,7 +2277,7 @@ void RexxActivation::mergeTraps(QueueClass *sourceConditionQueue)
  */
 void RexxActivation::unwindTrap(RexxActivation * child )
 {
-    //* still an interpret level?  Merge, and try again
+    // still an interpret level?  Merge, and try again
     if (isInterpret())
     {
         parent->mergeTraps(conditionQueue);
@@ -2300,20 +2294,24 @@ void RexxActivation::unwindTrap(RexxActivation * child )
 }
 
 
+/**
+ * Retrieve the activation that activated this activation (whew)
+ *
+ * @return The parent activation.
+ */
 RexxActivation * RexxActivation::senderActivation()
-/******************************************************************************/
-/* Function:  Retrieve the activation that activated this activation (whew)   */
-/******************************************************************************/
 {
-    /* get the sender from the activity  */
+    // get the sender from the activity
     RexxActivationBase *_sender = getPreviousStackFrame();
-    /* spin down to non-native activation*/
+    // spin down to non-native activation
     while (_sender != OREF_NULL && isOfClass(NativeActivation, _sender))
     {
         _sender = _sender->getPreviousStackFrame();
     }
-    return(RexxActivation *)_sender;    /* return that activation            */
+    // that is our sender
+    return(RexxActivation *)_sender;
 }
+
 
 /**
  * Translate and interpret a string of data as a piece
@@ -2322,10 +2320,6 @@ RexxActivation * RexxActivation::senderActivation()
  * @param codestring The source code string.
  */
 void RexxActivation::interpret(RexxString * codestring)
-/******************************************************************************/
-/* Function:  Translate and interpret a string of data as a piece of REXX     */
-/*            code within the current program context.                        */
-/******************************************************************************/
 {
     // check the stack space to see if we have room.
     ActivityManager::currentActivity->checkStackSpace();
@@ -2336,7 +2330,7 @@ void RexxActivation::interpret(RexxString * codestring)
     activity->pushStackFrame(newActivation);
     ProtectedObject r;
     // run this compiled code on the new activation
-    newActivation->run(OREF_NULL, OREF_NULL, arglist, argcount, OREF_NULL, r);
+    newActivation->run(OREF_NULL, OREF_NULL, argList, argCount, OREF_NULL, r);
 }
 
 
@@ -2358,7 +2352,7 @@ void RexxActivation::debugInterpret(RexxString * codestring)
         activity->pushStackFrame(newActivation);
         ProtectedObject r;
         // go run the code
-        newActivation->run(receiver, settings.msgname, arglist, argcount, OREF_NULL, r);
+        newActivation->run(receiver, settings.messageName, argList, argCount, OREF_NULL, r);
         // turn this off when done executing
         debugPause = false;
     }
@@ -2374,6 +2368,7 @@ void RexxActivation::debugInterpret(RexxString * codestring)
     }
 }
 
+
 /**
  * Return a Rexx-defined "dot" variable na.e
  *
@@ -2387,12 +2382,13 @@ RexxObject * RexxActivation::rexxVariable(RexxString * name )
     // .RS happens in our context, so process here.
     if (name->strCompare(CHAR_RS))
     {
-        if (settings.stateFlags[returnStatusSet])
+        // if we've set the return status, return that value, otherwise
+        // just return as the string name.
+        if (settings.isReturnStatusSet())
         {
-            /* returned as an integer object     */
             return new_integer(settings.returnStatus);
         }
-        else                               /* just return the name              */
+        else
         {
             return name->concatToCstring(".");
         }
@@ -2403,26 +2399,30 @@ RexxObject * RexxActivation::rexxVariable(RexxString * name )
         return parent->rexxVariable(name);
     }
 
-    if (name->strCompare(CHAR_METHODS))  /* is this ".methods"                */
+    // .METHODS
+    if (name->strCompare(CHAR_METHODS))
     {
-        /* get the methods directory         */
-        return(RexxObject *)settings.parentCode->getMethods();
+        return settings.parentCode->getMethods();
     }
-    else if (name->strCompare(CHAR_ROUTINES))  /* is this ".routines"                */
+    // .ROUTINES
+    else if (name->strCompare(CHAR_ROUTINES))
     {
-        /* get the methods directory         */
-        return(RexxObject *)settings.parentCode->getRoutines();
+        return settings.parentCode->getRoutines();
     }
-    else if (name->strCompare(CHAR_LINE))  /* current line (".line")?    */
+    // .LINE
+    else if (name->strCompare(CHAR_LINE))
     {
         return new_integer(current->getLineNumber());
     }
+    // .CONTEXT
     else if (name->strCompare(CHAR_CONTEXT))
     {
         // retrieve the context object (potentially creating it on the first request)
         return getContextObject();
     }
-    return OREF_NULL;                    // not recognized
+
+    // not one we know about
+    return OREF_NULL;
 }
 
 
@@ -2479,7 +2479,6 @@ size_t RexxActivation::getContextLineNumber()
     }
     else
     {
-
         return current->getLineNumber();
     }
 }
@@ -2492,9 +2491,8 @@ size_t RexxActivation::getContextLineNumber()
  */
 RexxObject *RexxActivation::getContextReturnStatus()
 {
-    if (settings.stateFlags&returnStatusSet)
+    if (settings.isReturnStatusSet())
     {
-        /* returned as an integer object     */
         return new_integer(settings.returnStatus);
     }
     else
@@ -2516,18 +2514,19 @@ RexxObject *RexxActivation::getContextReturnStatus()
  *
  * @return true if the macrospace function was located and called.
  */
-bool RexxActivation::callMacroSpaceFunction(RexxString * target, RexxObject **_arguments,
-    size_t _argcount, RexxString * calltype, int order, ProtectedObject &_result)
+bool RexxActivation::callMacroSpaceFunction(RexxString *target, RexxObject **arguments,
+    size_t argcount, RexxString *calltype, int order, ProtectedObject &_result)
 {
-    unsigned short position;             /* located macro search position     */
-    const char *macroName = target->getStringData();  /* point to the string data          */
-    /* did we find this one?             */
+    // the located macro search position
+    unsigned short position;
+    const char *macroName = target->getStringData();
+    // did we find the one we want at the right time?
     if (RexxQueryMacro(macroName, &position) == 0)
     {
-        /* but not at the right time?        */
-        if (order == MS_PREORDER && position == RXMACRO_SEARCH_AFTER)
+        // this was not found if the search order was different
+        if (order == position)
         {
-            return false;                    /* didn't really find this           */
+            return false;
         }
         // unflatten the code now
         Protected<RoutineClass> routine = getMacroCode(target);
@@ -2538,12 +2537,13 @@ bool RexxActivation::callMacroSpaceFunction(RexxString * target, RexxObject **_a
             return false;
         }
         // run as a call
-        routine->call(activity, target, _arguments, _argcount, calltype, OREF_NULL, EXTERNALCALL, _result);
+        routine->call(activity, target, arguments, argcount, calltype, OREF_NULL, EXTERNALCALL, _result);
         // merge (class) definitions from macro with current settings
-        getSourceObject()->mergeRequired(routine->getSourceObject());
-        return true;                       /* return success we found it flag   */
+        getPackageObject()->mergeRequired(routine->getPackageObject());
+        // we handled this
+        return true;
     }
-    return false;                        /* nope, nothing to find here        */
+    return false;
 }
 
 
@@ -2560,19 +2560,17 @@ bool RexxActivation::callMacroSpaceFunction(RexxString * target, RexxObject **_a
  * @return The function result (also returned in the resultObj protected
  *         object reference.
  */
-RexxObject *RexxActivation::externalCall(RexxString *target, size_t _argcount, ExpressionStack *_stack,
+RexxObject *RexxActivation::externalCall(RexxString *target, RexxObject **arguments, size_t argcount,
     RexxString *calltype, ProtectedObject &resultObj)
 {
-    /* get the arguments array           */
-    RexxObject **_arguments = _stack->arguments(_argcount);
     // Step 1:  Check the global functions directory
     // this is actually considered part of the built-in functions, but these are
     // written in ooRexx.  The names are also case sensitive
     RoutineClass *routine = (RoutineClass *)TheFunctionsDirectory->get(target);
-    if (routine != OREF_NULL)        /* not found yet?                    */
+    if (routine != OREF_NULL)
     {
         // call and return the result
-        routine->call(this->activity, target, _arguments, _argcount, calltype, OREF_NULL, EXTERNALCALL, resultObj);
+        routine->call(activity, target, arguments, argcount, calltype, OREF_NULL, EXTERNALCALL, resultObj);
         return(RexxObject *)resultObj;
     }
 
@@ -2581,29 +2579,30 @@ RexxObject *RexxActivation::externalCall(RexxString *target, size_t _argcount, E
     if (routine != OREF_NULL)
     {
         // call and return the result
-        routine->call(activity, target, _arguments, _argcount, calltype, OREF_NULL, EXTERNALCALL, resultObj);
+        routine->call(activity, target, arguments, argcount, calltype, OREF_NULL, EXTERNALCALL, resultObj);
         return(RexxObject *)resultObj;
     }
+
     // Step 2a:  See if the function call exit fields this one
-    if (!activity->callObjectFunctionExit(this, target, calltype, resultObj, _arguments, _argcount))
+    if (!activity->callObjectFunctionExit(this, target, calltype, resultObj, arguments, argcount))
     {
         return(RexxObject *)resultObj;
     }
 
     // Step 2b:  See if the function call exit fields this one
-    if (!activity->callFunctionExit(this, target, calltype, resultObj, _arguments, _argcount))
+    if (!activity->callFunctionExit(this, target, calltype, resultObj, arguments, argcount))
     {
         return(RexxObject *)resultObj;
     }
 
     // Step 3:  Perform all platform-specific searches
-    if (SystemInterpreter::invokeExternalFunction(this, activity, target, _arguments, _argcount, calltype, resultObj))
+    if (SystemInterpreter::invokeExternalFunction(this, activity, target, arguments, argcount, calltype, resultObj))
     {
         return(RexxObject *)resultObj;
     }
 
     // Step 4:  Check scripting exit, which is after most of the checks
-    if (!activity->callScriptingExit(this, target, calltype, resultObj, _arguments, _argcount))
+    if (!activity->callScriptingExit(this, target, calltype, resultObj, arguments, argcount))
     {
         return(RexxObject *)resultObj;
     }
@@ -2613,8 +2612,6 @@ RexxObject *RexxActivation::externalCall(RexxString *target, size_t _argcount, E
     reportException(Error_Routine_not_found_name, target);
     return OREF_NULL;     // prevent compile error
 }
-
-
 
 
 /**
@@ -2630,8 +2627,8 @@ RexxObject *RexxActivation::externalCall(RexxString *target, size_t _argcount, E
  * @return True if an external program was located and called.  false for
  *         any failures.
  */
-bool RexxActivation::callExternalRexx(RexxString *target, RexxObject **_arguments,
-    size_t _argcount, RexxString *calltype, ProtectedObject  &resultObj)
+bool RexxActivation::callExternalRexx(RexxString *target, RexxObject **arguments,
+    size_t argcount, RexxString *calltype, ProtectedObject  &resultObj)
 {
     // Get full name including path
     RexxString *filename = resolveProgramName(target);
@@ -2653,9 +2650,9 @@ bool RexxActivation::callExternalRexx(RexxString *target, RexxObject **_argument
         {
             ProtectedObject p(routine);
             // run as a call
-            routine->call(activity, target, _arguments, _argcount, calltype, settings.currentAddress, EXTERNALCALL, resultObj);
+            routine->call(activity, target, arguments, argcount, calltype, settings.currentAddress, EXTERNALCALL, resultObj);
             // merge all of the public info
-            settings.parentCode->mergeRequired(routine->getSourceObject());
+            settings.parentCode->mergeRequired(routine->getPackageObject());
             return true;
         }
     }
@@ -2724,7 +2721,7 @@ RexxString *RexxActivation::resolveProgramName(RexxString *name)
  */
 RexxClass *RexxActivation::findClass(RexxString *name)
 {
-    RexxClass *classObject = getSourceObject()->findClass(name);
+    RexxClass *classObject = getPackageObject()->findClass(name);
     // we need to filter this to always return a class object
     if (classObject != OREF_NULL && classObject->isInstanceOf(TheClassClass))
     {
@@ -2744,9 +2741,9 @@ RexxClass *RexxActivation::findClass(RexxString *name)
 RexxObject *RexxActivation::resolveDotVariable(RexxString *name)
 {
     // if not an interpret, then resolve directly.
-    if (activationContext != INTERPRET)
+    if (!isInterpret())
     {
-        return getSourceObject()->findClass(name);
+        return getPackageObject()->findClass(name);
     }
     else
     {
@@ -2770,8 +2767,8 @@ PackageClass *RexxActivation::loadRequires(RexxString *target, RexxInstruction *
     // this will cause the correct location to be used for error reporting
     current = instruction;
 
-    // the loading/merging is done by the source object
-    return getSourceObject()->loadRequires(activity, target);
+    // the loading/merging is done by the package
+    return getPackageObject()->loadRequires(activity, target);
 }
 
 
@@ -2805,23 +2802,19 @@ void RexxActivation::loadLibrary(RexxString *target, RexxInstruction *instructio
  * @return The return value object
  */
 RexxObject * RexxActivation::internalCall(RexxString *name, RexxInstruction *target,
-    size_t _argcount, ExpressionStack *_stack, ProtectedObject &returnObject)
+    RexxObject **arguments, size_t argcount, ProtectedObject &returnObject)
 {
-    RexxActivation * newActivation;      /* new activation for call           */
-    size_t           lineNum;            /* line number of the call           */
-    RexxObject **    _arguments = _stack->arguments(_argcount);
-
-    lineNum = current->getLineNumber();  /* get the current line number       */
-    /* initialize the SIGL variable      */
+    // we need to set SIGL to the caller's line number
+    size_t lineNum = current->getLineNumber();
     setLocalVariable(OREF_SIGL, VARIABLE_SIGL, new_integer(lineNum));
-    /* create a new activation           */
-    newActivation = ActivityManager::newActivation(activity, this, settings.parentCode, INTERNALCALL);
+    // create a new activation for running this and add to the activity stack
+    RexxActivation *newActivation = ActivityManager::newActivation(activity, this, settings.parentCode, INTERNALCALL);
+    activity->pushStackFrame(newActivation);
 
-    activity->pushStackFrame(newActivation); /* push on the activity stack        */
-    /* run the internal routine on the   */
-    /* new activation                    */
-    return newActivation->run(receiver, name, _arguments, _argcount, target, returnObject);
+    // and go run this
+    return newActivation->run(receiver, name, arguments, argcount, target, returnObject);
 }
+
 
 /**
  * Processing a call to an internal trap subroutine.
@@ -2834,48 +2827,47 @@ RexxObject * RexxActivation::internalCall(RexxString *name, RexxInstruction *tar
  *
  * @return Any return result
  */
-RexxObject * RexxActivation::internalCallTrap(RexxString *name, RexxInstruction * target,
+RexxObject * RexxActivation::internalCallTrap(RexxString *name, RexxInstruction *target,
     DirectoryClass *conditionObj, ProtectedObject &resultObj)
 {
-
-    stack.push(conditionObj);      /* protect the condition object      */
-    size_t lineNum = current->getLineNumber();  /* get the current line number       */
-    /* initialize the SIGL variable      */
+    // protect the condition object from GC by pushing on to the expression stack.
+    stack.push(conditionObj);
+    // we need to set the SIGL variable for an internal call
+    size_t lineNum = current->getLineNumber();
     setLocalVariable(OREF_SIGL, VARIABLE_SIGL, new_integer(lineNum));
-    /* create a new activation           */
+
+    // create a new activation to handle this
     RexxActivation *newActivation = ActivityManager::newActivation(activity, this, settings.parentCode, INTERNALCALL);
-    /* set the new condition object      */
+    // set the condition object into the context that will handle the call
     newActivation->setConditionObj(conditionObj);
-    activity->pushStackFrame(newActivation); /* push on the activity stack        */
-    /* run the internal routine on the   */
-    /* new activation                    */
+    activity->pushStackFrame(newActivation);
+    // and go run this.
     return newActivation->run(OREF_NULL, name, NULL, 0, target, resultObj);
 }
 
 
-
+/**
+ * Wait for a variable in a guard expression to get updated.
+ */
 void RexxActivation::guardWait()
-/******************************************************************************/
-/* Function:  Wait for a variable in a guard expression to get updated.       */
-/******************************************************************************/
 {
-    int initial_state = objectScope;  /* save the initial state            */
-                                         /* have the scope reserved?          */
+    // we need to wait without locking the variables.  If we
+    // held the lock before the wait, we reaquire it after we wake up.
+    GuardStatus initial_state = objectScope;
+
     if (objectScope == SCOPE_RESERVED)
     {
-        /* tell the receiver to release this */
         settings.objectVariables->release(activity);
-        /* and change our local state        */
-        objectScope = SCOPE_RELEASED;    /* do an assignment! */
+        objectScope = SCOPE_RELEASED;
     }
-    activity->guardWait();         /* wait on a variable inform event   */
-                                         /* did we release the scope?         */
+    // wait to be woken up by an update
+    activity->guardWait();
+    // if we released the scope before waiting, then we need to get it
+    // back before proceeding.
     if (initial_state == SCOPE_RESERVED)
     {
-        /* tell the receiver to reserve this */
         settings.objectVariables->reserve(activity);
-        /* and change our local state        */
-        objectScope = SCOPE_RESERVED;    /* do an assignment! */
+        objectScope = SCOPE_RESERVED;
     }
 }
 
@@ -2887,18 +2879,20 @@ void RexxActivation::guardWait()
  */
 RexxString *RexxActivation::getTraceBack()
 {
-    return formatTrace(current, getSourceObject());
+    return formatTrace(current, getPackageObject());
 }
 
 
+/**
+ * Retrieve the current activation timestamp, retrieving a new
+ * timestamp if this is the first call for a clause
+ *
+ * @return A RexxDateTime object with the full time stamp.
+ */
 RexxDateTime RexxActivation::getTime()
-/******************************************************************************/
-/* Function:  Retrieve the current activation timestamp, retrieving a new     */
-/*            timestamp if this is the first call for a clause                */
-/******************************************************************************/
 {
-    /* not a valid time stamp?           */
-    if (!settings.timestamp.valid)
+    // not a valid time stamp?
+    if (!settings.timeStamp.valid)
     {
         // IMPORTANT:  If a time call resets the elapsed time clock, we don't
         // clear the value out.  The time needs to stay valid until the clause is
@@ -2909,165 +2903,171 @@ RexxDateTime RexxActivation::getTime()
         // so that it will remain current.
         if (isElapsedTimerReset())
         {
-            settings.elapsed_time = settings.timestamp.getUTCBaseTime();
+            settings.elapsedTime = settings.timeStamp.getUTCBaseTime();
             setElapsedTimerValid();
         }
-        /* get a fresh time stamp            */
-        SystemInterpreter::getCurrentTime(&settings.timestamp);
-        /* got a new one                     */
-        settings.timestamp.valid = true;
+        // get a fresh time stamp
+        SystemInterpreter::getCurrentTime(&settings.timeStamp);
+        // got a new one
+        settings.timeStamp.valid = true;
     }
-    /* return the current time           */
-    return settings.timestamp;
+    // return the current time
+    return settings.timeStamp;
 }
 
 
+/**
+ * Retrieve the current elapsed time counter start time, starting
+ * the counter from the current time stamp if this is the first
+ * call
+ *
+ * @return The elapsed time counter.
+ */
 int64_t RexxActivation::getElapsed()
-/******************************************************************************/
-/* Function:  Retrieve the current elapsed time counter start time, starting  */
-/*            the counter from the current time stamp if this is the first    */
-/*            call                                                            */
-/******************************************************************************/
 {
     // no active elapsed time clock yet?
-    if (settings.elapsed_time == 0)
+    if (settings.elapsedTime == 0)
     {
-
-        settings.elapsed_time = settings.timestamp.getUTCBaseTime();
+        settings.elapsedTime = settings.timeStamp.getUTCBaseTime();
     }
-    return settings.elapsed_time;
+    return settings.elapsedTime;
 }
 
 
-void RexxActivation::resetElapsed()     /* reset activation elapsed time     */
-/******************************************************************************/
-/* Function:  Retrieve the current elapsed time counter start time, starting  */
-/*            the counter from the current time stamp if this is the first    */
-/*            call                                                            */
-/******************************************************************************/
+/**
+ * Reset the elapsed time counter for the activation.
+ */
+void RexxActivation::resetElapsed()
 {
-    // Just invalidate the flat so that we'll refresh this the next time we
+    // Just invalidate so that we'll refresh this the next time we
     // obtain a new timestamp value.
     setElapsedTimerInvalid();
 }
 
 
-#define DEFAULT_MIN 0                  /* default random minimum value      */
-#define DEFAULT_MAX 999                /* default random maximum value      */
-#define MAX_DIFFERENCE 999999999       /* max spread between min and max    */
-
-
-uint64_t RexxActivation::getRandomSeed(RexxInteger * seed )
+/**
+ * Get the random seed for the random number generator.
+ *
+ * @param seed   The starter seed (optional)
+ *
+ * @return The new seed value to use for the random numbers.
+ */
+uint64_t RexxActivation::getRandomSeed(RexxInteger *seed)
 {
-    /* currently in an internal routine  */
-    /* or interpret instruction?         */
+    // if we're in an internal routine or interpret, we need to have the parent
+    // context process this.
     if (isInternalLevelCall())
     {
-        /* forward along                     */
         return parent->getRandomSeed(seed);
     }
-    /* have a seed supplied?             */
+    // do we have a seed supplied?  process that, but it must be a non-negative integer.
     if (seed != OREF_NULL)
     {
-        wholenumber_t seed_value = seed->getValue();     /* get the value                     */
-        if (seed_value < 0)                /* negative value?                   */
+        wholenumber_t seed_value = seed->getValue();
+        if (seed_value < 0)
         {
-            /* got an error                      */
             reportException(Error_Incorrect_call_nonnegative, CHAR_RANDOM, IntegerThree, seed);
         }
-        /* set the saved seed value          */
+
+        // set the seed value, then randomize it a little bit.
         randomSeed = seed_value;
-        /* flip all of the bits              */
+        // flipping all of the bits gives us a better spread.  Supplied seeds tend to
+        // be smaller numbers with lots of zero bits.
         randomSeed = ~randomSeed;
-        /* randomize the seed number a bit   */
+        // an scramble it a bit further.
         for (size_t i = 0; i < 13; i++)
         {
-            /* scramble the seed a bit           */
             randomSeed = RANDOMIZE(randomSeed);
         }
     }
-    /* step the randomization            */
+
+    // now apply a randomization to whatever we have set
     randomSeed = RANDOMIZE(randomSeed);
-    /* set the seed at the activity level*/
+    // set the seed at the activity level
     activity->setRandomSeed(randomSeed);
-    return randomSeed;            /* return the seed value             */
+    return randomSeed;
 }
 
 
-RexxInteger * RexxActivation::random(
-  RexxInteger * randmin,               /* RANDOM minimum range              */
-  RexxInteger * randmax,               /* RANDOM maximum range              */
-  RexxInteger * randseed )             /* RANDOM seed                       */
-/******************************************************************************/
-/* Function:  Process the random function, using the current activation       */
-/*            seed value.                                                     */
-/******************************************************************************/
+/**
+ * Process the random function, using the current activation
+ * seed value.
+ *
+ * @param randmin  The lower bounds of the range
+ * @param randmax  The upper bounds of the range.
+ * @param randseed The optional seed value.
+ *
+ * @return A new random number.
+ */
+RexxInteger * RexxActivation::random(RexxInteger *randmin, RexxInteger *randmax, RexxInteger *randseed)
 {
-    size_t i;                           /* loop counter                      */
-
-                                        /* go get the seed value             */
+    // get a new seed value
     uint64_t seed = getRandomSeed(randseed);
 
-    wholenumber_t minimum = DEFAULT_MIN;  /* get the default MIN value         */
-    wholenumber_t maximum = DEFAULT_MAX;  /* get the default MAX value         */
-    /* minimum specified?                */
+    wholenumber_t minimum = DefaultRandomMin;
+    wholenumber_t maximum = DefaultRandomMax;
+
+    // now process the min and max arguments
     if (randmin != OREF_NULL)
     {
-        /* no maximum value specified        */
-        /* and no seed specified             */
+        // no maximum value specified and no seed specified,
+        // then the minimum is actually the max value value
         if ((randmax == OREF_NULL) && (randseed == OREF_NULL))
         {
-            maximum = randmin->getValue();  /* this is actually a max value      */
+            maximum = randmin->getValue();
         }
-        /* minimum value specified           */
-        /* maximum value not specified       */
-        /* seed specified                    */
+        // we have a min specified, no max, but do have a seed.  The minimum IS a
+        // minimum in this situation.
         else if ((randmin != OREF_NULL) && (randmax == OREF_NULL) && (randseed != OREF_NULL))
         {
             minimum = randmin->getValue();
         }
+        // we have both a min and a max.
         else
         {
-            minimum = randmin->getValue();  /* give both max and min values      */
+            minimum = randmin->getValue();
             maximum = randmax->getValue();
         }
     }
-    else if (randmax != OREF_NULL)      /* only given a maximum?             */
+    // no minimum, but we have a max?  That is a max.
+    else if (randmax != OREF_NULL)
     {
-        maximum = randmax->getValue();    /* use the supplied maximum          */
+        maximum = randmax->getValue();
     }
 
-    if (maximum < minimum)              /* range problem?                    */
+    if (maximum < minimum)
     {
-        /* this is an error                  */
         reportException(Error_Incorrect_call_random, randmin, randmax);
     }
-    /* too big of a spread ?              */
-    if (maximum - minimum > MAX_DIFFERENCE)
+
+    // we have a maximum range allowed
+    if (maximum - minimum > MaxRandomRange)
     {
-        /* this is an error                  */
         reportException(Error_Incorrect_call_random_range, randmin, randmax);
     }
 
-    /* have real work to do?             */
+    // if there is a real range involved, we need to generate a new random value
     if (minimum != maximum)
     {
-        // this will invert the bits of the value
-        uint64_t work = 0;                  /* start with zero                   */
-        for (i = 0; i < sizeof(uint64_t) * 8; i++)
+        // this will invert the bits of the value, start from zero and
+        // add in each bit from the random seed
+        uint64_t work = 0;
+        for (size_t i = 0; i < sizeof(uint64_t) * 8; i++)
         {
-            work <<= 1;                     /* shift working num left one        */
-                                            /* add in next seed bit value        */
+            work <<= 1;                     // shift working num left one
+                                            // add in next seed bit value
             work = work | (seed & 0x01LL);
-            seed >>= 1;                     /* shift off the right most seed bit */
+            seed >>= 1;                     // shift off the right most seed bit
         }
-        /* adjust for requested range        */
+        // we have a random value, now adjust the returned result for the spread of the range.
         minimum += (wholenumber_t)(work % (uint64_t)(maximum - minimum + 1));
     }
-    return new_integer(minimum);        /* return the random number          */
+    return new_integer(minimum);
 }
 
-// table of trace prefixes
+
+// table of trace prefixes.  Note that these need to match
+// the TracePrefix enumeration tupe.
 static const char * trace_prefix_table[] =
 {
   "*-*",                               // TRACE_PREFIX_CLAUSE
@@ -3087,26 +3087,37 @@ static const char * trace_prefix_table[] =
   ">I>",                               // TRACE_PREFIX_INVOCATION
 };
 
-
-// TODO get rid of these defines
-                                       /* extra space required to format a  */
-                                       /* result line.  This overhead is    */
-                                       /* 6 leading spaces for the line     */
-                                       /* number, + 1 space + length of the */
-                                       /* message prefix (3) + 1 space +    */
-                                       /* 2 for an indent + 2 for the       */
-                                       /* quotes surrounding the value      */
-#define TRACE_OVERHEAD 15
-                                       /* overhead for a traced instruction */
-                                       /* (6 digit line number, blank,      */
-                                       /* 3 character prefix, and a blank   */
-#define INSTRUCTION_OVERHEAD 11
-#define LINENUMBER 6                   /* size of a line number             */
-#define PREFIX_OFFSET (LINENUMBER + 1) /* location of the prefix field      */
-#define PREFIX_LENGTH 3                /* length of the prefix flag         */
-#define INDENT_SPACING 2               /* spaces per indentation amount     */
+// size of a line number
+const size_t LINENUMBER = 6;
+// location of the prefix field
+const size_t PREFIX_OFFSET = (LINENUMBER + 1);
+// length of the prefix field
+const size_t PREFIX_LENGTH = 3;
+// spaces per indentation amount
+const size_t INDENT_SPACING = 2;
 // over head for adding quotes
-#define QUOTES_OVERHEAD 2
+const size_t QUOTES_OVERHEAD = 2;
+
+// extra space required to format a  result line.  This overhead is
+// 6 leading spaces for the line  number, + 1 space + length of the
+// message prefix (3) + 1 space +  2 for an indent + 2 for the
+// quotes surrounding the value
+const size_t TRACE_OVERHEAD = LINENUMBER + 1 + PREFIX_LENGTH + 1 + INDENT_SPACING + QUOTES_OVERHEAD;
+
+// overhead for a traced instruction
+// (6 digit line number, blank,
+// 3 character prefix, and a blank
+const size_t INSTRUCTION_OVERHEAD = LINENUMBER + 1 + PREFIX_LENGTH + 1;
+
+// our maximum indentation amount for tracebacks
+const size_t MAX_TRACEBACK_INDENT = 20;
+
+
+// marker used for tagged traces to separate tag from the value
+const char *RexxActivation::VALUE_MARKER = " => ";
+// marker used for tagged traces to separate tag from the value
+const char *RexxActivation::ASSIGNMENT_MARKER = " <= ";
+
 
 /**
  * Trace program entry for a method or routine
@@ -3116,71 +3127,65 @@ void RexxActivation::traceEntry()
     // since we're advertising the entry location up front, we want to disable
     // the normal trace-turn on notice.  We'll get one or the other, but not
     // both
-    settings.stateFlags[sourceTraced] = true;
+    settings.setSourceTraced(true);
 
     ArrayClass *info = OREF_NULL;
 
+    // the substitution information is different depending on whether this
+    // is a method or a routine.
     if (isMethod())
     {
-        info = new_array(getMessageName(), scope->getId(), getPackage()->getName());
+        info = new_array(getMessageName(), scope->getId(), getPackage()->getProgramName());
     }
     else
     {
-        info = new_array(getExecutable()->getName(), getPackage()->getName());
+        info = new_array(getExecutable()->getName(), getPackage()->getProgramName());
     }
     ProtectedObject p(info);
 
+    // and the message is slightly different
     RexxString *message = activity->buildMessage(isRoutine() ? Message_Translations_routine_invocation : Message_Translations_method_invocation, info);
     p = message;
 
-    /* get a string large enough to      */
+    // we build this directly into a raw character string.
     size_t outlength = message->getLength() + INSTRUCTION_OVERHEAD;
-    RexxString *buffer = raw_string(outlength);      /* get an output string              */
-    /* insert the leading blanks         */
+    RexxString *buffer = raw_string(outlength);
+    // insert the leading blanks for the prefix area
     buffer->set(0, ' ', INSTRUCTION_OVERHEAD);
-    /* add the trace prefix              */
+    // copy in the prefix information
     buffer->put(PREFIX_OFFSET, trace_prefix_table[TRACE_PREFIX_INVOCATION], PREFIX_LENGTH);
-    /* copy the string value             */
+    // copy the message stuff over this
     buffer->put(INSTRUCTION_OVERHEAD, message->getStringData(), message->getLength());
-                                         /* write out the line                */
+    // and write out the trace line
     activity->traceOutput(this, buffer);
 }
 
 
-void RexxActivation::traceValue(       /* trace an intermediate value       */
-     RexxObject * value,               /* value to trace                    */
-     int          prefix )             /* traced result type                */
-/******************************************************************************/
-/* Function:  Trace an intermediate value or instruction result value         */
-/******************************************************************************/
+/**
+ * Trace an intermediate or result value.
+ *
+ * @param value  the value to trace.
+ * @param prefix The prefix value for the item.
+ */
+void RexxActivation::traceValue(RexxObject *value, TracePrefix prefix)
 {
-    /* tracing currently suppressed or   */
-    /* no value was received?            */
+    // nothing to trace here?  Just ignore
     if (noTracing(value))
     {
-        return;                            /* just ignore this call             */
+        return;
     }
 
-    if (!code->isTraceable())      /* if we don't have real source      */
-    {
-        return;                            /* just ignore for this              */
-    }
-                                           /* get the string version            */
+    // get the string value for the traced item (this is the "safe" string value)
     RexxString *stringvalue = value->stringValue();
-                                           /* get a string large enough to      */
-    size_t outlength = stringvalue->getLength() + TRACE_OVERHEAD + settings.traceindent * INDENT_SPACING;
-    RexxString *buffer = raw_string(outlength);      /* get an output string              */
+    // get a string large enough for the result
+    size_t outlength = stringvalue->getLength() + TRACE_OVERHEAD + settings.traceIndent * INDENT_SPACING;
+    RexxString *buffer = raw_string(outlength);
     ProtectedObject p(buffer);
-    /* insert the leading blanks         */
-    buffer->set(0, ' ', TRACE_OVERHEAD + settings.traceindent * INDENT_SPACING);
-    /* add the trace prefix              */
+    buffer->set(0, ' ', TRACE_OVERHEAD + settings.traceIndent * INDENT_SPACING);
     buffer->put(PREFIX_OFFSET, trace_prefix_table[prefix], PREFIX_LENGTH);
-    /* add a quotation mark              */
-    buffer->putChar(TRACE_OVERHEAD - 2 + settings.traceindent * INDENT_SPACING, '\"');
-    /* copy the string value             */
-    buffer->put(TRACE_OVERHEAD - 1 + settings.traceindent * INDENT_SPACING, stringvalue->getStringData(), stringvalue->getLength());
-    buffer->putChar(outlength - 1, '\"');/* add the trailing quotation mark   */
-                                         /* write out the line                */
+    buffer->putChar(TRACE_OVERHEAD - 2 + settings.traceIndent * INDENT_SPACING, '\"');
+    buffer->put(TRACE_OVERHEAD - 1 + settings.traceIndent * INDENT_SPACING, stringvalue->getStringData(), stringvalue->getLength());
+    buffer->putChar(outlength - 1, '\"');
     activity->traceOutput(this, buffer);
 }
 
@@ -3194,10 +3199,11 @@ void RexxActivation::traceValue(       /* trace an intermediate value       */
  * @param quoteTag  Indicates whether the tag should be quoted or not.  Operator
  *                  names are quoted.
  * @param tag       The tag name.
+ * @param marker    An additional string marker for the value.
  * @param value     The associated trace value.
  */
-void RexxActivation::traceTaggedValue(int prefix, const char *tagPrefix, bool quoteTag,
-     RexxString *tag, const char *marker, RexxObject * value)
+void RexxActivation::traceTaggedValue(TracePrefix prefix, const char *tagPrefix, bool quoteTag,
+     RexxString *tag, const char *marker, RexxObject *value)
 {
     // the trace settings would normally require us to trace this, but there are conditions
     // where we just skip doing this anyway.
@@ -3214,7 +3220,7 @@ void RexxActivation::traceTaggedValue(int prefix, const char *tagPrefix, bool qu
     // these are fixed overheads
     outLength += TRACE_OVERHEAD + strlen(marker);
     // now the indent spacing
-    outLength += settings.traceindent * INDENT_SPACING;
+    outLength += settings.traceIndent * INDENT_SPACING;
     // now other conditionals
     outLength += quoteTag ? QUOTES_OVERHEAD : 0;
     // this is usually null, but dot variables add a "." to the tag.
@@ -3225,10 +3231,8 @@ void RexxActivation::traceTaggedValue(int prefix, const char *tagPrefix, bool qu
     ProtectedObject p(buffer);
 
     // get a cursor for filling in the formatted data
-    stringsize_t dataOffset = TRACE_OVERHEAD + settings.traceindent * INDENT_SPACING - 2;
-                                       /* insert the leading blanks         */
-    buffer->set(0, ' ', TRACE_OVERHEAD + settings.traceindent * INDENT_SPACING);
-                                       /* add the trace prefix              */
+    stringsize_t dataOffset = TRACE_OVERHEAD + settings.traceIndent * INDENT_SPACING - 2;
+    buffer->set(0, ' ', TRACE_OVERHEAD + settings.traceIndent * INDENT_SPACING);
     buffer->put(PREFIX_OFFSET, trace_prefix_table[prefix], PREFIX_LENGTH);
 
     // if this is a quoted tag (operators do this), add quotes before coping the tag
@@ -3287,7 +3291,7 @@ void RexxActivation::traceTaggedValue(int prefix, const char *tagPrefix, bool qu
  * @param tag       The tag name.
  * @param value     The associated trace value.
  */
-void RexxActivation::traceOperatorValue(int prefix, const char *tag, RexxObject *value)
+void RexxActivation::traceOperatorValue(TracePrefix prefix, const char *tag, RexxObject *value)
 {
     // the trace settings would normally require us to trace this, but there are conditions
     // where we just skip doing this anyway.
@@ -3304,7 +3308,7 @@ void RexxActivation::traceOperatorValue(int prefix, const char *tag, RexxObject 
     // these are fixed overheads
     outLength += TRACE_OVERHEAD + strlen(VALUE_MARKER);
     // now the indent spacing
-    outLength += settings.traceindent * INDENT_SPACING;
+    outLength += settings.traceIndent * INDENT_SPACING;
     // now other conditionals
     outLength += QUOTES_OVERHEAD;
 
@@ -3313,10 +3317,8 @@ void RexxActivation::traceOperatorValue(int prefix, const char *tag, RexxObject 
     ProtectedObject p(buffer);
 
     // get a cursor for filling in the formatted data
-    stringsize_t dataOffset = TRACE_OVERHEAD + settings.traceindent * INDENT_SPACING - 2;
-                                       /* insert the leading blanks         */
-    buffer->set(0, ' ', TRACE_OVERHEAD + settings.traceindent * INDENT_SPACING);
-                                       /* add the trace prefix              */
+    stringsize_t dataOffset = TRACE_OVERHEAD + settings.traceIndent * INDENT_SPACING - 2;
+    buffer->set(0, ' ', TRACE_OVERHEAD + settings.traceIndent * INDENT_SPACING);
     buffer->put(PREFIX_OFFSET, trace_prefix_table[prefix], PREFIX_LENGTH);
 
     // operators are quoted.
@@ -3361,10 +3363,10 @@ void RexxActivation::traceOperatorValue(int prefix, const char *tag, RexxObject 
  * @param tailCount The count of tail elements.
  * @param value     The resolved tail element
  */
-void RexxActivation::traceCompoundValue(int prefix, RexxString *stemName, RexxObject **tails, size_t tailCount,
-     CompoundVariableTail *tail)
+void RexxActivation::traceCompoundValue(TracePrefix prefix, RexxString *stemName, RexxObject **tails, size_t tailCount,
+     CompoundVariableTail &tail)
 {
-    traceCompoundValue(TRACE_PREFIX_COMPOUND, stemName, tails, tailCount, VALUE_MARKER, tail->createCompoundName(stemName));
+    traceCompoundValue(prefix, stemName, tails, tailCount, VALUE_MARKER, tail.createCompoundName(stemName));
 }
 
 
@@ -3378,8 +3380,8 @@ void RexxActivation::traceCompoundValue(int prefix, RexxString *stemName, RexxOb
  * @param tailCount The count of tail elements.
  * @param value     The associated trace value.
  */
-void RexxActivation::traceCompoundValue(int prefix, RexxString *stemName, RexxObject **tails, size_t tailCount, const char *marker,
-     RexxObject * value)
+void RexxActivation::traceCompoundValue(TracePrefix prefix, RexxString *stemName, RexxObject **tails, size_t tailCount, const char *marker,
+     RexxObject *value)
 {
     // the trace settings would normally require us to trace this, but there are conditions
     // where we just skip doing this anyway.
@@ -3405,17 +3407,15 @@ void RexxActivation::traceCompoundValue(int prefix, RexxString *stemName, RexxOb
     // these are fixed overheads
     outLength += TRACE_OVERHEAD + strlen(marker);
     // now the indent spacing
-    outLength += settings.traceindent * INDENT_SPACING;
+    outLength += settings.traceIndent * INDENT_SPACING;
 
     // now get a buffer to write this out into
     RexxString *buffer = raw_string(outLength);
     ProtectedObject p(buffer);
 
     // get a cursor for filling in the formatted data
-    stringsize_t dataOffset = TRACE_OVERHEAD + settings.traceindent * INDENT_SPACING - 2;
-                                       /* insert the leading blanks         */
-    buffer->set(0, ' ', TRACE_OVERHEAD + settings.traceindent * INDENT_SPACING);
-                                       /* add the trace prefix              */
+    stringsize_t dataOffset = TRACE_OVERHEAD + settings.traceIndent * INDENT_SPACING - 2;
+    buffer->set(0, ' ', TRACE_OVERHEAD + settings.traceIndent * INDENT_SPACING);
     buffer->put(PREFIX_OFFSET, trace_prefix_table[prefix], PREFIX_LENGTH);
 
     // add in the stem name
@@ -3446,60 +3446,52 @@ void RexxActivation::traceCompoundValue(int prefix, RexxString *stemName, RexxOb
 }
 
 
+/**
+ * Trace the source string at debug mode start
+ */
 void RexxActivation::traceSourceString()
-/******************************************************************************/
-/* Function:  Trace the source string at debug mode start                     */
-/******************************************************************************/
 {
-    /* already traced?                   */
-    if (settings.stateFlags[sourceTraced])
+    // only once per customer...maybe next time.
+    if (settings.wasSourceTraced())
     {
-        return;                            /* don't do it again                 */
+        return;
     }
-                                           /* tag this as traced                */
-    settings.stateFlags[sourceTraced] = true;
-    /* get the string version            */
-    RexxString *string = sourceString();       /* get the source string             */
-    /* get a string large enough to      */
+
+    // now tag this as having been done.
+    settings.setSourceTraced(true);
+    // get the source string for the file
+    RexxString *string = sourceString();
+    // and build the trace line into a raw string
     size_t outlength = string->getLength() + INSTRUCTION_OVERHEAD + 2;
-    RexxString *buffer = raw_string(outlength);      /* get an output string              */
-    /* insert the leading blanks         */
+    RexxString *buffer = raw_string(outlength);
     buffer->set(0, ' ', INSTRUCTION_OVERHEAD);
-    /* add the trace prefix              */
     buffer->put(PREFIX_OFFSET, trace_prefix_table[TRACE_PREFIX_ERROR], PREFIX_LENGTH);
-    /* add a quotation mark              */
     buffer->putChar(INSTRUCTION_OVERHEAD, '\"');
-    /* copy the string value             */
     buffer->put(INSTRUCTION_OVERHEAD + 1, string->getStringData(), string->getLength());
-    buffer->putChar(outlength - 1, '\"');/* add the trailing quotation mark   */
-                                         /* write out the line                */
+    buffer->putChar(outlength - 1, '\"');
     activity->traceOutput(this, buffer);
 }
 
 
-RexxString *RexxActivation::formatTrace(
-   RexxInstruction *  instruction,     /* instruction to trace              */
-   PackageClass    *  package )        /* program source                    */
-/******************************************************************************/
-/* Function:  Format a source line for traceback or tracing                   */
-/******************************************************************************/
+/**
+ * Format a source line for traceback or tracing
+ *
+ * @param instruction
+ *                The target instruction.
+ * @param package The package this instruction belongs to.
+ *
+ * @return The formatted traceback line.
+ */
+RexxString *RexxActivation::formatTrace(RexxInstruction *instruction, PackageClass *package)
 {
-    if (instruction == OREF_NULL)        /* no current instruction?           */
+    // nothing to do if we don't have an instruction
+    if (instruction == OREF_NULL)
     {
-        return OREF_NULL;                  /* nothing to trace here             */
+        return OREF_NULL;
     }
     // get the instruction location
     SourceLocation location = instruction->getLocation();
-                                           /* extract the source string         */
-                                           /* (formatted for tracing)           */
-    if (settings.traceindent < MAX_TRACEBACK_INDENT)
-    {
-        return package->traceBack(this, location, settings.traceindent, true);
-    }
-    else
-    {
-        return package->traceBack(this, location, MAX_TRACEBACK_INDENT, true);
-    }
+    return package->traceBack(this, location, Numerics::minVal(settings.traceIndent, MAX_TRACEBACK_INDENT), true);
 }
 
 
@@ -3520,58 +3512,56 @@ void RexxActivation::processClauseBoundary()
     // test any halt exit wants to raise a halt condition.
     activity->callHaltTestExit(this);
     // check for external traces
-    if (!activity->callTraceTestExit(this, isExternalTraceOn()))
+    if (!activity->callTraceTestExit(this, settings.haveExternalTraceOn()))
     {
         // remember how this flipped
-        if (isExternalTraceOn())
+        if (settings.haveExternalTraceOn())
         {
-            setExternalTraceOff();
+            enableExternalTrace();
         }
         else
         {
-            setExternalTraceOn();
+            disableExternalTrace();
         }
     }
 
     // asked to yield control?
-    if (settings.stateFlags[externalYield)
+    if (settings.haveExternalYield())
     {
         // turn off the flag and give up control
-        settings.stateFlags[externalYield] = false;
+        settings.setExternalYield(false);
         activity->relinquish();
     }
 
     // have a halt condition?
-    if (settings.stateFlags[haltCondition])
+    if (settings.haveHaltCondition())
     {
         // flip this off and raise the condition
         // if not handled as a condition, turn into a syntax error
-        settings.stateFlags[haltCondition] = false;
-        if (!activity->raiseCondition(OREF_HALT, OREF_NULL, settings.halt_description, OREF_NULL, OREF_NULL))
+        settings.setHaltCondition(false);
+        if (!activity->raiseCondition(OREF_HALT, OREF_NULL, settings.haltDescription, OREF_NULL, OREF_NULL))
         {
             reportException(Error_Program_interrupted_condition, OREF_HALT);
         }
     }
 
     // been asked to turn on tracing?
-    if (settings.stateFlags[setTraceOn])
+    if (settings.haveExternalTraceOn())
     {
-        settings.stateFlags[setTraceOn] = false;
-        setExternalTraceOn();
-        setTrace(LanguageParser::TRACE_RESULTS | LanguageParser::DEBUG_ON, trace_results_flags | trace_debug);
+        settings.setExternalTraceOn(false);
+        enableExternalTrace();
     }
 
-    // maybe turing tracing off?
-    if (settings.stateFlags[setTraceOff])
+    // maybe turning tracing off?
+    if (settings.haveExternalTraceOff())
     {
-        settings.stateFlags[setTraceOff] = false;
-        setExternalTraceOff();
-        setTrace(LanguageParser::TRACE_OFF | LanguageParser::DEBUG_OFF, trace_off);
+        settings.setExternalTraceOff(false);
+        disableExternalTrace();
     }
 
     // now set the boundary flag based on whether we still have pending stuff for
     // next go around.
-    claseBoundary = (settings.stateFlags[clauseExits] && (conditionQueue == OREF_NULL || conditionQueue->isEmpty());
+    clauseBoundary = settings.haveClauseExits() && (conditionQueue == OREF_NULL || conditionQueue->isEmpty());
 }
 
 
@@ -3581,7 +3571,23 @@ void RexxActivation::processClauseBoundary()
  */
 void RexxActivation::enableExternalTrace()
 {
-    setTrace(LanguageParser::TRACE_RESULTS | LanguageParser::DEBUG_ON, trace_results_flags | trace_debug);
+    TraceSetting setting;
+    setting.setExternalTrace();
+
+    setTrace(setting);
+}
+
+
+/**
+ * Turn on external trace at program startup (e.g, because
+ * RXTRACE is set)
+ */
+void RexxActivation::disableExternalTrace()
+{
+    TraceSetting setting;
+    setting.setTraceOff();
+
+    setTrace(setting);
 }
 
 
@@ -3597,13 +3603,13 @@ void RexxActivation::enableExternalTrace()
 bool RexxActivation::halt(RexxString *description )
 {
     // if there's no halt condition pending, set this
-    if ((settings.stateFlags[haltCondition])
+    if (!settings.haveHaltCondition())
     {
         // store the description
         settings.haltDescription = description;
         // turn on the halt flag and also the clause boundary
         // flag so that this gets processed.
-        settings.stateFlags[halt_condition] = true;
+        settings.setHaltCondition(true);
         clauseBoundary = true;
         return true;
     }
@@ -3620,7 +3626,7 @@ bool RexxActivation::halt(RexxString *description )
  */
 void RexxActivation::yield()
 {
-    settings.stateFlags[externalYield] = true;
+    settings.setExternalYield(true);
     clauseBoundary = true;
 }
 
@@ -3631,18 +3637,18 @@ void RexxActivation::yield()
 void RexxActivation::externalTraceOn()
 {
     // turn on the tracing flags and have this checked at the next clause boundary
-    settings.stateFlags[setTraceOn] = true;
+    settings.setExternalTraceOn(true);
     clauseBoundary = true;
 }
 
 
 /**
- * Flip OFF the externally activated TRACE bit.
+ * Flip on the externally activated TRACE OFF bit.
  */
 void RexxActivation::externalTraceOff()
 {
     // turn on the tracing flags and have this checked at the next clause boundary
-    settings.stateFlags[setTraceOff] = true;
+    settings.setExternalTraceOff(true);
     clauseBoundary = true;
 }
 
@@ -3661,9 +3667,9 @@ bool RexxActivation::doDebugPause()
     }
 
     // asked to bypass...turn this off for the next time.
-    if (settings.stateFlags[debugBypass])
+    if (settings.isDebugBypassed())
     {
-        settings.stateFlags[debugBypass] = false;
+        settings.setDebugBypass(false);
     }
     // debug pauses suppressed?  Reduce the count and turn debug pausing
     // back on for the next time.
@@ -3675,7 +3681,7 @@ bool RexxActivation::doDebugPause()
             // turn tracing back on again (this
             // ensures the next pause also has
             // the instruction traced
-            settings.traceFlags[traceSuppress] = false;
+            settings.setTraceSuppressed(false);
         }
     }
     // normal pause
@@ -3687,11 +3693,11 @@ bool RexxActivation::doDebugPause()
             return false;
         }
         // first time paused?
-        if (!settings.stateFlags[debugPromptIssued])
+        if (!settings.wasDebugPromptIssued())
         {
             // write the initial prompt and turn off for the next time.
             activity->traceOutput(this, SystemInterpreter::getMessageText(Message_Translations_debug_prompt));
-            settings.stateFlags[debugPromptIssued] = true;
+            settings.setDebugPromptIssued(true);
         }
         // save the next instruction in case we're asked to re-execute
         RexxInstruction *currentInst = next;
@@ -3722,12 +3728,12 @@ bool RexxActivation::doDebugPause()
                     break;
                 }
                 // the trace setting may have changed on us.
-                else if (settings.stateFlags[debugBypass])
+                else if (settings.isDebugBypassed())
                 {
                     // turn off the bypass setting.  Is for situations where a
                     // trace in normal code turns on debug.  The debug pause is
                     // skipped until the next instruction
-                    settings.stateFlags[debugBypass] = false;
+                    settings.setDebugBypass(false);
                     break;
                 }
             }
@@ -3744,10 +3750,10 @@ bool RexxActivation::doDebugPause()
  * @param prefix
  */
 // TODO:  used a enum type for the prefix argument.
-void RexxActivation::traceClause(RexxInstruction *clause, int prefix)
+void RexxActivation::traceClause(RexxInstruction *clause, TracePrefix prefix)
 {
     // we might be in a state where tracing is suppressed, or there's no source available.
-    if (!canTrace())
+    if (noTracing())
     {
         return;
     }
@@ -3757,7 +3763,7 @@ void RexxActivation::traceClause(RexxInstruction *clause, int prefix)
     if (line != OREF_NULL)
     {
         // if we've just dropped into debug mode, we need to put out the extra context line.
-        if ((settings.traceFlags[traceDebug] && !settings.stateFlags[sourceTraced]))
+        if (inDebug() && !settings.wasSourceTraced())
         {
             traceSourceString();
         }
@@ -3813,12 +3819,12 @@ void RexxActivation::command(RexxString *address, RexxString *commandString)
     // condition object
     if (conditionObj != OREF_NULL)
     {
-        RexxObject *temp = conditionObj->get(OREF_RC);
+        RexxObject *temp = (RexxObject *)conditionObj->get(OREF_RC);
         if (temp == OREF_NULL)
         {
             // see if we have a result and make sure the condition object
             // fills this as the RC value
-            temp = conditionObj->get(OREF_RESULT);
+            temp = (RexxObject *)conditionObj->get(OREF_RESULT);
             if (temp != OREF_NULL)
             {
                 conditionObj->put(temp, OREF_RC);
@@ -3915,7 +3921,7 @@ void RexxActivation::command(RexxString *address, RexxString *commandString)
         // have TRACE ERROR in effect.
         if (instruction_traced && inDebug())
         {
-            debugPause();
+            doDebugPause();
         }
     }
 }
@@ -3930,56 +3936,40 @@ void RexxActivation::command(RexxString *address, RexxString *commandString)
 void RexxActivation::setReturnStatus(int status)
 {
     settings.returnStatus = status;
-    settings.statusFlags[returnStatusSet] = true;
-}
-
-
-RexxString * RexxActivation::getProgramName()
-/******************************************************************************/
-/* Function:  Return the name of the current program file                     */
-/******************************************************************************/
-{
-  return code->getProgramName(); /* get the name from the code        */
-}
-
-DirectoryClass * RexxActivation::getLabels()
-/******************************************************************************/
-/* Function:  Return the directory of labels for this method                  */
-/******************************************************************************/
-{
-  return code->getLabels();      /* get the labels from the code      */
-}
-
-RexxString * RexxActivation::sourceString()
-/******************************************************************************/
-/* Function:  Create the source string returned by parse source               */
-/******************************************************************************/
-{
-                                       /* produce the system specific string*/
-  return SystemInterpreter::getSourceString(settings.calltype, code->getProgramName());
+    settings.setReturnStatus(true);
 }
 
 
 /**
- * Add a local routine to the current activation's routine set.
+ * Return the name of the current program file
  *
- * @param name   The name to add this under.
- * @param method The method associated with the name.
+ * @return The string name of the program source.
  */
-void RexxActivation::addLocalRoutine(RexxString *name, MethodClass *_method)
+RexxString *RexxActivation::getProgramName()
 {
-    // get the directory of external functions
-    DirectoryClass *routines = settings.parentCode->getLocalRoutines();
+    return code->getProgramName();
+}
 
-    // if it does not exist, it will be created
-    if (routines == OREF_NULL)
-    {
 
-        settings.parentCode->getSourceObject()->setLocalRoutines(new_directory());
-        routines = settings.parentCode->getLocalRoutines();
-    }
-    // if a method by that name exists, it will be OVERWRITTEN!
-    routines->setEntry(name, _method);
+/**
+ * Return the directory of labels for this block of code.
+ *
+ * @return The string table of labels (returns null if there are no labels in this code section)
+ */
+StringTable *RexxActivation::getLabels()
+{
+   return code->getLabels();
+}
+
+
+/**
+ * Create the source string returned by parse source
+ *
+ * @return The constructed source string.
+ */
+RexxString *RexxActivation::sourceString()
+{
+    return SystemInterpreter::getSourceString(settings.calltype, code->getProgramName());
 }
 
 
@@ -3989,116 +3979,117 @@ void RexxActivation::addLocalRoutine(RexxString *name, MethodClass *_method)
  *
  * @return A directory of the public routines.
  */
-DirectoryClass *RexxActivation::getPublicRoutines()
+StringTable *RexxActivation::getPublicRoutines()
 {
     return code->getPublicRoutines();
 }
 
 
-
-void RexxActivation::setObjNotify(
-     MessageClass    * notify)          /* activation to notify              */
-/******************************************************************************/
-/* Function:  Set an error notification tag on the activation.                */
-/******************************************************************************/
+/**
+ * Set an error notification tag on the activation.
+ *
+ * @param notify The notification object.
+ */
+void RexxActivation::setObjNotify(MessageClass *notify)
 {
-  objnotify = notify;
+    notifyObject = notify;
 }
 
 
-void RexxActivation::pushEnvironment(
-     RexxObject * environment)         /* new local environment buffer        */
-/******************************************************************************/
-/* Function:  Push the new environment buffer onto the EnvLIst                */
-/******************************************************************************/
+/**
+ * Push the new environment buffer onto the environment list.
+ *
+ * @param environment
+ *               The new saved environment.
+ */
+void RexxActivation::pushEnvironment(RexxObject *environment)
 {
-    /* internal call or interpret?         */
+    // only process if we're at the top level.
     if (isTopLevelCall())
     {
-        /* nope, push environment here.        */
-        /* DO we have a environment list?      */
+        // create an environment list if this is the first request
         if (!environmentList)
         {
-            /* nope, create one                    */
-            environmentList = new_list();
+            environmentList = new_queue();
         }
-        environmentList->addFirst(environment);
+        // push this on the top of the stack.
+        environmentList->push(environment);
     }
-    else                                 /* nope, process up the chain.         */
+    // interprets and internal routines pass on to the parent activation
+    else
     {
-        /* Yes, forward on the message.        */
         parent->pushEnvironment(environment);
     }
 }
 
-RexxObject * RexxActivation::popEnvironment()
-/******************************************************************************/
-/* Function:  return the top level local Environemnt                          */
-/******************************************************************************/
+
+/**
+ * return the top level local Environemnt
+ *
+ * @return Pop the top local environment and restore it.
+ */
+RexxObject *RexxActivation::popEnvironment()
 {
-    /* internal call or interpret?         */
+    // only process if the top level
     if (isTopLevelCall())
     {
-        /* nope, we puop Environemnt here      */
-        /* DO we have a environment list?      */
         if (environmentList)
         {
-            /* yup, return first element           */
-            return  environmentList->removeFirst();
+            return (RexxObject *)environmentList->pull();
 
         }
-        else                               /* nope, return .nil                   */
+        else
         {
             return TheNilObject;
         }
     }
     else
-    {                               /* nope, pass on up the chain.         */
-                                    /* Yes, forward on the message.        */
+    {
         return parent->popEnvironment();
     }
 }
 
-void RexxActivation::closeStreams()
-/******************************************************************************/
-/* Function:  Close any streams opened by the I/O builtin functions           */
-/******************************************************************************/
-{
-    RexxString    *index;                /* index for stream directory        */
 
+/**
+ * Close any streams opened by the I/O builtin functions
+ */
+void RexxActivation::closeStreams()
+{
                                          /* exiting a bottom level?           */
     if (isProgramOrMethod())
     {
-        DirectoryClass *streams = settings.streams;  /* get the streams directory         */
+        StringTable *streams = settings.streams;  /* get the streams directory         */
         /* actually have a table?            */
         if (streams != OREF_NULL)
         {
-            /* traverse this                     */
-            for (HashLink j = streams->first(); (index = (RexxString *)streams->index(j)) != OREF_NULL; j = streams->next(j))
+            // send each of the streams in the table a CLOSE message.
+            for (HashContents::TableIterator iterator = streams->iterator(); iterator.isAvailable(); iterator.next())
             {
-                /* closing each stream               */
-                streams->at(index)->sendMessage(OREF_CLOSE);
+                ((RexxObject *)iterator.value())->sendMessage(OREF_CLOSE);
             }
         }
     }
 }
 
 
-RexxObject  *RexxActivation::novalueHandler(
-     RexxString *name )                /* name to retrieve                  */
-/******************************************************************************/
-/* Function:  process unitialized variable over rides                         */
-/******************************************************************************/
+/**
+ * process unitialized variable overrides
+ *
+ * @param name   The uninitialized variable name.
+ *
+ * @return The handler return result.
+ */
+RexxObject *RexxActivation::novalueHandler(RexxString *name)
 {
-    /* get the handler from .local       */
+    // the handler, if it exists, is stored in .local.
     RexxObject *novalue_handler = getLocalEnvironment(OREF_NOVALUE);
-    if (novalue_handler != OREF_NULL)    /* have a novalue handler?           */
+    if (novalue_handler != OREF_NULL)
     {
-        /* ask it to process this            */
-        return novalue_handler->sendMessage(OREF_NOVALUE, name);
+        return resultOrNil(novalue_handler->sendMessage(OREF_NOVALUE, name));
     }
-    return TheNilObject;                 /* return the handled result         */
+    return TheNilObject;
 }
+
 
 /**
  * Retrieve the package for the current execution context.
@@ -4128,11 +4119,11 @@ RexxInternalObject *RexxActivation::evaluateLocalCompoundVariable(RexxString *st
 
     // locate the stem variable and get the value from there.
     StemClass *stem_table = getLocalStem(stemName, index);
-    RexxInternalObject *value = stem_table->evaluateCompoundVariableValue(this, stemName, &resolved_tail);
+    RexxInternalObject *value = stem_table->evaluateCompoundVariableValue(this, stemName, resolved_tail);
     if (tracingIntermediates())
     {
-        traceCompoundName(stemName, tail, tailCount, &resolved_tail);
-        traceCompound(stemName, tail, tailCount, value);
+        traceCompoundName(stemName, tail, tailCount, resolved_tail);
+        traceCompound(stemName, tail, tailCount, (RexxObject *)value);
     }
     return value;
 }
@@ -4167,7 +4158,7 @@ RexxInternalObject *RexxActivation::getLocalCompoundVariableValue(RexxString *st
  *
  * @return The variable value (or OREF_NULL if not found)
  */
-RexxObject *RexxActivation::getLocalCompoundVariableRealValue(RexxString *localstem, size_t index, RexxObject **tail, size_t tailCount)
+RexxInternalObject *RexxActivation::getLocalCompoundVariableRealValue(RexxString *localstem, size_t index, RexxObject **tail, size_t tailCount)
 {
     CompoundVariableTail resolved_tail(this, tail, tailCount);
 
@@ -4251,7 +4242,7 @@ void RexxActivation::assignLocalCompoundVariable(RexxString *stemName, size_t in
     if (tracingIntermediates())
     {
         traceCompoundName(stemName, tail, tailCount, resolved_tail);
-        traceCompoundAssignment(stemName, tail, tailCount, value);
+        traceCompoundAssignment(stemName, tail, tailCount, (RexxObject *)value);
     }
 }
 
@@ -4270,7 +4261,7 @@ void RexxActivation::setLocalCompoundVariable(RexxString *stemName, size_t index
     CompoundVariableTail resolved_tail(this, tail, tailCount);
 
     StemClass *stem_table = getLocalStem(stemName, index);
-    stem_table->setCompoundVariable(&resolved_tail, value);
+    stem_table->setCompoundVariable(resolved_tail, value);
 }
 
 

@@ -260,7 +260,7 @@ bool SystemInterpreter::invokeExternalFunction(
   RexxString     * calltype,           /* Type of call                      */
   ProtectedObject &result)
 {
-  if (activation->callMacroSpaceFunction(target, arguments, argcount, calltype, MS_PREORDER, result))
+  if (activation->callMacroSpaceFunction(target, arguments, argcount, calltype, RXMACRO_SEARCH_BEFORE, result))
   {
       return true;
   }
@@ -276,7 +276,7 @@ bool SystemInterpreter::invokeExternalFunction(
   }
                                        /* function.  If still not found,    */
                                        /* then raise an error               */
-  if (activation->callMacroSpaceFunction(target, arguments, argcount, calltype, MS_POSTORDER, result))
+  if (activation->callMacroSpaceFunction(target, arguments, argcount, calltype, RXMACRO_SEARCH_AFTER, result))
   {
       return true;
   }

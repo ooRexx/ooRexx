@@ -45,7 +45,7 @@
 #define Included_PackageSetting
 
 #include "TraceSetting.hpp"
-#include "NumericSetting.hpp"
+#include "Numerics.hpp"
 
 /**
  * A class for processing different numeric settings
@@ -70,11 +70,12 @@ class PackageSetting
     inline void   setFuzz(size_t f) { numericSettings.setFuzz(f); }
     inline size_t getFuzz() const { return numericSettings.getFuzz(); }
     inline void   setTraceSetting(const TraceSetting &s) { traceSettings = s; }
+    inline bool   isDebug() { return traceSettings.isDebug(); }
     inline const  TraceSetting &getTraceSetting() const { return traceSettings; }
     inline RexxString *getTrace() { return traceSettings.toString(); }
 
-    NumericSetting numericSettings;       // the package numeric settings
-    TraceSetting   traceSettings;         // the package trace setting
+    NumericSettings numericSettings;       // the package numeric settings
+    TraceSetting    traceSettings;         // the package trace setting
 };
 
 #endif

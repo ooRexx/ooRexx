@@ -47,16 +47,37 @@
 
 #include "RexxCore.h"
 
-class NumericSettings                      // "global" numeric settings
+
+/**
+ * A class for processing different numeric settings
+ */
+class NumericSettings
 {
-    public:
-      NumericSettings();
-      size_t digits;                       // numeric digits setting
-      size_t fuzz;                         // numeric fuzz setting
-      bool form;                           // numeric form setting
-};                                         // global activation settings
+ public:
+
+    NumericSettings();
+
+    void setDefault();
+
+    inline void   setDigits(size_t d) { digits = d; }
+    inline size_t getDigits() const { return digits; }
+    inline void   setForm(bool f) { form = f; }
+    inline bool   getForm() const { return form; }
+    inline void   setFuzz(size_t f) { fuzz = f; }
+    inline size_t getFuzz() const { return fuzz; }
+
+protected:
+
+    size_t digits;                        // numeric digits setting
+    size_t fuzz;                          // numeric fuzz setting
+    bool   form;                          // numeric form setting
+};
 
 
+/**
+ * A class for holding all numeric-based settings and
+ * some numeric oriented static methods.
+ */
 class Numerics
 {
 public:
@@ -119,12 +140,12 @@ public:
 
     static size_t normalizeWholeNumber(wholenumber_t integer, char *dest);
 
-    static size_t digits() { return settings->digits; }
-    static size_t fuzz()   { return settings->fuzz; }
-    static bool   form()   { return settings->form; }
-    static void   setCurrentSettings(NumericSettings *s) { settings = s; }
-    static NumericSettings *setDefaultSettings() { settings = &defaultSettings; return settings; }
-    static NumericSettings *getDefaultSettings() { return &defaultSettings; }
+    static size_t digits() { return settings->getDigits(); }
+    static size_t fuzz()   { return settings->getFuzz(); }
+    static bool   form()   { return settings->getForm(); }
+    static void   setCurrentSettings(const NumericSettings *s) { settings = s; }
+    static const NumericSettings *setDefaultSettings() { settings = &defaultSettings; return settings; }
+    static const NumericSettings *getDefaultSettings() { return &defaultSettings; }
     static inline wholenumber_t abs(wholenumber_t n) { return n < 0 ? -n : n; }
     static inline wholenumber_t minVal(wholenumber_t n1, wholenumber_t n2) { return n2 > n1 ? n1 : n2; }
     static inline stringsize_t minVal(stringsize_t n1, stringsize_t n2) { return n2 > n1 ? n1 : n2; }
@@ -159,8 +180,8 @@ public:
 
 protected:
 
-    static NumericSettings *settings;
-    static NumericSettings  defaultSettings;
+    static const NumericSettings *settings;
+    static const NumericSettings  defaultSettings;
 };
 
 

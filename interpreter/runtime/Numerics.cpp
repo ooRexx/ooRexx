@@ -117,15 +117,28 @@ const size_t Numerics::DEFAULT_FUZZ    = ((size_t)0); /* default numeric fuzz se
                                      /* default numeric form setting      */
 const bool Numerics::DEFAULT_FORM = Numerics::FORM_SCIENTIFIC;
 
-NumericSettings Numerics::defaultSettings;
-NumericSettings *Numerics::settings = &Numerics::defaultSettings;
+const NumericSettings Numerics::defaultSettings;
+const NumericSettings *Numerics::settings = &Numerics::defaultSettings;
 
 
+
+/**
+ * Initialize a NumericSettings object.
+ */
 NumericSettings::NumericSettings()
 {
+    setDefault();
+}
+
+
+/**
+ * Set the default values for a NumericSettings object.
+ */
+void NumericSettings::setDefault();
+{
     digits = Numerics::DEFAULT_DIGITS;
-    fuzz = Numerics::DEFAULT_FUZZ;
     form = Numerics::DEFAULT_FORM;
+    fuzz = Numerics::DEFAULT_FUZZ;
 }
 
 
@@ -211,6 +224,7 @@ RexxObject *Numerics::stringsizeToObject(stringsize_t v)
     // allowable digits range
     return new_numberstringFromStringsize(v);
 }
+
 
 /**
  * Convert an object into a whole number value.
@@ -407,11 +421,6 @@ bool Numerics::objectToUnsignedInteger(RexxObject *source, size_t &result, size_
  *         conversion errors.
  */
 bool Numerics::objectToInt64(RexxObject *source, int64_t &result)
-/******************************************************************************/
-/* Function:  Convert a Rexx object into a numeric value within the specified */
-/* value range.  If the value is not convertable to an integer value or is    */
-/* outside of the specified range, false is returned.                         */
-/******************************************************************************/
 {
     // is this an integer value (very common)
     if (isInteger(source))
@@ -481,11 +490,6 @@ RexxObject *Numerics::int64Object(RexxObject *source)
  *         conversion errors.
  */
 bool Numerics::objectToUnsignedInt64(RexxObject *source, uint64_t &result)
-/******************************************************************************/
-/* Function:  Convert a Rexx object into a numeric value within the specified */
-/* value range.  If the value is not convertable to an integer value or is    */
-/* outside of the specified range, false is returned.                         */
-/******************************************************************************/
 {
     // is this an integer value (very common)
     if (isInteger(source))
@@ -685,6 +689,7 @@ stringsize_t Numerics::normalizeWholeNumber(wholenumber_t integer, char *dest)
     dest[length] = '\0';
     return length;
 }
+
 
 /**
  * Do portable formatting of a stringsize value into an ascii
@@ -897,12 +902,12 @@ RexxString *Numerics::pointerToString(void *p)
     // format this into a chracter string
     char temp[32];
     // unfortunately, the formation of %p is not consistent across platforms.
-    // We first format this directly, and if the value does not be
+    // We first format this directly, and if the value does not give use the
+    // desired form, we force it.
     sprintf(temp, "%p", p);
     if (temp[1] != 'x')
     {
         sprintf(temp, "0x%p", p);
     }
     return new_string(temp);
-
 }

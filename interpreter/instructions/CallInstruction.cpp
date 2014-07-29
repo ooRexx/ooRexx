@@ -188,7 +188,7 @@ void RexxInstructionCall::execute(RexxActivation *context, ExpressionStack *stac
     // if this has not resolved to an internal call, this is set to NULL
     if (targetInstruction != OREF_NULL)
     {
-        context->internalCall(targetName, targetInstruction, argumentCount, stack, result);
+        context->internalCall(targetName, targetInstruction, stack->arguments(argumentCount), argumentCount, result);
     }
     // if this was resolved to a builtin, call directly
     else if (builtinIndex != NO_BUILTIN)
@@ -199,7 +199,7 @@ void RexxInstructionCall::execute(RexxActivation *context, ExpressionStack *stac
     // an external call...this is handled elsewhere.
     else
     {
-        context->externalCall(targetName, argumentCount, stack, OREF_ROUTINENAME, result);
+        context->externalCall(targetName, stack->arguments(argumentCount), argumentCount, OREF_ROUTINENAME, result);
     }
 
     // did we get a result returned?  We need to either set or drop
@@ -342,7 +342,7 @@ void RexxInstructionDynamicCall::execute(RexxActivation *context, ExpressionStac
     // if this has not resolved to an internal call, this is still NULL
     if (targetInstruction != OREF_NULL)
     {
-        context->internalCall(targetName, targetInstruction, argumentCount, stack, result);
+        context->internalCall(targetName, targetInstruction, stack->arguments(argumentCount), argumentCount, result);
     }
     // builtin checks come next.
     else
@@ -356,7 +356,7 @@ void RexxInstructionDynamicCall::execute(RexxActivation *context, ExpressionStac
         // an external call...this is handled elsewhere.
         else
         {
-            context->externalCall(targetName, argumentCount, stack, OREF_ROUTINENAME, result);
+            context->externalCall(targetName, stack->arguments(argumentCount), argumentCount, OREF_ROUTINENAME, result);
         }
     }
 
@@ -534,7 +534,7 @@ void RexxInstructionCallOn::trap(RexxActivation *context, DirectoryClass  *condi
     // this is an external call.
     else
     {
-        context->externalCall(targetName, 0, context->getStack(), OREF_ROUTINENAME, result);
+        context->externalCall(targetName, NULL, 0, OREF_ROUTINENAME, result);
     }
 
     // NOTE:  Any result object is ignored for a CALL ON trap

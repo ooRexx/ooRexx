@@ -61,10 +61,6 @@ class PackageClass;
 class StackFrameClass;
 
 
-#define MS_PREORDER   0x01                  // Macro Space Pre-Search
-#define MS_POSTORDER  0x02                  // Macro Space Post-Search
-
-
 /**
  * An activation of a section of Rexx code.
  */
@@ -122,6 +118,30 @@ class RexxActivation : public RexxActivationBase
     } GuardStatus;
 
 
+    /**
+     * An enumeration of the different trace prefixes.  The
+     * trace prefix table must match these.
+     */
+    typedef enum
+    {
+        TRACE_PREFIX_CLAUSE   ,
+        TRACE_PREFIX_ERROR    ,
+        TRACE_PREFIX_RESULT   ,
+        TRACE_PREFIX_DUMMY    ,
+        TRACE_PREFIX_VARIABLE ,
+        TRACE_PREFIX_DOTVARIABLE ,
+        TRACE_PREFIX_LITERAL  ,
+        TRACE_PREFIX_FUNCTION ,
+        TRACE_PREFIX_PREFIX   ,
+        TRACE_PREFIX_OPERATOR ,
+        TRACE_PREFIX_COMPOUND ,
+        TRACE_PREFIX_MESSAGE  ,
+        TRACE_PREFIX_ARGUMENT ,
+        TRACE_PREFIX_ASSIGNMENT,
+        TRACE_PREFIX_INVOCATION,
+    } TracePrefix;
+
+
    void *operator new(size_t);
    inline void *operator new(size_t size, void *ptr) {return ptr;};
    inline void  operator delete(void *) { ; }
@@ -143,9 +163,6 @@ class RexxActivation : public RexxActivationBase
    void        setDigits(size_t);
    void        setFuzz(size_t);
    void        setForm(bool);
-   void        setDigits();
-   void        setFuzz();
-   void        setForm();
    bool        trap(RexxString *, DirectoryClass *);
    void        setObjNotify(MessageClass *);
    void        termination();
@@ -181,7 +198,7 @@ class RexxActivation : public RexxActivationBase
        return run(OREF_NULL, OREF_NULL, _arglist, _argcount, OREF_NULL, _result);
    }
    void              reply(RexxObject *);
-   RexxObject      * forward(RexxObject *, RexxString *, RexxObject *, RexxObject **, size_t, bool);
+   RexxObject      * forward(RexxObject *, RexxString *, RexxClass *, RexxObject **, size_t, bool);
    void              returnFrom(RexxObject *result);
    void              exitFrom(RexxObject *);
    void              procedureExpose(RexxVariableBase **variables, size_t count);
@@ -209,8 +226,8 @@ class RexxActivation : public RexxActivationBase
    void              trapDelay(RexxString *);
    void              trapUndelay(RexxString *);
    bool              callExternalRexx(RexxString *, RexxObject **, size_t, RexxString *, ProtectedObject &);
-   RexxObject      * externalCall(RexxString *, size_t, ExpressionStack *, RexxString *, ProtectedObject &);
-   RexxObject      * internalCall(RexxString *, RexxInstruction *, size_t, ExpressionStack *, ProtectedObject &);
+   RexxObject      * externalCall(RexxString *, RexxObject **, size_t, RexxString *, ProtectedObject &);
+   RexxObject      * internalCall(RexxString *, RexxInstruction *, RexxObject **, size_t, ProtectedObject &);
    RexxObject      * internalCallTrap(RexxString *, RexxInstruction *, DirectoryClass *, ProtectedObject &);
    bool              callMacroSpaceFunction(RexxString *, RexxObject **, size_t, RexxString *, int, ProtectedObject &);
    static RoutineClass* getMacroCode(RexxString *macroName);
@@ -223,13 +240,13 @@ class RexxActivation : public RexxActivationBase
    RexxInteger     * random(RexxInteger *, RexxInteger *, RexxInteger *);
    size_t            currentLine();
    void              arguments(RexxObject *);
-   void              traceValue(RexxObject *, int);
-   void              traceCompoundValue(int prefix, RexxString *stemName, RexxObject **tails, size_t tailCount, CompoundVariableTail *tail);
-   void              traceCompoundValue(int prefix, RexxString *stem, RexxObject **tails, size_t tailCount, const char *marker, RexxObject * value);
-   void              traceTaggedValue(int prefix, const char *tagPrefix, bool quoteTag, RexxString *tag, const char *marker, RexxObject * value);
-   void              traceOperatorValue(int prefix, const char *tag, RexxObject *value);
+   void              traceValue(RexxObject *, TracePrefix);
+   void              traceCompoundValue(TracePrefix prefix, RexxString *stemName, RexxObject **tails, size_t tailCount, CompoundVariableTail &tail);
+   void              traceCompoundValue(TracePrefix prefix, RexxString *stem, RexxObject **tails, size_t tailCount, const char *marker, RexxObject * value);
+   void              traceTaggedValue(TracePrefix prefix, const char *tagPrefix, bool quoteTag, RexxString *tag, const char *marker, RexxObject * value);
+   void              traceOperatorValue(TracePrefix prefix, const char *tag, RexxObject *value);
    void              traceSourceString();
-   void              traceClause(RexxInstruction *, int);
+   void              traceClause(RexxInstruction *, TracePrefix);
    void              traceEntry();
    void              resetElapsed();
    RexxString      * formatTrace(RexxInstruction *, PackageClass *);
@@ -241,7 +258,6 @@ class RexxActivation : public RexxActivationBase
 
    void              unwindTrap(RexxActivation *);
    RexxString      * sourceString();
-   void              addLocalRoutine(RexxString *name, MethodClass *method);
    StringTable      *getPublicRoutines();
    void              debugInterpret(RexxString *);
    bool              doDebugPause();
@@ -262,7 +278,7 @@ class RexxActivation : public RexxActivationBase
    void              mergeTraps(QueueClass *);
    uint64_t          getRandomSeed(RexxInteger *);
    void              adjustRandomSeed() { randomSeed += (uint64_t)(uintptr_t)this; }
-   VariableDictionary * getObjectVariables();
+   VariableDictionary *getObjectVariables();
    StringTable     * getLabels();
    RexxString      * getProgramName();
    RexxObject      * popControl();
@@ -317,13 +333,13 @@ class RexxActivation : public RexxActivationBase
 
    inline ExpressionStack * getStack() {return &stack; };
 
-   virtual NumericSettings *getNumericSettings();
+   virtual const NumericSettings *getNumericSettings();
    virtual RexxActivation  *getRexxContext();
    virtual RexxActivation  *findRexxContext();
    virtual RexxObject      *getReceiver();
    virtual bool             isRexxContext();
 
-   inline void              traceIntermediate(RexxObject * v, int p) { if (settings.intermediateTrace) traceValue(v, p); };
+   inline void              traceIntermediate(RexxObject * v, TracePrefix p) { if (settings.intermediateTrace) traceValue(v, p); };
    inline void              traceArgument(RexxObject * v) { if (settings.intermediateTrace) traceValue(v, TRACE_PREFIX_ARGUMENT); };
    inline void              traceVariable(RexxString *n, RexxObject *v)
        { if (settings.intermediateTrace) { traceTaggedValue(TRACE_PREFIX_VARIABLE, NULL, false, n, VALUE_MARKER, v); } };
@@ -339,11 +355,11 @@ class RexxActivation : public RexxActivationBase
        { if (settings.intermediateTrace) { traceOperatorValue(TRACE_PREFIX_PREFIX, n, v); } };
    inline void              traceAssignment(RexxString *n, RexxObject *v)
        { if (settings.intermediateTrace) { traceTaggedValue(TRACE_PREFIX_ASSIGNMENT, NULL, false, n, ASSIGNMENT_MARKER, v); } };
-   inline void              traceCompoundName(RexxString *stemVar, RexxObject **tails, size_t tailCount, CompoundVariableTail *tail) { if (settings.intermediateTrace) traceCompoundValue(TRACE_PREFIX_COMPOUND, stemVar, tails, tailCount, VALUE_MARKER, tail->createCompoundName(stemVar)); };
+   inline void              traceCompoundName(RexxString *stemVar, RexxObject **tails, size_t tailCount, CompoundVariableTail &tail) { if (settings.intermediateTrace) traceCompoundValue(TRACE_PREFIX_COMPOUND, stemVar, tails, tailCount, VALUE_MARKER, tail.createCompoundName(stemVar)); };
    inline void              traceCompoundName(RexxString *stemVar, RexxObject **tails, size_t tailCount, RexxString *tail) { if (settings.intermediateTrace) traceCompoundValue(TRACE_PREFIX_COMPOUND, stemVar, tails, tailCount, VALUE_MARKER, stemVar->concat(tail)); };
    inline void              traceCompound(RexxString *stemVar, RexxObject **tails, size_t tailCount, RexxObject *value) { if (settings.intermediateTrace) traceCompoundValue(TRACE_PREFIX_VARIABLE, stemVar, tails, tailCount, VALUE_MARKER, value); };
    inline void              traceCompoundAssignment(RexxString *stemVar, RexxObject **tails, size_t tailCount, RexxObject *value) { if (settings.intermediateTrace) traceCompoundValue(TRACE_PREFIX_ASSIGNMENT, stemVar, tails, tailCount, ASSIGNMENT_MARKER, value); };
-   inline void              clearTraceSettings() { settings.packageSettings.traceSettings.clear(); settings.intermediateTrace = false; }
+   inline void              clearTraceSettings() { settings.packageSettings.traceSettings.setTraceOff(); settings.intermediateTrace = false; }
    inline bool              tracingResults() {return settings.packageSettings.traceSettings.tracingResults(); }
    inline bool              tracingAll() {return settings.packageSettings.traceSettings.tracingAll(); }
    inline bool              inDebug() { return settings.packageSettings.traceSettings.isDebug() && !debugPause;}
@@ -375,10 +391,8 @@ class RexxActivation : public RexxActivationBase
    inline bool              isGuarded() { return settings.isGuarded(); }
    inline void              setGuarded() { settings.setGuarded(true); }
 
-   inline bool              isExternalTraceOn() { return settings.isExternalTraceOn(); }
-   inline void              setExternalTraceOn() { settings.setExternalTraceOn(true); }
-   inline void              setExternalTraceOff() { settings.setExternalTraceOn(false); }
           void              enableExternalTrace();
+          void              disableExternalTrace();
 
    inline bool              isElapsedTimerReset() { return settings.isElapsedTimerReset(); }
    inline void              setElapsedTimerInvalid() { settings.setElapsedTimerReset(true); }
@@ -575,6 +589,16 @@ class RexxActivation : public RexxActivationBase
                                         // size of a size_t value in bits
    static const size_t SIZE_BITS = sizeof(void *) * 8;
 
+   // some values for random processing
+   static const size_t DefaultRandomMin = 0;               // default lower bounds
+   static const size_t DefaultRandomMax = 999;             // default upper bounds
+   static const size_t MaxRandomRange = 999999999;         // the maximum range between lower and upper bounds.
+
+   // marker used for tagged traces to separate tag from the value
+   static const char *VALUE_MARKER;
+   // marker used for tagged traces to separate tag from the value
+   static const char *ASSIGNMENT_MARKER;
+
  protected:
 
     ActivationSettings   settings;      // inherited REXX settings
@@ -602,7 +626,7 @@ class RexxActivation : public RexxActivationBase
     ActivationContext    activationContext;
     MessageClass        *notifyObject;  // an object to notify if excep occur
                                         // list of Saved Local environments
-    ListClass           *environmentList;
+    QueueClass          *environmentList;
                                         // queue of trapped conditions
     QueueClass          *conditionQueue;// queue of trapped conditions
     // TODO:  create a random number encapsulation class

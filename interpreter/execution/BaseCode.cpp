@@ -104,7 +104,7 @@ BaseExecutable *BaseExecutable::setPackageObject(PackageClass *s)
 PackageClass *BaseExecutable::getPackage()
 {
     PackageClass *package = code->getPackage();
-    return resultOrNil(package);
+    return (PackageClass *)resultOrNil(package);
 }
 
 
@@ -168,7 +168,7 @@ ArrayClass *BaseExecutable::processExecutableSource(RexxObject *source, RexxObje
         else
         {
             // must be single dimension
-            if (sourceArray->getDimension() != 1)
+            if (!sourceArray->isSingleDimensional())
             {
                 reportException(Error_Incorrect_method_noarray, position);
             }

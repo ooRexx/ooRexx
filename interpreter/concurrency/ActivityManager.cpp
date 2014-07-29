@@ -184,9 +184,9 @@ void ActivityManager::addWaitingActivity(Activity *waitingAct, bool release )
     // the setting of the sentinel variables acts as a memory barrier to
     // ensure that the assignment of currentActivitiy occurs precisely at this point.
     sentinel = false;
-    currentActivity = waitingAct;        /* set new current activity          */
+    currentActivity = waitingAct;
     sentinel = true;
-    /* and new active settings           */
+    // set the new active numeric settings
     Numerics::setCurrentSettings(waitingAct->getNumericSettings());
 }
 

@@ -1359,7 +1359,7 @@ RexxObject  *RexxInteger::evaluate(RexxActivation *context, ExpressionStack *sta
 {
     // evaluate always leaves results on the stack
     stack->push(this);
-    context->traceIntermediate(this, TRACE_PREFIX_LITERAL);
+    context->traceIntermediate(this, RexxActivation::TRACE_PREFIX_LITERAL);
     // this is a literal result.
     return this;
 }

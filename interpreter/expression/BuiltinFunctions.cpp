@@ -985,7 +985,7 @@ BUILTIN(DATE)
     // get a copy of the current activation time.  This will ensure
     // a consistent timestamp across calls
     RexxDateTime current = context->getTime();
-    // by default, we operator off of the current time.  We may end up
+    // by default, we operate off of the current time.  We may end up
     // overwriting this
     RexxDateTime timestamp = current;
 

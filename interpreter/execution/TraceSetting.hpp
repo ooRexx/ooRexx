@@ -96,6 +96,7 @@ class TraceSetting
 
     inline void clear() { flags.reset(); }
     inline bool tracingResults() const { return flags[traceResult]; }
+    inline bool tracingIntermediates() const { return flags[traceIntermediates]; }
     inline bool isDebug() const { return flags[traceDebug]; }
     inline bool tracingAll() const { return flags[traceAll]; }
     inline bool tracingErrors() const { return flags[traceErrors]; }
@@ -109,13 +110,13 @@ class TraceSetting
     inline bool isTraceOff() const { return flags[traceOff]; }
 
     // reset all debug settings
-    inline bool resetDebug()
+    inline void resetDebug()
     {
         // turn off the debug and all pause flags
         flags.reset(traceDebug, pauseInstructions, pauseLabels, pauseCommands);
     }
     // turn on debug settings
-    inline bool setDebug()
+    inline void setDebug()
     {
         // turn on the debug flag and any pause indicators.
         flags[traceDebug] = true;
@@ -274,6 +275,14 @@ class TraceSetting
     {
         flags.reset();
         flags[debugToggle] = true;
+    }
+
+    // set trace to the external tracing form.
+    inline void setExternalTrace()
+    {
+        // The external trace value is Trace ?R
+        setTraceResults();
+        setDebug();
     }
 
     RexxString *toString();

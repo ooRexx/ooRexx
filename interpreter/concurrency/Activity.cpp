@@ -1428,7 +1428,7 @@ void Activity::updateFrameMarkers()
 
     // update the numeric settings
     numericSettings = topStackFrame->getNumericSettings();
-    // this should be tree, but make sure we don't clobber the global settings accidentally
+    // this should be true, but make sure we don't clobber the global settings accidentally
     if (ActivityManager::currentActivity == this)
     {
         Numerics::setCurrentSettings(numericSettings);
@@ -2703,7 +2703,7 @@ bool  Activity::callTraceTestExit(
 bool Activity::callNovalueExit(
     RexxActivation *activation,        /* sending activation                */
     RexxString     *variableName,      /* name to look up                   */
-    RexxObject    *&value)             /* the returned value                */
+    RexxInternalObject *&value)        /* the returned value                */
 /******************************************************************************/
 /* Function:   Calls the novalue handler for uninitialized variables          */
 /******************************************************************************/

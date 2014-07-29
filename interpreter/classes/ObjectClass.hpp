@@ -612,7 +612,7 @@ public:
     virtual size_t digits() {return Numerics::DEFAULT_DIGITS;};
     virtual size_t fuzz() {return Numerics::DEFAULT_FUZZ;};
     virtual bool form() {return Numerics::DEFAULT_FORM;};
-    virtual NumericSettings *getNumericSettings() { return Numerics::getDefaultSettings(); }
+    virtual const NumericSettings *getNumericSettings() { return Numerics::getDefaultSettings(); }
     virtual RexxActivation *getRexxContext() { return OREF_NULL; }
     virtual RexxActivation *findRexxContext() { return OREF_NULL; }
     virtual void setDigits(size_t) {;};

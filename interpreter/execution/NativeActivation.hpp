@@ -140,7 +140,7 @@ class NativeActivation : public RexxActivationBase
     BaseExecutable *getRexxContextExecutable();
     RexxObject *getRexxContextObject();
     virtual RexxActivation *findRexxContext();
-    virtual NumericSettings *getNumericSettings();
+    virtual const NumericSettings *getNumericSettings();
     virtual RexxObject *getReceiver();
     virtual SecurityManager *getSecurityManager();
     PackageClass *getPackageObject();

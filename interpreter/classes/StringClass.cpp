@@ -1782,7 +1782,7 @@ RexxObject *RexxString::evaluate(
 
     stack->push((RexxObject *)this);     /* place on the evaluation stack     */
                                        /* trace if necessary                */
-    context->traceIntermediate((RexxObject *)this, TRACE_PREFIX_LITERAL);
+    context->traceIntermediate((RexxObject *)this, RexxActivation::TRACE_PREFIX_LITERAL);
     return this;                         /* also return the result            */
 }
 

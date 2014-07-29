@@ -3390,7 +3390,7 @@ RexxObject *NumberString::evaluate(
 {
     stack->push(this);                   /* place on the evaluation stack     */
                                          /* trace if necessary                */
-    context->traceIntermediate(this, TRACE_PREFIX_LITERAL);
+    context->traceIntermediate(this, RexxActivation::TRACE_PREFIX_LITERAL);
     return this;                         /* also return the result            */
 }
 

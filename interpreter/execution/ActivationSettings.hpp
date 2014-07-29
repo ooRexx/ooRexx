@@ -73,7 +73,8 @@ class ActivationSettings
         debugBypass,             // skip next debug pause
         procedureValid,          // procedure instruction is valid
         haltCondition,           // a HALT condition occurred
-        traceOn,                 // external trace condition occurred
+        traceOn,                 // external trace ON condition occurred
+        traceOff,                // external trace OFF condition occurred
         sourceTraced,            // source string has been traced
         clauseExits,             // need to call clause boundary exits
         externalYield,           // activity wants us to yield
@@ -89,8 +90,6 @@ class ActivationSettings
         guardedMethod,           // this is a guarded method
     } ActivationFlag;
 
-// TODO:  fix up the default settings
-
 
     public:
       inline ActivationSettings() {}
@@ -103,8 +102,10 @@ class ActivationSettings
       inline void setDebugBypass(bool v = true) { stateFlags[debugBypass] = v; }
       inline bool isTraceSuppressed() { return stateFlags[traceSuppress]; }
       inline void setTraceSuppressed(bool v = true) { stateFlags[traceSuppress] = v; }
-      inline bool isExternalTraceOn() { return stateFlags[traceOn]; }
+      inline bool haveExternalTraceOn() { return stateFlags[traceOn]; }
       inline void setExternalTraceOn(bool v = true) { stateFlags[traceOn] = v; }
+      inline bool haveExternalTraceOff() { return stateFlags[traceOff]; }
+      inline void setExternalTraceOff(bool v = true) { stateFlags[traceOff] = v; }
       inline bool isElapsedTimerReset() { return stateFlags[elapsedReset]; }
       inline void setElapsedTimerReset(bool v = true) { stateFlags[elapsedReset] = v; }
       inline bool isReplyIssued() { return stateFlags[replyIssued]; }
@@ -119,13 +120,20 @@ class ActivationSettings
       inline void setProcedureValid(bool v = true) { stateFlags[procedureValid] = v; }
       inline bool wasDebugPromptIssued() { return stateFlags[debugPromptIssued]; }
       inline void setDebugPromptIssued(bool v = true) { stateFlags[debugPromptIssued] = v; }
+      inline bool isReturnStatusSet() { return stateFlags[returnStatusSet]; }
+      inline void setReturnStatus(bool v = true) { stateFlags[returnStatusSet] = v; }
+      inline bool wasSourceTraced() { return stateFlags[sourceTraced]; }
+      inline void setSourceTraced(bool v = true) { stateFlags[sourceTraced] = v; }
+      inline bool haveExternalYield() { return stateFlags[externalYield]; }
+      inline void setExternalYield(bool v = true) { stateFlags[externalYield] = v; }
+      inline bool haveHaltCondition() { return stateFlags[haltCondition]; }
+      inline void setHaltCondition(bool v = true) { stateFlags[haltCondition] = v; }
 
       StringTable    *traps;               // enabled condition traps
       DirectoryClass *conditionObj;        // current condition object
       RexxObject    **parentArgList;       // arguments to top level program
       size_t          parentArgCount;      // number of arguments to the top level program
       // TODO:  should this be a base executable?
-      MethodClass    *parentMethod;        // method object for top level
       RexxCode       *parentCode;          // source of the parent method
       RexxString     *currentAddress;      // current address environment
       RexxString     *alternateAddress;    // alternate address environment

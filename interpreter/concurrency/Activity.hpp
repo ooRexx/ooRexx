@@ -74,40 +74,6 @@ class ActivationFrame;
 #define QUEUE_FIFO 1
 #define QUEUE_LIFO 2
 
-/******************************************************************************/
-/* Constants used for trace prefixes                                          */
-/******************************************************************************/
-
-enum TracePrefixes
-{
-    TRACE_PREFIX_CLAUSE   ,
-    TRACE_PREFIX_ERROR    ,
-    TRACE_PREFIX_RESULT   ,
-    TRACE_PREFIX_DUMMY    ,
-    TRACE_PREFIX_VARIABLE ,
-    TRACE_PREFIX_DOTVARIABLE ,
-    TRACE_PREFIX_LITERAL  ,
-    TRACE_PREFIX_FUNCTION ,
-    TRACE_PREFIX_PREFIX   ,
-    TRACE_PREFIX_OPERATOR ,
-    TRACE_PREFIX_COMPOUND ,
-    TRACE_PREFIX_MESSAGE  ,
-    TRACE_PREFIX_ARGUMENT ,
-    TRACE_PREFIX_ASSIGNMENT,
-    TRACE_PREFIX_INVOCATION,
-};
-
-
-// marker used for tagged traces to separate tag from the value
-#define VALUE_MARKER " => "
-// marker used for tagged traces to separate tag from the value
-#define ASSIGNMENT_MARKER " <= "
-
-
-#define MAX_TRACEBACK_LIST 80      /* 40 messages are displayed */
-#define MAX_TRACEBACK_INDENT 20    /* 10 messages are indented */
-
-
 typedef enum
 {
     RecursiveStringError,              // a recursion problem in error handling
@@ -228,7 +194,7 @@ class Activity : public RexxInternalObject
     bool callHaltTestExit(RexxActivation *);
     bool callHaltClearExit(RexxActivation *);
     bool callTraceTestExit(RexxActivation *, bool);
-    bool callNovalueExit(RexxActivation *, RexxString *, RexxObject *&);
+    bool callNovalueExit(RexxActivation *, RexxString *, RexxInternalObject *&);
     bool callValueExit(RexxActivation *, RexxString *, RexxString *, RexxObject *, RexxObject *&);
     void traceOutput(RexxActivation *, RexxString *);
     void sayOutput(RexxActivation *, RexxString *);
@@ -275,7 +241,7 @@ class Activity : public RexxInternalObject
     inline RexxActivation *getCurrentRexxFrame() {return currentRexxFrame;}
     inline RexxActivationBase *getTopStackFrame() { return topStackFrame; }
     inline size_t getActivationDepth() { return stackFrameDepth; }
-    inline NumericSettings *getNumericSettings () {return numericSettings;}
+    inline const NumericSettings *getNumericSettings () {return numericSettings;}
     inline RexxInternalObject *runningRequires(RexxString *program) {return requiresTable->get(program);}
     inline void        addRunningRequires(RexxString *program) { requiresTable->put(program, program);}
     inline void        removeRunningRequires(RexxInternalObject *program) { requiresTable->remove(program);}
@@ -364,7 +330,7 @@ class Activity : public RexxInternalObject
     SysSemaphore        runsem;         // activity run control semaphore
     SysSemaphore        guardsem;       // guard expression semaphore
     SysActivity currentThread;          // descriptor for this thread
-    NumericSettings *numericSettings;   // current activation setting values
+    const NumericSettings *numericSettings; // current activation setting values
 
     bool     stackcheck;                // stack space is to be checked
     bool     exit;                      // activity loop is to exit
