@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                      NativeActivation.hpp  */
+/* REXX Kernel                                                                */
 /*                                                                            */
 /* Primitive Native Activation Class Definitions                              */
 /*                                                                            */
@@ -44,7 +44,9 @@
 #ifndef Included_NativeActivation
 #define Included_NativeActivation
 
+#include "ActivationBase.hpp"
 #include "Activity.hpp"
+
 class NativeCode;
 class ActivityDispatcher;
 class CallbackDispatcher;
@@ -58,7 +60,12 @@ class StackFrameClass;
 class IdentityTable;
 
 
-class NativeActivation : public RexxActivationBase
+/**
+ * An object representing an activation of external
+ * native code.  Used for handling external methods and
+ * routines, as well as other callouts such as exits.
+ */
+class NativeActivation : public ActivationBase
 {
    public:
            void *operator new(size_t);
@@ -81,7 +88,6 @@ class NativeActivation : public RexxActivationBase
     void run(CallbackDispatcher &dispatcher);
     void run(TrappingDispatcher &dispatcher);
     VariableDictionary *methodVariables();
-    bool   isInteger(RexxObject *);
     wholenumber_t signedIntegerValue(RexxObject *o, size_t position, wholenumber_t maxValue, wholenumber_t minValue);
     stringsize_t unsignedIntegerValue(RexxObject *o, size_t position, stringsize_t maxValue);
     int64_t int64Value(RexxObject *o, size_t position);
@@ -119,7 +125,7 @@ class NativeActivation : public RexxActivationBase
     inline void   termination() { guardOff();}
 
     void   accessCallerContext();
-    inline bool        isVariablePoolEnabled()   {return variablePoolEnabled;}
+    inline bool isVariablePoolEnabled()   {return variablePoolEnabled;}
     inline RexxString *getMessageName()   {return messageName;}
     RexxObject *getContextStem(RexxString *name);
     RexxObject *getContextVariable(const char *name);
@@ -176,6 +182,7 @@ class NativeActivation : public RexxActivationBase
     void disableConditionTraps() { trapErrors = false; }
     StackFrameClass *createStackFrame();
 
+    inline bool isMethod() { return activationType == METHOD_ACTIVATION; }
 
     static const size_t MaxNativeArguments = 16;
 
@@ -206,7 +213,6 @@ protected:
     SecurityManager *securityManager;    // our active security manager
                                          // running object variable pool
     VariableDictionary *objectVariables;
-    int             objectScope;         // reserve/release state of variables
     bool            stackBase;           // this is a stack base marker
     bool            trapErrors;          // we're trapping errors from external callers
     bool            trapConditions;      // trap any raised conditions

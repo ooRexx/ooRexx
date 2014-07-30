@@ -58,6 +58,27 @@ class VariableDictionary;
 class SecurityManager;
 class RexxClass;
 
+// activationContext values
+// these are done as bit settings to
+// allow multiple potential values
+// to be checked with a single test
+typedef enum
+{
+    DEBUGPAUSE   = 0x00000001,
+    METHODCALL   = 0x00000002,
+    INTERNALCALL = 0x00000004,
+    INTERPRET    = 0x00000008,
+    PROGRAMCALL  = 0x00000010,
+    EXTERNALCALL = 0x00000020,
+                                   // check for top level execution
+    TOP_LEVEL_CALL = (PROGRAMCALL | METHODCALL | EXTERNALCALL),
+                                   // non-method top level execution
+    PROGRAM_LEVEL_CALL = (PROGRAMCALL | EXTERNALCALL),
+                                   // non-method top level execution
+    PROGRAM_OR_METHOD = (PROGRAMCALL | METHODCALL),
+                                   // call is within an activation
+    INTERNAL_LEVEL_CALL = (INTERNALCALL | INTERPRET),
+} ActivationContext;
 
 /**
  * Main activation settings section created for easy

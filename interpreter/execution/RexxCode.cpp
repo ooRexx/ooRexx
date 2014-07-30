@@ -166,7 +166,7 @@ void RexxCode::call(Activity *activity, RoutineClass *routine, RexxString *msgna
  */
 void RexxCode::call(Activity *activity, RoutineClass *routine, RexxString *routineName,
     RexxObject**argPtr, size_t argcount, RexxString *calltype, RexxString *environment,
-    int context, ProtectedObject &result)
+    ActivationContext context, ProtectedObject &result)
 {
     // check the stack space before proceeding
     activity->checkStackSpace();
@@ -212,7 +212,7 @@ void RexxCode::run(Activity *activity, MethodClass *method, RexxObject *receiver
 ArrayClass *RexxCode::getSource()
 {
     // the source package handles this.
-    return source->extractSource(location);
+    return package->extractSource(location);
 }
 
 
@@ -223,7 +223,7 @@ ArrayClass *RexxCode::getSource()
  */
 RexxString * RexxCode::getProgramName()
 {
-    return source->getProgramName();
+    return package->getProgramName();
 }
 
 
@@ -236,7 +236,7 @@ RexxString * RexxCode::getProgramName()
  */
 RexxObject *RexxCode::setSecurityManager(RexxObject *manager)
 {
-    source->setSecurityManager(manager);
+    package->setSecurityManager(manager);
     return TheTrueObject;
 }
 

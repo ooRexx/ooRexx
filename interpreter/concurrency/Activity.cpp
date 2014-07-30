@@ -336,7 +336,7 @@ wholenumber_t Activity::error()
 }
 
 
-wholenumber_t Activity::error(RexxActivationBase *activation, DirectoryClass *errorInfo)
+wholenumber_t Activity::error(ActivationBase *activation, DirectoryClass *errorInfo)
 /******************************************************************************/
 /* Function:  Force error termination on an activity, returning the resulting */
 /*            REXX error code.                                                */
@@ -453,7 +453,7 @@ bool Activity::raiseCondition(DirectoryClass *conditionObj)
     /* invoke the error traps, on all    */
     /*  nativeacts until reach 1st       */
     /*  also give 1st activation a shot. */
-    for (RexxActivationBase *activation = getTopStackFrame() ; !activation->isStackBase(); activation = activation->getPreviousStackFrame())
+    for (ActivationBase *activation = getTopStackFrame() ; !activation->isStackBase(); activation = activation->getPreviousStackFrame())
     {
         handled = activation->trap(condition, conditionObj);
         if (isOfClass(Activation, activation)) /* reached our 1st activation yet.   */
@@ -757,7 +757,7 @@ void Activity::raiseException(wholenumber_t  errcode, RexxString *description, A
         throw RecursiveStringError;
     }
 
-    RexxActivationBase *topFrame = getTopStackFrame();
+    ActivationBase *topFrame = getTopStackFrame();
 
     RexxActivation *activation = getCurrentRexxFrame(); /* get the current activation        */
     // if we're raised within a real Rexx context, we need to deal with forwarded
@@ -1151,7 +1151,7 @@ void Activity::raisePropagate(
 {
                                          /* get the condition                 */
     RexxString *condition = (RexxString *)conditionObj->at(OREF_CONDITION);
-    RexxActivationBase *activation = getTopStackFrame(); /* get the current activation        */
+    ActivationBase *activation = getTopStackFrame(); /* get the current activation        */
 
     /* loop to the top of the stack      */
     while (activation != OREF_NULL)
@@ -1421,7 +1421,7 @@ void Activity::updateFrameMarkers()
 {
     // we have a new top entry...get this from the stack and adjust
     // the markers appropriately
-    topStackFrame = (RexxActivationBase *)activations->getTop();
+    topStackFrame = (ActivationBase *)activations->getTop();
     // the new activation is the new top and there may or may not be
     // a rexx context to deal with
     currentRexxFrame = topStackFrame->findRexxContext(); ;
@@ -1442,7 +1442,7 @@ void Activity::updateFrameMarkers()
  * @param new_activation
  *               The new activation to add.
  */
-void Activity::pushStackFrame(RexxActivationBase *new_activation)
+void Activity::pushStackFrame(ActivationBase *new_activation)
 {
     checkActivationStack();         // make sure the stack is not filled
     // push on to the stack and bump the depth
@@ -1491,7 +1491,7 @@ void Activity::createNewActivationStack()
 void Activity::popStackFrame(bool  reply)
 {
     // pop off the top elements and reduce the depth
-    RexxActivationBase *poppedStackFrame = (RexxActivationBase *)activations->fastPop();
+    ActivationBase *poppedStackFrame = (ActivationBase *)activations->fastPop();
     stackFrameDepth--;
 
     // did we just pop off the last element of a stack frame?  This should not happen, so
@@ -1519,7 +1519,7 @@ void Activity::popStackFrame(bool  reply)
 }
 
 
-void Activity::cleanupStackFrame(RexxActivationBase *poppedStackFrame)
+void Activity::cleanupStackFrame(ActivationBase *poppedStackFrame)
 {
     // make sure this frame is terminated first
     poppedStackFrame->termination();
@@ -1534,16 +1534,16 @@ void Activity::cleanupStackFrame(RexxActivationBase *poppedStackFrame)
  *
  * @param target The target for the pop operation.
  */
-void Activity::popStackFrame(RexxActivationBase *target)
+void Activity::popStackFrame(ActivationBase *target)
 {
-    RexxActivationBase *poppedStackFrame = (RexxActivationBase *)activations->fastPop();
+    ActivationBase *poppedStackFrame = (ActivationBase *)activations->fastPop();
     stackFrameDepth--;
     // pop off the top elements and reduce the depth
     while (poppedStackFrame != target)
     {
         // clean this up and potentially cache
         cleanupStackFrame(poppedStackFrame);
-        poppedStackFrame = (RexxActivationBase *)activations->fastPop();
+        poppedStackFrame = (ActivationBase *)activations->fastPop();
         stackFrameDepth--;
     }
 
@@ -1564,7 +1564,7 @@ void Activity::unwindStackFrame()
     {
         // check the top activation.  If it's a stack base item, then
         // we've reached the unwind point.
-        RexxActivationBase *poppedActivation = (RexxActivationBase *)activations->fastPop();
+        ActivationBase *poppedActivation = (ActivationBase *)activations->fastPop();
         stackFrameDepth--;
         if (poppedActivation->isStackBase())
         {
@@ -1609,7 +1609,7 @@ void Activity::unwindToDepth(size_t depth)
  */
 void Activity::unwindToFrame(RexxActivation *frame)
 {
-    RexxActivationBase *activation;
+    ActivationBase *activation;
 
     /* unwind the activation stack       */
     while ((activation = getTopStackFrame()) != frame)

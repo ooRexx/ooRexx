@@ -73,31 +73,5 @@ typedef uint16_t *(RexxEntry *PNATIVEROUTINE)(RexxCallContext *, ValueDescriptor
 // prototype for a registered function call.
 typedef size_t (RexxEntry *PREGISTEREDROUTINE)(const char *, size_t, PCONSTRXSTRING, const char *, PRXSTRING);
 
-/**
- * Base class for all executable objects.  Executable
- * objects and Methods and Routines.
- */
-class BaseExecutable : public RexxObject
-{
-public:
-    inline PackageClass *getPackageObject() { return code->getPackageObject(); };
-    inline BaseCode   *getCode() { return code; }
-    ArrayClass  *getSource() { return code->getSource(); }
-    PackageClass *getPackage();
-
-    ArrayClass *source();
-    RexxClass *findClass(RexxString *className);
-    BaseExecutable *setPackageObject(PackageClass *s);
-    RexxString *getName() { return executableName; }
-    void detachSource();
-    static ArrayClass *processExecutableSource(RexxObject *source, RexxObject *position);
-    static void processNewExecutableArgs(RexxObject **&init_args, size_t &argCount, RexxString *&name,
-        Protected<ArrayClass> &sourceArray, PackageClass *&sourceContext);
-
-protected:
-
-    RexxString *executableName;         // the created name of this routine
-    BaseCode   *code;                   // the backing code object
-};
 
 #endif

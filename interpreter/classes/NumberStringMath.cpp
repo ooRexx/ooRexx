@@ -50,6 +50,7 @@
 #include "NumberStringMath.hpp"
 #include "ActivityManager.hpp"
 #include "ProtectedObject.hpp"
+#include "ActivationBase.hpp"
 
 
 NumberString *NumberString::maxMin(RexxObject **args, size_t argCount, unsigned int operation)
@@ -66,7 +67,7 @@ NumberString *NumberString::maxMin(RexxObject **args, size_t argCount, unsigned 
     if (argCount == 0) return this;       /* any arguments to ccompare?        */
 
                                           /* Get a reference to our current act*/
-    RexxActivationBase *CurrentActivation = ActivityManager::currentActivity->getTopStackFrame();
+    ActivationBase *CurrentActivation = ActivityManager::currentActivity->getTopStackFrame();
 
     saveFuzz = CurrentActivation->fuzz(); /* get the current fuzz and digits   */
     saveDigits = CurrentActivation->digits();

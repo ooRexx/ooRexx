@@ -1752,7 +1752,7 @@ StringTable *RexxActivation::getStreams()
         {
             // get the caller frame.  If it is not a Rexx one, then
             // we use a fresh stream table
-            RexxActivationBase *callerFrame = getPreviousStackFrame();
+            ActivationBase *callerFrame = getPreviousStackFrame();
             if (callerFrame == OREF_NULL || !callerFrame->isRexxContext())
             {
                 settings.streams = new_string_table();
@@ -2095,7 +2095,7 @@ bool RexxActivation::trap(RexxString *condition, DirectoryClass *exceptionObject
     // stack frame to see if it can handle this.
     if (settings.isForwarded())
     {
-        RexxActivationBase *activation = getPreviousStackFrame();
+        ActivationBase *activation = getPreviousStackFrame();
         // we can have multiple forwardings in process, so keep drilling until we
         // find a non-forwarded frame
         while (activation != OREF_NULL && isOfClass(Activation, activation))
@@ -2302,7 +2302,7 @@ void RexxActivation::unwindTrap(RexxActivation * child )
 RexxActivation * RexxActivation::senderActivation()
 {
     // get the sender from the activity
-    RexxActivationBase *_sender = getPreviousStackFrame();
+    ActivationBase *_sender = getPreviousStackFrame();
     // spin down to non-native activation
     while (_sender != OREF_NULL && isOfClass(NativeActivation, _sender))
     {

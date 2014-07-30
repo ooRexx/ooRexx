@@ -58,7 +58,7 @@
 
 
 
-class ProtectedObject;                 // needed for look aheads
+class ProtectedObject;
 class PackageClass;
 class MethodClass;
 class InterpreterInstance;
@@ -67,9 +67,12 @@ class CallbackDispatcher;
 class TrappingDispatcher;
 class CommandHandler;
 class ActivationFrame;
+class ActivationBase;
+class NativeActivation;
+class RexxActivation;
 
-                                       /* interface values for the          */
-                                       /* activity_queue method             */
+/* interface values for the          */
+/* activity_queue method             */
 // TODO:  Get rid of these defines
 #define QUEUE_FIFO 1
 #define QUEUE_LIFO 2
@@ -104,7 +107,7 @@ class Activity : public RexxInternalObject
     void reset();
     void runThread();
     wholenumber_t error();
-    wholenumber_t error(RexxActivationBase *, DirectoryClass *errorInfo);
+    wholenumber_t error(ActivationBase *, DirectoryClass *errorInfo);
     wholenumber_t errorNumber(DirectoryClass *conditionObject);
     wholenumber_t displayCondition(DirectoryClass *conditionObject);
     bool        raiseCondition(RexxString *, RexxObject *, RexxString *, RexxObject *, RexxObject *);
@@ -140,14 +143,14 @@ class Activity : public RexxInternalObject
     void        run(MessageClass *target);
     void        checkActivationStack();
     void        updateFrameMarkers();
-    void        pushStackFrame(RexxActivationBase *new_activation);
+    void        pushStackFrame(ActivationBase *new_activation);
     void        createNewActivationStack();
     void        popStackFrame(bool  reply);
-    void        popStackFrame(RexxActivationBase *);
+    void        popStackFrame(ActivationBase *);
     void        unwindStackFrame();
     void        unwindToDepth(size_t depth);
     void        unwindToFrame(RexxActivation *frame);
-    void        cleanupStackFrame(RexxActivationBase *poppedStackFrame);
+    void        cleanupStackFrame(ActivationBase *poppedStackFrame);
     ArrayClass  *generateStackFrames(bool skipFirst);
     Activity *spawnReply();
 
@@ -239,7 +242,7 @@ class Activity : public RexxInternalObject
     void run(TrappingDispatcher &target);
 
     inline RexxActivation *getCurrentRexxFrame() {return currentRexxFrame;}
-    inline RexxActivationBase *getTopStackFrame() { return topStackFrame; }
+    inline ActivationBase *getTopStackFrame() { return topStackFrame; }
     inline size_t getActivationDepth() { return stackFrameDepth; }
     inline const NumericSettings *getNumericSettings () {return numericSettings;}
     inline RexxInternalObject *runningRequires(RexxString *program) {return requiresTable->get(program);}
@@ -324,7 +327,7 @@ class Activity : public RexxInternalObject
     // Rexx context, then the topStackFrame will be the NativeActivation that
     // made the callout and the currentRexxFrame will be the predecessor frame.
     RexxActivation     *currentRexxFrame;
-    RexxActivationBase *topStackFrame;
+    ActivationBase     *topStackFrame;  // top-most activation frame (can be either native or Rexx).
     RexxString         *currentExit;    // current executing system exit
     RexxObject         *waitingObject;  // object activity is waiting on
     SysSemaphore        runsem;         // activity run control semaphore

@@ -46,13 +46,16 @@
 
 #include "FlagSet.hpp"
 
-// required for method signatures
 class PackageClass;
 class SourceTable;
 class StringTable;
 class TableClass;
 class ArrayClass;
 class MethodDictionary;
+/**
+ * The class defintion for the Rexx CLASS class.
+ */
+class ListClass;
 
 class RexxClass : public RexxObject
 {

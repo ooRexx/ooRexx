@@ -41,7 +41,6 @@
 /* Primitive Object Class Definitions                                         */
 /*                                                                            */
 /******************************************************************************/
-/******************************************************************************/
 #ifndef Included_RexxObject
 #define Included_RexxObject
 
@@ -406,8 +405,6 @@ class RexxObject : public RexxInternalObject
         clearObject();
     }
 
-
-
     inline void initializeNewObject(size_t mark, void *vft, RexxBehaviour *b)
     {
         // we need to make this a function object of some type in case
@@ -595,74 +592,5 @@ protected:
     HashCode hashValue;
 };
 
-class ListClass;
-
-
-/**
- * Base class for the different activation types.  This
- * defines the common interface that the activation subclasses
- * must implement.
- */
-class RexxActivationBase : public RexxInternalObject
-{
-public:
-    inline RexxActivationBase() {;};
-    inline RexxActivationBase(RESTORETYPE restoreType) { ; };
-    virtual RexxObject  *dispatch() {return NULL;};
-    virtual size_t digits() {return Numerics::DEFAULT_DIGITS;};
-    virtual size_t fuzz() {return Numerics::DEFAULT_FUZZ;};
-    virtual bool form() {return Numerics::DEFAULT_FORM;};
-    virtual const NumericSettings *getNumericSettings() { return Numerics::getDefaultSettings(); }
-    virtual RexxActivation *getRexxContext() { return OREF_NULL; }
-    virtual RexxActivation *findRexxContext() { return OREF_NULL; }
-    virtual void setDigits(size_t) {;};
-    virtual void setFuzz(size_t) {;};
-    virtual void setForm(bool) {;}
-    virtual bool trap(RexxString *, DirectoryClass *) {return false;};
-    virtual void setObjNotify(MessageClass *) {;};
-    virtual void termination(){;};
-    virtual SecurityManager *getSecurityManager() = 0;
-    virtual bool isForwarded() { return false; }
-    virtual bool isStackBase() { return false; }
-    virtual bool isRexxContext() { return false; }
-    virtual RexxObject *getReceiver() { return OREF_NULL; }
-    inline void setPreviousStackFrame(RexxActivationBase *p) { previous = p; }
-    inline RexxActivationBase *getPreviousStackFrame() { return previous; }
-    inline BaseExecutable *getExecutable() { return executable; }
-    BaseExecutable *getExecutableObject() { return executable; }
-
-protected:
-
-    RexxActivationBase *previous;        // previous activation in the chain
-    BaseExecutable     *executable;      // the executable associated with this activation.
-
-};
-
-
-/**
- * Block guard lock on an object instance.  This allows us to
- * grab a guard lock, while ensuring that the lock is released
- * during exception unwind.
- */
-class GuardLock
-{
-public:
-    inline GuardLock(Activity *a, RexxObject *o, RexxClass *s) : activity(a), target(o), scope(s)
-    {
-        // just acquire the scope
-        target->guardOn(activity, scope);
-    }
-
-    inline ~GuardLock()
-    {
-        target->guardOff(activity, scope);
-    }
-
-private:
-
-    Activity   *activity;    // the activity we're running on
-    RexxObject *target;      // the target object for the lock
-    RexxClass  *scope;       // the scope of the required guard lock
-};
 
 #endif

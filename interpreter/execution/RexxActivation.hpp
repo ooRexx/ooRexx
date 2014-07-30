@@ -44,6 +44,7 @@
 #ifndef Included_RexxActivation
 #define Included_RexxActivation
 
+#include "ActivationBase.hpp"
 #include "ExpressionStack.hpp"
 #include "DoBlock.hpp"
 
@@ -53,6 +54,7 @@
 #include "ContextClass.hpp"
 #include "StemClass.hpp"
 #include "ActivationSettings.hpp"
+#include "BaseExecutable.hpp"
 
 class RexxInstructionCallBase;
 class ProtectedObject;
@@ -64,7 +66,7 @@ class StackFrameClass;
 /**
  * An activation of a section of Rexx code.
  */
-class RexxActivation : public RexxActivationBase
+class RexxActivation : public ActivationBase
 {
   public:
 
@@ -87,35 +89,6 @@ class RexxActivation : public RexxActivationBase
         RETURN_STATUS_FAILURE = -1
     }  ReturnStatus;
 
-
-    // activationContext values
-    // these are done as bit settings to
-    // allow multiple potential values
-    // to be checked with a single test
-    typedef enum
-    {
-        DEBUGPAUSE   = 0x00000001,
-        METHODCALL   = 0x00000002,
-        INTERNALCALL = 0x00000004,
-        INTERPRET    = 0x00000008,
-        PROGRAMCALL  = 0x00000010,
-        EXTERNALCALL = 0x00000020,
-                                       // check for top level execution
-        TOP_LEVEL_CALL = (PROGRAMCALL | METHODCALL | EXTERNALCALL),
-                                       // non-method top level execution
-        PROGRAM_LEVEL_CALL = (PROGRAMCALL | EXTERNALCALL),
-                                       // non-method top level execution
-        PROGRAM_OR_METHOD = (PROGRAMCALL | METHODCALL),
-                                       // call is within an activation
-        INTERNAL_LEVEL_CALL = (INTERNALCALL | INTERPRET),
-    } ActivationContext;
-
-    // guard scopy settings
-    typedef enum
-    {
-        SCOPE_RELEASED = 0,
-        SCOPE_RESERVED = 1,
-    } GuardStatus;
 
 
     /**
@@ -441,9 +414,9 @@ class RexxActivation : public RexxActivationBase
        return settings.localVariables.getDictionary();
    }
 
-   inline StringTable *getAllLocalVariables()
+   inline DirectoryClass *getAllLocalVariables()
    {
-       return getLocalVariables()->getAllVariables();
+       return getLocalVariables()->getVariableDirectory();
    }
 
    inline RexxVariable *getLocalVariable(RexxString *name, size_t index)
@@ -616,7 +589,6 @@ class RexxActivation : public RexxActivationBase
     RexxInstruction     *next;          // next instruction to execute
     bool                 debugPause;    // executing a debug pause
     bool                 clauseBoundary;// special flag for clause boundary checks
-    GuardStatus          objectScope;   // reserve/release state of variables
     RexxObject          *result;        // result of execution
     ArrayClass          *trapInfo;      // current trap handler
     RexxContext         *contextObject; // the context object representing the execution context

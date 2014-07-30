@@ -618,7 +618,7 @@ void VariableDictionary::setNextDictionary(VariableDictionary *next)
  * Get all of the variables in the local context.  This returns
  * just the top-level variables (i.e., simple variables and stems).
  *
- * @return A supplier for iterating the variable sset.
+ * @return A StringTable of the variables.
  */
 StringTable *VariableDictionary::getAllVariables()
 {
@@ -626,6 +626,34 @@ StringTable *VariableDictionary::getAllVariables()
     HashContents::TableIterator iterator = contents->iterator();
     // create a string table with room for the number of variables we have here.
     Protected<StringTable> result = new_string_table(contents->items());
+
+    for (; iterator.isAvailable(); iterator.nextEntry())
+    {
+        // get the next variable from the dictionary
+        RexxVariable *variable = (RexxVariable *)iterator.value();
+        // if this variable has a value, add to the result
+        if (variable->getVariableValue() != OREF_NULL)
+        {
+            result->put(variable->getVariableValue(), variable->getName());
+        }
+    }
+
+    return result;
+}
+
+
+/**
+ * Get all of the variables in the local context.  This returns
+ * just the top-level variables (i.e., simple variables and stems).
+ *
+ * @return A directory of the variables
+ */
+DirectoryClass *VariableDictionary::getVariableDirectory()
+{
+    // use an iterator to traverse the table
+    HashContents::TableIterator iterator = contents->iterator();
+    // create a string table with room for the number of variables we have here.
+    Protected<DirectoryClass> result = new_directory(contents->items());
 
     for (; iterator.isAvailable(); iterator.nextEntry())
     {

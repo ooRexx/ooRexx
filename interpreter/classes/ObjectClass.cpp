@@ -597,7 +597,7 @@ MethodClass * RexxObject::checkPrivate(MethodClass *method )
 {
     // TODO:  are there places where the activation context can be passed in?
     // get the calling activaiton context
-    RexxActivationBase *activation = ActivityManager::currentActivity->getTopStackFrame();
+    ActivationBase *activation = ActivityManager::currentActivity->getTopStackFrame();
     if (activation != OREF_NULL)
     {
         // if the sending and receiving object are the same, this is allowed.
@@ -1966,7 +1966,7 @@ void RexxObject::decodeMessageName(RexxObject *target, RexxObject *message, Rexx
         classArgument(startScope, TheClassClass, "SCOPE");
 
         // validate the message creator now
-        RexxActivationBase *activation = ActivityManager::currentActivity->getTopStackFrame();
+        ActivationBase *activation = ActivityManager::currentActivity->getTopStackFrame();
         // have an activation?
         if (activation != OREF_NULL)
         {

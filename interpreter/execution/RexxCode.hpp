@@ -47,6 +47,9 @@
 #include "BaseCode.hpp"
 #include "RexxLocalVariables.hpp"
 #include "PackageClass.hpp"
+#include "ActivationSettings.hpp"
+
+class StringTable;
 
 /**
  * The fundamental unit of Rexx code execution.  This
@@ -64,7 +67,7 @@ class RexxCode : public BaseCode
    // is generally off by one or two.
    const size_t MINIMUM_STACK_FRAME = 10;
 
-   RexxCode(PackageClass *s, RexxInstruction *i, DirectoryClass *l = OREF_NULL, size_t f = 0, size_t v = RexxLocalVariables::FIRST_VARIABLE_INDEX);
+   RexxCode(PackageClass *s, RexxInstruction *i, StringTable *l = OREF_NULL, size_t f = 0, size_t v = RexxLocalVariables::FIRST_VARIABLE_INDEX);
    inline RexxCode(RESTORETYPE restoreType) { ; };
 
    virtual void live(size_t);
@@ -95,7 +98,7 @@ class RexxCode : public BaseCode
 
    // overrides for BaseCode classes
    virtual void run(Activity *, MethodClass *, RexxObject *, RexxString *, RexxObject **,  size_t, ProtectedObject &);
-   virtual void call(Activity *, RoutineClass *, RexxString *,  RexxObject **, size_t, RexxString *, RexxString *, int, ProtectedObject &);
+   virtual void call(Activity *, RoutineClass *, RexxString *,  RexxObject **, size_t, RexxString *, RexxString *, ActivationContext, ProtectedObject &);
    virtual void call(Activity *, RoutineClass *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
 
 protected:

@@ -239,7 +239,7 @@ void RoutineClass::runProgram(Activity *activity, RexxString * calltype,
     RexxString * environment, RexxObject **arguments, size_t       argCount,
     ProtectedObject &result)
 {
-    code->call(activity, this, executableName, arguments, argCount, calltype, environment, RexxActivation::PROGRAMCALL, result);
+    code->call(activity, this, executableName, arguments, argCount, calltype, environment, PROGRAMCALL, result);
 }
 
 
@@ -255,7 +255,7 @@ void RoutineClass::runProgram(Activity *activity, RexxString * calltype,
 void RoutineClass::runProgram(Activity *activity, RexxObject **arguments,
     size_t argCount, ProtectedObject &result)
 {
-    code->call(activity, this, executableName, arguments, argCount, OREF_COMMAND, activity->getInstance()->getDefaultEnvironment(), RexxActivation::PROGRAMCALL, result);
+    code->call(activity, this, executableName, arguments, argCount, OREF_COMMAND, activity->getInstance()->getDefaultEnvironment(), PROGRAMCALL, result);
 }
 
 

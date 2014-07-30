@@ -36,93 +36,99 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                             MethodClass.hpp    */
+/* REXX Kernel                                                                */
 /*                                                                            */
-/* Primitive Kernel Method Class Definitions                                  */
+/* Base class for the activation types                                        */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_MethodClass
-#define Included_MethodClass
+#ifndef Included_ActivationBase
+#define Included_ActivationBase
 
-#include "RexxCore.h"
-#include "BaseExecutable.hpp"
-#include "FlagSet.hpp"
+#include "Numerics.hpp"
 
-class Activity;
-class MethodClass;
-class ProtectedObject;
-class ArrayClass;
 class RexxClass;
-class PackageClass;
+class Activity;
+class BaseExecutable;
+class DirectoryClass;
+class MessageClass;
+class SecurityManager;
+
+/**
+ * Base class for the different activation types.  This
+ * defines the common interface that the activation subclasses
+ * must implement.
+ */
+class ActivationBase : public RexxInternalObject
+{
+public:
+
+    // guard scopy settings
+    typedef enum
+    {
+        SCOPE_RELEASED = 0,
+        SCOPE_RESERVED = 1,
+    } GuardStatus;
+
+    inline ActivationBase() {;};
+    inline ActivationBase(RESTORETYPE restoreType) { ; };
+    virtual RexxObject  *dispatch() {return NULL;};
+    virtual size_t digits() {return Numerics::DEFAULT_DIGITS;};
+    virtual size_t fuzz() {return Numerics::DEFAULT_FUZZ;};
+    virtual bool form() {return Numerics::DEFAULT_FORM;};
+    virtual const NumericSettings *getNumericSettings() { return Numerics::getDefaultSettings(); }
+    virtual RexxActivation *getRexxContext() { return OREF_NULL; }
+    virtual RexxActivation *findRexxContext() { return OREF_NULL; }
+    virtual void setDigits(size_t) {;};
+    virtual void setFuzz(size_t) {;};
+    virtual void setForm(bool) {;}
+    virtual bool trap(RexxString *, DirectoryClass *) {return false;};
+    virtual void setObjNotify(MessageClass *) {;};
+    virtual void termination(){;};
+    virtual SecurityManager *getSecurityManager() = 0;
+    virtual bool isForwarded() { return false; }
+    virtual bool isStackBase() { return false; }
+    virtual bool isRexxContext() { return false; }
+    virtual RexxObject *getReceiver() { return OREF_NULL; }
+    inline void setPreviousStackFrame(ActivationBase *p) { previous = p; }
+    inline ActivationBase *getPreviousStackFrame() { return previous; }
+    inline BaseExecutable *getExecutable() { return executable; }
+    BaseExecutable *getExecutableObject() { return executable; }
+
+protected:
+
+    ActivationBase *previous;        // previous activation in the chain
+    BaseExecutable *executable;      // the executable associated with this activation.
+    GuardStatus     objectScope;     // reserve/release state of variables
+
+};
 
 
 /**
- * Base class for method object.  This is the frontend for
- * The different types of executable code objects.
+ * Block guard lock on an object instance.  This allows us to
+ * grab a guard lock, while ensuring that the lock is released
+ * during exception unwind.
  */
-class MethodClass : public BaseExecutable
+class GuardLock
 {
- public:
-    void *operator new(size_t);
-    inline void *operator new(size_t size, void *ptr) { return ptr; };
-
-    MethodClass(RexxString *name, BaseCode *_code);
-    inline MethodClass(RESTORETYPE restoreType) { ; };
-
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope*);
-
-    void         run(Activity *,  RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
-    MethodClass *newScope(RexxClass  *);
-    void         setScope(RexxClass  *);
-    SmartBuffer  *saveMethod();
-    RexxObject  *setUnguardedRexx();
-    RexxObject  *setGuardedRexx();
-    RexxObject  *setPrivateRexx();
-    RexxObject  *setProtectedRexx();
-    RexxObject  *setSecurityManager(RexxObject *);
-
-    RexxObject  *isGuardedRexx();
-    RexxObject  *isPrivateRexx();
-    RexxObject  *isProtectedRexx();
-
-    inline bool  isGuarded()      {return !methodFlags[UNGUARDED_FLAG]; };
-    inline bool  isPrivate()      {return methodFlags[PRIVATE_FLAG];}
-    inline bool  isProtected()    {return methodFlags[PROTECTED_FLAG];}
-    inline bool  isSpecial()      {return methodFlags.any(PROTECTED_FLAG, PRIVATE_FLAG);}
-
-    inline void  setUnguarded()    {methodFlags.set(UNGUARDED_FLAG);};
-    inline void  setGuarded()      {methodFlags.reset(UNGUARDED_FLAG);};
-    inline void  setPrivate()      {methodFlags.set(PRIVATE_FLAG); };
-    inline void  setProtected()    {methodFlags.set(PROTECTED_FLAG); };
-    inline void  setUnprotected()  {methodFlags.reset(PROTECTED_FLAG); };
-    inline void  setPublic()       {methodFlags.reset(PRIVATE_FLAG); };
-           void  setAttributes(bool _private, bool _protected, bool _guarded);
-    inline RexxClass *getScope() { return scope; }
-    inline bool  isScope(RexxClass *s) {return scope == s;}
-
-    inline BaseCode  *getCode()     { return code; }
-    MethodClass  *newRexx(RexxObject **, size_t);
-    MethodClass  *newFileRexx(RexxString *);
-    MethodClass  *loadExternalMethod(RexxString *name, RexxString *descriptor);
-
-    static MethodClass *newMethodObject(RexxString *, RexxObject *, RexxClass *, RexxObject *);
-
-    static void createInstance();
-    static RexxClass *classInstance;
-
- protected:
-
-    typedef enum
+public:
+    inline GuardLock(Activity *a, RexxObject *o, RexxClass *s) : activity(a), target(o), scope(s)
     {
-        PRIVATE_FLAG,                    // private method
-        UNGUARDED_FLAG,                  // Method can run with GUARD OFF
-        PROTECTED_FLAG,                  // method is protected
-    } MethodFlags;
+        // just acquire the scope
+        target->guardOn(activity, scope);
+    }
 
-    FlagSet<MethodFlags, 32>  methodFlags;  // method status flags
-    RexxClass  *scope;                      // pointer to the method scope
+    inline ~GuardLock()
+    {
+        target->guardOff(activity, scope);
+    }
+
+private:
+
+    Activity   *activity;    // the activity we're running on
+    RexxObject *target;      // the target object for the lock
+    RexxClass  *scope;       // the scope of the required guard lock
 };
 
+
 #endif
+

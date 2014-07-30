@@ -51,7 +51,12 @@
 class StemClass;
 class SupplierClass;
 class RexxVariableBase;
+class DirectoryClass;
 
+/**
+ * A variable dictionary, used both for object variables
+ * and dynamic access to context variables.
+ */
 class VariableDictionary : public RexxInternalObject
 {
  public:
@@ -199,6 +204,7 @@ class VariableDictionary : public RexxInternalObject
     void setCompoundVariable(RexxString *stemName, RexxObject **tail, size_t tailCount, RexxInternalObject *value);
     void dropCompoundVariable(RexxString *stemName, RexxObject **tail, size_t tailCount);
     StringTable *getAllVariables();
+    DirectoryClass *getVariableDirectory();
     inline void remove(RexxString *n) { contents->remove(n); }
 
     void         set(RexxString *, RexxObject *);
@@ -232,7 +238,7 @@ class VariableDictionary : public RexxInternalObject
 
 protected:
 
-    Activity  *reservingActivity;    // current reserving activity
+    Activity *reservingActivity;         // current reserving activity
     StringHashContents *contents;        // variable dictionary contents
     ArrayClass *waitingActivities;       // list of waiting activities
     unsigned short flags;                // dictionary control flags
