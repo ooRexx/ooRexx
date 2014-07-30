@@ -66,6 +66,7 @@
 #include "StackFrameClass.hpp"
 #include "MutableBufferClass.hpp"
 #include "MethodArguments.hpp"
+#include "ExpressionStem.hpp"
 
 
 /**
@@ -1039,7 +1040,7 @@ bool NativeActivation::objectToValue(RexxObject *o, ValueDescriptor *value)
 
         case REXX_VALUE_RexxStemObject:
         {
-            // Stems get special handling.  If the o\
+            // Stems get special handling.  If the
             // object is already a stem object, we're done.  Otherwise,
             // we get the string value of the value and use that
             // to resolve a stem name in the current context.  If the
@@ -2671,31 +2672,35 @@ PackageClass *NativeActivation::getPackageObject()
 RexxReturnCode NativeActivation::variablePoolInterface(PSHVBLOCK pshvblock)
 {
     // this is not allowed asynchronously
-    if (!getVpavailable())
+    if (!isVariablePoolEnabled())
     {
         return RXSHV_NOAVL;
     }
 
-    RexxReturnCode retcode = 0;          /* initialize composite rc           */
+    // this is a composit return code for all operations we're asked to perform
+    RexxReturnCode retcode = 0;
 
     try
     {
+        // variable pool requests can be chained, so we process
+        // all of the requests
         while (pshvblock)
-        {                   /* while more request blocks         */
+        {
             variablePoolRequest(pshvblock);
-            retcode |= pshvblock->shvret;        /* accumulate the return code        */
-            pshvblock = pshvblock->shvnext;      /* step to the next block            */
+            // the main return code is a composite, so
+            // OR in the return value from each block.
+            retcode |= pshvblock->shvret;
+            pshvblock = pshvblock->shvnext;
         }
-        return retcode;                       /* return composite return code      */
+        return retcode;
 
     }
     // intercept any termination failures
     catch (ActivityException)
     {
-        /* set failure in current            */
         pshvblock->shvret |= (uint8_t)RXSHV_MEMFL;
-        retcode |= pshvblock->shvret;       /* OR with the composite             */
-        return retcode;                     /* stop processing requests now      */
+        retcode |= pshvblock->shvret;
+        return retcode;
     }
 }
 
@@ -2711,38 +2716,42 @@ RexxReturnCode NativeActivation::variablePoolInterface(PSHVBLOCK pshvblock)
  */
 RexxVariableBase *NativeActivation::variablePoolGetVariable(PSHVBLOCK pshvblock, bool symbolic)
 {
-    /* no name given?                    */
+    // no name given?  Thats a failure for this request
     if (pshvblock->shvname.strptr==NULL)
     {
-        pshvblock->shvret|=RXSHV_BADN;   /* this is bad                       */
+        pshvblock->shvret|=RXSHV_BADN;
     }
     else
     {
-        /* get the variable as a string      */
+        // get the variable as a string
         RexxString *variable = new_string(pshvblock->shvname);
         RexxVariableBase *retriever = OREF_NULL;
-        /* symbolic access?                  */
+        // the type of retriever and the valid name rules depend on
+        // whether this is a symbolic or direct request
         if (symbolic)
         {
-            /* get a symbolic retriever          */
             retriever = VariableDictionary::getVariableRetriever(variable);
-        }
-        else                             /* need a direct retriever           */
-        {
-            retriever = VariableDictionary::getDirectVariableRetriever(variable);
-        }
-        if (retriever == OREF_NULL)      /* have a bad name?                  */
-        {
-            pshvblock->shvret|=RXSHV_BADN; /* this is bad                       */
         }
         else
         {
-            resetNext();             /* reset any next operations         */
+            retriever = VariableDictionary::getDirectVariableRetriever(variable);
+        }
+        // mark as a failure if this did not parse to a valid variable name.
+        if (retriever == OREF_NULL || isString(retriever))
+        {
+            pshvblock->shvret|=RXSHV_BADN;
+            return OREF_NULL;
+        }
+        else
+        {
+            // non-next requests of any type reset the variable iterator.
+            resetNext();
             return retriever;
         }
     }
     return OREF_NULL;
 }
+
 
 /**
  * Perform a variable pool fetch operation.
@@ -2755,32 +2764,17 @@ void NativeActivation::variablePoolFetchVariable(PSHVBLOCK pshvblock)
     RexxObject *value = OREF_NULL;
     if (retriever != OREF_NULL)
     {
-        /* have a non-name retriever?        */
-        if (isString((RexxObject *)retriever))
+        // have a real variable retriever and the variable does
+        // exist currently?  We flag new variables in the request block
+        if (!retriever->exists(activation))
         {
-            /* the value is the retriever        */
-            value = (RexxObject *)retriever;
+            pshvblock->shvret |= RXSHV_NEWV;
         }
-        else
-        {
-                                           /* have a non-name retriever         */
-                                           /* and a new variable?               */
-            if (!retriever->exists(activation))
-            {
-                /* flag this in the block            */
-                pshvblock->shvret |= RXSHV_NEWV;
-            }
-            /* get the variable value            */
-            value = retriever->getValue(activation);
-        }
+        // get the variable value
+        value = retriever->getValue(activation);
 
-        /* copy the value                    */
+        // copy the value into the block
         pshvblock->shvret |= copyValue(value, &pshvblock->shvvalue, (size_t *)&pshvblock->shvvaluelen);
-    }
-    else
-    {
-        /* this is bad                       */
-        pshvblock->shvret = RXSHV_BADN;
     }
 }
 
@@ -2792,27 +2786,17 @@ void NativeActivation::variablePoolFetchVariable(PSHVBLOCK pshvblock)
  */
 void NativeActivation::variablePoolSetVariable(PSHVBLOCK pshvblock)
 {
+    // get a retriever for this variable name.
     RexxVariableBase *retriever = variablePoolGetVariable(pshvblock, pshvblock->shvcode == RXSHV_SYSET);
     if (retriever != OREF_NULL)
     {
-        /* have a non-name retriever?        */
-        if (isString((RexxObject *)retriever))
+        // if assigning to a new variable, mark this as a new one.
+        if (!retriever->exists(activation))
         {
-            /* this is bad                       */
-            pshvblock->shvret = RXSHV_BADN;
+            pshvblock->shvret |= RXSHV_NEWV;
         }
-        else
-        {
-                                           /* have a non-name retriever         */
-                                           /* and a new variable?               */
-            if (!retriever->exists(activation))
-            {
-                /* flag this in the block            */
-                pshvblock->shvret |= RXSHV_NEWV;
-            }
-            /* do the assignment                 */
-            retriever->set(activation, new_string(pshvblock->shvvalue));
-        }
+        // do the assignment
+        retriever->set(activation, new_string(pshvblock->shvvalue));
     }
 }
 
@@ -2827,24 +2811,12 @@ void NativeActivation::variablePoolDropVariable(PSHVBLOCK pshvblock)
     RexxVariableBase *retriever = variablePoolGetVariable(pshvblock, pshvblock->shvcode == RXSHV_SYDRO);
     if (retriever != OREF_NULL)
     {
-        /* have a non-name retriever?        */
-        if (isString((RexxObject *)retriever))
+        // dropping an unassigned variable also sets the new flag.
+        if (!retriever->exists(activation))
         {
-            /* this is bad                       */
-            pshvblock->shvret = RXSHV_BADN;
+            pshvblock->shvret |= RXSHV_NEWV;
         }
-        else
-        {
-                                           /* have a non-name retriever         */
-                                           /* and a new variable?               */
-            if (!retriever->exists(activation))
-            {
-                /* flag this in the block            */
-                pshvblock->shvret |= RXSHV_NEWV;
-            }
-            /* perform the drop                  */
-            retriever->drop(activation);
-        }
+        retriever->drop(activation);
     }
 }
 
@@ -2858,16 +2830,17 @@ void NativeActivation::variablePoolNextVariable(PSHVBLOCK pshvblock)
 {
     RexxString *name;
     RexxObject *value;
-    /* get the next variable             */
-    if (!fetchNext(&name, &value))
+
+    // get the next variable from the iterator.  Flag
+    // as the last variable if this fails
+    if (!fetchNext(name, value))
     {
-        pshvblock->shvret |= RXSHV_LVAR; /* flag as such                      */
+        pshvblock->shvret |= RXSHV_LVAR;
     }
     else
-    {                             /* need to copy the name and value   */
-                                  /* copy the name                     */
+    {
+        // need to copy both the name and the value into the block.
         pshvblock->shvret |= copyValue(name, &pshvblock->shvname, &pshvblock->shvnamelen);
-        /* copy the value                    */
         pshvblock->shvret |= copyValue(value, &pshvblock->shvvalue, &pshvblock->shvvaluelen);
     }
 }
@@ -2880,72 +2853,64 @@ void NativeActivation::variablePoolNextVariable(PSHVBLOCK pshvblock)
  */
 void NativeActivation::variablePoolFetchPrivate(PSHVBLOCK pshvblock)
 {
-    /* and VP is enabled                 */
-    /* private block should always be enabled */
-    /* no name given?                    */
+    // must have a name
     if (pshvblock->shvname.strptr==NULL)
     {
         pshvblock->shvret|=RXSHV_BADN;   /* this is bad                       */
     }
     else
     {
-        /* get the variable as a string      */
+        // get the variable as a string
         const char *variable = pshvblock->shvname.strptr;
-        /* want the version string?          */
+        // Interpreter VERSION string?
         if (strcmp(variable, "VERSION") == 0)
         {
-            /* copy the value                    */
             pshvblock->shvret |= copyValue(Interpreter::getVersionNumber(), &pshvblock->shvvalue, &pshvblock->shvvaluelen);
         }
-        /* want the the current queue?       */
+        // the current queue name?
         else if (strcmp(variable, "QUENAME") == 0)
         {
-            /* copy the value                    */
             pshvblock->shvret |= copyValue(Interpreter::getCurrentQueue(), &pshvblock->shvvalue, &pshvblock->shvvaluelen);
         }
-        /* want the version string?          */
+        // the SOURCE string?
         else if (strcmp(variable, "SOURCE") == 0)
         {
-            /* retrieve the source string        */
             RexxString *value = activation->sourceString();
-            /* copy the value                    */
             pshvblock->shvret |= copyValue(value, &pshvblock->shvvalue, &pshvblock->shvvaluelen);
         }
-        /* want the parameter count?         */
+        // the parameter count (arguments in internal parlance)
         else if (strcmp(variable, "PARM") == 0)
         {
             RexxInteger *value = new_integer(activation->getProgramArgumentCount());
-            /* copy the value                    */
             pshvblock->shvret |= copyValue(value, &pshvblock->shvvalue, &pshvblock->shvvaluelen);
         }
-        /* some other parm form              */
+        // request for a specific argument?
         else if (!memcmp(variable, "PARM.", sizeof("PARM.") - 1))
         {
             wholenumber_t value_position;
-            /* extract the numeric piece         */
+            // extract the tail piece and try to convert to an integer.
+            // any failure is a bad name.
             RexxString *tail = new_string(variable + strlen("PARM."));
-            /* get the binary value              */
-            /* not a good number?                */
             if (!tail->numberValue(value_position) || value_position <= 0)
             {
-                /* this is a bad name                */
                 pshvblock->shvret|=RXSHV_BADN;
             }
             else
             {
-                /* get the arcgument from the parent activation */
+                // get the argument from the parent Rexx activation.
                 RexxObject *value = activation->getProgramArgument(value_position);
+                // non-existant args are always returned as a null string
                 if (value == OREF_NULL)
-                {    /* doesn't exist?                    */
-                    value = OREF_NULLSTRING; /* return a null string              */
+                {
+                    value = OREF_NULLSTRING;
                 }
-                /* copy the value                    */
                 pshvblock->shvret |= copyValue(value, &pshvblock->shvvalue, (size_t *)&pshvblock->shvvaluelen);
             }
         }
+        // an unknown name
         else
         {
-            pshvblock->shvret|=RXSHV_BADN; /* this is a bad name                */
+            pshvblock->shvret|=RXSHV_BADN;
         }
     }
 }
@@ -2958,7 +2923,9 @@ void NativeActivation::variablePoolFetchPrivate(PSHVBLOCK pshvblock)
  */
 void NativeActivation::variablePoolRequest(PSHVBLOCK pshvblock)
 {
-    pshvblock->shvret = 0;               /* set the block return code         */
+    // clear any return code in this block.  Return codes get
+    // OR'ed into this value.
+    pshvblock->shvret = 0;
 
     switch (pshvblock->shvcode)
     {
@@ -2990,9 +2957,10 @@ void NativeActivation::variablePoolRequest(PSHVBLOCK pshvblock)
             variablePoolFetchPrivate(pshvblock);
             break;
         }
+        // an unknown function
         default:
         {
-            pshvblock->shvret |= RXSHV_BADF;   /* bad function                      */
+            pshvblock->shvret |= RXSHV_BADF;
             break;
         }
     }
@@ -3036,25 +3004,22 @@ RexxReturnCode NativeActivation::copyValue(RexxObject * value, CONSTRXSTRING *rx
  */
 RexxReturnCode NativeActivation::copyValue(RexxObject * value, RXSTRING *rxstring, size_t *length)
 {
-    RexxString * stringVal;             /* converted object value            */
-    stringsize_t string_length;         /* length of the string              */
-    uint32_t     rc;                    /* return code                       */
+    uint32_t rc = 0;
 
-    rc = 0;                             /* default to success                */
-                                        /* get the string value              */
-    stringVal = value->stringValue();
-    string_length = stringVal->getLength();/* get the string length             */
-    // caller allowing use to allocate this?
+    RexxString *stringVal = value->stringValue();
+    size_t string_length = stringVal->getLength();
+    // caller allowing us to allocate this?
     if (rxstring->strptr == NULL)
     {
         rxstring->strptr = (char *)SystemInterpreter::allocateResultMemory(string_length + 1);
         if (rxstring->strptr == NULL)
         {
-            return RXSHV_MEMFL;                  /* couldn't allocate, return flag */
+            return RXSHV_MEMFL;
         }
         rxstring->strlength = string_length + 1;
     }
-    /* buffer too short?              */
+    // is the buffer too short for the value?  We just copy what we can
+    // and set the truncation flag.
     if (string_length > rxstring->strlength)
     {
         rc = RXSHV_TRUNC;                      /* set truncated return code      */
@@ -3063,41 +3028,49 @@ RexxReturnCode NativeActivation::copyValue(RexxObject * value, RXSTRING *rxstrin
     }
     else
     {
-        /* copy entire string             */
+        // can copy everything...add a terminating null if there is room.  Not
+        // having room for the null is not cause for setting the trunc flag.  The
+        // null is just a convenience, not part of the value.
         memcpy(rxstring->strptr, stringVal->getStringData(), string_length);
-        /* room for a null?               */
         if (rxstring->strlength > string_length)
         {
-            /* yes, add one                   */
             rxstring->strptr[string_length] = '\0';
         }
-        rxstring->strlength = string_length;   /* string length doesn't include terminating 0 */
+        // the returned length does not include the null.
+        rxstring->strlength = string_length;
     }
-    *length = string_length;                 /* return actual string length    */
-    return rc;                               /* give back the return code      */
+    *length = string_length;
+    return rc;
 }
 
-int NativeActivation::stemSort(const char *stemname, int order, int type, size_t start, size_t end, size_t firstcol, size_t lastcol)
-/******************************************************************************/
-/* Function:  Perform a sort on stem data.  If everything works correctly,    */
-/*             this returns zero, otherwise an appropriate error value.       */
-/******************************************************************************/
-{
-    size_t  position;                    /* scan position within compound name */
-    size_t  length;                      /* length of tail section            */
 
-                                         /* if access is enabled              */
+/**
+ * Perform a sort on stem data.  If everything works correctly,
+ * this returns zero, otherwise an appropriate error value.
+ *
+ * @param stemname The name of the stem variable.
+ * @param order    The sort order (ascending or descending).
+ * @param type     The type of sort.
+ * @param start    The starting element.
+ * @param end      The ending element.
+ * @param firstcol The first comparison column.
+ * @param lastcol  The last comparison column.
+ *
+ * @return The completion code.
+ */
+int NativeActivation::stemSort(const char *stemname, int order, int type, size_t start, size_t end, size_t firstcol, size_t lastcol)
+{
     // NB:  The braces here are to ensure the ProtectedObjects get released before the
     // currentActivity gets zeroed out.
     {
-        /* get the stem name as a string */
+        // get the stem name as a string
         RexxString *variable = new_string(stemname);
         ProtectedObject p1(variable);
-        /* and get a retriever for this variable */
+        // and get a retriever for this variable
         RexxStemVariable *retriever = (RexxStemVariable *)VariableDictionary::getVariableRetriever(variable);
 
-        /* this must be a stem variable in order for the sorting to work. */
-
+        // this must be a stem variable in order for the sorting to work. We accept a compound variable,
+        // but we need to chop off the tail piece and use as a prefix.
         if ( (!isOfClass(StemVariableTerm, retriever)) && (!isOfClass(CompoundVariableTerm, retriever)) )
         {
             return false;
@@ -3106,22 +3079,28 @@ int NativeActivation::stemSort(const char *stemname, int order, int type, size_t
         RexxString *tail = OREF_NULLSTRING ;
         ProtectedObject p2(tail);
 
+        // Damn, someone is trying to sort a subsection.  We need to split the stem and
+        // tail pieces.
         if (isOfClass(CompoundVariableTerm, retriever))
         {
-            length = variable->getLength();      /* get the string length             */
-            position = 0;                        /* start scanning at first character */
-            /* scan to the first period          */
+            // scan to the first period
+            size_t length = variable->getLength();
+            size_t position = 0;
             while (variable->getChar(position) != '.')
             {
-                position++;                        /* step to the next character        */
-                length--;                          /* reduce the length also            */
+                position++;
+                length--;
             }
-            position++;                          /* step past previous period         */
-            length--;                            /* adjust the length                 */
+            // the first period is part of the stem name
+            position++;
+            length--;
+            // extract the tail piece and uppercase.  We use this as
+            // a direct reference.
             tail = variable->extract(position, length);
             tail = tail->upper();
         }
 
+        // go perform the sort operation.
         return retriever->sort(activation, tail, order, type, start, end, firstcol, lastcol);
     }
 }
@@ -3158,11 +3137,11 @@ void NativeActivation::forwardMessage(RexxObject *to, RexxString *msg, RexxClass
     // no super class override?  Normal message send
     if (super == OREF_NULL)
     {
-        to->messageSend(msg, args->data(), args->size(), _result);
+        to->messageSend(msg, args->messageArgs(), args->messageArgCount(), _result);
     }
     else
     {
-        to->messageSend(msg, args->data(), args->size(), super, _result);
+        to->messageSend(msg, args->messageArgs(), args->messageArgCount(), super, _result);
     }
 }
 

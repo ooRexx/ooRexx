@@ -425,7 +425,7 @@ SupplierClass *MethodDictionary::getMethods(RexxClass *scope)
     {
         MethodClass *method = (MethodClass *)iterator.value();
         // we're only interested in the real method objects.
-        if (isOfClass(Method, method))
+        if (isMethod(method))
         {
             // only count if this is a scope match
             if (scope == OREF_NULL || method->isScope(scope))
@@ -450,7 +450,7 @@ SupplierClass *MethodDictionary::getMethods(RexxClass *scope)
     {
         MethodClass *method = (MethodClass *)iterator.value();
         // we're only interested in the real method objects.
-        if (isOfClass(Method, method))
+        if (isMethod(method))
         {
             // only count if this is a scope match
             if (scope == OREF_NULL || method->isScope(scope))

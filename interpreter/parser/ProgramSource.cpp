@@ -622,7 +622,7 @@ void ArrayProgramSource::getLine(size_t lineNumber, const char *&linePointer, si
     }
 
     //  now make sure we've been given a string item in each position
-    if (!isOfClass(String, line))
+    if (!isString(line))
     {
         // convert any non-string to a string if we can
         line = line->stringValue();

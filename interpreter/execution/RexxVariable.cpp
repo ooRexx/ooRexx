@@ -200,7 +200,7 @@ void RexxVariable::setStem(RexxInternalObject *value)
 {
     // if this is a stem-to-stem assignment, we replace the current variable's
     // stem object.
-    if (isOfClass(Stem, value))
+    if (isStem(value))
     {
         set(value);
     }

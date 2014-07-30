@@ -68,8 +68,8 @@ class NativeCode : public BaseCode
 
 protected:
 
-    RexxString *packageName;           // the package name
-    RexxString *name;                  // the mapped method name
+    RexxString   *packageName;         // the package name
+    RexxString   *name;                // the mapped method name
     PackageClass *package;             // source this is attached to
 };
 
@@ -102,7 +102,11 @@ protected:
 };
 
 
-class RexxRoutine : public NativeCode
+/**
+ * Base class for a native code routine.  The different
+ * routine types subclass this.
+ */
+class BaseNativeRoutine : public NativeCode
 {
   public:
 
@@ -116,7 +120,7 @@ class RexxRoutine : public NativeCode
 /**
  * An external routine written in C++
  */
-class NativeRoutine : public RexxRoutine
+class NativeRoutine : public BaseNativeRoutine
 {
   public:
     inline void *operator new(size_t size, void *ptr) { return ptr; }
@@ -143,7 +147,7 @@ protected:
 /**
  * A legacy-style external routine.
  */
-class RegisteredRoutine : public RexxRoutine
+class RegisteredRoutine : public BaseNativeRoutine
 {
   public:
     inline void *operator new(size_t size, void *ptr) { return ptr; }

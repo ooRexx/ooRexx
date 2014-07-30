@@ -341,7 +341,7 @@ MethodClass *MethodClass::newMethodObject(RexxString *pgmname, RexxObject *sourc
 {
     // this is used in contexts where an existing method object is allowed...perform this
     // check here and just return the original object if it is already a method.
-    if (isOfClass(Method, source))
+    if (isMethod(source))
     {
         return ((MethodClass *)source)->newScope(scope);
     }

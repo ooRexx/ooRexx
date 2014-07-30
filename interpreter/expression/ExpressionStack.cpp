@@ -144,9 +144,9 @@ RexxString *ExpressionStack::requiredStringArg(size_t position)
     // get the argument from the stack.  If this is a true
     // string, just return directly.
     RexxObject *argument = peek(position);
-    if (isOfClass(String, argument))
+    if (isString(argument))
     {
-        return(RexxString *)argument;
+        return (RexxString *)argument;
     }
     // get the string form, raising a NOSTRING condition if necessary
     RexxString *newStr = argument->requestString();
@@ -175,10 +175,11 @@ RexxString *ExpressionStack::optionalStringArg(size_t  position)
     }
 
     // quick return if this is a string
-    if (isOfClass(String, argument))
+    if (isString(argument))
     {
-        return(RexxString *)argument;
+        return (RexxString *)argument;
     }
+
     // get the string form, raising a NOSTRING condition if necessary
     RexxString *newStr = argument->requestString();
     // we replace the original stack object with the string value
@@ -202,9 +203,9 @@ RexxInteger *ExpressionStack::requiredIntegerArg(size_t position,
 {
     // if the argument is an integer already, this is a quick return.
     RexxObject *argument = peek(position);
-    if (isOfClass(Integer, argument))
+    if (isInteger(argument))
     {
-        return(RexxInteger *)argument;
+        return (RexxInteger *)argument;
     }
 
     // convert to an integer value, give an error if it did not convert.
@@ -241,7 +242,7 @@ RexxInteger *ExpressionStack::optionalIntegerArg(size_t position, size_t argcoun
     {
         return OREF_NULL;
     }
-    if (isOfClass(Integer, argument))
+    if (isInteger(argument))
     {
         return(RexxInteger *)argument;
     }

@@ -1557,7 +1557,7 @@ BUILTIN(SYMBOL)
                                          /* return the 'BAD' result           */
         return new_string(CHAR_BAD);
     }
-    else if (isOfClass(String, variable))    /* directly returned a string?       */
+    else if (isString(variable))    /* directly returned a string?       */
     {
         /* this is a literal value           */
         return new_string(CHAR_LIT);
@@ -1593,7 +1593,7 @@ BUILTIN(VAR)
     {
         return TheFalseObject;           /* return the 'BAD' result           */
     }
-    else if (isOfClass(String, retriever))   /* directly returned a string?       */
+    else if (isString(retriever))   /* directly returned a string?       */
     {
         return TheFalseObject;           /* this doesn't exist either         */
     }
@@ -1686,12 +1686,12 @@ BUILTIN(ABS)
     fix_args(ABS);                       /* check on required number of args  */
     /* get the argument in question      */
     RexxObject *argument = get_arg(ABS, n);
-    if (isOfClass(Integer, argument))
-    {      /* integer object already?           */
-        /* we can process this without conversion */
-        return((RexxInteger *)argument)->abs();
+    // and integer value can be processed quickly
+    if (isInteger(argument))
+    {
+        return ((RexxInteger *)argument)->abs();
     }
-    else if (isOfClass(NumberString, argument))
+    else if (isNumberString(argument))
     { /* how about already numeric?        */
         /* we can process this without conversion */
         return((NumberString *)argument)->abs();
@@ -1710,12 +1710,12 @@ BUILTIN(SIGN)
     fix_args(SIGN);                       /* check on required number of args  */
     /* get the argument in question      */
     RexxObject *argument = get_arg(SIGN, n);
-    if (isOfClass(Integer, argument))
+    if (isInteger(argument))
     {       /* integer object already?           */
         /* we can process this without conversion */
         return((RexxInteger *)argument)->sign();
     }
-    else if (isOfClass(NumberString, argument))
+    else if (isNumberString(argument))
     { /* how about already numeric?        */
         /* we can process this without conversion */
         return((NumberString *)argument)->Sign();
@@ -1759,7 +1759,7 @@ BUILTIN(MAX)
     check_args(ORXMAX);                     /* check on required args            */
     /* get the argument in question      */
     RexxObject *argument = get_arg(MAX, target);
-    if (isOfClass(NumberString, argument))
+    if (isNumberString(argument))
     { /* how about already numeric?        */
         /* we can process this without conversion */
         return((NumberString *)argument)->Max(stack->arguments(argcount - 1), argcount - 1);
@@ -1779,7 +1779,7 @@ BUILTIN(MIN)
     check_args(ORXMIN);                     /* check on required args            */
     /* get the argument in question      */
     RexxObject *argument = get_arg(MIN, target);
-    if (isOfClass(NumberString, argument))
+    if (isNumberString(argument))
     { /* how about already numeric?        */
         /* we can process this without conversion */
         return((NumberString *)argument)->Min(stack->arguments(argcount - 1), argcount - 1);

@@ -1560,9 +1560,9 @@ ArrayClass *RexxInternalObject::requestArray()
     // if this is a primitive object, apply a special fast-path for a real array object.
     if (isBaseClass())
     {
-        if (isOfClass(Array, this))
+        if (isArray(this))
         {
-            return(ArrayClass *)this;
+            return (ArrayClass *)this;
         }
         // other primitive classes handle directly
         else
@@ -1950,7 +1950,7 @@ void RexxObject::decodeMessageName(RexxObject *target, RexxObject *message, Rexx
     startScope = OREF_NULL;
 
     // if 1st arg is a string, we can do this quickly
-    if (!isOfClass(String, message))
+    if (!isString(message))
     {
         // this must be an array
         ArrayClass *messageArray = arrayArgument(message, ARG_ONE);

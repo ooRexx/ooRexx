@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                             NativeMethod.cpp   */
+/* REXX Kernel                                                                */
 /*                                                                            */
 /* Primitive Method Class                                                     */
 /*                                                                            */
@@ -47,52 +47,65 @@
 #include "NativeActivation.hpp"
 #include "NativeCode.hpp"
 #include "PackageManager.hpp"
+#include 'PackageClass.hpp'
 
 
+/**
+ * Construct a NativeCode object.
+ *
+ * @param _package The name of the external library package this is created
+ *                 from.
+ * @param _name    The name of the package entry.
+ */
 NativeCode::NativeCode(RexxString *_package, RexxString *_name)
 {
     // and this is the information needed to resolve this again after an
     // image restore
-    package = _package;
+    packageName = _package;
     name = _name;
     // this will be set later, if available
-    source = OREF_NULL;
+    package = OREF_NULL;
 }
 
 
-// TODO:  needs a cleanup pass
+/**
+ * Normal garbage collection live marking
+ *
+ * @param liveMark The current live mark.
+ */
 void NativeCode::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
-    memory_mark(package);
+    memory_mark(packageName);
     memory_mark(name);
-    memory_mark(source);
+    memory_mark(package);
 }
 
 
+/**
+ * Generalized object marking.
+ *
+ * @param reason The reason for this live marking operation.
+ */
 void NativeCode::liveGeneral(MarkReason reason)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
-    memory_mark_general(package);
+    memory_mark_general(packageName);
     memory_mark_general(name);
-    memory_mark_general(source);
+    memory_mark_general(package);
 }
 
 
+/**
+ * Flatten the table contents as part of a saved program.
+ *
+ * @param envelope The envelope we're flattening into.
+ */
 void NativeCode::flatten(Envelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
 {
     setUpFlatten(NativeMethod)
 
-    flattenRef(package);
+    flattenRef(packageName);
     flattenRef(name);
-    flattenRef(source);
+    flattenRef(package);
 
     cleanUpFlatten
 }
@@ -107,10 +120,10 @@ void NativeCode::flatten(Envelope *envelope)
  */
 RexxClass *NativeCode::findClass(RexxString *className)
 {
-    // if there is a source object attached, have it resolve things.  Otherwise, go back to the default.
-    if (source != OREF_NULL)
+    // if there is a package object attached, have it resolve things.  Otherwise, go back to the default.
+    if (package != OREF_NULL)
     {
-        return source->findClass(className);
+        return package->findClass(className);
     }
     return BaseCode::findClass(className);
 }
@@ -133,7 +146,9 @@ BaseCode *NativeCode::setPackageObject(PackageClass *s)
     }
     else
     {
-        NativeCode *codeCopy = (NativeCode *)this->copy();
+        // we're attaching a code object to a new package...make a copy
+        // and return that instead.
+        NativeCode *codeCopy = (NativeCode *)copy();
         codeCopy->package = s;
         return codeCopy;
     }
@@ -162,18 +177,33 @@ PackageClass *NativeCode::getPackageObject()
  */
 SecurityManager *NativeCode::getSecurityManager()
 {
-    if (source != OREF_NULL)
+    if (package != OREF_NULL)
     {
-        return source->getSecurityManager();
+        return package->getSecurityManager();
     }
     return OREF_NULL;
 }
 
 
+/**
+ * Allocate storage for a new NativeMethod object.
+ *
+ * @param size   The size of the object.
+ *
+ * @return A block of storage for creating this object.
+ */
+void * NativeMethod::operator new(size_t size)
+{
+    return new_object(size, T_NativeMethod);
+}
+
+
+/**
+ * Generalized object marking.
+ *
+ * @param reason The reason for this live marking operation.
+ */
 void NativeMethod::liveGeneral(MarkReason reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
 {
     // zero the entry point if saving the image
     if (reason == SAVINGIMAGE)
@@ -184,22 +214,43 @@ void NativeMethod::liveGeneral(MarkReason reason)
 }
 
 
+/**
+ * Flatten the table contents as part of a saved program.
+ *
+ * @param envelope The envelope we're flattening into.
+ */
 void NativeMethod::flatten(Envelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
 {
-  setUpFlatten(NativeMethod)
-   newThis->entry = NULL;
-   NativeCode::flatten(envelope);
-  cleanUpFlatten
+    setUpFlatten(NativeMethod)
+
+    // zero the entry point address when being flattened.
+    newThis->entry = NULL;
+    NativeCode::flatten(envelope);
+
+    cleanUpFlatten
 }
 
 
+/**
+ * Allocate storage for creating a new NativeRoutine
+ * object.
+ *
+ * @param size   The size of the object.
+ *
+ * @return Initialized storage for a new NativeRoutine.
+ */
+void *NativeRoutine::operator new(size_t size)
+{
+    return new_object(size, T_NativeRoutine);
+}
+
+
+/**
+ * Generalized object marking.
+ *
+ * @param reason The reason for this live marking operation.
+ */
 void NativeRoutine::liveGeneral(MarkReason reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
 {
     // zero the entry point if saving the image
     if (reason == SAVINGIMAGE)
@@ -210,22 +261,41 @@ void NativeRoutine::liveGeneral(MarkReason reason)
 }
 
 
+/**
+ * Flatten the table contents as part of a saved program.
+ *
+ * @param envelope The envelope we're flattening into.
+ */
 void NativeRoutine::flatten(Envelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
 {
-  setUpFlatten(NativeRoutine)
-   newThis->entry = NULL;
-   NativeCode::flatten(envelope);
-  cleanUpFlatten
+    setUpFlatten(NativeRoutine)
+
+    newThis->entry = NULL;
+    NativeCode::flatten(envelope);
+
+    cleanUpFlatten
 }
 
 
+/**
+ * Allocate memory for a new native routine.
+ *
+ * @param size   The size of the object.
+ *
+ * @return Storage for the new object.
+ */
+void *RegisteredRoutine::operator new(size_t size)
+{
+    return new_object(size, T_RegisteredRoutine);
+}
+
+
+/**
+ * Generalized object marking.
+ *
+ * @param reason The reason for this live marking operation.
+ */
 void RegisteredRoutine::liveGeneral(MarkReason reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
 {
     // zero the entry point if saving the image
     if (reason == SAVINGIMAGE)
@@ -236,15 +306,19 @@ void RegisteredRoutine::liveGeneral(MarkReason reason)
 }
 
 
+/**
+ * Flatten the table contents as part of a saved program.
+ *
+ * @param envelope The envelope we're flattening into.
+ */
 void RegisteredRoutine::flatten(Envelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
 {
-  setUpFlatten(RegisteredRoutine)
-   newThis->entry = NULL;
-   NativeCode::flatten(envelope);
-  cleanUpFlatten
+    setUpFlatten(RegisteredRoutine)
+
+    newThis->entry = NULL;
+    NativeCode::flatten(envelope);
+
+    cleanUpFlatten
 }
 
 
@@ -267,7 +341,7 @@ void NativeMethod::run(Activity *activity, MethodClass *method, RexxObject *rece
     if (entry == NULL)
     {
         // have the package manager resolve this for us before we make a call
-        entry = PackageManager::resolveMethodEntry(package, name);
+        entry = PackageManager::resolveMethodEntry(packageName, name);
     }
 
     // create a new native activation
@@ -275,16 +349,6 @@ void NativeMethod::run(Activity *activity, MethodClass *method, RexxObject *rece
     activity->pushStackFrame(newNActa);   /* push it on the activity stack     */
                                        /* and go run it                     */
     newNActa->run(method, this, receiver, messageName, argPtr, count, result);
-}
-
-
-void * NativeMethod::operator new(
-     size_t      size)                 /* object size                       */
-/****************************************************************************/
-/* Function:  Create a new Native method                                    */
-/****************************************************************************/
-{
-    return new_object(size, T_NativeMethod);  // Get new object
 }
 
 
@@ -304,7 +368,7 @@ void NativeRoutine::call(Activity *activity, RoutineClass *routine, RexxString *
     if (entry == NULL)
     {
         // have the package manager resolve this for us before we make a call
-        entry = PackageManager::resolveRoutineEntry(package, name);
+        entry = PackageManager::resolveRoutineEntry(packageName, name);
     }
 
     // create a new native activation
@@ -312,16 +376,6 @@ void NativeRoutine::call(Activity *activity, RoutineClass *routine, RexxString *
     activity->pushStackFrame(newNActa);   /* push it on the activity stack     */
                                        /* and go run it                     */
     newNActa->callNativeRoutine(routine, this, functionName, argPtr, count, result);
-}
-
-
-void * NativeRoutine::operator new(
-     size_t      size)                 /* object size                       */
-/****************************************************************************/
-/* Function:  Create a new Native method                                    */
-/****************************************************************************/
-{
-    return new_object(size, T_NativeRoutine);  // Get new object
 }
 
 
@@ -341,7 +395,7 @@ void RegisteredRoutine::call(Activity *activity, RoutineClass *routine, RexxStri
     if (entry == NULL)
     {
         // have the package manager resolve this for us before we make a call
-        entry = PackageManager::resolveRegisteredRoutineEntry(package, name);
+        entry = PackageManager::resolveRegisteredRoutineEntry(packageName, name);
     }
 
     // create a new native activation
@@ -349,14 +403,4 @@ void RegisteredRoutine::call(Activity *activity, RoutineClass *routine, RexxStri
     activity->pushStackFrame(newNActa);   /* push it on the activity stack     */
                                        /* and go run it                     */
     newNActa->callRegisteredRoutine(routine, this, functionName, argPtr, count, result);
-}
-
-
-void * RegisteredRoutine::operator new(
-     size_t      size)                 /* object size                       */
-/****************************************************************************/
-/* Function:  Create a new Native method                                    */
-/****************************************************************************/
-{
-    return new_object(size, T_RegisteredRoutine);  // Get new object
 }

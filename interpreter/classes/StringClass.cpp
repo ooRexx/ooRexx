@@ -194,7 +194,7 @@ RexxObject *RexxString::unflatten(Envelope *envelope)
  */
 RexxString *RexxString::stringValue()
 {
-    if (isOfClass(String, this))
+    if (!isBaseClass())
     {
         return this;
     }
@@ -1276,7 +1276,7 @@ bool RexxString::truthValue(int errorCode)
 {
     RexxString *testString;              /* string to test                    */
 
-    if (!isOfClass(String, this))            /*  a nonprimitive object?           */
+    if (!isBaseClass())                 /*  a nonprimitive object?           */
     {
         testString = requestString();/* get the real string value         */
     }
@@ -1314,7 +1314,7 @@ bool RexxString::logicalValue(logical_t &result)
 {
     RexxString *testString;              /* string to test                    */
 
-    if (!isOfClass(String, this))            /*  a nonprimitive object?           */
+    if (!isBaseClass())                  /*  a nonprimitive object?           */
     {
         testString = requestString();/* get the real string value         */
     }

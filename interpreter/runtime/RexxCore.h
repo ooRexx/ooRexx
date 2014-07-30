@@ -246,12 +246,12 @@ const int RC_LOGIC_ERROR  = 2;
 #define isOfClassType(t,r) (r)->isObjectType(T_##t)
 
 // some very common class tests
-inline bool isString(RexxObject *o) { return isOfClass(String, o); }
-inline bool isInteger(RexxObject *o) { return isOfClass(Integer, o); }
-inline bool isArray(RexxObject *o) { return isOfClass(Array, o); }
-inline bool isStem(RexxObject *o) { return isOfClass(Stem, o); }
-inline bool isActivation(RexxObject *o) { return isOfClass(Activation, o); }
-inline bool isMethod(RexxObject *o) { return isOfClass(Method, o); }
+inline bool isString(RexxInternalObject *o) { return isOfClass(String, o); }
+inline bool isInteger(RexxInternalObject *o) { return isOfClass(Integer, o); }
+inline bool isNumberString(RexxInternalObject *o) { return isOfClass(NumberString, o); }
+inline bool isArray(RexxInternalObject *o) { return isOfClass(Array, o); }
+inline bool isStem(RexxInternalObject *o) { return isOfClass(Stem, o); }
+inline bool isMethod(RexxInternalObject *o) { return isOfClass(Method, o); }
 
 #include "ActivityManager.hpp"
 

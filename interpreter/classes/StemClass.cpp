@@ -437,7 +437,7 @@ RexxObject *StemClass::bracketEqual(RexxObject **tailElements, size_t argCount)
     if (argCount == 1)
     {
         // stem value as default?  don't allow this as it leads to recursion loops
-        if (isOfClass(Stem, newValue))
+        if (isStem(newValue))
         {
             reportException(Error_Execution_nostem);
         }
@@ -591,7 +591,7 @@ RexxObject *StemClass::request(RexxString *makeclass)
     {
         // if we have a real stem object (not a subclass), handle directly,
         // otherwise send to the subclass.
-        if (isOfClass(Stem, this))
+        if (isStem(this))
         {
             return makeArray();
         }

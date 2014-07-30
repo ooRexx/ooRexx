@@ -1726,7 +1726,7 @@ logical_t RexxEntry IsStem(RexxThreadContext *c, RexxObjectPtr o)
     ApiContext context(c);
     try
     {
-        return isOfClass(Stem, (RexxObject *)o);
+        return isStem((RexxObject *)o);
     }
     catch (NativeActivation *)
     {

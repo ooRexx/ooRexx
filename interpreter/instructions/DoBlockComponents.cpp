@@ -73,7 +73,7 @@ void ForLoop::setup(RexxActivation *context,
 
     // if this is an integer value already and we're at the default digits setting,
     // we should be able to use this directly.
-    if (isOfClass(Integer, result) && context->digits() >= Numerics::DEFAULT_DIGITS)
+    if (isInteger(result) && context->digits() >= Numerics::DEFAULT_DIGITS)
     {
         // get the value directly and trace
         count = ((RexxInteger *)result)->getValue();
@@ -221,7 +221,7 @@ void OverLoop::setup( RexxActivation *context,
     // if this is already an array item, request the non-sparse version
 
     ArrayClass *array;
-    if (isOfClass(Array, result))
+    if (isArray(result))
     {
         array = ((ArrayClass *)result)->makeArray();
     }
@@ -232,7 +232,7 @@ void OverLoop::setup( RexxActivation *context,
         array = result->requestArray();
         // raise an error if this did not convert ok, or we got
         // back something other than a real Rexx array.
-        if (!isOfClass(Array, array))
+        if (!isArray(array))
         {
             reportException(Error_Execution_noarray, result);
         }

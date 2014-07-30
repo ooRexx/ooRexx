@@ -106,7 +106,7 @@ RexxObject *ArrayClass::newRexx(RexxInternalObject **arguments, size_t argCount)
         RexxInternalObject *currentDim = arguments[0];
         // specified as an array of dimensions?
         // this gets special handling
-        if (currentDim != OREF_NULL && isOfClass(Array, currentDim))
+        if (currentDim != OREF_NULL && isArray(currentDim))
         {
             return createMultidimensional((ArrayClass *)currentDim, classThis);
         }
@@ -1155,7 +1155,7 @@ bool ArrayClass::validateIndex(RexxObject **index, size_t indexCount,
     // to the array's information.
 
     // do we really have a single index item given as an array?
-    if (indexCount == 1 && index[0] != OREF_NULL && isOfClass(Array, index[0]))
+    if (indexCount == 1 && index[0] != OREF_NULL && isArray(index[0]))
     {
         // we process this exactly the same way, but swap the count and
         // pointers around to be the array data.
@@ -1483,7 +1483,7 @@ ArrayClass *ArrayClass::sectionRexx(RexxObject *start, RexxObject *end)
 ArrayClass *ArrayClass::allocateArrayOfClass(size_t size)
 {
     // typical is a just a primitive array.
-    if (isOfClass(Array, this))
+    if (isArray(this))
     {
         return new_array(size);
     }

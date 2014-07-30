@@ -547,7 +547,7 @@ RexxObject *RexxInteger::plus(RexxInteger *other)
     {
         // if we have two integers, we can do this very quickly.  However, if we
         // overflow as a result, we fall back to the slow way
-        if (isOfClass(Integer, other))
+        if (isInteger(other))
         {
             wholenumber_t tempVal = value + other->value;
             // fall withing range?  return an integer result
@@ -585,7 +585,7 @@ RexxObject *RexxInteger::minus(RexxInteger *other)
     else
     {
         // if subtracting two integer objects, try this in binary
-        if (isOfClass(Integer, other))
+        if (isInteger(other))
         {
             wholenumber_t tempVal = value - other->value;
             // if this is still in the whole number range, we can return a new Integer result
@@ -620,7 +620,7 @@ RexxObject *RexxInteger::multiply(RexxInteger *other)
     requiredArgument(other, ARG_ONE);
     // if the other value is an integer, we can multiply this directly if the other value is
     // an integer, but we need to do this using 64-bit math to detect overflows.
-    if (isOfClass(Integer, other))
+    if (isInteger(other))
     {
         int64_t tempThis = (int64_t)value;
         int64_t tempOther = (int64_t)other->value;
@@ -671,7 +671,7 @@ RexxObject *RexxInteger::integerDivide(RexxInteger *other)
     requiredArgument(other, ARG_ONE);
 
     // we can do this via binary means, but need to check for divide by zero here.
-    if (isOfClass(Integer, other))
+    if (isInteger(other))
     {
         if (other->value != 0)
         {
@@ -706,7 +706,7 @@ RexxObject *RexxInteger::remainder(RexxInteger *other)
     requiredArgument(other, ARG_ONE);
 
     // if we have a pair of integer, we can do this here.
-    if (isOfClass(Integer, other))
+    if (isInteger(other))
     {
         // protect against divide by zero
         if (other->value != 0)
@@ -754,7 +754,7 @@ bool RexxInteger::isEqual(RexxObject *other)
     // primitive version, no argument checking here
 
     // compare directly if we have two integers
-    if (isOfClass(Integer, other))
+    if (isInteger(other))
     {
         return value == ((RexxInteger *)other)->value;
     }
@@ -781,7 +781,7 @@ wholenumber_t RexxInteger::strictComp(RexxObject *other)
     // comparison operators, so the argument checking is done here.
     requiredArgument(other, ARG_ONE);
     // if two integers, this is easy to do.
-    if (isOfClass(Integer, other))
+    if (isInteger(other))
     {
         return value - ((RexxInteger *)other)->value;
     }
@@ -1188,7 +1188,7 @@ RexxObject *RexxInteger::Max(RexxObject **args, size_t argCount)
         requiredArgument(argument, arg);
 
         // if this is an integer object, we can continue doing this
-        if (isOfClass(Integer, argument))
+        if (isInteger(argument))
         {
             wholenumber_t v = ((RexxInteger *)argument)->getValue();
             // get the larger value
@@ -1237,7 +1237,7 @@ RexxObject *RexxInteger::Min(
         requiredArgument(argument, arg);
 
         // if this is an integer object, we can continue doing this
-        if (isOfClass(Integer, argument))
+        if (isInteger(argument))
         {
             wholenumber_t v = ((RexxInteger *)argument)->getValue();
             // get the larger value
