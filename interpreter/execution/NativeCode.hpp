@@ -110,8 +110,8 @@ class BaseNativeRoutine : public NativeCode
 {
   public:
 
-    inline RexxRoutine() { }
-    inline RexxRoutine(RexxString *p, RexxString *n) : NativeCode(p, n) { }
+    inline BaseNativeRoutine() { }
+    inline BaseNativeRoutine(RexxString *p, RexxString *n) : NativeCode(p, n) { }
 
     virtual void call(Activity *, RoutineClass *, RexxString *, RexxObject **, size_t, ProtectedObject &) = 0;
 };
@@ -129,7 +129,7 @@ class NativeRoutine : public BaseNativeRoutine
     inline void  operator delete(void *, void *) { ; }
 
     inline NativeRoutine(RESTORETYPE restoreType) { ; };
-    inline NativeRoutine(RexxString *p, RexxString *n, PNATIVEROUTINE e) : RexxRoutine(p, n), entry(e) { }
+    inline NativeRoutine(RexxString *p, RexxString *n, PNATIVEROUTINE e) : BaseNativeRoutine(p, n), entry(e) { }
 
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(Envelope *envelope);
@@ -159,8 +159,8 @@ class RegisteredRoutine : public BaseNativeRoutine
     virtual void flatten(Envelope *envelope);
 
     inline RegisteredRoutine(RESTORETYPE restoreType) { ; };
-    RegisteredRoutine(RexxString *n, RexxRoutineHandler *e)  : RexxRoutine(OREF_NULL, n), entry(e) { }
-    RegisteredRoutine(RexxString *p, RexxString *n, RexxRoutineHandler *e)  : RexxRoutine(p, n), entry(e) { }
+    RegisteredRoutine(RexxString *n, RexxRoutineHandler *e)  : BaseNativeRoutine(OREF_NULL, n), entry(e) { }
+    RegisteredRoutine(RexxString *p, RexxString *n, RexxRoutineHandler *e)  : BaseNativeRoutine(p, n), entry(e) { }
 
     virtual void call(Activity *, RoutineClass *, RexxString *, RexxObject **, size_t, ProtectedObject &);
 

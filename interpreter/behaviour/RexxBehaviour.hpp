@@ -68,7 +68,7 @@ class RexxBehaviour : public RexxInternalObject
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(Envelope*);
-    virtual RexxObject *copy();
+    virtual RexxInternalObject *copy();
 
     void         copyBehaviour();
     void         copyBehaviour(RexxBehaviour *source);

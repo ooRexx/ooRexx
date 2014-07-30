@@ -44,15 +44,12 @@
 #include "RexxCore.h"
 #include "TraceSetting.hpp"
 
-// make this a little easier to access
-using namespace TraceSetting;
-
-const TraceFlags defaultTraceFlags(traceNormal, traceFailures);
+const TraceSetting::TraceFlags defaultTraceFlags(TraceSetting::traceNormal, TraceSetting::traceFailures);
 
 // now the flag sets for different settings
-const TraceFlags traceAllFlags(traceAll, traceLabel, traceCommand);
-const TraceFlags traceResultsFlags(traceAll, traceLabel, traceResult, traceCommand);
-const TraceFlags traceIntermediatesFlags(traceAll, traceLabel, traceResult, traceCommand, traceIntermediate);
+const TraceSetting::TraceFlags traceAllFlags(TraceSetting::traceAll, TraceSetting::traceLabels, TraceSetting::traceCommands);
+const TraceSetting::TraceFlags traceResultsFlags(TraceSetting::traceAll, TraceSetting::traceLabels, TraceSetting::traceResults, TraceSetting::traceCommands);
+const TraceSetting::TraceFlags traceIntermediatesFlags(TraceSetting::traceAll, TraceSetting::traceLabels, TraceSetting::traceResults, TraceSetting::traceCommands, TraceSetting::traceIntermediates);
 
 
 /**
@@ -70,7 +67,7 @@ RexxString *TraceSetting::toString()
 
     // do we have a debug setting?
     // add a '?' prefix to the formatted setting
-    if (isDebug()))
+    if (isDebug())
     {
         setting[index++] = '?';
     }
@@ -82,38 +79,38 @@ RexxString *TraceSetting::toString()
     }
     // The following must be done in this order because N and E both
     // trace failures.
-    else if (flag[traceNormal])
+    else if (flags[traceNormal])
     {
         setting[index++] = 'N';
     }
-    else if (flag[traceErrors])
+    else if (flags[traceErrors])
     {
         setting[index++] = 'E';
     }
-    else if (flag[traceFailures])
+    else if (flags[traceFailures])
     {
         setting[index++] = 'F';
     }
     // these also must be done in this order...
     // each option also includes the setting below
-    else if (flag[traceIntermediate])
+    else if (flags[traceIntermediates])
     {
         setting[index++] = 'I';
     }
-    else if (flag[traceResult])
+    else if (flags[traceResults])
     {
         setting[index++] = 'R';
     }
     // ALL includes Label and Command, so it comes before those
-    else if (flag[traceAll])
+    else if (flags[traceAll])
     {
         setting[index++] = 'A';
     }
-    else if (flag[traceLabel])
+    else if (flags[traceLabels])
     {
         setting[index++] = 'L';
     }
-    else if (flag[traceCommand])
+    else if (flags[traceCommands])
     {
         setting[index++] = 'C';
     }

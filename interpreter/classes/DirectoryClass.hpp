@@ -63,7 +63,7 @@ class DirectoryClass : public StringHashCollection
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(Envelope *);
 
-    virtual RexxObject *copy();
+    virtual RexxInternalObject *copy();
 
     // virtual method overrides of the base collection class.
     virtual size_t items();

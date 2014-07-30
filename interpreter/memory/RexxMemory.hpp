@@ -148,10 +148,10 @@ class MemoryObject : public RexxInternalObject
     void        initialize(bool restoringImage);
     MemorySegment *newSegment(size_t requestLength, size_t minLength);
     MemorySegment *newLargeSegment(size_t requestLength, size_t minLength);
-    RexxObject *oldObject(size_t size);
-    inline RexxObject *newObject(size_t size) { return newObject(size, T_Object); }
-    RexxObject *newObject(size_t size, size_t type);
-    RexxObject *temporaryObject(size_t size);
+    RexxInternalObject *oldObject(size_t size);
+    inline RexxInternalObject *newObject(size_t size) { return newObject(size, T_Object); }
+    RexxInternalObject *newObject(size_t size, size_t type);
+    RexxInternalObject *temporaryObject(size_t size);
     ArrayClass *newObjects(size_t size, size_t count, size_t objectType);
     void        reSize(RexxInternalObject *, size_t);
     void        checkUninit();
@@ -160,8 +160,8 @@ class MemoryObject : public RexxInternalObject
     void        addUninitObject(RexxInternalObject *obj);
     bool        isPendingUninit(RexxInternalObject *obj);
     inline void checkUninitQueue() { if (pendingUninits > 0) runUninits(); }
-    RexxObject *unflattenObjectBuffer(BufferClass *sourceBuffer, char *startPointer, size_t dataLength);
-    void        unflattenProxyObjects(Envelope *envelope, RexxObject *firstObject, RexxObject *endObject);
+    RexxInternalObject *unflattenObjectBuffer(BufferClass *sourceBuffer, char *startPointer, size_t dataLength);
+    void        unflattenProxyObjects(Envelope *envelope, RexxInternalObject *firstObject, RexxInternalObject *endObject);
 
     void        markObjects();
     void        markObjectsMain(RexxInternalObject *);
@@ -327,11 +327,11 @@ public:
     ImageRestoreMarkHandler(char *r) : relocation(r) { }
 
     // pure virtual method for handling the mark operation.
-    virtual void mark(RexxObject **field, RexxObject *object)
+    virtual void mark(RexxInternalObject **field, RexxInternalObject *object)
     {
         // the object reference is an offset.  Add in the address
         // of the buffer start
-        *field = *(RexxObject *)(relocation + (size_t)object);
+        *field = *(RexxInternalObject *)(relocation + (size_t)object);
     }
 
     char *relocation;       // the relative relocation amount
@@ -349,11 +349,11 @@ public:
     UnflatteningMarkHandler(char *r, size_t m) : relocation(r), markWord(m) { }
 
     // pure virtual method for handling the mark operation.
-    virtual void mark(RexxObject **field, RexxObject *object)
+    virtual void mark(RexxInternalObject **field, RexxInternalObject *object)
     {
         // At this point, the object pointer is actually an offset and
         // the base buffer pointer is our location value
-        object = (RexxObject *)(relocation + (size_t)object);
+        object = (RexxInternalObject *)(relocation + (size_t)object);
         *field = object;
         // make sure this object is set to the current mark word
         // so that all objects will get marked correctly on the next pass.
@@ -375,7 +375,7 @@ public:
     EnvelopeMarkHandler(Envelope *e) : envelope(e) { }
 
     // pure virtual method for handling the mark operation.
-    virtual void mark(RexxObject * *field, RexxObject *object)
+    virtual void mark(RexxInternalObject **field, RexxInternalObject *object)
     {
         // do the unflatten operation
         *field = object->unflatten(envelope);
@@ -394,7 +394,7 @@ public:
     ImageSaveMarkHandler(MemoryObject *m, size_t mw, char *b, size_t o) : memory(m), markWord(mw), imageBuffer(b), imageOffset(o) { }
 
     // pure virtual method for handling the mark operation.
-    virtual void mark(RexxObject **pMarkObject, RexxObject *markObject);
+    virtual void mark(RexxInternalObject **pMarkObject, RexxInternalObject *markObject);
 
 
     MemoryObject *memory;    // the memory object
@@ -436,10 +436,10 @@ public:
 /* Memory management macros                                                   */
 /******************************************************************************/
 
-inline void holdObject(RexxInternalObject *o) { memoryObject.holdObject((RexxObject *)o); }
+inline void holdObject(RexxInternalObject *o) { memoryObject.holdObject(o); }
 
-inline RexxObject *new_object(size_t s) { return memoryObject.newObject(s); }
-inline RexxObject *new_object(size_t s, size_t t) { return memoryObject.newObject(s, t); }
+inline RexxInternalObject *new_object(size_t s) { return memoryObject.newObject(s); }
+inline RexxInternalObject *new_object(size_t s, size_t t) { return memoryObject.newObject(s, t); }
 
 inline ArrayClass *new_arrayOfObject(size_t s, size_t c, size_t t)  { return memoryObject.newObjects(s, c, t); }
 

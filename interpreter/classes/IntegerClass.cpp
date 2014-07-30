@@ -1498,7 +1498,7 @@ RexxClass *RexxInteger::classObject()
  */
 void *RexxInteger::operator new(size_t size)
 {
-    RexxObject *newObject = new_object(size, T_Integer);
+    RexxInternalObject *newObject = new_object(size, T_Integer);
     // initially, no references.
     newObject->setHasNoReferences();
     return newObject;

@@ -57,17 +57,18 @@ class HashCollection : public RexxObject
  public:
     inline HashCollection() { ; }
 
-    virtual void        live(size_t);
-    virtual void        liveGeneral(MarkReason reason);
-    virtual void        flatten(Envelope *);
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(Envelope *);
 
-    virtual RexxObject *unflatten(Envelope *);
-    virtual RexxObject *copy();
+    virtual RexxInternalObject *unflatten(Envelope *);
+    virtual RexxInternalObject *copy();
     virtual ArrayClass *makeArray();
 
     virtual HashContents *allocateContents(size_t bucketSize, size_t capacity);
     virtual void validateIndex(RexxInternalObject *&index, size_t position);
     virtual void validateValueIndex(RexxInternalObject *&value, RexxInternalObject *&index, size_t position);
+    virtual bool requiresRehash() { return true; }
 
     void initialize(size_t capacity = DefaultTableSize);
     void copyValues();
@@ -178,6 +179,8 @@ public:
 
     virtual HashContents *allocateContents(size_t bucketSize, size_t capacity);
     virtual void validateIndex(RexxInternalObject *&index, size_t position);
+    // string collections don't require a rehash
+    virtual bool requiresRehash() { return false; }
 
     // additional string oriented lookup functions
     // base implementations of extra directory methods.

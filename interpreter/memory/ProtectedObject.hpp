@@ -254,6 +254,12 @@ public:
         return (RexxObject *)protectedObject;
     }
 
+    // cast conversion operators for some very common uses of protected object.
+    inline operator RexxInternalObject *()
+    {
+        return (RexxInternalObject *)protectedObject;
+    }
+
     inline operator RexxObjectPtr ()
     {
         return (RexxObjectPtr)protectedObject;

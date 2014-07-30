@@ -62,7 +62,7 @@ class ListClass : public RexxObject
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(Envelope *);
 
-    virtual RexxObject *copy();
+    virtual RexxInternalObject *copy();
     virtual ArrayClass *makeArray();
     virtual ArrayClass *requestArray();
 

@@ -78,12 +78,12 @@ DeadObject *MemorySegment::lastDeadObject()
     /* the segment */
     for (objectPtr = start(), endPtr = end();
         objectPtr < endPtr;
-        objectPtr += ((RexxObject *)objectPtr)->getObjectSize())
+        objectPtr += ((RexxInternalObject *)objectPtr)->getObjectSize())
     {
         lastObjectPtr = objectPtr;
     }
 
-    if (!((RexxObject *)lastObjectPtr)->isObjectLive(memoryObject.markWord))
+    if (!((RexxInternalObject *)lastObjectPtr)->isObjectLive(memoryObject.markWord))
     {
         return(DeadObject *)lastObjectPtr;
     }
@@ -98,7 +98,7 @@ DeadObject *MemorySegment::firstDeadObject()
 /* in the segment for purposes of combining the segments.                     */
 /******************************************************************************/
 {
-    if (!((RexxObject *)start())->isObjectLive(memoryObject.markWord))
+    if (!((RexxInternalObject *)start())->isObjectLive(memoryObject.markWord))
     {
         return(DeadObject *)start();
     }
@@ -114,7 +114,7 @@ void MemorySegment::gatherObjectStats(MemoryStats *memStats, SegmentStats *stats
     char *op;
     char *ep;
     /* for all objects in this segment   */
-    for (op = start(), ep = end(); op < ep; op += ((RexxObject *)op)->getObjectSize())
+    for (op = start(), ep = end(); op < ep; op += ((RexxInternalObject *)op)->getObjectSize())
     {
         /* record the information about this object */
         stats->recordObject(memStats, op);
@@ -617,14 +617,14 @@ MemorySegment *MemorySegmentSet::splitSegment(size_t allocationLength)
         size_t deadLength;
         /* ok, sweep all of the objects in this segment, looking */
         /* for one large enough. */
-        for (objectPtr = segment->start(), endPtr = segment->end(), deadLength = ((RexxObject *)objectPtr)->getObjectSize();
+        for (objectPtr = segment->start(), endPtr = segment->end(), deadLength = ((RexxInternalObject *)objectPtr)->getObjectSize();
             objectPtr < endPtr;
-            objectPtr += deadLength, deadLength = ((RexxObject *)objectPtr)->getObjectSize())
+            objectPtr += deadLength, deadLength = ((RexxInternalObject *)objectPtr)->getObjectSize())
         {
             /* We're only interested in the dead objects.  Note */
             /* that since we've just finished a GC operation, we */
             /* shouldn't see any adjacent dead objects. */
-            if (!((RexxObject *)objectPtr)->isObjectLive(memoryObject.markWord))
+            if (!((RexxInternalObject *)objectPtr)->isObjectLive(memoryObject.markWord))
             {
                 /* have we found an empty part large enough to */
                 /* convert into a segment? */
@@ -1105,8 +1105,8 @@ void LargeSegmentSet::completeSweepOperation()
 #endif
 }
 
-inline bool objectIsLive(char *obj, size_t mark) {return ((RexxObject *)obj)->isObjectLive(mark); }
-inline bool objectIsNotLive(char *obj, size_t mark) {return ((RexxObject *)obj)->isObjectDead(mark); }
+inline bool objectIsLive(char *obj, size_t mark) {return ((RexxInternalObject *)obj)->isObjectLive(mark); }
+inline bool objectIsNotLive(char *obj, size_t mark) {return ((RexxInternalObject *)obj)->isObjectDead(mark); }
 
 void MemorySegmentSet::sweep()
 /******************************************************************************/
@@ -1138,7 +1138,7 @@ void MemorySegmentSet::sweep()
             if (objectIsLive(objectPtr, mark))
             {
                 /* Get size of object for stats and  */
-                bytes = ((RexxObject *)objectPtr)->getObjectSize();
+                bytes = ((RexxInternalObject *)objectPtr)->getObjectSize();
                 /* do any reference checking         */
                 validateObject(bytes);
                 /* update our tracking counters */
@@ -1152,7 +1152,7 @@ void MemorySegmentSet::sweep()
             else
             {
                 /* get the object's size */
-                deadLength = ((RexxObject *)objectPtr)->getObjectSize();
+                deadLength = ((RexxInternalObject *)objectPtr)->getObjectSize();
                 /* do any reference checking         */
                 validateObject(deadLength);
 
@@ -1161,7 +1161,7 @@ void MemorySegmentSet::sweep()
                     nextObjectPtr += bytes)
                 {
                     /* get the object size */
-                    bytes = ((RexxObject *)nextObjectPtr)->getObjectSize();
+                    bytes = ((RexxInternalObject *)nextObjectPtr)->getObjectSize();
                     /* do any reference checking         */
                     validateObject(bytes);
                     /* add in the size of this dead body */
@@ -1192,7 +1192,7 @@ void MemorySegmentSet::collectEmptySegments()
 }
 
 
-RexxObject *MemorySegmentSet::splitDeadObject(
+RexxInternalObject *MemorySegmentSet::splitDeadObject(
     DeadObject *object,                /* the object we're splitting */
     size_t allocationLength,           /* the request length, already rounded to an appropriate boundary */
     size_t splitMinimum)               /* the minimum size we're willing to split */
@@ -1227,12 +1227,12 @@ RexxObject *MemorySegmentSet::splitDeadObject(
         addDeadObject((char *)largeObject, deadLength);
     }
     /* Adjust the size of this object to the requested allocation length */
-    ((RexxObject *)object)->setObjectSize(allocationLength);
-    return(RexxObject *)object;
+    ((RexxInternalObject *)object)->setObjectSize(allocationLength);
+    return(RexxInternalObject *)object;
 }
 
 
-RexxObject *NormalSegmentSet::findLargeDeadObject(
+RexxInternalObject *NormalSegmentSet::findLargeDeadObject(
     size_t allocationLength)           /* the request length, already rounded to an appropriate boundary */
 /******************************************************************************/
 /* Function:  Search the segment set for a block of the requested length.     */
@@ -1254,7 +1254,7 @@ RexxObject *NormalSegmentSet::findLargeDeadObject(
 }
 
 
-RexxObject *NormalSegmentSet::findObject(size_t allocationLength)
+RexxInternalObject *NormalSegmentSet::findObject(size_t allocationLength)
 /******************************************************************************/
 /* Function:  Find a dead object in the caches for the NormalSegmentSet.      */
 /******************************************************************************/
@@ -1265,7 +1265,7 @@ RexxObject *NormalSegmentSet::findObject(size_t allocationLength)
 }
 
 
-RexxObject *NormalSegmentSet::handleAllocationFailure(size_t allocationLength)
+RexxInternalObject *NormalSegmentSet::handleAllocationFailure(size_t allocationLength)
 /******************************************************************************/
 /* Function:  Allocate an object from the normal object segment pool.         */
 /******************************************************************************/
@@ -1276,7 +1276,7 @@ RexxObject *NormalSegmentSet::handleAllocationFailure(size_t allocationLength)
     /* the heap size. */
     adjustMemorySize();
     /* Step 3, see if can allocate now */
-    RexxObject *newObject = findObject(allocationLength);
+    RexxInternalObject *newObject = findObject(allocationLength);
     /* still no luck?                    */
     if (newObject == OREF_NULL)
     {
@@ -1322,7 +1322,7 @@ RexxObject *NormalSegmentSet::handleAllocationFailure(size_t allocationLength)
 }
 
 
-RexxObject *LargeSegmentSet::findObject(size_t allocationLength)
+RexxInternalObject *LargeSegmentSet::findObject(size_t allocationLength)
 /******************************************************************************/
 /* Function:  Locate an object is the dead object cache maintained for large  */
 /* object allocations.                                                        */
@@ -1333,7 +1333,7 @@ RexxObject *LargeSegmentSet::findObject(size_t allocationLength)
 }
 
 
-RexxObject *LargeSegmentSet::handleAllocationFailure(size_t allocationLength)
+RexxInternalObject *LargeSegmentSet::handleAllocationFailure(size_t allocationLength)
 /******************************************************************************/
 /* Function:  Allocate a large block of memory.  This will manage allocation  */
 /* of larger memory requests.  This will search our large block allocation    */
@@ -1346,7 +1346,7 @@ RexxObject *LargeSegmentSet::handleAllocationFailure(size_t allocationLength)
     /* Step 2, decide to expand the heap or GC, or both */
     expandOrCollect(allocationLength);
     /* Step 3, see if can allocate now */
-    RexxObject *newObject = findObject(allocationLength);
+    RexxInternalObject *newObject = findObject(allocationLength);
     if (newObject == OREF_NULL)
     {    /* still no luck?                    */
         /* Step 4, force a heap expansion, if we can */
@@ -1383,7 +1383,7 @@ RexxObject *LargeSegmentSet::handleAllocationFailure(size_t allocationLength)
 }
 
 
-RexxObject *OldSpaceSegmentSet::findObject(size_t allocationLength)
+RexxInternalObject *OldSpaceSegmentSet::findObject(size_t allocationLength)
 /******************************************************************************/
 /* Function:  Locate an object is the dead object cache maintained for large  */
 /* object allocations.                                                        */
@@ -1403,7 +1403,7 @@ RexxObject *OldSpaceSegmentSet::findObject(size_t allocationLength)
 }
 
 
-RexxObject *OldSpaceSegmentSet::allocateObject(size_t requestLength)
+RexxInternalObject *OldSpaceSegmentSet::allocateObject(size_t requestLength)
 /******************************************************************************/
 /* Function:  Allocate an object from the old space.  This is a very simple   */
 /* management strategy, with no heroic efforts made to locate memory.  Since  */
@@ -1417,7 +1417,7 @@ RexxObject *OldSpaceSegmentSet::allocateObject(size_t requestLength)
     /* try to round the object size up at all.  This will take place */
     /* once we've found a fit.  The allocations will be rounded up to */
     /* the next appropriate boundary. */
-    RexxObject *newObject = findObject(allocationLength);
+    RexxInternalObject *newObject = findObject(allocationLength);
     /* can't allocate one?               */
     if (newObject == OREF_NULL)
     {
@@ -1784,16 +1784,17 @@ void MemorySegment::markAllObjects()
     for (op = start(), ep = end(); op < ep; )
     {
         /* mark behaviour live               */
-        memory_mark_general(((RexxObject *)op)->behaviour);
+        memory_mark_general(((RexxInternalObject *)op)->behaviour);
 
         /* Does this object have other Obj   */
         /*refs?                              */
-        if (((RexxObject *)op)->hasReferences())
+        if (((RexxInternalObject *)op)->hasReferences())
         {
             /*  yes, Then lets mark them         */
-            ((RexxObject *)op)->liveGeneral(RESTORINGIMAGE);
+            ((RexxInternalObject *)op)->liveGeneral(RESTORINGIMAGE);
         }
-        op += ((RexxObject *)op)->getObjectSize();   /* move to next object               */
+        // TODO:  use more of nextObject();
+        op += ((RexxInternalObject *)op)->getObjectSize();   /* move to next object               */
     }
 }
 

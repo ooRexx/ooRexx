@@ -1748,43 +1748,57 @@ void Activity::enterKernel()
 }
 
 
-void Activity::checkDeadLock(
-  Activity *targetActivity)        /* activity currently reserving      */
-/******************************************************************************/
-/* Function:  Check for a circular wait dead lock error                       */
-/******************************************************************************/
+/**
+ * Check for a circular wait dead lock error
+ *
+ * @param targetActivity
+ *               The target activity.
+ */
+void Activity::checkDeadLock(Activity *targetActivity)
 {
-  Activity *owningActivity;        /* activity owning the resource      */
-                                       /* currently waiting on something?   */
-  if (waitingObject != OREF_NULL) {
-                                       /* waiting on a message object?      */
-    if (isOfClass(Message, waitingObject))
-                                       /* get the activity message is on    */
-      owningActivity = ((MessageClass *)waitingObject)->getActivity();
-    else
-                                       /* get the locking activity for vdict*/
-      owningActivity = ((VariableDictionary *)waitingObject)->getReservingActivity();
-                                       /* have a circular wait              */
-    if (owningActivity == targetActivity)
-                                       /* have a deaklock                   */
-      reportException(Error_Execution_deadlock);
-    if (owningActivity != OREF_NULL)   /* have a real activity?             */
-                                       /* pass it along the chain           */
-      owningActivity->checkDeadLock(targetActivity);
-  }
+    Activity *owningActivity;
+    // are we currently waiting on something?
+    if (waitingObject != OREF_NULL)
+    {
+        // there are only a few object types we can wait on.  Each
+        // holds the activity that currently holds the lock
+        if (isOfClass(Message, waitingObject))
+        {
+            owningActivity = ((MessageClass *)waitingObject)->getActivity();
+        }
+        else
+        {
+            owningActivity = ((VariableDictionary *)waitingObject)->getReservingActivity();
+        }
+        // do we have a curcular wait?
+        if (owningActivity == targetActivity)
+        {
+            reportException(Error_Execution_deadlock);
+        }
+        // if we have an owning activity, have it perform a check also
+        if (owningActivity != OREF_NULL)
+        {
+            owningActivity->checkDeadLock(targetActivity);
+        }
+    }
 }
 
-void Activity::waitReserve(
-  RexxObject *resource )               /* resource we are waiting on        */
-/******************************************************************************/
-/* Function:  Wait for a new run event to occur                               */
-/******************************************************************************/
+
+/**
+ * Wait for a new run event to occur
+ *
+ * @param resource The object we're waiting on (used for deadlock detection)
+ */
+void Activity::waitReserve(RexxInternalObject *resource)
 {
-    runsem.reset();                      /* clear the run semaphore           */
-    waitingObject = resource;      /* save the waiting resource         */
-    releaseAccess();                     /* release the kernel access         */
-    runsem.wait();                       /* wait for the run to be posted     */
-    requestAccess();                     /* reaquire the kernel access        */
+    // clear the run semaphore and save the object we're waiting on
+    runsem.reset();
+    waitingObject = resource;
+    // release the interpreter lock and wait for access.  Don't continue
+    // until we get the lock back
+    releaseAccess();
+    runsem.wait();
+    requestAccess();
 }
 
 void Activity::guardWait()

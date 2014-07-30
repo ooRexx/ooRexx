@@ -161,7 +161,7 @@ void MemoryStats::clear()
 }
 
 
-void MemoryStats::logObject(RexxObject *obj)
+void MemoryStats::logObject(RexxInternalObject *obj)
 /******************************************************************************/
 /* Function:  Log the memory statistics for an individual object              */
 /******************************************************************************/

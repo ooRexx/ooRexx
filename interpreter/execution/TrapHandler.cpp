@@ -44,6 +44,9 @@
 #include "RexxCore.h"
 #include "TrapHandler.hpp"
 
+#include "CallInstruction.hpp"
+#include "DirectoryClass.hpp"
+
 
 /**
  * Allocate a new TrapHandler item
@@ -65,7 +68,7 @@ void *TrapHandler::operator new(size_t size)
  * @param h      The SIGNAL or CALL instruction that will handle the
  *               condition.
  */
-TrapHandler::TrapHandler(RexxString *c, RexxInstructionCallBase *h)
+TrapHandler::TrapHandler(RexxString *c, RexxInstructionTrapBase *h)
 {
     condition = c;
     handler = handler;
@@ -208,7 +211,7 @@ RexxString *TrapHandler::getState()
  */
 void TrapHandler::disable()
 {
-    state = DELAY;
+    state = DELAYED;
 }
 
 

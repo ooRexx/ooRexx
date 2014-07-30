@@ -64,20 +64,20 @@ class Envelope : public RexxInternalObject
     virtual void liveGeneral(MarkReason reason);
 
     void flattenReference(void *, size_t, void *);
-    BufferClass *pack(RexxObject *);
+    BufferClass *pack(RexxInternalObject *);
     void        puff(BufferClass *, char *, size_t length);
-    size_t queryObj(RexxObject *);
-    size_t copyBuffer(RexxObject *);
+    size_t queryObj(RexxInternalObject *);
+    size_t copyBuffer(RexxInternalObject *);
     void   rehash();
     char  *bufferStart();
-    void   associateObject(RexxObject *, size_t);
-    void   addTable(RexxObject *obj);
+    void   associateObject(RexxInternalObject *, size_t);
+    void   addTable(RexxInternalObject *obj);
 
-    inline SmartBuffer *getBuffer() {return this->buffer;}
-    inline RexxObject *getReceiver() {return this->receiver;}
-    inline size_t      getCurrentOffset() { return this->currentOffset; }
-    inline MapTable *getDuptable() {return this->duptable;}
-    inline IdentityTable *getRehashtable() {return this->rehashtable;}
+    inline SmartBuffer *getBuffer() {return buffer;}
+    inline RexxInternalObject  *getReceiver() {return receiver;}
+    inline size_t      getCurrentOffset() { return currentOffset; }
+    inline MapTable *getDuptable() {return dupTable;}
+    inline IdentityTable *getRehashtable() {return rehashTable;}
 
     size_t      currentOffset;            // current flattening offset
 
@@ -88,12 +88,13 @@ class Envelope : public RexxInternalObject
 
 protected:
 
-    RexxObject *home;
-    RexxObject *receiver;                 // object to receive the message
-    MapTable           *duptable;         // table of duplicates
-    IdentityTable  *savetable;        // table of protected objects created during flattening
-    SmartBuffer *buffer;              // smart buffer wrapper
-    IdentityTable  *rehashtable;      // table to rehash
-    LiveStack  *flattenStack;             // the flattening stack
+    RexxInternalObject *home;
+    RexxInternalObject *receiver;        // object to receive the message
+    MapTable           *dupTable;        // table of duplicates
+    IdentityTable      *saveTable;       // table of protected objects created during flattening
+    SmartBuffer *buffer;                 // smart buffer wrapper
+    // TODO:  Need to revisit the rehash stuff.
+    IdentityTable  *rehashTable;         // table to rehash
+    LiveStack  *flattenStack;           // the flattening stack
 };
 #endif

@@ -56,7 +56,7 @@
 #include "ActivationSettings.hpp"
 #include "BaseExecutable.hpp"
 
-class RexxInstructionCallBase;
+class RexxInstructionTrapBase;
 class ProtectedObject;
 class SupplierClass;
 class PackageClass;
@@ -191,7 +191,7 @@ class RexxActivation : public ActivationBase
    RexxString      * traceSetting();
    void              iterate(RexxString *);
    void              leaveLoop(RexxString *);
-   void              trapOn(RexxString *, RexxInstructionCallBase *);
+   void              trapOn(RexxString *, RexxInstructionTrapBase *);
    void              trapOff(RexxString *);
    void              setAddress(RexxString *);
    void              signalValue(RexxString *);

@@ -69,7 +69,7 @@ class TraceSetting
         traceNormal,                      // the default normal trace setting.
         traceDebug,                       // interactive trace mode flag
         traceAll,                         // trace all instructions
-        traceResult,                      // trace all results
+        traceResults,                     // trace all results
         traceIntermediates,               // trace all instructions
         traceCommands,                    // trace all commands
         traceLabels,                      // trace all labels
@@ -95,7 +95,7 @@ class TraceSetting
     static const TraceFlags traceIntermediatesFlags;
 
     inline void clear() { flags.reset(); }
-    inline bool tracingResults() const { return flags[traceResult]; }
+    inline bool tracingResults() const { return flags[traceResults]; }
     inline bool tracingIntermediates() const { return flags[traceIntermediates]; }
     inline bool isDebug() const { return flags[traceDebug]; }
     inline bool tracingAll() const { return flags[traceAll]; }

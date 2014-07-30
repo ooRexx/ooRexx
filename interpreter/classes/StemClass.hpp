@@ -79,7 +79,7 @@ class StemClass : public RexxObject
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(Envelope*);
-    virtual RexxObject * copy();
+    virtual RexxInternalObject *copy();
 
     void         copyFrom(CompoundVariableTable &_tails);
     bool         numberValue(wholenumber_t &result, size_t precision);
@@ -151,6 +151,8 @@ class StemClass : public RexxObject
     RexxInternalObject *getElement(size_t tail);
     RexxInternalObject *getElement(const char *tail);
     RexxInternalObject *getElement(CompoundVariableTail &tail);
+
+    CompoundVariableTable::TableIterator iterator();
 
     static void createInstance();
     static RexxClass *classInstance;

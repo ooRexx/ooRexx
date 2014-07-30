@@ -45,6 +45,7 @@
 
 class DirectoryClass;
 class RexxActivation;
+class RexxInstructionTrapBase;
 
 /**
  * A handler state for a SIGNAL ON or CALL ON trap in an
@@ -59,7 +60,7 @@ class TrapHandler : public RexxInternalObject
     inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };
     inline void   operator delete(void *, void *) { ; }
 
-    TrapHandler(RexxString *condition, RexxInstructionCallBase *handler);
+    TrapHandler(RexxString *condition, RexxInstructionTrapBase *handler);
     inline TrapHandler(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
@@ -86,7 +87,7 @@ protected:
 
 
     RexxString *condition;              // the condition we're handling
-    RexxInstructionCallBase *handler;   // the instruction that handles this condition trap
+    RexxInstructionTrapBase *handler;   // the instruction that handles this condition trap
     TrapState state;                    // current state of the trap
     DirectoryClass *conditionObject;    // an object associated with a active trap
 };

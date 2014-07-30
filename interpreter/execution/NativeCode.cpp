@@ -47,7 +47,7 @@
 #include "NativeActivation.hpp"
 #include "NativeCode.hpp"
 #include "PackageManager.hpp"
-#include 'PackageClass.hpp'
+#include "PackageClass.hpp"
 
 
 /**

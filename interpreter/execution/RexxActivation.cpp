@@ -1408,7 +1408,7 @@ void RexxActivation::checkTrapTable()
  * @param condition The condition name being trapped.
  * @param handler   The instruction handling the trap.
  */
-void RexxActivation::trapOn(RexxString *condition, RexxInstructionCallBase *handler)
+void RexxActivation::trapOn(RexxString *condition, RexxInstructionTrapBase *handler)
 {
     // make sure we have a trap table (we create on demand)
     checkTrapTable();

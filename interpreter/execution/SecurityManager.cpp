@@ -47,26 +47,36 @@
 #include "DirectoryClass.hpp"
 
 
-// TODO:  This needs a cleanup pass.
+/**
+ * Allocate a new SecurityManager object.
+ *
+ * @param size   The base size of the object.
+ *
+ * @return Storage for a security manager.
+ */
 void *SecurityManager::operator new (size_t size)
 {
     return new_object(size, T_SecurityManager);
 }
 
 
+/**
+ * Generalized object marking.
+ *
+ * @param reason The reason for this live marking operation.
+ */
 void SecurityManager::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
     memory_mark(manager);
 }
 
 
+/**
+ * Generalized object marking.
+ *
+ * @param reason The reason for this live marking operation.
+ */
 void SecurityManager::liveGeneral(MarkReason reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
 {
     memory_mark_general(manager);
 }
@@ -92,8 +102,8 @@ RexxObject *SecurityManager::checkLocalAccess(RexxString *index)
     securityArgs->put(TheNilObject, OREF_RESULT);
     if (callSecurityManager(OREF_LOCAL, securityArgs))
     {
-                                       /* get the result and return         */
-        return securityArgs->fastAt(OREF_RESULT);
+        // the result is returned in the arguments
+        return (RexxObject *)securityArgs->get(OREF_RESULT);
     }
     return OREF_NULL;   // not handled
 }
@@ -121,8 +131,7 @@ RexxObject *SecurityManager::checkEnvironmentAccess(RexxString *index)
     securityArgs->put(TheNilObject, OREF_RESULT);
     if (callSecurityManager(OREF_ENVIRONMENT, securityArgs))
     {
-                                       /* get the result and return         */
-        return securityArgs->fastAt(OREF_RESULT);
+        return (RexxObject *)securityArgs->get(OREF_RESULT);
     }
     return OREF_NULL;   // not handled
 }
@@ -178,7 +187,7 @@ bool SecurityManager::checkProtectedMethod(RexxObject *target, RexxString *messa
     if (callSecurityManager(OREF_METHODNAME, securityArgs))
     {
         // get the result and return
-        result = securityArgs->fastAt(OREF_RESULT);
+        result = securityArgs->get(OREF_RESULT);
         return true;
     }
     return false;       // not handled
@@ -212,7 +221,7 @@ bool SecurityManager::checkFunctionCall(RexxString *functionName, size_t count, 
     if (callSecurityManager(OREF_CALL, securityArgs))
     {
         // get the result and return
-        result = securityArgs->fastAt(OREF_RESULT);
+        result = securityArgs->get(OREF_RESULT);
         return true;
     }
     return false;       // not handled
@@ -239,27 +248,26 @@ bool SecurityManager::checkCommand(Activity *activity, RexxString *address, Rexx
     }
     DirectoryClass *securityArgs = new_directory();
     ProtectedObject p(securityArgs);
-                                       /* add the command                   */
+    // add the command and the accress target
     securityArgs->put(command, OREF_COMMAND);
-    /* and the target                    */
     securityArgs->put(address, OREF_ADDRESS);
-    /* did manager handle this?          */
+    // if the manager handled this, we need to decode the return stuff
     if (callSecurityManager(OREF_COMMAND, securityArgs))
     {
-        /* get the return code               */
-        result = securityArgs->fastAt(OREF_RC);
-        if ((RexxObject *)result == OREF_NULL)     /* no return code provide?           */
+        result = securityArgs->get(OREF_RC);
+        // if no return code received, use a zero code
+        if ((RexxObject *)result == OREF_NULL)
         {
-            result = IntegerZero;      /* use a zero return code            */
+            result = IntegerZero;
         }
-        /* failure indicated?                */
-        if (securityArgs->fastAt(OREF_FAILURENAME) != OREF_NULL)
+        // failure indicated?  Need to raise a failure condition
+        if (securityArgs->get(OREF_FAILURENAME) != OREF_NULL)
         {
             // raise the condition when things are done
             condition = activity->createConditionObject(OREF_FAILURENAME, (RexxObject *)result, command, OREF_NULL, OREF_NULL);
         }
-        /* how about an error condition?     */
-        else if (securityArgs->fastAt(OREF_ERRORNAME) != OREF_NULL)
+        // same for an error condition
+        else if (securityArgs->get(OREF_ERRORNAME) != OREF_NULL)
         {
             // raise the condition when things are done
             condition = activity->createConditionObject(OREF_ERRORNAME, (RexxObject *)result, command, OREF_NULL, OREF_NULL);
@@ -292,7 +300,7 @@ RexxObject *SecurityManager::checkStreamAccess(RexxString *name)
     if (callSecurityManager(OREF_STREAM, securityArgs))
     {
         // get the result and return
-        return securityArgs->fastAt(OREF_RESULT);
+        return (RexxObject *)securityArgs->get(OREF_RESULT);
     }
     // not handled
     return OREF_NULL;
@@ -325,13 +333,13 @@ RexxString *SecurityManager::checkRequiresAccess(RexxString *name, RexxObject *&
     {
         // retrieve any security manager that the security manager wants us to use for
         // a new file.
-        RexxObject *secObject = securityArgs->fastAt(OREF_SECURITYMANAGER);
+        RexxObject *secObject = (RexxObject *)securityArgs->get(OREF_SECURITYMANAGER);
         if (secObject != OREF_NULL && secObject != TheNilObject)
         {
             securityManager = secObject;
         }
         // the name can be replaced by the security manager
-        return (RexxString *)securityArgs->fastAt(OREF_NAME);
+        return (RexxString *)securityArgs->get(OREF_NAME);
     }
     // not handled, return the name unchanged
     return name;

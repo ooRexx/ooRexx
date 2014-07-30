@@ -159,7 +159,7 @@ void ListClass::flatten(Envelope *envelope)
  *
  * @return The object copy.
  */
-RexxObject *ListClass::copy()
+RexxInternalObject *ListClass::copy()
 {
     // make a copy of ourself (also copies the object variables)
     ListClass *newlist = (ListClass *)this->RexxObject::copy();

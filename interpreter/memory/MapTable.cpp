@@ -97,7 +97,7 @@ void MapTable::liveGeneral(MarkReason reason)
  *
  * @return The new maptable object.
  */
-RexxObject *MapTable::copy()
+RexxInternalObject *MapTable::copy()
 {
     // copy this object first
     MapTable *newObj = (MapTable *)RexxInternalObject::copy();

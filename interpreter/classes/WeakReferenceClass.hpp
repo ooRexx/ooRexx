@@ -67,10 +67,10 @@ public:
     void        live(size_t);
     void        liveGeneral(MarkReason);
     void        flatten(Envelope *);
-    RexxObject *unflatten(Envelope *);
+    RexxInternalObject *unflatten(Envelope *);
 
-    RexxObject *value();
-    inline RexxObject *get() { return referentObject; }
+    RexxInternalObject *value();
+    inline RexxInternalObject *get() { return referentObject; }
     inline bool hasReferent() { return referentObject == OREF_NULL; }
     void   clear();
 
@@ -82,8 +82,8 @@ public:
 
 protected:
 
-    RexxObject *referentObject;      // the object we refer to
-    WeakReference *nextReferenceList;  // used by memory management to keep track of reference objects
+    RexxInternalObject *referentObject;      // the object we refer to
+    WeakReference *nextReferenceList;        // used by memory management to keep track of reference objects
 };
 
 #endif

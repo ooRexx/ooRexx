@@ -114,7 +114,7 @@ void DirectoryClass::flatten(Envelope *envelope)
  *
  * @return A copy of the item.
  */
-RexxObject *DirectoryClass::copy()
+RexxInternalObject *DirectoryClass::copy()
 {
     // first copy via the superclass copy method
     Protected<DirectoryClass> newObj = (DirectoryClass *)HashCollection::copy();

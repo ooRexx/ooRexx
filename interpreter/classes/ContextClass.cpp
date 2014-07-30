@@ -244,9 +244,9 @@ RexxObject *RexxContext::getArgs()
 RexxObject *RexxContext::getCondition()
 {
     checkValid();
-                                       /* get current trapped condition     */
+    // we return a copy of the current condition if we have any
     RexxObject *conditionobj = activation->getConditionObj();
-    return conditionobj == OREF_NULL ? TheNilObject : conditionobj->copy();
+    return conditionobj == OREF_NULL ? TheNilObject : (RexxObject *)conditionobj->copy();
 }
 
 

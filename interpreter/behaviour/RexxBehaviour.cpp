@@ -217,7 +217,7 @@ void RexxBehaviour::resolveNonPrimitiveBehaviour()
  *
  * @return The new behaviour object.
  */
-RexxObject *RexxBehaviour::copy()
+RexxInternalObject *RexxBehaviour::copy()
 {
     // first, clone the existing object
     Protected<RexxBehaviour> newBehaviour = (RexxBehaviour *)clone();

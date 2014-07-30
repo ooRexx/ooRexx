@@ -67,7 +67,7 @@ class RexxVariable : public RexxInternalObject
     void         drop();
     void         notify();
     void         uninform(Activity *);
-    void         setStem(RexxObject *);
+    void         setStem(RexxInternalObject *);
 
     inline void set(RexxInternalObject *value)
     {

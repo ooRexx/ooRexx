@@ -157,7 +157,7 @@ class Activity : public RexxInternalObject
     void        exitKernel();
     void        enterKernel();
     RexxObject *previous();
-    void        waitReserve(RexxObject *);
+    void        waitReserve(RexxInternalObject *);
     void        guardWait();
     void        guardPost();
     void        guardSet();
@@ -329,7 +329,7 @@ class Activity : public RexxInternalObject
     RexxActivation     *currentRexxFrame;
     ActivationBase     *topStackFrame;  // top-most activation frame (can be either native or Rexx).
     RexxString         *currentExit;    // current executing system exit
-    RexxObject         *waitingObject;  // object activity is waiting on
+    RexxInternalObject *waitingObject;  // object activity is waiting on
     SysSemaphore        runsem;         // activity run control semaphore
     SysSemaphore        guardsem;       // guard expression semaphore
     SysActivity currentThread;          // descriptor for this thread

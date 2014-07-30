@@ -50,6 +50,8 @@
 
 RexxClass *WeakReference::classInstance = OREF_NULL;   // singleton class instance
 
+// TODO:  needs a cleanup pass
+
 void WeakReference::createInstance()
 /******************************************************************************/
 /* Function:  Create initial bootstrap objects                                */
@@ -142,7 +144,7 @@ void WeakReference::flatten(Envelope *envelope)
     cleanUpFlatten
 }
 
-RexxObject *WeakReference::unflatten(Envelope *envelope)
+RexxInternalObject *WeakReference::unflatten(Envelope *envelope)
 /******************************************************************************/
 /* Function:  unflatten an object                                             */
 /******************************************************************************/
@@ -150,7 +152,7 @@ RexxObject *WeakReference::unflatten(Envelope *envelope)
     // We add ourselves unconditionally as a weak object, even if the referenent
     // is null, since we could have a new one assigned.
     memoryObject.addWeakReference(this);
-    return (RexxObject *)this;
+    return this;
 }
 
 void WeakReference::clear()

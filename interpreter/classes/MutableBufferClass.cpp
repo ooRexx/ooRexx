@@ -212,7 +212,7 @@ void MutableBuffer::flatten(Envelope *envelope)
  *
  * @return A copy of the object.
  */
-RexxObject *MutableBuffer::copy()
+RexxInternalObject *MutableBuffer::copy()
 {
     // use the base copy method so that the object variables get copied to.
     MutableBuffer *newObj = (MutableBuffer *)RexxObject::copy();

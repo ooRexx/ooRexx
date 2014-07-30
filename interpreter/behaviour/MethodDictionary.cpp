@@ -125,7 +125,7 @@ void MethodDictionary::flatten(Envelope *envelope)
  *
  * @return A new instance of this collection.
  */
-RexxObject *MethodDictionary::copy()
+RexxInternalObject *MethodDictionary::copy()
 {
     // make a copy of the base object
     MethodDictionary *newObj = (MethodDictionary *)RexxObject::copy();

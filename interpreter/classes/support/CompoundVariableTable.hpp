@@ -118,6 +118,7 @@ class CompoundVariableTable
 
     void setParent(StemClass *parent);
     void setRoot(CompoundTableElement *newRoot);
+    TableIterator iterator() { return TableIterator(this); }
 
 protected:
 

@@ -67,7 +67,7 @@ class MethodDictionary: public StringHashCollection
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(Envelope *);
 
-    virtual RexxObject *copy();
+    virtual RexxInternalObject *copy();
     MethodClass *getMethod(RexxString *methodName) { return (MethodClass *)get(methodName); }
     void addMethod(RexxString *methodName, MethodClass *method);
     void replaceMethod(RexxString *methodName, MethodClass *method);

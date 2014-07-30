@@ -130,7 +130,8 @@ class MemorySegment : public MemorySegmentHeader
        remove();
    }
 
-   inline bool isInSegment(RexxObject * object) {
+   inline bool isInSegment(RexxInternalObject *object)
+   {
        return (((char *)object >= segmentStart) && ((char *)object <= segmentStart + segmentSize));
    }
 
@@ -231,25 +232,32 @@ class MemorySegmentSet
           count++;
       }
 
-      inline MemorySegment *first() {
-          if (anchor.next->isReal()) {
+      inline MemorySegment *first()
+      {
+          if (anchor.next->isReal())
+          {
               return anchor.next;
           }
-          else {
+          else
+          {
               return NULL;
           }
       }
 
-      inline MemorySegment *next(MemorySegment *segment) {
-          if (segment->next->isReal()) {
+      inline MemorySegment *next(MemorySegment *segment)
+      {
+          if (segment->next->isReal())
+          {
               return segment->next;
           }
-          else {
+          else
+          {
               return NULL;
           }
       }
 
-      inline bool isInSegmentSet(RexxObject *object) {
+      inline bool isInSegmentSet(RexxInternalObject *object)
+      {
           MemorySegment *segment = first();
           while (segment != NULL) {
               if (segment->isInSegment(object)) {
@@ -287,7 +295,7 @@ class MemorySegmentSet
       virtual void collectEmptySegments();
       virtual void addDeadObject(DeadObject *object);
       virtual void addDeadObject(char *object, size_t length);
-      RexxObject *splitDeadObject(DeadObject *object, size_t allocationLength, size_t splitMinimum);
+      RexxInternalObject *splitDeadObject(DeadObject *object, size_t allocationLength, size_t splitMinimum);
       void insertSegment(MemorySegment *segment);
       MemorySegment *findEmptySegment(size_t allocationLength);
       MemorySegment *splitSegment(size_t allocationLength);
@@ -364,7 +372,7 @@ class NormalSegmentSet : public MemorySegmentSet
     NormalSegmentSet(MemoryObject *memory);
     virtual ~NormalSegmentSet() { ; }
     virtual void   dumpMemoryProfile(FILE *outfile);
-    inline  RexxObject *allocateObject(size_t allocationLength)
+    inline RexxInternalObject *allocateObject(size_t allocationLength)
     {
         DeadObject *newObject;
         size_t targetPool;
@@ -403,7 +411,7 @@ class NormalSegmentSet : public MemorySegmentSet
                     /* subdivide into a small block. */
                     /* Convert this from a dead object into a real one of the */
                     /* given size. */
-                    return (RexxObject *)newObject;
+                    return (RexxInternalObject *)newObject;
                 }
 
                 currentDead++;
@@ -440,7 +448,7 @@ class NormalSegmentSet : public MemorySegmentSet
             if (deadLength < Memory::MinimumObjectSize) {
                 /* Convert this from a dead object into a real one of the */
                 /* given size. */
-                return (RexxObject *)newObject;
+                return (RexxInternalObject *)newObject;
             }
             else {
                 /* potentially split this object into a smaller unit so we */
@@ -451,7 +459,7 @@ class NormalSegmentSet : public MemorySegmentSet
         return OREF_NULL;
     }
 
-            RexxObject *handleAllocationFailure(size_t allocationLength);
+            RexxInternalObject *handleAllocationFailure(size_t allocationLength);
     virtual DeadObject *donateObject(size_t allocationLength);
     void    getInitialSet();
     virtual size_t suggestMemoryExpansion();
@@ -494,12 +502,12 @@ class NormalSegmentSet : public MemorySegmentSet
     static inline size_t deadPoolToLength(size_t d) { return ((d) * Memory::ObjectGrain); }
 
     inline size_t mapLengthToDeadPool(size_t length) { return length / Memory::ObjectGrain; }
-    RexxObject *findLargeDeadObject(size_t allocationLength);
+    RexxInternalObject *findLargeDeadObject(size_t allocationLength);
     inline size_t recommendedMemorySize() { return (size_t)((float)liveObjectBytes/(1.0 - NormalMemoryExpansionThreshold)); }
     inline size_t recommendedMaximumMemorySize() { return (size_t)((float)liveObjectBytes/(1.0 - NormalMemoryContractionThreshold)); }
     void checkObjectOverlap(DeadObject *obj);
-    RexxObject *findObject(size_t allocationLength);
-    inline RexxObject *splitNormalDeadObject(DeadObject *object, size_t allocationLength, size_t deadLength)
+    RexxInternalObject *findObject(size_t allocationLength);
+    inline RexxInternalObject *splitNormalDeadObject(DeadObject *object, size_t allocationLength, size_t deadLength)
     {
         /* we need to keep all of these sizes as ObjectGrain multiples, */
         /* so round it down...the allocation will get all of the extra. */
@@ -532,8 +540,8 @@ class NormalSegmentSet : public MemorySegmentSet
         }
         /* Convert this from a dead object into a real one of the */
         /* given size. */
-        ((RexxObject *)object)->setObjectSize(allocationLength);
-        return (RexxObject *)object;
+        ((RexxInternalObject *)object)->setObjectSize(allocationLength);
+        return (RexxInternalObject *)object;
     }
 
     DeadObjectPool largeDead;             /* the set of large dead objects */
@@ -552,8 +560,8 @@ class LargeSegmentSet : public MemorySegmentSet
     LargeSegmentSet(MemoryObject *memory);
     virtual ~LargeSegmentSet() { ; }
     virtual void   dumpMemoryProfile(FILE *outfile);
-    RexxObject *handleAllocationFailure(size_t allocationLength);
-    inline RexxObject *allocateObject(size_t allocationLength)
+    RexxInternalObject *handleAllocationFailure(size_t allocationLength);
+    inline RexxInternalObject *allocateObject(size_t allocationLength)
         {
           DeadObject *largeObject;
 
@@ -562,7 +570,8 @@ class LargeSegmentSet : public MemorySegmentSet
           /* the small chain are depleted.... */
           largeObject = deadCache.findBestFit(allocationLength);
           /* did we find an object?            */
-          if (largeObject != NULL) {
+          if (largeObject != NULL)
+          {
               /* remember the successful request */
               requests++;
               /* split and prepare this object for use */
@@ -585,7 +594,7 @@ protected:
 
   private:
 
-    RexxObject *findObject(size_t allocationLength);
+    RexxInternalObject *findObject(size_t allocationLength);
 
     DeadObjectPool deadCache;             /* the set of large dead objects */
     size_t         requests;              /* requests since last gc cycle. */
@@ -602,14 +611,14 @@ class OldSpaceSegmentSet : public MemorySegmentSet
     OldSpaceSegmentSet()  { ; }
     OldSpaceSegmentSet(MemoryObject *memory);
     virtual ~OldSpaceSegmentSet() { ; }
-            RexxObject *allocateObject(size_t allocationLength);
+            RexxInternalObject *allocateObject(size_t allocationLength);
 
     void markOldSpaceObjects();
 
   protected:
     virtual void addDeadObject(DeadObject *object);
     virtual void addDeadObject(char *object, size_t length);
-    RexxObject *findObject(size_t allocationLength);
+    RexxInternalObject *findObject(size_t allocationLength);
 
   private:
     DeadObjectPool deadCache;             /* the set of objects on the old dead chain */

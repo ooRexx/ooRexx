@@ -46,6 +46,7 @@
 
 #include "Numerics.hpp"
 
+class RexxInternalObject;
 class RexxObject;
 class RexxInteger;
 class RexxBehaviour;
@@ -185,7 +186,7 @@ class RexxVirtualBase
     virtual void         live(size_t) {;}
     virtual void         liveGeneral(MarkReason reason) {;}
     virtual void         flatten(Envelope *) {;}
-    virtual RexxObject  *unflatten(Envelope *) { return (RexxObject *)this; };
+    virtual RexxInternalObject *unflatten(Envelope *) { return (RexxInternalObject *)this; };
 };
 
 class RexxObject;
@@ -296,7 +297,7 @@ class RexxInternalObject : public RexxVirtualBase
     inline void   setBehaviour(RexxBehaviour *b) { behaviour = b; }
 
     virtual RexxObject  *makeProxy(Envelope *);
-    virtual RexxObject  *copy();
+    virtual RexxInternalObject *copy();
     virtual RexxObject  *evaluate(RexxActivation *, ExpressionStack *) { return OREF_NULL; }
     virtual RexxObject  *getValue(RexxActivation *) { return OREF_NULL; }
     virtual RexxObject  *getValue(VariableDictionary *) { return OREF_NULL; }
@@ -339,7 +340,7 @@ class RexxInternalObject : public RexxVirtualBase
 
     void         hasUninit();
     void         removedUninit();
-    RexxObject  *clone();
+    RexxInternalObject  *clone();
 
     RexxString  *requiredString(size_t);
     RexxString  *requiredString(const char *);
@@ -435,7 +436,7 @@ class RexxObject : public RexxInternalObject
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(Envelope *);
 
-    virtual RexxObject  *copy();
+    virtual RexxInternalObject *copy();
     virtual HashCode     hash();
     virtual RexxString  *stringValue();
 

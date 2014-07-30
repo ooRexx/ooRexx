@@ -529,12 +529,12 @@ bool RexxInternalObject::truthValue(int errorCode)
  *
  * @return A copy of the target internal object.
  */
-RexxObject * RexxInternalObject::copy()
+RexxInternalObject *RexxInternalObject::copy()
 {
     // Instead of calling new_object and memcpy, ask the memory object to make
     // a copy of ourself.  This way, any header information can be correctly
     // initialized by memory.
-    return (RexxObject *)clone();
+    return clone();
 }
 
 
@@ -546,7 +546,7 @@ RexxObject * RexxInternalObject::copy()
  *
  * @return A new instance of this object.
  */
-RexxObject *RexxObject::copy()
+RexxInternalObject *RexxObject::copy()
 {
     // Instead of calling new_object and memcpy, ask the memory object to make
     // a copy of ourself.  This way, any header information can be correctly
@@ -556,7 +556,7 @@ RexxObject *RexxObject::copy()
 
     // do we have object variables?  We need to give that opject
     // a copy of the variables
-    copyObjectVariables((RexxObject *)newObj);
+    copyObjectVariables(newObj);
 
     // have instance methods?
     if (behaviour->hasInstanceMethods())
@@ -2425,11 +2425,11 @@ RexxObject *RexxObject::newRexx(RexxObject **arguments, size_t argCount)
  *
  * @return A new object copied for the source object.
  */
-RexxObject *RexxInternalObject::clone()
+RexxInternalObject *RexxInternalObject::clone()
 {
     // we need an identically sized object
     size_t size = getObjectSize();
-    RexxObject *cloneObj = new_object(size);
+    RexxInternalObject *cloneObj = new_object(size);
     // copy the object header.  That's the only piece of this we're not going to keep from
     // the old object.
     ObjectHeader newHeader = cloneObj->header;

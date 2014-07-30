@@ -76,10 +76,10 @@ void Envelope::live(size_t liveMark)
 {
     memory_mark(home);
     memory_mark(receiver);
-    memory_mark(duptable);
-    memory_mark(savetable);
+    memory_mark(dupTable);
+    memory_mark(saveTable);
     memory_mark(buffer);
-    memory_mark(rehashtable);
+    memory_mark(rehashTable);
     memory_mark(flattenStack);
 }
 
@@ -95,10 +95,10 @@ void Envelope::liveGeneral(MarkReason reason)
 {
     memory_mark_general(home);
     memory_mark_general(receiver);
-    memory_mark_general(duptable);
-    memory_mark_general(savetable);
+    memory_mark_general(dupTable);
+    memory_mark_general(saveTable);
     memory_mark_general(buffer);
-    memory_mark_general(rehashtable);
+    memory_mark_general(rehashTable);
     memory_mark_general(flattenStack);
 }
 
@@ -118,13 +118,13 @@ void Envelope::liveGeneral(MarkReason reason)
  */
 void Envelope::flattenReference(void *newThisVoid, size_t newSelf, void *objRefVoid)
 {
-    RexxObject **newThis = (RexxObject **)newThisVoid;
-    RexxObject **objRef  = (RexxObject **)objRefVoid;
+    RexxInternalObject **newThis = (RexxInternalObject **)newThisVoid;
+    RexxInternalObject **objRef  = (RexxInternalObject **)objRefVoid;
 
-    RexxObject *obj = *objRef;
+    RexxInternalObject *obj = *objRef;
 
-                                          /* See if object has already been    */
-    size_t objOffset = this->queryObj(obj); /* flattened.                        */
+    // see if the object has already been flattened.
+    size_t objOffset = queryObj(obj);
     // if this object has not been previously flattened, we need to
     // copy the object into the buffer and add the offset to the table.
     if (objOffset == 0)
@@ -141,40 +141,40 @@ void Envelope::flattenReference(void *newThisVoid, size_t newSelf, void *objRefV
         if (obj->isProxyObject())
         {
             // get a proxy and make sure it's in our protection table
-            RexxObject *proxyObj = obj->makeProxy(this);
-            savetable->put(proxyObj, proxyObj);
+            RexxInternalObject *proxyObj = obj->makeProxy(this);
+            saveTable->put(proxyObj, proxyObj);
 
             // copy the proxy to the buffer and add it to the dup table
             // using the original object as the index.
-            objOffset = this->copyBuffer(proxyObj);
+            objOffset = copyBuffer(proxyObj);
             // it's not likely, but we might get a dup of the
             // proxy object too.  Add it to our resolution table.
-            this->associateObject(proxyObj, objOffset);
+            associateObject(proxyObj, objOffset);
         }
         else
         {
 
             // non-proxied object.  This gets copied to the buffer
             // directly and added to the dup table
-            objOffset = this->copyBuffer(obj);
+            objOffset = copyBuffer(obj);
         }
         // regardless of how we handle this, add an association for the object to the offset
         associateObject(obj, objOffset);
-        flattenStack->push((RexxObject *)objOffset);
+        flattenStack->push((RexxInternalObject *)objOffset);
         // if the buffer reallocated, we need to update the updating object pointer too.
-        char *newBuffer = this->bufferStart();
+        char *newBuffer = bufferStart();
         if (newBuffer != flattenBuffer)
         {
-            *newThis = (RexxObject *) (newBuffer + newSelf);
+            *newThis = (RexxInternalObject *) (newBuffer + newSelf);
         }
         // and update the reference with the offset
-        *(RexxObject **)(newBuffer + referenceOffset) = (RexxObject *)objOffset;
+        *(RexxInternalObject **)(newBuffer + referenceOffset) = (RexxInternalObject *)objOffset;
     }
     else
     {
         // no copying means no reallocation...we just replace the
         // original object reference with the offset value
-        *objRef = (RexxObject *)objOffset;
+        *objRef = (RexxInternalObject *)objOffset;
     }
 }
 
@@ -186,11 +186,11 @@ void Envelope::flattenReference(void *newThisVoid, size_t newSelf, void *objRefV
  *
  * @return The buffer containing the flattened object.
  */
-BufferClass *Envelope::pack(RexxObject *_receiver)
+BufferClass *Envelope::pack(RexxInternalObject *_receiver)
 {
-    RexxObject *flattenObj;              /* flattened object                  */
-    RexxObject *newSelf;                 /* the flattened envelope            */
-    RexxObject *firstObject;             /* first object to flatten           */
+    RexxInternalObject *flattenObj;           // flattened object
+    RexxInternalObject *newSelf;              // the flattened envelope
+    RexxInternalObject *firstObject;          // first object to flatten
 
     // NOTE:  Envelopes are transient objects and will never appear in the OldSpace
     // image.  We do not need to use OrefSet or setField here.
@@ -198,8 +198,8 @@ BufferClass *Envelope::pack(RexxObject *_receiver)
     receiver = _receiver;
     // create a save table to protect any objects (such as proxy
     // objects) we create during flattening.
-    savetable = new_identity_table();
-    duptable = new MapTable(DefaultDupTableSize);
+    saveTable = new_identity_table();
+    dupTable = new MapTable(DefaultDupTableSize);
     buffer = new SmartBuffer(DefaultEnvelopeBuffer);
     // Allocate a flatten stack
     flattenStack = new (Memory::LiveStackSize, true) LiveStack (Memory::LiveStackSize);
@@ -224,7 +224,7 @@ BufferClass *Envelope::pack(RexxObject *_receiver)
     // make sure we add this to the dup table in case it's self-referential at any point
     associateObject(firstObject, currentOffset);
     // point to the copied one
-    newSelf = (RexxObject *)(bufferStart() + currentOffset);
+    newSelf = (RexxInternalObject *)(bufferStart() + currentOffset);
 
     // ok, keep flattening until will find our marker object on the stack
     newSelf->flatten(this);
@@ -235,7 +235,7 @@ BufferClass *Envelope::pack(RexxObject *_receiver)
         // that way because the object location can change if the buffer needs to
         // reallocate.  We need to convert this into a real object pointer
         currentOffset = (size_t)flattenObj;
-        flattenObj = (RexxObject *)(bufferStart() + currentOffset);
+        flattenObj = (RexxInternalObject *)(bufferStart() + currentOffset);
         // and flatten the next object
         flattenObj->flatten(this);
     }
@@ -261,7 +261,7 @@ BufferClass *Envelope::pack(RexxObject *_receiver)
 void Envelope::puff(BufferClass *sourceBuffer, char *startPointer, size_t dataLength)
 {
     // this will mark the last object of our range
-    RexxObject *lastObject = sourceBuffer->nextObject();
+    RexxInternalObject *lastObject = sourceBuffer->nextObject();
 
     // fix up the objects contained in the data buffer.
     receiver = memoryObject.unflattenObjectBuffer(sourceBuffer, startPointer, dataLength);
@@ -284,9 +284,9 @@ void Envelope::puff(BufferClass *sourceBuffer, char *startPointer, size_t dataLe
  *
  * @return The offset to the object if it is in the table.
  */
-size_t Envelope::queryObj(RexxObject *obj)
+size_t Envelope::queryObj(RexxInternalObject *obj)
 {
-    return duptable->get(obj);
+    return dupTable->get(obj);
 }
 
 
@@ -297,13 +297,13 @@ size_t Envelope::queryObj(RexxObject *obj)
  *
  * @return The offset of the object within the buffer.
  */
-size_t Envelope::copyBuffer(RexxObject *obj)
+size_t Envelope::copyBuffer(RexxInternalObject *obj)
 {
     // copy the object into the buffer, which might cause the buffer to
     // resize itself.
     size_t objOffset = buffer->copyData((void *)obj, obj->getObjectSize());
     // get a reference to the copied object
-    RexxObject *newObj = (RexxObject *) (buffer->getBuffer()->getData() + objOffset);
+    RexxInternalObject *newObj = (RexxInternalObject *) (buffer->getBuffer()->getData() + objOffset);
     // if this is a non-primative behaviour, we need to flatten it as well.  The
     // offset is tagged as being a non-primitive behaviour that needs later inflating.
     if (newObj->behaviour->isNonPrimitive())
@@ -337,13 +337,13 @@ size_t Envelope::copyBuffer(RexxObject *obj)
 void  Envelope::rehash()
 {
     // do we actually have anything here?
-    if (rehashtable != OREF_NULL)
+    if (rehashTable != OREF_NULL)
     {
-        TableClass *index;
-        for (HashLink i = rehashtable->first(); (index = (TableClass *)rehashtable->index(i)) != OREF_NULL; i = rehashtable->next(i))
+        HashContents::TableIterator iterator = rehashTable->iterator();
+
+        for (; iterator.isAvailable(); iterator.next())
         {
-            // tell the table to rehash
-            index->reHash();
+            ((HashCollection *)iterator.value())->reHash();
         }
     }
 }
@@ -367,7 +367,7 @@ char *Envelope::bufferStart()
  * @param flattenOffset
  *               The associated offset.
  */
-void  Envelope::associateObject(RexxObject *o, size_t flattenOffset)
+void  Envelope::associateObject(RexxInternalObject *o, size_t flattenOffset)
 {
     // we just add this to the duptable under the original object
     // reference value.
@@ -380,7 +380,7 @@ void  Envelope::associateObject(RexxObject *o, size_t flattenOffset)
  *
  * @param obj    The object requiring a rehash.
  */
-void Envelope::addTable(RexxObject *obj)
+void Envelope::addTable(RexxInternalObject *obj)
 {
     // The following table will be used by the table_unflatten method.
     //
@@ -390,13 +390,13 @@ void Envelope::addTable(RexxObject *obj)
     // changed
 
     // create the table on first addition
-    if (rehashtable == OREF_NULL)
+    if (rehashTable == OREF_NULL)
     {
         rehashtable = new_identity_table();
     }
 
     // use put to make sure we only get
     // a single version of each table
-    rehashtable->put(TheNilObject, obj);
+    rehashtable->put(obj, obj);
 }
 

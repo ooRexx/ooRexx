@@ -240,10 +240,14 @@ void HashCollection::flatten(Envelope *envelope)
  *
  * @param envelope The envelope that is handling the unflatten.
  */
-RexxObject *HashCollection::unflatten(Envelope *envelope)
+RexxInternalObject *HashCollection::unflatten(Envelope *envelope)
 {
-    // just add this as a table to the envelope.
-    envelope->addTable(this);
+    // if this class of collection requires rehashing, add to the table.
+    if (requiresRehash())
+    {
+        // just add this as a table to the envelope.
+        envelope->addTable(this);
+    }
     return this;
 }
 
@@ -256,7 +260,7 @@ RexxObject *HashCollection::unflatten(Envelope *envelope)
  *
  * @return A new instance of this collection.
  */
-RexxObject *HashCollection::copy()
+RexxInternalObject *HashCollection::copy()
 {
     // make a copy of the base object
     HashCollection *newObj = (HashCollection *)RexxObject::copy();

@@ -172,12 +172,12 @@ void RexxString::flatten(Envelope *envelope)
  *
  * @return A potential replacement object if this is a proxy.
  */
-RexxObject *RexxString::unflatten(Envelope *envelope)
+RexxInternalObject *RexxString::unflatten(Envelope *envelope)
 {
     // if this has been proxied, then retrieve our target object from the environment
     if (isProxyObject())
     {
-        return (RexxObject *)TheEnvironment->entry(this);
+        return TheEnvironment->entry(this);
     }
     else
     {

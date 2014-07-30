@@ -327,7 +327,7 @@ ArrayClass::ArrayClass(RexxInternalObject **objs, size_t count)
  *
  * @return A copy of the array object.
  */
-RexxObject *ArrayClass::copy()
+RexxInternalObject *ArrayClass::copy()
 {
     // if we've expanded in the past, then just copy the
     // expansion array and update it with the appropriate

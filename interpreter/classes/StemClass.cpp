@@ -134,7 +134,7 @@ StemClass::StemClass(RexxString *name)
  *
  * @return A copy of the stem object.
  */
-RexxObject *StemClass::copy()
+RexxInternalObject *StemClass::copy()
 {
     // do the base object copy
     Protected<StemClass> newObj = (StemClass *)RexxObject::copy();
@@ -1638,4 +1638,15 @@ bool StemClass::sort(RexxString *prefix, int order, int type, size_t _first, siz
         element->set(_value);
     }
     return true;
+}
+
+
+/**
+ * Retrieve an iterator for the stem object.
+ *
+ * @return An iterator for traversing the stem object.
+ */
+CompoundVariableTable::TableIterator StemClass::iterator()
+{
+    return tails.iterator();
 }

@@ -765,7 +765,7 @@ void MemoryObject::collect()
     verboseMessage("End collecting memory\n");
 }
 
-RexxObject *MemoryObject::oldObject(size_t requestLength)
+RexxInternalObject *MemoryObject::oldObject(size_t requestLength)
 /******************************************************************************/
 /* Arguments:  Requested length                                               */
 /*                                                                            */
@@ -803,7 +803,7 @@ char *MemoryObject::allocateImageBuffer(size_t imageSize)
 }
 
 
-RexxObject *MemoryObject::newObject(size_t requestLength, size_t type)
+RexxInternalObject *MemoryObject::newObject(size_t requestLength, size_t type)
 /******************************************************************************/
 /* Arguments:  Requested length                                               */
 /*                                                                            */
@@ -1350,10 +1350,10 @@ void MemoryObject::tracingMark(RexxObject *root, MarkReason reason)
  *
  * @return The first "real" object in the buffer.
  */
-RexxObject *MemoryObject::unflattenObjectBuffer(BufferClass *sourceBuffer, char *startPointer, size_t dataLength)
+RexxInternalObject *MemoryObject::unflattenObjectBuffer(BufferClass *sourceBuffer, char *startPointer, size_t dataLength)
 {
     // get an end pointer
-    RexxObject *endPointer = (RexxObject *)(startPointer + dataLength);
+    RexxInternalObject *endPointer = (RexxInternalObject *)(startPointer + dataLength);
 
     // create the handler that will process the markGeneral calls.
     UnflatteningMarkHandler markHandler(startPointer, markWord);
@@ -1361,7 +1361,7 @@ RexxObject *MemoryObject::unflattenObjectBuffer(BufferClass *sourceBuffer, char 
 
     // pointer for addressing a location as an object.  This will also
     // give use the last object we've processed at the end.
-    RexxObject *puffObject = (RexxObject *)startPointer;
+    RexxInternalObject *puffObject = (RexxInternalObject *)startPointer;
 
     // now traverse the buffer fixing all of the behaviour pointers and having the object
     // mark and fix up their references.
@@ -1409,7 +1409,7 @@ RexxObject *MemoryObject::unflattenObjectBuffer(BufferClass *sourceBuffer, char 
     // the first object in the buffer is a dummy added
     // for padding.  We need to step past that one to the
     // beginning of the real unflattened objects
-    RexxObject *firstObject = ((RexxObject *)startPointer)->nextObject();
+    RexxInternalObject *firstObject = ((RexxInternalObject *)startPointer)->nextObject();
 
     // this is the location of the next object after the buffer
     char *nextObject = (char *)sourceBuffer->nextObject();
@@ -1438,7 +1438,7 @@ RexxObject *MemoryObject::unflattenObjectBuffer(BufferClass *sourceBuffer, char 
  *                  The first object of the buffer.
  * @param endObject The end location for the buffer (actually the first object past the end of the buffer).
  */
-void MemoryObject::unflattenProxyObjects(Envelope *envelope, RexxObject *firstObject, RexxObject *endObject)
+void MemoryObject::unflattenProxyObjects(Envelope *envelope, RexxInternalObject *firstObject, RexxInternalObject *endObject)
 {
     // switch to an unflattening mark handler.
     EnvelopeMarkHandler markHandler(envelope);

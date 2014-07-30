@@ -45,6 +45,7 @@
 #include "RexxVariable.hpp"
 #include "Activity.hpp"
 #include "ActivityManager.hpp"
+#include "StemClass.hpp"
 
 
 /**
@@ -118,7 +119,7 @@ void RexxVariable::inform(Activity *informee)
     if (dependents == OREF_NULL)
     {
         // use an object table for this
-        setField(dependents = new_identity_table();
+        setField(dependents, new_identity_table());
     }
     // add this to the table as the index
     dependents->put(TheNilObject, informee);
@@ -200,7 +201,7 @@ void RexxVariable::setStem(RexxInternalObject *value)
 {
     // if this is a stem-to-stem assignment, we replace the current variable's
     // stem object.
-    if (isStem(value))
+    if (::isStem(value))
     {
         set(value);
     }
@@ -208,7 +209,7 @@ void RexxVariable::setStem(RexxInternalObject *value)
     else
     {
         // create a new stem object as value
-        StemClass *stem_table = new StemClass (variable_name);
+        StemClass *stem_table = new StemClass(variableName);
         set(stem_table);                   // overlay the reference stem object
         stem_table->setValue(value);       // set the default value
     }

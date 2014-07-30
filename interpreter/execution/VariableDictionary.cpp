@@ -58,6 +58,7 @@
 #include "CompoundVariableTail.hpp"
 #include "LanguageParser.hpp"
 #include "HashCollection.hpp"
+#include "DirectoryClass.hpp"
 
 
 /**
@@ -163,7 +164,7 @@ void VariableDictionary::initialize(size_t capacity)
  *
  * @return A new HashContents object appropriate for this collection type.
  */
-HashContents *VariableDictionary::allocateContents(size_t bucketSize, size_t totalSize)
+StringHashContents *VariableDictionary::allocateContents(size_t bucketSize, size_t totalSize)
 {
     return new (totalSize) StringHashContents(bucketSize, totalSize);
 }
@@ -187,7 +188,7 @@ void VariableDictionary::expandContents()
 void VariableDictionary::expandContents(size_t capacity )
 {
     size_t bucketSize = HashCollection::calculateBucketSize(capacity);
-    Protected<HashContents> newContents = allocateContents(bucketSize, bucketSize * 2);
+    Protected<StringHashContents> newContents = allocateContents(bucketSize, bucketSize * 2);
     // copy all of the items into the new table
     contents->reMerge(newContents);
     // if this is a contents item in the old space, we need to
@@ -198,7 +199,7 @@ void VariableDictionary::expandContents(size_t capacity )
     }
     // replace the contents
 
-    setField(contents, (HashContents *)newContents);
+    setField(contents, newContents);
 }
 
 
@@ -215,7 +216,7 @@ void VariableDictionary::ensureCapacity(size_t delta)
     // doubling if the delta is a small value.
     if (!contents->hasCapacity(delta))
     {
-        expandContents(contents->capacity() + Numerics::maxVal(delta, contents->capacity());
+        expandContents(contents->capacity() + Numerics::maxVal(delta, contents->capacity()));
     }
 }
 
@@ -254,15 +255,15 @@ void VariableDictionary::checkFull()
  *
  * @return The new dictionary.
  */
-RexxObject  *VariableDictionary::copy()
+RexxInternalObject *VariableDictionary::copy()
 {
     // clone the top level object
     Protected<VariableDictionary> copyObj = (VariableDictionary *)clone();
     // now copy the contents
-    copyObj->contents =  (RexxHashTable *)contents->copy();
+    copyObj->contents =  (StringHashContents *)contents->copy();
     // copy all of the values in the table and return
     copyObj->copyValues();
-    return (RexxObject *)copyObj;
+    return copyObj;
 }
 
 /**
@@ -277,9 +278,9 @@ VariableDictionary *VariableDictionary::deepCopy()
     // make a copy of ourselves first.  This also copies the values.
     Protected<VariableDictionary> newDictionary = (VariableDictionary *)copy();
     // and propagate this if we're chained
-    if (next != OREF_NULL)
+    if (nextDictionary != OREF_NULL)
     {
-        newDictionary->setNextDictionary(next->deepCopy());
+        newDictionary->setNextDictionary(nextDictionary->deepCopy());
     }
 
     return newDictionary;
@@ -306,7 +307,7 @@ void VariableDictionary::copyValues()
  *
  * @return The true assigned value of the variable.
  */
-RexxObject  *VariableDictionary::realValue(RexxString *name)
+RexxInternalObject *VariableDictionary::realValue(RexxString *name)
 {
     // locate the variable in the dictionary. If we don't get one, return null.
     RexxVariable *variable = resolveVariable(name);
@@ -370,7 +371,7 @@ CompoundTableElement *VariableDictionary::getCompoundVariable(RexxString *stemNa
 
     // we get the stem first, then retrieve the compound variable from the stem object.
     StemClass *stem_table = getStem(stemName);
-    return stem_table->getCompoundVariable(&resolved_tail);
+    return stem_table->getCompoundVariable(resolved_tail);
 }
 
 
@@ -385,14 +386,14 @@ CompoundTableElement *VariableDictionary::getCompoundVariable(RexxString *stemNa
  * @return The variable value, including substituting of the string
  *         name of the variable if it does not exist.
  */
-RexxObject *VariableDictionary::getCompoundVariableValue(RexxString *stemName, RexxObject **tail, size_t tailCount)
+RexxInternalObject *VariableDictionary::getCompoundVariableValue(RexxString *stemName, RexxObject **tail, size_t tailCount)
 {
     CompoundVariableTail resolved_tail(this, tail, tailCount);
 
     StemClass *stem_table = getStem(stemName);
     // get the value from the stem...we pass OREF_NULL
     // for the dictionary to bypass NOVALUE handling
-    return stem_table->evaluateCompoundVariableValue(OREF_NULL, stemName, &resolved_tail);
+    return stem_table->evaluateCompoundVariableValue(OREF_NULL, stemName, resolved_tail);
 }
 
 
@@ -408,13 +409,13 @@ RexxObject *VariableDictionary::getCompoundVariableValue(RexxString *stemName, R
  * @return Either the variable value, or OREF_NULL for unassigned
  *         variables.
  */
-RexxObject *VariableDictionary::getCompoundVariableRealValue(RexxString *stem,
+RexxInternalObject *VariableDictionary::getCompoundVariableRealValue(RexxString *stem,
      RexxObject **tail, size_t tailCount)
 {
     CompoundVariableTail resolved_tail(this, tail, tailCount);
 
     StemClass *stem_table = getStem(stem);
-    return stem_table->getCompoundVariableRealValue(&resolved_tail);
+    return stem_table->getCompoundVariableRealValue(resolved_tail);
 }
 
 
@@ -427,7 +428,7 @@ RexxObject *VariableDictionary::getCompoundVariableRealValue(RexxString *stem,
  * @return The backing stem object, or OREF_NULL if this stem
  *         variable has not been used in this context.
  */
-RexxObject  *VariableDictionary::realStemValue(RexxString *stemName)
+RexxInternalObject  *VariableDictionary::realStemValue(RexxString *stemName)
 {
   return getStem(stemName);
 }
@@ -464,7 +465,7 @@ RexxVariable *VariableDictionary::createStemVariable(RexxString *stemName)
     // when a stem variable is first used.
     variable->set(stemtable);
     // add the variable to the table
-    addVariable(name, variable);
+    addVariable(stemName, variable);
     // return the backing variable
     return variable;
 }
@@ -481,6 +482,7 @@ RexxVariable  *VariableDictionary::createVariable(RexxString *name)
 {
     RexxVariable *variable =  new_variable(name);
     addVariable(name, variable);
+    return variable;
 }
 
 
@@ -563,7 +565,7 @@ void VariableDictionary::release(Activity *activity)
             reservingActivity = (Activity *)waitingActivities->removeFirst();
             reserveCount = 1;
             // wake up the waiting activity.
-            newActivity->postDispatch();
+            reservingActivity->postDispatch();
         }
     }
 }
@@ -627,7 +629,7 @@ StringTable *VariableDictionary::getAllVariables()
     // create a string table with room for the number of variables we have here.
     Protected<StringTable> result = new_string_table(contents->items());
 
-    for (; iterator.isAvailable(); iterator.nextEntry())
+    for (; iterator.isAvailable(); iterator.next())
     {
         // get the next variable from the dictionary
         RexxVariable *variable = (RexxVariable *)iterator.value();
@@ -655,7 +657,7 @@ DirectoryClass *VariableDictionary::getVariableDirectory()
     // create a string table with room for the number of variables we have here.
     Protected<DirectoryClass> result = new_directory(contents->items());
 
-    for (; iterator.isAvailable(); iterator.nextEntry())
+    for (; iterator.isAvailable(); iterator.next())
     {
         // get the next variable from the dictionary
         RexxVariable *variable = (RexxVariable *)iterator.value();
@@ -678,13 +680,13 @@ DirectoryClass *VariableDictionary::getVariableDirectory()
  * @param tailCount The count of tail elements.
  * @param value     The value to set.
  */
-void VariableDictionary::setCompoundVariable(RexxString *stemName, RexxObject **tail, size_t tailCount, RexxObject *value)
+void VariableDictionary::setCompoundVariable(RexxString *stemName, RexxObject **tail, size_t tailCount, RexxInternalObject *value)
 {
     CompoundVariableTail resolved_tail(this, tail, tailCount);
     // get, and potentially create, the stem object.
     StemClass *stem_table = getStem(stemName);
     // the value is set in the stem object
-    stem_table->setCompoundVariable(&resolved_tail, value);
+    stem_table->setCompoundVariable(resolved_tail, value);
 }
 
 
@@ -702,7 +704,7 @@ void VariableDictionary::dropCompoundVariable(RexxString *stemName, RexxObject *
     // get the backing stem
     StemClass *stem_table = getStem(stemName);
     // the stem handles the drop operation.
-    stem_table->dropCompoundVariable(&resolved_tail);
+    stem_table->dropCompoundVariable(resolved_tail);
 }
 
 
@@ -945,7 +947,7 @@ RexxVariableBase *VariableDictionary::buildCompoundVariable(RexxString *variable
             RexxVariableBase *tailPart;
             if (tail->getLength() == 0 || (tail->getChar(0) >= '0' && tail->getChar(0) <= '9'))
             {
-                tailPart = tail;
+                tailPart = (RexxVariableBase *)tail;
             }
             // simple variable, we need a retriever for this
             else
@@ -967,7 +969,7 @@ RexxVariableBase *VariableDictionary::buildCompoundVariable(RexxString *variable
     // create and return a new compound
 
     // TODO:  check the queue class items() vs getSize() usage.
-    return(RexxObject *)new (tails->getSize()) RexxCompoundVariable(stem, 0, tails, tails->getSize());
+    return new (tails->items()) RexxCompoundVariable(stem, 0, tails, tails->items());
 }
 
 
@@ -978,7 +980,7 @@ RexxVariableBase *VariableDictionary::buildCompoundVariable(RexxString *variable
  *
  * @return An iterator instance for this dictionary.
  */
-VariableIterator VariableDictionary::iterator()
+VariableDictionary::VariableIterator VariableDictionary::iterator()
 {
     // the iterator handles all of the details
     return VariableIterator(this);
@@ -989,7 +991,7 @@ VariableIterator VariableDictionary::iterator()
  * Step to the next position while iterating through a
  * variable dictionary.
  */
-inline void VariableDictonary::VariableIterator::next()
+inline void VariableDictionary::VariableIterator::next()
 {
     if (currentStem != OREF_NULL)
     {

@@ -196,7 +196,7 @@ void PushThroughStack::liveGeneral(MarkReason reason)
  * @param element The element to remove.
  * @param search  indicates whether we should search the stack for the item.
  */
-void PushThroughStack::remove(RexxObject *element, bool search)
+void PushThroughStack::remove(RexxInternalObject *element, bool search)
 {
     // first check the top item (which is easy)...we just leave the empty slot
     // if we found it.

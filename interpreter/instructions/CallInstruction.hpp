@@ -47,6 +47,8 @@
 #include "RexxInstruction.hpp"
 #include "Token.hpp"
 
+class QueueClass;
+
 
 /**
  * Base class for all instruction types that need a
