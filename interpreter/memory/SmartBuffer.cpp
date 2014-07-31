@@ -66,7 +66,7 @@ void   *SmartBuffer::operator new(size_t size)
  */
 SmartBuffer::SmartBuffer(size_t startSize)
 {
-    buffer = new_buffer(startSize));
+    buffer = new_buffer(startSize);
 }
 
 

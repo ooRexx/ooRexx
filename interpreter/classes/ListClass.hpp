@@ -118,7 +118,7 @@ class ListClass : public RexxObject
 
     // Class related methods
     ListClass     *newRexx(RexxObject **, size_t);
-    ListClass     *classOf(RexxObject **, size_t);
+    ListClass     *ofRexx(RexxObject **, size_t);
 
     static void createInstance();
     static RexxClass *classInstance;

@@ -143,7 +143,7 @@ RexxObject *BagClass::newRexx(RexxObject **args, size_t argCount)
  *
  * @return The populated list object.
  */
-BagClass *BagClass::classOf(RexxObject **args, size_t  argCount)
+BagClass *BagClass::ofRexx(RexxObject **args, size_t  argCount)
 {
     // create a list item of the appopriate type.
     Protected<BagClass> newBag = (BagClass *)newRexx(NULL, 0);

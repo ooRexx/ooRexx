@@ -121,7 +121,7 @@ HashCode PointerClass::getHashValue()
  */
 void *PointerClass::operator new(size_t size)
 {
-    RexxObject *newObject = new_object(size, T_Pointer);
+    RexxInternalObject *newObject = new_object(size, T_Pointer);
     newObject->setHasNoReferences();     // this has no references
     return (void *)newObject;
 }

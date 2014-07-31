@@ -183,7 +183,7 @@ void MemoryObject::logVerboseOutput(const char *message, void *sub1, void *sub2)
 }
 
 
-void MemoryObject::markObjectsMain(RexxObject *rootObject)
+void MemoryObject::markObjectsMain(RexxInternalObject *rootObject)
 /******************************************************************************/
 /* Function:  Main memory_mark driving loop                                   */
 /******************************************************************************/
@@ -195,25 +195,24 @@ void MemoryObject::markObjectsMain(RexxObject *rootObject)
         return;
     }
 
-    RexxObject *markObject;
-
     // set up the live marking word passed to the live() routines
     // we include the OldSpaceBit here to allow both conditions to be tested
     // in one shot.
     size_t liveMark = markWord | ObjectHeader::OldSpaceBit;
 
     allocations = 0;
-    pushLiveStack(OREF_NULL);            /* push a unique terminator          */
-    mark(rootObject);                    /* OREF_ENV or old2new               */
-    for (markObject = popLiveStack();
-        markObject != OREF_NULL;        /* test for unique terminator        */
-        markObject = popLiveStack())
+    // add a fence to the stack to act as a terminator.
+    pushLiveStack(OREF_NULL);
+    // mark the root object and start processing the stacked item.
+    // we terminate once we hit the null fence item.
+    mark(rootObject);
+    for (RexxInternalObject markObject = popLiveStack(); markObject != OREF_NULL; markObject = popLiveStack())
     {
-        /* mark behaviour live               */
-        memory_mark((RexxObject *)markObject->behaviour);
-        /* Mark other referenced obj.  We can do this without checking */
-        /* the references flag because we only push the object on to */
-        /* the stack if it has references. */
+        // mark the behaviour as live
+        memory_mark(markObject->behaviour);
+        // Mark other referenced obj.  We can do this without checking
+        // the references flag because we only push the object on to
+        // the stack if it has references.
         allocations++;
         markObject->live(liveMark);
     }

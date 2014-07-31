@@ -61,7 +61,7 @@ void *LiveStack::operator new(size_t size, size_t stksize, bool temporary)
     // This is a special allocation.  We use this if we need to expand the livestack
     // during a GC operation, which of course is when we are not able to allocate from
     // the Rexx heap.
-    RexxObject *newObject = memoryObject.temporaryObject(size + ((stksize-1) * sizeof(RexxObject *)));
+    RexxInternalObject *newObject = memoryObject.temporaryObject(size + ((stksize-1) * sizeof(RexxObject *)));
     // set the behaviour
     newObject->setBehaviour(TheLiveStackBehaviour);
     return newObject;

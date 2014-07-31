@@ -371,7 +371,7 @@ void  Envelope::associateObject(RexxInternalObject *o, size_t flattenOffset)
 {
     // we just add this to the duptable under the original object
     // reference value.
-    duptable->put(flattenOffset, o);
+    dupTable->put(flattenOffset, o);
 }
 
 
@@ -392,11 +392,11 @@ void Envelope::addTable(RexxInternalObject *obj)
     // create the table on first addition
     if (rehashTable == OREF_NULL)
     {
-        rehashtable = new_identity_table();
+        rehashTable = new_identity_table();
     }
 
     // use put to make sure we only get
     // a single version of each table
-    rehashtable->put(obj, obj);
+    rehashTable->put(obj, obj);
 }
 

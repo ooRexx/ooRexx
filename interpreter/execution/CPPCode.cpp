@@ -447,7 +447,6 @@ void AbstractCode::run(Activity *activity, MethodClass *method, RexxObject *rece
 #include "Envelope.hpp"
 #include "MessageClass.hpp"
 #include "StemClass.hpp"
-#include "RexxMisc.hpp"
 #include "NativeCode.hpp"
 #include "Activity.hpp"
 #include "ActivityManager.hpp"
@@ -461,6 +460,7 @@ void AbstractCode::run(Activity *activity, MethodClass *method, RexxObject *rece
 #include "WeakReferenceClass.hpp"
 #include "ContextClass.hpp"
 #include "StackFrameClass.hpp"
+#include "ActivityManager.hpp"
 
 PCPPM CPPCode::exportedMethods[] =     /* start of exported methods table   */
 {
@@ -625,7 +625,7 @@ CPPM(ListClass::hasItem),
 CPPM(ListClass::removeItem),
 
 CPPM(ListClass::newRexx),
-CPPM(ListClass::classOf),
+CPPM(ListClass::ofRexx),
 
 CPPM(MessageClass::notify),             /* Message methods                   */
 CPPM(MessageClass::result),
@@ -952,7 +952,7 @@ CPPM(RelationClass::hasItem),
 
 CPPM(RelationClass::newRexx),
 
-CPPM(RexxLocal::local),                /* the .local environment methods    */
+CPPM(ActivityManager::getLocalRexx),                // the .local environment methods
 
 CPPM(PointerClass::equal),
 CPPM(PointerClass::notEqual),

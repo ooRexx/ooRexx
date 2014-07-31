@@ -99,7 +99,7 @@ public:
     inline void         setNeedsInstallation() { installRequired = true; }
     inline void         install(RexxActivation *activation) { if (needsInstallation()) processInstall(activation); };
            void         setProgramName(RexxString *name);
-    inline RexxString  *getProgramName() { return programName; }
+           RexxString  *getProgramName() { return programName; }
     inline RexxString  *getProgramDirectory() { return programDirectory; }
     inline RexxString  *getProgramExtension() { return programExtension; }
     inline RexxString  *getProgramFile() { return programFile; }
@@ -164,6 +164,10 @@ public:
            RexxObject    *fuzzRexx();
            RexxObject    *formRexx();
            RexxObject    *traceRexx();
+           ArrayClass    *getSourceRexx()
+           {
+               return extractSource();
+           }
 
 protected:
 

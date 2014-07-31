@@ -115,6 +115,7 @@ class HashCollection : public RexxObject
 
     void           merge(HashCollection *);
     void           putAll(HashCollection *);
+    void           reHash();
     ArrayClass    *uniqueIndexes();
 
     // do this based off of items(), which can be overridden

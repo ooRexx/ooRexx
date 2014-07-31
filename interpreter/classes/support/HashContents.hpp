@@ -281,6 +281,17 @@ public:
         return totalSize;
     }
 
+
+    /**
+     * Return the bucket size of the contents.
+     *
+     * @return The hash bucket size
+     */
+    inline size_t hashBucket()
+    {
+        return bucketSize;
+    }
+
     // NOTE:  put() is virtual so that specialized hash tables can
     // override put() and change the replace vs. add semantics.
     virtual void put(RexxInternalObject *value, RexxInternalObject *index);

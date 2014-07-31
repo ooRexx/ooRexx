@@ -768,6 +768,22 @@ HashContents::IndexIterator HashCollection::iterator(RexxInternalObject *index)
 
 
 /**
+ * Rehash a collection after a restore.
+ */
+void HashCollection::reHash()
+{
+    // make a copy of our contents to get one of the same type and size.
+    Protected<HashContents> newContents = (HashContents *)contents->copy();
+    // empty the new one out
+    newContents->empty();
+    // copy all of the items into the new table
+    contents->reHash(newContents);
+    // make the new contents the active one.
+    setField(contents, newContents);
+}
+
+
+/**
  * construct a HashCollection with a given size.
  *
  * @param capacity The required capacity.

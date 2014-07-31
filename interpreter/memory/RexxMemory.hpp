@@ -281,9 +281,9 @@ enum
     void setMarkHandler(MarkHandler *h) { currentMarkHandler = h; }
     void resetMarkHandler() { currentMarkHandler = &defaultMarkHandler; }
 
-    void defineMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments);
-    void defineProtectedMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments);
-    void definePrivateMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments);
+    void defineMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments, const char *entryPointName);
+    void defineProtectedMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments, const char *entryPointName);
+    void definePrivateMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments, const char *entryPointName);
     void addToEnvironment(const char *name, RexxInternalObject *value);
     void addToSystem(const char *name, RexxInternalObject *value);
 

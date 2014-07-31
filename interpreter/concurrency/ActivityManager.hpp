@@ -94,6 +94,12 @@ public:
     static RexxObject *getLocalEnvironment(RexxString *name);
     static DirectoryClass *getLocal();
 
+    // non-static method that is attached to the environment directory
+    DirectoryClass *getLocalRexx()
+    {
+        return getLocal();
+    }
+
     static Activity * volatile currentActivity;   // the currently active thread
 
     static inline void postTermination()

@@ -551,10 +551,10 @@ RexxInternalObject *RexxObject::copy()
     // Instead of calling new_object and memcpy, ask the memory object to make
     // a copy of ourself.  This way, any header information can be correctly
     // initialized by memory.
-    RexxObject *newObj = clone();
+    RexxObject *newObj = (RexxObject *)clone();
     ProtectedObject p(newObj);
 
-    // do we have object variables?  We need to give that opject
+    // do we have object variables?  We need to give that object
     // a copy of the variables
     copyObjectVariables(newObj);
 
@@ -2589,7 +2589,7 @@ RexxString *RexxObject::defaultNameRexx()
  */
 RexxObject *RexxObject::copyRexx()
 {
-    return copy();
+    return (RexxObject *)copy();
 }
 
 /**
@@ -2731,14 +2731,7 @@ RexxObject *RexxObject::callOperatorMethod(size_t methodOffset, RexxObject *argu
  */
 void *RexxNilObject::operator new(size_t size)
 {
-    // At this point, this will be an instance of object.  After we've removed
-    // some of the methods during setup but before the image save, we'll update the
-    // behaviour type information so that it will restore with the correct virtual
-    // function table pointer.
-    RexxObject *newObj = new_object(size, T_Object);
-    // we need to switch the virtual method table pointer new.
-    newObj->setVirtualFunctions(MemoryObject::virtualFunctionTable[T_NilObject]);
-    return newObj;
+    return new_object(size, T_NilObject);
 }
 
 

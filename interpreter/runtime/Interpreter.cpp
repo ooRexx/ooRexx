@@ -516,16 +516,14 @@ void Interpreter::decodeConditionData(DirectoryClass *conditionObj, RexxConditio
  */
 RexxClass *Interpreter::findClass(RexxString *className)
 {
-    RexxString *internalName = className->upper();   /* upper case it                     */
-    /* send message to .local            */
+    RexxString *internalName = className->upper();
     RexxClass *classObject = (RexxClass *)(ActivityManager::getLocalEnvironment(internalName));
     if (classObject != OREF_NULL)
     {
         return classObject;
     }
 
-    /* last chance, try the environment  */
-    return(RexxClass *)(TheEnvironment->at(internalName));
+    return (RexxClass *)(TheEnvironment->get(internalName));
 }
 
 

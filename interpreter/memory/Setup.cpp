@@ -65,7 +65,6 @@
 #include "Envelope.hpp"
 #include "MessageClass.hpp"
 #include "StemClass.hpp"
-#include "RexxMisc.hpp"
 #include "NativeCode.hpp"
 #include "Activity.hpp"
 #include "ActivityManager.hpp"
@@ -86,6 +85,9 @@
 #include "ContextClass.hpp"
 #include "StackFrameClass.hpp"
 #include "LanguageParser.hpp"
+#include "SetClass.hpp"
+#include "BagClass.hpp"
+#include "ActivityManager.hpp"
 
 
 /**
@@ -113,9 +115,9 @@ void MemoryObject::defineMethod(const char *name, RexxBehaviour *behaviour, PCPP
  *                   method.
  * @param arguments  The method argument style (argument count or array indicator).
  */
-void MemoryObject::defineProtectedMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments)
+void MemoryObject::defineProtectedMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments, const char *entryPointName)
 {
-    MethodClass *method = behaviour->defineMethod(name, entryPoint, arguments);
+    MethodClass *method = behaviour->defineMethod(name, entryPoint, arguments, entryPointName);
     // mark as protected after the fact
     method->setProtected();
 }
@@ -131,9 +133,9 @@ void MemoryObject::defineProtectedMethod(const char *name, RexxBehaviour * behav
  *                   method.
  * @param arguments  The method argument style (argument count or array indicator).
  */
-void MemoryObject::definePrivateMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments)
+void MemoryObject::definePrivateMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments, const char *entryPointName)
 {
-    MethodClass *method = behaviour->define(name, entryPoint, arguments);
+    MethodClass *method = behaviour->defineMethod(name, entryPoint, arguments, entryPointName);
     // mark the method as private
     method->setPrivate();
 }
@@ -147,7 +149,7 @@ void MemoryObject::definePrivateMethod(const char *name, RexxBehaviour * behavio
  */
 void MemoryObject::addToEnvironment(const char *name, RexxInternalObject *value)
 {
-    TheEnvironment->put(getUpperGlobalName(name), object);
+    TheEnvironment->put(getUpperGlobalName(name), value);
 }
 
 
@@ -159,7 +161,7 @@ void MemoryObject::addToEnvironment(const char *name, RexxInternalObject *value)
  */
 void MemoryObject::addToSystem(const char *name, RexxInternalObject *value)
 {
-    TheSystem->put(getUpperGlobalName(name), object);
+    TheSystem->put(getUpperGlobalName(name), value);
 }
 
 
@@ -216,7 +218,7 @@ void MemoryObject::createImage()
     RelationClass::createInstance();
     StringTable::createInstance();
     DirectoryClass::createInstance();
-    SetClass::createinstance();
+    SetClass::createInstance();
     BagClass::createInstance();
     ListClass::createInstance();
     QueueClass::createInstance();
@@ -286,7 +288,6 @@ void MemoryObject::createImage()
 // local variable scope that identify which behaviours we are working with.
 #define StartClassDefinition(name) \
     {\
-        // set up variables with both the class and instance behaviours. \
         RexxBehaviour *currentClassBehaviour = The##name##ClassBehaviour; \
         RexxBehaviour *currentInstanceBehaviour = The##name##Behaviour;   \
         RexxClass *currentClass = The##name##Class;
@@ -361,7 +362,7 @@ StartClassDefinition(Class);
         AddProtectedMethod(CHAR_METACLASS, RexxClass::getMetaClass, 0);
         AddMethod(CHAR_METHOD, RexxClass::method, 1);
         AddMethod(CHAR_METHODS, RexxClass::methods, 1);
-        AddMethod(CHAR_MIXINCLASS. RexxClass::mixinclassRexx, 3);
+        AddMethod(CHAR_MIXINCLASS, RexxClass::mixinClass, 3);
         AddMethod(CHAR_QUERYMIXINCLASS, RexxClass::queryMixinClass, 0);
         AddMethod(CHAR_SUBCLASS, RexxClass::subclassRexx, 3);
         AddProtectedMethod(CHAR_SUBCLASSES, RexxClass::getSubClasses, 0);
@@ -384,7 +385,7 @@ StartClassDefinition(Class);
 
     // this is explicitly inserted into the class behaviour because it gets used
     // prior to the instance behavior merges.
-        AddMethod(CHAR_HASHCODE, hashCode, 0);
+        AddMethod(CHAR_HASHCODE, RexxClass::hashCode, 0);
     // this is a NOP by default, so we'll just use the object init method as a fill in.
         AddMethod(CHAR_ACTIVATE, RexxObject::initRexx, 0);
 
@@ -576,7 +577,7 @@ StartClassDefinition(String)
 
     CompleteClassDefinition(String);
 
-EndClassDefinition(String));
+EndClassDefinition(String);
 
 
     /***************************************************************************/
@@ -586,7 +587,7 @@ EndClassDefinition(String));
 StartClassDefinition(Array);
 
         AddClassMethod(CHAR_NEW, ArrayClass::newRexx, A_COUNT);
-        AddClassMethod(CHAR_OF, ArrayClass::of, A_COUNT);
+        AddClassMethod(CHAR_OF, ArrayClass::ofRexx, A_COUNT);
 
     CompleteClassMethodDefinitions();
 
@@ -604,9 +605,9 @@ StartClassDefinition(Array);
         AddMethod(CHAR_SIZE, ArrayClass::sizeRexx, 0);
         AddMethod(CHAR_SUPPLIER, ArrayClass::supplier, 0);
         AddMethod(CHAR_FIRST, ArrayClass::firstRexx, 0);
-        AddMethod(CHAR_FIRSTITEM, ArrayClass::firstItem, 0);
+        AddMethod(CHAR_FIRSTITEM, ArrayClass::getFirstItem, 0);
         AddMethod(CHAR_LAST, ArrayClass::lastRexx, 0);
-        AddMethod(CHAR_LASTITEM, ArrayClass::lastItem, 0);
+        AddMethod(CHAR_LASTITEM, ArrayClass::getLastItem, 0);
         AddMethod(CHAR_NEXT, ArrayClass::nextRexx, A_COUNT);
         AddMethod(CHAR_PREVIOUS, ArrayClass::previousRexx, A_COUNT);
         AddMethod(CHAR_APPEND, ArrayClass::appendRexx, 1);
@@ -628,7 +629,7 @@ StartClassDefinition(Array);
         AddMethod(CHAR_SORT, ArrayClass::stableSortRexx, 0);
         AddMethod(CHAR_SORTWITH, ArrayClass::stableSortWithRexx, 1);
         AddMethod(CHAR_STABLESORT, ArrayClass::stableSortRexx, 0);
-        AddMethod(CHAR_STABLESORTWITH ,TheArrayBehaviour, ArrayClass::stableSortWithRexx, 1);
+        AddMethod(CHAR_STABLESORTWITH, ArrayClass::stableSortWithRexx, 1);
 
     CompleteMethodDefinitions();
 
@@ -740,7 +741,7 @@ StartClassDefinition(StringTable);
         // most of the hash collection methods can be inherited
         InheritInstanceMethods(IdentityTable);
 
-        AddMethod(CHAR_UNKNOWN, ObjectClass::unknown, 2);
+        AddMethod(CHAR_UNKNOWN, RexxObject::unknownRexx, 2);
         AddMethod(CHAR_ENTRY, StringHashCollection::entryRexx, 1);
         AddMethod(CHAR_HASENTRY, StringHashCollection::hasEntry, 1);
         AddMethod(CHAR_SETENTRY, StringHashCollection::setEntry, 2);
@@ -805,7 +806,7 @@ EndClassDefinition(Directory);
 
 StartClassDefinition(Relation)
 
-        AddClassMethod(CHAR_NEW, Relation::newRexx, A_COUNT);
+        AddClassMethod(CHAR_NEW, RelationClass::newRexx, A_COUNT);
 
     CompleteClassMethodDefinitions();
 
@@ -987,31 +988,31 @@ StartClassDefinition(Package)
     CompleteClassMethodDefinitions();
 
         AddProtectedMethod(CHAR_SETSECURITYMANAGER, PackageClass::setSecurityManager, 1);
-        AddMethod(CHAR_SOURCE, PackageClass::getSource, 0);
+        AddMethod(CHAR_SOURCE, PackageClass::getSourceRexx, 0);
         AddMethod(CHAR_SOURCELINE, PackageClass::getSourceLineRexx, 1);
-        AddMethod(CHAR_SOURCESIZE, PackageClass::getSourceSize, 0);
-        AddMethod(CHAR_CLASSES, PackageClass::getClasses, 0);
-        AddMethod(CHAR_PUBLICCLASSES, PackageClass::getPublicClasses, 0);
-        AddMethod(CHAR_IMPORTEDCLASSES, PackageClass::getImportedClasses, 0);
-        AddMethod(CHAR_DEFINEDMETHODS, PackageClass::getMethods, 0);
-        AddMethod(CHAR_ROUTINES, PackageClass::getRoutines, 0);
-        AddMethod(CHAR_PUBLICROUTINES, PackageClass::getPublicRoutines, 0);
-        AddMethod(CHAR_IMPORTEDROUTINES, PackageClass::getImportedRoutines, 0);
-        AddMethod(CHAR_IMPORTEDPACKAGES, PackageClass::getImportedPackages, 0);
-        AddMethod(CHAR_LOADPACKAGE, PackageClass::loadPackage, 2);
-        AddMethod(CHAR_ADDPACKAGE, PackageClass::addPackage, 1);
+        AddMethod(CHAR_SOURCESIZE, PackageClass::getSourceSizeRexx, 0);
+        AddMethod(CHAR_CLASSES, PackageClass::getClassesRexx, 0);
+        AddMethod(CHAR_PUBLICCLASSES, PackageClass::getPublicClassesRexx, 0);
+        AddMethod(CHAR_IMPORTEDCLASSES, PackageClass::getImportedClassesRexx, 0);
+        AddMethod(CHAR_DEFINEDMETHODS, PackageClass::getMethodsRexx, 0);
+        AddMethod(CHAR_ROUTINES, PackageClass::getRoutinesRexx, 0);
+        AddMethod(CHAR_PUBLICROUTINES, PackageClass::getPublicRoutinesRexx, 0);
+        AddMethod(CHAR_IMPORTEDROUTINES, PackageClass::getImportedRoutinesRexx, 0);
+        AddMethod(CHAR_IMPORTEDPACKAGES, PackageClass::getImportedPackagesRexx, 0);
+        AddMethod(CHAR_LOADPACKAGE, PackageClass::loadPackageRexx, 2);
+        AddMethod(CHAR_ADDPACKAGE, PackageClass::addPackageRexx, 1);
         AddMethod(CHAR_FINDCLASS, PackageClass::findClassRexx, 1);
         AddMethod(CHAR_FINDROUTINE, PackageClass::findRoutineRexx, 1);
-        AddMethod(CHAR_ADDROUTINE, PackageClass::addRoutine, 2);
-        AddMethod(CHAR_ADDPUBLICROUTINE, PackageClass::addPublicRoutine, 2);
-        AddMethod(CHAR_ADDCLASS, PackageClass::addClass, 2);
-        AddMethod(CHAR_ADDPUBLICCLASS, PackageClass::addPublicClass, 2);
-        AddMethod(CHAR_NAME, PackageClass::getName, 0);
-        AddMethod("LOADLIBRARY", PackageClass::loadLibrary, 1);
-        AddMethod("DIGITS", PackageClass::digits, 0);
-        AddMethod("FORM", PackageClass::form, 0);
-        AddMethod("FUZZ", PackageClass::fuzz, 0);
-        AddMethod("TRACE", PackageClass::trace, 0);
+        AddMethod(CHAR_ADDROUTINE, PackageClass::addRoutineRexx, 2);
+        AddMethod(CHAR_ADDPUBLICROUTINE, PackageClass::addPublicRoutineRexx, 2);
+        AddMethod(CHAR_ADDCLASS, PackageClass::addClassRexx, 2);
+        AddMethod(CHAR_ADDPUBLICCLASS, PackageClass::addPublicClassRexx, 2);
+        AddMethod(CHAR_NAME, PackageClass::getProgramName, 0);
+        AddMethod("LOADLIBRARY", PackageClass::loadLibraryRexx, 1);
+        AddMethod("DIGITS", PackageClass::digitsRexx, 0);
+        AddMethod("FORM", PackageClass::formRexx, 0);
+        AddMethod("FUZZ", PackageClass::fuzzRexx, 0);
+        AddMethod("TRACE", PackageClass::traceRexx, 0);
 
     CompleteMethodDefinitions();
 
@@ -1085,12 +1086,12 @@ StartClassDefinition(Stem)
     // We want various operator methods that we inherit from the object
     // class to be redirected to our unknown method, so we block these methods
     // in our instance method directory.
-    HideMethod(CHAR_STRICT_EQUAL);
-    HideMethod(CHAR_EQUAL);
-    HideMethod(CHAR_STRICT_BACKSLASH_EQUAL);
-    HideMethod(CHAR_BACKSLASH_EQUAL);
-    HideMethod(CHAR_LESSTHAN_GREATERTHAN);
-    HideMethod(CHAR_GREATERTHAN_LESSTHAN);
+        HideMethod(CHAR_STRICT_EQUAL);
+        HideMethod(CHAR_EQUAL);
+        HideMethod(CHAR_STRICT_BACKSLASH_EQUAL);
+        HideMethod(CHAR_BACKSLASH_EQUAL);
+        HideMethod(CHAR_LESSTHAN_GREATERTHAN);
+        HideMethod(CHAR_GREATERTHAN_LESSTHAN);
 
     CompleteMethodDefinitions();
 
@@ -1405,8 +1406,8 @@ EndClassDefinition(StackFrame);
     // now add entries to the environment
     addToEnvironment(CHAR_ENVIRONMENT, TheEnvironment);
     addToEnvironment(CHAR_NIL ,TheNilObject);
-    addToEnvironment(CHAR_FALSE, TheFalseObject, TheEnvironment);
-    addToEnvironment(CHAR_TRUE, TheTrueObject, TheEnvironment);
+    addToEnvironment(CHAR_FALSE, TheFalseObject);
+    addToEnvironment(CHAR_TRUE, TheTrueObject);
 
     // TODO:  Make sure INTEGER and NUMBERSTRING are removed from the environment.
 
@@ -1437,7 +1438,7 @@ EndClassDefinition(StackFrame);
   {
       // create a method used to retrieve the .Local environment.  We set this on the
       // .Environment directory.
-      Protected<MethodClass> localMethod = new MethodClass(getGlobalName(CHAR_LOCAL), CPPCode::resolveExportedMethod(CHAR_LOCAL, CPPM(RexxLocal::local), 0));
+      Protected<MethodClass> localMethod = new MethodClass(getGlobalName(CHAR_LOCAL), CPPCode::resolveExportedMethod(CHAR_LOCAL, CPPM(ActivityManager::getLocalRexx), 0, "ActivityManager::getLocalRexx"));
 
       // add this to the environment directory.
       TheEnvironment->setMethodRexx(getGlobalName(CHAR_LOCAL), localMethod);
@@ -1468,9 +1469,9 @@ EndClassDefinition(StackFrame);
   }
 
   /* define and suppress methods in the nil object */
-  TheNilObject->defineMethod(getGlobalName(CHAR_COPY), (MethodClass *)TheNilObject);
-  TheNilObject->defineMethod(getGlobalName(CHAR_START), (MethodClass *)TheNilObject);
-  TheNilObject->defineMethod(getGlobalName(CHAR_OBJECTNAMEEQUALS), (MethodClass *)TheNilObject);
+  TheNilObject->defineInstanceMethod(getGlobalName(CHAR_COPY), (MethodClass *)TheNilObject, OREF_NULL);
+  TheNilObject->defineInstanceMethod(getGlobalName(CHAR_START), (MethodClass *)TheNilObject, OREF_NULL);
+  TheNilObject->defineInstanceMethod(getGlobalName(CHAR_OBJECTNAMEEQUALS), (MethodClass *)TheNilObject, OREF_NULL);
 
   // ok, .NIL has been constructed.  As a last step before saving the image, we need to change
   // the type identifier in the behaviour so that this will get the correct virtual function table
@@ -1478,6 +1479,8 @@ EndClassDefinition(StackFrame);
   TheNilObject->behaviour->setClassType(T_NilObject);
 
   RexxClass *ordered = (RexxClass *)TheEnvironment->get(getGlobalName(CHAR_ORDEREDCOLLECTION));
+
+  // TODO:  this really can be done in CoreClasses...
 
   TheArrayClass->inherit(ordered, OREF_NULL);
   TheArrayClass->setRexxDefined();
@@ -1507,6 +1510,12 @@ EndClassDefinition(StackFrame);
 
   TheStemClass->inherit(map, OREF_NULL);
   TheStemClass->setRexxDefined();
+
+  TheBagClass->inherit(map, OREF_NULL);
+  TheBagClass->setRexxDefined();
+
+  TheSetClass->inherit(map, OREF_NULL);
+  TheSetClass->setRexxDefined();
 
   // TODO:  Add Set and Bag class processing here.
 

@@ -977,7 +977,7 @@ ListClass *ListClass::newRexx(RexxObject **init_args, size_t  argCount)
  *
  * @return The populated list object.
  */
-ListClass *ListClass::classOf(RexxObject **args, size_t  argCount)
+ListClass *ListClass::ofRexx(RexxObject **args, size_t  argCount)
 {
     // it would be nice to create an object of the size we need, but
     // that is a little complicated from this code.  It's probably not

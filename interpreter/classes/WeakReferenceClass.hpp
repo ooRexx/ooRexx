@@ -57,7 +57,7 @@ class WeakReference : public RexxObject
 public:
     inline WeakReference(RESTORETYPE restoreType) { ; };
     WeakReference();
-    WeakReference(RexxObject *referent);
+    WeakReference(RexxInternalObject *referent);
 
     inline void *operator new(size_t, void *ptr) {return ptr;}
     inline void  operator delete(void *, void *) {;}
