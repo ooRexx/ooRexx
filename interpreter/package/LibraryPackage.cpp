@@ -47,7 +47,7 @@
 #include "PackageManager.hpp"
 #include "Interpreter.hpp"
 #include "NativeCode.hpp"
-#include "DirectoryClass.hpp"
+#include "StringTable.hpp"
 #include "RoutineClass.hpp"
 #include "ProtectedObject.hpp"
 
@@ -72,7 +72,7 @@ void *LibraryPackage::operator new(size_t size)
  */
 LibraryPackage::LibraryPackage(RexxString *n)
 {
-    OrefSet(this, libraryName, n);
+    libraryName = n;
 }
 
 /**
@@ -85,13 +85,13 @@ LibraryPackage::LibraryPackage(RexxString *n)
  */
 LibraryPackage::LibraryPackage(RexxString *n, RexxPackageEntry *p)
 {
-    OrefSet(this, libraryName, n);
-    ProtectedObject p2(this);
+    libraryName = n;
     // store the registered package entry
     package = p;
     // this is an internal package.
     internal = true;
 }
+
 
 /**
  * Normal live marking.
@@ -102,6 +102,7 @@ void LibraryPackage::live(size_t liveMark)
     memory_mark(routines);
     memory_mark(methods);
 }
+
 
 /**
  * Generalized live marking.
@@ -252,7 +253,7 @@ void LibraryPackage::loadRoutines(RexxRoutineEntry *table)
     }
 
     // create a directory of loaded routines
-    OrefSet(this, routines, new_directory());
+    setField(routines, new_string_table());
 
     while (table->style != 0)
     {
@@ -262,7 +263,7 @@ void LibraryPackage::loadRoutines(RexxRoutineEntry *table)
         RexxString *target = new_upper_string(table->name);
         RexxString *routineName = new_string(table->name);
 
-        RexxRoutine *func = OREF_NULL;
+        BaseNativeRoutine *func = OREF_NULL;
         if (table->style == ROUTINE_CLASSIC_STYLE)
         {
             func = new RegisteredRoutine(libraryName, routineName, (RexxRoutineHandler *)table->entryPoint);
@@ -365,7 +366,7 @@ NativeMethod *LibraryPackage::resolveMethod(RexxString *name)
     }
 
     // see if this is in the table yet.
-    NativeMethod *code = (NativeMethod *)methods->at(name);
+    NativeMethod *code = (NativeMethod *)methods->get(name);
     if (code == OREF_NULL)
     {
         // find the package definition
@@ -395,7 +396,7 @@ NativeMethod *LibraryPackage::resolveMethod(RexxString *name)
 RoutineClass *LibraryPackage::resolveRoutine(RexxString *name)
 {
     // we resolve all of these at load time, so this is either in the table, or it's not.
-    return (RoutineClass *)routines->at(name);
+    return (RoutineClass *)routines->get(name);
 }
 
 

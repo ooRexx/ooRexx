@@ -49,6 +49,7 @@
 #include "MemoryStack.hpp"
 #include "SysSemaphore.hpp"
 #include "IdentityTableClass.hpp"
+#include "QueueClass.hpp"
 
 // this can be enabled to switch on memory profiling info
 //#define MEMPROFILE
@@ -96,7 +97,6 @@ class MemorySegmentPool : public MemorySegmentPoolHeader
 #ifdef _DEBUG
  friend class MemoryObject;
 #endif
- friend bool SysAccessPool(MemorySegmentPool **);
  public:
      void          *operator new(size_t size, size_t minSize);
      inline void   *operator new(size_t size, void *pool) { return pool;}
@@ -129,7 +129,7 @@ class MarkHandler
 {
  public:
     // pure virtual method for handling the mark operation.
-    virtual void mark(RexxObject **field, RexxObject *object);
+    virtual void mark(RexxInternalObject **field, RexxInternalObject *object);
 };
 
 
@@ -158,8 +158,7 @@ class MemoryObject : public RexxInternalObject
     void        runUninits();
     void        removeUninitObject(RexxInternalObject *obj);
     void        addUninitObject(RexxInternalObject *obj);
-    bool        isPendingUninit(RexxInternalObject *obj);
-    inline void checkUninitQueue() { if (pendingUninits > 0) runUninits(); }
+    inline void checkUninitQueue() { if (!pendingUninits->isEmpty()) runUninits(); }
     RexxInternalObject *unflattenObjectBuffer(BufferClass *sourceBuffer, char *startPointer, size_t dataLength);
     void        unflattenProxyObjects(Envelope *envelope, RexxInternalObject *firstObject, RexxInternalObject *endObject);
 
@@ -172,7 +171,6 @@ class MemoryObject : public RexxInternalObject
     inline void removeHold(RexxInternalObject *obj) { saveStack->remove(obj); }
     RexxInternalObject *holdObject(RexxInternalObject *obj);
     void        saveImage();
-    void        setEnvelope(Envelope *);
     void        setOref(RexxInternalObject *variable, RexxInternalObject *value);
     void        memoryPoolAdded(MemorySegmentPool *);
     void        shutdown();
@@ -203,7 +201,7 @@ class MemoryObject : public RexxInternalObject
     inline void clearSaveStack() { saveStack->clear(); }
 
     void        checkAllocs();
-    RexxObject *dumpImageStats();
+    void        dumpImageStats();
     void        scavengeSegmentSets(MemorySegmentSet *requester, size_t allocationLength);
     void        setUpMemoryTables(MapTable *old2newTable);
     void        collectAndUninit(bool clearStack);
@@ -292,7 +290,7 @@ enum
 
     MapTable         *old2new;           // the table for tracking old2new references.
     IdentityTable    *uninitTable;       // the table of objects with uninit methods
-    size_t            pendingUninits;    // objects waiting to have uninits run
+    QueueClass       *pendingUninits;    // objects waiting to have uninits run
     bool              processingUninits; // true when we are processing the uninit table
     WeakReference    *weakReferenceList; // list of active weak references
 
@@ -413,7 +411,7 @@ public:
     TracingMarkHandler(MemoryObject *m, size_t mw) : memory(m), markWord(mw) { }
 
     // pure virtual method for handling the mark operation.
-    virtual void mark(RexxObject **pMarkObject, RexxObject *markObject)
+    virtual void mark(RexxInternalObject **pMarkObject, RexxInternalObject *markObject)
     {
         // Save image processing.  We only handle this if the object has not
         // already been marked.
@@ -447,7 +445,7 @@ inline ArrayClass *new_arrayOfObject(size_t s, size_t c, size_t t)  { return mem
 // memory marking macros.  These are macros because they use the assumed arguments
 // passed to the live method
 #define ObjectNeedsMarking(oref) ((oref) != OREF_NULL && !((oref)->isObjectMarked(liveMark)) )
-#define memory_mark(oref)  if (ObjectNeedsMarking(oref)) memoryObject.mark((RexxObject *)(oref))
+#define memory_mark(oref)  if (ObjectNeedsMarking(oref)) memoryObject.mark(oref)
 #define memory_mark_general(oref) (memoryObject.markGeneral((void *)&(oref)))
 
 // some convenience macros for marking arrays of objects.

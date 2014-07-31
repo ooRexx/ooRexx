@@ -52,7 +52,7 @@ class Activity;
 class UninitDispatcher : public TrappingDispatcher
 {
 public:
-    inline UninitDispatcher(RexxObject *t) : target(t) { }
+    inline UninitDispatcher(RexxInternalObject *t) : target(t) { }
     virtual ~UninitDispatcher() { ; }
 
     virtual void run();
@@ -60,7 +60,7 @@ public:
     virtual void handleError(DirectoryClass *);
 
 protected:
-    RexxObject *target;     // the object we're invoking
+    RexxInternalObject *target;  // the object we're invoking
 };
 
 #endif

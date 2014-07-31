@@ -81,10 +81,13 @@ class RexxClause : public RexxInternalObject
 
  protected:
 
+    static const size_t INITIAL_SIZE = 100;   // initial allocation size
+    static const size_t EXTEND_SIZE = 25;     // how much we extend the clause by when we run out of tokens.
+
     SourceLocation clauseLocation;       // position of the clause
     size_t current;                      // index of current token of clause
     size_t first;                        // first token of clause
-    ArrayClass  *tokens;                  // array of tokens in the clause
+    ArrayClass  *tokens;                 // array of tokens in the clause
     size_t size;                         // size of token array
     size_t free;                         // location of first free token
 };

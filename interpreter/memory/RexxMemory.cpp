@@ -36,9 +36,9 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* Kernel                                                     RexxMemory.cpp  */
 /*                                                                            */
-/* Memory Object                                                              */
+/* The main subsystem for dealing with all memory-related issues and          */
+/* interpreter initialization and image build.                                */
 /*                                                                            */
 /******************************************************************************/
 #include "RexxCore.h"
@@ -70,35 +70,43 @@
 #include "UninitDispatcher.hpp"
 #include "GlobalProtectedObject.hpp"
 #include "MapTable.hpp"
+#include "SetClass.hpp"
+#include "BagClass.hpp"
 
 // restore a class from its
 // associated primitive behaviour
 // (already restored by memory_init)
 #define RESTORE_CLASS(name, className) The##name##Class = (className *)RexxBehaviour::getPrimitiveBehaviour(T_##name)->restoreClass();
 
-
-bool SysAccessPool(MemorySegmentPool **pool);
 // NOTE:  There is just a single memory object in global storage.  We'll define
 // memobj to be the direct address of this memory object.
 MemoryObject memoryObject;
 
+
+/**
+ * Local function to handle memory logging.
+ *
+ * @param outfile The output file handle.
+ * @param message The message to write out
+ */
 static void logMemoryCheck(FILE *outfile, const char *message, ...)
 {
     va_list args;
     va_start(args, message);
     vprintf(message, args);
-    if (outfile != NULL) {
+    if (outfile != NULL)
+    {
         vfprintf(outfile, message, args);
     }
     va_end(args);
 }
 
 
+/**
+ * Main Constructor for Rexxmemory, called once during main
+ * initialization.  Will create the initial memory Pool(s), etc.
+ */
 MemoryObject::MemoryObject()
-/******************************************************************************/
-/* Function: Main Constructor for Rexxmemory, called once during main         */
-/*  initialization.  Will create the initial memory Pool(s), etc.             */
-/******************************************************************************/
 {
     // we need to set a valid size for this object.  We round it up
     // to the minimum allocation boundary, even though that might be
@@ -119,22 +127,29 @@ MemoryObject::MemoryObject()
 }
 
 
-void MemoryObject::initialize(bool _restoringImage)
-/******************************************************************************/
-/* Function:  Gain access to all Pools                                        */
-/******************************************************************************/
+/**
+ * Initialize the memory object, including getting the
+ * initial memory pool allocations.
+ *
+ * @param restoringImage
+ *               True if we are initializing during an image restore, false
+ *               if we need to build the initial image environemnt (i.e., called
+ *               via rexximage during a build).
+ */
+void MemoryObject::initialize(bool restoringImage)
 {
-    /* access 1st pool directly. SysCall */
-    /* Did the pool exist?               */
-
+    // create the initial memory pool and initialize everything.
     firstPool = MemorySegmentPool::createPool();
     currentPool = firstPool;
 
+    // The constructor makes sure some crucial aspects of the Memory object are set up.
     new (this) MemoryObject;
+
+    // create our various segment pools
     new (&newSpaceNormalSegments) NormalSegmentSet(this);
     new (&newSpaceLargeSegments) LargeSegmentSet(this);
 
-    /* and the new/old Space segments    */
+    // and the new/old Space segments
     new (&oldSpaceSegments) OldSpaceSegmentSet(this);
 
     collections = 0;
@@ -142,15 +157,20 @@ void MemoryObject::initialize(bool _restoringImage)
     variableCache = OREF_NULL;
     globalStrings = OREF_NULL;
 
-    // get our table of virtual functions setup first thing.
+    // get our table of virtual functions setup first thing.  We need this
+    // before we can allocate our first real object.
     buildVirtualFunctionTable();
 
+    // our first object allocation.  This is the live stack used for
+    // sweep marking.
     liveStack = (LiveStack *)oldSpaceSegments.allocateObject(MemorySegmentSet::SegmentDeadSpace);
     // remember the original one
     originalLiveStack = liveStack;
 
-    // if we're restoring, load everything from the imae file now.
-    if (_restoringImage)
+    // if we're restoring, load everything from the image file.  All of the
+    // classes will exist then, as well as restoring all of the
+    // behaviours
+    if (restoringImage)
     {
         restoreImage();
     }
@@ -166,27 +186,35 @@ void MemoryObject::initialize(bool _restoringImage)
 
     // is this image creation?  This will build and save the image, then
     // terminate
-    if (!_restoringImage)
+    if (!restoringImage)
     {
         createImage();
     }
+
     restore();                           // go restore the state of the memory object
 }
 
 
+/**
+ * Log verbose output events
+ *
+ * @param message The main message text.
+ * @param sub1    The first substitution value.
+ * @param sub2    The second substitution value.
+ */
 void MemoryObject::logVerboseOutput(const char *message, void *sub1, void *sub2)
-/******************************************************************************/
-/* Function:  Log verbose output events                                       */
-/******************************************************************************/
 {
     logMemoryCheck(NULL, message, sub1, sub2);
 }
 
 
+/**
+ * Main memory_mark driving loop
+ *
+ * @param rootObject The root object used for the marking (usually the
+ *                   MemoryObject).
+ */
 void MemoryObject::markObjectsMain(RexxInternalObject *rootObject)
-/******************************************************************************/
-/* Function:  Main memory_mark driving loop                                   */
-/******************************************************************************/
 {
     // for some of the root objects, we get called to mark them before they get allocated.
     // make sure we don't process any null references.
@@ -206,7 +234,7 @@ void MemoryObject::markObjectsMain(RexxInternalObject *rootObject)
     // mark the root object and start processing the stacked item.
     // we terminate once we hit the null fence item.
     mark(rootObject);
-    for (RexxInternalObject markObject = popLiveStack(); markObject != OREF_NULL; markObject = popLiveStack())
+    for (RexxInternalObject *markObject = popLiveStack(); markObject != OREF_NULL; markObject = popLiveStack())
     {
         // mark the behaviour as live
         memory_mark(markObject->behaviour);
@@ -219,34 +247,37 @@ void MemoryObject::markObjectsMain(RexxInternalObject *rootObject)
 }
 
 
+/**
+ * Check for objects that require an uninit method run.
+ */
 void MemoryObject::checkUninit()
-/******************************************************************************/
-/*                                                                            */
-/******************************************************************************/
 {
-    /* we might not actually have a table yet, so make sure we check */
-    /* before using it. */
+    // we might not actually have a table yet, so make sure we check
+    // before using it.
     if (uninitTable == NULL)
     {
         return;
     }
 
-    RexxObject *uninitObject;
-    /* table and any object is isn't   */
-    /* alive, we indicate it should be */
-    /* sent unInit.  We indiacte this  */
-    /* by setting the value to 1,      */
-    /* instead of NIL (the default)    */
-    for (HashLink i = uninitTable->first(); (uninitObject = uninitTable->index(i)) != OREF_NULL; i = uninitTable->next(i))
+    // scan the uninit table looking for objects that are elegable for collection.
+    for (HashContents::TableIterator iterator = uninitTable->iterator(); iterator.isAvailable(); iterator.next())
     {
-        /* is this object now dead?        */
+        RexxInternalObject *uninitObject = iterator.value();
+
+        // was this object not marked by the last sweep operation?
         if (uninitObject->isObjectDead(markWord))
         {
-            /* yes, indicate object is to be   */
-            /*  sent uninit.                   */
-            uninitTable->replace(TheTrueObject, i);
-            pendingUninits++;
+            // copy this to the pending table.
+            pendingUninits->append(uninitObject);
         }
+    }
+
+    // this is a little bit of a pain. but we have no means if
+    // safely deleting items from a table while we're using an iterator.
+    // so iterate over the pending table and remove those entries from the other table.
+    for (size_t i = 1; i <= pendingUninits->items(); i++)
+    {
+        uninitTable->remove(pendingUninits->get(i));
     }
 }
 
@@ -285,133 +316,85 @@ void MemoryObject::lastChanceUninit()
 }
 
 
+/**
+ * Run any pending uninit methods for this activity.
+ */
 void  MemoryObject::runUninits()
-/******************************************************************************/
-/* Function:  Run any UNINIT methods for this activity                        */
-/******************************************************************************/
-/* NOTE: The routine to iterate across uninit Table isn't quite right, since  */
-/*  the removal of zombieObj may move another zombieObj and then doing        */
-/*  the next will skip this zombie, we should however catch it next time      */
-/*  through.                                                                  */
-/*                                                                            */
-/******************************************************************************/
 {
-    RexxObject * zombieObj;              /* obj that needs uninit run.        */
-    HashLink iterTable;                  /* iterator for table.               */
-
-    /* if we're already processing this, don't try to do this */
-    /* recursively. */
+    // if we're already processing this, don't try to do this
+    // recursively.
     if (processingUninits)
     {
         return;
     }
 
-    /* turn on the recursion flag, and also zero out the count of */
-    /* pending uninits to run */
+    // turn on the recursion flag
     processingUninits = true;
-    pendingUninits = 0;
 
     // get the current activity for running the uninits
     Activity *activity = ActivityManager::currentActivity;
 
-    /* uninitTabe exists, run UNINIT     */
-    for (iterTable = uninitTable->first();
-        (zombieObj = uninitTable->index(iterTable)) != OREF_NULL;)
+    // process until the queue is empty
+    while (!pendingUninits->isEmpty())
     {
-        // TODO:  Ther's a bug here.  Removing the object can cause the
-        // iterator to skip over an entry....something should be done to
-        // prevent this.
-
-        /* is this object readyfor UNINIT?   */
-        if (uninitTable->value(iterTable) == TheTrueObject)
-        {
-            /* make sure we don't recurse        */
-            uninitTable->put(TheFalseObject, zombieObj);
-            {
-                // run this method with appropriate error trapping
-                UninitDispatcher dispatcher(zombieObj);
-                activity->run(dispatcher);
-            }
-                                           /* remove zombie from uninit table   */
-            uninitTable->remove(zombieObj);
-
-
-            // because we just did a remove operation, this will effect the iteration
-            // process. There are two possibilities here.  Either A) we were at the end of the
-            // chain and this is now an empty slot or B) the removal process moved an new item
-            // into this slot.  If it is case A), then we need to search for the next item.  If
-            // it is case B) we'll just leave the index alone and process this position again.
-            if (uninitTable->index(iterTable) == OREF_NULL)
-            {
-                iterTable = uninitTable->next(iterTable);
-            }
-        }
-        else
-        {
-            iterTable = uninitTable->next(iterTable);
-        }
-    }                                  /* now go check next object in table */
-    /* make sure we remove the recursion protection */
+        // take the front item from the queue
+        RexxInternalObject *zombieObject = pendingUninits->pull();
+        // run this method with appropriate error trapping
+        UninitDispatcher dispatcher(zombieObject);
+        activity->run(dispatcher);
+    }
+    // make sure we remove the recursion protection
     processingUninits = false;
 }
 
 
-void  MemoryObject::removeUninitObject(
-    RexxObject *obj)                   /* object to remove                  */
-/******************************************************************************/
-/* Function:  Remove an object from the uninit tables                         */
-/******************************************************************************/
+/**
+ * Remove an object from the uninit tables.  This can happen
+ * if a setMethod() on an object removes the uninit method.
+ *
+ * @param obj    The object to remove.
+ */
+void  MemoryObject::removeUninitObject(RexxInternalObject *obj)
 {
     // just remove this object from the table
     uninitTable->remove(obj);
 }
 
 
-void MemoryObject::addUninitObject(
-    RexxObject *obj)                   /* object to add                     */
-/******************************************************************************/
-/* Function:  Add an object with an uninit method to the uninit table for     */
-/*            a process                                                       */
-/******************************************************************************/
+/**
+ * Add an object with an uninit method to the uninit table
+ *
+ * @param obj    The object to add.
+ */
+void MemoryObject::addUninitObject(RexxInternalObject *obj)
 {
-                                       /* is object already in table?       */
-   if (uninitTable->get(obj) == OREF_NULL)
-   {
-                                       /* nope, add obj to uninitTable,     */
-                                       /*  initial value is NIL             */
-       uninitTable->put(TheNilObject, obj);
-   }
-
-}
-
-bool MemoryObject::isPendingUninit(RexxObject *obj)
-/******************************************************************************/
-/* Function:  Test if an object is going to require its uninit method run.    */
-/******************************************************************************/
-{
-    return uninitTable->get(obj) != OREF_NULL;
+    // just add to the table unconditionally.
+    uninitTable->put(obj, obj);
 }
 
 
+/**
+ * Main mark routine for garbage collection.
+ */
 void MemoryObject::markObjects()
-/******************************************************************************/
-/* Function:   Main mark routine for garbage collection.  This reoutine       */
-/*  Determines which mark routine to call and does all additional processing  */
-/******************************************************************************/
 {
     verboseMessage("Beginning mark operation\n");
 
-    /* call normal,speedy,efficient mark */
-    markObjectsMain((RexxObject *)this);
+    // do the marking using the memory object as the root object.
+    markObjectsMain(this);
     // now process the weak reference queue...We check this before the
     // uninit list is processed so that the uninit list doesn't mark any of the
     // weakly referenced items.  We don't want an object placed on the uninit queue
     // to end up strongly referenced later.
     checkWeakReferences();
 
-    checkUninit();               /* flag all objects about to be dead */
-                                       /* now mark the unInit table and the */
+    // check for any objects we're holding for uninits that have
+    // gone out of scope
+    checkUninit();
+    // make the uninit table and the pending uninits queue to keep those
+    // objects from getting reclaimed.
     markObjectsMain(uninitTable);
+    markObjectsMain(pendingUninits);
 
     // if we had to expand the live stack previously, we allocated a temporary
     // one from malloc() storage rather than the object heap.  We need to
@@ -425,13 +408,11 @@ void MemoryObject::markObjects()
 }
 
 
-/******************************************************************************/
-/* Function:  Scan the weak reference queue looking for either dead weak      */
-/* objects or weak references that refer to objects that have gone out of     */
-/* scope.  Objects with registered notification objects (that are still in    */
-/* scope) will be moved to a notification queue, which is processed after     */
-/* everything is scanned.                                                     */
-/******************************************************************************/
+/**
+ * Scan the weak reference queue looking for either dead weak
+ * objects or weak references that refer to objects that have gone out of
+ * scope.
+ */
 void MemoryObject::checkWeakReferences()
 {
     WeakReference *current = weakReferenceList;
@@ -459,7 +440,7 @@ void MemoryObject::checkWeakReferences()
                 }
             }
         }
-        // step to the new nest item
+        // step to the new next item
         current = next;
     }
 
@@ -468,10 +449,12 @@ void MemoryObject::checkWeakReferences()
 }
 
 
+/**
+ * Add a new weak reference to the tracking table
+ *
+ * @param ref    The weak reference item to add.
+ */
 void MemoryObject::addWeakReference(WeakReference *ref)
-/******************************************************************************/
-/* Function:  Add a new weak reference to the tracking table                  */
-/******************************************************************************/
 {
     // just add this to the front of the list
     ref->nextReferenceList = weakReferenceList;
@@ -479,88 +462,88 @@ void MemoryObject::addWeakReference(WeakReference *ref)
 }
 
 
+/**
+ * Allocate a segment of the requested size.  The requested size
+ * is the desired size, while the minimum is the absolute minimum we can
+ * handle.  This takes care of the overhead accounting and additional
+ * rounding.  The requested size is assumed to have been rounded up to the
+ * next "appropriate" boundary already, and the segment overhead will be
+ * allocated from that part, if possible.  Otherwise, and additional page is
+ * added.
+ *
+ * @param requestedBytes
+ *                 The suggested number of bytes to allocate.
+ * @param minBytes The minimum number of bytes we can accept.  Failure to
+ *                 allocate the minimum is an out-of-memory situation.
+ *
+ * @return The new memory segment.
+ */
 MemorySegment *MemoryObject::newSegment(size_t requestedBytes, size_t minBytes)
-/******************************************************************************/
-/* Function:  Allocate a segment of the requested size.  The requested size   */
-/* is the desired size, while the minimum is the absolute minimum we can      */
-/* handle.  This takes care of the overhead accounting and additional         */
-/* rounding.  The requested size is assumed to have been rounded up to the    */
-/* next "appropriate" boundary already, and the segment overhead will be      */
-/* allocated from that part, if possible.  Otherwise, and additional page is  */
-/* added.                                                                     */
-/******************************************************************************/
 {
-    MemorySegment *segment;
-
 #ifdef MEMPROFILE
     printf("Allocating a new segment of %d bytes\n", requestedBytes);
 #endif
-    /* first make sure we've got enough space for the control */
-    /* information, and round this to a proper boundary */
+    // first make sure we've got enough space for the control
+    // information, and round this to a proper boundary
     requestedBytes = MemorySegment::roundSegmentBoundary(requestedBytes + MemorySegment::MemorySegmentOverhead);
 #ifdef MEMPROFILE
     printf("Allocating boundary a new segment of %d bytes\n", requestedBytes);
 #endif
-    /*Get a new segment                  */
-    segment = currentPool->newSegment(requestedBytes);
-    /* Did we get a segment              */
+    // try to allocate a new segment
+    MemorySegment *segment = currentPool->newSegment(requestedBytes);
     if (segment == NULL)
     {
-        /* Segmentsize is the minimum size request we handle.  If */
-        /* minbytes is small, then we're just adding a segment to the */
-        /* small pool.  Reduce the request to SegmentSize and try again. */
-        /* For all other requests, try once more with the minimum. */
+        // Segmentsize is the minimum size request we handle.  If
+        // minbytes is small, then we're just adding a segment to the
+        // small pool.  Reduce the request to SegmentSize and try again.
+        // For all other requests, try once more with the minimum.
         minBytes = MemorySegment::roundSegmentBoundary(minBytes + MemorySegment::MemorySegmentOverhead);
-        /* try to allocate once more...if this fails, the caller will */
-        /* have to handle it. */
+        // try to allocate once more...if this fails, the caller will
+        // have to handle it.
         segment = currentPool->newSegment(minBytes);
     }
-    return segment;                      /* return the allocated segment      */
+    return segment;                      // return the allocated segment
 }
 
 
+/**
+ * Allocate a segment of the requested size.  The requested size
+ * is the desired size, while the minimum is the absolute minimum we can
+ * handle.
+ *
+ * @param requestedBytes
+ *                 The requested bytes for the allocation.
+ * @param minBytes The minimum acceptable allocation size.
+ *
+ * @return A new segment.
+ */
 MemorySegment *MemoryObject::newLargeSegment(size_t requestedBytes, size_t minBytes)
-/******************************************************************************/
-/* Function:  Allocate a segment of the requested size.  The requested size   */
-/* is the desired size, while the minimum is the absolute minimum we can      */
-/* handle.  This takes care of the overhead accounting and additional         */
-/* rounding.  The requested size is assumed to have been rounded up to the    */
-/* next "appropriate" boundary already, and the segment overhead will be      */
-/* allocated from that part, if possible.  Otherwise, and additional page is  */
-/* added.                                                                     */
-/******************************************************************************/
 {
-    MemorySegment *segment;
-
-    /* first make sure we've got enough space for the control */
-    /* information, and round this to a proper boundary */
+    // first make sure we've got enough space for the control
+    // information, and round this to a proper boundary
     size_t allocationBytes = MemorySegment::roundSegmentBoundary(requestedBytes + MemorySegment::MemorySegmentOverhead);
 #ifdef MEMPROFILE
     printf("Allocating large boundary new segment of %d bytes for request of %d\n", allocationBytes, requestedBytes);
 #endif
-    /*Get a new segment                  */
-    segment = currentPool->newLargeSegment(allocationBytes);
-    /* Did we get a segment              */
+    // try allocate a segment using the requested size
+    MemorySegment *segment = currentPool->newLargeSegment(allocationBytes);
     if (segment == NULL)
     {
-        /* Segmentsize is the minimum size request we handle.  If */
-        /* minbytes is small, then we're just adding a segment to the */
-        /* small pool.  Reduce the request to SegmentSize and try again. */
-        /* For all other requests, try once more with the minimum. */
-        // TODO: this operation is done a lot...consider adding a method to MemorySegment
+        // Segmentsize is the minimum size request we handle.  If
+        // minbytes is small, then we're just adding a segment to the
+        // small pool.  Reduce the request to SegmentSize and try again.
+        // For all other requests, try once more with the minimum.
         minBytes = MemorySegment::roundSegmentBoundary(minBytes + MemorySegment::MemorySegmentOverhead);
-        /* try to allocate once more...if this fails, the caller will */
-        /* have to handle it. */
         segment = currentPool->newLargeSegment(minBytes);
     }
-    return segment;                      /* return the allocated segment      */
+    return segment;
 }
 
 
+/**
+ * Restore a saved image to usefulness.
+ */
 void MemoryObject::restoreImage()
-/******************************************************************************/
-/* Function:  Restore a saved image to usefulness.                            */
-/******************************************************************************/
 {
     // Nothing to restore if we have a buffer already
     if (restoredImage != NULL)
@@ -583,8 +566,8 @@ void MemoryObject::restoreImage()
     setMarkHandler(&markHandler);
 
     // address the start and end of the image.
-    RexxObject *objectPointer = (RexxObject *)restoredImage;
-    RexxObject *endPointer = (RexxObject *)(restoredImage + imageSize);
+    RexxInternalObject *objectPointer = (RexxInternalObject *)restoredImage;
+    RexxInternalObject *endPointer = (RexxInternalObject *)(restoredImage + imageSize);
 
     // the save array is the 1st object in the buffer
     ArrayClass *saveArray = (ArrayClass *)objectPointer;
@@ -643,24 +626,24 @@ void MemoryObject::restoreImage()
     ArrayClass *primitiveBehaviours = (ArrayClass *)saveArray->get(saveArray_PBEHAV);
     for (size_t i = 0; i <= T_Last_Exported_Class; i++)
     {
-        /* behaviours into this array        */
         RexxBehaviour::primitiveBehaviours[i].restore((RexxBehaviour *)primitiveBehaviours->get(i + 1));
     }
 
-    TheSystem      = (DirectoryClass *)saveArray->get(saveArray_SYSTEM);
-    TheFunctionsDirectory = (DirectoryClass *)saveArray->get(saveArray_FUNCTIONS);
+    TheSystem      = (StringTable *)saveArray->get(saveArray_SYSTEM);
+    TheFunctionsDirectory = (StringTable *)saveArray->get(saveArray_FUNCTIONS);
     TheTrueObject  = (RexxInteger *)saveArray->get(saveArray_TRUE);
     TheFalseObject = (RexxInteger *)saveArray->get(saveArray_FALSE);
-    TheNilObject   = saveArray->get(saveArray_NIL);
+    TheNilObject   = (RexxObject *)saveArray->get(saveArray_NIL);
     TheNullArray   = (ArrayClass *)saveArray->get(saveArray_NULLA);
     TheNullPointer   = (PointerClass *)saveArray->get(saveArray_NULLPOINTER);
     TheClassClass  = (RexxClass *)saveArray->get(saveArray_CLASS);
-    TheCommonRetrievers = (DirectoryClass *)saveArray->get(saveArray_COMMON_RETRIEVERS);
+    TheCommonRetrievers = (StringTable *)saveArray->get(saveArray_COMMON_RETRIEVERS);
 
     // restore the global strings
     memoryObject.restoreStrings((ArrayClass *)saveArray->get(saveArray_NAME_STRINGS));
     // make sure we have a working thread context
     Activity::initializeThreadContext();
+    // now we can restore the packages
     PackageManager::restore((ArrayClass *)saveArray->get(saveArray_PACKAGES));
 }
 
@@ -701,13 +684,12 @@ void MemoryObject::live(size_t liveMark)
 }
 
 
+/**
+ * General live marking routine for the memory object.
+ *
+ * @param reason The marking reason.
+ */
 void MemoryObject::liveGeneral(MarkReason reason)
-/******************************************************************************/
-/* Arguments:  None                                                           */
-/*                                                                            */
-/*  Returned:  Nothing                                                        */
-/*                                                                            */
-/******************************************************************************/
 {
     memory_mark_general(saveStack);
     memory_mark_general(old2new);
@@ -732,111 +714,125 @@ void MemoryObject::liveGeneral(MarkReason reason)
     }
 }
 
+
+/**
+ * Collect all dead memory in the Rexx object space.  The
+ * collection process performs a mark operation to mark all of the live
+ * objects, followed by sweep of each of the segment sets.
+ */
 void MemoryObject::collect()
-/******************************************************************************/
-/* Function:  Collect all dead memory in the Rexx object space.  The          */
-/* collection process performs a mark operation to mark all of the live       */
-/* objects, followed by sweep of each of the segment sets.                    */
-/******************************************************************************/
 {
     collections++;
     verboseMessage("Begin collecting memory, cycle #%d after %d allocations.\n", collections, allocations);
     allocations = 0;
 
-    /* change our marker to the next value so we can distinguish */
-    /* between objects marked on this cycle from the objects marked */
-    /* in the pervious cycles. */
+    // change our marker to the next value so we can distinguish
+    // between objects marked on this cycle from the objects marked
+    // in the pervious cycles.
     bumpMarkWord();
 
-    /* do the object marking now...followed by a sweep of all of the */
-    /* segments. */
+    // do the object marking now...followed by a sweep of all of the
+    // segments.
     markObjects();
     newSpaceNormalSegments.sweep();
     newSpaceLargeSegments.sweep();
 
-    /* The space segments are now in a known, completely clean state. */
-    /* Now based on the context that caused garbage collection to be */
-    /* initiated, the segment sets may be expanded to add additional */
-    /* free memory.  The decision to expand the object space requires */
-    /* the usage statistics collected by the mark-and-sweep */
-    /* operation. */
+    // The space segments are now in a known, completely clean state.
+    // Now based on the context that caused garbage collection to be
+    // initiated, the segment sets may be expanded to add additional
+    // free memory.  The decision to expand the object space requires
+    // the usage statistics collected by the mark-and-sweep
+    // operation.
 
     verboseMessage("End collecting memory\n");
 }
 
-RexxInternalObject *MemoryObject::oldObject(size_t requestLength)
-/******************************************************************************/
-/* Arguments:  Requested length                                               */
-/*                                                                            */
-/*  Returned:  New object, or OREF_NULL if requested length was too large     */
-/******************************************************************************/
-{
-    /* Compute size of new object and determine where we should */
-    /* allocate from */
-    requestLength = Memory::roundObjectBoundary(requestLength);
-    RexxObject *newObj = oldSpaceSegments.allocateObject(requestLength);
 
-    /* if we got a new object, then perform the final setup steps. */
-    /* Since the oldspace objects are special, we don't push them on */
-    /* to the save stack.  Also, we don't set the oldspace flag, as */
-    /* those are a separate category of object. */
+/**
+ * Allocate an object in "old space".  This is generally
+ * used just for special memory objects or for allocating
+ * the space for the restored image.
+ *
+ * @param requestLength
+ *               The size of the object.
+ *
+ * @return Storage for a new object.
+ */
+RexxInternalObject *MemoryObject::oldObject(size_t requestLength)
+{
+    // Compute size of new object and allocate from the old segment pool
+    requestLength = Memory::roundObjectBoundary(requestLength);
+    RexxInternalObject *newObj = oldSpaceSegments.allocateObject(requestLength);
+
+    // if we got a new object, then perform the final setup steps.
+    // Since the oldspace objects are special, we don't push them on
+    // to the save stack.  Also, we don't set the oldspace flag, as
+    // those are a separate category of object.
     if (newObj != OREF_NULL)
     {
-        // initialize the hash table object
-        newObj->initializeNewObject(requestLength, markWord, virtualFunctionTable[T_Object], TheObjectBehaviour);
+        // initialize the new object
+        ((RexxObject *)newObj)->initializeNewObject(requestLength, markWord, virtualFunctionTable[T_Object], TheObjectBehaviour);
     }
 
-    /* return the newly allocated object to our caller */
     return newObj;
 }
 
+
+/**
+ * Allocate an image buffer for the system code.  The image buffer
+ * is allocated in the oldspace segment set.  We create an object from that
+ * space, then return this object as a character pointer.  We eventually will
+ * get that pointer passed back to us as the image address.
+ *
+ * @param imageSize The size required for the image buffer.
+ *
+ * @return The storage for the image.
+ */
 char *MemoryObject::allocateImageBuffer(size_t imageSize)
-/******************************************************************************/
-/* Function:  Allocate an image buffer for the system code.  The image buffer */
-/* is allocated in the oldspace segment set.  We create an object from that   */
-/* space, then return this object as a character pointer.  We eventually will */
-/* get that pointer passed back to us as the image address.                   */
-/******************************************************************************/
 {
     return (char *)oldObject(imageSize);
 }
 
 
+/**
+ * allocate a new object of the requested size.
+ *
+ * @param requestLength
+ *               The required object length.
+ * @param type   The object type this should be initialized to.
+ *
+ * @return The storage for creating a new object.
+ */
 RexxInternalObject *MemoryObject::newObject(size_t requestLength, size_t type)
-/******************************************************************************/
-/* Arguments:  Requested length                                               */
-/*                                                                            */
-/*  Returned:  New object, or OREF_NULL if requested length was too large     */
-/******************************************************************************/
 {
-    RexxObject *newObj;
-
     allocations++;
 
-    /* Compute size of new object and determine where we should */
-    /* allocate from */
+    // Compute size of new object and determine where we should
+    // allocate from
     requestLength = Memory::roundObjectBoundary(requestLength);
 
-    /* is this a typical small object? */
+    RexxInternalObject *newObj;
+
+    // is this a typical small object?
     if (requestLength <= MemorySegment::LargeBlockThreshold)
     {
-        /* make sure we don't go below our minimum size. */
+        // make sure we don't go below our minimum size.
         if (requestLength < Memory::MinimumObjectSize)
         {
             requestLength = Memory::MinimumObjectSize;
         }
         newObj = newSpaceNormalSegments.allocateObject(requestLength);
-        /* feat. 1061 moves the handleAllocationFailure code into the initial */
-        /* allocation parts; this way an "if" instruction can be saved.       */
+        // if we could not allocate, process an allocation failure.  This will
+        // drive a garbage collection and potentially expand the heap size.
         if (newObj == NULL)
         {
             newObj = newSpaceNormalSegments.handleAllocationFailure(requestLength);
         }
     }
-    /* we keep the big objects in a separate cage */
+    // we keep the big objects in a separate cage
     else
     {
-        /* round this allocation up to the appropriate large boundary */
+        // round this allocation up to the appropriate large boundary
         requestLength = Memory::roundLargeObjectAllocation(requestLength);
         newObj = newSpaceLargeSegments.allocateObject(requestLength);
         if (newObj == NULL)
@@ -845,12 +841,17 @@ RexxInternalObject *MemoryObject::newObject(size_t requestLength, size_t type)
         }
     }
 
-    newObj->initializeNewObject(markWord, virtualFunctionTable[type], RexxBehaviour::getPrimitiveBehaviour(type));
+    // initialize the object to the required type.  This also fills in the
+    // object header so things work correctly on a garbage collection.
+    // NOTE that this is a method on the RexxObject class because it uses access to
+    // Object variables field.  Not terribly optimal to need to cast this way, but
+    // it is pragmatic...
+    ((RexxObject *)newObj)->initializeNewObject(markWord, virtualFunctionTable[type], RexxBehaviour::getPrimitiveBehaviour(type));
 
     if (saveStack != OREF_NULL)
     {
         // saveobj doesn't get turned on until the system is initialized
-        //far enough but once its on, push this new obj on the save stack to
+        //far enough but once it's on, push this new obj on the save stack to
         //keep it from being garbage collected before it can be used
         //and safely anchored by caller.
         pushSaveStack(newObj);
@@ -860,181 +861,72 @@ RexxInternalObject *MemoryObject::newObject(size_t requestLength, size_t type)
 }
 
 
-ArrayClass  *MemoryObject::newObjects(
-                size_t         size,
-                size_t         count,
-                size_t         objectType)
-/******************************************************************************/
-/* Arguments:  size of individual objects,                                    */
-/*             number of objects to get                                       */
-/*             behaviour of the new objects.                                  */
-/*                                                                            */
-/* Function : Return an  Array of count objects of size size, with the given  */
-/*             behaviour.  Each objects will be cleared                       */
-/*  Returned: Array object                                                    */
-/*                                                                            */
-/******************************************************************************/
+/**
+ * Resize an object to a smaller size.   Usually used for array
+ * objects after a reallocation.
+ *
+ * The object shrinkObj only needs to be the size of newSize If
+ * the left over space is big enough to become a dead object we
+ * will shrink the object to the specified size.
+ *
+ * NOTE: Since memory knows nothing about any objects that are
+ * in the extra space, it cannot do anything about them if this
+ * is an OldSpace objetc, therefore the caller must have already
+ * take care of this.
+ *
+ * @param shrinkObj The object to resize.
+ * @param requestSize
+ *                  The new object size.
+ */
+void MemoryObject::reSize(RexxInternalObject *shrinkObj, size_t requestSize)
 {
-    size_t i;
-    size_t objSize = Memory::roundObjectBoundary(size);
-    size_t totalSize;                      /* total size allocated              */
-    RexxObject *prototype;                 /* our first prototype object        */
-
-    ArrayClass  *arrayOfObjects;
-    RexxObject *largeObject;
-
-    /* Get array object to contain all the objects.. */
-    arrayOfObjects = (ArrayClass *)new_array(count);
-
-    /* Get one LARGE object, that we will parcel up into the smaller */
-    /* objects over allocate by the size of one minimum object so we */
-    /* can handle any potential overallocations */
-    totalSize = objSize * count;         /* first get the total object size   */
-    /* We make the decision on which heap this should be allocated */
-    /* from based on the size of the object request rather than the */
-    /* total size of the aggregate object.  Since our normal usage of */
-    /* this is for allocating large collections of small objects, we */
-    /* don't want those objects coming from the large block heap, */
-    /* even if the aggregate size would suggest this should happen. */
-    if (objSize <= MemorySegment::LargeBlockThreshold)
-    {
-        largeObject = newSpaceNormalSegments.allocateObject(totalSize);
-        if (largeObject == OREF_NULL)
-        {
-            largeObject = newSpaceNormalSegments.handleAllocationFailure(totalSize);
-        }
-    }
-    /* we keep the big objects in a separate cage */
-    else
-    {
-        largeObject = newSpaceLargeSegments.allocateObject(totalSize);
-        if (largeObject == OREF_NULL)
-        {
-            largeObject = newSpaceLargeSegments.handleAllocationFailure(totalSize);
-        }
-    }
-
-    largeObject->initializeNewObject(markWord, virtualFunctionTable[T_Object], TheObjectBehaviour);
-
-    if (saveStack != OREF_NULL)
-    {
-        /* saveobj doesn't get turned on     */
-        /*until the system is initialized    */
-        /*far enough but once its on, push   */
-        /*this new obj on the save stack to  */
-        /*keep him from being garbage        */
-        /*collected, before it can be used   */
-        /*and safely anchored by caller.     */
-        pushSaveStack(largeObject);
-    }
-
-    /* Description of defect 318:  IH:
-
-    The problem is caused by the constructor of RexxClause which is calling newObjects.
-    NewObjects allocates one large Object. Immediately after this large Object is allocated,
-    an array is allocated as well. It then can happen that while allocating the array
-    the largeObject shall be marked. This causes a trap when objectVariables is != NULL.
-
-    Solution: Set objectVariables to NULL before allocating the array. In order to make
-    OrefOK (called if CHECKOREF is defined) work properly, the largeObject has to be
-    set to a valid object state before calling new_array. Therefore the behaviour assignement
-    and the virtual functions assignement has to be done in advance. */
-
-    /* get the remainder object size...this is used to manage the */
-    /* dangling piece on the end of the allocation. */
-    totalSize = largeObject->getObjectSize() - totalSize;
-
-    /* Clear out the entire object... */
-    largeObject->clearObject();
-
-    prototype = largeObject;
-
-    // make sure this objects get a valid vft and behaviour immediately, otherwise
-    // GC could have problems if triggered before other initialization completes.
-
-    // initialize the hash table object
-    largeObject->initializeNewObject(objSize, markWord, virtualFunctionTable[objectType], RexxBehaviour::getPrimitiveBehaviour(objectType));
-
-    for (i=1 ;i < count ; i++ )
-    {
-        /* IH: Loop one time less than before because first object is initialized
-           outside of the loop. I had to move the following 2 statements
-           in front of the object initialization */
-        /* add this object to the array of objs */
-        arrayOfObjects->put(largeObject, i);
-        /* point to the next object space. */
-        largeObject = (RexxObject *)((char *)largeObject + objSize);
-        /* copy the information from the prototype */
-        memcpy((void *)largeObject, (void *)prototype, sizeof(RexxInternalObject));
-    }
-    arrayOfObjects->put(largeObject, i);  /* put the last Object */
-
-    /* adjust the size of the last one to account for any remainder */
-    largeObject->setObjectSize(totalSize + objSize);
-
-    return arrayOfObjects;               /* Return our array of objects.      */
-}
-
-
-void MemoryObject::reSize(RexxObject *shrinkObj, size_t requestSize)
-/******************************************************************************/
-/* Function:  The object shrinkObj only needs to be the size of newSize       */
-/*             If the left over space is big enough to become a dead object   */
-/*             we will shrink the object to the specified size.               */
-/*            NOTE: Since memory knows nothing about any objects that are     */
-/*             in the extra space, it cannot do anything about them if this   */
-/*             is an OldSpace objetc, therefore the caller must have already  */
-/*             take care of this.                                             */
-/*                                                                            */
-/******************************************************************************/
-{
-    DeadObject *newDeadObj;
-
     size_t newSize = Memory::roundObjectResize(requestSize);
 
-    /* is the rounded size smaller and is remainder at least the size */
-    /* of the smallest OBJ MINOBJSIZE */
+    // is the rounded size smaller and is remainder at least the size
+    // of the smallest OBJ MINOBJSIZE
     if (newSize < requestSize && (shrinkObj->getObjectSize() - newSize) >= Memory::MinimumObjectSize)
     {
         size_t deadObjectSize = shrinkObj->getObjectSize() - newSize;
-        /* Yes, then we can shrink the object.  Get starting point of */
-        /* the extra, this will be the new Dead obj */
-        newDeadObj = new ((void *)((char *)shrinkObj + newSize)) DeadObject (deadObjectSize);
-        /* if an object is larger than 16 MB, the last 8 bits (256) are */
-        /* truncated and therefore the object must have a size */
-        /* dividable by 256 and the rest must be put to the dead chain. */
-        /* If the resulting dead object is smaller than the size we */
-        /* gave, then we've got a truncated remainder we need to turn */
-        /* into a dead object. */
+        // Yes, then we can shrink the object.  Get starting point of
+        // the extra, this will be the new Dead obj
+        DeadObject *newDeadObj = new ((void *)((char *)shrinkObj + newSize)) DeadObject (deadObjectSize);
+        // if an object is larger than 16 MB, the last 8 bits (256) are
+        // truncated and therefore the object must have a size
+        // dividable by 256 and the rest must be put to the dead chain.
+        // If the resulting dead object is smaller than the size we
+        // gave, then we've got a truncated remainder we need to turn
+        // into a dead object.
         deadObjectSize -= newDeadObj->getObjectSize();
         if (deadObjectSize != 0)
         {
-            /* create difference object.  Note:  We don't bother */
-            /* putting this back on the dead chain.  It will be */
-            /* picked up during the next GC cycle. */
+            // create difference object.  Note:  We don't bother
+            // putting this back on the dead chain.  It will be
+            // picked up during the next GC cycle.
             new ((char *)newDeadObj + newDeadObj->getObjectSize()) DeadObject (deadObjectSize);
         }
-        /* Adjust size of original object */
+        // Adjust size of original object
         shrinkObj->setObjectSize(newSize);
     }
 }
 
 
-void MemoryObject::scavengeSegmentSets(
-    MemorySegmentSet *requestor,           /* the requesting segment set */
-    size_t allocationLength)               /* the size required          */
-/******************************************************************************/
-/* Function:  Orchestrate sharing of sharing of storage between the segment   */
-/* sets in low storage conditions.  We do this only as a last ditch, as we'll */
-/* end up fragmenting the large heap with small blocks, messing up the        */
-/* benefits of keeping the heaps separate.  We first look a set to donate a   */
-/* segment to the requesting set.  If that doesn't work, we'll borrow a block */
-/* of storage from the other set so that we can satisfy this request.         */
-/******************************************************************************/
+/**
+ * Orchestrate sharing of sharing of storage between the segment
+ * sets in low storage conditions.  We do this only as a last ditch, as we'll
+ * end up fragmenting the large heap with small blocks, messing up the
+ * benefits of keeping the heaps separate.  We first look a set to donate a
+ * segment to the requesting set.  If that doesn't work, we'll borrow a block
+ * of storage from the other set so that we can satisfy this request.
+ *
+ * @param requestor The segment set needing to steal storage.
+ * @param allocationLength
+ *                  The allocation length needed.
+ */
+void MemoryObject::scavengeSegmentSets(MemorySegmentSet *requestor, size_t allocationLength)
 {
     MemorySegmentSet *donor;
 
-    /* first determine the donor/requester relationships. */
+    // first determine the donor/requester relationships.
     if (requestor->is(MemorySegmentSet::SET_NORMAL))
     {
         donor = &newSpaceLargeSegments;
@@ -1044,8 +936,8 @@ void MemoryObject::scavengeSegmentSets(
         donor = &newSpaceNormalSegments;
     }
 
-    /* first look for an unused segment.  We might be able to steal */
-    /* one and just move it over. */
+    // first look for an unused segment.  We might be able to steal
+    // one and just move it over.
     MemorySegment *newSeg = donor->donateSegment(allocationLength);
     if (newSeg != NULL)
     {
@@ -1053,23 +945,23 @@ void MemoryObject::scavengeSegmentSets(
         return;
     }
 
-    /* we can't just move a segment over.  Find the smallest block */
-    /* we can find that will satisfy this allocation.  If found, we */
-    /* can insert it into the normal deadchains. */
+    // we can't just move a segment over.  Find the smallest block
+    // we can find that will satisfy this allocation.  If found, we
+    // can insert it into the normal deadchains.
     DeadObject *largeObject = donor->donateObject(allocationLength);
     if (largeObject != NULL)
     {
-        /* we need to insert this into the normal dead chain */
-        /* locations. */
+        // we need to insert this into the normal dead chain
+        // locations.
         requestor->addDeadObject(largeObject);
     }
 }
 
 
+/**
+ * Process a live-stack overflow situation
+ */
 void MemoryObject::liveStackFull()
-/******************************************************************************/
-/* Function:  Process a live-stack overflow situation                         */
-/******************************************************************************/
 {
     // create a new stack that is double in size
     LiveStack *newLiveStack = liveStack->reallocate(2);
@@ -1087,62 +979,63 @@ void MemoryObject::liveStackFull()
 }
 
 
-void MemoryObject::mark(RexxObject *markObject)
-/******************************************************************************/
-/* Function:  Perform a memory management mark operation                      */
-/******************************************************************************/
+/**
+ * Perform a memory management mark operation.  This is only
+ * used during a real garbage collection.
+ *
+ * @param markObject The object being marked.
+ */
+void MemoryObject::mark(RexxInternalObject *markObject)
 {
+    // get the current live mark to use for testing
     size_t liveMark = markWord | ObjectHeader::OldSpaceBit;
+    // mark this object as live
+    markObject->setObjectLive(markWord);
 
-    markObject->setObjectLive(markWord); /* Then Mark this object as live.    */
-                                         /* object have any references?       */
-                                         /* if there are no references, we don't */
-                                         /* need to push this on the stack, but */
-                                         /* we might need to push the behavior */
-                                         /* on the stack.  Since behaviors are */
-                                         /* we can frequently skip that step as well */
+    // if the object does not have any references, we don't need to push this on
+    // the stack.  We might need to do this with the behaviour, but since they are
+    // shared across object instances, we frequently can skip that as well.
     if (markObject->hasNoReferences())
     {
         if (ObjectNeedsMarking(markObject->behaviour))
         {
-            /* mark the behaviour now to keep us from processing this */
-            /* more than once. */
+            // mark the behaviour now to keep us from processing this
+            // more than once.
             markObject->behaviour->setObjectLive(markWord);
-            /* push him to livestack, to mark    */
-            /* later.                            */
-            pushLiveStack((RexxObject *)markObject->behaviour);
+            // push the behaviour on the live stack to mark later
+            pushLiveStack(markObject->behaviour);
         }
     }
     else
     {
-        /* push him to livestack, to mark    */
-        /* later.                            */
+        // add this to the live stack so we can call the live() method late.r
         pushLiveStack(markObject);
     }
 }
 
-RexxObject *MemoryObject::temporaryObject(size_t requestLength)
-/******************************************************************************/
-/* Function:  Allocate and setup a temporary object obtained via malloc       */
-/*            storage.  This is used currently only by the mark routine to    */
-/*            expand the size of the live stack during a garbage collection.  */
-/******************************************************************************/
+
+/**
+ * Allocate and setup a temporary object obtained via malloc
+ * storage.  This is used currently only by the mark routine to
+ * expand the size of the live stack during a garbage collection.
+ *
+ * @param requestLength
+ *               The size of the object.
+ *
+ * @return Storage for creating a new object.
+ */
+RexxInternalObject *MemoryObject::temporaryObject(size_t requestLength)
 {
-    /* get the rounded size of the object*/
     size_t allocationLength = Memory::roundObjectBoundary(requestLength);
-    /* allocate a new object             */
-    RexxObject *newObj = (RexxObject *)malloc(allocationLength);
+    // allocate just using malloc()
+    RexxInternalObject *newObj = (RexxInternalObject *)malloc(allocationLength);
     if (newObj == OREF_NULL)             /* unable to allocate a new one?     */
     {
-        /* can't allocate, report resource   */
-        /* error.                            */
         reportException(Error_System_resources);
     }
-    /* setup the new object header for   */
-    /*use                                */
-    // initialize the hash table object
-    newObj->initializeNewObject(allocationLength, markWord, virtualFunctionTable[T_Object], TheObjectBehaviour);
-    return newObj;                       /* and return it                     */
+    // initialize the new object
+    ((RexxObject *)newObj)->initializeNewObject(allocationLength, markWord, virtualFunctionTable[T_Object], TheObjectBehaviour);
+    return newObj;
 }
 
 
@@ -1163,8 +1056,8 @@ void MemoryObject::markGeneral(void *obj)
 {
     // OK, convert this to a pointer to an Object field, then
     // get the object reference stored there.
-    RexxObject **pMarkObject = (RexxObject **)obj;
-    RexxObject *markObject = *pMarkObject;
+    RexxInternalObject **pMarkObject = (RexxInternalObject **)obj;
+    RexxInternalObject *markObject = *pMarkObject;
 
     // NULL references require no processing for any operation.
     if (markObject == OREF_NULL)
@@ -1177,32 +1070,31 @@ void MemoryObject::markGeneral(void *obj)
 }
 
 
-RexxObject *MemoryObject::holdObject(RexxInternalObject *obj)
-/******************************************************************************/
-/* Function:  Place an object on the hold stack                               */
-/******************************************************************************/
+/**
+ * Place an object on the hold stack to provide some
+ * temporary GC protection.
+ *
+ * @param obj    The object to hold.
+ *
+ * @return The same object.
+ */
+RexxInternalObject *MemoryObject::holdObject(RexxInternalObject *obj)
 {
-   /* Push object onto saveStack */
-   saveStack->push((RexxObject *)obj);
-   /* return held  object               */
-   return (RexxObject *)obj;
+   saveStack->push(obj);
+   return obj;
 }
 
 
+/**
+ * Save the memory image as part of the interpreter
+ * build.
+ */
 void MemoryObject::saveImage()
-/******************************************************************************/
-/* Function:  Save the memory image as part of interpreter build              */
-/******************************************************************************/
 {
     MemoryStats _imageStats;
 
     imageStats = &_imageStats;     // set the pointer to the current collector
     _imageStats.clear();
-
-    // this has been protecting every thing critical
-    // from GC events thus far, but now we remove it because
-    // it contains things we don't want to save in the image.
-    TheEnvironment->remove(getGlobalName(CHAR_KERNEL));
 
     // get an array to hold all special objects.  This will be the first object
     // copied into the image buffer and allows us to recover all of the important
@@ -1213,18 +1105,18 @@ void MemoryObject::saveImage()
     GlobalProtectedObject p(saveArray);
 
     // Add all elements needed in
-    saveArray->put((RexxObject *)TheEnvironment,   saveArray_ENV);
-    saveArray->put((RexxObject *)TheTrueObject,    saveArray_TRUE);
-    saveArray->put((RexxObject *)TheFalseObject,   saveArray_FALSE);
-    saveArray->put((RexxObject *)TheNilObject,     saveArray_NIL);
-    saveArray->put((RexxObject *)TheNullArray,     saveArray_NULLA);
-    saveArray->put((RexxObject *)TheNullPointer,   saveArray_NULLPOINTER);
-    saveArray->put((RexxObject *)TheClassClass,    saveArray_CLASS);
-    saveArray->put((RexxObject *)PackageManager::getImageData(), saveArray_PACKAGES);
-    saveArray->put((RexxObject *)TheSystem,       saveArray_SYSTEM);
-    saveArray->put((RexxObject *)TheFunctionsDirectory,  saveArray_FUNCTIONS);
-    saveArray->put((RexxObject *)TheCommonRetrievers,    saveArray_COMMON_RETRIEVERS);
-    saveArray->put((RexxObject *)saveStrings(), saveArray_NAME_STRINGS);
+    saveArray->put(TheEnvironment,   saveArray_ENV);
+    saveArray->put(TheTrueObject,    saveArray_TRUE);
+    saveArray->put(TheFalseObject,   saveArray_FALSE);
+    saveArray->put(TheNilObject,     saveArray_NIL);
+    saveArray->put(TheNullArray,     saveArray_NULLA);
+    saveArray->put(TheNullPointer,   saveArray_NULLPOINTER);
+    saveArray->put(TheClassClass,    saveArray_CLASS);
+    saveArray->put(PackageManager::getImageData(), saveArray_PACKAGES);
+    saveArray->put(TheSystem,       saveArray_SYSTEM);
+    saveArray->put(TheFunctionsDirectory,  saveArray_FUNCTIONS);
+    saveArray->put(TheCommonRetrievers,    saveArray_COMMON_RETRIEVERS);
+    saveArray->put(saveStrings(), saveArray_NAME_STRINGS);
 
     // create an array for all of the primitive behaviours and fill it with
     // pointers to our primitive behaviours (only the exported ones need this).
@@ -1273,12 +1165,12 @@ void MemoryObject::saveImage()
     memory_mark_general(saveArray);
 
     // now keep popping objects from the stack until we hit the null terminator.
-    for (RexxObject *markObject = popLiveStack(); markObject != OREF_NULL; markObject = popLiveStack())
+    for (RexxInternalObject *markObject = popLiveStack(); markObject != OREF_NULL; markObject = popLiveStack())
     {
         // The mark of this object moved it to the image buffer.  Its behaviour
-        // no contains its offset in the image.  We don't want to mark the original
+        // now contains its offset in the image.  We don't want to mark the original
         // object, but rather the save image copy.
-        RexxObject *copyObject = (RexxObject *)(imageBuffer + (uintptr_t)markObject->behaviour);
+        RexxInternalObject *copyObject = (RexxInternalObject *)(imageBuffer + (uintptr_t)markObject->behaviour);
 
         // mark any other referenced objects in the copy.
         copyObject->liveGeneral(SAVINGIMAGE);
@@ -1318,14 +1210,14 @@ void MemoryObject::saveImage()
  * @param root   The root object to mark from.
  * @param reason The marking reason.
  */
-void MemoryObject::tracingMark(RexxObject *root, MarkReason reason)
+void MemoryObject::tracingMark(RexxInternalObject *root, MarkReason reason)
 {
     // push a unique terminator
     pushLiveStack(OREF_NULL);
     // push the live root, and process until we run out of stacked objects.
     memory_mark_general(root);
 
-    for (RexxObject *markObject = popLiveStack();
+    for (RexxInternalObject *markObject = popLiveStack();
         markObject != OREF_NULL;        /*   test for unique terminator      */
         markObject = popLiveStack())
     {
@@ -1528,22 +1420,19 @@ void MemoryObject::setOref(RexxInternalObject *oldValue, RexxInternalObject *val
     }
 }
 
-RexxObject *MemoryObject::dumpImageStats()
-/******************************************************************************/
-/*                                                                            */
-/******************************************************************************/
+/**
+ * Dump the image statistics
+ */
+void MemoryObject::dumpImageStats()
 {
     MemoryStats _imageStats;
 
-    /* clear all of the statistics */
     _imageStats.clear();
-    /* gather a fresh set of stats for all of the segments */
+    // gather a fresh set of stats for all of the segments
     newSpaceNormalSegments.gatherStats(&_imageStats, &_imageStats.normalStats);
     newSpaceLargeSegments.gatherStats(&_imageStats, &_imageStats.largeStats);
 
-    /* print out the memory statistics */
     _imageStats.printMemoryStats();
-    return TheNilObject;
 }
 
 
@@ -1559,12 +1448,12 @@ void MemoryObject::memoryPoolAdded(MemorySegmentPool *pool)
 }
 
 
+/**
+ * Free all the memory pools currently accessed by this process
+ * If not already released.  Then set process Pool to NULL, indicate
+ * pools have been released.
+ */
 void MemoryObject::shutdown()
-/******************************************************************************/
-/* Function:  Free all the memory pools currently accessed by this process    */
-/*    If not already released.  Then set process Pool to NULL, indicate       */
-/*    pools have been released.                                               */
-/******************************************************************************/
 {
     MemorySegmentPool *pool = firstPool;
     while (pool != NULL)
@@ -1581,10 +1470,13 @@ void MemoryObject::shutdown()
 }
 
 
+/**
+ * Set up the initial memory table.
+ *
+ * @param old2newTable
+ *               The old-to-new tracking table.
+ */
 void MemoryObject::setUpMemoryTables(MapTable *old2newTable)
-/******************************************************************************/
-/* Function:  Set up the initial memory table.                                */
-/******************************************************************************/
 {
     // fix up the previously allocated live stack to have the correct
     // characteristics...we're almost ready to go on the air.
@@ -1612,7 +1504,7 @@ RexxString *MemoryObject::getGlobalName(const char *value)
     RexxString *stringValue = new_string(value);
     if (globalStrings == OREF_NULL)
     {
-        return stringValue;                /* just return the string            */
+        return stringValue;
     }
 
     // now see if we have this string in the table already
@@ -1657,30 +1549,27 @@ RexxString *MemoryObject::getUpperGlobalName(const char *value)
 }
 
 
+/**
+ * Initial memory setup during image build
+ */
 void MemoryObject::create()
-/******************************************************************************/
-/* Function:  Initial memory setup during image build                         */
-/******************************************************************************/
 {
-    RexxClass::createInstance();         /* get the CLASS class created       */
+    // Class and integer has some special stuff, so get them created first
+    RexxClass::createInstance();
     RexxInteger::createInstance();
     // Now get our savestack
     memoryObject.setUpMemoryTables(OREF_NULL);
 }
 
 
+/**
+ * Memory management image restore functions
+ */
 void MemoryObject::restore()
-/******************************************************************************/
-/* Function:  Memory management image restore functions                       */
-/******************************************************************************/
 {
-    /* Retrieve special saved objects    */
-    /* OREF_ENV and primitive behaviours */
-    /* are already restored              */
-                                         /* start restoring class OREF_s      */
     RESTORE_CLASS(Object, RexxClass);
     RESTORE_CLASS(Class, RexxClass);
-                                         /* (CLASS is already restored)       */
+                                         // (CLASS is already restored)
     RESTORE_CLASS(String, RexxClass);
     RESTORE_CLASS(Array, RexxClass);
     RESTORE_CLASS(Directory, RexxClass);
@@ -1696,6 +1585,9 @@ void MemoryObject::restore()
     RESTORE_CLASS(Stem, RexxClass);
     RESTORE_CLASS(Supplier, RexxClass);
     RESTORE_CLASS(Table, RexxClass);
+    RESTORE_CLASS(StringTable, RexxClass);
+    RESTORE_CLASS(Set, RexxClass);
+    RESTORE_CLASS(Bag, RexxClass);
     RESTORE_CLASS(IdentityTable, RexxClass);
     RESTORE_CLASS(Relation, RexxClass);
     RESTORE_CLASS(MutableBuffer, RexxClass);
@@ -1704,14 +1596,17 @@ void MemoryObject::restore()
     RESTORE_CLASS(WeakReference, RexxClass);
     RESTORE_CLASS(StackFrame, RexxClass);
 
-    memoryObject.setOldSpace();          /* Mark Memory Object as OldSpace    */
-    /* initialize the tables used for garbage collection. */
+    // mark the memory object as old space.
+    memoryObject.setOldSpace();
+    // initialize the tables used for garbage collection.
     memoryObject.setUpMemoryTables(new MapTable(Memory::DefaultOld2NewSize));
-                                         /* If first one through, generate all*/
-    IntegerZero   = new_integer(0);      /*  static integers we want to use...*/
-    IntegerOne    = new_integer(1);      /* This will allow us to use static  */
-    IntegerTwo    = new_integer(2);      /* integers instead of having to do a*/
-    IntegerThree  = new_integer(3);      /* new_integer evrytime....          */
+
+    // initialize the static integer pointers.
+
+    IntegerZero   = new_integer(0);
+    IntegerOne    = new_integer(1);
+    IntegerTwo    = new_integer(2);
+    IntegerThree  = new_integer(3);
     IntegerFour   = new_integer(4);
     IntegerFive   = new_integer(5);
     IntegerSix    = new_integer(6);
@@ -1724,8 +1619,8 @@ void MemoryObject::restore()
     // stream classes.  We need to get the external libraries reloaded before
     // that happens.
     Interpreter::init();
-    ActivityManager::init();             /* do activity restores              */
-    PackageManager::restore();           // finish restoration of the packages.
+    ActivityManager::init();
+    PackageManager::restore();
 }
 
 
@@ -1735,7 +1630,7 @@ void MemoryObject::restore()
  * @param field  The field being marked.
  * @param object the object value in the field.
  */
-void MarkHandler::mark(RexxObject **field, RexxObject *object)
+void MarkHandler::mark(RexxInternalObject **field, RexxInternalObject *object)
 {
     Interpreter::logicError("Wrong mark routine called");
 }
@@ -1748,7 +1643,7 @@ void MarkHandler::mark(RexxObject **field, RexxObject *object)
  *                   The pointer to the field being marked.
  * @param markObject The object being marked.
  */
-void ImageSaveMarkHandler::mark(RexxObject **pMarkObject, RexxObject *markObject)
+void ImageSaveMarkHandler::mark(RexxInternalObject **pMarkObject, RexxInternalObject *markObject)
 {
     // Save image processing.  We only handle this if the object has not
     // already been marked.
@@ -1764,7 +1659,7 @@ void ImageSaveMarkHandler::mark(RexxObject **pMarkObject, RexxObject *markObject
         memory->logObjectStats(markObject);
 
         // ok, this is our target copy address
-        RexxObject *bufferReference = (RexxObject *)(imageBuffer + imageOffset);
+        RexxInternalObject *bufferReference = (RexxInternalObject *)(imageBuffer + imageOffset);
         // we allocated a hard coded buffer, so we need to make sure we don't blow
         // the buffer size.
         if (imageOffset + size > Memory::MaxImageSize)
@@ -1807,5 +1702,5 @@ void ImageSaveMarkHandler::mark(RexxObject **pMarkObject, RexxObject *markObject
     }
 
     // now update the field reference with the moved offset location.
-    *pMarkObject = (RexxObject *)markObject->behaviour;
+    *pMarkObject = (RexxInternalObject *)markObject->behaviour;
 }

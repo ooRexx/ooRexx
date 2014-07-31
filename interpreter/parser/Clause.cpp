@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                                Clause.c    */
+/* REXX Translator                                                            */
 /*                                                                            */
 /* Primitive Translator Clause Class                                          */
 /*                                                                            */
@@ -47,9 +47,6 @@
 #include "ArrayClass.hpp"
 #include "Clause.hpp"
 #include "ProtectedObject.hpp"
-
-#define INITIAL_SIZE  100              // initial size of the token cache
-#define EXTEND_SIZE   25               // size to extend when table fills
 
 
 /**
@@ -71,7 +68,12 @@ void *RexxClause::operator new(size_t size)
 RexxClause::RexxClause()
 {
     // allocate an entire array of tokens for use.  We reuse these
-    tokens = new_arrayOfObject(sizeof(RexxToken), INITIAL_SIZE, T_Token);
+    tokens = new_array(INITIAL_SIZE);
+    for (size_t i = 0; i < INITIAL_SIZE)
+    {
+        tokens->append(new RexxToken());
+    }
+
     first = 1;                     // first token is the start
     current = 1;                   // no current token
     size = INITIAL_SIZE;           // set the token cache size
@@ -170,11 +172,13 @@ RexxToken *RexxClause::newToken(TokenClass classId, TokenSubclass subclass, Rexx
     //. do we need to extend our cache?
     if (free > size)
     {
-        // allocate a bunch of additional token objects.
-        ArrayClass *newTokens = new_arrayOfObject(sizeof(RexxToken), EXTEND_SIZE, T_Token);
-        ProtectedObject p(newTokens);
-        // join this to our existing array
-        tokens = (ArrayClass *)tokens->join(newTokens);
+        // make sure the token array is large enough for the additional token's we're adding.
+        tokens->ensureSpace(tokens->size() + EXTEND_SIZE);
+
+        for (size_t i = 0; i < EXTEND_SIZE)
+        {
+            tokens->append(new RexxToken());
+        }
         size += EXTEND_SIZE;
     }
 

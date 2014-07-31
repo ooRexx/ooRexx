@@ -51,6 +51,7 @@
 
 class PackageManager;
 class NativeMethod;
+class StringTable;
 
 typedef RexxPackageEntry * (RexxEntry *PACKAGE_LOADER)();
 
@@ -89,12 +90,12 @@ public:
 protected:
 
     RexxPackageEntry *package;  // loaded package information
-    RexxString *libraryName;   // the name of the library
-    DirectoryClass *routines;   // loaded routines
-    DirectoryClass *methods;    // loaded methods
-    SysLibrary  lib;           // the library management handle
-    bool        loaded;        // we've at least been able to load the library
-    bool        internal;      // this is an internal package...no library load required.
+    RexxString *libraryName;    // the name of the library
+    StringTable    *routines;   // loaded routines
+    StringTable    *methods;    // loaded methods
+    SysLibrary  lib;            // the library management handle
+    bool        loaded;         // we've at least been able to load the library
+    bool        internal;       // this is an internal package...no library load required.
 };
 
 

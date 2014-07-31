@@ -498,6 +498,7 @@ class RexxToken : public RexxInternalObject
     inline void  operator delete(void *) { ; }
     inline void  operator delete(void *, void *) {;}
 
+    inline RexxToken() { }
     inline RexxToken(TokenClass c, SourceLocation &l, TokenSubclass sc = SUBTYPE_NONE, RexxString *v = OREF_NULL) : classId(c), subclass(sc),
         stringValue(v), numeric(SUBTYPE_NONE), tokenLocation(l) { };
 
@@ -578,8 +579,6 @@ protected:
     static KeywordEntry subDirectives[];
 };
 
-
-inline ArrayClass *new_arrayOfTokens(size_t n) { return memoryObject.newObjects(sizeof(RexxToken), n, T_Token); }
 inline RexxToken *new_token(TokenClass c, TokenSubclass s, RexxString *v, SourceLocation &l) { return new RexxToken (c, l, s, v); }
 
 #endif
