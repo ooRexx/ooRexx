@@ -36,7 +36,6 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
-#include <stdio.h>
 #include "RexxCore.h"
 #include "CPPCode.hpp"
 #include "ActivityManager.hpp"
@@ -45,6 +44,7 @@
 #include "VariableDictionary.hpp"
 #include "ActivationFrame.hpp"
 #include "ExpressionBaseVariable.hpp"
+#include "MethodArguments.hpp"
 
 
 /**
@@ -183,7 +183,6 @@ void CPPCode::run(Activity *activity, MethodClass *method, RexxObject *receiver,
  */
 void *AttributeGetterCode::operator new(size_t size)
 {
-    // just allocate ane return
     return new_object(size, T_AttributeGetterCode);
 }
 
@@ -250,7 +249,8 @@ void AttributeGetterCode::run(Activity *activity, MethodClass *method, RexxObjec
     {
         result = attribute->getValue(receiver->getObjectVariables(method->getScope()));
     }
-    else {
+    else
+    {
         // get the variable pool and get the guard lock
         VariableDictionary *objectVariables = receiver->getObjectVariables(method->getScope());
         objectVariables->reserve(activity);
@@ -270,7 +270,6 @@ void AttributeGetterCode::run(Activity *activity, MethodClass *method, RexxObjec
  */
 void *AttributeSetterCode::operator new(size_t size)
 {
-    // just allocate ane return
     return new_object(size, T_AttributeSetterCode);
 }
 
@@ -298,15 +297,17 @@ void AttributeSetterCode::run(Activity *activity, MethodClass *method, RexxObjec
 
     if (count == 0 || *argPtr == OREF_NULL)
     {
-        missingArgument(1);
+        missingArgument(ARG_ONE);
     }
+
     // this is simplier if the method is not guarded
     if (!method->isGuarded())
     {
         // go set the attribue
         attribute->set(receiver->getObjectVariables(method->getScope()), argPtr[0]);
     }
-    else {
+    else
+    {
         // get the variable pool and get the guard lock
         VariableDictionary *objectVariables = receiver->getObjectVariables(method->getScope());
         objectVariables->reserve(activity);
@@ -327,7 +328,6 @@ void AttributeSetterCode::run(Activity *activity, MethodClass *method, RexxObjec
  */
 void *ConstantGetterCode::operator new(size_t size)
 {
-    // just allocate ane return
     return new_object(size, T_AttributeGetterCode);
 }
 
@@ -361,11 +361,11 @@ void ConstantGetterCode::liveGeneral(MarkReason reason)
  */
 void ConstantGetterCode::flatten(Envelope *envelope)
 {
-  setUpFlatten(ConstantGetterCode)
+    setUpFlatten(ConstantGetterCode)
 
-  flattenRef(constantValue);
+    flattenRef(constantValue);
 
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
 
@@ -402,7 +402,6 @@ void ConstantGetterCode::run(Activity *activity, MethodClass *method, RexxObject
  */
 void *AbstractCode::operator new(size_t size)
 {
-    // just allocate ane return
     return new_object(size, T_AbstractCode);
 }
 
@@ -462,7 +461,10 @@ void AbstractCode::run(Activity *activity, MethodClass *method, RexxObject *rece
 #include "StackFrameClass.hpp"
 #include "ActivityManager.hpp"
 
-PCPPM CPPCode::exportedMethods[] =     /* start of exported methods table   */
+// start of the exported methods table.  Any method used in Setup.cpp must also
+// be included in this table here so that methods can recover the pointer
+// to the backing code after being restored.
+PCPPM CPPCode::exportedMethods[] =
 {
 CPPM(RexxObject::objectName),
 CPPM(RexxObject::objectNameEquals),
@@ -497,7 +499,7 @@ CPPM(RexxObject::concatBlank),
 
 CPPM(RexxObject::newRexx),
 
-CPPM(RexxClass::setRexxDefined),       /* Class methods                     */
+CPPM(RexxClass::setRexxDefined),
 CPPM(RexxClass::defaultNameRexx),
 CPPM(RexxClass::queryMixinClass),
 CPPM(RexxClass::getId),
@@ -527,7 +529,7 @@ CPPM(RexxClass::getPackage),
 
 CPPM(RexxClass::newRexx),
 
-CPPM(ArrayClass::sizeRexx),             /* Array methods                     */
+CPPM(ArrayClass::sizeRexx),
 CPPM(ArrayClass::itemsRexx),
 CPPM(ArrayClass::dimensionRexx),
 CPPM(ArrayClass::getDimensions),
@@ -565,7 +567,7 @@ CPPM(ArrayClass::ofRexx),
 
 CPPM(DirectoryClass::newRexx),
 
-CPPM(RexxInteger::plus),               /* Integer methods                   */
+CPPM(RexxInteger::plus),
 CPPM(RexxInteger::minus),
 CPPM(RexxInteger::multiply),
 CPPM(RexxInteger::divide),
@@ -627,7 +629,7 @@ CPPM(ListClass::removeItem),
 CPPM(ListClass::newRexx),
 CPPM(ListClass::ofRexx),
 
-CPPM(MessageClass::notify),             /* Message methods                   */
+CPPM(MessageClass::notify),
 CPPM(MessageClass::result),
 CPPM(MessageClass::send),
 CPPM(MessageClass::start),
@@ -640,7 +642,7 @@ CPPM(MessageClass::arguments),
 
 CPPM(MessageClass::newRexx),
 
-CPPM(MethodClass::setUnguardedRexx),    /* Method methods                    */
+CPPM(MethodClass::setUnguardedRexx),
 CPPM(MethodClass::setGuardedRexx),
 CPPM(BaseExecutable::source),
 CPPM(BaseExecutable::getPackage),
@@ -690,7 +692,7 @@ CPPM(PackageClass::traceRexx),
 
 CPPM(PackageClass::newRexx),
 
-CPPM(NumberString::formatRexx),    /* NumberString methods              */
+CPPM(NumberString::formatRexx),
 CPPM(NumberString::trunc),
 CPPM(NumberString::floor),
 CPPM(NumberString::ceiling),
@@ -764,7 +766,7 @@ CPPM(StemClass::toDirectory),
 
 CPPM(StemClass::newRexx),
 
-CPPM(RexxString::lengthRexx),          /* String methods                    */
+CPPM(RexxString::lengthRexx),
 CPPM(RexxString::concatRexx),
 CPPM(RexxString::concatBlank),
 CPPM(RexxString::concatWith),
@@ -798,11 +800,6 @@ CPPM(RexxString::Min),
 CPPM(RexxString::upperRexx),
 CPPM(RexxString::lowerRexx),
 
-                                          /* All BIF methods start here.  They */
-                                          /*  will be arranged according to the*/
-                                          /*  they are defined in.             */
-
-                                          /* following methods are in OKBSUBS  */
 CPPM(RexxString::center),
 CPPM(RexxString::delstr),
 CPPM(RexxString::insert),
@@ -815,7 +812,6 @@ CPPM(RexxString::substr),
 CPPM(RexxString::subchar),
 CPPM(RexxString::replaceAt),
 
-                                          /* following methods are in OKBWORD  */
 CPPM(RexxString::delWord),
 CPPM(RexxString::space),
 CPPM(RexxString::subWord),
@@ -826,8 +822,6 @@ CPPM(RexxString::wordLength),
 CPPM(RexxString::wordPos),
 CPPM(RexxString::caselessWordPos),
 CPPM(RexxString::words),
-
-                                          /* following methods are in OKBMISC  */
 
 CPPM(RexxString::changeStr),
 CPPM(RexxString::caselessChangeStr),
@@ -849,7 +843,6 @@ CPPM(RexxString::containsRexx),
 CPPM(RexxString::caselessContains),
 CPPM(RexxString::containsWord),
 CPPM(RexxString::caselessContainsWord),
-
 
 CPPM(RexxString::bitAnd),
 CPPM(RexxString::bitOr),
@@ -928,7 +921,7 @@ CPPM(MutableBuffer::caselessContains),
 CPPM(MutableBuffer::containsWord),
 CPPM(MutableBuffer::caselessContainsWord),
 
-CPPM(SupplierClass::available),         /* Supplier methods                  */
+CPPM(SupplierClass::available),
 CPPM(SupplierClass::next),
 CPPM(SupplierClass::value),
 CPPM(SupplierClass::index),
@@ -936,14 +929,12 @@ CPPM(SupplierClass::initRexx),
 
 CPPM(SupplierClass::newRexx),
 
-
-
 CPPM(TableClass::itemsRexx),
 CPPM(TableClass::newRexx),
 
 CPPM(IdentityTable::newRexx),
 
-CPPM(RelationClass::put),               /* Relation methods                  */
+CPPM(RelationClass::put),
 CPPM(RelationClass::removeItemRexx),
 CPPM(RelationClass::removeAll),
 CPPM(RelationClass::itemsRexx),
@@ -952,7 +943,7 @@ CPPM(RelationClass::hasItem),
 
 CPPM(RelationClass::newRexx),
 
-CPPM(ActivityManager::getLocalRexx),                // the .local environment methods
+CPPM(ActivityManager::getLocalRexx),
 
 CPPM(PointerClass::equal),
 CPPM(PointerClass::notEqual),
@@ -987,7 +978,8 @@ CPPM(StackFrameClass::getType),
 CPPM(StackFrameClass::getTarget),
 CPPM(StackFrameClass::getArguments),
 CPPM(StackFrameClass::newRexx),
-NULL                                   /* final terminating method          */
+// This NULL terminator is important to mark the end of the table.
+NULL
 };
 
 

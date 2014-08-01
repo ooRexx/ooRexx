@@ -39,7 +39,7 @@
 #define Included_ActivityManager
 
 #include "Activity.hpp"
-
+#include "ActivationSettings.hpp"
 #include <deque>
 
 class IdentityTable;
@@ -47,6 +47,7 @@ class LiveStack;
 class RexxCode;
 class RoutineClass;
 class NativeActivation;
+class QueueClass;
 
 class ActivityManager
 {
@@ -71,8 +72,8 @@ public:
     static void createLocks();
     static void closeLocks();
     static void init();
-    static RexxActivation *newActivation(Activity *activity, RoutineClass *routine, RexxCode *code, RexxString *calltype, RexxString *environment, int context);
-    static RexxActivation *newActivation(Activity *activity, RexxActivation *parent, RexxCode *code, int context);
+    static RexxActivation *newActivation(Activity *activity, RoutineClass *routine, RexxCode *code, RexxString *calltype, RexxString *environment, ActivationContext context);
+    static RexxActivation *newActivation(Activity *activity, RexxActivation *parent, RexxCode *code, ActivationContext context);
     static RexxActivation *newActivation(Activity *activity, MethodClass *method, RexxCode *code);
     static NativeActivation *newNativeActivation(Activity *activity, RexxActivation *parent);
     static NativeActivation *newNativeActivation(Activity *activity);
@@ -117,24 +118,19 @@ protected:
     // maximum number of activities we'll pool
     static const size_t MAX_THREAD_POOL_SIZE = 5;
 
-    // activities in use
-    static ListClass         *activeActivities;
-    // free activities
-    static ListClass         *availableActivities;
-    // table of all activities
-    static ListClass         *allActivities;
-    static bool              processTerminating;  // shutdown processing started
-    static size_t            interpreterInstances;  // number of times an interpreter has been created.
+    static QueueClass       *availableActivities;     // table of available activities
+    static QueueClass       *allActivities;           // table of all activities
+    static bool              processTerminating;      // shutdown processing started
+    static size_t            interpreterInstances;    // number of times an interpreter has been created.
 
-    static SysMutex          kernelSemaphore;       // global kernel semaphore lock
-    static SysSemaphore      terminationSem;    // used to signal that everything has shutdown
-    static volatile bool sentinel;  // used to ensure proper ordering of updates
+    static SysMutex          kernelSemaphore;         // global kernel semaphore lock
+    static SysSemaphore      terminationSem;          // used to signal that everything has shutdown
+    static volatile bool sentinel;                    // used to ensure proper ordering of updates
     static std::deque<Activity *>waitingActivities;   // queue of waiting activities
 };
 
 
-                                       /* various exception/condition       */
-                                       /* reporting routines                */
+// various exception/condition reporting routines
 inline void reportCondition(RexxString *condition, RexxString *description) { ActivityManager::currentActivity->raiseCondition(condition, OREF_NULL, description, OREF_NULL, OREF_NULL); }
 inline void reportNovalue(RexxString *description) { reportCondition(OREF_NOVALUE, description); }
 inline void reportNostring(RexxString *description) { reportCondition(OREF_NOSTRING, description); }
@@ -243,16 +239,8 @@ inline void reportNomethod(RexxString *message, RexxObject *receiver)
 {
     if (!ActivityManager::currentActivity->raiseCondition(OREF_NOMETHOD, OREF_NULL, message, receiver, OREF_NULL))
     {
-                                           /* raise as a syntax error           */
         reportException(Error_No_method_name, receiver, message);
     }
-}
-
-
-inline void missingArgument(size_t argumentPosition)
-{
-                                       /* just raise the error              */
-    reportException(Error_Incorrect_method_noarg, argumentPosition);
 }
 
 
@@ -260,21 +248,14 @@ inline Activity *new_activity()  { return ActivityManager::createNewActivity(); 
 inline Activity *new_activity(Activity *parent)  { return ActivityManager::createNewActivity(parent); }
 
 
+/**
+ * Return name of last message sent via messageSend()
+ *
+ * @return
+ */
 inline RexxString *lastMessageName()
-/******************************************************************************/
-/* Function:  Return name of last message sent via messageSend()              */
-/******************************************************************************/
 {
   return ActivityManager::currentActivity->getLastMessageName();
-}
-
-inline MethodClass *lastMethod()
-/******************************************************************************/
-/* Function:  Return last invoked method object (for use by kernel methods    */
-/*            only)                                                           */
-/******************************************************************************/
-{
-    return ActivityManager::currentActivity->getLastMethod();
 }
 
 

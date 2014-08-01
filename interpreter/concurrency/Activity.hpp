@@ -135,8 +135,8 @@ class Activity : public RexxInternalObject
     void        reportAnException(wholenumber_t, const char *, RexxObject *, const char *, RexxObject *);
     void        reraiseException(DirectoryClass *);
     void        raisePropagate(DirectoryClass *);
-    RexxObject *display(DirectoryClass *);
-    RexxObject *displayDebug(DirectoryClass *);
+    void        display(DirectoryClass *);
+    void        displayDebug(DirectoryClass *);
     RexxString *buildMessage(wholenumber_t, ArrayClass *);
     RexxString *messageSubstitution(RexxString *, ArrayClass *);
     void        run();
@@ -255,7 +255,6 @@ class Activity : public RexxInternalObject
     inline uint64_t    getRandomSeed() { return randomSeed; }
     inline void setRandomSeed(uint64_t seed) { randomSeed = seed; };
            RexxString *getLastMessageName();
-           MethodClass *getLastMethod();
 
     inline RexxThreadContext *getThreadContext() { return &threadContext.threadContext; }
     inline NativeActivation *getApiContext() { return (NativeActivation *)topStackFrame; }

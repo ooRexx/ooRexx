@@ -2131,10 +2131,24 @@ RexxObject *ArrayClass::indexRexx(RexxInternalObject *target)
  *
  * @return The removed object (same as target).
  */
-RexxInternalObject *ArrayClass::removeItem(RexxInternalObject *target)
+RexxInternalObject *ArrayClass::removeItemRexx(RexxInternalObject *target)
 {
     // we require the index to be there.
     requiredArgument(target, ARG_ONE);
+    // do the removal
+    return removeItem(target);
+}
+
+
+/**
+ * Remove the target object from the collection.
+ *
+ * @param target The target object.
+ *
+ * @return The removed object (same as target).
+ */
+RexxInternalObject *ArrayClass::removeItem(RexxInternalObject *target)
+{
     // see if we have this item.  If not, then
     // we return .nil.
     size_t index = findSingleIndexItem(target);
@@ -2146,8 +2160,6 @@ RexxInternalObject *ArrayClass::removeItem(RexxInternalObject *target)
     // remove the item at the location
     return remove(index);
 }
-
-
 
 
 /**

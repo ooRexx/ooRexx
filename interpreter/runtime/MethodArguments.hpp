@@ -49,6 +49,17 @@
 
 
 /**
+ * Report an error with a missing argument.
+ *
+ * @param argumentPosition
+ *               The argument position.
+ */
+inline void missingArgument(size_t argumentPosition)
+{
+    reportException(Error_Incorrect_method_noarg, argumentPosition);
+}
+
+/**
  * Check for required arguments and raise a missing argument
  * error for the given position.
  *

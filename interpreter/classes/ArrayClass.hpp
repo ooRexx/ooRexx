@@ -168,8 +168,11 @@ class ArrayClass : public RexxObject
     void          put(RexxInternalObject * eref, size_t pos);
     RexxObject   *putRexx(RexxObject **, size_t);
     void          putApi(RexxInternalObject * eref, size_t pos);
-    RexxInternalObject  *remove(size_t);
+    // this is virtual because Queue redefines this as a delete operation.
+    virtual RexxInternalObject *remove(size_t);
     RexxInternalObject  *removeRexx(RexxObject **, size_t);
+    RexxInternalObject  *removeItem(RexxInternalObject *target);
+    RexxInternalObject  *removeItemRexx(RexxInternalObject *target);
     RexxObject   *appendRexx(RexxInternalObject *);
     size_t        append(RexxInternalObject *);
     void          appendAll(ArrayClass *);
@@ -230,7 +233,6 @@ class ArrayClass : public RexxObject
     RexxObject  *index(RexxInternalObject *);
     RexxObject  *hasItemRexx(RexxInternalObject *);
     bool         hasItem(RexxInternalObject *target);
-    RexxInternalObject  *removeItem(RexxInternalObject *);
     wholenumber_t sortCompare(RexxObject *comparator, RexxInternalObject *left, RexxInternalObject *right);
     ArrayClass  *stableSortRexx();
     ArrayClass  *stableSortWithRexx(RexxObject *comparator);

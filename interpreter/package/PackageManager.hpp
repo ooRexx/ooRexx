@@ -55,6 +55,7 @@ class Activity;
 class NativeMethod;
 class ProtectedObject;
 class PackageClass;
+class StringTable;
 
 class PackageManager
 {
@@ -108,18 +109,18 @@ protected:
         IMAGE_ARRAY_SIZE = IMAGE_REQUIRES
     };
 
-    static DirectoryClass *imagePackages;        // our loaded packages
-    static DirectoryClass *imagePackageRoutines; // table of functions loaded from packages
-    static DirectoryClass *imageRegisteredRoutines;  // table of functions resolved by older registration mechanisms
-    static DirectoryClass *imageLoadedRequires;      // table of previously loaded requires files
+    static StringTable    *imagePackages;            // our loaded packages
+    static StringTable    *imagePackageRoutines;     // table of functions loaded from packages
+    static StringTable    *imageRegisteredRoutines;  // table of functions resolved by older registration mechanisms
+    static StringTable    *imageLoadedRequires;      // table of previously loaded requires files
 
 
-    static DirectoryClass *packages;        // our loaded packages
-    static DirectoryClass *packageRoutines; // table of functions loaded from packages
-    static DirectoryClass *registeredRoutines;  // table of functions resolved by older registration mechanisms
-    static DirectoryClass *loadedRequires;      // table of previously loaded requires files
+    static StringTable    *packages;            // our loaded packages
+    static StringTable    *packageRoutines;     // table of functions loaded from packages
+    static StringTable    *registeredRoutines;  // table of functions resolved by older registration mechanisms
+    static StringTable    *loadedRequires;      // table of previously loaded requires files
 
-    static RexxPackageEntry *rexxPackage;   // internal generated REXX package
+    static RexxPackageEntry *rexxPackage;       // internal generated REXX package
 };
 
 #endif

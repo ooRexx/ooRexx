@@ -47,7 +47,7 @@
 #include "PackageManager.hpp"
 #include "Interpreter.hpp"
 #include "NativeCode.hpp"
-#include "StringTable.hpp"
+#include "StringTableClass.hpp"
 #include "RoutineClass.hpp"
 #include "ProtectedObject.hpp"
 
@@ -362,7 +362,7 @@ NativeMethod *LibraryPackage::resolveMethod(RexxString *name)
     // create our methods table if not yet created.
     if (methods == OREF_NULL)
     {
-        OrefSet(this, methods, new_directory());
+        setField(methods, new_string_table());
     }
 
     // see if this is in the table yet.

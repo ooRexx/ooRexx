@@ -188,23 +188,17 @@ RexxObject *QueueClass::putRexx(RexxInternalObject *value, RexxObject *index)
 
 
 /**
- * The Rexx stub for the Queue REMOVE method. Replaces the Array
- * version because for the Queue class, remove and delete are
- * the same thing.
+ * Remove an object from the array.  This redefines remove() to
+ * be a delete operation.
  *
+ * @param index  The target index position.
  *
- * @param arguments Pointer to the index arguments.
- * @param argCount  The count of index arguments.
- *
- * @return The removed object, if any.  Returns .nil if there
- *         is no item at the index position.
- *
- * @return Always return nothing.
+ * @return The removed object, if any.  Returns OREF_NULL if there
+ *         is no item at that index.
  */
-RexxInternalObject *QueueClass::removeRexx(RexxObject *index)
+RexxInternalObject *ArrayClass::remove(size_t index)
 {
-    // just reroute to the real operation
-    return deleteRexx(index);
+    return deleteItem(index);
 }
 
 

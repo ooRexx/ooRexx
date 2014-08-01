@@ -61,13 +61,13 @@ class QueueClass : public ArrayClass
      RexxObject *queueRexx(RexxInternalObject *item);
      RexxInternalObject *peek();
      RexxObject *putRexx(RexxInternalObject *value, RexxObject *index);
-     RexxInternalObject *removeRexx(RexxObject *index);
      RexxObject *initRexx(RexxObject *initialSize);
 
      inline RexxInternalObject *pop() { return removeFirst();};
      inline RexxInternalObject *pull() { return removeFirst();};
      inline void push(RexxInternalObject *obj) { addFirst(obj);};
      inline void queue(RexxInternalObject *obj) { addLast(obj);};
+     virtual RexxInternalObject *remove(size_t index);
      RexxObject *newRexx(RexxObject **init_args, size_t argCount);
      QueueClass *ofRexx(RexxObject **args, size_t argCount);
 

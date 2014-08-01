@@ -88,7 +88,7 @@ public:
     virtual void run();
     void complete(RexxString *command, ProtectedObject &result, ProtectedObject &condition);
 
-    Activity *activity;               // the activity we're dispatching on
+    Activity *activity;                   // the activity we're dispatching on
     REXXPFN    entryPoint;                // resolved exit entry point
     CONSTRXSTRING  rxstrcmd;              // invoked command
     RXSTRING       retstr;                // passed back result

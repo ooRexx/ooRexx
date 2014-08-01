@@ -57,9 +57,9 @@
  *
  * @return The allocated object.
  */
-void *CommandHandler::operator new(size_t      size)
+void *CommandHandler::operator new(size_t size)
 {
-    return new_object(size, T_CommandHandler);  // Get new object
+    return new_object(size, T_CommandHandler);
 }
 
 
@@ -114,7 +114,7 @@ void CommandHandler::call(Activity *activity, RexxActivation *activation, RexxSt
 
 CommandHandlerDispatcher::CommandHandlerDispatcher(Activity *a, REXXPFN e, RexxString *command)
 {
-    activity = a;      // needed for raising conditions
+    activity = a;               // needed for raising conditions
     entryPoint = e;             // the call point
     // clear the state flags
     flags = 0;
@@ -146,40 +146,38 @@ void CommandHandlerDispatcher::run()
  */
 void CommandHandlerDispatcher::complete(RexxString *command, ProtectedObject &result, ProtectedObject &condition)
 {
-    if (sbrc != 0)                     /* have a numeric return code?         */
+    // did we get a numeric return code?  Turn into an Integer object.
+    if (sbrc != 0)
     {
-        result = new_integer(sbrc);      /* just use the binary return code     */
+        result = new_integer(sbrc);
     }
-    else if (!RXNULLSTRING(retstr))  /* we have something in retstr?        */
+    // maybe we got a string value back?
+    else if (!RXNULLSTRING(retstr))
     {
-        /* make into a return string           */
+        // make into a string value and try to convert to an integer (not an error
+        // if it doesn't convert)
         result = new_string(retstr.strptr, retstr.strlength);
         // try to get this as a numeric value
         ((RexxObject *)result)->numberValue(sbrc);
-        /* user give us a new buffer?          */
+        // handle any buffer reallocation
         if (retstr.strptr != default_return_buffer)
         {
-            /* free it                             */
             SystemInterpreter::releaseResultMemory(retstr.strptr);
         }
     }
+    // default return code is zero
     else
     {
-        result = IntegerZero;            /* got a zero return code              */
+        result = IntegerZero;
     }
 
-    /****************************************************************************/
-    /* Check error flags from subcom handler and if needed, stick condition     */
-    /* into result array.                                                       */
-    /****************************************************************************/
-
-    if (flags & (unsigned short)RXSUBCOM_FAILURE)/* If failure flag set               */
+    // Check error flags from subcom handler and if needed, stick condition
+    // into result array.
+    if (flags & (unsigned short)RXSUBCOM_FAILURE)
     {
-        /*   send failure condition back     */
         // raise the condition when things are done
         condition = (RexxObject *)activity->createConditionObject(OREF_FAILURENAME, (RexxObject *)result, command, OREF_NULL, OREF_NULL);
     }
-    /* If error flag set                 */
     else if (flags & (unsigned short)RXSUBCOM_ERROR)
     {
         // raise the condition when things are done
@@ -219,7 +217,7 @@ void ContextCommandHandlerDispatcher::handleError(DirectoryClass *c)
     if (c != OREF_NULL)
     {
         // check to see if this is an error or failure situation
-        RexxString *conditionName = (RexxString *)c->at(OREF_CONDITION);
+        RexxString *conditionName = (RexxString *)c->get(OREF_CONDITION);
         // if this is not a syntax error, this is likely an error
         // or failure condition, and the return value is taken from
         // the condition object.
