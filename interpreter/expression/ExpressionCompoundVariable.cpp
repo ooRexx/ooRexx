@@ -53,6 +53,7 @@
 #include "RexxVariable.hpp"
 #include "ProtectedObject.hpp"
 #include "CompoundVariableTail.hpp"
+#include "CompoundTableElement.hpp"
 
 
 /**
@@ -227,7 +228,7 @@ RexxObject *build(RexxString * variable_name, bool direct )
         }
     }
     // create and return a new compound
-    return(RexxObject *)new (tails->getSize()) RexxCompoundVariable((RexxString *)stem, 0, tails, tails->getSize());
+    return (RexxObject *)new (tails->items()) RexxCompoundVariable((RexxString *)stem, 0, tails, tails->items());
 }
 
 
@@ -242,7 +243,7 @@ RexxObject *build(RexxString * variable_name, bool direct )
 RexxObject * RexxCompoundVariable::evaluate(RexxActivation *context, ExpressionStack *stack )
 {
     // the context does the real evaluation work
-    RexxObject *value = context->evaluateLocalCompoundVariable(stemName, stemIndex, &tails[0], tailCount);
+    RexxObject *value = (RexxObject *)context->evaluateLocalCompoundVariable(stemName, stemIndex, &tails[0], tailCount);
     // expression values need to be pushed on to the stack before returning
     stack->push(value);
     return value;
@@ -258,7 +259,7 @@ RexxObject * RexxCompoundVariable::evaluate(RexxActivation *context, ExpressionS
 RexxObject  *RexxCompoundVariable::getValue(VariableDictionary *dictionary)
 {
     // the dictionary handles the details
-    return dictionary->getCompoundVariableValue(stemName, &tails[0], tailCount);
+    return (RexxObject *)dictionary->getCompoundVariableValue(stemName, &tails[0], tailCount);
 }
 
 
@@ -272,7 +273,7 @@ RexxObject  *RexxCompoundVariable::getValue(VariableDictionary *dictionary)
 RexxObject  *RexxCompoundVariable::getValue(RexxActivation *context)
 {
                                        /* resolve the tail element          */
-    return context->getLocalCompoundVariableValue(stemName, stemIndex, &tails[0], tailCount);
+    return (RexxObject *)context->getLocalCompoundVariableValue(stemName, stemIndex, &tails[0], tailCount);
 }
 
 /**
@@ -286,7 +287,7 @@ RexxObject  *RexxCompoundVariable::getValue(RexxActivation *context)
  */
 RexxObject  *RexxCompoundVariable::getRealValue(VariableDictionary *dictionary)
 {
-    return dictionary->getCompoundVariableRealValue(stemName, &tails[0], tailCount);
+    return (RexxObject *)dictionary->getCompoundVariableRealValue(stemName, &tails[0], tailCount);
 }
 
 
@@ -302,7 +303,7 @@ RexxObject  *RexxCompoundVariable::getRealValue(VariableDictionary *dictionary)
  */
 RexxObject *RexxCompoundVariable::getRealValue(RexxActivation *context)
 {
-    return context->getLocalCompoundVariableRealValue(stemName, stemIndex, &tails[0], tailCount);
+    return (RexxObject *)context->getLocalCompoundVariableRealValue(stemName, stemIndex, &tails[0], tailCount);
 }
 
 

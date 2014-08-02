@@ -57,902 +57,936 @@
 #include "PackageManager.hpp"
 #include "SystemInterpreter.hpp"
 #include "SysFileSystem.hpp"
+#include "MethodArguments.hpp"
 
-
-/* checks if pad is a single character string */
-void checkPadArgument(const char *pFuncName, RexxObject *position, RexxString *pad)
-{
-    if (pad == OREF_NULL)
-    {
-        return;
-    }
-    if (pad->getLength() != 1)
-    {
-        reportException(Error_Incorrect_call_pad, pFuncName, position, pad);
-    }
-}
-
-#define CENTER_MIN 2
-#define CENTER_MAX 3
-#define CENTER_string 1
-#define CENTER_length 2
-#define CENTER_pad    3
+// a note on the constants here.  These values are
+// used to define what arguments are used by a BIF.  For
+// example, for CENTER, we expect a minimum of 2 arguments and
+// a maximum of 3.  The first argument is called "string", the
+// second is called "length", the third is called "pad".  These
+// values are used by the macros to locate the appropriate arguments
+// from the expression stack.
 
 BUILTIN(CENTER)
 {
-    fix_args(CENTER);                    /* check on required number of args  */
-                                         /* force first argument to a string  */
+    const size_t CENTER_Min = 2;
+    const size_t CENTER_Max = 3;
+    const size_t CENTER_string = 1;
+    const size_t CENTER_length = 2;
+    const size_t CENTER_pad =    3;
+
+    fix_args(CENTER);
+
     RexxString *string = required_string(CENTER, string);
-    /* this is a required length         */
     RexxInteger *length = required_integer(CENTER, length);
-    RexxString *pad = optional_string(CENTER, pad);  /* the pad character must be one too */
-    checkPadArgument(CHAR_CENTER, IntegerThree, pad);
-    return string->center(length, pad);  /* do the center function            */
+    RexxString *pad = optional_pad(CENTER, pad);
+
+    return string->center(length, pad);
 }
 
-#define CENTRE_MIN 2
-#define CENTRE_MAX 3
-#define CENTRE_string 1
-#define CENTRE_length 2
-#define CENTRE_pad    3
 
 BUILTIN(CENTRE)
 {
-    fix_args(CENTRE);                    /* check on required number of args  */
-                                         /* force first argument to a string  */
+    const size_t CENTRE_Min = 2;
+    const size_t CENTRE_Max = 3;
+    const size_t CENTRE_string = 1;
+    const size_t CENTRE_length = 2;
+    const size_t CENTRE_pad =    3;
+
+    fix_args(CENTRE);
+
     RexxString *string = required_string(CENTRE, string);
-    /* this is a required length         */
     RexxInteger *length = required_integer(CENTRE, length);
-    RexxString *pad = optional_string(CENTRE, pad);  /* the pad character must be one too */
-    checkPadArgument(CHAR_CENTRE, IntegerThree, pad);
-    return string->center(length, pad);  /* do the center function            */
+    RexxString *pad = optional_pad(CENTRE, pad);
+
+    return string->center(length, pad);
 }
 
-#define DELSTR_MIN 2
-#define DELSTR_MAX 3
-#define DELSTR_string 1
-#define DELSTR_n      2
-#define DELSTR_length 3
 
 BUILTIN(DELSTR)
 {
-    fix_args(DELSTR);                    /* check on required number of args  */
-                                         /* must have the first argument      */
+    const size_t DELSTR_Min = 2;
+    const size_t DELSTR_Max = 3;
+    const size_t DELSTR_string = 1;
+    const size_t DELSTR_n =      2;
+    const size_t DELSTR_length = 3;
+
+    fix_args(DELSTR);
+
     RexxString *string = required_string(DELSTR, string);
-    RexxInteger *n = required_integer(DELSTR, n);     /* need a delete position            */
-    /* length is optional                */
+    RexxInteger *n = required_integer(DELSTR, n);
     RexxInteger *length = optional_integer(DELSTR, length);
-    return string->delstr(n, length);    /* do the delstr function            */
+
+    return string->delstr(n, length);
 }
 
-#define DELWORD_MIN 2
-#define DELWORD_MAX 3
-#define DELWORD_string 1
-#define DELWORD_n      2
-#define DELWORD_length 3
 
 BUILTIN(DELWORD)
 {
-    fix_args(DELWORD);                   /* check on required number of args  */
-                                         /* must have the first argument      */
+    const size_t DELWORD_Min = 2;
+    const size_t DELWORD_Max = 3;
+    const size_t DELWORD_string = 1;
+    const size_t DELWORD_n =      2;
+    const size_t DELWORD_length = 3;
+
+    fix_args(DELWORD);
+
     RexxString *string = required_string(DELWORD, string);
-    RexxInteger *n = required_integer(DELWORD, n);    /* need a delete position            */
-    /* length is optional                */
+    RexxInteger *n = required_integer(DELWORD, n);
     RexxInteger *length = optional_integer(DELWORD, length);
-    return string->delWord(n, length);   /* do the delword function           */
+
+    return string->delWord(n, length);
 }
 
-#define INSERT_MIN 2
-#define INSERT_MAX 5
-#define INSERT_new    1
-#define INSERT_target 2
-#define INSERT_n      3
-#define INSERT_length 4
-#define INSERT_pad    5
 
 BUILTIN(INSERT)
 {
-    fix_args(INSERT);                    /* check on require number of args   */
-                                         /* get string for new                */
+    const size_t INSERT_Min = 2;
+    const size_t INSERT_Max = 5;
+    const size_t INSERT_new =    1;
+    const size_t INSERT_target = 2;
+    const size_t INSERT_n =      3;
+    const size_t INSERT_length = 4;
+    const size_t INSERT_pad =    5;
+
+    fix_args(INSERT);
+
     RexxString *newString = required_string(INSERT, new);
-    /* get string for target             */
     RexxString *target = required_string(INSERT, target);
-    RexxInteger *n = optional_integer(INSERT, n);     /* insert position is optional       */
-    /* length is optional                */
+    RexxInteger *n = optional_integer(INSERT, n);
     RexxInteger *length = optional_integer(INSERT, length);
-    RexxString *pad = optional_string(INSERT, pad);  /* get string for pad                */
-    /* go perform the insert function    */
-    checkPadArgument(CHAR_INSERT, IntegerFour, pad);
+    RexxString *pad = optional_pad(INSERT, pad);
+
     return target->insert(newString, n, length, pad);
 }
 
-#define LEFT_MIN 2
-#define LEFT_MAX 3
-#define LEFT_string 1
-#define LEFT_length 2
-#define LEFT_pad    3
 
 BUILTIN(LEFT)
 {
-    fix_args(LEFT);                      /* check on required number of args  */
-                                         /* must have the first argument      */
+    const size_t LEFT_Min = 2;
+    const size_t LEFT_Max = 3;
+    const size_t LEFT_string = 1;
+    const size_t LEFT_length = 2;
+    const size_t LEFT_pad =    3;
+
+    fix_args(LEFT);
+
     RexxString *string = required_string(LEFT, string);
-    /* length is optional                */
     RexxInteger *length = optional_integer(LEFT, length);
-    RexxString *pad = optional_string(LEFT, pad);    /* pad must be a string also         */
-    checkPadArgument(CHAR_LEFT, IntegerThree, pad);
-    return string->left(length, pad);    /* do the substr function            */
+    RexxString *pad = optional_pad(LEFT, pad);
+
+    return string->left(length, pad);
 }
 
-#define OVERLAY_MIN 2
-#define OVERLAY_MAX 5
-#define OVERLAY_new    1
-#define OVERLAY_target 2
-#define OVERLAY_n      3
-#define OVERLAY_length 4
-#define OVERLAY_pad    5
 
 BUILTIN(OVERLAY)
 {
-    fix_args(OVERLAY);                   /* check on require number of args   */
-                                         /* get string for new                */
+    const size_t OVERLAY_Min = 2;
+    const size_t OVERLAY_Max = 5;
+    const size_t OVERLAY_new =    1;
+    const size_t OVERLAY_target = 2;
+    const size_t OVERLAY_n =      3;
+    const size_t OVERLAY_length = 4;
+    const size_t OVERLAY_pad =    5;
+
+    fix_args(OVERLAY);
+
     RexxString *newString = required_string(OVERLAY, new);
-    /* get string for target             */
     RexxString *target = required_string(OVERLAY, target);
-    RexxInteger *n = optional_integer(OVERLAY, n);    /* overlay position is optional      */
-    /* length is optional                */
+    RexxInteger *n = optional_integer(OVERLAY, n);
     RexxInteger *length = optional_integer(OVERLAY, length);
-    RexxString *pad = optional_string(OVERLAY, pad); /* get string for pad                */
-    /* go perform the overlay function   */
-    checkPadArgument(CHAR_OVERLAY, IntegerFive, pad);
+    RexxString *pad = optional_pad(OVERLAY, pad);
+
     return target->overlay(newString, n, length, pad);
 }
 
-#define POS_MIN 2
-#define POS_MAX 4
-#define POS_needle   1
-#define POS_haystack 2
-#define POS_start    3
-#define POS_range    4
 
 BUILTIN(POS)
 {
-    fix_args(POS);                       /* check on require number of args   */
-                                         /* get string for new                */
+    const size_t POS_Min = 2;
+    const size_t POS_Max = 4;
+    const size_t POS_needle =   1;
+    const size_t POS_haystack = 2;
+    const size_t POS_start =    3;
+    const size_t POS_range =    4;
+
+    fix_args(POS);
+
     RexxString *needle = required_string(POS, needle);
-    /* get string for target             */
     RexxString *haystack = required_string(POS, haystack);
-    RexxInteger *start = optional_integer(POS, start);/* start position is optional        */
+    RexxInteger *start = optional_integer(POS, start);
     RexxInteger *range = optional_integer(POS, range);
-    /* go perform the pos function       */
+
     return haystack->posRexx(needle, start, range);
 }
 
-#define LASTPOS_MIN 2
-#define LASTPOS_MAX 4
-#define LASTPOS_needle   1
-#define LASTPOS_haystack 2
-#define LASTPOS_start    3
-#define LASTPOS_range    4
 
 BUILTIN(LASTPOS)
 {
-    fix_args(LASTPOS);                   /* check on require number of args   */
-                                         /* get string for new                */
+    const size_t LASTPOS_Min = 2;
+    const size_t LASTPOS_Max = 4;
+    const size_t LASTPOS_needle =   1;
+    const size_t LASTPOS_haystack = 2;
+    const size_t LASTPOS_start =    3;
+    const size_t LASTPOS_range =    4;
+
+    fix_args(LASTPOS);
+
     RexxString *needle = required_string(LASTPOS, needle);
-    /* get string for target             */
     RexxString *haystack = required_string(LASTPOS, haystack);
-    /* start position is optional        */
     RexxInteger *start = optional_integer(LASTPOS, start);
     RexxInteger *range = optional_integer(LASTPOS, range);
-    /* go perform the lastpos function   */
+
     return haystack->lastPosRexx(needle, start, range);
 }
 
-#define REVERSE_MIN 1
-#define REVERSE_MAX 1
-#define REVERSE_string 1
 
 BUILTIN(REVERSE)
 {
-    fix_args(REVERSE);                   /* check on require number of args   */
-                                         /* get string for string             */
+    const size_t REVERSE_Min = 1;
+    const size_t REVERSE_Max = 1;
+    const size_t REVERSE_string = 1;
+
+    fix_args(REVERSE);
+
     RexxString *string = required_string(REVERSE, string);
-    return string->reverse();            /* go perform the reverse function   */
+
+    return string->reverse();
 }
 
-#define RIGHT_MIN 2
-#define RIGHT_MAX 3
-#define RIGHT_string 1
-#define RIGHT_length 2
-#define RIGHT_pad    3
+const size_t RIGHT_Min = 2;
+const size_t RIGHT_Max = 3;
+const size_t RIGHT_string = 1;
+const size_t RIGHT_length = 2;
+const size_t RIGHT_pad =    3;
 
 BUILTIN(RIGHT)
 {
-    fix_args(RIGHT);                     /* check on required number of args  */
-                                         /* must have the first argument      */
+    fix_args(RIGHT);
+
     RexxString *string = required_string(RIGHT, string);
-    /* length is optional                */
     RexxInteger *length = optional_integer(RIGHT, length);
-    RexxString *pad = optional_string(RIGHT, pad);   /* pad must be a string also         */
-    checkPadArgument(CHAR_RIGHT, IntegerThree, pad);
-    return string->right(length, pad);   /* do the substr function            */
+    RexxString *pad = optional_pad(RIGHT, pad);
+
+    return string->right(length, pad);
 }
 
-#define STRIP_MIN 1
-#define STRIP_MAX 3
-#define STRIP_string 1
-#define STRIP_option 2
-#define STRIP_char   3
 
 BUILTIN(STRIP)
 {
-    fix_args(STRIP);                     /* check on required number of args  */
-                                         /* must have the first argument      */
+    const size_t STRIP_Min = 1;
+    const size_t STRIP_Max = 3;
+    const size_t STRIP_string = 1;
+    const size_t STRIP_option = 2;
+    const size_t STRIP_char =   3;
+
+    fix_args(STRIP);
+
     RexxString *string = required_string(STRIP, string);
-    /* option must be a string too       */
     RexxString *option = optional_string(STRIP, option);
-    /* as is char as well                */
     RexxString *character = optional_string(STRIP, char);
-    /* do the strip function             */
+
     return string->strip(option, character);
 }
-
-#define SPACE_MIN 1
-#define SPACE_MAX 3
-#define SPACE_string 1
-#define SPACE_n      2
-#define SPACE_pad    3
 
 
 BUILTIN(SPACE)
 {
-    fix_args(SPACE);                     /* check on required number of args  */
-                                         /* must have the first argument      */
-    RexxString *string = required_string(SPACE, string);
-    RexxInteger *n = optional_integer(SPACE, n);      /* spacing is an optional integer    */
-    RexxString *pad = optional_string(SPACE, pad);   /* pad must be a string also         */
-    checkPadArgument(CHAR_SPACE, IntegerThree, pad);
-    return string->space(n, pad);        /* do the space function             */
-}
+    const size_t SPACE_Min = 1;
+    const size_t SPACE_Max = 3;
+    const size_t SPACE_string = 1;
+    const size_t SPACE_n =      2;
+    const size_t SPACE_pad =    3;
 
-#define SUBSTR_MIN 2
-#define SUBSTR_MAX 4
-#define SUBSTR_string 1
-#define SUBSTR_n      2
-#define SUBSTR_length 3
-#define SUBSTR_pad    4
+    fix_args(SPACE);
+
+    RexxString *string = required_string(SPACE, string);
+    RexxInteger *n = optional_integer(SPACE, n);
+    RexxString *pad = optional_pad(SPACE, pad);
+
+    return string->space(n, pad);
+}
 
 
 BUILTIN(SUBSTR)
 {
-    fix_args(SUBSTR);                    /* check on required number of args  */
-                                         /* must have the first argument      */
+    const size_t SUBSTR_Min = 2;
+    const size_t SUBSTR_Max = 4;
+    const size_t SUBSTR_string = 1;
+    const size_t SUBSTR_n =      2;
+    const size_t SUBSTR_length = 3;
+    const size_t SUBSTR_pad =    4;
+
+    fix_args(SUBSTR);
+
     RexxString *string = required_string(SUBSTR, string);
-    RexxInteger *n = required_integer(SUBSTR, n);     /* position is required              */
-    /* length is optional                */
+    RexxInteger *n = required_integer(SUBSTR, n);
     RexxInteger *length = optional_integer(SUBSTR, length);
-    RexxString *pad = optional_string(SUBSTR, pad);  /* pad must be a string also         */
-    /* do the substr function            */
-    checkPadArgument(CHAR_SUBSTR, IntegerFour, pad);
+    RexxString *pad = optional_pad(SUBSTR, pad);
+
     return string->substr(n, length, pad);
 }
 
 
-#define LOWER_MIN 1
-#define LOWER_MAX 3
-#define LOWER_string 1
-#define LOWER_n      2
-#define LOWER_length 3
-
-
 BUILTIN(LOWER)
 {
-    fix_args(LOWER);                     /* check on required number of args  */
-                                         /* must have the first argument      */
+    const size_t LOWER_Min = 1;
+    const size_t LOWER_Max = 3;
+    const size_t LOWER_string = 1;
+    const size_t LOWER_n =      2;
+    const size_t LOWER_length = 3;
+
+    fix_args(LOWER);
+
     RexxString *string = required_string(LOWER, string);
-    RexxInteger *n = optional_integer(LOWER, n);      /* position is optional              */
-    /* length is optional                */
+    RexxInteger *n = optional_integer(LOWER, n);
     RexxInteger *length = optional_integer(LOWER, length);
-    /* do the LOWER function            */
+
     return string->lowerRexx(n, length);
 }
 
 
-#define UPPER_MIN 1
-#define UPPER_MAX 3
-#define UPPER_string 1
-#define UPPER_n      2
-#define UPPER_length 3
-
-
 BUILTIN(UPPER)
 {
-    fix_args(UPPER);                     /* check on required number of args  */
-                                         /* must have the first argument      */
+    const size_t UPPER_Min = 1;
+    const size_t UPPER_Max = 3;
+    const size_t UPPER_string = 1;
+    const size_t UPPER_n =      2;
+    const size_t UPPER_length = 3;
+
+    fix_args(UPPER);
+
     RexxString *string = required_string(UPPER, string);
-    RexxInteger *n = optional_integer(UPPER, n);       /* position is optional              */
-    /* length is optional                */
+    RexxInteger *n = optional_integer(UPPER, n);
     RexxInteger *length = optional_integer(UPPER, length);
-    /* do the UPPER function            */
+
     return string->upperRexx(n, length);
 }
 
 
-#define SUBWORD_MIN 2
-#define SUBWORD_MAX 3
-#define SUBWORD_string 1
-#define SUBWORD_n      2
-#define SUBWORD_length 3
-
 BUILTIN(SUBWORD)
 {
-    fix_args(SUBWORD);                   /* check on required number of args  */
-                                         /* must have the first argument      */
+    const size_t SUBWORD_Min = 2;
+    const size_t SUBWORD_Max = 3;
+    const size_t SUBWORD_string = 1;
+    const size_t SUBWORD_n =      2;
+    const size_t SUBWORD_length = 3;
+
+    fix_args(SUBWORD);
+
     RexxString *string = required_string(SUBWORD, string);
-    RexxInteger *n = required_integer(SUBWORD, n);    /* position is required              */
-    /* length is optional                */
+    RexxInteger *n = required_integer(SUBWORD, n);
     RexxInteger *length = optional_integer(SUBWORD, length);
-    return string->subWord(n, length);   /* do the subword function           */
+
+    return string->subWord(n, length);
 }
 
-#define WORD_MIN 2
-#define WORD_MAX 2
-#define WORD_string 1
-#define WORD_n      2
 
 BUILTIN(WORD)
 {
-    fix_args(WORD);                      /* check on required number of args  */
-                                         /* must have the first argument      */
+    const size_t WORD_Min = 2;
+    const size_t WORD_Max = 2;
+    const size_t WORD_string = 1;
+    const size_t WORD_n =      2;
+
+    fix_args(WORD);
+
     RexxString *string = required_string(WORD, string);
-    RexxInteger *n = required_integer(WORD, n);       /* position is required              */
-    return string->word(n);              /* do the word function              */
+    RexxInteger *n = required_integer(WORD, n);
+
+    return string->word(n);
 }
 
-#define WORDINDEX_MIN 2
-#define WORDINDEX_MAX 2
-#define WORDINDEX_string 1
-#define WORDINDEX_n      2
 
 BUILTIN(WORDINDEX)
 {
-    fix_args(WORDINDEX);                 /* check on required number of args  */
-                                         /* must have the first argument      */
+    const size_t WORDINDEX_Min = 2;
+    const size_t WORDINDEX_Max = 2;
+    const size_t WORDINDEX_string = 1;
+    const size_t WORDINDEX_n =      2;
+
+    fix_args(WORDINDEX);
+
     RexxString *string = required_string(WORDINDEX, string);
-    RexxInteger *n = required_integer(WORDINDEX, n);  /* position is required              */
-    return string->wordIndex(n);         /* do the wordindex function         */
+    RexxInteger *n = required_integer(WORDINDEX, n);
+
+    return string->wordIndex(n);
 }
 
-#define WORDLENGTH_MIN 2
-#define WORDLENGTH_MAX 2
-#define WORDLENGTH_string 1
-#define WORDLENGTH_n      2
 
 BUILTIN(WORDLENGTH)
 {
-    fix_args(WORDLENGTH);                /* check on required number of args  */
-                                         /* must have the first argument      */
+    const size_t WORDLENGTH_Min = 2;
+    const size_t WORDLENGTH_Max = 2;
+    const size_t WORDLENGTH_string = 1;
+    const size_t WORDLENGTH_n =      2;
+
+    fix_args(WORDLENGTH);
+
     RexxString *string = required_string(WORDLENGTH, string);
-    RexxInteger *n = required_integer(WORDLENGTH, n); /* position is required              */
-    return string->wordLength(n);        /* do the wordlength function        */
+    RexxInteger *n = required_integer(WORDLENGTH, n);
+    return string->wordLength(n);
 }
 
-#define COPIES_MIN 2
-#define COPIES_MAX 2
-#define COPIES_string 1
-#define COPIES_n      2
 
 BUILTIN(COPIES)
 {
-    fix_args(COPIES);                    /* check on required number of args  */
-                                         /* must have the first argument      */
+    const size_t COPIES_Min = 2;
+    const size_t COPIES_Max = 2;
+    const size_t COPIES_string = 1;
+    const size_t COPIES_n =      2;
+
+    fix_args(COPIES);
+
     RexxString *string = required_string(COPIES, string);
-    RexxInteger *n = required_integer(COPIES, n);     /* position is required              */
-    return string->copies(n);            /* do the copies function            */
+    RexxInteger *n = required_integer(COPIES, n);
+
+    return string->copies(n);
 }
 
-#define WORDPOS_MIN 2
-#define WORDPOS_MAX 3
-#define WORDPOS_phrase 1
-#define WORDPOS_string 2
-#define WORDPOS_start  3
 
 BUILTIN(WORDPOS)
 {
-    fix_args(WORDPOS);                   /* check on required number of args  */
-                                         /* must have a phrase string         */
+    const size_t WORDPOS_Min = 2;
+    const size_t WORDPOS_Max = 3;
+    const size_t WORDPOS_phrase = 1;
+    const size_t WORDPOS_string = 2;
+    const size_t WORDPOS_start =  3;
+
+    fix_args(WORDPOS);
+
     RexxString *phrase = required_string(WORDPOS, phrase);
-    /* must have the string argument     */
     RexxString *string = required_string(WORDPOS, string);
-    /* start position is optional        */
     RexxInteger *start = optional_integer(WORDPOS, start);
-    /* do the wordpos function           */
+
     return string->wordPos(phrase, start);
 }
 
-#define WORDS_MIN 1
-#define WORDS_MAX 1
-#define WORDS_string 1
+// TODO: Check on how/when the string uppercase flag is set
 
 BUILTIN(WORDS)
 {
-    fix_args(WORDS);                     /* check on required number of args  */
-                                         /* must have the string argument     */
+    const size_t WORDS_Min = 1;
+    const size_t WORDS_Max = 1;
+    const size_t WORDS_string = 1;
+
+    fix_args(WORDS);
+
     RexxString *string = required_string(WORDS, string);
-    return string->words();              /* do the words function             */
+
+    return string->words();
 }
 
-#define ABBREV_MIN 2
-#define ABBREV_MAX 3
-#define ABBREV_information 1
-#define ABBREV_info        2
-#define ABBREV_length      3
 
 BUILTIN(ABBREV)
 {
-    fix_args(ABBREV);                    /* check on required number of args  */
-                                         /* information must be a string arg  */
+    const size_t ABBREV_Min = 2;
+    const size_t ABBREV_Max = 3;
+    const size_t ABBREV_information = 1;
+    const size_t ABBREV_info =        2;
+    const size_t ABBREV_length =      3;
+
+    fix_args(ABBREV);
+
     RexxString *information = required_string(ABBREV, information);
-    RexxString *info = required_string(ABBREV, info);/* info must also be a string        */
-    /* length is optional                */
+    RexxString *info = required_string(ABBREV, info);
     RexxInteger *length = optional_integer(ABBREV, length);
-    /* check on the abbreviation         */
+
     return information->abbrev(info, length);
 }
 
-#define BITAND_MIN 1
-#define BITAND_MAX 3
-#define BITAND_string1 1
-#define BITAND_string2 2
-#define BITAND_pad     3
 
 BUILTIN(BITAND)
 {
-    fix_args(BITAND);                    /* check on required number of args  */
-                                         /* must have the first string        */
+    const size_t BITAND_Min = 1;
+    const size_t BITAND_Max = 3;
+    const size_t BITAND_string1 = 1;
+    const size_t BITAND_string2 = 2;
+    const size_t BITAND_pad =     3;
+
+    fix_args(BITAND);
+
     RexxString *string1 = required_string(BITAND, string1);
-    /* second string is optional         */
     RexxString *string2 = optional_string(BITAND, string2);
-    RexxString *pad = optional_string(BITAND, pad);  /* pad is optional also              */
-    checkPadArgument(CHAR_BITAND, IntegerThree, pad);
-    return string1->bitAnd(string2, pad);/* do the bitand function            */
+    RexxString *pad = optional_pad(BITAND, pad);
+
+    return string1->bitAnd(string2, pad);
 }
 
-#define BITOR_MIN 1
-#define BITOR_MAX 3
-#define BITOR_string1 1
-#define BITOR_string2 2
-#define BITOR_pad     3
 
 BUILTIN(BITOR)
 {
-    fix_args(BITOR);                     /* check on required number of args  */
-                                         /* must have the first string        */
+    const size_t BITOR_Min = 1;
+    const size_t BITOR_Max = 3;
+    const size_t BITOR_string1 = 1;
+    const size_t BITOR_string2 = 2;
+    const size_t BITOR_pad =     3;
+
+    fix_args(BITOR);
+
     RexxString *string1 = required_string(BITOR, string1);
-    /* second string is optional         */
     RexxString *string2 = optional_string(BITOR, string2);
-    RexxString *pad = optional_string(BITOR, pad);   /* pad is optional also              */
-    checkPadArgument(CHAR_BITOR, IntegerThree, pad);
-    return string1->bitOr(string2, pad); /* do the bitor function             */
+    RexxString *pad = optional_pad(BITOR, pad);
+
+    return string1->bitOr(string2, pad);
 }
 
-#define BITXOR_MIN 1
-#define BITXOR_MAX 3
-#define BITXOR_string1 1
-#define BITXOR_string2 2
-#define BITXOR_pad     3
 
 BUILTIN(BITXOR)
 {
-    fix_args(BITXOR);                    /* check on required number of args  */
-                                         /* must have the first string        */
+    const size_t BITXOR_Min = 1;
+    const size_t BITXOR_Max = 3;
+    const size_t BITXOR_string1 = 1;
+    const size_t BITXOR_string2 = 2;
+    const size_t BITXOR_pad =     3;
+
+    fix_args(BITXOR);
+
     RexxString *string1 = required_string(BITXOR, string1);
-    /* second string is optional         */
     RexxString *string2 = optional_string(BITXOR, string2);
-    RexxString *pad = optional_string(BITXOR, pad);  /* pad is optional also              */
-    checkPadArgument(CHAR_BITXOR, IntegerThree, pad);
-    return string1->bitXor(string2, pad);/* do the bitxor function            */
+    RexxString *pad = optional_pad(BITXOR, pad);
+
+    return string1->bitXor(string2, pad);
 }
 
-#define B2X_MIN 1
-#define B2X_MAX 1
-#define B2X_string  1
 
 BUILTIN(B2X)
 {
-    fix_args(B2X);                       /* check on required number of args  */
-                                         /* must have the first string        */
+    const size_t B2X_Min = 1;
+    const size_t B2X_Max = 1;
+    const size_t B2X_string =  1;
+
+    fix_args(B2X);
+
     RexxString *string = required_string(B2X, string);
-    return string->b2x();                /* do the b2x function               */
+
+    return string->b2x();
 }
 
-#define X2B_MIN 1
-#define X2B_MAX 1
-#define X2B_string  1
 
 BUILTIN(X2B)
 {
-    fix_args(X2B);                       /* check on required number of args  */
-                                         /* must have the first string        */
+    const size_t X2B_Min = 1;
+    const size_t X2B_Max = 1;
+    const size_t X2B_string =  1;
+
+    fix_args(X2B);
+
     RexxString *string = required_string(X2B, string);
-    return string->x2b();                /* do the x2b function               */
+
+    return string->x2b();
 }
 
-#define C2X_MIN 1
-#define C2X_MAX 1
-#define C2X_string  1
 
 BUILTIN(C2X)
 {
-    fix_args(C2X);                       /* check on required number of args  */
-                                         /* must have the first string        */
+    const size_t C2X_Min = 1;
+    const size_t C2X_Max = 1;
+    const size_t C2X_string =  1;
+
+    fix_args(C2X);
+
     RexxString *string = required_string(C2X, string);
-    return string->c2x();                /* do the c2x function               */
+
+    return string->c2x();
 }
 
-#define X2C_MIN 1
-#define X2C_MAX 1
-#define X2C_string  1
 
 BUILTIN(X2C)
 {
-    fix_args(X2C);                       /* check on required number of args  */
-                                         /* must have the first string        */
+    const size_t X2C_Min = 1;
+    const size_t X2C_Max = 1;
+    const size_t X2C_string =  1;
+
+    fix_args(X2C);
+
     RexxString *string = required_string(X2C, string);
-    return string->x2c();                /* do the x2c function               */
+
+    return string->x2c();
 }
 
-#define C2D_MIN 1
-#define C2D_MAX 2
-#define C2D_string  1
-#define C2D_n       2
 
 BUILTIN(C2D)
 {
-    fix_args(C2D);                       /* check on required number of args  */
-                                         /* must have the first string        */
+    const size_t C2D_Min = 1;
+    const size_t C2D_Max = 2;
+    const size_t C2D_string =  1;
+    const size_t C2D_n =       2;
+
+    fix_args(C2D);
+
     RexxString *string = required_string(C2D, string);
-    RexxInteger *n = optional_integer(C2D, n);        /* length is optional                */
-    return string->c2d(n);               /* do the c2d function               */
+    RexxInteger *n = optional_integer(C2D, n);
+
+    return string->c2d(n);
 }
 
-#define TRUNC_MIN 1
-#define TRUNC_MAX 2
-#define TRUNC_number  1
-#define TRUNC_n       2
 
 BUILTIN(TRUNC)
 {
-    fix_args(TRUNC);                     /* check on required number of args  */
-                                         /* must have the first string        */
+    const size_t TRUNC_Min = 1;
+    const size_t TRUNC_Max = 2;
+    const size_t TRUNC_number =  1;
+    const size_t TRUNC_n =       2;
+
+    fix_args(TRUNC);
+
     RexxString *number = required_string(TRUNC, number);
-    RexxInteger *n = optional_integer(TRUNC, n);      /* length is optional                */
-    return number->trunc(n);             /* do the trunc function             */
+    RexxInteger *n = optional_integer(TRUNC, n);
+
+    return number->trunc(n);
 }
 
-#define X2D_MIN 1
-#define X2D_MAX 2
-#define X2D_string  1
-#define X2D_n       2
 
 BUILTIN(X2D)
 {
-    fix_args(X2D);                       /* check on required number of args  */
-                                         /* must have the first string        */
+    const size_t X2D_Min = 1;
+    const size_t X2D_Max = 2;
+    const size_t X2D_string =  1;
+    const size_t X2D_n =       2;
+
+    fix_args(X2D);
+
     RexxString *string = required_string(X2D, string);
-    RexxInteger *n = optional_integer(X2D, n);        /* length is optional                */
-    return string->x2d(n);               /* do the x2d function               */
+    RexxInteger *n = optional_integer(X2D, n);
+
+    return string->x2d(n);
 }
 
-#define D2X_MIN 1
-#define D2X_MAX 2
-#define D2X_string  1
-#define D2X_n       2
 
 BUILTIN(D2X)
 {
-    fix_args(D2X);                       /* check on required number of args  */
-                                         /* must have the first string        */
+    const size_t D2X_Min = 1;
+    const size_t D2X_Max = 2;
+    const size_t D2X_string =  1;
+    const size_t D2X_n =       2;
+
+    fix_args(D2X);
+
     RexxString *string = required_string(D2X, string);
-    RexxInteger *n = optional_integer(D2X, n);        /* length is optional                */
-    return string->d2x(n);               /* do the x2d function               */
+    RexxInteger *n = optional_integer(D2X, n);
+
+    return string->d2x(n);
 }
 
-#define D2C_MIN 1
-#define D2C_MAX 2
-#define D2C_string  1
-#define D2C_n       2
 
 BUILTIN(D2C)
 {
-    fix_args(D2C);                       /* check on required number of args  */
-                                         /* must have the first string        */
+    const size_t D2C_Min = 1;
+    const size_t D2C_Max = 2;
+    const size_t D2C_string =  1;
+    const size_t D2C_n =       2;
+
+    fix_args(D2C);
+
     RexxString *string = required_string(D2C, string);
-    RexxInteger *n = optional_integer(D2C, n);        /* length is optional                */
-    return string->d2c(n);               /* do the x2d function               */
+    RexxInteger *n = optional_integer(D2C, n);
+
+    return string->d2c(n);
 }
 
-#define COMPARE_MIN 2
-#define COMPARE_MAX 3
-#define COMPARE_string1 1
-#define COMPARE_string2 2
-#define COMPARE_pad     3
 
 BUILTIN(COMPARE)
 {
-    fix_args(COMPARE);                   /* check on required number of args  */
-                                         /* must have the first string        */
+    const size_t COMPARE_Min = 2;
+    const size_t COMPARE_Max = 3;
+    const size_t COMPARE_string1 = 1;
+    const size_t COMPARE_string2 = 2;
+    const size_t COMPARE_pad =     3;
+
+    fix_args(COMPARE);
+
     RexxString *string1 = required_string(COMPARE, string1);
-    /* and the second string also        */
     RexxString *string2 = required_string(COMPARE, string2);
-    RexxString *pad = optional_string(COMPARE, pad); /* padding is optional               */
-                                         /* do the comparison                 */
-    checkPadArgument(CHAR_COMPARE, IntegerThree, pad);
+    RexxString *pad = optional_pad(COMPARE, pad);
+
     return string1->compare(string2, pad);
 }
 
-#define LENGTH_MIN 1
-#define LENGTH_MAX 1
-#define LENGTH_string  1
 
 BUILTIN(LENGTH)
 {
-    fix_args(LENGTH);                    /* check on required number of args  */
-                                         /* must have a string                */
+    const size_t LENGTH_Min = 1;
+    const size_t LENGTH_Max = 1;
+    const size_t LENGTH_string =  1;
+
+    fix_args(LENGTH);
+
     RexxString *target = required_string(LENGTH, string);
-    return target->lengthRexx();         /* get the length                    */
+
+    return target->lengthRexx();
 }
 
-#define TRANSLATE_MIN 1
-#define TRANSLATE_MAX 6
-#define TRANSLATE_string  1
-#define TRANSLATE_tableo  2
-#define TRANSLATE_tablei  3
-#define TRANSLATE_pad     4
-#define TRANSLATE_start   5
-#define TRANSLATE_range   6
 
 BUILTIN(TRANSLATE)
 {
-    fix_args(TRANSLATE);                 /* check on required number of args  */
-                                         /* must have a string                */
+    const size_t TRANSLATE_Min = 1;
+    const size_t TRANSLATE_Max = 6;
+    const size_t TRANSLATE_string =  1;
+    const size_t TRANSLATE_tableo =  2;
+    const size_t TRANSLATE_tablei =  3;
+    const size_t TRANSLATE_pad =     4;
+    const size_t TRANSLATE_start =   5;
+    const size_t TRANSLATE_range =   6;
+
+    fix_args(TRANSLATE);
+
     RexxString *string = required_string(TRANSLATE, string);
-    /* output table is optional          */
     RexxString *tableo = optional_string(TRANSLATE, tableo);
-    /* input table is optional           */
     RexxString *tablei = optional_string(TRANSLATE, tablei);
-    /* pad is also optional              */
-    RexxString *pad = optional_string(TRANSLATE, pad);
-    /* perform the translate             */
-    checkPadArgument(CHAR_TRANSLATE, IntegerFour, pad);
+    RexxString *pad = optional_pad(TRANSLATE, pad);
     RexxInteger *start = optional_integer(TRANSLATE, start);
     RexxInteger *range = optional_integer(TRANSLATE, range);
+
     return string->translate(tableo, tablei, pad, start, range);
 }
 
-#define VERIFY_MIN 2
-#define VERIFY_MAX 5
-#define VERIFY_string    1
-#define VERIFY_reference 2
-#define VERIFY_option    3
-#define VERIFY_start     4
-#define VERIFY_range     5
+
+const size_t VERIFY_Min = 2;
+const size_t VERIFY_Max = 5;
+const size_t VERIFY_string =    1;
+const size_t VERIFY_reference = 2;
+const size_t VERIFY_option =    3;
+const size_t VERIFY_start =     4;
+const size_t VERIFY_range =     5;
 
 BUILTIN(VERIFY)
 {
-    fix_args(VERIFY);                    /* check on required number of args  */
-                                         /* must have a string                */
+    const size_t VERIFY_Min = 2;
+    const size_t VERIFY_Max = 5;
+    const size_t VERIFY_string =    1;
+    const size_t VERIFY_reference = 2;
+    const size_t VERIFY_option =    3;
+    const size_t VERIFY_start =     4;
+    const size_t VERIFY_range =     5;
+
+    fix_args(VERIFY);
+
     RexxString *string = required_string(VERIFY, string);
-    /* reference is also required        */
     RexxString *reference = required_string(VERIFY, reference);
-    /* the options are optional          */
     RexxString *option = optional_string(VERIFY, option);
-    /* start is optional                 */
     RexxInteger *start = optional_integer(VERIFY, start);
-    /* start is optional                 */
     RexxInteger *range = optional_integer(VERIFY, range);
-    /* do the verify function            */
+
     return string->verify(reference, option, start, range);
 }
 
-#define DATATYPE_MIN 1
-#define DATATYPE_MAX 2
-#define DATATYPE_string    1
-#define DATATYPE_type      2
 
 BUILTIN(DATATYPE)
 {
-    fix_args(DATATYPE);                  /* check on required number of args  */
-                                         /* must have a string                */
+    const size_t DATATYPE_Min = 1;
+    const size_t DATATYPE_Max = 2;
+    const size_t DATATYPE_string =    1;
+    const size_t DATATYPE_type =      2;
+
+    fix_args(DATATYPE);
+
     RexxString *string = required_string(DATATYPE, string);
-    /* type must also be a string        */
     RexxString *type = optional_string(DATATYPE, type);
-    return string->dataType(type);       /* call the datatype method          */
+
+    return string->dataType(type);
 }
 
-#define ADDRESS_MIN 0
-#define ADDRESS_MAX 0
 
 BUILTIN(ADDRESS)
 {
-    check_args(ADDRESS);                 /* check on required number of args  */
-    return context->getAddress();        /* return the current address setting*/
+    const size_t ADDRESS_Min = 0;
+    const size_t ADDRESS_Max = 0;
+
+    check_args(ADDRESS);
+
+    return context->getAddress();
 }
 
-#define DIGITS_MIN 0
-#define DIGITS_MAX 0
 
 BUILTIN(DIGITS)
 {
-    check_args(DIGITS);                  /* check on required number of args  */
-    return new_integer(context->digits());   /* return as an option               */
+    const size_t DIGITS_Min = 0;
+    const size_t DIGITS_Max = 0;
+
+    check_args(DIGITS);
+
+    return new_integer(context->digits());
 }
 
-#define FUZZ_MIN 0
-#define FUZZ_MAX 0
 
 BUILTIN(FUZZ)
 {
-    check_args(FUZZ);                    /* check on required number of args  */
-    return new_integer(context->fuzz()); /* return as an integer object       */
+    const size_t FUZZ_Min = 0;
+    const size_t FUZZ_Max = 0;
+
+    check_args(FUZZ);
+
+    return new_integer(context->fuzz());
 }
 
-#define FORM_MIN 0
-#define FORM_MAX 0
 
 BUILTIN(FORM)
 {
-    check_args(FORM);                    /* check on required number of args  */
-                                         /* return the current form setting   */
+    const size_t FORM_Min = 0;
+    const size_t FORM_Max = 0;
+
+    check_args(FORM);
+
     return context->form() == Numerics::FORM_SCIENTIFIC ? OREF_SCIENTIFIC : OREF_ENGINEERING;
 }
 
-#define USERID_MIN 0
-#define USERID_MAX 0
 
 BUILTIN(USERID)
 {
+    const size_t USERID_Min = 0;
+    const size_t USERID_Max = 0;
+
     check_args(USERID);
     return SystemInterpreter::getUserid();
 }
 
-#define ERRORTEXT_MIN 1
-#define ERRORTEXT_MAX 1
-#define ERRORTEXT_n   1
 
 BUILTIN(ERRORTEXT)
 {
-    check_args(ERRORTEXT);               /* check on required number of args  */
-                                         /* get the error number              */
+    const size_t ERRORTEXT_Min = 1;
+    const size_t ERRORTEXT_Max = 1;
+    const size_t ERRORTEXT_n =   1;
+
+    check_args(ERRORTEXT);
+
+    // verify this is in range for a Rexx error condition (we only retrieve
+    // the major error message, which does not have substitutions)
     wholenumber_t error_number = (required_integer(ERRORTEXT, n))->getValue();
-    /* outside allowed range?            */
     if (error_number < 0 || error_number > 99)
     {
-        /* this is an error                  */
         reportException(Error_Incorrect_call_range, CHAR_ERRORTEXT, IntegerOne, error_number);
     }
-    /* retrieve the major error message  */
+    // get the error message for this number and return the text.
     RexxString *result = SystemInterpreter::getMessageText(error_number * 1000);
-    if (result == OREF_NULL)             /* not found?                        */
+    if (result == OREF_NULL)
     {
-        result = OREF_NULLSTRING;          /* this is a null string result      */
+        result = OREF_NULLSTRING;
     }
-    return result;                       /* finished                          */
+    return result;
 }
 
-#define ARG_MIN 0
-#undef ARG_MAX                      /* In AIX already defined            */
-#define ARG_MAX 2
-#define ARG_n      1
-#define ARG_option 2
 
 BUILTIN(ARG)
 {
-    fix_args(ARG);                       /* expand arguments to full value    */
-    RexxInteger *n = optional_integer(ARG, n);        /* get the position info             */
-                                         /* get the option string             */
+    const size_t ARG_Min = 0;
+    const size_t ARG_Max = 2;
+    const size_t ARG_n =      1;
+    const size_t ARG_option = 2;
+
+    fix_args(ARG);
+    RexxInteger *n = optional_integer(ARG, n);
     RexxString *option = optional_string(ARG, option);
-    /* get the argument array            */
+
+    // get the arguments from the context
     RexxObject **arglist = context->getMethodArgumentList();
     size_t size = context->getMethodArgumentCount();
-    /* have an option but no position?   */
+
+    // if there is no position, then any option is invalid
     if (n == OREF_NULL)
-    {                /* no position specified?            */
-        if (option != OREF_NULL)           /* have an option with no position   */
+    {
+        if (option != OREF_NULL)
         {
-                                           /* raise an error                    */
             reportException(Error_Incorrect_call_noarg, CHAR_ARG, IntegerOne);
         }
-        /* return the count as an object */
+
+        // this is the default, which is to just return the count
         return new_integer(size);
     }
+    // position with no argument is just looking for a specific arg.
     else if (option == OREF_NULL)
-    {      /* just looking for a specific arg?  */
-        size_t position = n->getValue();   /* get the integer value             */
-                                           /* must be a positive integer        */
+    {
+        // verify this is a positive integer value
+        size_t position = n->getValue();
         positive_integer(position, ARG, IntegerOne);
-        /* bigger than argument list size?   */
+
+        // out of range is just a null string
         if (size < position)
         {
-            return OREF_NULLSTRING;          /* just return a null string         */
+            return OREF_NULLSTRING;
         }
         else
         {
-            RexxObject *result = arglist[position - 1];  /* get actual value from arglist     */
-            if (result == OREF_NULL)         /* argument wasn't there?            */
+            // if the argumetn does not exist, return a null string
+            RexxObject *result = arglist[position - 1];
+            if (result == OREF_NULL)
             {
-                return OREF_NULLSTRING;      /* this too is a null string         */
+                return OREF_NULLSTRING;
             }
-            return result;                   // return the argument stuff
+            return result;
         }
     }
+    // process the different options.  We have both a position
+    // and an option
     else
-    {                               /* need to process an option         */
-        size_t position = n->getValue();   /* get the integer value             */
-                                           /* must be a positive integer        */
+    {
+        // get the postition value, which is the same for all options
+        size_t position = n->getValue();
         positive_integer(position, ARG, IntegerOne);
 
-        switch (option->getChar(0))
-        {      /* process the option character      */
-
-            case 'A':                        /* return argument array             */
-            case 'a':                        /* return argument array             */
+        switch (toupper(option->getChar(0)))
+        {
+            // 'A'rray
+            case 'A':
+                // if the position is 1, return the entire array
                 if (position == 1)
-                {           /* want it all?                      */
-                    /* create an array result for the return */
+                {
                     return new_array(size, arglist);
                 }
-                else if (position > size)      /* beyond bounds of argument list?   */
+                // if greater than the size, this is an empty array
+                else if (position > size)
                 {
-                                               /* this is a zero size array         */
-                    return TheNullArray->copy();
+
+                    return new_array();
                 }
                 else
-                {                         /* need to extract a sub array       */
+                {
+                    // extract the sub array
                     return new_array(size - position + 1, &arglist[position - 1]);
                 }
                 break;
 
-            case 'E':                        /* argument 'E'xist?                 */
-            case 'e':                        /* argument 'E'xist?                 */
-                if (position > size)           /* too big for argument list?        */
+            // 'E'xist
+            case 'E':
+                // out of range is always false
+                if (position > size)
                 {
-                    return TheFalseObject;     /* can't be true                     */
+                    return TheFalseObject;
                 }
-                                                 /* have a real argument?             */
+                // test the actual arg position
+                return booleanObject(arglist[position - 1] != OREF_NULL);
+                break;
+
+            // 'O'mitted argument?
+            case 'O':
+                // out if range is an omitted arg
+                if (position > size)
+                {
+                    return TheTrueObject;
+                }
+                // check the actual position
                 return booleanObject(arglist[position - 1] == OREF_NULL);
                 break;
 
-            case 'O':                        /* argument 'O'mitted?               */
-            case 'o':                        /* argument 'O'mitted?               */
-                if (position > size)           /* too big for argument list?        */
+            // 'N'ormal, which is the same as the position and no argument
+            case 'N':
+                if (position > size)
                 {
-                    return TheTrueObject;      /* must be omitted                   */
-                }
-                                                 /* have a real argument?             */
-                return booleanObject(arglist[position - 1] == OREF_NULL);
-                break;
-
-            case 'N':                        /* 'N'ormal processing?              */
-            case 'n':                        /* 'N'ormal processing?              */
-                if (position > size)           /* bigger than argument list size?   */
-                {
-                    return OREF_NULLSTRING;    /* just return a null string         */
+                    return OREF_NULLSTRING;
                 }
                 else
-                {                         /* get actual value from arglist     */
+                {
                     RexxObject *result = arglist[position - 1];
-                    if (result == OREF_NULL)     /* argument wasn't there?            */
+                    if (result == OREF_NULL)
                     {
-                        return OREF_NULLSTRING;  /* this too is a null string         */
+                        return OREF_NULLSTRING;
                     }
                     return result;
                 }
                 break;
 
-            default:                         /* unknown option                    */
-                /* this is an error                  */
+            // unknown option
+            default:
                 reportException(Error_Incorrect_call_list, CHAR_ARG, IntegerTwo, "AENO", option);
                 break;
         }
@@ -961,21 +995,18 @@ BUILTIN(ARG)
 }
 
 
-#define DATE_MIN 0
-#define DATE_MAX 5
-#define DATE_option  1
-#define DATE_indate  2
-#define DATE_option2 3
-#define DATE_osep    4
-#define DATE_isep    5
-
 BUILTIN(DATE)
 {
-    char  work[30];                      /* temporary work                    */
+    const size_t DATE_Min = 0;
+    const size_t DATE_Max = 5;
+    const size_t DATE_option =  1;
+    const size_t DATE_indate =  2;
+    const size_t DATE_option2 = 3;
+    const size_t DATE_osep =    4;
+    const size_t DATE_isep =    5;
 
-    fix_args(DATE);                      /* expand arguments to full value    */
+    fix_args(DATE);
 
-    // get the arguments
     RexxString *option = optional_string(DATE, option);
     RexxString *indate = optional_string(DATE, indate);
     RexxString *option2 = optional_string(DATE, option2);
@@ -994,37 +1025,33 @@ BUILTIN(DATE)
     int style2 = 'N';
 
     // now process the various option specifiers
-    if (option != OREF_NULL)             /* just using default format?        */
+    if (option != OREF_NULL)
     {
-        if (option->getLength() == 0)        /* have a null string?               */
+        if (option->getLength() == 0)
         {
-            /* this is an error                  */
             reportException(Error_Incorrect_call_list, CHAR_DATE, IntegerOne, "BDEFLMNOSTUW", option);
         }
-        else                                 /* need to process an option         */
+        else
         {
-            /* option is first character         */
             style = toupper(option->getChar(0));
         }
     }
 
-    /* opt2 or isep w/o date?            */
+    // opt2 or isep w/o date?
     if (indate == OREF_NULL && (option2 != OREF_NULL || isep != OREF_NULL))
     {
-        /* this is an error                  */
         reportException(Error_Incorrect_call_noarg, CHAR_DATE, IntegerTwo);
     }
 
-    if (option2 != OREF_NULL)            /* just using default format?        */
+    // have a second option specified?  Get the option character from that also
+    if (option2 != OREF_NULL)
     {
-        if (option2->getLength() == 0)       /* have a null string?               */
+        if (option2->getLength() == 0)
         {
-            /* this is an error                  */
             reportException(Error_Incorrect_call_list, CHAR_DATE, IntegerThree, "BDEFNOSTU", option2);
         }
-        else                                 /* need to process an option         */
+        else
         {
-            /* option is first character         */
             style2 = toupper(option2->getChar(0));
         }
     }
@@ -1039,6 +1066,7 @@ BUILTIN(DATE)
         {
             reportException(Error_Incorrect_call_format_incomp_sep, CHAR_DATE, IntegerOne, new_string((char)style), IntegerFour);
         }
+        // must be zero or 1 character and cannot be alpha numeric
         if (osep->getLength() > 1 || (osep->getLength() == 1 && strchr(ALPHANUM, osep->getChar(0)) != NULL))
         {
             reportException(Error_Incorrect_call_parm_wrong_sep, CHAR_DATE, IntegerFour, osep);
@@ -1048,19 +1076,22 @@ BUILTIN(DATE)
         outputSeparator = osep->getStringData();
     }
 
-    if (indate != OREF_NULL)             /* given a time stamp?               */
+    // given an input timestamp to parse?  Need to figure out the form
+    if (indate != OREF_NULL)
     {
-        bool valid = true;                 /* assume have a good stamp          */
+        bool valid = true;
 
         const char *separator = NULL;      // different formats will override this
-                                           /* begin addition                    */
-        // if we have a separator, perform validation here
+
+        // if we have a separator for input, perform validation here
         if (isep != OREF_NULL)
         {
+            // only valid with certain styles
             if (strchr("BDMWL", style2) != NULL)
             {
                 reportException(Error_Incorrect_call_format_incomp_sep, CHAR_DATE, IntegerThree, new_string((char *)&style2, 1), IntegerFive);
             }
+
             // explicitly specified delimiter, we need to validate this first
             if (isep->getLength() > 1 || (isep->getLength() == 1 && strchr(ALPHANUM, isep->getChar(0)) != NULL))
             {
@@ -1068,89 +1099,100 @@ BUILTIN(DATE)
                 // alphanumeric, or a null character
                 reportException(Error_Incorrect_call_parm_wrong_sep, new_string(CHAR_DATE), IntegerFive, isep);
             }
+
             // string objects are null terminated, so we can point directly at what will
             // be either 1 or 0 characters of data.
             separator = isep->getStringData();
         }
 
-        /* clear the time stamp              */
+        // clear the time stamp copy
         timestamp.clear();
         // everything is done using the current timezone offset
         timestamp.setTimeZoneOffset(current.getTimeZoneOffset());
+        // the RexxDateTime option does the parsing directly.
         switch (style2)
-        {                  /* convert to usable form per option2*/
-
-            case 'N':                        /* 'N'ormal: default style           */
+        {
+            // 'N'ormal
+            case 'N':
                 valid = timestamp.parseNormalDate(indate->getStringData(), separator);
                 break;
 
-            case 'B':                        /* 'B'asedate                        */
+            // 'B'asedate
+            case 'B':
+            {
+                // this is just a numeric value
+                wholenumber_t basedays;
+                if (!indate->numberValue(basedays) || !timestamp.setBaseDate(basedays))
                 {
-                    /*convert the value                  */
-                    wholenumber_t basedays;
-                    if (!indate->numberValue(basedays) || !timestamp.setBaseDate(basedays))
-                    {
-                        reportException(Error_Incorrect_call_format_invalid, CHAR_DATE, indate, new_string((char *)&style2, 1));
-                    }
-                    break;
+                    reportException(Error_Incorrect_call_format_invalid, CHAR_DATE, indate, new_string((char *)&style2, 1));
                 }
+                break;
+            }
 
-            case 'F':                        /* 'F'ull datetime stamp            */
+            // 'F'ull
+            case 'F':
+            {
+                // this is a BIG numeric value, since it also includes the time portion
+                int64_t basetime;
+                if (!Numerics::objectToInt64(indate, basetime) || !timestamp.setBaseTime(basetime))
                 {
-                    /*convert the value                  */
-                    int64_t basetime;
-                    if (!Numerics::objectToInt64(indate, basetime) || !timestamp.setBaseTime(basetime))
-                    {
-                        reportException(Error_Incorrect_call_format_invalid, CHAR_DATE, indate, new_string((char *)&style2, 1));
-                    }
-                    break;
+                    reportException(Error_Incorrect_call_format_invalid, CHAR_DATE, indate, new_string((char *)&style2, 1));
                 }
+                break;
+            }
 
-            case 'T':                        /* 'T'icks datetime stamp            */
+            // 'T'icks, which is also a big number value
+            case 'T':
+            {
+                int64_t basetime;
+                if (!Numerics::objectToInt64(indate, basetime) || !timestamp.setUnixTime(basetime))
                 {
-                    /*convert the value                  */
-                    int64_t basetime;
-                    if (!Numerics::objectToInt64(indate, basetime) || !timestamp.setUnixTime(basetime))
-                    {
-                        reportException(Error_Incorrect_call_format_invalid, CHAR_DATE, indate, new_string((char *)&style2, 1));
-                    }
-                    break;
+                    reportException(Error_Incorrect_call_format_invalid, CHAR_DATE, indate, new_string((char *)&style2, 1));
                 }
+                break;
+            }
 
-            case 'D':                        /* 'D'ay of year                     */
+            // 'D'ay of year
+            case 'D':
+            {
+                // smaller numeric value
+                wholenumber_t yearday;
+                if (!indate->numberValue(yearday) || yearday < 0 || yearday > YEAR_DAYS + 1 ||
+                    (yearday > YEAR_DAYS && !LeapYear(current.year)))
                 {
-                    /*convert the value                  */
-                    wholenumber_t yearday;
-                    if (!indate->numberValue(yearday) || yearday < 0 || yearday > YEAR_DAYS + 1 ||
-                        (yearday > YEAR_DAYS && !LeapYear(current.year)))
-                    {
-                        reportException(Error_Incorrect_call_format_invalid, CHAR_DATE, indate, new_string((char *)&style2, 1));
-                    }
-                    // set the date directly
-                    timestamp.setDate(current.year, yearday);
-                    break;
+                    reportException(Error_Incorrect_call_format_invalid, CHAR_DATE, indate, new_string((char *)&style2, 1));
                 }
+                // set the date directly
+                timestamp.setDate(current.year, yearday);
+                break;
+            }
 
-            case 'E':                        /* 'E'uropean format: days-month-year*/
+            // 'E'uropean format, days-month-year
+            case 'E':
                 valid = timestamp.parseEuropeanDate(indate->getStringData(), separator, current.year);
                 break;
 
-            case 'O':                        /* 'O'rdered format: year-month-day  */
+            // 'O'rdered format, year-month-day
+            case 'O':
                 valid = timestamp.parseOrderedDate(indate->getStringData(), separator, current.year);
                 break;
 
-            case 'S':                        /* 'S'tandard format (ISO date)      */
+            // 'S'tandard format (ISO date)
+            case 'S':
                 valid = timestamp.parseStandardDate(indate->getStringData(), separator);
                 break;
 
-            case 'U':                        /* 'U'SA format: month-day-year      */
+            // 'U'SA format, month-day-year
+            case 'U':
                 valid = timestamp.parseUsaDate(indate->getStringData(), separator, current.year);
                 break;
 
+            // invalid input option
             default:
                 reportException(Error_Incorrect_call_list, CHAR_DATE, IntegerThree, "BDEFNOTSU", new_string((char *)&style2, 1));
                 break;
         }
+
         // if there's a formatting error
         if (!valid)
         {
@@ -1171,96 +1213,99 @@ BUILTIN(DATE)
         timestamp = current;
     }
 
-    wholenumber_t day = timestamp.day;          /* get various date parts            */
+    wholenumber_t day = timestamp.day;
     wholenumber_t month = timestamp.month;
     wholenumber_t year = timestamp.year;
 
-    switch (style)
-    {                     /* process the various styles        */
+    // our working output buffer
+    char work[64];
 
-        case 'B':                          /* 'B'asedate                        */
+    // reverse of the inputs...the time stamp handles most of these directly
+    switch (style)
+    {
+
+        case 'B':
             timestamp.formatBaseDate(work);
             break;
 
-        case 'F':                          /* 'F'asedate                        */
+        case 'F':
             timestamp.formatBaseTime(work);
             break;
 
-        case 'T':                          /* 'F'asedate                        */
+        case 'T':
             timestamp.formatUnixTime(work);
             break;
 
-        case 'D':                          /* 'D'ays                            */
+        case 'D':
             timestamp.formatDays(work);
             break;
 
-        case 'E':                          /* 'E'uropean                        */
+        case 'E':
             timestamp.formatEuropeanDate(work, outputSeparator);
             break;
 
-        case 'L':                          /* 'L'ocal                           */
-            {
-                /* get the month name                */
-                RexxString *month_name = SystemInterpreter::getMessageText(Message_Translations_January + month - 1);
-                /* format as a date                  */
-                sprintf(work, "%ld %s %4.4ld", day, month_name->getStringData(), year);
-                break;
+        case 'L':
+        {
+            // the month name comes from the message repository
+            RexxString *month_name = SystemInterpreter::getMessageText(Message_Translations_January + month - 1);
 
-            }
+            sprintf(work, "%ld %s %4.4ld", day, month_name->getStringData(), year);
+            break;
 
-        case 'M':                          /* 'M'onth                           */
+        }
+
+        case 'M':
             timestamp.formatMonthName(work);
             break;
 
-        case 'N':                          /* 'N'ormal -- default format        */
+        case 'N':
             timestamp.formatNormalDate(work, outputSeparator);
             break;
 
-        case 'O':                          /* 'O'rdered                         */
+        case 'O':
             timestamp.formatOrderedDate(work, outputSeparator);
             break;
 
-        case 'S':                          /* 'S'tandard format (ISO dates)     */
+        case 'S':
             timestamp.formatStandardDate(work, outputSeparator);
             break;
 
-        case 'U':                          /* 'U'SA                             */
+        case 'U':
             timestamp.formatUsaDate(work, outputSeparator);
             break;
 
-        case 'W':                          /* 'W'eekday                         */
+        case 'W':
             timestamp.formatWeekDay(work);
             break;
 
-        default:                           /* unrecognized                      */
-            work[0] = style;                 /* copy over the character           */
+        default:
+            work[0] = style;
             reportException(Error_Incorrect_call_list, CHAR_DATE, IntegerOne, "BDEFLMNOSTUW", new_string(work, 1));
             break;
     }
-    /* now create a string object        */
+    // return as a string object
     return new_string(work);
 }
 
 
-#define TIME_MIN 0
-#define TIME_MAX 3
-#define TIME_option  1
-#define TIME_intime  2
-#define TIME_option2 3
-
 BUILTIN(TIME)
 {
-    char  work[30];                      /* temporary work                    */
+    const size_t TIME_Min = 0;
+    const size_t TIME_Max = 3;
+    const size_t TIME_option =  1;
+    const size_t TIME_intime =  2;
+    const size_t TIME_option2 = 3;
 
-    fix_args(TIME);                      /* expand arguments to full value    */
-                                         /* get the option string             */
+    fix_args(TIME);
+
     RexxString *option = optional_string(TIME, option);
-    /* the input date                    */
     RexxString *intime = optional_string(TIME, intime);
-    /* input date format                 */
     RexxString *option2 = optional_string(TIME, option2);
-    RexxDateTime current = context->getTime();        /* get the current activation time   */
-    RexxDateTime timestamp = current;                 // and by default we work off of that time
+
+    // get the current activation time and a copy for the default input
+    RexxDateTime current = context->getTime();
+    RexxDateTime timestamp = current;
+
     int style = 'N';                     // get the default style
 
     // do we have a style option specified?  Validate, and retrieve
@@ -1275,7 +1320,7 @@ BUILTIN(TIME)
         style = toupper(option->getChar(0));
     }
 
-    // now repeat with the second style
+    // now repeat with the input style
     int style2 = 'N';
 
     // has the input style been specified?
@@ -1294,7 +1339,7 @@ BUILTIN(TIME)
         style2 = toupper(option2->getChar(0));
     }
 
-
+    // we have an input time, so we need to parse this
     if (intime != OREF_NULL)
     {
         // the input timestamp is not valid with the elapsed time options, and
@@ -1310,146 +1355,150 @@ BUILTIN(TIME)
 
         switch (style2)
         {
-            // default style, 01:23:45 format (24 hour)
+            // 'N'ormal default style, 01:23:45 format (24 hour)
             case 'N':
                 valid = timestamp.parseNormalTime(intime->getStringData());
                 break;
 
-                // 'C'ivil time, 1:23pm format (12-hour, no zero)
+            // 'C'ivil time, 1:23pm format (12-hour, no zero)
             case 'C':
                 valid = timestamp.parseCivilTime(intime->getStringData());
                 break;
 
-                // 'L'ong time, full 24-hour, plus fractional
+            // 'L'ong time, full 24-hour, plus fractional
             case 'L':
                 valid = timestamp.parseLongTime(intime->getStringData());
                 break;
 
-            case 'H':                        /* 'H'ours format                    */
-                {
-                    wholenumber_t i;
-                    valid = intime->numberValue(i) && timestamp.setHours(i);
-                    break;
-                }
+            // 'H'our format...
+            case 'H':
+            {
+                wholenumber_t i;
+                valid = intime->numberValue(i) && timestamp.setHours(i);
+                break;
+            }
 
             case 'S':                        /* 'S'econds format                  */
-                {
-                    wholenumber_t i;
-                    valid = intime->numberValue(i) && timestamp.setSeconds(i);
-                    break;
-                }
+            {
+                wholenumber_t i;
+                valid = intime->numberValue(i) && timestamp.setSeconds(i);
+                break;
+            }
 
             case 'M':                        /* 'M'inutes format                  */
-                {
-                    wholenumber_t i;
-                    valid = intime->numberValue(i) && timestamp.setMinutes(i);
-                    break;
-                }
+            {
+                wholenumber_t i;
+                valid = intime->numberValue(i) && timestamp.setMinutes(i);
+                break;
+            }
 
             case 'F':                        /* 'F'ull datetime stamp            */
+            {
+                int64_t basetime;
+                if (!Numerics::objectToInt64(intime, basetime) || !timestamp.setBaseTime(basetime))
                 {
-                    /*convert the value                  */
-                    int64_t basetime;
-                    if (!Numerics::objectToInt64(intime, basetime) || !timestamp.setBaseTime(basetime))
-                    {
-                        reportException(Error_Incorrect_call_format_invalid, CHAR_TIME, intime, new_string((char *)&style2, 1));
-                    }
-                    break;
+                    reportException(Error_Incorrect_call_format_invalid, CHAR_TIME, intime, new_string((char *)&style2, 1));
                 }
+                break;
+            }
 
             case 'T':                        /* 'T'icks datetime stamp            */
+            {
+                int64_t basetime;
+                if (!Numerics::objectToInt64(intime, basetime) || !timestamp.setUnixTime(basetime))
                 {
-                    /*convert the value                  */
-                    int64_t basetime;
-                    if (!Numerics::objectToInt64(intime, basetime) || !timestamp.setUnixTime(basetime))
-                    {
-                        reportException(Error_Incorrect_call_format_invalid, CHAR_TIME, intime, new_string((char *)&style2, 1));
-                    }
-                    break;
+                    reportException(Error_Incorrect_call_format_invalid, CHAR_TIME, intime, new_string((char *)&style2, 1));
                 }
+                break;
+            }
 
             case 'O':                          // 'O'ffset.  microseconds offset from UTC
-                {
-                    // everything comes from the current time stamp, but we will adjust to the new offset
-                    timestamp = current;                 // and by default we work off of that time
-                    wholenumber_t i;
-                    valid = intime->numberValue(i) && timestamp.adjustTimeZone(i);
-                    break;
+            {
+                // everything comes from the current time stamp, but we will adjust to the new offset
+                timestamp = current;                 // and by default we work off of that time
+                wholenumber_t i;
+                valid = intime->numberValue(i) && timestamp.adjustTimeZone(i);
+                break;
+            }
 
-                }
-
+            // an invalid input style
             default:
-                work[0] = style2;              /* copy over the character           */
-                reportException(Error_Incorrect_call_list, CHAR_TIME, IntegerThree, "CFHLMNOST", new_string(work, 1));
+                reportException(Error_Incorrect_call_list, CHAR_TIME, IntegerThree, "CFHLMNOST", new_string((char)style2));
                 break;
         }
-        if (!valid)                        /* not convert cleanly?              */
+        if (!valid)
         {
             reportException(Error_Incorrect_call_format_invalid, CHAR_TIME, intime, new_string((char *)&style2, 1) );
         }
     }
 
-    switch (style)
-    {                     /* process the styles                */
+    // our working output buffer
+    char work[64];
 
-        case 'E':                         /* 'E'lapsed time                    */
-        case 'R':                         /* 'R'eset elapsed time              */
+    // now output styles
+    switch (style)
+    {
+        case 'E':                         // 'E'lapsed time
+        case 'R':                         // 'R'eset elapsed time
+        {
+            // get the elapsed time from the context
+            int64_t startTime = context->getElapsed();
+            // substract the time values
+            int64_t threshold = current.getUTCBaseTime() - startTime;
+            // a negative value always returns zero and we reset
+            if (threshold < 0)
             {
-                /* get the current elapsed time      */
-                int64_t startTime = context->getElapsed();
-                // substract the time values
-                int64_t threshold = current.getUTCBaseTime() - startTime;
-                if (threshold < 0)
-                {
-                    strcpy(work, "0");            /* just return zero                  */
-                    context->resetElapsed();      /* reset the clock for next time     */
-                }                                 /* times equal?                      */
-                else if (threshold == 0)
-                {
-                    strcpy(work, "0");            /* just return zero                  */
-                }
-                else
-                {
-                    // format as a long time
-                    sprintf(work, "%d.%06d", (int)(threshold / (int64_t)MICROSECONDS), (int)(threshold % (int64_t)MICROSECONDS));
-                }
-                /* format the result                 */
-                if (style == 'R')               /* is this a reset call?             */
-                {
-                    context->resetElapsed();      /* reset the clock for next time     */
-                }
-                break;
+                strcpy(work, "0");
+                context->resetElapsed();
+            }
+            // zero is always exactly zero
+            else if (threshold == 0)
+            {
+                strcpy(work, "0");
+            }
+            else
+            {
+                // format as a long time
+                sprintf(work, "%d.%06d", (int)(threshold / (int64_t)MICROSECONDS), (int)(threshold % (int64_t)MICROSECONDS));
             }
 
-        case 'C':                         /* 'C'ivil time                      */
+            // if this is a reset call, then we reset the timer also
+            if (style == 'R')
+            {
+                context->resetElapsed();
+            }
+            break;
+        }
+
+        case 'C':                         // 'C'ivil time
             timestamp.formatCivilTime(work);
             break;
 
-        case 'H':                         /* 'Hours'                           */
+        case 'H':                         // 'Hours'
             timestamp.formatHours(work);
             break;
 
-        case 'L':                         /* 'L'ong format                     */
+        case 'L':                         // 'L'ong format
             timestamp.formatLongTime(work);
             break;
 
-        case 'M':                         /* 'M'inutes format                  */
+        case 'M':                         // 'M'inutes format
             timestamp.formatMinutes(work);
             break;
 
-        case 'N':                         /* 'N'ormal format...the default     */
+        case 'N':                         // 'N'ormal format...the default
             timestamp.formatNormalTime(work);
             break;
 
-        case 'S':                         /* 'S'econds format...total seconds  */
+        case 'S':                         // 'S'econds format...total seconds
             timestamp.formatSeconds(work);
             break;
 
-        case 'F':                          /* 'F'ull                            */
+        case 'F':                          // 'F'ull
             timestamp.formatBaseTime(work);
             break;
 
-        case 'T':                          /* 'T'icks                           */
+        case 'T':                          // 'T'icks
             timestamp.formatUnixTime(work);
             break;
 
@@ -1457,27 +1506,30 @@ BUILTIN(TIME)
             timestamp.formatTimeZone(work);
             break;
 
-        default:                          /* unknown format                    */
-            work[0] = style;                /* copy over the character           */
+        // unknown output format
+        default:
+            work[0] = style;
             reportException(Error_Incorrect_call_list, CHAR_TIME, IntegerOne, "CEFHLMNORST", new_string(work, 1));
             break;
     }
-    /* now create a string object        */
+
+    // return as a string object
     return new_string(work);
 }
 
-#define RANDOM_MIN 0
-#define RANDOM_MAX 3
-#define RANDOM_minimum 1
-#define RANDOM_maximum 2
-#define RANDOM_seed    3
 
 BUILTIN(RANDOM)
 {
-    RexxInteger *minimum;                /* RANDOM minimum value              */
-    RexxInteger *maximum;                /* RANDOM maximum value              */
+    const size_t RANDOM_Min = 0;
+    const size_t RANDOM_Max = 3;
+    const size_t RANDOM_minimum = 1;
+    const size_t RANDOM_maximum = 2;
+    const size_t RANDOM_seed =    3;
 
-    fix_args(RANDOM);                    /* expand arguments to full value    */
+    fix_args(RANDOM);
+
+    RexxInteger *minimum;
+    RexxInteger *maximum;
     // we need a special case here.  the interpretation of Random is such that
     // random() is NOT the same as Random(,).
     if (argcount == 2 && arg_omitted(RANDOM, minimum) && arg_omitted(RANDOM, maximum))
@@ -1487,145 +1539,157 @@ BUILTIN(RANDOM)
     }
     else
     {
-        /* get the minimum value             */
         minimum = optional_integer(RANDOM, minimum);
-        /* get the maximum value             */
         maximum = optional_integer(RANDOM, maximum);
     }
-    /* get the seed value                */
+
     RexxInteger *seed = optional_integer(RANDOM, seed);
-    /* have the activation generate      */
+
+    // the activation handles random number generation
     return context->random(minimum, maximum, seed);
 }
 
-#define XRANGE_MIN 0
-#define XRANGE_MAX 2
-#define XRANGE_start   1
-#define XRANGE_end     2
 
 BUILTIN(XRANGE)
 {
-    fix_args(XRANGE);                    /* expand arguments to full value    */
-    char startchar = 0;                  /* set default start position        */
-    char endchar = (char)0xff;           /* set default end position          */
+    const size_t XRANGE_Min = 0;
+    const size_t XRANGE_Max = 2;
+    const size_t XRANGE_start =   1;
+    const size_t XRANGE_end =     2;
 
-                                         /* get the starting string           */
+    fix_args(XRANGE);
+
+    // default start and end positions are the full range
+    char startchar = 0;
+    char endchar = (char)0xff;
+
     RexxString *start = optional_string(XRANGE, start);
-    RexxString *end = optional_string(XRANGE, end);  /* get the ending string             */
+    RexxString *end = optional_string(XRANGE, end);
 
+    // validate the starts and end
     if (start != OREF_NULL)
-    {            /* have a start position             */
-        if (start->getLength() != 1)            /* not a single character?           */
+    {
+        // must be just a single character
+        if (start->getLength() != 1)
         {
-            /* have an error                     */
             reportException(Error_Incorrect_call_pad, CHAR_XRANGE, IntegerOne, start);
         }
-        startchar = start->getChar(0);     /* get the new start position        */
+        startchar = start->getChar(0);
     }
+    // same rules with the end
     if (end != OREF_NULL)
-    {              /* have an end position              */
-        if (end->getLength() != 1)         /* not a single character?           */
+    {
+        if (end->getLength() != 1)
         {
-                                           /* have an error                     */
             reportException(Error_Incorrect_call_pad, CHAR_XRANGE, IntegerTwo, end);
         }
-        endchar = end->getChar(0);         /* get the new end position          */
+        endchar = end->getChar(0);
     }
-    /* calculate result size             */
+
+    // calculate the result size...note that XRANGE can wrap if the end precedes the start
     size_t length = ((endchar < startchar) ? (256 - startchar) + endchar : (endchar - startchar)) + 1;
-    RexxString *result = raw_string(length);         /* get a result string               */
-    for (size_t i = 0; i < length; i++)         /* loop through result length        */
+
+    RexxString *result = raw_string(length);
+    for (size_t i = 0; i < length; i++)
     {
-        result->putChar(i, startchar++);   /* inserting each character          */
+        // NOTE:  This depends on the fact that we are only inserting the
+        // least significant byte here, so the wrap situation is handled
+        // automatically.
+        result->putChar(i, startchar++);
     }
-    return result;                       /* finished                          */
+    return result;
 }
 
-#define SYMBOL_MIN 1
-#define SYMBOL_MAX 1
-#define SYMBOL_name    1
 
 BUILTIN(SYMBOL)
 {
-    fix_args(SYMBOL);                    /* expand arguments to full value    */
-                                         /* get the variable name             */
+    const size_t SYMBOL_Min = 1;
+    const size_t SYMBOL_Max = 1;
+    const size_t SYMBOL_name =    1;
+
+    fix_args(SYMBOL);
+
     RexxString *name = required_string(SYMBOL, name);
-    /* get a variable retriever          */
+
+    // get a retriever for this name
     RexxVariableBase *variable = VariableDictionary::getVariableRetriever(name);
-    if (variable == OREF_NULL)           /* invalid variable name?            */
+    // a parsing failure is "BAD"
+    if (variable == OREF_NULL)
     {
-                                         /* return the 'BAD' result           */
         return new_string(CHAR_BAD);
     }
-    else if (isString(variable))    /* directly returned a string?       */
+    // if this is a constant symbol, this is LIT
+    else if (isString(variable))
     {
-        /* this is a literal value           */
         return new_string(CHAR_LIT);
     }
     else
-    {                               /* need to perform lookup            */
-                                    /* see if variable has a value       */
+    {
+        // see if the variable exists in the context.  Non-set
+        // variables are "LIT", set variables are "VAR"
         if (!variable->exists(context))
         {
-            /* this is a literal value           */
             return new_string(CHAR_LIT);
         }
         else
         {
-            /* this is a variable value          */
             return new_string(CHAR_VAR);
         }
     }
 }
 
-#define VAR_MIN 1
-#define VAR_MAX 1
-#define VAR_name    1
 
 BUILTIN(VAR)
 {
-    fix_args(VAR);                       /* expand arguments to full value    */
-                                         /* get the variable name             */
+    const size_t VAR_Min = 1;
+    const size_t VAR_Max = 1;
+    const size_t VAR_name =    1;
+
+    fix_args(VAR);
     RexxString *variable = required_string(VAR, name);
-    /* get a variable retriever          */
+
+    // like SYMBOL, but this is a simple true/false return vallue
     RexxVariableBase *retriever = VariableDictionary::getVariableRetriever(variable);
-    if (retriever == OREF_NULL)          /* invalid variable name?            */
+    // invalid variable name is false
+    if (retriever == OREF_NULL)
     {
-        return TheFalseObject;           /* return the 'BAD' result           */
+        return TheFalseObject;
     }
-    else if (isString(retriever))   /* directly returned a string?       */
+    // a constant string is also false
+    else if (isString(retriever))
     {
-        return TheFalseObject;           /* this doesn't exist either         */
+        return TheFalseObject;
     }
     else
-    {                               /* need to perform lookup            */
-                                    /* get the variable value            */
+    {
+        // return the existance flag.
         return booleanObject(retriever->exists(context));
     }
 }
 
-#define VALUE_MIN 1
-#define VALUE_MAX 3
-#define VALUE_name     1
-#define VALUE_newValue 2
-#define VALUE_selector 3
 
 BUILTIN(VALUE)
 {
-    fix_args(VALUE);                     /* expand arguments to full value    */
-                                         /* get the variable name             */
+    const size_t VALUE_Min = 1;
+    const size_t VALUE_Max = 3;
+    const size_t VALUE_name =     1;
+    const size_t VALUE_newValue = 2;
+    const size_t VALUE_selector = 3;
+
+    fix_args(VALUE);
+
     RexxString *variable = required_string(VALUE, name);
-    /* get the new value                 */
     RexxObject *newvalue = optional_argument(VALUE, newValue);
-    /* and the selector                  */
     RexxString *selector = optional_string(VALUE, selector);
+
+
     // get the variable type
     StringSymbolType variableType = variable->isSymbol();
     bool assignable = variableType == STRING_NAME || variableType == STRING_STEM || variableType == STRING_COMPOUND_NAME;
 
-    if (selector == OREF_NULL)           /* have a selector?                  */
+    // no selector means we're looking up a local variable
+    if (selector == OREF_NULL)
     {
-        /* get a variable retriever          */
         RexxVariableBase *retriever = VariableDictionary::getVariableRetriever(variable);
         // this could an invalid name, or we might be trying to assign a value to a non-variable
         // symbol.
@@ -1633,32 +1697,34 @@ BUILTIN(VALUE)
         {
             reportException(Error_Incorrect_call_symbol, CHAR_VALUE, IntegerOne, variable);
         }
-        /* get the variable value            */
-        RexxObject *result = retriever->getValue(context);
-        if (newvalue != OREF_NULL)       /* have a new value to assign?       */
+        // get the variable value
+        RexxObject *result = (RexxObject *)retriever->getValue(context);
+        // given a new value?  Assign that
+        if (newvalue != OREF_NULL)
         {
-                                         /* do the assignment                 */
             retriever->assign(context, newvalue);
         }
-        return result;                       /* return the indicator              */
+        return result;
     }
-    else if (selector->getLength() == 0)   /* null string selector?             */
+    // a NULL string selector is .environment...whatever that means
+    else if (selector->getLength() == 0)
     {
-        /* get the existing value            */
-        RexxObject *result = TheEnvironment->entry(variable);
-        if (result == OREF_NULL)           /* not in the environment?           */
+
+        RexxObject *result = (RexxObject *)TheEnvironment->entry(variable);
+        // the value is .VARIABLE if not found
+        if (result == OREF_NULL)
         {
-            /* turn into ".VARIABLE" as value    */
             result = ((RexxString *)OREF_PERIOD)->concat(variable->upper());
         }
-        if (newvalue != OREF_NULL)         /* have a new value?                 */
+        // do the set also
+        if (newvalue != OREF_NULL)
         {
-            /* do the set also                   */
             TheEnvironment->setEntry(variable, newvalue);
         }
-        return result;                       /* return the indicator              */
+        return result;
     }
-    else                                 /* external value function           */
+    // an external selector value
+    else
     {
         RexxObject *result;
         // try the platform defined selectors.
@@ -1666,25 +1732,28 @@ BUILTIN(VALUE)
         {
             return result;
         }
+
         // if the exit passes on this, try the platform-defined selectors
         if (!context->getActivity()->callValueExit(context, selector, variable, newvalue, result))
         {
             return result;
         }
+
         // this is an exception
         reportException(Error_Incorrect_call_selector, selector);
     }
     return OREF_NULL;    // should never reach here
 }
 
-#define ABS_MIN 1
-#define ABS_MAX 1
-#define ABS_n   1
 
 BUILTIN(ABS)
 {
-    fix_args(ABS);                       /* check on required number of args  */
-    /* get the argument in question      */
+    const size_t ABS_Min = 1;
+    const size_t ABS_Max = 1;
+    const size_t ABS_n =   1;
+
+    fix_args(ABS);
+
     RexxObject *argument = get_arg(ABS, n);
     // and integer value can be processed quickly
     if (isInteger(argument))
@@ -1692,161 +1761,173 @@ BUILTIN(ABS)
         return ((RexxInteger *)argument)->abs();
     }
     else if (isNumberString(argument))
-    { /* how about already numeric?        */
-        /* we can process this without conversion */
+    {
         return((NumberString *)argument)->abs();
     }
-    /* force to a string object          */
+
+    // force to a string object and perform it on that
     RexxString *n = required_string(ABS, n);
-    return n->abs();                   /* invoke the string ABS function    */
+    return n->abs();
 }
 
-#define SIGN_MIN 1
-#define SIGN_MAX 1
-#define SIGN_n   1
 
 BUILTIN(SIGN)
 {
-    fix_args(SIGN);                       /* check on required number of args  */
-    /* get the argument in question      */
+    const size_t SIGN_Min = 1;
+    const size_t SIGN_Max = 1;
+    const size_t SIGN_n =   1;
+
+    fix_args(SIGN);
+
     RexxObject *argument = get_arg(SIGN, n);
+
+    // check for the numeric forms and use them directory, otherwise
+    // do this on the string value
     if (isInteger(argument))
-    {       /* integer object already?           */
-        /* we can process this without conversion */
+    {
         return((RexxInteger *)argument)->sign();
     }
     else if (isNumberString(argument))
-    { /* how about already numeric?        */
-        /* we can process this without conversion */
+    {
         return((NumberString *)argument)->Sign();
     }
-    /* force to a string object          */
+
     RexxString *n = required_string(SIGN, n);
-    return n->sign();                     /* invoke the string SIGN function    */
+    return n->sign();
 }
 
-#define FORMAT_MIN 1
-#define FORMAT_MAX 5
-#define FORMAT_number 1
-#define FORMAT_before 2
-#define FORMAT_after  3
-#define FORMAT_expp   4
-#define FORMAT_expt   5
 
 BUILTIN(FORMAT)
 {
-    fix_args(FORMAT);                    /* check on required number of args  */
-                                         /* force to a string object          */
+    const size_t FORMAT_Min = 1;
+    const size_t FORMAT_Max = 5;
+    const size_t FORMAT_number = 1;
+    const size_t FORMAT_before = 2;
+    const size_t FORMAT_after =  3;
+    const size_t FORMAT_expp =   4;
+    const size_t FORMAT_expt =   5;
+
+    fix_args(FORMAT);
+
     RexxString *number = required_string(FORMAT, number);
-    /* before value is optional          */
     RexxInteger *before = optional_integer(FORMAT, before);
-    /* after value is optional           */
     RexxInteger *after = optional_integer(FORMAT, after);
-    /* expp value is optional            */
     RexxInteger *expp = optional_integer(FORMAT, expp);
-    /* expt value is optional            */
     RexxInteger *expt = optional_integer(FORMAT, expt);
-    /* invoke the string FORMAT function   */
+
     return number->format(before, after, expp, expt);
 }
 
-#define ORXMAX_MIN 1
-#define ORXMAX_MAX argcount
-#define MAX_target 1
 
 BUILTIN(MAX)
 {
-    check_args(ORXMAX);                     /* check on required args            */
-    /* get the argument in question      */
+    const size_t MAX_Min = 1;
+    const size_t MAX_Max = argcount;
+    const size_t MAX_target = 1;
+
+    check_args(MAX);
+
     RexxObject *argument = get_arg(MAX, target);
+
+    // if in number string form, we can do this directory
     if (isNumberString(argument))
-    { /* how about already numeric?        */
-        /* we can process this without conversion */
+    {
         return((NumberString *)argument)->Max(stack->arguments(argcount - 1), argcount - 1);
     }
-    /* get the target string             */
+
+    // start with the string form
     RexxString *target = required_string(MAX, target);
-    /* go perform the MIN function       */
+
+    // we just just one fewer of the arguments
     return target->Max(stack->arguments(argcount - 1), argcount - 1);
 }
 
-#define ORXMIN_MIN 1
-#define ORXMIN_MAX argcount
-#define MIN_target 1
 
 BUILTIN(MIN)
 {
-    check_args(ORXMIN);                     /* check on required args            */
-    /* get the argument in question      */
+    const size_t MIN_Min = 1;
+    const size_t MIN_Max = argcount;
+    const size_t MIN_target = 1;
+
+    check_args(MIN);
+
     RexxObject *argument = get_arg(MIN, target);
+
+    // the numberstring gives us a leg up on the first one
     if (isNumberString(argument))
-    { /* how about already numeric?        */
-        /* we can process this without conversion */
+    {
         return((NumberString *)argument)->Min(stack->arguments(argcount - 1), argcount - 1);
     }
-    /* get the target string             */
+
+    // use the string form
     RexxString *target = required_string(MIN, target);
-    /* go perform the MIN function       */
+
     return target->Min(stack->arguments(argcount - 1), argcount - 1);
 }
 
-#define SOURCELINE_MIN 0
-#define SOURCELINE_MAX 1
-#define SOURCELINE_n   1
 
 BUILTIN(SOURCELINE)
 {
-    fix_args(SOURCELINE);                /* check on required number of args  */
+    const size_t SOURCELINE_Min = 0;
+    const size_t SOURCELINE_Max = 1;
+    const size_t SOURCELINE_n =   1;
+
+    fix_args(SOURCELINE);
+
     // get the effective source object.  If we're in an interpret context, this will
     // be the one of our caller.
     PackageClass *package = context->getEffectivePackageObject();
-    size_t size = package->sourceSize();  /* get the program size              */
-    if (argcount == 1)                   /* asking for a specific line?       */
+    // and get the program size
+    size_t size = package->sourceSize();
+    if (argcount == 1)
     {
-        /* get the line number               */
+        // get the line number in binary
         size_t line_number = required_integer(SOURCELINE, n)->getValue();
-        /* must be a positive integer        */
+        // and it must be a positive integer
         positive_integer((ssize_t)line_number, SOURCELINE, IntegerOne);
-        if (line_number > size)            /* larger than program source?       */
+        // out of range is an error
+        if (line_number > size)
         {
-            /* this is an error too?             */
             reportException(Error_Incorrect_call_sourceline, line_number, size);
         }
-        /* get the specific line             */
-        return package>getLine(line_number);
+        // get the specific line from the source
+        return package->getLine(line_number);
     }
+    // no argument just returns the size
     else
     {
-        /* just return the source size       */
         return new_integer(size);
     }
 }
 
-#define TRACE_MIN 0
-#define TRACE_MAX 1
-#define TRACE_setting 1
 
 BUILTIN(TRACE)
 {
-    RexxString  *result;                 /* returned result                   */
-    RexxString  *setting;                /* new trace setting                 */
+    const size_t TRACE_Min = 0;
+    const size_t TRACE_Max = 1;
+    const size_t TRACE_setting = 1;
 
-    fix_args(TRACE);                     /* check required arguments          */
-                                         /* get the trace setting             */
-    setting = optional_string(TRACE, setting);
-    result = context->traceSetting();    /* get the existing trace setting    */
+    fix_args(TRACE);
+
+    RexxString *setting = optional_string(TRACE, setting);
+    // get the existing setting before setting a new one
+    RexxString *result = context->traceSetting();
+    // if we have a new value, then set it
     if (setting != OREF_NULL)
-    {          /* have a new setting?               */
+    {
         context->setTrace(setting);
     }
-    return result;                       /* return old trace setting          */
+    return result;
 }
 
-/* check to see if stream is to queue*/
+/**
+ * Check to see if a stream name is a queue
+ *
+ * @param name   The name to check.
+ *
+ * @return True if this is a QUEUE value, false otherwise.
+ */
 bool check_queue(RexxString *name)
-/******************************************************************************/
-/* Function:  Check to see if a stream name is a queue                        */
-/******************************************************************************/
 {
     if (name != OREF_NULL)               /* non-default name?                 */
     {
@@ -1858,30 +1939,32 @@ bool check_queue(RexxString *name)
     }
 }
 
-#define LINEIN_MIN 0
-#define LINEIN_MAX 3
-#define LINEIN_name   1
-#define LINEIN_line   2
-#define LINEIN_count  3
 
 BUILTIN(LINEIN)
 {
-    fix_args(LINEIN);                    /* check required arguments          */
+    const size_t LINEIN_Min = 0;
+    const size_t LINEIN_Max = 3;
+    const size_t LINEIN_name =   1;
+    const size_t LINEIN_line =   2;
+    const size_t LINEIN_count =  3;
 
-    RexxString *name = optional_string(LINEIN, name);/* get the string name               */
-                                         /* get the line position             */
+    fix_args(LINEIN);
+
+    RexxString *name = optional_string(LINEIN, name);
     RexxObject *line = optional_big_integer(LINEIN, line);
-    /* and the optional count of lines   */
     RexxObject *count = optional_big_integer(LINEIN, count);
+
+    // if this is linein request for "QUEUE:, this is really a pull
+    // operation.
     if (check_queue(name))
-    {             /* is this "QUEUE:"                  */
+    {
         RexxString *result;
-                  /* if exit declines call             */
+
+        // handle both via the exit and the actual queue object
         if (context->getActivity()->callPullExit(context, result))
         {
-            /* get the default output stream     */
-            RexxObject *stream = context->getLocalEnvironment(OREF_QueueClass);
-            /* pull from the queue               */
+            RexxObject *stream = context->getLocalEnvironment(OREF_REXXQUEUE);
+            // we do this using a LINEIN method
             return stream->sendMessage(OREF_LINEIN);
         }
         return result;
@@ -1889,18 +1972,22 @@ BUILTIN(LINEIN)
     else
     {
         bool added = false;
-        /* get a stream for this name        */
+        // get a stream for this name
         RexxObject *stream = context->resolveStream(name, true, NULL, &added);
         switch (argcount)
-        {                /* process according to argcount     */
-            case 0:                          /* no name                           */
-            case 1:                          /* name only                         */
+        {
+            // process based on the arguments
+            // NAME only
+            case 0:
+            case 1:
                 return stream->sendMessage(OREF_LINEIN);
                 break;
-            case 2:                          /* name and start                    */
+            // start position specified
+            case 2:
                 return stream->sendMessage(OREF_LINEIN, line);
                 break;
-            case 3:                          /* name, start and count             */
+            // start and count specified
+            case 3:
                 return stream->sendMessage(OREF_LINEIN, line, count);
                 break;
         }
@@ -1908,76 +1995,75 @@ BUILTIN(LINEIN)
     return OREF_NULLSTRING;  // should never happen
 }
 
-#define CHARIN_MIN 0
-#define CHARIN_MAX 3
-#define CHARIN_name   1
-#define CHARIN_start  2
-#define CHARIN_count  3
 
 BUILTIN(CHARIN)
 {
-    fix_args(CHARIN);                    /* check required arguments          */
-                                         /* get the string name               */
+    const size_t CHARIN_Min = 0;
+    const size_t CHARIN_Max = 3;
+    const size_t CHARIN_name =   1;
+    const size_t CHARIN_start =  2;
+    const size_t CHARIN_count =  3;
+
+    fix_args(CHARIN);
+
     RexxString *name = optional_string(CHARIN, name);
-    /* get the line position             */
     RexxObject *position = optional_big_integer(CHARIN, start);
-    /* and the optional count of chars   */
     RexxObject *count = optional_big_integer(CHARIN, count);
-    if (check_queue(name))               /* is this "QUEUE:"                  */
+
+    // queue is not allowed for CHARIN
+    if (check_queue(name))
     {
-                                         /* this isn't allowed                */
         reportException(Error_Incorrect_call_queue_no_char, OREF_CHARIN);
     }
 
-    /* get a stream for this name        */
+    // resolve the stream name and send it the appropriate message
     bool added = false;
     RexxObject *stream = context->resolveStream(name, true, NULL, &added);
     switch (argcount)
-    {                  /* process according to argcount     */
-        case 0:                            /* no name                           */
-        case 1:                            /* name only                         */
+    {
+        case 0:
+        case 1:
             return stream->sendMessage(OREF_CHARIN);
             break;
-        case 2:                            /* name and string                   */
+        case 2:
             return stream->sendMessage(OREF_CHARIN, position);
             break;
-        case 3:                            /* name, string and line             */
+        case 3:
             return stream->sendMessage(OREF_CHARIN, position, count);
             break;
     }
-    return OREF_NULLSTRING;              /* should never get here             */
+    return OREF_NULLSTRING;
 }
 
-#define LINEOUT_MIN 0
-#define LINEOUT_MAX 3
-#define LINEOUT_name   1
-#define LINEOUT_string 2
-#define LINEOUT_line   3
 
 BUILTIN(LINEOUT)
 {
-    fix_args(LINEOUT);                   /* check required arguments          */
-                                         /* get the string name               */
+    const size_t LINEOUT_Min = 0;
+    const size_t LINEOUT_Max = 3;
+    const size_t LINEOUT_name =   1;
+    const size_t LINEOUT_string = 2;
+    const size_t LINEOUT_line =   3;
+
+    fix_args(LINEOUT);
+
     RexxString *name = optional_string(LINEOUT, name);
-    /* get the output string             */
     RexxString *string = optional_string(LINEOUT, string);
-    /* get the line position             */
     RexxObject *line = optional_big_integer(LINEOUT, line);
+
+    // lineout is allowed to the queue
     if (check_queue(name))
-    {             /* is this "QUEUE:"                  */
-                  /* if exit declines call             */
+    {
+
         if (context->getActivity()->callPushExit(context, string, QUEUE_FIFO))
         {
+            // lineout always queues to the queue
             if (string != OREF_NULL)
-            {       /* have an actual string to write?   */
-                    /* get the default output stream     */
-                RexxObject *stream = context->getLocalEnvironment(OREF_QueueClass);
-                /* push onto the queue               */
+            {
+                RexxObject *stream = context->getLocalEnvironment(OREF_REXXQUEUE);
                 return stream->sendMessage(OREF_QUEUENAME, string);
             }
             else
             {
-                /* always a zero residual            */
                 return IntegerZero;
             }
         }
@@ -1986,73 +2072,74 @@ BUILTIN(LINEOUT)
     {
         bool added;
         RexxString *fullName;
-        /* get a stream for this name        */
+        // resolve the stream name and send the message based on the arguments
         RexxObject *stream = context->resolveStream(name, false, &fullName, &added);
         switch (argcount)
-        {                /* process according to argcount     */
-            case 0:                          /* no name                           */
-            case 1:                          /* name only                         */
+        {
+            case 0:
+            case 1:
                 return stream->sendMessage(OREF_LINEOUT);
                 break;
-            case 2:                          /* name and string                   */
+            case 2:
                 return stream->sendMessage(OREF_LINEOUT, string);
                 break;
-            case 3:                          /* name, string and line             */
+            case 3:
                 return stream->sendMessage(OREF_LINEOUT, string, line);
                 break;
         }
     }
-    return OREF_NULLSTRING;              /* should never happen               */
+    return OREF_NULLSTRING;
 }
 
-#define CHAROUT_MIN 0
-#define CHAROUT_MAX 3
-#define CHAROUT_name   1
-#define CHAROUT_string 2
-#define CHAROUT_start  3
 
 BUILTIN(CHAROUT)
 {
-    fix_args(CHAROUT);                   /* check required arguments          */
-                                         /* get the string name               */
+    const size_t CHAROUT_Min = 0;
+    const size_t CHAROUT_Max = 3;
+    const size_t CHAROUT_name =   1;
+    const size_t CHAROUT_string = 2;
+    const size_t CHAROUT_start =  3;
+
+    fix_args(CHAROUT);
+
     RexxString *name = optional_string(CHAROUT, name);
-    /* get the output string             */
     RexxString *string = optional_string(CHAROUT, string);
-    /* get the line position             */
     RexxObject *position = optional_big_integer(CHAROUT, start);
-    if (check_queue(name))               /* is this "QUEUE:"                  */
+
+    // queues are not allowed with charout
+    if (check_queue(name))
     {
-                                         /* this isn't allowed                */
         reportException(Error_Incorrect_call_queue_no_char, OREF_CHAROUT);
     }
 
     bool added;
-    /* get a stream for this name        */
+    // resolve the stream name
     RexxObject *stream = context->resolveStream(name, false, NULL, &added);
     switch (argcount)
-    {                  /* process according to argcount     */
-        case 0:                            /* no name                           */
-        case 1:                            /* name only                         */
+    {
+        case 0:
+        case 1:
             return stream->sendMessage(OREF_CHAROUT);
             break;
-        case 2:                            /* name and string                   */
+        case 2:
             return stream->sendMessage(OREF_CHAROUT, string);
             break;
-        case 3:                            /* name, string and line             */
+        case 3:
             return stream->sendMessage(OREF_CHAROUT, string, position);
             break;
     }
-    return OREF_NULLSTRING;              /* should never happen               */
+    return OREF_NULLSTRING;
 }
 
-#define LINES_MIN 0
-#define LINES_MAX    2
-#define LINES_name   1
-#define LINES_option 2
 
 BUILTIN(LINES)
 {
-    fix_args(LINES);                     /* check required arguments          */
+    const size_t LINES_Min = 0;
+    const size_t LINES_Max =    2;
+    const size_t LINES_name =   1;
+    const size_t LINES_option = 2;
+
+    fix_args(LINES);
 
     RexxString *name = optional_string(LINES, name); /* get the string name               */
     RexxString *option = optional_string(LINES, option);
@@ -2060,16 +2147,15 @@ BUILTIN(LINES)
 
     if (option != OREF_NULL)
     {
-        switch (option->getChar(0))
-        {      /* process the option character      */
+        switch (toupper(option->getChar(0)))
+        {
             case 'C':
-            case 'c':
                 break;
             case 'N':
-            case 'n':
                 break;
-            default:                         /* unknown option                    */
-                /* this is an error                  */
+            // really just doing this for the error detection here.
+            default:
+
                 reportException(Error_Incorrect_call_list, CHAR_ARG, IntegerTwo, "NC", option);
                 break;
         }
@@ -2079,24 +2165,23 @@ BUILTIN(LINES)
         option = OREF_NORMAL;
     }
 
+    // for the queue, return the count of items in the queue
     if (check_queue(name))
-    {             /* is this "QUEUE:"                  */
-                  /* get the default output stream     */
-        RexxObject *stream = context->getLocalEnvironment(OREF_QueueClass);
-        /* return count on the queue         */
+    {
+        RexxObject *stream = context->getLocalEnvironment(OREF_REXXQUEUE);
         result = stream->sendMessage(OREF_QUEUED);
     }
     else
     {
         bool added;
-        /* get a stream for this name        */
+        // resolve the stream
         RexxObject *stream = context->resolveStream(name, true, NULL, &added);
-
-        /* use modified LINES method with quick flag       */
+        // and send the lines message with the option.
         result = stream->sendMessage(OREF_LINES, option);
     }
-    /* for compatibility this needs      */
-    /* to only return 0 or 1             */
+
+
+    // for compatibility this needs to only return 0 or 1
     if (toupper(option->getChar(0)) == 'N')
     {
         wholenumber_t count = 0;
@@ -2112,128 +2197,138 @@ BUILTIN(LINES)
     }
 }
 
-#define CHARS_MIN 0
-#define CHARS_MAX 1
-#define CHARS_name   1
 
 BUILTIN(CHARS)
 {
-    fix_args(CHARS);                     /* check required arguments          */
+    const size_t CHARS_Min = 0;
+    const size_t CHARS_Max = 1;
+    const size_t CHARS_name =   1;
 
-    RexxString *name = optional_string(CHARS, name); /* get the string name               */
-    if (check_queue(name))               /* is this "QUEUE:"                  */
+    fix_args(CHARS);
+
+    RexxString *name = optional_string(CHARS, name);
+
+    // queue not allowed with chars()
+    if (check_queue(name))
     {
-                                         /* this isn't allowed                */
         reportException(Error_Incorrect_call_queue_no_char, OREF_CHARS);
     }
-    /* get a stream for this name        */
+
+    // resolve the stream and send it the CHARS message
     bool added;
     RexxObject *stream = context->resolveStream(name, true, NULL, &added);
     return stream->sendMessage(OREF_CHARS);
 }
 
-#define STREAM_MIN 1
-#undef STREAM_MAX                      /* already defined in AIX            */
-#define STREAM_MAX 3
-#define STREAM_name      1
-#define STREAM_operation 2
-#define STREAM_command   3
-
-#define STREAM_STATUS      'S'
-#define STREAM_DESCRIPTION 'D'
-#define STREAM_COMMAND     'C'
 
 BUILTIN(STREAM)
 {
-    fix_args(STREAM);                    /* check required arguments          */
-                                         /* get the string name               */
+    const size_t STREAM_Min = 1;
+    #undef STREAM_Max                      /* already defined in AIX            */
+    const size_t STREAM_Max = 3;
+    const size_t STREAM_name =      1;
+    const size_t STREAM_operation = 2;
+    const size_t STREAM_command =   3;
+
+    const size_t STREAM_STATUS =      'S';
+    const size_t STREAM_DESCRIPTION = 'D';
+    const size_t STREAM_COMMAND =     'C';
+
+    fix_args(STREAM);
+
     RexxString *name = required_string(STREAM, name);
-    if (name->getLength() == 0)          /* check name validity               */
+
+    // null string not allowed for the name
+    if (name->getLength() == 0)
     {
-        /* raise an error                    */
         reportException(Error_Incorrect_call_stream_name, OREF_STREAM, name);
     }
-    /* get any operation                 */
+
     RexxString *action = optional_string(STREAM, operation);
-    /* get any command                   */
     RexxString *command = optional_string(STREAM, command);
 
-    char action_char = STREAM_STATUS;       /* this is a status attempt          */
+    char action_char = STREAM_STATUS;
+    // decode the action
     if (action != OREF_NULL)
-    {           /* no action given?                  */
+    {
+        // null string is not a valid option
         if (action->getLength() == 0)
-        {    /* get a null string?                */
-             /* this is an error                  */
+        {
             reportException(Error_Incorrect_call_list, CHAR_STREAM, IntegerTwo, "SDC", action);
         }
-        /* get the option character          */
         action_char = toupper(action->getChar(0));
     }
 
     switch (action_char)
-    {               /* process the options               */
-        case STREAM_STATUS:                /* stream(name, s)                   */
+    {
+        // stream(name, 'S')
+        case STREAM_STATUS:
             {
+                // no third argument allowed with status
                 if (argcount > 2)
-                {              /* given a third argument?           */
-                               /* raise an error                    */
+                {
                     reportException(Error_Incorrect_call_maxarg, OREF_STREAM, IntegerTwo);
                 }
+
+                // get the stream object and get the state
                 RexxObject *stream = context->resolveStream(name, true, NULL, NULL);
-                /* get the stream state              */
                 return stream->sendMessage(OREF_STATE);
                 break;
             }
 
-        case STREAM_DESCRIPTION:           /* stream(name, d)                   */
+        // stream(name, 'D')
+        case STREAM_DESCRIPTION:
             {
+                // only 2 args allowed here also
                 if (argcount > 2)
-                {              /* given a third argument?           */
-                               /* raise an error                    */
+                {
                     reportException(Error_Incorrect_call_maxarg, OREF_STREAM, IntegerTwo);
                 }
+
                 RexxObject *stream = context->resolveStream(name, true, NULL, NULL);
-                /* get the stream description        */
                 return stream->sendMessage(OREF_DESCRIPTION);
                 break;
             }
 
-        case STREAM_COMMAND:               /* stream(name, c, command)          */
+        // stream(name, 'C', command)
+        case STREAM_COMMAND:
             {
+                //the third argument is required here
                 if (argcount < 3)
-                {              /* given a third argument?           */
-                               /* raise an error                    */
+                {
                     reportException(Error_Incorrect_call_minarg, OREF_STREAM, IntegerThree);
                 }
-                /* get the stream description        */
                 ProtectedObject p(command);
 
-                /* I have to check the command twice because in the Rexx methods (i.g. query_exists)
-                   I don't have access to the activation and thus not to the streamtable.
-                   It's also not possible to pass context as the second argument because
-                   stream is a MethodClass and USE ARG RexxActivation is not possible */
+                // I have to check the command twice because in the Rexx methods (i.g. query_exists)
+                // I don't have access to the activation and thus not to the streamtable.
+                // It's also not possible to pass context as the second argument because
+                // stream is a MethodClass and USE ARG RexxActivation is not possible
                 RexxString *command_upper = command->upper();
                 ProtectedObject p1(command_upper);
 
+                // an open request
                 if (command_upper->wordPos(new_string("OPEN"), OREF_NULL)->getValue() > 0)
                 {
                     RexxString *fullName;
                     bool added;
                     RexxObject *stream = context->resolveStream(name, true, &fullName, &added);
                     RexxString *result = (RexxString *)stream->sendMessage(OREF_COMMAND, command);
-                    /* if open failed, remove the stream object from stream table again */
+                    // if open failed, remove the stream object from stream table again
                     if (!result->strCompare("READY:"))
                     {
                         context->getStreams()->remove(fullName);
                     }
                     return result;
                 }
+                // a close request
                 else if (command_upper->wordPos(new_string("CLOSE"), OREF_NULL)->getValue() > 0)
                 {
                     RexxString *fullName;
                     bool added;
                     RexxObject *stream = context->resolveStream(name, true, &fullName, &added);
                     RexxString *result = (RexxString *)stream->sendMessage(OREF_COMMAND, command);
+                    // remove this from the table after the close
                     context->getStreams()->remove(fullName);
                     return result;
                 }
@@ -2244,10 +2339,11 @@ BUILTIN(STREAM)
                     RexxString *fullName;
                     bool added;
                     RexxObject *stream = context->resolveStream(name, true, &fullName, &added);
-                    // this is a real operation, so just leave alone
+                    // this is a real operation, so pass along to the stream object
                     RexxString *result = (RexxString *)stream->sendMessage(OREF_COMMAND, command);
                     return result;
                 }
+                // all other commands just pass to the resolved stream object
                 else
                 {
                     RexxObject *stream = context->resolveStream(name, true, NULL, NULL);
@@ -2257,180 +2353,188 @@ BUILTIN(STREAM)
             }
 
         default:
-            /* this is an error                  */
             reportException(Error_Incorrect_call_list, CHAR_STREAM, IntegerTwo, "SDC", action);
             break;
     }
-    return OREF_NULL;                    /* should never happen        */
+    return OREF_NULL;
 }
 
-#define QUEUED_MIN 0
-#define QUEUED_MAX 0
 
 BUILTIN(QUEUED)
 {
+    const size_t QUEUED_Min = 0;
+    const size_t QUEUED_Max = 0;
 
-    check_args(QUEUED);                  /* check on required number of args  */
-    RexxInteger  *queuesize;             /* returned queue size from sys exit */
-                                         /* get the default output stream     */
+    check_args(QUEUED);
+    RexxInteger  *queuesize;
+
+    // see if the exit handles this, otherwise send a message to the current queue
     if (context->getActivity()->callQueueSizeExit(context, queuesize))
     {
-        RexxObject *queue = context->getLocalEnvironment(OREF_QueueClass);
-        /* return count on the queue         */
+        RexxObject *queue = (RexxObject *)context->getLocalEnvironment(OREF_REXXQUEUE);
         return queue->sendMessage(OREF_QUEUED);
     }
     else
     {
-        return queuesize;                  /* return count from system exit     */
+        return queuesize;
     }
 }
 
-#define CONDITION_MIN 0
-#define CONDITION_MAX 1
-#define CONDITION_option 1
 
 BUILTIN(CONDITION)
 {
-    int   style = 'I';                   /* style of condition output         */
-    fix_args(CONDITION);                 /* expand arguments to full value    */
-                                         /* get the option string             */
+    const size_t CONDITION_Min = 0;
+    const size_t CONDITION_Max = 1;
+    const size_t CONDITION_option = 1;
+
+    fix_args(CONDITION);
+
     RexxString *option = optional_string(CONDITION, option);
-    if (option != OREF_NULL)             /* just using default format?        */
+
+    int   style = 'I';
+    // do we have an explicit option?
+    if (option != OREF_NULL)
     {
-        if (option->getLength() == 0)   /* have a null string?               */
+        // null string is not a valid option
+        if (option->getLength() == 0)
         {
-            /* this is an error                  */
             reportException(Error_Incorrect_call_list, CHAR_CONDITION, IntegerOne, "ACDIOS", option);
         }
 
-        /* option is first character         */
         style = toupper(option->getChar(0));
     }
-    /* get current trapped condition     */
+
+    // get the current trapped condition
     DirectoryClass *conditionobj = context->getConditionObj();
 
     switch (style)
-    {                     /* process various CONDITION objects */
-
-        case 'A':                          /* 'A'dditional                      */
+    {
+        // condition('A'dditional)
+        case 'A':
             if (conditionobj != OREF_NULL)
-            { /* have a condition object?          */
-              /* retrieve the additional info      */
-                RexxObject *result = conditionobj->at(OREF_ADDITIONAL);
-                if (result == OREF_NULL)       /* not there?                        */
+            {
+                RexxObject *result = (RexxObject *)conditionobj->get(OREF_ADDITIONAL);
+                // return either .nil or a copy of the additional informaion
+                if (result == OREF_NULL)
                 {
-                    return TheNilObject;       /* return .nil                       */
+                    return TheNilObject;
                 }
                 else
                 {
-                    return result->copy();     /* copy the result info              */
+                    return (RexxObject *)result->copy();
                 }
             }
             else
             {
-                return TheNilObject;         /* return .nil if not there          */
+                return TheNilObject;
             }
             break;
 
-        case 'I':                          /* 'I'nstruction                     */
-            if (conditionobj != OREF_NULL)   /* have a condition object?          */
-            {
-                /* retrieve the instruction info     */
-                return conditionobj->at(OREF_INSTRUCTION);
-            }
-            break;
-
-        case 'D':                          /* 'D'escription                     */
+        // condition('I'struction).  Returns either SYNTAX or CALL, or a null string if no condition
+        case 'I':
             if (conditionobj != OREF_NULL)
-            { /* have a condition object?          */
-              /* retrieve the description info     */
-                RexxObject *result = conditionobj->at(OREF_DESCRIPTION);
-                if (result == OREF_NULL)       /* not found?                        */
+            {
+                return (RexxObject *)conditionobj->get(OREF_INSTRUCTION);
+            }
+            break;
+
+        // condition('D'escription)
+        case 'D':
+            if (conditionobj != OREF_NULL)
+            {
+                // get the description from the object, return a null string if not there
+                RexxObject *result = (RexxObject *)conditionobj->get(OREF_DESCRIPTION);
+                if (result == OREF_NULL)
                 {
-                    result = OREF_NULLSTRING;    /* return a null string if nothing   */
+                    result = OREF_NULLSTRING;
                 }
                 return result;
             }
             break;
 
-        case 'C':                          /* 'C'ondition name                  */
-            if (conditionobj != OREF_NULL)   /* have a condition object?          */
+        // condition('C'ondition)
+        case 'C':
+            // if we have a condition object, return that value
+            if (conditionobj != OREF_NULL)
             {
-                /* retrieve the condition name       */
-                return conditionobj->at(OREF_CONDITION);
+                return (RexxObject *)conditionobj->get(OREF_CONDITION);
             }
             break;
 
-        case 'O':                          /* 'C'ondition name                  */
-            if (conditionobj != OREF_NULL)   /* have a condition object?          */
+        // condition('O'bject)
+        case 'O':
+            // if we have a condition, return a copy of the condition object
+            if (conditionobj != OREF_NULL)
             {
-                return conditionobj->copy(); /* just return a copy of this        */
+                return (RexxObject *)conditionobj->copy();
             }
-            return TheNilObject;         /* return the NIL object             */
+            return TheNilObject;
 
-        case 'S':                          /* 'S'tate                           */
-            if (conditionobj != OREF_NULL)   /* have a condition object?          */
+        // condition('S'tate
+        case 'S':
+            // get the current trap state from the condition object if we have one
+            if (conditionobj != OREF_NULL)
             {
-                /* get the current trap state        */
-                return context->trapState((RexxString *)conditionobj->at(OREF_CONDITION));
+                return context->trapState((RexxString *)conditionobj->get(OREF_CONDITION));
             }
             break;
 
-        default:                           /* unknown option                    */
-            /* report an error                   */
+        // an unknown option
+        default:
             reportException(Error_Incorrect_call_list, CHAR_CONDITION, IntegerOne, "ACDIOS", option);
             break;
     }
+
+    // most of the options fall through to here if there is no current condition.
     return OREF_NULLSTRING;
 }
 
-#define CHANGESTR_MIN 3
-#define CHANGESTR_MAX 4
-#define CHANGESTR_needle     1
-#define CHANGESTR_haystack   2
-#define CHANGESTR_newneedle  3
-#define CHANGESTR_count      4
 
 BUILTIN(CHANGESTR)
 {
-    fix_args(CHANGESTR);                 /* check on require number of args   */
-                                         /* get string for new                */
+    const size_t CHANGESTR_Min = 3;
+    const size_t CHANGESTR_Max = 4;
+    const size_t CHANGESTR_needle =     1;
+    const size_t CHANGESTR_haystack =   2;
+    const size_t CHANGESTR_newneedle =  3;
+    const size_t CHANGESTR_count =      4;
+
+    fix_args(CHANGESTR);
+
     RexxString *needle = required_string(CHANGESTR, needle);
-    /* get string for target             */
     RexxString *haystack = required_string(CHANGESTR, haystack);
-    /* get string to change to           */
     RexxString *newneedle = required_string(CHANGESTR, newneedle);
-    /* length is optional                */
     RexxInteger *count = optional_integer(CHANGESTR, count);
-    /* go perform the pos function       */
+
     return haystack->changeStr(needle, newneedle, count);
 }
 
-#define COUNTSTR_MIN 2
-#define COUNTSTR_MAX 2
-#define COUNTSTR_needle     1
-#define COUNTSTR_haystack   2
 
 BUILTIN(COUNTSTR)
 {
-    fix_args(COUNTSTR);                  /* check on require number of args   */
-                                         /* get string for new                */
+    const size_t COUNTSTR_Min = 2;
+    const size_t COUNTSTR_Max = 2;
+    const size_t COUNTSTR_needle =     1;
+    const size_t COUNTSTR_haystack =   2;
+
+    fix_args(COUNTSTR);
+
     RexxString *needle = required_string(COUNTSTR, needle);
-    /* get string for target             */
     RexxString *haystack = required_string(COUNTSTR, haystack);
-    return haystack->countStrRexx(needle); /* go perform the countstr function  */
+
+    return haystack->countStrRexx(needle);
 }
 
 
-#define RXFUNCADD_MIN 2
-#define RXFUNCADD_MAX 3
-#define RXFUNCADD_name   1
-#define RXFUNCADD_module 2
-#define RXFUNCADD_proc   3
-
 BUILTIN(RXFUNCADD)
 {
-    fix_args(RXFUNCADD);                 /* check on required number of args  */
+    const size_t RXFUNCADD_Min = 2;
+    const size_t RXFUNCADD_Max = 3;
+    const size_t RXFUNCADD_name =   1;
+    const size_t RXFUNCADD_module = 2;
+    const size_t RXFUNCADD_proc =   3;
+
+    fix_args(RXFUNCADD);
 
     // we require a name and module, but the
     // procedure is optional.  If not specified, we
@@ -2448,30 +2552,30 @@ BUILTIN(RXFUNCADD)
     return PackageManager::addRegisteredRoutine(name, module, proc);
 }
 
-#define RXFUNCDROP_MIN 1
-#define RXFUNCDROP_MAX 1
-#define RXFUNCDROP_name   1
 
 BUILTIN(RXFUNCDROP)
 {
-    fix_args(RXFUNCDROP);                 /* check on required number of args  */
+    const size_t RXFUNCDROP_Min = 1;
+    const size_t RXFUNCDROP_Max = 1;
+    const size_t RXFUNCDROP_name =   1;
 
-    // only a name is required.
+    fix_args(RXFUNCDROP);
+
     RexxString *name = required_string(RXFUNCDROP, name);
 
     // hand this off to the package manager.
     return PackageManager::dropRegisteredRoutine(name);
 }
 
-#define RXFUNCQUERY_MIN 1
-#define RXFUNCQUERY_MAX 1
-#define RXFUNCQUERY_name   1
 
 BUILTIN(RXFUNCQUERY)
 {
-    fix_args(RXFUNCQUERY);                 /* check on required number of args  */
+    const size_t RXFUNCQUERY_Min = 1;
+    const size_t RXFUNCQUERY_Max = 1;
+    const size_t RXFUNCQUERY_name =   1;
 
-    // only a name is required.
+    fix_args(RXFUNCQUERY);
+
     RexxString *name = required_string(RXFUNCQUERY, name);
 
     // hand this off to the package manager.
@@ -2479,20 +2583,18 @@ BUILTIN(RXFUNCQUERY)
 }
 
 
-#define QUEUEEXIT_MIN 1
-#define QUEUEEXIT_MAX 1
-#define QUEUEEXIT_name   1
-
-
 // This somewhat funny function is implemented as a builtin because it
 // requires quite a bit of internal access.
 BUILTIN(QUEUEEXIT)
 {
-    fix_args(QUEUEEXIT);                   /* check on required number of args  */
+    const size_t QUEUEEXIT_Min = 1;
+    const size_t QUEUEEXIT_Max = 1;
+    const size_t QUEUEEXIT_name =   1;
 
-    // only a name is required.
+    fix_args(QUEUEEXIT);
+
     RexxString *name = required_string(QUEUEEXIT, name);
-    /* call the exit                     */
+
     context->getActivity()->callQueueNameExit(context, name);
     // make sure we have real object to return
     if (name == OREF_NULL)
@@ -2502,36 +2604,42 @@ BUILTIN(QUEUEEXIT)
     return name;
 }
 
-#define SETLOCAL_MIN 0
-#define SETLOCAL_MAX 0
 
 BUILTIN(SETLOCAL)
 {
-    check_args(SETLOCAL);              /* check on required number of args  */
+    const size_t SETLOCAL_Min = 0;
+    const size_t SETLOCAL_Max = 0;
+
+    check_args(SETLOCAL);
+
     // the external environment implements this
     return SystemInterpreter::pushEnvironment(context);
 }
 
-#define ENDLOCAL_MIN 0
-#define ENDLOCAL_MAX 0
 
 BUILTIN(ENDLOCAL)
 {
-    check_args(ENDLOCAL);              /* check on required number of args  */
+    const size_t ENDLOCAL_Min = 0;
+    const size_t ENDLOCAL_Max = 0;
+
+    check_args(ENDLOCAL);
+
     // the external environment implements this
     return SystemInterpreter::popEnvironment(context);
 }
 
-#define QUALIFY_MIN 1
-#define QUALIFY_MAX 1
-#define QUALIFY_name  1
 
 /**
  * Qualify a stream name.
  */
 BUILTIN(QUALIFY)
 {
-    check_args(QUALIFY);               /* check on required number of args  */
+    const size_t QUALIFY_Min = 1;
+    const size_t QUALIFY_Max = 1;
+    const size_t QUALIFY_name =  1;
+
+    check_args(QUALIFY);
+
     RexxString *name = optional_string(QUALIFY, name);
 
     char qualified_name[SysFileSystem::MaximumFileNameLength];
