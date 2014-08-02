@@ -61,13 +61,13 @@ void RexxStartDispatcher::run()
     RexxString *name = OREF_NULLSTRING;     // name of the invoked program
     RexxString *fullname = name;            // default the fulllength name to the simple name
 
-    if (programName != NULL)       /* have an actual name?              */
+    // if we've been given an actual name, get the string version of it
+    if (programName != NULL)
     {
-        /* get string version of the name    */
         name = new_string(programName);
+        savedObjects.add(name);
     }
 
-    savedObjects.add(name);              /* protect from garbage collect      */
     // get an array version of the arguments and protect
     ArrayClass *new_arglist = new_array(argcount);
     savedObjects.add(new_arglist);
@@ -78,14 +78,14 @@ void RexxStartDispatcher::run()
     {
         new_arglist->put(new_string(arglist[0].strptr + 1, arglist[0].strlength - 1), 1);
     }
-    else {
-        /* loop through the argument list    */
+    // we need to create an array argument list from the RXSTRINGs
+    else
+    {
         for (size_t i = 0; i < argcount; i++)
         {
-            /* have a real argument?             */
+            // only add real arguments
             if (arglist[i].strptr != NULL)
             {
-                /* add to the argument array         */
                 new_arglist->put(new_string(arglist[i]), i + 1);
             }
         }
@@ -93,49 +93,48 @@ void RexxStartDispatcher::run()
 
     RexxString *source_calltype;
 
-    switch (calltype)                      /* turn calltype into a string       */
+    // now get the calltype as a character string to used in
+    // the source string. .
+    switch (calltype)
     {
-        case  RXCOMMAND:                   /* command invocation                */
-            source_calltype = OREF_COMMAND;  /* this is the 'COMMAND' string      */
+        case  RXCOMMAND:
+            source_calltype = OREF_COMMAND;
             break;
 
-        case  RXFUNCTION:                  /* function invocation               */
-            /* 'FUNCTION' string                 */
+        case  RXFUNCTION:
             source_calltype = OREF_FUNCTIONNAME;
             break;
 
-        case  RXSUBROUTINE:                /* subroutine invocation             */
-            /* 'SUBROUTINE' string               */
+        case  RXSUBROUTINE:
             source_calltype = OREF_SUBROUTINE;
             break;
 
+        // if not specified, call it a COMMAND.
         default:
-            source_calltype = OREF_COMMAND;  /* this is the 'COMMAND' string      */
+            source_calltype = OREF_COMMAND;
             break;
     }
 
     Protected<RoutineClass> program;
 
-    if (instore == NULL)                     /* no instore request?               */
+    // if not an instore request, we load this from a file.
+    if (instore == NULL)
     {
-        /* go resolve the name               */
         fullname = activity->resolveProgramName(name, OREF_NULL, OREF_NULL);
-        if (fullname == OREF_NULL)         /* not found?                        */
+        if (fullname == OREF_NULL)
         {
-            /* got an error here                 */
             reportException(Error_Program_unreadable_notfound, name);
         }
         savedObjects.add(fullname);
-                                           /* try to restore saved image        */
         program = LanguageParser::createProgramFromFile(fullname);
     }
-    else                                 /* have an instore program           */
+    // we either need to parse the instore source or restore from a
+    // previous image.
+    else
     {
-        /* go handle instore parms           */
         program = LanguageParser::processInstore(instore, name);
-        if (program == OREF_NULL)        /* couldn't get it?                  */
+        if (program.isNull())
         {
-            /* got an error here                 */
             reportException(Error_Program_unreadable_name, name);
         }
     }
@@ -146,31 +145,33 @@ void RexxStartDispatcher::run()
     {
         ProtectedObject program_result;
         // call the program
-        program->runProgram(activity, source_calltype, initial_address, new_arglist->data(), argcount, program_result);
-        if (result != NULL)          /* if return provided for            */
+        program->runProgram(activity, source_calltype, initial_address, new_arglist->messageArgs(), argcount, program_result);
+
+        // provided for a return result (that's optional)
+        if (result != NULL)
         {
-            /* actually have a result to return? */
+            // actually have a result to return?
             if ((RexxObject *)program_result != OREF_NULL)
             {
-                /* force to a string value           */
+                // force to a string value
                 program_result = ((RexxObject *)program_result)->stringValue();
                 // copy this into the result RXSTRING
                 ((RexxString *)program_result)->copyToRxstring(*result);
             }
-            else                             /* make this an invalid string       */
+            // nothing to return
+            else
             {
                 MAKERXSTRING(*result, NULL, 0);
             }
         }
-                                             /* If there is a return val...       */
+
+        // if we have a return result and it is an integer value, return that as a return code.
         if ((RexxObject *)program_result != OREF_NULL)
         {
             wholenumber_t return_code;
 
-            /* if a whole number...              */
             if (((RexxObject *)program_result)->numberValue(return_code) && return_code <= SHRT_MAX && return_code >= SHRT_MIN)
             {
-                /* ...copy to return code.           */
                 retcode = (short)return_code;
             }
         }
@@ -203,7 +204,7 @@ void CallRoutineDispatcher::run()
     if (arguments != OREF_NULL)
     {
         // we use a null string for the name when things are called directly
-        routine->call(activity, OREF_NULLSTRING, arguments->data(), arguments->size(), result);
+        routine->call(activity, OREF_NULLSTRING, arguments->messageArgs(), arguments->messageArgCount(), result);
     }
     else
     {
@@ -220,22 +221,20 @@ void CallRoutineDispatcher::run()
 void CallProgramDispatcher::run()
 {
     RexxString *targetName = new_string(program);
-    /* go resolve the name               */
+    //we are resolving from a program name
     RexxString *name = activity->resolveProgramName(targetName, OREF_NULL, OREF_NULL);
-    if (name == OREF_NULL)                /* not found?                        */
+    if (name == OREF_NULL)
     {
-        /* got an error here                 */
         reportException(Error_Program_unreadable_notfound, targetName);
     }
     ProtectedObject p(name);
     // create a routine from this file
     Protected<RoutineClass> routine = LanguageParser::createProgramFromFile(name);
-    p = routine;
 
     if (arguments != OREF_NULL)
     {
         // use the provided name for the call name
-        routine->runProgram(activity, arguments->data(), arguments->size(), result);
+        routine->runProgram(activity, arguments->messageArgs(), arguments->messageArgCount(), result);
     }
     else
     {

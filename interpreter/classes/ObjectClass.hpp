@@ -312,6 +312,7 @@ class RexxInternalObject : public RexxVirtualBase
     virtual bool         truthValue(int);
     virtual bool         logicalValue(logical_t &);
     virtual RexxString  *makeString();
+    virtual RexxString  *defaultName();
     virtual void         copyIntoTail(CompoundVariableTail *buffer);
     virtual RexxString  *primitiveMakeString();
     virtual ArrayClass  *makeArray();

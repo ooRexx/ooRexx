@@ -232,9 +232,6 @@ RexxInternalObject *MutableBuffer::copy()
  *               The additional length required.
  */
 void MutableBuffer::ensureCapacity(size_t addedLength)
-/******************************************************************************/
-/* Function:  append to the mutable buffer                                    */
-/******************************************************************************/
 {
     size_t resultLength = dataLength + addedLength;
 
@@ -321,10 +318,7 @@ RexxObject *MutableBuffer::lengthRexx()
  *
  * @return returns the same buffer.
  */
-MutableBuffer *MutableBuffer::append(RexxObject *obj)
-/******************************************************************************/
-/* Function:  append to the mutable buffer                                    */
-/******************************************************************************/
+MutableBuffer *MutableBuffer::appendRexx(RexxObject *obj)
 {
     Protected<RexxString> string = stringArgument(obj, ARG_ONE);
     // make sure we have enough room
@@ -333,6 +327,22 @@ MutableBuffer *MutableBuffer::append(RexxObject *obj)
     copyData(dataLength, string->getStringData(), string->getLength());
     dataLength += string->getLength();
     return this;
+}
+
+
+/**
+ * Append a value to this buffer.
+ *
+ * @param d      The data to append.
+ * @param l      The length of the data to append.
+ */
+void MutableBuffer::append(const char *d, size_t l)
+{
+    // make sure we have enough room
+    ensureCapacity(l);
+
+    copyData(dataLength, d, l);
+    dataLength += l;
 }
 
 
@@ -368,7 +378,7 @@ MutableBuffer *MutableBuffer::insert(RexxObject *str, RexxObject *pos, RexxObjec
         // if inserting a zero length string, this is simple!
         if (insertLength == 0)
         {
-            return this;                            /* do nothing                   */
+            return this;
         }
         ensureCapacity(insertLength);
     }
@@ -378,17 +388,17 @@ MutableBuffer *MutableBuffer::insert(RexxObject *str, RexxObject *pos, RexxObjec
     }
 
 
-    /* create space in the buffer   */
+    // create space in the buffer
     if (begin < dataLength)
     {
         openGap(begin, insertLength, dataLength - begin);
     }
+    // else if we need to pad before the insertion
     else if (begin > dataLength)
     {
-        /* pad before insertion         */
         setData(dataLength, padChar, begin - dataLength);
     }
-    /* insert string contents       */
+    // copy in the string contents
     copyData(begin, string->getStringData(), copyLength);
     // do we need data padding?
     if (padLength > 0)
@@ -558,7 +568,7 @@ MutableBuffer *MutableBuffer::mydelete(RexxObject *_start, RexxObject *len)
 
     // is the begin point actually within the string?
     if (begin < dataLength)
-    {           /* got some work to do?         */
+    {
         // deleting from the middle?
         if (begin + range < dataLength)
         {
@@ -608,7 +618,7 @@ RexxObject *MutableBuffer::setBufferSize(RexxInteger *size)
         dataLength = Numerics::minVal(dataLength, newsize);
         newBuffer->copyData(0, data->getData(), dataLength);
         // replace the old buffer
-        OrefSet(this, data, newBuffer);
+        setField(data, newBuffer);
         // and update the size....
         bufferLength = newsize;
     }
@@ -728,13 +738,10 @@ RexxInteger *MutableBuffer::lastPos(RexxString  *needle, RexxInteger *_start, Re
  */
 RexxInteger *MutableBuffer::caselessPos(RexxString  *needle, RexxInteger *pstart, RexxInteger *range)
 {
-    /* force needle to a string          */
     needle = stringArgument(needle, ARG_ONE);
-    /* get the starting position         */
     size_t _start = optionalPositionArgument(pstart, 1, ARG_TWO);
     size_t _range = optionalLengthArgument(range, getLength() - _start + 1, ARG_THREE);
-    /* pass on to the primitive function */
-    /* and return as an integer object   */
+
     return new_integer(StringUtil::caselessPos(getStringData(), getLength(), needle , _start - 1, _range));
 }
 
@@ -749,13 +756,11 @@ RexxInteger *MutableBuffer::caselessPos(RexxString  *needle, RexxInteger *pstart
  */
 RexxObject *MutableBuffer::caselessContains(RexxString  *needle, RexxInteger *pstart, RexxInteger *range)
 {
-    /* force needle to a string          */
     needle = stringArgument(needle, ARG_ONE);
-    /* get the starting position         */
     size_t _start = optionalPositionArgument(pstart, 1, ARG_TWO);
     size_t _range = optionalLengthArgument(range, getLength() - _start + 1, ARG_THREE);
-    /* pass on to the primitive function */
-    /* and return as an integer object   */
+
+    // pass on to the primitive function and return as an integer object
     return booleanObject(StringUtil::caselessPos(getStringData(), getLength(), needle , _start - 1, _range) > 0);
 }
 
@@ -772,13 +777,11 @@ RexxObject *MutableBuffer::caselessContains(RexxString  *needle, RexxInteger *ps
  */
 RexxInteger *MutableBuffer::caselessLastPos(RexxString  *needle, RexxInteger *pstart, RexxInteger *range)
 {
-    /* force needle to a string          */
     needle = stringArgument(needle, ARG_ONE);
-    /* get the starting position         */
     size_t _start = optionalPositionArgument(pstart, getLength(), ARG_TWO);
     size_t _range = optionalLengthArgument(range, getLength(), ARG_THREE);
-    /* pass on to the primitive function */
-    /* and return as an integer object   */
+
+    // pass on to the primitive function and return as an integer object
     return new_integer(StringUtil::caselessLastPos(getStringData(), getLength(), needle , _start, _range));
 }
 
@@ -855,16 +858,15 @@ RexxInteger *MutableBuffer::caselessCountStrRexx(RexxString *needle)
  */
 MutableBuffer *MutableBuffer::changeStr(RexxString *needle, RexxString *newNeedle, RexxInteger *countArg)
 {
-    /* force needle to a string          */
     needle = stringArgument(needle, ARG_ONE);
-    /* newneedle must be a string two    */
     newNeedle = stringArgument(newNeedle, ARG_TWO);
 
     // we'll only change up to a specified count.  If not there, we do everything.
     size_t count = optionalPositive(countArg, Numerics::MAX_WHOLENUMBER, ARG_THREE);
     // find the number of matches in the string
     size_t matches = StringUtil::countStr(getStringData(), getLength(), needle);
-    if (matches > count)                 // the matches are bounded by the count
+    // the matches are bounded by the count
+    if (matches > count)
     {
         matches = count;
     }
@@ -873,8 +875,9 @@ MutableBuffer *MutableBuffer::changeStr(RexxString *needle, RexxString *newNeedl
     {
         return this;
     }
-    size_t needleLength = needle->getLength();  /* get the length of the needle      */
-    size_t newLength = newNeedle->getLength();  /* and the replacement length        */
+    size_t needleLength = needle->getLength();
+    size_t newLength = newNeedle->getLength();
+
     // calculate the final length and make sure we have enough space
     size_t resultLength = getLength() - (matches * needleLength) + (matches * newLength);
     ensureCapacity(resultLength);
@@ -994,16 +997,16 @@ MutableBuffer *MutableBuffer::changeStr(RexxString *needle, RexxString *newNeedl
  */
 MutableBuffer *MutableBuffer::caselessChangeStr(RexxString *needle, RexxString *newNeedle, RexxInteger *countArg)
 {
-    /* force needle to a string          */
     needle = stringArgument(needle, ARG_ONE);
-    /* newneedle must be a string two    */
     newNeedle = stringArgument(newNeedle, ARG_TWO);
 
     // we'll only change up to a specified count.  If not there, we do everything.
     size_t count = optionalPositive(countArg, Numerics::MAX_WHOLENUMBER, ARG_THREE);
     // find the number of matches in the string
     size_t matches = StringUtil::caselessCountStr(getStringData(), getLength(), needle);
-    if (matches > count)                 // the matches are bounded by the count
+
+    // the matches are bounded by the count
+    if (matches > count)
     {
         matches = count;
     }
@@ -1012,8 +1015,10 @@ MutableBuffer *MutableBuffer::caselessChangeStr(RexxString *needle, RexxString *
     {
         return this;
     }
-    size_t needleLength = needle->getLength();  /* get the length of the needle      */
-    size_t newLength = newNeedle->getLength();  /* and the replacement length        */
+
+    size_t needleLength = needle->getLength();
+    size_t newLength = newNeedle->getLength();
+
     // calculate the final length and make sure we have enough space
     size_t resultLength = getLength() - (matches * needleLength) + (matches * newLength);
     ensureCapacity(resultLength);
@@ -1026,7 +1031,7 @@ MutableBuffer *MutableBuffer::caselessChangeStr(RexxString *needle, RexxString *
     {
         const char *source = getStringData();
         size_t sourceLength = getLength();
-        size_t _start = 0;                          /* set a zero starting point         */
+        size_t _start = 0;
         for (size_t i = 0; i < matches; i++)
         {
             // search for the next occurrence...which should be there because we
@@ -1065,7 +1070,7 @@ MutableBuffer *MutableBuffer::caselessChangeStr(RexxString *needle, RexxString *
                 copyData(copyOffset, newPtr, newLength);
                 copyOffset += newLength;
             }
-            _start = matchPos + needleLength - 1;  /* step to the next position         */
+            _start = matchPos + needleLength - 1;
         }
         // we likely have some remainder that needs copying
         if (_start < sourceLength)
@@ -1107,7 +1112,7 @@ MutableBuffer *MutableBuffer::caselessChangeStr(RexxString *needle, RexxString *
                 copyData(copyOffset, newPtr, newLength);
                 copyOffset += newLength;
             }
-            _start = matchPos + needleLength - 1;  /* step to the next position         */
+            _start = matchPos + needleLength - 1;
         }
         // we likely have some remainder that needs copying
         if (_start < sourceLength)
@@ -1219,15 +1224,15 @@ MutableBuffer *MutableBuffer::translate(RexxString *tableo, RexxString *tablei, 
     {
         return upper(_start, _range);
     }
-                                            /* validate the tables               */
+
     tableo = optionalStringArgument(tableo, OREF_NULLSTRING, ARG_ONE);
-    size_t outTableLength = tableo->getLength();      /* get the table length              */
-    /* input table too                   */
+    size_t outTableLength = tableo->getLength();
+
     tablei = optionalStringArgument(tablei, OREF_NULLSTRING, ARG_TWO);
-    size_t inTableLength = tablei->getLength();       /* get the table length              */
-    const char *inTable = tablei->getStringData();    /* point at the input table          */
-    const char *outTable = tableo->getStringData();   /* and the output table              */
-                                          /* get the pad character             */
+    size_t inTableLength = tablei->getLength();
+    const char *inTable = tablei->getStringData();
+    const char *outTable = tableo->getStringData();
+
     char padChar = optionalPadArgument(pad, ' ', ARG_THREE);
     size_t startPos = optionalPositionArgument(_start, 1, ARG_FOUR);
     size_t range = optionalLengthArgument(_range, getLength() - startPos + 1, ARG_FOUR);
@@ -1237,38 +1242,39 @@ MutableBuffer *MutableBuffer::translate(RexxString *tableo, RexxString *tablei, 
     {
         return this;
     }
-    // cape the real range
+
+    // capy the real range
     range = Numerics::minVal(range, getLength() - startPos + 1);
-    char *scanPtr = getData() + startPos - 1;   /* point to data                     */
-    size_t scanLength = range;                  /* get the length too                */
+    char *scanPtr = getData() + startPos - 1;
+    size_t scanLength = range;
 
     while (scanLength--)
-    {                /* spin thru input                   */
-        char ch = *scanPtr;                      /* get a character                   */
+    {
+        char ch = *scanPtr;
         size_t position;
 
-        if (tablei != OREF_NULLSTRING)      /* input table specified?            */
+        if (tablei != OREF_NULLSTRING)
         {
-            /* search for the character          */
             position = StringUtil::memPos(inTable, inTableLength, ch);
         }
         else
         {
-            position = ((size_t)ch) & 0xff;     /* position is the character value   */
+            position = ((size_t)ch) & 0xff;
         }
+        // if found in the table, need to convert
         if (position != (size_t)(-1))
-        {     /* found in the table?               */
-            if (position < outTableLength)    /* in the output table?              */
+        {
+            if (position < outTableLength)
             {
-                /* convert the character             */
                 *scanPtr = *(outTable + position);
             }
+            // use the pad character if the output table is shorter
             else
             {
-                *scanPtr = padChar;             /* else use the pad character        */
+                *scanPtr = padChar;
             }
         }
-        scanPtr++;                          /* step the pointer                  */
+        scanPtr++;
     }
     return this;
 }
@@ -1656,48 +1662,57 @@ RexxObject *MutableBuffer::caselessContainsWord(RexxString  *phrase, RexxInteger
  */
 MutableBuffer *MutableBuffer::delWord(RexxInteger *position, RexxInteger *plength)
 {
-                                         /* convert position to binary        */
     size_t _wordPos = positionArgument(position, ARG_ONE);
-    /* get num of words to delete, the   */
-    /* default is "a very large number"  */
+    // default delete count is a "very large number"
     size_t count = optionalLengthArgument(plength, Numerics::MAX_WHOLENUMBER, ARG_TWO);
 
-    size_t length = getLength();         /* get string length                 */
-    if (length == 0)                     /* null string?                      */
+    // if this is a null string, we're done
+    size_t length = getLength();
+    if (length == 0)
     {
-        return this;                     /* nothing to delete                 */
-    }
-    if (count == 0)                      /* deleting zero words?              */
-    {
-        return this;                     /* also very easy                    */
-    }
-    const char *_word = getStringData();  /* point to the string               */
-    const char *nextSite = NULL;
-                                       /* get the first word                */
-    size_t _wordLength = StringUtil::nextWord(&_word, &length, &nextSite);
-    while (--_wordPos > 0 && _wordLength != 0)
-    {  /* loop until we reach tArget        */
-        _word = nextSite;                /* copy the start pointer            */
-                                         /* get the next word                 */
-        _wordLength = StringUtil::nextWord(&_word, &length, &nextSite);
-    }
-    if (_wordPos != 0)                   /* run out of words first            */
-    {
-        return this;                     /* return the buffer unaltered       */
-    }
-    // get the deletion point as an offset
-    size_t deletePosition = _word - getStringData();
-    while (--count > 0 && _wordLength != 0)
-    {  /* loop until we reach tArget        */
-        _word = nextSite;              /* copy the start pointer            */
-                                       /* get the next word                 */
-        _wordLength = StringUtil::nextWord(&_word, &length, &nextSite);
-    }
-    if (length != 0)                   /* didn't use up the string          */
-    {
-        StringUtil::skipBlanks(&nextSite, &length);/* skip over trailing blanks         */
+        return this;
     }
 
+    // not deleting any words, also done
+    if (count == 0)
+    {
+        return this;
+    }
+
+    const char *_word = getStringData();
+    const char *nextSite = NULL;
+
+    // loop until we reach our word target
+    size_t _wordLength = StringUtil::nextWord(&_word, &length, &nextSite);
+    while (--_wordPos > 0 && _wordLength != 0)
+    {
+        _word = nextSite;
+        _wordLength = StringUtil::nextWord(&_word, &length, &nextSite);
+    }
+
+    // if we ran out of words before reaching the delete position, we're also done
+    if (_wordPos != 0)
+    {
+        return this;
+    }
+
+    // get the deletion point as an offset
+    size_t deletePosition = _word - getStringData();
+
+    // scan to the end of the deletion target
+    while (--count > 0 && _wordLength != 0)
+    {
+        _word = nextSite;
+        _wordLength = StringUtil::nextWord(&_word, &length, &nextSite);
+    }
+
+    // skip over trailing blanks if we can have them.
+    if (length != 0)
+    {
+        StringUtil::skipBlanks(&nextSite, &length);
+    }
+
+    // delete the data
     size_t gapSize = dataLength - (deletePosition + length);
     // close up the delete part
     closeGap(deletePosition, gapSize, length);
@@ -1718,18 +1733,16 @@ MutableBuffer *MutableBuffer::delWord(RexxInteger *position, RexxInteger *plengt
 */
 MutableBuffer *MutableBuffer::space(RexxInteger *space_count, RexxString *pad)
 {
-    size_t count = 0;                      /* count word interstices in buffer*/
+    size_t count = 0;
 
-                                           /* get the spacing count           */
     const size_t padLength = optionalLengthArgument(space_count, 1, ARG_ONE);
-    /* get the pad character           */
     const char   padChar   = optionalPadArgument(pad, ' ', ARG_TWO);
 
     // an inplace update has complications, depending on whether the new string
     // is shorter or longer than the original.
     // first execute padC with padLength == 0,1; later expand padC to padLength
-    const char   padC = ' ';               /* intermediate pad: single space  */
-    const size_t padL = 1;                 /* intermediate pad length: 1      */
+    const char   padC = ' ';
+    const size_t padL = 1;
 
     // With padC the new string is not longer, so we can just overlay in place.
     // Set write position to start of buffer
@@ -1746,82 +1759,93 @@ MutableBuffer *MutableBuffer::space(RexxInteger *space_count, RexxString *pad)
     //     increment word interstice count
     //     iterate
     // adjust string dataLength to write position
-    size_t      writePos = 0;               /* offset current write position  */
-    const char *_word    = getStringData(); /* point to the start of string   */
-    const char *nextSite = NULL;            /* start of the next word         */
-    size_t        length = getLength();     /* get string data length         */
+    size_t writePos = 0;
+    const char *_word = getStringData();
+    const char *nextSite = NULL;
+    size_t length = getLength();
 
-                                            /* get the first word             */
+    // find the first word
     size_t _wordLength = StringUtil::nextWord(&_word, &length, &nextSite);
 
+    // while we still have more words, do an inplace update
     while (_wordLength != 0)
     {
-        /* copy first word to writePos    */
         copyData(writePos, _word, _wordLength);
-        writePos += _wordLength;            /* update writePos for next word  */
-        _word = nextSite;                   /* set start pointer to next word */
-                                            /* get the next word              */
-        _wordLength = StringUtil::nextWord(&_word, &length, &nextSite);
-        if (_wordLength == 0)               /* is there no next word coming ? */
-        {
-            break;                          /* don't pad or count last word   */
-        }
-        switch (padLength)                  /* handle different padLength     */
-        {
-            case 1:                             /* more frequent case goes first  */
-                setData(writePos, padChar, padLength); /* write pad character     */
-                writePos += padLength;         /* move write position one byte    */
-                break;
-            case 0:
-                break;                         /* don't write pad character       */
-            default:                           /* padLength > 1                   */
-                setData(writePos, padC, padL); /* write padC pad character        */
-                writePos += padL;              /* move write position one byte    */
-        }
-        count++;                           /* increment the word count        */
-    }
-    dataLength = writePos;           /* set data length in buffer       */
+        writePos += _wordLength;
+        _word = nextSite;
 
-    if ( padLength > 1 )                   /* do we need to expand padC ?     */
+        _wordLength = StringUtil::nextWord(&_word, &length, &nextSite);
+        // no word found, we're done
+        if (_wordLength == 0)
+        {
+            break;
+        }
+        // handle the differnt pad situations
+        switch (padLength)
+        {
+            // single pad character, most common
+            case 1:
+                setData(writePos, padChar, padLength);
+                writePos += padLength;
+                break;
+            // removing all spaces...nothing to add
+            case 0:
+                break;
+            // spacing with multiple characters...uncommon.
+            default:
+                setData(writePos, padC, padL);
+                writePos += padL;
+        }
+        count++;
+    }
+    dataLength = writePos;
+
+    // need to extend the padding?
+    if (padLength > 1)
     {
-        size_t growth = count * (padLength-1); /* data grows by so many bytes */
-        ensureCapacity(growth);            /* make sure we have room for this */
+        // make sure we have room for the extra
+        size_t growth = count * (padLength-1);
+        ensureCapacity(growth);
 
         // As the string gets longer, we need to shift all data to the end and
         // then pull the pieces back in as we go.
-        length = getLength();              /* get current string data length  */
-        openGap(0, growth, length);        /* shift towards end of the buffer */
+        length = getLength();
+        openGap(0, growth, length);
         writePos = 0;
-        while (growth>0)
+        while (growth > 0)
         {
-            setData(writePos, padC, padL); /* fill gap with whitespace        */
+            setData(writePos, padC, padL);
             writePos++;
             growth--;
         }
         dataLength = getLength() + count * (padLength-1);/*adjust data to size*/
 
         // Now we do the last loop over, using padChar and padLength
-        writePos = 0;                      /* offset current write position   */
-        const char *_word    = getStringData(); /*point to the start of string*/
-        const char *nextSite = NULL;       /* start of the next word          */
-        length = dataLength;         /* get current string data length  */
-                                           /* get the first word              */
+        writePos = 0;
+        const char *_word = getStringData();
+        const char *nextSite = NULL;
+        length = dataLength;
+
+        // step forward to the first word
         _wordLength = StringUtil::nextWord(&_word, &length, &nextSite);
 
-        while (_wordLength != 0)           /* while there is a word ...       */
+        // process all of the words
+        while (_wordLength != 0)
         {
-            /* copy first word to writePos     */
+            // copy the word to the write position and update
             copyData(writePos, _word, _wordLength);
-            writePos += _wordLength;       /* update writePos for next word   */
-            _word = nextSite;              /* set start pointer to next word  */
-                                           /* get the next word               */
+            writePos += _wordLength;
+            _word = nextSite;
+
+            // find the next word
             _wordLength = StringUtil::nextWord(&_word, &length, &nextSite);
-            if (_wordLength != 0)          /* except for the last word        */
+            // if we have a next word, add the space padding
+            if (_wordLength != 0)
             {
-                setData(writePos, padChar, padLength); /* write padChar chars */
-                writePos += padLength;     /* update writePos for next word   */
+                setData(writePos, padChar, padLength);
+                writePos += padLength;
             }
         }
     }
-    return this;                           /* return the mutable buffer       */
+    return this;
 }

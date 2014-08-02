@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -43,6 +43,9 @@
 #include "ActivityDispatcher.hpp"
 #include "ProtectedObject.hpp"
 
+/**
+ * A dispatcher for processing a RexxStart call.
+ */
 class RexxStartDispatcher : public ActivityDispatcher
 {
 public:
@@ -52,17 +55,20 @@ public:
     virtual void run();
     virtual void handleError(wholenumber_t, DirectoryClass *);
 
-    size_t     argcount;                 /* Number of args in arglist         */
-    PCONSTRXSTRING arglist;              /* Array of args                     */
-    const char *programName;             /* REXX program to run               */
-    PRXSTRING  instore;                  /* Instore array                     */
-    const char *envname;                 /* Initial cmd environment           */
-    int        calltype;                 /* How the program is called         */
-    short      retcode;                  /* Integer form of result            */
-    PRXSTRING  result;                   /* Result returned from program      */
+    size_t     argcount;                 // Number of args in arglist
+    PCONSTRXSTRING arglist;              // Array of args
+    const char *programName;             // REXX program to run
+    PRXSTRING  instore;                  // Instore array
+    const char *envname;                 // Initial cmd environment
+    int        calltype;                 // How the program is called
+    short      retcode;                  // Integer form of result
+    PRXSTRING  result;                   // Result returned from program
 };
 
 
+/**
+ * A dispatcher for handling external routine calls.
+ */
 class CallRoutineDispatcher : public ActivityDispatcher
 {
 public:
@@ -75,10 +81,13 @@ public:
 
 protected:
     RoutineClass *routine;           // target routine
-    ArrayClass    *arguments;         // the argument array (can be NULL)
+    ArrayClass   *arguments;         // the argument array (can be NULL)
 };
 
 
+/**
+ * A call dispatcher for handling an external program call.
+ */
 class CallProgramDispatcher : public ActivityDispatcher
 {
 public:
@@ -91,7 +100,7 @@ public:
 
 protected:
     const char   *program;           // target routine
-    ArrayClass    *arguments;         // the argument array (can be NULL)
+    ArrayClass   *arguments;         // the argument array (can be NULL)
 };
 
 

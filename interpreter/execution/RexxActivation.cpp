@@ -2584,13 +2584,13 @@ RexxObject *RexxActivation::externalCall(RexxString *target, RexxObject **argume
     }
 
     // Step 2a:  See if the function call exit fields this one
-    if (!activity->callObjectFunctionExit(this, target, calltype, resultObj, arguments, argcount))
+    if (!activity->callObjectFunctionExit(this, target, calltype == OREF_FUNCTIONNAME, resultObj, arguments, argcount))
     {
         return(RexxObject *)resultObj;
     }
 
     // Step 2b:  See if the function call exit fields this one
-    if (!activity->callFunctionExit(this, target, calltype, resultObj, arguments, argcount))
+    if (!activity->callFunctionExit(this, target, calltype == OREF_FUNCTIONNAME, resultObj, arguments, argcount))
     {
         return(RexxObject *)resultObj;
     }
@@ -2602,7 +2602,7 @@ RexxObject *RexxActivation::externalCall(RexxString *target, RexxObject **argume
     }
 
     // Step 4:  Check scripting exit, which is after most of the checks
-    if (!activity->callScriptingExit(this, target, calltype, resultObj, arguments, argcount))
+    if (!activity->callScriptingExit(this, target, calltype == OREF_FUNCTIONNAME, resultObj, arguments, argcount))
     {
         return(RexxObject *)resultObj;
     }

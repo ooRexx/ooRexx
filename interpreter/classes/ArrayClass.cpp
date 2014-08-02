@@ -1832,7 +1832,7 @@ RexxString *ArrayClass::toString(RexxString *format, RexxString *separator)
                 // string resolution here.  Items like arrays stored in arrays will display
                 // as "An Array".
                 RexxString *value = item->stringValue();
-                mutbuffer->append(value);
+                mutbuffer->appendRexx(value);
             }
         }
     }
@@ -1859,10 +1859,10 @@ RexxString *ArrayClass::toString(RexxString *format, RexxString *separator)
                 // append a linend between the previous item and this one.
                 if (!first)
                 {
-                    mutbuffer->append(lineEndString);
+                    mutbuffer->appendRexx(lineEndString);
                 }
                 RexxString *value = item->stringValue();
-                mutbuffer->append(value);
+                mutbuffer->appendRexx(value);
                 first = false;
             }
         }

@@ -200,11 +200,10 @@ protected:
 
 
 /**
- * Typed version of a protected object.  Because this
- * uses templates, it is possible to use these like
- * normal pointers to invoke methods.  More useful where
- * operations need to be performed on a protected object
- * since it avoids lots of cast operations.
+ * A single proctected object that can
+ * protect multiple object instances.  Useful for
+ * situations where there are a variable number of
+ * things that require protecting.
  */
 class ProtectedSet : public ProtectedObject
 {
@@ -213,10 +212,17 @@ public:
     inline ProtectedSet(Activity *a) : ProtectedObject(a) { }
     inline ~ProtectedSet() { }
 
-    void add(RexxObject *);
+    void add(RexxInternalObject *);
 };
 
 
+/**
+ * Typed version of a protected object.  Because this
+ * uses templates, it is possible to use these like
+ * normal pointers to invoke methods.  More useful where
+ * operations need to be performed on a protected object
+ * since it avoids lots of cast operations.
+ */
 template <class objType> class Protected : public ProtectedBase
 {
 public:

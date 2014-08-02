@@ -49,6 +49,9 @@
 #include "BufferClass.hpp"
 
 
+/**
+ * A string-like object where in-place updating of the data is permitted.
+ */
 class MutableBuffer : public RexxObject
 {
  public:
@@ -68,7 +71,7 @@ class MutableBuffer : public RexxObject
 
     RexxObject *lengthRexx();
 
-    MutableBuffer *append(RexxObject*);
+    MutableBuffer *appendRexx(RexxObject*);
     MutableBuffer *insert(RexxObject*, RexxObject*, RexxObject*, RexxObject*);
     MutableBuffer *overlay(RexxObject*, RexxObject*, RexxObject*, RexxObject*);
     MutableBuffer *replaceAt(RexxObject *str, RexxObject *pos, RexxObject *len, RexxObject *pad);
@@ -118,6 +121,7 @@ class MutableBuffer : public RexxObject
     inline const char *getStringData() { return data->getData(); }
     inline size_t      getLength()     { return dataLength; }
     inline char *      getData()       { return data->getData(); }
+           void append(const char *string, size_t l);
     inline void copyData(size_t offset, const char *string, size_t l) { data->copyData(offset, string, l); }
     inline void openGap(size_t offset, size_t _size, size_t tailSize) { data->openGap(offset, _size, tailSize); }
     inline void closeGap(size_t offset, size_t _size, size_t tailSize) { data->closeGap(offset, _size, tailSize); }

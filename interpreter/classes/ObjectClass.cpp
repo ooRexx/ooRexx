@@ -1634,6 +1634,18 @@ RexxObject  *RexxObject::objectNameEquals(RexxObject *name)
  * @return The default string value for an object...generally just
  *         constructed from the class id.
  */
+RexxString  *RexxInternalObject::defaultName()
+{
+    return new_string("Unknownn class object");
+}
+
+
+/**
+ * Handle "final" string coercion level
+ *
+ * @return The default string value for an object...generally just
+ *         constructed from the class id.
+ */
 RexxString  *RexxObject::defaultName()
 {
     RexxString *defaultname = behaviour->getOwningClass()->getId();

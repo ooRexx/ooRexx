@@ -41,7 +41,7 @@
 #include "ArrayClass.hpp"
 
 
-void ProtectedSet::add(RexxObject *o)
+void ProtectedSet::add(RexxInternalObject *o)
 {
     // first one we've added?
     if (protectedObject == OREF_NULL)
