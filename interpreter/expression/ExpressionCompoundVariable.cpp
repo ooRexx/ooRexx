@@ -417,7 +417,7 @@ void RexxCompoundVariable::expose(RexxActivation *context, VariableDictionary *o
     CompoundVariableTail resolved_tail(context, &tails[0], tailCount);
     // first get (and possible create) the compound variable in the
     // object context.
-    CompoundTableElement *variable = source_stem->exposeCompoundVariable(&resolved_tail);
+    CompoundTableElement *variable = source_stem->exposeCompoundVariable(resolved_tail);
     // get the stem index from the current level.  This may end up
     // creating the stem that holds the exposed value.
     StemClass *stem_table = context->getLocalStem(stemName, stemIndex);

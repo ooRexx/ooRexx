@@ -156,7 +156,7 @@ RexxObject *RexxExpressionMessage::evaluate(RexxActivation *context, ExpressionS
 {
     // evaluate the target object
     RexxObject *_target = target->evaluate(context, stack);
-    RexxObject *_super = OREF_NULL;
+    RexxClass *_super = OREF_NULL;
 
     // do we have a super class override?
     if (super != OREF_NULL)
@@ -168,7 +168,7 @@ RexxObject *RexxExpressionMessage::evaluate(RexxActivation *context, ExpressionS
             reportException(Error_Execution_super);
         }
 
-        _super = super->evaluate(context, stack);
+        _super = (RexxClass *)super->evaluate(context, stack);
         // we send the message using the stack, which
         // expects to find the target and the arguments
         // on the stack, but not the super.  We need to
@@ -252,7 +252,7 @@ void RexxExpressionMessage::assign(RexxActivation *context, RexxObject *value)
 
     // evaluate the target (protected on the stack)
     RexxObject *_target = target->evaluate(context, stack);
-    RexxObject *_super = OREF_NULL;
+    RexxClass *_super = OREF_NULL;
 
     // message override?
     if (super != OREF_NULL)
@@ -263,7 +263,7 @@ void RexxExpressionMessage::assign(RexxActivation *context, RexxObject *value)
             reportException(Error_Execution_super);
         }
         // evaluate the superclass override
-        _super = super->evaluate(context, stack);
+        _super = (RexxClass *)super->evaluate(context, stack);
         // we need to remove this from the stack for the send operation to work.
         stack->toss();
     }

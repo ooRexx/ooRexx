@@ -55,7 +55,7 @@
 void ExpressionStack::live(size_t liveMark)
 {
     // mark all current entries on the stack.
-    for (RexxObject **entry = stack; entry <= top; entry++)
+    for (RexxInternalObject **entry = stack; entry <= top; entry++)
     {
         memory_mark(*entry);
     }
@@ -72,7 +72,7 @@ void ExpressionStack::live(size_t liveMark)
 void ExpressionStack::liveGeneral(MarkReason reason)
 {
     // mark all current entries on the stack.
-    for (RexxObject **entry = stack; entry <= top; entry++)
+    for (RexxInternalObject **entry = stack; entry <= top; entry++)
     {
         memory_mark_general(*entry);
     }
@@ -86,11 +86,11 @@ void ExpressionStack::liveGeneral(MarkReason reason)
  */
 void ExpressionStack::migrate(Activity *activity)
 {
-    RexxObject **oldFrame = stack;
+    RexxInternalObject **oldFrame = stack;
     // allocate a new frame
     activity->allocateStackFrame(this, size);
     // copy the enties over to the new stack.
-    memcpy(stack, oldFrame, sizeof(RexxObject *) * size);
+    memcpy(stack, oldFrame, sizeof(RexxInternalObject *) * size);
 }
 
 
@@ -118,7 +118,7 @@ void ExpressionStack::expandArgs(size_t argcount, size_t min, size_t max, const 
     {
         // now check all of the arguments up to the min count
         // to verify none of them have been omitted.
-        RexxObject **current = pointer(argcount - 1);
+        RexxInternalObject **current = pointer(argcount - 1);
         for (size_t i = min; i; i--)
         {
             // an omitted value?
@@ -143,7 +143,7 @@ RexxString *ExpressionStack::requiredStringArg(size_t position)
 {
     // get the argument from the stack.  If this is a true
     // string, just return directly.
-    RexxObject *argument = peek(position);
+    RexxInternalObject *argument = peek(position);
     if (isString(argument))
     {
         return (RexxString *)argument;
@@ -168,7 +168,7 @@ RexxString *ExpressionStack::optionalStringArg(size_t  position)
 {
     // this is an optional argument, we just return the null value if it
     // isn't there.
-    RexxObject *argument = peek(position);
+    RexxInternalObject *argument = peek(position);
     if (argument == OREF_NULL)
     {
         return OREF_NULL;
@@ -202,7 +202,7 @@ RexxInteger *ExpressionStack::requiredIntegerArg(size_t position,
      size_t argcount, const char *function)
 {
     // if the argument is an integer already, this is a quick return.
-    RexxObject *argument = peek(position);
+    RexxInternalObject *argument = peek(position);
     if (isInteger(argument))
     {
         return (RexxInteger *)argument;
@@ -212,7 +212,7 @@ RexxInteger *ExpressionStack::requiredIntegerArg(size_t position,
     wholenumber_t numberValue;
     if (!argument->requestNumber(numberValue, Numerics::ARGUMENT_DIGITS))
     {
-        reportException(Error_Incorrect_call_whole, function, argcount - position, argument);
+        reportException(Error_Incorrect_call_whole, function, argcount - position, (RexxObject *)argument);
     }
 
     // replace the slot with the new value
@@ -237,7 +237,7 @@ RexxInteger *ExpressionStack::requiredIntegerArg(size_t position,
 RexxInteger *ExpressionStack::optionalIntegerArg(size_t position, size_t argcount, const char *function)
 {
     // this is optional, so we can return null.
-    RexxObject *argument = peek(position);
+    RexxInternalObject *argument = peek(position);
     if (argument == OREF_NULL)
     {
         return OREF_NULL;
@@ -251,7 +251,7 @@ RexxInteger *ExpressionStack::optionalIntegerArg(size_t position, size_t argcoun
     wholenumber_t numberValue;
     if (!argument->requestNumber(numberValue, Numerics::ARGUMENT_DIGITS))
     {
-        reportException(Error_Incorrect_call_whole, function, argcount - position, argument);
+        reportException(Error_Incorrect_call_whole, function, argcount - position, (RexxObject *)argument);
     }
 
     // replace the slot with the new value
@@ -274,7 +274,7 @@ RexxInteger *ExpressionStack::optionalIntegerArg(size_t position, size_t argcoun
  */
 RexxObject *ExpressionStack::requiredBigIntegerArg(size_t position, size_t argcount, const char *function)
 {
-    RexxObject *argument = peek(position);
+    RexxObject *argument = (RexxObject *)peek(position);
     // get this in the form of an object that is valid as a 64-bit integer, ready to
     // be passed along as an argument to native code.
     RexxObject *newArgument = Numerics::int64Object(argument);
@@ -302,7 +302,7 @@ RexxObject *ExpressionStack::requiredBigIntegerArg(size_t position, size_t argco
  */
 RexxObject *ExpressionStack::optionalBigIntegerArg(size_t position, size_t argcount, const char *function)
 {
-    RexxObject *argument = peek(position);
+    RexxObject *argument = (RexxObject *)peek(position);
     if (argument == OREF_NULL)
     {
         return OREF_NULL;
@@ -313,7 +313,7 @@ RexxObject *ExpressionStack::optionalBigIntegerArg(size_t position, size_t argco
     // returns a null value if it doesn't convert properly
     if (newArgument == OREF_NULL)
     {
-        reportException(Error_Incorrect_call_whole, function, argcount - position, argument);
+        reportException(Error_Incorrect_call_whole, function, argcount - position, (RexxObject *)argument);
     }
     // replace original object on the stack
     replace(position, newArgument);

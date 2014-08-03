@@ -58,8 +58,8 @@ class ExpressionStack
     ExpressionStack(RexxInternalObject **frames, size_t items) { stack = frames; size = items; top = stack; }
     ExpressionStack() { stack = OREF_NULL; size = 0; top = stack; }
 
-    void live(size_t);
-    void liveGeneral(MarkReason reason);
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
 
     void         expandArgs(size_t, size_t, size_t, const char *);
     RexxString * requiredStringArg(size_t);
@@ -78,7 +78,6 @@ class ExpressionStack
                    ((RexxObject *)(*(top - count)))->messageSend(message, arguments(count), count, result); };
     inline void         push(RexxInternalObject *value) { *(++top) = value; };
     inline RexxInternalObject  *pop() { return *(top--); };
-    inline RexxInternalObject  *fastPop() { return *(top--); };
     inline ArrayClass  *argumentArray(size_t count) { return new_array(count, (RexxInternalObject **)(top - (count - 1))); };
     inline RexxObject **arguments(size_t count) { return (RexxObject **)(top - (count - 1)); };
     inline void         replace(size_t offset, RexxObject *value) { *(top - offset) = value; };

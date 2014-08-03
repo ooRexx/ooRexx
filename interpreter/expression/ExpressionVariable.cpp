@@ -124,16 +124,16 @@ void RexxSimpleVariable::flatten(Envelope *envelope)
  *
  * @return The variable value (also pushed on stack)
  */
-RexxObject  *RexxSimpleVariable::evaluate(RexxActivation *context, ExpressionStack *stack)
+RexxObject *RexxSimpleVariable::evaluate(RexxActivation *context, ExpressionStack *stack)
 {
     // look up the variable
     RexxVariable *variable = context->getLocalVariable(variableName, index);
-    RexxObject *value = variable->getVariableValue();
+    RexxObject *value = (RexxObject *)variable->getVariableValue();
     // we need to do novalue checks.
     if (value == OREF_NULL)
     {
         // try the various novalue mechanisms
-        value = context->handleNovalueEvent(variableName, variableName, variable);
+        value = (RexxObject *)context->handleNovalueEvent(variableName, variableName, variable);
     }
     // stack, trace, and return
     stack->push(value);
@@ -152,13 +152,9 @@ RexxObject  *RexxSimpleVariable::evaluate(RexxActivation *context, ExpressionSta
  * @return The variable value.
  */
 RexxObject *RexxSimpleVariable::getValue(VariableDictionary *dictionary)
-/******************************************************************************/
-/* Function:  retrieve a simple variable's value (notready condition will     */
-/*            not be raised)                                                  */
-/******************************************************************************/
 {
     RexxVariable *variable = dictionary->getVariable(variableName);
-    RexxObject *value = variable->getVariableValue();
+    RexxObject *value = (RexxObject *)variable->getVariableValue();
     // if no variable yet, return the name.
     if (value == OREF_NULL)
     {
@@ -179,7 +175,7 @@ RexxObject *RexxSimpleVariable::getValue(VariableDictionary *dictionary)
 RexxObject  *RexxSimpleVariable::getValue(RexxActivation *context)
 {
     RexxVariable *variable = context->getLocalVariable(variableName, index);
-    RexxObject *value = variable->getVariableValue();
+    RexxObject *value = (RexxObject *)variable->getVariableValue();
     // use the variable name if not set.
     if (value == OREF_NULL)
     {
@@ -198,10 +194,10 @@ RexxObject  *RexxSimpleVariable::getValue(RexxActivation *context)
  * @return The variable value, or OREF_NULL if the variable is not
  *         assigned.
  */
-RexxObject  *RexxSimpleVariable::getRealValue(VariableDictionary *dictionary)
+RexxObject *RexxSimpleVariable::getRealValue(VariableDictionary *dictionary)
 {
     RexxVariable *variable = dictionary->getVariable(variableName);
-    return variable->getVariableValue();
+    return (RexxObject *)variable->getVariableValue();
 }
 
 
@@ -218,7 +214,7 @@ RexxObject  *RexxSimpleVariable::getRealValue(VariableDictionary *dictionary)
 RexxObject  *RexxSimpleVariable::getRealValue(RexxActivation *context)
 {
     RexxVariable *variable = context->getLocalVariable(variableName, index);
-    return variable->getVariableValue();
+    return (RexxObject *)variable->getVariableValue();
 }
 
 

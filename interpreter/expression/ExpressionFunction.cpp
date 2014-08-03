@@ -156,7 +156,7 @@ void RexxExpressionFunction::resolve(DirectoryClass *labels)
     {
         // see if there is a matching label.  If we get something,
         // we're finished.
-        target = (RexxInstruction *)labels->at((RexxString *)functionName);
+        target = (RexxInstruction *)labels->get((RexxString *)functionName);
     }
 
     // really nothing else required here.  If we did not resolve a label location, then
