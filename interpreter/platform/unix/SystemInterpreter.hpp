@@ -100,7 +100,7 @@ public:
     static RexxString *getDefaultAddressName();
     static bool invokeExternalFunction(RexxActivation *, Activity *, RexxString *, RexxObject **, size_t, RexxString *, ProtectedObject &);
     static void validateAddressName(RexxString *name );
-    static void loadImage(char **imageBuffer, size_t *imageSize);
+    static void loadImage(char *&imageBuffer, size_t &imageSize);
     static BufferClass *readProgram(const char *file_name);
 
     static sigset_t oldmask;       // masks used for setting signal handlers

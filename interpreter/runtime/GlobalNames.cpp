@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -44,62 +44,64 @@
 #include "RexxCore.h"
 #include "DirectoryClass.hpp"
 #include "ArrayClass.hpp"
+
+
+// create all globally available string objects.
 void MemoryObject::createStrings()
-/******************************************************************************/
-/* Function:  Create all globally available string objects                    */
-/******************************************************************************/
 {
     // if we're calling this, then we're building the image.  Make sure the
     // global string directory is created first.
-    globalStrings = new_directory();
-                                       /* redefine the GLOBAL_NAME macro    */
-                                       /* to create each of the strings     */
-#undef GLOBAL_NAME
-#define GLOBAL_NAME(name, value) OREF_##name = getGlobalName(value);
+    globalStrings = string_table();
 
-#include "GlobalNames.h"             /* now create the strings            */
+    // redefine the GLOBAL_NAME macro to create each of the strings
+    #undef GLOBAL_NAME
+    #define GLOBAL_NAME(name, value) OREF_##name = getGlobalName(value);
+
+    #include "GlobalNames.h"
 }
 
 
+/**
+ * Save all globally available string objects in the image.
+ *
+ * @return An array of all global string objects.
+ */
 ArrayClass *MemoryObject::saveStrings()
-/******************************************************************************/
-/* Function:  Create all globally available string objects                    */
-/******************************************************************************/
 {
-                                       /* redefine the GLOBAL_NAME macro    */
-                                       /* to count the number of string     */
-                                       /* objects we need to save           */
-  #undef GLOBAL_NAME
-  #define GLOBAL_NAME(name, value) stringCount++;
+    // pass one, count how many string objects we have
+    #undef GLOBAL_NAME
+    #define GLOBAL_NAME(name, value) stringCount++;
 
-  size_t stringCount = 0;              /* no strings yet                    */
-  #include "GlobalNames.h"             /* now create the strings            */
+    size_t stringCount = 0;
+    #include "GlobalNames.h"
 
-  // get an array to contain all of the string values
-  ArrayClass *stringArray = new_array(stringCount);
-                                       /* redefine the GLOBAL_NAME macro    */
-                                       /* to save each string in the array  */
-                                       /* at its relative offset            */
-  #undef GLOBAL_NAME
-  #define GLOBAL_NAME(name, value) stringArray->put((RexxObject *)OREF_##name, stringCount); stringCount++;
+    // get an array to contain all of the string values
+    ArrayClass *stringArray = new_array(stringCount);
 
-  stringCount = 1;                     /* start with the first string       */
-  #include "GlobalNames.h"             /* now save the strings              */
+    // redefine GLOBAL_NAME to save each string in the array
+    #undef GLOBAL_NAME
+    #define GLOBAL_NAME(name, value) stringArray->put(OREF_##name, stringCount); stringCount++;
 
-  return stringArray;                  // and return the saved string array
+    // the index gets incremented as we go
+    stringCount = 1;
+    #include "GlobalNames.h"
+
+    return stringArray;                  // and return the saved string array
 }
 
-void MemoryObject::restoreStrings(ArrayClass *stringArray)
-/******************************************************************************/
-/* Function:  Create all globally available string objects                    */
-/******************************************************************************/
-{
-                                       /* redefine the GLOBAL_NAME macro    */
-                                       /* to create and give a count of the */
-                                       /* strings created                   */
-  #undef GLOBAL_NAME
-  #define GLOBAL_NAME(name, value) OREF_##name = *strings++;
 
-  RexxString **strings = (RexxString **)stringArray->data();
-  #include "GlobalNames.h"                 /* now restore the strings           */
+/**
+ * Restore all globally available string objects during an image restore.
+ *
+ * @param stringArray
+ *               The string array from the image.
+ */
+void MemoryObject::restoreStrings(ArrayClass *stringArray)
+{
+    // redefine GLOBAL_NAME to restore each string pointer
+    #undef GLOBAL_NAME
+    #define GLOBAL_NAME(name, value) OREF_##name = *strings++;
+
+    RexxString **strings = (RexxString **)stringArray->data();
+    #include "GlobalNames.h"
 }

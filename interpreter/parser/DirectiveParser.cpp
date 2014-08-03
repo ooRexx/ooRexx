@@ -252,9 +252,9 @@ bool LanguageParser::isDuplicateRoutine(RexxString *name)
  */
 void LanguageParser::addClassDirective(RexxString *name, ClassDirective *directive)
 {
-    classDependencies->put((RexxObject *)directive, name);
+    classDependencies->put(directive, name);
     // also add to the array list
-    classes->append((RexxObject *)directive);
+    classes->append(directive);
 }
 
 

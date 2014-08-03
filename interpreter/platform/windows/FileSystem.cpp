@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -51,11 +51,6 @@
 #include "SystemInterpreter.hpp"
 #include "InterpreterInstance.hpp"
 #include "SysFileSystem.hpp"
-#include <string.h>
-#include <io.h>
-#include <fcntl.h>
-#include <conio.h>
-#define MAX_STDOUT_LENGTH     32767    /* max. amount of data to push to STDOUT @THU007A */ /* @HOL007M */
 
 
 /**
@@ -107,9 +102,9 @@ RexxString *SysInterpreterInstance::resolveProgramName(RexxString *_name, RexxSt
     }
 
     // ok, now time to try each of the individual extensions along the way.
-    for (size_t i = instance->searchExtensions->firstIndex(); i != LIST_END; i = instance->searchExtensions->nextIndex(i))
+    for (size_t i = 1; i <= searchExtensions->items(); i++)
     {
-        RexxString *ext = (RexxString *)instance->searchExtensions->getValue(i);
+        RexxString *ext = (RexxString *)instance->searchExtensions->get(i);
 
         if (SysFileSystem::searchName(name, searchPath.path, ext->getStringData(), resolvedName))
         {
@@ -125,6 +120,7 @@ RexxString *SysInterpreterInstance::resolveProgramName(RexxString *_name, RexxSt
 
     return OREF_NULL;
 }
+
 
 /**
  * Load the base image into storage.
@@ -146,90 +142,101 @@ RexxString *SysInterpreterInstance::resolveProgramName(RexxString *_name, RexxSt
  *           If the image is not found in the application image's directory, the
  *           regular executable search, which searches the path, is performed.
  */
-void SystemInterpreter::loadImage(char **imageBuffer, size_t *imageSize )
+void SystemInterpreter::loadImage(char *&imageBuffer, size_t &imageSize )
 {
     char fullname[MAX_PATH + 1];    // finally resolved name
 
+    // if we can't find the image on the search path, this is a logic error
     if (!SysFileSystem::primitiveSearchName(BASEIMAGE, NULL, NULL, fullname))
     {
-        Interpreter::logicError("no startup image");   /* can't find it       */
+        Interpreter::logicError("no startup image");
     }
 
-    /* try to open the file              */
+    // try to open the file
     HANDLE fileHandle = CreateFile(fullname, GENERIC_READ, FILE_SHARE_READ,
                             NULL, OPEN_EXISTING, FILE_FLAG_WRITE_THROUGH, NULL);
 
+    // we could resolve the file name, but can't open the file for some reason
     if (fileHandle == INVALID_HANDLE_VALUE)
     {
-        Interpreter::logicError("no startup image");   /* can't find it       */
+        Interpreter::logicError("no startup image");
     }
-    DWORD     bytesRead;                 /* number of bytes read              */
-    /* Read in the size of the image     */
+
+    DWORD     bytesRead;
+    // the image is written out with a size before the buffer
     ReadFile(fileHandle, imageSize, sizeof(size_t), &bytesRead, NULL);
-    *imageBuffer = memoryObject.allocateImageBuffer(*imageSize);
+
+    // now allocate the image buffer and read the entire file into the buffer
+    imageBuffer = memoryObject.allocateImageBuffer(*imageSize);
     /* read in the image                 */
-    ReadFile(fileHandle, *imageBuffer, (DWORD)*imageSize, &bytesRead, NULL);
+    ReadFile(fileHandle, imageBuffer, (DWORD)*imageSize, &bytesRead, NULL);
     // set this to the actual size read.
-    *imageSize = bytesRead;
-    CloseHandle(fileHandle);                /* and close the file             */
+    imageSize = bytesRead;
+    CloseHandle(fileHandle);
 }
 
 
-BufferClass *SystemInterpreter::readProgram(
-  const char *file_name)               /* program file name                 */
-/*******************************************************************/
-/* Function:  Read a program into a buffer                         */
-/*******************************************************************/
+/**
+ * Read in a program and return it in a buffer object.
+ *
+ * @param file_name the target file name.
+ *
+ * @return A buffer containing the program.
+ */
+BufferClass *SystemInterpreter::readProgram(const char *file_name)
 {
-  HANDLE        fileHandle;             /* open file access handle           */
-  size_t   buffersize;                 /* size of read buffer               */
-  BufferClass * buffer;                 /* buffer object to read file into   */
-  BY_HANDLE_FILE_INFORMATION   status; /* file status information           */
-  DWORD        bytesRead;              /* number of bytes read              */
 
-  {
-      UnsafeBlock releaser;
-                           /* try to open the file              */
-      fileHandle = CreateFile(file_name, GENERIC_READ, FILE_SHARE_READ,
-                              NULL, OPEN_EXISTING, FILE_FLAG_WRITE_THROUGH, NULL);
-      if (fileHandle == INVALID_HANDLE_VALUE)
-      {
-        return OREF_NULL;                  /* return nothing                    */
-      }
-                           /* retrieve the file size            */
-      GetFileInformationByHandle(fileHandle, &status);
-  }
-  buffersize = status.nFileSizeLow;    /* get the file size                 */
-  buffer = new_buffer(buffersize);     /* get a buffer object               */
-  ProtectedObject p(buffer);
-  {
-      UnsafeBlock releaser;
+    HANDLE        fileHandle;
+    BY_HANDLE_FILE_INFORMATION   status;
 
-                           /* read in a buffer of data   */
-      if (ReadFile(fileHandle, buffer->getData(), (DWORD)buffersize, &bytesRead, NULL) == 0) {
-        return OREF_NULL;                  /* return nothing                    */
-      }
-      CloseHandle(fileHandle);                /* close the file now         */
-      return buffer;                       /* return the program buffer         */
-  }
+    // NOTE: We read this in without holding the kernel locak
+    {
+        UnsafeBlock releaser;
+        fileHandle = CreateFile(file_name, GENERIC_READ, FILE_SHARE_READ,
+                                NULL, OPEN_EXISTING, FILE_FLAG_WRITE_THROUGH, NULL);
+        if (fileHandle == INVALID_HANDLE_VALUE)
+        {
+            return OREF_NULL;
+        }
+        // get the file size    retrieve the file size            */
+        GetFileInformationByHandle(fileHandle, &status);
+    }
+
+    // back to locked status
+    // get the file size and allocate a new buffer of the program size
+    size_t buffersize = status.nFileSizeLow;
+    BufferClass *buffer = new_buffer(buffersize);
+    ProtectedObject p(buffer);
+    {
+        UnsafeBlock releaser;
+
+        // read in the data, but return nothing if there is an error
+        if (ReadFile(fileHandle, buffer->getData(), (DWORD)buffersize, &bytesRead, NULL) == 0)
+        {
+            return OREF_NULL;
+        }
+        CloseHandle(fileHandle);
+        return buffer;
+    }
 }
 
 
-RexxString *SystemInterpreter::qualifyFileSystemName(
-  RexxString * name)                   /* stream information block          */
-/*******************************************************************/
-/* Function:  Qualify a stream name for this system                */
-/*******************************************************************/
+/**
+ * Fully qualify a program file name.
+ *
+ * @param name   The starting file name.
+ *
+ * @return A fully qualified string file name.
+ */
+RexxString *SystemInterpreter::qualifyFileSystemName(RexxString *name)
 {
-   char nameBuffer[SysFileSystem::MaximumFileNameBuffer];
+    char nameBuffer[SysFileSystem::MaximumFileNameBuffer];
 
-                       /* clear out the block               */
-   memset(nameBuffer, 0, sizeof(nameBuffer));
-   SysFileSystem::qualifyStreamName((char *)name->getStringData(), nameBuffer, sizeof(nameBuffer)); /* expand the full name              */
-                       /* uppercase this                    */
-   strupr(nameBuffer);
-                       /* get the qualified file name       */
-   return new_string(nameBuffer);
+    // expand the file name.
+    memset(nameBuffer, 0, sizeof(nameBuffer));
+    SysFileSystem::qualifyStreamName((char *)name->getStringData(), nameBuffer, sizeof(nameBuffer));
+    // get the qualified file name.
+    return new_string(nameBuffer);
 }
 
 

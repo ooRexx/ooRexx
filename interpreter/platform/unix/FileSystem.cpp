@@ -139,7 +139,7 @@ RexxString *SysInterpreterInstance::resolveProgramName(RexxString *_name, RexxSt
 }
 
 
-void SystemInterpreter::loadImage(char **imageBuffer, size_t *imageSize)
+void SystemInterpreter::loadImage(char *&imageBuffer, size_t &imageSize)
 /*******************************************************************/
 /* Function : Load the image into storage                          */
 /*******************************************************************/
@@ -167,18 +167,18 @@ void SystemInterpreter::loadImage(char **imageBuffer, size_t *imageSize)
     }
 
     /* Read in the size of the image     */
-    if (!fread(imageSize, 1, sizeof(size_t), image))
+    if (!fread(&imageSize, 1, sizeof(size_t), image))
     {
         Interpreter::logicError("could not check the size of the image");
     }
     /* Create new segment for image      */
-    *imageBuffer = (char *)memoryObject.allocateImageBuffer(*imageSize);
+    imageBuffer = (char *)memoryObject.allocateImageBuffer(imageSize);
     /* Create an object the size of the  */
     /* image. We will be overwriting the */
     /* object header.                    */
     /* read in the image, store the      */
     /* the size read                     */
-    if (!(*imageSize = fread(*imageBuffer, 1, *imageSize, image)))
+    if (!(imageSize = fread(imageBuffer, 1, imageSize, image)))
     {
         Interpreter::logicError("could not read in the image");
     }

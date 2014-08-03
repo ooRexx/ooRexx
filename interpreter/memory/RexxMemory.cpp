@@ -554,7 +554,7 @@ void MemoryObject::restoreImage()
     size_t imageSize;
 
     // load the image file
-    SystemInterpreter::loadImage(&restoredImage, &imageSize);
+    SystemInterpreter::loadImage(restoredImage, imageSize);
     // we write a size to the start of the image when the image is created.
     // the restoredImage buffer does not include that image size, so we
     // need to pretend the buffer is slightly before the start.

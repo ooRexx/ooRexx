@@ -67,8 +67,9 @@ public:
     inline void  operator delete(void *, void *) {;}
     void *operator new(size_t);
     inline void  operator delete(void *) {;}
-    void        live(size_t);
-    void        liveGeneral(MarkReason);
+
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason);
 
     RexxString *getDefaultEnvironment() { return defaultEnvironment; }
     Activity *getRootActivity() { return rootActivity; }
@@ -129,24 +130,24 @@ protected:
     bool processOptions(RexxOption *options);
 
 
-    InstanceContext      context;            // our externalizied instance context
+    InstanceContext        context;          // our externalizied instance context
     SysInterpreterInstance sysInstance;      // our platform specific helper
 
-    Activity        *rootActivity;       // the initial activity
+    Activity            *rootActivity;       // the initial activity
     SecurityManager     *securityManager;    // the security manager for our instance
-    ListClass            *allActivities;      // all activities associated with this instance
-    IdentityTable   *globalReferences;   // our global reference table
+    QueueClass          *allActivities;      // all activities associated with this instance
+    IdentityTable       *globalReferences;   // our global reference table
     RexxString          *defaultEnvironment; // the default address environment
     RexxString          *searchPath;         // additional Rexx search path
-    ListClass            *searchExtensions;   // extensions to search on for external calls
+    ArrayClass          *searchExtensions;   // extensions to search on for external calls
     void                *applicationData;    // application specific data
-    DirectoryClass       *localEnvironment;   // the current local environment
-    DirectoryClass       *commandHandlers;    // our list of command environment handlers
-    DirectoryClass       *requiresFiles;      // our list of requires files used by this instance
+    DirectoryClass      *localEnvironment;   // the current local environment
+    StringTable         *commandHandlers;    // our list of command environment handlers
+    StringTable         *requiresFiles;      // our list of requires files used by this instance
 
-    bool terminating;                // shutdown indicator
-    bool terminated;                 // last thread cleared indicator
-    SysSemaphore terminationSem;     // used to signal that everything has shutdown
+    bool terminating;                        // shutdown indicator
+    bool terminated;                         // last thread cleared indicator
+    SysSemaphore terminationSem;             // used to signal that everything has shutdown
 
     // array of system exits
     ExitHandler exits[RXNOOFEXITS + 1];
