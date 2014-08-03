@@ -489,7 +489,7 @@ RexxInstruction *LanguageParser::nextInstruction()
 RexxInstruction *LanguageParser::sourceNewObject(size_t size, RexxBehaviour *_behaviour,
     InstructionKeyword type )
 {
-    RexxObject *newObject = new_object(size);
+    RexxInternalObject *newObject = new_object(size);
     newObject->setBehaviour(_behaviour);
     new ((void *)newObject) RexxInstruction (clause, type);
     currentInstruction = (RexxInstruction *)newObject;
@@ -1995,7 +1995,7 @@ RexxInstruction *LanguageParser::messageAssignmentOpNew(RexxExpressionMessage *m
     // part.  We copy the original message object to use as a retriever, then
     // convert the original to an assignment message by changing the message name.
 
-    RexxObject *retriever = msg->copy();
+    RexxObject *retriever = (RexxObject *)msg->copy();
 
     msg->makeAssignment(this);       // convert into an assignment message (the original message term)
 
@@ -3220,9 +3220,9 @@ RexxInstructionIf *LanguageParser::whenCaseNew(RexxInstructionIf *original)
  */
 RexxInstruction *LanguageParser::traceNew()
 {
-    size_t setting = TRACE_NORMAL;              // set default trace mode
+    TraceSetting settings;                      // the parsed trace setting flags
+    bool skipForm = false;                      // set default trace mode
     wholenumber_t debug_skip = 0;               // no skipping
-    size_t trcFlags = 0;                        // no translated flags
     RexxObject *expression = OREF_NULL;         // not expression form
 
     // ok, start processing for real
@@ -3254,14 +3254,13 @@ RexxInstruction *LanguageParser::traceNew()
                     debug_skip = 0;
                     char badOption = 0;
                     // go parse the trace setting values
-                    if (!parseTraceSetting(value, setting, trcFlags, badOption))
+                    if (!parseTraceSetting(value, settings, badOption))
                     {
                         syntaxError(Error_Invalid_trace_trace, new_string(&badOption, 1));
                     }
                 }
                 else
                 {
-                    setting = DEBUG_SKIP;  // turn on the skip flag
                 }
             }
         }
@@ -3276,48 +3275,51 @@ RexxInstruction *LanguageParser::traceNew()
             {
                 debug_skip = 0;
                 char badOption = 0;
-
-                if (!parseTraceSetting(value, setting, trcFlags, badOption))
+                // parse into
+                if (!parseTraceSetting(value, settings, badOption))
                 {
                     syntaxError(Error_Invalid_trace_trace, new_string(&badOption, 1));
                 }
             }
             else
             {
-                setting = 0;                   /* not a normal setting situation    */
+                // remember that this is the skip form
+                skipForm = true;
             }
         }
         // potential numeric value with a sign?
         else if (token->isSubtype(OPERATOR_SUBTRACT, OPERATOR_PLUS))
         {
-            setting = 0;
-            // minus form?
-            if (token->isSubtype(OPERATOR_SUBTRACT))
-            {
-                // turns off tracing entirely
-                setting |= DEBUG_NOTRACE;
-            }
+            // remember that this is the skip form
+            skipForm = true;
 
             // we expect to find a number
-            token = nextReal();
-            if (token->isEndOfClause())
+            RexxToken *second = nextReal();
+            if (second->isEndOfClause())
             {
-                syntaxError(Error_Invalid_expression_general, token);
+                syntaxError(Error_Invalid_expression_general, second);
             }
             // this must be a symbol or a literal value
-            if (!token->isSymbolOrLiteral())
+            if (!second->isSymbolOrLiteral())
             {
-                syntaxError(Error_Invalid_expression_general, token);
+                syntaxError(Error_Invalid_expression_general, second);
             }
 
             // this needs to be the end of the clause
-            RexxString *value = token->value();
+            RexxString *value = second->value();
             requiredEndOfClause(Error_Invalid_data_trace);
 
             // convert to a binary number
             if (!value->requestNumber(debug_skip, number_digits()))
             {
                 syntaxError(Error_Invalid_whole_number_trace, value);
+            }
+
+            // minus form?  then negate the value
+            if (token->isSubtype(OPERATOR_SUBTRACT))
+            {
+                debug_skip = -debug_skip;
+                // turns off tracing entirely
             }
         }
         // implicit TRACE VALUE form
@@ -3330,7 +3332,20 @@ RexxInstruction *LanguageParser::traceNew()
     }
 
     RexxInstruction *newObject = new_instruction(TRACE, Trace);
-    new ((void *)newObject) RexxInstructionTrace(expression, setting, trcFlags, debug_skip);
+    // this is one of three forms
+    if (skipForm)
+    {
+        new ((void *)newObject) RexxInstructionTrace(debug_skip);
+    }
+    else if (expression != OREF_NULL)
+    {
+        new ((void *)newObject) RexxInstructionTrace(expression);
+    }
+    else
+    {
+        new ((void *)newObject) RexxInstructionTrace(settings);
+    }
+
     return newObject;
 }
 

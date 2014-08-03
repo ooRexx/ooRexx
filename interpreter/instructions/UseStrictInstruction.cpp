@@ -76,7 +76,7 @@ RexxInstructionUseStrict::RexxInstructionUseStrict(size_t count, bool strict, bo
         // decrement first, so we store at the correct offset.
         count--;
         variables[count].variable = (RexxVariableBase *)variable_list->pop();
-        variables[count].defaultValue = defaults->pop();
+        variables[count].defaultValue = (RexxObject *)defaults->pop();
 
         // if this is a real variable, see if this is the last of the required ones.
         if (minimumRequired < count + 1 && variables[count].variable != OREF_NULL)

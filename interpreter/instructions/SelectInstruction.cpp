@@ -135,7 +135,7 @@ void RexxInstructionSelect::execute(RexxActivation *context, ExpressionStack *st
     // in case someone tries do SIGNAL into the middle of the instruction.
     DoBlock *doblock = new DoBlock (this, context->getIndent());
     // set the block to the top of the context stack.
-    context->newDo(doblock);
+    context->newBlockInstruction(doblock);
     // Debug pause requires a conditional pause that terminates the block construct
     // if we've been asked to re-execute.
     if (context->conditionalPauseInstruction())
@@ -165,7 +165,7 @@ bool RexxInstructionSelect::isLoop()
 void RexxInstructionSelect::terminate(RexxActivation *context, DoBlock *doblock )
 {
     // we terminate this doblock
-    context->terminateBlock(doblock->getIndent());
+    context->terminateBlockInstruction(doblock->getIndent());
     // and we jump to the instruction after our END
     context->setNext(end->nextInstruction);
 }
@@ -181,7 +181,7 @@ void RexxInstructionSelect::matchEnd(RexxInstructionEnd *partner, LanguageParser
 {
     // get some location information for error reporting
     SourceLocation endLocation = partner->getLocation();
-    size_t lineNum = this->getLineNumber();
+    size_t lineNum = getLineNumber();
 
     // ok, we need to match up the names. If the END has a label, then it must
     // match a label on the SELECT.
@@ -356,7 +356,7 @@ void RexxInstructionSelectCase::execute(RexxActivation *context, ExpressionStack
     // in case someone tries do SIGNAL into the middle of the instruction.
     DoBlock *doblock = new DoBlock (this, context->getIndent());
     // set the block to the top of the context stack.
-    context->newDo(doblock);
+    context->newBlockInstruction(doblock);
 
     // evaluate the CASE instruction and store in the doblock so the WHEN
     // instructions can retrieve it.
@@ -366,7 +366,7 @@ void RexxInstructionSelectCase::execute(RexxActivation *context, ExpressionStack
     // if we've been asked to re-execute.
     if (context->conditionalPauseInstruction())
     {
-        this->terminate(context, doblock);
+        terminate(context, doblock);
     }
 }
 

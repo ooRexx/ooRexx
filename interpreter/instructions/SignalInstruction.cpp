@@ -108,7 +108,7 @@ void RexxInstructionSignal::flatten(Envelope *envelope)
  *
  * @param labels The directory of label objects for this code section.
  */
-void RexxInstructionSignal::resolve(DirectoryClass *labels)
+void RexxInstructionSignal::resolve(StringTable *labels)
 {
     // The section might not have any labels, but if it does, get our
     // name from the directory.  Note, we don't raise an error now, we
@@ -117,7 +117,7 @@ void RexxInstructionSignal::resolve(DirectoryClass *labels)
     {
         // this links the signal instruction directly to the label
         // instruction that is the target.
-        targetInstruction = (RexxInstruction *)labels->at(targetName);
+        targetInstruction = (RexxInstruction *)labels->get(targetName);
     }
 }
 
@@ -321,7 +321,7 @@ void RexxInstructionSignalOn::execute(RexxActivation *context, ExpressionStack *
  *
  * @param labels The table of label instructions in the current context.
  */
-void RexxInstructionSignalOn::resolve(DirectoryClass *labels)
+void RexxInstructionSignalOn::resolve(StringTable *labels)
 {
     // if there is a labels table, see if we can find a label object from the context.
     // SIGNALS only go to labels, but we don't report an error until the trap is triggered.
@@ -329,7 +329,7 @@ void RexxInstructionSignalOn::resolve(DirectoryClass *labels)
     {
         // see if there is a matching label.  If we get something,
         // we're finished.
-        targetInstruction = (RexxInstruction *)labels->at((RexxString *)targetName);
+        targetInstruction = (RexxInstruction *)labels->get((RexxString *)targetName);
     }
 }
 

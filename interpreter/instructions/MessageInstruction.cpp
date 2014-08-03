@@ -154,7 +154,7 @@ void RexxInstructionMessage::execute(RexxActivation *context, ExpressionStack *s
 
     // evaluate the target object
     RexxObject *_target = target->evaluate(context, stack);
-    RexxObject *_super = OREF_NULL;
+    RexxClass  *_super = OREF_NULL;
 
     // do we have a superclass override?
     if (super != OREF_NULL)
@@ -166,7 +166,7 @@ void RexxInstructionMessage::execute(RexxActivation *context, ExpressionStack *s
             reportException(Error_Execution_super);
         }
         // get the superclass target
-        _super = super->evaluate(context, stack);
+        _super = (RexxClass *)super->evaluate(context, stack);
         // we send the message using the stack, which
         // expects to find the target and the arguments
         // on the stack, but not the super.  We need to
@@ -185,14 +185,14 @@ void RexxInstructionMessage::execute(RexxActivation *context, ExpressionStack *s
             // NOTE: this leaves the argument on the evaluation stack
             // We'll build up the entire list there.
             RexxObject *result = arguments[i]->evaluate(context, stack);
-            context->traceIntermediate(result, TRACE_PREFIX_ARGUMENT);
+            context->traceArgument(result);
         }
         // omitted argument...push a null value on to the stack and trace
         // as a null string.
         else
         {
             stack->push(OREF_NULL);
-            context->traceIntermediate(OREF_NULLSTRING, TRACE_PREFIX_ARGUMENT);
+            context->traceArgument(OREF_NULLSTRING);
         }
     }
 

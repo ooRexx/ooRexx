@@ -69,7 +69,7 @@ RexxClause::RexxClause()
 {
     // allocate an entire array of tokens for use.  We reuse these
     tokens = new_array(INITIAL_SIZE);
-    for (size_t i = 0; i < INITIAL_SIZE)
+    for (size_t i = 0; i < INITIAL_SIZE; i++)
     {
         tokens->append(new RexxToken());
     }
@@ -175,7 +175,7 @@ RexxToken *RexxClause::newToken(TokenClass classId, TokenSubclass subclass, Rexx
         // make sure the token array is large enough for the additional token's we're adding.
         tokens->ensureSpace(tokens->size() + EXTEND_SIZE);
 
-        for (size_t i = 0; i < EXTEND_SIZE)
+        for (size_t i = 0; i < EXTEND_SIZE; i++)
         {
             tokens->append(new RexxToken());
         }

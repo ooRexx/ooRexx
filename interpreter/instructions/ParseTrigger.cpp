@@ -277,7 +277,7 @@ void ParseTrigger::parse(RexxActivation *context, ExpressionStack *stack,
             // this is the dummy variable
             else
             {
-                context->traceIntermediate(variableValue, TRACE_PREFIX_DUMMY);
+                context->traceIntermediate(variableValue, RexxActivation::TRACE_PREFIX_DUMMY);
             }
         }
     }

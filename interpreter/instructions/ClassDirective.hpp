@@ -49,6 +49,10 @@
 class DirectoryClass;
 class RexxClass;
 
+/**
+ * A class representing a directive instruction inside
+ * of a package file.
+ */
 class ClassDirective : public RexxDirective
 {
  friend class PackageClass;
@@ -68,16 +72,16 @@ class ClassDirective : public RexxDirective
     inline RexxString *getName() { return publicName; }
     RexxClass *install(PackageClass *package, RexxActivation *activation);
 
-    void addDependencies(DirectoryClass *class_directives);
-    void checkDependency(RexxString *name, DirectoryClass *class_directives);
+    void addDependencies(StringTable *class_directives);
+    void checkDependency(RexxString *name, StringTable *class_directives);
     bool dependenciesResolved();
     void removeDependency(RexxString *name);
 
     inline RexxString *getMetaClass() { return metaclassName; }
-    inline void setMetaClass(RexxString *m) { OrefSet(this, this->metaclassName, m); }
+    inline void setMetaClass(RexxString *m) { setField(metaclassName, m); }
     inline RexxString *getSubClass() { return subclassName; }
-    inline void setSubClass(RexxString *m) { OrefSet(this, this->subclassName, m); }
-    inline void setMixinClass(RexxString *m) { OrefSet(this, this->subclassName, m); mixinClass = true; }
+    inline void setSubClass(RexxString *m) { setField(subclassName, m); }
+    inline void setMixinClass(RexxString *m) { setField(subclassName, m); mixinClass = true; }
     inline void setPublic() { publicClass = true; }
     void addInherits(RexxString *name);
     void addMethod(RexxString *name, MethodClass *method, bool classMethod);
@@ -87,19 +91,19 @@ class ClassDirective : public RexxDirective
 
 protected:
 
-    TableClass *getClassMethods();
-    TableClass *getInstanceMethods();
+    StringTable *getClassMethods();
+    StringTable *getInstanceMethods();
 
-    RexxString *publicName;         // the published name of the class
-    RexxString *idName;             // the internal ID name
-    RexxString *metaclassName;      // name of the class meta class
-    RexxString *subclassName;       // the class used for the subclassing operation.
+    RexxString  *publicName;         // the published name of the class
+    RexxString  *idName;             // the internal ID name
+    RexxString  *metaclassName;      // name of the class meta class
+    RexxString  *subclassName;       // the class used for the subclassing operation.
     ArrayClass  *inheritsClasses;    // the names of inherited classes
-    TableClass  *instanceMethods;    // the methods attached to this class
-    TableClass  *classMethods;       // the set of class methods
-    bool        publicClass;        // this is a public class
-    bool        mixinClass;         // this is a mixin class
-    DirectoryClass *dependencies;    // in-package dependencies
+    StringTable *instanceMethods;    // the methods attached to this class
+    StringTable *classMethods;       // the set of class methods
+    bool         publicClass;        // this is a public class
+    bool         mixinClass;         // this is a mixin class
+    StringTable  *dependencies;      // in-package dependencies
 };
 
 #endif

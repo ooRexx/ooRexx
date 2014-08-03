@@ -128,7 +128,7 @@ bool DoBlock::checkOver(RexxActivation *context, ExpressionStack *stack)
 
     // get the next element  from the array. This should be a
     // non-sparse array, but we need to double check anyway.
-    RexxObject *result = overArray->get(forCount);
+    RexxObject *result = (RexxObject *)overArray->get(forCount);
     // use .nil for any empty slots
     if (result == OREF_NULL)
     {

@@ -115,7 +115,7 @@ void RexxInstructionEnd::execute(RexxActivation *context, ExpressionStack *stack
     // SIGNAL will disable all active block instructions, so it is possible that
     // this END has been encountered without its corresponding block instruction actually
     // being active.
-    if (!context->hasActiveBlocks())
+    if (!context->hasActiveBlockInstructions())
     {
         // trace anyway, then give an error
         context->traceInstruction(this);
@@ -132,7 +132,7 @@ void RexxInstructionEnd::execute(RexxActivation *context, ExpressionStack *stack
         case LOOP_BLOCK:
         {
             // get the top block from the context.
-            DoBlock *doBlock = context->topBlock();
+            DoBlock *doBlock = context->topBlockInstruction();
             // For tracing the end, reset the indentation to the block beginning indent.
             // then trace.
             context->setIndent(doBlock->getIndent());
@@ -162,7 +162,7 @@ void RexxInstructionEnd::execute(RexxActivation *context, ExpressionStack *stack
         case LABELED_DO_BLOCK:
         {
             // terminateBlock will also reset the indentation for tracing
-            context->terminateBlock();
+            context->terminateBlockInstruction();
             context->traceInstruction(this);
             break;
         }
@@ -171,7 +171,7 @@ void RexxInstructionEnd::execute(RexxActivation *context, ExpressionStack *stack
         default:
         {
             context->unindent();
-            context->removeBlock();
+            context->removeBlockInstruction();
             context->traceInstruction(this);
             break;
         }

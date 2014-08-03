@@ -80,7 +80,7 @@ void RexxInstructionCommand::execute(RexxActivation *context, ExpressionStack *s
     if (context->tracingCommands())
     {
         // trace the full command result
-        context->traceValue(command, TRACE_PREFIX_RESULT);
+        context->traceResultValue(command);
     }
 
     // finally, execute this command in the current address environment

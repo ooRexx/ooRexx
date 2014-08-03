@@ -187,7 +187,7 @@ class RexxActivation : public ActivationBase
    void              interpret(RexxString *);
    void              signalTo(RexxInstruction *);
    void              guardWait();
-   void              debugSkip(wholenumber_t, bool);
+   void              debugSkip(wholenumber_t);
    RexxString      * traceSetting();
    void              iterate(RexxString *);
    void              leaveLoop(RexxString *);
@@ -337,6 +337,7 @@ class RexxActivation : public ActivationBase
    inline bool              tracingAll() {return settings.packageSettings.traceSettings.tracingAll(); }
    inline bool              inDebug() { return settings.packageSettings.traceSettings.isDebug() && !debugPause;}
    inline void              traceResult(RexxObject * v) { if (tracingResults()) traceValue(v, TRACE_PREFIX_RESULT); };
+   inline void              traceResultValue(RexxObject * v) { traceValue(v, TRACE_PREFIX_RESULT); };
    inline bool              tracingInstructions() { return tracingAll(); }
    inline bool              tracingErrors() { return settings.packageSettings.traceSettings.tracingErrors(); }
    inline bool              tracingFailures() { return settings.packageSettings.traceSettings.tracingFailures(); }

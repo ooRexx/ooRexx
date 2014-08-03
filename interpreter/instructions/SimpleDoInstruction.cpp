@@ -82,12 +82,12 @@ void RexxInstructionSimpleDo::execute(RexxActivation *context, ExpressionStack *
         // create an active block, and make this the top of the
         // control stack
         doblock = new DoBlock (this, context->getIndent());
-        context->newDo(doblock);
+        context->newBlockInstruction(doblock);
     }
     else
     {
         // this just tells the context to step the nesting level.
-        context->addBlock();
+        context->addBlockInstruction();
     }
 
     // handle a debug pause that might cause re-execution

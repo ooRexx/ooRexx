@@ -176,7 +176,7 @@ void RexxInstructionCaseWhen::execute(RexxActivation *context, ExpressionStack *
 
     // This should be us.  It really isn't possible to jump into a middle of a select
     // and get to a WHEN without raising an error.
-    DoBlock *doBlock = context->topBlock();
+    DoBlock *doBlock = context->topBlockInstruction();
     // get the case expression
     RexxObject *caseValue = doBlock->getCase();
     // and the compare target (which needs tracing, but only as an intermediate

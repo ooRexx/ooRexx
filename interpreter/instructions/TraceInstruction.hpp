@@ -45,6 +45,7 @@
 #define Included_RexxInstructionTrace
 
 #include "RexxInstruction.hpp"
+#include "TraceSetting.hpp"
 
 class RexxInstructionTrace : public RexxInstruction
 {
@@ -53,7 +54,9 @@ public:
     inline void  operator delete(void *) { }
     inline void  operator delete(void *, void *) { }
 
-    RexxInstructionTrace(RexxObject *, size_t, size_t, wholenumber_t);
+    RexxInstructionTrace(TraceSetting);
+    RexxInstructionTrace(wholenumber_t);
+    RexxInstructionTrace(RexxObject *);
     inline RexxInstructionTrace(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
@@ -64,9 +67,9 @@ public:
 
 protected:
 
-    RexxObject *expression;              // trace value expression
-    wholenumber_t debugskip;             // clauses to skip
-    size_t      traceSetting;            // new trace setting
-    size_t      traceFlags;              // optimized trace flags when statically defined
+    RexxObject   *expression;              // trace value expression
+    wholenumber_t debugSkip;               // clauses to skip
+    bool          skip;                    // indicates this is a skip-type instruction
+    TraceSetting  settings;                // new trace setting
 };
 #endif

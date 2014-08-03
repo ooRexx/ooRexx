@@ -48,6 +48,7 @@
 #include "Token.hpp"
 
 class QueueClass;
+class StringTable;
 
 
 /**
@@ -59,7 +60,7 @@ class RexxInstructionCallBase : public RexxInstruction
  public:
     inline RexxInstructionCallBase() { ; };
     // subclasses must provide this
-    virtual void resolve(DirectoryClass *) = 0;
+    virtual void resolve(StringTable *) = 0;
 
  protected:
 
@@ -118,7 +119,7 @@ class RexxInstructionCall : public RexxInstructionCallBase
     virtual void flatten(Envelope*);
 
     virtual void execute(RexxActivation *, ExpressionStack *);
-    virtual void resolve(DirectoryClass *);
+    virtual void resolve(StringTable *);
 
 protected:
 
@@ -176,7 +177,7 @@ class RexxInstructionCallOn : public RexxInstructionTrapBase
     virtual void flatten(Envelope*);
 
     virtual void execute(RexxActivation *, ExpressionStack *);
-    virtual void resolve(DirectoryClass *);
+    virtual void resolve(StringTable *);
 
     virtual void trap(RexxActivation *context, DirectoryClass  *conditionObj);
 

@@ -87,7 +87,7 @@ RexxInstructionRaise::RexxInstructionRaise(RexxString *_condition, RexxObject *_
         // copy each of the argument expressions
         for (size_t i = 0; i < arrayCount; i++)
         {
-            additional[i] = arrayItems->get(i + 1);
+            additional[i] = (RexxObject *)arrayItems->get(i + 1);
         }
     }
     // store the expression for retrieving the additional item from the
@@ -184,7 +184,7 @@ void RexxInstructionRaise::execute(RexxActivation *context, ExpressionStack *sta
     if (instructionFlags[raise_syntax])
     {
         // give this a default additional information of an empty array
-        _additional = TheNullArray->copy();
+        _additional = new_array();
         // The description is a null string
         _description = OREF_NULLSTRING;
         // the RC must have a string value...this is an error if it doesn.
@@ -258,7 +258,7 @@ void RexxInstructionRaise::execute(RexxActivation *context, ExpressionStack *sta
         // if this is a propagate, get CONDITION name from the condition object.
         if (instructionFlags[raise_propagate])
         {
-            errorCode = (RexxString *)conditionobj->at(OREF_CONDITION);
+            errorCode = (RexxString *)conditionobj->get(OREF_CONDITION);
         }
         // If this is a SYNTAX condition, than the Additional information MUST
         // be an array of items used for substitutions.

@@ -65,7 +65,7 @@ class RexxExpressionFunction : public RexxInternalObject
 
     virtual RexxObject *evaluate(RexxActivation*, ExpressionStack *);
 
-    virtual void        resolve(DirectoryClass *);
+    virtual void        resolve(StringTable *);
 
 protected:
 

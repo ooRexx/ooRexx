@@ -47,7 +47,6 @@
 #include "RexxInstruction.hpp"
 #include "CallInstruction.hpp"
 
-
 /**
  * Instruction object for a "normal" SIGNAL instruction
  * that jumps to a label location.
@@ -63,7 +62,7 @@ class RexxInstructionSignal : public RexxInstructionCallBase
     virtual void flatten(Envelope *);
 
     virtual void execute(RexxActivation *, ExpressionStack *);
-    virtual void resolve (DirectoryClass *);
+    virtual void resolve (StringTable *);
 };
 
 
@@ -101,7 +100,7 @@ class RexxInstructionSignalOn : public RexxInstructionTrapBase
     virtual void flatten(Envelope*);
 
     virtual void execute(RexxActivation *, ExpressionStack *);
-    virtual void resolve(DirectoryClass *);
+    virtual void resolve(StringTable *);
 
     virtual void trap(RexxActivation *context, DirectoryClass  *conditionObj);
 };

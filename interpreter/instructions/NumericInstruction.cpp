@@ -81,7 +81,7 @@ void RexxInstructionNumeric::execute(RexxActivation *context, ExpressionStack *s
         // no expression?  Just set digits back to default
         if (expression == OREF_NULL)
         {
-            context->setDigits();
+            context->setDigits(Numerics::DEFAULT_DIGITS);
         }
         // expression version
         else
@@ -112,9 +112,9 @@ void RexxInstructionNumeric::execute(RexxActivation *context, ExpressionStack *s
         // no expression resets to default
         if (expression == OREF_NULL)
         {
-            context->setFuzz();        /* just set it to the default        */
+            context->setFuzz(Numerics::DEFAULT_FUZZ);
         }
-        else                           /* need to evaluate an expression    */
+        else
         {
             // get the expression value and convert to a numeric
             RexxObject *result = expression->evaluate(context, stack);
@@ -145,7 +145,7 @@ void RexxInstructionNumeric::execute(RexxActivation *context, ExpressionStack *s
             // if default form, set that
             if (numericFlags[numeric_form_default])
             {
-                context->setForm();
+                context->setForm(Numerics::DEFAULT_FORM);
             }
             else
             {

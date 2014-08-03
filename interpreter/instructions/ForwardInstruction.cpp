@@ -139,7 +139,7 @@ void RexxInstructionForward::execute(RexxActivation *context, ExpressionStack *s
     // we only set the pieces we've been given
     RexxObject *_target = OREF_NULL;
     RexxObject *_message = OREF_NULL;
-    RexxObject *_superClass = OREF_NULL;
+    RexxClass  *_superClass = OREF_NULL;
     RexxObject **_arguments = OREF_NULL;
     size_t      count = 0;
 
@@ -160,9 +160,9 @@ void RexxInstructionForward::execute(RexxActivation *context, ExpressionStack *s
     }
 
     // have a superclass override?
-    if (this->superClass != OREF_NULL)
+    if (superClass != OREF_NULL)
     {
-        _superClass = superClass->evaluate(context, stack);
+        _superClass = (RexxClass *)superClass->evaluate(context, stack);
     }
 
     // overriding the arguments?
@@ -174,7 +174,7 @@ void RexxInstructionForward::execute(RexxActivation *context, ExpressionStack *s
         // protect this on the stack too
         stack->push(argArray);
         // make sure we got an acceptable array back.
-        if (argArray == TheNilObject || argArray->getDimension() != 1)
+        if (argArray == TheNilObject || argArray->isMultiDimensional())
         {
             reportException(Error_Execution_forward_arguments);
         }
@@ -195,7 +195,7 @@ void RexxInstructionForward::execute(RexxActivation *context, ExpressionStack *s
             }
         }
         // point to the data in the argument array.
-        _arguments = argArray->data();
+        _arguments = argArray->messageArgs();
     }
 
     // have we been overridden via the ARRAY keyword?  We only have
@@ -206,7 +206,7 @@ void RexxInstructionForward::execute(RexxActivation *context, ExpressionStack *s
         count = array->size();
         for (size_t i = 1; i <= count; i++)
         {
-            RexxObject *argElement = array->get(i);
+            RexxObject *argElement = (RexxObject *)array->get(i);
             // a real argument?                  */
             if (argElement != OREF_NULL)
             {

@@ -35,7 +35,7 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-#include "MessageClassNumbers.h"
+#include "RexxMessageNumbers.h"
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "SystemInterpreter.hpp"
@@ -62,17 +62,15 @@ RexxString * SystemInterpreter::getMessageHeader(wholenumber_t code )
  */
 RexxString *SystemInterpreter::getMessageText(wholenumber_t code)
 {
-    char dataArea[256];                /* buf addr to return message        */
-
-                                       /* loop through looking for the      */
-                                       /* error code                        */
+    char dataArea[256];
+    // if we can load this message, return as a string value.
     if (loadMessage(code, dataArea, sizeof(dataArea) - 1))
     {
         return new_string(dataArea);
     }
     else
     {
-        return OREF_NULL;                  /* no message retrieved              */
+        return OREF_NULL;
     }
 }
 

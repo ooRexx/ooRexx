@@ -47,24 +47,40 @@
 #include "LanguageParser.hpp"
 #include "MethodArguments.hpp"
 
+
 /**
  * Initialize a Trace instruction.
  *
- * @param _expression
- *                   A potential expression to evaluate.
- * @param trace      The new trace setting (can be zero if numeric or dynamic form).
- * @param flags      The translated trace flags for setting-based forms.
- * @param debug_skip A potential debug_skip value.
+ * @param s      The new trace settings.
  */
-RexxInstructionTrace::RexxInstructionTrace(RexxObject *_expression, size_t trace, size_t flags, wholenumber_t debug_skip )
+RexxInstructionTrace::RexxInstructionTrace(TraceSetting s)
 {
-    // this is an expression for TRACE VALUE forms
-    expression = _expression;
-    // this is also optional, used for numeric stuff
-    debugskip = debug_skip;
-    // a trace setting and some optimized flags
-    traceSetting = trace;
-    traceFlags = flags;
+    settings = s;
+    skip = false;
+}
+
+
+/**
+ * Initialize a Trace Value instruction.
+ *
+ * @param e      The value expression.
+ */
+RexxInstructionTrace::RexxInstructionTrace(RexxObject *e)
+{
+    expression = e;
+    skip = false;
+}
+
+
+/**
+ * Initialize a Trace suppress instruction.
+ *
+ * @param e      The value expression.
+ */
+RexxInstructionTrace::RexxInstructionTrace(wholenumber_t s)
+{
+    debugSkip = s;
+    skip = true;
 }
 
 
@@ -123,11 +139,13 @@ void RexxInstructionTrace::execute(RexxActivation *context, ExpressionStack *sta
 {
     // trace if needed.
     context->traceInstruction(this);
-    // is this a debug skip request (the setting value is zero in that case)
-    if ((traceSetting&LanguageParser::DEBUG_SKIP) != 0)
+
+    // if this is the debug skip form, turn on the trace suppression
+    if (skip)
     {
-        // turn on the skip mode in the context.
-        context->debugSkip(debugskip, (traceSetting&LanguageParser::DEBUG_NOTRACE) != 0);
+        // turn on the skip mode in the context.  A negative value also suppresses
+        // the tracing.
+        context->debugSkip(debugSkip);
     }
     // non-dynamic form?
     else if (expression == OREF_NULL)
@@ -136,7 +154,7 @@ void RexxInstructionTrace::execute(RexxActivation *context, ExpressionStack *sta
         // is ignored in debug mode, although we do trace everything
         if (!context->inDebug())
         {
-            context->setTrace(traceSetting, traceFlags);
+            context->setTrace(settings);
         }
         else
         {

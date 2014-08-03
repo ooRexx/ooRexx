@@ -44,8 +44,7 @@
 #include "RexxCore.h"
 #include "ClassDirective.hpp"
 #include "Clause.hpp"
-#include "DirectoryClass.hpp"
-#include "TableClass.hpp"
+#include "StringTableClass.hpp"
 #include "ListClass.hpp"
 #include "RexxActivation.hpp"
 #include "MethodClass.hpp"
@@ -113,16 +112,16 @@ void ClassDirective::flatten(Envelope *envelope)
 {
     setUpFlatten(ClassDirective)
 
-        flattenRef(nextInstruction);
-        flattenRef(publicName);
-        flattenRef(idName);
-        flattenRef(metaclassName);
-        flattenRef(subclassName);
-        flattenRef(inheritsClasses);
-        flattenRef(instanceMethods);
-        flattenRef(classMethods);
-        // we don't carry this one forward
-        newThis->dependencies = OREF_NULL;
+    flattenRef(nextInstruction);
+    flattenRef(publicName);
+    flattenRef(idName);
+    flattenRef(metaclassName);
+    flattenRef(subclassName);
+    flattenRef(inheritsClasses);
+    flattenRef(instanceMethods);
+    flattenRef(classMethods);
+    // we don't carry this one forward
+    newThis->dependencies = OREF_NULL;
 
     cleanUpFlatten
 }
@@ -185,16 +184,16 @@ RexxClass *ClassDirective::install(PackageClass *package, RexxActivation *activa
     // creating a mixing
     if (mixinClass)
     {
-        classObject = subclass->mixinclass(source, idName, metaclass, classMethods);
+        classObject = subclass->mixinClass(package, idName, metaclass, classMethods);
     }
     // creating a direct subclass
     else
     {
-        classObject = subclass->subclass(source, idName, metaclass, classMethods);
+        classObject = subclass->subclass(package, idName, metaclass, classMethods);
     }
     // add the class to the directory, which also protects it from GC for the
     // subsequent steps
-    source->addInstalledClass(publicName, classObject, publicClass);
+    package->addInstalledClass(publicName, classObject, publicClass);
 
     // using multiple inheritance?  Process each one in turn.
     if (inheritsClasses != OREF_NULL)
@@ -237,7 +236,7 @@ RexxClass *ClassDirective::install(PackageClass *package, RexxActivation *activa
  * @param classDirectives
  *               The global local classes list.
  */
-void ClassDirective::checkDependency(RexxString *name, DirectoryClass *classDirectives)
+void ClassDirective::checkDependency(RexxString *name, StringTable *classDirectives)
 {
     if (name != OREF_NULL)
     {
@@ -246,7 +245,7 @@ void ClassDirective::checkDependency(RexxString *name, DirectoryClass *classDire
         {
             if (dependencies == OREF_NULL)
             {
-                dependencies = new_directory();
+                dependencies = new_string_table();
             }
             // add to our pending list
             dependencies->setEntry(name, name);
@@ -262,7 +261,7 @@ void ClassDirective::checkDependency(RexxString *name, DirectoryClass *classDire
  * @param classDirectives
  *               The global set of defined classes in this package.
  */
-void ClassDirective::addDependencies(DirectoryClass *classDirectives)
+void ClassDirective::addDependencies(StringTable *classDirectives)
 {
     // now for each of our dependent classes, if this is defined locally, we
     // add an entry to our dependency list to aid the class ordering
@@ -335,11 +334,11 @@ void ClassDirective::addInherits(RexxString *name)
  *
  * @return The class methods directory.
  */
-TableClass *ClassDirective::getClassMethods()
+StringTable *ClassDirective::getClassMethods()
 {
     if (classMethods == OREF_NULL)
     {
-        classMethods = new_table();
+        classMethods = new_string_table();
     }
     return classMethods;
 }
@@ -350,11 +349,11 @@ TableClass *ClassDirective::getClassMethods()
  *
  * @return The instance methods directory.
  */
-TableClass *ClassDirective::getInstanceMethods()
+StringTable *ClassDirective::getInstanceMethods()
 {
     if (instanceMethods == OREF_NULL)
     {
-        instanceMethods = new_table();
+        instanceMethods = new_string_table();
     }
     return instanceMethods;
 }
@@ -373,13 +372,12 @@ bool ClassDirective::checkDuplicateMethod(RexxString *name, bool classMethod)
 {
     if (classMethod)
     {
-        return getClassMethods()->get(name) != OREF_NULL;
+        return getClassMethods()->hasIndex(name);
     }
     else
     {
-        return getInstanceMethods()->get(name) != OREF_NULL;
+        return getInstanceMethods()->hasIndex(name);
     }
-
 }
 
 

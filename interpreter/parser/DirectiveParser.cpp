@@ -54,6 +54,7 @@
 #include "CPPCode.hpp"
 #include "BaseCode.hpp"
 #include "PackageManager.hpp"
+#include "TraceSetting.hpp"
 
 
 /**
@@ -852,17 +853,15 @@ void LanguageParser::optionsDirective()
 
                     RexxString *value = token->value();
                     char badOption = 0;
-                    size_t traceSetting;
-                    size_t traceFlags;
+                    TraceSetting settings;
 
                     // validate the setting
-                    if (!parseTraceSetting(value, traceSetting, traceFlags, badOption))
+                    if (!parseTraceSetting(value, settings, badOption))
                     {
                         syntaxError(Error_Invalid_trace_trace, new_string(&badOption, 1));
                     }
                     // poke into the package
-                    package->setTraceSetting(traceSetting);
-                    package->setTraceFlags(traceFlags);
+                    package->setTraceSetting(settings);
                     break;
                 }
 
@@ -894,7 +893,7 @@ MethodClass *LanguageParser::createNativeMethod(RexxString *name, RexxString *li
          syntaxError(Error_External_name_not_found_method, procedure);
     }
     // this might return a different object if this has been used already
-    nmethod = (NativeCode *)nmethod->setSourceObject(package);
+    nmethod = (NativeCode *)nmethod->setPackageObject(package);
     // turn into a real method object
     return new MethodClass(name, nmethod);
 }
@@ -1619,7 +1618,7 @@ void LanguageParser::routineDirective()
                      syntaxError(Error_External_name_not_found_routine, entry);
                 }
                 // make sure this is attached to the source object for context information
-                routine->setSourceObject(package);
+                routine->setPackageObject(package);
                 // add to the routine directory
                 routines->setEntry(name, routine);
                 // if this is a public routine, add to the public directory as well.
@@ -1663,7 +1662,7 @@ void LanguageParser::routineDirective()
                      syntaxError(Error_External_name_not_found_routine, entry);
                 }
                 // make sure this is attached to the source object for context information
-                routine->setSourceObject(package);
+                routine->setPackageObject(package);
                 // add to the routine directory
                 routines->setEntry(name, routine);
                 // if this is a public routine, add to the public directory as well.

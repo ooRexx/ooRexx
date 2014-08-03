@@ -116,7 +116,7 @@ void RexxInstructionBaseDo::execute(RexxActivation *context, ExpressionStack *st
 
     // all we do here is create a new doblock and make it active
     DoBlock *doblock = new DoBlock (this, context->getIndent());
-    context->newDo(doblock);
+    context->newBlockInstruction(doblock);
 
     // perform loop specific initialization
     setup(context, stack, doblock);
@@ -277,7 +277,7 @@ void RexxInstructionBaseDo::handleDebugPause(RexxActivation *context, DoBlock *d
         // no block required, just remove the nesting
         else
         {
-            context->removeBlock();
+            context->removeBlockInstruction();
         }
         // this makes us the next instruction to be executed
         context->setNext(this);
@@ -295,7 +295,7 @@ void RexxInstructionBaseDo::handleDebugPause(RexxActivation *context, DoBlock *d
 void RexxInstructionBaseDo::terminate(RexxActivation *context, DoBlock *doblock )
 {
     // reset the DO block
-    context->terminateBlock(doblock->getIndent());
+    context->terminateBlockInstruction(doblock->getIndent());
     // The next instruction is the one after the END
     context->setNext(end->nextInstruction);
 }
@@ -310,8 +310,8 @@ void RexxInstructionBaseDo::terminate(RexxActivation *context, DoBlock *doblock 
 void RexxInstructionBaseDo::endLoop(RexxActivation *context)
 {
     // pop the block instruction and remove the execution nest.
-    context->popBlock();
-    context->removeBlock();
+    context->popBlockInstruction();
+    context->removeBlockInstruction();
     // jump to the loop end
     context->setNext(end->nextInstruction);
     context->unindent();

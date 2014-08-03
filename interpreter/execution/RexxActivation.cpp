@@ -841,9 +841,8 @@ void RexxActivation::processTraps()
  * pauses or tracing for a given number of instructions.
  *
  * @param skipCount The number of clauses to skip.
- * @param noTrace   Indicates whether we are skipping tracing as well as the pauses.
  */
-void RexxActivation::debugSkip(wholenumber_t skipCount, bool noTrace )
+void RexxActivation::debugSkip(wholenumber_t skipCount)
 {
     // this is only allowed from a debug pause, not normal code execution
     if (!debugPause)
@@ -852,9 +851,11 @@ void RexxActivation::debugSkip(wholenumber_t skipCount, bool noTrace )
     }
 
     // mark the count to skip
-    settings.traceSkip = skipCount;
+    settings.traceSkip = Numerics::abs(skipCount);
     // turn on the skip flag to suppress the tracing.
-    settings.setTraceSuppressed(noTrace);
+    // if the skip count is a negative value, we turn off all
+    // tracing, not just the debug pauses.
+    settings.setTraceSuppressed(skipCount < 0);
     settings.setDebugBypass(true);
 }
 

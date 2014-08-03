@@ -49,7 +49,7 @@
 #include "RoutineClass.hpp"
 #include "PackageClass.hpp"
 #include "RexxCode.hpp"
-#include "StringTable.hpp"
+#include "StringTableClass.hpp"
 #include "ClassDirective.hpp"
 #include "StackFrameClass.hpp"
 #include "ActivationFrame.hpp"
@@ -409,7 +409,7 @@ MethodClass *LanguageParser::generateMethod(PackageClass *sourceContext)
     // if we have a source context, then we need to inherit this
     // context before doing the install so that anything from the parent
     // context is visible during the install processing.
-    package->inheritSourceContext(sourceContext);
+    package->inheritPackageContext(sourceContext);
 
     // force the package to resolve classes/libraries now.
     installPackage();
@@ -443,7 +443,7 @@ RoutineClass *LanguageParser::generateRoutine(PackageClass *sourceContext)
     // if we have a source context, then we need to inherit this
     // context before doing the install so that anything from the parent
     // context is visible during the install processing.
-    package->inheritSourceContext(sourceContext);
+    package->inheritPackageContext(sourceContext);
 
     // force the package to resolve classes/libraries now.
     installPackage();
@@ -1497,7 +1497,7 @@ void LanguageParser::flushControl(RexxInstruction *instruction)
  */
 bool LanguageParser::isExposed(RexxString *varName)
 {
-    return exposedVariables != OREF_NULL && exposedVariables->fastAt(varName) != OREF_NULL;
+    return exposedVariables != OREF_NULL && exposedVariables->hasIndex(varName);
 }
 
 /**
@@ -1538,8 +1538,9 @@ RexxVariableBase *LanguageParser::addSimpleVariable(RexxString *varname)
 {
     // we might have this already (fairly common in most programs).  If
     // not we cache a new one for the next time.
-    RexxVariableBase *retriever = (RexxVariableBase *)variables->fastAt(varname);
-    if (retriever == OREF_NULL)          /* not in the table yet?             */
+    RexxVariableBase *retriever = (RexxVariableBase *)variables->get(varname);
+    // if not in the table yet, we need to create a new one
+    if (retriever == OREF_NULL)
     {
         // ok, have to create a new one.
 
@@ -1585,7 +1586,7 @@ RexxVariableBase *LanguageParser::addSimpleVariable(RexxString *varname)
 RexxStemVariable *LanguageParser::addStem(RexxString *stemName)
 {
     // like with normal variables, we might have this already cached.
-    RexxStemVariable *retriever = (RexxStemVariable *)(variables->fastAt(stemName));
+    RexxStemVariable *retriever = (RexxStemVariable *)(variables->get(stemName));
     if (retriever == OREF_NULL)
     {
         if (!isInterpret())
@@ -1629,7 +1630,7 @@ RexxCompoundVariable *LanguageParser::addCompound(RexxString *name)
 {
     // we cache compound variables also...see if we've encountered
     // this exact name before.
-    RexxCompoundVariable *retriever = (RexxCompoundVariable *)(variables->fastAt(name));
+    RexxCompoundVariable *retriever = (RexxCompoundVariable *)(variables->get(name));
     if (retriever != OREF_NULL)
     {
         return retriever;
@@ -1739,7 +1740,7 @@ void LanguageParser::expose(RexxString *name )
 RexxString *LanguageParser::commonString(RexxString *string)
 {
     // check the global table first for this value.
-    RexxString *result = (RexxString *)strings->fastAt(string);
+    RexxString *result = (RexxString *)strings->get(string);
     // if not in the table, we add this new one, otherwise we
     // return the table version
     if (result != OREF_NULL)
@@ -1804,7 +1805,7 @@ RexxObject *LanguageParser::addText(RexxToken *token)
                     // we might already have processed this before.
                     // if not, we need to examine this and find the
                     // most appropriate form.
-                    RexxObject *retriever = literals->fastAt(name);
+                    RexxObject *retriever = (RexxObject *)literals->get(name);
                     if (retriever != OREF_NULL)
                     {
                         return retriever;
@@ -1880,7 +1881,7 @@ RexxObject *LanguageParser::addText(RexxToken *token)
                     // we might already have processed this before.
                     // if not, we need to examine this and find the
                     // most appropriate form.
-                    RexxObject *retriever = literals->fastAt(name);
+                    RexxObject *retriever = (RexxObject *)literals->get(name);
                     if (retriever != OREF_NULL)
                     {
                         return retriever;
@@ -1906,7 +1907,7 @@ RexxObject *LanguageParser::addText(RexxToken *token)
             // we might already have processed this before.
             // if not, we need to examine this and find the
             // most appropriate form.
-            RexxObject *retriever = literals->fastAt(name);
+            RexxObject *retriever = (RexxObject *)literals->get(name);
             if (retriever != OREF_NULL)
             {
                 return retriever;
@@ -1992,7 +1993,7 @@ void LanguageParser::addClause(RexxInstruction *instruction)
  */
 void LanguageParser::addLabel(RexxInstruction *label, RexxString *labelname )
 {
-    if (labels->fastAt(labelname) == OREF_NULL)
+    if (!labels->hasIndex(labelname))
     {
         labels->put((RexxObject *)label, labelname);
     }
@@ -2011,7 +2012,7 @@ RexxInstruction *LanguageParser::findLabel(RexxString *labelname)
     // it's possible we don't have a label table.
     if (labels != OREF_NULL)
     {
-        return(RexxInstruction *)labels->fastAt(labelname);
+        return(RexxInstruction *)labels->get(labelname);
     }
     return OREF_NULL;
 }
@@ -3111,7 +3112,7 @@ RexxObject *LanguageParser::popTerm()
     currentStack--;
     // pop the object off of the stack and give it some short-term
     // GC protection.
-    RexxObject *term = terms->pop();
+    RexxObject *term = (RexxObject *)terms->pop();
     holdObject(term);
     return term;
 }
@@ -3153,7 +3154,7 @@ RexxObject *LanguageParser::requiredTerm(RexxToken *token, int errorCode)
     // we track the size count when we push/pop
     currentStack--;
     // pop the term off of the stack
-    RexxObject *term = terms->pop();
+    RexxObject *term = (RexxObject *)terms->pop();
     // we need a term, if this is not here, this is a syntax error
     if (term == OREF_NULL)
     {
@@ -3180,7 +3181,7 @@ RexxObject *LanguageParser::popNTerms(size_t count)
     // and pop that many elements
     while (count--)
     {
-        result = terms->pop();
+        result = (RexxObject *)terms->pop();
     }
     // if we have a return item, protect it for a little while.
     if (result != OREF_NULL)
@@ -3466,7 +3467,7 @@ RexxObject *LanguageParser::parseLogical(int terminators)
     // one (most common situation), just pop the top item and return it
     if (total == 1)
     {
-        return subTerms->pop();
+        return (RexxObject *)subTerms->pop();
     }
 
     // composite tis expression into a single object that can evaluate the
@@ -3493,12 +3494,12 @@ bool LanguageParser::parseTraceSetting(RexxString *value, TraceSetting &newSetti
     // null string?  This just turns tracing off.
     if (length == 0)
     {
-        newSetting.traceOff();
+        newSetting.setTraceOff();
         return true;
     }
 
     // turn off entirely so we know if we have just a debug toggle request.
-    newSetting.reset();
+    newSetting.clear();
 
     // scan the characters.  We only recognize the first characters of
     // words, but this can also have a prefix.
@@ -3558,14 +3559,13 @@ bool LanguageParser::parseTraceSetting(RexxString *value, TraceSetting &newSetti
             // TRACE INTERMEDIATES
             case 'I':
                 newSetting.setTraceIntermediates();
-                setting = TRACE_INTERMEDIATES;
                 break;
 
             // unknown trace setting
             default:
                 // each context handles it's own error reporting, so give back the
                 // information needed for the message.
-                badOption = value->getChar(_position);
+                badOption = value->getChar(pos);
                 return false;
                 break;
         }
@@ -3585,7 +3585,7 @@ bool LanguageParser::parseTraceSetting(RexxString *value, TraceSetting &newSetti
         }
         // trace OFF is special...it unconditionally turns off debug, so
         // don't set the debug flag on if we have OFF.
-        else if (!isTraceOff())
+        else if (!newSetting.isTraceOff())
         {
             // this turns on special optimization flags also.
             newSetting.setDebug();
@@ -3629,7 +3629,7 @@ RoutineClass *LanguageParser::processInstore(PRXSTRING instore, RexxString * nam
             if (instore[0].strptr != NULL)
             {
                 BufferClass *source_buffer = new_buffer(instore[0]);
-                routine->getSourceObject()->attachSource(source_buffer);
+                routine->getPackageObject()->attachSource(source_buffer);
             }
             return routine;                  /* go return it                      */
         }

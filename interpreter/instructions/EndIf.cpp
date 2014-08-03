@@ -137,7 +137,7 @@ void RexxInstructionEndIf::execute(RexxActivation *context, ExpressionStack *sta
     if (this->instructionType == KEYWORD_ENDWHEN)
     {
         // remove the select block and reset the indent
-        context->terminateBlock();
+        context->terminateBlockInstruction();
         // branch to the END of the SELECT.
         context->setNext(else_end->nextInstruction);
     }

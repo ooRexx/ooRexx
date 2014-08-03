@@ -43,7 +43,7 @@
 /******************************************************************************/
 #include "RexxCore.h"
 #include "StringClass.hpp"
-#include "DirectoryClass.hpp"
+#include "StringTableClass.hpp"
 #include "ArrayClass.hpp"
 #include "VariableDictionary.hpp"
 #include "RexxActivation.hpp"
@@ -131,7 +131,7 @@ void RexxInstructionCall::flatten(Envelope *envelope)
  *
  * @param labels The table of label instructions in the current context.
  */
-void RexxInstructionCall::resolve(DirectoryClass *labels)
+void RexxInstructionCall::resolve(StringTable *labels)
 {
     // Note, if we are not allowed to have internal calls, we never get added to the
     // resolution list.  If we get a resolve call, then we need to check for this.
@@ -140,7 +140,7 @@ void RexxInstructionCall::resolve(DirectoryClass *labels)
     {
         // see if there is a matching label.  If we get something,
         // we're finished.
-        targetInstruction = (RexxInstruction *)labels->at((RexxString *)targetName);
+        targetInstruction = (RexxInstruction *)labels->get((RexxString *)targetName);
     }
 
     // really nothing else required here.  If we did not resolve a label location, then
@@ -172,14 +172,14 @@ void RexxInstructionCall::execute(RexxActivation *context, ExpressionStack *stac
             RexxObject *argResult = arguments[i]->evaluate(context, stack);
 
             // trace if the settings require it.
-            context->traceIntermediate(argResult, TRACE_PREFIX_ARGUMENT);
+            context->traceArgument(argResult);
         }
         else
         {
             // push an empty value on to the stack and trace this as a null string
             // value.
             stack->push(OREF_NULL);
-            context->traceIntermediate(OREF_NULLSTRING, TRACE_PREFIX_ARGUMENT);
+            context->traceArgument(OREF_NULLSTRING);
         }
     }
 
@@ -233,10 +233,7 @@ RexxInstructionDynamicCall::RexxInstructionDynamicCall(RexxObject *expr, size_t 
 
     // now copy any arguments from the sub term stack
     // NOTE:  The arguments are in last-to-first order on the stack.
-    while (argCount > 0)
-    {
-        arguments[--argCount] = argList->pop();
-    }
+    initializeObjectArray(argCount, arguments, RexxObject, argList);
 }
 
 /**
@@ -317,24 +314,24 @@ void RexxInstructionDynamicCall::execute(RexxActivation *context, ExpressionStac
             RexxObject *argResult = arguments[i]->evaluate(context, stack);
 
             // trace if the settings require it.
-            context->traceIntermediate(argResult, TRACE_PREFIX_ARGUMENT);
+            context->traceArgument(argResult);
         }
         else
         {
             // push an empty value on to the stack and trace this as a null string
             // value.
             stack->push(OREF_NULL);
-            context->traceIntermediate(OREF_NULLSTRING, TRACE_PREFIX_ARGUMENT);
+            context->traceArgument(OREF_NULLSTRING);
         }
     }
 
     // see if we can find an internal label target
     RexxInstruction *targetInstruction = OREF_NULL;
     // see if the context has a matching label (case sensitive lookup)
-    DirectoryClass *labels = context->getLabels();
+    StringTable *labels = context->getLabels();
     if (labels != OREF_NULL)
     {
-        targetInstruction = (RexxInstruction *)(labels->at(targetName));
+        targetInstruction = (RexxInstruction *)(labels->get(targetName));
     }
 
     ProtectedObject   result;            // returned result
@@ -362,7 +359,7 @@ void RexxInstructionDynamicCall::execute(RexxActivation *context, ExpressionStac
 
     // did we get a result returned?  We need to either set or drop
     // the result variable and potentially trace this.
-    if ((RexxObject *)result != OREF_NULL)   /* result returned?                  */
+    if ((RexxObject *)result != OREF_NULL)
     {
         context->setLocalVariable(OREF_RESULT, VARIABLE_RESULT, (RexxObject *)result);
         context->traceResult((RexxObject *)result);
@@ -447,32 +444,16 @@ void RexxInstructionCallOn::flatten(Envelope *envelope)
  *
  * @param labels The table of label instructions in the current context.
  */
-void RexxInstructionCallOn::resolve(DirectoryClass *labels)
+void RexxInstructionCallOn::resolve(StringTable *labels)
 {
     // if there is a labels table, see if we can find a label object from the context.
     if (labels != OREF_NULL)
     {
-        // see if there is a matching label.  If we get something,
-        // we're finished.
-        targetInstruction = (RexxInstruction *)labels->at((RexxString *)targetName);
-        if (targetInstruction != OREF_NULL)
-        {
-            return;
-        }
+        // see if there is a matching label.  We've already resolved any
+        // potential builtin, so if there is no matching label we can figure out from
+        // there what sort of call we have.
+        targetInstruction = (RexxInstruction *)labels->get((RexxString *)targetName);
     }
-
-    // if we could not resolve to a target, try the checks for the builtins
-    // and external targets.
-
-    // if we've resolved to a builtin target, we can just scrap the name.
-    // in addition to saving a little space in the saved image, this will
-    // double as an indicator that this is a builtin call.
-    if (builtinIndex != NO_BUILTIN)
-    {
-        targetName = OREF_NULL;
-    }
-
-    // if none of the above resolved anything, this is an external call.
 }
 
 
