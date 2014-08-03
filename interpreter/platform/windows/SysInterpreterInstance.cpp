@@ -87,6 +87,7 @@ BOOL __stdcall WinConsoleCtrlHandler(DWORD dwCtrlType)
     return SystemInterpreter::processSignal(dwCtrlType);
 }
 
+
 /**
  * Initialize the interpreter instance.
  *
@@ -99,19 +100,20 @@ void SysInterpreterInstance::initialize(InterpreterInstance *i, RexxOption *opti
     externalTraceEnabled = false;    // off by default
     TCHAR rxTraceBuf[8];
 
-    /* scan current environment,         */
+    // check the current environment for RXTRACE
     if (GetEnvironmentVariable("RXTRACE", rxTraceBuf, 8))
     {
-        if (!Utilities::strCaselessCompare(rxTraceBuf, "ON"))    /* request to turn on?               */
+        // if this is set to on, start with tracing enabled
+        if (!Utilities::strCaselessCompare(rxTraceBuf, "ON"))
         {
             externalTraceEnabled = true;   // turn on tracing of top-level activations for this instance
         }
     }
 
-    /* Because of using the stand-alone runtime library or when using different compilers,
-       the std-streams of the calling program and the REXX.DLL might be located at different
-       addresses and therefore _file might be -1. If so, std-streams are reassigned to the
-       file standard handles returned by the system */
+    // Because of using the stand-alone runtime library or when using different compilers,
+    // the std-streams of the calling program and the REXX.DLL might be located at different
+    // addresses and therefore _file might be -1. If so, std-streams are reassigned to the
+    // file standard handles returned by the system
     if ((stdin->_file == -1) && (GetFileType(GetStdHandle(STD_INPUT_HANDLE)) != FILE_TYPE_UNKNOWN))
     {
         *stdin = *_fdopen(_open_osfhandle((intptr_t)GetStdHandle(STD_INPUT_HANDLE),_O_RDONLY), "r");
@@ -151,16 +153,19 @@ void SysInterpreterInstance::addSearchExtension(const char *name)
 {
     // if the extension is not already in the extension list, add it
     RexxString *ext = new_string(name);
-    if (instance->searchExtensions->hasItem(ext) == TheFalseObject)
+    if (!instance->searchExtensions->hasItem(ext))
     {
         instance->searchExtensions->append(ext);
     }
 }
 
+
+/**
+ * Do system specific program setup
+ *
+ * @param activation the activation starting up.
+ */
 void SysInterpreterInstance::setupProgram(RexxActivation *activation)
-/******************************************************************************/
-/* Function:  Do system specific program setup                                */
-/******************************************************************************/
 {
     // trace this activation if turned on externally when the instance was started
     if (externalTraceEnabled)
@@ -170,6 +175,13 @@ void SysInterpreterInstance::setupProgram(RexxActivation *activation)
 }
 
 
+/**
+ * Initialize a path searcher.
+ *
+ * @param parentDir The parent dirctory for the search.
+ * @param extensionPath
+ *                  The system extension path.
+ */
 SysSearchPath::SysSearchPath(const char *parentDir, const char *extensionPath)
 {
     char temp[4];             // this is just a temp buffer to check component sizes

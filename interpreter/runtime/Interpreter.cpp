@@ -48,7 +48,7 @@
 
 #include "Interpreter.hpp"
 #include "ActivityManager.hpp"
-#include "ListClass.hpp"
+#include "QueueClass.hpp"
 #include "SystemInterpreter.hpp"
 #include "InterpreterInstance.hpp"
 #include "DirectoryClass.hpp"
@@ -60,7 +60,7 @@
 // global resource lock
 SysMutex Interpreter::resourceLock;
 
-ListClass *Interpreter::interpreterInstances = OREF_NULL;
+QueueClass *Interpreter::interpreterInstances = OREF_NULL;
 
 // the local server object
 RexxObject *Interpreter::localServer = OREF_NULL;
@@ -76,10 +76,15 @@ bool Interpreter::timeSliceElapsed = false;
  */
 void Interpreter::init()
 {
-    interpreterInstances = new_list();
+    interpreterInstances = new_queue();
 }
 
 
+/**
+ * Normal garbage collection live marking
+ *
+ * @param liveMark The current live mark.
+ */
 void Interpreter::live(size_t liveMark)
 {
     memory_mark(interpreterInstances);
@@ -87,6 +92,12 @@ void Interpreter::live(size_t liveMark)
     memory_mark(versionNumber);
 }
 
+
+/**
+ * Flatten the table contents as part of a saved program.
+ *
+ * @param envelope The envelope we're flattening into.
+ */
 void Interpreter::liveGeneral(MarkReason reason)
 {
   if (reason != SAVINGIMAGE)
@@ -97,6 +108,10 @@ void Interpreter::liveGeneral(MarkReason reason)
   }
 }
 
+
+/**
+ * Perform new process initialization.
+ */
 void Interpreter::processStartup()
 {
     // the locks get create in order
@@ -105,6 +120,10 @@ void Interpreter::processStartup()
     // make sure we have a session queue created for this process
 }
 
+
+/**
+ * Handle end of process shutdown.
+ */
 void Interpreter::processShutdown()
 {
     ActivityManager::closeLocks();
@@ -131,23 +150,24 @@ void Interpreter::startInterpreter(InterpreterStartupMode mode)
         memoryObject.initialize(mode == RUN_MODE);
         RexxCreateSessionQueue();
         // create our instances list
-        interpreterInstances = new_list();
+        interpreterInstances = new_queue();
         // if we have a local server created already, don't recurse.
         if (localServer == OREF_NULL)
         {
             // Get an instance.  This also gives the root activity of the instance
             // the kernel lock.
             InstanceBlock instance;
-            /* get the local environment         */
-            /* get the server class              */
-            RexxObject *server_class = TheSystem->entry(new_string("!SERVER"));
+
+            // TODO:  Reassess the server class
+            // get the server class from the local environment
+            RexxObject *server_class = (RexxObject *)TheSystem->entry(new_string("!SERVER"));
 
             // NOTE:  This is a second block so that the
             // protected object's destructor gets run before
             // the activity is removed as the current activity.
             {
                 ProtectedObject result;
-                /* create a new server object        */
+                // create a new server object
                 server_class->messageSend(OREF_NEW, OREF_NULL, 0, result);
                 localServer = (RexxObject *)result;
             }
@@ -348,13 +368,9 @@ bool Interpreter::haltAllActivities(RexxString *name)
     ResourceSection lock;
     bool result = true;
 
-    for (size_t listIndex = interpreterInstances->firstIndex() ;
-         listIndex != LIST_END;
-         listIndex = interpreterInstances->nextIndex(listIndex) )
+    for (size_t listIndex = 1; listIndex <= interpreterInstances->items(); listIndex++)
     {
-                                         /* Get the next message object to    */
-                                         /*process                            */
-        InterpreterInstance *instance = (InterpreterInstance *)interpreterInstances->getValue(listIndex);
+        InterpreterInstance *instance = (InterpreterInstance *)interpreterInstances->get(listIndex);
         // halt every thing
         result = result && instance->haltAllActivities(name);
     }
@@ -457,24 +473,24 @@ InstanceBlock::~InstanceBlock()
 void Interpreter::decodeConditionData(DirectoryClass *conditionObj, RexxCondition *condData)
 {
     memset(condData, 0, sizeof(RexxCondition));
-    condData->code = messageNumber((RexxString *)conditionObj->at(OREF_CODE));
+    condData->code = messageNumber((RexxString *)conditionObj->get(OREF_CODE));
     // just return the major part
-    condData->rc = messageNumber((RexxString *)conditionObj->at(OREF_RC))/1000;
-    condData->conditionName = (RexxStringObject)conditionObj->at(OREF_CONDITION);
+    condData->rc = messageNumber((RexxString *)conditionObj->get(OREF_RC))/1000;
+    condData->conditionName = (RexxStringObject)conditionObj->get(OREF_CONDITION);
 
-    RexxObject *temp = conditionObj->at(OREF_NAME_MESSAGE);
+    RexxObject *temp = (RexxObject *)conditionObj->get(OREF_NAME_MESSAGE);
     if (temp != OREF_NULL)
     {
         condData->message = (RexxStringObject)temp;
     }
 
-    temp = conditionObj->at(OREF_ERRORTEXT);
+    temp = (RexxObject *)conditionObj->get(OREF_ERRORTEXT);
     if (temp != OREF_NULL)
     {
         condData->errortext = (RexxStringObject)temp;
     }
 
-    temp = conditionObj->at(OREF_DESCRIPTION);
+    temp = (RexxObject *)conditionObj->get(OREF_DESCRIPTION);
     if (temp != OREF_NULL)
     {
         condData->description = (RexxStringObject)temp;
@@ -482,7 +498,7 @@ void Interpreter::decodeConditionData(DirectoryClass *conditionObj, RexxConditio
 
     // this could be raised by a termination exit, so there might not be
     // position information available
-    temp = conditionObj->at(OREF_POSITION);
+    temp = (RexxObject *)conditionObj->get(OREF_POSITION);
     if (temp != OREF_NULL)
     {
         condData->position = ((RexxInteger *)temp)->wholeNumber();
@@ -492,13 +508,13 @@ void Interpreter::decodeConditionData(DirectoryClass *conditionObj, RexxConditio
         condData->position = 0;
     }
 
-    temp = conditionObj->at(OREF_PROGRAM);
+    temp = (RexxObject *)conditionObj->get(OREF_PROGRAM);
     if (temp != OREF_NULL)
     {
         condData->program = (RexxStringObject)temp;
     }
 
-    temp = conditionObj->at(OREF_ADDITIONAL);
+    temp = (RexxObject *)conditionObj->get(OREF_ADDITIONAL);
     if (temp != OREF_NULL)
     {
         condData->additional = (RexxArrayObject)temp;
@@ -545,51 +561,54 @@ RexxString *Interpreter::getCurrentQueue()
 }
 
 
+/**
+ * Raise a fatal logic error
+ *
+ * @param desc   The error description.
+ */
 void Interpreter::logicError (const char *desc)
-/******************************************************************************/
-/* Function:  Raise a fatal logic error                                       */
-/******************************************************************************/
 {
     printf("Logic error: %s\n",desc);
     exit(RC_LOGIC_ERROR);
 }
 
-wholenumber_t Interpreter::messageNumber(
-    RexxString *errorcode)             /* REXX error code as string         */
-/******************************************************************************/
-/* Function:  Parse out the error code string into the messagecode valuey     */
-/******************************************************************************/
+
+/**
+ * Parse out the error code string into the messagecode value
+ *
+ * @param errorcode The string version of the error code.
+ *
+ * @return The composite error code number.
+ */
+wholenumber_t Interpreter::messageNumber(RexxString *errorcode)
 {
-    const char *decimalPoint;            /* location of decimalPoint in errorcode*/
     wholenumber_t  primary = 0;          /* Primary part of error code, major */
     wholenumber_t  secondary = 0;        /* Secondary protion (minor code)    */
     wholenumber_t  count;
 
-    /* make sure we get errorcode as str */
+    // make sure this is a string
     errorcode = (RexxString *)errorcode->stringValue();
-    /* scan to decimal Point or end of   */
-    /* error code.                       */
+    // scan to decimal Point or end of error code.
+    const char *decimalPoint;
     for (decimalPoint = errorcode->getStringData(), count = 0; *decimalPoint && *decimalPoint != '.'; decimalPoint++, count++);
 
     // must be a whole number in the correct range
     if (!new_string(errorcode->getStringData(), count)->numberValue(primary) || primary < 1 || primary >= 100)
     {
-        /* Nope raise an error.              */
         reportException(Error_Expression_result_raise);
 
     }
+
     // now shift over the decimal position.
     primary *= 1000;
 
-
+    // was there a decimal point in this?
     if (*decimalPoint)
-    {                 /* Was there a decimal point specified?*/
-                      /* is the subcode invalid or too big?*/
+    {
         if (!new_string(decimalPoint + 1, errorcode->getLength() - count -1)->numberValue(secondary) || secondary < 0  || secondary >= 1000)
         {
-            /* Yes, raise an error.              */
             reportException(Error_Expression_result_raise);
         }
     }
-    return primary + secondary;          /* add two portions together, return */
+    return primary + secondary;          // add two portions together, return
 }

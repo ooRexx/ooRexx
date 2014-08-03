@@ -49,7 +49,7 @@
 
 #include "oorexxapi.h"                 // this is the core to everything
 
-/* ANSI C definitions */
+// ANSI C definitions used in many files.
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
@@ -67,22 +67,6 @@
 /* Literal definitions                                                        */
 /******************************************************************************/
 #include "RexxConstants.hpp"
-
-/******************************************************************************/
-/* Defines for argument error reporting                                       */
-/******************************************************************************/
-
-const int ARG_ONE    = 1;
-const int ARG_TWO    = 2;
-const int ARG_THREE  = 3;
-const int ARG_FOUR   = 4;
-const int ARG_FIVE   = 5;
-const int ARG_SIX    = 6;
-const int ARG_SEVEN  = 7;
-const int ARG_EIGHT  = 8;
-const int ARG_NINE   = 9;
-const int ARG_TEN    = 10;
-
 
 // Object Reference Assignment
 // OrefSet handles reference assignment for situations where an
@@ -121,8 +105,6 @@ const int ARG_TEN    = 10;
 
 // cleaner version for setting in another object
 #define setOtherField(o, r, v) OrefSet(o, o->r, v)
-
-
 
 // forward declaration of commonly used classes
 class ExpressionStack;
@@ -222,9 +204,10 @@ EXTERNMEM MemoryObject memoryObject;
 /******************************************************************************/
 /* Global Objects - Names                                                     */
 /******************************************************************************/
-#undef GLOBAL_NAME
-#define GLOBAL_NAME(name, value) EXTERN RexxString * OREF_##name INITGLOBALPTR;
-#include "GlobalNames.h"
+#include "GlobalNames.hpp"
+
+// make this namespace globally available
+using namespace GlobalNames;
 
 #include "ObjectClass.hpp"               // get real definition of Object
 
@@ -232,7 +215,7 @@ EXTERNMEM MemoryObject memoryObject;
 #include "RexxMemory.hpp"                // memory next, to get OrefSet
 #include "RexxBehaviour.hpp"             // now behaviours and
 #include "ClassClass.hpp"                // classes, which everything needs
-#include "Envelope.hpp"              // envelope is needed for flattens
+#include "Envelope.hpp"                  // envelope is needed for flattens
 
 /******************************************************************************/
 /* Return codes                                                               */

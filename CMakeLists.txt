@@ -535,6 +535,7 @@ set (classes_sources ${build_classes_dir}/ArrayClass.cpp
 set (package_sources ${build_package_dir}/LibraryPackage.cpp
             ${build_package_dir}/PackageManager.cpp)
 set (memory_sources ${build_memory_dir}/DeadObject.cpp
+            ${build_memory_dir}/GlobalNames.cpp
             ${build_memory_dir}/MapBucket.cpp
             ${build_memory_dir}/MapTable.cpp
             ${build_memory_dir}/MemorySegment.cpp
@@ -662,9 +663,7 @@ set (common_sources ${build_common_dir}/Utilities.cpp
             ${build_common_platform_dir}/SysLibrary.cpp
             ${build_common_platform_dir}/SysSemaphore.cpp
             ${build_common_platform_dir}/SysThread.cpp)
-set (runtime_sources ${build_runtime_dir}/GlobalData.cpp
-            ${build_runtime_dir}/GlobalNames.cpp
-            ${build_runtime_dir}/InternalPackage.cpp
+set (runtime_sources ${build_runtime_dir}/InternalPackage.cpp
             ${build_runtime_dir}/Interpreter.cpp
             ${build_runtime_dir}/InterpreterInstance.cpp
             ${build_runtime_dir}/Numerics.cpp

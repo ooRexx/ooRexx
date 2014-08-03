@@ -48,6 +48,22 @@
 #define MethodArguments_Include
 
 
+/******************************************************************************/
+/* Defines for argument error reporting                                       */
+/******************************************************************************/
+
+const int ARG_ONE    = 1;
+const int ARG_TWO    = 2;
+const int ARG_THREE  = 3;
+const int ARG_FOUR   = 4;
+const int ARG_FIVE   = 5;
+const int ARG_SIX    = 6;
+const int ARG_SEVEN  = 7;
+const int ARG_EIGHT  = 8;
+const int ARG_NINE   = 9;
+const int ARG_TEN    = 10;
+
+
 /**
  * Report an error with a missing argument.
  *

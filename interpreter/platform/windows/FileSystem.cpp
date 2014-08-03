@@ -102,7 +102,7 @@ RexxString *SysInterpreterInstance::resolveProgramName(RexxString *_name, RexxSt
     }
 
     // ok, now time to try each of the individual extensions along the way.
-    for (size_t i = 1; i <= searchExtensions->items(); i++)
+    for (size_t i = 1; i <= instance->searchExtensions->items(); i++)
     {
         RexxString *ext = (RexxString *)instance->searchExtensions->get(i);
 
@@ -164,12 +164,12 @@ void SystemInterpreter::loadImage(char *&imageBuffer, size_t &imageSize )
 
     DWORD     bytesRead;
     // the image is written out with a size before the buffer
-    ReadFile(fileHandle, imageSize, sizeof(size_t), &bytesRead, NULL);
+    ReadFile(fileHandle, &imageSize, sizeof(size_t), &bytesRead, NULL);
 
     // now allocate the image buffer and read the entire file into the buffer
-    imageBuffer = memoryObject.allocateImageBuffer(*imageSize);
+    imageBuffer = memoryObject.allocateImageBuffer(imageSize);
     /* read in the image                 */
-    ReadFile(fileHandle, imageBuffer, (DWORD)*imageSize, &bytesRead, NULL);
+    ReadFile(fileHandle, imageBuffer, (DWORD)imageSize, &bytesRead, NULL);
     // set this to the actual size read.
     imageSize = bytesRead;
     CloseHandle(fileHandle);
@@ -210,6 +210,7 @@ BufferClass *SystemInterpreter::readProgram(const char *file_name)
     {
         UnsafeBlock releaser;
 
+        DWORD bytesRead;
         // read in the data, but return nothing if there is an error
         if (ReadFile(fileHandle, buffer->getData(), (DWORD)buffersize, &bytesRead, NULL) == 0)
         {

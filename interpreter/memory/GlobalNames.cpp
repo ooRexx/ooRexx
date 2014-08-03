@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -36,18 +36,72 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  okgdata.c     */
+/* REXX Kernel                                                                */
 /*                                                                            */
-/* Global Data                                                                */
+/*   Save and Restore all global "name" strings                               */
 /*                                                                            */
 /******************************************************************************/
-#define GDATA                          /* prevent some RexxCore.h declares    */
-#define EXTERN                         /* keep RexxCore.h from using extern   */
-// explicitly initialize global variable declares.
-#define INITGLOBALPTR = NULL
-
 #include "RexxCore.h"
-#include "StringClass.hpp"
-#include "MethodClass.hpp"
+#include "DirectoryClass.hpp"
+#include "ArrayClass.hpp"
 
 
+// create all globally available string objects.
+void MemoryObject::createStrings()
+{
+    // if we're calling this, then we're building the image.  Make sure the
+    // global string directory is created first.
+    globalStrings = new_string_table();
+
+    // redefine the GLOBAL_NAME macro to create each of the strings
+    #undef GLOBAL_NAME
+    #define GLOBAL_NAME(name, value) OREF_##name = getGlobalName(value);
+
+    #include "GlobalNames.h"
+}
+
+
+/**
+ * Save all globally available string objects in the image.
+ *
+ * @return An array of all global string objects.
+ */
+ArrayClass *MemoryObject::saveStrings()
+{
+    // pass one, count how many string objects we have
+    #undef GLOBAL_NAME
+    #define GLOBAL_NAME(name, value) stringCount++;
+
+    size_t stringCount = 0;
+    #include "GlobalNames.h"
+
+    // get an array to contain all of the string values
+    ArrayClass *stringArray = new_array(stringCount);
+
+    // redefine GLOBAL_NAME to save each string in the array
+    #undef GLOBAL_NAME
+    #define GLOBAL_NAME(name, value) stringArray->put(OREF_##name, stringCount); stringCount++;
+
+    // the index gets incremented as we go
+    stringCount = 1;
+    #include "GlobalNames.h"
+
+    return stringArray;                  // and return the saved string array
+}
+
+
+/**
+ * Restore all globally available string objects during an image restore.
+ *
+ * @param stringArray
+ *               The string array from the image.
+ */
+void MemoryObject::restoreStrings(ArrayClass *stringArray)
+{
+    // redefine GLOBAL_NAME to restore each string pointer
+    #undef GLOBAL_NAME
+    #define GLOBAL_NAME(name, value) OREF_##name = *strings++;
+
+    RexxString **strings = (RexxString **)stringArray->data();
+    #include "GlobalNames.h"
+}

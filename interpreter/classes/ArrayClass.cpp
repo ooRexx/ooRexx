@@ -395,13 +395,6 @@ void ArrayClass::liveGeneral(MarkReason reason)
     // but we need to mark our space too.
     memory_mark_general_array(arraySize, objects);
 }
-
-
-/**
- * Flatten the table contents as part of a saved program.
- *
- * @param envelope The envelope we're flattening into.
- */
 void ArrayClass::flatten(Envelope *envelope)
 {
     setUpFlatten(ArrayClass)
