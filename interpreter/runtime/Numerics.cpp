@@ -50,17 +50,9 @@
 #include <limits.h>
 
 #ifdef __REXX64__
-const wholenumber_t Numerics::MAX_WHOLENUMBER = __INT64_C(999999999999999999);
-const wholenumber_t Numerics::MIN_WHOLENUMBER = __INT64_C(-999999999999999999);
-    // the digits setting used internally for function/method arguments to allow
-    // for the full range
-const size_t Numerics::ARGUMENT_DIGITS  = ((size_t)18);
-// this is the digits setting for full size binary settings
-const size_t Numerics::SIZE_DIGITS  = ((size_t)20);
 
-
-/* Array for valid whole number at various digits settings */
-/*  for value 1-18.                                         */
+// Array for valid whole number at various digits settings
+//  for value 1-18.
 const wholenumber_t Numerics::validMaxWhole[] = {10,
                                            100,
                                            1000,
@@ -80,17 +72,9 @@ const wholenumber_t Numerics::validMaxWhole[] = {10,
                                            100000000000000000,
                                            1000000000000000000};
 #else
-const wholenumber_t Numerics::MAX_WHOLENUMBER = 999999999;
-const wholenumber_t Numerics::MIN_WHOLENUMBER = -999999999;
-    // the digits setting used internally for function/method arguments to allow
-    // for the full binary value range
-const size_t Numerics::ARGUMENT_DIGITS  = ((size_t)9);
-// this is the digits setting for full size binary settings
-const size_t Numerics::SIZE_DIGITS  = ((size_t)10);
 
-
-/* Array for valid whole number at various digits settings */
-/*  for value 1-9.                                         */
+// Array for valid whole number at various digits settings
+//  for value 1-9.
 const wholenumber_t Numerics::validMaxWhole[] = {10,
                                            100,
                                            1000,
@@ -101,21 +85,6 @@ const wholenumber_t Numerics::validMaxWhole[] = {10,
                                            100000000,
                                            1000000000};
 #endif
-
-const wholenumber_t Numerics::MAX_EXPONENT = 999999999;
-const wholenumber_t Numerics::MIN_EXPONENT = -999999999;
-// this is the matching component to a whole number
-const stringsize_t  Numerics::MAX_STRINGSIZE = MAX_WHOLENUMBER;
-    // max numeric digits value for explicit 64-bit conversions
-const size_t Numerics::DIGITS64 = ((size_t)20);
-// numeric digits 9 is always the default
-const size_t Numerics::DEFAULT_DIGITS  = ((size_t)9);
-const bool Numerics::FORM_SCIENTIFIC    = false;
-const bool Numerics::FORM_ENGINEERING   = true;
-
-const size_t Numerics::DEFAULT_FUZZ    = ((size_t)0); /* default numeric fuzz setting      */
-                                     /* default numeric form setting      */
-const bool Numerics::DEFAULT_FORM = Numerics::FORM_SCIENTIFIC;
 
 const NumericSettings Numerics::defaultSettings;
 const NumericSettings *Numerics::settings = &Numerics::defaultSettings;
@@ -128,17 +97,6 @@ const NumericSettings *Numerics::settings = &Numerics::defaultSettings;
 NumericSettings::NumericSettings()
 {
     setDefault();
-}
-
-
-/**
- * Set the default values for a NumericSettings object.
- */
-void NumericSettings::setDefault();
-{
-    digits = Numerics::DEFAULT_DIGITS;
-    form = Numerics::DEFAULT_FORM;
-    fuzz = Numerics::DEFAULT_FUZZ;
 }
 
 

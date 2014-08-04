@@ -55,7 +55,7 @@ void MemoryObject::createStrings()
 
     // redefine the GLOBAL_NAME macro to create each of the strings
     #undef GLOBAL_NAME
-    #define GLOBAL_NAME(name, value) OREF_##name = getGlobalName(value);
+    #define GLOBAL_NAME(name, value) GlobalNames::name = getGlobalName(value);
 
     #include "GlobalNames.h"
 }
@@ -80,7 +80,7 @@ ArrayClass *MemoryObject::saveStrings()
 
     // redefine GLOBAL_NAME to save each string in the array
     #undef GLOBAL_NAME
-    #define GLOBAL_NAME(name, value) stringArray->put(OREF_##name, stringCount); stringCount++;
+    #define GLOBAL_NAME(name, value) stringArray->put(GlobalNames::name, stringCount); stringCount++;
 
     // the index gets incremented as we go
     stringCount = 1;
@@ -100,8 +100,16 @@ void MemoryObject::restoreStrings(ArrayClass *stringArray)
 {
     // redefine GLOBAL_NAME to restore each string pointer
     #undef GLOBAL_NAME
-    #define GLOBAL_NAME(name, value) OREF_##name = *strings++;
+    #define GLOBAL_NAME(name, value) GlobalNames::name = *strings++;
 
     RexxString **strings = (RexxString **)stringArray->data();
     #include "GlobalNames.h"
 }
+
+
+// now actual locations of the constants declared in
+// GlobalNames.h.
+#undef GLOBAL_NAME
+#define GLOBAL_NAME(name, value) RexxString *GlobalNames::name = OREF_NULL;
+
+#include "GlobalNames.h"

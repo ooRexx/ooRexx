@@ -2294,7 +2294,7 @@ RexxInstruction *LanguageParser::parseNew(InstructionSubKeyword argPull)
                 sourceExpression = parseExpression(TERM_WITH | TERM_KEYWORD);
                 if (sourceExpression.isNull())
                 {
-                    sourceExpression = OREF_NULLSTRING;
+                    sourceExpression = GlobalNames::NULLSTRING;
                 }
                 // the terminator needs to be a WITH keyword.
                 token = nextToken();

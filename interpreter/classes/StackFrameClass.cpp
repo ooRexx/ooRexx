@@ -91,7 +91,7 @@ StackFrameClass::StackFrameClass(const char *ty, RexxString *n, BaseExecutable *
     // return value if requested, so make this a nullstring.
     if (name == OREF_NULL)
     {
-        name = OREF_NULLSTRING;
+        name = GlobalNames::NULLSTRING;
     }
     executable = e;
     target = tg;

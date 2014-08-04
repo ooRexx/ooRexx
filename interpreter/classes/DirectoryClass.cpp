@@ -450,7 +450,7 @@ RexxInternalObject *DirectoryClass::setMethodRexx(RexxString *entryname, MethodC
         methodobj = MethodClass::newMethodObject(entryname, methodobj, (RexxClass *)TheNilObject, IntegerTwo);
 
         // the unknown method?  We keep that in a special place
-        if (entryname->strCompare(CHAR_UNKNOWN))
+        if (entryname->strCompare(GlobalNames::UNKNOWN))
         {
             setField(unknownMethod, methodobj);
         }
@@ -469,7 +469,7 @@ RexxInternalObject *DirectoryClass::setMethodRexx(RexxString *entryname, MethodC
     else
     {
         // if unknown, remove this from the special place.
-        if (entryname->strCompare(CHAR_UNKNOWN))
+        if (entryname->strCompare(GlobalNames::UNKNOWN))
         {
             clearField(unknownMethod);
         }
@@ -528,7 +528,7 @@ RexxInternalObject *DirectoryClass::unknownValue(RexxInternalObject *index)
     if (unknownMethod != OREF_NULL)
     {
         ProtectedObject v;
-        unknownMethod->run(ActivityManager::currentActivity, this, OREF_UNKNOWN, (RexxObject **)&index, 1, v);
+        unknownMethod->run(ActivityManager::currentActivity, this, GlobalNames::UNKNOWN, (RexxObject **)&index, 1, v);
         return v;
     }
     return OREF_NULL;

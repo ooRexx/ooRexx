@@ -270,7 +270,7 @@ RexxCode *LanguageParser::translateInterpret(RexxString *interpretString, String
     // create the appropriate array source, then the parser, then generate the
     // code.
     ProgramSource *programSource = new ArrayProgramSource(new_array(interpretString), lineNumber);
-    Protected<LanguageParser> parser = new LanguageParser(OREF_NULLSTRING, programSource);
+    Protected<LanguageParser> parser = new LanguageParser(GlobalNames::NULLSTRING, programSource);
     return parser->translateInterpret(labels);
 }
 
@@ -2255,7 +2255,7 @@ RexxObject *LanguageParser::parseSubExpression(int terminators )
                 location.setEnd(location.getLineNumber(), location.getOffset());
                 // create a dummy token, push the abuttal token back on the queue, and fall
                 // through to the next section where the blank concatenate operator is handled.
-                token = new RexxToken (TOKEN_OPERATOR, location, OPERATOR_ABUTTAL, OREF_NULLSTRING);
+                token = new RexxToken (TOKEN_OPERATOR, location, OPERATOR_ABUTTAL, GlobalNames::NULLSTRING);
                 previousToken();
             }
             // NOTE:  The above section falls through to this piece

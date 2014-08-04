@@ -191,7 +191,7 @@ RexxObject *RexxExpressionFunction::evaluate(RexxActivation *context, Expression
         else
         {
             stack->push(OREF_NULL);
-            context->traceArgument(OREF_NULLSTRING);
+            context->traceArgument(GlobalNames::NULLSTRING);
         }
     }
 

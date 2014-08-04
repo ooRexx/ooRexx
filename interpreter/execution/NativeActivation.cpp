@@ -1672,10 +1672,10 @@ void NativeActivation::checkConditions()
         if (!isStackBase())
         {
             // get the original condition name from the condition object
-            RexxString *condition = (RexxString *)conditionObj->get(OREF_CONDITION);
+            RexxString *condition = (RexxString *)conditionObj->get(GlobalNames::CONDITION);
 
             // syntax errors are fatal...we need to reraise this
-            if (condition->strCompare(CHAR_SYNTAX))
+            if (condition->strCompare(GlobalNames::SYNTAX))
             {
                 // this prevents us from trying to trap this again
                 trapErrors = false;
@@ -1693,7 +1693,7 @@ void NativeActivation::checkConditions()
                 }
                 // if the trap is not handled, then we return directly.  The return
                 // value (if any) is stored in the condition object
-                result = (RexxObject *)conditionObj->get(OREF_RESULT);
+                result = (RexxObject *)conditionObj->get(GlobalNames::RESULT);
             }
         }
     }
@@ -1821,6 +1821,8 @@ uint64_t NativeActivation::unsignedInt64Value(RexxObject *o, size_t position)
     return temp;
 }
 
+
+// TODO:  Cleanup not finished here
 
 const char *NativeActivation::cstring(
     RexxObject *object)                /* object to convert                 */
@@ -2267,7 +2269,7 @@ bool NativeActivation::trap(RexxString *condition, DirectoryClass * exception_ob
 
     // we end up seeing this a second time if we're raising the exception on
     // return from an external call or method.
-    if (condition->isEqual(OREF_SYNTAX))
+    if (condition->isEqual(GlobalNames::SYNTAX))
     {
         if (trapErrors)
         {
@@ -2306,8 +2308,7 @@ bool NativeActivation::trap(RexxString *condition, DirectoryClass * exception_ob
  */
 void NativeActivation::raiseCondition(RexxString *condition, RexxString *description, RexxObject *additional, RexxObject *_result)
 {
-    result = (RexxObject *)_result; /* save the result                   */
-                                         /* go raise the condition            */
+    result = (RexxObject *)_result;
     activity->raiseCondition(condition, OREF_NULL, description, additional, result);
 
     // We only return here if no activation above us has trapped this.  If we do return, then
@@ -2902,7 +2903,7 @@ void NativeActivation::variablePoolFetchPrivate(PSHVBLOCK pshvblock)
                 // non-existant args are always returned as a null string
                 if (value == OREF_NULL)
                 {
-                    value = OREF_NULLSTRING;
+                    value = GlobalNames::NULLSTRING;
                 }
                 pshvblock->shvret |= copyValue(value, &pshvblock->shvvalue, (size_t *)&pshvblock->shvvaluelen);
             }
@@ -3076,7 +3077,7 @@ int NativeActivation::stemSort(const char *stemname, int order, int type, size_t
             return false;
         }
 
-        RexxString *tail = OREF_NULLSTRING ;
+        RexxString *tail = GlobalNames::NULLSTRING ;
         ProtectedObject p2(tail);
 
         // Damn, someone is trying to sort a subsection.  We need to split the stem and

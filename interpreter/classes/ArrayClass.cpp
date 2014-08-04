@@ -687,7 +687,7 @@ RexxObject *ArrayClass::isEmptyRexx()
 RexxObject *ArrayClass::appendRexx(RexxInternalObject *value)
 {
     requiredArgument(value, ARG_ONE);
-    checkMultiDimensional(CHAR_APPEND);
+    checkMultiDimensional("APPEND");
 
     // let the low-level version handle the expansion.
     return new_integer(append(value));
@@ -725,7 +725,7 @@ size_t ArrayClass::append(RexxInternalObject *value)
  */
 RexxObject *ArrayClass::insertRexx(RexxInternalObject *value, RexxObject *index)
 {
-    checkMultiDimensional(CHAR_INSERT);
+    checkMultiDimensional("INSERT");
 
     size_t position;                     // array position
 
@@ -1483,7 +1483,7 @@ ArrayClass *ArrayClass::allocateArrayOfClass(size_t size)
 
     // need to do this by sending a message to the class object.
     ProtectedObject result;
-    classObject()->sendMessage(OREF_NEW, new_integer(size), result);
+    classObject()->sendMessage(GlobalNames::NEW, new_integer(size), result);
     return (ArrayClass *)(RexxObject *)result;
 }
 
@@ -2686,10 +2686,10 @@ wholenumber_t ArrayClass::BaseSortComparator::compare(RexxInternalObject *first,
 wholenumber_t ArrayClass::WithSortComparator::compare(RexxInternalObject *first, RexxInternalObject *second)
 {
     ProtectedObject result;
-    comparator->sendMessage(OREF_COMPARE, (RexxObject *)first, (RexxObject *)second, result);
+    comparator->sendMessage(GlobalNames::COMPARE, (RexxObject *)first, (RexxObject *)second, result);
     if ((RexxObject *)result == OREF_NULL)
     {
-        reportException(Error_No_result_object_message, OREF_COMPARE);
+        reportException(Error_No_result_object_message, GlobalNames::COMPARE);
     }
 
     wholenumber_t comparison;

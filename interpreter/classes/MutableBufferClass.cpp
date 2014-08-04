@@ -94,7 +94,7 @@ MutableBuffer *MutableBuffer::newRexx(RexxObject **args, size_t argc)
     RexxClass *classThis = (RexxClass *)this;
 
     // default string value
-    RexxString *string = OREF_NULLSTRING;
+    RexxString *string = GlobalNames::NULLSTRING;
     size_t bufferLength = DEFAULT_BUFFER_LENGTH;
     size_t defaultSize = 0;
     // if we have at least one argument, then the first
@@ -1225,10 +1225,10 @@ MutableBuffer *MutableBuffer::translate(RexxString *tableo, RexxString *tablei, 
         return upper(_start, _range);
     }
 
-    tableo = optionalStringArgument(tableo, OREF_NULLSTRING, ARG_ONE);
+    tableo = optionalStringArgument(tableo, GlobalNames::NULLSTRING, ARG_ONE);
     size_t outTableLength = tableo->getLength();
 
-    tablei = optionalStringArgument(tablei, OREF_NULLSTRING, ARG_TWO);
+    tablei = optionalStringArgument(tablei, GlobalNames::NULLSTRING, ARG_TWO);
     size_t inTableLength = tablei->getLength();
     const char *inTable = tablei->getStringData();
     const char *outTable = tableo->getStringData();
@@ -1253,7 +1253,7 @@ MutableBuffer *MutableBuffer::translate(RexxString *tableo, RexxString *tablei, 
         char ch = *scanPtr;
         size_t position;
 
-        if (tablei != OREF_NULLSTRING)
+        if (tablei->getLength() != 0)
         {
             position = StringUtil::memPos(inTable, inTableLength, ch);
         }

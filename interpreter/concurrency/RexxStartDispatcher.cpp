@@ -58,7 +58,7 @@ void RexxStartDispatcher::run()
     rc = 0;
     retcode = 0;
 
-    RexxString *name = OREF_NULLSTRING;     // name of the invoked program
+    RexxString *name = GlobalNames::NULLSTRING;     // name of the invoked program
     RexxString *fullname = name;            // default the fulllength name to the simple name
 
     // if we've been given an actual name, get the string version of it
@@ -204,12 +204,12 @@ void CallRoutineDispatcher::run()
     if (arguments != OREF_NULL)
     {
         // we use a null string for the name when things are called directly
-        routine->call(activity, OREF_NULLSTRING, arguments->messageArgs(), arguments->messageArgCount(), result);
+        routine->call(activity, GlobalNames::NULLSTRING, arguments->messageArgs(), arguments->messageArgCount(), result);
     }
     else
     {
         // we use a null string for the name when things are called directly
-        routine->call(activity, OREF_NULLSTRING, NULL, 0, result);
+        routine->call(activity, GlobalNames::NULLSTRING, NULL, 0, result);
     }
 }
 

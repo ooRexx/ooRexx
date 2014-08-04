@@ -186,7 +186,7 @@ void RexxInstructionRaise::execute(RexxActivation *context, ExpressionStack *sta
         // give this a default additional information of an empty array
         _additional = new_array();
         // The description is a null string
-        _description = OREF_NULLSTRING;
+        _description = GlobalNames::NULLSTRING;
         // the RC must have a string value...this is an error if it doesn.
         RexxString *errorcode = rc->requestString();
         if (errorcode == TheNilObject)

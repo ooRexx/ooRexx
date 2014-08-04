@@ -230,7 +230,7 @@ RexxString *RexxInstructionExpression::evaluateStringExpression(RexxActivation *
     // expression.  We still need to trace that.
     else
     {
-        context->traceResult(OREF_NULLSTRING);
-        return OREF_NULLSTRING;
+        context->traceResult(GlobalNames::NULLSTRING);
+        return GlobalNames::NULLSTRING;
     }
 }

@@ -220,7 +220,7 @@ void CompoundVariableTail::buildTail(RexxObject **tails, size_t count)
         // omitted pices are null strings
         if (part == OREF_NULL)
         {
-            part = OREF_NULLSTRING;
+            part = GlobalNames::NULLSTRING;
         }
         part->copyIntoTail(this);
     }

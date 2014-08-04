@@ -255,7 +255,7 @@ void RoutineClass::runProgram(Activity *activity, RexxString * calltype,
 void RoutineClass::runProgram(Activity *activity, RexxObject **arguments,
     size_t argCount, ProtectedObject &result)
 {
-    code->call(activity, this, executableName, arguments, argCount, OREF_COMMAND, activity->getInstance()->getDefaultEnvironment(), PROGRAMCALL, result);
+    code->call(activity, this, executableName, arguments, argCount, GlobalNames::COMMAND, activity->getInstance()->getDefaultEnvironment(), PROGRAMCALL, result);
 }
 
 
@@ -550,7 +550,7 @@ RoutineClass *RoutineClass::loadExternalRoutine(RexxString *name, RexxString *de
     // convert external into words
     Protected<ArrayClass> words = StringUtil::words(descriptor->getStringData(), descriptor->getLength());
     // "LIBRARY libbar [foo]"
-    if (((RexxString *)(words->get(1)))->strCompare(CHAR_LIBRARY))
+    if (((RexxString *)(words->get(1)))->strCompare("LIBRARY"))
     {
         RexxString *library = OREF_NULL;
         // the default entry point name is the internal name

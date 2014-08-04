@@ -87,7 +87,7 @@ void RexxTarget::next(RexxActivation *context)
     {
         if (next_argument > argcount)
         {
-            string = OREF_NULLSTRING;
+            string = GlobalNames::NULLSTRING;
         }
         else
         {
@@ -96,7 +96,7 @@ void RexxTarget::next(RexxActivation *context)
             // omitted argument? use a null string
             if (string == OREF_NULL)
             {
-                string = OREF_NULLSTRING;
+                string = GlobalNames::NULLSTRING;
             }
         }
     }
@@ -105,7 +105,7 @@ void RexxTarget::next(RexxActivation *context)
         // not PARSE ARG, so beyond the first template is always a null string
         if (next_argument != 1)
         {
-            string = OREF_NULLSTRING;
+            string = GlobalNames::NULLSTRING;
         }
     }
     next_argument++;
@@ -407,7 +407,7 @@ RexxString *RexxTarget::getWord()
     // already moved past the end of the string?  This is a NULLSTRING result
     if (subcurrent >= end)
     {
-        return OREF_NULLSTRING;
+        return GlobalNames::NULLSTRING;
     }
     else                               /* need to scan off a word           */
     {
@@ -429,7 +429,7 @@ RexxString *RexxTarget::getWord()
         // scanned past the end?  just return a null string.
         if (subcurrent >= end)
         {
-            return OREF_NULLSTRING;
+            return GlobalNames::NULLSTRING;
         }
         // we have the start of a real word here...
         else
@@ -481,7 +481,7 @@ RexxString *RexxTarget::getWord()
         }
     }
     // should never get here.
-    return OREF_NULLSTRING;
+    return GlobalNames::NULLSTRING;
 }
 
 /**
@@ -545,7 +545,7 @@ RexxString *RexxTarget::remainder()
     // already used up?  this is ""
     if (subcurrent >= end)
     {
-        return OREF_NULLSTRING;
+        return GlobalNames::NULLSTRING;
     }
     // get the rest of the current piece
 

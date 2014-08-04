@@ -283,7 +283,7 @@ RexxString *RexxString::copies(RexxInteger *_copies)
     if (Count == 0 ||                    /* no copies requested?              */
         Len == 0 )                       /* or copying a null string          */
     {
-        Retval = OREF_NULLSTRING;          /* just a null string                */
+        Retval = GlobalNames::NULLSTRING;          /* just a null string                */
     }
     else
     {                               /* get storage size                  */
@@ -683,10 +683,10 @@ RexxString *RexxString::translate(
     }
                                             /* validate the tables               */
                                             /* validate the tables               */
-    tableo = optionalStringArgument(tableo, OREF_NULLSTRING, ARG_ONE);
+    tableo = optionalStringArgument(tableo, GlobalNames::NULLSTRING, ARG_ONE);
     OutTableLength = tableo->getLength();      /* get the table length              */
     /* input table too                   */
-    tablei = optionalStringArgument(tablei, OREF_NULLSTRING, ARG_TWO);
+    tablei = optionalStringArgument(tablei, GlobalNames::NULLSTRING, ARG_TWO);
     InTableLength = tablei->getLength();       /* get the table length              */
     InTable = tablei->getStringData();    /* point at the input table          */
     OutTable = tableo->getStringData();   /* and the output table              */
@@ -713,7 +713,7 @@ RexxString *RexxString::translate(
     {                /* spin thru input                   */
         ch = *ScanPtr;                      /* get a character                   */
 
-        if (tablei != OREF_NULLSTRING)      /* input table specified?            */
+        if (tablei != GlobalNames::NULLSTRING)      /* input table specified?            */
         {
             /* search for the character          */
             Position = StringUtil::memPos(InTable, InTableLength, ch);

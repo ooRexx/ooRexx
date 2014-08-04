@@ -192,7 +192,7 @@ RexxObject *RexxExpressionMessage::evaluate(RexxActivation *context, ExpressionS
         else
         {
             stack->push(OREF_NULL);
-            context->traceArgument(OREF_NULLSTRING);
+            context->traceArgument(GlobalNames::NULLSTRING);
         }
     }
 
@@ -288,7 +288,7 @@ void RexxExpressionMessage::assign(RexxActivation *context, RexxObject *value)
         {
             // non existant arg....we may still need to trace that
             stack->push(OREF_NULL);
-            context->traceResult(OREF_NULLSTRING);
+            context->traceResult(GlobalNames::NULLSTRING);
         }
     }
 

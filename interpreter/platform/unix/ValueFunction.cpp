@@ -134,7 +134,7 @@ bool SystemInterpreter::valueFunction(
   if (OldValue != NULL)                /* have a value already?   */
     result = new_string(OldValue);    /* Yes -  convert to Rexx string     */
   else
-    result = OREF_NULLSTRING;          /* otherwise, return null            */
+    result = GlobalNames::NULLSTRING;          /* otherwise, return null            */
 
   if (NewValue != OREF_NULL)           /* if there's a new value, set it    */
   {

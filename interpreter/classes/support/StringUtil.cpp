@@ -82,7 +82,7 @@ RexxString *StringUtil::substr(const char *string, size_t stringLength, RexxInte
     // if our target length is zero, we can just return the null string singleton
     if (length == 0)
     {
-        return OREF_NULLSTRING;
+        return GlobalNames::NULLSTRING;
     }
 
     size_t substrLength = 0;
@@ -469,7 +469,7 @@ RexxString *StringUtil::subchar(const char *stringData, size_t stringLength, Rex
     // beyond the bounds, this is a null string
     if (position >= stringLength)
     {
-        return OREF_NULLSTRING;
+        return GlobalNames::NULLSTRING;
     }
     // return the single character
     return new_string(stringData + position, 1);
@@ -931,7 +931,7 @@ RexxString *StringUtil::packHex(const char *String, size_t StringLength)
     else
     {
         /* this is a null string             */
-        Retval = OREF_NULLSTRING;
+        Retval = GlobalNames::NULLSTRING;
     }
     return Retval;                       /* return the packed string          */
 }
@@ -1460,7 +1460,7 @@ RexxString *StringUtil::subWord(const char *data, size_t length, RexxInteger *po
     // handle cases that will always result in a null string
     if (length == 0 || count == 0)
     {
-        return OREF_NULLSTRING;
+        return GlobalNames::NULLSTRING;
     }
     const char *nextSite = NULL;
     const char *word = data;
@@ -1476,7 +1476,7 @@ RexxString *StringUtil::subWord(const char *data, size_t length, RexxInteger *po
     // count position
     if (wordPos != 0)
     {
-        return OREF_NULLSTRING;        /* again a null string               */
+        return GlobalNames::NULLSTRING;        /* again a null string               */
     }
 
     const char *wordStart = word;                /* save start position               */
@@ -1569,7 +1569,7 @@ RexxString *StringUtil::word(const char *data, size_t length, RexxInteger *posit
 
     if (length == 0)                     /* null string?                      */
     {
-        return OREF_NULLSTRING;          /* result is null also               */
+        return GlobalNames::NULLSTRING;          /* result is null also               */
     }
     const char *word = data;             /* point to the string               */
     const char *nextSite = NULL;
@@ -1586,7 +1586,7 @@ RexxString *StringUtil::word(const char *data, size_t length, RexxInteger *posit
         /* extract the string                */
         return new_string(word, wordLength);
     }
-    return OREF_NULLSTRING;        /* no word, return a null            */
+    return GlobalNames::NULLSTRING;        /* no word, return a null            */
 }
 
 

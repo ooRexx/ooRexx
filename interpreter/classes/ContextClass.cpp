@@ -193,7 +193,7 @@ RexxObject *RexxContext::getFuzz()
 RexxObject *RexxContext::getForm()
 {
     checkValid();
-    return activation->form() == Numerics::FORM_SCIENTIFIC ? OREF_SCIENTIFIC : OREF_ENGINEERING;
+    return activation->form() == Numerics::FORM_SCIENTIFIC ? GlobalNames::SCIENTIFIC : GlobalNames::ENGINEERING;
 }
 
 

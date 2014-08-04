@@ -90,11 +90,11 @@ NumberString *NumberString::maxMin(RexxObject **args, size_t argCount, unsigned 
             CurrentActivation->setFuzz(saveFuzz);
             if (operation == OT_MAX)            /*  doing a MAX operation?           */
             {
-                reportException(Error_Incorrect_call_noarg, CHAR_ORXMAX, arg + 1);
+                reportException(Error_Incorrect_call_noarg, "MAX", arg + 1);
             }
             else                                /*  nope must be min.                */
             {
-                reportException(Error_Incorrect_call_noarg, CHAR_ORXMIN, arg + 1);
+                reportException(Error_Incorrect_call_noarg, "MIN", arg + 1);
             }
         }
 
@@ -439,7 +439,7 @@ NumberString *NumberString::prepareOperatorNumber(size_t targetLength, size_t nu
     {  /* is the length larger than digits()*/
        /* raise a numeric condition, may    */
        /*  not return from this.            */
-        reportCondition(OREF_LOSTDIGITS, (RexxString *)newObj);
+        reportCondition(GlobalNames::LOSTDIGITS, (RexxString *)newObj);
         if (newObj->length > targetLength)
         {
             /* adjust exponent by amount over     */
@@ -494,7 +494,7 @@ NumberString *NumberString::addSub(
     if (leftLength > NumberDigits)
     {
         // raise a numeric condition, which might not return
-        reportCondition(OREF_LOSTDIGITS, (RexxString *)this);
+        reportCondition(GlobalNames::LOSTDIGITS, (RexxString *)this);
         if (leftLength > maxLength)
         {
             leftExp += leftLength - maxLength;
@@ -505,7 +505,7 @@ NumberString *NumberString::addSub(
     if (rightLength > NumberDigits)
     {
         // raise a numeric condition, which might not return
-        reportCondition(OREF_LOSTDIGITS, (RexxString *)other);
+        reportCondition(GlobalNames::LOSTDIGITS, (RexxString *)other);
         if (rightLength > maxLength)
         {
             /*  not return from this.            */

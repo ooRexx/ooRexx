@@ -206,9 +206,6 @@ EXTERNMEM MemoryObject memoryObject;
 /******************************************************************************/
 #include "GlobalNames.hpp"
 
-// make this namespace globally available
-using namespace GlobalNames;
-
 #include "ObjectClass.hpp"               // get real definition of Object
 
 #include "TableClass.hpp"                // memory has inline methods to these

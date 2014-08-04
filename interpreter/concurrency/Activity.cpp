@@ -593,7 +593,7 @@ DirectoryClass *Activity::createConditionObject(RexxString *condition, RexxObjec
     ProtectedObject p(conditionObj);
     // fill in the provided pieces
     conditionObj->put(condition, OREF_CONDITION);
-    conditionObj->put(description == OREF_NULL ? OREF_NULLSTRING : description, OREF_DESCRIPTION);
+    conditionObj->put(description == OREF_NULL ? GlobalNames::NULLSTRING : description, OREF_DESCRIPTION);
     conditionObj->put(TheFalseObject, OREF_PROPAGATED);
 
     // the remainders don't have defaults, so only add the items if provided.
@@ -913,7 +913,7 @@ DirectoryClass *Activity::createExceptionObject(wholenumber_t  errcode,
     if (description == OREF_NULL)
     {
         // use an explicit null string
-        exobj->put(OREF_NULLSTRING, OREF_DESCRIPTION);
+        exobj->put(GlobalNames::NULLSTRING, OREF_DESCRIPTION);
     }
     else
     {
@@ -991,7 +991,7 @@ void Activity::generateProgramInformation(DirectoryClass *exobj)
     else
     {
         // if not available, then this is explicitly a NULLSTRING.
-        exobj->put(OREF_NULLSTRING, OREF_PROGRAM);
+        exobj->put(GlobalNames::NULLSTRING, OREF_PROGRAM);
     }
 }
 
@@ -1092,7 +1092,7 @@ RexxString *Activity::messageSubstitution(RexxString *message, ArrayClass  *addi
         // get the character following the '&'.  This should be a numeric
         // substitution number.  We only support digits 1-9.
         size_t selector = message->getChar(subposition + 1);
-        RexxString *stringVal = OREF_NULLSTRING;
+        RexxString *stringVal = GlobalNames::NULLSTRING;
         // if this a bad selector, substitute anyway, but give a generic marker
         if (selector < '0' || selector > '9')
         {
@@ -1276,7 +1276,7 @@ void Activity::display(DirectoryClass *exobj)
     text = text->concatWith(rc->requestString(), ' ');
 
     // add on the program name if we have one.
-    if (programname != OREF_NULL && programname != OREF_NULLSTRING)
+    if (programname != OREF_NULL && programname != GlobalNames::NULLSTRING)
     {
         text = text->concatWith(SystemInterpreter::getMessageText(Message_Translations_running), ' ');
         text = text->concatWith(programname, ' ');
@@ -1684,7 +1684,7 @@ void Activity::initializeThreadContext()
     threadContextFunctions.RexxNil = (RexxObjectPtr)TheNilObject;
     threadContextFunctions.RexxTrue = (RexxObjectPtr)TheTrueObject;
     threadContextFunctions.RexxFalse = (RexxObjectPtr)TheFalseObject;
-    threadContextFunctions.RexxNullString = (RexxStringObject)OREF_NULLSTRING;
+    threadContextFunctions.RexxNullString = (RexxStringObject)GlobalNames::NULLSTRING;
 }
 
 
@@ -2912,13 +2912,13 @@ RexxString *Activity::traceInput(RexxActivation *activation)
             // use a null string of we get .nil back.
             if (value == (RexxString *)TheNilObject)
             {
-                value = OREF_NULLSTRING;
+                value = GlobalNames::NULLSTRING;
             }
         }
         else
         {
             // just use a null string if nothing is set up.
-            value = OREF_NULLSTRING;
+            value = GlobalNames::NULLSTRING;
         }
     }
     return value;
@@ -2992,12 +2992,12 @@ RexxString *Activity::lineIn(RexxActivation *activation)
             value = (RexxString *)stream->sendMessage(OREF_LINEIN);
             if (value == (RexxString *)TheNilObject)
             {
-                value = OREF_NULLSTRING;
+                value = GlobalNames::NULLSTRING;
             }
         }
         else
         {
-            value = OREF_NULLSTRING;
+            value = GlobalNames::NULLSTRING;
         }
     }
     return value;

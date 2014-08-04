@@ -189,7 +189,7 @@ bool RexxInternalObject::isEqual(RexxInternalObject *other)
     else
     {
         ProtectedObject result;
-        ((RexxObject *)this)->sendMessage(OREF_STRICT_EQUAL, (RexxObject *)other, result);
+        ((RexxObject *)this)->sendMessage(GlobalNames::STRICT_EQUAL, (RexxObject *)other, result);
         return ((RexxObject *)result)->truthValue(Error_Logical_value_method);
     }
 }
@@ -231,11 +231,11 @@ wholenumber_t RexxInternalObject::compareTo(RexxInternalObject *other )
 {
     ProtectedObject result;
 
-    ((RexxObject *)this)->sendMessage(OREF_COMPARETO, (RexxObject *)other, result);
+    ((RexxObject *)this)->sendMessage(GlobalNames::COMPARETO, (RexxObject *)other, result);
     // the result is required
     if ((RexxObject *)result == OREF_NULL)
     {
-        reportException(Error_No_result_object_message, OREF_COMPARETO);
+        reportException(Error_No_result_object_message, GlobalNames::COMPARETO);
     }
     wholenumber_t comparison;
 
@@ -422,7 +422,7 @@ HashCode RexxObject::hash()
         ProtectedObject result;
         // we have some other type of object, so we need to request a hash code
         // by sending the HASHCODE() message.
-        sendMessage(OREF_HASHCODE, result);
+        sendMessage(GlobalNames::HASHCODE, result);
         // TODO:  probably need to have a value check here.
 
         // the default version sends us a string containing binary data.
@@ -1002,7 +1002,7 @@ void RexxObject::processProtectedMethod(RexxString *messageName, MethodClass *ta
 void RexxObject::processUnknown(RexxString *messageName, RexxObject **arguments, size_t count, ProtectedObject &result)
 {
     // first check to see if there is an unknown method on this object.
-    MethodClass *method_save = behaviour->methodLookup(OREF_UNKNOWN);
+    MethodClass *method_save = behaviour->methodLookup(GlobalNames::UNKNOWN);
     // if it does not exist, then this is a NOMETHOD situation.  Need to
     // check for a condition handler before issuing the syntax error.
     if (method_save == OREF_NULL)
@@ -1019,7 +1019,7 @@ void RexxObject::processUnknown(RexxString *messageName, RexxObject **arguments,
     unknown_arguments[0] = messageName;
     unknown_arguments[1] = (RexxObject *)argumentArray;
     // and go invoke the method.
-    method_save->run(ActivityManager::currentActivity, this, OREF_UNKNOWN, unknown_arguments, 2, result);
+    method_save->run(ActivityManager::currentActivity, this, GlobalNames::UNKNOWN, unknown_arguments, 2, result);
 }
 
 
@@ -1145,7 +1145,7 @@ RexxString *RexxInternalObject::stringValue()
     // we pass a lot of methods on to the string value.  We depend on internal objects
     // returning a reliable string object that will likely raise an error in places where
     // they are used unexpectedly.
-    return OREF_NULLSTRING;
+    return GlobalNames::NULLSTRING;
 }
 
 
@@ -1157,7 +1157,7 @@ RexxString *RexxInternalObject::stringValue()
  */
 RexxString *RexxObject::stringValue()
 {
-    return (RexxString *)sendMessage(OREF_OBJECTNAME);
+    return (RexxString *)sendMessage(GlobalNames::OBJECTNAME);
 }
 
 
@@ -1187,7 +1187,7 @@ RexxString *RexxInternalObject::makeString()
     // some sort of subclass, so we need to issue the actual REQUEST method.
     else
     {
-        return (RexxString *)resultOrNil(((RexxObject *)this)->sendMessage(OREF_REQUEST, OREF_STRINGSYM));
+        return (RexxString *)resultOrNil(((RexxObject *)this)->sendMessage(GlobalNames::REQUEST, GlobalNames::STRING));
     }
 }
 
@@ -1219,7 +1219,7 @@ ArrayClass *RexxInternalObject::makeArray()
     }
     else
     {
-        return (ArrayClass *)resultOrNil(((RexxObject *)this)->sendMessage(OREF_REQUEST, OREF_ARRAYSYM));
+        return (ArrayClass *)resultOrNil(((RexxObject *)this)->sendMessage(GlobalNames::REQUEST, GlobalNames::ARRAY));
     }
 }
 
@@ -1242,7 +1242,7 @@ RexxString *RexxInternalObject::requestString()
             // get the ultimate, really needs to return a string string value for raising the condition.
             string_value = stringValue();
             // and raise nostring.  If not trapped, this returns here and we return the final string value as a result.
-            ActivityManager::currentActivity->raiseCondition(OREF_NOSTRING, OREF_NULL, string_value, (RexxObject *)this, OREF_NULL);
+            ActivityManager::currentActivity->raiseCondition(GlobalNames::NOSTRING, OREF_NULL, string_value, (RexxObject *)this, OREF_NULL);
         }
         return string_value;
     }
@@ -1251,7 +1251,7 @@ RexxString *RexxInternalObject::requestString()
         // we need to do this via a real request message.
         ProtectedObject string_value;
 
-        ((RexxObject *)this)->sendMessage(OREF_REQUEST, OREF_STRINGSYM, string_value);
+        ((RexxObject *)this)->sendMessage(GlobalNames::REQUEST, GlobalNames::STRING, string_value);
         // The returned value might be an Integer or NumberString value.  We need to
         // force this to be a real string value.
         string_value = ((RexxObject *)string_value)->primitiveMakeString();
@@ -1259,7 +1259,7 @@ RexxString *RexxInternalObject::requestString()
         // if this did not convert, we send the STRING message to get a value
         if ((RexxObject *)string_value == TheNilObject)
         {
-            ((RexxObject *)this)->sendMessage(OREF_STRINGSYM, string_value);
+            ((RexxObject *)this)->sendMessage(GlobalNames::STRING, string_value);
             // we're really dependent upon the program respecting the protocol
             // here and returning a value.  It is possible there is a
             // problem, so how to handle this.  We could just raise an error, but this
@@ -1275,14 +1275,14 @@ RexxString *RexxInternalObject::requestString()
                 string_value = stringValue();
                 if (((RexxObject *)string_value) == OREF_NULL)
                 {
-                    reportException(Error_No_result_object_message, OREF_STRINGSYM);
+                    reportException(Error_No_result_object_message, GlobalNames::STRING);
                 }
             }
             // The returned value might be an Integer or NumberString value.  We need to
             // force this to be a real string value.
             string_value = ((RexxObject *)string_value)->primitiveMakeString();
             // raise a NOSTRING condition
-            ActivityManager::currentActivity->raiseCondition(OREF_NOSTRING, OREF_NULL, (RexxString *)string_value, (RexxObject *)this, OREF_NULL);
+            ActivityManager::currentActivity->raiseCondition(GlobalNames::NOSTRING, OREF_NULL, (RexxString *)string_value, (RexxObject *)this, OREF_NULL);
         }
         // we finally have a string value of some sort.
         return (RexxString *)string_value;
@@ -1316,10 +1316,10 @@ RexxString *RexxInternalObject::requestStringNoNOSTRING()
     {
         // have to do this via message sends
         ProtectedObject string_value;
-        ((RexxObject *)this)->sendMessage(OREF_REQUEST, OREF_STRINGSYM, string_value);
+        ((RexxObject *)this)->sendMessage(GlobalNames::REQUEST, GlobalNames::STRING, string_value);
         if ((RexxObject *)string_value == TheNilObject)
         {
-            ((RexxObject *)this)->sendMessage(OREF_STRINGSYM, string_value);
+            ((RexxObject *)this)->sendMessage(GlobalNames::STRING, string_value);
         }
 
         // we better get something here.
@@ -1347,7 +1347,7 @@ RexxString *RexxInternalObject::requiredString()
     {
         // do via a message send with some no return value protection to keep us from
         // crashing.
-        RexxObject *string_value = resultOrNil(((RexxObject *)this)->sendMessage(OREF_REQUEST, OREF_STRINGSYM));
+        RexxObject *string_value = resultOrNil(((RexxObject *)this)->sendMessage(GlobalNames::REQUEST, GlobalNames::STRING));
         if (string_value != TheNilObject)
         {
             // The returned value might be an Integer or NumberString value.  We need to
@@ -1573,7 +1573,7 @@ ArrayClass *RexxInternalObject::requestArray()
     // for subclasses, this needs to go through the REQUEST method.
     else
     {
-        return(ArrayClass *)resultOrNil(((RexxObject *)this)->sendMessage(OREF_REQUEST, OREF_ARRAYSYM));
+        return(ArrayClass *)resultOrNil(((RexxObject *)this)->sendMessage(GlobalNames::REQUEST, GlobalNames::ARRAY));
     }
 }
 
@@ -1588,7 +1588,7 @@ RexxString *RexxObject::objectName()
     ProtectedObject string_value;
 
     // this is always stored in the object class scope
-    string_value = getObjectVariable(OREF_NAME, TheObjectClass);
+    string_value = getObjectVariable(GlobalNames::OBJECTNAME, TheObjectClass);
     // if not found, we fall back to default means.
     if ((RexxObject *)string_value == OREF_NULL)
     {
@@ -1599,7 +1599,7 @@ RexxString *RexxObject::objectName()
         }
 
         // send the default name message...
-        sendMessage(OREF_DEFAULTNAME, string_value);
+        sendMessage(GlobalNames::DEFAULTNAME, string_value);
         // it is possible we got nothing back from this method.  Prevent
         // potential crashes by returning the default default.
         if ((RexxObject *)string_value == OREF_NULL)
@@ -1623,7 +1623,7 @@ RexxObject  *RexxObject::objectNameEquals(RexxObject *name)
 {
     name = stringArgument(name, ARG_ONE);
     // set the name in the object class scope
-    setObjectVariable(OREF_NAME, name, TheObjectClass);
+    setObjectVariable(GlobalNames::OBJECTNAME, name, TheObjectClass);
     return OREF_NULL;
 }
 
@@ -1735,7 +1735,7 @@ RexxObject  *RexxObject::setMethod(RexxString *msgname, MethodClass *methobj, Re
         // FLOAT is the only other possibility, which is the default
         else if (Utilities::strCaselessCompare("FLOAT",option->getStringData()) != 0)
         {
-            reportException(Error_Incorrect_call_list, CHAR_SETMETHOD, IntegerThree, "\"FLOAT\", \"OBJECT\"", option);
+            reportException(Error_Incorrect_call_list, "SETMETHOD", IntegerThree, "\"FLOAT\", \"OBJECT\"", option);
         }
     }
 
@@ -1791,7 +1791,7 @@ RexxObject *RexxObject::requestRexx(RexxString *className)
         return this;
     }
     // Get "MAKE"||class methodname
-    RexxString *make_method = className->concatToCstring(CHAR_MAKE);
+    RexxString *make_method = className->concatToCstring("MAKE");
     // find the MAKExxxx method
     MethodClass *method = behaviour->methodLookup(make_method);
     // have this method?
@@ -2031,7 +2031,7 @@ RexxObject *RexxObject::run(RexxObject **arguments, size_t argCount)
     Protected<MethodClass> methobj = (MethodClass *)arguments[0];
     requiredArgument(methobj, ARG_ONE);
     // make sure we have a method object, including creating one from source if necessary
-    methobj = MethodClass::newMethodObject(OREF_RUN, (RexxObject *)methobj, (RexxClass *)TheNilObject, IntegerOne);
+    methobj = MethodClass::newMethodObject(GlobalNames::RUN, (RexxObject *)methobj, (RexxClass *)TheNilObject, IntegerOne);
 
     // if we have arguments, decode how we are supposed to handle method arguments.
     if (argCount > 1)
@@ -2078,7 +2078,7 @@ RexxObject *RexxObject::run(RexxObject **arguments, size_t argCount)
     }
     ProtectedObject result;
     // run the method and return the result
-    methobj->run(ActivityManager::currentActivity, this, OREF_NONE, argumentPtr, argcount, result);
+    methobj->run(ActivityManager::currentActivity, this, GlobalNames::NONE, argumentPtr, argcount, result);
     return (RexxObject *)result;
 }
 
@@ -2101,7 +2101,8 @@ RexxObject *RexxObject::defineInstanceMethods(DirectoryClass *methods)
     for (HashContents::TableIterator iterator = methods->iterator(); iterator.isAvailable(); iterator.next())
     {
         MethodClass *method = (MethodClass *)iterator.value();
-        if (method != TheNilObject)        /* not a removal?                    */
+        // if not a method removal, change the scope
+        if (method != TheNilObject)
         {
             // need validation here?
             method = method->newScope((RexxClass *)this);
@@ -2146,7 +2147,7 @@ RexxObject *RexxObject::defineInstanceMethod(RexxString *msgname, MethodClass *m
     // add this to the behaviour
     behaviour->defineMethod(msgname, methobj);
     // adding an UNINIT method to obj?
-    if (methobj != TheNilObject && msgname->strCompare(CHAR_UNINIT))
+    if (methobj != TheNilObject && msgname->strCompare(GlobalNames::UNINIT))
     {
         hasUninit();
     }
@@ -2380,9 +2381,9 @@ RexxInteger *RexxObject::identityHashRexx()
  */
 void RexxObject::uninit()
 {
-    if (hasMethod(OREF_UNINIT))
+    if (hasMethod(GlobalNames::UNINIT))
     {
-        sendMessage(OREF_UNINIT);
+        sendMessage(GlobalNames::UNINIT);
     }
 }
 
@@ -2394,7 +2395,7 @@ void RexxObject::uninit()
  */
 bool RexxObject::hasUninitMethod()
 {
-    return hasMethod(OREF_UNINIT);
+    return hasMethod(GlobalNames::UNINIT);
 }
 
 
@@ -2462,10 +2463,10 @@ RexxInternalObject *RexxInternalObject::clone()
 #define operatorMethod(name, message) RexxObject * RexxObject::name(RexxObject *operand) \
 {\
     ProtectedObject result;                                                     \
-    messageSend(OREF_##message, &operand, 1, result);                      \
+    messageSend(GlobalNames::message, &operand, 1, result);                      \
     if ((RexxObject *)result == OREF_NULL)                                           \
     {  \
-        reportException(Error_No_result_object_message, OREF_##message); \
+        reportException(Error_No_result_object_message, GlobalNames::message); \
     }  \
     return (RexxObject *)result;                                                 \
 }\
@@ -2475,10 +2476,10 @@ RexxInternalObject *RexxInternalObject::clone()
 #define prefixOperatorMethod(name, message) RexxObject * RexxObject::name(RexxObject *operand) \
 {\
     ProtectedObject result;                                                     \
-    messageSend(OREF_##message, &operand, operand == OREF_NULL ? 0 : 1, result); \
+    messageSend(GlobalNames::message, &operand, operand == OREF_NULL ? 0 : 1, result); \
     if ((RexxObject *)result == OREF_NULL)                                                     \
     {  \
-        reportException(Error_No_result_object_message, OREF_##message); \
+        reportException(Error_No_result_object_message, GlobalNames::message); \
     }  \
     return (RexxObject *)result;                                                 \
 }\
@@ -2664,7 +2665,7 @@ HashCode RexxNilObject::getHashValue()
 void *RexxObject::getCSelf()
 {
     // try for the variable value
-    RexxObject *C_self = getObjectVariable(OREF_CSELF);
+    RexxObject *C_self = getObjectVariable(GlobalNames::CSELF);
     // if we found one, validate for unwrappering
     if (C_self != OREF_NULL)
     {
@@ -2680,7 +2681,7 @@ void *RexxObject::getCSelf()
             return(void *)((BufferClass *)C_self)->getData();
         }
     }
-    return NULL;                     /* no object available               */
+    return NULL;
 }
 
 
@@ -2698,7 +2699,7 @@ void *RexxObject::getCSelf(RexxClass *scope)
     while (scope != TheNilObject)
     {
         // try for the variable value
-        RexxObject *C_self = getObjectVariable(OREF_CSELF, scope);
+        RexxObject *C_self = getObjectVariable(GlobalNames::CSELF, scope);
         // if we found one, validate for unwrappering
         if (C_self != OREF_NULL)
         {

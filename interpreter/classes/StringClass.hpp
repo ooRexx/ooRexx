@@ -301,8 +301,10 @@ class RexxString : public RexxObject
     inline void  setNonNumeric() { attributes.set(STRING_NONNUMERIC);}
     inline bool  strCompare(const char * s) const { return memCompare((s), strlen(s)); }
     inline bool  strCaselessCompare(const char * s) const { return (size_t)length == strlen(s) && Utilities::strCaselessCompare(s, stringData) == 0;}
+    inline bool  strCaselessCompare(RexxString *s) const { return length == s->getLength() && Utilities::strCaselessCompare(s->getStringData(), stringData) == 0;}
     inline bool  memCompare(const char * s, size_t l) const { return l == length && memcmp(s, stringData, l) == 0; }
     inline bool  memCompare(RexxString *other) const { return other->length == length && memcmp(other->stringData, stringData, length) == 0; }
+    inline bool  strCompare(RexxString *other) const { return other->length == length && memcmp(other->stringData, stringData, length) == 0; }
     inline void  memCopy(char * s) const { memcpy(s, stringData, length); }
     inline void  toRxstring(CONSTRXSTRING &r) { r.strptr = getStringData(); r.strlength = getLength(); }
     inline void  toRxstring(RXSTRING &r) { r.strptr = getWritableData(); r.strlength = getLength(); }

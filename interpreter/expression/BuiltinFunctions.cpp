@@ -861,7 +861,7 @@ BUILTIN(ERRORTEXT)
     RexxString *result = SystemInterpreter::getMessageText(error_number * 1000);
     if (result == OREF_NULL)
     {
-        result = OREF_NULLSTRING;
+        result = GlobalNames::NULLSTRING;
     }
     return result;
 }
@@ -903,7 +903,7 @@ BUILTIN(ARG)
         // out of range is just a null string
         if (size < position)
         {
-            return OREF_NULLSTRING;
+            return GlobalNames::NULLSTRING;
         }
         else
         {
@@ -911,7 +911,7 @@ BUILTIN(ARG)
             RexxObject *result = arglist[position - 1];
             if (result == OREF_NULL)
             {
-                return OREF_NULLSTRING;
+                return GlobalNames::NULLSTRING;
             }
             return result;
         }
@@ -972,14 +972,14 @@ BUILTIN(ARG)
             case 'N':
                 if (position > size)
                 {
-                    return OREF_NULLSTRING;
+                    return GlobalNames::NULLSTRING;
                 }
                 else
                 {
                     RexxObject *result = arglist[position - 1];
                     if (result == OREF_NULL)
                     {
-                        return OREF_NULLSTRING;
+                        return GlobalNames::NULLSTRING;
                     }
                     return result;
                 }
@@ -991,7 +991,7 @@ BUILTIN(ARG)
                 break;
         }
     }
-    return OREF_NULLSTRING;              // should never happen
+    return GlobalNames::NULLSTRING;              // should never happen
 }
 
 
@@ -1992,7 +1992,7 @@ BUILTIN(LINEIN)
                 break;
         }
     }
-    return OREF_NULLSTRING;  // should never happen
+    return GlobalNames::NULLSTRING;  // should never happen
 }
 
 
@@ -2032,7 +2032,7 @@ BUILTIN(CHARIN)
             return stream->sendMessage(OREF_CHARIN, position, count);
             break;
     }
-    return OREF_NULLSTRING;
+    return GlobalNames::NULLSTRING;
 }
 
 
@@ -2088,7 +2088,7 @@ BUILTIN(LINEOUT)
                 break;
         }
     }
-    return OREF_NULLSTRING;
+    return GlobalNames::NULLSTRING;
 }
 
 
@@ -2128,7 +2128,7 @@ BUILTIN(CHAROUT)
             return stream->sendMessage(OREF_CHAROUT, string, position);
             break;
     }
-    return OREF_NULLSTRING;
+    return GlobalNames::NULLSTRING;
 }
 
 
@@ -2446,7 +2446,7 @@ BUILTIN(CONDITION)
                 RexxObject *result = (RexxObject *)conditionobj->get(OREF_DESCRIPTION);
                 if (result == OREF_NULL)
                 {
-                    result = OREF_NULLSTRING;
+                    result = GlobalNames::NULLSTRING;
                 }
                 return result;
             }
@@ -2486,7 +2486,7 @@ BUILTIN(CONDITION)
     }
 
     // most of the options fall through to here if there is no current condition.
-    return OREF_NULLSTRING;
+    return GlobalNames::NULLSTRING;
 }
 
 
@@ -2599,7 +2599,7 @@ BUILTIN(QUEUEEXIT)
     // make sure we have real object to return
     if (name == OREF_NULL)
     {
-        name = OREF_NULLSTRING;
+        name = GlobalNames::NULLSTRING;
     }
     return name;
 }

@@ -231,7 +231,7 @@ bool RexxClass::isEqual(RexxObject *other)
     {
         ProtectedObject r;
         // other wise giveuser version a chance
-        sendMessage(OREF_STRICT_EQUAL, other, r);
+        sendMessage(GlobalNames::STRICT_EQUAL, other, r);
         return((RexxObject *)r)->truthValue(Error_Logical_value_method);
     }
 }
@@ -723,7 +723,7 @@ RexxObject *RexxClass::defineMethod(RexxString *method_name, RexxObject *methodS
     // and alse check if this is an uninit method, which is a special case.
     if (TheNilObject != methodObject)
     {
-        if (method_name->strCompare(CHAR_UNINIT))
+        if (method_name->strCompare("UNINIT"))
         {
             setHasUninitDefined();
         }
@@ -1065,7 +1065,7 @@ void RexxClass::mergeBehaviour(RexxBehaviour *target_instance_behaviour)
  */
 void RexxClass::checkUninit()
 {
-    if (instanceBehaviour->methodLookup(OREF_UNINIT) != OREF_NULL)
+    if (instanceBehaviour->methodLookup(GlobalNames::UNINIT) != OREF_NULL)
     {
         setHasUninitDefined();
     }
@@ -1093,7 +1093,7 @@ MethodDictionary *RexxClass::createMethodDictionary(RexxObject *sourceCollection
     // it would be nice to just grab a table iterator, but we need to use
     // a supplier here.
     ProtectedObject p2;
-    sourceCollection->sendMessage(OREF_SUPPLIERSYM, p2);
+    sourceCollection->sendMessage(GlobalNames::SUPPLIER, p2);
     SupplierClass *supplier = (SupplierClass *)(RexxObject *)p2;
     for (; supplier->available() == TheTrueObject; supplier->next())
     {
@@ -1310,7 +1310,7 @@ RexxObject *RexxClass::enhanced(RexxObject **args, size_t argCount)
     dummy_subclass->createInstanceBehaviour(dummy_subclass->instanceBehaviour);
     ProtectedObject r;
     // now create an instance of the enhanced subclass
-    dummy_subclass->sendMessage(OREF_NEW, args + 1, argCount - 1, r);
+    dummy_subclass->sendMessage(GlobalNames::NEW, args + 1, argCount - 1, r);
     RexxObject *enhanced_object = (RexxObject *)r;
     // change the create_class in the instance behaviour to point to the
     // original class object
@@ -1419,7 +1419,7 @@ RexxClass  *RexxClass::subclass(PackageClass *package, RexxString *class_id,
 
     ProtectedObject p;
     // now get an instance of the meta class
-    meta_class->sendMessage(OREF_NEW, class_id, p);
+    meta_class->sendMessage(GlobalNames::NEW, class_id, p);
     RexxClass *new_class = (RexxClass *)(RexxObject *)p;
 
     // hook this up with the source as early as possible.
@@ -1467,7 +1467,7 @@ RexxClass  *RexxClass::subclass(PackageClass *package, RexxString *class_id,
     // we need to look for an uninit method and record if we have it
     new_class->checkUninit();
     // drive the new class INIT method
-    new_class->sendMessage(OREF_INIT);
+    new_class->sendMessage(GlobalNames::INIT);
 
     // If the parent class has an uninit defined, the new child class must have one, too
     if (hasUninitDefined() || parentHasUninitDefined())
@@ -1651,14 +1651,15 @@ RexxClass  *RexxClass::newRexx(RexxObject **args, size_t argCount)
     }
 
     // send the new class the INIT method
-    new_class->sendMessage(OREF_INIT, args + 1, argCount - 1);
+    new_class->sendMessage(GlobalNames::INIT, args + 1, argCount - 1);
     return new_class;
 }
 
+
+/**
+ * Create the initial class object
+ */
 void RexxClass::createInstance()
-/******************************************************************************/
-/* Function:  Create the initial class object                                 */
-/******************************************************************************/
 {
     // create a class object
     TheClassClass = (RexxClass *)new_object(sizeof(RexxClass));
@@ -1698,10 +1699,11 @@ void RexxClass::completeNewObject(RexxObject *obj, RexxObject **initArgs, size_t
         obj->hasUninit();
     }
     // now send an INIT message to complete initialization.
-    obj->sendMessage(OREF_INIT, initArgs, argCount);
+    obj->sendMessage(GlobalNames::INIT, initArgs, argCount);
 }
 
 
+// TODO:  Finish cleaning this file up
 void RexxClass::processNewArgs(
     RexxObject **arg_array,            /* source argument array             */
     size_t       argCount,             /* size of the argument array        */

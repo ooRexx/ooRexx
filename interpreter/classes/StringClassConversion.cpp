@@ -68,7 +68,7 @@ RexxString *RexxString::encodeBase64()
     size_t inputLength = this->getLength();     /* get length of string              */
     if (inputLength == 0)               /* null string?                      */
     {
-        return OREF_NULLSTRING;
+        return GlobalNames::NULLSTRING;
     }
     /* figure out the output string length */
     size_t outputLength = (inputLength / 3) * 4;
@@ -130,7 +130,7 @@ RexxString *RexxString::decodeBase64()
     size_t inputLength = this->getLength();     /* get length of string              */
     if (inputLength == 0)                    /* null string?                      */
     {
-        return OREF_NULLSTRING;          // this encodes as a null string
+        return GlobalNames::NULLSTRING;          // this encodes as a null string
     }
     if (inputLength % 4 > 0) {
         /* the input string is an invalid length */
@@ -218,7 +218,7 @@ RexxString *RexxString::c2x()
     InputLength = this->getLength();          /* get length of string              */
     if (!InputLength)                    /* null string?                      */
     {
-        Retval = OREF_NULLSTRING;          /* converts to a null string         */
+        Retval = GlobalNames::NULLSTRING;          /* converts to a null string         */
     }
     else
     {                               /* real data to convert              */
@@ -286,7 +286,7 @@ RexxString *RexxString::x2c()
     size_t InputLength = this->getLength();          /* get length of string       */
     if (InputLength== 0)                    /* null string?               */
     {
-        return OREF_NULLSTRING;          /* converts to a null string         */
+        return GlobalNames::NULLSTRING;          /* converts to a null string         */
     }
     else                                 /* real data to convert       */
     {
@@ -552,7 +552,7 @@ RexxString *RexxString::b2x()
 
     if (this->getLength() == 0)               /* null input, i.e. zerolength       */
     {
-        Retval = OREF_NULLSTRING;          /* return null                       */
+        Retval = GlobalNames::NULLSTRING;          /* return null                       */
     }
     else
     {                               /* need to do conversion             */
@@ -612,7 +612,7 @@ RexxString *RexxString::x2b()
     if (this->getLength() == 0)               /* null input, i.e. zerolength       */
     {
         /* string                            */
-        Retval = OREF_NULLSTRING;          /* return null                       */
+        Retval = GlobalNames::NULLSTRING;          /* return null                       */
     }
     else
     {                               /* have real data to pack            */

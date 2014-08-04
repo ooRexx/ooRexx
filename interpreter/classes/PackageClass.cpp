@@ -410,7 +410,7 @@ RexxString *PackageClass::traceBack(RexxActivation *activation, SourceLocation &
 
     // not available...we provide some sort of information about what is there, even
     // if we can't display the source line.
-    if (line == OREF_NULLSTRING)
+    if (line == GlobalNames::NULLSTRING)
     {
         // old space code means this is part of the interpreter image.  Don't include
         // the package name in the message
@@ -424,7 +424,7 @@ RexxString *PackageClass::traceBack(RexxActivation *activation, SourceLocation &
         // the invocation situation
         if (activation != OREF_NULL)
         {
-            line = activation->formatSourcelessTraceLine(isInternalCode() ? OREF_REXX : programName);
+            line = activation->formatSourcelessTraceLine(isInternalCode() ? GlobalNames::REXX : programName);
         }
 
         // this could be part of the internal code...give a generic message that doesn't identify
@@ -456,11 +456,14 @@ RexxString *PackageClass::traceBack(RexxActivation *activation, SourceLocation &
     // I have never seen that happen!
     size_t outlength = strlen(linenumber);
     char *linepointer = linenumber;
+    // if the line number is larger than we can fit in the standard
+    // space, overlay with a question mark.  Note that his requires a
+    // program over a million lines long!
     if (outlength > LINENUMBER)
     {
         linepointer += outlength - LINENUMBER;
-        *linepointer = '?';                /* overlay a question mark           */
-        outlength = LINENUMBER;            /* shorten the length                */
+        *linepointer = '?';
+        outlength = LINENUMBER;
     }
     // copy in the line number
     buffer->put(LINENUMBER - outlength, linepointer, outlength);
@@ -898,7 +901,7 @@ void PackageClass::processInstall(RexxActivation *activation)
         for (size_t i = 1; i <= count; i++)
         {
             RexxClass *clz = (RexxClass *)createdClasses->get(i);
-            clz->sendMessage(OREF_ACTIVATE);
+            clz->sendMessage(GlobalNames::ACTIVATE);
         }
     }
 }
@@ -1490,7 +1493,7 @@ RexxObject *PackageClass::fuzzRexx()
  */
 RexxObject *PackageClass::formRexx()
 {
-    return getForm() == Numerics::FORM_SCIENTIFIC ? OREF_SCIENTIFIC : OREF_ENGINEERING;
+    return getForm() == Numerics::FORM_SCIENTIFIC ? GlobalNames::SCIENTIFIC : GlobalNames::ENGINEERING;
 }
 
 

@@ -76,7 +76,7 @@ RexxString *RexxString::delWord(RexxInteger *position,
     Length = this->getLength();               /* get string length                 */
     if (!Length)                         /* null string?                      */
     {
-        Retval = OREF_NULLSTRING;          /* result is null also               */
+        Retval = GlobalNames::NULLSTRING;          /* result is null also               */
     }
     else if (!Count)                     /* deleting zero words?              */
     {
@@ -175,7 +175,7 @@ RexxString *RexxString::space(RexxInteger *space_count,
     }
     if (!Count)                          /* no words?                         */
     {
-        Retval = OREF_NULLSTRING;          /* this is a null string             */
+        Retval = GlobalNames::NULLSTRING;          /* this is a null string             */
     }
     else
     {                               /* real words                        */

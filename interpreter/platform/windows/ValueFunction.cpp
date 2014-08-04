@@ -83,12 +83,12 @@ bool SystemInterpreter::valueFunction(
             }
             else
             {
-                result = OREF_NULLSTRING;        /* otherwise, return null            */
+                result = GlobalNames::NULLSTRING;        /* otherwise, return null            */
             }
         }
         else
         {
-            result = OREF_NULLSTRING;
+            result = GlobalNames::NULLSTRING;
         }
 
         if (NewValue != OREF_NULL)           /* have a new value?                 */

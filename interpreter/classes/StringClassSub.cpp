@@ -79,7 +79,7 @@ RexxString *RexxString::center(RexxInteger *_length,
     }
     else if (!Width)                     /* centered in zero?                 */
     {
-        Retval = OREF_NULLSTRING;          /* return a null string              */
+        Retval = GlobalNames::NULLSTRING;          /* return a null string              */
     }
     else
     {
@@ -300,7 +300,7 @@ RexxString *RexxString::left(RexxInteger *_length,
 
     if (!Size)                           /* requesting zero bytes?            */
     {
-        Retval = OREF_NULLSTRING;          /* return a null string              */
+        Retval = GlobalNames::NULLSTRING;          /* return a null string              */
     }
     else
     {
@@ -537,7 +537,7 @@ RexxString *RexxString::reverse()
     }
     else                                 /* if null input                     */
     {
-        Retval = OREF_NULLSTRING;          /* return null output                */
+        Retval = GlobalNames::NULLSTRING;          /* return null output                */
     }
     return Retval;                       /* return the reversed string        */
 }
@@ -569,7 +569,7 @@ RexxString *RexxString::right(RexxInteger *_length,
     if (!Size)                           /* requesting zero bytes?            */
     {
         /* return a null string              */
-        Retval = OREF_NULLSTRING;
+        Retval = GlobalNames::NULLSTRING;
     }
     else
     {
@@ -661,7 +661,7 @@ RexxString *RexxString::strip(RexxString *optionString, RexxString *stripchar)
     else
     {
         // null string, everything stripped away
-        return OREF_NULLSTRING;
+        return GlobalNames::NULLSTRING;
     }
 }
 

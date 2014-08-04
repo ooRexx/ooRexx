@@ -99,20 +99,19 @@ public:
     static const size_t Numerics::SIZE_DIGITS  = ((size_t)10);
 #endif
 
-    static const wholenumber_t MAX_EXPONENT;
-    static const wholenumber_t MIN_EXPONENT;
-    static const size_t DEFAULT_DIGITS;
+    static const wholenumber_t MAX_EXPONENT = 999999999;
+    static const wholenumber_t MIN_EXPONENT = -999999999;
+    static const size_t DEFAULT_DIGITS  = ((size_t)9);
     // a digits setting for full range integer conversion
-    static const size_t  MAX_STRINGSIZE;
+    static const size_t  MAX_STRINGSIZE = MAX_WHOLENUMBER;
 
     // max numeric digits value for explicit 64-bit conversions
-    static const size_t DIGITS64;
-    static const bool FORM_SCIENTIFIC;
-    static const bool FORM_ENGINEERING;
+    static const size_t DIGITS64 = ((size_t)20);
+    static const bool FORM_SCIENTIFIC = false;
+    static const bool FORM_ENGINEERING = true;
 
-    static const size_t DEFAULT_FUZZ;
-                                     /* default numeric form setting      */
-    static const bool DEFAULT_FORM;
+    static const size_t DEFAULT_FUZZ = 0;
+    static const bool DEFAULT_FORM = FORM_SCIENTIFIC;
 
     static const wholenumber_t validMaxWhole[];      // table of maximum values per digits setting
 

@@ -118,7 +118,7 @@ RexxObject *StemClass::newRexx(RexxObject **init_args, size_t       argCount)
 StemClass::StemClass(RexxString *name)
 {
     // get the name as a real string...we default to a null string.
-    name = optionalStringArgument(name, OREF_NULLSTRING, ARG_ONE);
+    name = optionalStringArgument(name, GlobalNames::NULLSTRING, ARG_ONE);
 
     stemName = name;
     value = name;
@@ -587,7 +587,7 @@ RexxObject *StemClass::request(RexxString *makeclass)
     ProtectedObject result;
     makeclass = stringArgument(makeclass, ARG_ONE)->upper();
     // take care of any ARRAY requests, the rest go to the default value
-    if (makeclass->strCompare(CHAR_ARRAY))
+    if (makeclass->strCompare("ARRAY"))
     {
         // if we have a real stem object (not a subclass), handle directly,
         // otherwise send to the subclass.
@@ -597,12 +597,12 @@ RexxObject *StemClass::request(RexxString *makeclass)
         }
         else
         {
-            sendMessage(OREF_MAKEARRAY, result);
+            sendMessage(GlobalNames::MAKEARRAY, result);
             return result;
         }
     }
     // let the default value handle everything else
-    ((RexxObject *)value)->sendMessage(OREF_REQUEST, makeclass, result);
+    ((RexxObject *)value)->sendMessage(GlobalNames::REQUEST, makeclass, result);
     return result;
 }
 

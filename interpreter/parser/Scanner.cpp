@@ -420,7 +420,7 @@ RexxString *LanguageParser::packHexLiteral(size_t start, size_t length)
     // the rest is not nearly as easy :-)
     if (length == 0)
     {
-        return OREF_NULLSTRING;
+        return GlobalNames::NULLSTRING;
     }
 
     // the first group gets special handling in terms of padding
@@ -590,7 +590,7 @@ RexxString *LanguageParser::packBinaryLiteral(size_t start, size_t length)
     // the rest is not nearly as easy :-)
     if (length == 0)
     {
-        return OREF_NULLSTRING;
+        return GlobalNames::NULLSTRING;
     }
 
     // the first group gets special handling in terms of padding

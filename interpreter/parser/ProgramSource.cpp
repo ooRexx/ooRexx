@@ -82,7 +82,7 @@ RexxString *ProgramSource::getStringLine(size_t position)
     // null string regardless.
     if (lineLength == 0)
     {
-        return OREF_NULLSTRING;
+        return GlobalNames::NULLSTRING;
     }
     // convert to a string object.
     return new_string(linePointer, lineLength);
@@ -114,7 +114,7 @@ RexxString *ProgramSource::getStringLine(size_t position, size_t startOffset, si
     // null string regardless.
     if (lineLength == 0)
     {
-        return OREF_NULLSTRING;
+        return GlobalNames::NULLSTRING;
     }
 
     // protect from an overrun
@@ -145,13 +145,13 @@ RexxString *ProgramSource::extract(SourceLocation &location )
     // not traceable means no source, so just return a null string regardless
     if (!isTraceable())
     {
-        return OREF_NULLSTRING;
+        return GlobalNames::NULLSTRING;
     }
 
     // make sure this is within range of the lines we have.
     if (location.getLineNumber() <= getFirstLine() || location.getLineNumber() > lineCount)
     {
-        return OREF_NULLSTRING;
+        return GlobalNames::NULLSTRING;
     }
     // easiest situation is all on one line.
     else if (location.getLineNumber() >= location.getEndLine())
@@ -583,7 +583,7 @@ void ArrayProgramSource::setup()
         // we want to keep the line so we don't throw off the line counts.
         if (firstLine->getChar(0) == '#' && firstLine->getChar(1) == '!')
         {
-            array->put(OREF_NULLSTRING, 1);
+            array->put(GlobalNames::NULLSTRING, 1);
         }
     }
 }

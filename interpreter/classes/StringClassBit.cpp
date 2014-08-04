@@ -70,7 +70,7 @@ RexxString *RexxString::bitAnd(RexxString *string2,
 
                                          /* get string we will be doing bit   */
                                          /* stuff to...                       */
-    string2 = optionalStringArgument(string2, OREF_NULLSTRING, ARG_ONE);
+    string2 = optionalStringArgument(string2, GlobalNames::NULLSTRING, ARG_ONE);
     String2Len = string2->getLength();        /* get the string length             */
     String2 = string2->getStringData();       /* get the string data pointer       */
     /* get the pad character             */
@@ -139,7 +139,7 @@ RexxString *RexxString::bitOr(RexxString *string2,
 
     /* get string we will be doing bit   */
     /* stuff to...                       */
-    string2 = optionalStringArgument(string2, OREF_NULLSTRING, ARG_ONE);
+    string2 = optionalStringArgument(string2, GlobalNames::NULLSTRING, ARG_ONE);
     String2Len = string2->getLength();   /* get the string length             */
     String2 = string2->getStringData();  /* get the string data pointer       */
                                          /* get the pad character             */
@@ -208,7 +208,7 @@ RexxString *RexxString::bitXor(RexxString *string2,
 
     /* get string we will be doing bit   */
     /* stuff to...                       */
-    string2 = optionalStringArgument(string2, OREF_NULLSTRING, ARG_ONE);
+    string2 = optionalStringArgument(string2, GlobalNames::NULLSTRING, ARG_ONE);
     String2Len = string2->getLength();   /* get the string length             */
     String2 = string2->getStringData();  /* get the string data pointer       */
                                          /* get the pad character             */

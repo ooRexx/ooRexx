@@ -499,7 +499,7 @@ bool RexxString::isEqual(RexxObject *otherObj)
     // if not a primitive, we need to go the full == message route.
     if (!isBaseClass())
     {
-        return sendMessage(OREF_STRICT_EQUAL, otherObj)->truthValue(Error_Logical_value_method);
+        return sendMessage(GlobalNames::STRICT_EQUAL, otherObj)->truthValue(Error_Logical_value_method);
     }
 
     if (otherObj == TheNilObject)        // strings never compare equal to the NIL object

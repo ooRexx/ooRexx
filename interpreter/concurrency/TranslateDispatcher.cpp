@@ -54,7 +54,7 @@ void TranslateDispatcher::run()
 
     RoutineClass *program;
 
-    RexxString *name = OREF_NULLSTRING;     // name of the invoked program
+    RexxString *name = GlobalNames::NULLSTRING;     // name of the invoked program
     if (programName != NULL)       /* have an actual name?              */
     {
         /* get string version of the name    */
@@ -119,7 +119,7 @@ void TranslateDispatcher::handleError(wholenumber_t r, DirectoryClass *c)
 void TranslateInstoreDispatcher::run()
 {
     ProtectedSet savedObjects;
-    RexxString *name = OREF_NULLSTRING;     // name of the invoked program
+    RexxString *name = GlobalNames::NULLSTRING;     // name of the invoked program
     if (programName != NULL)       /* have an actual name?              */
     {
         /* get string version of the name    */

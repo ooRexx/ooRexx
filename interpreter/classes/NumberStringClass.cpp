@@ -219,7 +219,8 @@ RexxString *NumberString::stringValue()
     if (sign == 0  )
     {              /* is the number zero?               */
                    /* Yes, return a 0 string.           */
-        OrefSet(this, stringObject, OREF_ZERO_STRING);
+        // TODO:  Eliminate use of OrefSet
+        setField(stringObject, GlobalNames::ZERO);
         setHasReferences();           /* we now have to garbage collect    */
         return stringObject;          /* and return now                    */
     }
@@ -2725,7 +2726,7 @@ bool NumberString::isEqual(
     if (isSubClassOrEnhanced())      /* not a primitive?                  */
     {
                                            /* do the full lookup compare        */
-        return sendMessage(OREF_STRICT_EQUAL, other)->truthValue(Error_Logical_value_method);
+        return sendMessage(GlobalNames::STRICT_EQUAL, other)->truthValue(Error_Logical_value_method);
     }
                                        /* go do a string compare            */
     return stringValue()->isEqual(other);
@@ -2788,11 +2789,11 @@ wholenumber_t NumberString::comp(
 
     if (length > NumberDigits)
     {
-        reportCondition(OREF_LOSTDIGITS, (RexxString *)this);
+        reportCondition(GlobalNames::LOSTDIGITS, (RexxString *)this);
     }
     if (rightNumber->length > NumberDigits)
     {
-        reportCondition(OREF_LOSTDIGITS, (RexxString *)rightNumber);
+        reportCondition(GlobalNames::LOSTDIGITS, (RexxString *)rightNumber);
     }
 
     if (sign != rightNumber->sign) /* are numbers the same sign?        */

@@ -443,7 +443,7 @@ MethodClass *MethodClass::loadExternalMethod(RexxString *name, RexxString *descr
     ArrayClass *_words = StringUtil::words(descriptor->getStringData(), descriptor->getLength());
     ProtectedObject p(_words);
     // "LIBRARY libbar [foo]"
-    if (((RexxString *)(_words->get(1)))->strCompare(CHAR_LIBRARY))
+    if (((RexxString *)(_words->get(1)))->strCompare("LIBRARY"))
     {
         RexxString *library = OREF_NULL;
         // the default entry point name is the internal name
@@ -461,7 +461,6 @@ MethodClass *MethodClass::loadExternalMethod(RexxString *name, RexxString *descr
         }
         else  // wrong number of tokens
         {
-            /* this is an error                  */
             reportException(Error_Translation_bad_external, descriptor);
         }
         // get the native code for this library

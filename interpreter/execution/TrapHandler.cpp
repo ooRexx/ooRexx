@@ -115,11 +115,11 @@ bool TrapHandler::canHandle(RexxString *c)
     // if the trap is CALL ON, there are only a few
     // conditions we can trap with an ANY
     if (handler->isType(KEYWORD_CALL_ON) &&
-        (condition->strCompare(CHAR_SYNTAX) ||
-         condition->strCompare(CHAR_NOVALUE) ||
-         condition->strCompare(CHAR_LOSTDIGITS) ||
-         condition->strCompare(CHAR_NOMETHOD) ||
-         condition->strCompare(CHAR_NOSTRING)))
+        (condition->strCompare(GlobalNames::SYNTAX) ||
+         condition->strCompare(GlobalNames::NOVALUE) ||
+         condition->strCompare(GlobalNames::LOSTDIGITS) ||
+         condition->strCompare(GlobalNames::NOMETHOD) ||
+         condition->strCompare(GlobalNames::NOSTRING)))
     {
         return false;
     }
@@ -135,7 +135,7 @@ bool TrapHandler::canHandle(RexxString *c)
  */
 RexxString *TrapHandler::instructionName()
 {
-    return handler->isType(KEYWORD_CALL_ON) ? OREF_CALL : OREF_SIGNAL;
+    return handler->isType(KEYWORD_CALL_ON) ? GlobalNames::CALL : GlobalNames::SIGNAL;
 }
 
 
@@ -202,7 +202,7 @@ void TrapHandler::trap(RexxActivation *context)
  */
 RexxString *TrapHandler::getState()
 {
-    return state == ON ? OREF_ON : OREF_DELAY;
+    return state == ON ? GlobalNames::ON : GlobalNames::DELAY;
 }
 
 

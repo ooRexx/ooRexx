@@ -144,7 +144,7 @@ void RexxInstructionParse::execute(RexxActivation *context, ExpressionStack *sta
     bool multiple = false;
 
     // default different pieces of source data information
-    RexxObject *value = OREF_NULLSTRING;
+    RexxObject *value = GlobalNames::NULLSTRING;
     RexxObject **argList = OREF_NULL;
     size_t argCount = 0;
 
@@ -206,7 +206,7 @@ void RexxInstructionParse::execute(RexxActivation *context, ExpressionStack *sta
             // PARSE VALUE WITH template actually is legal.  Not useful, but legal :-)
             else
             {
-                value = OREF_NULLSTRING;
+                value = GlobalNames::NULLSTRING;
             }
             // the expression version is still on the evalation stack.
             break;

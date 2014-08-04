@@ -158,7 +158,7 @@ RexxActivation::RexxActivation(Activity* _activity, MethodClass * _method, RexxC
         settings.securityManager = activity->getInstanceSecurityManager();
     }
     // and the call type is METHOD
-    settings.calltype = OREF_METHODNAME;
+    settings.calltype = GlobalNames::METHOD;
 }
 
 
@@ -527,8 +527,8 @@ RexxObject * RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxOb
                     objectScope = SCOPE_RESERVED;
                 }
                 // initialize the SELF and SUPER variables
-                setLocalVariable(OREF_SELF, VARIABLE_SELF, receiver);
-                setLocalVariable(OREF_SUPER, VARIABLE_SUPER, receiver->superScope(scope));
+                setLocalVariable(GlobalNames::SELF, VARIABLE_SELF, receiver);
+                setLocalVariable(GlobalNames::SUPER, VARIABLE_SUPER, receiver->superScope(scope));
             }
         }
         // Internal call, interpret, or a debug pause
@@ -809,10 +809,10 @@ void RexxActivation::processTraps()
             // get the condition object from the current trap handler
             DirectoryClass *conditionObj = trapHandler->getConditionObject();
             // see if we have something to assign to the RC variable
-            RexxInternalObject *rc = conditionObj->get(OREF_RC);
+            RexxInternalObject *rc = conditionObj->get(GlobalNames::RC);
             if (rc != OREF_NULL)
             {
-                setLocalVariable(OREF_RC, VARIABLE_RC, rc);
+                setLocalVariable(GlobalNames::RC, VARIABLE_RC, rc);
             }
 
             // it's possible that the condition can raise an error because of a
@@ -1418,7 +1418,7 @@ void RexxActivation::trapOn(RexxString *condition, RexxInstructionTrapBase *hand
     settings.traps->put(new TrapHandler(condition, handler), condition);
     // if this is NOVALUE or ANY, then we need to flip on the switch in the
     // local variables indicating we're interested in NOVALUE events.
-    if (condition->strCompare(CHAR_NOVALUE) || condition->strCompare(CHAR_ANY))
+    if (condition->strCompare(GlobalNames::NOVALUE) || condition->strCompare(GlobalNames::ANY))
     {
         settings.localVariables.setNovalueOn();
     }
@@ -1437,28 +1437,29 @@ void RexxActivation::trapOff(RexxString *condition)
     settings.traps->remove(condition);
     // if we no longer have NOVALUE or ANY enabled, then we can turn
     // off novalue processing in the variable pool
-    if (!settings.traps->hasIndex(OREF_NOVALUE) && !settings.traps->hasIndex(OREF_ANY))
+    if (!settings.traps->hasIndex(GlobalNames::NOVALUE) && !settings.traps->hasIndex(GlobalNames::ANY))
     {
         settings.localVariables.setNovalueOff();
     }
 }
 
 
+/**
+ * Return the top level external activation
+ *
+ * @return The main external call (a top level call or an external routine invocation)
+ */
 RexxActivation * RexxActivation::external()
-/******************************************************************************/
-/* Function:  Return the top level external activation                        */
-/******************************************************************************/
 {
-    /* if an internal call or an         */
-    /* interpret, we need to pass this   */
-    /* along                             */
+    // if an internal call or an interpret, we need to pass this /* along                             */
     if (isInternalLevelCall())
     {
-        return parent->external();   /* get our sender method             */
+        return parent->external();
     }
+    // got the one we need
     else
     {
-        return this;                       /* already at the top level          */
+        return this;
     }
 }
 
@@ -1526,50 +1527,50 @@ void RexxActivation::raise(RexxString *condition, RexxObject *rc, RexxString *de
     bool propagated = false;
 
     // are we propagating an an existing condition?
-    if (condition->strCompare(CHAR_PROPAGATE))
+    if (condition->strCompare(GlobalNames::PROPAGATE))
     {
 
         // get the original condition name
-        condition = (RexxString *)conditionobj->get(OREF_CONDITION);
+        condition = (RexxString *)conditionobj->get(GlobalNames::CONDITION);
         propagated = true;
         // fill in the propagation status
-        conditionobj->put(TheTrueObject, OREF_PROPAGATED);
+        conditionobj->put(TheTrueObject, GlobalNames::PROPAGATED);
         // if no result was specified, use the one from the condition object
         if (resultObj == OREF_NULL)
         {
-            resultObj = (RexxObject *)conditionobj->get(OREF_RESULT);
+            resultObj = (RexxObject *)conditionobj->get(GlobalNames::RESULT);
         }
     }
     else
     {
         // build a condition object for the condition
         conditionobj = new_directory();
-        conditionobj->put(condition, OREF_CONDITION);
-        conditionobj->put(OREF_NULLSTRING, OREF_DESCRIPTION);
-        conditionobj->put(TheFalseObject, OREF_PROPAGATED);
+        conditionobj->put(condition, GlobalNames::CONDITION);
+        conditionobj->put(GlobalNames::NULLSTRING, GlobalNames::DESCRIPTION);
+        conditionobj->put(TheFalseObject, GlobalNames::PROPAGATED);
         // not propagated
         propagated = false;
     }
     // now fill in other pieces from the raise instruction
     if (rc != OREF_NULL)
     {
-        conditionobj->put(rc, OREF_RC);
+        conditionobj->put(rc, GlobalNames::RC);
     }
     if (description != OREF_NULL)
     {
-        conditionobj->put(description, OREF_DESCRIPTION);
+        conditionobj->put(description, GlobalNames::DESCRIPTION);
     }
     if (additional != OREF_NULL)
     {
-        conditionobj->put(additional, OREF_ADDITIONAL);
+        conditionobj->put(additional, GlobalNames::ADDITIONAL);
     }
     if (resultObj != OREF_NULL)
     {
-        conditionobj->put(resultObj, OREF_RESULT);
+        conditionobj->put(resultObj, GlobalNames::RESULT);
     }
 
     // is this a SYNTAX error?  These get special handling
-    if (condition->strCompare(CHAR_SYNTAX))
+    if (condition->strCompare(GlobalNames::SYNTAX))
     {
         // if propagating, terminate this level and reraise the condition
         // with earlier levels.
@@ -1599,9 +1600,9 @@ void RexxActivation::raise(RexxString *condition, RexxObject *rc, RexxString *de
         }
 
         // is this an untrapped HALT condition?  Need to transform into a SYNTAX error
-        if (!trapped && condition->strCompare(CHAR_HALT))
+        if (!trapped && condition->strCompare(GlobalNames::HALT))
         {
-            reportException(Error_Program_interrupted_condition, OREF_HALT);
+            reportException(Error_Program_interrupted_condition, GlobalNames::HALT);
         }
 
         // process the return part, then unwind the call stack
@@ -1667,25 +1668,25 @@ RexxObject *RexxActivation::resolveStream(RexxString *name, bool input, RexxStri
     {
         if (input)
         {
-            return getLocalEnvironment(OREF_INPUT);
+            return getLocalEnvironment(GlobalNames::INPUT);
         }
         else
         {
-            return getLocalEnvironment(OREF_OUTPUT);
+            return getLocalEnvironment(GlobalNames::OUTPUT);
         }
     }
     // check for the standard input or out put streams.
-    else if (name->strCaselessCompare(CHAR_STDIN) || name->strCaselessCompare(CHAR_CSTDIN))
+    else if (name->strCaselessCompare("STDIN") || name->strCaselessCompare("STDIN:"))
     {
-        return getLocalEnvironment(OREF_INPUT);
+        return getLocalEnvironment(GlobalNames::INPUT);
     }
-    else if (name->strCaselessCompare(CHAR_STDOUT) || name->strCaselessCompare(CHAR_CSTDOUT))
+    else if (name->strCaselessCompare("STDOUT") || name->strCaselessCompare("STDOUT:"))
     {
-        return getLocalEnvironment(OREF_OUTPUT);
+        return getLocalEnvironment(GlobalNames::OUTPUT);
     }
-    else if (name->strCaselessCompare(CHAR_STDERR) || name->strCaselessCompare(CHAR_CSTDERR))
+    else if (name->strCaselessCompare("STDERR") || name->strCaselessCompare("STDERR:"))
     {
-        return getLocalEnvironment(OREF_ERRORNAME);
+        return getLocalEnvironment(GlobalNames::ERRORNAME);
     }
     // not one of the standards...go looking for a file.
     else
@@ -1714,8 +1715,8 @@ RexxObject *RexxActivation::resolveStream(RexxString *name, bool input, RexxStri
             // create an instance of the stream class and create a new
             // instance
             // TODO:  replace this with a REXX package lookup once that is done.
-            RexxObject *streamClass = (RexxObject *)TheEnvironment->get(OREF_STREAM);
-            stream = streamClass->sendMessage(OREF_NEW, name);
+            RexxObject *streamClass = (RexxObject *)TheEnvironment->get(GlobalNames::STREAM);
+            stream = streamClass->sendMessage(GlobalNames::NEW, name);
 
             // if we're requested to add this to the table, add it in and return the indicator.
             if (added)
@@ -1791,7 +1792,7 @@ void RexxActivation::signalTo(RexxInstruction *target)
     else
     {
         size_t lineNum = current->getLineNumber();
-        setLocalVariable(OREF_SIGL, VARIABLE_SIGL, new_integer(lineNum));
+        setLocalVariable(GlobalNames::SIGL, VARIABLE_SIGL, new_integer(lineNum));
         // the target is the next instruction we execute.
         next = target;
         doStack = OREF_NULL;
@@ -2024,7 +2025,7 @@ RexxObject *RexxActivation::getReceiver()
 RexxString *RexxActivation::trapState(RexxString *condition)
 {
     // default to OFF
-    RexxString *state = OREF_OFF;
+    RexxString *state = GlobalNames::OFF;
     // no enabled traps?  must be off
     if (settings.traps != OREF_NULL)
     {
@@ -2113,7 +2114,7 @@ bool RexxActivation::trap(RexxString *condition, DirectoryClass *exceptionObject
     }
     // do we need to notify a message object of a syntax error?
     // send it the notification message.
-    if (notifyObject != OREF_NULL && condition->strCompare(CHAR_SYNTAX))
+    if (notifyObject != OREF_NULL && condition->strCompare(GlobalNames::SYNTAX))
     {
         notifyObject->error(exceptionObject);
     }
@@ -2121,7 +2122,7 @@ bool RexxActivation::trap(RexxString *condition, DirectoryClass *exceptionObject
     // are we in a debug pause?  ignore any condition other than a syntax error.
     if (debugPause)
     {
-        if (!condition->strCompare(CHAR_SYNTAX))
+        if (!condition->strCompare(GlobalNames::SYNTAX))
         {
             return false;
         }
@@ -2144,7 +2145,7 @@ bool RexxActivation::trap(RexxString *condition, DirectoryClass *exceptionObject
     if (trapHandler == OREF_NULL)
     {
 
-        trapHandler = (TrapHandler *)settings.traps->get(OREF_ANY);
+        trapHandler = (TrapHandler *)settings.traps->get(GlobalNames::ANY);
         // if we have a handler, but this can't handle this can condition, return false
         if (trapHandler != OREF_NULL && !trapHandler->canHandle(condition))
         {
@@ -2155,7 +2156,7 @@ bool RexxActivation::trap(RexxString *condition, DirectoryClass *exceptionObject
     if (trapHandler != OREF_NULL)
     {
         // if this is a halt condition, we might need to call the system exit.
-        if (condition->strCompare(CHAR_HALT))
+        if (condition->strCompare(GlobalNames::HALT))
         {
             activity->callHaltClearExit(this);
         }
@@ -2167,7 +2168,7 @@ bool RexxActivation::trap(RexxString *condition, DirectoryClass *exceptionObject
         }
 
         // add the instruction trap info
-        exceptionObject->put(trapHandler->instructionName(), OREF_INSTRUCTION);
+        exceptionObject->put(trapHandler->instructionName(), GlobalNames::INSTRUCTION);
         // set the condition object into the traphandler
         trapHandler->setConditionObject(exceptionObject);
         // add the handler to the condition queue
@@ -2381,7 +2382,7 @@ void RexxActivation::debugInterpret(RexxString * codestring)
 RexxObject * RexxActivation::rexxVariable(RexxString * name )
 {
     // .RS happens in our context, so process here.
-    if (name->strCompare(CHAR_RS))
+    if (name->strCompare("RS"))
     {
         // if we've set the return status, return that value, otherwise
         // just return as the string name.
@@ -2401,22 +2402,22 @@ RexxObject * RexxActivation::rexxVariable(RexxString * name )
     }
 
     // .METHODS
-    if (name->strCompare(CHAR_METHODS))
+    if (name->strCompare("METHODS"))
     {
         return settings.parentCode->getMethods();
     }
     // .ROUTINES
-    else if (name->strCompare(CHAR_ROUTINES))
+    else if (name->strCompare("ROUTINES"))
     {
         return settings.parentCode->getRoutines();
     }
     // .LINE
-    else if (name->strCompare(CHAR_LINE))
+    else if (name->strCompare("LINE"))
     {
         return new_integer(current->getLineNumber());
     }
     // .CONTEXT
-    else if (name->strCompare(CHAR_CONTEXT))
+    else if (name->strCompare("CONTEXT"))
     {
         // retrieve the context object (potentially creating it on the first request)
         return getContextObject();
@@ -2585,13 +2586,13 @@ RexxObject *RexxActivation::externalCall(RexxString *target, RexxObject **argume
     }
 
     // Step 2a:  See if the function call exit fields this one
-    if (!activity->callObjectFunctionExit(this, target, calltype == OREF_FUNCTIONNAME, resultObj, arguments, argcount))
+    if (!activity->callObjectFunctionExit(this, target, calltype == GlobalNames::FUNCTION, resultObj, arguments, argcount))
     {
         return(RexxObject *)resultObj;
     }
 
     // Step 2b:  See if the function call exit fields this one
-    if (!activity->callFunctionExit(this, target, calltype == OREF_FUNCTIONNAME, resultObj, arguments, argcount))
+    if (!activity->callFunctionExit(this, target, calltype == GlobalNames::FUNCTION, resultObj, arguments, argcount))
     {
         return(RexxObject *)resultObj;
     }
@@ -2603,7 +2604,7 @@ RexxObject *RexxActivation::externalCall(RexxString *target, RexxObject **argume
     }
 
     // Step 4:  Check scripting exit, which is after most of the checks
-    if (!activity->callScriptingExit(this, target, calltype == OREF_FUNCTIONNAME, resultObj, arguments, argcount))
+    if (!activity->callScriptingExit(this, target, calltype == GlobalNames::FUNCTION, resultObj, arguments, argcount))
     {
         return(RexxObject *)resultObj;
     }
@@ -2807,7 +2808,7 @@ RexxObject * RexxActivation::internalCall(RexxString *name, RexxInstruction *tar
 {
     // we need to set SIGL to the caller's line number
     size_t lineNum = current->getLineNumber();
-    setLocalVariable(OREF_SIGL, VARIABLE_SIGL, new_integer(lineNum));
+    setLocalVariable(GlobalNames::SIGL, VARIABLE_SIGL, new_integer(lineNum));
     // create a new activation for running this and add to the activity stack
     RexxActivation *newActivation = ActivityManager::newActivation(activity, this, settings.parentCode, INTERNALCALL);
     activity->pushStackFrame(newActivation);
@@ -2835,7 +2836,7 @@ RexxObject * RexxActivation::internalCallTrap(RexxString *name, RexxInstruction 
     stack.push(conditionObj);
     // we need to set the SIGL variable for an internal call
     size_t lineNum = current->getLineNumber();
-    setLocalVariable(OREF_SIGL, VARIABLE_SIGL, new_integer(lineNum));
+    setLocalVariable(GlobalNames::SIGL, VARIABLE_SIGL, new_integer(lineNum));
 
     // create a new activation to handle this
     RexxActivation *newActivation = ActivityManager::newActivation(activity, this, settings.parentCode, INTERNALCALL);
@@ -2967,7 +2968,7 @@ uint64_t RexxActivation::getRandomSeed(RexxInteger *seed)
         wholenumber_t seed_value = seed->getValue();
         if (seed_value < 0)
         {
-            reportException(Error_Incorrect_call_nonnegative, CHAR_RANDOM, IntegerThree, seed);
+            reportException(Error_Incorrect_call_nonnegative, "RANDOM", IntegerThree, seed);
         }
 
         // set the seed value, then randomize it a little bit.
@@ -3540,9 +3541,9 @@ void RexxActivation::processClauseBoundary()
         // flip this off and raise the condition
         // if not handled as a condition, turn into a syntax error
         settings.setHaltCondition(false);
-        if (!activity->raiseCondition(OREF_HALT, OREF_NULL, settings.haltDescription, OREF_NULL, OREF_NULL))
+        if (!activity->raiseCondition(GlobalNames::HALT, OREF_NULL, settings.haltDescription, OREF_NULL, OREF_NULL))
         {
-            reportException(Error_Program_interrupted_condition, OREF_HALT);
+            reportException(Error_Program_interrupted_condition, GlobalNames::HALT);
         }
     }
 
@@ -3805,7 +3806,7 @@ void RexxActivation::command(RexxString *address, RexxString *commandString)
             // No handler for this environment.  Give a default return code and
             // raise a failure condition.
             commandResult = new_integer(RXSUBCOM_NOTREG);   // just use the not registered return code
-            condition = activity->createConditionObject(OREF_FAILURENAME, (RexxObject *)commandResult, commandString, OREF_NULL, OREF_NULL);
+            condition = activity->createConditionObject(GlobalNames::FAILURE, (RexxObject *)commandResult, commandString, OREF_NULL, OREF_NULL);
         }
     }
 
@@ -3820,15 +3821,15 @@ void RexxActivation::command(RexxString *address, RexxString *commandString)
     // condition object
     if (conditionObj != OREF_NULL)
     {
-        RexxObject *temp = (RexxObject *)conditionObj->get(OREF_RC);
+        RexxObject *temp = (RexxObject *)conditionObj->get(GlobalNames::RC);
         if (temp == OREF_NULL)
         {
             // see if we have a result and make sure the condition object
             // fills this as the RC value
-            temp = (RexxObject *)conditionObj->get(OREF_RESULT);
+            temp = (RexxObject *)conditionObj->get(GlobalNames::RESULT);
             if (temp != OREF_NULL)
             {
-                conditionObj->put(temp, OREF_RC);
+                conditionObj->put(temp, GlobalNames::RC);
             }
         }
         // replace the RC value
@@ -3838,22 +3839,22 @@ void RexxActivation::command(RexxString *address, RexxString *commandString)
         }
 
         // now check for ERROR or FAILURE conditions
-        RexxString *conditionName = (RexxString *)conditionObj->get(OREF_CONDITION);
+        RexxString *conditionName = (RexxString *)conditionObj->get(GlobalNames::CONDITION);
         // check for an error or failure condition, since these get special handling
-        if (conditionName->strCompare(CHAR_FAILURENAME))
+        if (conditionName->strCompare("FAILURE"))
         {
             // unconditionally update the RC value
-            conditionObj->put(temp, OREF_RC);
+            conditionObj->put(temp, GlobalNames::RC);
             // failure conditions require special handling when raising the condition
             // we'll need to reraise this as an ERROR condition if not trapped.
             failureCondition = true;
             // set the appropriate return status
             returnStatus = RETURN_STATUS_FAILURE;
         }
-        if (conditionName->strCompare(CHAR_ERROR))
+        if (conditionName->strCompare("ERROR"))
         {
             // unconditionally update the RC value
-            conditionObj->put(temp, OREF_RC);
+            conditionObj->put(temp, GlobalNames::RC);
             // set the appropriate return status
             returnStatus = RETURN_STATUS_ERROR;
         }
@@ -3871,7 +3872,7 @@ void RexxActivation::command(RexxString *address, RexxString *commandString)
     if (!debugPause)
     {
         // set the RC value before anything
-        setLocalVariable(OREF_RC, VARIABLE_RC, rc);
+        setLocalVariable(GlobalNames::RC, VARIABLE_RC, rc);
         // tracing command errors or fails?
         if ((returnStatus == RETURN_STATUS_ERROR && tracingErrors()) ||
             (returnStatus == RETURN_STATUS_FAILURE && (tracingFailures())))
@@ -3910,7 +3911,7 @@ void RexxActivation::command(RexxString *address, RexxString *commandString)
                 if (failureCondition)
                 {
                     // just change the condition name
-                    conditionObj->put(OREF_ERRORNAME, OREF_CONDITION);
+                    conditionObj->put(GlobalNames::ERRORNAME, GlobalNames::CONDITION);
                     activity->raiseCondition(conditionObj);
                 }
             }
@@ -4066,7 +4067,7 @@ void RexxActivation::closeStreams()
             // send each of the streams in the table a CLOSE message.
             for (HashContents::TableIterator iterator = streams->iterator(); iterator.isAvailable(); iterator.next())
             {
-                ((RexxObject *)iterator.value())->sendMessage(OREF_CLOSE);
+                ((RexxObject *)iterator.value())->sendMessage(GlobalNames::CLOSE);
             }
         }
     }
@@ -4083,10 +4084,10 @@ void RexxActivation::closeStreams()
 RexxObject *RexxActivation::novalueHandler(RexxString *name)
 {
     // the handler, if it exists, is stored in .local.
-    RexxObject *novalue_handler = getLocalEnvironment(OREF_NOVALUE);
+    RexxObject *novalue_handler = getLocalEnvironment(GlobalNames::NOVALUE);
     if (novalue_handler != OREF_NULL)
     {
-        return resultOrNil(novalue_handler->sendMessage(OREF_NOVALUE, name));
+        return resultOrNil(novalue_handler->sendMessage(GlobalNames::NOVALUE, name));
     }
     return TheNilObject;
 }

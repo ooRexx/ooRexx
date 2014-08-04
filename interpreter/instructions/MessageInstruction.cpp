@@ -192,7 +192,7 @@ void RexxInstructionMessage::execute(RexxActivation *context, ExpressionStack *s
         else
         {
             stack->push(OREF_NULL);
-            context->traceArgument(OREF_NULLSTRING);
+            context->traceArgument(GlobalNames::NULLSTRING);
         }
     }
 

@@ -132,8 +132,8 @@ protected:
 
 // various exception/condition reporting routines
 inline void reportCondition(RexxString *condition, RexxString *description) { ActivityManager::currentActivity->raiseCondition(condition, OREF_NULL, description, OREF_NULL, OREF_NULL); }
-inline void reportNovalue(RexxString *description) { reportCondition(OREF_NOVALUE, description); }
-inline void reportNostring(RexxString *description) { reportCondition(OREF_NOSTRING, description); }
+inline void reportNovalue(RexxString *description) { reportCondition(GlobalNames::NOVALUE, description); }
+inline void reportNostring(RexxString *description) { reportCondition(GlobalNames::NOSTRING, description); }
 
 inline void reportException(wholenumber_t error)
 {
@@ -237,7 +237,7 @@ inline void reportException(wholenumber_t error, const char *a1, RexxObject *a2,
 
 inline void reportNomethod(RexxString *message, RexxObject *receiver)
 {
-    if (!ActivityManager::currentActivity->raiseCondition(OREF_NOMETHOD, OREF_NULL, message, receiver, OREF_NULL))
+    if (!ActivityManager::currentActivity->raiseCondition(GlobalNames::NOMETHOD, OREF_NULL, message, receiver, OREF_NULL))
     {
         reportException(Error_No_method_name, receiver, message);
     }

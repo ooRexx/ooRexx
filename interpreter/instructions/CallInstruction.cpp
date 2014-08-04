@@ -179,7 +179,7 @@ void RexxInstructionCall::execute(RexxActivation *context, ExpressionStack *stac
             // push an empty value on to the stack and trace this as a null string
             // value.
             stack->push(OREF_NULL);
-            context->traceArgument(OREF_NULLSTRING);
+            context->traceArgument(GlobalNames::NULLSTRING);
         }
     }
 
@@ -321,7 +321,7 @@ void RexxInstructionDynamicCall::execute(RexxActivation *context, ExpressionStac
             // push an empty value on to the stack and trace this as a null string
             // value.
             stack->push(OREF_NULL);
-            context->traceArgument(OREF_NULLSTRING);
+            context->traceArgument(GlobalNames::NULLSTRING);
         }
     }
 

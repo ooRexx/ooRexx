@@ -224,7 +224,7 @@ RexxObject *build(RexxString * variable_name, bool direct )
         // have a trailing period?  We need a trailing nulltring
         if (variable_name->getChar(position - 1) == '.')
         {
-            tails->push(OREF_NULLSTRING);
+            tails->push(GlobalNames::NULLSTRING);
         }
     }
     // create and return a new compound

@@ -962,7 +962,7 @@ RexxVariableBase *VariableDictionary::buildCompoundVariable(RexxString *variable
         // a null string for the final section to pick up the trailing period
         if (variable_name->getChar(position - 1) == '.')
         {
-            tails->push(OREF_NULLSTRING);
+            tails->push(GlobalNames::NULLSTRING);
         }
     }
 

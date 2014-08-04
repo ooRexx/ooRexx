@@ -271,11 +271,11 @@ void MemoryObject::createImage()
 
     // These special variables are always assigned the same slot positions in all
     // Rexx code contexts.
-    TheCommonRetrievers->put((RexxObject *)new RexxSimpleVariable(OREF_SELF, VARIABLE_SELF), OREF_SELF);
-    TheCommonRetrievers->put((RexxObject *)new RexxSimpleVariable(OREF_SUPER, VARIABLE_SUPER), OREF_SUPER);
-    TheCommonRetrievers->put((RexxObject *)new RexxSimpleVariable(OREF_SIGL, VARIABLE_SIGL), OREF_SIGL);
-    TheCommonRetrievers->put((RexxObject *)new RexxSimpleVariable(OREF_RC, VARIABLE_RC), OREF_RC);
-    TheCommonRetrievers->put((RexxObject *)new RexxSimpleVariable(OREF_RESULT, VARIABLE_RESULT), OREF_RESULT);
+    TheCommonRetrievers->put((RexxObject *)new RexxSimpleVariable(GlobalNames::SELF, VARIABLE_SELF), GlobalNames::SELF);
+    TheCommonRetrievers->put((RexxObject *)new RexxSimpleVariable(GlobalNames::SUPER, VARIABLE_SUPER), GlobalNames::SUPER);
+    TheCommonRetrievers->put((RexxObject *)new RexxSimpleVariable(GlobalNames::SIGL, VARIABLE_SIGL), GlobalNames::SIGL);
+    TheCommonRetrievers->put((RexxObject *)new RexxSimpleVariable(GlobalNames::RC, VARIABLE_RC), GlobalNames::RC);
+    TheCommonRetrievers->put((RexxObject *)new RexxSimpleVariable(GlobalNames::RESULT, VARIABLE_RESULT), GlobalNames::RESULT);
 
 //***************************************************************************
 // The following Rexx classes that are exposed to the users are set up as
@@ -345,49 +345,49 @@ void MemoryObject::createImage()
     /************************************************************************/
 StartClassDefinition(Class);
     // for the CLASS object, we only add the NEW method.
-        AddClassMethod(CHAR_NEW, RexxClass::newRexx, A_COUNT);
+        AddClassMethod("New", RexxClass::newRexx, A_COUNT);
 
     CompleteClassMethodDefinitions();
 
     // now the normal instance methods for a CLASS object.
-        AddProtectedMethod(CHAR_BASECLASS, RexxClass::getBaseClass, 0);
-        AddProtectedMethod(CHAR_DEFINE, RexxClass::defineMethod, 2);
-        AddProtectedMethod(CHAR_DEFINE_METHODS, RexxClass::defineMethods, 1);
+        AddProtectedMethod("BaseClass", RexxClass::getBaseClass, 0);
+        AddProtectedMethod("Define", RexxClass::defineMethod, 2);
+        AddProtectedMethod("!DEFINE_METHODS", RexxClass::defineMethods, 1);
         AddProtectedMethod("!DEFINE_CLASS_METHOD", RexxClass::defineClassMethod, 2);
         AddProtectedMethod("INHERITINSTANCEMETHODS", RexxClass::inheritInstanceMethods, 1)
-        AddProtectedMethod(CHAR_DELETE, RexxClass::deleteMethod, 1);
-        AddMethod(CHAR_ENHANCED, RexxClass::enhanced, A_COUNT);
-        AddMethod(CHAR_ID, RexxClass::getId, 0);
-        AddMethod(CHAR_INHERIT, RexxClass::inherit, 2);
-        AddProtectedMethod(CHAR_METACLASS, RexxClass::getMetaClass, 0);
-        AddMethod(CHAR_METHOD, RexxClass::method, 1);
-        AddMethod(CHAR_METHODS, RexxClass::methods, 1);
-        AddMethod(CHAR_MIXINCLASS, RexxClass::mixinClass, 3);
-        AddMethod(CHAR_QUERYMIXINCLASS, RexxClass::queryMixinClass, 0);
-        AddMethod(CHAR_SUBCLASS, RexxClass::subclassRexx, 3);
-        AddProtectedMethod(CHAR_SUBCLASSES, RexxClass::getSubClasses, 0);
-        AddProtectedMethod(CHAR_SUPERCLASSES, RexxClass::getSuperClasses, 0);
-        AddProtectedMethod(CHAR_SUPERCLASS, RexxClass::getSuperClass, 0);
-        AddProtectedMethod(CHAR_UNINHERIT, RexxClass::uninherit, 1);
+        AddProtectedMethod("Delete", RexxClass::deleteMethod, 1);
+        AddMethod("Enhanced", RexxClass::enhanced, A_COUNT);
+        AddMethod("ID", RexxClass::getId, 0);
+        AddMethod("Inherit", RexxClass::inherit, 2);
+        AddProtectedMethod("MetaClass", RexxClass::getMetaClass, 0);
+        AddMethod("Method", RexxClass::method, 1);
+        AddMethod("Methods", RexxClass::methods, 1);
+        AddMethod("MixinClass", RexxClass::mixinClass, 3);
+        AddMethod("QueryMixinClass", RexxClass::queryMixinClass, 0);
+        AddMethod("Subclass", RexxClass::subclassRexx, 3);
+        AddProtectedMethod("Subclasses", RexxClass::getSubClasses, 0);
+        AddProtectedMethod("Superclasses", RexxClass::getSuperClasses, 0);
+        AddProtectedMethod("Superclass", RexxClass::getSuperClass, 0);
+        AddProtectedMethod("Uninherit", RexxClass::uninherit, 1);
 
-        AddMethod(CHAR_ISSUBCLASSOF, RexxClass::isSubclassOf, 1);
-        AddMethod(CHAR_SHRIEKREXXDEFINED, RexxClass::setRexxDefined, 0);
-        AddMethod(CHAR_DEFAULTNAME, RexxClass::defaultNameRexx, 0);
-        AddMethod(CHAR_PACKAGE, RexxClass::getPackage, 0);
+        AddMethod("IsSubclassOf", RexxClass::isSubclassOf, 1);
+        AddMethod("!REXXDEFINED", RexxClass::setRexxDefined, 0);
+        AddMethod("DefaultName", RexxClass::defaultNameRexx, 0);
+        AddMethod("Package", RexxClass::getPackage, 0);
 
     // operator methods
-        AddMethod(CHAR_EQUAL, RexxClass::equal, 1);
-        AddMethod(CHAR_STRICT_EQUAL, RexxClass::strictEqual, 1);
-        AddMethod(CHAR_BACKSLASH_EQUAL, RexxClass::notEqual, 1);
-        AddMethod(CHAR_LESSTHAN_GREATERTHAN, RexxClass::notEqual, 1);
-        AddMethod(CHAR_GREATERTHAN_LESSTHAN, RexxClass::notEqual, 1);
-        AddMethod(CHAR_STRICT_BACKSLASH_EQUAL, RexxClass::notEqual, 1);
+        AddMethod("=", RexxClass::equal, 1);
+        AddMethod("==", RexxClass::strictEqual, 1);
+        AddMethod("\\=", RexxClass::notEqual, 1);
+        AddMethod("<>", RexxClass::notEqual, 1);
+        AddMethod("><", RexxClass::notEqual, 1);
+        AddMethod("\\==", RexxClass::notEqual, 1);
 
     // this is explicitly inserted into the class behaviour because it gets used
     // prior to the instance behavior merges.
-        AddMethod(CHAR_HASHCODE, RexxClass::hashCode, 0);
+        AddMethod("HashCode", RexxClass::hashCode, 0);
     // this is a NOP by default, so we'll just use the object init method as a fill in.
-        AddMethod(CHAR_ACTIVATE, RexxObject::initRexx, 0);
+        AddMethod("Activate", RexxObject::initRexx, 0);
 
     CompleteMethodDefinitions();
 
@@ -402,43 +402,43 @@ EndClassDefinition(Class);
 StartClassDefinition(Object);
 
     // for the OBJECT class object, we only add the NEW method.
-        AddClassMethod(CHAR_NEW, RexxObject::newRexx, A_COUNT);
+        AddClassMethod("New", RexxObject::newRexx, A_COUNT);
 
     CompleteClassMethodDefinitions();
 
     // Now Object instance methods
 
-        AddMethod(CHAR_INIT, RexxObject::initRexx, 0);
-        AddMethod(CHAR_EQUAL, RexxObject::equal, 1);
-        AddMethod(CHAR_STRICT_EQUAL, RexxObject::strictEqual, 1);
-        AddMethod(CHAR_HASHCODE, RexxObject::hashCode, 0);
-        AddMethod(CHAR_BACKSLASH_EQUAL, RexxObject::notEqual, 1);
-        AddMethod(CHAR_LESSTHAN_GREATERTHAN, RexxObject::notEqual, 1);
-        AddMethod(CHAR_GREATERTHAN_LESSTHAN, RexxObject::notEqual, 1);
-        AddMethod(CHAR_STRICT_BACKSLASH_EQUAL, RexxObject::strictNotEqual, 1);
-        AddMethod(CHAR_NULLSTRING, RexxObject::concatRexx, 1);
-        AddMethod(CHAR_BLANK, RexxObject::concatBlank, 1);
-        AddMethod(CHAR_CONCATENATE, RexxObject::concatRexx, 1);
-        AddMethod(CHAR_COPY, RexxObject::copyRexx, 0);
-        AddMethod(CHAR_CLASS, RexxObject::classObject, 0);
-        AddMethod(CHAR_HASMETHOD, RexxObject::hasMethodRexx, 1);
-        AddMethod(CHAR_DEFAULTNAME, RexxObject::defaultNameRexx, 0);
-        AddMethod(CHAR_OBJECTNAME, RexxObject::objectName, 0);
-        AddMethod(CHAR_OBJECTNAMEEQUALS, RexxObject::objectNameEquals, 1);
-        AddMethod(CHAR_REQUEST, RexxObject::requestRexx, 1);
-        AddMethod(CHAR_START, RexxObject::start, A_COUNT);
+        AddMethod("Init", RexxObject::initRexx, 0);
+        AddMethod("=", RexxObject::equal, 1);
+        AddMethod("==", RexxObject::strictEqual, 1);
+        AddMethod("HashCode", RexxObject::hashCode, 0);
+        AddMethod("\\=", RexxObject::notEqual, 1);
+        AddMethod("<>", RexxObject::notEqual, 1);
+        AddMethod("><", RexxObject::notEqual, 1);
+        AddMethod("\\==", RexxObject::strictNotEqual, 1);
+        AddMethod("", RexxObject::concatRexx, 1);
+        AddMethod(" ", RexxObject::concatBlank, 1);
+        AddMethod("||", RexxObject::concatRexx, 1);
+        AddMethod("Copy", RexxObject::copyRexx, 0);
+        AddMethod("Class", RexxObject::classObject, 0);
+        AddMethod("HasMethod", RexxObject::hasMethodRexx, 1);
+        AddMethod("DefaultName", RexxObject::defaultNameRexx, 0);
+        AddMethod("ObjectName", RexxObject::objectName, 0);
+        AddMethod("ObjectName=", RexxObject::objectNameEquals, 1);
+        AddMethod("Request", RexxObject::requestRexx, 1);
+        AddMethod("Start", RexxObject::start, A_COUNT);
         AddMethod("STARTWITH", RexxObject::startWith, 2);
         AddMethod("SEND", RexxObject::send, A_COUNT);
         AddMethod("SENDWITH", RexxObject::sendWith, 2);
-        AddMethod(CHAR_STRING, RexxObject::stringRexx, 0);
-        AddMethod(CHAR_ISINSTANCEOF, RexxObject::isInstanceOfRexx, 1);
-        AddMethod(CHAR_ISA, RexxObject::isInstanceOfRexx, 1);
-        AddMethod(CHAR_INSTANCEMETHOD, RexxObject::instanceMethodRexx, 1);
-        AddMethod(CHAR_INSTANCEMETHODS, RexxObject::instanceMethodsRexx, 1);
-        AddMethod(CHAR_IDENTITYHASH, RexxObject::identityHashRexx, 0);
-        AddPrivateMethod(CHAR_RUN, RexxObject::run, A_COUNT);
-        AddPrivateMethod(CHAR_SETMETHOD, RexxObject::setMethod, 3);
-        AddPrivateMethod(CHAR_UNSETMETHOD, RexxObject::unsetMethod, 1);
+        AddMethod("String", RexxObject::stringRexx, 0);
+        AddMethod("IsInstanceOf", RexxObject::isInstanceOfRexx, 1);
+        AddMethod("IsA", RexxObject::isInstanceOfRexx, 1);
+        AddMethod("InstanceMethod", RexxObject::instanceMethodRexx, 1);
+        AddMethod("InstanceMethods", RexxObject::instanceMethodsRexx, 1);
+        AddMethod("IdentityHash", RexxObject::identityHashRexx, 0);
+        AddPrivateMethod("Run", RexxObject::run, A_COUNT);
+        AddPrivateMethod("SetMethod", RexxObject::setMethod, 3);
+        AddPrivateMethod("UnsetMethod", RexxObject::unsetMethod, 1);
 
     CompleteMethodDefinitions();
 
@@ -459,119 +459,119 @@ CompleteClassDefinition(Class);
 
 StartClassDefinition(String)
 
-        AddClassMethod(CHAR_NEW, RexxString::newRexx, A_COUNT);
+        AddClassMethod("New", RexxString::newRexx, A_COUNT);
 
     CompleteClassMethodDefinitions();
 
-        AddMethod(CHAR_NULLSTRING, RexxString::concatRexx, 1);
-        AddMethod(CHAR_BLANK, RexxString::concatBlank, 1);
-        AddMethod(CHAR_CONCATENATE, RexxString::concatRexx, 1);
-        AddMethod(CHAR_LENGTH, RexxString::lengthRexx, 0);
-        AddMethod(CHAR_CENTER, RexxString::center, 2);
-        AddMethod(CHAR_CENTRE, RexxString::center, 2);
-        AddMethod(CHAR_DATATYPE, RexxString::dataType, 1);
-        AddMethod(CHAR_DELSTR, RexxString::delstr, 2);
-        AddMethod(CHAR_FORMAT, RexxString::format, 4);
-        AddMethod(CHAR_INSERT, RexxString::insert, 4);
-        AddMethod(CHAR_LEFT, RexxString::left, 2);
-        AddMethod(CHAR_OVERLAY, RexxString::overlay, 4);
-        AddMethod(CHAR_REPLACEAT, RexxString::replaceAt, 4);
-        AddMethod(CHAR_REVERSE, RexxString::reverse, 0);
-        AddMethod(CHAR_RIGHT, RexxString::right, 2);
-        AddMethod(CHAR_STRIP, RexxString::strip, 2);
-        AddMethod(CHAR_SUBSTR, RexxString::substr, 3);
-        AddMethod(CHAR_SUBCHAR, RexxString::subchar, 1);
-        AddMethod(CHAR_DELWORD, RexxString::delWord, 2);
-        AddMethod(CHAR_SPACE, RexxString::space, 2);
-        AddMethod(CHAR_SUBWORD, RexxString::subWord, 2);
+        AddMethod("", RexxString::concatRexx, 1);
+        AddMethod(" ", RexxString::concatBlank, 1);
+        AddMethod("||", RexxString::concatRexx, 1);
+        AddMethod("Length", RexxString::lengthRexx, 0);
+        AddMethod("Center", RexxString::center, 2);
+        AddMethod("Centre", RexxString::center, 2);
+        AddMethod("Datatype", RexxString::dataType, 1);
+        AddMethod("Delstr", RexxString::delstr, 2);
+        AddMethod("Format", RexxString::format, 4);
+        AddMethod("Insert", RexxString::insert, 4);
+        AddMethod("Left", RexxString::left, 2);
+        AddMethod("Overlay", RexxString::overlay, 4);
+        AddMethod("ReplaceAt", RexxString::replaceAt, 4);
+        AddMethod("Reverse", RexxString::reverse, 0);
+        AddMethod("Right", RexxString::right, 2);
+        AddMethod("Strip", RexxString::strip, 2);
+        AddMethod("Substr", RexxString::substr, 3);
+        AddMethod("SubChar", RexxString::subchar, 1);
+        AddMethod("DelWord", RexxString::delWord, 2);
+        AddMethod("Space", RexxString::space, 2);
+        AddMethod("SubWord", RexxString::subWord, 2);
         AddMethod("SUBWORDS", RexxString::subWords, 2);
         AddMethod("FLOOR", RexxString::floor, 0);
         AddMethod("CEILING", RexxString::ceiling, 0);
         AddMethod("ROUND", RexxString::round, 0);
-        AddMethod(CHAR_TRUNC, RexxString::trunc, 1);
-        AddMethod(CHAR_WORD, RexxString::word, 1);
-        AddMethod(CHAR_WORDINDEX, RexxString::wordIndex, 1);
-        AddMethod(CHAR_WORDLENGTH, RexxString::wordLength, 1);
-        AddMethod(CHAR_WORDPOS, RexxString::wordPos, 2);
-        AddMethod(CHAR_CASELESSWORDPOS, RexxString::caselessWordPos, 2);
-        AddMethod(CHAR_WORDS, RexxString::words, 0);
-        AddMethod(CHAR_ABBREV, RexxString::abbrev, 2);
-        AddMethod(CHAR_CASELESSABBREV, RexxString::caselessAbbrev, 2);
-        AddMethod(CHAR_CHANGESTR, RexxString::changeStr, 3);
-        AddMethod(CHAR_CASELESSCHANGESTR, RexxString::caselessChangeStr, 3);
-        AddMethod(CHAR_COMPARE, RexxString::compare, 2);
-        AddMethod(CHAR_CASELESSCOMPARE, RexxString::caselessCompare, 2);
-        AddMethod(CHAR_COPIES, RexxString::copies, 1);
-        AddMethod(CHAR_COUNTSTR, RexxString::countStrRexx, 1);
-        AddMethod(CHAR_CASELESSCOUNTSTR, RexxString::caselessCountStrRexx, 1);
-        AddMethod(CHAR_LASTPOS, RexxString::lastPosRexx, 3);
-        AddMethod(CHAR_POS, RexxString::posRexx, 3);
+        AddMethod("Trunc", RexxString::trunc, 1);
+        AddMethod("Word", RexxString::word, 1);
+        AddMethod("WordIndex", RexxString::wordIndex, 1);
+        AddMethod("WordLength", RexxString::wordLength, 1);
+        AddMethod("WordPos", RexxString::wordPos, 2);
+        AddMethod("CaselessWordPos", RexxString::caselessWordPos, 2);
+        AddMethod("Words", RexxString::words, 0);
+        AddMethod("Abbrev", RexxString::abbrev, 2);
+        AddMethod("CaselessAbbrev", RexxString::caselessAbbrev, 2);
+        AddMethod("ChangeStr", RexxString::changeStr, 3);
+        AddMethod("CaselessChangeStr", RexxString::caselessChangeStr, 3);
+        AddMethod("Compare", RexxString::compare, 2);
+        AddMethod("CaselessCompare", RexxString::caselessCompare, 2);
+        AddMethod("Copies", RexxString::copies, 1);
+        AddMethod("CountStr", RexxString::countStrRexx, 1);
+        AddMethod("CaselessCountStr", RexxString::caselessCountStrRexx, 1);
+        AddMethod("LastPos", RexxString::lastPosRexx, 3);
+        AddMethod("Pos", RexxString::posRexx, 3);
         AddMethod("CONTAINS", RexxString::containsRexx, 3);
         AddMethod("CASELESSCONTAINS", RexxString::caselessContains, 3);
         AddMethod("CONTAINSWORD", RexxString::containsWord, 2);
         AddMethod("CASELESSCONTAINSWORD", RexxString::caselessContainsWord, 2);
-        AddMethod(CHAR_CASELESSLASTPOS, RexxString::caselessLastPosRexx, 3);
-        AddMethod(CHAR_CASELESSPOS, RexxString::caselessPosRexx, 3);
-        AddMethod(CHAR_TRANSLATE, RexxString::translate, 5);
-        AddMethod(CHAR_VERIFY, RexxString::verify, 4);
-        AddMethod(CHAR_BITAND, RexxString::bitAnd, 2);
-        AddMethod(CHAR_BITOR, RexxString::bitOr, 2);
-        AddMethod(CHAR_BITXOR, RexxString::bitXor, 2);
-        AddMethod(CHAR_B2X, RexxString::b2x, 0);
-        AddMethod(CHAR_C2D, RexxString::c2d, 1);
-        AddMethod(CHAR_C2X, RexxString::c2x, 0);
-        AddMethod(CHAR_D2C, RexxString::d2c, 1);
-        AddMethod(CHAR_D2X, RexxString::d2x, 1);
-        AddMethod(CHAR_X2B, RexxString::x2b, 0);
-        AddMethod(CHAR_X2C, RexxString::x2c, 0);
-        AddMethod(CHAR_X2D, RexxString::x2d, 1);
-        AddMethod(CHAR_ENCODEBASE64, RexxString::encodeBase64, 0);
-        AddMethod(CHAR_DECODEBASE64, RexxString::decodeBase64, 0);
-        AddMethod(CHAR_MAKESTRING, RexxObject::makeStringRexx, 0);
-        AddMethod(CHAR_ABS, RexxString::abs, 0);
-        AddMethod(CHAR_ORXMAX, RexxString::Max, A_COUNT);
-        AddMethod(CHAR_ORXMIN, RexxString::Min, A_COUNT);
-        AddMethod(CHAR_SIGN, RexxString::sign, 0);
-        AddMethod(CHAR_EQUAL, RexxString::equal, 1);
-        AddMethod(CHAR_BACKSLASH_EQUAL, RexxString::notEqual, 1);
-        AddMethod(CHAR_LESSTHAN_GREATERTHAN, RexxString::notEqual, 1);
-        AddMethod(CHAR_GREATERTHAN_LESSTHAN, RexxString::notEqual, 1);
-        AddMethod(CHAR_GREATERTHAN, RexxString::isGreaterThan, 1);
-        AddMethod(CHAR_LESSTHAN, RexxString::isLessThan, 1);
-        AddMethod(CHAR_GREATERTHAN_EQUAL, RexxString::isGreaterOrEqual, 1);
-        AddMethod(CHAR_BACKSLASH_LESSTHAN, RexxString::isGreaterOrEqual, 1);
-        AddMethod(CHAR_LESSTHAN_EQUAL, RexxString::isLessOrEqual, 1);
-        AddMethod(CHAR_BACKSLASH_GREATERTHAN, RexxString::isLessOrEqual, 1);
-        AddMethod(CHAR_STRICT_EQUAL, RexxString::strictEqual, 1);
-        AddMethod(CHAR_STRICT_BACKSLASH_EQUAL, RexxString::strictNotEqual, 1);
-        AddMethod(CHAR_STRICT_GREATERTHAN, RexxString::strictGreaterThan, 1);
-        AddMethod(CHAR_STRICT_LESSTHAN, RexxString::strictLessThan, 1);
-        AddMethod(CHAR_STRICT_GREATERTHAN_EQUAL, RexxString::strictGreaterOrEqual, 1);
-        AddMethod(CHAR_STRICT_BACKSLASH_LESSTHAN, RexxString::strictGreaterOrEqual, 1);
-        AddMethod(CHAR_STRICT_LESSTHAN_EQUAL, RexxString::strictLessOrEqual, 1);
-        AddMethod(CHAR_STRICT_BACKSLASH_GREATERTHAN, RexxString::strictLessOrEqual, 1);
-        AddMethod(CHAR_PLUS, RexxString::plus, 1);
-        AddMethod(CHAR_SUBTRACT, RexxString::minus, 1);
-        AddMethod(CHAR_MULTIPLY, RexxString::multiply, 1);
-        AddMethod(CHAR_POWER, RexxString::power, 1);
-        AddMethod(CHAR_DIVIDE, RexxString::divide, 1);
-        AddMethod(CHAR_INTDIV, RexxString::integerDivide, 1);
-        AddMethod(CHAR_REMAINDER, RexxString::remainder, 1);
-        AddMethod(CHAR_BACKSLASH, RexxString::notOp, 0);
-        AddMethod(CHAR_AND, RexxString::andOp, 1);
-        AddMethod(CHAR_OR, RexxString::orOp, 1);
-        AddMethod(CHAR_XOR, RexxString::xorOp, 1);
-        AddMethod(CHAR_MAKEARRAY, RexxString::makeArrayRexx, 1);
-        AddMethod(CHAR_LOWER, RexxString::lowerRexx, 2);
-        AddMethod(CHAR_UPPER, RexxString::upperRexx, 2);
-        AddMethod(CHAR_MATCH, RexxString::match, 4);
-        AddMethod(CHAR_CASELESSMATCH, RexxString::caselessMatch, 4);
-        AddMethod(CHAR_MATCHCHAR, RexxString::matchChar, 2);
-        AddMethod(CHAR_CASELESSMATCHCHAR, RexxString::caselessMatchChar, 2);
-        AddMethod(CHAR_EQUALS, RexxString::equals, 1);
-        AddMethod(CHAR_CASELESSEQUALS, RexxString::caselessEquals, 1);
-        AddMethod(CHAR_COMPARETO, RexxString::compareToRexx, 3);
-        AddMethod(CHAR_CASELESSCOMPARETO, RexxString::caselessCompareToRexx, 3);
+        AddMethod("CaselessLastPos", RexxString::caselessLastPosRexx, 3);
+        AddMethod("CaselessPos", RexxString::caselessPosRexx, 3);
+        AddMethod("Translate", RexxString::translate, 5);
+        AddMethod("Verify", RexxString::verify, 4);
+        AddMethod("BitAnd", RexxString::bitAnd, 2);
+        AddMethod("BitOr", RexxString::bitOr, 2);
+        AddMethod("BitXor", RexxString::bitXor, 2);
+        AddMethod("B2X", RexxString::b2x, 0);
+        AddMethod("C2D", RexxString::c2d, 1);
+        AddMethod("C2X", RexxString::c2x, 0);
+        AddMethod("D2C", RexxString::d2c, 1);
+        AddMethod("D2X", RexxString::d2x, 1);
+        AddMethod("X2B", RexxString::x2b, 0);
+        AddMethod("X2C", RexxString::x2c, 0);
+        AddMethod("X2D", RexxString::x2d, 1);
+        AddMethod("EncodeBase64", RexxString::encodeBase64, 0);
+        AddMethod("DecodeBase64", RexxString::decodeBase64, 0);
+        AddMethod("MakeString", RexxObject::makeStringRexx, 0);
+        AddMethod("Abs", RexxString::abs, 0);
+        AddMethod("Max", RexxString::Max, A_COUNT);
+        AddMethod("Min", RexxString::Min, A_COUNT);
+        AddMethod("Sign", RexxString::sign, 0);
+        AddMethod("=", RexxString::equal, 1);
+        AddMethod("\\=", RexxString::notEqual, 1);
+        AddMethod("<>", RexxString::notEqual, 1);
+        AddMethod("><", RexxString::notEqual, 1);
+        AddMethod(">", RexxString::isGreaterThan, 1);
+        AddMethod("<", RexxString::isLessThan, 1);
+        AddMethod(">=", RexxString::isGreaterOrEqual, 1);
+        AddMethod("\\<", RexxString::isGreaterOrEqual, 1);
+        AddMethod("<=", RexxString::isLessOrEqual, 1);
+        AddMethod("\\>", RexxString::isLessOrEqual, 1);
+        AddMethod("==", RexxString::strictEqual, 1);
+        AddMethod("\\==", RexxString::strictNotEqual, 1);
+        AddMethod(">>", RexxString::strictGreaterThan, 1);
+        AddMethod("<<", RexxString::strictLessThan, 1);
+        AddMethod(">>=", RexxString::strictGreaterOrEqual, 1);
+        AddMethod("\\<<", RexxString::strictGreaterOrEqual, 1);
+        AddMethod("<<=", RexxString::strictLessOrEqual, 1);
+        AddMethod("\\>>", RexxString::strictLessOrEqual, 1);
+        AddMethod("+", RexxString::plus, 1);
+        AddMethod("-", RexxString::minus, 1);
+        AddMethod("*", RexxString::multiply, 1);
+        AddMethod("**", RexxString::power, 1);
+        AddMethod("/", RexxString::divide, 1);
+        AddMethod("%", RexxString::integerDivide, 1);
+        AddMethod("//", RexxString::remainder, 1);
+        AddMethod("\\", RexxString::notOp, 0);
+        AddMethod("&", RexxString::andOp, 1);
+        AddMethod("|", RexxString::orOp, 1);
+        AddMethod("&&", RexxString::xorOp, 1);
+        AddMethod("MakeArray", RexxString::makeArrayRexx, 1);
+        AddMethod("Lower", RexxString::lowerRexx, 2);
+        AddMethod("Upper", RexxString::upperRexx, 2);
+        AddMethod("Match", RexxString::match, 4);
+        AddMethod("CaselessMatch", RexxString::caselessMatch, 4);
+        AddMethod("MatchChar", RexxString::matchChar, 2);
+        AddMethod("CaselessMatchChar", RexxString::caselessMatchChar, 2);
+        AddMethod("Equals", RexxString::equals, 1);
+        AddMethod("CaselessEquals", RexxString::caselessEquals, 1);
+        AddMethod("CompareTo", RexxString::compareToRexx, 3);
+        AddMethod("CaselessCompareTo", RexxString::caselessCompareToRexx, 3);
 
     CompleteMethodDefinitions();
 
@@ -586,50 +586,50 @@ EndClassDefinition(String);
 
 StartClassDefinition(Array);
 
-        AddClassMethod(CHAR_NEW, ArrayClass::newRexx, A_COUNT);
-        AddClassMethod(CHAR_OF, ArrayClass::ofRexx, A_COUNT);
+        AddClassMethod("New", ArrayClass::newRexx, A_COUNT);
+        AddClassMethod("Of", ArrayClass::ofRexx, A_COUNT);
 
     CompleteClassMethodDefinitions();
 
-        AddMethod(CHAR_BRACKETS, ArrayClass::getRexx, A_COUNT);
-        AddMethod(CHAR_BRACKETSEQUAL, ArrayClass::putRexx, A_COUNT);
-        AddMethod(CHAR_AT, ArrayClass::getRexx, A_COUNT);
-        AddMethod(CHAR_DIMENSION, ArrayClass::dimensionRexx, 1);
-        AddMethod("DIMENSIONS", ArrayClass::getDimensionsRexx, 0);
-        AddMethod(CHAR_HASINDEX, ArrayClass::hasIndexRexx, A_COUNT);
-        AddMethod(CHAR_ITEMS, ArrayClass::itemsRexx, 0);
-        AddMethod(CHAR_MAKEARRAY, RexxObject::makeArrayRexx, 0);
-        AddMethod(CHAR_PUT, ArrayClass::putRexx, A_COUNT);
-        AddMethod(CHAR_REMOVE, ArrayClass::removeRexx, A_COUNT);
-        AddMethod(CHAR_SECTION, ArrayClass::sectionRexx, 2);
-        AddMethod(CHAR_SIZE, ArrayClass::sizeRexx, 0);
-        AddMethod(CHAR_SUPPLIER, ArrayClass::supplier, 0);
-        AddMethod(CHAR_FIRST, ArrayClass::firstRexx, 0);
-        AddMethod(CHAR_FIRSTITEM, ArrayClass::getFirstItem, 0);
-        AddMethod(CHAR_LAST, ArrayClass::lastRexx, 0);
-        AddMethod(CHAR_LASTITEM, ArrayClass::getLastItem, 0);
-        AddMethod(CHAR_NEXT, ArrayClass::nextRexx, A_COUNT);
-        AddMethod(CHAR_PREVIOUS, ArrayClass::previousRexx, A_COUNT);
-        AddMethod(CHAR_APPEND, ArrayClass::appendRexx, 1);
-        AddMethod(CHAR_MAKESTRING, ArrayClass::makeString, 2);
-        AddMethod(CHAR_TOSTRING, ArrayClass::toString, 2);
-        AddMethod(CHAR_ALLINDEXES, ArrayClass::allIndexes, 0);
-        AddMethod(CHAR_ALLITEMS, ArrayClass::allItems, 0);
-        AddMethod(CHAR_EMPTY, ArrayClass::empty, 0);
-        AddMethod(CHAR_ISEMPTY, ArrayClass::isEmptyRexx, 0);
-        AddMethod(CHAR_INDEX, ArrayClass::indexRexx, 1);
-        AddMethod(CHAR_HASITEM, ArrayClass::hasItemRexx, 1);
-        AddMethod(CHAR_REMOVEITEM, ArrayClass::removeItem, 1);
-        AddMethod(CHAR_INSERT, ArrayClass::insertRexx, 2);
-        AddMethod(CHAR_DELETE, ArrayClass::deleteRexx, 1);
-        AddMethod("FILL", ArrayClass::fill, 1);
+        AddMethod("[]", ArrayClass::getRexx, A_COUNT);
+        AddMethod("[]=", ArrayClass::putRexx, A_COUNT);
+        AddMethod("At", ArrayClass::getRexx, A_COUNT);
+        AddMethod("Dimension", ArrayClass::dimensionRexx, 1);
+        AddMethod("Dimensions", ArrayClass::getDimensionsRexx, 0);
+        AddMethod("HasIndex", ArrayClass::hasIndexRexx, A_COUNT);
+        AddMethod("Items", ArrayClass::itemsRexx, 0);
+        AddMethod("MakeArray", RexxObject::makeArrayRexx, 0);
+        AddMethod("Put", ArrayClass::putRexx, A_COUNT);
+        AddMethod("Remove", ArrayClass::removeRexx, A_COUNT);
+        AddMethod("Section", ArrayClass::sectionRexx, 2);
+        AddMethod("Size", ArrayClass::sizeRexx, 0);
+        AddMethod("Supplier", ArrayClass::supplier, 0);
+        AddMethod("First", ArrayClass::firstRexx, 0);
+        AddMethod("FirstItem", ArrayClass::getFirstItem, 0);
+        AddMethod("Last", ArrayClass::lastRexx, 0);
+        AddMethod("LastItem", ArrayClass::getLastItem, 0);
+        AddMethod("Next", ArrayClass::nextRexx, A_COUNT);
+        AddMethod("Previous", ArrayClass::previousRexx, A_COUNT);
+        AddMethod("Append", ArrayClass::appendRexx, 1);
+        AddMethod("MakeString", ArrayClass::makeString, 2);
+        AddMethod("ToString", ArrayClass::toString, 2);
+        AddMethod("AllIndexes", ArrayClass::allIndexes, 0);
+        AddMethod("AllItems", ArrayClass::allItems, 0);
+        AddMethod("Empty", ArrayClass::empty, 0);
+        AddMethod("IsEmpty", ArrayClass::isEmptyRexx, 0);
+        AddMethod("Index", ArrayClass::indexRexx, 1);
+        AddMethod("HasItem", ArrayClass::hasItemRexx, 1);
+        AddMethod("RemoveItem", ArrayClass::removeItem, 1);
+        AddMethod("Insert", ArrayClass::insertRexx, 2);
+        AddMethod("Delete", ArrayClass::deleteRexx, 1);
+        AddMethod("Fill", ArrayClass::fill, 1);
 
     // there have been some problems with the quick sort used as the default sort, so map everything
     // to the stable sort.  The stable sort, in theory, uses more memory, but in practice, this is not true.
-        AddMethod(CHAR_SORT, ArrayClass::stableSortRexx, 0);
-        AddMethod(CHAR_SORTWITH, ArrayClass::stableSortWithRexx, 1);
-        AddMethod(CHAR_STABLESORT, ArrayClass::stableSortRexx, 0);
-        AddMethod(CHAR_STABLESORTWITH, ArrayClass::stableSortWithRexx, 1);
+        AddMethod("Sort", ArrayClass::stableSortRexx, 0);
+        AddMethod("SortWith", ArrayClass::stableSortWithRexx, 1);
+        AddMethod("StableSort", ArrayClass::stableSortRexx, 0);
+        AddMethod("StableSortWith", ArrayClass::stableSortWithRexx, 1);
 
     CompleteMethodDefinitions();
 
@@ -644,8 +644,8 @@ EndClassDefinition(Array);
 
 StartClassDefinition(Queue);
 
-        AddClassMethod(CHAR_NEW, QueueClass::newRexx, A_COUNT);
-        AddClassMethod(CHAR_OF, QueueClass::ofRexx, A_COUNT);
+        AddClassMethod("New", QueueClass::newRexx, A_COUNT);
+        AddClassMethod("Of", QueueClass::ofRexx, A_COUNT);
 
     CompleteClassMethodDefinitions();
 
@@ -655,15 +655,15 @@ StartClassDefinition(Queue);
 
         InheritInstanceMethods(Array);
 
-        AddMethod(CHAR_PUSH, QueueClass::pushRexx, 1);
-        AddMethod(CHAR_PEEK, QueueClass::peek, 0);
-        AddMethod(CHAR_PULL, QueueClass::pullRexx, 0);
-        AddMethod(CHAR_QUEUE, QueueClass::queueRexx, 1);
-        AddMethod(CHAR_PUT, QueueClass::putRexx, 2);
-        AddMethod(CHAR_REMOVE, QueueClass::removeRexx, 1);
+        AddMethod("Push", QueueClass::pushRexx, 1);
+        AddMethod("Peek", QueueClass::peek, 0);
+        AddMethod("Pull", QueueClass::pullRexx, 0);
+        AddMethod("Queue", QueueClass::queueRexx, 1);
+        AddMethod("Put", QueueClass::putRexx, 2);
+        AddMethod("Remove", QueueClass::removeRexx, 1);
         // the queue size is always the number of items, so remap that call
         // to the array items method.
-        AddMethod(CHAR_SIZE, ArrayClass::items, 0);
+        AddMethod("Size", ArrayClass::items, 0);
 
     CompleteMethodDefinitions();
 
@@ -680,26 +680,26 @@ EndClassDefinition(Queue);
 
 StartClassDefinition(IdentityTable);
 
-        AddClassMethod(CHAR_NEW, IdentityTable::newRexx, A_COUNT);
+        AddClassMethod("New", IdentityTable::newRexx, A_COUNT);
 
     CompleteClassMethodDefinitions();
 
-        AddMethod(CHAR_BRACKETS, HashCollection::getRexx, 1);
-        AddMethod(CHAR_BRACKETSEQUAL, HashCollection::putRexx, 2);
-        AddMethod(CHAR_MAKEARRAY, RexxObject::makeArrayRexx, 0);
-        AddMethod(CHAR_AT, HashCollection::getRexx, 1);
-        AddMethod(CHAR_HASINDEX, HashCollection::hasIndexRexx, 1);
-        AddMethod(CHAR_ITEMS, HashCollection::itemsRexx, 0);
-        AddMethod(CHAR_PUT, HashCollection::putRexx, 2);
-        AddMethod(CHAR_REMOVE, HashCollection::removeRexx, 1);
-        AddMethod(CHAR_SUPPLIER, HashCollection::supplier, 0);
-        AddMethod(CHAR_ALLITEMS, HashCollection::allItems, 0);
-        AddMethod(CHAR_ALLINDEXES, HashCollection::allIndexes, 0);
-        AddMethod(CHAR_EMPTY, HashCollection::emptyRexx, 0);
-        AddMethod(CHAR_ISEMPTY, HashCollection::isEmptyRexx, 0);
-        AddMethod(CHAR_INDEX, HashCollection::indexRexx, 1);
-        AddMethod(CHAR_HASITEM, HashCollection::hasItemRexx, 1);
-        AddMethod(CHAR_REMOVEITEM, HashCollection::removeItemRexx, 1);
+        AddMethod("[]", HashCollection::getRexx, 1);
+        AddMethod("[]=", HashCollection::putRexx, 2);
+        AddMethod("MakeArray", RexxObject::makeArrayRexx, 0);
+        AddMethod("At", HashCollection::getRexx, 1);
+        AddMethod("HasIndex", HashCollection::hasIndexRexx, 1);
+        AddMethod("Items", HashCollection::itemsRexx, 0);
+        AddMethod("Put", HashCollection::putRexx, 2);
+        AddMethod("Remove", HashCollection::removeRexx, 1);
+        AddMethod("Supplier", HashCollection::supplier, 0);
+        AddMethod("AllItems", HashCollection::allItems, 0);
+        AddMethod("AllIndexes", HashCollection::allIndexes, 0);
+        AddMethod("Empty", HashCollection::emptyRexx, 0);
+        AddMethod("IsEmpty", HashCollection::isEmptyRexx, 0);
+        AddMethod("Index", HashCollection::indexRexx, 1);
+        AddMethod("HasItem", HashCollection::hasItemRexx, 1);
+        AddMethod("RemoveItem", HashCollection::removeItemRexx, 1);
 
     CompleteMethodDefinitions();
 
@@ -714,7 +714,7 @@ EndClassDefinition(IdentityTable);
 
 StartClassDefinition(Table);
 
-        AddClassMethod(CHAR_NEW, TableClass::newRexx, A_COUNT);
+        AddClassMethod("New", TableClass::newRexx, A_COUNT);
 
     CompleteClassMethodDefinitions();
 
@@ -734,17 +734,17 @@ EndClassDefinition(Table);
 
 StartClassDefinition(StringTable);
 
-        AddClassMethod(CHAR_NEW, StringTable::newRexx, A_COUNT);
+        AddClassMethod("New", StringTable::newRexx, A_COUNT);
 
     CompleteClassMethodDefinitions();
 
         // most of the hash collection methods can be inherited
         InheritInstanceMethods(IdentityTable);
 
-        AddMethod(CHAR_UNKNOWN, RexxObject::unknownRexx, 2);
-        AddMethod(CHAR_ENTRY, StringHashCollection::entryRexx, 1);
-        AddMethod(CHAR_HASENTRY, StringHashCollection::hasEntry, 1);
-        AddMethod(CHAR_SETENTRY, StringHashCollection::setEntry, 2);
+        AddMethod("Unknown", RexxObject::unknownRexx, 2);
+        AddMethod("Entry", StringHashCollection::entryRexx, 1);
+        AddMethod("HasEntry", StringHashCollection::hasEntry, 1);
+        AddMethod("SetEntry", StringHashCollection::setEntry, 2);
         AddMethod("RemoveEntry", StringHashCollection::removeEntry, 1);
 
     CompleteMethodDefinitions();
@@ -760,8 +760,8 @@ EndClassDefinition(StringTable);
 
 StartClassDefinition(Set)
 
-        AddClassMethod(CHAR_NEW, SetClass::newRexx, A_COUNT);
-        AddClassMethod(CHAR_NEW, SetClass::ofRexx, A_COUNT);
+        AddClassMethod("New", SetClass::newRexx, A_COUNT);
+        AddClassMethod("Of", SetClass::ofRexx, A_COUNT);
 
     CompleteClassMethodDefinitions();
 
@@ -781,17 +781,17 @@ EndClassDefinition(Set);
 
 StartClassDefinition(Directory)
 
-        AddClassMethod(CHAR_NEW, DirectoryClass::newRexx, A_COUNT);
+        AddClassMethod("New", DirectoryClass::newRexx, A_COUNT);
 
     CompleteClassMethodDefinitions();
 
     // many of the hash collection methods can be inherited
         InheritInstanceMethods(StringTable);
 
-        AddMethod(CHAR_INIT, DirectoryClass::initRexx, 1);
+        AddMethod("Init", DirectoryClass::initRexx, 1);
 
-        AddProtectedMethod(CHAR_SETMETHOD, DirectoryClass::setMethodRexx, 2);
-        AddProtectedMethod(CHAR_UNSETMETHOD, DirectoryClass::removeRexx, 1);
+        AddProtectedMethod("SetMethod", DirectoryClass::setMethodRexx, 2);
+        AddProtectedMethod("UnsetMethod", DirectoryClass::removeRexx, 1);
 
     CompleteMethodDefinitions();
 
@@ -806,19 +806,19 @@ EndClassDefinition(Directory);
 
 StartClassDefinition(Relation)
 
-        AddClassMethod(CHAR_NEW, RelationClass::newRexx, A_COUNT);
+        AddClassMethod("New", RelationClass::newRexx, A_COUNT);
 
     CompleteClassMethodDefinitions();
 
     // many of the hash collection methods can be inherited
         InheritInstanceMethods(IdentityTable);
 
-        AddMethod(CHAR_REMOVEITEM, RelationClass::removeItemRexx, 2);
-        AddMethod(CHAR_SUPPLIER, RelationClass::supplierRexx, 1);
-        AddMethod(CHAR_ITEMS, RelationClass::itemsRexx, 1);
-        AddMethod(CHAR_HASITEM, RelationClass::hasItemRexx, 2);
-        AddMethod(CHAR_ALLINDEX, RelationClass::allIndexRexx, 1);
-        AddMethod("REMOVEALL", RelationClass::removeAll, 1);
+        AddMethod("RemoveItem", RelationClass::removeItemRexx, 2);
+        AddMethod("Supplier", RelationClass::supplierRexx, 1);
+        AddMethod("Items", RelationClass::itemsRexx, 1);
+        AddMethod("HasItem", RelationClass::hasItemRexx, 2);
+        AddMethod("AllIndex", RelationClass::allIndexRexx, 1);
+        AddMethod("RemoveAll", RelationClass::removeAll, 1);
 
     CompleteMethodDefinitions();
 
@@ -833,8 +833,8 @@ EndClassDefinition(Relation);
 
 StartClassDefinition(Bag)
 
-        AddClassMethod(CHAR_NEW, BagClass::newRexx, A_COUNT);
-        AddClassMethod(CHAR_OF, BagClass::ofRexx, A_COUNT);
+        AddClassMethod("New", BagClass::newRexx, A_COUNT);
+        AddClassMethod("Of", BagClass::ofRexx, A_COUNT);
 
     CompleteClassMethodDefinitions();
 
@@ -854,39 +854,39 @@ EndClassDefinition(Bag);
 
 StartClassDefinition(List)
 
-        AddClassMethod(CHAR_NEW, ListClass::newRexx, A_COUNT);
-        AddClassMethod(CHAR_OF, ListClass::ofRexx, A_COUNT);
+        AddClassMethod("New", ListClass::newRexx, A_COUNT);
+        AddClassMethod("Of", ListClass::ofRexx, A_COUNT);
 
     CompleteClassMethodDefinitions();
 
-        AddMethod(CHAR_INIT, ListClass::initRexx, 1);
-        AddMethod(CHAR_BRACKETS, ListClass::getRexx, 1);
-        AddMethod(CHAR_BRACKETSEQUAL, ListClass::putRexx, 2);
-        AddMethod(CHAR_MAKEARRAY, RexxObject::makeArrayRexx, 0);
-        AddMethod(CHAR_AT, ListClass::getRexx, 1);
-        AddMethod(CHAR_FIRSTITEM, ListClass::firstItemRexx, 0);
-        AddMethod(CHAR_HASINDEX, ListClass::hasIndexRexx, 1);
-        AddMethod(CHAR_INSERT, ListClass::insertRexx, 2);
-        AddMethod(CHAR_ITEMS, ListClass::itemsRexx, 0);
-        AddMethod(CHAR_LASTITEM, ListClass::lastItemRexx, 0);
-        AddMethod(CHAR_FIRST, ListClass::firstRexx, 0);
-        AddMethod(CHAR_LAST, ListClass::lastRexx, 0);
-        AddMethod(CHAR_NEXT, ListClass::nextRexx, 1);
-        AddMethod(CHAR_PREVIOUS, ListClass::previousRexx, 1);
-        AddMethod(CHAR_PUT, ListClass::putRexx, 2);
-        AddMethod(CHAR_REMOVE, ListClass::removeRexx, 1);
+        AddMethod("Init", ListClass::initRexx, 1);
+        AddMethod("[]", ListClass::getRexx, 1);
+        AddMethod("[]=", ListClass::putRexx, 2);
+        AddMethod("MakeArray", RexxObject::makeArrayRexx, 0);
+        AddMethod("At", ListClass::getRexx, 1);
+        AddMethod("FirstItem", ListClass::firstItemRexx, 0);
+        AddMethod("HasIndex", ListClass::hasIndexRexx, 1);
+        AddMethod("Insert", ListClass::insertRexx, 2);
+        AddMethod("Items", ListClass::itemsRexx, 0);
+        AddMethod("LastItem", ListClass::lastItemRexx, 0);
+        AddMethod("First", ListClass::firstRexx, 0);
+        AddMethod("Last", ListClass::lastRexx, 0);
+        AddMethod("Next", ListClass::nextRexx, 1);
+        AddMethod("Previous", ListClass::previousRexx, 1);
+        AddMethod("Put", ListClass::putRexx, 2);
+        AddMethod("Remove", ListClass::removeRexx, 1);
     // DELETE is the same as REMOVE for the List class
-        AddMethod(CHAR_DELETE, ListClass::removeRexx, 1);
-        AddMethod(CHAR_SECTION, ListClass::sectionRexx, 2);
-        AddMethod(CHAR_SUPPLIER, ListClass::supplier, 0);
-        AddMethod(CHAR_APPEND, ListClass::appendRexx, 1);
-        AddMethod(CHAR_ALLITEMS, ListClass::allItems, 0);
-        AddMethod(CHAR_ALLINDEXES, ListClass::allIndexes, 0);
-        AddMethod(CHAR_EMPTY, ListClass::emptyRexx, 0);
-        AddMethod(CHAR_ISEMPTY, ListClass::isEmptyRexx, 0);
-        AddMethod(CHAR_INDEX, ListClass::indexRexx, 1);
-        AddMethod(CHAR_HASITEM, ListClass::hasItemRexx, 1);
-        AddMethod(CHAR_REMOVEITEM, ListClass::removeItemRexx, 1);
+        AddMethod("Delete", ListClass::removeRexx, 1);
+        AddMethod("Section", ListClass::sectionRexx, 2);
+        AddMethod("Supplier", ListClass::supplier, 0);
+        AddMethod("Append", ListClass::appendRexx, 1);
+        AddMethod("AllItems", ListClass::allItems, 0);
+        AddMethod("AllIndexes", ListClass::allIndexes, 0);
+        AddMethod("Empty", ListClass::emptyRexx, 0);
+        AddMethod("IsEmpty", ListClass::isEmptyRexx, 0);
+        AddMethod("Index", ListClass::indexRexx, 1);
+        AddMethod("HasItem", ListClass::hasItemRexx, 1);
+        AddMethod("RemoveItem", ListClass::removeItemRexx, 1);
 
     CompleteMethodDefinitions();
 
@@ -900,20 +900,20 @@ EndClassDefinition(List);
 
 StartClassDefinition(Message)
 
-        AddClassMethod(CHAR_NEW, MessageClass::newRexx, A_COUNT);
+        AddClassMethod("New", MessageClass::newRexx, A_COUNT);
 
     CompleteClassMethodDefinitions();
 
-        AddMethod(CHAR_COMPLETED, MessageClass::completed, 0);
-        AddMethod(CHAR_HASERROR, MessageClass::hasError, 0);
-        AddMethod(CHAR_NOTIFY, MessageClass::notify, 1);
-        AddMethod(CHAR_RESULT, MessageClass::result, 0);
-        AddMethod(CHAR_TARGET, MessageClass::messageTarget, 0);
-        AddMethod(CHAR_MESSAGENAME, MessageClass::messageName, 0);
-        AddMethod(CHAR_ARGUMENTS, MessageClass::arguments, 0);
-        AddMethod(CHAR_ERRORCONDITION, MessageClass::errorCondition, 0);
-        AddMethod(CHAR_SEND, MessageClass::send, 1);
-        AddMethod(CHAR_START, MessageClass::start, 1);
+        AddMethod("Completed", MessageClass::completed, 0);
+        AddMethod("HasError", MessageClass::hasError, 0);
+        AddMethod("Notify", MessageClass::notify, 1);
+        AddMethod("Result", MessageClass::result, 0);
+        AddMethod("Target", MessageClass::messageTarget, 0);
+        AddMethod("MessageName", MessageClass::messageName, 0);
+        AddMethod("Arguments", MessageClass::arguments, 0);
+        AddMethod("ErrorCondition", MessageClass::errorCondition, 0);
+        AddMethod("Send", MessageClass::send, 1);
+        AddMethod("Start", MessageClass::start, 1);
 
     CompleteMethodDefinitions();
 
@@ -928,22 +928,22 @@ EndClassDefinition(Message);
 
 StartClassDefinition(Method)
 
-        AddClassMethod(CHAR_NEW, MethodClass::newRexx, A_COUNT);
-        AddClassMethod(CHAR_NEWFILE, MethodClass::newFileRexx, 1);
-        AddClassMethod("LOADEXTERNALMETHOD", MethodClass::loadExternalMethod, 2);
+        AddClassMethod("New", MethodClass::newRexx, A_COUNT);
+        AddClassMethod("NewFile", MethodClass::newFileRexx, 1);
+        AddClassMethod("LoadExternalMethod", MethodClass::loadExternalMethod, 2);
 
     CompleteClassMethodDefinitions();
 
-        AddMethod(CHAR_SETUNGUARDED, MethodClass::setUnguardedRexx, 0);
-        AddMethod(CHAR_SETGUARDED, MethodClass::setGuardedRexx, 0);
-        AddMethod(CHAR_SETPRIVATE, MethodClass::setPrivateRexx, 0);
-        AddMethod(CHAR_ISGUARDED, MethodClass::isGuardedRexx, 0);
-        AddMethod(CHAR_ISPRIVATE, MethodClass::isPrivateRexx, 0);
-        AddMethod(CHAR_ISPROTECTED, MethodClass::isProtectedRexx, 0);
-        AddProtectedMethod(CHAR_SETPROTECTED, MethodClass::setProtectedRexx, 0);
-        AddProtectedMethod(CHAR_SETSECURITYMANAGER, MethodClass::setSecurityManager, 1);
-        AddMethod(CHAR_SOURCE, BaseExecutable::source, 0);
-        AddMethod(CHAR_PACKAGE, BaseExecutable::getPackage, 0);
+        AddMethod("SetUnguarded", MethodClass::setUnguardedRexx, 0);
+        AddMethod("SetGuarded", MethodClass::setGuardedRexx, 0);
+        AddMethod("SetPrivate", MethodClass::setPrivateRexx, 0);
+        AddMethod("IsGuarded", MethodClass::isGuardedRexx, 0);
+        AddMethod("IsPrivate", MethodClass::isPrivateRexx, 0);
+        AddMethod("IsProtected", MethodClass::isProtectedRexx, 0);
+        AddProtectedMethod("SetProtected", MethodClass::setProtectedRexx, 0);
+        AddProtectedMethod("SetSecurityManager", MethodClass::setSecurityManager, 1);
+        AddMethod("Source", BaseExecutable::source, 0);
+        AddMethod("Package", BaseExecutable::getPackage, 0);
 
     CompleteMethodDefinitions();
 
@@ -958,17 +958,17 @@ EndClassDefinition(Method);
 
 StartClassDefinition(Routine)
 
-        AddClassMethod(CHAR_NEW, RoutineClass::newRexx, A_COUNT);
-        AddClassMethod(CHAR_NEWFILE, RoutineClass::newFileRexx, 1);
-        AddClassMethod("LOADEXTERNALROUTINE", RoutineClass::loadExternalRoutine, 2);
+        AddClassMethod("New", RoutineClass::newRexx, A_COUNT);
+        AddClassMethod("NewFile", RoutineClass::newFileRexx, 1);
+        AddClassMethod("LoadExternalRoutine", RoutineClass::loadExternalRoutine, 2);
 
     CompleteClassMethodDefinitions();
 
-        AddProtectedMethod(CHAR_SETSECURITYMANAGER, RoutineClass::setSecurityManager, 1);
-        AddMethod(CHAR_SOURCE, BaseExecutable::source, 0);
-        AddMethod(CHAR_PACKAGE, BaseExecutable::getPackage, 0);
-        AddMethod(CHAR_CALL, RoutineClass::callRexx, A_COUNT);
-        AddMethod(CHAR_CALLWITH, RoutineClass::callWithRexx, 1);
+        AddProtectedMethod("SetSecurityManager", RoutineClass::setSecurityManager, 1);
+        AddMethod("Source", BaseExecutable::source, 0);
+        AddMethod("Package", BaseExecutable::getPackage, 0);
+        AddMethod("Call", RoutineClass::callRexx, A_COUNT);
+        AddMethod("CallWith", RoutineClass::callWithRexx, 1);
 
     CompleteMethodDefinitions();
 
@@ -983,36 +983,36 @@ EndClassDefinition(Routine);
 
 StartClassDefinition(Package)
 
-        AddClassMethod(CHAR_NEW, PackageClass::newRexx, A_COUNT);
+        AddClassMethod("New", PackageClass::newRexx, A_COUNT);
 
     CompleteClassMethodDefinitions();
 
-        AddProtectedMethod(CHAR_SETSECURITYMANAGER, PackageClass::setSecurityManager, 1);
-        AddMethod(CHAR_SOURCE, PackageClass::getSourceRexx, 0);
-        AddMethod(CHAR_SOURCELINE, PackageClass::getSourceLineRexx, 1);
-        AddMethod(CHAR_SOURCESIZE, PackageClass::getSourceSizeRexx, 0);
-        AddMethod(CHAR_CLASSES, PackageClass::getClassesRexx, 0);
-        AddMethod(CHAR_PUBLICCLASSES, PackageClass::getPublicClassesRexx, 0);
-        AddMethod(CHAR_IMPORTEDCLASSES, PackageClass::getImportedClassesRexx, 0);
-        AddMethod(CHAR_DEFINEDMETHODS, PackageClass::getMethodsRexx, 0);
-        AddMethod(CHAR_ROUTINES, PackageClass::getRoutinesRexx, 0);
-        AddMethod(CHAR_PUBLICROUTINES, PackageClass::getPublicRoutinesRexx, 0);
-        AddMethod(CHAR_IMPORTEDROUTINES, PackageClass::getImportedRoutinesRexx, 0);
-        AddMethod(CHAR_IMPORTEDPACKAGES, PackageClass::getImportedPackagesRexx, 0);
-        AddMethod(CHAR_LOADPACKAGE, PackageClass::loadPackageRexx, 2);
-        AddMethod(CHAR_ADDPACKAGE, PackageClass::addPackageRexx, 1);
-        AddMethod(CHAR_FINDCLASS, PackageClass::findClassRexx, 1);
-        AddMethod(CHAR_FINDROUTINE, PackageClass::findRoutineRexx, 1);
-        AddMethod(CHAR_ADDROUTINE, PackageClass::addRoutineRexx, 2);
-        AddMethod(CHAR_ADDPUBLICROUTINE, PackageClass::addPublicRoutineRexx, 2);
-        AddMethod(CHAR_ADDCLASS, PackageClass::addClassRexx, 2);
-        AddMethod(CHAR_ADDPUBLICCLASS, PackageClass::addPublicClassRexx, 2);
-        AddMethod(CHAR_NAME, PackageClass::getProgramName, 0);
-        AddMethod("LOADLIBRARY", PackageClass::loadLibraryRexx, 1);
-        AddMethod("DIGITS", PackageClass::digitsRexx, 0);
-        AddMethod("FORM", PackageClass::formRexx, 0);
-        AddMethod("FUZZ", PackageClass::fuzzRexx, 0);
-        AddMethod("TRACE", PackageClass::traceRexx, 0);
+        AddProtectedMethod("SetSecurityManager", PackageClass::setSecurityManager, 1);
+        AddMethod("Source", PackageClass::getSourceRexx, 0);
+        AddMethod("SourceLine", PackageClass::getSourceLineRexx, 1);
+        AddMethod("SourceSize", PackageClass::getSourceSizeRexx, 0);
+        AddMethod("Classes", PackageClass::getClassesRexx, 0);
+        AddMethod("PublicClasses", PackageClass::getPublicClassesRexx, 0);
+        AddMethod("ImportedClasses", PackageClass::getImportedClassesRexx, 0);
+        AddMethod("DefinedMethods", PackageClass::getMethodsRexx, 0);
+        AddMethod("Routines", PackageClass::getRoutinesRexx, 0);
+        AddMethod("PublicRoutines", PackageClass::getPublicRoutinesRexx, 0);
+        AddMethod("ImportedRoutines", PackageClass::getImportedRoutinesRexx, 0);
+        AddMethod("ImportedPackages", PackageClass::getImportedPackagesRexx, 0);
+        AddMethod("LoadPackage", PackageClass::loadPackageRexx, 2);
+        AddMethod("AddPackage", PackageClass::addPackageRexx, 1);
+        AddMethod("FindClass", PackageClass::findClassRexx, 1);
+        AddMethod("FindRoutine", PackageClass::findRoutineRexx, 1);
+        AddMethod("AddRoutine", PackageClass::addRoutineRexx, 2);
+        AddMethod("AddPublicRoutine", PackageClass::addPublicRoutineRexx, 2);
+        AddMethod("AddClass", PackageClass::addClassRexx, 2);
+        AddMethod("AddPublicClass", PackageClass::addPublicClassRexx, 2);
+        AddMethod("Name", PackageClass::getProgramName, 0);
+        AddMethod("LoadLibrary", PackageClass::loadLibraryRexx, 1);
+        AddMethod("Digits", PackageClass::digitsRexx, 0);
+        AddMethod("Form", PackageClass::formRexx, 0);
+        AddMethod("Fuzz", PackageClass::fuzzRexx, 0);
+        AddMethod("Trace", PackageClass::traceRexx, 0);
 
     CompleteMethodDefinitions();
 
@@ -1027,23 +1027,23 @@ EndClassDefinition(Package);
 
 StartClassDefinition(RexxContext)
 
-        AddClassMethod(CHAR_NEW, RexxContext::newRexx, A_COUNT);
+        AddClassMethod("New", RexxContext::newRexx, A_COUNT);
 
     CompleteClassMethodDefinitions();
 
-        AddMethod(CHAR_COPY, RexxContext::copyRexx, 0);
-        AddMethod(CHAR_PACKAGE, RexxContext::getPackage, 0);
-        AddMethod(CHAR_EXECUTABLE, RexxContext::getExecutable, 0);
-        AddMethod(CHAR_FORM, RexxContext::getForm, 0);
-        AddMethod(CHAR_FUZZ, RexxContext::getFuzz, 0);
-        AddMethod(CHAR_DIGITS, RexxContext::getDigits, 0);
-        AddMethod(CHAR_VARIABLES, RexxContext::getVariables, 0);
-        AddMethod(CHAR_ARGS, RexxContext::getArgs, 0);
-        AddMethod(CHAR_CONDITION, RexxContext::getCondition, 0);
-        AddMethod("LINE", RexxContext::getLine, 0);
+        AddMethod("Copy", RexxContext::copyRexx, 0);
+        AddMethod("Package", RexxContext::getPackage, 0);
+        AddMethod("Executable", RexxContext::getExecutable, 0);
+        AddMethod("Form", RexxContext::getForm, 0);
+        AddMethod("Fuzz", RexxContext::getFuzz, 0);
+        AddMethod("Digits", RexxContext::getDigits, 0);
+        AddMethod("Variables", RexxContext::getVariables, 0);
+        AddMethod("Args", RexxContext::getArgs, 0);
+        AddMethod("Condition", RexxContext::getCondition, 0);
+        AddMethod("Line", RexxContext::getLine, 0);
         AddMethod("RS", RexxContext::getRS, 0);
-        AddMethod(CHAR_NAME, RexxContext::getName, 0);
-        AddMethod("STACKFRAMES", RexxContext::getStackFrames, 0);
+        AddMethod("Name", RexxContext::getName, 0);
+        AddMethod("StackFrames", RexxContext::getStackFrames, 0);
 
     CompleteMethodDefinitions();
 
@@ -1058,40 +1058,40 @@ EndClassDefinition(RexxContext);
 
 StartClassDefinition(Stem)
 
-        AddClassMethod(CHAR_NEW, StemClass::newRexx, A_COUNT);
+        AddClassMethod("New", StemClass::newRexx, A_COUNT);
 
     CompleteClassMethodDefinitions();
 
-        AddMethod(CHAR_BRACKETS, StemClass::bracket, A_COUNT);
-        AddMethod(CHAR_BRACKETSEQUAL, StemClass::bracketEqual, A_COUNT);
-        AddMethod(CHAR_AT, StemClass::bracket, A_COUNT);
-        AddMethod(CHAR_PUT, StemClass::bracketEqual, A_COUNT);
-        AddMethod(CHAR_MAKEARRAY, RexxObject::makeArrayRexx, 0);
-        AddMethod(CHAR_REQUEST, StemClass::request, 1);
-        AddMethod(CHAR_SUPPLIER, StemClass::supplier, 0);
-        AddMethod(CHAR_ALLINDEXES, StemClass::allIndexes, 0);
-        AddMethod(CHAR_ALLITEMS, StemClass::allItems, 0);
-        AddMethod(CHAR_EMPTY, StemClass::empty, 0);
-        AddMethod(CHAR_ISEMPTY, StemClass::isEmptyRexx, 0);
-        AddMethod(CHAR_UNKNOWN, RexxObject::unknownRexx, 2);
+        AddMethod("[]", StemClass::bracket, A_COUNT);
+        AddMethod("[]=", StemClass::bracketEqual, A_COUNT);
+        AddMethod("At", StemClass::bracket, A_COUNT);
+        AddMethod("Put", StemClass::bracketEqual, A_COUNT);
+        AddMethod("MakeArray", RexxObject::makeArrayRexx, 0);
+        AddMethod("Request", StemClass::request, 1);
+        AddMethod("Supplier", StemClass::supplier, 0);
+        AddMethod("AllIndexes", StemClass::allIndexes, 0);
+        AddMethod("AllItems", StemClass::allItems, 0);
+        AddMethod("Empty", StemClass::empty, 0);
+        AddMethod("IsEmpty", StemClass::isEmptyRexx, 0);
+        AddMethod("Unknown", RexxObject::unknownRexx, 2);
 
-        AddMethod(CHAR_ITEMS, StemClass::itemsRexx, 0);
-        AddMethod(CHAR_HASINDEX, StemClass::hasIndex, A_COUNT);
-        AddMethod(CHAR_REMOVE, StemClass::remove, A_COUNT);
-        AddMethod(CHAR_INDEX, StemClass::index, 1);
-        AddMethod(CHAR_HASITEM, StemClass::hasItem, 1);
-        AddMethod(CHAR_REMOVEITEM, StemClass::removeItem, 1);
-        AddMethod(CHAR_TODIRECTORY, StemClass::toDirectory, 0);
+        AddMethod("Items", StemClass::itemsRexx, 0);
+        AddMethod("HasIndex", StemClass::hasIndex, A_COUNT);
+        AddMethod("Remove", StemClass::remove, A_COUNT);
+        AddMethod("Index", StemClass::index, 1);
+        AddMethod("HasItem", StemClass::hasItem, 1);
+        AddMethod("RemoveItem", StemClass::removeItem, 1);
+        AddMethod("ToDirectory", StemClass::toDirectory, 0);
 
     // We want various operator methods that we inherit from the object
     // class to be redirected to our unknown method, so we block these methods
     // in our instance method directory.
-        HideMethod(CHAR_STRICT_EQUAL);
-        HideMethod(CHAR_EQUAL);
-        HideMethod(CHAR_STRICT_BACKSLASH_EQUAL);
-        HideMethod(CHAR_BACKSLASH_EQUAL);
-        HideMethod(CHAR_LESSTHAN_GREATERTHAN);
-        HideMethod(CHAR_GREATERTHAN_LESSTHAN);
+        HideMethod("==");
+        HideMethod("=");
+        HideMethod("\\==");
+        HideMethod("\\=");
+        HideMethod("<>");
+        HideMethod("><");
 
     CompleteMethodDefinitions();
 
@@ -1105,54 +1105,54 @@ EndClassDefinition(Stem);
 
 StartClassDefinition(MutableBuffer)
 
-        AddClassMethod(CHAR_NEW, MutableBuffer::newRexx, A_COUNT);
+        AddClassMethod("New", MutableBuffer::newRexx, A_COUNT);
 
     CompleteClassMethodDefinitions();
 
-        AddMethod(CHAR_APPEND, MutableBuffer::append, 1);
-        AddMethod(CHAR_INSERT, MutableBuffer::insert, 4);
-        AddMethod(CHAR_OVERLAY, MutableBuffer::overlay, 4);
-        AddMethod(CHAR_REPLACEAT, MutableBuffer::replaceAt, 4);
-        AddMethod(CHAR_DELETE, MutableBuffer::mydelete, 2);
-        AddMethod(CHAR_DELSTR, MutableBuffer::mydelete, 2);
-        AddMethod(CHAR_SUBSTR, MutableBuffer::substr, 3);
-        AddMethod(CHAR_POS, MutableBuffer::posRexx, 3);
-        AddMethod(CHAR_LASTPOS, MutableBuffer::lastPos, 3);
-        AddMethod("CONTAINS", MutableBuffer::containsRexx, 3);
-        AddMethod("CASELESSCONTAINS", MutableBuffer::caselessContains, 3);
-        AddMethod("CONTAINSWORD", MutableBuffer::containsWord, 2);
-        AddMethod("CASELESSCONTAINSWORD", MutableBuffer::caselessContainsWord, 2);
-        AddMethod(CHAR_CASELESSPOS, MutableBuffer::caselessPos, 3);
-        AddMethod(CHAR_CASELESSLASTPOS, MutableBuffer::caselessLastPos, 3);
-        AddMethod(CHAR_SUBCHAR, MutableBuffer::subchar, 1);
-        AddMethod(CHAR_GETBUFFERSIZE, MutableBuffer::getBufferSize, 0);
-        AddMethod(CHAR_SETBUFFERSIZE, MutableBuffer::setBufferSize, 1);
+        AddMethod("Append", MutableBuffer::append, 1);
+        AddMethod("Insert", MutableBuffer::insert, 4);
+        AddMethod("Overlay", MutableBuffer::overlay, 4);
+        AddMethod("ReplaceAt", MutableBuffer::replaceAt, 4);
+        AddMethod("Delete", MutableBuffer::mydelete, 2);
+        AddMethod("DelStr", MutableBuffer::mydelete, 2);
+        AddMethod("Substr", MutableBuffer::substr, 3);
+        AddMethod("Pos", MutableBuffer::posRexx, 3);
+        AddMethod("LastPos", MutableBuffer::lastPos, 3);
+        AddMethod("Contains", MutableBuffer::containsRexx, 3);
+        AddMethod("CaselessContains", MutableBuffer::caselessContains, 3);
+        AddMethod("ContainsWord", MutableBuffer::containsWord, 2);
+        AddMethod("CaselessContainsWord", MutableBuffer::caselessContainsWord, 2);
+        AddMethod("CaselessPos", MutableBuffer::caselessPos, 3);
+        AddMethod("CaselessLastPos", MutableBuffer::caselessLastPos, 3);
+        AddMethod("SubChar", MutableBuffer::subchar, 1);
+        AddMethod("GetBufferSize", MutableBuffer::getBufferSize, 0);
+        AddMethod("SetBufferSize", MutableBuffer::setBufferSize, 1);
 
-        AddMethod(CHAR_LENGTH, MutableBuffer::lengthRexx, 0);
-        AddMethod(CHAR_MAKEARRAY, MutableBuffer::makeArrayRexx, 1);
-        AddMethod(CHAR_STRING, RexxObject::makeStringRexx, 0);
-        AddMethod(CHAR_COUNTSTR, MutableBuffer::countStrRexx, 1);
-        AddMethod(CHAR_CASELESSCOUNTSTR, MutableBuffer::caselessCountStrRexx, 1);
-        AddMethod(CHAR_CHANGESTR, MutableBuffer::changeStr, 3);
-        AddMethod(CHAR_CASELESSCHANGESTR, MutableBuffer::caselessChangeStr, 3);
-        AddMethod(CHAR_UPPER, MutableBuffer::upper, 2);
-        AddMethod(CHAR_LOWER, MutableBuffer::lower, 2);
-        AddMethod(CHAR_TRANSLATE, MutableBuffer::translate, 5);
-        AddMethod(CHAR_MATCH, MutableBuffer::match, 4);
-        AddMethod(CHAR_CASELESSMATCH, MutableBuffer::caselessMatch, 4);
-        AddMethod(CHAR_MATCHCHAR, MutableBuffer::matchChar, 2);
-        AddMethod(CHAR_CASELESSMATCHCHAR, MutableBuffer::caselessMatchChar, 2);
-        AddMethod(CHAR_VERIFY, MutableBuffer::verify, 4);
-        AddMethod(CHAR_SPACE, MutableBuffer::space, 2);
-        AddMethod(CHAR_SUBWORD, MutableBuffer::subWord, 2);
-        AddMethod("SUBWORDS", MutableBuffer::subWords, 2);
-        AddMethod(CHAR_WORD, MutableBuffer::word, 1);
-        AddMethod(CHAR_WORDINDEX, MutableBuffer::wordIndex, 1);
-        AddMethod(CHAR_WORDLENGTH, MutableBuffer::wordLength, 1);
-        AddMethod(CHAR_WORDS, MutableBuffer::words, 0);
-        AddMethod(CHAR_WORDPOS, MutableBuffer::wordPos, 2);
-        AddMethod(CHAR_CASELESSWORDPOS, MutableBuffer::caselessWordPos, 2);
-        AddMethod(CHAR_DELWORD, MutableBuffer::delWord, 2);
+        AddMethod("Length", MutableBuffer::lengthRexx, 0);
+        AddMethod("MakeArray", MutableBuffer::makeArrayRexx, 1);
+        AddMethod("String", RexxObject::makeStringRexx, 0);
+        AddMethod("CountStr", MutableBuffer::countStrRexx, 1);
+        AddMethod("CaselessCountStr", MutableBuffer::caselessCountStrRexx, 1);
+        AddMethod("ChangeStr", MutableBuffer::changeStr, 3);
+        AddMethod("CaselessChangeStr", MutableBuffer::caselessChangeStr, 3);
+        AddMethod("Upper", MutableBuffer::upper, 2);
+        AddMethod("Lower", MutableBuffer::lower, 2);
+        AddMethod("Translate", MutableBuffer::translate, 5);
+        AddMethod("Match", MutableBuffer::match, 4);
+        AddMethod("CaselessMatch", MutableBuffer::caselessMatch, 4);
+        AddMethod("MatchChar", MutableBuffer::matchChar, 2);
+        AddMethod("CaselessMatchChar", MutableBuffer::caselessMatchChar, 2);
+        AddMethod("Verify", MutableBuffer::verify, 4);
+        AddMethod("Space", MutableBuffer::space, 2);
+        AddMethod("SubWord", MutableBuffer::subWord, 2);
+        AddMethod("SubWords", MutableBuffer::subWords, 2);
+        AddMethod("Word", MutableBuffer::word, 1);
+        AddMethod("WordIndex", MutableBuffer::wordIndex, 1);
+        AddMethod("WordLength", MutableBuffer::wordLength, 1);
+        AddMethod("Words", MutableBuffer::words, 0);
+        AddMethod("WordPos", MutableBuffer::wordPos, 2);
+        AddMethod("CaselessWordPos", MutableBuffer::caselessWordPos, 2);
+        AddMethod("DelWord", MutableBuffer::delWord, 2);
 
     CompleteMethodDefinitions();
 
@@ -1168,54 +1168,54 @@ StartClassDefinition(Integer)
 
     // NOTE that we are pointing the new method at the String version...part of the
     // fakeout that the Integer class does.
-        AddClassMethod(CHAR_NEW, RexxString::newRexx, A_COUNT);
+        AddClassMethod("New", RexxString::newRexx, A_COUNT);
 
     CompleteClassMethodDefinitions();
 
-        AddMethod(CHAR_PLUS, RexxInteger::plus, 1);
-        AddMethod(CHAR_SUBTRACT, RexxInteger::minus, 1);
-        AddMethod(CHAR_MULTIPLY, RexxInteger::multiply, 1);
-        AddMethod(CHAR_POWER, RexxInteger::power, 1);
-        AddMethod(CHAR_DIVIDE, RexxInteger::divide, 1);
-        AddMethod(CHAR_INTDIV, RexxInteger::integerDivide, 1);
-        AddMethod(CHAR_REMAINDER, RexxInteger::remainder, 1);
-        AddMethod(CHAR_BACKSLASH, RexxInteger::notOp, 0);
-        AddMethod(CHAR_AND, RexxInteger::andOp, 1);
-        AddMethod(CHAR_OR, RexxInteger::orOp, 1);
-        AddMethod(CHAR_XOR, RexxInteger::xorOp, 1);
-        AddMethod(CHAR_UNKNOWN, RexxObject::unknownRexx, 2);
-        AddMethod(CHAR_D2C, RexxInteger::d2c, 1);
-        AddMethod(CHAR_D2X, RexxInteger::d2x, 1);
-        AddMethod(CHAR_ABS, RexxInteger::abs, 0);
-        AddMethod(CHAR_ORXMAX, RexxInteger::Max, A_COUNT);
-        AddMethod(CHAR_ORXMIN, RexxInteger::Min, A_COUNT);
-        AddMethod(CHAR_SIGN, RexxInteger::sign, 0);
-        AddMethod(CHAR_EQUAL, RexxInteger::equal, 1);
-        AddMethod(CHAR_BACKSLASH_EQUAL, RexxInteger::notEqual, 1);
-        AddMethod(CHAR_LESSTHAN_GREATERTHAN, RexxInteger::notEqual, 1);
-        AddMethod(CHAR_GREATERTHAN_LESSTHAN, RexxInteger::notEqual, 1);
-        AddMethod(CHAR_GREATERTHAN, RexxInteger::isGreaterThan, 1);
-        AddMethod(CHAR_LESSTHAN, RexxInteger::isLessThan, 1);
-        AddMethod(CHAR_GREATERTHAN_EQUAL, RexxInteger::isGreaterOrEqual, 1);
-        AddMethod(CHAR_BACKSLASH_LESSTHAN, RexxInteger::isGreaterOrEqual, 1);
-        AddMethod(CHAR_LESSTHAN_EQUAL, RexxInteger::isLessOrEqual, 1);
-        AddMethod(CHAR_BACKSLASH_GREATERTHAN, RexxInteger::isLessOrEqual, 1);
-        AddMethod(CHAR_STRICT_EQUAL, RexxInteger::strictEqual, 1);
-        AddMethod(CHAR_HASHCODE, RexxInteger::hashCode, 1);
-        AddMethod(CHAR_STRICT_BACKSLASH_EQUAL, RexxInteger::strictNotEqual, 1);
-        AddMethod(CHAR_STRICT_GREATERTHAN, RexxInteger::strictGreaterThan, 1);
-        AddMethod(CHAR_STRICT_LESSTHAN, RexxInteger::strictLessThan, 1);
-        AddMethod(CHAR_STRICT_GREATERTHAN_EQUAL, RexxInteger::strictGreaterOrEqual, 1);
-        AddMethod(CHAR_STRICT_BACKSLASH_LESSTHAN, RexxInteger::strictGreaterOrEqual, 1);
-        AddMethod(CHAR_STRICT_LESSTHAN_EQUAL, RexxInteger::strictLessOrEqual, 1);
-        AddMethod(CHAR_STRICT_BACKSLASH_GREATERTHAN, RexxInteger::strictLessOrEqual, 1);
-        AddMethod(CHAR_MAKESTRING, RexxObject::makeStringRexx, 0);
-        AddMethod(CHAR_FORMAT, RexxInteger::format, 4);
-        AddMethod(CHAR_TRUNC, RexxInteger::trunc, 1);
-        AddMethod("FLOOR", RexxInteger::floor, 0);
-        AddMethod("CEILING", RexxInteger::ceiling, 0);
-        AddMethod("ROUND", RexxInteger::round, 0);
-        AddMethod(CHAR_CLASS, RexxInteger::classObject, 0);
+        AddMethod("+", RexxInteger::plus, 1);
+        AddMethod("-", RexxInteger::minus, 1);
+        AddMethod("*", RexxInteger::multiply, 1);
+        AddMethod("**", RexxInteger::power, 1);
+        AddMethod("/", RexxInteger::divide, 1);
+        AddMethod("%", RexxInteger::integerDivide, 1);
+        AddMethod("//", RexxInteger::remainder, 1);
+        AddMethod("\\", RexxInteger::notOp, 0);
+        AddMethod("&", RexxInteger::andOp, 1);
+        AddMethod("|", RexxInteger::orOp, 1);
+        AddMethod("&&", RexxInteger::xorOp, 1);
+        AddMethod("Unknown", RexxObject::unknownRexx, 2);
+        AddMethod("D2C", RexxInteger::d2c, 1);
+        AddMethod("D2X", RexxInteger::d2x, 1);
+        AddMethod("Abs", RexxInteger::abs, 0);
+        AddMethod("Max", RexxInteger::Max, A_COUNT);
+        AddMethod("Min", RexxInteger::Min, A_COUNT);
+        AddMethod("Sign", RexxInteger::sign, 0);
+        AddMethod("Equal", RexxInteger::equal, 1);
+        AddMethod("\\=", RexxInteger::notEqual, 1);
+        AddMethod("<>", RexxInteger::notEqual, 1);
+        AddMethod("><", RexxInteger::notEqual, 1);
+        AddMethod(">", RexxInteger::isGreaterThan, 1);
+        AddMethod("<", RexxInteger::isLessThan, 1);
+        AddMethod(">=", RexxInteger::isGreaterOrEqual, 1);
+        AddMethod("\\<", RexxInteger::isGreaterOrEqual, 1);
+        AddMethod("<=", RexxInteger::isLessOrEqual, 1);
+        AddMethod("\\>", RexxInteger::isLessOrEqual, 1);
+        AddMethod("==", RexxInteger::strictEqual, 1);
+        AddMethod("HashCode", RexxInteger::hashCode, 1);
+        AddMethod("\\==", RexxInteger::strictNotEqual, 1);
+        AddMethod(">>", RexxInteger::strictGreaterThan, 1);
+        AddMethod("<<", RexxInteger::strictLessThan, 1);
+        AddMethod(">>=", RexxInteger::strictGreaterOrEqual, 1);
+        AddMethod("\\<<", RexxInteger::strictGreaterOrEqual, 1);
+        AddMethod("<<=", RexxInteger::strictLessOrEqual, 1);
+        AddMethod("\\>>", RexxInteger::strictLessOrEqual, 1);
+        AddMethod("MakeString", RexxObject::makeStringRexx, 0);
+        AddMethod("Format", RexxInteger::format, 4);
+        AddMethod("Trunc", RexxInteger::trunc, 1);
+        AddMethod("Floor", RexxInteger::floor, 0);
+        AddMethod("Ceiling", RexxInteger::ceiling, 0);
+        AddMethod("Round", RexxInteger::round, 0);
+        AddMethod("Class", RexxInteger::classObject, 0);
 
     CompleteMethodDefinitions();
 
@@ -1232,54 +1232,54 @@ StartClassDefinition(NumberString)
 
     // NOTE that we are pointing the new method at the String version...part of the
     // fakeout that the NumberString class does.
-        AddClassMethod(CHAR_NEW, RexxString::newRexx, A_COUNT);
+        AddClassMethod("New", RexxString::newRexx, A_COUNT);
 
     CompleteClassMethodDefinitions();
 
-        AddMethod(CHAR_UNKNOWN, RexxObject::unknownRexx, 2);
-        AddMethod(CHAR_ABS, NumberString::abs, 0);
-        AddMethod(CHAR_ORXMAX, NumberString::Max, A_COUNT);
-        AddMethod(CHAR_ORXMIN, NumberString::Min, A_COUNT);
-        AddMethod(CHAR_SIGN, NumberString::Sign, 0);
-        AddMethod(CHAR_D2C, NumberString::d2c, 1);
-        AddMethod(CHAR_D2X, NumberString::d2x, 1);
-        AddMethod(CHAR_EQUAL, NumberString::equal, 1);
-        AddMethod(CHAR_BACKSLASH_EQUAL, NumberString::notEqual, 1);
-        AddMethod(CHAR_LESSTHAN_GREATERTHAN, NumberString::notEqual, 1);
-        AddMethod(CHAR_GREATERTHAN_LESSTHAN, NumberString::notEqual, 1);
-        AddMethod(CHAR_GREATERTHAN, NumberString::isGreaterThan, 1);
-        AddMethod(CHAR_LESSTHAN, NumberString::isLessThan, 1);
-        AddMethod(CHAR_GREATERTHAN_EQUAL, NumberString::isGreaterOrEqual, 1);
-        AddMethod(CHAR_BACKSLASH_LESSTHAN, NumberString::isGreaterOrEqual, 1);
-        AddMethod(CHAR_LESSTHAN_EQUAL, NumberString::isLessOrEqual, 1);
-        AddMethod(CHAR_BACKSLASH_GREATERTHAN, NumberString::isLessOrEqual, 1);
-        AddMethod(CHAR_STRICT_EQUAL, NumberString::strictEqual, 1);
-        AddMethod(CHAR_HASHCODE, NumberString::hashCode, 0);
-        AddMethod(CHAR_STRICT_BACKSLASH_EQUAL, NumberString::strictNotEqual, 1);
-        AddMethod(CHAR_STRICT_GREATERTHAN, NumberString::strictGreaterThan, 1);
-        AddMethod(CHAR_STRICT_LESSTHAN, NumberString::strictLessThan, 1);
-        AddMethod(CHAR_STRICT_GREATERTHAN_EQUAL, NumberString::strictGreaterOrEqual, 1);
-        AddMethod(CHAR_STRICT_BACKSLASH_LESSTHAN, NumberString::strictGreaterOrEqual, 1);
-        AddMethod(CHAR_STRICT_LESSTHAN_EQUAL, NumberString::strictLessOrEqual, 1);
-        AddMethod(CHAR_STRICT_BACKSLASH_GREATERTHAN, NumberString::strictLessOrEqual, 1);
-        AddMethod(CHAR_PLUS, NumberString::plus, 1);
-        AddMethod(CHAR_SUBTRACT, NumberString::minus, 1);
-        AddMethod(CHAR_MULTIPLY, NumberString::multiply, 1);
-        AddMethod(CHAR_POWER, NumberString::power, 1);
-        AddMethod(CHAR_DIVIDE, NumberString::divide, 1);
-        AddMethod(CHAR_INTDIV, NumberString::integerDivide, 1);
-        AddMethod(CHAR_REMAINDER, NumberString::remainder, 1);
-        AddMethod(CHAR_BACKSLASH, NumberString::notOp, 0);
-        AddMethod(CHAR_AND, NumberString::andOp, 1);
-        AddMethod(CHAR_OR, NumberString::orOp, 1);
-        AddMethod(CHAR_XOR, NumberString::xorOp, 1);
-        AddMethod(CHAR_MAKESTRING, RexxObject::makeStringRexx, 0);
-        AddMethod(CHAR_FORMAT, NumberString::formatRexx, 4);
-        AddMethod(CHAR_TRUNC, NumberString::trunc, 1);
-        AddMethod("FLOOR", NumberString::floor, 0);
-        AddMethod("CEILING", NumberString::ceiling, 0);
-        AddMethod("ROUND", NumberString::round, 0);
-        AddMethod(CHAR_CLASS, NumberString::classObject, 0);
+        AddMethod("Unknown", RexxObject::unknownRexx, 2);
+        AddMethod("Abs", NumberString::abs, 0);
+        AddMethod("Max", NumberString::Max, A_COUNT);
+        AddMethod("Min", NumberString::Min, A_COUNT);
+        AddMethod("Sign", NumberString::Sign, 0);
+        AddMethod("D2C", NumberString::d2c, 1);
+        AddMethod("D2X", NumberString::d2x, 1);
+        AddMethod("=", NumberString::equal, 1);
+        AddMethod("\\=", NumberString::notEqual, 1);
+        AddMethod("<>", NumberString::notEqual, 1);
+        AddMethod("><", NumberString::notEqual, 1);
+        AddMethod(">", NumberString::isGreaterThan, 1);
+        AddMethod("<", NumberString::isLessThan, 1);
+        AddMethod(">=", NumberString::isGreaterOrEqual, 1);
+        AddMethod("\\<", NumberString::isGreaterOrEqual, 1);
+        AddMethod("<=", NumberString::isLessOrEqual, 1);
+        AddMethod("\\>", NumberString::isLessOrEqual, 1);
+        AddMethod("==", NumberString::strictEqual, 1);
+        AddMethod("HashCode", NumberString::hashCode, 0);
+        AddMethod("\\==", NumberString::strictNotEqual, 1);
+        AddMethod(">>", NumberString::strictGreaterThan, 1);
+        AddMethod("<<", NumberString::strictLessThan, 1);
+        AddMethod(">>=", NumberString::strictGreaterOrEqual, 1);
+        AddMethod("\\<<", NumberString::strictGreaterOrEqual, 1);
+        AddMethod("<<=", NumberString::strictLessOrEqual, 1);
+        AddMethod("\\>>", NumberString::strictLessOrEqual, 1);
+        AddMethod("+", NumberString::plus, 1);
+        AddMethod("-", NumberString::minus, 1);
+        AddMethod("*", NumberString::multiply, 1);
+        AddMethod("**", NumberString::power, 1);
+        AddMethod("/", NumberString::divide, 1);
+        AddMethod("%", NumberString::integerDivide, 1);
+        AddMethod("//", NumberString::remainder, 1);
+        AddMethod("\\", NumberString::notOp, 0);
+        AddMethod("&", NumberString::andOp, 1);
+        AddMethod("|", NumberString::orOp, 1);
+        AddMethod("&&", NumberString::xorOp, 1);
+        AddMethod("MakeString", RexxObject::makeStringRexx, 0);
+        AddMethod("Format", NumberString::formatRexx, 4);
+        AddMethod("Trunc", NumberString::trunc, 1);
+        AddMethod("Floor", NumberString::floor, 0);
+        AddMethod("Ceiling", NumberString::ceiling, 0);
+        AddMethod("Round", NumberString::round, 0);
+        AddMethod("Class", NumberString::classObject, 0);
 
     CompleteMethodDefinitions();
 
@@ -1294,15 +1294,15 @@ EndClassDefinition(NumberString);
 
 StartClassDefinition(Supplier)
 
-        AddClassMethod(CHAR_NEW, SupplierClass::newRexx, A_COUNT);
+        AddClassMethod("New", SupplierClass::newRexx, A_COUNT);
 
     CompleteClassMethodDefinitions();
 
-        AddMethod(CHAR_AVAILABLE, SupplierClass::available, 0);
-        AddMethod(CHAR_INDEX, SupplierClass::index, 0);
-        AddMethod(CHAR_NEXT, SupplierClass::next, 0);
-        AddMethod(CHAR_ITEM, SupplierClass::value, 0);
-        AddMethod(CHAR_INIT, SupplierClass::initRexx, 2);
+        AddMethod("Available", SupplierClass::available, 0);
+        AddMethod("Index", SupplierClass::index, 0);
+        AddMethod("Next", SupplierClass::next, 0);
+        AddMethod("Item", SupplierClass::value, 0);
+        AddMethod("Init", SupplierClass::initRexx, 2);
 
     CompleteMethodDefinitions();
 
@@ -1317,15 +1317,15 @@ EndClassDefinition(Supplier);
 
 StartClassDefinition(Pointer)
 
-        AddClassMethod(CHAR_NEW, PointerClass::newRexx, A_COUNT);
+        AddClassMethod("New", PointerClass::newRexx, A_COUNT);
 
     CompleteClassMethodDefinitions();
 
-        AddMethod(CHAR_EQUAL, PointerClass::equal, 1);
-        AddMethod(CHAR_BACKSLASH_EQUAL, PointerClass::notEqual, 1);
-        AddMethod(CHAR_STRICT_EQUAL, PointerClass::equal, 1);
-        AddMethod(CHAR_STRICT_BACKSLASH_EQUAL, PointerClass::notEqual, 1);
-        AddMethod(CHAR_ISNULL, PointerClass::isNull, 0);
+        AddMethod("=", PointerClass::equal, 1);
+        AddMethod("\\=", PointerClass::notEqual, 1);
+        AddMethod("==", PointerClass::equal, 1);
+        AddMethod("\\==", PointerClass::notEqual, 1);
+        AddMethod("IsNull", PointerClass::isNull, 0);
 
     CompleteMethodDefinitions();
 
@@ -1340,7 +1340,7 @@ EndClassDefinition(Pointer);
 
 StartClassDefinition(Buffer)
 
-        AddClassMethod(CHAR_NEW, BufferClass::newRexx, A_COUNT);
+        AddClassMethod("New", BufferClass::newRexx, A_COUNT);
 
     CompleteClassMethodDefinitions();
 
@@ -1359,11 +1359,11 @@ EndClassDefinition(Buffer);
 
 StartClassDefinition(WeakReference)
 
-        AddClassMethod(CHAR_NEW, WeakReference::newRexx, A_COUNT);
+        AddClassMethod("New", WeakReference::newRexx, A_COUNT);
 
     CompleteClassMethodDefinitions();
 
-        AddMethod(CHAR_VALUE, WeakReference::value, 0);
+        AddMethod("Value", WeakReference::value, 0);
 
     CompleteMethodDefinitions();
 
@@ -1378,20 +1378,20 @@ EndClassDefinition(WeakReference);
 
 StartClassDefinition(StackFrame)
 
-        AddClassMethod(CHAR_NEW, StackFrameClass::newRexx, A_COUNT);
+        AddClassMethod("New", StackFrameClass::newRexx, A_COUNT);
 
     CompleteClassMethodDefinitions();
 
-        AddMethod("NAME", StackFrameClass::getName, 0);
-        AddMethod("EXECUTABLE", StackFrameClass::getExecutable, 0);
-        AddMethod("LINE", StackFrameClass::getLine, 0);
-        AddMethod("TARGET", StackFrameClass::getTarget, 0);
-        AddMethod("TRACELINE", StackFrameClass::getTraceLine, 0);
-        AddMethod("TYPE", StackFrameClass::getType, 0);
-        AddMethod("ARGUMENTS", StackFrameClass::getArguments, 0);
+        AddMethod("Name", StackFrameClass::getName, 0);
+        AddMethod("Executable", StackFrameClass::getExecutable, 0);
+        AddMethod("Line", StackFrameClass::getLine, 0);
+        AddMethod("Target", StackFrameClass::getTarget, 0);
+        AddMethod("TraceLine", StackFrameClass::getTraceLine, 0);
+        AddMethod("Type", StackFrameClass::getType, 0);
+        AddMethod("Arguments", StackFrameClass::getArguments, 0);
         // the string method just maps to TRACELINE
-        AddMethod("STRING", StackFrameClass::getTraceLine, 0);
-        AddMethod("MAKESTRING", StackFrameClass::getTraceLine, 0);
+        AddMethod("String", StackFrameClass::getTraceLine, 0);
+        AddMethod("MakeString", StackFrameClass::getTraceLine, 0);
 
     CompleteMethodDefinitions();
 
@@ -1404,27 +1404,25 @@ EndClassDefinition(StackFrame);
     /***************************************************************************/
 
     // now add entries to the environment
-    addToEnvironment(CHAR_ENVIRONMENT, TheEnvironment);
-    addToEnvironment(CHAR_NIL ,TheNilObject);
-    addToEnvironment(CHAR_FALSE, TheFalseObject);
-    addToEnvironment(CHAR_TRUE, TheTrueObject);
-
-    // TODO:  Make sure INTEGER and NUMBERSTRING are removed from the environment.
+    addToEnvironment("ENVIRONMENT", TheEnvironment);
+    addToEnvironment("NIL" ,TheNilObject);
+    addToEnvironment("FALSE", TheFalseObject);
+    addToEnvironment("TRUE", TheTrueObject);
 
     // set up the kernel directory
-    addToSystem(CHAR_INTEGER, TheIntegerClass);
-    addToSystem(CHAR_NUMBERSTRING, TheNumberStringClass);
+    addToSystem("INTEGER", TheIntegerClass);
+    addToSystem("NUMBERSTRING", TheNumberStringClass);
 
-    addToSystem(CHAR_NULLARRAY, TheNullArray);
-    addToSystem(CHAR_NULLPOINTER, TheNullPointer);
-    addToSystem(CHAR_COMMON_RETRIEVERS, TheCommonRetrievers);
-    addToSystem(CHAR_ENVIRONMENT, TheEnvironment);
-    addToSystem(CHAR_FUNCTIONS, TheFunctionsDirectory);
+    addToSystem("NULLARRAY", TheNullArray);
+    addToSystem("NULLPOINTER", TheNullPointer);
+    addToSystem("COMMONRETRIEVERS", TheCommonRetrievers);
+    addToSystem("ENVIRONMENT", TheEnvironment);
+    addToSystem("FUNCTIONS", TheFunctionsDirectory);
 
-    addToSystem(CHAR_VERSION, Interpreter::getVersionNumber());
-    addToSystem(CHAR_NAME, SystemInterpreter::getSystemName());
-    addToSystem(CHAR_INTERNALNAME, SystemInterpreter::getInternalSystemName());
-    addToSystem(CHAR_VERSION, SystemInterpreter::getSystemVersion());
+    addToSystem("VERSION", Interpreter::getVersionNumber());
+    addToSystem("NAME", SystemInterpreter::getSystemName());
+    addToSystem("INTERNALNAME", SystemInterpreter::getInternalSystemName());
+    addToSystem("VERSION", SystemInterpreter::getSystemVersion());
     // initialize our thread vector for external calls.
     Activity::initializeThreadContext();
 
@@ -1438,10 +1436,10 @@ EndClassDefinition(StackFrame);
   {
       // create a method used to retrieve the .Local environment.  We set this on the
       // .Environment directory.
-      Protected<MethodClass> localMethod = new MethodClass(getGlobalName(CHAR_LOCAL), CPPCode::resolveExportedMethod(CHAR_LOCAL, CPPM(ActivityManager::getLocalRexx), 0, "ActivityManager::getLocalRexx"));
+      Protected<MethodClass> localMethod = new MethodClass(getGlobalName("LOCAL"), CPPCode::resolveExportedMethod("Local", CPPM(ActivityManager::getLocalRexx), 0, "ActivityManager::getLocalRexx"));
 
       // add this to the environment directory.
-      TheEnvironment->setMethodRexx(getGlobalName(CHAR_LOCAL), localMethod);
+      TheEnvironment->setMethodRexx(getGlobalName("LOCAL"), localMethod);
 
                                            /* create the BaseClasses method and run it*/
       RexxString *symb = getGlobalName(BASEIMAGELOAD);   /* get a name version of the string  */
@@ -1458,7 +1456,7 @@ EndClassDefinition(StackFrame);
           RexxObject *args = TheSystem;
           ProtectedObject result;
           // now create the core program objects.
-          loader->runProgram(ActivityManager::currentActivity, OREF_PROGRAM, OREF_NULL, (RexxObject **)&args, 1, result);
+          loader->runProgram(ActivityManager::currentActivity, GlobalNames::PROGRAM, OREF_NULL, (RexxObject **)&args, 1, result);
       }
       catch (ActivityException )
       {
@@ -1469,16 +1467,16 @@ EndClassDefinition(StackFrame);
   }
 
   /* define and suppress methods in the nil object */
-  TheNilObject->defineInstanceMethod(getGlobalName(CHAR_COPY), (MethodClass *)TheNilObject, OREF_NULL);
-  TheNilObject->defineInstanceMethod(getGlobalName(CHAR_START), (MethodClass *)TheNilObject, OREF_NULL);
-  TheNilObject->defineInstanceMethod(getGlobalName(CHAR_OBJECTNAMEEQUALS), (MethodClass *)TheNilObject, OREF_NULL);
+  TheNilObject->defineInstanceMethod(getGlobalName("COPY"), (MethodClass *)TheNilObject, OREF_NULL);
+  TheNilObject->defineInstanceMethod(getGlobalName("START"), (MethodClass *)TheNilObject, OREF_NULL);
+  TheNilObject->defineInstanceMethod(getGlobalName("OBJECTNAME="), (MethodClass *)TheNilObject, OREF_NULL);
 
   // ok, .NIL has been constructed.  As a last step before saving the image, we need to change
   // the type identifier in the behaviour so that this will get the correct virtual function table
   // restored when the image reloads.
   TheNilObject->behaviour->setClassType(T_NilObject);
 
-  RexxClass *ordered = (RexxClass *)TheEnvironment->get(getGlobalName(CHAR_ORDEREDCOLLECTION));
+  RexxClass *ordered = (RexxClass *)TheEnvironment->get(getGlobalName("ORDEREDCOLLECTION"));
 
   // TODO:  this really can be done in CoreClasses...
 
@@ -1491,7 +1489,7 @@ EndClassDefinition(StackFrame);
   TheListClass->inherit(ordered, OREF_NULL);
   TheListClass->setRexxDefined();
 
-  RexxClass *map = (RexxClass *)TheEnvironment->get(getGlobalName(CHAR_MAPCOLLECTION));
+  RexxClass *map = (RexxClass *)TheEnvironment->get(getGlobalName("MAPCOLLECTION"));
 
   TheTableClass->inherit(map, OREF_NULL);
   TheTableClass->setRexxDefined();
@@ -1520,15 +1518,15 @@ EndClassDefinition(StackFrame);
   // TODO:  Add Set and Bag class processing here.
 
 
-  RexxClass *comparable = (RexxClass *)TheEnvironment->get(getGlobalName(CHAR_COMPARABLE));
+  RexxClass *comparable = (RexxClass *)TheEnvironment->get(getGlobalName("COMPARABLE"));
 
   TheStringClass->inherit(comparable, OREF_NULL);
   TheStringClass->setRexxDefined();
 
   // disable the special class methods we only use during the image build phase.
   // this removes this from all of the subclasses as well
-  TheObjectClass->removeClassMethod(new_string(CHAR_DEFINE_METHODS));
-  TheObjectClass->removeClassMethod(new_string(CHAR_SHRIEKREXXDEFINED));
+  TheObjectClass->removeClassMethod(new_string("!DEFINE_METHODS"));
+  TheObjectClass->removeClassMethod(new_string("!REXXDEFINED"));
   TheObjectClass->removeClassMethod(new_string("!DEFINE_CLASS_METHOD"));
   TheObjectClass->removeClassMethod(new_string("INHERITINSTANCEMETHODS"));
 

@@ -359,6 +359,6 @@ RexxString *RexxToken::displayValue()
 
         // token we don't have an answer for...just use a null string
         default:
-            return (RexxString *)OREF_NULLSTRING;
+            return (RexxString *)GlobalNames::NULLSTRING;
     }
 }
