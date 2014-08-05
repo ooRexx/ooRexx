@@ -222,12 +222,12 @@ void RexxInstructionMessage::execute(RexxActivation *context, ExpressionStack *s
     if ((RexxObject *)result != OREF_NULL)
     {
         context->traceResult((RexxObject *)result);
-        context->setLocalVariable(OREF_RESULT, VARIABLE_RESULT, (RexxObject *)result);
+        context->setLocalVariable(GlobalNames::RESULT, VARIABLE_RESULT, (RexxObject *)result);
     }
     // for no result, we drop the RESULT variable
     else
     {
-        context->dropLocalVariable(OREF_RESULT, VARIABLE_RESULT);
+        context->dropLocalVariable(GlobalNames::RESULT, VARIABLE_RESULT);
     }
 
     context->pauseInstruction();

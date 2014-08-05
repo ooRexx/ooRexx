@@ -88,8 +88,6 @@ public:
     static RexxString *qualifyFileSystemName(RexxString *name);
     static void getCurrentTime(RexxDateTime *Date );
     static RexxString *getSystemName();
-    static RexxString *getSystemVersion();
-    static RexxString *getInternalSystemName();
     static RexxString *getSourceString(RexxString *callType, RexxString * programName);
     static RexxString *getUserid();
     static void releaseResultMemory(void *);

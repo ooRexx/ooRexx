@@ -209,7 +209,7 @@ RexxObject *RexxExpressionFunction::evaluate(RexxActivation *context, Expression
     }
     else
     {
-        context->externalCall(functionName, stack->arguments(argumentCount), argumentCount, OREF_FUNCTIONNAME, result);
+        context->externalCall(functionName, stack->arguments(argumentCount), argumentCount, GlobalNames::FUNCTION, result);
     }
 
     // functions must have a return result

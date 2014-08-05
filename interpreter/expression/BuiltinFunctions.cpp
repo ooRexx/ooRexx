@@ -59,6 +59,10 @@
 #include "SysFileSystem.hpp"
 #include "MethodArguments.hpp"
 
+// lots of global names used here, so make the
+// namespace global.
+using namespace GlobalNames;
+
 // a note on the constants here.  These values are
 // used to define what arguments are used by a BIF.  For
 // example, for CENTER, we expect a minimum of 2 arguments and
@@ -828,7 +832,7 @@ BUILTIN(FORM)
 
     check_args(FORM);
 
-    return context->form() == Numerics::FORM_SCIENTIFIC ? OREF_SCIENTIFIC : OREF_ENGINEERING;
+    return context->form() == Numerics::FORM_SCIENTIFIC ? SCIENTIFIC : ENGINEERING;
 }
 
 
@@ -855,7 +859,7 @@ BUILTIN(ERRORTEXT)
     wholenumber_t error_number = (required_integer(ERRORTEXT, n))->getValue();
     if (error_number < 0 || error_number > 99)
     {
-        reportException(Error_Incorrect_call_range, CHAR_ERRORTEXT, IntegerOne, error_number);
+        reportException(Error_Incorrect_call_range, "ERRORTEXT", IntegerOne, error_number);
     }
     // get the error message for this number and return the text.
     RexxString *result = SystemInterpreter::getMessageText(error_number * 1000);
@@ -887,7 +891,7 @@ BUILTIN(ARG)
     {
         if (option != OREF_NULL)
         {
-            reportException(Error_Incorrect_call_noarg, CHAR_ARG, IntegerOne);
+            reportException(Error_Incorrect_call_noarg, "ARG", IntegerOne);
         }
 
         // this is the default, which is to just return the count
@@ -987,7 +991,7 @@ BUILTIN(ARG)
 
             // unknown option
             default:
-                reportException(Error_Incorrect_call_list, CHAR_ARG, IntegerTwo, "AENO", option);
+                reportException(Error_Incorrect_call_list, "ARG", IntegerTwo, "AENO", option);
                 break;
         }
     }
@@ -1029,7 +1033,7 @@ BUILTIN(DATE)
     {
         if (option->getLength() == 0)
         {
-            reportException(Error_Incorrect_call_list, CHAR_DATE, IntegerOne, "BDEFLMNOSTUW", option);
+            reportException(Error_Incorrect_call_list, "DATE", IntegerOne, "BDEFLMNOSTUW", option);
         }
         else
         {
@@ -1040,7 +1044,7 @@ BUILTIN(DATE)
     // opt2 or isep w/o date?
     if (indate == OREF_NULL && (option2 != OREF_NULL || isep != OREF_NULL))
     {
-        reportException(Error_Incorrect_call_noarg, CHAR_DATE, IntegerTwo);
+        reportException(Error_Incorrect_call_noarg, "DATE", IntegerTwo);
     }
 
     // have a second option specified?  Get the option character from that also
@@ -1048,7 +1052,7 @@ BUILTIN(DATE)
     {
         if (option2->getLength() == 0)
         {
-            reportException(Error_Incorrect_call_list, CHAR_DATE, IntegerThree, "BDEFNOSTU", option2);
+            reportException(Error_Incorrect_call_list, "DATE", IntegerThree, "BDEFNOSTU", option2);
         }
         else
         {
@@ -1064,12 +1068,12 @@ BUILTIN(DATE)
         // only certain styles support this option
         if (strchr("BDMWL", style) != NULL)
         {
-            reportException(Error_Incorrect_call_format_incomp_sep, CHAR_DATE, IntegerOne, new_string((char)style), IntegerFour);
+            reportException(Error_Incorrect_call_format_incomp_sep, "DATE", IntegerOne, new_string((char)style), IntegerFour);
         }
         // must be zero or 1 character and cannot be alpha numeric
         if (osep->getLength() > 1 || (osep->getLength() == 1 && strchr(ALPHANUM, osep->getChar(0)) != NULL))
         {
-            reportException(Error_Incorrect_call_parm_wrong_sep, CHAR_DATE, IntegerFour, osep);
+            reportException(Error_Incorrect_call_parm_wrong_sep, "DATE", IntegerFour, osep);
         }
         // string objects are null terminated, so we can point directly at what will
         // be either 1 or 0 characters of data.
@@ -1089,7 +1093,7 @@ BUILTIN(DATE)
             // only valid with certain styles
             if (strchr("BDMWL", style2) != NULL)
             {
-                reportException(Error_Incorrect_call_format_incomp_sep, CHAR_DATE, IntegerThree, new_string((char *)&style2, 1), IntegerFive);
+                reportException(Error_Incorrect_call_format_incomp_sep, "DATE", IntegerThree, new_string((char *)&style2, 1), IntegerFive);
             }
 
             // explicitly specified delimiter, we need to validate this first
@@ -1097,7 +1101,7 @@ BUILTIN(DATE)
             {
                 // the field delimiter must be a single character and NOT
                 // alphanumeric, or a null character
-                reportException(Error_Incorrect_call_parm_wrong_sep, new_string(CHAR_DATE), IntegerFive, isep);
+                reportException(Error_Incorrect_call_parm_wrong_sep, new_string("DATE"), IntegerFive, isep);
             }
 
             // string objects are null terminated, so we can point directly at what will
@@ -1124,7 +1128,7 @@ BUILTIN(DATE)
                 wholenumber_t basedays;
                 if (!indate->numberValue(basedays) || !timestamp.setBaseDate(basedays))
                 {
-                    reportException(Error_Incorrect_call_format_invalid, CHAR_DATE, indate, new_string((char *)&style2, 1));
+                    reportException(Error_Incorrect_call_format_invalid, "DATE", indate, new_string((char *)&style2, 1));
                 }
                 break;
             }
@@ -1136,7 +1140,7 @@ BUILTIN(DATE)
                 int64_t basetime;
                 if (!Numerics::objectToInt64(indate, basetime) || !timestamp.setBaseTime(basetime))
                 {
-                    reportException(Error_Incorrect_call_format_invalid, CHAR_DATE, indate, new_string((char *)&style2, 1));
+                    reportException(Error_Incorrect_call_format_invalid, "DATE", indate, new_string((char *)&style2, 1));
                 }
                 break;
             }
@@ -1147,7 +1151,7 @@ BUILTIN(DATE)
                 int64_t basetime;
                 if (!Numerics::objectToInt64(indate, basetime) || !timestamp.setUnixTime(basetime))
                 {
-                    reportException(Error_Incorrect_call_format_invalid, CHAR_DATE, indate, new_string((char *)&style2, 1));
+                    reportException(Error_Incorrect_call_format_invalid, "DATE", indate, new_string((char *)&style2, 1));
                 }
                 break;
             }
@@ -1160,7 +1164,7 @@ BUILTIN(DATE)
                 if (!indate->numberValue(yearday) || yearday < 0 || yearday > YEAR_DAYS + 1 ||
                     (yearday > YEAR_DAYS && !LeapYear(current.year)))
                 {
-                    reportException(Error_Incorrect_call_format_invalid, CHAR_DATE, indate, new_string((char *)&style2, 1));
+                    reportException(Error_Incorrect_call_format_invalid, "DATE", indate, new_string((char *)&style2, 1));
                 }
                 // set the date directly
                 timestamp.setDate(current.year, yearday);
@@ -1189,7 +1193,7 @@ BUILTIN(DATE)
 
             // invalid input option
             default:
-                reportException(Error_Incorrect_call_list, CHAR_DATE, IntegerThree, "BDEFNOTSU", new_string((char *)&style2, 1));
+                reportException(Error_Incorrect_call_list, "DATE", IntegerThree, "BDEFNOTSU", new_string((char *)&style2, 1));
                 break;
         }
 
@@ -1199,11 +1203,11 @@ BUILTIN(DATE)
             // different error message depending on whether a separator was specified, or not.
             if (isep != OREF_NULL)
             {
-                reportException(Error_Incorrect_call_format_incomp_sep, CHAR_DATE, IntegerTwo, indate, IntegerFive);
+                reportException(Error_Incorrect_call_format_incomp_sep, "DATE", IntegerTwo, indate, IntegerFive);
             }
             else
             {
-                reportException(Error_Incorrect_call_format_invalid, CHAR_DATE, indate, new_string((char *)&style2, 1));
+                reportException(Error_Incorrect_call_format_invalid, "DATE", indate, new_string((char *)&style2, 1));
             }
         }
     }
@@ -1280,7 +1284,7 @@ BUILTIN(DATE)
 
         default:
             work[0] = style;
-            reportException(Error_Incorrect_call_list, CHAR_DATE, IntegerOne, "BDEFLMNOSTUW", new_string(work, 1));
+            reportException(Error_Incorrect_call_list, "DATE", IntegerOne, "BDEFLMNOSTUW", new_string(work, 1));
             break;
     }
     // return as a string object
@@ -1314,7 +1318,7 @@ BUILTIN(TIME)
         // null strings not allowed as an option character
         if (option->getLength() == 0)
         {
-            reportException(Error_Incorrect_call_list, CHAR_TIME, IntegerOne, "CEFHLMNORST", option);
+            reportException(Error_Incorrect_call_list, "TIME", IntegerOne, "CEFHLMNORST", option);
         }
         // we only use the first character
         style = toupper(option->getChar(0));
@@ -1329,12 +1333,12 @@ BUILTIN(TIME)
         // the second option requires an input date
         if (intime == OREF_NULL)
         {
-            reportException(Error_Incorrect_call_noarg, CHAR_TIME, IntegerTwo);
+            reportException(Error_Incorrect_call_noarg, "TIME", IntegerTwo);
         }
         // again, must be at least one character, of which we only use the first
         if (option2->getLength() == 0)
         {
-            reportException(Error_Incorrect_call_list, CHAR_TIME, IntegerThree, "CFHLMNOST", option2);
+            reportException(Error_Incorrect_call_list, "TIME", IntegerThree, "CFHLMNOST", option2);
         }
         style2 = toupper(option2->getChar(0));
     }
@@ -1346,7 +1350,7 @@ BUILTIN(TIME)
         // using an offset as an input isn't really meaningful
         if (style == 'R' || style == 'E')
         {
-            reportException(Error_Incorrect_call_invalid_conversion, CHAR_TIME, new_string((char *)&style, 1));
+            reportException(Error_Incorrect_call_invalid_conversion, "TIME", new_string((char *)&style, 1));
         }
         bool valid = true;                 // assume this is a good timestamp
         timestamp.clear();                 // clear everything out
@@ -1397,7 +1401,7 @@ BUILTIN(TIME)
                 int64_t basetime;
                 if (!Numerics::objectToInt64(intime, basetime) || !timestamp.setBaseTime(basetime))
                 {
-                    reportException(Error_Incorrect_call_format_invalid, CHAR_TIME, intime, new_string((char *)&style2, 1));
+                    reportException(Error_Incorrect_call_format_invalid, "TIME", intime, new_string((char *)&style2, 1));
                 }
                 break;
             }
@@ -1407,7 +1411,7 @@ BUILTIN(TIME)
                 int64_t basetime;
                 if (!Numerics::objectToInt64(intime, basetime) || !timestamp.setUnixTime(basetime))
                 {
-                    reportException(Error_Incorrect_call_format_invalid, CHAR_TIME, intime, new_string((char *)&style2, 1));
+                    reportException(Error_Incorrect_call_format_invalid, "TIME", intime, new_string((char *)&style2, 1));
                 }
                 break;
             }
@@ -1423,12 +1427,12 @@ BUILTIN(TIME)
 
             // an invalid input style
             default:
-                reportException(Error_Incorrect_call_list, CHAR_TIME, IntegerThree, "CFHLMNOST", new_string((char)style2));
+                reportException(Error_Incorrect_call_list, "TIME", IntegerThree, "CFHLMNOST", new_string((char)style2));
                 break;
         }
         if (!valid)
         {
-            reportException(Error_Incorrect_call_format_invalid, CHAR_TIME, intime, new_string((char *)&style2, 1) );
+            reportException(Error_Incorrect_call_format_invalid, "TIME", intime, new_string((char *)&style2, 1) );
         }
     }
 
@@ -1509,7 +1513,7 @@ BUILTIN(TIME)
         // unknown output format
         default:
             work[0] = style;
-            reportException(Error_Incorrect_call_list, CHAR_TIME, IntegerOne, "CEFHLMNORST", new_string(work, 1));
+            reportException(Error_Incorrect_call_list, "TIME", IntegerOne, "CEFHLMNORST", new_string(work, 1));
             break;
     }
 
@@ -1572,7 +1576,7 @@ BUILTIN(XRANGE)
         // must be just a single character
         if (start->getLength() != 1)
         {
-            reportException(Error_Incorrect_call_pad, CHAR_XRANGE, IntegerOne, start);
+            reportException(Error_Incorrect_call_pad, "XRANGE", IntegerOne, start);
         }
         startchar = start->getChar(0);
     }
@@ -1581,7 +1585,7 @@ BUILTIN(XRANGE)
     {
         if (end->getLength() != 1)
         {
-            reportException(Error_Incorrect_call_pad, CHAR_XRANGE, IntegerTwo, end);
+            reportException(Error_Incorrect_call_pad, "XRANGE", IntegerTwo, end);
         }
         endchar = end->getChar(0);
     }
@@ -1616,12 +1620,12 @@ BUILTIN(SYMBOL)
     // a parsing failure is "BAD"
     if (variable == OREF_NULL)
     {
-        return new_string(CHAR_BAD);
+        return new_string("BAD");
     }
     // if this is a constant symbol, this is LIT
     else if (isString(variable))
     {
-        return new_string(CHAR_LIT);
+        return new_string("LIT");
     }
     else
     {
@@ -1629,11 +1633,11 @@ BUILTIN(SYMBOL)
         // variables are "LIT", set variables are "VAR"
         if (!variable->exists(context))
         {
-            return new_string(CHAR_LIT);
+            return new_string("LIT");
         }
         else
         {
-            return new_string(CHAR_VAR);
+            return new_string("VAR");
         }
     }
 }
@@ -1695,7 +1699,7 @@ BUILTIN(VALUE)
         // symbol.
         if (retriever == OREF_NULL || (newvalue != OREF_NULL && !assignable))
         {
-            reportException(Error_Incorrect_call_symbol, CHAR_VALUE, IntegerOne, variable);
+            reportException(Error_Incorrect_call_symbol, "VALUE", IntegerOne, variable);
         }
         // get the variable value
         RexxObject *result = (RexxObject *)retriever->getValue(context);
@@ -1714,7 +1718,7 @@ BUILTIN(VALUE)
         // the value is .VARIABLE if not found
         if (result == OREF_NULL)
         {
-            result = ((RexxString *)OREF_PERIOD)->concat(variable->upper());
+            result = variable->upper()->concatToCstring(".");
         }
         // do the set also
         if (newvalue != OREF_NULL)
@@ -1963,9 +1967,9 @@ BUILTIN(LINEIN)
         // handle both via the exit and the actual queue object
         if (context->getActivity()->callPullExit(context, result))
         {
-            RexxObject *stream = context->getLocalEnvironment(OREF_REXXQUEUE);
+            RexxObject *stream = context->getLocalEnvironment(REXXQUEUE);
             // we do this using a LINEIN method
-            return stream->sendMessage(OREF_LINEIN);
+            return stream->sendMessage(LINEIN);
         }
         return result;
     }
@@ -1980,15 +1984,15 @@ BUILTIN(LINEIN)
             // NAME only
             case 0:
             case 1:
-                return stream->sendMessage(OREF_LINEIN);
+                return stream->sendMessage(LINEIN);
                 break;
             // start position specified
             case 2:
-                return stream->sendMessage(OREF_LINEIN, line);
+                return stream->sendMessage(LINEIN, line);
                 break;
             // start and count specified
             case 3:
-                return stream->sendMessage(OREF_LINEIN, line, count);
+                return stream->sendMessage(LINEIN, line, count);
                 break;
         }
     }
@@ -2013,7 +2017,7 @@ BUILTIN(CHARIN)
     // queue is not allowed for CHARIN
     if (check_queue(name))
     {
-        reportException(Error_Incorrect_call_queue_no_char, OREF_CHARIN);
+        reportException(Error_Incorrect_call_queue_no_char, CHARIN);
     }
 
     // resolve the stream name and send it the appropriate message
@@ -2023,13 +2027,13 @@ BUILTIN(CHARIN)
     {
         case 0:
         case 1:
-            return stream->sendMessage(OREF_CHARIN);
+            return stream->sendMessage(CHARIN);
             break;
         case 2:
-            return stream->sendMessage(OREF_CHARIN, position);
+            return stream->sendMessage(CHARIN, position);
             break;
         case 3:
-            return stream->sendMessage(OREF_CHARIN, position, count);
+            return stream->sendMessage(CHARIN, position, count);
             break;
     }
     return GlobalNames::NULLSTRING;
@@ -2059,8 +2063,8 @@ BUILTIN(LINEOUT)
             // lineout always queues to the queue
             if (string != OREF_NULL)
             {
-                RexxObject *stream = context->getLocalEnvironment(OREF_REXXQUEUE);
-                return stream->sendMessage(OREF_QUEUENAME, string);
+                RexxObject *stream = context->getLocalEnvironment(REXXQUEUE);
+                return stream->sendMessage(QUEUE, string);
             }
             else
             {
@@ -2078,13 +2082,13 @@ BUILTIN(LINEOUT)
         {
             case 0:
             case 1:
-                return stream->sendMessage(OREF_LINEOUT);
+                return stream->sendMessage(LINEOUT);
                 break;
             case 2:
-                return stream->sendMessage(OREF_LINEOUT, string);
+                return stream->sendMessage(LINEOUT, string);
                 break;
             case 3:
-                return stream->sendMessage(OREF_LINEOUT, string, line);
+                return stream->sendMessage(LINEOUT, string, line);
                 break;
         }
     }
@@ -2109,7 +2113,7 @@ BUILTIN(CHAROUT)
     // queues are not allowed with charout
     if (check_queue(name))
     {
-        reportException(Error_Incorrect_call_queue_no_char, OREF_CHAROUT);
+        reportException(Error_Incorrect_call_queue_no_char, CHAROUT);
     }
 
     bool added;
@@ -2119,13 +2123,13 @@ BUILTIN(CHAROUT)
     {
         case 0:
         case 1:
-            return stream->sendMessage(OREF_CHAROUT);
+            return stream->sendMessage(CHAROUT);
             break;
         case 2:
-            return stream->sendMessage(OREF_CHAROUT, string);
+            return stream->sendMessage(CHAROUT, string);
             break;
         case 3:
-            return stream->sendMessage(OREF_CHAROUT, string, position);
+            return stream->sendMessage(CHAROUT, string, position);
             break;
     }
     return GlobalNames::NULLSTRING;
@@ -2144,32 +2148,23 @@ BUILTIN(LINES)
     RexxString *name = optional_string(LINES, name); /* get the string name               */
     RexxString *option = optional_string(LINES, option);
     RexxObject *result;
+    int opt = 'N';
 
     if (option != OREF_NULL)
     {
-        switch (toupper(option->getChar(0)))
+        // get the first character
+        opt = toupper(option->getChar(0));
+        if (opt != 'C' && opt != 'N')
         {
-            case 'C':
-                break;
-            case 'N':
-                break;
-            // really just doing this for the error detection here.
-            default:
-
-                reportException(Error_Incorrect_call_list, CHAR_ARG, IntegerTwo, "NC", option);
-                break;
+            reportException(Error_Incorrect_call_list, "ARG", IntegerTwo, "NC", option);
         }
-    }
-    else
-    {
-        option = OREF_NORMAL;
     }
 
     // for the queue, return the count of items in the queue
     if (check_queue(name))
     {
-        RexxObject *stream = context->getLocalEnvironment(OREF_REXXQUEUE);
-        result = stream->sendMessage(OREF_QUEUED);
+        RexxObject *stream = context->getLocalEnvironment(REXXQUEUE);
+        result = stream->sendMessage(QUEUED);
     }
     else
     {
@@ -2177,12 +2172,12 @@ BUILTIN(LINES)
         // resolve the stream
         RexxObject *stream = context->resolveStream(name, true, NULL, &added);
         // and send the lines message with the option.
-        result = stream->sendMessage(OREF_LINES, option);
+        result = stream->sendMessage(LINES, option);
     }
 
 
     // for compatibility this needs to only return 0 or 1
-    if (toupper(option->getChar(0)) == 'N')
+    if (opt == 'N')
     {
         wholenumber_t count = 0;
         if (result->numberValue(count))
@@ -2211,13 +2206,13 @@ BUILTIN(CHARS)
     // queue not allowed with chars()
     if (check_queue(name))
     {
-        reportException(Error_Incorrect_call_queue_no_char, OREF_CHARS);
+        reportException(Error_Incorrect_call_queue_no_char, CHARS);
     }
 
     // resolve the stream and send it the CHARS message
     bool added;
     RexxObject *stream = context->resolveStream(name, true, NULL, &added);
-    return stream->sendMessage(OREF_CHARS);
+    return stream->sendMessage(CHARS);
 }
 
 
@@ -2241,7 +2236,7 @@ BUILTIN(STREAM)
     // null string not allowed for the name
     if (name->getLength() == 0)
     {
-        reportException(Error_Incorrect_call_stream_name, OREF_STREAM, name);
+        reportException(Error_Incorrect_call_stream_name, STREAM, name);
     }
 
     RexxString *action = optional_string(STREAM, operation);
@@ -2254,7 +2249,7 @@ BUILTIN(STREAM)
         // null string is not a valid option
         if (action->getLength() == 0)
         {
-            reportException(Error_Incorrect_call_list, CHAR_STREAM, IntegerTwo, "SDC", action);
+            reportException(Error_Incorrect_call_list, "STREAM", IntegerTwo, "SDC", action);
         }
         action_char = toupper(action->getChar(0));
     }
@@ -2267,12 +2262,12 @@ BUILTIN(STREAM)
                 // no third argument allowed with status
                 if (argcount > 2)
                 {
-                    reportException(Error_Incorrect_call_maxarg, OREF_STREAM, IntegerTwo);
+                    reportException(Error_Incorrect_call_maxarg, STREAM, IntegerTwo);
                 }
 
                 // get the stream object and get the state
                 RexxObject *stream = context->resolveStream(name, true, NULL, NULL);
-                return stream->sendMessage(OREF_STATE);
+                return stream->sendMessage(STATE);
                 break;
             }
 
@@ -2282,11 +2277,11 @@ BUILTIN(STREAM)
                 // only 2 args allowed here also
                 if (argcount > 2)
                 {
-                    reportException(Error_Incorrect_call_maxarg, OREF_STREAM, IntegerTwo);
+                    reportException(Error_Incorrect_call_maxarg, STREAM, IntegerTwo);
                 }
 
                 RexxObject *stream = context->resolveStream(name, true, NULL, NULL);
-                return stream->sendMessage(OREF_DESCRIPTION);
+                return stream->sendMessage(DESCRIPTION);
                 break;
             }
 
@@ -2296,7 +2291,7 @@ BUILTIN(STREAM)
                 //the third argument is required here
                 if (argcount < 3)
                 {
-                    reportException(Error_Incorrect_call_minarg, OREF_STREAM, IntegerThree);
+                    reportException(Error_Incorrect_call_minarg, STREAM, IntegerThree);
                 }
                 ProtectedObject p(command);
 
@@ -2313,7 +2308,7 @@ BUILTIN(STREAM)
                     RexxString *fullName;
                     bool added;
                     RexxObject *stream = context->resolveStream(name, true, &fullName, &added);
-                    RexxString *result = (RexxString *)stream->sendMessage(OREF_COMMAND, command);
+                    RexxString *result = (RexxString *)stream->sendMessage(COMMAND, command);
                     // if open failed, remove the stream object from stream table again
                     if (!result->strCompare("READY:"))
                     {
@@ -2327,7 +2322,7 @@ BUILTIN(STREAM)
                     RexxString *fullName;
                     bool added;
                     RexxObject *stream = context->resolveStream(name, true, &fullName, &added);
-                    RexxString *result = (RexxString *)stream->sendMessage(OREF_COMMAND, command);
+                    RexxString *result = (RexxString *)stream->sendMessage(COMMAND, command);
                     // remove this from the table after the close
                     context->getStreams()->remove(fullName);
                     return result;
@@ -2340,20 +2335,20 @@ BUILTIN(STREAM)
                     bool added;
                     RexxObject *stream = context->resolveStream(name, true, &fullName, &added);
                     // this is a real operation, so pass along to the stream object
-                    RexxString *result = (RexxString *)stream->sendMessage(OREF_COMMAND, command);
+                    RexxString *result = (RexxString *)stream->sendMessage(COMMAND, command);
                     return result;
                 }
                 // all other commands just pass to the resolved stream object
                 else
                 {
                     RexxObject *stream = context->resolveStream(name, true, NULL, NULL);
-                    return stream->sendMessage(OREF_COMMAND, command);
+                    return stream->sendMessage(COMMAND, command);
                 }
                 break;
             }
 
         default:
-            reportException(Error_Incorrect_call_list, CHAR_STREAM, IntegerTwo, "SDC", action);
+            reportException(Error_Incorrect_call_list, "STREAM", IntegerTwo, "SDC", action);
             break;
     }
     return OREF_NULL;
@@ -2371,8 +2366,8 @@ BUILTIN(QUEUED)
     // see if the exit handles this, otherwise send a message to the current queue
     if (context->getActivity()->callQueueSizeExit(context, queuesize))
     {
-        RexxObject *queue = (RexxObject *)context->getLocalEnvironment(OREF_REXXQUEUE);
-        return queue->sendMessage(OREF_QUEUED);
+        RexxObject *queue = (RexxObject *)context->getLocalEnvironment(REXXQUEUE);
+        return queue->sendMessage(QUEUED);
     }
     else
     {
@@ -2398,7 +2393,7 @@ BUILTIN(CONDITION)
         // null string is not a valid option
         if (option->getLength() == 0)
         {
-            reportException(Error_Incorrect_call_list, CHAR_CONDITION, IntegerOne, "ACDIOS", option);
+            reportException(Error_Incorrect_call_list, "CONDITION", IntegerOne, "ACDIOS", option);
         }
 
         style = toupper(option->getChar(0));
@@ -2413,7 +2408,7 @@ BUILTIN(CONDITION)
         case 'A':
             if (conditionobj != OREF_NULL)
             {
-                RexxObject *result = (RexxObject *)conditionobj->get(OREF_ADDITIONAL);
+                RexxObject *result = (RexxObject *)conditionobj->get(ADDITIONAL);
                 // return either .nil or a copy of the additional informaion
                 if (result == OREF_NULL)
                 {
@@ -2434,7 +2429,7 @@ BUILTIN(CONDITION)
         case 'I':
             if (conditionobj != OREF_NULL)
             {
-                return (RexxObject *)conditionobj->get(OREF_INSTRUCTION);
+                return (RexxObject *)conditionobj->get(INSTRUCTION);
             }
             break;
 
@@ -2443,7 +2438,7 @@ BUILTIN(CONDITION)
             if (conditionobj != OREF_NULL)
             {
                 // get the description from the object, return a null string if not there
-                RexxObject *result = (RexxObject *)conditionobj->get(OREF_DESCRIPTION);
+                RexxObject *result = (RexxObject *)conditionobj->get(DESCRIPTION);
                 if (result == OREF_NULL)
                 {
                     result = GlobalNames::NULLSTRING;
@@ -2457,7 +2452,7 @@ BUILTIN(CONDITION)
             // if we have a condition object, return that value
             if (conditionobj != OREF_NULL)
             {
-                return (RexxObject *)conditionobj->get(OREF_CONDITION);
+                return (RexxObject *)conditionobj->get(CONDITION);
             }
             break;
 
@@ -2475,13 +2470,13 @@ BUILTIN(CONDITION)
             // get the current trap state from the condition object if we have one
             if (conditionobj != OREF_NULL)
             {
-                return context->trapState((RexxString *)conditionobj->get(OREF_CONDITION));
+                return context->trapState((RexxString *)conditionobj->get(CONDITION));
             }
             break;
 
         // an unknown option
         default:
-            reportException(Error_Incorrect_call_list, CHAR_CONDITION, IntegerOne, "ACDIOS", option);
+            reportException(Error_Incorrect_call_list, "CONDITION", IntegerOne, "ACDIOS", option);
             break;
     }
 
@@ -2585,6 +2580,8 @@ BUILTIN(RXFUNCQUERY)
 
 // This somewhat funny function is implemented as a builtin because it
 // requires quite a bit of internal access.
+// TODO:  This needs a real rethink here...can't really do this as
+// a builtin.
 BUILTIN(QUEUEEXIT)
 {
     const size_t QUEUEEXIT_Min = 1;

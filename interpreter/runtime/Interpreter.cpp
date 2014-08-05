@@ -168,7 +168,7 @@ void Interpreter::startInterpreter(InterpreterStartupMode mode)
             {
                 ProtectedObject result;
                 // create a new server object
-                server_class->messageSend(OREF_NEW, OREF_NULL, 0, result);
+                server_class->messageSend(GlobalNames::NEW, OREF_NULL, 0, result);
                 localServer = (RexxObject *)result;
             }
         }
@@ -188,7 +188,7 @@ void Interpreter::initLocal()
     {
         // this will insert the initial .local objects
         ProtectedObject result;
-        localServer->messageSend(OREF_INITINSTANCE, OREF_NULL, 0, result);
+        localServer->messageSend(new_string("INITINSTANCE"), OREF_NULL, 0, result);
     }
 }
 
@@ -472,25 +472,27 @@ InstanceBlock::~InstanceBlock()
  */
 void Interpreter::decodeConditionData(DirectoryClass *conditionObj, RexxCondition *condData)
 {
-    memset(condData, 0, sizeof(RexxCondition));
-    condData->code = messageNumber((RexxString *)conditionObj->get(OREF_CODE));
-    // just return the major part
-    condData->rc = messageNumber((RexxString *)conditionObj->get(OREF_RC))/1000;
-    condData->conditionName = (RexxStringObject)conditionObj->get(OREF_CONDITION);
+    using namespace GlobalNames;
 
-    RexxObject *temp = (RexxObject *)conditionObj->get(OREF_NAME_MESSAGE);
+    memset(condData, 0, sizeof(RexxCondition));
+    condData->code = messageNumber((RexxString *)conditionObj->get(CODE));
+    // just return the major part
+    condData->rc = messageNumber((RexxString *)conditionObj->get(RC))/1000;
+    condData->conditionName = (RexxStringObject)conditionObj->get(CONDITION);
+
+    RexxObject *temp = (RexxObject *)conditionObj->get(MESSAGE);
     if (temp != OREF_NULL)
     {
         condData->message = (RexxStringObject)temp;
     }
 
-    temp = (RexxObject *)conditionObj->get(OREF_ERRORTEXT);
+    temp = (RexxObject *)conditionObj->get(ERRORTEXT);
     if (temp != OREF_NULL)
     {
         condData->errortext = (RexxStringObject)temp;
     }
 
-    temp = (RexxObject *)conditionObj->get(OREF_DESCRIPTION);
+    temp = (RexxObject *)conditionObj->get(DESCRIPTION);
     if (temp != OREF_NULL)
     {
         condData->description = (RexxStringObject)temp;
@@ -498,7 +500,7 @@ void Interpreter::decodeConditionData(DirectoryClass *conditionObj, RexxConditio
 
     // this could be raised by a termination exit, so there might not be
     // position information available
-    temp = (RexxObject *)conditionObj->get(OREF_POSITION);
+    temp = (RexxObject *)conditionObj->get(POSITION);
     if (temp != OREF_NULL)
     {
         condData->position = ((RexxInteger *)temp)->wholeNumber();
@@ -508,13 +510,13 @@ void Interpreter::decodeConditionData(DirectoryClass *conditionObj, RexxConditio
         condData->position = 0;
     }
 
-    temp = (RexxObject *)conditionObj->get(OREF_PROGRAM);
+    temp = (RexxObject *)conditionObj->get(PROGRAM);
     if (temp != OREF_NULL)
     {
         condData->program = (RexxStringObject)temp;
     }
 
-    temp = (RexxObject *)conditionObj->get(OREF_ADDITIONAL);
+    temp = (RexxObject *)conditionObj->get(ADDITIONAL);
     if (temp != OREF_NULL)
     {
         condData->additional = (RexxArrayObject)temp;
@@ -550,14 +552,14 @@ RexxClass *Interpreter::findClass(RexxString *className)
  */
 RexxString *Interpreter::getCurrentQueue()
 {
-    RexxObject *queue = ActivityManager::getLocalEnvironment(OREF_REXXQUEUE);
+    RexxObject *queue = ActivityManager::getLocalEnvironment(GlobalNames::REXXQUEUE);
 
-    if (queue == OREF_NULL)              /* no queue?                         */
+    if (queue == OREF_NULL)              // no queue set?  Default to session
     {
-        return OREF_SESSION;             // the session queue is the default
+        return GlobalNames::SESSION;     // the session queue is the default
     }
     // get the current name from the queue object.
-    return(RexxString *)queue->sendMessage(OREF_GET);
+    return(RexxString *)queue->sendMessage(GlobalNames::GET);
 }
 
 

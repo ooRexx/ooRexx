@@ -199,19 +199,19 @@ void RexxInstructionCall::execute(RexxActivation *context, ExpressionStack *stac
     // an external call...this is handled elsewhere.
     else
     {
-        context->externalCall(targetName, stack->arguments(argumentCount), argumentCount, OREF_ROUTINENAME, result);
+        context->externalCall(targetName, stack->arguments(argumentCount), argumentCount, GlobalNames::ROUTINE, result);
     }
 
     // did we get a result returned?  We need to either set or drop
     // the result variable and potentially trace this.
     if ((RexxObject *)result != OREF_NULL)   /* result returned?                  */
     {
-        context->setLocalVariable(OREF_RESULT, VARIABLE_RESULT, (RexxObject *)result);
+        context->setLocalVariable(GlobalNames::RESULT, VARIABLE_RESULT, (RexxObject *)result);
         context->traceResult((RexxObject *)result);
     }
     else
     {
-        context->dropLocalVariable(OREF_RESULT, VARIABLE_RESULT);
+        context->dropLocalVariable(GlobalNames::RESULT, VARIABLE_RESULT);
     }
     // and finally the debut pause.
     context->pauseInstruction();
@@ -353,7 +353,7 @@ void RexxInstructionDynamicCall::execute(RexxActivation *context, ExpressionStac
         // an external call...this is handled elsewhere.
         else
         {
-            context->externalCall(targetName, stack->arguments(argumentCount), argumentCount, OREF_ROUTINENAME, result);
+            context->externalCall(targetName, stack->arguments(argumentCount), argumentCount, GlobalNames::ROUTINE, result);
         }
     }
 
@@ -361,12 +361,12 @@ void RexxInstructionDynamicCall::execute(RexxActivation *context, ExpressionStac
     // the result variable and potentially trace this.
     if ((RexxObject *)result != OREF_NULL)
     {
-        context->setLocalVariable(OREF_RESULT, VARIABLE_RESULT, (RexxObject *)result);
+        context->setLocalVariable(GlobalNames::RESULT, VARIABLE_RESULT, (RexxObject *)result);
         context->traceResult((RexxObject *)result);
     }
     else
     {
-        context->dropLocalVariable(OREF_RESULT, VARIABLE_RESULT);
+        context->dropLocalVariable(GlobalNames::RESULT, VARIABLE_RESULT);
     }
     // and finally the debug pause.
     context->pauseInstruction();
@@ -515,7 +515,7 @@ void RexxInstructionCallOn::trap(RexxActivation *context, DirectoryClass  *condi
     // this is an external call.
     else
     {
-        context->externalCall(targetName, NULL, 0, OREF_ROUTINENAME, result);
+        context->externalCall(targetName, NULL, 0, GlobalNames::ROUTINE, result);
     }
 
     // NOTE:  Any result object is ignored for a CALL ON trap

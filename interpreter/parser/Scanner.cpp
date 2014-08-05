@@ -113,15 +113,13 @@ int LanguageParser::characterTable[]={
 #endif
 };
 
-                                       /* some macros for commonly coded    */
-                                       /* scanning operations...mostly to   */
-                                       /* save some keystrokes and make     */
-                                       /* things a little more readable     */
-#define OPERATOR(op) (clause->newToken(TOKEN_OPERATOR, OPERATOR_##op, (RexxString *)OREF_##op, location))
+// some macros for commonly coded scanning operations...mostly to
+// save some keystrokes and make things a little more readable
+#define OPERATOR(op) (clause->newToken(TOKEN_OPERATOR, OPERATOR_##op, (RexxString *)GlobalNames::op, location))
 #define CHECK_ASSIGNMENT(op) \
 {\
-   RexxToken *token = clause->newToken(TOKEN_OPERATOR, OPERATOR_##op, (RexxString *)OREF_##op, location); \
-   token->checkAssignment(this, (RexxString *)OREF_ASSIGNMENT_##op); \
+   RexxToken *token = clause->newToken(TOKEN_OPERATOR, OPERATOR_##op, GlobalNames::op, location); \
+   token->checkAssignment(this, GlobalNames::ASSIGNMENT_##op); \
    return token; \
 }
 
@@ -795,7 +793,7 @@ RexxToken *LanguageParser::sourceNextToken(RexxToken *previous )
                  inch == '('  || inch == '[')
             {
                 // this is a blank operator token
-                return clause->newToken(TOKEN_BLANK, OPERATOR_BLANK, OREF_BLANK, location);
+                return clause->newToken(TOKEN_BLANK, OPERATOR_BLANK, GlobalNames::BLANK, location);
             }
 
             // this is actually a non-significant blank, try again.

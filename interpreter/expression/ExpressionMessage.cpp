@@ -322,6 +322,6 @@ void RexxExpressionMessage::assign(RexxActivation *context, RexxObject *value)
 void RexxExpressionMessage::makeAssignment(LanguageParser *parser)
 {
     // add an equal sign to the name
-    messageName = parser->commonString(messageName->concat(OREF_EQUAL));
+    messageName = parser->commonString(messageName->concat(GlobalNames::EQUAL));
 }
 

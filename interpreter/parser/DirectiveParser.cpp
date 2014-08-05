@@ -919,7 +919,7 @@ void LanguageParser::decodeExternalMethod(RexxString *methodName, RexxString *ex
     // common string pool
     ArrayClass *_words = words(externalSpec);
     // not 'LIBRARY library [entry]' form?
-    if (((RexxString *)(_words->get(1)))->strCompare(CHAR_LIBRARY))
+    if (((RexxString *)(_words->get(1)))->strCompare("LIBRARY"))
     {
         // full library with entry name version?
         if (_words->size() == 3)
@@ -1586,7 +1586,7 @@ void LanguageParser::routineDirective()
             // NOTE:  decodeMethodLibrary doesn't really work for routines
             // because we have a second form.  Not really worth writing
             // a second version just for one use.
-            if (((RexxString *)(_words->get(1)))->strCompare(CHAR_LIBRARY))
+            if (((RexxString *)(_words->get(1)))->strCompare("LIBRARY"))
             {
                 RexxString *library = OREF_NULL;
 
@@ -1631,7 +1631,7 @@ void LanguageParser::routineDirective()
 
             // ::ROUTINE foo EXTERNAL "REGISTERED libbar [foo]"
             // this is an old-style external function.
-            else if (((RexxString *)(_words->get(1)))->strCompare(CHAR_REGISTERED))
+            else if (((RexxString *)(_words->get(1)))->strCompare("REGISTERED"))
             {
                 RexxString *library = OREF_NULL;
                 // the default entry point name is the internal name

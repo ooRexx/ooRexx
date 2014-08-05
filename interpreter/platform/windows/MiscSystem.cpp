@@ -42,94 +42,25 @@
 /*********************************************************************/
 #include "RexxCore.h"
 #include "StringClass.hpp"
-#include "DirectoryClass.hpp"
-#include "Activity.hpp"
-#include "RexxActivation.hpp"
-#include "PointerClass.hpp"
-#include <stdlib.h>
-#include <process.h>
-#include "malloc.h"
 #include <signal.h>
-#include "Interpreter.hpp"
 #include "SystemInterpreter.hpp"
 
-RexxString *SystemInterpreter::getInternalSystemName()
-{
-    return getSystemName();     // this is the same
-}
 
-
-static OSVERSIONINFO version_info={0}; /* for optimization so that GetVersionEx */
-									   /* don't have to be called each time */
-
-
-RexxString *SystemInterpreter::getSystemName()
-/******************************************************************************/
-/* Function: Get System Name                                                  */
-/******************************************************************************/
-{
-    return new_string("WindowsNT");
-}
-
-
-RexxString *SystemInterpreter::getSystemVersion()
-/******************************************************************************/
-/* Function:   Return the system specific version identifier that is stored   */
-/*             in the image.                                                  */
-/******************************************************************************/
-{
-    char chVerBuf[8];                   // buffer for version
-    OSVERSIONINFO vi;
-    // dont forget to change sysmeths.cmd
-
-    vi.dwOSVersionInfoSize = sizeof(vi);  // if not set --> violation error
-
-    GetVersionEx(&vi);              // get version with extended api
-    /* format into the buffer            */
-    wsprintf(chVerBuf,"%i.%02i",(int)vi.dwMajorVersion,(int)vi.dwMinorVersion);
-    return new_string(chVerBuf);     /* return as a string                */
-}
-
-
-RexxString *SystemInterpreter::getSourceString(
-  RexxString * callType,               /* type of call token                */
-  RexxString * programName )           /* program name token                */
-/******************************************************************************/
-/* Function:  Produce a system specific source string                         */
-/******************************************************************************/
-{
-    char  *outPtr;                  /* copy pointer                     */
-    const char  *chSysName;               /* copy pointer                     */
-
-    RexxString *rsSysName = getSystemName();    /* start with the system stuff       */
-    chSysName= rsSysName->getStringData();
-
-    RexxString *source_string = raw_string(rsSysName->getLength() + 2 + callType->getLength() + programName->getLength());
-
-    outPtr = source_string->getWritableData();  /* point to the result data          */
-    strcpy(outPtr, chSysName);           /* copy the system name              */
-    outPtr +=rsSysName->getLength();     /* step past the name                */
-    *outPtr++ = ' ';                     /* put a blank between               */
-                                         /* copy the call type                */
-    memcpy(outPtr, callType->getStringData(), callType->getLength());
-    outPtr += callType->getLength();     /* step over the call type           */
-    *outPtr++ = ' ';                     /* put a blank between               */
-                                         /* copy the system name              */
-    memcpy(outPtr, programName->getStringData(), programName->getLength());
-    return source_string;                /* return the source string          */
-}
-
-
+/**
+ * Exception Filter used by Windows exception handling
+ *
+ * @param xCode  The exception code.
+ *
+ * @return We always pass on this.
+ */
 int WinExceptionFilter( int xCode )
-/******************************************************************************/
-/* Function:  Exception Filter used by Windows exception handling             */
-/******************************************************************************/
 {
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
 
-#define MAX_ADDRESS_NAME_LENGTH  250   /* maximum command environment name  */
+// maximum environment name length
+const size_t MAX_ADDRESS_NAME_LENGTH = 250;
 
 
 
@@ -140,10 +71,9 @@ int WinExceptionFilter( int xCode )
  */
 void SystemInterpreter::validateAddressName(RexxString *name )
 {
-    /* name too long?                    */
+    // only the length of the name is a disqualifying consideration.
     if (name->getLength() > MAX_ADDRESS_NAME_LENGTH)
     {
-        /* go report an error                */
         reportException(Error_Environment_name_name, MAX_ADDRESS_NAME_LENGTH, name);
     }
 }

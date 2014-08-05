@@ -161,12 +161,12 @@ void RexxInstructionNumeric::execute(RexxActivation *context, ExpressionStack *s
             context->traceResult(stringResult);
 
             //  Scientific form?
-            if (stringResult->strCompare(CHAR_SCIENTIFIC))
+            if (stringResult->strCompare(GlobalNames::SCIENTIFIC))
             {
                 context->setForm(Numerics::FORM_SCIENTIFIC);
             }
             // Engineering form?
-            else if (stringResult->strCompare(CHAR_ENGINEERING))
+            else if (stringResult->strCompare(GlobalNames::ENGINEERING))
             {
                 context->setForm(Numerics::FORM_ENGINEERING);
             }

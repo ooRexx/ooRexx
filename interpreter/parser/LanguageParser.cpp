@@ -2585,7 +2585,7 @@ RexxObject *LanguageParser::parseCollectionMessage(RexxToken *token, RexxObject 
     size_t argCount = parseArgList(token, (TERM_SQRIGHT));
 
     // create the message item.
-    RexxObject *msg = (RexxObject *)new (argCount) RexxExpressionMessage(target, (RexxString *)OREF_BRACKETS,
+    RexxObject *msg = (RexxObject *)new (argCount) RexxExpressionMessage(target, GlobalNames::BRACKETS,
         (RexxObject *)OREF_NULL, argCount, subTerms, false);
     // give this a little short-term GC protection.
     holdObject(msg);

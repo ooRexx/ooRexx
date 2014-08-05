@@ -258,11 +258,11 @@ void RexxInstructionRaise::execute(RexxActivation *context, ExpressionStack *sta
         // if this is a propagate, get CONDITION name from the condition object.
         if (instructionFlags[raise_propagate])
         {
-            errorCode = (RexxString *)conditionobj->get(OREF_CONDITION);
+            errorCode = (RexxString *)conditionobj->get(GlobalNames::CONDITION);
         }
         // If this is a SYNTAX condition, than the Additional information MUST
         // be an array of items used for substitutions.
-        if (errorCode->strCompare(CHAR_SYNTAX))
+        if (errorCode->strCompare(GlobalNames::SYNTAX))
         {
             // get the array version, and it must be single dimension.
             _additional = _additional->requestArray();
@@ -277,7 +277,6 @@ void RexxInstructionRaise::execute(RexxActivation *context, ExpressionStack *sta
     // raise return is processed as a return instruction
     if (instructionFlags[raise_return])
     {
-                                         /* let activation handle as return   */
         context->raise(conditionName, rc, _description, _additional, _result, conditionobj);
     }
     // the default is handled like an EXIT

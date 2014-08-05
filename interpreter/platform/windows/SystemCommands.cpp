@@ -77,7 +77,7 @@
  */
 RexxString *SystemInterpreter::getDefaultAddressName()
 {
-    return OREF_INITIALADDRESS;
+    return GlobalNames::INITIALADDRESS;
 }
 
 

@@ -63,11 +63,6 @@
 
 #include "RexxPlatformDefinitions.h"
 
-/******************************************************************************/
-/* Literal definitions                                                        */
-/******************************************************************************/
-#include "RexxConstants.hpp"
-
 // Object Reference Assignment
 // OrefSet handles reference assignment for situations where an
 // object exists in the oldspace (rexx image) area and the fields is being updated

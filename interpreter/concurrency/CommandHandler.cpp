@@ -176,12 +176,12 @@ void CommandHandlerDispatcher::complete(RexxString *command, ProtectedObject &re
     if (flags & (unsigned short)RXSUBCOM_FAILURE)
     {
         // raise the condition when things are done
-        condition = (RexxObject *)activity->createConditionObject(OREF_FAILURENAME, (RexxObject *)result, command, OREF_NULL, OREF_NULL);
+        condition = (RexxObject *)activity->createConditionObject(GlobalNames::FAILURE, (RexxObject *)result, command, OREF_NULL, OREF_NULL);
     }
     else if (flags & (unsigned short)RXSUBCOM_ERROR)
     {
         // raise the condition when things are done
-        condition = (RexxObject *)activity->createConditionObject(OREF_ERRORNAME, (RexxObject *)result, command, OREF_NULL, OREF_NULL);
+        condition = (RexxObject *)activity->createConditionObject(GlobalNames::ERRORNAME, (RexxObject *)result, command, OREF_NULL, OREF_NULL);
     }
 }
 
@@ -217,11 +217,11 @@ void ContextCommandHandlerDispatcher::handleError(DirectoryClass *c)
     if (c != OREF_NULL)
     {
         // check to see if this is an error or failure situation
-        RexxString *conditionName = (RexxString *)c->get(OREF_CONDITION);
+        RexxString *conditionName = (RexxString *)c->get(GlobalNames::CONDITION);
         // if this is not a syntax error, this is likely an error
         // or failure condition, and the return value is taken from
         // the condition object.
-        if (!conditionName->strCompare(CHAR_SYNTAX))
+        if (!conditionName->strCompare(GlobalNames::SYNTAX))
         {
             // just set the condition now...additional processing will be
             // done on return to the command issuer

@@ -663,7 +663,7 @@ RexxInstruction *LanguageParser::callOnNew(InstructionSubKeyword type)
         // The condition name for this instruction is "USER condition", so
         // construct that now and make it a common string (likely used
         // other places in the program)
-        conditionName = commonString(labelName->concatToCstring(CHAR_USER_BLANK));
+        conditionName = commonString(labelName->concatToCstring("USER "));
     }
     else
     {
@@ -2640,7 +2640,7 @@ RexxInstruction *LanguageParser::raiseNew()
             // the condition name is actuall "USER condition", so construct
             // the composite
             _condition = token->value();
-            _condition = _condition->concatToCstring(CHAR_USER_BLANK);
+            _condition = _condition->concatToCstring("USER ");
             // NB:  Common string protects this from garbage collection, so we
             // don't need to give it extra protection.
             _condition = commonString(_condition);
@@ -3031,7 +3031,7 @@ RexxInstruction *LanguageParser::signalOnNew(InstructionSubKeyword type)
         // The condition name for this instruction is "USER condition", so
         // construct that now and make it a common string (likely used
         // other places in the program)
-        conditionName = commonString(labelName->concatToCstring(CHAR_USER_BLANK));
+        conditionName = commonString(labelName->concatToCstring("USER "));
     }
     else
     {
@@ -3404,7 +3404,7 @@ RexxInstruction *LanguageParser::useNew()
             if (token->isSymbol())
             {
                 // is this an ellipsis symbol?
-                if (token->value()->strCompare(CHAR_ELLIPSIS))
+                if (token->value()->strCompare("..."))
                 {
                     // ok, this is the end of everything.  Tell the instructions to not enforce the max rules
                     allowOptionals = true;

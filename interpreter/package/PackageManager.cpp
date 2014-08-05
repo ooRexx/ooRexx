@@ -83,8 +83,8 @@ void PackageManager::initialize()
     registeredRoutines = new_string_table();
     loadedRequires = new_string_table();
     // load the internal library first
-    loadInternalPackage(OREF_REXX, rexxPackage);
-    loadLibrary(OREF_REXXUTIL); // load the rexxutil package automatically
+    loadInternalPackage(GlobalNames::REXX, rexxPackage);
+    loadLibrary(GlobalNames::REXXUTIL); // load the rexxutil package automatically
 }
 
 

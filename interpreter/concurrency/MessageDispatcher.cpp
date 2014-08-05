@@ -50,7 +50,7 @@
 void MessageDispatcher::run()
 {
     // must invoke the message object
-    message->sendMessage(OREF_SEND);
+    message->sendMessage(GlobalNames::SEND);
 }
 
 

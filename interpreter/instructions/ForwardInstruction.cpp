@@ -231,12 +231,12 @@ void RexxInstructionForward::execute(RexxActivation *context, ExpressionStack *s
         if (!result.isNull())
         {
             context->traceResult((RexxObject *)result);
-            context->setLocalVariable(OREF_RESULT, VARIABLE_RESULT, result);
+            context->setLocalVariable(GlobalNames::RESULT, VARIABLE_RESULT, result);
         }
         // ne result returned, so we drop the RESULT variable
         else
         {
-            context->dropLocalVariable(OREF_RESULT, VARIABLE_RESULT);
+            context->dropLocalVariable(GlobalNames::RESULT, VARIABLE_RESULT);
         }
         // and finally, pause
         context->pauseInstruction();

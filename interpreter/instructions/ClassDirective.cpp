@@ -213,7 +213,7 @@ RexxClass *ClassDirective::install(PackageClass *package, RexxActivation *activa
             }
 
             // inherit from the mixin
-            classObject->sendMessage(OREF_INHERIT, mixin);
+            classObject->sendMessage(GlobalNames::INHERIT, mixin);
         }
     }
 

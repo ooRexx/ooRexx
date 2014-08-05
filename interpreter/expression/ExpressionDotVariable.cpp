@@ -131,7 +131,7 @@ RexxObject * RexxDotVariable::evaluate(RexxActivation *context, ExpressionStack 
         if (result == OREF_NULL)
         {
             // add a period to the name
-            result = variableName->concatToCstring(CHAR_PERIOD);
+            result = variableName->concatToCstring(".");
         }
     }
     // evaluate always pushes on the stack.
@@ -162,7 +162,7 @@ RexxObject * RexxDotVariable::getValue(RexxActivation *context)
         if (result == OREF_NULL)
         {
             // add a period to the name
-            result = variableName->concatToCstring(CHAR_PERIOD);
+            result = variableName->concatToCstring(".");
         }
     }
     // this just returns without pusing on the stack

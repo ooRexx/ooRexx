@@ -1420,9 +1420,6 @@ EndClassDefinition(StackFrame);
     addToSystem("FUNCTIONS", TheFunctionsDirectory);
 
     addToSystem("VERSION", Interpreter::getVersionNumber());
-    addToSystem("NAME", SystemInterpreter::getSystemName());
-    addToSystem("INTERNALNAME", SystemInterpreter::getInternalSystemName());
-    addToSystem("VERSION", SystemInterpreter::getSystemVersion());
     // initialize our thread vector for external calls.
     Activity::initializeThreadContext();
 

@@ -98,20 +98,20 @@ void RexxStartDispatcher::run()
     switch (calltype)
     {
         case  RXCOMMAND:
-            source_calltype = OREF_COMMAND;
+            source_calltype = GlobalNames::COMMAND;
             break;
 
         case  RXFUNCTION:
-            source_calltype = OREF_FUNCTIONNAME;
+            source_calltype = GlobalNames::FUNCTION;
             break;
 
         case  RXSUBROUTINE:
-            source_calltype = OREF_SUBROUTINE;
+            source_calltype = GlobalNames::SUBROUTINE;
             break;
 
         // if not specified, call it a COMMAND.
         default:
-            source_calltype = OREF_COMMAND;
+            source_calltype = GlobalNames::COMMAND;
             break;
     }
 

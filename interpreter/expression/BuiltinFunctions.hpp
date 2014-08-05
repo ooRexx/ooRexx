@@ -61,13 +61,13 @@
 #define optional_string(x,n) ((argcount >= x##_##n) ? stack->optionalStringArg(argcount - x##_##n) : OREF_NULL)
 
 // get an argument from the stack that is required to be an integer value
-#define required_integer(x,n) stack->requiredIntegerArg(argcount - x##_##n, argcount, CHAR_##x)
-#define optional_integer(x,n) ((argcount >= x##_##n) ? stack->optionalIntegerArg(argcount - x##_##n, argcount, CHAR_##x) : OREF_NULL)
+#define required_integer(x,n) stack->requiredIntegerArg(argcount - x##_##n, argcount, #x)
+#define optional_integer(x,n) ((argcount >= x##_##n) ? stack->optionalIntegerArg(argcount - x##_##n, argcount, #x) : OREF_NULL)
 
 // get an argument from the stack that is required to be a "big" integer argument,
 // such as a file position.
-#define required_big_integer(x,n) stack->requiredBigIntegerArg(argcount - x##_##n, argcount, CHAR_##x)
-#define optional_big_integer(x,n) ((argcount >= x##_##n) ? stack->optionalBigIntegerArg(argcount - x##_##n, argcount, CHAR_##x) : OREF_NULL)
+#define required_big_integer(x,n) stack->requiredBigIntegerArg(argcount - x##_##n, argcount, #x)
+#define optional_big_integer(x,n) ((argcount >= x##_##n) ? stack->optionalBigIntegerArg(argcount - x##_##n, argcount, #x) : OREF_NULL)
 
 // tests for optional arguments
 #define optional_argument(x,n) ((argcount >= x##_##n) ? (RexxObject *)stack->peek(argcount - x##_##n) : OREF_NULL )

@@ -43,17 +43,14 @@
 #include "ActivityManager.hpp"
 #include "SystemInterpreter.hpp"
 
-#define ACCOUNT_BUFFER_SIZE  256
+const size_t ACCOUNT_BUFFER_SIZE = 256;
 
 
-/*********************************************************************/
-/*                                                                   */
-/*   Subroutine Name:   SysUserid                                    */
-/*                                                                   */
-/*   Descriptive Name:  retrieve current userid                      */
-/*                                                                   */
-/*********************************************************************/
-
+/**
+ * retrieve current userid
+ *
+ * @return The current userid, as a string.
+ */
 RexxString *SystemInterpreter::getUserid()
 {
     char account_buffer[ACCOUNT_BUFFER_SIZE];
@@ -73,7 +70,7 @@ RexxString *SystemInterpreter::getUserid()
                 account = (char*) malloc(account_size);
                 break;
             default:
-                reportException(Error_Function_no_data_function, CHAR_USERID);
+                reportException(Error_Function_no_data_function, "USERID");
                 break;
         }
     }

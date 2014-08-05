@@ -100,7 +100,7 @@ extern int putflag;
  */
 RexxString *SystemInterpreter::getDefaultAddressName()
 {
-    return OREF_INITIALADDRESS;
+    return GlobalNames::INITIALADDRESS;
 }
 
 /* Handle "export" command in same process */
