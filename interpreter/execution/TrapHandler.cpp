@@ -46,6 +46,7 @@
 
 #include "CallInstruction.hpp"
 #include "DirectoryClass.hpp"
+#include "GlobalNames.hpp"
 
 
 /**

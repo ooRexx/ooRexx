@@ -49,18 +49,12 @@
 
 #include "oorexxapi.h"                 // this is the core to everything
 
-// ANSI C definitions used in many files.
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
-#include <ctype.h>
-#include <limits.h>
-
 // base definition of a null object pointer
-// NOTE:  This needs to remain untypes because of differences between
+// NOTE:  This needs to remain untyped because of differences between
 // RexxObject and RexxInternalObject.
 #define OREF_NULL NULL
 
+// platform customizations
 #include "RexxPlatformDefinitions.h"
 
 // Object Reference Assignment
@@ -112,22 +106,6 @@ class ArrayClass;
 class MemoryObject;
 class RexxString;
 
-
-/******************************************************************************/
-/* Change EXTERN definition if not already created by GDATA                   */
-/******************************************************************************/
-
-#ifndef INITGLOBALPTR                  // if not the global, this is a NOP.
-#define INITGLOBALPTR
-#endif
-#ifndef EXTERN
-#define EXTERN extern                  /* turn into external definition     */
-#endif
-
-#ifndef EXTERNMEM
-#define EXTERNMEM extern               /* turn into external definition     */
-#endif
-
 // used for building short hand operator method definitions.
 #define koper(name) RexxObject *name(RexxObject *);
 
@@ -135,7 +113,7 @@ class RexxString;
 /* Global Objects - General                                                   */
 /******************************************************************************/
 // this one is special, and is truly global.
-EXTERNMEM MemoryObject memoryObject;
+extern MemoryObject memoryObject;
 
 // short hand references to internal class objects.
 
@@ -167,7 +145,7 @@ EXTERNMEM MemoryObject memoryObject;
 #define TheWeakReferenceClass WeakReference::classInstance
 #define TheStackFrameClass StackFrameClass::classInstance
 
-// shorthand access to some important object.
+// shorthand access to some important objects.
 #define TheEnvironment memoryObject.environment
 #define TheCommonRetrievers memoryObject.commonRetrievers
 #define TheFunctionsDirectory memoryObject.functionsDir
@@ -199,8 +177,6 @@ EXTERNMEM MemoryObject memoryObject;
 /******************************************************************************/
 /* Global Objects - Names                                                     */
 /******************************************************************************/
-#include "GlobalNames.hpp"
-
 #include "ObjectClass.hpp"               // get real definition of Object
 
 #include "TableClass.hpp"                // memory has inline methods to these
@@ -208,26 +184,5 @@ EXTERNMEM MemoryObject memoryObject;
 #include "RexxBehaviour.hpp"             // now behaviours and
 #include "ClassClass.hpp"                // classes, which everything needs
 #include "Envelope.hpp"                  // envelope is needed for flattens
-
-/******************************************************************************/
-/* Return codes                                                               */
-/******************************************************************************/
-
-const int RC_OK         = 0;
-const int RC_LOGIC_ERROR  = 2;
-
-// test if an object is of a particular class
-#define isOfClass(t,r) (r)->isObjectType(The##t##Behaviour)
-#define isOfClassType(t,r) (r)->isObjectType(T_##t)
-
-// some very common class tests
-inline bool isString(RexxInternalObject *o) { return isOfClass(String, o); }
-inline bool isInteger(RexxInternalObject *o) { return isOfClass(Integer, o); }
-inline bool isNumberString(RexxInternalObject *o) { return isOfClass(NumberString, o); }
-inline bool isArray(RexxInternalObject *o) { return isOfClass(Array, o); }
-inline bool isStem(RexxInternalObject *o) { return isOfClass(Stem, o); }
-inline bool isMethod(RexxInternalObject *o) { return isOfClass(Method, o); }
-
-#include "ActivityManager.hpp"
 
 #endif

@@ -44,6 +44,8 @@
 
 #include "RexxCore.h"
 #include "SysActivity.hpp"
+#include "Activity.hpp"
+#include "ActivityManager.hpp"
 
 /**
  * Close out any resources required by this thread descriptor.

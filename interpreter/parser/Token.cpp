@@ -45,6 +45,7 @@
 #include "StringClass.hpp"
 #include "Token.hpp"
 #include "LanguageParser.hpp"
+#include "GlobalNames.hpp"
 
 /**
  * Create a new Token object.

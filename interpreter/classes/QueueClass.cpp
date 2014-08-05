@@ -95,7 +95,7 @@ void *QueueClass::operator new(size_t size, size_t capacity, size_t maxSize)
  * @return true if this was a valid index (within bounds) based
  *         on the bounds checking flags.
  */
-bool ArrayClass::validateIndex(RexxObject **index, size_t indexCount,
+bool QueueClass::validateIndex(RexxObject **index, size_t indexCount,
     size_t argPosition, size_t boundsError, stringsize_t &position)
 {
     return validateSingleDimensionIndex(index, indexCount, argPosition, boundsError, position);
@@ -196,7 +196,7 @@ RexxObject *QueueClass::putRexx(RexxInternalObject *value, RexxObject *index)
  * @return The removed object, if any.  Returns OREF_NULL if there
  *         is no item at that index.
  */
-RexxInternalObject *ArrayClass::remove(size_t index)
+RexxInternalObject *QueueClass::remove(size_t index)
 {
     return deleteItem(index);
 }

@@ -47,6 +47,7 @@
 #ifndef MethodArguments_Included
 #define MethodArguments_Include
 
+#include "ActivityManager.hpp"
 
 /******************************************************************************/
 /* Defines for argument error reporting                                       */

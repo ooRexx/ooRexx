@@ -1428,107 +1428,107 @@ EndClassDefinition(StackFrame);
 /*      the rest of the REXX image.                                           */
 /******************************************************************************/
 
-  // set up the kernel methods that will be defined on OBJECT classes in
-  // CoreClasses.orx
-  {
-      // create a method used to retrieve the .Local environment.  We set this on the
-      // .Environment directory.
-      Protected<MethodClass> localMethod = new MethodClass(getGlobalName("LOCAL"), CPPCode::resolveExportedMethod("Local", CPPM(ActivityManager::getLocalRexx), 0, "ActivityManager::getLocalRexx"));
+    // set up the kernel methods that will be defined on OBJECT classes in
+    // CoreClasses.orx
+    {
+        // create a method used to retrieve the .Local environment.  We set this on the
+        // .Environment directory.
+        Protected<MethodClass> localMethod = new MethodClass(getGlobalName("LOCAL"), CPPCode::resolveExportedMethod("Local", CPPM(ActivityManager::getLocalRexx), 0, "ActivityManager::getLocalRexx"));
 
-      // add this to the environment directory.
-      TheEnvironment->setMethodRexx(getGlobalName("LOCAL"), localMethod);
+        // add this to the environment directory.
+        TheEnvironment->setMethodRexx(getGlobalName("LOCAL"), localMethod);
 
-                                           /* create the BaseClasses method and run it*/
-      RexxString *symb = getGlobalName(BASEIMAGELOAD);   /* get a name version of the string  */
-                                           /* go resolve the program name       */
-      RexxString *programName = ActivityManager::currentActivity->resolveProgramName(symb, OREF_NULL, OREF_NULL);
-      // create a new stack frame to run under
-      ActivityManager::currentActivity->createNewActivationStack();
-      try
-      {
-          // create an executable object for this.
-          Protected<RoutineClass> loader = LanguageParser::createProgram(programName);
+                                             /* create the BaseClasses method and run it*/
+        RexxString *symb = getGlobalName(BASEIMAGELOAD);   /* get a name version of the string  */
+                                             /* go resolve the program name       */
+        RexxString *programName = ActivityManager::currentActivity->resolveProgramName(symb, OREF_NULL, OREF_NULL);
+        // create a new stack frame to run under
+        ActivityManager::currentActivity->createNewActivationStack();
+        try
+        {
+            // create an executable object for this.
+            Protected<RoutineClass> loader = LanguageParser::createProgram(programName);
 
-          // we pass TheSystem as an argument to the core classes.
-          RexxObject *args = TheSystem;
-          ProtectedObject result;
-          // now create the core program objects.
-          loader->runProgram(ActivityManager::currentActivity, GlobalNames::PROGRAM, OREF_NULL, (RexxObject **)&args, 1, result);
-      }
-      catch (ActivityException )
-      {
-          ActivityManager::currentActivity->error();          /* do error cleanup                  */
-          Interpreter::logicError("Error building kernel image.  Image not saved.");
-      }
+            // we pass TheSystem as an argument to the core classes.
+            RexxObject *args = TheSystem;
+            ProtectedObject result;
+            // now create the core program objects.
+            loader->runProgram(ActivityManager::currentActivity, GlobalNames::PROGRAM, OREF_NULL, (RexxObject **)&args, 1, result);
+        }
+        catch (ActivityException )
+        {
+            ActivityManager::currentActivity->error();          /* do error cleanup                  */
+            Interpreter::logicError("Error building kernel image.  Image not saved.");
+        }
 
-  }
+    }
 
-  /* define and suppress methods in the nil object */
-  TheNilObject->defineInstanceMethod(getGlobalName("COPY"), (MethodClass *)TheNilObject, OREF_NULL);
-  TheNilObject->defineInstanceMethod(getGlobalName("START"), (MethodClass *)TheNilObject, OREF_NULL);
-  TheNilObject->defineInstanceMethod(getGlobalName("OBJECTNAME="), (MethodClass *)TheNilObject, OREF_NULL);
+    /* define and suppress methods in the nil object */
+    TheNilObject->defineInstanceMethod(getGlobalName("COPY"), (MethodClass *)TheNilObject, OREF_NULL);
+    TheNilObject->defineInstanceMethod(getGlobalName("START"), (MethodClass *)TheNilObject, OREF_NULL);
+    TheNilObject->defineInstanceMethod(getGlobalName("OBJECTNAME="), (MethodClass *)TheNilObject, OREF_NULL);
 
-  // ok, .NIL has been constructed.  As a last step before saving the image, we need to change
-  // the type identifier in the behaviour so that this will get the correct virtual function table
-  // restored when the image reloads.
-  TheNilObject->behaviour->setClassType(T_NilObject);
+    // ok, .NIL has been constructed.  As a last step before saving the image, we need to change
+    // the type identifier in the behaviour so that this will get the correct virtual function table
+    // restored when the image reloads.
+    TheNilObject->behaviour->setClassType(T_NilObject);
 
-  RexxClass *ordered = (RexxClass *)TheEnvironment->get(getGlobalName("ORDEREDCOLLECTION"));
+    RexxClass *ordered = (RexxClass *)TheEnvironment->get(getGlobalName("ORDEREDCOLLECTION"));
 
-  // TODO:  this really can be done in CoreClasses...
+    // TODO:  this really can be done in CoreClasses...
 
-  TheArrayClass->inherit(ordered, OREF_NULL);
-  TheArrayClass->setRexxDefined();
+    TheArrayClass->inherit(ordered, OREF_NULL);
+    TheArrayClass->setRexxDefined();
 
-  TheQueueClass->inherit(ordered, OREF_NULL);
-  TheQueueClass->setRexxDefined();
+    TheQueueClass->inherit(ordered, OREF_NULL);
+    TheQueueClass->setRexxDefined();
 
-  TheListClass->inherit(ordered, OREF_NULL);
-  TheListClass->setRexxDefined();
+    TheListClass->inherit(ordered, OREF_NULL);
+    TheListClass->setRexxDefined();
 
-  RexxClass *map = (RexxClass *)TheEnvironment->get(getGlobalName("MAPCOLLECTION"));
+    RexxClass *map = (RexxClass *)TheEnvironment->get(getGlobalName("MAPCOLLECTION"));
 
-  TheTableClass->inherit(map, OREF_NULL);
-  TheTableClass->setRexxDefined();
+    TheTableClass->inherit(map, OREF_NULL);
+    TheTableClass->setRexxDefined();
 
-  TheStringTableClass->inherit(map, OREF_NULL);
-  TheStringTableClass->setRexxDefined();
+    TheStringTableClass->inherit(map, OREF_NULL);
+    TheStringTableClass->setRexxDefined();
 
-  TheIdentityTableClass->inherit(map, OREF_NULL);
-  TheIdentityTableClass->setRexxDefined();
+    TheIdentityTableClass->inherit(map, OREF_NULL);
+    TheIdentityTableClass->setRexxDefined();
 
-  TheRelationClass->inherit(map, OREF_NULL);
-  TheRelationClass->setRexxDefined();
+    TheRelationClass->inherit(map, OREF_NULL);
+    TheRelationClass->setRexxDefined();
 
-  TheDirectoryClass->inherit(map, OREF_NULL);
-  TheDirectoryClass->setRexxDefined();
+    TheDirectoryClass->inherit(map, OREF_NULL);
+    TheDirectoryClass->setRexxDefined();
 
-  TheStemClass->inherit(map, OREF_NULL);
-  TheStemClass->setRexxDefined();
+    TheStemClass->inherit(map, OREF_NULL);
+    TheStemClass->setRexxDefined();
 
-  TheBagClass->inherit(map, OREF_NULL);
-  TheBagClass->setRexxDefined();
+    TheBagClass->inherit(map, OREF_NULL);
+    TheBagClass->setRexxDefined();
 
-  TheSetClass->inherit(map, OREF_NULL);
-  TheSetClass->setRexxDefined();
+    TheSetClass->inherit(map, OREF_NULL);
+    TheSetClass->setRexxDefined();
 
-  // TODO:  Add Set and Bag class processing here.
+    // TODO:  Add Set and Bag class processing here.
 
 
-  RexxClass *comparable = (RexxClass *)TheEnvironment->get(getGlobalName("COMPARABLE"));
+    RexxClass *comparable = (RexxClass *)TheEnvironment->get(getGlobalName("COMPARABLE"));
 
-  TheStringClass->inherit(comparable, OREF_NULL);
-  TheStringClass->setRexxDefined();
+    TheStringClass->inherit(comparable, OREF_NULL);
+    TheStringClass->setRexxDefined();
 
-  // disable the special class methods we only use during the image build phase.
-  // this removes this from all of the subclasses as well
-  TheObjectClass->removeClassMethod(new_string("!DEFINE_METHODS"));
-  TheObjectClass->removeClassMethod(new_string("!REXXDEFINED"));
-  TheObjectClass->removeClassMethod(new_string("!DEFINE_CLASS_METHOD"));
-  TheObjectClass->removeClassMethod(new_string("INHERITINSTANCEMETHODS"));
+    // disable the special class methods we only use during the image build phase.
+    // this removes this from all of the subclasses as well
+    TheObjectClass->removeClassMethod(new_string("!DEFINE_METHODS"));
+    TheObjectClass->removeClassMethod(new_string("!REXXDEFINED"));
+    TheObjectClass->removeClassMethod(new_string("!DEFINE_CLASS_METHOD"));
+    TheObjectClass->removeClassMethod(new_string("INHERITINSTANCEMETHODS"));
 
-  // now save the image
-  memoryObject.saveImage();
-  ActivityManager::returnActivity(ActivityManager::currentActivity);
-  exit(RC_OK);                         // successful build
+    // now save the image
+    memoryObject.saveImage();
+    ActivityManager::returnActivity(ActivityManager::currentActivity);
+    exit(0);                         // successful build
 }

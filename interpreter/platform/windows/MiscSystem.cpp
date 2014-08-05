@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -44,7 +44,41 @@
 #include "StringClass.hpp"
 #include <signal.h>
 #include "SystemInterpreter.hpp"
+#include "ActivityManager.hpp"
 
+
+
+
+/**
+ * Produce a system specific source string.
+ *
+ * @param callType The program call type
+ * @param programName
+ *                 The name of the program.
+ *
+ * @return A formatted source string.
+ */
+RexxString *SystemInterpreter::getSourceString(RexxString *callType, RexxString *programName )
+{
+    const char *chSysName = "WindowsNT";
+
+    // get a raw string we can build this into
+    RexxString *source_string = raw_string(strlen(chSysName) + 2 + callType->getLength() + programName->getLength());
+    char *outPtr = source_string->getWritableData();
+    // name is first, with a blank separator
+    strcpy(outPtr, chSysName);
+    outPtr += strlen(chSysName);->getLength();
+    *outPtr++ = ' ';
+
+    // now the call type
+    memcpy(outPtr, callType->getStringData(), callType->getLength());
+    outPtr += callType->getLength();
+    *outPtr++ = ' ';
+
+    // and finally the program name.
+    memcpy(outPtr, programName->getStringData(), programName->getLength());
+    return source_string;
+}
 
 /**
  * Exception Filter used by Windows exception handling
@@ -61,7 +95,6 @@ int WinExceptionFilter( int xCode )
 
 // maximum environment name length
 const size_t MAX_ADDRESS_NAME_LENGTH = 250;
-
 
 
 /**

@@ -47,6 +47,7 @@
 #define ctrl_z 0x1a                    // the end of file marker
 
 #include "ObjectClass.hpp"
+#include "SourceLocation.hpp"
 
 /**
  * A descriptor for a single source line.

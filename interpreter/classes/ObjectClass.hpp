@@ -594,5 +594,4 @@ protected:
     HashCode hashValue;
 };
 
-
 #endif

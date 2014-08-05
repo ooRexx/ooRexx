@@ -86,6 +86,18 @@ VariableDictionary::VariableDictionary(size_t capacity)
 
 
 /**
+ * construct a variable dictionary for a given scope.
+ *
+ * @param s      The scope associated with this instance.
+ */
+VariableDictionary::VariableDictionary(RexxClass *s)
+{
+    initialize(DefaultObjectDictionarySize);
+    scope = s;
+}
+
+
+/**
  * Normal garbage collection live marking
  *
  * @param liveMark The current live mark.
@@ -218,22 +230,6 @@ void VariableDictionary::ensureCapacity(size_t delta)
     {
         expandContents(contents->capacity() + Numerics::maxVal(delta, contents->capacity()));
     }
-}
-
-
-/**
- * Method for allocating a new contents item for this
- * collection. Collections with special requirements should
- * override this and return the appropriate subclass.
- *
- * @param bucketSize The bucket size of the collection.
- * @param totalSize  The total capacity of the collection.
- *
- * @return A new HashContents object appropriate for this collection type.
- */
-HashContents *StringHashCollection::allocateContents(size_t bucketSize, size_t totalSize)
-{
-    return new (totalSize) StringHashContents(bucketSize, totalSize);
 }
 
 

@@ -76,7 +76,7 @@ ListContents::ListContents(size_t size)
 
     // no first or last items.
     firstItem = NoMore;
-    lastItem = NoMore
+    lastItem = NoMore;
 
     // initialize the free chains
     initializeFreeChain();
@@ -142,7 +142,7 @@ void ListContents::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope we're flattening into.
  */
-void ListContents::flatten(RexxEnvelope *envelope)
+void ListContents::flatten(Envelope *envelope)
 {
     setUpFlatten(ListContents)
 

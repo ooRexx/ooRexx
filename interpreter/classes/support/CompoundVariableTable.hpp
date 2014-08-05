@@ -85,7 +85,7 @@ class CompoundVariableTable
         inline ~TableIterator() {}
 
         inline bool isAvailable()  { return current != OREF_NULL; }
-        inline RexxInternalObject *value();
+               RexxInternalObject *value();
                RexxString *name();
                RexxString *name(RexxString *stemName);
                void replace(RexxInternalObject *v);

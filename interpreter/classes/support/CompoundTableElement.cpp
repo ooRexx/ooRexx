@@ -53,7 +53,7 @@
  *
  * @return Storage for creating the object.
  */
-void *RexxVariable::operator new(size_t size)
+void *CompoundTableElement::operator new(size_t size)
 {
     return new_object(size, T_CompoundElement);
 }

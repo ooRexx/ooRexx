@@ -51,6 +51,7 @@
 class DirectoryClass;
 class CommandHandler;
 class PackageClass;
+class RoutineClass;
 
 class InterpreterInstance : public RexxInternalObject
 {

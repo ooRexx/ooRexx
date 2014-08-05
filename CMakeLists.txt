@@ -490,6 +490,7 @@ set (interpreter_api_sources ${build_interpreter_api_dir}/CallContextStubs.cpp
             ${build_interpreter_api_dir}/ThreadContextStubs.cpp)
 set (classes_support_sources ${build_classes_support_dir}/HashCollection.cpp
             ${build_classes_support_dir}/HashContents.cpp
+            ${build_classes_support_dir}/ListContents.cpp
             ${build_classes_support_dir}/ProgramMetaData.cpp
             ${build_classes_support_dir}/CompoundTableElement.cpp
             ${build_classes_support_dir}/CompoundVariableTable.cpp
@@ -550,6 +551,7 @@ set (memory_sources ${build_memory_dir}/DeadObject.cpp
             ${build_memory_dir}/Setup.cpp
             ${build_memory_dir}/RexxMemory.cpp)
 set (execution_sources ${build_execution_dir}/CPPCode.cpp
+            ${build_execution_dir}/ActivationStack.cpp
             ${build_execution_dir}/RexxActivation.cpp
             ${build_execution_dir}/BaseCode.cpp
             ${build_execution_dir}/BaseExecutable.cpp

@@ -64,6 +64,19 @@ void DirectoryClass::createInstance()
 
 
 /**
+ * Create a new directory object.
+ *
+ * @param size   the size of the object.
+ *
+ * @return Storage for creating a the object.
+ */
+void *TableClass::operator new (size_t size)
+{
+    return new_object(size, T_Directory);
+}
+
+
+/**
  * Normal garbage collection live marking
  *
  * @param liveMark The current live mark.

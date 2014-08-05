@@ -41,6 +41,7 @@
 #include "Activity.hpp"
 #include "ActivationSettings.hpp"
 #include <deque>
+#include "GlobalNames.hpp"
 
 class IdentityTable;
 class LiveStack;

@@ -186,4 +186,16 @@ class RexxBehaviour : public RexxInternalObject
 
 #include "PrimitiveBehaviourNames.h"
 
+
+// test if an object is of a particular class
+#define isOfClass(t,r) (r)->isObjectType(The##t##Behaviour)
+#define isOfClassType(t,r) (r)->isObjectType(T_##t)
+
+inline bool isString(RexxInternalObject *o) { return isOfClass(String, o); }
+inline bool isInteger(RexxInternalObject *o) { return isOfClass(Integer, o); }
+inline bool isNumberString(RexxInternalObject *o) { return isOfClass(NumberString, o); }
+inline bool isArray(RexxInternalObject *o) { return isOfClass(Array, o); }
+inline bool isStem(RexxInternalObject *o) { return isOfClass(Stem, o); }
+inline bool isMethod(RexxInternalObject *o) { return isOfClass(Method, o); }
+
 #endif

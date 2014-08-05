@@ -45,6 +45,7 @@
 #include "StringClass.hpp"
 #include "ArrayClass.hpp"
 #include "LanguageParser.hpp"
+#include "GlobalNames.hpp"
 
 
 /*********************************************************************

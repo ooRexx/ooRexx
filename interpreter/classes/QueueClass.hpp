@@ -56,6 +56,7 @@ class QueueClass : public ArrayClass
      inline QueueClass() {;};
      inline QueueClass(RESTORETYPE restoreType) { ; };
 
+     virtual bool validateIndex(RexxObject **index, size_t indexCount, size_t argPosition, size_t boundsError, stringsize_t &position);
      RexxInternalObject *pullRexx();
      RexxObject *pushRexx(RexxInternalObject *item);
      RexxObject *queueRexx(RexxInternalObject *item);

@@ -101,6 +101,17 @@ NumericSettings::NumericSettings()
 
 
 /**
+ * Set the default numeric settings.
+ */
+void NumericSettings::setDefault()
+{
+    digits = Numerics::DEFAULT_DIGITS;
+    fuzz = Numerics::DEFAULT_FUZZ;
+    form = Numerics::DEFAULT_FORM;
+}
+
+
+/**
  * Convert a signed int64 object into the appropriate Rexx
  * object type.
  *

@@ -120,7 +120,7 @@ class RexxLocalVariables
             locals[index] = variable;
             if (dictionary != OREF_NULL)
             {
-                dictionary->put(variable, variable->getName());
+                dictionary->addVariable(variable->getName(), variable);
             }
         }
         else
@@ -129,7 +129,7 @@ class RexxLocalVariables
             {
                 createDictionary();
             }
-            dictionary->put(variable, variable->getName());
+            dictionary->addVariable(variable->getName(), variable);
         }
     }
 

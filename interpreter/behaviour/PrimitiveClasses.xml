@@ -119,6 +119,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="EqualityHashContents" class="EqualityHashContents" include="HashContents.hpp"/>
 <Class id="MultiValueContents" class="MultiValueContents" include="HashContents.hpp"/>
 <Class id="StringHashContents" class="StringHashContents" include="HashContents.hpp"/>
+<Class id="ListContents" class="ListContents" include="ListContents.hpp"/>
 
 <Class id="Variable" class="RexxVariable" include="RexxVariable.hpp"/>
 <Class id="VariableDictionary" class="VariableDictionary" include="VariableDictionary.hpp"/>

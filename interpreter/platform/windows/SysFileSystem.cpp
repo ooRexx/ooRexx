@@ -44,6 +44,7 @@
 
 #include "RexxCore.h"
 #include "SysFileSystem.hpp"
+#include "ActivityManager.hpp"
 
 int SysFileSystem::stdinHandle = 0;
 int SysFileSystem::stdoutHandle = 1;
@@ -53,59 +54,53 @@ const char SysFileSystem::EOF_Marker = 0x1a;    // the end-of-file marker
 const char *SysFileSystem::EOL_Marker = "\r\n"; // the end-of-line marker
 const char SysFileSystem::PathDelimiter = '\\'; // directory path delimiter
 
-/*********************************************************************/
-/*                                                                   */
-/* FUNCTION    : SearchFileName                                      */
-/*                                                                   */
-/* DESCRIPTION : Search for a given filename, returning the fully    */
-/*               resolved name if it is found.                       */
-/*                                                                   */
-/*********************************************************************/
-
-bool SysFileSystem::searchFileName(
-  const char *     name,               /* name of rexx proc to check        */
-  char *     fullName )                /* fully resolved name               */
+/**
+ * Search for a given filename, returning the fully
+ * resolved name if it is found.
+ *
+ * @param name     The input search name.
+ * @param fullName The returned fully resolved name.
+ *
+ * @return True if the file was located, false otherwise.
+ */
+bool SysFileSystem::searchFileName(const char *name, char *fullName)
 {
-    size_t nameLength;                   /* length of name                    */
-
     DWORD dwFileAttrib;                  // file attributes
     LPTSTR ppszFilePart=NULL;            // file name only in buffer
     UINT   errorMode;
 
-    nameLength = strlen(name);           /* get length of incoming name       */
+    size_t nameLength = strlen(name);
 
-    /* if name is too small or big       */
+    // if name is tool small or big, this cannot be a valid name.
     if (nameLength < 1 || nameLength > MAX_PATH)
     {
-        return false;                  /* then Not a rexx proc name         */
+        return false;
     }
-    /* now try for original name         */
+    // now try for original name
     errorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
     if (GetFullPathName(name, MAX_PATH, (LPTSTR)fullName, &ppszFilePart))
     {
-        /* make sure it really exists        */
+        // if this is a good name, then make sure this really exists and it's not a directory.
         // make sure it's not a directory
         if (-1 != (dwFileAttrib=GetFileAttributes((LPTSTR)fullName)) && (dwFileAttrib != FILE_ATTRIBUTE_DIRECTORY))
         {
-            /* got it!                           */
             SetErrorMode(errorMode);
             return true;
         }
     }
-    /* try searching the path            */
+    // search on the path
     if ( SearchPath(NULL, (LPCTSTR)name, NULL, MAX_PATH, (LPTSTR)fullName, &ppszFilePart) )
     {
-        // make sure it's not a directory
+        // and again, we need this to be a real file.
         if (-1 != (dwFileAttrib=GetFileAttributes((LPTSTR)fullName)) && (dwFileAttrib != FILE_ATTRIBUTE_DIRECTORY))
         {
-            /* got it!                           */
             SetErrorMode(errorMode);
             return true;
         }
     }
 
     SetErrorMode(errorMode);
-    return false;                    /* not found                         */
+    return false;
 }
 
 
@@ -118,6 +113,7 @@ const char *SysFileSystem::getTempFileName()
 {
     return tmpnam(NULL);
 }
+
 
 /**
  * Generate a fully qualified stream name.
@@ -169,7 +165,7 @@ void SysFileSystem::qualifyStreamName(const char *unqualifiedName, char *qualifi
 
         }
     }
-    /* get the fully expanded name       */
+    // get the fully expanded name
     errorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
     DWORD rc = GetFullPathName(qualifiedName, (DWORD)bufferSize, qualifiedName, &lpszLastNamePart);
     SetErrorMode(errorMode);

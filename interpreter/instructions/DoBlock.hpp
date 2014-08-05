@@ -48,6 +48,7 @@
 #include "Token.hpp"
 
 class RexxBlockInstruction;
+class RexxVariableBase;
 
 class DoBlock : public RexxInternalObject
 {

@@ -52,6 +52,7 @@ class StemClass;
 class SupplierClass;
 class RexxVariableBase;
 class DirectoryClass;
+class RexxClass;
 
 /**
  * A variable dictionary, used both for object variables
@@ -111,17 +112,17 @@ class VariableDictionary : public RexxInternalObject
              return (RexxString *)dictionaryIterator.index();
          }
 
-         inline void next();
+         void next();
 
          // explicitly terminate an iterator
-         void terminate()
+         inline void terminate()
          {
              dictionary = OREF_NULL;
              currentStem = OREF_NULL;
          }
 
          // indicate if this is an active iterator or not.
-         bool isActive()
+         inline bool isActive()
          {
              return dictionary != OREF_NULL;
          }
@@ -148,6 +149,7 @@ class VariableDictionary : public RexxInternalObject
     inline void  operator delete(void *, void *) { }
 
            VariableDictionary(size_t capacity);
+           VariableDictionary(RexxClass *scope);
     inline VariableDictionary(RESTORETYPE restoreType) { ; };
 
     StringHashContents *allocateContents(size_t bucketSize, size_t capacity);
@@ -167,8 +169,6 @@ class VariableDictionary : public RexxInternalObject
             VariableDictionary *deepCopy();
 
     RexxInternalObject  *realValue(RexxString *name);
-    void         add(RexxVariable *, RexxString *);
-    void         put(RexxVariable *, RexxString *);
     inline StemClass *getStem(RexxString *stemName) { return (StemClass *)getStemVariable(stemName)->getVariableValue(); }
     RexxVariable *createStemVariable(RexxString *stemName);
     RexxVariable *createVariable(RexxString *stemName);
@@ -236,9 +236,6 @@ class VariableDictionary : public RexxInternalObject
     static RexxVariableBase *getDirectVariableRetriever(RexxString  *variable);
     static RexxVariableBase *buildCompoundVariable(RexxString *variable_name, bool direct);
 
-    static VariableDictionary *newInstance(size_t);
-    static VariableDictionary *newInstance(RexxObject *);
-
 protected:
 
     Activity *reservingActivity;         // current reserving activity
@@ -250,7 +247,6 @@ protected:
     RexxClass *scope;                    // scopy of this object dictionary
 };
 
-
-inline VariableDictionary *new_variableDictionary(size_t s) { return VariableDictionary::newInstance(s); }
-inline VariableDictionary *new_objectVariableDictionary(RexxObject *s) { return VariableDictionary::newInstance(s); }
+inline VariableDictionary *new_variableDictionary(size_t s) { return new VariableDictionary(s); }
+inline VariableDictionary *new_objectVariableDictionary(RexxClass *s) { return new VariableDictionary(s); }
 #endif

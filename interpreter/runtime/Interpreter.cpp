@@ -71,6 +71,10 @@ bool Interpreter::active = false;
 bool Interpreter::timeSliceElapsed = false;
 
 
+// exit return codes.
+const int RC_OK         = 0;
+const int RC_LOGIC_ERROR  = 2;
+
 /**
  * Initialize the interpreter subsystem.
  */

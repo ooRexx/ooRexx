@@ -41,6 +41,7 @@
 #include "ProgramMetaData.hpp"
 #include "BufferClass.hpp"
 #include "Interpreter.hpp"
+#include "ActivityManager.hpp"
 #include <stdio.h>
 #include <fcntl.h>
 
@@ -237,7 +238,7 @@ BufferClass *ProgramMetaData::read(RexxString *fileName, FILE *handle)
         // if this failed because of the version signature, we need to raise an error now.
         if (badVersion)
         {
-            fclose(handle);                    /* close the file                    */
+            fclose(handle);
             reportException(Error_Program_unreadable_version, fileName);
         }
 

@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -404,7 +404,7 @@ RexxReturnCode RexxEntry RexxVariablePool(PSHVBLOCK pshvblock)
  *
  * @return The sort return code result.
  */
-RexxReturnCode RexxEntry StemClassSort(const char *stemname, int order, int type,
+RexxReturnCode RexxEntry RexxStemSort(const char *stemname, int order, int type,
     size_t start, size_t end, size_t firstcol, size_t lastcol)
 {
     NativeContextBlock context;

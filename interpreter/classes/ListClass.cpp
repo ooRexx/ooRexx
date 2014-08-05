@@ -65,6 +65,19 @@ void ListClass::createInstance()
 
 
 /**
+ * Create a new list object
+ *
+ * @param size   the size of the object.
+ *
+ * @return Storage for creating the object.
+ */
+void *ListClass::operator new (size_t size)
+{
+    return new_object(size, T_List);
+}
+
+
+/**
  * construct a list object with the given size.
  *
  * @param capacity The required capacity.

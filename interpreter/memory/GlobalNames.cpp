@@ -44,6 +44,8 @@
 #include "RexxCore.h"
 #include "DirectoryClass.hpp"
 #include "ArrayClass.hpp"
+#include "StringTableClass.hpp"
+#include "GlobalNames.hpp"
 
 
 // create all globally available string objects.

@@ -58,6 +58,8 @@ class StemClass;
 class SupplierClass;
 class StackFrameClass;
 class IdentityTable;
+class RoutineClass;
+class MethodClass;
 
 
 /**
