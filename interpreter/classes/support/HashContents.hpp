@@ -140,8 +140,6 @@ public:
         ItemLink next;                       // next item in overflow bucket
     };
 
-    void * operator new(size_t size, size_t capacity);
-    void   operator delete(void *, size_t) { }
     inline HashContents() { ; };
            HashContents(size_t entries, size_t total);
 

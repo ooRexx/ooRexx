@@ -95,6 +95,7 @@ class ListContents : public RexxInternalObject
     ItemLink insertAtBeginning(RexxInternalObject *value);
     ItemLink insertAtEnd(RexxInternalObject *value);
     void removeItem(ItemLink item);
+    ItemLink append(RexxInternalObject *value);
 
     RexxInternalObject *get(ItemLink index);
     RexxInternalObject *put(RexxInternalObject *value, ItemLink index);
@@ -114,9 +115,6 @@ class ListContents : public RexxInternalObject
     SupplierClass *supplier();
     ArrayClass *weakReferenceArray();
 
-    // set the entry values for a position
-    void setEntry(ItemLink position, RexxInternalObject *value);
-
     // clear an entry in the chain
     void clearEntry(ItemLink position);
 
@@ -128,7 +126,7 @@ class ListContents : public RexxInternalObject
     inline void copyEntry(ItemLink target, ItemLink source)
     {
         // copy all of the information (NOTE:  we need to use setField() for this)
-        setEntry(target, entryValue(source));
+        setValue(target, entryValue(source));
         entries[target].next = entries[source].next;
         entries[target].previous = entries[source].next;
     }

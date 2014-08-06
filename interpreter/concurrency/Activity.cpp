@@ -1483,7 +1483,7 @@ void Activity::createNewActivationStack()
 void Activity::popStackFrame(bool  reply)
 {
     // pop off the top elements and reduce the depth
-    ActivationBase *poppedStackFrame = (ActivationBase *)activations->fastPop();
+    ActivationBase *poppedStackFrame = (ActivationBase *)activations->pop();
     stackFrameDepth--;
 
     // did we just pop off the last element of a stack frame?  This should not happen, so
@@ -1533,14 +1533,14 @@ void Activity::cleanupStackFrame(ActivationBase *poppedStackFrame)
  */
 void Activity::popStackFrame(ActivationBase *target)
 {
-    ActivationBase *poppedStackFrame = (ActivationBase *)activations->fastPop();
+    ActivationBase *poppedStackFrame = (ActivationBase *)activations->pop();
     stackFrameDepth--;
     // pop off the top elements and reduce the depth
     while (poppedStackFrame != target)
     {
         // clean this up and potentially cache
         cleanupStackFrame(poppedStackFrame);
-        poppedStackFrame = (ActivationBase *)activations->fastPop();
+        poppedStackFrame = (ActivationBase *)activations->pop();
         stackFrameDepth--;
     }
 
@@ -1562,7 +1562,7 @@ void Activity::unwindStackFrame()
     {
         // check the top activation.  If it's a stack base item, then
         // we've reached the unwind point.
-        ActivationBase *poppedActivation = (ActivationBase *)activations->fastPop();
+        ActivationBase *poppedActivation = (ActivationBase *)activations->pop();
         stackFrameDepth--;
         if (poppedActivation->isStackBase())
         {
@@ -1592,7 +1592,7 @@ void Activity::unwindToDepth(size_t depth)
     // pop elements until we unwind to the target
     while (stackFrameDepth > depth)
     {
-        activations->fastPop();
+        activations->pop();
         stackFrameDepth--;
     }
 
@@ -2942,7 +2942,7 @@ RexxString *Activity::pullInput(RexxActivation *activation)
     if (callPullExit(activation, value))
     {
         // we handle both the queue and I/O parts here
-        RexxObject *stream = getLocalEnvironment(REXXQUEUE);
+        RexxObject *stream = getLocalEnvironment(STDQUE);
         // read from the rexx queue first
         if (stream != OREF_NULL)
         {
@@ -3019,7 +3019,7 @@ void Activity::queue(RexxActivation *activation, RexxString *line, int order)
     if (callPushExit(activation, line, order))
     {
         // we use the current queue object as the target
-        RexxObject *targetQueue = getLocalEnvironment(REXXQUEUE);
+        RexxObject *targetQueue = getLocalEnvironment(STDQUE);
         if (targetQueue != OREF_NULL)
         {
             if (order == QUEUE_LIFO)

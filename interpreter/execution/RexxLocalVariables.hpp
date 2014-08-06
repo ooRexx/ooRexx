@@ -139,7 +139,8 @@ class RexxLocalVariables
     inline RexxVariable *find(RexxString *name, size_t index)
     {
         RexxVariable *variable = get(index);
-        if (variable == OREF_NULL) {
+        if (variable == OREF_NULL)
+        {
             variable = findVariable(name, index);
         }
         return variable;

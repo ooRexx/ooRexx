@@ -58,7 +58,7 @@
  *
  * @return Memory for creating this object.
  */
-void * RexxCode::operator new(size_t size)
+void *RexxCode::operator new(size_t size)
 {
     return new_object(size, T_RexxCode);
 }
@@ -145,7 +145,7 @@ void RexxCode::flatten(Envelope * envelope)
 void RexxCode::call(Activity *activity, RoutineClass *routine, RexxString *msgname, RexxObject**argPtr, size_t argcount, ProtectedObject &result)
 {
     // just forward to the more general method
-    call(activity, routine, msgname, argPtr, argcount, OREF_SUBROUTINE, OREF_NULL, EXTERNALCALL, result);
+    call(activity, routine, msgname, argPtr, argcount, GlobalNames::SUBROUTINE, OREF_NULL, EXTERNALCALL, result);
 }
 
 

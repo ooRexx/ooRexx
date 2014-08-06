@@ -59,31 +59,27 @@ class InternalStack : public RexxInternalObject
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
 
-    inline void         push(RexxObject *value) { *(++top) = value; };
-    inline RexxObject * pop() { return *(top--); };
-    inline RexxObject * fastPop() { return *(top--); };
-    inline void         replace(size_t offset, RexxObject *value) { *(top - offset) = value; };
+    inline void         push(RexxInternalObject *value) { *(++top) = value; };
+    inline RexxInternalObject *pop() { return *(top--); };
+    inline void         replace(size_t offset, RexxInternalObject *value) { *(top - offset) = value; };
     inline size_t       getSize() {return size;};
-    inline RexxObject * getTop()  {return *(top);};
+    inline RexxInternalObject *getTop()  {return *(top);};
     inline void         popn(size_t c) {top -= c;};
     inline void         clear() {top = stack;};
-    inline RexxObject * peek(size_t v) {return *(top - v);};
-    inline RexxObject **pointer(size_t v) {return (top - v); };
+    inline RexxInternalObject * peek(size_t v) {return *(top - v);};
+    inline RexxInternalObject **pointer(size_t v) {return (top - v); };
     inline size_t       location() {return top - stack;};
     inline void         setTop(size_t v) {top = stack + v;};
     inline void         toss() { top--; };
     inline bool         isEmpty() { return top == stack; }
     inline bool         isFull() { return top >= stack + size; }
 
-    static InternalStack *newInstance(size_t s);
-
 protected:
 
     size_t size;                         // size of the expression stack
-    RexxObject **top;                    // current expression stack top position
-    RexxObject *stack[1];                // start of actual stack values
+    RexxInternalObject **top;            // current expression stack top position
+    RexxInternalObject *stack[1];        // start of actual stack values
 };
 
 

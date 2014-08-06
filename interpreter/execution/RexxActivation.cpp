@@ -2565,19 +2565,10 @@ bool RexxActivation::callMacroSpaceFunction(RexxString *target, RexxObject **arg
 RexxObject *RexxActivation::externalCall(RexxString *target, RexxObject **arguments, size_t argcount,
     RexxString *calltype, ProtectedObject &resultObj)
 {
-    // Step 1:  Check the global functions directory
-    // this is actually considered part of the built-in functions, but these are
-    // written in ooRexx.  The names are also case sensitive
-    RoutineClass *routine = (RoutineClass *)TheFunctionsDirectory->get(target);
-    if (routine != OREF_NULL)
-    {
-        // call and return the result
-        routine->call(activity, target, arguments, argcount, calltype, OREF_NULL, EXTERNALCALL, resultObj);
-        return(RexxObject *)resultObj;
-    }
+    // Step 1: used to be the functions directory, which has been deprecated.
 
     // Step 2:  Check for a ::ROUTINE definition in the local context
-    routine = settings.parentCode->findRoutine(target);
+    RoutineClass *routine = settings.parentCode->findRoutine(target);
     if (routine != OREF_NULL)
     {
         // call and return the result

@@ -79,10 +79,6 @@ class DirectoryClass : public StringHashCollection
     virtual bool hasItem(RexxInternalObject *target);
     virtual RexxInternalObject *removeItem(RexxInternalObject *target);
 
-    // our unknown method
-    RexxObject *unknown(RexxString *msgname, ArrayClass *arguments);
-
-
     // stubs for additional exported directory methods.
     RexxInternalObject *setMethodRexx(RexxString *entryname, MethodClass *methodobj);
 

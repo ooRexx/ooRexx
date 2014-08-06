@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -46,7 +46,6 @@
 #include "InternalStack.hpp"
 
 
-
 /**
  * Allocate storage for a new internal stack.
  *
@@ -57,7 +56,7 @@
  */
 void *InternalStack::operator new(size_t size, size_t stackSize)
 {
-    return new_object(size + (stackSize * sizeof(RexxObject *)), T_InternalStack);
+    return new_object(size + (stackSize * sizeof(RexxInternalObject *)), T_InternalStack);
 }
 
 
@@ -84,7 +83,7 @@ InternalStack::InternalStack(size_t stackSize)
  */
 void InternalStack::live(size_t liveMark)
 {
-   for (RexxObject **entry = stack; entry <= top; entry++)
+   for (RexxInternalObject **entry = stack; entry <= top; entry++)
    {
        memory_mark(*entry);
    }
@@ -98,7 +97,7 @@ void InternalStack::live(size_t liveMark)
  */
 void InternalStack::liveGeneral(MarkReason reason)
 {
-   for (RexxObject **entry = stack; entry <= top; entry++)
+   for (RexxInternalObject **entry = stack; entry <= top; entry++)
    {
        memory_mark_general(*entry);
    }

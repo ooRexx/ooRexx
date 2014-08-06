@@ -242,35 +242,32 @@ class MemoryObject : public RexxInternalObject
     StringTable    *commonRetrievers;        // statically defined requires
 
     StringTable    *system;                  // the system directory...anchors stuff we don't want to expose in environment
-    StringTable    *functionsDir;            // statically defined requires
-
 
 private:
 
 
-/******************************************************************************/
-/* Define location of objects saved in SaveArray during Saveimage processing  */
-/*  and used during restart processing.                                       */
-/* Currently only used in MemoryObject                                        */
-/******************************************************************************/
-enum
-{
-    saveArray_ENV = 1,
-    saveArray_SYSTEM,
-    saveArray_NAME_STRINGS,
-    saveArray_TRUE,
-    saveArray_FALSE,
-    saveArray_NIL,
-    saveArray_GLOBAL_STRINGS,
-    saveArray_CLASS,
-    saveArray_PBEHAV,
-    saveArray_PACKAGES,
-    saveArray_NULLA,
-    saveArray_NULLPOINTER,
-    saveArray_FUNCTIONS,
-    saveArray_COMMON_RETRIEVERS,
-    saveArray_highest = saveArray_COMMON_RETRIEVERS
-};
+    /******************************************************************************/
+    /* Define location of objects saved in SaveArray during Saveimage processing  */
+    /*  and used during restart processing.                                       */
+    /* Currently only used in MemoryObject                                        */
+    /******************************************************************************/
+    enum
+    {
+        saveArray_ENV = 1,
+        saveArray_SYSTEM,
+        saveArray_NAME_STRINGS,
+        saveArray_TRUE,
+        saveArray_FALSE,
+        saveArray_NIL,
+        saveArray_GLOBAL_STRINGS,
+        saveArray_CLASS,
+        saveArray_PBEHAV,
+        saveArray_PACKAGES,
+        saveArray_NULLA,
+        saveArray_NULLPOINTER,
+        saveArray_COMMON_RETRIEVERS,
+        saveArray_highest = saveArray_COMMON_RETRIEVERS
+    };
 
 
 

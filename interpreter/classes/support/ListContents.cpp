@@ -44,6 +44,9 @@
 #include "RexxCore.h"
 #include "ListClass.hpp"
 #include "Memory.hpp"
+#include "WeakReferenceClass.hpp"
+#include "SupplierClass.hpp"
+#include "ProtectedObject.hpp"
 
 
 /**
@@ -170,7 +173,7 @@ void ListContents::mergeInto(ListContents *target)
     // run the chain appending each item on to the target
     for (size_t position = firstItem; position != NoMore; position = nextEntry(position))
     {
-        target->append(entryValue(i));
+        target->append(entryValue(position));
     }
 }
 
@@ -182,7 +185,7 @@ void ListContents::mergeInto(ListContents *target)
  *
  * @return The index position for the inserted item.
  */
-ItemLink ListContents::allocateSlot(RexxInternalOBject *value)
+ListContents::ItemLink ListContents::allocateSlot(RexxInternalObject *value)
 {
     // this is a nice central place to handle bumping the count
     itemCount++;
@@ -191,7 +194,7 @@ ItemLink ListContents::allocateSlot(RexxInternalOBject *value)
     ItemLink newItem = freeChain;
     freeChain = nextEntry(newItem);
 
-    setEntryValue(newItem, value);
+    setValue(newItem, value);
     return newItem;
 }
 
@@ -201,7 +204,7 @@ ItemLink ListContents::allocateSlot(RexxInternalOBject *value)
  *
  * @param newItem The new item we're inserting.
  */
-void ListContents::insertAtEnd(ItemLink newItem)
+void ListContents::insertAtEnd(ListContents::ItemLink newItem)
 {
     // first insertion into this list?
     if (lastItem = NoMore)
@@ -224,7 +227,7 @@ void ListContents::insertAtEnd(ItemLink newItem)
  *
  * @param newItem The new item we're inserting.
  */
-void ListContents::insertAtFront(ItemLink newItem)
+void ListContents::insertAtFront(ListContents::ItemLink newItem)
 {
     // first insertion into this list?
     if (firstItem = NoMore)
@@ -248,7 +251,7 @@ void ListContents::insertAtFront(ItemLink newItem)
  * @param newItem    The new item we're inserting.
  * @param insertItem The item this is inserted after.
  */
-void ListContents::insertAfter(ItemLink newItem, ItemLink insertItem)
+void ListContents::insertAfter(ListContents::ItemLink newItem, ListContents::ItemLink insertItem)
 {
     // the new item gets the next item of our predecessor
     setNext(newItem, nextEntry(insertItem));
@@ -259,12 +262,12 @@ void ListContents::insertAfter(ItemLink newItem, ItemLink insertItem)
     // do we have a following item?...if not, we're the new last item
     if (nextEntry(newItem) == NoMore)
     {
-        lastItem = newItem
+        lastItem = newItem;
     }
     // need to update the item after us to point back to us
     else
     {
-        setPrevious(nextEntry(newItem), newItem)
+        setPrevious(nextEntry(newItem), newItem);
     }
 }
 
@@ -275,7 +278,7 @@ void ListContents::insertAfter(ItemLink newItem, ItemLink insertItem)
  * @param newItem    The new item we're inserting.
  * @param insertItem The item this is inserted before.
  */
-void ListContents::insertBefore(ItemLink newItem, ItemLink insertItem)
+void ListContents::insertBefore(ListContents::ItemLink newItem, ListContents::ItemLink insertItem)
 {
     // the new item gets the prevous item of our predecessor
     setPrevious(newItem, previousEntry(insertItem));
@@ -286,12 +289,12 @@ void ListContents::insertBefore(ItemLink newItem, ItemLink insertItem)
     // do we have a previous item?...if not, we're the new first item
     if (previousEntry(insertItem) == NoMore)
     {
-        firstItem = newItem
+        firstItem = newItem;
     }
     // need to update the item after us to point back to us
     else
     {
-        setNext(previousEntry(newItem), newItem)
+        setNext(previousEntry(newItem), newItem);
     }
 }
 
@@ -304,9 +307,9 @@ void ListContents::insertBefore(ItemLink newItem, ItemLink insertItem)
  *
  * @return The index position of the new item.
  */
-ItemLink ListContents::insert(RexxInternalObject *value, ItemLink index)
+ListContents::ItemLink ListContents::insert(RexxInternalObject *value, ListContents::ItemLink index)
 {
-    newItem = allocateSlot(value);
+    ItemLink newItem = allocateSlot(value);
     // if we got a .nil index for the insertion, this is at the beginning.
     if (index == AtEnd)
     {
@@ -328,15 +331,31 @@ ItemLink ListContents::insert(RexxInternalObject *value, ItemLink index)
 
 
 /**
+ * Append an item to the list
+ *
+ * @param value  The value to add.
+ *
+ * @return The index position of the new item.
+ */
+ListContents::ItemLink ListContents::append(RexxInternalObject *value)
+{
+    size_t newItem = allocateSlot(value);
+    // insert this at the end and return the index.
+    insertAtEnd(newItem);
+    return newItem;
+}
+
+
+/**
  * Add a value to the beginning of the list
  *
  * @param value  The value to add.
  *
  * @return The index position of the new item.
  */
-ItemLink ListContents::insertAtBeginning(RexxInternalObject *value)
+ListContents::ItemLink ListContents::insertAtBeginning(RexxInternalObject *value)
 {
-    newItem = allocateSlot(value);
+    ItemLink newItem = allocateSlot(value);
     insertAtFront(newItem);
     // return the new index
     return newItem;
@@ -350,9 +369,9 @@ ItemLink ListContents::insertAtBeginning(RexxInternalObject *value)
  *
  * @return The index position of the new item.
  */
-ItemLink ListContents::insertAtEnd(RexxInternalObject *value)
+ListContents::ItemLink ListContents::insertAtEnd(RexxInternalObject *value)
 {
-    newItem = allocateSlot(value);
+    ItemLink newItem = allocateSlot(value);
     insertAtEnd(newItem);
     // return the new index
     return newItem;
@@ -365,7 +384,7 @@ ItemLink ListContents::insertAtEnd(RexxInternalObject *value)
  *
  * @param item   The item position to remove.
  */
-void ListContents::removeItem(ItemLink item)
+void ListContents::removeItem(ListContents::ItemLink item)
 {
     // we have one fewer item now.
     itemCount--;
@@ -399,9 +418,9 @@ void ListContents::removeItem(ItemLink item)
     else
     {
         // update the next item first
-        setPrevious(nextEntry(item), previousEntry(item))
+        setPrevious(nextEntry(item), previousEntry(item));
         // and the reverse for our previous item
-        setNext(previousEntry(item), nextEntry(item))
+        setNext(previousEntry(item), nextEntry(item));
     }
 
     // put this back on the free chain
@@ -416,7 +435,7 @@ void ListContents::removeItem(ItemLink item)
  *
  * @return The associated value.
  */
-RexxInternalObject *ListContents::get(ItemLink index)
+RexxInternalObject *ListContents::get(ListContents::ItemLink index)
 {
     return isIndexValid(index) ? OREF_NULL : entryValue(index);
 }
@@ -431,7 +450,7 @@ RexxInternalObject *ListContents::get(ItemLink index)
  *
  * @return The old value or OREF_NULL if this is not a valid index.
  */
-RexxInternalObject *ListContents::put(RexxInternalObject value, ItemLink index)
+RexxInternalObject *ListContents::put(RexxInternalObject *value, ListContents::ItemLink index)
 {
     if (!isIndexValid(index))
     {
@@ -464,6 +483,7 @@ RexxInternalObject *ListContents::remove(ItemLink index)
     // is our return value.
     RexxInternalObject *removed = entryValue(index);
     removeItem(index);
+    return removed;
 }
 
 
@@ -472,7 +492,7 @@ RexxInternalObject *ListContents::remove(ItemLink index)
  *
  * @return The first item, or OREF_NULL if the list is empty.
  */
-RexxInternalObject *ListContents::firstItem()
+RexxInternalObject *ListContents::getFirstItem()
 {
     if (firstItem == NoMore)
     {
@@ -488,7 +508,7 @@ RexxInternalObject *ListContents::firstItem()
  *
  * @return The last item, or OREF_NULL if the list is empty.
  */
-RexxInternalObject *ListContents::lastItem()
+RexxInternalObject *ListContents::getLastItem()
 {
     if (lastItem == NoMore)
     {
@@ -504,7 +524,7 @@ RexxInternalObject *ListContents::lastItem()
  *
  * @return The first item index, or NoMore
  */
-ItemLink ListContents::firstIndex()
+ListContents::ItemLink ListContents::firstIndex()
 {
     return firstItem;
 }
@@ -515,9 +535,9 @@ ItemLink ListContents::firstIndex()
  *
  * @return The last item index, or NoMore if the list is empty
  */
-ItemLink ListContents::lastIndex()
+ListContents::ItemLink ListContents::lastIndex()
 {
-    return lastIndex;
+    return lastItem;
 }
 
 
@@ -528,7 +548,7 @@ ItemLink ListContents::lastIndex()
  *
  * @return The next item.  NoMore indicates there is no next item.
  */
-ItemLink ListContents::nextIndex(ItemLink item)
+ListContents::ItemLink ListContents::nextIndex(ListContents::ItemLink item)
 {
     return item == NoMore ? NoMore : nextEntry(item);
 }
@@ -541,7 +561,7 @@ ItemLink ListContents::nextIndex(ItemLink item)
  *
  * @return The item index, or NoMore if there is not valid previous item.
  */
-ItemLink ListContents::previousIndex(ItemLink item)
+ListContents::ItemLink ListContents::previousIndex(ListContents::ItemLink item)
 {
     return item == NoMore ? NoMore : previousEntry(item);
 }
@@ -552,16 +572,16 @@ ItemLink ListContents::previousIndex(ItemLink item)
  *
  * @return An array containing all of the items.
  */
-RexxArray *ListContents::allItems()
+ArrayClass *ListContents::allItems()
 {
-    RexxArray *items = new_array(items());
+    ArrayClass *itemArray = new_array(itemCount);
 
     for (size_t position = firstItem; position != NoMore; position = nextEntry(position))
     {
-        items->append(entryValue(position));
+        itemArray->append(entryValue(position));
     }
 
-    return items
+    return itemArray;
 }
 
 
@@ -570,16 +590,16 @@ RexxArray *ListContents::allItems()
  *
  * @return An array containing all of the indexes.
  */
-RexxArray *ListContents::allIndexes()
+ArrayClass *ListContents::allIndexes()
 {
-    RexxArray *items = new_array(items());
+    ArrayClass *itemArray = new_array(itemCount);
 
     for (size_t position = firstItem; position != NoMore; position = nextEntry(position))
     {
-        items->append(new_integer(position)));
+        itemArray->append(new_integer(position));
     }
 
-    return items
+    return itemArray;
 }
 
 
@@ -603,13 +623,33 @@ void ListContents::empty()
 
 
 /**
+ * Clear the value from a given entry.
+ *
+ * @param position The table position to clear.
+ */
+void ListContents::clearEntry(ListContents::ItemLink position)
+{
+    clearField(entries[position].value);
+    // belt and braces...clear the next and previous values as well
+    entries[position].next = NoMore;
+    entries[position].previous = NoMore;
+}
+
+
+void ListContents::setValue(ListContents::ItemLink position, RexxInternalObject *v)
+{
+    setField(entries[position].value, v);
+}
+
+
+/**
  * Find the index for a target item.
  *
  * @param target The target item.
  *
  * @return The index of the located item or NoMore if this cannot be found.
  */
-ItemLink ListContents::getIndex(RexxInternalObject *target)
+ListContents::ItemLink ListContents::getIndex(RexxInternalObject *target)
 {
     // scan until we get a hit.
     for (size_t position = firstItem; position != NoMore; position = nextEntry(position))
@@ -667,9 +707,9 @@ RexxInternalObject *ListContents::removeItem(RexxInternalObject *target)
  */
 SupplierClass *ListContents::supplier()
 {
-    RexxArray *indexes = allIndexes();
-    RexxArray *values = allItems();
-    return new_supplier(values, indices);
+    ArrayClass *indexes = allIndexes();
+    ArrayClass *values = allItems();
+    return new_supplier(values, indexes);
 }
 
 
@@ -685,7 +725,7 @@ SupplierClass *ListContents::supplier()
  *
  * @return An array of the dereferenced objects.
  */
-RexxArray *ListContents::weakReferenceArray()
+ArrayClass *ListContents::weakReferenceArray()
 {
     // this is a little tricky.  We allocate the result array
     // before we process the weak references.  If we prune
@@ -696,7 +736,7 @@ RexxArray *ListContents::weakReferenceArray()
     // make this larg enough to hold what is currently there.
     // this could be more than we need, but that's fine.
     // TODO:  make sure subclasses uses items() rather than size()
-    Protected<RexxArray> result = new_array(items());
+    Protected<ArrayClass> result = new_array(items());
 
     size_t position = firstItem;
     while (position != NoMore)

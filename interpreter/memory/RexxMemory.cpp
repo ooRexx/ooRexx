@@ -630,7 +630,6 @@ void MemoryObject::restoreImage()
     }
 
     TheSystem      = (StringTable *)saveArray->get(saveArray_SYSTEM);
-    TheFunctionsDirectory = (StringTable *)saveArray->get(saveArray_FUNCTIONS);
     TheTrueObject  = (RexxInteger *)saveArray->get(saveArray_TRUE);
     TheFalseObject = (RexxInteger *)saveArray->get(saveArray_FALSE);
     TheNilObject   = (RexxObject *)saveArray->get(saveArray_NIL);
@@ -1114,7 +1113,6 @@ void MemoryObject::saveImage()
     saveArray->put(TheClassClass,    saveArray_CLASS);
     saveArray->put(PackageManager::getImageData(), saveArray_PACKAGES);
     saveArray->put(TheSystem,       saveArray_SYSTEM);
-    saveArray->put(TheFunctionsDirectory,  saveArray_FUNCTIONS);
     saveArray->put(TheCommonRetrievers,    saveArray_COMMON_RETRIEVERS);
     saveArray->put(saveStrings(), saveArray_NAME_STRINGS);
 

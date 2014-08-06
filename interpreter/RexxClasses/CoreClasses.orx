@@ -128,9 +128,6 @@ call 'StreamClasses.orx'
 
 call 'PlatformObjects.orx'                   -- now load platform-specific builtin classes
 
--- add all of the defined routine functions into our global list
-.kernel~functions['RXQUEUE'] = .routines~rxqueue
-
 exit
 
 /* ************************************************************************** */
@@ -3631,64 +3628,6 @@ nomethod:
   if \obj~isa(class) then do
       raise syntax 88.914 array(name, class~id)
   end
-
-
-
-/* **************************************** */
-/*    F U N C T I O N S                     */
-/* **************************************** */
-
-::routine rxqueue
-  use arg keyword, queue_name
-  parse upper var keyword keyword
-  signal on syntax
-  if arg() > 2 then
-     raise syntax 40.004 array ('RXQUEUE', 2)
-
-  if substr(keyword,1,1) = 'G' then
-    if arg() > 1 then
-      raise syntax 40.004 array ('RXQUEUE', 1)
-    else
-      return .stdque~get
-
-  if substr(keyword,1,1) = 'S' then do
-    queue_name = !queueexit(queue_name)/* give the exit a pass     */
-    if symbol(queue_name) = 'BAD' then
-      raise syntax 40.026 array ('RXQUEUE', 2, queue_name)
-    return .stdque~set(queue_name)
-  end
-
-  if substr(keyword,1,1) = 'C' then do
-    if symbol(queue_name) = 'BAD' then
-      raise syntax 40.026 array ('RXQUEUE', 2, queue_name)
-    if (Arg(2,'o') = 1) then
-      return .RexxQueue~create
-    else
-      return .RexxQueue~create(queue_name)
-  end
-
-  if substr(keyword,1,1) = 'O' then do
-    if symbol(queue_name) = 'BAD' then
-      raise syntax 40.026 array ('RXQUEUE', 2, queue_name)
-    return .RexxQueue~open(queue_name)
-  end
-
-  if substr(keyword,1,1) = 'e' then do
-    if symbol(queue_name) = 'BAD' then
-      raise syntax 40.026 array ('RXQUEUE', 2, queue_name)
-    return .RexxQueue~exists(queue_name)
-  end
-
-  if substr(keyword,1,1) = 'D' then do
-    if symbol(queue_name) = 'BAD' then
-      raise syntax 40.026 array ('RXQUEUE', 2, queue_name)
-    return .RexxQueue~delete(queue_name)
-  end
-  raise syntax 40.904 array ('RXQUEUE', 1, 'CDGS', keyword)
-  return
-
-syntax: raise propagate
-
 
 
 -- A mixin class for easily adding comparison methods to a

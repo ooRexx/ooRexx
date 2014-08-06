@@ -556,7 +556,7 @@ RexxClass *Interpreter::findClass(RexxString *className)
  */
 RexxString *Interpreter::getCurrentQueue()
 {
-    RexxObject *queue = ActivityManager::getLocalEnvironment(GlobalNames::REXXQUEUE);
+    RexxObject *queue = ActivityManager::getLocalEnvironment(GlobalNames::STDQUE);
 
     if (queue == OREF_NULL)              // no queue set?  Default to session
     {

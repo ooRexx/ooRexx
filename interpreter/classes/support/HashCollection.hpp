@@ -65,7 +65,7 @@ class HashCollection : public RexxObject
     virtual RexxInternalObject *copy();
     virtual ArrayClass *makeArray();
 
-    virtual HashContents *allocateContents(size_t bucketSize, size_t capacity);
+    virtual HashContents *allocateContents(size_t bucketSize, size_t capacity) = 0;
     virtual void validateIndex(RexxInternalObject *&index, size_t position);
     virtual void validateValueIndex(RexxInternalObject *&value, RexxInternalObject *&index, size_t position);
     virtual bool requiresRehash() { return true; }

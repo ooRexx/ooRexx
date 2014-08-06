@@ -44,12 +44,12 @@
 #include "RexxCore.h"
 #include "TraceSetting.hpp"
 
-const TraceSetting::TraceFlags defaultTraceFlags(TraceSetting::traceNormal, TraceSetting::traceFailures);
+const TraceSetting::TraceFlags TraceSetting::defaultTraceFlags(TraceSetting::traceNormal, TraceSetting::traceFailures);
 
 // now the flag sets for different settings
-const TraceSetting::TraceFlags traceAllFlags(TraceSetting::traceAll, TraceSetting::traceLabels, TraceSetting::traceCommands);
-const TraceSetting::TraceFlags traceResultsFlags(TraceSetting::traceAll, TraceSetting::traceLabels, TraceSetting::traceResults, TraceSetting::traceCommands);
-const TraceSetting::TraceFlags traceIntermediatesFlags(TraceSetting::traceAll, TraceSetting::traceLabels, TraceSetting::traceResults, TraceSetting::traceCommands, TraceSetting::traceIntermediates);
+const TraceSetting::TraceFlags TraceSetting::traceAllFlags(TraceSetting::traceAll, TraceSetting::traceLabels, TraceSetting::traceCommands);
+const TraceSetting::TraceFlags TraceSetting::traceResultsFlags(TraceSetting::traceAll, TraceSetting::traceLabels, TraceSetting::traceResults, TraceSetting::traceCommands);
+const TraceSetting::TraceFlags TraceSetting::traceIntermediatesFlags(TraceSetting::traceAll, TraceSetting::traceLabels, TraceSetting::traceResults, TraceSetting::traceCommands, TraceSetting::traceIntermediates);
 
 
 /**

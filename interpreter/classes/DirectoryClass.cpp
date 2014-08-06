@@ -70,7 +70,7 @@ void DirectoryClass::createInstance()
  *
  * @return Storage for creating a the object.
  */
-void *TableClass::operator new (size_t size)
+void *DirectoryClass::operator new (size_t size)
 {
     return new_object(size, T_Directory);
 }

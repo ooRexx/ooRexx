@@ -1967,7 +1967,7 @@ BUILTIN(LINEIN)
         // handle both via the exit and the actual queue object
         if (context->getActivity()->callPullExit(context, result))
         {
-            RexxObject *stream = context->getLocalEnvironment(REXXQUEUE);
+            RexxObject *stream = context->getLocalEnvironment(STDQUE);
             // we do this using a LINEIN method
             return stream->sendMessage(LINEIN);
         }
@@ -2063,7 +2063,7 @@ BUILTIN(LINEOUT)
             // lineout always queues to the queue
             if (string != OREF_NULL)
             {
-                RexxObject *stream = context->getLocalEnvironment(REXXQUEUE);
+                RexxObject *stream = context->getLocalEnvironment(STDQUE);
                 return stream->sendMessage(QUEUE, string);
             }
             else
@@ -2163,7 +2163,7 @@ BUILTIN(LINES)
     // for the queue, return the count of items in the queue
     if (check_queue(name))
     {
-        RexxObject *stream = context->getLocalEnvironment(REXXQUEUE);
+        RexxObject *stream = context->getLocalEnvironment(STDQUE);
         result = stream->sendMessage(QUEUED);
     }
     else
@@ -2366,7 +2366,7 @@ BUILTIN(QUEUED)
     // see if the exit handles this, otherwise send a message to the current queue
     if (context->getActivity()->callQueueSizeExit(context, queuesize))
     {
-        RexxObject *queue = (RexxObject *)context->getLocalEnvironment(REXXQUEUE);
+        RexxObject *queue = (RexxObject *)context->getLocalEnvironment(STDQUE);
         return queue->sendMessage(QUEUED);
     }
     else
@@ -2578,27 +2578,93 @@ BUILTIN(RXFUNCQUERY)
 }
 
 
-// This somewhat funny function is implemented as a builtin because it
-// requires quite a bit of internal access.
-// TODO:  This needs a real rethink here...can't really do this as
-// a builtin.
-BUILTIN(QUEUEEXIT)
+BUILTIN(RXQUEUE)
 {
-    const size_t QUEUEEXIT_Min = 1;
-    const size_t QUEUEEXIT_Max = 1;
-    const size_t QUEUEEXIT_name =   1;
+    const size_t RXQUEUE_Min = 1;
+    const size_t RXQUEUE_Max = 2;
+    const size_t RXQUEUE_option = 1;
+    const size_t RXQUEUE_name =   2;
 
-    fix_args(QUEUEEXIT);
+    fix_args(RXQUEUE);
 
-    RexxString *name = required_string(QUEUEEXIT, name);
+    RexxString *option = required_string(RXQUEUE, option);
+    RexxString *queueName = optional_string(RXQUEUE, name);
 
-    context->getActivity()->callQueueNameExit(context, name);
-    // make sure we have real object to return
-    if (name == OREF_NULL)
+    // all of the options here manipulate stdque, so get this upfront.
+    RexxObject *queue = (RexxObject *)context->getLocalEnvironment(STDQUE);
+
+    switch (toupper(option->getChar(0)))
     {
-        name = GlobalNames::NULLSTRING;
+        // 'G'et the current queue name
+        case 'G':
+            // the queue name is not allowed with the 'G'et option
+            if (queueName != OREF_NULL)
+            {
+                reportException(Error_Incorrect_call_maxarg, "RXQUEUE", IntegerTwo);
+            }
+            return queue->sendMessage(GlobalNames::GET);
+
+        // 'C'reate a named queue
+        case 'C':
+            // if no queue name specified, we allow a name to be
+            // created for us
+            if (queueName == OREF_NULL)
+            {
+                return queue->sendMessage(new_string("CREATE"));
+            }
+            else
+            {
+                // this must be a valid symbol
+                if (queueName->isSymbol() == STRING_BAD_VARIABLE)
+                {
+                    reportException(Error_Incorrect_call_symbol, new_string("RXQUEUE"), IntegerTwo, queueName);
+                }
+                return queue->sendMessage(new_string("CREATE"), queueName);
+            }
+
+        // 'S'et a new queue name
+        case 'S':
+            // give the exit a pass at this
+            context->getActivity()->callQueueNameExit(context, queueName);
+            // this must be a valid symbol
+            if (queueName->isSymbol() == STRING_BAD_VARIABLE)
+            {
+                reportException(Error_Incorrect_call_symbol, new_string("RXQUEUE"), IntegerTwo, queueName);
+            }
+            return queue->sendMessage(new_string("SET"), queueName);
+
+        // 'O'pen a new queue name...creates if needed
+        case 'O':
+            // this must be a valid symbol
+            if (queueName->isSymbol() == STRING_BAD_VARIABLE)
+            {
+                reportException(Error_Incorrect_call_symbol, new_string("RXQUEUE"), IntegerTwo, queueName);
+            }
+            return queue->sendMessage(new_string("OPEN"), queueName);
+
+        // 'E'xists
+        case 'E':
+            // this must be a valid symbol
+            if (queueName->isSymbol() == STRING_BAD_VARIABLE)
+            {
+                reportException(Error_Incorrect_call_symbol, new_string("RXQUEUE"), IntegerTwo, queueName);
+            }
+            return queue->sendMessage(new_string("EXISTS"), queueName);
+
+        // 'D'elete
+        case 'D':
+            // this must be a valid symbol
+            if (queueName->isSymbol() == STRING_BAD_VARIABLE)
+            {
+                reportException(Error_Incorrect_call_symbol, new_string("RXQUEUE"), IntegerTwo, queueName);
+            }
+            return queue->sendMessage(new_string("DELETE"), queueName);
+
+        default:
+            reportException(Error_Incorrect_call_list, "RXQUEUE", IntegerOne, "CDEGOS", option);
     }
-    return name;
+
+    return OREF_NULL;
 }
 
 
@@ -2697,6 +2763,7 @@ pbuiltin LanguageParser::builtinTable[] =
     &builtin_function_RANDOM           ,
     &builtin_function_REVERSE          ,
     &builtin_function_RIGHT            ,
+    &builtin_function_RXQUEUE          ,
     &builtin_function_SIGN             ,
     &builtin_function_SOURCELINE       ,
     &builtin_function_SPACE            ,
@@ -2729,7 +2796,6 @@ pbuiltin LanguageParser::builtinTable[] =
     &builtin_function_RXFUNCQUERY      ,
     &builtin_function_ENDLOCAL         ,
     &builtin_function_SETLOCAL         ,
-    &builtin_function_QUEUEEXIT        ,
     &builtin_function_QUALIFY          ,
 };
 

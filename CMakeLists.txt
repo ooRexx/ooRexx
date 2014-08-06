@@ -554,6 +554,7 @@ set (execution_sources ${build_execution_dir}/CPPCode.cpp
             ${build_execution_dir}/ActivationStack.cpp
             ${build_execution_dir}/RexxActivation.cpp
             ${build_execution_dir}/BaseCode.cpp
+            ${build_execution_dir}/RexxCode.cpp
             ${build_execution_dir}/BaseExecutable.cpp
             ${build_execution_dir}/RexxLocalVariables.cpp
             ${build_execution_dir}/NativeActivation.cpp

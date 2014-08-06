@@ -148,7 +148,6 @@ extern MemoryObject memoryObject;
 // shorthand access to some important objects.
 #define TheEnvironment memoryObject.environment
 #define TheCommonRetrievers memoryObject.commonRetrievers
-#define TheFunctionsDirectory memoryObject.functionsDir
 #define TheSystem memoryObject.system
 
 #define TheNilObject RexxNilObject::nilObject

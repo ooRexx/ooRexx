@@ -86,22 +86,6 @@ void HashCollection::initialize(size_t capacity)
 
 
 /**
- * Virtual method for allocating a new contents item for this
- * collection.  Collections with special requirements should
- * override this and return the appropriate subclass.
- *
- * @param bucketSize The bucket size of the collection.
- * @param totalSize  The total capacity of the collection.
- *
- * @return A new HashContents object appropriate for this collection type.
- */
-HashContents *HashCollection::allocateContents(size_t bucketSize, size_t totalSize)
-{
-    return new (totalSize) HashContents(bucketSize, totalSize);
-}
-
-
-/**
  * Expand the contents of a collection.  We try for double the
  * size.
  */
@@ -746,6 +730,18 @@ RexxObject *HashCollection::isEmptyRexx()
 
 
 /**
+ * Return the count of collection items as an integer
+ * object.
+ *
+ * @return An integer count of the items.
+ */
+RexxObject *HashCollection::itemsRexx()
+{
+    return new_integer(items());
+}
+
+
+/**
  * Return an iterator for this collection.
  *
  * @return An iterator for the hash contens.
@@ -1016,6 +1012,22 @@ EqualityHashCollection::EqualityHashCollection(size_t capacity)
     // called.  We don't have access to our allocateContents() override
     // until the final constructor is run.
     initialize(capacity);
+}
+
+
+/**
+ * Virtual method for allocating a new contents item for this
+ * collection.  Collections with special requirements should
+ * override this and return the appropriate subclass.
+ *
+ * @param bucketSize The bucket size of the collection.
+ * @param totalSize  The total capacity of the collection.
+ *
+ * @return A new HashContents object appropriate for this collection type.
+ */
+HashContents *IdentityHashCollection::allocateContents(size_t bucketSize, size_t totalSize)
+{
+    return new (totalSize) IdentityHashContents(bucketSize, totalSize);
 }
 
 

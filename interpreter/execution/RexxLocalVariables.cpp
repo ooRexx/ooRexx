@@ -46,275 +46,299 @@
 #include "RexxLocalVariables.hpp"
 #include "RexxActivation.hpp"
 
+
+/**
+ * Normal garbage collection live marking
+ *
+ * @param liveMark The current live mark.
+ */
 void RexxLocalVariables::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
     // We can only mark if full initialized
     if (locals != NULL)
     {
-       RexxVariable **entry;                /* marked stack entry                */
+       RexxVariable **entry;
        RexxVariable **top;
 
-                                           /* loop through the stack entries    */
+       // mark all of the stack entries;
        for (entry = locals, top = entry + size; entry < top; entry++)
        {
-           memory_mark(*entry);            /* marking each one                  */
+           memory_mark(*entry);
        }
     }
-    memory_mark(dictionary);            /* also mark any created vdict       */
+    // also mark any created variable dictionary
+    memory_mark(dictionary);
 }
 
+
+/**
+ * Generalized object marking.
+ *
+ * @param reason The reason for this live marking operation.
+ */
 void RexxLocalVariables::liveGeneral(MarkReason reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
 {
     // We can only mark if full initialized
     if (locals != NULL)
     {
-        RexxVariable **entry;                /* marked stack entry                */
+        RexxVariable **entry;
         RexxVariable **top;
 
-                                            /* loop through the stack entries    */
         for (entry = locals, top = entry + size; entry < top; entry++)
         {
-            memory_mark_general(*entry);    /* marking each one                  */
+            memory_mark_general(*entry);
         }
     }
-    memory_mark_general(dictionary);    /* also mark any created vdict       */
+    memory_mark_general(dictionary);
 }
 
 
+/**
+ * Migrate the local variable cache to a new activity.
+ *
+ * @param activity The new target activity.
+ */
 void RexxLocalVariables::migrate(Activity *activity)
-/******************************************************************************/
-/* Function:  Migrate the expression stack to a new activity                  */
-/******************************************************************************/
 {
     RexxVariable **oldFrame = locals;
-    /* allocate a new frame */
+    // ask the activity to allocate a new stack frame.
     activity->allocateLocalVariableFrame(this);
-    /* copy the enties over to the new stack. */
+    // copy the existing entries over to the new stack.  Our
+    // VariableDictionary pointer is fine.
     memcpy(locals, oldFrame, sizeof(RexxVariable *) * size);
 }
 
 
+/**
+ * Do a more extensive search for a variable, without creating
+ * one if it doesn't exist.  This is only called after we've had
+ * a miss on the variable table.
+ *
+ * @param name   The target name.
+ * @param index  The target index (can be 0, which requires a search).
+ *
+ * @return The variable object corresponding to the name, or NULL if
+ *         not found.
+ */
 RexxVariable *RexxLocalVariables::findVariable(RexxString *name, size_t index)
-/******************************************************************************/
-/* Function:  Do a more extensive search for a variable, without creating     */
-/*            one if it doesn't exist.                                        */
-/******************************************************************************/
 {
     RexxVariable *variable = OREF_NULL;
 
-    /* if we have a dictionary already, we can do a fast lookup. */
+    // we need to search for this by name, so if we have a variable
+    // dictionary already created, this is a quick search.
     if (dictionary != OREF_NULL)
     {
+        // the lookup might be using a non-zero index and failing
+        // because the variable might have been created dynamically (using
+        // VALUE() or interpret, for example).  If we have a non-zero
+        // index, store the value from the dictionary into the slot.
         variable = dictionary->resolveVariable(name);
-        /* if we have an index, fill in the cache entry. */
+        // if we have an index, fill in the cache entry.
         if (index != 0)
         {
-            /* add this to the variable cache */
             locals[index] = variable;
         }
     }
+    // first dynamic lookup...we might need to create the variable
+    // dictionary.
     else
     {
-        /* if this is a non-targetted lookup, we don't know the slot */
-        /* this variable needs to be stored in, or this is a */
-        /* dynamically accessed variable that may not have a slot.  We */
-        /* might need to create a variable dictionary for this. */
+        // if this is a non-targetted lookup, we don't know the slot
+        // this variable needs to be stored in, or this is a
+        // dynamically accessed variable that may not have a slot.  We
+        // might need to create a variable dictionary for this.
         if (index == 0)
         {
-            /* if we haven't created a variable dictionary yet, scan */
-            /* the set of variables looking for one we may have created */
-            /* earlier. */
-            size_t i;
-            for (i = 0; i < size; i++)
+            // if we haven't created a variable dictionary yet, scan
+            // the set of variables looking for one we may have created
+            // earlier.
+            for (size_t i = 0; i < size; i++)
             {
-                /* grab the item */
                 variable = locals[i];
-                /* if the variable at this position exists, check the name. */
+                // if the slot exists at this position, check the name
                 if (variable != OREF_NULL)
                 {
-                    /* if the names match, this is our target */
-                    if (name->memCompare(variable->getName()))
+                    if (name->strCompare(variable->getName()))
                     {
                         return variable;
                     }
                 }
             }
         }
-        variable = NULL;      // force this to null, otherwise it returns last variable examined
+        // a non-zero index with no created variable dictionary means this
+        // variable cannot exist.  Just return NULL.
     }
-    return variable;
+    // not found
+    return OREF_NULL;
 }
 
-RexxVariable *RexxLocalVariables::lookupVariable(RexxString *name, size_t index)
-/******************************************************************************/
-/* Function:  Create a local variable object of the given name and store      */
-/*            it at the given location.                                       */
-/******************************************************************************/
-{
-    RexxVariable *variable = OREF_NULL;
 
-    /* if this is a non-targetted lookup, we don't know the slot */
-    /* this variable needs to be stored in, or this is a */
-    /* dynamically accessed variable that may not have a slot.  We */
-    /* might need to create a variable dictionary for this. */
+/**
+ * Create a local variable object of the given name and store
+ * it at the given location.
+ *
+ * @param name   The variable name.
+ * @param index  The target index position.
+ *
+ * @return The created or resolved variable object.
+ */
+RexxVariable *RexxLocalVariables::lookupVariable(RexxString *name, size_t index)
+{
+    // if this is a non-targetted lookup, we don't know the slot
+    // this variable needs to be stored in, or this is a
+    // dynamically accessed variable that may not have a slot.  We
+    // might need to create a variable dictionary for this.
     if (index == 0)
     {
-        /* if we haven't created a variable dictionary yet, scan */
-        /* the set of variables looking for one we may have created */
-        /* earlier. */
+        // if we haven't created a variable dictionary yet, scan
+        // the set of variables looking for one we may have created
+        // earlier.
         if (dictionary == OREF_NULL)
         {
-            size_t i;
-            for (i = 0; i < size; i++)
+            for (size_t i = 0; i < size; i++)
             {
-                /* grab the item */
-                variable = locals[i];
-                /* if the variable at this position exists, check the name. */
+                // we're looking for a variable where the names match.
+                RexxVariable *variable = locals[i];
                 if (variable != OREF_NULL)
                 {
-                    /* if the names match, this is our target */
-                    if (name->memCompare(variable->getName()))
+                    if (name->strCompare(variable->getName()))
                     {
                         return variable;
                     }
                 }
             }
-            /* go create the dictionary and populate it with our variable set. */
+            // go create the dictionary and populate it with our variable set.
             createDictionary();
         }
 
-
-        /* get the variable item for this name */
+        // retrieve this from the variable dictionary now, which will create
+        // the item we need.
         return dictionary->getVariable(name);
     }
     else
     {
-        /* if we've had to create a dictionary for this because of */
-        /* prior dynamic access, then we need to retrieve the */
-        /* variable from the dictionary. */
+        RexxVariable *variable;
+        // if we've had to create a dictionary for this because of
+        // prior dynamic access, then we need to retrieve the
+        // variable from the dictionary.
         if (dictionary != OREF_NULL)
         {
             variable = dictionary->getVariable(name);
         }
+        // we've already had a cache miss, so we're creating a variable.
         else
         {
-            /* create a new variable item for this */
             variable = owner->newLocalVariable(name);
         }
-        /* add this to the variable cache */
+        // fill in the cache slot for the next lookup and return
+        // the new variable.
         locals[index] = variable;
-        /* and return the new variable */
         return variable;
     }
 }
 
 
+/**
+ * Create a local stem variable variable object of the given name and store
+ * it at the given location.
+ *
+ * @param name   The variable name.
+ * @param index  The variable cache slot (can be zero)
+ *
+ * @return The located or created variable object.
+ */
 RexxVariable *RexxLocalVariables::lookupStemVariable(RexxString *name, size_t index)
-/******************************************************************************/
-/* Function:  Create a local variable object of the given name and store      */
-/*            it at the given location.                                       */
-/******************************************************************************/
 {
-    RexxVariable *variable;
-
-    /* if this is a non-targetted lookup, we don't know the slot */
-    /* this variable needs to be stored in, or this is a */
-    /* dynamically accessed variable that may not have a slot.  We */
-    /* might need to create a variable dictionary for this. */
+    // if this is a non-targetted lookup, we don't know the slot
+    // this variable needs to be stored in, or this is a
+    // dynamically accessed variable that may not have a slot.  We
+    // might need to create a variable dictionary for this.
     if (index == 0)
     {
-        /* if we haven't created a variable dictionary yet, scan */
-        /* the set of variables looking for one we may have created */
-        /* earlier. */
+        // if we haven't created a variable dictionary yet, scan
+        // the set of variables looking for one we may have created
+        // earlier.
         if (dictionary == OREF_NULL)
         {
-            size_t i;
-            for (i = 0; i < size; i++)
+            for (size_t i = 0; i < size; i++)
             {
-                /* grab the item */
-                variable = locals[i];
-                /* if the variable at this position exists, check the name. */
+                // we if find a matching variable, return it immediately
+                RexxVariable *variable = locals[i];
                 if (variable != OREF_NULL)
                 {
-                    /* if the names match, this is our target */
-                    if (name->memCompare(variable->getName()))
+                    if (name->strCompare(variable->getName()))
                     {
                         return variable;
                     }
                 }
             }
 
-            /* go create the dictionary and populate it with our variable set. */
+            // go create the dictionary and populate it with our variable set.
             createDictionary();
         }
 
-        /* get the variable item for this name */
+        // have the dictionary create this for us
         return dictionary->getStemVariable(name);
     }
     else
     {
-        /* if we've had to create a dictionary for this because of */
-        /* prior dynamic access, then we need to retrieve the */
-        /* variable from the dictionary. */
+        // if we've had to create a dictionary for this because of
+        // prior dynamic access, then we need to retrieve the
+        // variable from the dictionary.
+
+        RexxVariable *variable;
         if (dictionary != OREF_NULL)
         {
+            // create from the dictionary and add this to the cache at
+            // the target location.
             variable = dictionary->getStemVariable(name);
-            /* add this to the variable cache */
             locals[index] = variable;
         }
         else
         {
-            /* create a new variable item for this */
+            // create a new variable from the local context and
+            // add it to the cache.
             variable = owner->newLocalVariable(name);
-            /* add this to the variable cache */
             locals[index] = variable;
-            /* create a stem object as value     */
+
+            // stem variables are initialized as soon as they
+            // are created, using a stem object with the same name.
             StemClass *stemtable = new StemClass(name);
-            /* the stem object is the value of   */
-            /* stem variable                     */
-            variable->set((RexxObject *)stemtable);
+            variable->set(stemtable);
         }
-        /* and return the new variable */
+        // and return the new variable
         return variable;
     }
 }
 
+
+/**
+ * Update a local variable context with a provided variable object.
+ *
+ * @param variable The variable used for the replacement.
+ */
 void RexxLocalVariables::updateVariable(RexxVariable *variable)
-/******************************************************************************/
-/* Function:  Do a more extensive search for a variable, without creating     */
-/*            one if it doesn't exist.                                        */
-/******************************************************************************/
 {
     RexxVariable *oldVariable = OREF_NULL;
     RexxString *name = variable->getName();
 
-    /* if we haven't created a variable dictionary yet, scan    */
-    /* the set of variables looking for one we may have created */
-    /* earlier.                                                 */
-    size_t i;
-    for (i = 0; i < size; i++)
+    // scan the set of variables looking for one we may have created
+    // earlier.
+    for (size_t i = 0; i < size; i++)
     {
-        /* grab the item */
         oldVariable = locals[i];
-        /* if the variable at this position exists, check the name. */
         if (oldVariable != OREF_NULL)
         {
-            /* if the names match, this is our target */
-            if (name->memCompare(oldVariable->getName()))
+            // if we find a match, replace the slot variable at this
+            // location with the new variable object.
+            if (name->strCompare(oldVariable->getName()))
             {
-                /* overwrite this */
                 locals[i] = variable;
 
-                /* if we have a dictionary, we update that entry too */
+                // if we have a dictionary created, replace the entry in that as well.
                 if (dictionary != OREF_NULL)
                 {
-                    dictionary->put(variable, name);
+                    dictionary->addVariable(name, variable);
                     return;
                 }
                 break;
@@ -322,35 +346,35 @@ void RexxLocalVariables::updateVariable(RexxVariable *variable)
         }
     }
 
-    /* we didn't find a static one, so this is a completely dynamic */
-    /* update.  Make sure we have a dynamic dictionary and insert   */
-    /* this entry. */
+
+    // we didn't find a static one, so this is a completely dynamic
+    // update.  Make sure we have a dynamic dictionary and insert
+    // this entry.
     if (dictionary == OREF_NULL)
     {
         createDictionary();
     }
-    /* add the variable to the dictionary */
-    dictionary->put(variable, name);
+    // add the variable to the dictionary
+    dictionary->addVariable(name, variable);
 }
 
+
+/**
+ * Create a variable dictionary for this activation to
+ * support dynamic access to variables.  This is created only
+ * when dynamic lookup cannot be avoided.
+ */
 void RexxLocalVariables::createDictionary()
-/******************************************************************************/
-/* Function:  Create a variable dictionary for this method activation to      */
-/*            support dynamic access to variables.  This is created only      */
-/*            when dynamic lookup cannot be avoided.                          */
-/******************************************************************************/
 {
-    /* create a dictionary with the recommended size */
+    // create a dictionary with the recommended size
     dictionary = new_variableDictionary(size);
     for (size_t i = 0; i < size; i++)
     {
-        /* grab the item */
+        // if we have a variable at this position, insert into the dictionary
         RexxVariable *variable = locals[i];
-        /* if the variable at this position exists, check the name. */
         if (variable != OREF_NULL)
         {
-            /* add the variable to the dictionary */
-            dictionary->put(variable, variable->getName());
+            dictionary->addVariable(variable->getName(), variable);
         }
     }
 }

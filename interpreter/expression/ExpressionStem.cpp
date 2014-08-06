@@ -289,7 +289,7 @@ void RexxStemVariable::procedureExpose(RexxActivation *context, RexxActivation *
     // get the old variable entry
     RexxVariable *old_variable = parent->getLocalStemVariable(stemName, stemIndex);
 
-    // if we have an index (and generally we should because expose cannot
+    // if we have an index (and generally we should because procedure cannot
     // be interpreted), we just put this variable into the local context.
     // otherwise, we need to do a dynamic search to update this.
     if (stemIndex == 0)

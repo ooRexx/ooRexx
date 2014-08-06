@@ -67,7 +67,7 @@ RexxString *SystemInterpreter::getSourceString(RexxString *callType, RexxString 
     char *outPtr = source_string->getWritableData();
     // name is first, with a blank separator
     strcpy(outPtr, chSysName);
-    outPtr += strlen(chSysName);->getLength();
+    outPtr += strlen(chSysName);
     *outPtr++ = ' ';
 
     // now the call type

@@ -223,9 +223,6 @@ void MemoryObject::createImage()
     ListClass::createInstance();
     QueueClass::createInstance();
 
-    // functions directory used for functions like rxqueue.
-    TheFunctionsDirectory = new_string_table();
-
     // We keep handy references to a number of commonly used
     // integer objects.
     IntegerZero    = new_integer(0);
@@ -1417,7 +1414,6 @@ EndClassDefinition(StackFrame);
     addToSystem("NULLPOINTER", TheNullPointer);
     addToSystem("COMMONRETRIEVERS", TheCommonRetrievers);
     addToSystem("ENVIRONMENT", TheEnvironment);
-    addToSystem("FUNCTIONS", TheFunctionsDirectory);
 
     addToSystem("VERSION", Interpreter::getVersionNumber());
     // initialize our thread vector for external calls.

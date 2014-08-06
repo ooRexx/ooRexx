@@ -431,6 +431,7 @@ typedef enum
     BUILTIN_RANDOM,
     BUILTIN_REVERSE,
     BUILTIN_RIGHT,
+    BUILTIN_RXQUEUE,
     BUILTIN_SIGN,
     BUILTIN_SOURCELINE,
     BUILTIN_SPACE,
@@ -463,7 +464,6 @@ typedef enum
     BUILTIN_RXFUNCQUERY,
     BUILTIN_ENDLOCAL,
     BUILTIN_SETLOCAL,
-    BUILTIN_QUEUEEXIT,
     BUILTIN_QUALIFY,
 } BuiltinCode;
 
@@ -503,8 +503,8 @@ class RexxToken : public RexxInternalObject
         stringValue(v), numeric(SUBTYPE_NONE), tokenLocation(l) { };
 
     inline RexxToken(RESTORETYPE restoreType) { ; };
-    void       live(size_t);
-    void       liveGeneral(MarkReason reason);
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
 
     inline void setStart(size_t l, size_t o) { tokenLocation.setStart(l, o); }
     inline void setEnd(size_t l, size_t o) { tokenLocation.setEnd(l, o); }
