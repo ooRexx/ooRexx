@@ -88,6 +88,13 @@ void NativeCode::live(size_t liveMark)
  */
 void NativeCode::liveGeneral(MarkReason reason)
 {
+    // if we're getting ready to save the image, replace the source
+    // package with the global REXX package
+    if (reason == PREPARINGIMAGE)
+    {
+        package = TheRexxPackage;
+    }
+
     memory_mark_general(packageName);
     memory_mark_general(name);
     memory_mark_general(package);
@@ -125,6 +132,7 @@ RexxClass *NativeCode::findClass(RexxString *className)
     {
         return package->findClass(className);
     }
+
     return BaseCode::findClass(className);
 }
 
@@ -152,19 +160,6 @@ BaseCode *NativeCode::setPackageObject(PackageClass *s)
         codeCopy->package = s;
         return codeCopy;
     }
-}
-
-
-/**
- * Get the source object backing this code instance.  If created from
- * a directive, this will be the source package containing the
- * directive.
- *
- * @return The parent source instance.
- */
-PackageClass *NativeCode::getPackageObject()
-{
-    return package;
 }
 
 

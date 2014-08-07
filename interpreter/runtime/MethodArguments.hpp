@@ -103,7 +103,7 @@ inline RexxInternalObject *requiredArgument(RexxInternalObject *object, size_t p
  *
  * @return The String value of the object, if it really has a string value.
  */
-inline RexxString * stringArgument(RexxInternalObject *object, size_t position)
+inline RexxString *stringArgument(RexxInternalObject *object, size_t position)
 {
     if (object == OREF_NULL)
     {

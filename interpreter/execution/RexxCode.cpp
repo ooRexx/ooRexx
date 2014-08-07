@@ -109,6 +109,13 @@ void RexxCode::live(size_t liveMark)
  */
 void RexxCode::liveGeneral(MarkReason reason)
 {
+    // if we're getting ready to save the image, replace the source
+    // package with the global REXX package
+    if (reason == PREPARINGIMAGE)
+    {
+        package = TheRexxPackage;
+    }
+
     memory_mark_general(package);
     memory_mark_general(start);
     memory_mark_general(labels);

@@ -149,6 +149,7 @@ extern MemoryObject memoryObject;
 #define TheEnvironment memoryObject.environment
 #define TheCommonRetrievers memoryObject.commonRetrievers
 #define TheSystem memoryObject.system
+#define TheRexxPackage memoryObject.rexxPackage
 
 #define TheNilObject RexxNilObject::nilObject
 

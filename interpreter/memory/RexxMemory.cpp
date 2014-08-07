@@ -637,6 +637,7 @@ void MemoryObject::restoreImage()
     TheNullPointer   = (PointerClass *)saveArray->get(saveArray_NULLPOINTER);
     TheClassClass  = (RexxClass *)saveArray->get(saveArray_CLASS);
     TheCommonRetrievers = (StringTable *)saveArray->get(saveArray_COMMON_RETRIEVERS);
+    TheRexxPackage = (PackageClass *)saveArray->get(saveArray_REXX_PACKAGE);
 
     // restore the global strings
     memoryObject.restoreStrings((ArrayClass *)saveArray->get(saveArray_NAME_STRINGS));
@@ -666,6 +667,7 @@ void MemoryObject::live(size_t liveMark)
     memory_mark(environment);
     memory_mark(commonRetrievers);
     memory_mark(system);
+    memory_mark(rexxPackage);
 
     // now call the various subsystem managers to mark their references
     Interpreter::live(liveMark);
@@ -697,6 +699,7 @@ void MemoryObject::liveGeneral(MarkReason reason)
     memory_mark_general(environment);
     memory_mark_general(commonRetrievers);
     memory_mark_general(system);
+    memory_mark_general(rexxPackage);
 
     // now call the various subsystem managers to mark their references
     Interpreter::liveGeneral(reason);

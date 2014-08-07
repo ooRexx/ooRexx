@@ -166,6 +166,36 @@ void MemoryObject::addToSystem(const char *name, RexxInternalObject *value)
 
 
 /**
+ * Finalize a system class during image construction.  This
+ * places the class in the Environment and also adds it to
+ * the Rexx package.
+ *
+ * @param name     The class name.
+ * @param classObj The class object.
+ */
+void MemoryObject::completeSystemClass(const char *name, RexxClass *classObj)
+{
+    // this gets added to the environment and the package in an uppercase name.
+    RexxString *className = getUpperGlobalName(name);
+    TheEnvironment->put(className, classObj);
+    // this is added as a public class in this package.
+    TheRexxPackage->addInstalledClass(className, classObj, true);
+}
+
+
+/**
+ * Create the base Rexx package object.  All Rexx-defined classes
+ * in the image will be added to this package.
+ */
+void MemoryObject::createRexxPackage()
+{
+    // this is a dummy package named "REXX" with the place holder
+    // sourceless program source
+    rexxPackage = new PackageClass(GlobalNames::REXX, new ProgramSource());
+}
+
+
+/**
  * Initialize the Rexx memory environment during an image built.
  */
 void MemoryObject::createImage()
@@ -324,7 +354,13 @@ void MemoryObject::createImage()
 // Add the created class object to the environment under its name and close
 // the local variable scope
 #define EndClassDefinition(name) \
-    addToEnvironment(#name, currentClass); \
+    completeSystemClass(#name, currentClass); \
+}
+
+// Finish up one of the special classes (Integer and NumberString).  Those are
+// real classes, but are kept hidden.
+#define EndSpecialClassDefinition(name) \
+    addToSystem(#name, currentClass); \
 }
 
 
@@ -349,9 +385,11 @@ StartClassDefinition(Class);
     // now the normal instance methods for a CLASS object.
         AddProtectedMethod("BaseClass", RexxClass::getBaseClass, 0);
         AddProtectedMethod("Define", RexxClass::defineMethod, 2);
-        AddProtectedMethod("!DEFINE_METHODS", RexxClass::defineMethods, 1);
-        AddProtectedMethod("!DEFINE_CLASS_METHOD", RexxClass::defineClassMethod, 2);
-        AddProtectedMethod("INHERITINSTANCEMETHODS", RexxClass::inheritInstanceMethods, 1)
+        // these two are special and will be removed at the end of
+        // the image build
+        AddProtectedMethod("DefineClassMethod", RexxClass::defineClassMethod, 2);
+        AddProtectedMethod("InheritInstanceMethods", RexxClass::inheritInstanceMethods, 1)
+
         AddProtectedMethod("Delete", RexxClass::deleteMethod, 1);
         AddMethod("Enhanced", RexxClass::enhanced, A_COUNT);
         AddMethod("ID", RexxClass::getId, 0);
@@ -368,7 +406,6 @@ StartClassDefinition(Class);
         AddProtectedMethod("Uninherit", RexxClass::uninherit, 1);
 
         AddMethod("IsSubclassOf", RexxClass::isSubclassOf, 1);
-        AddMethod("!REXXDEFINED", RexxClass::setRexxDefined, 0);
         AddMethod("DefaultName", RexxClass::defaultNameRexx, 0);
         AddMethod("Package", RexxClass::getPackage, 0);
 
@@ -1218,7 +1255,7 @@ StartClassDefinition(Integer)
 
     CompleteClassDefinition(Integer);
 
-EndClassDefinition(Integer);
+EndSpecialClassDefinition(Integer);
 
 
     /***************************************************************************/
@@ -1282,7 +1319,7 @@ StartClassDefinition(NumberString)
 
     CompleteClassDefinition(NumberString);
 
-EndClassDefinition(NumberString);
+EndSpecialClassDefinition(NumberString);
 
 
     /***************************************************************************/
@@ -1434,9 +1471,9 @@ EndClassDefinition(StackFrame);
         // add this to the environment directory.
         TheEnvironment->setMethodRexx(getGlobalName("LOCAL"), localMethod);
 
-                                             /* create the BaseClasses method and run it*/
-        RexxString *symb = getGlobalName(BASEIMAGELOAD);   /* get a name version of the string  */
-                                             /* go resolve the program name       */
+        // CoreClasses contains additional classes written in Rexx and enhances some of the
+        // base classes with methods written in Rexx.
+        RexxString *symb = getGlobalName(BASEIMAGELOAD);
         RexxString *programName = ActivityManager::currentActivity->resolveProgramName(symb, OREF_NULL, OREF_NULL);
         // create a new stack frame to run under
         ActivityManager::currentActivity->createNewActivationStack();
@@ -1469,58 +1506,9 @@ EndClassDefinition(StackFrame);
     // restored when the image reloads.
     TheNilObject->behaviour->setClassType(T_NilObject);
 
-    RexxClass *ordered = (RexxClass *)TheEnvironment->get(getGlobalName("ORDEREDCOLLECTION"));
-
-    // TODO:  this really can be done in CoreClasses...
-
-    TheArrayClass->inherit(ordered, OREF_NULL);
-    TheArrayClass->setRexxDefined();
-
-    TheQueueClass->inherit(ordered, OREF_NULL);
-    TheQueueClass->setRexxDefined();
-
-    TheListClass->inherit(ordered, OREF_NULL);
-    TheListClass->setRexxDefined();
-
-    RexxClass *map = (RexxClass *)TheEnvironment->get(getGlobalName("MAPCOLLECTION"));
-
-    TheTableClass->inherit(map, OREF_NULL);
-    TheTableClass->setRexxDefined();
-
-    TheStringTableClass->inherit(map, OREF_NULL);
-    TheStringTableClass->setRexxDefined();
-
-    TheIdentityTableClass->inherit(map, OREF_NULL);
-    TheIdentityTableClass->setRexxDefined();
-
-    TheRelationClass->inherit(map, OREF_NULL);
-    TheRelationClass->setRexxDefined();
-
-    TheDirectoryClass->inherit(map, OREF_NULL);
-    TheDirectoryClass->setRexxDefined();
-
-    TheStemClass->inherit(map, OREF_NULL);
-    TheStemClass->setRexxDefined();
-
-    TheBagClass->inherit(map, OREF_NULL);
-    TheBagClass->setRexxDefined();
-
-    TheSetClass->inherit(map, OREF_NULL);
-    TheSetClass->setRexxDefined();
-
-    // TODO:  Add Set and Bag class processing here.
-
-
-    RexxClass *comparable = (RexxClass *)TheEnvironment->get(getGlobalName("COMPARABLE"));
-
-    TheStringClass->inherit(comparable, OREF_NULL);
-    TheStringClass->setRexxDefined();
-
     // disable the special class methods we only use during the image build phase.
     // this removes this from all of the subclasses as well
-    TheObjectClass->removeClassMethod(new_string("!DEFINE_METHODS"));
-    TheObjectClass->removeClassMethod(new_string("!REXXDEFINED"));
-    TheObjectClass->removeClassMethod(new_string("!DEFINE_CLASS_METHOD"));
+    TheObjectClass->removeClassMethod(new_string("DEFINECLASSMETHOD"));
     TheObjectClass->removeClassMethod(new_string("INHERITINSTANCEMETHODS"));
 
     // now save the image

@@ -242,6 +242,7 @@ class MemoryObject : public RexxInternalObject
     StringTable    *commonRetrievers;        // statically defined requires
 
     StringTable    *system;                  // the system directory...anchors stuff we don't want to expose in environment
+    PackageClass   *rexxPackage;             // the main rexx package
 
 private:
 
@@ -265,6 +266,7 @@ private:
         saveArray_PACKAGES,
         saveArray_NULLA,
         saveArray_NULLPOINTER,
+        saveArray_REXX_PACKAGE,
         saveArray_COMMON_RETRIEVERS,
         saveArray_highest = saveArray_COMMON_RETRIEVERS
     };
@@ -281,6 +283,8 @@ private:
     void definePrivateMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments, const char *entryPointName);
     void addToEnvironment(const char *name, RexxInternalObject *value);
     void addToSystem(const char *name, RexxInternalObject *value);
+    void completeSystemClass(const char *name, RexxClass *classObj);
+    void createRexxPackage();
 
     LiveStack  *liveStack;               // stack used for memory marking
     PushThroughStack *saveStack;         // our temporary protection stack

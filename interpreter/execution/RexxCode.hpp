@@ -78,7 +78,6 @@ class RexxCode : public BaseCode
    RexxObject      *setSecurityManager(RexxObject *);
    RexxString      *getProgramName();
 
-   inline PackageClass *getPackageObject() { return package; }
    inline RexxInstruction *getFirstInstruction() { return start; }
    inline StringTable *getLabels() { return labels; }
    inline size_t getMaxStackSize() { return maxStack; }
@@ -103,7 +102,6 @@ class RexxCode : public BaseCode
 
 protected:
 
-    PackageClass    *package;           // the source this code belongs to.
     RexxInstruction *start;             // root of instruction tree
     SourceLocation   location;          // the full location of the code.
     StringTable     *labels;            // list of labels in this code block

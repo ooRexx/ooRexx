@@ -72,6 +72,8 @@ class RexxString : public RexxObject
      {
         STRING_HASLOWER,
         STRING_NOLOWER,
+        STRING_HASUPPER,
+        STRING_NOUPPER,
         STRING_NONNUMERIC,
      } StringFlag;
 
@@ -151,6 +153,7 @@ class RexxString : public RexxObject
     RexxString *concatWithCstring(const char *);
     RexxString *concatBlank(RexxObject *);
     bool        checkLower();
+    bool        checkUpper();
     RexxString *upper();
     RexxString *upper(size_t, size_t);
     RexxString *upperRexx(RexxInteger *, RexxInteger *);
@@ -158,7 +161,7 @@ class RexxString : public RexxObject
     RexxString *lower(size_t, size_t);
     RexxString *lowerRexx(RexxInteger *, RexxInteger *);
     RexxString *stringTrace();
-    void        setNumberString(RexxObject *);
+    void        setNumberString(NumberString *);
     RexxString *concatWith(RexxString *, char);
 
     RexxObject *plus(RexxObject *right);
@@ -283,6 +286,7 @@ class RexxString : public RexxObject
 
 // Inline_functions
 
+    inline RexxString *baseString() { return isBaseClass() ? this : requestString(); }
     inline size_t  getLength() const { return length; }
     inline void  setLength(size_t l) { length = l; }
     inline void  finish(stringsize_t l) { length = l; }
@@ -297,6 +301,10 @@ class RexxString : public RexxObject
     inline bool  hasLower() const {return attributes[STRING_HASLOWER]; }
     inline void  setUpperOnly() { attributes.set(STRING_NOLOWER);}
     inline void  setHasLower() { attributes.set(STRING_HASLOWER);}
+    inline bool  lowerOnly() const {return attributes[STRING_NOUPPER];}
+    inline bool  hasUpper() const {return attributes[STRING_HASUPPER]; }
+    inline void  setLowerOnly() { attributes.set(STRING_NOUPPER);}
+    inline void  setHasUpper() { attributes.set(STRING_HASUPPER);}
     inline bool  nonNumeric() const {return attributes[STRING_NONNUMERIC];}
     inline void  setNonNumeric() { attributes.set(STRING_NONNUMERIC);}
     inline bool  strCompare(const char * s) const { return memCompare((s), strlen(s)); }

@@ -164,7 +164,7 @@ void Interpreter::startInterpreter(InterpreterStartupMode mode)
 
             // TODO:  Reassess the server class
             // get the server class from the local environment
-            RexxObject *server_class = (RexxObject *)TheSystem->entry(new_string("!SERVER"));
+            RexxObject *server_class = (RexxObject *)TheRexxPackage->findClass(new_string("LOCALSERVER"));
 
             // NOTE:  This is a second block so that the
             // protected object's destructor gets run before
@@ -227,7 +227,7 @@ bool Interpreter::terminateInterpreter()
             try
             {
                 // this may seem funny, but we need to create an instance
-                // so shut down so that the package manager can unload
+                // to shut down so that the package manager can unload
                 // the libraries (it needs to pass a RexxThreadContext
                 // pointer out to package unloaders, if they are defined)
                 InstanceBlock instance;
@@ -539,7 +539,24 @@ void Interpreter::decodeConditionData(DirectoryClass *conditionObj, RexxConditio
 RexxClass *Interpreter::findClass(RexxString *className)
 {
     RexxString *internalName = className->upper();
-    RexxClass *classObject = (RexxClass *)(ActivityManager::getLocalEnvironment(internalName));
+
+    // we search first in the REXX package to ensure that we are
+    // getting the real system classes rather than overrides somebody
+    // has poked into the environment
+
+    RexxClass *classObject;
+
+    if (TheRexxPackage != OREF_NULL)
+    {
+        classObject = TheRexxPackage->findClass(internalName);
+        if (classObject != OREF_NULL)
+        {
+            return classObject;
+        }
+    }
+
+    // if not in the system package, check .local, then .environment
+    classObject = (RexxClass *)(ActivityManager::getLocalEnvironment(internalName));
     if (classObject != OREF_NULL)
     {
         return classObject;

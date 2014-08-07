@@ -146,7 +146,7 @@ RexxObject *BaseCode::setSecurityManager(RexxObject *manager)
  */
 PackageClass *BaseCode::getPackageObject()
 {
-    return OREF_NULL;
+    return package;
 }
 
 
@@ -160,6 +160,18 @@ PackageClass *BaseCode::getPackageObject()
  */
 RexxClass *BaseCode::findClass(RexxString *className)
 {
+    RexxClass *classObject;
+
+    // if we have a package set, search the packge first
+    if (package != OREF_NULL)
+    {
+        classObject = package->findClass(className);
+        if (classObject != OREF_NULL)
+        {
+            return classObject;
+        }
+    }
+
     // the interpreter class handles the default lookups
     return Interpreter::findClass(className);
 }
@@ -179,7 +191,9 @@ RexxClass *BaseCode::findClass(RexxString *className)
  */
 BaseCode *BaseCode::setPackageObject(PackageClass *s)
 {
-    return this;         // this is just a nop
+    // set in the base field
+    setField(package, s);
+    return this;
 }
 
 
@@ -200,7 +214,6 @@ PackageClass *BaseCode::getPackage()
  */
 void BaseCode::detachSource()
 {
-    PackageClass *package = getPackageObject();
     if (package != OREF_NULL)
     {
         package->detachSource();

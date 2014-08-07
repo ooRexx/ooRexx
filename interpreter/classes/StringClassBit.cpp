@@ -46,209 +46,208 @@
 #include "StringClass.hpp"
 #include "MethodArguments.hpp"
 
-/******************************************************************************/
-/* Arguments:  String to bitand with self                                     */
-/*             pad  character to use                                          */
-/*                                                                            */
-/*  Returned:  New string object                                              */
-/******************************************************************************/
-RexxString *RexxString::bitAnd(RexxString *string2,
-                               RexxString *pad)
+
+/**
+ * String method for performing a BITAND operation.
+ *
+ * @param string2 The string to AND with (optional)
+ * @param pad     The optional pad character.
+ *
+ * @return The ANDed string.
+ */
+RexxString *RexxString::bitAnd(RexxString *string2, RexxString *pad)
 {
-    char        PadChar;                 /* pad character                     */
-    const char *String1;                 /* string 1 pointer                  */
-    const char *PadString;               /* padded string part                */
-    const char *String2;                 /* string 2 pointer                  */
-    size_t      String1Len;              /* string 1 length                   */
-    size_t      String2Len;              /* string 2 length                   */
-    size_t      MinLength;               /* length of shorter string          */
-    size_t      PadLength;               /* length to pad                     */
-    size_t      MaxLength;               /* longest length                    */
-    RexxString *Retval;                  /* return value                      */
-    const char *Source;                  /* source string pointer             */
-    char       *Target;                  /* target string pointer             */
-
-                                         /* get string we will be doing bit   */
-                                         /* stuff to...                       */
+    // the other string is optional...the operation can be performed using just
+    // pad characters.
     string2 = optionalStringArgument(string2, GlobalNames::NULLSTRING, ARG_ONE);
-    String2Len = string2->getLength();        /* get the string length             */
-    String2 = string2->getStringData();       /* get the string data pointer       */
-    /* get the pad character             */
-    PadChar = optionalPadArgument(pad, (char)0xff, ARG_TWO);
 
-    String1 = this->getStringData();     /* point to the first string         */
-    String1Len = this->getLength();      /* get the length                    */
-    if (String1Len <= String2Len)
-    {      /* string 1 shorter or equal?        */
-        MinLength = String1Len;            /* string 1 is the shorter           */
-        MaxLength = String2Len;            /* string 2 is the longer            */
-        PadString = String2;               /* padding is done on string2        */
-        Source = String1;                  /* operate from string 1             */
+    size_t string2Len = string2->getLength();
+    // get the pad character...the default is 'ff'x.
+    char padChar = optionalPadArgument(pad, (char)0xff, ARG_TWO);
+
+    size_t string1Len = getLength();
+
+    size_t minLength;
+    size_t maxLength;
+    const char *padString;
+    const char *source;
+
+    // we adjust for whichever string is longer
+    if (string1Len <= string2Len)
+    {
+        minLength = string1Len;
+        maxLength = string2Len;
+        padString = string2->getStringData();
+        source = getStringData();
     }
     else
     {
-        MinLength = String2Len;            /* string 2 is the shorter           */
-        MaxLength = String1Len;            /* string 1 is the longer            */
-        PadString = String1;               /* padding is done on string1        */
-        Source = String2;                  /* operate from string 2             */
-    }
-    PadLength = MaxLength - MinLength;   /* get the padding length            */
-                                         /* Duplicate Longer                  */
-    Retval = raw_string(MaxLength);
-    Target = Retval->getWritableData();  /* point to the tArget               */
-    memcpy(Target, PadString, MaxLength);/* now copy in the longer one        */
-
-    while (MinLength--)
-    {                /* while shorter has data            */
-                     /* and in each character             */
-        *Target = *Target & *Source++;
-        Target++;                          /* step the target                   */
+        minLength = string2Len;
+        maxLength = string1Len;
+        padString = getStringData();
+        source = string2->getStringData();
     }
 
-    while (PadLength--)
-    {                /* while pad needed                  */
-                     /* and in a pad character            */
-        *Target = *Target & PadChar;
-        Target++;                          /* step the target                   */
+    // calculate the length of padding required
+    size_t padLength = maxLength - minLength;
+
+    // get a result string the length of the longer string.
+    RexxString *retval = raw_string(maxLength);
+    char *target = retval->getWritableData();
+
+    // copy in the longer string
+    memcpy(target, padString, maxLength);
+
+    // now peform the AND operation between the two strings
+    while (minLength--)
+    {
+        *target = *target & *source++;
+        target++;
     }
-    return Retval;                       /* return result string              */
+
+    // now do the end part with the pad character
+    while (padLength--)
+    {
+        *target = *target & padChar;
+        target++;
+    }
+
+    return retval;
 }
 
-/* the BITOR function */
-/******************************************************************************/
-/* Arguments:  String to bitor  with self                                     */
-/*             pad  character to use                                          */
-/*                                                                            */
-/*  Returned:  New string object                                              */
-/******************************************************************************/
-RexxString *RexxString::bitOr(RexxString *string2,
-                              RexxString *pad)
+
+/**
+ * String method for performing a BITOR operation.
+ *
+ * @param string2 The string to OR with (optional)
+ * @param pad     The optional pad character.
+ *
+ * @return The ORed string.
+ */
+RexxString *RexxString::bitOr(RexxString *string2, RexxString *pad)
 {
-    char        PadChar;                  /* pad character                     */
-    const char *String1;                  /* string 1 pointer                  */
-    const char *PadString;                /* padded string part                */
-    const char *String2;                  /* string 2 pointer                  */
-    size_t      String1Len;               /* string 1 length                   */
-    size_t      String2Len;               /* string 2 length                   */
-    size_t      MinLength;                /* length of shorter string          */
-    size_t      PadLength;                /* length to pad                     */
-    size_t      MaxLength;                /* longest length                    */
-    RexxString *Retval;                   /* return value                      */
-    const char *Source;                   /* source string pointer             */
-    char       *Target;                   /* tArget string pointer             */
-
-    /* get string we will be doing bit   */
-    /* stuff to...                       */
+    // the other string is optional...the operation can be performed using just
+    // pad characters.
     string2 = optionalStringArgument(string2, GlobalNames::NULLSTRING, ARG_ONE);
-    String2Len = string2->getLength();   /* get the string length             */
-    String2 = string2->getStringData();  /* get the string data pointer       */
-                                         /* get the pad character             */
-    PadChar = optionalPadArgument(pad, 0x00, ARG_TWO);
 
-    String1 = this->getStringData();     /* point to the first string         */
-    String1Len = this->getLength();      /* get the length                    */
-    if (String1Len <= String2Len)
-    {      /* string 1 shorter or equal?        */
-        MinLength = String1Len;            /* string 1 is the shorter           */
-        MaxLength = String2Len;            /* string 2 is the longer            */
-        PadString = String2;               /* padding is done on string2        */
-        Source = String1;                  /* operate from string 1             */
+    size_t string2Len = string2->getLength();
+    // get the pad character...the default is 'ff'x.
+    char padChar = optionalPadArgument(pad, (char)0xff, ARG_TWO);
+
+    size_t string1Len = getLength();
+
+    size_t minLength;
+    size_t maxLength;
+    const char *padString;
+    const char *source;
+
+    // we adjust for whichever string is longer
+    if (string1Len <= string2Len)
+    {
+        minLength = string1Len;
+        maxLength = string2Len;
+        padString = string2->getStringData();
+        source = getStringData();
     }
     else
     {
-        MinLength = String2Len;            /* string 2 is the shorter           */
-        MaxLength = String1Len;            /* string 1 is the longer            */
-        PadString = String1;               /* padding is done on string1        */
-        Source = String2;                  /* operate from string 2             */
-    }
-    PadLength = MaxLength - MinLength;   /* get the padding length            */
-                                         /* Duplicate Longer                  */
-    Retval = raw_string(MaxLength);
-    Target = Retval->getWritableData();  /* point to the tArget               */
-    memcpy(Target, PadString, MaxLength);/* now copy in the longer one        */
-
-    while (MinLength--)
-    {                /* while shorter has data            */
-                     /* and in each character             */
-        *Target = *Target | *Source++;
-        Target++;                          /* step the target                   */
+        minLength = string2Len;
+        maxLength = string1Len;
+        padString = getStringData();
+        source = string2->getStringData();
     }
 
-    while (PadLength--)
-    {                /* while pad needed                  */
-                     /* and in a pad character            */
-        *Target = *Target | PadChar;
-        Target++;                          /* step the target                   */
+    // calculate the length of padding required
+    size_t padLength = maxLength - minLength;
+
+    // get a result string the length of the longer string.
+    RexxString *retval = raw_string(maxLength);
+    char *target = retval->getWritableData();
+
+    // copy in the longer string
+    memcpy(target, padString, maxLength);
+
+    // now peform the AND operation between the two strings
+    while (minLength--)
+    {
+        *target = *target | *source++;
+        target++;
     }
-    return Retval;                       /* return result string              */
+
+    // now do the end part with the pad character
+    while (padLength--)
+    {
+        *target = *target | padChar;
+        target++;
+    }
+
+    return retval;
 }
-
-/* the BITXOR function */
-/******************************************************************************/
-/* Arguments:  String to bitxor with self                                     */
-/*             pad  character to use                                          */
-/*                                                                            */
-/*  Returned:  New string object                                              */
-/******************************************************************************/
-RexxString *RexxString::bitXor(RexxString *string2,
-                               RexxString *pad)
+/**
+ * String method for performing a BITXOR operation.
+ *
+ * @param string2 The string to XOR with (optional)
+ * @param pad     The optional pad character.
+ *
+ * @return The XORed string.
+ */
+RexxString *RexxString::bitXor(RexxString *string2, RexxString *pad)
 {
-    char        PadChar;                  /* pad character                     */
-    const char *String1;                  /* string 1 pointer                  */
-    const char *PadString;                /* padded string part                */
-    const char *String2;                  /* string 2 pointer                  */
-    size_t      String1Len;               /* string 1 length                   */
-    size_t      String2Len;               /* string 2 length                   */
-    size_t      MinLength;                /* length of shorter string          */
-    size_t      PadLength;                /* length to pad                     */
-    size_t      MaxLength;                /* longest length                    */
-    RexxString *Retval;                   /* return value                      */
-    const char *Source;                   /* source string pointer             */
-    char       *Target;                   /* tArget string pointer             */
-
-    /* get string we will be doing bit   */
-    /* stuff to...                       */
+    // the other string is optional...the operation can be performed using just
+    // pad characters.
     string2 = optionalStringArgument(string2, GlobalNames::NULLSTRING, ARG_ONE);
-    String2Len = string2->getLength();   /* get the string length             */
-    String2 = string2->getStringData();  /* get the string data pointer       */
-                                         /* get the pad character             */
-    PadChar = optionalPadArgument(pad, 0x00, ARG_TWO);
 
-    String1 = this->getStringData();     /* point to the first string         */
-    String1Len = this->getLength();      /* get the length                    */
-    if (String1Len <= String2Len)
-    {      /* string 1 shorter or equal?        */
-        MinLength = String1Len;            /* string 1 is the shorter           */
-        MaxLength = String2Len;            /* string 2 is the longer            */
-        PadString = String2;               /* padding is done on string2        */
-        Source = String1;                  /* operate from string 1             */
+    size_t string2Len = string2->getLength();
+    // get the pad character...the default is 'ff'x.
+    char padChar = optionalPadArgument(pad, (char)0xff, ARG_TWO);
+
+    size_t string1Len = getLength();
+
+    size_t minLength;
+    size_t maxLength;
+    const char *padString;
+    const char *source;
+
+    // we adjust for whichever string is longer
+    if (string1Len <= string2Len)
+    {
+        minLength = string1Len;
+        maxLength = string2Len;
+        padString = string2->getStringData();
+        source = getStringData();
     }
     else
     {
-        MinLength = String2Len;            /* string 2 is the shorter           */
-        MaxLength = String1Len;            /* string 1 is the longer            */
-        PadString = String1;               /* padding is done on string1        */
-        Source = String2;                  /* operate from string 2             */
-    }
-    PadLength = MaxLength - MinLength;   /* get the padding length            */
-                                         /* Duplicate Longer                  */
-    Retval = raw_string(MaxLength);
-    Target = Retval->getWritableData();  /* point to the tArget               */
-    memcpy(Target, PadString, MaxLength);/* now copy in the longer one        */
-
-    while (MinLength--)
-    {                /* while shorter has data            */
-                     /* and in each character             */
-        *Target = *Target ^ *Source++;
-        Target++;                          /* step the target                   */
+        minLength = string2Len;
+        maxLength = string1Len;
+        padString = getStringData();
+        source = string2->getStringData();
     }
 
-    while (PadLength--)
-    {                /* while pad needed                  */
-                     /* and in a pad character            */
-        *Target = *Target ^ PadChar;
-        Target++;                          /* step the target                   */
+    // calculate the length of padding required
+    size_t padLength = maxLength - minLength;
+
+    // get a result string the length of the longer string.
+    RexxString *retval = raw_string(maxLength);
+    char *target = retval->getWritableData();
+
+    // copy in the longer string
+    memcpy(target, padString, maxLength);
+
+    // now peform the XOR operation between the two strings
+    while (minLength--)
+    {
+        *target = *target ^ *source++;
+        target++;
     }
-    return Retval;                       /* return result string              */
+
+    // now do the end part with the pad character
+    while (padLength--)
+    {
+        *target = *target ^ padChar;
+        target++;
+    }
+
+    return retval;
 }
 

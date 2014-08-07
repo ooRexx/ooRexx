@@ -57,6 +57,7 @@ public:
     virtual void run(Activity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
     virtual void call(Activity *, RoutineClass *, RexxString *,  RexxObject **, size_t, RexxString *, RexxString *, int, ProtectedObject &);
     virtual void call(Activity *, RoutineClass *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
+
     virtual ArrayClass *getSource();
     virtual RexxObject *setSecurityManager(RexxObject *manager);
     virtual PackageClass *getPackageObject();
@@ -64,6 +65,8 @@ public:
     virtual BaseCode  *setPackageObject(PackageClass *s);
     virtual PackageClass *getPackage();
             void detachSource();
+
+            PackageClass *package;             // source this is attached to
 };
 
 // pointer to native method function

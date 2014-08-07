@@ -2608,6 +2608,7 @@ RexxClass *NativeActivation::findClass(RexxString *className)
     {
         classObject = Interpreter::findClass(className);
     }
+
     // we need to filter this to always return a class object
     if (classObject != OREF_NULL && classObject->isInstanceOf(TheClassClass))
     {

@@ -41,11 +41,9 @@
 
 #include "MethodClass.hpp"
 
-/******************************************************************************/
-/* Method arguments special codes                                             */
-/******************************************************************************/
 
-const size_t A_COUNT   = 127;            // pass arguments as pointer/count pair
+// pass arguments as pointer/count pair
+const size_t A_COUNT   = 127;
 
 /**
  * Class for a method-wrappered CPP internal method.
@@ -59,9 +57,10 @@ public:
     inline void operator delete(void *, void *) { }
     CPPCode(size_t, PCPPM, size_t);
     inline CPPCode(RESTORETYPE restoreType) { ; };
-    void liveGeneral(MarkReason reason);
 
-    void run(Activity *, MethodClass *, RexxObject *, RexxString *, RexxObject **, size_t, ProtectedObject &);
+    virtual void liveGeneral(MarkReason reason);
+
+    virtual void run(Activity *, MethodClass *, RexxObject *, RexxString *, RexxObject **, size_t, ProtectedObject &);
 
     static CPPCode *resolveExportedMethod(const char *name, PCPPM targetMethod, size_t argcount, const char* entryPointName);
     // The table of exported methods.
@@ -87,14 +86,15 @@ public:
     inline void operator delete(void *, void *) { }
     inline AttributeGetterCode(RexxVariableBase *a) { attribute = a; }
     inline AttributeGetterCode(RESTORETYPE restoreType) { ; };
-    void live(size_t);
-    void liveGeneral(MarkReason reason);
-    void flatten(Envelope*);
 
-    void run(Activity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(Envelope*);
+
+    virtual void run(Activity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
 
 protected:
-    RexxVariableBase *attribute;      /* method attribute info             */
+    RexxVariableBase *attribute;      // method attribute info
 };
 
 
@@ -108,10 +108,11 @@ public:
     inline void *operator new(size_t size, void *ptr) { return ptr; };
     inline void operator delete(void *) { }
     inline void operator delete(void *, void *) { }
+
     inline AttributeSetterCode(RexxVariableBase *a) : AttributeGetterCode(a) { }
     inline AttributeSetterCode(RESTORETYPE restoreType) : AttributeGetterCode(restoreType) { }
 
-    void run(Activity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t,  ProtectedObject &);
+    virtual void run(Activity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t,  ProtectedObject &);
 };
 
 
@@ -125,11 +126,13 @@ public:
     inline void *operator new(size_t size, void *ptr) { return ptr; };
     inline void operator delete(void *) { }
     inline void operator delete(void *, void *) { }
+
     inline ConstantGetterCode(RexxObject * v) { constantValue = v; }
     inline ConstantGetterCode(RESTORETYPE restoreType) { }
-    void live(size_t);
-    void liveGeneral(MarkReason reason);
-    void flatten(Envelope*);
+
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(Envelope*);
 
     void run(Activity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
 
@@ -151,7 +154,7 @@ public:
     inline AbstractCode() { }
     inline AbstractCode(RESTORETYPE restoreType) { }
 
-    void run(Activity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
+    virtual void run(Activity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
 };
 
 #endif

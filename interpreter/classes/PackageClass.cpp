@@ -316,6 +316,20 @@ void PackageClass::setProgramName(RexxString *name)
 
 
 /**
+ * Check for an invalid attempt to make additions to the REXX
+ * package.
+ */
+void PackageClass::checkRexxPackage()
+{
+    // If this is marked as internal code, reject the addition attempt.
+    if (isInternalCode())
+    {
+        reportException(Error_Execution_rexx_package_update);
+    }
+}
+
+
+/**
  * Return count of lines in the source.  This could be zero
  * if no source is available for this method.
  *
@@ -414,7 +428,7 @@ RexxString *PackageClass::traceBack(RexxActivation *activation, SourceLocation &
     {
         // old space code means this is part of the interpreter image.  Don't include
         // the package name in the message
-        if (isOldSpace())
+        if (isInternalCode())
         {
             line = ActivityManager::currentActivity->buildMessage(Message_Translations_internal_code, new_array((size_t)0));
         }
@@ -424,7 +438,7 @@ RexxString *PackageClass::traceBack(RexxActivation *activation, SourceLocation &
         // the invocation situation
         if (activation != OREF_NULL)
         {
-            line = activation->formatSourcelessTraceLine(isInternalCode() ? GlobalNames::REXX : programName);
+            line = activation->formatSourcelessTraceLine(programName);
         }
 
         // this could be part of the internal code...give a generic message that doesn't identify
@@ -782,6 +796,14 @@ RexxClass *PackageClass::findClass(RexxString *className)
         return classObject;
     }
 
+    // now try for a system-defined class.
+    classObject = TheRexxPackage->findClass(internalName);
+    // return if we got one
+    if (classObject != OREF_NULL)
+    {
+        return classObject;
+    }
+
     // give the security manager a go
     if (securityManager != OREF_NULL)
     {
@@ -792,14 +814,14 @@ RexxClass *PackageClass::findClass(RexxString *className)
         }
     }
 
-    /* send message to .local            */
+    // look in .local
     classObject = (RexxClass *)(ActivityManager::getLocalEnvironment(internalName));
     if (classObject != OREF_NULL)
     {
         return classObject;
     }
 
-    /* normal execution?                 */
+    // normal execution?
     if (securityManager != OREF_NULL)
     {
         classObject = (RexxClass *)securityManager->checkEnvironmentAccess(internalName);
@@ -1306,6 +1328,8 @@ PackageClass *PackageClass::loadPackageRexx(RexxString *name, ArrayClass *s)
 {
     // make sure we have a valid name and delegate to the source object
     name = stringArgument(name, 1);
+    // unable to add to the external packages
+    checkRexxPackage();
     // if no source provided, this comes from a file
     if (s == OREF_NULL)
     {
@@ -1329,6 +1353,8 @@ PackageClass *PackageClass::loadPackageRexx(RexxString *name, ArrayClass *s)
 RexxObject *PackageClass::addPackageRexx(PackageClass *package)
 {
     classArgument(package, ThePackageClass, "package");
+    // unable to add to the external packages
+    checkRexxPackage();
     addPackage(package);
     return this;
 }
@@ -1345,6 +1371,8 @@ RexxObject *PackageClass::addRoutineRexx(RexxString *name, RoutineClass *routine
 {
     name = stringArgument(name, "name");
     classArgument(routine, TheRoutineClass, "routine");
+    // unable to add to the external packages
+    checkRexxPackage();
     addInstalledRoutine(name, routine, false);
     return this;
 }
@@ -1361,6 +1389,8 @@ RexxObject *PackageClass::addPublicRoutineRexx(RexxString *name, RoutineClass *r
 {
     name = stringArgument(name, "name");
     classArgument(routine, TheRoutineClass, "routine");
+    // unable to add to the external packages
+    checkRexxPackage();
     addInstalledRoutine(name, routine, true);
     return this;
 }
@@ -1377,6 +1407,8 @@ RexxObject *PackageClass::addClassRexx(RexxString *name, RexxClass *clazz)
 {
     name = stringArgument(name, "name");
     classArgument(clazz, TheClassClass, "class");
+    // unable to add to the external packages
+    checkRexxPackage();
     addInstalledClass(name, clazz, false);
     return this;
 }
@@ -1393,6 +1425,8 @@ RexxObject *PackageClass::addPublicClassRexx(RexxString *name, RexxClass *clazz)
 {
     name = stringArgument(name, "name");
     classArgument(clazz, TheClassClass, "class");
+    // unable to add to the external packages
+    checkRexxPackage();
     addInstalledClass(name, clazz, true);
     return this;
 }
@@ -1441,6 +1475,8 @@ RoutineClass *PackageClass::findRoutineRexx(RexxString *name)
  */
 RexxObject *PackageClass::setSecurityManagerRexx(RexxObject *manager)
 {
+    // unable to add to the external packages
+    checkRexxPackage();
     setSecurityManager(manager);
     return TheTrueObject;
 }
@@ -1457,6 +1493,8 @@ RexxObject *PackageClass::setSecurityManagerRexx(RexxObject *manager)
 RexxObject *PackageClass::loadLibraryRexx(RexxString *name)
 {
     name = stringArgument(name, "name");
+    // unable to add to the external packages
+    checkRexxPackage();
     // have we already loaded this package?
     // may need to bootstrap it up first.
     LibraryPackage *package = PackageManager::loadLibrary(name);

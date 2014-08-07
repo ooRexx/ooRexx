@@ -70,7 +70,6 @@ protected:
 
     RexxString   *packageName;         // the package name
     RexxString   *name;                // the mapped method name
-    PackageClass *package;             // source this is attached to
 };
 
 

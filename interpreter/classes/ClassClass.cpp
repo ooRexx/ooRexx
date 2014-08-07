@@ -133,6 +133,15 @@ void RexxClass::live(size_t liveMark)
  */
 void RexxClass::liveGeneral(MarkReason reason)
 {
+    // if we're getting ready to save the image, replace the source
+    // package with the global REXX package
+    if (reason == PREPARINGIMAGE)
+    {
+        package = TheRexxPackage;
+        // this class can no longer be altered
+        setRexxDefined();
+    }
+
     memory_mark_general(objectVariables);
     memory_mark_general(id);
     memory_mark_general(classMethodDictionary);
@@ -148,6 +157,7 @@ void RexxClass::liveGeneral(MarkReason reason)
     memory_mark_general(scopeSuperClass);
     memory_mark_general(scopeSearchOrder);
 }
+
 
 // TODO:  no flatten method for classes?
 
