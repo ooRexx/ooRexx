@@ -49,6 +49,11 @@
 #include "NumberStringMath.hpp"
 
 
+/**
+ * A base NumberString object.  Occasionally, we create
+ * number string instances with no data part, so we have a base
+ * class for some of the portions.
+ */
 class NumberStringBase : public RexxObject
 {
  friend class NumberString;
@@ -70,47 +75,92 @@ public:
 
     RexxString *stringObject;          // converted string value
     FlagSet<NumberFlag, 16> numFlags;  // Flags for use by the Numberstring methods
-    short sign;                        // sign for this number (-1 is neg)
-    size_t  numDigits;                 // Maintain a copy of digits setting of from when object was created
-    wholenumber_t exp;                 // the exponent value
-    size_t  length;                    // the length of the number data
+    short numberSign;                  // sign for this number (-1 is neg)
+    size_t  createdDigits;             // the digits setting of from when object was created
+    wholenumber_t numberExponent;      // the exponent value
+    wholenumber_t numberLength;        // the length of the number data (more conveniently managed as a signed number)
 };
 
 
+/**
+ * The "Full Monty" NumberString.  This implements most of the
+ * functions, and directly includes the string data.
+ */
 class NumberString : public NumberStringBase
 {
    public:
+
+
+   /**
+    * A class for constructing a number value from a sequence of
+    * append steps.
+    */
+   class NumberBuilder
+   {
+   public:
+       inline NumberBuilder(RexxString *s) : current(s->getWriteableData()), start(s->getWriteableData()), length(s->getLength()) {}
+
+       inline void addSign(bool isNegative) { if (isNegative) { *start = RexxString::ch_MINUS2; current = start + 1; } }
+       inline void addDecimal() { append(ch_PERIOD); }
+       inline void addExponent(const char *exp)
+       {
+           size_t len = strlen(exp);
+           memcpy(current, exp, len);
+           current += len;
+       }
+       inline void append(const char *d, size_t l)  { memcpy(current, d, l); current += l; }
+       inline void append(char c) { *current++ = c; }
+       inline void addDigits(const char *d, size_t len)
+       {
+           for (size_t i = 0; i < len; i++)
+           {
+               append(d[i] + RexxString::ch_ZERO);
+           }
+       }
+       inline void addZeroDecimal()  { append('0'); append('.'); }
+       inline void addZeros(size_t count)
+       {
+           memset(current, '0', count);
+           current += count;
+       }
+
+
+   protected:
+       char *start;     // start of the buffer
+       size_t length;   // total length of string
+       char *current;   // current output pointer
+   };
     void         *operator new(size_t, size_t);
     inline void  *operator new(size_t size, void *ptr) {return ptr;}
     inline void   operator delete(void *) { ; }
     inline void   operator delete(void *, size_t) { }
     inline void   operator delete(void *, void *) { }
 
-
     NumberString(size_t) ;
     NumberString(size_t, size_t) ;
     inline NumberString(RESTORETYPE restoreType) { ; };
     virtual HashCode getHashValue();
-    void        live(size_t);
-    void        liveGeneral(MarkReason reason);
-    void        flatten(Envelope *);
 
-    bool         numberValue(wholenumber_t &result, size_t precision);
-    bool         numberValue(wholenumber_t &result);
-    bool         unsignedNumberValue(size_t &result, size_t precision);
-    bool         unsignedNumberValue(size_t &result);
-    bool         doubleValue(double &result);
-    inline NumberString *numberString() { return this; }
-    RexxInteger *integerValue(size_t);
-    RexxString  *makeString();
-    ArrayClass  *makeArray();
-    bool         hasMethod(RexxString *);
-    RexxString  *primitiveMakeString();
-    RexxString  *stringValue();
-    bool         truthValue(int);
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(Envelope *);
+
+    virtual bool numberValue(wholenumber_t &result, size_t precision);
+    virtual bool numberValue(wholenumber_t &result);
+    virtual bool unsignedNumberValue(size_t &result, size_t precision);
+    virtual bool unsignedNumberValue(size_t &result);
+    virtual bool doubleValue(double &result);
+    virtual inline NumberString *numberString() { return this; }
+    virtual RexxInteger *integerValue(size_t);
+    virtual RexxString  *makeString();
+    virtual ArrayClass  *makeArray();
+    virtual bool         hasMethod(RexxString *);
+    virtual RexxString  *primitiveMakeString();
+    virtual RexxString  *stringValue();
+    virtual bool         truthValue(int);
     virtual bool logicalValue(logical_t &);
 
-    bool        isEqual(RexxObject *);
+    virtual bool        isEqual(RexxObject *);
     wholenumber_t strictComp(RexxObject *);
     wholenumber_t comp(RexxObject *);
     RexxObject  *equal(RexxObject *);
@@ -161,6 +211,16 @@ class NumberString : public NumberStringBase
        }
        return this;                          // no adjustment required
     }
+    //quick test for a numeric overflow
+    inline void checkOverflow()
+    {
+        if (((numberExponent + numberLength - 1) > Numerics::MAX_EXPONENT) ||
+            (numberExponent < (Numerics::MIN_EXPONENT)) )
+        {
+            reportException(Error_Conversion_operator, this);
+        }
+    }
+
 
     NumberString *prepareNumber(size_t, bool);
     NumberString *prepareOperatorNumber(size_t, size_t, bool);
@@ -229,11 +289,16 @@ class NumberString : public NumberStringBase
     int         format(const char *, size_t);
     inline void setZero()
     {
-        number[0] = '\0';               // Make value a zero.
-        length = 1;                     // Length is 1
-        sign = 0;                       // Make sign Zero.
-        exp = 0;                        // exponent is zero.
+        numberDigits[0] = '\0';         // Make value a zero.
+        numberLength = 1;               // Length is 1
+        numberSign = 0;                 // Make sign Zero.
+        numberExponent = 0;             // exponent is zero.
     }
+
+    inline bool isZero() { return numberSign == 0; }
+    inline bool isNegative() { return numberSign < 0; }
+    inline bool isPositive() { return numberSign > 0; }
+    inline bool isInteger() { return exponent == 0; }
 
     static PCPPM operatorMethods[];
 
@@ -265,7 +330,7 @@ class NumberString : public NumberStringBase
 
     static const size_t OVERFLOWSPACE = 2;   // space for numeric buffer overflow
 
-    char  number[4];
+    char  numberDigits[4];                   // the digits for the number
 };
 
 
