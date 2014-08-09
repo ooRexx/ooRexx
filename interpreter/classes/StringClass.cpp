@@ -36,9 +36,8 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                               StringClass.c    */
 /*                                                                            */
-/* Primitive String Class                                                     */
+/* The Rexx STRING object class                                               */
 /*                                                                            */
 /******************************************************************************/
 #include "RexxCore.h"
@@ -61,7 +60,7 @@ const char *RexxString::BINARY       = "01";
 const char *RexxString::LOWER_ALPHA  = "abcdefghijklmnopqrstuvwxyz";
 const char *RexxString::MIXED_ALPHA  = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const char *RexxString::UPPER_ALPHA  = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
+const char *RexxString::DIGITS_BASE64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 /**
  * Create initial class object at bootstrap time.

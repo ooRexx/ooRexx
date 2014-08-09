@@ -513,6 +513,7 @@ class RexxString : public RexxObject
     static const char *LOWER_ALPHA;
     static const char *MIXED_ALPHA;
     static const char *UPPER_ALPHA;
+    static const char *DIGITS_BASE64;
 
   protected:
 
