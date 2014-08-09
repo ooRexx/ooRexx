@@ -196,7 +196,7 @@ ListContents::ItemLink ListClass::validateIndex(RexxObject *index, size_t positi
     // this is required
     requiredArgument(index, position);
 
-    stringsize_t item_index;
+    size_t item_index;
     // converted using the ARGUMENT_DIGITS value
     if (!index->unsignedNumberValue(item_index, Numerics::ARGUMENT_DIGITS))
     {

@@ -179,10 +179,10 @@ class ArrayClass : public RexxObject
     void          setExpansion(RexxObject * expansion);
     RexxInteger  *available(size_t position);
     // virtual so subclasses can screen out multidimensional support.
-    virtual bool  validateIndex(RexxObject **, size_t, size_t, size_t, stringsize_t &);
-    inline bool   validateIndex(RexxObject *i, size_t start, size_t flags, stringsize_t &p) { return validateIndex(&i, 1, start, flags, p); }
-    bool validateSingleDimensionIndex(RexxObject **index, size_t indexCount, size_t argPosition, size_t boundsError, stringsize_t &position);
-    bool validateMultiDimensionIndex(RexxObject **index, size_t indexCount, size_t argPosition, size_t boundsError, stringsize_t &position);
+    virtual bool  validateIndex(RexxObject **, size_t, size_t, size_t, size_t &);
+    inline bool   validateIndex(RexxObject *i, size_t start, size_t flags, size_t &p) { return validateIndex(&i, 1, start, flags, p); }
+    bool validateSingleDimensionIndex(RexxObject **index, size_t indexCount, size_t argPosition, size_t boundsError, size_t &position);
+    bool validateMultiDimensionIndex(RexxObject **index, size_t indexCount, size_t argPosition, size_t boundsError, size_t &position);
     ArrayClass   *allocateArrayOfClass(size_t size);
 
     RexxInteger  *sizeRexx();

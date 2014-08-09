@@ -96,7 +96,7 @@ void *QueueClass::operator new(size_t size, size_t capacity, size_t maxSize)
  *         on the bounds checking flags.
  */
 bool QueueClass::validateIndex(RexxObject **index, size_t indexCount,
-    size_t argPosition, size_t boundsError, stringsize_t &position)
+    size_t argPosition, size_t boundsError, size_t &position)
 {
     return validateSingleDimensionIndex(index, indexCount, argPosition, boundsError, position);
 }

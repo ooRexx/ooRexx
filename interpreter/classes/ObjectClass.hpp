@@ -320,8 +320,8 @@ class RexxInternalObject : public RexxVirtualBase
     virtual RexxInteger *integerValue(size_t);
     virtual bool         numberValue(wholenumber_t &result, size_t precision);
     virtual bool         numberValue(wholenumber_t &result);
-    virtual bool         unsignedNumberValue(stringsize_t &result, size_t precision);
-    virtual bool         unsignedNumberValue(stringsize_t &result);
+    virtual bool         unsignedNumberValue(size_t &result, size_t precision);
+    virtual bool         unsignedNumberValue(size_t &result);
     virtual bool         doubleValue(double &result);
     virtual NumberString *numberString();
 
@@ -348,14 +348,14 @@ class RexxInternalObject : public RexxVirtualBase
     RexxString  *requiredString();
     RexxInteger *requiredInteger(size_t, size_t);
     wholenumber_t requiredNumber(size_t position, size_t precision = Numerics::ARGUMENT_DIGITS);
-    stringsize_t requiredPositive(size_t position, size_t precision = Numerics::ARGUMENT_DIGITS);
-    stringsize_t requiredNonNegative(size_t position, size_t precision = Numerics::ARGUMENT_DIGITS);
+    size_t requiredPositive(size_t position, size_t precision = Numerics::ARGUMENT_DIGITS);
+    size_t requiredNonNegative(size_t position, size_t precision = Numerics::ARGUMENT_DIGITS);
 
     RexxString  *requestString();
     RexxString  *requestStringNoNOSTRING();
     RexxInteger *requestInteger(size_t digits = Numerics::ARGUMENT_DIGITS);
     bool         requestNumber(wholenumber_t &, size_t);
-    bool         requestUnsignedNumber(stringsize_t &, size_t);
+    bool         requestUnsignedNumber(size_t &, size_t);
     ArrayClass  *requestArray();
 
     ObjectHeader header;              /* memory management header          */

@@ -250,6 +250,19 @@ char optionArgument(RexxInternalObject *o, size_t p);
 
 
 /**
+ * Parse an option argument.  This must be a non-zero length string.
+ *
+ * @param o      The object to check.
+ * @param validOptions
+ *               The list of valid option characters as an ASCII-Z string.
+ * @param p      The argument position for error messages.
+ *
+ * @return The first character of the option string.
+ */
+char optionArgument(RexxInternalObject *o, const char *validOptions, size_t p);
+
+
+/**
  * Parse an optional option argument.  This must be a non-zero
  * length string.
  *
@@ -262,6 +275,23 @@ char optionArgument(RexxInternalObject *o, size_t p);
 inline char optionalOptionArgument(RexxInternalObject *o, char d, size_t p)
 {
     return (o == OREF_NULL ? d : optionArgument(o, p));
+}
+
+
+/**
+ * Parse an optional option argument.  This must be a non-zero
+ * length string.
+ *
+ * @param o      The object to check.
+ * @param v      The list of valid option characters.
+ * @param d      The default option if this was an omitted argument.
+ * @param p      The argument position for error messages.
+ *
+ * @return The first character of the option string.
+ */
+inline char optionalOptionArgument(RexxInternalObject *o, const char *v, char d, size_t p)
+{
+    return (o == OREF_NULL ? d : optionArgument(o, v, p));
 }
 
 

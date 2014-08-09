@@ -380,7 +380,7 @@ KeywordEntry RexxToken::subDirectives[] =
 int RexxToken::resolveKeyword(RexxString *token, KeywordEntry *table, size_t tableSize)
 {
     const char *name = token->getStringData();
-    stringsize_t length = token->getLength();
+    size_t length = token->getLength();
 
     // search this table using a binary search
 

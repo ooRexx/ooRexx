@@ -147,7 +147,7 @@ void RexxString::liveGeneral(MarkReason reason)
 
 
 /**
- * Flatten the table contents as part of a saved program.
+ * Flatten the object contents as part of a saved program.
  *
  * @param envelope The envelope we're flattening into.
  */
@@ -266,7 +266,7 @@ RexxString  *RexxString::primitiveMakeString()
  *
  * @return true if this converted successfully.
  */
-bool RexxString::numberValue(wholenumber_t &result, stringsize_t digits)
+bool RexxString::numberValue(wholenumber_t &result, size_t digits)
 {
     // convert based off of requested string value.
     if (!isBaseClass())
@@ -318,7 +318,7 @@ bool RexxString::numberValue(wholenumber_t &result)
  *
  * @return true if this converted successfully.
  */
-bool RexxString::unsignedNumberValue(stringsize_t &result, stringsize_t digits)
+bool RexxString::unsignedNumberValue(size_t &result, size_t digits)
 {
     if (!isBaseClass())
     {
@@ -341,7 +341,7 @@ bool RexxString::unsignedNumberValue(stringsize_t &result, stringsize_t digits)
  *
  * @return true if this converted successfully.
  */
-bool RexxString::unsignedNumberValue(stringsize_t &result)
+bool RexxString::unsignedNumberValue(size_t &result)
 {
     if (!isBaseClass())
     {
@@ -563,7 +563,7 @@ bool RexxString::primitiveCaselessIsEqual(RexxObject *otherObj)
         return false;
     }
     RexxString *other = otherObj->requestString();
-    stringsize_t otherLen = other->getLength();
+    size_t otherLen = other->getLength();
     // can't compare equal if different lengths
     if (otherLen != getLength())
     {
@@ -1117,12 +1117,11 @@ RexxString *RexxString::concat(RexxString *other)
 
     // create a new string to build the result.
     RexxString *result = raw_string(len1+len2);
-    char *data = result->getWritableData();
+    StringBuilder builder(result);
 
-    // both lengths are non-zero because of the test above, so we can
-    // unconditionally copy
-    memcpy(data, getStringData(), len1);
-    memcpy(data + len1, other->getStringData(), len2);
+    // just append the two string lengths
+    builder.append(getStringData(), len1);
+    builder.append(other->getStringData(), len2)
     return result;
 }
 
@@ -1158,12 +1157,11 @@ RexxString *RexxString::concatRexx(RexxObject *otherObj)
     }
 
     RexxString *result = raw_string(len1+len2);
-    char *data = result->getWritableData();
+    StringBuilder builder(result);
 
-    // both lengths are non-zero because of the test above, so we can
-    // unconditionally copy
-    memcpy(data, getStringData(), len1);
-    memcpy(data + len1, other->getStringData(), len2);
+    // just append the two string lengths
+    builder.append(getStringData(), len1);
+    builder.append(other->getStringData(), len2)
     return result;
 }
 
@@ -1183,9 +1181,10 @@ RexxString *RexxString::concatToCstring(const char *other)
     size_t len2 = strlen(other);
 
     RexxString *result = raw_string(len1+len2);
-    // we're assuming neither of these is a null string.
-    memcpy(result->getWritableData(), other, len2);
-    memcpy(result->getWritableData() + len2, getStringData(), len1);
+    StringBuilder builder(result);
+
+    builder.append(other, len2);
+    builder.append(getStringData(), len1);
     return result;
 }
 
@@ -1202,9 +1201,10 @@ RexxString *RexxString::concatWithCstring(const char *other)
     size_t len2 = strlen(other);
 
     RexxString *result = raw_string(len1+len2);
-    // we're assuming neither of these is a null string.
-    memcpy(result->getWritableData(), getStringData(), len1);
-    memcpy(result->getWritableData() + len1, other, len2);
+    StringBuilder builder(result);
+
+    builder.append(getStringData(), len1);
+    builder.append(other, len2);
     return result;
 }
 
@@ -1227,20 +1227,12 @@ RexxString *RexxString::concatBlank(RexxObject *otherObj)
 
     // get a new string of the required size
     RexxString *result = raw_string(len1+len2+1);
-    data = result->getWritableData();
-    // copy the first string, if we have data
-    if (len1 != 0)
-    {
+    StringBuilder builder(result);
 
-        memcpy(data, getStringData(), len1);
-        data += len1;
-    }
-    // add the blank, and copy the back part
-    *data++ = ' ';
-    if (len2 != 0)
-    {
-        memcpy(data, other->getStringData(), len2);
-    }
+    builder.append(getStringData(), len1);
+    // add the blank between
+    builder.append(' ');
+    builder.append(getStringData(), len2);
     return result;
 }
 
@@ -1679,20 +1671,14 @@ RexxString *RexxString::concatWith(RexxString *other, char between)
     size_t len2 = other->getLength();
 
     RexxString *result = raw_string(len1+len2+1);
-    char *data = result->getWritableData();
+    StringBuilder builder(result);
+
     // copy the first string data (if any)
-    if (len1 != 0)
-    {
-        memcpy(data, getStringData(), len1);
-        data += len1;
-    }
+    builder.append(getStringData(), len1);
     // insert the separator character
-    *data++ = between;
+    builder.append(between);
     // and copy the tail part
-    if (len2 != 0)
-    {
-        memcpy(data, other->getStringData(), len2);
-    }
+    builder.append(other->getStringData(), len2);
     return result;
 }
 
@@ -1945,7 +1931,7 @@ RexxString *RexxString::rawString(size_t length)
  *
  * @return A newly constructed string object.
  */
-RexxString *RexxString::newUpperString(const char * string, stringsize_t length)
+RexxString *RexxString::newUpperString(const char * string, size_t length)
 {
     // these are variable size objects.  We make sure we give some additional space
     // for a terminating null character.
@@ -1999,7 +1985,7 @@ RexxString *RexxString::newString(double number)
  *
  * @return A string value of the converted result.
  */
-RexxString *RexxString::newString(double number, stringsize_t precision)
+RexxString *RexxString::newString(double number, size_t precision)
 {
     if (number == 0.0)
     {

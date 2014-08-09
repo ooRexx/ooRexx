@@ -58,11 +58,11 @@ class RexxTarget
     void        init (RexxObject *, RexxObject **, size_t, FlagSet<ParseFlags, 32>, bool, RexxActivation *, ExpressionStack *);
     void        next(RexxActivation *);
     void        moveToEnd();
-    void        forward(stringsize_t);
-    void        forwardLength(stringsize_t);
-    void        absolute(stringsize_t);
-    void        backward(stringsize_t);
-    void        backwardLength(stringsize_t);
+    void        forward(size_t);
+    void        forwardLength(size_t);
+    void        absolute(size_t);
+    void        backward(size_t);
+    void        backwardLength(size_t);
     void        search(RexxString *);
     void        caselessSearch(RexxString *);
     RexxString *getWord();
@@ -81,11 +81,11 @@ class RexxTarget
     FlagSet<ParseFlags, 32>  translate;  // string translation flags
 
     // parsing position state starts here
-    stringsize_t  string_length;         // length of the string
-    stringsize_t  start;                 // This is the start of the substring what will be parsed into variables
-    stringsize_t  end;                   // end of the substring section
-    stringsize_t  pattern_start;         // start of the last matched position
-    stringsize_t  pattern_end;           // end of the last match position (for numeric triggers, same as pattern_start)
-    stringsize_t  subcurrent;            // current location used for parsing into words
+    size_t  string_length;         // length of the string
+    size_t  start;                 // This is the start of the substring what will be parsed into variables
+    size_t  end;                   // end of the substring section
+    size_t  pattern_start;         // start of the last matched position
+    size_t  pattern_end;           // end of the last match position (for numeric triggers, same as pattern_start)
+    size_t  subcurrent;            // current location used for parsing into words
 };
 #endif

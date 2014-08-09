@@ -75,7 +75,7 @@ class ParseTrigger : public RexxInternalObject
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(Envelope *);
 
-    stringsize_t integerTrigger(RexxActivation *context, ExpressionStack *stack);
+    size_t integerTrigger(RexxActivation *context, ExpressionStack *stack);
     RexxString *stringTrigger(RexxActivation *context, ExpressionStack *stack);
     void        parse(RexxActivation *, ExpressionStack *, RexxTarget *);
 

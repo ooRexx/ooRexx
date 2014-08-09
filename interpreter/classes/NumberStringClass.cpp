@@ -89,18 +89,19 @@ NumberString::NumberString(size_t len, size_t precision)
     length = len;
 }
 
+
+/**
+ * Special clone code for a number string object.
+ *
+ * @return A new numberstring with extra fields nulled out.
+ */
 NumberString *NumberString::clone()
-/******************************************************************************/
-/* Function:  low level copy of a number string object                        */
-/******************************************************************************/
 {
-    /* first clone ourselves             */
     NumberString *newObj = (NumberString *)RexxInternalObject::clone();
-    /* don't keep the original string    */
-    OrefSet(newObj, newObj->stringObject, OREF_NULL);
-    /* or the OVD fields                 */
-    OrefSet(newObj, newObj->objectVariables, OREF_NULL);
-    return newObj;                       /* return this                       */
+    // clear all other fields
+    newObj->stringObject = OREF_NULL;
+    newObj->objectVariables = OREF_NULL;
+    return newObj;
 }
 
 
@@ -111,31 +112,42 @@ NumberString *NumberString::clone()
  */
 HashCode NumberString::getHashValue()
 {
+    // we need to use the string hash so that we can show up in
+    // the same hash buckets as the equivalent string object.
     return stringValue()->getHashValue();
 }
 
+
+/**
+ * Normal garbage collection live marking
+ *
+ * @param liveMark The current live mark.
+ */
 void NumberString::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
     memory_mark(objectVariables);
     memory_mark(stringObject);
 }
 
+
+/**
+ * Generalized object marking.
+ *
+ * @param reason The reason for this live marking operation.
+ */
 void NumberString::liveGeneral(MarkReason reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
 {
     memory_mark_general(objectVariables);
     memory_mark_general(stringObject);
 }
 
+
+/**
+ * Flatten the object contents as part of a saved program.
+ *
+ * @param envelope The envelope we're flattening into.
+ */
 void NumberString::flatten(Envelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
 {
     setUpFlatten(NumberString)
 
@@ -145,15 +157,15 @@ void NumberString::flatten(Envelope *envelope)
     cleanUpFlatten
 }
 
-void NumberString::setString(
-    RexxString *stringObj )            /* new string value                  */
+
+void NumberString::setString(RexxString *stringObj)
 /******************************************************************************/
 /* Function:  Set the number string's string value                            */
 /******************************************************************************/
 {
                                        /* set the new string value          */
-   OrefSet(this, stringObject, stringObj);
-   setHasReferences();           /* we now have to garbage collect    */
+    OrefSet(this, stringObject, stringObj);
+    setHasReferences();           /* we now have to garbage collect    */
 }
 
 RexxString *NumberString::makeString()
@@ -488,7 +500,7 @@ bool NumberString::numberValue(wholenumber_t &result)
     return numberValue(result, Numerics::DEFAULT_DIGITS);
 }
 
-bool NumberString::unsignedNumberValue(stringsize_t &result)
+bool NumberString::unsignedNumberValue(size_t &result)
 /******************************************************************************/
 /* Function:  Convert a number string to a unsigned whole number value        */
 /******************************************************************************/
@@ -506,7 +518,7 @@ bool NumberString::numberValue(wholenumber_t &result, size_t numDigits)
 
     bool carry = false;
     wholenumber_t numberExp = exp;
-    stringsize_t numberLength = length;
+    size_t numberLength = length;
     size_t intnum;
 
     // if the number is exactly zero, then this is easy
@@ -570,7 +582,7 @@ bool NumberString::numberValue(wholenumber_t &result, size_t numDigits)
     return true;
 }
 
-bool NumberString::unsignedNumberValue(stringsize_t &result, size_t numDigits)
+bool NumberString::unsignedNumberValue(size_t &result, size_t numDigits)
 /******************************************************************************/
 /* Function:  Convert a number string to an unsigned number value             */
 /******************************************************************************/
@@ -579,7 +591,7 @@ bool NumberString::unsignedNumberValue(stringsize_t &result, size_t numDigits)
 
     bool carry = false;
     wholenumber_t numberExp = exp;
-    stringsize_t numberLength = length;
+    size_t numberLength = length;
     size_t intnum;
 
     // if the number is exactly zero, then this is easy
@@ -683,7 +695,7 @@ RexxInteger *NumberString::integerValue(
 /*********************************************************************/
 /*   Function:  Convert the numberstring to unsigned value           */
 /*********************************************************************/
-bool  NumberString::createUnsignedValue(const char *thisnum, stringsize_t intlength, int carry, wholenumber_t exponent, size_t maxValue, size_t &result)
+bool  NumberString::createUnsignedValue(const char *thisnum, size_t intlength, int carry, wholenumber_t exponent, size_t maxValue, size_t &result)
 {
     // if the exponent multiplier would cause an overflow, there's no point in doing
     // anything here
@@ -695,7 +707,7 @@ bool  NumberString::createUnsignedValue(const char *thisnum, stringsize_t intlen
     // our converted value
     size_t intNumber = 0;
 
-    for (stringsize_t numpos = 1; numpos <= intlength; numpos++ )
+    for (size_t numpos = 1; numpos <= intlength; numpos++ )
     {
         // add in the next digit value
         size_t newNumber = (intNumber * 10) + (size_t)*thisnum++;
@@ -757,7 +769,7 @@ bool  NumberString::createUnsignedValue(const char *thisnum, stringsize_t intlen
 /*********************************************************************/
 /*   Function:  Convert the numberstring to unsigned value           */
 /*********************************************************************/
-bool  NumberString::createUnsignedInt64Value(const char *thisnum, stringsize_t intlength, int carry, wholenumber_t exponent, uint64_t maxValue, uint64_t &result)
+bool  NumberString::createUnsignedInt64Value(const char *thisnum, size_t intlength, int carry, wholenumber_t exponent, uint64_t maxValue, uint64_t &result)
 {
     // if the exponent multiplier would cause an overflow, there's no point in doing
     // anything here
@@ -769,7 +781,7 @@ bool  NumberString::createUnsignedInt64Value(const char *thisnum, stringsize_t i
     // our converted value
     uint64_t intNumber = 0;
 
-    for (stringsize_t numpos = 1; numpos <= intlength; numpos++ )
+    for (size_t numpos = 1; numpos <= intlength; numpos++ )
     {
         // add in the next digit value
         uint64_t newNumber = (intNumber * 10) + (uint64_t)*thisnum++;
@@ -829,7 +841,7 @@ bool  NumberString::createUnsignedInt64Value(const char *thisnum, stringsize_t i
 }
 
 
-bool NumberString::checkIntegerDigits(stringsize_t numDigits, stringsize_t &numberLength,
+bool NumberString::checkIntegerDigits(size_t numDigits, size_t &numberLength,
     wholenumber_t &numberExponent, bool &carry)
 /******************************************************************************/
 /* Function:  Check that a numberstring is convertable into an integer value  */
@@ -862,7 +874,7 @@ bool NumberString::checkIntegerDigits(stringsize_t numDigits, stringsize_t &numb
     if (numberExponent < 0)
     {
         // the position of the decimal is the negation of the exponent
-        stringsize_t decimalPos = (stringsize_t)(-numberExponent);
+        size_t decimalPos = (size_t)(-numberExponent);
         // everything to the right of the decimal must be a zero.
         char compareChar = 0;
         // if we had a previous carry condition, this changes things a
@@ -909,7 +921,7 @@ bool NumberString::checkIntegerDigits(stringsize_t numDigits, stringsize_t &numb
 }
 
 
-bool NumberString::int64Value(int64_t *result, stringsize_t numDigits)
+bool NumberString::int64Value(int64_t *result, size_t numDigits)
 /******************************************************************************/
 /* Function:  Convert a number string to a int64 value                        */
 /******************************************************************************/
@@ -918,7 +930,7 @@ bool NumberString::int64Value(int64_t *result, stringsize_t numDigits)
 
     bool carry = false;
     wholenumber_t numberExp = exp;
-    stringsize_t numberLength = length;
+    size_t numberLength = length;
     uint64_t intnum;
 
     // if the number is exactly zero, then this is easy
@@ -1009,7 +1021,7 @@ bool NumberString::int64Value(int64_t *result, stringsize_t numDigits)
 }
 
 
-bool NumberString::unsignedInt64Value(uint64_t *result, stringsize_t numDigits)
+bool NumberString::unsignedInt64Value(uint64_t *result, size_t numDigits)
 /******************************************************************************/
 /* Function:  Convert a number string to a int64 value                        */
 /******************************************************************************/
@@ -1018,7 +1030,7 @@ bool NumberString::unsignedInt64Value(uint64_t *result, stringsize_t numDigits)
 
     bool carry = false;
     wholenumber_t numberExp = exp;
-    stringsize_t numberLength = length;
+    size_t numberLength = length;
 
     // if the number is exactly zero, then this is easy
     if (sign == 0)
@@ -1505,11 +1517,11 @@ RexxObject *NumberString::floorInternal()
             // any non-zero decimals
 
             // get the number of decimals we need to scan
-            stringsize_t decimals = Numerics::minVal(length, (stringsize_t)(-exp));
+            size_t decimals = Numerics::minVal(length, (size_t)(-exp));
             // get the position to start the scan
-            stringsize_t lastDecimal = length - 1;
+            size_t lastDecimal = length - 1;
             bool foundNonZero = false;
-            for (stringsize_t i = decimals; i > 0; i--)
+            for (size_t i = decimals; i > 0; i--)
             {
                 // if we found a non-zero, we have to do this the hard way
                 if (number[lastDecimal--] != 0)
@@ -1634,11 +1646,11 @@ RexxObject *NumberString::ceilingInternal()
             // any non-zero decimals
 
             // get the number of decimals we need to scan
-            stringsize_t decimals = Numerics::minVal((stringsize_t)length, (stringsize_t)(-exp));
+            size_t decimals = Numerics::minVal((size_t)length, (size_t)(-exp));
             // get the position to start the scan
-            stringsize_t lastDecimal = length - 1;
+            size_t lastDecimal = length - 1;
             bool foundNonZero = false;
-            for (stringsize_t i = decimals; i > 0; i--)
+            for (size_t i = decimals; i > 0; i--)
             {
                 // if we found a non-zero, we have to do this the hard way
                 if (number[lastDecimal--] != 0)
@@ -3404,7 +3416,7 @@ RexxString *NumberString::d2xD2c(
 
 {
     char       PadChar;                  /* needed padding character          */
-    stringsize_t ResultSize;             /* size of result string             */
+    size_t ResultSize;             /* size of result string             */
     size_t     HexLength;                /* length of hex characters          */
     size_t     BufferLength;             /* length of the buffer              */
     char     * Scan;                     /* scan pointer                      */
@@ -3676,7 +3688,7 @@ void  *NumberString::operator new(size_t size, size_t length)
     return newNumber;                    /* return the new numberstring       */
 }
 
-NumberString *NumberString::newInstance(const char *number, stringsize_t len)
+NumberString *NumberString::newInstance(const char *number, size_t len)
 /******************************************************************************/
 /* Function:  Create a new number string object                               */
 /******************************************************************************/
@@ -3786,7 +3798,7 @@ NumberString *NumberString::newInstanceFromWholenumber(wholenumber_t integer)
     return newNumber;
 }
 
-NumberString *NumberString::newInstanceFromStringsize(stringsize_t integer)
+NumberString *NumberString::newInstanceFromStringsize(size_t integer)
 /******************************************************************************/
 /* Function:  Create a NumberString object from a size_t value                */
 /******************************************************************************/

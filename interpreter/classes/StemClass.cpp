@@ -490,7 +490,7 @@ RexxString *StemClass::stringValue()
  *
  * @return true if this converted, false otherwise.
  */
-bool StemClass::numberValue(wholenumber_t &result, stringsize_t digits)
+bool StemClass::numberValue(wholenumber_t &result, size_t digits)
 {
     return value->numberValue(result, digits);
 }
@@ -517,7 +517,7 @@ bool StemClass::numberValue(wholenumber_t &result)
  *
  * @return true if this converted, false otherwise.
  */
-bool StemClass::unsignedNumberValue(stringsize_t &result, stringsize_t digits)
+bool StemClass::unsignedNumberValue(size_t &result, size_t digits)
 {
     return value->unsignedNumberValue(result, digits);
 }
@@ -530,7 +530,7 @@ bool StemClass::unsignedNumberValue(stringsize_t &result, stringsize_t digits)
  *
  * @return true if this converted, false otherwise.
  */
-bool StemClass::unsignedNumberValue(stringsize_t &result)
+bool StemClass::unsignedNumberValue(size_t &result)
 {
     return value->unsignedNumberValue(result);
 }
@@ -1530,7 +1530,7 @@ bool StemClass::sort(RexxString *prefix, int order, int type, size_t _first, siz
         return false;
     }
 
-    stringsize_t count;
+    size_t count;
     // get the integer value of this.  It must be a valid numeric value.
     if (!size_value->unsignedNumberValue(count, Numerics::DEFAULT_DIGITS))
     {

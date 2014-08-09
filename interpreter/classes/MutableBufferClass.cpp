@@ -1297,7 +1297,7 @@ MutableBuffer *MutableBuffer::translate(RexxString *tableo, RexxString *tablei, 
  */
 RexxObject *MutableBuffer::match(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_)
 {
-    stringsize_t _start = positionArgument(start_, ARG_ONE);
+    size_t _start = positionArgument(start_, ARG_ONE);
     // the start position must be within the string bounds
     if (_start > getLength())
     {
@@ -1305,14 +1305,14 @@ RexxObject *MutableBuffer::match(RexxInteger *start_, RexxString *other, RexxInt
     }
     other = stringArgument(other, ARG_TWO);
 
-    stringsize_t offset = optionalPositionArgument(offset_, 1, ARG_THREE);
+    size_t offset = optionalPositionArgument(offset_, 1, ARG_THREE);
 
     if (offset > other->getLength())
     {
         reportException(Error_Incorrect_method_position, offset);
     }
 
-    stringsize_t len = optionalLengthArgument(len_, other->getLength() - offset + 1, ARG_FOUR);
+    size_t len = optionalLengthArgument(len_, other->getLength() - offset + 1, ARG_FOUR);
 
     if ((offset + len - 1) > other->getLength())
     {
@@ -1340,7 +1340,7 @@ RexxObject *MutableBuffer::match(RexxInteger *start_, RexxString *other, RexxInt
  */
 RexxObject *MutableBuffer::caselessMatch(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_)
 {
-    stringsize_t _start = positionArgument(start_, ARG_ONE);
+    size_t _start = positionArgument(start_, ARG_ONE);
     // the start position must be within the string bounds
     if (_start > getLength())
     {
@@ -1348,14 +1348,14 @@ RexxObject *MutableBuffer::caselessMatch(RexxInteger *start_, RexxString *other,
     }
     other = stringArgument(other, ARG_TWO);
 
-    stringsize_t offset = optionalPositionArgument(offset_, 1, ARG_THREE);
+    size_t offset = optionalPositionArgument(offset_, 1, ARG_THREE);
 
     if (offset > other->getLength())
     {
         reportException(Error_Incorrect_method_position, offset);
     }
 
-    stringsize_t len = optionalLengthArgument(len_, other->getLength() - offset + 1, ARG_FOUR);
+    size_t len = optionalLengthArgument(len_, other->getLength() - offset + 1, ARG_FOUR);
 
     if ((offset + len - 1) > other->getLength())
     {
@@ -1377,7 +1377,7 @@ RexxObject *MutableBuffer::caselessMatch(RexxInteger *start_, RexxString *other,
  *
  * @return True if the regions match, false otherwise.
  */
-bool MutableBuffer::primitiveMatch(stringsize_t _start, RexxString *other, stringsize_t offset, stringsize_t len)
+bool MutableBuffer::primitiveMatch(size_t _start, RexxString *other, size_t offset, size_t len)
 {
     _start--;      // make the starting point origin zero
     offset--;
@@ -1404,7 +1404,7 @@ bool MutableBuffer::primitiveMatch(stringsize_t _start, RexxString *other, strin
  *
  * @return True if the regions match, false otherwise.
  */
-bool MutableBuffer::primitiveCaselessMatch(stringsize_t _start, RexxString *other, stringsize_t offset, stringsize_t len)
+bool MutableBuffer::primitiveCaselessMatch(size_t _start, RexxString *other, size_t offset, size_t len)
 {
     _start--;      // make the starting point origin zero
     offset--;
@@ -1432,7 +1432,7 @@ bool MutableBuffer::primitiveCaselessMatch(stringsize_t _start, RexxString *othe
  */
 RexxObject *MutableBuffer::matchChar(RexxInteger *position_, RexxString *matchSet)
 {
-    stringsize_t position = positionArgument(position_, ARG_ONE);
+    size_t position = positionArgument(position_, ARG_ONE);
     // the start position must be within the string bounds
     if (position > getLength())
     {
@@ -1440,11 +1440,11 @@ RexxObject *MutableBuffer::matchChar(RexxInteger *position_, RexxString *matchSe
     }
     matchSet = stringArgument(matchSet, ARG_TWO);
 
-    stringsize_t _setLength = matchSet->getLength();
+    size_t _setLength = matchSet->getLength();
     char         _matchChar = getChar(position - 1);
 
     // iterate through the match set looking for a match
-    for (stringsize_t i = 0; i < _setLength; i++)
+    for (size_t i = 0; i < _setLength; i++)
     {
         if (_matchChar == matchSet->getChar(i))
         {
@@ -1468,7 +1468,7 @@ RexxObject *MutableBuffer::matchChar(RexxInteger *position_, RexxString *matchSe
  */
 RexxObject *MutableBuffer::caselessMatchChar(RexxInteger *position_, RexxString *matchSet)
 {
-    stringsize_t position = positionArgument(position_, ARG_ONE);
+    size_t position = positionArgument(position_, ARG_ONE);
     // the start position must be within the string bounds
     if (position > getLength())
     {
@@ -1476,13 +1476,13 @@ RexxObject *MutableBuffer::caselessMatchChar(RexxInteger *position_, RexxString 
     }
     matchSet = stringArgument(matchSet, ARG_TWO);
 
-    stringsize_t _setLength = matchSet->getLength();
+    size_t _setLength = matchSet->getLength();
     char         _matchChar = getChar(position - 1);
     _matchChar = toupper(_matchChar);
 
     // iterate through the match set looking for a match, using a
     // caseless compare
-    for (stringsize_t i = 0; i < _setLength; i++)
+    for (size_t i = 0; i < _setLength; i++)
     {
         if (_matchChar == toupper(matchSet->getChar(i)))
         {
@@ -1679,41 +1679,31 @@ MutableBuffer *MutableBuffer::delWord(RexxInteger *position, RexxInteger *plengt
         return this;
     }
 
-    const char *_word = getStringData();
-    const char *nextSite = NULL;
+    // create an iterator for traversing the words
+    WordIterator iterator(getStringData(), length);
 
-    // loop until we reach our word target
-    size_t _wordLength = StringUtil::nextWord(&_word, &length, &nextSite);
-    while (--_wordPos > 0 && _wordLength != 0)
-    {
-        _word = nextSite;
-        _wordLength = StringUtil::nextWord(&_word, &length, &nextSite);
-    }
-
-    // if we ran out of words before reaching the delete position, we're also done
-    if (_wordPos != 0)
+    // to the given word position...if we don't get there,
+    // there is nothing to delete so we can just return the
+    // original string.
+    if (!iterator.skipWords(wordPos))
     {
         return this;
     }
 
     // get the deletion point as an offset
-    size_t deletePosition = _word - getStringData();
+    size_t deletePosition = iterator.wordPointer() - getStringData();
 
-    // scan to the end of the deletion target
-    while (--count > 0 && _wordLength != 0)
+    // if we managed to locate the desired number of words, then skip
+    // over the trailing blanks to the next word or the end of the string.
+    if (iterator.skipWords(count))
     {
-        _word = nextSite;
-        _wordLength = StringUtil::nextWord(&_word, &length, &nextSite);
+        iterator.skipBlanks();
     }
 
-    // skip over trailing blanks if we can have them.
-    if (length != 0)
-    {
-        StringUtil::skipBlanks(&nextSite, &length);
-    }
+    size_t endPosition = iterator.scanPosition() - getStringData();
 
     // delete the data
-    size_t gapSize = dataLength - (deletePosition + length);
+    size_t gapSize = (deletePosition - endPosition);
     // close up the delete part
     closeGap(deletePosition, gapSize, length);
     // adjust for the deleted data
@@ -1738,12 +1728,6 @@ MutableBuffer *MutableBuffer::space(RexxInteger *space_count, RexxString *pad)
     const size_t padLength = optionalLengthArgument(space_count, 1, ARG_ONE);
     const char   padChar   = optionalPadArgument(pad, ' ', ARG_TWO);
 
-    // an inplace update has complications, depending on whether the new string
-    // is shorter or longer than the original.
-    // first execute padC with padLength == 0,1; later expand padC to padLength
-    const char   padC = ' ';
-    const size_t padL = 1;
-
     // With padC the new string is not longer, so we can just overlay in place.
     // Set write position to start of buffer
     // Find first word: start position and length
@@ -1760,91 +1744,97 @@ MutableBuffer *MutableBuffer::space(RexxInteger *space_count, RexxString *pad)
     //     iterate
     // adjust string dataLength to write position
     size_t writePos = 0;
-    const char *_word = getStringData();
-    const char *nextSite = NULL;
-    size_t length = getLength();
 
-    // find the first word
-    size_t _wordLength = StringUtil::nextWord(&_word, &length, &nextSite);
+
+    // get a fresh iterator for building the string
+    WordIterator iterator(getStringData(), getLength());
+
+    bool haveWord = iterator.next();
 
     // while we still have more words, do an inplace update
-    while (_wordLength != 0)
+    while (haveWord)
     {
-        copyData(writePos, _word, _wordLength);
-        writePos += _wordLength;
-        _word = nextSite;
+        copyData(writePos, iterator.wordPointer(), iterator.wordLength());
+        writePos += iterator.wordLength();
 
-        _wordLength = StringUtil::nextWord(&_word, &length, &nextSite);
-        // no word found, we're done
-        if (_wordLength == 0)
+        // see if we have a following word.  If we don't we're done,
+        // otherwise we need to insert the between word padding.
+        haveWord = iterator.next();
+        if (!haveWord)
         {
             break;
         }
-        // handle the differnt pad situations
+
+        // right now, we're only padding with a single character at most.  If the
+        // pad length is longer than 1, we'll handle this by expanding the gaps after
+        // the string has been formatted.  More normal situations are 0 or 1 spacing.
+
         switch (padLength)
         {
             // single pad character, most common
             case 1:
-                setData(writePos, padChar, padLength);
-                writePos += padLength;
+                setData(writePos, padChar, 1);
+                writePos++;
                 break;
             // removing all spaces...nothing to add
             case 0:
                 break;
             // spacing with multiple characters...uncommon.
             default:
-                setData(writePos, padC, padL);
-                writePos += padL;
+                // for now, we're just going to use blanks here.  We'll make a second
+                // pass and open these up after the removal process is complete.
+                setData(writePos, ' ', 1);
+                writePos++;
         }
         count++;
     }
+
+    // update the data length for the new write position
     dataLength = writePos;
 
     // need to extend the padding?
     if (padLength > 1)
     {
         // make sure we have room for the extra
-        size_t growth = count * (padLength-1);
+        size_t growth = count * (padLength - 1);
         ensureCapacity(growth);
 
         // As the string gets longer, we need to shift all data to the end and
         // then pull the pieces back in as we go.
-        length = getLength();
+        size_t length = getLength();
+        // open a gap at the beginning of the buffer, then fill
+        // with blank characters as a temporary
         openGap(0, growth, length);
         writePos = 0;
-        while (growth > 0)
-        {
-            setData(writePos, padC, padL);
-            writePos++;
-            growth--;
-        }
-        dataLength = getLength() + count * (padLength-1);/*adjust data to size*/
+        setData(0, ' ', growth);
+        // adjust the data size
+        dataLength = getLength() + growth;
 
         // Now we do the last loop over, using padChar and padLength
         writePos = 0;
-        const char *_word = getStringData();
-        const char *nextSite = NULL;
-        length = dataLength;
 
-        // step forward to the first word
-        _wordLength = StringUtil::nextWord(&_word, &length, &nextSite);
+        // get a fresh iterator for building the string
+        WordIterator iterator(getStringData(), getLength());
 
-        // process all of the words
-        while (_wordLength != 0)
+        bool haveWord = iterator.next();
+
+        // while we still have more words, do an inplace update
+        while (haveWord)
         {
-            // copy the word to the write position and update
-            copyData(writePos, _word, _wordLength);
-            writePos += _wordLength;
-            _word = nextSite;
+            copyData(writePos, iterator.wordPointer(), iterator.wordLength());
+            writePos += _iterator.wordLength();
 
-            // find the next word
-            _wordLength = StringUtil::nextWord(&_word, &length, &nextSite);
-            // if we have a next word, add the space padding
-            if (_wordLength != 0)
+            // see if we have a following word.  If we don't we're done,
+            // otherwise we need to insert the between word padding.
+            haveWord = iterator.next();
+            if (!haveWord)
             {
-                setData(writePos, padChar, padLength);
-                writePos += padLength;
+                break;
             }
+
+            // fill in the real pad characters
+            setData(writePos, padChar, padLength);
+            writePos += padLength;
         }
     }
     return this;

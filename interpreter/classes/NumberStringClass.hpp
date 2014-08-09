@@ -97,8 +97,8 @@ class NumberString : public NumberStringBase
 
     bool         numberValue(wholenumber_t &result, size_t precision);
     bool         numberValue(wholenumber_t &result);
-    bool         unsignedNumberValue(stringsize_t &result, size_t precision);
-    bool         unsignedNumberValue(stringsize_t &result);
+    bool         unsignedNumberValue(size_t &result, size_t precision);
+    bool         unsignedNumberValue(size_t &result);
     bool         doubleValue(double &result);
     inline NumberString *numberString() { return this; }
     RexxInteger *integerValue(size_t);
@@ -191,11 +191,11 @@ class NumberString : public NumberStringBase
         checkPrecision();
     }
 
-    bool  createUnsignedValue(const char *thisnum, stringsize_t intlength, int carry, wholenumber_t exponent, size_t maxValue, size_t &result);
-    bool  createUnsignedInt64Value(const char *thisnum, stringsize_t intlength, int carry, wholenumber_t exponent, uint64_t maxValue, uint64_t &result);
-    bool  checkIntegerDigits(stringsize_t numDigits, stringsize_t &numberLength, wholenumber_t &numberExponent, bool &carry);
-    bool  int64Value(int64_t *result, stringsize_t numDigits);
-    bool  unsignedInt64Value(uint64_t *result, stringsize_t numDigits);
+    bool  createUnsignedValue(const char *thisnum, size_t intlength, int carry, wholenumber_t exponent, size_t maxValue, size_t &result);
+    bool  createUnsignedInt64Value(const char *thisnum, size_t intlength, int carry, wholenumber_t exponent, uint64_t maxValue, uint64_t &result);
+    bool  checkIntegerDigits(size_t numDigits, size_t &numberLength, wholenumber_t &numberExponent, bool &carry);
+    bool  int64Value(int64_t *result, size_t numDigits);
+    bool  unsignedInt64Value(uint64_t *result, size_t numDigits);
     void  formatInt64(int64_t integer);
     void  formatUnsignedInt64(uint64_t integer);
 
@@ -243,8 +243,8 @@ class NumberString : public NumberStringBase
     static NumberString *newInstanceFromWholenumber(wholenumber_t);
     static NumberString *newInstanceFromInt64(int64_t);
     static NumberString *newInstanceFromUint64(uint64_t);
-    static NumberString *newInstanceFromStringsize(stringsize_t);
-    static NumberString *newInstance(const char *, stringsize_t);
+    static NumberString *newInstanceFromStringsize(size_t);
+    static NumberString *newInstance(const char *, size_t);
 
 
     static void createInstance();
@@ -269,7 +269,7 @@ class NumberString : public NumberStringBase
 };
 
 
-inline NumberString *new_numberstring(const char *s, stringsize_t l)
+inline NumberString *new_numberstring(const char *s, size_t l)
 {
     return NumberString::newInstance(s, l);
 }
@@ -279,7 +279,7 @@ inline NumberString *new_numberstringFromWholenumber(wholenumber_t n)
     return NumberString::newInstanceFromWholenumber(n);
 }
 
-inline NumberString *new_numberstringFromStringsize(stringsize_t n)
+inline NumberString *new_numberstringFromStringsize(size_t n)
 {
     return NumberString::newInstanceFromStringsize(n);
 }

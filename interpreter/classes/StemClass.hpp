@@ -59,8 +59,8 @@ class StringTable;
  class SortData
  {
  public:
-     stringsize_t startColumn;
-     stringsize_t columnLength;
+     size_t startColumn;
+     size_t columnLength;
  };
 
 
@@ -84,8 +84,8 @@ class StemClass : public RexxObject
     void         copyFrom(CompoundVariableTable &_tails);
     bool         numberValue(wholenumber_t &result, size_t precision);
     bool         numberValue(wholenumber_t &result);
-    bool         unsignedNumberValue(stringsize_t &result, size_t precision);
-    bool         unsignedNumberValue(stringsize_t &result);
+    bool         unsignedNumberValue(size_t &result, size_t precision);
+    bool         unsignedNumberValue(size_t &result);
     bool         doubleValue(double &result);
     NumberString *numberString();
     RexxInteger *integerValue(size_t);

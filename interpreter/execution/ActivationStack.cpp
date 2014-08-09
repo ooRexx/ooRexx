@@ -151,7 +151,7 @@ void ActivationStack::init()
 void ActivationStack::expandCapacity(size_t entries)
 {
     ActivationFrameBuffer *next;
-    entries = Numerics::maxVal(entries, (stringsize_t)DefaultFrameBufferSize);
+    entries = Numerics::maxVal(entries, (size_t)DefaultFrameBufferSize);
     // do we have an unused one we're holding ready that has enough room?
     if (unused != OREF_NULL && unused->hasCapacity(entries))
     {

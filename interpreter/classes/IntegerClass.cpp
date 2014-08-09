@@ -319,7 +319,7 @@ bool RexxInteger::numberValue(wholenumber_t &result, size_t digits)
  * @return true if the number converts ok under the current digits setting.  false
  *         for any conversion errors.
  */
-bool RexxInteger::unsignedNumberValue(stringsize_t &result)
+bool RexxInteger::unsignedNumberValue(size_t &result)
 {
     // this must be non-negative and not out of range
     if (value < 0  || value > Numerics::MAX_WHOLENUMBER)
@@ -341,7 +341,7 @@ bool RexxInteger::unsignedNumberValue(stringsize_t &result)
  * @return true if the number converts ok under the current digits setting.  false
  *         for any conversion errors.
  */
-bool RexxInteger::unsignedNumberValue(stringsize_t &result, size_t digits)
+bool RexxInteger::unsignedNumberValue(size_t &result, size_t digits)
 {
     // valid as a unsigned number in the current digits range?
     if (!Numerics::isValid(value, digits))

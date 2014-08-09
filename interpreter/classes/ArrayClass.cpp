@@ -1141,7 +1141,7 @@ SupplierClass *ArrayClass::supplier()
  *         on the bounds checking flags.
  */
 bool ArrayClass::validateIndex(RexxObject **index, size_t indexCount,
-    size_t argPosition, size_t boundsError, stringsize_t &position)
+    size_t argPosition, size_t boundsError, size_t &position)
 {
     // one possibility is a single array used as a single argument specifying the
     // index position.  If this is the case, dummy up the argument list to point
@@ -1188,7 +1188,7 @@ bool ArrayClass::validateIndex(RexxObject **index, size_t indexCount,
  *         on the bounds checking flags.
  */
 bool ArrayClass::validateSingleDimensionIndex(RexxObject **index, size_t indexCount,
-    size_t argPosition, size_t boundsError, stringsize_t &position)
+    size_t argPosition, size_t boundsError, size_t &position)
 {
     // we have a single dimension array and one argument...we are very happy!
     if (indexCount == 1)
@@ -1291,7 +1291,7 @@ bool ArrayClass::validateSingleDimensionIndex(RexxObject **index, size_t indexCo
  *         on the bounds checking flags.
  */
 bool ArrayClass::validateMultiDimensionIndex(RexxObject **index, size_t indexCount,
-    size_t argPosition, size_t boundsError, stringsize_t &position)
+    size_t argPosition, size_t boundsError, size_t &position)
 {
     size_t numSubscripts = indexCount;
     size_t numDimensions = dimensions->size();

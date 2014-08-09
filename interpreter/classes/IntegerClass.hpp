@@ -66,8 +66,8 @@ class RexxInteger : public RexxObject
 
     bool         numberValue(wholenumber_t &result, size_t precision);
     bool         numberValue(wholenumber_t &result);
-    bool         unsignedNumberValue(stringsize_t &result, size_t precision);
-    bool         unsignedNumberValue(stringsize_t &result);
+    bool         unsignedNumberValue(size_t &result, size_t precision);
+    bool         unsignedNumberValue(size_t &result);
     bool         doubleValue(double &result);
     NumberString *numberString();
     RexxInteger *integerValue(size_t);
@@ -140,7 +140,7 @@ class RexxInteger : public RexxObject
 
     inline wholenumber_t getValue() {return value;}
     inline wholenumber_t wholeNumber() {return value;}
-    inline stringsize_t stringSize() {return (stringsize_t)value;}
+    inline size_t stringSize() {return (size_t)value;}
     inline RexxString *getStringrep() {return stringrep;}
 
     static void createInstance();

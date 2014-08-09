@@ -1045,7 +1045,7 @@ MethodClass * RexxObject::methodLookup(RexxString *msgname)
  *
  * @return true if the number converted, false otherwise.
  */
-bool RexxInternalObject::numberValue(wholenumber_t &result, stringsize_t digits)
+bool RexxInternalObject::numberValue(wholenumber_t &result, size_t digits)
 {
     return requestString()->numberValue(result, digits);
 }
@@ -1072,7 +1072,7 @@ bool RexxInternalObject::numberValue(wholenumber_t &result)
  *
  * @return true if the number converted, false otherwise.
  */
-bool RexxInternalObject::unsignedNumberValue(stringsize_t &result, stringsize_t digits)
+bool RexxInternalObject::unsignedNumberValue(size_t &result, size_t digits)
 {
 
     return requestString()->unsignedNumberValue(result, digits);
@@ -1086,7 +1086,7 @@ bool RexxInternalObject::unsignedNumberValue(stringsize_t &result, stringsize_t 
  *
  * @return true if the number converted, false otherwise.
  */
-bool RexxInternalObject::unsignedNumberValue(stringsize_t &result)
+bool RexxInternalObject::unsignedNumberValue(size_t &result)
 {
     return requestString()->unsignedNumberValue(result);
 }
@@ -1477,7 +1477,7 @@ bool RexxInternalObject::requestNumber(wholenumber_t &result, size_t precision)
  *
  * @return true if the object converted ok, false for a conversion failure.
  */
-bool RexxInternalObject::requestUnsignedNumber(stringsize_t &result, size_t precision)
+bool RexxInternalObject::requestUnsignedNumber(size_t &result, size_t precision)
 {
     // numberValue takes care of baseclass/subclass issues, so we just forward
     return unsignedNumberValue(result, precision);
@@ -1515,9 +1515,9 @@ wholenumber_t RexxInternalObject::requiredNumber(size_t position, size_t precisi
  *
  * @return The converted whole number.
  */
-stringsize_t RexxInternalObject::requiredPositive(size_t position, size_t precision)
+size_t RexxInternalObject::requiredPositive(size_t position, size_t precision)
 {
-    stringsize_t result;
+    size_t result;
 
     // convert and validate the result
     if (!unsignedNumberValue(result, precision) || result == 0)
@@ -1538,9 +1538,9 @@ stringsize_t RexxInternalObject::requiredPositive(size_t position, size_t precis
  * @return The converted whole number.
  */
 // TODO:  should we have versions of this that take a name?
-stringsize_t RexxInternalObject::requiredNonNegative(size_t position, size_t precision)
+size_t RexxInternalObject::requiredNonNegative(size_t position, size_t precision)
 {
-    stringsize_t result;
+    size_t result;
 
     if (!unsignedNumberValue(result, precision))
     {

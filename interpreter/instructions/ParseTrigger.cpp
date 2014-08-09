@@ -137,7 +137,7 @@ void ParseTrigger::flatten(Envelope *envelope)
  *
  * @return The converted integer value.
  */
-stringsize_t ParseTrigger::integerTrigger(RexxActivation *context, ExpressionStack *stack)
+size_t ParseTrigger::integerTrigger(RexxActivation *context, ExpressionStack *stack)
 {
     // if we have a value that requires evaluation, get the value and trace.
     RexxObject *trigger = value->evaluate(context, stack);
@@ -145,7 +145,7 @@ stringsize_t ParseTrigger::integerTrigger(RexxActivation *context, ExpressionSta
 
     // NOTE:  We leave this on the stack to protect from GC until after we convert.
 
-    stringsize_t result;
+    size_t result;
     // try to convert to an unsigned number...report an error if this failed.
     if (!trigger->requestUnsignedNumber(result, number_digits()))
     {

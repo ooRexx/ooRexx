@@ -296,13 +296,12 @@ RexxString *RexxString::copies(RexxInteger *_copies)
 
     // get a result string large enough for the requested number of copies
     RexxString *retval = raw_string(len * count);
-    char *temp = retval->getWritableData();
+    StringBuilder builder(retval);
 
     // copy in count times
     while (count--)
     {
-        memcpy(temp, getStringData(), len);
-        temp += len;
+        builder.append(getStringData(), len);
     }
     return retval;
 }
@@ -460,8 +459,9 @@ RexxString *RexxString::changeStr(RexxString *needle, RexxString *newNeedle, Rex
     size_t newLength = newNeedle->getLength();
     // get the proper size result string based on the number of changes we need to make.
 
-    result = raw_string(getLength() - (count * needleLength) + (count * newLength));
-    char *copyPtr = result->getWritableData();
+    RexxString *result = raw_string(getLength() - (count * needleLength) + (count * newLength));
+    StringBuilder builder(result);
+
     const char *source = getStringData();
 
     const char *newPtr = newNeedle->getStringData();
@@ -474,35 +474,30 @@ RexxString *RexxString::changeStr(RexxString *needle, RexxString *newNeedle, Rex
         size_t matchPos = pos(needle, start);
         // get the prefix length to copy
         size_t copyLength = (matchPos - 1) - start;
-        if (copyLength != 0)
-        {
-            memcpy(copyPtr, source + start, copyLength);
-            copyPtr += copyLength;
-        }
+        builder.append(source + start, copyLength);
         // not changing to a null string?  copy over an occurrence of the new value.
-        if (newLength != 0)
-        {
-            memcpy(copyPtr, newPtr, newLength);
-            copyPtr += newLength;
-        }
+        builder.append(newPtr, newLength);
 
         // step to the next search start position
         start = matchPos + needleLength - 1;
     }
 
     // have something left at the end, copy on to the end of the string
-    if (start < getLength())
-    {
-        memcpy(copyPtr, source + start, getLength() - start);
-    }
+    builder.append(source + start, getLength() - start);
     return result;
 }
 
 
+/**
+ * Change occurrences of values in a string into another value.
+ *
+ * @param needle    The search needle we're changing.
+ * @param newNeedle The replacement string
+ * @param countArg  The optional count of occurrences to change.
+ *
+ * @return A new string with the replacements made.
+ */
 RexxString *RexxString::caselessChangeStr(RexxString *needle, RexxString *newNeedle, RexxInteger *countArg)
-/******************************************************************************/
-/* Function:  Change strings into another string.                             */
-/******************************************************************************/
 {
     // both needles must be string arguments
     needle = stringArgument(needle, ARG_ONE);
@@ -523,8 +518,9 @@ RexxString *RexxString::caselessChangeStr(RexxString *needle, RexxString *newNee
     size_t newLength = newNeedle->getLength();
     // get the proper size result string based on the number of changes we need to make.
 
-    result = raw_string(getLength() - (count * needleLength) + (count * newLength));
-    char *copyPtr = result->getWritableData();
+    RexxString *result = raw_string(getLength() - (count * needleLength) + (count * newLength));
+    StringBuilder builder(result);
+
     const char *source = getStringData();
 
     const char *newPtr = newNeedle->getStringData();
@@ -537,27 +533,16 @@ RexxString *RexxString::caselessChangeStr(RexxString *needle, RexxString *newNee
         size_t matchPos = caselessPos(needle, start);
         // get the prefix length to copy
         size_t copyLength = (matchPos - 1) - start;
-        if (copyLength != 0)
-        {
-            memcpy(copyPtr, source + start, copyLength);
-            copyPtr += copyLength;
-        }
+        builder.append(source + start, copyLength);
         // not changing to a null string?  copy over an occurrence of the new value.
-        if (newLength != 0)
-        {
-            memcpy(copyPtr, newPtr, newLength);
-            copyPtr += newLength;
-        }
+        builder.append(newPtr, newLength);
 
         // step to the next search start position
         start = matchPos + needleLength - 1;
     }
 
     // have something left at the end, copy on to the end of the string
-    if (start < getLength())
-    {
-        memcpy(copyPtr, source + start, getLength() - start);
-    }
+    builder.append(source + start, getLength() - start);
     return result;
 }
 
@@ -795,7 +780,7 @@ RexxInteger *RexxString::verify(RexxString *ref, RexxString *option, RexxInteger
  */
 RexxObject *RexxString::match(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_)
 {
-    stringsize_t _start = positionArgument(start_, ARG_ONE);
+    size_t _start = positionArgument(start_, ARG_ONE);
     // the start position must be within the string bounds
     if (_start > getLength())
     {
@@ -803,14 +788,14 @@ RexxObject *RexxString::match(RexxInteger *start_, RexxString *other, RexxIntege
     }
     other = stringArgument(other, ARG_TWO);
 
-    stringsize_t offset = optionalPositionArgument(offset_, 1, ARG_THREE);
+    size_t offset = optionalPositionArgument(offset_, 1, ARG_THREE);
 
     if (offset > other->getLength())
     {
         reportException(Error_Incorrect_method_position, offset);
     }
 
-    stringsize_t len = optionalLengthArgument(len_, other->getLength() - offset + 1, ARG_FOUR);
+    size_t len = optionalLengthArgument(len_, other->getLength() - offset + 1, ARG_FOUR);
 
     if ((offset + len - 1) > other->getLength())
     {
@@ -838,7 +823,7 @@ RexxObject *RexxString::match(RexxInteger *start_, RexxString *other, RexxIntege
  */
 RexxObject *RexxString::caselessMatch(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_)
 {
-    stringsize_t _start = positionArgument(start_, ARG_ONE);
+    size_t _start = positionArgument(start_, ARG_ONE);
     // the start position must be within the string bounds
     if (_start > getLength())
     {
@@ -846,14 +831,14 @@ RexxObject *RexxString::caselessMatch(RexxInteger *start_, RexxString *other, Re
     }
     other = stringArgument(other, ARG_TWO);
 
-    stringsize_t offset = optionalPositionArgument(offset_, 1, ARG_THREE);
+    size_t offset = optionalPositionArgument(offset_, 1, ARG_THREE);
 
     if (offset > other->getLength())
     {
         reportException(Error_Incorrect_method_position, offset);
     }
 
-    stringsize_t len = optionalLengthArgument(len_, other->getLength() - offset + 1, ARG_FOUR);
+    size_t len = optionalLengthArgument(len_, other->getLength() - offset + 1, ARG_FOUR);
 
     if ((offset + len - 1) > other->getLength())
     {
@@ -875,7 +860,7 @@ RexxObject *RexxString::caselessMatch(RexxInteger *start_, RexxString *other, Re
  *
  * @return True if the regions match, false otherwise.
  */
-bool RexxString::primitiveMatch(stringsize_t _start, RexxString *other, stringsize_t offset, stringsize_t len)
+bool RexxString::primitiveMatch(size_t _start, RexxString *other, size_t offset, size_t len)
 {
     _start--;      // make the starting point origin zero
     offset--;
@@ -902,7 +887,7 @@ bool RexxString::primitiveMatch(stringsize_t _start, RexxString *other, stringsi
  *
  * @return True if the regions match, false otherwise.
  */
-bool RexxString::primitiveCaselessMatch(stringsize_t _start, RexxString *other, stringsize_t offset, stringsize_t len)
+bool RexxString::primitiveCaselessMatch(size_t _start, RexxString *other, size_t offset, size_t len)
 {
     _start--;      // make the starting point origin zero
     offset--;
@@ -930,7 +915,7 @@ bool RexxString::primitiveCaselessMatch(stringsize_t _start, RexxString *other, 
  */
 RexxObject *RexxString::matchChar(RexxInteger *position_, RexxString *matchSet)
 {
-    stringsize_t position = positionArgument(position_, ARG_ONE);
+    size_t position = positionArgument(position_, ARG_ONE);
     // the start position must be within the string bounds
     if (position > getLength())
     {
@@ -938,11 +923,11 @@ RexxObject *RexxString::matchChar(RexxInteger *position_, RexxString *matchSet)
     }
     matchSet = stringArgument(matchSet, ARG_TWO);
 
-    stringsize_t _setLength = matchSet->getLength();
+    size_t _setLength = matchSet->getLength();
     char         _matchChar = getChar(position - 1);
 
     // iterate through the match set looking for a match
-    for (stringsize_t i = 0; i < _setLength; i++)
+    for (size_t i = 0; i < _setLength; i++)
     {
         if (_matchChar == matchSet->getChar(i))
         {
@@ -966,7 +951,7 @@ RexxObject *RexxString::matchChar(RexxInteger *position_, RexxString *matchSet)
  */
 RexxObject *RexxString::caselessMatchChar(RexxInteger *position_, RexxString *matchSet)
 {
-    stringsize_t position = positionArgument(position_, ARG_ONE);
+    size_t position = positionArgument(position_, ARG_ONE);
     // the start position must be within the string bounds
     if (position > getLength())
     {
@@ -974,13 +959,13 @@ RexxObject *RexxString::caselessMatchChar(RexxInteger *position_, RexxString *ma
     }
     matchSet = stringArgument(matchSet, ARG_TWO);
 
-    stringsize_t _setLength = matchSet->getLength();
+    size_t _setLength = matchSet->getLength();
     char         _matchChar = getChar(position - 1);
     _matchChar = toupper(_matchChar);
 
     // iterate through the match set looking for a match, using a
     // caseless compare
-    for (stringsize_t i = 0; i < _setLength; i++)
+    for (size_t i = 0; i < _setLength; i++)
     {
         if (_matchChar == toupper(matchSet->getChar(i)))
         {
@@ -1004,8 +989,8 @@ RexxInteger *RexxString::compareToRexx(RexxString *other, RexxInteger *start_, R
 {
     other = stringArgument(other, ARG_ONE);
 
-    stringsize_t _start = optionalPositionArgument(start_, 1, ARG_TWO);
-    stringsize_t len = optionalLengthArgument(len_, Numerics::maxVal(getLength(), other->getLength()) - _start + 1, ARG_THREE);
+    size_t _start = optionalPositionArgument(start_, 1, ARG_TWO);
+    size_t len = optionalLengthArgument(len_, Numerics::maxVal(getLength(), other->getLength()) - _start + 1, ARG_THREE);
 
     return new_integer(primitiveCompareTo(other, _start, len));
 }
@@ -1022,10 +1007,10 @@ RexxInteger *RexxString::compareToRexx(RexxString *other, RexxInteger *start_, R
  * @return -1 if the target string is less than, 0 if the two strings are
  *         equal, 1 if the target string is the greater.
  */
-wholenumber_t RexxString::primitiveCompareTo(RexxString *other, stringsize_t _start, stringsize_t len)
+wholenumber_t RexxString::primitiveCompareTo(RexxString *other, size_t _start, size_t len)
 {
-    stringsize_t myLength = getLength();
-    stringsize_t otherLength = other->getLength();
+    size_t myLength = getLength();
+    size_t otherLength = other->getLength();
 
     // if doing the compare outside of the string length, we're less than the other string
     // unless the start is
@@ -1086,8 +1071,8 @@ wholenumber_t RexxString::primitiveCompareTo(RexxString *other, stringsize_t _st
  */
 wholenumber_t RexxString::primitiveCompareTo(RexxString *other)
 {
-    stringsize_t myLength = getLength();
-    stringsize_t otherLength = other->getLength();
+    size_t myLength = getLength();
+    size_t otherLength = other->getLength();
 
     size_t len = Numerics::minVal(getLength(), other->getLength());
 
@@ -1133,8 +1118,8 @@ RexxInteger *RexxString::caselessCompareToRexx(RexxString *other, RexxInteger *s
 {
     other = stringArgument(other, ARG_ONE);
 
-    stringsize_t _start = optionalPositionArgument(start_, 1, ARG_TWO);
-    stringsize_t len = optionalLengthArgument(len_, Numerics::maxVal(getLength(), other->getLength()) - _start + 1, ARG_THREE);
+    size_t _start = optionalPositionArgument(start_, 1, ARG_TWO);
+    size_t len = optionalLengthArgument(len_, Numerics::maxVal(getLength(), other->getLength()) - _start + 1, ARG_THREE);
 
     return new_integer(primitiveCaselessCompareTo(other, _start, len));
 }
@@ -1153,10 +1138,10 @@ RexxInteger *RexxString::caselessCompareToRexx(RexxString *other, RexxInteger *s
  * @return -1 if the target string is less than, 0 if the two strings are
  *         equal, 1 if the target string is the greater.
  */
-wholenumber_t RexxString::primitiveCaselessCompareTo(RexxString *other, stringsize_t _start, stringsize_t len)
+wholenumber_t RexxString::primitiveCaselessCompareTo(RexxString *other, size_t _start, size_t len)
 {
-    stringsize_t myLength = getLength();
-    stringsize_t otherLength = other->getLength();
+    size_t myLength = getLength();
+    size_t otherLength = other->getLength();
 
     // if doing the compare outside of the string length, we're less than the other string
     // unless the start is

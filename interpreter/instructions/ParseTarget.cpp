@@ -162,7 +162,7 @@ void RexxTarget::moveToEnd()
  *
  * @param offset The offset to move.
  */
-void RexxTarget::forward(stringsize_t offset)
+void RexxTarget::forward(size_t offset)
 {
     // the start position is the last postion and the end
     // position is the start position + the offset we're moving
@@ -202,7 +202,7 @@ void RexxTarget::forward(stringsize_t offset)
  *
  * @param offset The offset amount to move.
  */
-void RexxTarget::forwardLength(stringsize_t offset)
+void RexxTarget::forwardLength(size_t offset)
 {
     // the start position is our last start position (which will
     // be the beginning of the last string match.
@@ -230,7 +230,7 @@ void RexxTarget::forwardLength(stringsize_t offset)
  *
  * @param offset The target string position.
  */
-void RexxTarget::absolute(stringsize_t offset)
+void RexxTarget::absolute(size_t offset)
 {
     // make the offset origin zero (but be careful of a 0 offset already)
     if (offset > 0)
@@ -272,7 +272,7 @@ void RexxTarget::absolute(stringsize_t offset)
  *
  * @param offset The offset amount to move.
  */
-void RexxTarget::backward(stringsize_t offset)
+void RexxTarget::backward(size_t offset)
 {
     // the current string starts with the last pattern and goes to
     // the end
@@ -302,7 +302,7 @@ void RexxTarget::backward(stringsize_t offset)
  *
  * @param offset The offset to move.
  */
-void RexxTarget::backwardLength(stringsize_t offset)
+void RexxTarget::backwardLength(size_t offset)
 {
     // the start position will be the final movement postion.
     // the end position will be the last match position, which
@@ -550,8 +550,8 @@ RexxString *RexxTarget::remainder()
     // get the rest of the current piece
 
     // get the length, and then clear the string section
-    stringsize_t length = end - subcurrent;
-    stringsize_t offset = subcurrent;
+    size_t length = end - subcurrent;
+    size_t offset = subcurrent;
     // consume the rest
     subcurrent = end;
     // if this is the entire string, we can just return

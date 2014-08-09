@@ -77,6 +77,212 @@ class RexxString : public RexxObject
         STRING_NONNUMERIC,
      } StringFlag;
 
+
+     /**
+      * A class for constructing a string value from a sequence
+      * of append steps.
+      */
+     class StringBuilder
+     {
+     public:
+         inline StringBuilder(char *b) : current(b) {}
+         inline StringBuilder(RexxString *s) : current(s->getWriteableData()) {}
+
+         inline void append(const char *d, size_t l)  { memcpy(current, d, l); current += l; }
+         inline void append(char c) { *current++ = c; }
+         inline void pad(char c, size_t l)  { memset(current, c, l); current += l; }
+
+     protected:
+         char *current;   // current output pointer
+     };
+
+
+     /**
+      * A class for iterating through the words of a string.
+      */
+     class WordIterator
+     {
+     public:
+         inline WordIterator(char *b, size_t l) : nextPosition(b), scanLength(l) {}
+         inline StringBuilder(RexxString *s) : nextPosition(s->getStringData()), scanLength(s->getLength()) {}
+
+         /**
+          * Skip leading blanks in a string.
+          *
+          * @param String The target string.
+          * @param scanLength
+          *               The length of the string segment.
+          */
+         void skipBlanks(const char *&string, size_t &scanLength )
+         {
+             const char *scan = string;
+             size_t length = scanLength;
+
+             // just skip over any white space characters
+             for (;length > 0; scan++, length--)
+                 if (*scan != ' ' && *scan != '\t')
+                 {
+                     break;
+                 }
+                 scan++;
+             }
+
+             // we've either found a non blank or we ran out of string
+             string = scan;
+             scanLength = length;
+         }
+
+         /**
+          * Skip non-blank characters to the next whitespace char.
+          *
+          * @param String The source string.
+          * @param scanLength
+          *               The string length (update on return);
+          */
+         void skipNonBlanks(const char *&string, size_t &scanLength )
+         {
+             const char *scan = string;
+             size_t length = scanLength;
+
+             for (;length > 0; scan++, length--)
+             {
+                 // stop if we find a white space character
+                 if (*scan == ' ' || *scan == '\t')
+                 {
+                     break;
+                 }
+                 scan++;
+             }
+             string = scan;
+             scanLength = length;
+         }
+
+
+         /**
+          * Scan forward to the next word in the string.
+          *
+          * @return true if a word was found, false if we've run out out words.
+          */
+         inline bool next()
+         {
+             // NOTE: We leave the word pointer and length untouched until we
+             // have a hit so that after an iteration failure, we can still retrieve
+             // the last word.
+
+             // if out of string, this is a failure
+             if (scanLength == 0)
+             {
+                 return false;
+             }
+
+             // if we have string left
+             // skip over any blanks
+             skipBlanks(nextPosition, scanLength);
+             // if we ran out of string, there are no more words
+             if (scanLength == 0)
+             {
+                 return false;
+             }
+
+             // save the starting length
+             currentWordLength = scanLength;
+             // save the start of the word
+             currentWord = nextPosition;
+
+             // skip over the non-blank charactes
+             skipNonBlanks(nextPosition, scanLength);
+             // get the length of the next word
+             currentWordLength -= scanLength;
+             // we have a word
+             return true;
+         }
+
+
+         /**
+          * Skip over a given number of words.  Returns true if
+          * the count was reached before the end of the string, false
+          * if the end is reached first.
+          *
+          * @param count  The count to skip.
+          *
+          * @return true if count words were found.
+          */
+         inline bool skipWords(size_t count)
+         {
+             while (count--)
+             {
+                 if (!next())
+                 {
+                     return false;
+                 }
+             }
+             return true;
+         }
+
+         // skip from the end of the current word to to the next word
+         // or the end of the string
+         inline bool skipBlanks()
+         {
+             skipBlanks(nextPosition, scanLength);
+         }
+
+
+         /**
+          * Compare the current word in two iterators.
+          *
+          * @param other  The other comparison.
+          *
+          * @return true if the words match, false otherwise
+          */
+         inline bool compare(WordIterator &other)
+         {
+             // length mismatch, can't be a match
+             if (currentWordLength != other.wordLength())
+             {
+                 return false;
+             }
+
+             // now compare the two words
+             return memcmp(currentWord, other.wordPointer(), currentWordLength) == 0;
+         }
+
+
+         /**
+          * Compare the current word in two iterators.
+          *
+          * @param other  The other comparison.
+          *
+          * @return true if the words match, false otherwise
+          */
+         inline bool caselessCompare(WordIterator &other)
+         {
+             // length mismatch, can't be a match
+             if (currentWordLength != other.wordLength())
+             {
+                 return false;
+             }
+
+             // now compare the two words
+             return StringUtil::caselessCompare(currentWord, other.wordPointer(), currentWordLength) == 0;
+         }
+
+
+         inline size_t wordLength() { return currentWordLength; }
+         inline const char *wordPointer() { return currentWord; }
+         inline const char *wordEndPointer() { return currentWord + currentWordLength; }
+         inline void append(StringBuilder &builder) { builder.append(currentWord, currentWordLength); }
+         inline void appendRemainder(StringBuilder &builder) { builder.append(nextPosition, scanLength); }
+         inline const char *scanPosition() { return nextPosition; }
+         inline size_t length() { return scanLength; }
+
+     protected:
+         const char *currentWord;       // the current word position
+         const char *nextPosition;      // the next scan position
+         size_t currentWordLength;      // the length of the current word match
+         size_t scanLength;             // the remaining scan length
+     };
+
+
     inline void       *operator new(size_t size, void *ptr){return ptr;}
     inline RexxString() {;} ;
     inline RexxString(RESTORETYPE restoreType) { ; }
@@ -92,14 +298,14 @@ class RexxString : public RexxObject
     {
         if (hashValue == 0)                // if we've never generated this, the code is zero
         {
-            stringsize_t len = getLength();
+            size_t len = getLength();
 
             HashCode h = 0;
             // the hash code is generated from all of the string characters.
             // we do this in a lazy fashion, since most string objects never need to
             // calculate a hash code, particularly the long ones.
             // This hashing algorithm is very similar to that used for Java strings.
-            for (stringsize_t i = 0; i < len; i++)
+            for (size_t i = 0; i < len; i++)
             {
                 h = 31 * h + stringData[i];
             }
@@ -112,8 +318,8 @@ class RexxString : public RexxObject
 
     bool         numberValue(wholenumber_t &result, size_t precision);
     bool         numberValue(wholenumber_t &result);
-    bool         unsignedNumberValue(stringsize_t &result, size_t precision);
-    bool         unsignedNumberValue(stringsize_t &result);
+    bool         unsignedNumberValue(size_t &result, size_t precision);
+    bool         unsignedNumberValue(size_t &result);
     bool         doubleValue(double &result);
     NumberString *numberString();
     RexxInteger *integerValue(size_t);
@@ -265,15 +471,15 @@ class RexxString : public RexxObject
 
     RexxObject  *match(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_);
     RexxObject  *caselessMatch(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_);
-    bool primitiveMatch(stringsize_t start, RexxString *other, stringsize_t offset, stringsize_t len);
-    bool primitiveCaselessMatch(stringsize_t start, RexxString *other, stringsize_t offset, stringsize_t len);
+    bool primitiveMatch(size_t start, RexxString *other, size_t offset, size_t len);
+    bool primitiveCaselessMatch(size_t start, RexxString *other, size_t offset, size_t len);
     RexxObject  *matchChar(RexxInteger *position_, RexxString *matchSet);
     RexxObject  *caselessMatchChar(RexxInteger *position_, RexxString *matchSet);
 
     RexxInteger *compareToRexx(RexxString *other, RexxInteger *start_, RexxInteger *len_);
     RexxInteger *caselessCompareToRexx(RexxString *other, RexxInteger *start_, RexxInteger *len_);
-    wholenumber_t primitiveCompareTo(RexxString *other, stringsize_t start, stringsize_t len);
-    wholenumber_t primitiveCaselessCompareTo(RexxString *other, stringsize_t start, stringsize_t len);
+    wholenumber_t primitiveCompareTo(RexxString *other, size_t start, size_t len);
+    wholenumber_t primitiveCaselessCompareTo(RexxString *other, size_t start, size_t len);
     wholenumber_t primitiveCompareTo(RexxString *other);
     wholenumber_t primitiveCaselessCompareTo(RexxString *other);
 
@@ -288,8 +494,9 @@ class RexxString : public RexxObject
 
     inline RexxString *baseString() { return isBaseClass() ? this : requestString(); }
     inline size_t  getLength() const { return length; }
+    inline bool isNullString() const { return length == 0; }
     inline void  setLength(size_t l) { length = l; }
-    inline void  finish(stringsize_t l) { length = l; }
+    inline void  finish(size_t l) { length = l; }
     inline const char *getStringData() const { return stringData; }
     inline char *getWritableData() { return &stringData[0]; }
     inline void  put(size_t s, const void *b, size_t l) { memcpy(getWritableData() + s, b, l); }
@@ -459,7 +666,7 @@ class RexxString : public RexxObject
 
     static RexxString *newString(const char *, size_t);
     static RexxString *rawString(size_t);
-    static RexxString *newUpperString(const char *, stringsize_t);
+    static RexxString *newUpperString(const char *, size_t);
     static RexxString *newString(double d);
     static RexxString *newString(double d, size_t precision);
     static RexxString *newProxy(const char *);
@@ -527,12 +734,12 @@ class RexxString : public RexxObject
 
 // String creation inline functions
 
-inline RexxString *new_string(const char *s, stringsize_t l)
+inline RexxString *new_string(const char *s, size_t l)
 {
     return RexxString::newString(s, l);
 }
 
-inline RexxString *raw_string(stringsize_t l)
+inline RexxString *raw_string(size_t l)
 {
     return RexxString::rawString(l);
 }
@@ -576,7 +783,7 @@ inline RexxString *new_proxy(const char *name)
     return RexxString::newProxy(name);
 }
 
-inline RexxString *new_upper_string(const char *s, stringsize_t l)
+inline RexxString *new_upper_string(const char *s, size_t l)
 {
     return RexxString::newUpperString(s, l);
 }

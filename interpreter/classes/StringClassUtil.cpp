@@ -38,7 +38,7 @@
 /******************************************************************************/
 /* REXX Kernel                                                                */
 /*                                                                            */
-/* Word-related REXX string method utility functions                          */
+/* Argument-related utilities for some common string argument types.          */
 /*                                                                            */
 /******************************************************************************/
 #include "RexxCore.h"
@@ -57,13 +57,13 @@
  *
  * @return The argument converted to a non-negative integer value.
  */
-stringsize_t lengthArgument(RexxInternalObject *argument, size_t position )
+size_t lengthArgument(RexxInternalObject *argument, size_t position )
 {
     if (argument == OREF_NULL)
     {
         missingArgument(position);
     }
-    stringsize_t    value;
+    size_t    value;
     // converted using the ARGUMENT_DIGITS value
     if (!argument->unsignedNumberValue(value, Numerics::ARGUMENT_DIGITS))
     {
@@ -83,13 +83,13 @@ stringsize_t lengthArgument(RexxInternalObject *argument, size_t position )
  *
  * @return The converted numeric value.
  */
-stringsize_t positionArgument(RexxInternalObject *argument, size_t position )
+size_t positionArgument(RexxInternalObject *argument, size_t position )
 {
     if (argument == OREF_NULL)
     {
         missingArgument(position);
     }
-    stringsize_t    value;
+    size_t    value;
 
     if (!argument->unsignedNumberValue(value, Numerics::ARGUMENT_DIGITS) || value == 0)
     {
@@ -136,4 +136,31 @@ char optionArgument(RexxInternalObject *argument, size_t position)
     // must be a string value
     RexxString *parameter = (RexxString *)stringArgument(argument, position);
     return toupper(parameter->getChar(0));
+}
+
+
+/**
+ * Take in an argument passed to the BIF, convert it to a
+ * character, if it exists otherwise return the default
+ * character as defined (passed in) by the BIF.  Also validate
+ * against the set of allowed characters.
+ *
+ * @param argument The argument to test.
+ * @param position The position of the argument
+ *
+ * @return The first character of the option string.
+ */
+char optionArgument(RexxInternalObject *argument, const char *validOptions, size_t position)
+{
+    // must be a string value
+    RexxString *parameter = (RexxString *)stringArgument(argument, position);
+
+    // get the first character of the string
+    char option == toupper(parameter->getChar(0));
+    // if not one of the valid options (null string is not valid), raise the error
+    if (parameter->isNullString() || strchr(validOptions, option) == NULL)
+    {
+        reportException(Error_Incorrect_method_option, validOptions, option);
+    }
+    return option;
 }

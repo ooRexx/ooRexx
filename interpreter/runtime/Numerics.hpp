@@ -116,14 +116,14 @@ public:
     static const wholenumber_t validMaxWhole[];      // table of maximum values per digits setting
 
     static RexxObject *wholenumberToObject(wholenumber_t v);
-    static RexxObject *stringsizeToObject(stringsize_t v);
+    static RexxObject *stringsizeToObject(size_t v);
     static RexxObject *int64ToObject(int64_t v);
     static RexxObject *uint64ToObject(uint64_t v);
     static RexxObject *uintptrToObject(uintptr_t v);
     static RexxObject *intptrToObject(intptr_t v);
 
     static bool objectToWholeNumber(RexxObject *o, wholenumber_t &result, wholenumber_t max, wholenumber_t min);
-    static bool objectToStringSize(RexxObject *o, stringsize_t &result, stringsize_t max);
+    static bool objectToStringSize(RexxObject *o, size_t &result, size_t max);
     static bool objectToSignedInteger(RexxObject *o, ssize_t &result, ssize_t max, ssize_t min);
     static bool objectToUnsignedInteger(RexxObject *o, size_t &result, size_t max);
     static bool objectToInt64(RexxObject *o, int64_t &result);
@@ -133,7 +133,7 @@ public:
     static RexxObject *int64Object(RexxObject *source);
 
     static size_t formatWholeNumber(wholenumber_t integer, char *dest);
-    static size_t formatStringSize(stringsize_t integer, char *dest);
+    static size_t formatStringSize(size_t integer, char *dest);
     static size_t formatInt64(int64_t integer, char *dest);
     static size_t formatUnsignedInt64(uint64_t integer, char *dest);
 
@@ -147,9 +147,9 @@ public:
     static const NumericSettings *getDefaultSettings() { return &defaultSettings; }
     static inline wholenumber_t abs(wholenumber_t n) { return n < 0 ? -n : n; }
     static inline wholenumber_t minVal(wholenumber_t n1, wholenumber_t n2) { return n2 > n1 ? n1 : n2; }
-    static inline stringsize_t minVal(stringsize_t n1, stringsize_t n2) { return n2 > n1 ? n1 : n2; }
+    static inline size_t minVal(size_t n1, size_t n2) { return n2 > n1 ? n1 : n2; }
     static inline wholenumber_t maxVal(wholenumber_t n1, wholenumber_t n2) { return n2 > n1 ? n2 : n1; }
-    static inline stringsize_t maxVal(stringsize_t n1, stringsize_t n2) { return n2 > n1 ? n2 : n1; }
+    static inline size_t maxVal(size_t n1, size_t n2) { return n2 > n1 ? n2 : n1; }
     static inline wholenumber_t maxValueForDigits(size_t d)
     {
         if (d > ARGUMENT_DIGITS)

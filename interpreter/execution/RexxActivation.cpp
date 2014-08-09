@@ -3209,7 +3209,7 @@ void RexxActivation::traceTaggedValue(TracePrefix prefix, const char *tagPrefix,
     RexxString *stringVal = value->stringValue();
 
     // now calculate the length of the traced string
-    stringsize_t outLength = tag->getLength() + stringVal->getLength();
+    size_t outLength = tag->getLength() + stringVal->getLength();
     // these are fixed overheads
     outLength += TRACE_OVERHEAD + strlen(marker);
     // now the indent spacing
@@ -3224,7 +3224,7 @@ void RexxActivation::traceTaggedValue(TracePrefix prefix, const char *tagPrefix,
     ProtectedObject p(buffer);
 
     // get a cursor for filling in the formatted data
-    stringsize_t dataOffset = TRACE_OVERHEAD + settings.traceIndent * INDENT_SPACING - 2;
+    size_t dataOffset = TRACE_OVERHEAD + settings.traceIndent * INDENT_SPACING - 2;
     buffer->set(0, ' ', TRACE_OVERHEAD + settings.traceIndent * INDENT_SPACING);
     buffer->put(PREFIX_OFFSET, trace_prefix_table[prefix], PREFIX_LENGTH);
 
@@ -3237,7 +3237,7 @@ void RexxActivation::traceTaggedValue(TracePrefix prefix, const char *tagPrefix,
     // is the tag prefixed?  Add this before the name
     if (tagPrefix != NULL)
     {
-        stringsize_t prefixLength = strlen(tagPrefix);
+        size_t prefixLength = strlen(tagPrefix);
         buffer->put(dataOffset, tagPrefix, prefixLength);
         dataOffset += prefixLength;
     }
@@ -3297,7 +3297,7 @@ void RexxActivation::traceOperatorValue(TracePrefix prefix, const char *tag, Rex
     RexxString *stringVal = value->stringValue();
 
     // now calculate the length of the traced string
-    stringsize_t outLength = strlen(tag) + stringVal->getLength();
+    size_t outLength = strlen(tag) + stringVal->getLength();
     // these are fixed overheads
     outLength += TRACE_OVERHEAD + strlen(VALUE_MARKER);
     // now the indent spacing
@@ -3310,7 +3310,7 @@ void RexxActivation::traceOperatorValue(TracePrefix prefix, const char *tag, Rex
     ProtectedObject p(buffer);
 
     // get a cursor for filling in the formatted data
-    stringsize_t dataOffset = TRACE_OVERHEAD + settings.traceIndent * INDENT_SPACING - 2;
+    size_t dataOffset = TRACE_OVERHEAD + settings.traceIndent * INDENT_SPACING - 2;
     buffer->set(0, ' ', TRACE_OVERHEAD + settings.traceIndent * INDENT_SPACING);
     buffer->put(PREFIX_OFFSET, trace_prefix_table[prefix], PREFIX_LENGTH);
 
@@ -3387,7 +3387,7 @@ void RexxActivation::traceCompoundValue(TracePrefix prefix, RexxString *stemName
     RexxString *stringVal = value->stringValue();
 
     // now calculate the length of the traced string
-    stringsize_t outLength = stemName->getLength() + stringVal->getLength();
+    size_t outLength = stemName->getLength() + stringVal->getLength();
 
     // build an unresolved tail name
     CompoundVariableTail tail(tails, tailCount, false);
@@ -3407,7 +3407,7 @@ void RexxActivation::traceCompoundValue(TracePrefix prefix, RexxString *stemName
     ProtectedObject p(buffer);
 
     // get a cursor for filling in the formatted data
-    stringsize_t dataOffset = TRACE_OVERHEAD + settings.traceIndent * INDENT_SPACING - 2;
+    size_t dataOffset = TRACE_OVERHEAD + settings.traceIndent * INDENT_SPACING - 2;
     buffer->set(0, ' ', TRACE_OVERHEAD + settings.traceIndent * INDENT_SPACING);
     buffer->put(PREFIX_OFFSET, trace_prefix_table[prefix], PREFIX_LENGTH);
 

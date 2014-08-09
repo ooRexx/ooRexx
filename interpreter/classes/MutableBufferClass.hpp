@@ -100,8 +100,8 @@ class MutableBuffer : public RexxObject
     MutableBuffer *translate(RexxString *tableo, RexxString *tablei, RexxString *pad, RexxInteger *, RexxInteger *);
     RexxObject  *match(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_);
     RexxObject  *caselessMatch(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_);
-    bool primitiveMatch(stringsize_t start, RexxString *other, stringsize_t offset, stringsize_t len);
-    bool primitiveCaselessMatch(stringsize_t start, RexxString *other, stringsize_t offset, stringsize_t len);
+    bool primitiveMatch(size_t start, RexxString *other, size_t offset, size_t len);
+    bool primitiveCaselessMatch(size_t start, RexxString *other, size_t offset, size_t len);
     RexxObject  *matchChar(RexxInteger *position_, RexxString *matchSet);
     RexxObject  *caselessMatchChar(RexxInteger *position_, RexxString *matchSet);
     RexxInteger *verify(RexxString *, RexxString *, RexxInteger *, RexxInteger *);
