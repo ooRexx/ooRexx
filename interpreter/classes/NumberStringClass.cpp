@@ -226,6 +226,49 @@ RexxString *NumberString::primitiveMakeString()
 
 
 /**
+ * Test if a number has any significant (i.e., non-zero)
+ * decimal values within a given digits setting.
+ *
+ * @param digits The digits setting to test.
+ *
+ * @return true if this number has significant decimals.
+ */
+bool NumberString::hasSignificantDecimals(size_t digits)
+{
+    // if the exponent is not negative, then we can't have decimals.
+    if (!hasDecimals())
+    {
+        return false;
+    }
+
+    // the first digit to check
+    const char *tempPtr = number + digitsCount + numberExponent;
+    wholenumber_t checkLength = -numberExponent;
+    const char *highDigit = number + digits;
+    // while more decimals and we're still within the digits value
+    while (checkLength > 0 && tempPtr < highDigit)
+    {
+        // we found a digit
+        if (*tempPtr++ != 0)
+        {
+            return true;
+        }
+        checkLength--;
+    }
+
+    // if we hit the digits limit before running of digits to check,
+    // we need to test this digit to see if this will round up into
+    // the area we already checked.
+    if (checkLength > 0)
+    {
+        return *tempPtr >= 5;
+    }
+    // all insigificant
+    return false;
+}
+
+
+/**
  * Format an exponent value into a buffer, including the
  * "E" marker and the exponent sign.
  *

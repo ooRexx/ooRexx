@@ -81,202 +81,190 @@ RexxString *NumberString::d2xD2c(RexxObject *length, bool type)
     RexxString *Retval;                  /* returned result                   */
 
 
-                                         /* get the target length             */
-    ResultSize = optionalLengthArgument(_length, SIZE_MAX, ARG_ONE);
-    CurrentDigits = number_digits();     /* get the current digits setting    */
-    TargetLength = length;         /* copy the length                   */
-                                         /* too big to process?               */
-    if (exp + length > CurrentDigits)
+    // get the target length
+    size_t resultSize = optionalLengthArgument(length, SIZE_MAX, ARG_ONE);
+    size_t currentDigits = number_digits();
+    size_t targetLength = digitsCount;
+
+    // already larger than the current digits setting?  That's an
+    // error
+    if (numberExponent + digitsCount > currentDigits)
     {
-        if (type == true)                  /* d2c form?                         */
-        {
-            /* use that message                  */
-            reportException(Error_Incorrect_method_d2c, this);
-        }
-        else                               /* use d2x form                      */
-        {
-            reportException(Error_Incorrect_method_d2x, this);
-        }
+        reportException(type ? Error_Incorrect_method_d2c  Error_Incorrect_method_d2x, this);
     }
-    else if (exp < 0)
-    {            /* may have trailing zeros           */
-                 /* point to the decimal part         */
-        TempPtr = number + length + exp;
-        HexLength = -exp;            /* get the length to check           */
-                                           /* point to the rounding digit       */
-        HighDigit = number + CurrentDigits;
-        /* while more decimals               */
-        while (HexLength -- && TempPtr <= HighDigit)
-        {
-            if (*TempPtr != 0)
-            {             /* non-zero decimal?                 */
-                          /* this may be non-significant       */
-                if (TargetLength > CurrentDigits)
-                {
-                    /* this the "rounding" digit?        */
-                    if (TempPtr == HighDigit && *TempPtr < 5)
-                    {
-                        break;                     /* insignificant digit found         */
-                    }
-                }
-                if (type == true)              /* d2c form?                         */
-                {
-                    /* use that message                  */
-                    reportException(Error_Incorrect_method_d2c, this);
-                }
-                else                           /* use d2x form                      */
-                {
-                    reportException(Error_Incorrect_method_d2x, this);
-                }
-            }
-            TempPtr++;                       /* step the pointer                  */
-        }
-        /* adjust the length                 */
-        TargetLength = length + exp;
-    }
-    /* negative without a size           */
-    if (sign < 0 && ResultSize == SIZE_MAX)
+
+    // if this has decimals, we need to see if we have non-zero decimals.
+    if (hasDecimals())
     {
-        /* this is an error                  */
+        // if we have non-zero decimals, this is an error.  This must be a whole
+        // number.
+        if (hasSignficantDecimals(currentDigits))
+        {
+            reportException(type ? Error_Incorrect_method_d2c : Error_Incorrect_method_d2x, this);
+        }
+        // adjust the scan length to eliminate the decimal part
+        targetLength += numberExponent;
+    }
+
+    // if the value is negative and we don't have an explicit size, this is an error
+    if (isNegative() && resultSize == SIZE_MAX)
+    {
         reportException(Error_Incorrect_method_d2xd2c);
     }
-    if (ResultSize == SIZE_MAX)          /* using default size?               */
+
+    size_t bufferLength = currentDigits + OVERFLOWSPACE;
+
+    if (resultSize == SIZE_MAX)
     {
-        /* allocate buffer based on digits   */
         BufferLength = CurrentDigits + OVERFLOWSPACE;
     }
-    else if (type == true)
-    {             /* X2C function?                     */
-        if (ResultSize * 2 < CurrentDigits)/* smaller than digits setting?      */
-        {
-            /* allocate buffer based on digits   */
-            BufferLength = CurrentDigits + OVERFLOWSPACE;
-        }
-        else                               /* allocate a large buffer           */
-        {
-            BufferLength = (ResultSize * 2) + OVERFLOWSPACE;
-        }
-    }
     else
-    {                               /* D2X function                      */
-        if (ResultSize < CurrentDigits)    /* smaller than digits setting?      */
+    {
+        resultSize = Numerics::MaxVal(currentDigits, resultSize);
+        // if this is the character function, we need more space, so double it
+        if (type)
         {
-            /* allocate buffer based on digits   */
-            BufferLength = CurrentDigits + OVERFLOWSPACE;
-        }
-        else                               /* allocate a large buffer           */
-        {
-            BufferLength = ResultSize + OVERFLOWSPACE;
+            resultSize += resultSize;
         }
     }
-    Target = new_buffer(BufferLength);   /* set up format buffer              */
-    Scan = number;                 /* point to first digit              */
-                                         /* set accumulator pointer           */
-    Accumulator = Target->getData() + BufferLength - 2;
-    HighDigit = Accumulator - 1;         /* set initial high position         */
-                                         /* clear the accumulator             */
-    memset(Target->getData(), '\0', BufferLength);
-    while (TargetLength--)
-    {             /* while more digits                 */
-                  /* add next digit                    */
-        HighDigit = addToBaseSixteen(*Scan++, Accumulator, HighDigit);
-        if (TargetLength != 0)             /* not last digit?                   */
+    BufferClass *target = new_buffer(bufferLength);
+    const char *scan = numberDigits;
+
+    // we start accumulating from the end of the buffer
+    char *accumulator = target->getData() + bufferLength - 2;
+    // and this is our high water mark for the math so far.
+    char *highDigit = accumulator - 1;
+    // clear the buffer before we start
+    memset(target->getData(), '\0', bufferLength);
+
+    // now process all of the digits in the integer portion of the number string.
+    while (targetLength--)
+    {
+        // add to the buffer using base 16 math
+        highDigit = addToBaseSixteen(*scan++, accumulator, highDigit);
+        if (targetLength != 0)
         {
-            /* do another multiply               */
-            HighDigit = multiplyBaseSixteen(Accumulator, HighDigit);
+            // multiply by base 16 to shift everything
+            highDigit = multiplyBaseSixteen(accumulator, highDigit);
         }
     }
-    if (exp > 0)
-    {                 /* have extra digits to worry about? */
-                      /* do another multiply               */
-        HighDigit = multiplyBaseSixteen(Accumulator, HighDigit);
-        TargetLength = exp;          /* copy the exponent                 */
-        while (TargetLength--)
-        {           /* while more digits                 */
-                    /* add next zero digit               */
-            HighDigit = addToBaseSixteen('\0', Accumulator, HighDigit);
-            if (TargetLength != 0)           /* not last digit?                   */
-            {
-                /* do the multiply                   */
-                HighDigit = multiplyBaseSixteen(Accumulator, HighDigit);
-            }
+
+    // we have extra digits to worry about, so we need to
+    if (numberExponent > 0)
+    {
+        // we need to multiply the number by 16 for each of the excess values.
+        // Note that normally we would not multiply for the last one, but we
+        // skipped the last one while processing the digits, so this works out
+        // to be the same.
+        for (size_t i = 0; i < )
+        {
+            // we additional multiplications required
+            highDigit = multiplyBaseSixteen(accumulator, highDigit);
         }
     }
-    HexLength = Accumulator - HighDigit; /* get accumulator length            */
-    if (sign < 0)
-    {                /* have a negative number?           */
-                     /* take twos complement              */
-        PadChar = 'F';                     /* pad negatives with foxes          */
-        Scan = Accumulator;                /* point to last digit               */
-        while (!*Scan)                     /* handle any borrows                */
+    // this is our current length in terms of hex digits
+    size_t hexLength = accumulator - highDigit;
+
+    // this is our default padding character.  We need to switch this
+    // if the value is negative
+    char padChar = '0';
+
+    if (isNegative())
+    {
+        // we pad with foxes to perform sign extending
+        padChar = 'F';
+        scan = accumulator;
+        // start with the back of the result and transform any zeros
+        // into foxes.  This is basically the equivalent of subtracting
+        // 1 with a wrap and then carrying the subtraction out.  The first
+        // non-zero byte is where the borrowing stops.
+        while (*scan == 0)
         {
-            *Scan-- = 0xf;                   /* make digit a 15                   */
+            *scan-- = 0xf;
         }
-        *Scan = *Scan - 1;                 /* subtract the 1                    */
-        Scan = Accumulator;                /* start at first digit again        */
-        while (Scan > HighDigit)
-        {         /* invert all the bits               */
-                  /* one digit at a time               */
-            *Scan = (char)(*Scan ^ (unsigned)0x0f);
-            Scan--;                          /* step to next digit                */
+
+        // subtract a one from the first non-zero digit
+        *scan = *scan - 1;
+
+        // now we need to invert all of the bits for the result length.
+        scan = accumulator;
+        while (scan > highDigit)
+        {
+            *scan = (char)(*scan ^ (unsigned)0x0f);
+            scan--;
+        }
+    }
+
+    // now we need to convert all of the result digits into printable characters
+    scan = accumulator;
+    while (scan > highDigit)
+    {
+        *scan = RexxString::intToHexDigit(*scan);
+        scan--;
+    }
+    scan = highDigit + 1;
+
+    // now calculate the final result size.
+    if (type == false)
+    {
+        // if this is D2X, result size is the actual digit
+        // size.
+        if (resultSize == SIZE_MAX)
+        {
+            resultSize = hexLength;
         }
     }
     else
     {
-        PadChar = '0';                     /* pad positives with zero           */
-    }
-                                           /* now make number printable         */
-    Scan = Accumulator;                  /* start at first digit again        */
-    while (Scan > HighDigit)
-    {           /* convert all the nibbles           */
-        *Scan = RexxString::intToHexDigit(*Scan);      /* one digit at a time               */
-        Scan--;                            /* step to next digit                */
-    }
-    Scan = HighDigit + 1;                /* point to first digit              */
-
-    if (type == false)
-    {                 /* d2x function ?                    */
-        if (ResultSize == SIZE_MAX)        /* using default length?             */
+        if (resultSize == SIZE_MAX)
         {
-            ResultSize = HexLength;          /* use actual data length            */
+            resultSize = hexLength;
         }
-    }
-    else
-    {                               /* d2c function                      */
-        if (ResultSize == SIZE_MAX)        /* using default length?             */
-        {
-            ResultSize = HexLength;          /* use actual data length            */
-        }
+        // for d2c, an explicit result size is the character size, not the
+        // nibble size.  We need to format at least twice as many characters
+        // then pack
         else
         {
-            ResultSize += ResultSize;        /* double the size                   */
+            resultSize += resultSize;
         }
     }
-    if (ResultSize < HexLength)
-    {        /* need to truncate?                 */
-        PadSize = 0;                       /* no Padding                        */
-        Scan += HexLength - ResultSize;    /* step the pointer                  */
-        HexLength = ResultSize;            /* adjust number of digits           */
-    }
-    else                                 /* possible padding                  */
+    size_t padSize = 0;
+
+    // we might actually need to truncate
+    if (resultSize < hexLength)
     {
-        PadSize = ResultSize - HexLength;  /* calculate needed padding          */
+        // no padding added, we are truncating on the left end, so
+        // shift the pointer by the excess.
+        padSize = 0;
+        scan += hexLength - resultSize;
+        hexLength = resultSize;
     }
-    if (PadSize)
-    {                       /* padding needed?                   */
-        Scan -= PadSize;                   /* step back the pointer             */
-        memset(Scan, PadChar, PadSize);    /* pad in front                      */
-    }
-    if (type == true)                    /* need to pack?                     */
-    {
-        Retval = StringUtil::packHex(Scan, ResultSize);/* yes, pack to character            */
-    }
+    // we have possible padding
     else
     {
-        /* allocate result string            */
-        Retval = new_string(Scan, ResultSize);
+        padSize = resultSize - hexLength;
     }
-    return Retval;                       /* return proper result              */
+
+    // do we need to pad?
+    if (padSize)
+    {
+        // step the result pointer back and add the padding character (either '0' or 'F',
+        // depending on the sign of the number)
+        scan -= padSize;
+        memset(scan, padChar, padSize);
+    }
+
+    // if this is d2c, we need to pack the hex digits into character values.
+    if (type == true)
+    {
+        // TODO:  should we have a more efficient version of this that assumes no blanks?
+        return StringUtil::packHex(scan, resultSize);
+    }
+    // for d2x, we can just create the string version now
+    else
+    {
+        return new_string(scan, resultSize);
+    }
 }
 
 
