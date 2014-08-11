@@ -78,7 +78,7 @@ public:
     short numberSign;                  // sign for this number (-1 is neg)
     size_t  createdDigits;             // the digits setting of from when object was created
     wholenumber_t numberExponent;      // the exponent value
-    wholenumber_t numberLength;        // the length of the number data (more conveniently managed as a signed number)
+    wholenumber_t digitsCount;         // the length of the number data (more conveniently managed as a signed number)
 };
 
 
@@ -98,9 +98,10 @@ class NumberString : public NumberStringBase
    class NumberBuilder
    {
    public:
-       inline NumberBuilder(RexxString *s) : current(s->getWriteableData()), start(s->getWriteableData()), length(s->getLength()) {}
+       inline NumberBuilder(RexxString *s) : current(s->getWriteableData()) {}
 
-       inline void addSign(bool isNegative) { if (isNegative) { *start = RexxString::ch_MINUS2; current = start + 1; } }
+       inline void addSign(bool isNegative) { if (isNegative) { *current = RexxString::ch_MINUS2; current++; } }
+       inline void addExponentSign(bool isNegative) { *current = isNegative ? RexxString::ch_MINUS : RexxString::ch_PLUS; current++; }
        inline void addDecimal() { append(ch_PERIOD); }
        inline void addExponent(const char *exp)
        {
@@ -110,7 +111,7 @@ class NumberString : public NumberStringBase
        }
        inline void append(const char *d, size_t l)  { memcpy(current, d, l); current += l; }
        inline void append(char c) { *current++ = c; }
-       inline void addDigits(const char *d, size_t len)
+       inline void addDigits(const char *d, wholenumber_t len)
        {
            for (size_t i = 0; i < len; i++)
            {
@@ -118,16 +119,35 @@ class NumberString : public NumberStringBase
            }
        }
        inline void addZeroDecimal()  { append('0'); append('.'); }
-       inline void addZeros(size_t count)
+       inline void addZeros(wholenumber_t count)
        {
            memset(current, '0', count);
            current += count;
        }
 
+       inline void addSpaces(wholenumber_t count)
+       {
+           memset(current, ' ', count);
+           current += count;
+       }
+
+       inline void addIntegerPart(bool sign, const char *digits, wholenumber_t intDigits, wholeNumber_t pad = 0)
+       {
+           addSign(sign);
+           addDigits(digis, intDigits);
+           addZeros(pad);
+       }
+
+       inline void addDecimalPart(bool sign, const char *digits, wholenumber_t decimalDigits, wholeNumber_t leadPad = 0, wholenumber_t trailingPad = 0)
+       {
+           builder.addDecimal();
+           builder.addZeros(Pad);
+           builder.addDigits(digits, decimalDigits);
+           builder.addZeros(trailingPad);
+       }
+
 
    protected:
-       char *start;     // start of the buffer
-       size_t length;   // total length of string
        char *current;   // current output pointer
    };
     void         *operator new(size_t, size_t);
@@ -203,7 +223,7 @@ class NumberString : public NumberStringBase
     RexxClass  *classObject();
     inline NumberString *checkNumber(size_t digits)
     {
-       if (length > digits)            // is the length larger than digits()?
+       if (digitsCount > digits)            // is the length larger than digits()?
        {
                                              // need to allocate a new number, but
                                              // we chop to digits + 1
@@ -211,10 +231,11 @@ class NumberString : public NumberStringBase
        }
        return this;                          // no adjustment required
     }
+
     //quick test for a numeric overflow
     inline void checkOverflow()
     {
-        if (((numberExponent + numberLength - 1) > Numerics::MAX_EXPONENT) ||
+        if (((numberExponent + digitsCount - 1) > Numerics::MAX_EXPONENT) ||
             (numberExponent < (Numerics::MIN_EXPONENT)) )
         {
             reportException(Error_Conversion_operator, this);
@@ -245,9 +266,9 @@ class NumberString : public NumberStringBase
 
     inline void setupNumber()
     {
-        /* inherit the current numeric settings */
+        // inherit the current numeric settings
         setNumericSettings(number_digits(), number_form());
-        /* check for any required rounding */
+        // check for any required rounding
         checkPrecision();
     }
 
