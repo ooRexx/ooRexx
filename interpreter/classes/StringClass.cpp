@@ -629,8 +629,29 @@ wholenumber_t RexxString::comp(RexxObject *other)
     }
 
     // we're doing a string comparison, so get the string version of the other.
-    RexxString *second = other->requestString();
+    return stringComp(other->requestString());
+}
 
+
+/**
+ * Do a value comparison of two strings for the non-strict
+ * comparisons.  This returns for the compares:
+ *
+ *    a value < 0 when this is smaller than other
+ *    a value   0 when this is equal to other
+ *    a value > 0 when this is larger than other
+ *
+ *    NOTE:  This version does not do the numeric portion of the
+ *    compare, just the string portion.  This allows
+ *    numberstring to directly perform a string comparison
+ *    without reattempting numeric conversions on the values.
+ *
+ * @param other  The object we compare against.
+ *
+ * @return the relative compare value (<0, 0, or >0)
+ */
+wholenumber_t RexxString::stringComp(RexxString *second)
+{
     // get the string specifics
     size_t firstLen = getLength();
     const char *firstStart = getStringData();

@@ -53,6 +53,233 @@
 #include "ActivationBase.hpp"
 
 
+
+
+/**
+ * Convert a valid numberstring to a hex or character string.
+ *
+ * @param length The output length (required for negative
+ *               numbers).
+ * @param type   The type of conversion (hex or character)
+ *
+ * @return The converted value.
+ */
+RexxString *NumberString::d2xD2c(RexxObject *length, bool type)
+{
+    char       PadChar;                  /* needed padding character          */
+    size_t ResultSize;             /* size of result string             */
+    size_t     HexLength;                /* length of hex characters          */
+    size_t     BufferLength;             /* length of the buffer              */
+    char     * Scan;                     /* scan pointer                      */
+    char     * HighDigit;                /* highest digit location            */
+    char     * Accumulator;              /* accumulator pointer               */
+    char     * TempPtr;                  /* temporary pointer value           */
+    size_t     PadSize;                  /* needed padding                    */
+    size_t     CurrentDigits;            /* current digits setting            */
+    size_t     TargetLength;             /* length of current number          */
+    BufferClass *Target;                  /* formatted number                  */
+    RexxString *Retval;                  /* returned result                   */
+
+
+                                         /* get the target length             */
+    ResultSize = optionalLengthArgument(_length, SIZE_MAX, ARG_ONE);
+    CurrentDigits = number_digits();     /* get the current digits setting    */
+    TargetLength = length;         /* copy the length                   */
+                                         /* too big to process?               */
+    if (exp + length > CurrentDigits)
+    {
+        if (type == true)                  /* d2c form?                         */
+        {
+            /* use that message                  */
+            reportException(Error_Incorrect_method_d2c, this);
+        }
+        else                               /* use d2x form                      */
+        {
+            reportException(Error_Incorrect_method_d2x, this);
+        }
+    }
+    else if (exp < 0)
+    {            /* may have trailing zeros           */
+                 /* point to the decimal part         */
+        TempPtr = number + length + exp;
+        HexLength = -exp;            /* get the length to check           */
+                                           /* point to the rounding digit       */
+        HighDigit = number + CurrentDigits;
+        /* while more decimals               */
+        while (HexLength -- && TempPtr <= HighDigit)
+        {
+            if (*TempPtr != 0)
+            {             /* non-zero decimal?                 */
+                          /* this may be non-significant       */
+                if (TargetLength > CurrentDigits)
+                {
+                    /* this the "rounding" digit?        */
+                    if (TempPtr == HighDigit && *TempPtr < 5)
+                    {
+                        break;                     /* insignificant digit found         */
+                    }
+                }
+                if (type == true)              /* d2c form?                         */
+                {
+                    /* use that message                  */
+                    reportException(Error_Incorrect_method_d2c, this);
+                }
+                else                           /* use d2x form                      */
+                {
+                    reportException(Error_Incorrect_method_d2x, this);
+                }
+            }
+            TempPtr++;                       /* step the pointer                  */
+        }
+        /* adjust the length                 */
+        TargetLength = length + exp;
+    }
+    /* negative without a size           */
+    if (sign < 0 && ResultSize == SIZE_MAX)
+    {
+        /* this is an error                  */
+        reportException(Error_Incorrect_method_d2xd2c);
+    }
+    if (ResultSize == SIZE_MAX)          /* using default size?               */
+    {
+        /* allocate buffer based on digits   */
+        BufferLength = CurrentDigits + OVERFLOWSPACE;
+    }
+    else if (type == true)
+    {             /* X2C function?                     */
+        if (ResultSize * 2 < CurrentDigits)/* smaller than digits setting?      */
+        {
+            /* allocate buffer based on digits   */
+            BufferLength = CurrentDigits + OVERFLOWSPACE;
+        }
+        else                               /* allocate a large buffer           */
+        {
+            BufferLength = (ResultSize * 2) + OVERFLOWSPACE;
+        }
+    }
+    else
+    {                               /* D2X function                      */
+        if (ResultSize < CurrentDigits)    /* smaller than digits setting?      */
+        {
+            /* allocate buffer based on digits   */
+            BufferLength = CurrentDigits + OVERFLOWSPACE;
+        }
+        else                               /* allocate a large buffer           */
+        {
+            BufferLength = ResultSize + OVERFLOWSPACE;
+        }
+    }
+    Target = new_buffer(BufferLength);   /* set up format buffer              */
+    Scan = number;                 /* point to first digit              */
+                                         /* set accumulator pointer           */
+    Accumulator = Target->getData() + BufferLength - 2;
+    HighDigit = Accumulator - 1;         /* set initial high position         */
+                                         /* clear the accumulator             */
+    memset(Target->getData(), '\0', BufferLength);
+    while (TargetLength--)
+    {             /* while more digits                 */
+                  /* add next digit                    */
+        HighDigit = addToBaseSixteen(*Scan++, Accumulator, HighDigit);
+        if (TargetLength != 0)             /* not last digit?                   */
+        {
+            /* do another multiply               */
+            HighDigit = multiplyBaseSixteen(Accumulator, HighDigit);
+        }
+    }
+    if (exp > 0)
+    {                 /* have extra digits to worry about? */
+                      /* do another multiply               */
+        HighDigit = multiplyBaseSixteen(Accumulator, HighDigit);
+        TargetLength = exp;          /* copy the exponent                 */
+        while (TargetLength--)
+        {           /* while more digits                 */
+                    /* add next zero digit               */
+            HighDigit = addToBaseSixteen('\0', Accumulator, HighDigit);
+            if (TargetLength != 0)           /* not last digit?                   */
+            {
+                /* do the multiply                   */
+                HighDigit = multiplyBaseSixteen(Accumulator, HighDigit);
+            }
+        }
+    }
+    HexLength = Accumulator - HighDigit; /* get accumulator length            */
+    if (sign < 0)
+    {                /* have a negative number?           */
+                     /* take twos complement              */
+        PadChar = 'F';                     /* pad negatives with foxes          */
+        Scan = Accumulator;                /* point to last digit               */
+        while (!*Scan)                     /* handle any borrows                */
+        {
+            *Scan-- = 0xf;                   /* make digit a 15                   */
+        }
+        *Scan = *Scan - 1;                 /* subtract the 1                    */
+        Scan = Accumulator;                /* start at first digit again        */
+        while (Scan > HighDigit)
+        {         /* invert all the bits               */
+                  /* one digit at a time               */
+            *Scan = (char)(*Scan ^ (unsigned)0x0f);
+            Scan--;                          /* step to next digit                */
+        }
+    }
+    else
+    {
+        PadChar = '0';                     /* pad positives with zero           */
+    }
+                                           /* now make number printable         */
+    Scan = Accumulator;                  /* start at first digit again        */
+    while (Scan > HighDigit)
+    {           /* convert all the nibbles           */
+        *Scan = RexxString::intToHexDigit(*Scan);      /* one digit at a time               */
+        Scan--;                            /* step to next digit                */
+    }
+    Scan = HighDigit + 1;                /* point to first digit              */
+
+    if (type == false)
+    {                 /* d2x function ?                    */
+        if (ResultSize == SIZE_MAX)        /* using default length?             */
+        {
+            ResultSize = HexLength;          /* use actual data length            */
+        }
+    }
+    else
+    {                               /* d2c function                      */
+        if (ResultSize == SIZE_MAX)        /* using default length?             */
+        {
+            ResultSize = HexLength;          /* use actual data length            */
+        }
+        else
+        {
+            ResultSize += ResultSize;        /* double the size                   */
+        }
+    }
+    if (ResultSize < HexLength)
+    {        /* need to truncate?                 */
+        PadSize = 0;                       /* no Padding                        */
+        Scan += HexLength - ResultSize;    /* step the pointer                  */
+        HexLength = ResultSize;            /* adjust number of digits           */
+    }
+    else                                 /* possible padding                  */
+    {
+        PadSize = ResultSize - HexLength;  /* calculate needed padding          */
+    }
+    if (PadSize)
+    {                       /* padding needed?                   */
+        Scan -= PadSize;                   /* step back the pointer             */
+        memset(Scan, PadChar, PadSize);    /* pad in front                      */
+    }
+    if (type == true)                    /* need to pack?                     */
+    {
+        Retval = StringUtil::packHex(Scan, ResultSize);/* yes, pack to character            */
+    }
+    else
+    {
+        /* allocate result string            */
+        Retval = new_string(Scan, ResultSize);
+    }
+    return Retval;                       /* return proper result              */
+}
+
+
 NumberString *NumberString::maxMin(RexxObject **args, size_t argCount, unsigned int operation)
 /*********************************************************************/
 /* Function:  Process the MAX and MIN builtin functions and methods  */

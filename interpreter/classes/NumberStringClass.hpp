@@ -247,7 +247,7 @@ class NumberString : public NumberStringBase
     NumberString *prepareOperatorNumber(size_t, size_t, bool);
     void              adjustPrecision(char *, size_t);
     void              adjustPrecision();
-    inline void       checkPrecision() { if (length > numDigits) adjustPrecision(); }
+    inline void       checkPrecision() { if (digitsCount > createdDigits) adjustPrecision(); }
     inline void       setNumericSettings(size_t digits, bool form)
     {
         numDigits = digits;
@@ -268,6 +268,14 @@ class NumberString : public NumberStringBase
     {
         // inherit the current numeric settings
         setNumericSettings(number_digits(), number_form());
+        // check for any required rounding
+        checkPrecision();
+    }
+
+    inline void setupNumber(size_t digits, bool form)
+    {
+        // inherit the current numeric settings
+        setNumericSettings(digits, form);
         // check for any required rounding
         checkPrecision();
     }
@@ -317,6 +325,7 @@ class NumberString : public NumberStringBase
     }
 
     inline bool isZero() { return numberSign == 0; }
+    inline bool isOne() { return digitsCount == 1 && numberSign == 1 && numberExponent == 1 && numberDigits[0] = 1; }
     inline bool isNegative() { return numberSign < 0; }
     inline bool isPositive() { return numberSign > 0; }
     inline bool isInteger() { return exponent == 0; }
