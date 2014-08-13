@@ -46,7 +46,6 @@
 
 #include "FlagSet.hpp"
 #include "Numerics.hpp"
-#include "NumberStringMath.hpp"
 
 
 /**
@@ -88,7 +87,22 @@ public:
  */
 class NumberString : public NumberStringBase
 {
-   public:
+ public:
+   /**
+    * Identifiers for different arithmetic operators.
+    */
+   typedef enum
+   {
+       OT_PLUS,
+       OT_MINUS,
+       OT_MULTIPLY,
+       OT_DIVIDE,
+       OT_INT_DIVIDE,
+       OT_REMAINDER,
+       OT_POWER,
+       OT_MAX,
+       OT_MIN,
+   } ArithmeticOperator;
 
 
    /**
@@ -150,6 +164,7 @@ class NumberString : public NumberStringBase
    protected:
        char *current;   // current output pointer
    };
+
     void         *operator new(size_t, size_t);
     inline void  *operator new(size_t size, void *ptr) {return ptr;}
     inline void   operator delete(void *) { ; }
@@ -360,6 +375,18 @@ class NumberString : public NumberStringBase
     static char *multiplyBaseTen(char *, char *);
 
     static const size_t OVERFLOWSPACE = 2;   // space for numeric buffer overflow
+
+    static const size_t BYTE_SIZE = 8;
+    static const size_t SIZEBITS = (sizeof(size_t) * BYTE_SIZE);
+    static const bool ROUND = true;
+    static const bool NOROUND = false;
+
+    // these are used for masking the power bits
+    static const size_t HIBIT = ~SSIZE_MAX;
+    static const size_t LOWBITS = SSIZE_MAX;
+
+    // special buffer allocation size
+    static const size_t FAST_BUFFER = 36;
 
     char  numberDigits[4];                   // the digits for the number
 };

@@ -47,12 +47,9 @@
 #include "ArrayClass.hpp"
 #include "Activity.hpp"
 #include "BufferClass.hpp"
-#include "NumberStringMath.hpp"
 #include "ActivityManager.hpp"
 #include "ProtectedObject.hpp"
 #include "ActivationBase.hpp"
-
-
 
 
 /**
@@ -268,363 +265,322 @@ RexxString *NumberString::d2xD2c(RexxObject *length, bool type)
 }
 
 
+/**
+ * Process the MAX and MIN builtin functions and methods
+ *
+ * @param args      The variable length array of arguments.
+ * @param argCount  The count of arguments.
+ * @param operation Indicates which function we are processing.
+ *
+ * @return The largest or smallest of the set of numbers.
+ */
 NumberString *NumberString::maxMin(RexxObject **args, size_t argCount, unsigned int operation)
-/*********************************************************************/
-/* Function:  Process the MAX and MIN builtin functions and methods  */
-/*********************************************************************/
 {
-    size_t arg;
-    NumberString *compobj, *maxminobj;
-    RexxObject *compResult;
-    RexxObject *nextObject;
-    size_t saveFuzz, saveDigits;
+    const char *methodName = operation == OT_MAX ? "MAX" : "MIN";
+    // this is the result from comp() that indicates we have
+    // a greater comparison.
+    wholenumber_t compResult = operation == OT_MAX ? 1 : -1;
 
-    if (argCount == 0) return this;       /* any arguments to ccompare?        */
+    // if there are no other numbers to compare against, this is the result.
+    // TODO:  Does this need rounding?
+    if (argCount == 0)
+    {
+        return this;
+    }
 
-                                          /* Get a reference to our current act*/
-    ActivationBase *CurrentActivation = ActivityManager::currentActivity->getTopStackFrame();
+    size_t saveFuzz = number_fuzz();
+    size_t saveDigits = number_digits();
 
-    saveFuzz = CurrentActivation->fuzz(); /* get the current fuzz and digits   */
-    saveDigits = CurrentActivation->digits();
-    CurrentActivation->setFuzz(0);        /* set the fuzz setting to 0         */
-
-                                          /* assume 1st operand (self) is the  */
-                                          /*  one we want !                    */
     // NB:  The min and max methods are defined as rounding the values to the
     // current digits settings, which bypasses the LOSTDIGITS condition
-    maxminobj = prepareNumber(saveDigits, ROUND);
-    ProtectedObject p(maxminobj);
-    for (arg=0; arg < argCount; arg++)
-    {  /* Loop through all args             */
-        nextObject = args[arg];              /* Get next argument.                */
+    // The target number gets rounded also
+    Protected<NumberString> maxminobj = prepareNumber(saveDigits, ROUND);
 
+    // now looop through all of the arguments
+    for (size_t arg = 0; arg < argCount; arg++)
+    {
+        // get the next argument.  Omitted arguments are not allowed
+        RexxObject *nextObject = args[arg];
         if (nextObject == OREF_NULL)
-        {       /* Was this arg omitted?             */
-                /*  Yes, report the error.           */
-                /* but restore the fuzz first        */
-            CurrentActivation->setFuzz(saveFuzz);
-            if (operation == OT_MAX)            /*  doing a MAX operation?           */
-            {
-                reportException(Error_Incorrect_call_noarg, "MAX", arg + 1);
-            }
-            else                                /*  nope must be min.                */
-            {
-                reportException(Error_Incorrect_call_noarg, "MIN", arg + 1);
-            }
+        {
+            reportException(Error_Incorrect_call_noarg, methodName, arg + 1);
         }
 
-        compobj = nextObject->numberString();/* get a numberstring object         */
+        // try to get as a numberstring object
+        NumberString *compobj = nextObject->numberString();
         if (compobj != OREF_NULL)
-        {          /* Was conversion sucessfull?        */
-                   /* get new comp object in right      */
-                   /* digits                            */
+        {
+            // we need this rounded to the current digits setting.
             compobj = compobj->prepareOperatorNumber(saveDigits, saveDigits, ROUND);
 
-            // TODO:  just call the comp() method to do this.
-            /* Just compare the two NumberStrings*/
-            /*  See if new number is greater than*/
-            /* See if we have a new MAX          */
-            if (operation == OT_MAX)
+            // if we had the desired comparison trigger,
+            // we have a new min or max object.  Swap it
+            if (compobj->comp(maxminobj, saveFuzz) == compResult)
             {
-                compResult = compobj->isGreaterThan(maxminobj);
-
-            }
-            else
-            {                              /* must be looking for MIN           */
-                                           /*  is new less than old maxmin      */
-                                           /*  if so we have a new maxmin.      */
-                compResult = compobj->isLessThan(maxminobj);
-            }
-
-
-            if (compResult == TheTrueObject)
-            {  /* Do we have a new MAX/MIN ?        */
-               /* Yes, no need to save old MAX/MIN  */
-               /*  assign and protect our next      */
-               /*  MAX/MIN                          */
-                p = compobj;
-                maxminobj = (NumberString *)compobj;
+                compobj;
             }
         }
+        // we have an invalid object type...that's an error
         else
-        {                               /* invalid object type.              */
-                                        /* be sure we restore original Fuzz  */
-            CurrentActivation->setFuzz(saveFuzz);
-            /* keep maxminobj around just a      */
+        {
             reportException(Error_Incorrect_method_number, arg + 1, args[arg]);
         }
     }
-    CurrentActivation->setFuzz(saveFuzz); /* be sure we restore original Fuzz  */
-                                          /* We have already made a            */
-                                          /* copy/converted the MaxMin object  */
-                                          /* and it is adjusted to the correct */
-                                          /* precision, so we have nothing     */
-                                          /* left to do.                       */
-    return maxminobj;                     /* now return it.                    */
+
+    // return the max or min object.  This is already rounded to the
+    // current digits ans is ready to go.
+    return maxminobj;
 }
 
-void NumberStringBase::mathRound(
-    char  *NumPtr)                     /* first digit to round up           */
-/*********************************************************************/
-/* Function:  Adjust a a number string object to correct NUMERIC     */
-/*            DIGITS setting                                         */
-/*********************************************************************/
+
+/**
+ * Adjust a a number string object to correct NUMERIC
+ * DIGITS setting
+ *
+ * @param numPtr The first digit of the number (not the rounding
+ *               position).
+ */
+void NumberStringBase::mathRound(char *numPtr)
 {
-    int carry, RoundNum;
-    size_t resultDigits;
-    wholenumber_t numVal;
+    // point one past the last digit of the number string.  This is
+    // the point we round from.
+    wholenumber_t resultDigits = digitsCount;
+    numPtr += digitsCount;
 
-    resultDigits = length;          /* get number of digits in number    */
-    NumPtr += length;               /* point one past last digit, this   */
-                                          /* gives us most significant digit of*/
-                                          /* digits being truncated.           */
-
-    if (*NumPtr-- >= 5 )
-    {                /* is this digit grater_equal to 5   */
-        carry = 1;                           /* yes, we need to round up next dig */
-        while (carry && resultDigits-- > 0)
-        {/* do while we have carry and digits */
-         /* left to round up in number        */
-            if (*NumPtr == 9)                  /* is this digit 9?                  */
+    // if this digit is greater than 5, we have to round
+    if (*numPtr-- >= 5 )
+    {
+        // we have a carry out, which is our trigger to keep rounding
+        int carry = 1;
+        // loop through all of the digits while we still have carry outs
+        // happening.
+        while (carry != 0 && resultDigits-- > 0)
+        {
+            // if the current digit is a 9, make it zero and continue rounding.
+            if (*numPtr == 9)
             {
-                RoundNum = 0;                     /* Yes, then this digit will be 0    */
+                *numPtr-- = 0;
             }
             else
             {
-                RoundNum = *NumPtr + carry;       /* Not 9, add 1 (carry) to digit     */
-                carry = 0;                        /* no more carry.                    */
+                // adjust for the carry value and turn off the carray flag
+                // to stop the rounding process
+                *numPtr = *numPtr + 1;
+                carry = 0;
             }
-            *NumPtr-- = (char)RoundNum;        /* Set this digit in data area.      */
         }
 
-        if (carry )
-        {                        /* Done will all numbers, do we still*/
-                                 /* have a carry (Did carry propogate */
-                                 /* all the way through?              */
-            *++NumPtr = 1;                      /* yes, set high digit to 1          */
-            exp += 1;                     /*      increment exponent by one.   */
+        // did we carry all the way out?  All of
+        // our digits became zero.  We replace the
+        // first digit of the number with a 1 and
+        // bump the exponent value up one for the shift
+        if (carry != 0)
+        {
+            *++numPtr = 1;
+            numberExponent += 1;
         }
     }
 
-    /* At this point number is all setup,*/
-    /*  Check for overflow               */
-    numVal = exp + length - 1;
-    if (numVal > Numerics::MAX_EXPONENT)
+    // do some overflow checks
+    checkOverFlow();
+}
+
+
+/**
+ * Adjust the precision of a number to the digits setting
+ * it was created under.
+ */
+void NumberString::adjustPrecision()
+{
+    // is the length of the number too big?
+    if (digitsCount > createdDigits)
     {
-        reportException(Error_Overflow_expoverflow, numVal, Numerics::DEFAULT_DIGITS);
+        // perform truncation and rounding.
+        truncateToDigits(createdDigits);
     }
-    /*  Check for underflow.             */
-    else if (exp < Numerics::MIN_EXPONENT)
+    // it is possible that we have a zero number not marked as zero
+    else if (numberDigits == 0 && digitsCount == 1)
     {
-        reportException(Error_Overflow_expunderflow, exp, Numerics::DEFAULT_DIGITS);
+        // make sure it is fully zero
+        setZero();
+    }
+    // check to make sure this is really a valid number
+    else
+    {
+        checkOverflow();
+    }
+}
+
+
+/**
+ * Determine high order bit position of an unsigned
+ * number setting.
+ *
+ * @param number The number we're checking
+ *
+ * @return The index position of the high bit.
+ */
+size_t NumberString::highBits(size_t number)
+{
+    // if the number is zero, there is no high bit.
+    if (number == 0)
+    {
+        return 0;
+    }
+
+    size_t highBit = SIZEBITS;
+
+    // keep shifting the number until we find the high bit on
+    while ((number & HIBIT) == 0)
+    {
+        number <<= 1;
+        highBit--;
+    }
+
+    return highBit;
+}
+
+
+/**
+ * Adjust the number data to be with the correct NUMERIC
+ * DIGITS setting.
+ *
+ * @param numPtr    The pointer to the start of the current numeric data.
+ * @param result    Where this should be copied back to after adjustment.
+ * @param resultLen The length of the result area.  Data is copied relative
+ *                  to the end of the data.
+ * @param digits    The digits setting for the adjustment.
+ *
+ * @return The new number ptr after the copy.
+ */
+char *NumberStringBase::adjustNumber(char *numPtr, char *result, size_t resultLen, size_t digits)
+{
+    // remove all leading zeros that might have occurred after the operation.
+    numPtr = stripLeadingZeros(numPtr);
+
+    // after stripping, is the length of the number larger than the digits setting?
+    if (digitsCount > digits)
+    {
+        // perform truncation and rounding.
+        truncateToDigits(digits);
+    }
+    // copy the data into the result area, aligned with the end of the
+    // buffer.  We return the pointer to the new start of the number
+    return (char *)memcpy(((result + resultLen - 1) - digitsCount), numPtr, digitsCount);
+}
+
+
+/**
+ * Remove all leading zeros from a number after an arithmetic
+ * operation.
+ *
+ * @param accumPtr The pointer to the start of the number digits
+ *
+ * @return The new first digit pointer.  The length of the number
+ *         has been adjusted accordingly.  This does not touch
+ *         the number exponent.
+ */
+char *NumberStringBase::stripLeadingZeros(char *accumPtr)
+{
+    // we only strip down to the last zero...we'll leave a single one for
+    // a real zero result.
+    while (*accumPtr == 0 && digitsCount > 1)
+    {
+        accumPtr++;
+        digitscount--;
+    }
+    return accumPtr;
+}
+
+
+/**
+ * Adjust the precision of a number to the given digits.  Also
+ * copies the data to the start of the number string buffer
+ * after adjustment.
+ *
+ * @param resultPtr The start of the digits data to
+ *                  process.
+ * @param digits    The precision for making the adjustment.
+ */
+void NumberString::adjustPrecision(char *resultPtr, size_t digits)
+{
+    // is the length of the number too big?
+    if (digitsCount > digits)
+    {
+        // adjust the length and the exponent for the truncation amount
+        wholenumber_t extra = digitsCount - (wholenumber_t)digits;
+        digitsCount = digits;
+        numberExponent += extra;
+        // round the adjusted number, if necessary
+        mathRound(resultPtr);
+    }
+
+    // strip any leading zeros
+    resultPtr = stripLeadingZeros(resultPtr);
+    // now move into the object
+    memcpy(numberDigits, resultPtr, digitsCount);
+
+    // make sure this has the correct digits creation settings
+    setNumericSettings(digits, number_form());
+
+    // if this reduced to zero, make it exactly zero
+    if (*resultPtr == 0 && length == 1)
+    {
+        setZero();
+    }
+    else
+    {
+        // perform overflow checks on the result
+        checkOverFlow();
     }
     return;
 }
 
-void NumberString::adjustPrecision()
-/*********************************************************************/
-/* Function:  Adjust the precision of a number to the given digits   */
-/*********************************************************************/
+
+/**
+ * Truncate a number to the current digits setting, with optional rounding.
+ *
+ * @param digits The target digits (already determined that truncation is needed)
+ * @param round
+ */
+void NumberString::truncateToDigits(size_t digits, bool round)
 {
-    wholenumber_t resultVal;
-    /* is length of number too big?      */
-    if (length > numDigits)
+    numberExponent += digitsCount - digits;
+    digitsCount = digits
+    if (round)
     {
-        size_t extra = length - numDigits;
-        length = numDigits;         /* Yes, make length equal precision  */
-        exp += extra;               /* adjust exponent by amount over    */
-        mathRound(number);          /* Round the adjusted number         */
-    }
-
-    /* Was number reduced to zero?       */
-    if (*number == 0 && length == 1)
-    {
-        setZero();                /* Yes, make it so...                */
-    }
-    else
-    {
-
-        /* At this point number is all setup,*/
-        /*  Check for overflow               */
-        resultVal = exp + length - 1;
-        if (resultVal > Numerics::MAX_EXPONENT)
-        {
-            reportException(Error_Overflow_expoverflow, resultVal, Numerics::DEFAULT_DIGITS);
-        }
-        else if (exp < Numerics::MIN_EXPONENT)
-        {      /*  Check for underflow.             */
-            reportException(Error_Overflow_expunderflow, exp, Numerics::DEFAULT_DIGITS);
-        }
-    }
-    return;                               /* just return to caller.            */
-}
-
-size_t NumberString::highBits(size_t number)
-/*********************************************************************/
-/* Function:  Determine high order bit position of an unsigned       */
-/*            number setting.                                        */
-/*********************************************************************/
-{
-    size_t HighBit;
-
-    if (number == 0)                      /* is number 0?                      */
-    {
-        return 0;                         /*  Yes, just return 0, no high bit  */
-    }
-
-    HighBit = LONGBITS;                   /* get number of digits in number    */
-
-    while ((number & HIBIT) == 0)
-    {     /* loops though all bit positions    */
-          /*  until first 1 bit is found.      */
-        number <<= 1;                        /* shift number one bit pos left.    */
-        HighBit--;                           /* decrement i, high bit not found   */
-    }
-
-    return HighBit;                       /* return count.                     */
-}
-
-char *NumberStringBase::adjustNumber(
-    char *NumPtr,                      /* pointer to number data            */
-    char  *result,                     /* result location                   */
-    size_t resultLen,                  /* result length                     */
-    size_t NumberDigits)               /* required digits setting           */
-/*********************************************************************/
-/* Function:  Adjust the number data to be with the correct NUMERIC  */
-/*            DIGITS setting.                                        */
-/*********************************************************************/
-{
-    /* Remove all leading zeros          */
-    NumPtr = stripLeadingZeros(NumPtr);
-
-    /* is length of number too big?      */
-    if (length > NumberDigits)
-    {
-        length = NumberDigits;         /* Yes, make length equal precision  */
-                                             /* adjust exponent by amount over    */
-        exp += length - NumberDigits;
-        mathRound(NumPtr);             /* Round the adjusted number         */
-    }
-
-    if (resultLen == 0)                   /* See if there is anything to copy? */
-    {
-        return result;                       /* Nope, just return result Pointer. */
-    }
-    else
-    {
-        /* Copy the data into the result area*/
-        /*  and pointer to start of data     */
-        return(char *)memcpy(((result + resultLen - 1) - length), NumPtr, length);
+        mathRound(numberDigits);
     }
 }
 
-char *NumberStringBase::stripLeadingZeros(
-    char *AccumPtr)                    /* current accumulator position      */
-/*********************************************************************/
-/* Function:  Remove all leading zeros from a number                 */
-/*********************************************************************/
+
+/**
+ * Create new copy of supplied object and make sure the
+ * number is computed to correct digits setting
+ *
+ * @param NumberDigits
+ *                 The precision we're at.
+ * @param rounding true if we should round, false if we just truncate.
+ *
+ * @return The new number that is now safe for modification and also
+ *         rounded to the current digits setting.
+ */
+NumberString *NumberString::prepareNumber(size_t digits, bool rounding)
 {
-    /* while leading digit is zero and   */
-    /* still data in object              */
-    while (!*AccumPtr && length>1)
-    {
-        AccumPtr++;                         /* Point to next digit.              */
-        length--;                     /* length od number is one less.     */
-    }
-    return AccumPtr;                      /* return pointer to 1st non-zero    */
-}
-
-void NumberString::adjustPrecision(char *resultPtr, size_t NumberDigits)
-/*********************************************************************/
-/* Function:  Adjust the precision of a number to the given digits   */
-/*********************************************************************/
-{
-    bool  CopyData;
-    wholenumber_t resultVal;
-    /* resultPtr will either point to    */
-    /* the actual result data or be      */
-    /* NULL, if the data is already in   */
-    /* result obj.                       */
-    if (resultPtr == NULL)
-    {              /* Is resultPtr NULL, that is data   */
-                   /*  already in result object?        */
-        CopyData = false;                    /* Yes, don't copy data.             */
-                                             /* have data pointer point to data in*/
-        resultPtr = number;            /* The result object.                */
-    }
-    else
-    {
-        CopyData = true;                     /* resultPtr not null, need to copy  */
-    }
-    /* is length of number too big?      */
-    if (length > NumberDigits)
-    {
-        size_t extra = length - NumberDigits;
-        length = NumberDigits;        /* Yes, make length equal precision  */
-        exp += extra;                 /* adjust exponent by amount over    */
-        mathRound(resultPtr);         /* Round the adjusted number         */
-    }
-
-    if (CopyData)
-    {                       /* only remove leading zeros if      */
-                            /* data note already in the object.  */
-                            /* remove any leading zeros          */
-        resultPtr = stripLeadingZeros(resultPtr);
-        /* Move result data into object      */
-        memcpy(number, resultPtr, (size_t)length);
-    }
-
-    /* make sure this number has the correct numeric settings */
-    setNumericSettings(NumberDigits, number_form());
-
-    if (!*resultPtr && length == 1) /* Was number reduced to zero?       */
-        setZero();                     /* Yes, make it so...                */
-    else
-    {
-
-        /* At this point number is all setup,*/
-        /*  Check for overflow               */
-        resultVal = exp + length - 1;
-        if (resultVal > Numerics::MAX_EXPONENT)
-        {
-            reportException(Error_Overflow_expoverflow, resultVal, Numerics::DEFAULT_DIGITS);
-        }
-        else if (exp < Numerics::MIN_EXPONENT)
-        {      /*  Check for underflow.             */
-            reportException(Error_Overflow_expunderflow, exp, Numerics::DEFAULT_DIGITS);
-        }
-    }
-    return;                               /* just return to caller.            */
-}
-
-
-NumberString *NumberString::prepareNumber(size_t NumberDigits, bool rounding)
-/*********************************************************************/
-/* Function:  Create new copy of supplied object and make sure the   */
-/*            number is computed to correct digits setting           */
-/*********************************************************************/
-{
-    /* clone ourselves                   */
+    // make a copy of the number with a fresh setting of numeric creation information.
     NumberString *newObj = clone();
-    if (newObj->length > NumberDigits)
+    if (newObj->digitsCount > digits)
     {
         // NOTE:  This version does NOT raise a LOSTDIGITS condition, since it
         // is used for formatting results from functions that are used to create
         // intentionally shortened numbers.
 
-        /* adjust exponent by amount over     */
-        /* precision                         */
-        newObj->exp += newObj->length - NumberDigits;
-        newObj->length = NumberDigits;       /* make length equal precision       */
-        if (rounding == ROUND)
-        {             /* are we to perform rounding?       */
-                      /* Round the adjusted number         */
-            newObj->mathRound(newObj->number);
-        }
+        // perform truncation and rounding.
+        truncateToDigits(digits, rounding);
     }
-    /* make sure this has the correct settings */
-    newObj->setNumericSettings(NumberDigits, number_form());
-    return newObj;                        /* return new object to caller.      */
+    // update the numeric metrics for the creation time
+    newObj->setNumericSettings(digits, number_form());
+    return newObj;
 }
 
 
@@ -635,52 +591,44 @@ NumberString *NumberString::prepareNumber(size_t NumberDigits, bool rounding)
  *
  * @param targetLength
  *                 The target preparation length (>= numberDigits)
- * @param numberDigits
- *                 The digits setting used to determine LOSTDIGITS conditions
+ * @param digits The digits setting used to determine LOSTDIGITS
+ *               conditions
  * @param rounding Inidicates whether rounding is to be performed if the
  *                 target object is longer than the targetLength
  *
  * @return A new number object no longer than the target length.
  */
-NumberString *NumberString::prepareOperatorNumber(size_t targetLength, size_t numberDigits, bool rounding)
-/*********************************************************************/
-/* Function:  Create new copy of supplied object and make sure the   */
-/*            number is computed to correct digits setting           */
-/*********************************************************************/
+NumberString *NumberString::prepareOperatorNumber(size_t targetLength, size_t digits, bool rounding)
 {
-    /* clone ourselves                   */
+    // clone the starting number
     NumberString *newObj = clone();
-    if (newObj->length > numberDigits)
-    {  /* is the length larger than digits()*/
-       /* raise a numeric condition, may    */
-       /*  not return from this.            */
+    if (newObj->digitsCount > digits)
+    {
+        // if we are going to lose digits because we're longer than the
+        // current digits setting, raise the LOSTDIGITS condition
         reportCondition(GlobalNames::LOSTDIGITS, (RexxString *)newObj);
-        if (newObj->length > targetLength)
+        // if we're longer than the target length, chop and potentially round
+        if (newObj->digitsCount > targetLength)
         {
-            /* adjust exponent by amount over     */
-            /* precision                         */
-            newObj->exp += newObj->length - targetLength;
-            newObj->length = targetLength;       /* make length equal precision       */
-            if (rounding == ROUND)
-            {             /* are we to perform rounding?       */
-                          /* Round the adjusted number         */
-                newObj->mathRound(newObj->number);
-            }
+            truncateToDigits(targetLength, rounding);
         }
     }
-    /* make sure this has the correct settings */
-    newObj->setNumericSettings(numberDigits, number_form());
-    return newObj;                        /* return new object to caller.      */
+    // make sure this has the correct settings
+    newObj->setNumericSettings(digits, number_form());
+    return newObj;
 }
 
 
-NumberString *NumberString::addSub(
-  NumberString *other,             /* other addition/subtract target    */
-  unsigned int operation,              /* add or subtract operation         */
-  size_t NumberDigits )                /* precision to use                  */
-/*********************************************************************/
-/* Function:  Add or subtract two normalized numbers                 */
-/*********************************************************************/
+/**
+ * Add or subtract two normalized numbers
+ *
+ * @param other     The other number for the operation.
+ * @param operation The operation identifier (addtion or subtraction)
+ * @param digits    The digits this operation is being performed under.
+ *
+ * @return The operation result.
+ */
+NumberString *NumberString::addSub(NumberString *other, ArithmeticOperation operation, size_t digits)
 {
     NumberString *left, *right, *result, *temp1;
     char  *leftPtr,*rightPtr,*resultPtr;
@@ -692,24 +640,28 @@ NumberString *NumberString::addSub(
     wholenumber_t aLeftExp, aRightExp, rightExp, leftExp, MinExp;
     size_t rightLength, leftLength;
     char  resultBufFast[FASTDIGITS*2+1];  /* for fast allocation if default    */
-    size_t maxLength = NumberDigits + 1;
 
-    /* Make copies of the input object   */
-    /* since we may need to adjust       */
-    /* values, and make these new        */
-    /*objects safe.                      */
-    left = this;
-    right = other;
-    leftExp = left->exp;                  /* maintain our own copy of exponent */
-    rightExp = right->exp;                /* these may be adjusted below.      */
+    // when performing the operations, we allow up to digits + 1 digits to particpate
+    size_t maxLength = digits  + 1;
 
-    leftLength = left->length;            /* maintain our own copy of lengths  */
-    rightLength = right->length;          /* these may be adjusted below.      */
+    // get local variables of the input object metrics since we might
+    // need to copy the objects and adjust some settings.
+    NumberString *left = this;
+    NumberSTring *right = other;
+    wholenumber_t leftExp = left->numberExponent;
+    wholenumber_t rightExp = right->numberExponent;
 
-    if (leftLength > NumberDigits)
+    wholenumber_t leftLength = left->digitsCount;
+    wholenumber_t rightLength = right->digitsCount;
+
+    // now we need to check for truncation, including raising LOSTDIGITS
+    // conditions if we do need to truncate
+    if (leftLength > digits)
     {
         // raise a numeric condition, which might not return
         reportCondition(GlobalNames::LOSTDIGITS, (RexxString *)this);
+
+        // adjust this for the maximum length
         if (leftLength > maxLength)
         {
             leftExp += leftLength - maxLength;
@@ -717,762 +669,738 @@ NumberString *NumberString::addSub(
         }
     }
 
+    // and repeat for the right number
     if (rightLength > NumberDigits)
     {
-        // raise a numeric condition, which might not return
         reportCondition(GlobalNames::LOSTDIGITS, (RexxString *)other);
         if (rightLength > maxLength)
         {
-            /*  not return from this.            */
             rightExp += rightLength - maxLength;
             rightLength = maxLength;
         }
     }
 
+    // get the minimum exponent from these values
+    wholenumber_t minExp = Numerics::minVal(leftExp, rightExp);
 
-    if (leftExp <= rightExp)              /* Find the smaller of the two exps. */
+    // we create an adjusted exponent that gives a good relative size indicator
+    // one of these will be zero, the other will be the difference in magniture
+    // between the two numbers
+    wholenumber_t adjustedLeftExp  = leftExp - minExp;
+    wholenumber_t adjustedRightExp = rightExp - minExp;
+
+    // we might be able to quickly return in certain circumstances.
+    NumberString *result = OREF_NULL;
+
+    // if the left number is zero, we can just return the right number (with some
+    // adjustments.
+    if (left->isZero())
     {
-        MinExp = leftExp;
+        result = right;
     }
-    else
+    // if the right number is zero, we can just return the left
+    else if (right->isZero())
     {
-        MinExp = rightExp;
+        result = left;
     }
 
-
-    aLeftExp  = leftExp - MinExp;         /* Compute adjusted Left exponent    */
-    aRightExp = rightExp - MinExp;        /* Compute adjusted Right exponent   */
-    right_sign = right->sign;             /* make a copy of the right objs sign*/
-                                          /* Now check if either number is     */
-                                          /*  zero or has dominance over       */
-                                          /*  the other number.                */
-    temp1=NULL;
-    if (left->sign==0)
-    {                 /* Is left number zero               */
-        temp1=right;                         /*  Yes, set up to return right      */
-    }
-    else if (right->sign==0)
-    {          /* Is right number zero ?            */
-        temp1=left;                          /*  Yes, Setup up to return left     */
-
-                                             /* Is the left number completely     */
-                                             /*  dominant, that is can the right  */
-                                             /*  number affect the outcome of the */
-                                             /*  arithmetic operation?            */
-    }
-    else if ((aLeftExp + (wholenumber_t)leftLength) > (wholenumber_t)(rightLength + NumberDigits))
+    // is the size difference between these numbers so large that the
+    // right number cannot impact the calculation result?  We can just
+    // use the left number without subtracting
+    else if ((adjustedLeftExp + leftLength) > (rightLength + digits))
     {
-        temp1=left;                          /*   Yes,  so return the left number.*/
-                                             /* Is the right number completely    */
-                                             /*  dominant, that is can the left   */
-                                             /*  number affect the outcome of the */
-                                             /*  arithmetic operation?            */
+        result = left;
     }
-    else if ((aRightExp + (wholenumber_t)rightLength) > (wholenumber_t)(leftLength + NumberDigits))
+    // same test for the right side
+    else if ((adjustedRightExp + rightLength) > (leftLength + digits))
     {
-        temp1=right;                         /*   Yes, so setup to return right   */
+        result = right;
     }
-    /* Temp1 will either point to null   */
-    /* or to the number object that      */
-    /* should be returned as the result. */
-    /* A null means we really do need to */
-    /* do that math.                     */
-    if (temp1)
-    {                         /* Can we do a quick return?         */
-        result = temp1->clone();             /* Yes, copy temp1 for result        */
 
-                                             /* are we doing subtraction and      */
-                                             /* the right operand is our result?  */
-        if ((temp1 == right) && (operation == OT_MINUS))
+    // if we have a fast path exit, then we can do a quick return without
+    // performing any actual operation.  We return a copy of the value, and
+    // we might have to change the sign of this is a subtraction operation.
+    if (result != OREF_NULL)
+    {
+        // copy the original number
+        NumberString *resultCopy = result->clone();
+
+        // if this is a subtraction operation, we need to negate the sign
+        // of the result number.
+        if ((result == right) && (operation == OT_MINUS))
         {
-            result->sign = -result->sign;       /* yes, make sign of result oposite  */
+            resultCopy->numberSign = -resultCopy->numberSign;
         }
-                                                /* of the right operand.             */
-                                                /* Get result into correct precision.*/
-        result->setupNumber();
-        return result;                       /* and return new result object      */
-    }
-    /* We really need to perfrom the     */
-    /*  arithmetic, so lets do it.       */
-    if (operation == OT_MINUS)
-    {          /* is this a subtraction request?    */
-        right_sign  = -right_sign;           /*  yes, invert sign of right number */
-                                             /*  to make addition.                */
+        // get into the correct precision and record the settings at the
+        // time this was created.
+        resultCopy->setupNumber();
+        return resultCopy;
     }
 
-    if (right_sign != left->sign)
-    {       /* are the two signs equal?          */
-            /*  nope, see if numbers are equal?  */
+    // subtraction is basically addition with the negation of the number.
+    // so if we're subtracting, negate the sign of the right hand side.
+    wholenumber_t rightSign = operation == OT_MINUS ? -right->numberSign : right->numberSign;
+
+    // if two signs are not equal, check to see if the specifics of the numbers
+    // are equal...we might be able to return an exact zero
+    if (rightSign != left->numberSign)
+    {
+        // these are equal if the lengths, exponents, and all digits are the same.
+        // this is more common than you might think.  We can make this zero immediately.
         if (((leftLength == rightLength) && (leftExp == rightExp)) &&
-            !(memcmp(left->number, right->number, leftLength)) )
+            !(memcmp(left->numberDigits, right->numberDigits, leftLength)) )
         {
-
-            return new_numberstring("0", 1);   /* Yes, return Zero as result.       */
+            return new_numberstring("0", 1);
         }
-        operation = OT_MINUS;                /* We are now doing a subtraction.   */
+        // if the signs are different, make this a subtraction.
+        operation = OT_MINUS;
     }
     else
-    {                                /* signs are equal, it is addition   */
-        operation = OT_PLUS;                 /* We will now do a addition.        */
+    {
+        // the signs are equal, so handle as an addition.
+        operation = OT_PLUS;
     }
 
-    ResultSize = maxLength;               /* size will be NUMERIC DIGITS + 1   */
-    result = (NumberString *) new (ResultSize) NumberString (ResultSize);
+    // get a result object big enough to handle our maximum size result
+    NumberString *result = new (maxSize) NumberString (maxSize);
 
-    result->sign = 0;                     /* make sure all values are zero     */
-    result->exp=0;                        /* to start with ...                 */
-    result->length=0;
-
-    /* LeftPtr points to end of number   */
-    leftPtr = left->number + leftLength - 1;
-    /* RightPtr points to end of number  */
-    rightPtr = right->number + rightLength - 1;
-    resultPtr = NULL;                     /* Initialize Result Ptr to 0;       */
+    // make sure all values are zero to start with
+    result->numberSign = 0;
+    result->numberExponent = 0;
+    result->digitsCount = 0;
 
 
-                                          /* See if we need oto adjust the     */
-                                          /* number with respect to current    */
-                                          /* Digits setting.                   */
-                                          /* Compute the amount we may need to */
-                                          /* adjust for each number. Using the */
-                                          /* Adjusted exponents ....           */
-                                          /* a value of 0 or less means we are */
-                                          /*OK.                                */
-    LadjustDigits = ((wholenumber_t)leftLength + aLeftExp) - (wholenumber_t)(maxLength);
-    RadjustDigits = ((wholenumber_t)rightLength + aRightExp) - (wholenumber_t)(maxLength);
-    /* Do we need to adjust any numbers? */
-    if (LadjustDigits > 0 || RadjustDigits >0 )
+    // point to the end of both numbers.
+    char *leftPtr = left->numberDigits + leftLength - 1;
+    char *rightPtr = right->number + rightLength - 1;
+    char *resultPtr = NULL;
+
+    // See if we need oto adjust the number with respect to current
+    // Digits setting.  Compute the amount we may need to
+    // adjust for each number. Using the adjusted exponents ....
+    // a value of 0 or less means we are OK.
+    wholenumber_t adjustedLeftDigits = (leftLength + adjustedLeftExp) - (wholenumber_t)maxLength;
+    wholenumber_t adjustedRightDigits = (rightLength + adjustedRightExp) - (wholenumber_t)maxLength;
+    // Do we need to adjust any numbers?
+    if (adjustedLeftDigits > 0 || adjustedRightDigits > 0 )
     {
-        if (LadjustDigits >= RadjustDigits)  /* yes, find which number needs to be*/
+        // we need some adjustment on the digit alignments, figure
+        // out which way
+        if (adjustedLeftDigits >= adjustedRightDigits)
         {
-            /* adjusted the most and assign the  */
-            adjustDigits = LadjustDigits;       /* adjustment value to adjustDigits. */
+            adjustDigits = adjustedLeftDigits;
         }
         else
         {
-            adjustDigits = RadjustDigits;
+            adjustDigits = adjustedRightDigits;
         }
-        /* now we adjust the adjust exp      */
-        /* and real length/exp of each no.   */
 
-
-        if (aLeftExp)
-        {                      /* Was left exp larger than right    */
-            if ((wholenumber_t)adjustDigits < aLeftExp)
-            { /* Do we need to adjust for more than*/
-                /* our adjusted exponent?            */
-                aLeftExp -= adjustDigits;         /* Yes, decrease adj exp             */
-                                                  /* Right number is now shorter       */
-                rightPtr = rightPtr-adjustDigits;
-                rightExp += adjustDigits;         /* Right exponent adjusted           */
-                rightLength -= adjustDigits;      /* update the length to reflect      */
-                adjustDigits = 0;                 /* adjustment done.                  */
+        // one of these adjusted exponents will be zero, which is the smaller
+        // of the two numbers because the adjustment was made using the smaller of
+        // the two exponents.  This number will contribute less to the sum or difference.
+        if (adjustedLeftExp != 0)
+        {
+            // the left number has the larger exponent.  Do we need to adjust
+            // for more than the adjusted exponent here?
+            if (adjustDigits < adjustedLeftExp)
+            {
+                // adjust the exponent by the digits adjustment (obtained originally by
+                // subtracting the two exponents...)
+                adjustedLeftExp -= adjustDigits;
+                // rightPtr points to the end of the right number, so shorten by the
+                // asjustment amount and also reduce the length and the real exponent.
+                rightPtr = rightPtr - adjustDigits;
+                rightExp += adjustDigits;
+                rightLength -= adjustDigits;
+                // no longer need the adjustment amount
+                adjustDigits = 0;
+            }
+            // the adjustment is larger than the exponent difference, so
+            // adjust the right information by the exponent difference.
+            else
+            {
+                rightPtr = rightPtr - adjustedLeftExp;
+                rightExp += adjustedLeftExp;
+                // we reduce the length to add by the full adjustment amound
+                rightLength -= adjustDigits;
+                adjustDigits -= adjustedLeftExp;
+                // the adjusted left exponent is no longer needed
+                adjustedLeftExp = 0;
+            }
+        }
+        // ok, the right exponent is larger
+        else if (adjustedRightExp != 0)
+        {
+            // same process we just did for the other case
+            if (adjustDigits < adjustedRightExp)
+            {
+                adjustedRightExp -= adjustDigits;
+                leftPtr = leftPtr - adjustDigits;
+                leftExp += adjustDigits;
+                leftLength -= adjustDigits;
+                adjustDigits = 0;
             }
             else
-            {                             /* decrease by adjusted exp value    */
-                                          /* Right number is now shorter       */
-                rightPtr = rightPtr-aLeftExp;
-                rightExp += aLeftExp;             /* Right exponent adjusted           */
-                rightLength -= adjustDigits;      /* update the length to reflect      */
-                adjustDigits -= aLeftExp;         /* adjustment partially done.        */
-                aLeftExp = 0;                     /* the adjusted exponent is now zero.*/
-            }
-        }
-        else if (aRightExp)
-        {                /* Was right exp larger than left    */
-            if ((wholenumber_t)adjustDigits < aRightExp)
-            {    /* Do we adjust for more than        */
-                /* our adjusted exponent?            */
-                aRightExp -= adjustDigits;        /* Yes, decrease adj exp             */
-                                                  /* Left  number is now shorter       */
-                leftPtr = leftPtr-adjustDigits;
-                leftExp += adjustDigits;          /* Left  exponent adjusted           */
-                leftLength -= adjustDigits;       /* update the length to reflect      */
-                adjustDigits = 0;                 /* adjustment done.                  */
-            }
-            else
-            {                             /* decrease by adjusted exp value    */
-                                          /* Right number is now shorter       */
-                leftPtr = leftPtr-aRightExp;
-                leftExp += aRightExp;             /* Right exponent adjusted           */
-                leftLength -= adjustDigits;       /* update the length to reflect      */
-                adjustDigits -= aRightExp;        /* adjustment partially done.        */
-                aRightExp = 0;                    /* the adjusted exponent is now zero.*/
+            {
+
+                leftPtr = leftPtr - adjustedRightExp;
+                leftExp += adjustedRightExp;
+                leftLength -= adjustDigits;
+                adjustDigits -= adjustedRightExp;
+                adjustedRightExp = 0;
             }
         }
 
+        // if we still have adjustments to make after all of that,
         if (adjustDigits)
-        {                  /* Is there still adjusting needed   */
-            leftExp += adjustDigits;            /* So adjust length and exp of each  */
-                                                /* bumber by the remaining adjust    */
-            leftPtr = leftPtr-adjustDigits;
+        {
+            // reduce the length of both numbers by the adjustment amount and
+            // increase both exponents accordingly
+            leftExp += adjustDigits;
+            leftPtr = leftPtr - adjustDigits;
             rightExp += adjustDigits;
             rightPtr = rightPtr - adjustDigits;
         }
-    }                                     /* Done with adjusting the numbers,  */
-    if (NumberDigits <= FASTDIGITS)       /* Get a buffer for the reuslt       */
-    {
-        resultBuffer = resultBufFast;
-    }
-    else
-    {
-        resultBuffer = buffer_alloc(NumberDigits*2 + 1);
     }
 
-    /* Have Result Ptr point to end      */
-    resultPtr = resultBuffer + NumberDigits*2;
+    // we can allocate here, if we're in a "reasonable" digits setting.
+    // we can go up to 36 digits with the default, which probably gets most
+    // cases.
+    char resultBufFast[FASTDIGITS * 2 + 1];
+    char *resultBuffer = resultBufFast;
 
+    // if the digits are really big, then we need to allocate a larger buffer.
+    // just allocate a buffer object and allow it to get garbage collected after
+    // we're done.
+    if (digits > FASTDIGITS)
+    {
+        resultBuffer = new_buffer(digits * 2 + 1)->getData();
+    }
+
+    // point to the end, which will be the start of where we accumulate
+    char *resultPtr = resultBuffer + digits * 2;
+
+    // finally time to do some arithmetic.  We have different paths based on
+    // whether this is addition or subtraction
     if (operation == OT_PLUS)
-    {           /* Are we doing addition?            */
-        carry = 0;                           /* no carry to start with.           */
+    {
+        wholenumber_t carry = 0;
 
-                                             /* we need check and see if there    */
-                                             /* are values in the adjusted exps   */
-                                             /* that is do we pretend there       */
-                                             /* are extra zeros at the end        */
-                                             /* of the numbers?                   */
-        result->sign = left->sign;           /* we are doing addition, both signs */
-                                             /* are the same, assign use left for */
-                                             /* result.                           */
-        if (aLeftExp)
+        // we are doing addition, which means both signs are the same.  Take the
+        // result sign from the left number.
+        result->numberSign = left->numberSign;
+        // we need check and see if there are values in the adjusted exps
+        // that is do we pretend there  are extra zeros at the end
+        // of the numbers?
+
+
+        // if the left exponent needs adjusting, we need to have
+        // zeros added.  Handle this by moving digits of the right number into
+        // the result.  For example,
+        // xxxxxxx000     <- adjustedLeftExp = 3
+            yyyyyyyyy     <- adjustedRightExp = 0
+        if (adjustedLeftExp != 0)
         {
-            while (aLeftExp--)
-            {               /* does left need zeros "added"?     */
-                            /* yes, move digits of right         */
-                            /* number into result                */
-                            /*  xxxxxxx000   <- aLeftExp = 3     */
-                            /*   yyyyyyyyy   <- aRightExp = 0    */
-                if (rightPtr >= right->number)    /* Is there still data to move?      */
+            // while we have exponent left
+            while (adjustedLeftExp--)
+            {
+                // if there is still data to move, copy from the right number and shorten it
+                if (rightPtr >= right->numberDigits)
                 {
-                    *resultPtr-- = *rightPtr--;      /* Yes, move in correct digit.       */
+                    *resultPtr-- = *rightPtr--;
                 }
-                else                              /* nope,                             */
+                // move in a zero if we've run out of right digits.
+                else
                 {
-                    *resultPtr-- = '\0';             /* nope, move in a zero. we remove   */
+                    *resultPtr-- = '\0';
                 }
-                                                     /*  leading zeros from orig number   */
-                result->length++;                 /* Length is one greater.            */
+                // note the length addition in the result number
+                result->digitsCount++;
             }
-            result->exp = rightExp;            /* Right is smaller, assign to resul */
+            // the right is smaller, so use the right exponent for the result
+            result->numberExponent = rightExp;
         }
-        else if (aRightExp)
+        // the right exponent is greater...same process, but copying left digits
+        // into the result.
+        else if (adjustedRightExp != 0)
         {
-            while (aRightExp--)
-            {              /* does right need zeros "added"?    */
-                           /* yes, move digits of left          */
-                           /* number into result                */
-                           /*  xxxxxxxxx    <- aLeftExp = 0     */
-                           /*   yyyyyy00    <- aRightExp = 2    */
-
-                if (leftPtr >= left->number)      /* Is there still data to move?      */
+            while (adjustedRightExp--)
+            {
+                if (leftPtr >= left->numberDigits)
                 {
-                    *resultPtr-- = *leftPtr--;       /* Yes, move in correct digit.       */
-                }
-                else                              /* nope,                             */
-                {
-                    *resultPtr-- = '\0';             /* nope, move in a zero.             */
-                }
-                result->length++;                 /* Result length is now one more.    */
-            }
-            result->exp = leftExp;             /* left is smaller, assign to result */
-        }
-        else
-        {
-            result->exp = leftExp;             /* otherwise same exp. take left     */
-        }
-
-        while ( (leftPtr >= left->number) &&/* While we still have data to add.  */
-                (rightPtr >= right->number) )
-        {
-            /* add the two current digits with a */
-            /* possibly carry bit, and update the*/
-            /* left and right ptr to point to    */
-            /* next (actually previous) digit.   */
-            addDigit = carry + (*leftPtr--) + *(rightPtr--);
-            if (addDigit >= 10)
-            {             /* result greater than 10? we have a */
-                          /* carry for our next addition.      */
-                carry = 1;                       /* indicate carry.                   */
-                addDigit -= 10;                  /* subtract 10 from our result.      */
-            }
-            else
-            {                            /* not bigger than 10.               */
-                carry = 0;                       /* cancel any former carry           */
-            }
-            *resultPtr-- = (char)addDigit;    /* move result into the result       */
-            result->length++;                 /* length of result is one more.     */
-        }                                   /* go back and do next set of digits */
-
-        /* One of the numbers is finished,   */
-        /* check the other.                  */
-
-        while (leftPtr >= left->number)
-        {   /* While still digits in the         */
-            /* left number.                      */
-            addDigit = carry + (*leftPtr--);   /* add in any carry, and move to     */
-                                               /* next digit to add.                */
-            if (addDigit >= 10)
-            {              /* do we still have a carry          */
-                carry = 1;                        /* yes, indicate carry.              */
-                addDigit -= 10;                   /* subtract 10 from our result.      */
-            }
-            else
-            {                             /* not bigger than 10.               */
-                carry = 0;                        /* make sure we cancel former carry  */
-            }
-            *resultPtr-- = (char)addDigit;     /* move result into the result       */
-            result->length++;                  /* length of result is one more.     */
-        }                                   /* all done with left number.        */
-
-        while (rightPtr >= right->number)
-        { /* While there is still digits in    */
-          /* right number.                     */
-            addDigit = carry + (*rightPtr--);  /* add in any carry, and move to the */
-                                               /* next digit to add.                */
-            if (addDigit >= 10)
-            {              /* do we still have a carry          */
-                carry = 1;                        /* indicate carry.                   */
-                addDigit -= 10;                   /* subtract 10 from our result.      */
-            }
-            else
-            {                             /* not bigger than 10.               */
-                carry = 0;                        /* make sure we cancel former carry  */
-            }
-            *resultPtr-- = (char)addDigit;     /* move result into the result       */
-            result->length++;                  /* length of result is one more.     */
-        }                                   /* all done with left number.        */
-
-        if (carry)
-        {                        /* Do we still have a carry over?    */
-            result->length++;                  /*  yes, number is now one more      */
-            *resultPtr-- = 1;                  /*  set the high digit to 1.         */
-        }
-    }                                     /* end of addition.                  */
-
-    else
-    {                                /* we are doing subtraction.         */
-
-                                     /* is left number bigger than right  */
-        if ((aLeftExp + leftLength)>(aRightExp + rightLength))
-        {
-            /* yes, subtract right from left     */
-            subtractNumbers(left, leftPtr, aLeftExp, right, rightPtr, aRightExp, result, &resultPtr);
-            /* result exp is the adjusted exp of */
-            /* smaller number.                   */
-            if (aLeftExp)                     /* if adjusted left exp has a value  */
-            {
-                result->exp = rightExp;          /* the the right exp was smaller     */
-            }
-            else
-            {
-                result->exp = leftExp;           /* otherwise left was smaller/equal  */
-            }
-
-            result->sign = left->sign;         /* result sign is that of left.      */
-        }
-        /* is right number bigger than left  */
-        else if ((aLeftExp + leftLength)<(aRightExp + rightLength))
-        {
-            /* yes, subtract left from right     */
-            subtractNumbers(right, rightPtr, aRightExp, left, leftPtr, aLeftExp, result, &resultPtr);
-            /* result exp is adjusted exp of the */
-            /* smaller number.                   */
-            if (aLeftExp)                     /* if adjusted left exp has a value  */
-            {
-                result->exp = rightExp;          /* the the right exp was smaller     */
-            }
-            else
-            {
-                result->exp = leftExp;           /* otherwise left was smaller/equal  */
-            }
-
-            result->sign = right_sign;         /* result sign is that of right.     */
-        }
-
-        /* here both numbers have same       */
-        /* adjusted lexponent + length       */
-        /* so see which number is longer and */
-        /* each number for length of smaller.*/
-        /* if they compare equal the result  */
-        /* is zero                           */
-        else if (rightLength < leftLength)
-        {/* Does right number have a smaller  */
-         /* length.                           */
-
-         /* Yes, compare the digits....       */
-         /* and see if right is larger.       */
-            if ((rc = memcmp(right->number, left->number, rightLength)) > 0)
-            {
-                /* yes, subtract left from right     */
-                subtractNumbers(right, rightPtr, aRightExp, left, leftPtr, aLeftExp, result, &resultPtr);
-                result->sign = right_sign;        /* result sign is that of right.     */
-            }
-            else
-            {
-                /* no,  subtract right from left     */
-                subtractNumbers(left, leftPtr, aLeftExp, right, rightPtr, aRightExp, result, &resultPtr);
-                result->sign = left->sign;        /* result sign is that of left.      */
-            }
-            result->exp = leftExp;             /* result exp is that of the longer  */
-                                               /* number (smaller Exp.) which is the*/
-                                               /* left number in this case.         */
-        }
-        else
-        {                              /* left length is smaller or equal to*/
-                                       /* the length of right.              */
-                                       /* see if left number is larger      */
-            if ((rc = memcmp(left->number, right->number, leftLength)) > 0)
-            {
-                /* yes, subtract right from left     */
-                subtractNumbers(left, leftPtr, aLeftExp, right, rightPtr, aRightExp, result, &resultPtr);
-                result->exp = rightExp;          /* result exp is that of the longer  */
-                                                 /* number (smaller Exp.) which is    */
-                                                 /* right number in this case.        */
-
-                result->sign = left->sign;        /* result sign is that of left.      */
-            }
-            else if (rc)
-            {                     /* is the right number larger?       */
-                                  /* no, subtract left from right      */
-                subtractNumbers(right, rightPtr, aRightExp, left, leftPtr, aLeftExp, result, &resultPtr);
-                result->exp = rightExp;          /* result exp is that of the longer  */
-                                                 /* number (smaller Exp.) which is the*/
-                                                 /* right number in this case.        */
-                result->sign = right_sign;        /* result sign is that of right.     */
-            }
-            else
-            {                              /* numbers compared are equal.       */
-                if (leftLength < rightLength)
-                {   /* does left have fewer digits?      */
-                    /* Yes, then left is actuall smaller */
-                    /*  so subtract left from right      */
-                    subtractNumbers(right, rightPtr, aRightExp, left, leftPtr, aLeftExp, result, &resultPtr);
-                    result->exp = rightExp;          /* result exp is that of the longer  */
-                                                     /* number (smaller Exp.) which is    */
-                                                     /* left number in this case.         */
-                    result->sign = right_sign;       /* result sign is that of right.     */
+                    *resultPtr-- = *leftPtr--;
                 }
                 else
-                {                            /* Lengths are also eqaul, so numbers*/
-                                             /* are identical.                    */
-                    result->sign=0;                  /* number equal, return 0            */
-                    result->exp = 0;
-                    result->length = 1;
-                    result->number[0] = '0';
+                {
+                    *resultPtr-- = '\0';
+                }
+                result->digitsCount++;
+            }
+            result->numberExponent = leftExp;
+        }
+        // these have same exponent, so take the exponent from the left
+        else
+        {
+            result->numberExponent = leftExp;
+        }
+
+        // ok, while both numbers still have digits, we finally get to add something
+        // together!
+        while ( (leftPtr >= left->numberDigits) && (rightPtr >= right->numberDigits))
+        {
+            // add the two current digits with possible carry bit, and update the
+            // left and right ptr to point to next (actually previous) digit.
+            wholenumber_t addDigit = carry + (*leftPtr--) + *(rightPtr--);
+            // check for a carry on this addition
+            if (addDigit >= 10)
+            {
+                carry = 1;
+                addDigit -= 10;
+            }
+            else
+            {
+                carry = 0;
+            }
+            // move this into the result and bump the result length
+            *resultPtr-- = (char)addDigit;
+            result->digitsCount++;
+        }
+
+
+        // one of the numbers is finished, but we might have digits in the
+        // other number to handle.
+
+        // left number?  we need to handle this like an addition to zero,
+        // with carry outs still possible.
+        while (leftPtr >= left->numberDigits)
+        {
+            addDigit = carry + (*leftPtr--);
+            if (addDigit >= 10)
+            {
+                carry = 1;
+                addDigit -= 10;
+            }
+            else
+            {
+                carry = 0;
+            }
+            *resultPtr-- = (char)addDigit;
+            result->digitsCount++;
+        }
+
+        // and repeat with the right number
+        while (rightPtr >= right->numberDigits)
+        {
+            addDigit = carry + (*rightPtr--);
+            if (addDigit >= 10)
+            {
+                carry = 1;
+                addDigit -= 10;
+            }
+            else
+            {
+                carry = 0;
+            }
+            *resultPtr-- = (char)addDigit;
+            result->length++;
+        }
+
+        // if we still have a carry from this, add an extra "1" at the front
+        if (carry != 0)
+        {
+            result->digitsCount++
+            *resultPtr-- = 1;
+        }
+    }
+    // we're dealing with a subtraction operation.
+    else
+    {
+        // if the left side is the larger number based on the length/exponent
+        // compbination, then subtract the right from the left.
+        if ((adjustedLeftExp + leftLength) > (adjustedRightExp + rightLength))
+        {
+            subtractNumbers(left, leftPtr, adjusteLeftExp, right, rightPtr, adjustedRightExp, result, &resultPtr);
+            // the result exponent is the exponent of the smaller number
+            result->numberExponent = adjustedLeftExponent != 0 ? rightExp : leftExp;
+            // the result sign is that of the left
+            result->numberSign = left->numberSign;
+        }
+        // right number bigger than the left?   We subtract the left from the right
+        else if ((adjustedLeftExp + leftLength) < (adjustedRightExp + rightLength))
+        {
+            subtractNumbers(right, rightPtr, adjustedRightExp, left, leftPtr, adjustedLeftExp, result, &resultPtr);
+            result->numberExponent = adjustedLeftExponent != 0 ? rightExp : leftExp;
+            // we use the right sign for this (which might have been flipped for the operation)
+            result->numberSign = rightSign;
+        }
+
+        // here both numbers have same adjusted lexponent + length
+        // so see which number is longer and compare each number for length of smaller.
+        // if they compare equal the result is zero
+        else if (rightLength < leftLength)
+        {
+            // the right number is shorter.  Because of the adjusted exponents,
+            // these digits actually line up at the same positions.  Things work
+            // our more efficiently if we subtract the smaller number from the larger
+            if ((rc = memcmp(right->numberDigits, left->numberDigits, rightLength)) > 0)
+            {
+                // subtract the left from the right and keep the sign from the right.
+                subtractNumbers(right, rightPtr, adjustedRightExp, left, leftPtr, adjustedLeftExp, result, &resultPtr);
+                result->numberSign = rightSign;
+            }
+            else
+            {
+                // subtracting right from left and using the sign from the left.
+                subtractNumbers(left, leftPtr, aLeftExp, right, rightPtr, aRightExp, result, &resultPtr);
+                result->numberSign = left->numberSign;
+            }
+            // we use the exponent from the left (which must be larger because it is the shorter number).
+            result->numberExponent = leftExp;
+        }
+        // the left length is less than or equal to the right.  Reverse the process
+        // from above.
+        else
+        {
+            // if the left number is larger, subtract the right from the left
+            if ((rc = memcmp(left->numberDigits, right->numberDigits, leftLength)) > 0)
+            {
+                subtractNumbers(left, leftPtr, adjustedLeftExp, right, rightPtr, adjustedRightExp, result, &resultPtr);
+                result->numberExponent = rightExp;
+                result->numberSign = left->numberSign;
+            }
+            // left number is smaller
+            else if (rc != 0)
+            {
+                subtractNumbers(right, rightPtr, adjustedRightExp, left, leftPtr, adjustedLeftExp, result, &resultPtr);
+                result->numberExponent = rightExp;
+                result->numberSign = rightSign;
+            }
+            // numbers compare equal for their lengths
+            else
+            {
+                // if the left length is shorter, then subtract the left from the right
+                if (leftLength < rightLength)
+                {
+                    subtractNumbers(right, rightPtr, adjustedRightExp, left, leftPtr, adjustedLeftExp, result, &resultPtr);
+                    result->numberExponent = rightExp;
+                    result->sign = rightSign;
+                }
+                // the lengths are equal and they compare equal, so this result is zero.
+                else
+                {
+                    result->setZero();
+                    // no adjustment necessary, we can return this now.
+                    return result;
                 }
             }
         }
-    }                                     /* End of subtraction.               */
+    }
 
-    /* pointer resultPtr always points   */
-    /* to next position to add a digit   */
-    /* thereofre we will bump the pointer*/
-    /* 1st before doing any cleanup      */
-    /* we end up pointing to the most sig*/
-    /* digit on exit of loop instead of  */
-    /* the 1st digit.                    */
+    // pointer resultPtr always points to next position to add a digit
+    // thereofre we will bump the pointer 1st before doing any cleanup
+    // we end up pointing to the most sig digit on exit of loop instead of
+    // the 1st digit.
 
-    /*make sure result end up with       */
-    /* correct precision.                */
-    result->adjustPrecision(++resultPtr, NumberDigits);
-    return result;                        /* all done, return the result       */
-
+    //make sure result ends up with correct precision.
+    result->adjustPrecision(++resultPtr, digits);
+    return result;
 }
 
-void NumberString::subtractNumbers(
-    NumberString *larger,          /* larger numberstring object        */
-    const char       *largerPtr,       /* pointer to last digit in larger   */
-    wholenumber_t     aLargerExp,      /* adjusted exponent of larger       */
-    NumberString *smaller,         /* smaller numberstring object       */
-    const char       *smallerPtr,      /* pointer to last digit in smaller  */
-    wholenumber_t     aSmallerExp,     /* adjusted exponent of smaller      */
-    NumberString *result,          /* result numberstring object        */
-    char            **presultPtr)      /* last number in result             */
-/*********************************************************************/
-/* Function:  Subtract two numbers.  The second number is subtracted */
-/*            from the first.  The absolute value of the 1st number  */
-/*            must be larger than the absolute value of the second.  */
-/*********************************************************************/
+
+/**
+ * Subtract two numbers.  The second number is subtracted
+ * from the first.  The absolute value of the 1st number
+ * must be larger than the absolute value of the second.
+ *
+ * @param larger     The pointer to the larger number.
+ * @param largerPtr  The larger number digits pointer.
+ * @param adjustedLargerExp
+ *                   The adjusted exponent for the larger number.
+ * @param smaller    The smaller number value.
+ * @param smallerPtr The pointer to the digit data for the smaller number.
+ * @param adjustedSmallerExp
+ *                   The adjusted exponent for the smaller number.
+ * @param result     The result number.
+ * @param resultPtr  The pointer for writing the result data.
+ */
+void NumberString::subtractNumbers(NumberString *larger, const char *largerPtr, wholenumber_t adjustedLargerExp,
+    NumberString *smaller, const char *smallerPtr, wholenumber_t adjustedSmallerExp, NumberString *result, char *&resultPtr)
 {
-    int borrow, subDigit;
-    char *resultPtr;
+    // no carry from the start
+    int borrow = 0;
 
-    resultPtr = *presultPtr;              /* since we need to update value of  */
-                                          /* resultPtr and return value to     */
-                                          /* caller, we are passed a pointer   */
-                                          /* pointer,  we'll just use Ptr to   */
-                                          /* data. (avoid reference problems)  */
-                                          /* we will update this pointer value */
-                                          /* before exiting, so the Ptr        */
-                                          /* is correct in caller.             */
-    borrow = 0;                          /* no carry to start with.           */
+    // 1st we need to make both adjusted exponents zero.  values are either
+    // positive or zero on entry. one of the adjusted exponents will
+    // always be zero on entry.
 
-                                         /* 1st we need to make both adjusted */
-                                         /* exponents zero.  values are either*/
-                                         /* positive or zero on entry.        */
-                                         /* one of the adjusted exponents will*/
-                                         /* always be zero on entry.          */
-    while (aLargerExp--)
-    {               /* if larger number had a value for  */
-                    /* for adjusted exponent that means  */
-                    /* that smaller number had a smaller */
-                    /* exponent (less significant digit  */
-                    /* so we pretend to add extra zeros  */
-                    /* to the larger number and do the   */
-                    /* subtraction for required number   */
-                    /* of digits, (aLargerExp).          */
-                    /*   xxxxx00                         */
-                    /*    yyyyyy                         */
 
-        if (smallerPtr >= smaller->number) /* Is there still data to subtract   */
+    // if larger number had a value for for adjusted exponent that means
+    // that smaller number had a smaller exponent (less significant digit
+    // so we pretend to add extra zeros to the larger number and do the
+    // subtraction for required number of digits, (aLargerExp).
+    //   xxxxx00
+    //    yyyyyy
+
+    int subDigit;
+
+    while (adjustedLargerExp--)
+    {
+        if (smallerPtr >= smaller->numberDigits)
         {
-            subDigit = *smallerPtr--;        /* Yes, set value for subtraction    */
+            subDigit = *smallerPtr--;
         }
-        else                               /* nope,                             */
+        else
         {
-            subDigit = '\0';                 /* nope, use a Zero for subtraction. */
+            subDigit = '\0';
         }
-
-                                             /* subtract 10 from smaller number,  */
-                                             /* any borrow.                       */
-                                             /* and point to next digit.          */
+        // we're subtracting from zero, so we need to borrow.  We also
+        // need to worry about a borrow from a previous iteration
         subDigit = borrow + 10 - subDigit;
+        // if the result was 10, then the bottom digit was zero
+        // and we didn't borrow anything.  This is a zero digit
+        // and there's no borrow.
         if (subDigit == 10)
-        {              /* was result 10, this can only occur*/
-                       /* the bottom digit was a zero and we*/
-                       /* didn't borrow anyting.            */
-            subDigit -= 10;                   /* Yes, result will be zero and      */
-            borrow = 0;                       /*   no borrow.                      */
+        {
+            subDigit = 0;
+            borrow = 0;
+        }
+        // the digit is ok, but we need to borrow on the next digit
+        else
+        {
+            borrow = -1;
+        }
+
+        // add this to our result number
+        *resultPtr-- = (char)subDigit;
+        result->digitsCount++;
+    }
+
+    // same process, but the smaller number needs the padding.  In this
+    // case, we're subtracting zero from each of the positions...an extremely
+    // easy process!
+    while (adjustedSmallerExp--)
+    {
+        // if we still have digits here, just copy the digit into the
+        // result, otherwise pad with a zero.
+        if (largerPtr >= larger->numberDigits)
+        {
+            *resultPtr-- = *largerPtr--;
         }
         else
         {
-            borrow = -1;                      /* nope, result digit ok, and we     */
+            *resultPtr-- = '\0';
         }
-                                              /* need to borrow.                   */
-        *resultPtr-- = (char)subDigit;     /* place this digit in result number */
-        result->length++;                  /* length of result is now one more. */
+        result->digitCount++;
     }
 
-    while (aSmallerExp--)
-    {              /* if smaller number had a value for */
-                   /* for adjusted exponent that means  */
-                   /* that larger  number had a smaller */
-                   /* exponent (more significant digit  */
-                   /* so we pretend to add extra zeros  */
-                   /* to smaller number and do the      */
-                   /* subtraction for required number   */
-                   /* of digits, (aSmallerExp).         */
-                   /*   xxxxxxx                         */
-                   /*    yyyy00                         */
-
-                   /* here we just move the the digits  */
-                   /* from larger into result.          */
-                   /* and point to next digit.          */
-
-        if (largerPtr >= larger->number)   /* Is there still data to move?      */
-        {
-            *resultPtr-- = *largerPtr--;     /* Yes, move in correct digit.       */
-        }
-        else                               /* nope,                             */
-        {
-            *resultPtr-- = '\0';             /* nope, move in a zero. we remove   */
-        }
-                                             /*  leading zeros from orig number   */
-        result->length++;                  /* length of result is now one more. */
-    }
-
-    /* Now we are ready to do subtract   */
-    /* of our digits.                    */
-    /* While still have data to subtract */
-    while (smallerPtr >= smaller->number)
+    // ok, our strings have had the exponent mismatches handled.
+    // strings of digits, do the actual subtraction.
+    while (smallerPtr >= smaller->numberDigits)
     {
-        /* Sub two current digits with a     */
-        /* possibly borrow bit, and update   */
-        /* larger and smaller pointer to     */
-        /* to next (actually previous) digit */
+        // standard subtraction process.  Subtract two digits
+        // and account for the borrows
         subDigit = borrow + (*largerPtr--) - *(smallerPtr--);
+        // result less than zero means we need to borrow on the next
+        // iteration.  Add 10 to this digit to reflect the borrow.
         if (subDigit < 0  )
-        {              /* result less than 0, Do we need to */
-                       /* borrow for next subtraction       */
-            borrow = -1;                      /* yes, indicate borrow.             */
-            subDigit += 10;                   /* add 10 to result from borrow.     */
+        {
+            borrow = -1;
+            subDigit += 10;
         }
+        // a positive result means no borrow
         else
-        {                             /* not less than 0                   */
-            borrow = 0;                       /* make sure we cancel former borrow */
+        {
+            borrow = 0;
         }
-        *resultPtr-- = (char)subDigit;     /* move result into result object.   */
-        result->length++;                  /* length of result is one more.     */
-    }                                    /* go back and do next set of digits */
+        // add this to the result buffer
+        *resultPtr-- = (char)subDigit;
+        result->length++;
+    }
 
-    /* One number is finished, need      */
-    /* to check the other.               */
+    // we might still have digits left on the larger number
+    while (largerPtr >= larger->numberDigits)
+    {
+        // we have nothing to subtract here but the borrow
+        subDigit = borrow + (*largerPtr--);
 
-    while (largerPtr >= larger->number)
-    {/* While still digits in the larger  */
-        subDigit = borrow + (*largerPtr--);/* sub any borrow,   and move to the */
-                                           /* next digit to subtract.           */
-        if (subDigit < 0  )
-        {              /* do we still need to borrow?       */
-            borrow = -1;                      /* yes, indicate borrow              */
-            subDigit += 10;                   /* add 10 to result for borrow.      */
-        }
-        else
-        {                             /* not bigger than 10.               */
-            borrow = 0;                       /* make sure we cancel former carry  */
-        }
-        *resultPtr-- = (char)subDigit;     /* move result into result object.   */
-        result->length++;                  /* length of result is one more.     */
-    }                                    /* all done with larger number.      */
-
-    *presultPtr = resultPtr;              /* update result PTR for our return  */
-    return;
-}
-
-char *NumberString::addToBaseSixteen(
-  int      Digit,                      /* digit to add                      */
-  char    *Value,                      /* number to add                     */
-  char    *HighDigit )                 /* highest digit location            */
-/*********************************************************************/
-/*   Function:          Adds a base ten digit to string number in    */
-/*                      base 16 (used by the d2x and d2c functions)  */
-/*********************************************************************/
-{
-    while (Digit)
-    {                      /* while something to add            */
-        Digit += *Value;                   /* add in current number             */
-        if (Digit > 15)
-        {                  /* carry?                            */
-            Digit -= 16;                     /* reduce digit                      */
-            *Value-- = (char)Digit;          /* set digit and step pointer        */
-            Digit = 1;                       /* just a carry digit now            */
+        if (subDigit < 0)
+        {
+            borrow = -1;
+            subDigit += 10;
         }
         else
         {
-            *Value-- = (char)Digit;          /* set the digit                     */
-            Digit = 0;                       /* no more carry                     */
+            borrow = 0;
         }
+        *resultPtr-- = (char)subDigit;
+        result->digitsCount++;
     }
-    if (Value < HighDigit)               /* new high water mark?              */
-    {
-        return Value;                      /* return high location              */
-    }
-    else
-    {
-        return HighDigit;                  /* return the old one                */
-    }
+    // because we arranged these so that we always subtract the smaller from the larger, we
+    // don't need to worry about a borrow out of the top digit.
 }
 
-char *NumberString::multiplyBaseSixteen(
-  char *     Accum,                    /* number to multiply                */
-  char *     HighDigit )               /* current high water mark           */
-/*********************************************************************/
-/*   Function:          multiplies a base 16 number by 10, placing   */
-/*                      the result in the same buffer.               */
-/*********************************************************************/
+/**
+ * Adds a base ten digit to string number in
+ * base 16 (used by the d2x and d2c functions)
+ *
+ * @param digit     The digit to add.
+ * @param value     The number we're adding to.
+ * @param highDigit The highest digit location
+ *
+ * @return The new highest digit location if this carrys out.
+ */
+char *NumberString::addToBaseSixteen(int digit, char *value, char *highDigit )
 {
-    int          Carry;                  /* multiplication carry              */
-    unsigned int Digit;                  /* current digit                     */
-    char *       OutPtr;                 /* output pointer                    */
+    // while we have something to add
+    while (digit != 0)
+    {
+        // add in to the current value location
+        digit += *value;
+        // we're doing base-16 math here, so check for carries
+        // in base 16.
+        if (digit > 15)
+        {
+            digit -= 16;
+            *value-- = (char)digit;
+            digit = 1;
+        }
+        else
+        {
+            *value-- = (char)digit;
+            digit = 0;
+        }
+    }
 
-    OutPtr = Accum;                      /* point to first digit              */
-    Carry = 0;                           /* no carry yet                      */
+    // return the highest digit position
+    return value < highDigit ? value : highDigit;
+}
+
+
+/**
+ * multiplies a base 16 number by decimal 10, placing
+ * the result in the same buffer.
+ *
+ * @param Accum     The current accumulator position.
+ * @param HighDigit The current high digit location for the number.
+ *
+ * @return The new high digit location.
+ */
+char *NumberString::multiplyBaseSixteen(char *accum, char * highDigit )
+{
+    // get a working output pointer
+    char *outPtr = accum;
+    // no carry at the start
+    unsigned int carry = 0;
+
+    // until we run out of digits, do the multiply.
     while (OutPtr > HighDigit)
-    {         /* while more digits                 */
-              /* multiply digit by 10              */
-        Digit = (unsigned int )((*OutPtr * 10) + Carry);
-        if (Digit > 15)
-        {                  /* carry?                            */
-            Carry = (int)(Digit / 16);       /* get carry value                   */
-            Digit &= (unsigned int )0x0000000f; /* keep just lower nibble         */
-        }
-        else                               /* no carry here                     */
-        {
-            Carry = 0;                       /* no carry                          */
-        }
-        *OutPtr-- = (char)Digit;           /* set the digit                     */
-    }
-    if (Carry)                           /* carried out?                      */
     {
-        *OutPtr-- = (char)Carry;           /* set the carry pointer             */
+        // multiply the current digit by 10
+        unsigned int digit = (unsigned int )((*outPtr * 10) + carry);
+        // the only digits that won't carry here are 0 and 1.
+        if (digit > 15)
+        {
+            // the carry value is the number of units base 16.  For example,
+            // if the current digit is 4, the result is 40.  Our carry value
+            // is 2 and the new digit at this location is 8
+            carry = digit / 16;
+            // the digit is the lower nibble.
+            digit &= (unsigned int )0x0000000f;
+        }
+        // no carry over to the next
+        else
+        {
+            carry = 0;
+        }
+        *outPtr-- = (char)digit;
     }
-    return OutPtr;                       /* return new high water mark        */
+
+    // did we carry out of the top digit (pretty likely).
+    if (carry)
+    {
+        *outPtr-- = (char)carry;
+    }
+    // return the new high water mark.
+    return outPtr;
 }
 
-char *NumberString::addToBaseTen(
-  int      Digit,                      /* digit to add                      */
-  char    *Accum,                      /* number to add                     */
-  char    *HighDigit )                 /* highest digit location            */
-/*********************************************************************/
-/*   Function:          Adds a base sixteen digit to a string number */
-/*                      base 10 (used by the d2x and d2c functions)  */
-/*********************************************************************/
-{
-    int      Carry;                      /* carry number                      */
 
-    Carry = 0;                           /* no carry yet                      */
-    while (Digit || Carry)
-    {             /* while something to add            */
-        Digit += *Accum + Carry;           /* add in current number             */
-        if (Digit > 9)
-        {                   /* carry?                            */
-            Carry = Digit / 10;              /* get the carry out                 */
-            Digit %= 10;                     /* reduce digit                      */
-            *Accum-- = (char)Digit;          /* set digit and step pointer        */
+/**
+ * Adds a base sixteen digit to a string number
+ * base 10 (used by the x2d and c2d functions)
+ *
+ * @param digit     The base-16 digit to add.
+ * @param accum     The accumulator pointer.
+ * @param highDigit The highest digit of our result so far.
+ *
+ * @return The new highest digit position.
+ */
+char *NumberString::addToBaseTen(int digit, char *accum, char *highDigit)
+{
+    int carry = 0;
+    // continue as long as we have something to add in
+    while (digit != 0 || carry != 0)
+    {
+        digit += *accum + carry;
+        if (carry > 9)
+        {
+            carry = digit / 10;
+            digit %= 10;
+            *accum-- = (char)digit;
         }
         else
         {
-            *Accum-- = (char)Digit;          /* set the digit                     */
-            Carry = 0;                       /* no more carry                     */
+            *accum-- = (char)digit;
+            carry = 0;
         }
-        Digit = 0;                         /* no addition after first           */
+        digit = 0;
     }
-    if (Accum < HighDigit)               /* new high water mark?              */
-    {
-        return Accum;                      /* return high location              */
-    }
-    else
-    {
-        return HighDigit;                  /* return the old one                */
-    }
+    // return the current high water mark
+    return accum < highDigit ? accum : highDigit;
+
 }
 
-char *NumberString::multiplyBaseTen(
-  char *      Accum,                    /* number to multiply                */
-  char *      HighDigit )               /* current high water mark           */
-
-/*********************************************************************/
-/*   Function:          multiplies a base 16 number by 10, placing   */
-/*                      the number in a different buffer.            */
-/*********************************************************************/
+/**
+ * multiplys a base 16 number by 10, placing
+ * the number in the same buffer
+ *
+ * @param Accum     The current accumulator position
+ * @param HighDigit The high digit of the result.
+ *
+ * @return The new high digit position.
+ */
+char *NumberString::multiplyBaseTen(char *accum, char *highDigit)
 {
-    char *       OutPtr;                 /* addition pointer                  */
-    int          Carry;                  /* multiplication carry              */
-    unsigned int Digit;                  /* current digit                     */
+    char *outPtr = accum;
+    unsigned int carry = 0;
 
-    OutPtr = Accum;                      /* point to output buffer            */
-    Carry = 0;                           /* no carry yet                      */
-
-    while (OutPtr > HighDigit)
-    {         /* while more digits                 */
-              /* multiply digit by 16              */
-        Digit = (unsigned int )((*OutPtr * 16) + Carry);
-        if (Digit > 9)
-        {                   /* carry?                            */
-            Carry = (int)(Digit / 10);       /* get carry value                   */
-            Digit %= 10;                     /* get the digit value               */
-        }
-        else                               /* no carry here                     */
+    // while we have more digits to process
+    while (outPtr > highDigit)
+    {
+        // multiplying by 16, but checking for the carry in decimal
+        unsigned int digit = (unsigned int )((*outPtr * 16) + carry);
+        if (digit > 9)
         {
-            Carry = 0;                       /* no carry                          */
+            // the carry value can be larger than 1
+            carry = digit / 10;
+            // the digit is the remainder
+            digit %= 10;
         }
-        *OutPtr-- = (char)Digit;           /* set the digit                     */
+        // no carry out on this one
+        else
+        {
+            carry = 0;
+        }
+        *outPtr-- = (char)digit;
     }
-    while (Carry)
-    {                      /* carried out?                      */
-        Digit = Carry % 10;                /* get first carry digit             */
-        Carry = Carry / 10;                /* get the next digit                */
-        *OutPtr-- = (char)Digit;           /* set the digit                     */
+
+    // handle carry outs...
+    while (carry)
+    {
+        unsigned int digit = carry % 10;
+        carry = carry / 10;
+        *outPtr-- = (char)digit;
     }
-    return OutPtr;                       /* return new high water mark        */
+    // this is the new high water mark
+    return outPtr;
 }

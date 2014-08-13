@@ -45,7 +45,6 @@
 #include "StringClass.hpp"
 #include "BufferClass.hpp"
 
-#include "NumberStringMath.hpp"
 #include "ActivityManager.hpp"
 #include "StringUtil.hpp"
 #include "MethodArguments.hpp"

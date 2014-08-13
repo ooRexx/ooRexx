@@ -45,7 +45,6 @@
 #include "StringClass.hpp"
 #include "BufferClass.hpp"
 #include "RexxActivation.hpp"
-#include "NumberStringMath.hpp"
 #include "Numerics.hpp"
 #include "StringUtil.hpp"
 #include "MethodArguments.hpp"
@@ -295,6 +294,26 @@ void NumberString::formatExponent(wholenumber_t exponent, char *buffer)
         // make this a null C string
         *buffer = '\0';
     }
+}
+
+
+/**
+ * Check for an overflow situation with the exponent.
+ */
+void NumberString::checkOverflow()
+{
+    // if the adjusted exponent is too large
+    if (numberExponent + digitscount - 1 > Numerics::MAX_EXPONENT)
+    {
+        reportException(Error_Overflow_expoverflow, numberExponent + digitsCount - 1, Numerics::DEFAULT_DIGITS);
+    }
+
+    // or just straight out too small, these are errors.
+    if (numberExponent < Numerics::MIN_EXPONENT)
+    {
+        reportException(Error_Overflow_expunderflow, numberExponent, Numerics::DEFAULT_DIGITS);
+    }
+    return;
 }
 
 
@@ -3021,23 +3040,14 @@ void NumberString::checkLostDigits(size_t digits)
  * non-strict comparisons.
  *
  * @param right  The other comparison value.
+ * @param fuzz   The fuzz value for the comparison.
  *
  * @return A value < 0 when this is smaller than the other.
  *         A value   0 when this is equal to the other
  *         A value > 0 when this is greater than the other.
  */
-wholenumber_t NumberString::comp(RexxObject *right)
+wholenumber_t NumberString::comp(RexxObject *right, size_t fuzz)
 {
-    NumberString *rightNumber;       /* converted right hand number     */
-    wholenumber_t      aLexp;            /* adjusted left exponent            */
-    wholenumber_t     aRexp;             /* adjusted right exponent           */
-    size_t    aLlen;                     /* adjusted left length              */
-    size_t    aRlen;                     /* adjusted right length             */
-    wholenumber_t      MinExp;           /* minimum exponent                  */
-    size_t    NumberDigits;              /* current digits setting            */
-    char     *scan;                      /* scan pointer                      */
-    wholenumber_t rc;                    /* compare result                    */
-
     // the compare is done by subtracting the two numbers, the
     // sign of the result obj will be our return value.
     requiredArgument(right, ARG_ONE);
@@ -3084,7 +3094,7 @@ wholenumber_t NumberString::comp(RexxObject *right)
     wholenumber_t adjustedRightLength = digitsCount + adjustedRightExponent;
 
     // get the digits value adjusted for the current fuzz.
-    digits = number_fuzzydigits();
+    digits -= fuzz;
 
     // if both of these are in the fuzz range, the longer number is the largest,
     // although we need to take the sign into account.
@@ -3184,7 +3194,7 @@ RexxObject *NumberString::equal(RexxObject *other)
     {
         return TheFalseObject;
     }
-    return booleanObject(comp(other) == 0);
+    return booleanObject(comp(other, number_fuzz()) == 0);
 }
 
 
@@ -3201,7 +3211,7 @@ RexxObject *NumberString::notEqual(RexxObject *other)
     {
         return TheTrueObject;
     }
-    return booleanObject(comp(other) != 0);
+    return booleanObject(comp(other, number_fuzz()) != 0);
 }
 
 
@@ -3216,22 +3226,22 @@ RexxObject *NumberString::notEqual(RexxObject *other)
 
 RexxObject *NumberString::isGreaterThan(RexxObject *other)
 {
-    CompareOperator(comp(other) > 0);
+    CompareOperator(comp(other, number_fuzz()) > 0);
 }
 
 RexxObject *NumberString::isLessThan(RexxObject *other)
 {
-    CompareOperator(comp(other) < 0);
+    CompareOperator(comp(other, number_fuzz()) < 0);
 }
 
 RexxObject *NumberString::isGreaterOrEqual(RexxObject *other)
 {
-    CompareOperator(comp(other) >= 0);
+    CompareOperator(comp(other, number_fuzz()) >= 0);
 }
 
 RexxObject *NumberString::isLessOrEqual(RexxObject *other)
 {
-    CompareOperator(comp(other) <= 0);
+    CompareOperator(comp(other, number_fuzz()) <= 0);
 }
 
 
