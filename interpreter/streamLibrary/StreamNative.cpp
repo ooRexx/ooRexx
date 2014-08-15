@@ -50,6 +50,7 @@
 #include <sys/stat.h>
 #include <string.h>
 #include <errno.h>
+#include <new>
 
 /********************************************************************************/
 /*                                                                              */
@@ -1370,6 +1371,8 @@ void StreamInfo::appendVariableLine(RexxArrayObject result)
         size_t bytesRead = 0;
         if (!fileInfo.gets(readPosition, bufferSize - currentLength, bytesRead))
         {
+            // this will raise a NOTREADY condition and throw an exception,
+            // so it will not return.
             checkEof();
         }
 
@@ -1396,6 +1399,7 @@ void StreamInfo::appendVariableLine(RexxArrayObject result)
         {
             lineReadIncrement();
             context->ArrayAppendString(result, buffer, currentLength);
+            return;
         }
         buffer = extendBuffer(bufferSize);
     }
@@ -2112,13 +2116,11 @@ RexxMethod1(CSTRING, stream_uninit, CSELF, streamPtr)
     try
     {
         stream_info->streamClose();
-        // delete the stream information backing this.  This can only
-        // be done by the uninit, not by close, because a stream object
-        // can be reused.  We need to wait until the garbage collector
-        // reclaims this.
-        delete stream_info;
+        // The stream information is held in a Buffer object that will be
+        // automatically garbage collected with the stream object.  We don't
+        // need to explicitly delete this
         stream_info = NULL;
-        // clear the backing pointer for the stream info
+        // clear the backing buffer for the stream info
         context->DropObjectVariable("CSELF");
         return 0;
     }
@@ -3671,9 +3673,9 @@ StreamInfo::StreamInfo(RexxObjectPtr s, const char *inputName)
 RexxMethod2(RexxObjectPtr, stream_init, OSELF, self, CSTRING, name)
 {
     // create a new stream info member
-    StreamInfo *stream_info = new StreamInfo(self, name);
-    RexxPointerObject streamPtr = context->NewPointer(stream_info);
-    context->SetObjectVariable("CSELF", streamPtr);
+    RexxBufferObject buffer = context->NewBuffer(sizeof(StreamInfo));
+    StreamInfo *stream_info = new ((void *)context->BufferData(buffer)) StreamInfo(self, name);
+    context->SetObjectVariable("CSELF", buffer);
 
     return NULLOBJECT;
 }
