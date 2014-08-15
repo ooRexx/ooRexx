@@ -60,9 +60,6 @@ class DeadObject {
  friend class DeadObjectPool;
 
  public:
-    inline void *operator new(size_t size, void *address) { return address; };
-    inline void  operator delete(void *, void *) {;}
-
     inline void addEyeCatcher(const char *string) { memcpy(VFT, string, 4); }
     inline DeadObject(size_t objectSize) {
         header.setObjectSize(objectSize);

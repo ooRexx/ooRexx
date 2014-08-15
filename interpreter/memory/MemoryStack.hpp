@@ -54,10 +54,8 @@
 class LiveStack : public RexxInternalObject
 {
  public:
-    inline void *operator new(size_t size, void *ptr) { return ptr; }
     void        *operator new(size_t, size_t);
     void        *operator new(size_t, size_t, bool temporary);
-    inline void  operator delete(void *, void *) { }
     inline void  operator delete(void *, size_t) { };
     inline void  operator delete(void *, size_t, bool temporary) { };
 
@@ -140,10 +138,8 @@ class LiveStack : public RexxInternalObject
 class PushThroughStack : public RexxInternalObject
 {
  public:
-    inline void *operator new(size_t size, void *ptr) { return ptr; }
     void        *operator new(size_t, size_t);
     void        *operator new(size_t, size_t, bool temporary);
-    inline void  operator delete(void *, void *) { }
     inline void  operator delete(void *, size_t) { };
     inline void  operator delete(void *, size_t, bool temporary) { };
 

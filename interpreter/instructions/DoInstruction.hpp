@@ -97,11 +97,6 @@ class RexxInstructionBaseDo : public RexxBlockInstruction
 class RexxInstructionSimpleDo : public RexxInstructionBaseDo
 {
  public:
-
-    inline void *operator new(size_t size, void *ptr) {return ptr;}
-    inline void operator delete(void *) { }
-    inline void operator delete(void *, void *) { }
-
     inline RexxInstructionSimpleDo() { ; }
     inline RexxInstructionSimpleDo(RESTORETYPE restoreType) { ; };
            RexxInstructionSimpleDo(RexxString *l);
@@ -123,11 +118,6 @@ class RexxInstructionSimpleDo : public RexxInstructionBaseDo
 class RexxInstructionDoForever : public RexxInstructionBaseDo
 {
  public:
-
-    inline void *operator new(size_t size, void *ptr) {return ptr;}
-    inline void operator delete(void *) { }
-    inline void operator delete(void *, void *) { }
-
     inline RexxInstructionDoForever() { ; }
     inline RexxInstructionDoForever(RESTORETYPE restoreType) { ; };
            RexxInstructionDoForever(RexxString *l);
@@ -141,11 +131,6 @@ class RexxInstructionDoForever : public RexxInstructionBaseDo
 class RexxInstructionDoOver : public RexxInstructionBaseDo
 {
  public:
-
-    inline void *operator new(size_t size, void *ptr) {return ptr;}
-    inline void operator delete(void *) { }
-    inline void operator delete(void *, void *) { }
-
     inline RexxInstructionDoOver() { ; }
     inline RexxInstructionDoOver(RESTORETYPE restoreType) { ; };
            RexxInstructionDoOver(RexxString *l, OverLoop &o);
@@ -171,11 +156,6 @@ class RexxInstructionDoOver : public RexxInstructionBaseDo
 class RexxInstructionDoOverUntil : public RexxInstructionDoOver
 {
  public:
-
-    inline void *operator new(size_t size, void *ptr) {return ptr;}
-    inline void operator delete(void *) { }
-    inline void operator delete(void *, void *) { }
-
     inline RexxInstructionDoOverUntil() { ; }
     inline RexxInstructionDoOverUntil(RESTORETYPE restoreType) { ; };
            RexxInstructionDoOverUntil(RexxString *l, OverLoop &o, WhileUntilLoop &w);
@@ -200,11 +180,6 @@ protected:
 class RexxInstructionDoOverWhile : public RexxInstructionDoOverUntil
 {
  public:
-
-    inline void *operator new(size_t size, void *ptr) {return ptr;}
-    inline void operator delete(void *) { }
-    inline void operator delete(void *, void *) { }
-
     inline RexxInstructionDoOverWhile() { ; }
     inline RexxInstructionDoOverWhile(RESTORETYPE restoreType) { ; };
            RexxInstructionDoOverWhile(RexxString *l, OverLoop &o, WhileUntilLoop &w);
@@ -221,11 +196,6 @@ class RexxInstructionDoOverWhile : public RexxInstructionDoOverUntil
 class RexxInstructionControlledDo: public RexxInstructionBaseDo
 {
  public:
-
-    inline void *operator new(size_t size, void *ptr) {return ptr;}
-    inline void operator delete(void *) { }
-    inline void operator delete(void *, void *) { }
-
     inline RexxInstructionControlledDo() { ; }
     inline RexxInstructionControlledDo(RESTORETYPE restoreType) { ; };
            RexxInstructionControlledDo(RexxString *l, ControlledLoop &c);
@@ -250,11 +220,6 @@ class RexxInstructionControlledDo: public RexxInstructionBaseDo
 class RexxInstructionControlledDoUntil : public RexxInstructionControlledDo
 {
  public:
-
-    inline void *operator new(size_t size, void *ptr) {return ptr;}
-    inline void operator delete(void *) { }
-    inline void operator delete(void *, void *) { }
-
     inline RexxInstructionControlledDoUntil() { ; }
     inline RexxInstructionControlledDoUntil(RESTORETYPE restoreType) { ; };
            RexxInstructionControlledDoUntil(RexxString *l, ControlledLoop &c, WhileUntilLoop &w);
@@ -278,11 +243,6 @@ class RexxInstructionControlledDoUntil : public RexxInstructionControlledDo
 class RexxInstructionControlledDoWhile : public RexxInstructionControlledDoUntil
 {
  public:
-
-    inline void *operator new(size_t size, void *ptr) {return ptr;}
-    inline void operator delete(void *) { }
-    inline void operator delete(void *, void *) { }
-
     inline RexxInstructionControlledDoWhile() { ; }
     inline RexxInstructionControlledDoWhile(RESTORETYPE restoreType) { ; };
            RexxInstructionControlledDoWhile(RexxString *l, ControlledLoop &c, WhileUntilLoop &w);
@@ -297,11 +257,6 @@ class RexxInstructionControlledDoWhile : public RexxInstructionControlledDoUntil
 class RexxInstructionDoWhile: public RexxInstructionBaseDo
 {
  public:
-
-    inline void *operator new(size_t size, void *ptr) {return ptr;}
-    inline void operator delete(void *) { }
-    inline void operator delete(void *, void *) { }
-
     inline RexxInstructionDoWhile() { ; }
     inline RexxInstructionDoWhile(RESTORETYPE restoreType) { ; };
            RexxInstructionDoWhile(RexxString *l, WhileUntilLoop &w);
@@ -326,11 +281,6 @@ class RexxInstructionDoWhile: public RexxInstructionBaseDo
 class RexxInstructionDoUntil : public RexxInstructionDoWhile
 {
  public:
-
-    inline void *operator new(size_t size, void *ptr) {return ptr;}
-    inline void operator delete(void *) { }
-    inline void operator delete(void *, void *) { }
-
     inline RexxInstructionDoUntil() { ; }
     inline RexxInstructionDoUntil(RESTORETYPE restoreType) { ; };
            RexxInstructionDoUntil(RexxString *l, WhileUntilLoop &w);
@@ -346,11 +296,6 @@ class RexxInstructionDoUntil : public RexxInstructionDoWhile
 class RexxInstructionDoCount : public RexxInstructionBaseDo
 {
  public:
-
-    inline void *operator new(size_t size, void *ptr) {return ptr;}
-    inline void operator delete(void *) { }
-    inline void operator delete(void *, void *) { }
-
     inline RexxInstructionDoCount() { ; }
     inline RexxInstructionDoCount(RESTORETYPE restoreType) { ; };
            RexxInstructionDoCount(RexxString *l, ForLoop &f);
@@ -375,11 +320,6 @@ class RexxInstructionDoCount : public RexxInstructionBaseDo
 class RexxInstructionDoCountUntil : public RexxInstructionDoCount
 {
  public:
-
-    inline void *operator new(size_t size, void *ptr) {return ptr;}
-    inline void operator delete(void *) { }
-    inline void operator delete(void *, void *) { }
-
     inline RexxInstructionDoCountUntil() { ; }
     inline RexxInstructionDoCountUntil(RESTORETYPE restoreType) { ; };
            RexxInstructionDoCountUntil(RexxString *l, ForLoop &f, WhileUntilLoop &w);
@@ -404,11 +344,6 @@ class RexxInstructionDoCountUntil : public RexxInstructionDoCount
 class RexxInstructionDoCountWhile : public RexxInstructionDoCountUntil
 {
  public:
-
-    inline void *operator new(size_t size, void *ptr) {return ptr;}
-    inline void operator delete(void *) { }
-    inline void operator delete(void *, void *) { }
-
     inline RexxInstructionDoCountWhile() { ; }
     inline RexxInstructionDoCountWhile(RESTORETYPE restoreType) { ; };
            RexxInstructionDoCountWhile(RexxString *l, ForLoop &f, WhileUntilLoop &w);

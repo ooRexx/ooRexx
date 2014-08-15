@@ -49,6 +49,7 @@
 #include "Numerics.hpp"
 #include "CompoundVariableTail.hpp"
 #include "MethodArguments.hpp"
+#include "NumberStringClass.hpp"
 
 
 
@@ -812,7 +813,7 @@ wholenumber_t RexxInteger::comp(RexxObject *other)
     }
     else
     {
-        return numberString()->comp(other);
+        return numberString()->comp(other, number_fuzz());
     }
 }
 

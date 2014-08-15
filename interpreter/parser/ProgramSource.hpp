@@ -83,8 +83,6 @@ class LineDescriptor
 class ProgramSource: public RexxInternalObject
 {
 public:
-    inline void *operator new(size_t, void *ptr) {return ptr;}
-    inline void  operator delete(void *, void *) { ; }
     void *operator new(size_t);
     inline void  operator delete(void *) { ; }
 
@@ -126,8 +124,6 @@ protected:
 class BufferProgramSource: public ProgramSource
 {
  public:
-    inline void *operator new(size_t, void *ptr) {return ptr;}
-    inline void  operator delete(void *, void *) { ; }
     void *operator new(size_t);
     inline void  operator delete(void *) { ; }
 
@@ -164,8 +160,6 @@ protected:
 class FileProgramSource: public BufferProgramSource
 {
  public:
-    inline void *operator new(size_t, void *ptr) {return ptr;}
-    inline void  operator delete(void *, void *) { ; }
     void *operator new(size_t);
     inline void  operator delete(void *) { ; }
 
@@ -193,8 +187,6 @@ protected:
 class ArrayProgramSource: public ProgramSource
 {
  public:
-    inline void *operator new(size_t, void *ptr) {return ptr;}
-    inline void  operator delete(void *, void *) { ; }
     void *operator new(size_t);
     inline void  operator delete(void *) { ; }
 

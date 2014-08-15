@@ -55,8 +55,6 @@ class NumberArray : public RexxInternalObject
 
     void *operator new(size_t base, size_t entries);
     inline void  operator delete(void *, size_t) {;}
-    inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };
-    inline void   operator delete(void *, void *) { ; }
 
     NumberArray(size_t entries);
     inline NumberArray(RESTORETYPE restoreType) { ; };

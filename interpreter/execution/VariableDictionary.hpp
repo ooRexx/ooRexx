@@ -144,9 +144,7 @@ class VariableDictionary : public RexxInternalObject
 
 
            void *operator new(size_t size);
-    inline void *operator new(size_t size, void *ptr) { return ptr; };
     inline void  operator delete(void *) { }
-    inline void  operator delete(void *, void *) { }
 
            VariableDictionary(size_t capacity);
            VariableDictionary(RexxClass *scope);

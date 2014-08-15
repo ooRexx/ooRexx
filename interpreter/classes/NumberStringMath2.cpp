@@ -1051,155 +1051,169 @@ char *NumberString::dividePower(const char *accumPtr, NumberStringBase *accum, c
     //   this routin also check Division for similiar updates
 
     size_t totalDigits = ((digits + 1) * 2) + 1;
-    /* get buffer for left digit data.   */
-    leftPtr = buffer_alloc(totalDigits);
-    /* get buffer for result digit data. */
-    result  = buffer_alloc(totalDigits);
-    resultPtr = result;                   /* Set up the result, point to end of*/
-                                          /*  data.                            */
-                                          /* address the static part           */
-    left = (NumberStringBase *)leftBuffer;
 
-    /* length of left starts same as     */
-    /* Accum                             */
-    left->length = Accum->length;
-    left->exp = 0;                        /* no exponent to start with.        */
-    *leftPtr = 1;                         /* place the digit 1 into left.      */
-                                          /* fill the rest of data with Zero   */
+    // set up temporary buffers for the calculations
+    char  leftBuffer[sizeof(NumberStringBase)];
+    char *leftPtr = new_buffer(totalDigits)->getData();
+    char *result = leftPtr + totalDigits;
+
+    NumberStringBase *left = (NumberStringBase *)leftBuffer;
+
+    // length of left starts same as the accumulator
+    left->digitsCount = accum->digitsCount;
+    // no exponent to start with, but we start with a 1, followed by a lot of zeros.
+    left->numberExponent = 0;
+    *leftPtr = 1;
     memset(leftPtr + 1, '\0', totalDigits - 1);
-    /* calculate expected resultant exp  */
-    CalcExp = -Accum->exp - (wholenumber_t)Accum->length + 1;
 
-    Num1 = leftPtr;                       /* Num1 will be left digit pointer.  */
-    Num2 = AccumPtr;                      /* Num2 is our input digit pointer   */
+    // this is our expected result exponent
+    wholenumber_t calcExp = -accum->numberExponent - accum->digitsCount + 1;
 
-    /* When generate a best guess digits for result we will look*/
-    /* use the 1st 2 digits of the dividend (if there are 2)    */
-    /* we then add 1 to this DivChar to ensure than when we gues*/
-    /* we either guess correctly of under guess.                */
-    /*           _______________                                */
-    /*  aabbbbbb ) xxyyyyyyyy                                   */
-    /*                                                          */
-    /*     DivChar = aa + 1                                     */
+    char *leftNumber = leftPtr;
+    char *rightNumber = accumPtr;
 
-    DivChar = *Num2 * 10;                 /* Divide char is 1st 2 digits + 1   */
-    if (Accum->length > 1)                /* more than 1 digit in Accum?       */
-        DivChar += *(Num2 + 1);              /*  yes, get second digit for Div    */
-    DivChar++;                            /* add 1 to Div number               */
+    // When generate a best guess digits for result we will look
+    // use the 1st 2 digits of the dividend (if there are 2)
+    // we then add 1 to this divChar to ensure than when we guess
+    // we either guess correctly or under guess.
+    //           _______________
+    //  aabbbbbb ) xxyyyyyyyy
+    //
+    //     DivChar = aa + 1
 
-    resultDigits = 0;         /* initializes digit values to zero. */
-    thisDigit = 0;
+    int divChar = *rightNumber * 10;
+    if (accum->digitsCount > 1)
+    {
+        divChar += *(rightNumber + 1);
+    }
+    // add 1 to this pairing so that we will err on the high side.
+    divChar++;
 
-    /* We are now to enter 2 do forever loops, inside the loops */
-    /*  we test for ending conditions. and will exit the loops  */
-    /*  when needed. This inner loop may need to break out of   */
-    /*  both loops, if our divisor is reduced to zero(all finish*/
-    /*  if this happens to do the no-no nad use a GOTO.         */
-    /* The outer loop is used to obtain all digits for the resul*/
-    /*  We continue in this loop while the divisor has NOT been */
-    /*  reduced to zero and we have not reach the maximum number*/
-    /*  of digits to be in the result (NumDigits + 1), we add   */
-    /*  one to NumDigits so we can round if necessary.          */
-    /* The inner loop conputs each digits of the result and     */
-    /*  breaks to the outer loop when the next digit of result  */
-    /*  is found.                                               */
-    /* We compute a digit of result by continually taking best  */
-    /*  guesses at how many times the dividend can go into the  */
-    /*  divisor. Once The divisor becomes less than the dividend*/
-    /*  we found this digit and we exit the inner loop. If the  */
-    /*  divisor = dividend then we know dividend will go into   */
-    /*  1 more than last guess, so bump up the last guess and   */
-    /*  exit both loops (ALL DONE !!), if neither of the above  */
-    /*  conditions are met our last guess was low, compute a new*/
-    /*  guess using result of last one, and go though inner loop*/
-    /*  again.                                                  */
+    wholenumber_t resultDigits = 0;
+    int thisDigit = 0;
+
+    // We are now to enter 2 do forever loops, inside the loops
+    //  we test for ending conditions. and will exit the loops
+    //  when needed. This inner loop may need to break out of
+    //  both loops, if our divisor is reduced to zero(all finish
+    //  if this happens to do the no-no nad use a GOTO.
+    // The outer loop is used to obtain all digits for the result
+    //  We continue in this loop while the divisor has NOT been
+    //  reduced to zero and we have not reach the maximum number
+    //  of digits to be in the result (NumDigits + 1), we add
+    //  one to NumDigits so we can round if necessary.
+    // The inner loop conputs each digits of the result and
+    //  breaks to the outer loop when the next digit of result
+    //  is found.
+    // We compute a digit of result by continually taking best
+    //  guesses at how many times the dividend can go into the
+    //  divisor. Once The divisor becomes less than the dividend
+    //  we found this digit and we exit the inner loop. If the
+    //  divisor = dividend then we know dividend will go into
+    //  1 more than last guess, so bump up the last guess and
+    //  exit both loops (ALL DONE !!), if neither of the above
+    //  conditions are met our last guess was low, compute a new
+    //  guess using result of last one, and go though inner loop
+    //  again.
     for (; ; )
-    {                          /* do forever (outer loop)           */
+    {
         for (; ; )
-        {                        /* do forever (inner loop)           */
-                                 /* are two numbers equal in length?  */
-            if (left->length == Accum->length)
+        {
+            // if we've reached the point where the two numbers are
+            // of equal length, we've reached the point where we can
+            // directly compare to see where we are at.
+            if (left->digitsCount == accum->digitsCount)
             {
-                /* yes, then compare the two numbers */
-                rc = memcmp(Num1, Num2, left->length);
-                if (rc < 0)                       /* is Num1(left) smaller?            */
+                // do a direct comparison of the digits
+                // if the left is smaller, we've got a good estimate
+                // for this digit
+                rc = memcmp(leftNumber, rightNumber, left->digitsCount);
+                if (rc < 0)
                 {
-                    break;                           /* yes, break out of inner loop.     */
+                    break;
                 }
-
+                // the number is equal.  Our current digit is exactly one
+                // too small.  Adjust it and exit the entire
+                // division loop
                 else if (rc == 0)
-                {               /* are the two numebrs equal         */
-                                /* yes, done with Division, cleanup  */
+                {
+
                     *resultPtr++ = (char)(thisDigit + 1);
-                    resultDigits++;                  /* one more digit in result          */
-                    goto PowerDivideDone;            /* break out of both loops.          */
+                    resultDigits++;
+                    goto PowerDivideDone;
                 }
+                // we can pick up the next multiplier and continue
                 else
                 {
-                    multiplier = *Num1;              /* Num2(Accum) is smaller,           */
+                    multiplier = *leftNumber;
                 }
             }
-            /* is left longer than Accum?        */
-            else if (left->length > Accum->length)
+            // unequal lengths...if the left is still longer than the accumulator, we
+            // get the next set of digits
+            else if (left->digitsCount > accum->digitsCount)
             {
-                /* calculate multiplier, next two    */
-                /*digits                             */
-                multiplier = *Num1 * 10 + *(Num1 + 1);
+                // NB:  since the left number is longer, we know there are
+                // still at least 2 digits here
+                multiplier = *leftNumber * 10 + *(leftNumber + 1);
             }
+            // the left is smaller, break the inner loop
             else
             {
-                break;                           /* left is smaller, break inner loop */
+                break;
             }
 
-                                                 /* compute Multiplier for divide     */
-            multiplier = multiplier * 10 / DivChar;
-            if (multiplier == 0)               /* did it compute to 0?              */
+            // get the multiplier...a zero multiplier gets wrapped to 1
+            multiplier = multiplier * 10 / divChar;
+            if (multiplier == 0)
             {
-                multiplier = 1;                   /*  yes, can't be zero make it one.  */
+                multiplier = 1;
             }
 
-            thisDigit += multiplier;           /* add multiplier to this digit.     */
-                                               /* now subtract                      */
-            Num1 = subtractDivisor(Num1, left->length, Num2, Accum->length, Num1 + left->length - 1, multiplier);
-            /* Strip off all leading zeros       */
-            Num1 = left->stripLeadingZeros(Num1);
-        }                                   /* end of inner loop                 */
+            // add to the current digit and subtract
+            thisDigit += multiplier;
 
-        if (resultDigits || thisDigit)
-        {    /* Have a digit for result?          */
-            *resultPtr++ = (char) thisDigit;  /* yes, place digit in result.       */
-            thisDigit = 0;                     /* reset digit value to zero;        */
-            resultDigits++;                    /* one more digit in result;         */
-
-                                               /* is there been reduced to zero     */
-            if (*Num1 == '\0' || resultDigits > NumberDigits)
-            {
-                break;                            /* yes, were done, exit outer loop   */
-            }
-
+            leftNumber = subtractDivisor(leftNumber, left->digitsCount, rightNumber, accum->digitsCount, leftNumber + left->digitsCount - 1, multiplier);
+            // and strip off all leading zeros so we're working with real lengths
+            leftNumber = left->stripLeadingZeros(leftNumber);
         }
-        /* Was number reduced to zero?       */
-        if (left->length == 1 && *Num1 == '\0')
+
+        // any non-zero digit gets added to the result.  Zeros only get
+        // added if we have a previous non-zero.
+        if (resultDigits > 0 || thisDigit != 0)
         {
-            break;                             /* yes, all done exit outer loop     */
+            *resultPtr++ = (char) thisDigit;
+            thisDigit = 0;
+            resultDigits++;
+
+            // if the left number has gone to zero or we've hit our digits limit, we're
+            // done processing
+            if (*leftNumber == '\0' || resultDigits > digits)
+            {
+                break;
+            }
+
         }
 
-        CalcExp--;                          /* result exponent is one less.      */
-        left->length++;                     /* length is one more.               */
+        // have we reduced to exactly zero?  we're done
+        if (left->digitsCount == 1 && *leftNumber == '\0')
+        {
+            break;
+        }
 
-                                            /* reset the number ptr to beginning */
-                                            /* of the buffer.                    */
-        Num1 = (char *)memmove(leftPtr, Num1, left->length);
-        /* make sure traling end of buffer   */
-        /* is reset to 0's.                  */
-        memset(Num1 + left->length, '\0', totalDigits - left->length);
-    }                                     /* end of outer loop                 */
+        calcExp--;
+        left->digitsCount++;
+        // shift the left number back to the front of the buffer and padd with zeros again
+        leftNumber = (char *)memmove(leftPtr, leftNumber, left->digitsCount);
+        memset(leftNumber + left->digitsCount, '\0', totalDigits - left->digitsCount);
+    }
 
-    PowerDivideDone:                       /*All done doing divide now do       */
-    ;                       /*  the cleanup stuff.               */
+    // finished with the divide, so final result cleanup
+    PowerDivideDone:
+    ;
 
-    Accum->length = resultDigits;         /* set length of result              */
-    Accum->exp = CalcExp;                 /* set exponent of result.           */
-    memcpy(Output, result, resultDigits); /* move result data to result area   */
-    return Output;                        /* all done, return to caller.       */
+    accum->digitsCount = resultDigits;
+    accum->numberExponent = calcExp;
+    // copy to the output buffer
+    memcpy(output, result, resultDigits);
+    return output;
 }

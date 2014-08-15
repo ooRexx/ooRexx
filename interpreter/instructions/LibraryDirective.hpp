@@ -50,9 +50,7 @@ class LibraryDirective : public RexxDirective
 {
  public:
            void *operator new(size_t);
-    inline void *operator new(size_t size, void *objectPtr) { return objectPtr; }
     inline void  operator delete(void *) { }
-    inline void  operator delete(void *, void *) { }
 
     LibraryDirective(RexxString *, RexxClause *);
     inline LibraryDirective(RESTORETYPE restoreType) { ; };

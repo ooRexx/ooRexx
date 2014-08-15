@@ -70,10 +70,8 @@ class ListContents : public RexxInternalObject
         size_t previous;                     // previous list element in chain
     };
 
-    void * operator new(size_t, size_t);
-    inline void *operator new(size_t size, void *objectPtr) { return objectPtr; };
-    inline void operator delete(void *, size_t) { }
-    inline void  operator delete(void *, void *) {;}
+           void *operator new(size_t, size_t);
+    inline void  operator delete(void *, size_t) { }
 
     inline ListContents(RESTORETYPE restoreType) { ; };
     inline ListContents() {;};

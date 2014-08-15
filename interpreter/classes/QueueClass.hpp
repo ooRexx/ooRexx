@@ -51,7 +51,6 @@ class QueueClass : public ArrayClass
  public:
 
      void * operator new(size_t, size_t = DefaultArraySize, size_t = DefaultArraySize);
-     inline void *operator new(size_t size, void *ptr) {return ptr;};
 
      inline QueueClass() {;};
      inline QueueClass(RESTORETYPE restoreType) { ; };

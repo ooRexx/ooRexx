@@ -44,7 +44,6 @@
 #ifndef Included_RexxString
 #define Included_RexxString
 
-#include "NumberStringClass.hpp"
 #include "IntegerClass.hpp"
 #include "StringUtil.hpp"
 #include "Utilities.hpp"
@@ -86,7 +85,7 @@ class RexxString : public RexxObject
      {
      public:
          inline StringBuilder(char *b) : current(b) {}
-         inline StringBuilder(RexxString *s) : current(s->getWriteableData()) {}
+         inline StringBuilder(RexxString *s) : current(s->getWritableData()) {}
 
          inline void append(const char *d, size_t l)  { memcpy(current, d, l); current += l; }
          inline void append(char c) { *current++ = c; }
@@ -104,7 +103,7 @@ class RexxString : public RexxObject
      {
      public:
          inline WordIterator(char *b, size_t l) : nextPosition(b), scanLength(l) {}
-         inline StringBuilder(RexxString *s) : nextPosition(s->getStringData()), scanLength(s->getLength()) {}
+         inline WordIterator(RexxString *s) : nextPosition(s->getStringData()), scanLength(s->getLength()) {}
 
          /**
           * Skip leading blanks in a string.
@@ -120,6 +119,7 @@ class RexxString : public RexxObject
 
              // just skip over any white space characters
              for (;length > 0; scan++, length--)
+             {
                  if (*scan != ' ' && *scan != '\t')
                  {
                      break;
@@ -221,7 +221,7 @@ class RexxString : public RexxObject
 
          // skip from the end of the current word to to the next word
          // or the end of the string
-         inline bool skipBlanks()
+         inline void skipBlanks()
          {
              skipBlanks(nextPosition, scanLength);
          }
@@ -283,7 +283,6 @@ class RexxString : public RexxObject
      };
 
 
-    inline void       *operator new(size_t size, void *ptr){return ptr;}
     inline RexxString() {;} ;
     inline RexxString(RESTORETYPE restoreType) { ; }
 

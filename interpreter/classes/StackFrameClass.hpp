@@ -53,7 +53,7 @@ class StackFrameClass : public RexxObject
 {
 public:
     void *operator new(size_t);
-    inline void *operator new(size_t size, void *ptr) { return ptr; };
+
     StackFrameClass(const char *type, RexxString *name, BaseExecutable *p, RexxObject *target, ArrayClass *arguments, RexxString *t, size_t l);
     inline StackFrameClass(RESTORETYPE restoreType) { ; };
 

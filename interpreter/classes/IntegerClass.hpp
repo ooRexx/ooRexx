@@ -44,7 +44,6 @@
 #ifndef Included_RexxInteger
 #define Included_RexxInteger
 
-#include "NumberStringClass.hpp"
 #include "ClassClass.hpp"
 
 void integer_create ();
@@ -56,7 +55,7 @@ class RexxInteger : public RexxObject
  public:
     inline RexxInteger(RESTORETYPE restoreType) { ; };
     inline RexxInteger(wholenumber_t intValue) { value = intValue; };
-    inline void *operator new(size_t size, void *ptr) {return ptr;};
+
     void *operator new(size_t);
 
     virtual void live(size_t);

@@ -644,6 +644,7 @@
 #define Message_Translations_sourceless_program_invocation_msg       738
 #define Error_Invalid_expression_select_case_msg                     739
 #define Error_Translation_directive_method_routine_msg               740
+#define Error_Execution_rexx_package_update_msg                      741
 
 
 #endif

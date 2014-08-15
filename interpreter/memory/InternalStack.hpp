@@ -49,9 +49,7 @@ class InternalStack : public RexxInternalObject
 {
  public:
            void *operator new(size_t size, size_t stackSize);
-    inline void *operator new(size_t size, void *ptr) { return ptr; }
     inline void  operator delete(void *, size_t) { ; }
-    inline void  operator delete(void *, void *) { ; }
 
     InternalStack() { ; }
     InternalStack::InternalStack(size_t stackSize);

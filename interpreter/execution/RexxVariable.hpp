@@ -51,8 +51,6 @@ class RexxVariable : public RexxInternalObject
 {
  public:
     void *operator new(size_t);
-    inline void *operator new(size_t size, void *objectPtr) { return objectPtr; };
-    inline void  operator delete(void *, void *) {;}
     inline void  operator delete(void *) { }
 
     inline RexxVariable() : variableName(OREF_NULL), variableValue(OREF_NULL), creator(OREF_NULL), dependents(OREF_NULL) {;};

@@ -644,6 +644,7 @@ Error_Program_unreadable    "Failure during initialization"
    Message_Translations_sourceless_program_invocation    "Program in ""&1"" (no source available)"
    Error_Invalid_expression_select_case    "Missing expression following CASE keyword of a SELECT instruction"
    Error_Translation_directive_method_routine    "Method or routine code may not contain directive instructions"
+   Error_Execution_rexx_package_update    "User additions are not allowed to the REXX package."
    
 END
 

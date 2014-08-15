@@ -67,7 +67,6 @@ class MessageClass : public RexxObject
     } MessageFlag;
 
     void * operator new(size_t);
-    inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };
 
     MessageClass(RexxObject *, RexxString *, RexxClass *, ArrayClass *);
     inline MessageClass(RESTORETYPE restoreType) { ; };

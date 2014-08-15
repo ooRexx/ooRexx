@@ -58,9 +58,7 @@ typedef RexxPackageEntry * (RexxEntry *PACKAGE_LOADER)();
 class LibraryPackage : public RexxInternalObject
 {
 public:
-    inline void *operator new(size_t, void *ptr) {return ptr;}
-    inline void  operator delete(void *, void *) {;}
-    void *operator new(size_t);
+           void *operator new(size_t);
     inline void  operator delete(void *) {;}
 
     LibraryPackage(RexxString *n);

@@ -53,8 +53,6 @@ class Activity;
 class ExpressionStack
 {
  public:
-
-    inline void *operator new(size_t size, void *ptr) { return ptr;};
     ExpressionStack(RexxInternalObject **frames, size_t items) { stack = frames; size = items; top = stack; }
     ExpressionStack() { stack = OREF_NULL; size = 0; top = stack; }
 

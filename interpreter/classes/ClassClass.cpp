@@ -59,6 +59,8 @@
 #include "MethodDictionary.hpp"
 #include "StringTableClass.hpp"
 #include "PackageClass.hpp"
+#include "NumberStringClass.hpp"
+#include <new>
 
 
 // singleton class instance
@@ -1684,7 +1686,7 @@ void RexxClass::createInstance()
 
     // tell the mobile support to just make a proxy for this class
     TheClassClass->makeProxiedObject();
-    new (TheClassClass) RexxClass;
+    ::new ((void *)TheClassClass) RexxClass;
 }
 
 /**

@@ -42,6 +42,7 @@
 /*                                                                            */
 /******************************************************************************/
 #include "RexxCore.h"
+#include "NumberStringClass.hpp"
 #include "StringClass.hpp"
 #include "BufferClass.hpp"
 #include "RexxActivation.hpp"
@@ -70,8 +71,8 @@ void NumberString::createInstance()
 NumberString::NumberString(size_t len)
 {
     setNumericSettings(number_digits(), number_form());
-    sign = 1;
-    length = len;
+    numberSign = 1;
+    digitsCount = len;
 }
 
 
@@ -84,8 +85,8 @@ NumberString::NumberString(size_t len)
 NumberString::NumberString(size_t len, size_t precision)
 {
     setNumericSettings(precision, number_form());
-    sign = 1;
-    length = len;
+    numberSign = 1;
+    digitsCount = len;
 }
 
 
@@ -241,9 +242,9 @@ bool NumberString::hasSignificantDecimals(size_t digits)
     }
 
     // the first digit to check
-    const char *tempPtr = number + digitsCount + numberExponent;
+    const char *tempPtr = numberDigits + digitsCount + numberExponent;
     wholenumber_t checkLength = -numberExponent;
-    const char *highDigit = number + digits;
+    const char *highDigit = numberDigits + digits;
     // while more decimals and we're still within the digits value
     while (checkLength > 0 && tempPtr < highDigit)
     {
@@ -281,7 +282,7 @@ void NumberString::formatExponent(wholenumber_t exponent, char *buffer)
     if (exponent < 0)
     {
         *buffer = 'E';
-        Numerics::formatWholeNumber(exponent), buffer + 1);
+        Numerics::formatWholeNumber(exponent, buffer + 1);
     }
     else if (exponent > 0)
     {
@@ -303,7 +304,7 @@ void NumberString::formatExponent(wholenumber_t exponent, char *buffer)
 void NumberString::checkOverflow()
 {
     // if the adjusted exponent is too large
-    if (numberExponent + digitscount - 1 > Numerics::MAX_EXPONENT)
+    if (numberExponent + digitsCount - 1 > Numerics::MAX_EXPONENT)
     {
         reportException(Error_Overflow_expoverflow, numberExponent + digitsCount - 1, Numerics::DEFAULT_DIGITS);
     }
@@ -340,16 +341,16 @@ RexxString *NumberString::stringValue()
 
     // if the exponent value is zero, this is all integer digits.  This
     // is a fast path for conversion.
-    if (isInteger())
+    if (isAllInteger())
     {
-        size_t maxNumberSize = numberLength + isNegative();
+        size_t maxNumberSize = digitsCount + isNegative();
 
         // get a new string of the exact length needed
         RexxString *stringObj = raw_string(maxNumberSize);
         NumberBuilder builder(stringObj);
 
         // just build as an integer
-        builder.addIntegerPart(isNegative(), numberDigits, numberLength, 0);
+        builder.addIntegerPart(isNegative(), numberDigits, digitsCount, 0);
         // set and return this string representation
         setString(stringObj);
         stringObj->setNumberString(this);
@@ -364,7 +365,7 @@ RexxString *NumberString::stringValue()
 
     // the number is not exponential yet.
     wholenumber_t expFactor = 0;
-    wholenumber_t adjustedSize = numberExponent + numberLength - 1;
+    wholenumber_t adjustedSize = numberExponent + digitsCount - 1;
     size_t adjustedExponent = numberExponent;
 
     // null out the exponent string value for now.
@@ -415,13 +416,13 @@ RexxString *NumberString::stringValue()
     if (adjustedExponent >= 0)
     {
         // the size is the length of the number plus the exponent
-        maxNumberSize = (size_t)adjustedExponent + numberLength;
+        maxNumberSize = (size_t)adjustedExponent + digitsCount;
     }
     // the exponent is negative, so we're shifting stuff to the right.
     // if the absolute value of the exponent is larger than the
     // length of the number, then we'll need to add additional zeros between
     // the decimal point and the first digit.
-    else if (Numerics::abs(adjustedExponent) >= numberLength)
+    else if (Numerics::abs(adjustedExponent) >= digitsCount)
     {
         // we add to characters for a leading zero and decimal point
         maxNumberSize = Numerics::abs(adjustedExponent) + 2;
@@ -430,14 +431,14 @@ RexxString *NumberString::stringValue()
     // result value is the length plus one for a decimal point
     else
     {
-        maxNumberSize = numberLength + 1;
+        maxNumberSize = digitsCount + 1;
     }
 
     // if we're using exponential notation, add in the size of the
     // exponent string
     if (expFactor)
     {
-        maxNumbersize += strlen(expstring);
+        maxNumberSize += strlen(expstring);
     }
     // add in space for a sign
     if (isNegative())
@@ -446,9 +447,9 @@ RexxString *NumberString::stringValue()
     }
 
     RexxString *stringObj = raw_string(maxNumberSize);
-    NumberBuilder bulder(stringObj);
+    NumberBuilder builder(stringObj);
 
-    wholenumber_t adjustedLength = adjustedExponent + numberLength;
+    wholenumber_t adjustedLength = adjustedExponent + digitsCount;
 
     // if the adjusted length is not positive, then
     // we have nothing to the left of the decimal.  All
@@ -460,27 +461,27 @@ RexxString *NumberString::stringValue()
         // build the integer part as just the sign and a single pad character
         builder.addIntegerPart(isNegative(), numberDigits, 0, 1);
         // build the decimal portion
-        builder.addDecimalPart(numberDigits, numberLength, -adjustedLength);
+        builder.addDecimalPart(numberDigits, digitsCount, -adjustedLength);
 
         // add the exponent, if any
         builder.addExponent(expstring);
     }
     // we might need to add zeros after the digits,
     // something like "xxxx00000"
-    else if (adjustedLength >= numberLength)
+    else if (adjustedLength >= digitsCount)
     {
         // build the integer section
-        builder.addIntegerPart(isNegative(), numberDigits, numberLength, adjustedLength);
+        builder.addIntegerPart(isNegative(), numberDigits, digitsCount, adjustedLength);
         // add the exponent, if any
         builder.addExponent(expstring);
     }
     // partial decimal number
     else
     {
-        wholenumber_t integers = numberLength - temp;
+        wholenumber_t integers = digitsCount - adjustedLength;
         // do the integer and decimal parts separately
         builder.addIntegerPart(isNegative(), numberDigits, integers);
-        builder.addDecimalPart(numberDigits + integers, numberLength - digits);
+        builder.addDecimalPart(numberDigits + integers, digitsCount - integers);
         // and the exponent, if we have one.
         builder.addExponent(expstring);
     }
@@ -534,7 +535,7 @@ bool NumberString::numberValue(wholenumber_t &result, size_t numDigits)
     // set up the default values
     bool carry = false;
     wholenumber_t numberExp = numberExponent;
-    size_t length = numberLength;
+    size_t length = digitsCount;
 
     // if the number is exactly zero, then this is easy
     if (isZero())
@@ -550,13 +551,13 @@ bool NumberString::numberValue(wholenumber_t &result, size_t numDigits)
     if (length <= numDigits && numberExp >= 0)
     {
         // go convert...we need to make sure it stays in range.
-        if (!createUnsignedValue(number, length, false, numberExp, Numerics::maxValueForDigits(numDigits), intnum))
+        if (!createUnsignedValue(numberDigits, length, false, numberExp, Numerics::maxValueForDigits(numDigits), intnum))
         {
             return false;                   // too big to handle
         }
 
         // adjust for the sign
-        result = ((wholenumber_t)intnum) * sign;
+        result = ((wholenumber_t)intnum) * numberSign;
         return true;
     }
 
@@ -585,7 +586,7 @@ bool NumberString::numberValue(wholenumber_t &result, size_t numDigits)
     if (numberExp < 0)
     {
         // now convert this into an unsigned value
-        if (!createUnsignedValue(number, length + numberExp, carry, 0, Numerics::maxValueForDigits(numDigits), intnum))
+        if (!createUnsignedValue(numberDigits, length + numberExp, carry, 0, Numerics::maxValueForDigits(numDigits), intnum))
         {
             return false;                   // to big to handle
         }
@@ -593,14 +594,14 @@ bool NumberString::numberValue(wholenumber_t &result, size_t numDigits)
     // a straight out number, we can compute just from the digits.
     else
     {
-        if (!createUnsignedValue(number, length, carry, numberExp, Numerics::maxValueForDigits(numDigits), intnum))
+        if (!createUnsignedValue(numberDigits, length, carry, numberExp, Numerics::maxValueForDigits(numDigits), intnum))
         {
             return false;                   // to big to handle
         }
     }
 
     // adjust for the sign
-    result = ((wholenumber_t)intnum) * sign;
+    result = ((wholenumber_t)intnum) * numberSign;
     return true;
 }
 
@@ -618,8 +619,8 @@ bool NumberString::unsignedNumberValue(size_t &result, size_t numDigits)
     // set up the default values
 
     bool carry = false;
-    wholenumber_t numberExp = exp;
-    size_t length = numberLength;
+    wholenumber_t numberExp = numberExponent;
+    size_t length = digitsCount;
 
     // if the number is exactly zero, then this is easy
     if (isZero())
@@ -638,7 +639,7 @@ bool NumberString::unsignedNumberValue(size_t &result, size_t numDigits)
     if (length <= numDigits && numberExp >= 0)
     {
         // convert and directly return the value
-        return createUnsignedValue(number, length, false, numberExp, Numerics::maxValueForDigits(numDigits), result);
+        return createUnsignedValue(numberDigits, length, false, numberExp, Numerics::maxValueForDigits(numDigits), result);
     }
 
 
@@ -653,7 +654,7 @@ bool NumberString::unsignedNumberValue(size_t &result, size_t numDigits)
     // if because of this adjustment, the decimal point lies to the left
     // of our first digit, then this value truncates to 0 (or 1, if a carry condition
     // resulted).
-    if (-numberExp >= numberLength)
+    if (-numberExp >= digitsCount)
     {
         // since we know a) this number is all decimals, and b) the
         // remaining decimals are either all 0 or all 9s with a carry,
@@ -667,11 +668,11 @@ bool NumberString::unsignedNumberValue(size_t &result, size_t numDigits)
     if (numberExp < 0)
     {
         // now convert this into an unsigned value
-        return createUnsignedValue(number, numberLength + numberExp, carry, 0, Numerics::maxValueForDigits(numDigits), result);
+        return createUnsignedValue(numberDigits, digitsCount + numberExp, carry, 0, Numerics::maxValueForDigits(numDigits), result);
     }
     else
-    {                             /* straight out number. just compute.*/
-        return createUnsignedValue(number, numberLength, carry, numberExp, Numerics::maxValueForDigits(numDigits), result);
+    {
+        return createUnsignedValue(numberDigits, digitsCount, carry, numberExp, Numerics::maxValueForDigits(numDigits), result);
     }
 }
 
@@ -903,7 +904,7 @@ bool NumberString::checkIntegerDigits(size_t numDigits, size_t &length,
 {
     // set the initial values
     carry = false;
-    cxponent = numberExponent;
+    exponent = numberExponent;
     length = digitsCount;
 
     // is this number longer than the digits value?
@@ -919,7 +920,7 @@ bool NumberString::checkIntegerDigits(size_t numDigits, size_t &length,
 
         // now check to see if the first excluded digit will cause rounding
         // if it does, we need to worry about a carry value when converting
-        if (*(number + numberLength) >= 5)
+        if (*(numberDigits + digitsCount) >= 5)
         {
             carry = true;
         }
@@ -956,12 +957,12 @@ bool NumberString::checkIntegerDigits(size_t numDigits, size_t &length,
             // decimal is somewhere to the left of everything...
             // all of these digits must be checked
             decimalPos = length;
-            numberData = number;
+            numberData = numberDigits;
         }
         else
         {
             // get the exponent adjusted position
-            numberData = number + length + exponent;
+            numberData = numberDigits + length + exponent;
         }
 
         for ( ; decimalPos > 0 ; decimalPos--)
@@ -994,7 +995,7 @@ bool NumberString::int64Value(int64_t *result, size_t numDigits)
     uint64_t intnum;
 
     // if the number is exactly zero, then this is easy
-    if (sign == 0)
+    if (numberSign == 0)
     {
         *result = 0;
         return true;
@@ -1004,7 +1005,7 @@ bool NumberString::int64Value(int64_t *result, size_t numDigits)
     if (numberLength <= numDigits && numberExp >= 0)
     {
         // the minimum negative value requires one more than the max positive
-        if (!createUnsignedInt64Value(number, numberLength, false, numberExp, ((uint64_t)INT64_MAX) + 1, intnum))
+        if (!createUnsignedInt64Value(numberDigits, numberLength, false, numberExp, ((uint64_t)INT64_MAX) + 1, intnum))
         {
             return false;                   // too big to handle
         }
@@ -1012,7 +1013,7 @@ bool NumberString::int64Value(int64_t *result, size_t numDigits)
         if (intnum == ((uint64_t)INT64_MAX) + 1)
         {
             // if at the limit, this must be a negative number
-            if (sign != -1)
+            if (numberSign != -1)
             {
                 return false;
             }
@@ -1021,7 +1022,7 @@ bool NumberString::int64Value(int64_t *result, size_t numDigits)
         else
         {
             // adjust for the sign
-            *result = ((int64_t)intnum) * sign;
+            *result = ((int64_t)intnum) * numberSign;
         }
         return true;
     }
@@ -1051,14 +1052,14 @@ bool NumberString::int64Value(int64_t *result, size_t numDigits)
     if (numberExp < 0)
     {
         // now convert this into an unsigned value
-        if (!createUnsignedInt64Value(number, numberLength + numberExp, carry, 0, ((uint64_t)INT64_MAX) + 1, intnum))
+        if (!createUnsignedInt64Value(numberDigits, numberLength + numberExp, carry, 0, ((uint64_t)INT64_MAX) + 1, intnum))
         {
             return false;                   // to big to handle
         }
     }
     else
-    {                             /* straight out number. just compute.*/
-        if (!createUnsignedInt64Value(number, numberLength, carry, numberExp, ((uint64_t)INT64_MAX) + 1, intnum))
+    {
+        if (!createUnsignedInt64Value(numberDigits, numberLength, carry, numberExp, ((uint64_t)INT64_MAX) + 1, intnum))
         {
             return false;                   // to big to handle
         }
@@ -1068,7 +1069,7 @@ bool NumberString::int64Value(int64_t *result, size_t numDigits)
     if (intnum == ((uint64_t)INT64_MAX) + 1)
     {
         // if at the limit, this must be a negative number
-        if (sign != -1)
+        if (numberSign != -1)
         {
             return false;
         }
@@ -1077,7 +1078,7 @@ bool NumberString::int64Value(int64_t *result, size_t numDigits)
     else
     {
         // adjust for the sign
-        *result = ((int64_t)intnum) * sign;
+        *result = ((int64_t)intnum) * numberSign;
     }
     return true;
 }
@@ -1115,7 +1116,7 @@ bool NumberString::unsignedInt64Value(uint64_t *result, size_t numDigits)
     // is this easily within limits (very common)?
     if (numberLength <= numDigits && numberExp >= 0)
     {
-        if (!createUnsignedInt64Value(number, numberLength, false, numberExp, UINT64_MAX, *result))
+        if (!createUnsignedInt64Value(numberDigits, numberLength, false, numberExp, UINT64_MAX, *result))
         {
             return false;                   // too big to handle
         }
@@ -1147,11 +1148,11 @@ bool NumberString::unsignedInt64Value(uint64_t *result, size_t numDigits)
     if (numberExp < 0)
     {
         // now convert this into an unsigned value
-        return createUnsignedInt64Value(number, numberLength + numberExp, carry, 0, UINT64_MAX, *result);
+        return createUnsignedInt64Value(numberDigits, numberLength + numberExp, carry, 0, UINT64_MAX, *result);
     }
     else
-    {                             /* straight out number. just compute.*/
-        return createUnsignedInt64Value(number, numberLength, carry, numberExp, UINT64_MAX, *result);
+    {
+        return createUnsignedInt64Value(numberDigits, numberLength, carry, numberExp, UINT64_MAX, *result);
     }
 }
 
@@ -1174,7 +1175,7 @@ bool  NumberString::truthValue(int errorcode)
     // 2) the exponent is zero, 3) the number has exactly one digits, and finally
     // 4) that single digit is a 1.  Thankfully, we rarely need to perform this test
     // on number strings!
-    else if (!(numberSign == 1 && numberExponent == 0 && digitsCount == 1 && *(number) == 1))
+    else if (!(numberSign == 1 && numberExponent == 0 && digitsCount == 1 && *(numberDigits) == 1))
     {
         reportException(errorcode, this);
     }
@@ -1203,7 +1204,7 @@ bool NumberString::logicalValue(logical_t &result)
     // 2) the exponent is zero, 3) the number has exactly one digits, and finally
     // 4) that single digit is a 1.  Thankfully, we rarely need to perform this test
     // on number strings!
-    else if (numberSign == 1 && numberExponent == 0 && digitsCount == 1 && *(number) == 1)
+    else if (numberSign == 1 && numberExponent == 0 && digitsCount == 1 && *(numberDigits) == 1)
     {
         result = true;                   // this is true and the conversion worked
         return true;
@@ -1249,7 +1250,7 @@ bool numberStringScan(const char *number, size_t length)
     {
         inPtr++;
         // spaces are allowed after a sign, so skip them too
-        while (*nPtr == RexxString::ch_SPACE || *inPtr == RexxString::ch_TAB)
+        while (*inPtr == RexxString::ch_SPACE || *inPtr == RexxString::ch_TAB)
         {
             inPtr++;
         }
@@ -1292,7 +1293,7 @@ bool numberStringScan(const char *number, size_t length)
             inPtr++;
         }
         // use up the rest of the string (also common)...we have a good number
-        if (inPtr >= indData)
+        if (inPtr >= endData)
         {
             return false;
         }
@@ -1370,15 +1371,8 @@ RexxObject *NumberString::trunc(RexxObject *decimal_digits)
  *
  * @return The truncated number.
  */
-RexxObject *NumberString::truncInternal(size_t needed_digits)
+RexxObject *NumberString::truncInternal(wholenumber_t needed_digits)
 {
-    RexxString *result;                  /* returned result                   */
-    wholenumber_t    temp;               /* temporary string value            */
-    wholenumber_t    integer_digits;     /* leading integer digits            */
-    size_t  size;                        /* total size of the result          */
-    int     signValue;                   /* current sign indicator            */
-    char   *resultPtr;                   /* result pointer                    */
-
     // zero is easy, depending on the how many decimals we need
     if (isZero())
     {
@@ -1417,7 +1411,7 @@ RexxObject *NumberString::truncInternal(size_t needed_digits)
     // we use the initial sign, but based on how things playout, this
     // value could truncate to something like "0.000", which loses the sign.
     // we will need to clear this out
-    size_t signOverhead = isNegative();
+    size_t signOverHead = isNegative();
 
     // if the exponent is greater than zero, then we will need to add some padding zeros
     //
@@ -1451,7 +1445,7 @@ RexxObject *NumberString::truncInternal(size_t needed_digits)
             // if we need more than are available, calculate how much trailing pad we need.
             if (decimalDigits < needed_digits)
             {
-                trailingDecimalPad = needed_digits - decimalDigits;
+                trailingDecimalPadding = needed_digits - decimalDigits;
             }
         }
 
@@ -1475,32 +1469,32 @@ RexxObject *NumberString::truncInternal(size_t needed_digits)
 
             // split this into the padding and the actual digits.
             // if we need less that this, we'll adjust these values.
-            leadDecimalPad = decimalLength - digitsCount;
+            leadDecimalPadding = decimalLength - digitsCount;
             decimalDigits = digitsCount;
 
             // will we need to add additional zeros beyond what is provided?
             if (needed_digits >= decimalLength)
             {
                 // we use all of the number value, plus some potential trailing pad zeros.
-                trailingDecimalPad - needed_digits - decimalLength;
+                trailingDecimalPadding = needed_digits - decimalLength;
             }
             // we really are truncating part of this
             else
             {
                 // truncating in the leading section?  We don't add
                 // any digits from the number and cap the padding.
-                if (needed_digits <= leadDecimalPad)
+                if (needed_digits <= leadDecimalPadding)
                 {
                     // we're going from something like "-0.0001234" to "-0.00".
                     // the sign needs to disappear
-                    signOverhead = 0;
+                    signOverHead = 0;
                     decimalDigits = 0;
-                    leadDecimalPad = Numerics::maxVal(leadDecimalPad, needed_digits);
+                    leadDecimalPadding = Numerics::maxVal(leadDecimalPadding, needed_digits);
                 }
                 // we're using all of the padding and at least one of the digits
                 else
                 {
-                    decimalDigits = Numerics::maxVal(decimalDigits, needed_digits - leadDecimalPad);
+                    decimalDigits = Numerics::maxVal(decimalDigits, needed_digits - leadDecimalPadding);
                 }
             }
         }
@@ -1508,16 +1502,16 @@ RexxObject *NumberString::truncInternal(size_t needed_digits)
 
 
     // add up the whole lot to get the result size
-    wholenumber_t resultSize = overhead + signOverhead + integerDigits + integerPadding + leadDecimalPadding + decimalDigits + trailingDecimalPad;
+    wholenumber_t resultSize = overHead + signOverHead + integerDigits + integerPadding + leadDecimalPadding + decimalDigits + trailingDecimalPadding;
     RexxString *result = raw_string(resultSize);
     NumberBuilder builder(result);
 
     // build the integer part
-    builder.addIntegerPart(signOverHead != 0, number, integerDigits, integerPad);
+    builder.addIntegerPart(signOverHead != 0, numberDigits, integerDigits, integerPadding);
     // if we have any decimal part, add in the period and the trailing sections
     if (needed_digits != 0)
     {
-        addDecimalPart(number + integerDigits, decimalDigits, leadDecimalPad, trailingDecimalPad);
+        builder.addDecimalPart(numberDigits + integerDigits, decimalDigits, leadDecimalPadding, trailingDecimalPadding);
     }
     // and return the result
     return result;
@@ -1559,7 +1553,7 @@ RexxObject *NumberString::floorInternal()
         return IntegerZero;
     }
     // if this is a positive number, then this is the same as trunc
-    else if (sign > 0)
+    else if (isPositive())
     {
         return truncInternal(0);
     }
@@ -1581,14 +1575,14 @@ RexxObject *NumberString::floorInternal()
             // any non-zero decimals
 
             // get the number of decimals we need to scan
-            size_t decimals = Numerics::minVal(length, (size_t)(-exp));
+            size_t decimals = Numerics::minVal(digitsCount, -numberExponent);
             // get the position to start the scan
-            size_t lastDecimal = length - 1;
+            size_t lastDecimal = digitsCount - 1;
             bool foundNonZero = false;
             for (size_t i = decimals; i > 0; i--)
             {
                 // if we found a non-zero, we have to do this the hard way
-                if (number[lastDecimal--] != 0)
+                if (numberDigits[lastDecimal--] != 0)
                 {
                     foundNonZero = true;
                     break;
@@ -1606,7 +1600,7 @@ RexxObject *NumberString::floorInternal()
             // the number, so we need to account for this
 
             // get the leading digits of the value
-            wholenumber_t integer_digits = (wholenumber_t)length + exp;
+            wholenumber_t integer_digits = digitsCount + numberExponent;
             // if there are no integer digits, then this number is between 0 and -1.
             // we can just punt here and return -1.
             if (integer_digits <= 0)
@@ -1618,14 +1612,14 @@ RexxObject *NumberString::floorInternal()
                 // ok, we have integer digits.  Let's make this easy at this
                 // point by chopping this down to just the integer digits and
                 // throwing away the exponent
-                length = integer_digits;
-                exp = 0;
+                digitsCount = integer_digits;
+                numberExponent = 0;
 
                 // point to the first digit, and start adding until
                 // we no longer round
-                char *current = number + integer_digits - 1;
+                char *current = numberDigits + integer_digits - 1;
 
-                while (current >= number)
+                while (current >= numberDigits)
                 {
                     int ch = *current + 1;
                     // did this round?
@@ -1646,8 +1640,8 @@ RexxObject *NumberString::floorInternal()
                 // ok, we rounded all the way out.  At this point, every digit in
                 // the buffer is a zero.  Doing the rounding is easy here, just
                 // stuff a 1 in the first digit and bump the exponent by 1
-                *number = 1;
-                exp += 1;
+                *numberDigits = 1;
+                numberExponent += 1;
                 // and again, the trunc code can handle all of the formatting
                 return truncInternal(0);
             }
@@ -1703,7 +1697,7 @@ RexxObject *NumberString::ceilingInternal()
         // to the value and then let trunc do the heavy lifting.
 
         // not have a decimal part?  If no decimal part, just pass to trunc
-        if (exp >= 0)
+        if (isAllInteger())
         {
             return truncInternal(0);
         }
@@ -1713,14 +1707,14 @@ RexxObject *NumberString::ceilingInternal()
             // any non-zero decimals
 
             // get the number of decimals we need to scan
-            size_t decimals = Numerics::minVal((size_t)length, (size_t)(-exp));
+            size_t decimals = Numerics::minVal(digitsCount, -numberExponent);
             // get the position to start the scan
-            size_t lastDecimal = length - 1;
+            wholenumber_t lastDecimal = digitsCount - 1;
             bool foundNonZero = false;
             for (size_t i = decimals; i > 0; i--)
             {
                 // if we found a non-zero, we have to do this the hard way
-                if (number[lastDecimal--] != 0)
+                if (numberDigits[lastDecimal--] != 0)
                 {
                     foundNonZero = true;
                     break;
@@ -1738,7 +1732,7 @@ RexxObject *NumberString::ceilingInternal()
             // the number, so we need to account for this
 
             // get the leading digits of the value
-            wholenumber_t integer_digits = (wholenumber_t)length + exp;
+            wholenumber_t integer_digits = digitsCount + numberExponent;
             // if there are no integer digits, then this number is between 0 and 1.
             // we can just punt here and return 1.
             if (integer_digits <= 0)
@@ -1750,14 +1744,14 @@ RexxObject *NumberString::ceilingInternal()
                 // ok, we have integer digits.  Let's make like easy at this
                 // point by chopping this down to just the integer digits and
                 // throwing away the exponent
-                length = integer_digits;
-                exp = 0;
+                digitsCount = integer_digits;
+                numberExponent = 0;
 
                 // point to the first digit, and start adding until
                 // we no longer round
-                char *current = number + integer_digits - 1;
+                char *current = numberDigits + integer_digits - 1;
 
-                while (current >= number)
+                while (current >= numberDigits)
                 {
                     int ch = *current + 1;
                     // did this round?
@@ -1778,8 +1772,8 @@ RexxObject *NumberString::ceilingInternal()
                 // ok, we rounded all the way out.  At this point, every digit in
                 // the buffer is a zero.  Doing the rounding is easy here, just
                 // stuff a 1 in the first digit and bump the exponent by 1
-                *number = 1;
-                exp += 1;
+                *numberDigits = 1;
+                numberExponent += 1;
                 // and again, the trunc code can handle all of the formatting
                 return truncInternal(0);
             }
@@ -1853,12 +1847,12 @@ RexxObject *NumberString::roundInternal()
                 // ok, we have integer digits and decimals.  The returned value will
                 // be an integer, so we can just set the exponent to zero now and
                 // throw away the decimal part
-                length = integer_digits;
-                exp = 0;
+                digitsCount = integer_digits;
+                numberExponent = 0;
 
                 // Now we need to look at the first decimal and see if
                 // we're rounding up
-                char *current = number + integer_digits;
+                char *current = numberDigits + integer_digits;
                 // no rounding needed, go do the formatting
                 if (*current < 5)
                 {
@@ -1869,7 +1863,7 @@ RexxObject *NumberString::roundInternal()
                 // might round all the way out.
                 current--;
 
-                while (current >= number)
+                while (current >= numberDigits)
                 {
                     int ch = *current + 1;
                     // did this round?
@@ -1895,7 +1889,7 @@ RexxObject *NumberString::roundInternal()
                 // ok, we rounded all the way out.  At this point, every digit in
                 // the buffer is a zero.  Doing the rounding is easy here, just
                 // stuff a 1 in the first digit and bump the exponent by 1
-                *number = 1;
+                *numberDigits = 1;
                 numberExponent += 1;
                 // and again, the trunc code can handle all of the formatting
                 return truncInternal(0);
@@ -1919,22 +1913,15 @@ RexxObject *NumberString::roundInternal()
 RexxString  *NumberString::formatRexx(RexxObject *Integers, RexxObject *Decimals,
   RexxObject *MathExp, RexxObject *ExpTrigger )
 {
-    size_t integers;                     /* integer space requested           */
-    size_t decimals;                     /* decimal space requested           */
-    size_t mathexp;                      /* exponent space requested          */
-    size_t exptrigger;                   /* exponential notation trigger      */
-    size_t digits;                       /* current numeric digits            */
-    bool   form;                         /* current numeric form              */
-
     size_t digits = number_digits();
-    size_t form = number_form();
+    bool form = number_form();
 
     wholenumber_t integers = optionalNonNegative(Integers, -1, ARG_ONE);
-    wholenumber_t = optionalNonNegative(Decimals, -1, ARG_TWO);
-    wholenumber_t = optionalNonNegative(MathExp, -1, ARG_THREE);
-    wholenumber_t exptrigger = optionalNonNegative(ExpTrigger, digits, ARG_FOUR);
+    wholenumber_t decimals = optionalNonNegative(Decimals, -1, ARG_TWO);
+    wholenumber_t mathExp = optionalNonNegative(MathExp, -1, ARG_THREE);
+    wholenumber_t expTrigger = optionalNonNegative(ExpTrigger, digits, ARG_FOUR);
     // round to the current digits setting and format
-    return prepareNumber(digits, ROUND)->formatInternal(integers, decimals, mathexp, exptrigger, this, digits, form);
+    return prepareNumber(digits, ROUND)->formatInternal(integers, decimals, mathExp, expTrigger, this, digits, form);
 }
 
 
@@ -1968,7 +1955,7 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
 
     // we need to calculate a whole bunch of size sections.  Initialize
     // them all to zero for now.
-    wholenumber size = 0;
+    wholenumber_t size = 0;
     wholenumber_t leadingSpaces = 0;
     wholenumber_t integerDigits = 0;
     wholenumber_t trailingIntegerZeros = 0;
@@ -1989,7 +1976,7 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
         // than that on the call.  If the number of decimals is greater than the
         // trigger value, or the space required to format a pure decimal number or more than
         // twice the trigger value, we're in exponential form
-        if (adjustedLength >= exptrigger || Numerics::abs(exp) > exptrigger * 2)
+        if (adjustedLength >= exptrigger || Numerics::abs(numberExponent) > exptrigger * 2)
         {
             if (form == Numerics::FORM_ENGINEERING)
             {
@@ -2004,12 +1991,11 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
             // adjust the exponent value
             numberExponent = numberExponent - adjustedLength;
             // the exponent factor will be added in to the exponent when formatted
-            expfactor = adjustedLength;
+            expFactor = adjustedLength;
             adjustedLength = Numerics::abs(adjustedLength);
             // format the exponent to a string value now.
             Numerics::formatWholeNumber(adjustedLength, stringExponent);
-            /* get the number of digits needed   */
-            exponentSize = strlen(exponent);
+            exponentSize = strlen(stringExponent);
             // if the exponent size is defaulted, then reset to
             // the actual size we have.
             if (mathexp == -1)
@@ -2048,13 +2034,13 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
             wholenumber_t adjustedDecimals = -numberExponent;
             // will we have more decimals than requested?  We'll need to
             // round or truncate.
-            if ((adjustedDecimals > decimals)
+            if (adjustedDecimals > decimals)
             {
                 // get the amount we need to change by
                 adjustedDecimals = adjustedDecimals - decimals;
                 // we're going to chop the lengths a bit, so we also tweak the
                 // exponent
-                numberExponent = numberExponent + adjust;
+                numberExponent = numberExponent + adjustedDecimals;
                 // are we going to lose all of the digits?  Then we need to
                 // round.
                 if (adjustedDecimals >= digitsCount)
@@ -2062,16 +2048,16 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
                     // if the delta is exactly equal to the number of digits in
                     // the number, then we might need to round.  We become just a
                     // single digit number.
-                    if (adjust == digitsCount && number[0] >= 5)
+                    if (adjustedDecimals == digitsCount && numberDigits[0] >= 5)
                     {
-                        number[0] = 1;
+                        numberDigits[0] = 1;
                     }
                     // truncating and becoming zero
                     else
                     {
-                        number[0] = 0;
+                        numberDigits[0] = 0;
                         numberExponent = 0;
-                        sign = 0;
+                        numberSign = 0;
                     }
                     // we become a single digit long regardless
                     digitsCount = 1;
@@ -2083,17 +2069,17 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
                     // reduce the length
                     digitsCount -= adjustedDecimals;
                     // go round the number digit
-                    mathRound(number);
+                    mathRound(numberDigits);
                     // calculate new adjusted value, which means we have to redo
                     // the previous exponent calculation.
                     // needed for format(.999999,,4,2,2)
-                    if (mathexp != 0 && expfactor != 0)
+                    if (mathexp != 0 && expFactor != 0)
                     {
                         // adjust the exponent back to the orignal
-                        numberExponent += expfactor;
-                        expfactor = 0;
+                        numberExponent += expFactor;
+                        expFactor = 0;
                         strcpy(stringExponent, "0");
-                        exponentSize = strlen(exponent);
+                        exponentSize = 1;
                     }
 
                     wholenumber_t adjustedExponent = numberExponent + digitsCount - 1;
@@ -2112,11 +2098,11 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
 
                         // reapply the exponent adjustment
                         numberExponent -= adjustedExponent;
-                        expfactor = adjustedExponent;
+                        expFactor = adjustedExponent;
                         // format exponent to a string
-                        Numerics::formatWholeNumber(Numerics::abs(expfactor), stringExponent);
+                        Numerics::formatWholeNumber(Numerics::abs(expFactor), stringExponent);
                         // and get the new exponent size     */
-                        exponentSize = strlen(exponent);
+                        exponentSize = strlen(stringExponent);
 
                         // TODO:  This is not really correct...we've wiped out mathexp
                         // earlier, so this will no longer be -1.  Need to decouple this.
@@ -2147,7 +2133,7 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
             // no leading zeros, and we have fewer real digits
             else
             {
-                decimalDicits = digitsCount - adjustedDecimals;
+                decimalDigits = digitsCount - adjustedDecimals;
             }
             // in theory, everything has been adjusted to the point where
             // decimals is >= to the adjusted size
@@ -2166,7 +2152,7 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
         {
             integers = 1;
             integerDigits = 0;
-            trailingIntegerZeros = 1
+            trailingIntegerZeros = 1;
         }
         else
         {
@@ -2181,7 +2167,7 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
     //. working with a user-requested size.
     else
     {
-        wholenumber_T reqIntegers = integers;
+        wholenumber_t reqIntegers = integers;
         // the integer size value includes the sign, so reduce by one if we are negative
         if (isNegative())
         {
@@ -2197,7 +2183,7 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
         {
             neededIntegers = 1;
             integerDigits = 0;
-            trailingIntegerZeros = 1
+            trailingIntegerZeros = 1;
         }
         else
         {
@@ -2240,7 +2226,7 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
     }
 
     // do we have an exponent to add?
-    if (expfactor != 0)
+    if (expFactor != 0)
     {
         // add two for the E and the sign,
         size += 2;
@@ -2263,20 +2249,20 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
     // add the leading spaces
     builder.addSpaces(leadingSpaces);
     // build the integer part
-    builder.addIntegerPart(isNegative(), number, integerDigits, trailingIntegerZeros);
+    builder.addIntegerPart(isNegative(), numberDigits, integerDigits, trailingIntegerZeros);
 
     // if we have a decimal portion, add that now
     if (decimals > 0)
     {
-        builder.addDecimalPart(number + integerDigits, decimalDigits, leadingDecimalZeros, trailingDecimalZeros);
+        builder.addDecimalPart(numberDigits + integerDigits, decimalDigits, leadingDecimalZeros, trailingDecimalZeros);
     }
 
     // have an exponent to add?
-    if (expfactor != 0)
+    if (expFactor != 0)
     {
         // add the exponent marker
         builder.append('E');
-        builder.addExponentSign(expfactor < 0);
+        builder.addExponentSign(expFactor < 0);
         // add any padding zeros needed.
         builder.addZeros(leadingExpZeros);
         // add the real exponent part
@@ -2323,6 +2309,8 @@ public:
     inline bool atEnd() { return current >= end; }
     inline unsigned int getChar() { return (unsigned char)*current;}
     inline unsigned int nextChar() { return (unsigned char)*current++; }
+    inline void stepPosition() { current++; }
+    inline bool moreChars() { return current < end; }
 
 protected:
     const char *start;
@@ -2374,7 +2362,7 @@ public:
             // zeros are significant now
             haveNonZero = true;
             // store in binary form
-            *current++ = ch - '0';
+            *current++ = d - '0';
         }
         // in case this reduces to just zero, remember that we've
         // seen some sort of digit in the number
@@ -2402,12 +2390,12 @@ public:
     void setSign(char s)
     {
         // set the number sign
-        number->numberSign = s == ch_MINUS ? -1 : 1;
+        number->numberSign = s == RexxString::ch_MINUS ? -1 : 1;
     }
 
     void setExponentSign(char s)
     {
-        exponentSign = s == ch_MINUS ? -1 : 1;
+        exponentSign = s == RexxString::ch_MINUS ? -1 : 1;
     }
 
     void addExponentDigit(char d)
@@ -2448,9 +2436,9 @@ public:
         return true;
     }
 
-protected;
+protected:
     NumberString *number;               // the number we're building
-    const char *current;                // the current spot for adding a new digit
+    char *current;                      // the current spot for adding a new digit
     int exponentSign;                   // any sign for our exponent
     wholenumber_t exponent;             // our exponent accumulator
     wholenumber_t decimals;             // the decimal shift on the exponent
@@ -2578,7 +2566,7 @@ bool NumberString::parseNumber(const char *number, size_t length)
                 }
                 // if this is a dot, then we've got a starting decimal
                 // point.  This could be a number or an environment symbol
-                else if (inch == inch == RexxString::ch_PERIOD)
+                else if (inch == RexxString::ch_PERIOD)
                 {
                     state = NUMBER_SPOINT;
                 }
@@ -2596,7 +2584,7 @@ bool NumberString::parseNumber(const char *number, size_t length)
                 // is this a period?  Since we're scanning digits, this
                 // is must be the first period and is a decimal point.
                 // switch to scanning the part after the decimal.
-                if (inch == inch == RexxString::ch_PERIOD)
+                if (inch == RexxString::ch_PERIOD)
                 {
                     state = NUMBER_POINT;
                 }
@@ -2668,7 +2656,7 @@ bool NumberString::parseNumber(const char *number, size_t length)
                 if (inch >= RexxString::ch_ZERO && inch <= RexxString::ch_NINE)
                 {
                     // consume the exponent digit
-                    addExponentDigit(inch);
+                    builder.addExponentDigit(inch);
                     state = NUMBER_EDIGIT;
                 }
                 // potential sign for the exponent
@@ -2696,7 +2684,7 @@ bool NumberString::parseNumber(const char *number, size_t length)
                 if (inch >= RexxString::ch_ZERO && inch <= RexxString::ch_NINE)
                 {
                     // add the first digit here
-                    addExponentDigit(inch);
+                    builder.addExponentDigit(inch);
                     state = NUMBER_EDIGIT;
                 }
                 else
@@ -2721,12 +2709,12 @@ bool NumberString::parseNumber(const char *number, size_t length)
                     return false;
                 }
                 // process the digit
-                addExponentDigit(inch);
+                builder.addExponentDigit(inch);
                 break;
             }
 
             // removing trailing whitespace.  Only whitespace is allowed from here.
-            case NUMBER_WHITESPACE:
+            case NUMBER_TRAILING_WHITESPACE:
             {
                 // non-whitespace not allowed.
                 if (inch != RexxString::ch_SPACE && inch != RexxString::ch_TAB)
@@ -2737,7 +2725,7 @@ bool NumberString::parseNumber(const char *number, size_t length)
         }
 
         // handled all of the states, now handle the termination checks.
-        stepPosition();
+        scanner.stepPosition();
 
         // have we reached the end of the line?  Also done.
         if (!scanner.moreChars())
@@ -2746,7 +2734,7 @@ bool NumberString::parseNumber(const char *number, size_t length)
         }
 
         // get the next character
-        inch = getChar();
+        inch = scanner.getChar();
     }
 
     // if this fails final validation checks, return the failure.
@@ -2792,16 +2780,16 @@ void NumberString::formatUnsignedNumber(size_t integer)
         // this is a positive value
         numberSign = 1;
         // format the string value into our buffer
-        Numerics::formatStringSize(integer, number);
+        Numerics::formatStringSize(integer, numberDigits);
 
         // normalize all of the digits
-        char *current = number;
+        char *current = numberDigits;
         while (*current != '\0')
         {
             *current -= '0';
             current++;
         }
-        digitsCount = current - number;
+        digitsCount = current - numberDigits;
     }
 }
 
@@ -2833,7 +2821,7 @@ void NumberString::formatInt64(int64_t integer)
             // digit back in
             uint64_t working = (uint64_t)(-(integer + 1));
             working++;      // undoes the +1 above
-            sign = -1;      // negative number
+            numberSign = -1;      // negative number
 
             while (working > 0)
             {
@@ -2846,7 +2834,7 @@ void NumberString::formatInt64(int64_t integer)
         }
         else
         {
-            sign = 1;              // positive number
+            numberSign = 1;              // positive number
             while (integer > 0)
             {
                 // get the digit and reduce the size of the integer
@@ -2858,8 +2846,8 @@ void NumberString::formatInt64(int64_t integer)
         }
 
         // copy into the buffer and set the length
-        length = sizeof(buffer) - index;
-        memcpy(number, &buffer[index], length);
+        digitsCount = sizeof(buffer) - index;
+        memcpy(numberDigits, &buffer[index], digitsCount);
     }
 }
 
@@ -2893,8 +2881,8 @@ void NumberString::formatUnsignedInt64(uint64_t integer)
         }
 
         // copy into the buffer and set the length
-        length = sizeof(buffer) - index;
-        memcpy(number, &buffer[index], length);
+        digitsCount = sizeof(buffer) - index;
+        memcpy(numberDigits, &buffer[index], digitsCount);
     }
 }
 
@@ -3064,7 +3052,7 @@ wholenumber_t NumberString::comp(RexxObject *right, size_t fuzz)
 
     // unfortunately, we need to perform any lostdigits checks before
     // handling any of the short cuts
-    size_t digits = number_digits();
+    wholenumber_t digits = (wholenumber_t)number_digits();
 
     checkLostDigits(digits);
     rightNumber->checkLostDigits(digits);
@@ -3088,7 +3076,7 @@ wholenumber_t NumberString::comp(RexxObject *right, size_t fuzz)
     // get values adjusted for the relative magnatudes of the numbers.  This can
     // allow us to avoid performing the actual subtraction.
     wholenumber_t adjustedLeftExponent = numberExponent - minExponent;
-    wholenumber_t adjustedRightExponent = right->numberExponent - minExponent;
+    wholenumber_t adjustedRightExponent = rightNumber->numberExponent - minExponent;
 
     wholenumber_t adjustedLeftLength = digitsCount + adjustedLeftExponent;
     wholenumber_t adjustedRightLength = digitsCount + adjustedRightExponent;
@@ -3125,9 +3113,9 @@ wholenumber_t NumberString::comp(RexxObject *right, size_t fuzz)
             // the shorter length.  If they compare equal, then we need to scan
             // the longer string to see if there are any non-zero characters in
             // non-compared section
-            else if (length > rightNumber->length)
+            else if (digitsCount > rightNumber->digitsCount)
             {
-                rc = memcmp(numberDigits, rightNumber->numberDigits, rightNumber->digitsCount) * numberSign;
+                int rc = memcmp(numberDigits, rightNumber->numberDigits, rightNumber->digitsCount) * numberSign;
                 // if still equal, scan the remainder of our digits after the compared length
                 if (rc == 0)
                 {
@@ -3150,7 +3138,7 @@ wholenumber_t NumberString::comp(RexxObject *right, size_t fuzz)
             // inverse of the above compare...the left side is shorter
             else
             {
-                rc = memcmp(numberDigits, rightNumber->numberDigits, digitsCount) * numberSign;
+                int rc = memcmp(numberDigits, rightNumber->numberDigits, digitsCount) * numberSign;
                 // if still equal, scan the remainder of our digits after the compared length
                 if (rc == 0)
                 {
@@ -3394,7 +3382,7 @@ NumberString *NumberString::minus(RexxObject *right)
     {
         // need to copy and reformat, then negate the sign
         NumberString *result = prepareOperatorNumber(number_digits(), number_digits(), ROUND);
-        result->sign = -(result->sign);
+        result->numberSign = -(result->numberSign);
         return result;
     }
 }
@@ -3474,14 +3462,14 @@ NumberString *NumberString::remainder(RexxObject *right)
  */
 NumberString *NumberString::copyIfNecessary()
 {
-    size_t digits = number_digits();
+    wholenumber_t digits = (wholenumber_t)number_digits();
     bool form = number_form();
 
     // if this number has problems with the current digits settings,
     // we need to make a copy and potentially round.  There are also issues
     // if the numberstring digits or form settings are different from the
     // current values.  We will need a string that will format the correct way.
-    if (digitsCount > digits || createDigits != digits || isScientific() != form)
+    if (digitsCount > digits || createdDigits != digits || isScientific() != form)
     {
         NumberString *newNumber = clone();
         // inherit the current numeric settings and perform rounding, if
@@ -3664,7 +3652,7 @@ bool NumberString::isInteger()
     // get size of the integer part of this number
     wholenumber_t adjustedLength = numberExponent + digitsCount;
     // ok, now do the exponent check...if we need one, not an integer
-    if ((adjustedLength >= createdDigits) || (Numerics::abs(exponent) > (createdDigits * 2)) )
+    if ((adjustedLength >= (wholenumber_t)createdDigits) || (Numerics::abs(numberExponent) > (wholenumber_t)(createdDigits * 2)) )
     {
         return false;
     }
@@ -3691,56 +3679,12 @@ bool NumberString::isInteger()
     // validate that all decimal positions are zero
     for (wholenumber_t numIndex = integers; numIndex < digitsCount; numIndex++)
     {
-        if (number[numIndex] != 0)
+        if (numberDigits[numIndex] != 0)
         {
             return false;
         }
     }
     return true;
-}
-
-
-/*********************************************************************/
-/*   Function:          Round up a number as a result of the chopping*/
-/*                        digits off of the number during init.      */
-/*********************************************************************/
-void NumberString::roundUp(int MSDigit)
-{
-    int  carry;
-    char *InPtr;
-    char ch;
-    /* Did we chop off digits and is it  */
-    /* greater/equal to 5, rounding?     */
-    if (MSDigit >= RexxString::ch_FIVE && MSDigit <= RexxString::ch_NINE)
-    {
-        /* yes, we have to round up digits   */
-
-        carry = 1;                         /* indicate we have a carry.         */
-                                           /* point to last digit.              */
-        InPtr = number + length - 1;
-
-        /* all digits and still have a carry */
-        while ((InPtr >= number) && carry)
-        {
-            if (*InPtr == 9)                  /* Is this digit a 9?                */
-            {
-                ch = 0;                          /* make digit 0, still have carry    */
-            }
-            else
-            {
-                ch = *InPtr + 1;                 /* Not nine, just add one to digit.  */
-                carry = 0;                       /* No more carry.                    */
-            }
-            *InPtr-- = ch;                    /* replace digit with new value.     */
-        }                                  /* All done rounding.                */
-
-        if (carry)
-        {                       /* Do we still have a carry?         */
-                                /* yes, carry rippled all the way    */
-            *number = 1;                /*  set 1st digit to a 1.            */
-            exp += 1;                   /* increment exponent by one.        */
-        }
-    }
 }
 
 
@@ -3970,15 +3914,14 @@ NumberString *NumberString::newInstanceFromDouble(double number, size_t precisio
         return (NumberString *)new_string("-infinity");
     }
 
-    NumberString *result;
-    size_t resultLen;
+
     // Max length of double str is 22, make 32 just to be safe
     char doubleStr[32];
     // get double as a string value, using the provided precision
     sprintf(doubleStr, "%.*g", (int)(precision + 2), number);
     size_t resultLen = strlen(doubleStr);
     // create a new number string with this size
-    NumberString result = new (resultLen) NumberString (resultLen, precision);
+    NumberString *result = new (resultLen) NumberString (resultLen, precision);
     // now format as a numberstring
     result->parseNumber(doubleStr, resultLen);
     // and perform any rounding that might be required for this precision.

@@ -49,9 +49,7 @@
 class MapTable : public RexxInternalObject
 {
  public:
-    void *operator new(size_t base);
-    inline void *operator new(size_t size, void *objectPtr) { return objectPtr; };
-    inline void  operator delete(void *, void *) {;}
+           void *operator new(size_t base);
     inline void  operator delete(void *) {;}
 
     MapTable(size_t entries);

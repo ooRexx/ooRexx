@@ -49,8 +49,6 @@
 class PointerClass : public RexxObject
 {
 public:
-    inline void *operator new(size_t, void *ptr) { return ptr; }
-    inline void  operator delete(void *, void *) { ; }
     void *operator new(size_t);
     inline void  operator delete(void *) { ; }
 

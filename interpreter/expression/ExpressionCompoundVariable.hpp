@@ -57,10 +57,7 @@ class RexxCompoundVariable : public RexxVariableBase
 {
  public:
     void *operator new(size_t, size_t);
-    inline void *operator new(size_t size, void *ptr) {return ptr;};
-    inline void  operator delete(void *) { ; }
     inline void  operator delete(void *, size_t) { ; }
-    inline void  operator delete(void *, void *) { ; }
 
     RexxCompoundVariable(RexxString *, size_t, QueueClass *, size_t);
     inline RexxCompoundVariable(RESTORETYPE restoreType) { ; };

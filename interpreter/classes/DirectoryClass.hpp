@@ -50,9 +50,7 @@ class DirectoryClass : public StringHashCollection
 {
  public:
     void        *operator new(size_t);
-    inline void *operator new(size_t size, void *ptr) {return ptr;}
     inline void  operator delete(void *) { ; }
-    inline void  operator delete(void *, void *) { ; }
 
     inline DirectoryClass(RESTORETYPE restoreType) { ; }
            DirectoryClass(size_t capacity = HashCollection::DefaultTableSize) : methodTable(OREF_NULL), unknownMethod(OREF_NULL), StringHashCollection(capacity) { }

@@ -60,10 +60,8 @@ class MapBucket : public RexxInternalObject
  public:
     typedef size_t MapLink;                  // a link to another map item
 
-    void *operator new(size_t base, size_t entries);
+           void *operator new(size_t base, size_t entries);
     inline void  operator delete(void *, size_t) {;}
-    inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };
-    inline void   operator delete(void *, void *) { ; }
 
     MapBucket(size_t entries);
     inline MapBucket(RESTORETYPE restoreType) { ; };

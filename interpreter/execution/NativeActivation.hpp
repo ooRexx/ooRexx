@@ -71,8 +71,6 @@ class NativeActivation : public ActivationBase
 {
    public:
            void *operator new(size_t);
-    inline void *operator new(size_t size, void *ptr) {return ptr;};
-    inline void  operator delete(void *, void *) { ; }
     inline void  operator delete(void *) { ; }
 
     inline NativeActivation(RESTORETYPE restoreType) { ; };

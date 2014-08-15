@@ -50,7 +50,6 @@ class RoutineClass : public BaseExecutable
 {
 public:
     void *operator new(size_t);
-    inline void *operator new(size_t size, void *ptr) { return ptr; };
 
     RoutineClass(RexxString *n, BaseCode *_code);
     inline RoutineClass(RESTORETYPE restoreType) { ; };

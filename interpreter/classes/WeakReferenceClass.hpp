@@ -59,15 +59,14 @@ public:
     WeakReference();
     WeakReference(RexxInternalObject *referent);
 
-    inline void *operator new(size_t, void *ptr) {return ptr;}
-    inline void  operator delete(void *, void *) {;}
-    void *operator new(size_t);
-    inline void  operator delete(void *) {;}
+           void *operator new(size_t);
 
-    void        live(size_t);
-    void        liveGeneral(MarkReason);
-    void        flatten(Envelope *);
-    RexxInternalObject *unflatten(Envelope *);
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason);
+    virtual void flatten(Envelope *);
+    virtual RexxInternalObject *unflatten(Envelope *);
+
+    // TODO:  Weak reference might have some copy method issues
 
     RexxInternalObject *value();
     inline RexxInternalObject *get() { return referentObject; }

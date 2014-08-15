@@ -1680,12 +1680,12 @@ MutableBuffer *MutableBuffer::delWord(RexxInteger *position, RexxInteger *plengt
     }
 
     // create an iterator for traversing the words
-    WordIterator iterator(getStringData(), length);
+    RexxString::WordIterator iterator(getData(), length);
 
     // to the given word position...if we don't get there,
     // there is nothing to delete so we can just return the
     // original string.
-    if (!iterator.skipWords(wordPos))
+    if (!iterator.skipWords(_wordPos))
     {
         return this;
     }
@@ -1747,7 +1747,7 @@ MutableBuffer *MutableBuffer::space(RexxInteger *space_count, RexxString *pad)
 
 
     // get a fresh iterator for building the string
-    WordIterator iterator(getStringData(), getLength());
+    RexxString::WordIterator iterator(getData(), getLength());
 
     bool haveWord = iterator.next();
 
@@ -1814,7 +1814,7 @@ MutableBuffer *MutableBuffer::space(RexxInteger *space_count, RexxString *pad)
         writePos = 0;
 
         // get a fresh iterator for building the string
-        WordIterator iterator(getStringData(), getLength());
+        RexxString::WordIterator iterator(getData(), getLength());
 
         bool haveWord = iterator.next();
 
@@ -1822,7 +1822,7 @@ MutableBuffer *MutableBuffer::space(RexxInteger *space_count, RexxString *pad)
         while (haveWord)
         {
             copyData(writePos, iterator.wordPointer(), iterator.wordLength());
-            writePos += _iterator.wordLength();
+            writePos += iterator.wordLength();
 
             // see if we have a following word.  If we don't we're done,
             // otherwise we need to insert the between word padding.

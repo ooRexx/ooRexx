@@ -61,10 +61,6 @@ typedef enum
 class RexxInstructionParse : public RexxInstruction
 {
  public:
-    inline void *operator new(size_t size, void *ptr) {return ptr;}
-    inline void operator delete(void *) { }
-    inline void operator delete(void *, void *) { }
-
     RexxInstructionParse(RexxObject *expr, InstructionSubKeyword source,
         FlagSet<ParseFlags, 32>, size_t templateCount, QueueClass *parse_template);
     inline RexxInstructionParse(RESTORETYPE restoreType) { ; };

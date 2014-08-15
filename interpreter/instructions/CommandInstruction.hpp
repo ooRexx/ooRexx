@@ -49,10 +49,6 @@
 class RexxInstructionCommand : public RexxInstructionExpression
 {
  public:
-    inline void *operator new(size_t size, void *ptr) {return ptr;}
-    inline void operator delete(void *) { }
-    inline void operator delete(void *, void *) { }
-
     RexxInstructionCommand(RexxObject*);
     inline RexxInstructionCommand(RESTORETYPE restoreType) { ; };
 

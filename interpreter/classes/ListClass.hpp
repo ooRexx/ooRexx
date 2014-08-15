@@ -53,7 +53,7 @@ class ListClass : public RexxObject
   friend class ListTable;
  public:
     void * operator new(size_t);
-    inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };
+
     inline ListClass(RESTORETYPE restoreType) { ; };
     ListClass(size_t capacity = DefaultListSize);
     ListClass::ListClass(bool fromRexx) { }

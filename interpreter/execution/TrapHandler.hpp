@@ -54,11 +54,7 @@ class RexxInstructionTrapBase;
 class TrapHandler : public RexxInternalObject
 {
  public:
-
     void *operator new(size_t base);
-    inline void  operator delete(void *) {;}
-    inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };
-    inline void   operator delete(void *, void *) { ; }
 
     TrapHandler(RexxString *condition, RexxInstructionTrapBase *handler);
     inline TrapHandler(RESTORETYPE restoreType) { ; };

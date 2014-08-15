@@ -3493,6 +3493,12 @@ special character (such as a parenthesis).
 <para>Execution thread does not match API thread context.</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>984</term>
+<listitem>
+<para>User additions are not allowed to the REXX package.</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR99">

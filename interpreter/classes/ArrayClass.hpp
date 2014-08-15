@@ -132,13 +132,11 @@ class ArrayClass : public RexxObject
         RexxObject *comparator;
     };
 
-    inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };
     void * operator new(size_t, size_t = DefaultArraySize, size_t = DefaultArraySize);
+    inline void operator delete(void *, size_t, size_t) {;}
 
     static ArrayClass *allocateNewObject(size_t size, size_t items, size_t maxSize, size_t type);
 
-    inline void operator delete(void *, void *) {;}
-    inline void operator delete(void *, size_t, size_t) {;}
 
     inline ArrayClass(RESTORETYPE restoreType) { ; };
     inline ArrayClass() { ; };

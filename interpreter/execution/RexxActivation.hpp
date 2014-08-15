@@ -114,11 +114,8 @@ class RexxActivation : public ActivationBase
         TRACE_PREFIX_INVOCATION,
     } TracePrefix;
 
-
    void *operator new(size_t);
-   inline void *operator new(size_t size, void *ptr) {return ptr;};
    inline void  operator delete(void *) { ; }
-   inline void  operator delete(void *, void *) { ; }
 
    inline RexxActivation(RESTORETYPE restoreType) { ; };
    RexxActivation();

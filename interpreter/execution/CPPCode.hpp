@@ -52,9 +52,8 @@ class CPPCode : public BaseCode
 {
 public:
     void *operator new(size_t);
-    inline void *operator new(size_t size, void *ptr) { return ptr; };
     inline void operator delete(void *) { }
-    inline void operator delete(void *, void *) { }
+
     CPPCode(size_t, PCPPM, size_t);
     inline CPPCode(RESTORETYPE restoreType) { ; };
 
@@ -81,9 +80,8 @@ class AttributeGetterCode : public BaseCode
 {
 public:
     void *operator new(size_t);
-    inline void *operator new(size_t size, void *ptr) { return ptr; };
     inline void operator delete(void *) { }
-    inline void operator delete(void *, void *) { }
+
     inline AttributeGetterCode(RexxVariableBase *a) { attribute = a; }
     inline AttributeGetterCode(RESTORETYPE restoreType) { ; };
 
@@ -105,9 +103,7 @@ class AttributeSetterCode : public AttributeGetterCode
 {
 public:
     void *operator new(size_t);
-    inline void *operator new(size_t size, void *ptr) { return ptr; };
     inline void operator delete(void *) { }
-    inline void operator delete(void *, void *) { }
 
     inline AttributeSetterCode(RexxVariableBase *a) : AttributeGetterCode(a) { }
     inline AttributeSetterCode(RESTORETYPE restoreType) : AttributeGetterCode(restoreType) { }
@@ -123,9 +119,7 @@ class ConstantGetterCode : public BaseCode
 {
 public:
     void *operator new(size_t);
-    inline void *operator new(size_t size, void *ptr) { return ptr; };
     inline void operator delete(void *) { }
-    inline void operator delete(void *, void *) { }
 
     inline ConstantGetterCode(RexxObject * v) { constantValue = v; }
     inline ConstantGetterCode(RESTORETYPE restoreType) { }
@@ -148,9 +142,8 @@ class AbstractCode : public BaseCode
 {
 public:
     void *operator new(size_t);
-    inline void *operator new(size_t size, void *ptr) { return ptr; };
     inline void operator delete(void *) { }
-    inline void operator delete(void *, void *) { }
+
     inline AbstractCode() { }
     inline AbstractCode(RESTORETYPE restoreType) { }
 

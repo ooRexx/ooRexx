@@ -64,9 +64,7 @@ class RexxInstruction : public RexxInternalObject
  friend class RexxActivation;
  public:
            void *operator new(size_t);
-    inline void *operator new(size_t size, void *objectPtr) { return objectPtr; }
     inline void  operator delete(void *) { }
-    inline void  operator delete(void *, void *) { }
 
     RexxInstruction(RexxClause *clause, InstructionKeyword type);
     inline RexxInstruction(RESTORETYPE restoreType) { ; };

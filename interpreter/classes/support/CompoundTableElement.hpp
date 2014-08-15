@@ -54,9 +54,7 @@ class CompoundTableElement : public RexxVariable
 
  public:
            void *operator new(size_t size);
-    inline void *operator new(size_t size, void *ptr) { return ptr; };
     inline void  operator delete(void *) { ; }
-    inline void  operator delete(void *, void *) { ; }
 
     inline CompoundTableElement(RexxString *name) { variableName = name; }
     inline CompoundTableElement(RESTORETYPE restoreType) { ; };

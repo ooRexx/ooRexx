@@ -106,11 +106,6 @@ class RexxInstructionTrapBase : public RexxInstructionCallBase
 class RexxInstructionCall : public RexxInstructionCallBase
 {
  public:
-
-    inline void *operator new(size_t size, void *ptr) {return ptr;}
-    inline void operator delete(void *) { }
-    inline void operator delete(void *, void *) { }
-
     RexxInstructionCall(RexxString *, size_t, QueueClass *, BuiltinCode);
     inline RexxInstructionCall(RESTORETYPE restoreType) { ; };
 
@@ -136,11 +131,6 @@ protected:
 class RexxInstructionDynamicCall : public RexxInstructionDynamicCallBase
 {
  public:
-
-    inline void *operator new(size_t size, void *ptr) {return ptr;}
-    inline void operator delete(void *) { }
-    inline void operator delete(void *, void *) { }
-
     RexxInstructionDynamicCall(RexxObject *, size_t, QueueClass *);
     inline RexxInstructionDynamicCall(RESTORETYPE restoreType) { ; };
 
@@ -164,11 +154,6 @@ protected:
 class RexxInstructionCallOn : public RexxInstructionTrapBase
 {
  public:
-
-    inline void *operator new(size_t size, void *ptr) {return ptr;}
-    inline void operator delete(void *) { }
-    inline void operator delete(void *, void *) { }
-
     RexxInstructionCallOn(RexxString*, RexxString *, BuiltinCode);
     inline RexxInstructionCallOn(RESTORETYPE restoreType) { ; };
 

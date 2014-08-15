@@ -72,7 +72,7 @@ class StemClass : public RexxObject
   friend class CompoundVariableTable;
   public:
     void *operator new (size_t);
-    inline void *operator new(size_t size, void *ptr) {return ptr;};
+
     StemClass(RexxString *);
     inline StemClass(RESTORETYPE restoreType) { ; };
 

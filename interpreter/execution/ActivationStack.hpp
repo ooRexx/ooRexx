@@ -54,7 +54,6 @@ class ActivationFrameBuffer : public RexxInternalObject
 {
     public:
             void *operator new(size_t size, size_t entries);
-     inline void *operator new(size_t size, void *ptr) { return ptr;};
      inline void  operator delete(void *, void *) { ; }
      inline void  operator delete(void *, size_t) { ; }
 
@@ -111,8 +110,6 @@ class ActivationStack
  public:
 
     enum { DefaultFrameBufferSize = 2048 };
-
-    inline void *operator new(size_t size, void *ptr) { return ptr;};
     ActivationStack() { ; }
 
     void live(size_t);

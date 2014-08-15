@@ -50,9 +50,7 @@ class RelationClass : public EqualityHashCollection
 {
  public:
      void        *operator new(size_t);
-     inline void *operator new(size_t size, void *ptr) {return ptr;}
      inline void  operator delete(void *) { ; }
-     inline void  operator delete(void *, void *) { ; }
 
     inline RelationClass(RESTORETYPE restoreType) { ; }
            RelationClass(size_t capacity = HashCollection::DefaultTableSize);

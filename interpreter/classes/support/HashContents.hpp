@@ -357,8 +357,6 @@ class IdentityHashContents : public HashContents
 {
 public:
            void * operator new(size_t size, size_t capacity);
-    inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };
-    inline void  operator delete(void *, void *) { ; }
     inline void  operator delete(void *, size_t) { ; }
 
     inline IdentityHashContents() { ; };
@@ -374,9 +372,7 @@ public:
 class EqualityHashContents : public HashContents
 {
 public:
-        void * operator new(size_t size, size_t capacity);
-    inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };
-    inline void  operator delete(void *, void *) { ; }
+           void *operator new(size_t size, size_t capacity);
     inline void  operator delete(void *, size_t) { ; }
 
     inline EqualityHashContents() { ; };
@@ -413,9 +409,7 @@ public:
 class MultiValueContents : public EqualityHashContents
 {
 public:
-        void * operator new(size_t size, size_t capacity);
-    inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };
-    inline void  operator delete(void *, void *) { ; }
+           void *operator new(size_t size, size_t capacity);
     inline void  operator delete(void *, size_t) { ; }
 
     inline MultiValueContents() { ; };
@@ -437,9 +431,7 @@ public:
 class StringHashContents : public EqualityHashContents
 {
 public:
-        void * operator new(size_t size, size_t capacity);
-    inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };
-    inline void  operator delete(void *, void *) { ; }
+           void *operator new(size_t size, size_t capacity);
     inline void  operator delete(void *, size_t) { ; }
 
     inline StringHashContents() { ; };

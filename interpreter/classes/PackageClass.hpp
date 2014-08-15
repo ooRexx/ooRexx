@@ -58,7 +58,6 @@ class PackageClass : public RexxObject
 friend class LanguageParser;
 public:
     void *operator new(size_t);
-    inline void *operator new(size_t size, void *ptr) { return ptr; };
 
     PackageClass(RexxString *p, ProgramSource *s);
     inline PackageClass(RESTORETYPE restoreType) { ; };

@@ -559,6 +559,7 @@
 #define Rexx_Error_Execution_context_not_active                 98981
 #define Rexx_Error_Execution_library_version                    98982
 #define Rexx_Error_Execution_invalid_thread                     98983
+#define Rexx_Error_Execution_rexx_package_update                98984
 #define Rexx_Error_Translation                                  99000
 #define Rexx_Error_Translation_user_defined                     99900
 #define Rexx_Error_Translation_duplicate_class                  99901

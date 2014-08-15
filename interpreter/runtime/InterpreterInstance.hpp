@@ -60,14 +60,12 @@ class InterpreterInstance : public RexxInternalObject
 friend class SysInterpreterInstance;
 public:
 
+    void *operator new(size_t);
+    inline void  operator delete(void *) {;}
+
     // methods associated with actual interpreter instances
     inline InterpreterInstance(RESTORETYPE restoreType) { ; }
     InterpreterInstance();
-
-    inline void *operator new(size_t, void *ptr) {return ptr;}
-    inline void  operator delete(void *, void *) {;}
-    void *operator new(size_t);
-    inline void  operator delete(void *) {;}
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason);

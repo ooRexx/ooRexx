@@ -93,9 +93,7 @@ class LanguageParser: public RexxInternalObject
 {
  public:
     void        *operator new(size_t);
-    inline void *operator new(size_t size, void *ptr) {return ptr;}
     inline void  operator delete(void *) { ; }
-    inline void  operator delete(void *, void *) { ; }
 
     LanguageParser(RexxString *name, ProgramSource *s);
     inline LanguageParser(RESTORETYPE restoreType) { ; };

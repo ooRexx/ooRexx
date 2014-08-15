@@ -51,8 +51,6 @@ class SupplierClass : public RexxObject
 {
  public:
            void *operator new(size_t);
-    inline void *operator new(size_t size, void *objectPtr) { return objectPtr; };
-    inline void  operator delete(void *, void *) {;}
     inline void  operator delete(void *) {;}
 
     inline SupplierClass(RESTORETYPE restoreType) { ; };

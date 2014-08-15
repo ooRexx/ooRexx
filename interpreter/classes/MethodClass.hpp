@@ -64,7 +64,6 @@ class MethodClass : public BaseExecutable
 {
  public:
     void *operator new(size_t);
-    inline void *operator new(size_t size, void *ptr) { return ptr; };
 
     MethodClass(RexxString *name, BaseCode *_code);
     inline MethodClass(RESTORETYPE restoreType) { ; };

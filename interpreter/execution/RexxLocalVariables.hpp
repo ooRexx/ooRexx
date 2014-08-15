@@ -75,7 +75,6 @@ class RexxLocalVariables
         METHOD_CONTEXT,          // this is a method context
     } VDictFlag;
 
-    inline void *operator new(size_t size, void *ptr) { return ptr;};
     RexxLocalVariables(RexxObject **frames, size_t items) { locals = (RexxVariable **)frames; size = items; }
     RexxLocalVariables() { locals = OREF_NULL; size = 0; }
 

@@ -55,9 +55,7 @@ class BagClass : public IndexOnlyHashCollection
 {
  public:
      void        *operator new(size_t);
-     inline void *operator new(size_t size, void *ptr) {return ptr;}
      inline void  operator delete(void *) { ; }
-     inline void  operator delete(void *, void *) { ; }
 
     inline BagClass(RESTORETYPE restoreType) { ; }
            BagClass(size_t capacity = HashCollection::DefaultTableSize);

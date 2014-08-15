@@ -52,10 +52,8 @@ class Activity;
 class CommandHandler : public RexxInternalObject
 {
 public:
-    inline void *operator new(size_t size, void *ptr) { return ptr; }
     void        *operator new(size_t size);
     inline void  operator delete(void *) { ; }
-    inline void  operator delete(void *, void *) { ; }
 
     inline CommandHandler(RESTORETYPE restoreType) { ; };
     inline CommandHandler(REXXPFN e) : entryPoint(e) { type = DIRECT; }

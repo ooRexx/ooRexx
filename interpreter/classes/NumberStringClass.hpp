@@ -46,6 +46,7 @@
 
 #include "FlagSet.hpp"
 #include "Numerics.hpp"
+#include "StringClass.hpp"
 
 
 /**
@@ -56,6 +57,7 @@
 class NumberStringBase : public RexxObject
 {
  friend class NumberString;
+ friend class NumberStringBuilder;
 public:
     typedef enum
     {
@@ -112,11 +114,11 @@ class NumberString : public NumberStringBase
    class NumberBuilder
    {
    public:
-       inline NumberBuilder(RexxString *s) : current(s->getWriteableData()) {}
+       inline NumberBuilder(RexxString *s) : current(s->getWritableData()) {}
 
-       inline void addSign(bool isNegative) { if (isNegative) { *current = RexxString::ch_MINUS2; current++; } }
+       inline void addSign(bool isNegative) { if (isNegative) { *current = RexxString::ch_MINUS; current++; } }
        inline void addExponentSign(bool isNegative) { *current = isNegative ? RexxString::ch_MINUS : RexxString::ch_PLUS; current++; }
-       inline void addDecimal() { append(ch_PERIOD); }
+       inline void addDecimal() { append(RexxString::ch_PERIOD); }
        inline void addExponent(const char *exp)
        {
            size_t len = strlen(exp);
@@ -127,7 +129,7 @@ class NumberString : public NumberStringBase
        inline void append(char c) { *current++ = c; }
        inline void addDigits(const char *d, wholenumber_t len)
        {
-           for (size_t i = 0; i < len; i++)
+           for (wholenumber_t i = 0; i < len; i++)
            {
                append(d[i] + RexxString::ch_ZERO);
            }
@@ -145,19 +147,19 @@ class NumberString : public NumberStringBase
            current += count;
        }
 
-       inline void addIntegerPart(bool sign, const char *digits, wholenumber_t intDigits, wholeNumber_t pad = 0)
+       inline void addIntegerPart(bool sign, const char *digits, wholenumber_t intDigits, wholenumber_t pad = 0)
        {
            addSign(sign);
-           addDigits(digis, intDigits);
+           addDigits(digits, intDigits);
            addZeros(pad);
        }
 
-       inline void addDecimalPart(bool sign, const char *digits, wholenumber_t decimalDigits, wholeNumber_t leadPad = 0, wholenumber_t trailingPad = 0)
+       inline void addDecimalPart(const char *digits, wholenumber_t decimalDigits, wholenumber_t leadPad = 0, wholenumber_t trailingPad = 0)
        {
-           builder.addDecimal();
-           builder.addZeros(Pad);
-           builder.addDigits(digits, decimalDigits);
-           builder.addZeros(trailingPad);
+           addDecimal();
+           addZeros(leadPad);
+           addDigits(digits, decimalDigits);
+           addZeros(trailingPad);
        }
 
 
@@ -166,10 +168,7 @@ class NumberString : public NumberStringBase
    };
 
     void         *operator new(size_t, size_t);
-    inline void  *operator new(size_t size, void *ptr) {return ptr;}
-    inline void   operator delete(void *) { ; }
     inline void   operator delete(void *, size_t) { }
-    inline void   operator delete(void *, void *) { }
 
     NumberString(size_t) ;
     NumberString(size_t, size_t) ;
@@ -197,7 +196,7 @@ class NumberString : public NumberStringBase
 
     virtual bool        isEqual(RexxObject *);
     wholenumber_t strictComp(RexxObject *);
-    wholenumber_t comp(RexxObject *);
+    wholenumber_t comp(RexxObject *, size_t fuzz);
     RexxObject  *equal(RexxObject *);
     RexxObject  *strictEqual(RexxObject *);
     RexxObject  *notEqual(RexxObject *);
@@ -214,9 +213,8 @@ class NumberString : public NumberStringBase
 
     NumberString *clone();
     void        setString(RexxString *);
-    void        roundUp(int);
     RexxString *formatRexx(RexxObject *, RexxObject *, RexxObject *, RexxObject *);
-    RexxString *formatInternal(size_t, size_t, size_t, size_t, NumberString *, size_t, bool);
+    RexxString *formatInternal(wholenumber_t, wholenumber_t, wholenumber_t, wholenumber_t, NumberString *, size_t, bool);
     RexxObject *operatorNot(RexxObject *);
     RexxObject *evaluate(RexxActivation *, ExpressionStack *);
     RexxObject *getValue(RexxActivation *context);
@@ -224,7 +222,7 @@ class NumberString : public NumberStringBase
     RexxObject *getRealValue(RexxActivation *);
     RexxObject *getRealValue(VariableDictionary *);
     RexxObject *trunc(RexxObject *);
-    RexxObject *truncInternal(size_t);
+    RexxObject *truncInternal(wholenumber_t);
     RexxObject *floor();
     RexxObject *floorInternal();
     RexxObject *ceiling();
@@ -238,7 +236,7 @@ class NumberString : public NumberStringBase
     RexxClass  *classObject();
     inline NumberString *checkNumber(size_t digits)
     {
-       if (digitsCount > digits)            // is the length larger than digits()?
+       if (digitsCount > (wholenumber_t)digits)  // is the length larger than digits()?
        {
                                              // need to allocate a new number, but
                                              // we chop to digits + 1
@@ -248,24 +246,20 @@ class NumberString : public NumberStringBase
     }
 
     //quick test for a numeric overflow
-    inline void checkOverflow()
-    {
-        if (((numberExponent + digitsCount - 1) > Numerics::MAX_EXPONENT) ||
-            (numberExponent < (Numerics::MIN_EXPONENT)) )
-        {
-            reportException(Error_Conversion_operator, this);
-        }
-    }
-
+    void checkOverflow();
+    void checkLostDigits(size_t digits);
+    NumberString *operatorArgument(RexxObject *right);
 
     NumberString *prepareNumber(size_t, bool);
     NumberString *prepareOperatorNumber(size_t, size_t, bool);
+    NumberString *copyIfNecessary();
+    NumberString *copyForCurrentSettings();
     void              adjustPrecision(char *, size_t);
     void              adjustPrecision();
-    inline void       checkPrecision() { if (digitsCount > createdDigits) adjustPrecision(); }
+    inline void       checkPrecision() { if (digitsCount > (wholenumber_t)createdDigits) adjustPrecision(); }
     inline void       setNumericSettings(size_t digits, bool form)
     {
-        numDigits = digits;
+        createdDigits = digits;
         if (form == Numerics::FORM_SCIENTIFIC)
         {
             numFlags.set(NumberFormScientific);
@@ -328,23 +322,25 @@ class NumberString : public NumberStringBase
     RexxObject *orOp(RexxObject *);
     RexxObject *andOp(RexxObject *);
     RexxObject *xorOp(RexxObject *);
-    void        formatNumber(wholenumber_t);
+    bool        parseNumber(const char *number, size_t length);
+    void        formatNumber(wholenumber_t integer);
     void        formatUnsignedNumber(size_t);
-    int         format(const char *, size_t);
     inline void setZero()
     {
         numberDigits[0] = '\0';         // Make value a zero.
-        numberLength = 1;               // Length is 1
+        digitsCount = 1;                // Length is 1
         numberSign = 0;                 // Make sign Zero.
         numberExponent = 0;             // exponent is zero.
     }
 
     inline bool isZero() { return numberSign == 0; }
-    inline bool isOne() { return digitsCount == 1 && numberSign == 1 && numberExponent == 1 && numberDigits[0] = 1; }
+    inline bool isOne() { return digitsCount == 1 && numberSign == 1 && numberExponent == 1 && numberDigits[0] == 1; }
     inline bool isNegative() { return numberSign < 0; }
     inline bool isPositive() { return numberSign > 0; }
-    inline bool isInteger() { return numberExponent == 0; }
+    inline bool isAllInteger() { return numberExponent == 0; }
     inline bool hasDecimals() { return numberExponent < 0; }
+           bool hasSignificantDecimals(size_t digits);
+           void formatExponent(wholenumber_t exponent, char *buffer);
 
     static PCPPM operatorMethods[];
 

@@ -44,6 +44,7 @@
 #ifndef Included_RexxObject
 #define Included_RexxObject
 
+#include <new>
 #include "Numerics.hpp"
 
 class RexxInternalObject;
@@ -229,11 +230,6 @@ inline uintptr_t HASHOREF(RexxVirtualBase *r) { return ((uintptr_t)r) >> OREFSHI
 class RexxInternalObject : public RexxVirtualBase
 {
  public:
-     // we define these at the lowest level so the in-memory ones are available everywhere
-     inline void *operator new(size_t size, void *objectPtr) { return objectPtr; };
-     inline void  operator delete(void *, void *) {;}
-     inline void  operator delete(void *) {;}
-
     inline RexxInternalObject() {;};
     /**
      * Following constructor used to reconstruct the Virtual
@@ -373,9 +369,7 @@ class RexxObject : public RexxInternalObject
 {
  public:
     void * operator new(size_t);
-    inline void *operator new(size_t size, void *objectPtr) { return objectPtr; };
     inline void  operator delete(void *) { ; }
-    inline void  operator delete(void *, void *) {;}
 
     // Following are used to create new objects.
     // Assumed that the message is sent to a class Object
@@ -575,9 +569,7 @@ class RexxNilObject : public RexxObject
 {
 public:
     void * operator new(size_t);
-    inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };
     inline void   operator delete(void *) { ; }
-    inline void   operator delete(void *, void *) { ; }
 
     RexxNilObject();
     inline RexxNilObject(RESTORETYPE restoreType) { ; };

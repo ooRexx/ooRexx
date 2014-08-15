@@ -58,9 +58,7 @@ class ClassDirective : public RexxDirective
  friend class PackageClass;
  public:
            void *operator new(size_t);
-    inline void *operator new(size_t size, void *objectPtr) { return objectPtr; }
     inline void  operator delete(void *) { }
-    inline void  operator delete(void *, void *) { }
 
     ClassDirective(RexxString *, RexxString *, RexxClause *);
     inline ClassDirective(RESTORETYPE restoreType) { ; };

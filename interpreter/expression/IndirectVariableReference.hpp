@@ -51,10 +51,8 @@ class ArrayClass;
 class RexxVariableReference : public RexxVariableBase
 {
  public:
-    void *operator new(size_t);
-    inline void *operator new(size_t size, void *ptr) {return ptr;};
+           void *operator new(size_t);
     inline void  operator delete(void *) { ; }
-    inline void  operator delete(void *, void *) { ; }
 
     inline RexxVariableReference(RESTORETYPE restoreType) { ; };
     RexxVariableReference(RexxVariableBase *);

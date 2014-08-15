@@ -89,11 +89,8 @@ class MemorySegment : public MemorySegmentHeader
  friend class MemoryObject;
 
  public:
-   inline void *operator new(size_t size, void *segment) { return segment; }
-   inline void  operator delete(void *) { }
-   inline void  operator delete(void *, void *) { }
-
-   inline MemorySegment(size_t segSize) {
+   inline MemorySegment(size_t segSize)
+   {
        segmentSize = segSize - sizeof(MemorySegmentHeader);
    }
    /* Following is a static constructor, called during MemoryObject */
@@ -106,26 +103,30 @@ class MemorySegment : public MemorySegmentHeader
        previous = this;
    }
 
-   inline void insertAfter(MemorySegment *newSegment) {
+   inline void insertAfter(MemorySegment *newSegment)
+   {
        newSegment->next     = this->next;
        newSegment->previous = this;
        this->next->previous = newSegment;
        this->next           = newSegment;
    };
 
-   inline void insertBefore(MemorySegment *newSegment) {
+   inline void insertBefore(MemorySegment *newSegment)
+   {
        newSegment->next     = this;
        newSegment->previous = this->previous;
        this->previous->next = newSegment;
        this->previous       = newSegment;
    };
 
-   inline void remove() {
+   inline void remove()
+   {
        this->next->previous = this->previous;
        this->previous->next = this->next;
    }
 
-   inline void removeAll() {
+   inline void removeAll()
+   {
        firstObject()->remove();
        remove();
    }
@@ -187,7 +188,8 @@ class MemorySegmentSet
   public:
       typedef enum { SET_UNINITIALIZED, SET_NORMAL, SET_LARGEBLOCK, SET_OLDSPACE } SegmentSetID;
         /* the memory segment mimic for anchoring the pool */
-      MemorySegmentSet(MemoryObject *memObject, SegmentSetID id, const char *setName)  {
+      MemorySegmentSet(MemoryObject *memObject, SegmentSetID id, const char *setName)
+      {
           /* Chain this segment to itself.     */
           owner = id;
           count = 0;
@@ -197,7 +199,8 @@ class MemorySegmentSet
           this->name = setName;
       }
         /* the default constructor */
-      MemorySegmentSet()  {
+      MemorySegmentSet()
+      {
           /* Chain this segment to itself.     */
           owner = SET_UNINITIALIZED;
           count = 0;
@@ -206,28 +209,28 @@ class MemorySegmentSet
       }
 
       virtual ~MemorySegmentSet() { ; }
-      inline void *operator new(size_t size, void *segment) { return segment; }
-      inline void  operator delete(void * size) { }
-      inline void  operator delete(void * size, void *segment) { }
 
       /* Following is a static constructor, called during */
       /* MemoryObject initialization */
 
-      inline void removeSegment(MemorySegment *segment) {
+      inline void removeSegment(MemorySegment *segment)
+      {
           /* remove both the segment, and any blocks on the dead */
           /* chains. */
           segment->remove();
           count--;
       }
 
-      inline void removeSegmentAndStorage(MemorySegment *segment) {
+      inline void removeSegmentAndStorage(MemorySegment *segment)
+      {
           /* remove both the segment, and any blocks on the dead */
           /* chains. */
           segment->removeAll();
           count--;
       }
 
-      inline void add(MemorySegment *segment) {
+      inline void add(MemorySegment *segment)
+      {
           anchor.insertBefore(segment);
           count++;
       }
@@ -385,14 +388,16 @@ class NormalSegmentSet : public MemorySegmentSet
         /* large size. */
         targetPool = lengthToDeadPool(allocationLength);
 
-        if (targetPool < DeadPools) {
+        if (targetPool < DeadPools)
+        {
 
             /* pick up the last successful one */
             size_t currentDead = lastUsedSubpool[targetPool];
             /* loop through the small pool chains looking for a block. */
             /* We only go up to the largest blocks as a last resort to */
             /* reduce the fragmentation. */
-            while (currentDead < DeadPools) {
+            while (currentDead < DeadPools)
+            {
                 /* See if the chain has an object.  Once we get an */
                 /* object, we return this directly.  We accept over */
                 /* allocations when then come from the subpool chain. */
@@ -402,7 +407,8 @@ class NormalSegmentSet : public MemorySegmentSet
                 /* can't split anyway.  When we do split, the result is */
                 /* a very small fragment. */
                 newObject = subpools[currentDead].getFirstSingle();
-                if (newObject != OREF_NULL) {
+                if (newObject != OREF_NULL)
+                {
                     /* Record the success.  Next time around, */
                     /* allocations will come directly here. */
                     lastUsedSubpool[targetPool] = currentDead;
@@ -441,16 +447,19 @@ class NormalSegmentSet : public MemorySegmentSet
         /* one we can use either our object is too big for all the */
         /* small chains, or the small chains are depleted.... */
         newObject = largeDead.findFit(allocationLength, &realLength);
-        if (newObject != NULL) {         /* did we find an object?            */
+        if (newObject != NULL)
+        {         /* did we find an object?            */
             size_t deadLength = realLength - allocationLength;
             /* remainder too small or this is a very large request */
             /* is the remainder two small to reuse? */
-            if (deadLength < Memory::MinimumObjectSize) {
+            if (deadLength < Memory::MinimumObjectSize)
+            {
                 /* Convert this from a dead object into a real one of the */
                 /* given size. */
                 return (RexxInternalObject *)newObject;
             }
-            else {
+            else
+            {
                 /* potentially split this object into a smaller unit so we */
                 /* can reuse the remainder. */
                 return splitNormalDeadObject(newObject, allocationLength, deadLength);
@@ -524,13 +533,15 @@ class NormalSegmentSet : public MemorySegmentSet
         DeadObject *largeObject = (DeadObject *)(((char *)object) + allocationLength);
         /* if the length is larger than the biggest subpool we */
         /* maintain, we add this to the large block list. */
-        if (deadLength > LargestSubpool) {
+        if (deadLength > LargestSubpool)
+        {
               /* ideally, we'd like to add this sorted by size, but */
               /* this is called so frequently, attempting to sort */
               /* degrades performance by about 10%. */
               largeDead.add(new (largeObject) DeadObject(deadLength));
         }
-        else {
+        else
+        {
             /* calculate the dead chain          */
             /* and add that to the appropriate chain */
             size_t deadChain = lengthToDeadPool(deadLength);
@@ -562,23 +573,23 @@ class LargeSegmentSet : public MemorySegmentSet
     virtual void   dumpMemoryProfile(FILE *outfile);
     RexxInternalObject *handleAllocationFailure(size_t allocationLength);
     inline RexxInternalObject *allocateObject(size_t allocationLength)
-        {
-          DeadObject *largeObject;
+    {
+        DeadObject *largeObject;
 
-          /* go through the LARGEDEAD object looking for the 1st one we can */
-          /* use either our object is too big for all the small chains, or */
-          /* the small chain are depleted.... */
-          largeObject = deadCache.findBestFit(allocationLength);
-          /* did we find an object?            */
-          if (largeObject != NULL)
-          {
-              /* remember the successful request */
-              requests++;
-              /* split and prepare this object for use */
-              return splitDeadObject(largeObject, allocationLength, Memory::LargeAllocationUnit);
-          }
-          return OREF_NULL;                    /* we couldn't get this              */
+        /* go through the LARGEDEAD object looking for the 1st one we can */
+        /* use either our object is too big for all the small chains, or */
+        /* the small chain are depleted.... */
+        largeObject = deadCache.findBestFit(allocationLength);
+        /* did we find an object?            */
+        if (largeObject != NULL)
+        {
+            /* remember the successful request */
+            requests++;
+            /* split and prepare this object for use */
+            return splitDeadObject(largeObject, allocationLength, Memory::LargeAllocationUnit);
         }
+        return OREF_NULL;                    /* we couldn't get this              */
+    }
 
     virtual DeadObject *donateObject(size_t allocationLength);
 

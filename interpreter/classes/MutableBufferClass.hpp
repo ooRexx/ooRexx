@@ -55,7 +55,6 @@
 class MutableBuffer : public RexxObject
 {
  public:
-    inline void *operator new(size_t size, void *ptr){return ptr;};
            void *operator new(size_t size);
 
            MutableBuffer();
