@@ -70,7 +70,10 @@ public:
 
     void   mathRound(char *);
     char  *stripLeadingZeros(char *);
-    char * adjustNumber(char *, char *, size_t, size_t);
+    char  *adjustNumber(char *, char *, size_t, size_t);
+    void   truncateToDigits(size_t digits, char *digitsPtr, bool round);
+    //quick test for a numeric overflow
+    void checkOverflow();
 
   protected:
 
@@ -251,7 +254,7 @@ class NumberString : public NumberStringBase
     NumberString *operatorArgument(RexxObject *right);
 
     NumberString *prepareNumber(size_t, bool);
-    NumberString *prepareOperatorNumber(size_t, size_t, bool);
+    NumberString *prepareOperatorNumber(wholenumber_t, size_t, bool);
     NumberString *copyIfNecessary();
     NumberString *copyForCurrentSettings();
     void              adjustPrecision(char *, size_t);
@@ -297,7 +300,7 @@ class NumberString : public NumberStringBase
     void  formatInt64(int64_t integer);
     void  formatUnsignedInt64(uint64_t integer);
 
-    NumberString *addSub(NumberString *, unsigned int, size_t);
+    NumberString *addSub(NumberString *, ArithmeticOperator, wholenumber_t);
     NumberString *plus(RexxObject *);
     NumberString *minus(RexxObject *);
     NumberString *multiply(RexxObject *);
@@ -306,13 +309,13 @@ class NumberString : public NumberStringBase
     NumberString *remainder(RexxObject *);
     NumberString *power(RexxObject *);
     NumberString *Multiply(NumberString *);
-    NumberString *Division(NumberString *, unsigned int);
+    NumberString *Division(NumberString *, ArithmeticOperator);
     NumberString *abs();
     RexxInteger *Sign();
     RexxObject  *notOp();
     NumberString *Max(RexxObject **, size_t);
     NumberString *Min(RexxObject **, size_t);
-    NumberString *maxMin(RexxObject **, size_t, unsigned int);
+    NumberString *maxMin(RexxObject **, size_t, ArithmeticOperator);
     bool        isInteger();
     RexxString *d2c(RexxObject *);
     RexxString *d2x(RexxObject *);
@@ -358,13 +361,13 @@ class NumberString : public NumberStringBase
     static RexxClass *classInstance;
 
     static size_t highBits(size_t);
-    static void  subtractNumbers( NumberString *larger, const char *largerPtr, wholenumber_t aLargerExp,
+    static void  subtractNumbers(NumberString *larger, const char *largerPtr, wholenumber_t aLargerExp,
                                   NumberString *smaller, const char *smallerPtr, wholenumber_t aSmallerExp,
-                                  NumberString *result, char **resultPtr);
-    static char *addMultiplier( char *, size_t, char *, int);
-    static char *subtractDivisor(char *data1, size_t length1, char *data2, size_t length2, char *result, int Mult);
-    static char *multiplyPower(char *leftPtr, NumberStringBase *left, char *rightPtr, NumberStringBase *right, char *OutPtr, size_t OutLen, size_t NumberDigits);
-    static char *dividePower(char *AccumPtr, NumberStringBase *Accum, char *Output, size_t NumberDigits);
+                                  NumberString *result, char *&resultPtr);
+    static char *addMultiplier(const char *, size_t, char *, int);
+    static char *subtractDivisor(const char *data1, size_t length1, const char *data2, size_t length2, char *result, int Mult);
+    static char *multiplyPower(const char *leftPtr, NumberStringBase *left, const char *rightPtr, NumberStringBase *right, char *OutPtr, size_t OutLen, wholenumber_t NumberDigits);
+    static char *dividePower(const char *AccumPtr, NumberStringBase *Accum, char *Output, wholenumber_t NumberDigits);
     static char *addToBaseSixteen(int, char *, char *);
     static char *addToBaseTen(int, char *, char *);
     static char *multiplyBaseSixteen(char *, char *);

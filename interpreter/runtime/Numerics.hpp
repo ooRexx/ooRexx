@@ -59,17 +59,17 @@ class NumericSettings
 
     void setDefault();
 
-    inline void   setDigits(size_t d) { digits = d; }
-    inline size_t getDigits() const { return digits; }
+    inline void   setDigits(wholenumber_t d) { digits = d; }
+    inline wholenumber_t getDigits() const { return digits; }
     inline void   setForm(bool f) { form = f; }
     inline bool   getForm() const { return form; }
-    inline void   setFuzz(size_t f) { fuzz = f; }
-    inline size_t getFuzz() const { return fuzz; }
+    inline void   setFuzz(wholenumber_t f) { fuzz = f; }
+    inline wholenumber_t getFuzz() const { return fuzz; }
 
 protected:
 
-    size_t digits;                        // numeric digits setting
-    size_t fuzz;                          // numeric fuzz setting
+    wholenumber_t digits;                 // numeric digits setting
+    wholenumber_t fuzz;                   // numeric fuzz setting
     bool   form;                          // numeric form setting
 };
 
@@ -86,31 +86,31 @@ public:
     static const wholenumber_t Numerics::MIN_WHOLENUMBER = __INT64_C(-999999999999999999);
     // the digits setting used internally for function/method arguments to allow
     // for the full range
-    static const size_t Numerics::ARGUMENT_DIGITS  = ((size_t)18);
+    static const wholenumber_t Numerics::ARGUMENT_DIGITS  = ((size_t)18);
     // this is the digits setting for full size binary settings
-    static const size_t Numerics::SIZE_DIGITS  = ((size_t)20);
+    static const wholenumber_t Numerics::SIZE_DIGITS  = ((size_t)20);
 #else
     static const wholenumber_t Numerics::MAX_WHOLENUMBER = 999999999;
     static const wholenumber_t Numerics::MIN_WHOLENUMBER = -999999999;
         // the digits setting used internally for function/method arguments to allow
         // for the full binary value range
-    static const size_t Numerics::ARGUMENT_DIGITS  = ((size_t)9);
+    static const wholenumber_t Numerics::ARGUMENT_DIGITS  = ((size_t)9);
     // this is the digits setting for full size binary settings
-    static const size_t Numerics::SIZE_DIGITS  = ((size_t)10);
+    static const wholenumber_t Numerics::SIZE_DIGITS  = ((size_t)10);
 #endif
 
     static const wholenumber_t MAX_EXPONENT = 999999999;
     static const wholenumber_t MIN_EXPONENT = -999999999;
-    static const size_t DEFAULT_DIGITS  = ((size_t)9);
+    static const wholenumber_t DEFAULT_DIGITS  = ((size_t)9);
     // a digits setting for full range integer conversion
     static const size_t  MAX_STRINGSIZE = MAX_WHOLENUMBER;
 
     // max numeric digits value for explicit 64-bit conversions
-    static const size_t DIGITS64 = ((size_t)20);
+    static const wholenumber_t DIGITS64 = ((size_t)20);
     static const bool FORM_SCIENTIFIC = false;
     static const bool FORM_ENGINEERING = true;
 
-    static const size_t DEFAULT_FUZZ = 0;
+    static const wholenumber_t DEFAULT_FUZZ = 0;
     static const bool DEFAULT_FORM = FORM_SCIENTIFIC;
 
     static const wholenumber_t validMaxWhole[];      // table of maximum values per digits setting
@@ -139,8 +139,8 @@ public:
 
     static size_t normalizeWholeNumber(wholenumber_t integer, char *dest);
 
-    static size_t digits() { return settings->getDigits(); }
-    static size_t fuzz()   { return settings->getFuzz(); }
+    static wholenumber_t digits() { return settings->getDigits(); }
+    static wholenumber_t fuzz()   { return settings->getFuzz(); }
     static bool   form()   { return settings->getForm(); }
     static void   setCurrentSettings(const NumericSettings *s) { settings = s; }
     static const NumericSettings *setDefaultSettings() { settings = &defaultSettings; return settings; }
@@ -150,7 +150,7 @@ public:
     static inline size_t minVal(size_t n1, size_t n2) { return n2 > n1 ? n1 : n2; }
     static inline wholenumber_t maxVal(wholenumber_t n1, wholenumber_t n2) { return n2 > n1 ? n2 : n1; }
     static inline size_t maxVal(size_t n1, size_t n2) { return n2 > n1 ? n2 : n1; }
-    static inline wholenumber_t maxValueForDigits(size_t d)
+    static inline wholenumber_t maxValueForDigits(wholenumber_t d)
     {
         if (d > ARGUMENT_DIGITS)
         {
@@ -184,9 +184,9 @@ protected:
 };
 
 
-inline size_t number_digits() { return Numerics::digits(); }
-inline size_t number_fuzz()   { return Numerics::fuzz(); }
+inline wholenumber_t number_digits() { return Numerics::digits(); }
+inline wholenumber_t number_fuzz()   { return Numerics::fuzz(); }
 inline bool   number_form()   { return Numerics::form(); }
-inline size_t number_fuzzydigits()   { return number_digits() - number_fuzz(); }
+inline wholenumber_t number_fuzzydigits()   { return number_digits() - number_fuzz(); }
 #endif
 

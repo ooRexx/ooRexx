@@ -62,7 +62,7 @@
  *
  * @return The new accumulator top bounds.
  */
-char *NumberString::addMultiplier(char *top, size_t topLen, char *accumPtr, int multChar)
+char *NumberString::addMultiplier(const char *top, size_t topLen, char *accumPtr, int multChar)
 {
     // no carry at the start
     int carry = 0;
@@ -104,13 +104,6 @@ char *NumberString::addMultiplier(char *top, size_t topLen, char *accumPtr, int 
  */
 NumberString *NumberString::Multiply(NumberString *other)
 {
-    NumberString *left, *right, *result, *LargeNum, *SmallNum;
-    char *ResultPtr, *AccumPtr, *Current, *OutPtr;
-    char MultChar;
-    size_t AccumLen;
-    size_t i;
-    size_t NumberDigits, TotalDigits, ExtraDigit;
-
     size_t digits = number_digits();
 
     // prepare both numbers, copying and rounding if necessary.
@@ -127,7 +120,7 @@ NumberString *NumberString::Multiply(NumberString *other)
     // we can optimize things by using the smaller number for
     // the individual digit multiplcation, which will need fewer passes.
     NumberString *largeNum = left;
-    NumberSTring *smallNum = right;
+    NumberString *smallNum = right;
 
     if (left->digitsCount < right->digitsCount)
     {
@@ -139,13 +132,13 @@ NumberString *NumberString::Multiply(NumberString *other)
     size_t totalDigits = (digits * 2) + 1;
 
     // fast allocation buffer
-    char resultBufFast[FASTDIGITS];
+    char resultBufFast[FAST_BUFFER];
     char *outPtr = resultBufFast;
 
     // if the digits are really big, then we need to allocate a larger buffer.
     // just allocate a buffer object and allow it to get garbage collected after
     // we're done.
-    if (digits > FASTDIGITS)
+    if (digits > FAST_BUFFER)
     {
         outPtr = new_buffer(totalDigits)->getData();
     }
@@ -153,7 +146,7 @@ NumberString *NumberString::Multiply(NumberString *other)
     memset(outPtr, '\0', totalDigits);
 
     // set up the initial accumulator
-    char *accumPtr = OutPtr;
+    char *accumPtr = outPtr;
     size_t accumLen = 0;
 
     // this is where we start laying out the data...starting from the
@@ -161,7 +154,7 @@ NumberString *NumberString::Multiply(NumberString *other)
     char *resultPtr = accumPtr + totalDigits - 1;
     // we iterate through the small number multiplying with each of the
     // digits in the smaller number
-    current = smallNum->numberDigits + smallNum->digitsCount;
+    char *current = smallNum->numberDigits + smallNum->digitsCount;
 
     // now process all of the digits
     for (size_t i = smallNum->digitsCount ; i > 0 ; i-- )
@@ -194,7 +187,7 @@ NumberString *NumberString::Multiply(NumberString *other)
         // we also need to chop the length to digits + 1 (we'll use that to round
         // the final result)
         extraDigits = accumLen -(digits + 1);
-        accumLen = numberDigits + 1;
+        accumLen = digitsCount + 1;
     }
 
     // now get a numberstring object large enough to hold this result
@@ -246,8 +239,8 @@ char *NumberString::subtractDivisor(const char *divisor, size_t divisorLength,
 
 
     // point to the least significant character of both operands
-    const char *divisorData += (divisorLength -1);
-    const char *dividendData += (dividendLength -1);
+    const char *divisorData = divisor + (divisorLength - 1);
+    const char *dividendData = dividend + (dividendLength -1);
 
     // set up the result pointer for the subtraction
     char *outPtr = result + 1;
@@ -331,7 +324,7 @@ char *NumberString::subtractDivisor(const char *divisor, size_t divisorLength,
  *
  * @return The division result.
  */
-NumberString *NumberString::Division(NumberString *other, ArithmeticOperation DivOP)
+NumberString *NumberString::Division(NumberString *other, ArithmeticOperator divOP)
 {
     // buffers for intermediate results (just the numeric data)
     char accumBuffer[sizeof(NumberStringBase)];
@@ -339,22 +332,9 @@ NumberString *NumberString::Division(NumberString *other, ArithmeticOperation Di
     char saveRightBuffer[sizeof(NumberStringBase)];
 
     // static sized buffers for typical calculation sizes.
-    char leftBufFast[FASTDIGITS];
-    char rightBufFast[FASTDIGITS];
-    char outBufFast[FASTDIGITS];
-
-    NumberString   *result;
-    char *Num1, *Num2;
-    char *resultPtr, *Output, *rightPtr, *leftPtr, *SaveLeftPtr, *SaveRightPtr;
-    wholenumber_t   multiplier, rc;
-    wholenumber_t   DivChar, thisDigit;
-    wholenumber_t  CalcExp;
-
-    size_t  NumberDigits, totalDigits, resultDigits;
-    size_t adjustNum1;
-    size_t  rightPadding;                 /* amount right side is padded by    */
-
-    SaveLeftPtr = NULL;
+    char leftBufFast[FAST_BUFFER];
+    char rightBufFast[FAST_BUFFER];
+    char outBufFast[FAST_BUFFER];
 
     // NOTE: this is very similiar to the PowerDivide
     //   method, these we kept as seperate routines since there
@@ -377,9 +357,9 @@ NumberString *NumberString::Division(NumberString *other, ArithmeticOperation Di
 
     // set of pointers for our temporary values
     NumberStringBase *accum = (NumberStringBase *)accumBuffer;
-    NumberString *saveLeft = (NumberStringBase *)saveLeftBuffer;
-    NumberString *saveRight = (NumberStringBase *)saveRightBuffer;
-    size_t digits = number_digits();
+    NumberStringBase *saveLeft = (NumberStringBase *)saveLeftBuffer;
+    NumberStringBase *saveRight = (NumberStringBase *)saveRightBuffer;
+    wholenumber_t digits = number_digits();
 
     // either of these values might require rounding before starting the
     // operation, which might copy the values
@@ -422,7 +402,7 @@ NumberString *NumberString::Division(NumberString *other, ArithmeticOperation Di
     // we have automatic buffers for these that will handle typical
     // sizes.  If larger than that, we allocate real buffer objects
     // and just allow them to be garbage collected at the end
-    if (totalDigits > FASTDIGITS)
+    if (totalDigits > FAST_BUFFER)
     {
         // we can use a single buffer and chop it up
         leftPtr = new_buffer(totalDigits * 3)->getData();
@@ -435,7 +415,7 @@ NumberString *NumberString::Division(NumberString *other, ArithmeticOperation Di
     memcpy(leftPtr, left->numberDigits, left->digitsCount);
     memset(leftPtr + left->digitsCount, '\0', totalDigits - left->digitsCount);
 
-    memcpy(rightPtr, right->numberDitis, right->digitsCount);
+    memcpy(rightPtr, right->numberDigits, right->digitsCount);
     memset(rightPtr + right->digitsCount, '\0', totalDigits - right->digitsCount);
     char *resultPtr = output;
 
@@ -539,6 +519,7 @@ NumberString *NumberString::Division(NumberString *other, ArithmeticOperation Di
     // outer loop
     for (; ; )
     {
+        int multiplier;
         // inner loop
         for (; ; )
         {
@@ -546,7 +527,7 @@ NumberString *NumberString::Division(NumberString *other, ArithmeticOperation Di
             if (saveLeft->digitsCount == saveRight->digitsCount)
             {
                 // directly compare the two numbers
-                rc = memcmp(leftNum, rightNum, saveLeft->digits);
+                int rc = memcmp(leftNum, rightNum, saveLeft->digitsCount);
                 // if the left number is smaller, we're done with the inner
                 // loop.
                 if (rc < 0)
@@ -605,11 +586,11 @@ NumberString *NumberString::Division(NumberString *other, ArithmeticOperation Di
 
 
             // divide the digit through and see if we guessed correctly.
-            leftNumber = subtractDivisor(leftNumber, saveLeft->digitsCount, rightNumber, saveRight->digitsCount, leftNumber + saveLeft->digitsCount - 1, (int)multiplier);
+            leftPtr = subtractDivisor(leftPtr, saveLeft->digitsCount, rightPtr, saveRight->digitsCount, leftPtr + saveLeft->digitsCount - 1, multiplier);
             // skip over any leading zeros
-            while (*leftNumber == 0 && saveLeft->digitsCount > 1)
+            while (*leftPtr == 0 && saveLeft->digitsCount > 1)
             {
-                leftNumber++;
+                leftPtr++;
                 saveLeft->digitsCount--;
             }
             // end of inner loop, go back and guess again !! This might have been the right guess.
@@ -632,7 +613,7 @@ NumberString *NumberString::Division(NumberString *other, ArithmeticOperation Di
         }
 
         // we have different termination rules for int divide and remainder operations.
-        if (DivOP != OT_DIVIDE)
+        if (divOP != OT_DIVIDE)
         {
             // have we generated all of the integer digits yet?
             // then we are done.
@@ -642,7 +623,7 @@ NumberString *NumberString::Division(NumberString *other, ArithmeticOperation Di
             }
         }
         // Was number reduced to zero?  We divided evenly
-        if (saveLeft->digitsCount == 1 && *leftNumber == '\0')
+        if (saveLeft->digitsCount == 1 && *leftPtr == '\0')
         {
             break;
         }
@@ -663,7 +644,7 @@ NumberString *NumberString::Division(NumberString *other, ArithmeticOperation Di
         // before starting, so we add the digits back in as we progress.
         else
         {
-            saveLeft->digitsCount++
+            saveLeft->digitsCount++;
         }
     }
 
@@ -675,11 +656,11 @@ NumberString *NumberString::Division(NumberString *other, ArithmeticOperation Di
     // This might not be expressible as a whole number because of
     // the relative size of the operands, or we have a result with
     // no integer portion
-    if ((DivOP != OT_DIVIDE) && ((calcExp >= 0 &&
+    if ((divOP != OT_DIVIDE) && ((calcExp >= 0 &&
            ( resultDigits + calcExp) > digits) ||
          (calcExp < 0  && Numerics::abs(calcExp) > resultDigits)))
     {
-        reportException(divOp == OT_REMAINDER ? Error_Invalid_whole_number_rem : Error_Invalid_whole_number_intdiv);
+        reportException(divOP == OT_REMAINDER ? Error_Invalid_whole_number_rem : Error_Invalid_whole_number_intdiv);
     }
 
     // if we're doing a remainder operation, we've really done an integer divide to this
@@ -694,10 +675,10 @@ NumberString *NumberString::Division(NumberString *other, ArithmeticOperation Di
             if (*leftNum != 0)
             {
                 // this is our result
-                resultPtr = leftNumber;
+                resultPtr = leftPtr;
                 // now we need to calculate the exponent, adjusting for any added zeros
                 saveLeftPtr += left->digitsCount;
-                saveRightPtr = resultPtr + saveLeft->digitsCount + adjustLeftNum;
+                saveRightPtr = resultPtr + saveLeft->digitsCount + adjustLeft;
                 accum->numberExponent = left->numberExponent - (saveRightPtr - saveLeftPtr);
                 // the result length is the remaining digits count
                 accum->digitsCount = saveLeft->digitsCount;
@@ -712,7 +693,7 @@ NumberString *NumberString::Division(NumberString *other, ArithmeticOperation Di
         else
         {
             // we return a copy of the left number
-            result = clone();
+            NumberString *result = clone();
             result->setupNumber();
             return result;
         }
@@ -724,13 +705,13 @@ NumberString *NumberString::Division(NumberString *other, ArithmeticOperation Di
         if (resultDigits != 0)
         {
             resultPtr = output;
-            accum->numberLength = resultDigits;
+            accum->digitsCount = resultDigits;
             accum->numberExponent = calcExp;
             // if the result is too big, we need to round to the digits setting
             if (accum->digitsCount > digits)
             {
                 // we shorten the length and increase the exponent by the delta
-                accum->numberExponent += (Accum->digitsCount - digits);
+                accum->numberExponent += (accum->digitsCount - digits);
                 accum->digitsCount = digits;
                 // see if we need to round
                 accum->mathRound(resultPtr);
@@ -759,7 +740,7 @@ NumberString *NumberString::Division(NumberString *other, ArithmeticOperation Di
     }
 
     // ok, accum is the number data, resultPtr is the result data
-    result = new (accum->digitsCount) NumberString (accum->digitsCount);
+    NumberString *result = new (accum->digitsCount) NumberString (accum->digitsCount);
 
     result->digitsCount = accum->digitsCount;
     result->numberExponent = accum->numberExponent;
@@ -779,16 +760,6 @@ NumberString *NumberString::Division(NumberString *other, ArithmeticOperation Di
  */
 NumberString *NumberString::power(RexxObject *PowerObj)
 {
-    wholenumber_t extra, OldNorm;
-    size_t  NumberDigits;
-    char   *Accum, *AccumPtr, *OutPtr, *TempPtr;
-    bool    NegativePower;
-    NumberStringBase *AccumObj;
-    NumberString     *left;
-    NumberString     *result;
-    size_t NumBits;
-    size_t    AccumLen;
-
     requiredArgument(PowerObj, ARG_ONE);
     wholenumber_t powerValue;
 
@@ -807,7 +778,8 @@ NumberString *NumberString::power(RexxObject *PowerObj)
         powerValue = -powerValue;
     }
 
-    size_t digits = number_digits();
+    wholenumber_t digits = number_digits();
+
     // get a potential copy of this, truncated to have at most digits + 1 digits.
     NumberString *left = prepareOperatorNumber(digits + 1, digits, NOROUND);
 
@@ -855,8 +827,8 @@ NumberString *NumberString::power(RexxObject *PowerObj)
     }
 
     // we create a dummy numberstring object and initialize it from the target number
-    char accumBuffer[sizeof(NumberStringBase)];
-    NumberString *accumObj = (NumberStringBase *)accumBuffer;
+    char accumNumber[sizeof(NumberStringBase)];
+    NumberStringBase *accumObj = (NumberStringBase *)accumNumber;
     memcpy((void *)accumObj, (void *)left, sizeof(NumberStringBase));
 
     // Find out how many digits are in power value, needed for actual
@@ -866,7 +838,7 @@ NumberString *NumberString::power(RexxObject *PowerObj)
 
     // keep dividing the value by 10 until we hit zero.  That will be the number of
     // powers of 10 we have in the number.
-    for (oldNorm != 0; extra++)
+    for (; oldNorm != 0; extra++)
     {
         oldNorm /= 10;
     }
@@ -878,13 +850,13 @@ NumberString *NumberString::power(RexxObject *PowerObj)
 
     // get a single buffer object with space for two values of this size
     char *outPtr = new_buffer(accumLen * 2)->getData();
-    char *accum = outPtr + accumLen;
+    char *accumBuffer = outPtr + accumLen;
+    char *accumPtr = accumBuffer;
 
     // copy the the initial number data into the buffer
     memcpy(accumPtr, left->numberDigits, left->digitsCount);
 
     // the power operation is defined to use bitwise reduction
-    /* to use bitwise reduction          */
     size_t numBits = SIZEBITS;
 
     // get the first non-zero bit shifted to the top of the number
@@ -911,7 +883,7 @@ NumberString *NumberString::power(RexxObject *PowerObj)
             accumPtr = multiplyPower(accumPtr, accumObj, left->numberDigits, left, outPtr, accumLen, digits);
             // We now call AdjustNumber to make sure we stay within the required
             // precision and move the Accum data back to Accum.
-            accumPtr = accumObj->adjustNumber(accumPtr, accum, accumLen, digits);
+            accumPtr = accumObj->adjustNumber(accumPtr, accumBuffer, accumLen, digits);
         }
         // if we will be making another pass through this loop, we need
         // to square the accumulator
@@ -919,7 +891,7 @@ NumberString *NumberString::power(RexxObject *PowerObj)
         {
             accumPtr = multiplyPower(accumPtr, accumObj, accumPtr, accumObj,  outPtr, accumLen, digits);
             // and adjust the result again
-            accumPtr = accumObj->adjustNumber(accumPtr, accum, accumLen, digits);
+            accumPtr = accumObj->adjustNumber(accumPtr, accumBuffer, accumLen, digits);
         }
         // and shift to the next bit position
         powerValue <<= 1;
@@ -928,7 +900,7 @@ NumberString *NumberString::power(RexxObject *PowerObj)
     // if this was actually a negative power, take the reciprical now
     if (negativePower)
     {
-        accumPtr = dividePower(accumPtr, accumObj, accum, digits);
+        accumPtr = dividePower(accumPtr, accumObj, accumBuffer, digits);
     }
 
     // reset the digits to the original and remove all leading zeros
@@ -956,12 +928,12 @@ NumberString *NumberString::power(RexxObject *PowerObj)
     }
 
     // finally build a result object.
-    NumberString *result = new (accumObj->digitsCount) NumberString (AccumObj->digitsCount);
+    NumberString *result = new (accumObj->digitsCount) NumberString (accumObj->digitsCount);
 
     result->numberSign = accumObj->numberSign;
     result->numberExponent  = accumObj->numberExponent;
     result->digitsCount = accumObj->digitsCount;
-    memcpy(result->numberDigits, accumPtr, result->numberDigits);
+    memcpy(result->numberDigits, accumPtr, result->digitsCount);
     return result;
 }
 
@@ -980,12 +952,13 @@ NumberString *NumberString::power(RexxObject *PowerObj)
  */
 char *NumberString::multiplyPower(const char *leftPtr, NumberStringBase *left,
                      const char *rightPtr, NumberStringBase *right,
-                     char *outPtr, size_t outLen, size_t digits)
+                     char *outPtr, size_t outLen, wholenumber_t digits)
 {
     // clear the output buffer of any previous results
-    memset(outPtr, '\0', utLen);
+    memset(outPtr, '\0', outLen);
 
-    size_t accumLen = 0;
+    wholenumber_t accumLen = 0;
+    char *accumPtr = NULL;
     // build the result from the end of the output location.
     char *resultPtr = outPtr + outLen - 1;
     // we iterate through the right number
@@ -1009,7 +982,7 @@ char *NumberString::multiplyPower(const char *leftPtr, NumberStringBase *left,
     accumLen = (size_t)(++resultPtr - accumPtr) + right->digitsCount;
 
     // we might need to truncate to our digits setting
-    wholenumber_t extraDigits = accumLen > digits ? accumLen - digits ? 0;
+    wholenumber_t extraDigits = accumLen > digits ? accumLen - digits : 0;
 
 
     left->numberExponent += (right->numberExponent + extraDigits);
@@ -1031,18 +1004,8 @@ char *NumberString::multiplyPower(const char *leftPtr, NumberStringBase *left,
  *
  * @return
  */
-char *NumberString::dividePower(const char *accumPtr, NumberStringBase *accum, char *output, size_t digits)
+char *NumberString::dividePower(const char *accumPtr, NumberStringBase *accum, char *output, wholenumber_t digits)
 {
-    NumberStringBase *left;
-    char  leftBuffer[sizeof(NumberStringBase)];
-    char *Num1, *Num2;
-    char *resultPtr, *leftPtr, *result;
-    int   multiplier, rc;
-    int   DivChar, thisDigit;
-    wholenumber_t  CalcExp;
-    size_t resultDigits;
-    size_t  totalDigits;
-
     // NOTE: this routine is very similiar to the Division
     //   routine, these we kept as seperate routines since there
     //   are enough subtile differences between the operations
@@ -1050,7 +1013,7 @@ char *NumberString::dividePower(const char *accumPtr, NumberStringBase *accum, c
     //   routine even more so.  When fixing/updating/adding to
     //   this routin also check Division for similiar updates
 
-    size_t totalDigits = ((digits + 1) * 2) + 1;
+    wholenumber_t totalDigits = ((digits + 1) * 2) + 1;
 
     // set up temporary buffers for the calculations
     char  leftBuffer[sizeof(NumberStringBase)];
@@ -1070,7 +1033,7 @@ char *NumberString::dividePower(const char *accumPtr, NumberStringBase *accum, c
     wholenumber_t calcExp = -accum->numberExponent - accum->digitsCount + 1;
 
     char *leftNumber = leftPtr;
-    char *rightNumber = accumPtr;
+    const char *rightNumber = accumPtr;
 
     // When generate a best guess digits for result we will look
     // use the 1st 2 digits of the dividend (if there are 2)
@@ -1117,6 +1080,7 @@ char *NumberString::dividePower(const char *accumPtr, NumberStringBase *accum, c
     //  again.
     for (; ; )
     {
+        int multiplier;
         for (; ; )
         {
             // if we've reached the point where the two numbers are
@@ -1127,7 +1091,7 @@ char *NumberString::dividePower(const char *accumPtr, NumberStringBase *accum, c
                 // do a direct comparison of the digits
                 // if the left is smaller, we've got a good estimate
                 // for this digit
-                rc = memcmp(leftNumber, rightNumber, left->digitsCount);
+                int rc = memcmp(leftNumber, rightNumber, left->digitsCount);
                 if (rc < 0)
                 {
                     break;
@@ -1138,7 +1102,7 @@ char *NumberString::dividePower(const char *accumPtr, NumberStringBase *accum, c
                 else if (rc == 0)
                 {
 
-                    *resultPtr++ = (char)(thisDigit + 1);
+                    *result++ = (char)(thisDigit + 1);
                     resultDigits++;
                     goto PowerDivideDone;
                 }
@@ -1181,7 +1145,7 @@ char *NumberString::dividePower(const char *accumPtr, NumberStringBase *accum, c
         // added if we have a previous non-zero.
         if (resultDigits > 0 || thisDigit != 0)
         {
-            *resultPtr++ = (char) thisDigit;
+            *result++ = (char) thisDigit;
             thisDigit = 0;
             resultDigits++;
 

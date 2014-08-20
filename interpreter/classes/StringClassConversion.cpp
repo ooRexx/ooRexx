@@ -207,7 +207,7 @@ RexxString *RexxString::decodeBase64()
             }
 
             // get the reduced digit value
-            char digitValue = match - DIGITS_BASE64;
+            char digitValue = (char)(match - DIGITS_BASE64);
 
             // digit value is the binary value of this digit.  Now, based
             // on which digit of the input set we're working on, we update

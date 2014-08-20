@@ -50,6 +50,7 @@
 #include "ActivityManager.hpp"
 #include "ProtectedObject.hpp"
 #include "ActivationBase.hpp"
+#include "MethodArguments.hpp"
 
 
 /**
@@ -63,31 +64,16 @@
  */
 RexxString *NumberString::d2xD2c(RexxObject *length, bool type)
 {
-    char       PadChar;                  /* needed padding character          */
-    size_t ResultSize;             /* size of result string             */
-    size_t     HexLength;                /* length of hex characters          */
-    size_t     BufferLength;             /* length of the buffer              */
-    char     * Scan;                     /* scan pointer                      */
-    char     * HighDigit;                /* highest digit location            */
-    char     * Accumulator;              /* accumulator pointer               */
-    char     * TempPtr;                  /* temporary pointer value           */
-    size_t     PadSize;                  /* needed padding                    */
-    size_t     CurrentDigits;            /* current digits setting            */
-    size_t     TargetLength;             /* length of current number          */
-    BufferClass *Target;                  /* formatted number                  */
-    RexxString *Retval;                  /* returned result                   */
-
-
     // get the target length
-    size_t resultSize = optionalLengthArgument(length, SIZE_MAX, ARG_ONE);
-    size_t currentDigits = number_digits();
-    size_t targetLength = digitsCount;
+    wholenumber_t resultSize = optionalLengthArgument(length, SIZE_MAX, ARG_ONE);
+    wholenumber_t currentDigits = (wholenumber_t)number_digits();
+    wholenumber_t targetLength = digitsCount;
 
     // already larger than the current digits setting?  That's an
     // error
     if (numberExponent + digitsCount > currentDigits)
     {
-        reportException(type ? Error_Incorrect_method_d2c  Error_Incorrect_method_d2x, this);
+        reportException(type ? Error_Incorrect_method_d2c : Error_Incorrect_method_d2x, this);
     }
 
     // if this has decimals, we need to see if we have non-zero decimals.
@@ -95,7 +81,7 @@ RexxString *NumberString::d2xD2c(RexxObject *length, bool type)
     {
         // if we have non-zero decimals, this is an error.  This must be a whole
         // number.
-        if (hasSignficantDecimals(currentDigits))
+        if (hasSignificantDecimals(currentDigits))
         {
             reportException(type ? Error_Incorrect_method_d2c : Error_Incorrect_method_d2x, this);
         }
@@ -113,11 +99,11 @@ RexxString *NumberString::d2xD2c(RexxObject *length, bool type)
 
     if (resultSize == SIZE_MAX)
     {
-        BufferLength = CurrentDigits + OVERFLOWSPACE;
+        bufferLength = currentDigits + OVERFLOWSPACE;
     }
     else
     {
-        resultSize = Numerics::MaxVal(currentDigits, resultSize);
+        resultSize = Numerics::maxVal(currentDigits, resultSize);
         // if this is the character function, we need more space, so double it
         if (type)
         {
@@ -125,7 +111,7 @@ RexxString *NumberString::d2xD2c(RexxObject *length, bool type)
         }
     }
     BufferClass *target = new_buffer(bufferLength);
-    const char *scan = numberDigits;
+    char *scan = numberDigits;
 
     // we start accumulating from the end of the buffer
     char *accumulator = target->getData() + bufferLength - 2;
@@ -153,14 +139,14 @@ RexxString *NumberString::d2xD2c(RexxObject *length, bool type)
         // Note that normally we would not multiply for the last one, but we
         // skipped the last one while processing the digits, so this works out
         // to be the same.
-        for (size_t i = 0; i < )
+        for (wholenumber_t i = 0; i < numberExponent; i++)
         {
             // we additional multiplications required
             highDigit = multiplyBaseSixteen(accumulator, highDigit);
         }
     }
     // this is our current length in terms of hex digits
-    size_t hexLength = accumulator - highDigit;
+    wholenumber_t hexLength = accumulator - highDigit;
 
     // this is our default padding character.  We need to switch this
     // if the value is negative
@@ -274,7 +260,7 @@ RexxString *NumberString::d2xD2c(RexxObject *length, bool type)
  *
  * @return The largest or smallest of the set of numbers.
  */
-NumberString *NumberString::maxMin(RexxObject **args, size_t argCount, unsigned int operation)
+NumberString *NumberString::maxMin(RexxObject **args, size_t argCount, ArithmeticOperator operation)
 {
     const char *methodName = operation == OT_MAX ? "MAX" : "MIN";
     // this is the result from comp() that indicates we have
@@ -382,7 +368,7 @@ void NumberStringBase::mathRound(char *numPtr)
     }
 
     // do some overflow checks
-    checkOverFlow();
+    checkOverflow();
 }
 
 
@@ -393,10 +379,10 @@ void NumberStringBase::mathRound(char *numPtr)
 void NumberString::adjustPrecision()
 {
     // is the length of the number too big?
-    if (digitsCount > createdDigits)
+    if (digitsCount > (wholenumber_t)createdDigits)
     {
         // perform truncation and rounding.
-        truncateToDigits(createdDigits);
+        truncateToDigits(createdDigits, numberDigits, true);
     }
     // it is possible that we have a zero number not marked as zero
     else if (numberDigits == 0 && digitsCount == 1)
@@ -459,10 +445,10 @@ char *NumberStringBase::adjustNumber(char *numPtr, char *result, size_t resultLe
     numPtr = stripLeadingZeros(numPtr);
 
     // after stripping, is the length of the number larger than the digits setting?
-    if (digitsCount > digits)
+    if (digitsCount > (wholenumber_t)digits)
     {
         // perform truncation and rounding.
-        truncateToDigits(digits);
+        truncateToDigits(digits, numPtr, true);
     }
     // copy the data into the result area, aligned with the end of the
     // buffer.  We return the pointer to the new start of the number
@@ -487,7 +473,7 @@ char *NumberStringBase::stripLeadingZeros(char *accumPtr)
     while (*accumPtr == 0 && digitsCount > 1)
     {
         accumPtr++;
-        digitscount--;
+        digitsCount--;
     }
     return accumPtr;
 }
@@ -505,7 +491,7 @@ char *NumberStringBase::stripLeadingZeros(char *accumPtr)
 void NumberString::adjustPrecision(char *resultPtr, size_t digits)
 {
     // is the length of the number too big?
-    if (digitsCount > digits)
+    if (digitsCount > (wholenumber_t)digits)
     {
         // adjust the length and the exponent for the truncation amount
         wholenumber_t extra = digitsCount - (wholenumber_t)digits;
@@ -524,14 +510,14 @@ void NumberString::adjustPrecision(char *resultPtr, size_t digits)
     setNumericSettings(digits, number_form());
 
     // if this reduced to zero, make it exactly zero
-    if (*resultPtr == 0 && length == 1)
+    if (*resultPtr == 0 && digitsCount == 1)
     {
         setZero();
     }
     else
     {
         // perform overflow checks on the result
-        checkOverFlow();
+        checkOverflow();
     }
     return;
 }
@@ -543,13 +529,13 @@ void NumberString::adjustPrecision(char *resultPtr, size_t digits)
  * @param digits The target digits (already determined that truncation is needed)
  * @param round
  */
-void NumberString::truncateToDigits(size_t digits, bool round)
+void NumberStringBase::truncateToDigits(size_t digits, char *digitsPtr, bool round)
 {
     numberExponent += digitsCount - digits;
-    digitsCount = digits
+    digitsCount = digits;
     if (round)
     {
-        mathRound(numberDigits);
+        mathRound(digitsPtr);
     }
 }
 
@@ -569,14 +555,14 @@ NumberString *NumberString::prepareNumber(size_t digits, bool rounding)
 {
     // make a copy of the number with a fresh setting of numeric creation information.
     NumberString *newObj = clone();
-    if (newObj->digitsCount > digits)
+    if (newObj->digitsCount > (wholenumber_t)digits)
     {
         // NOTE:  This version does NOT raise a LOSTDIGITS condition, since it
         // is used for formatting results from functions that are used to create
         // intentionally shortened numbers.
 
         // perform truncation and rounding.
-        truncateToDigits(digits, rounding);
+        newObj->truncateToDigits(digits, newObj->numberDigits, rounding);
     }
     // update the numeric metrics for the creation time
     newObj->setNumericSettings(digits, number_form());
@@ -598,11 +584,11 @@ NumberString *NumberString::prepareNumber(size_t digits, bool rounding)
  *
  * @return A new number object no longer than the target length.
  */
-NumberString *NumberString::prepareOperatorNumber(size_t targetLength, size_t digits, bool rounding)
+NumberString *NumberString::prepareOperatorNumber(wholenumber_t targetLength, size_t digits, bool rounding)
 {
     // clone the starting number
     NumberString *newObj = clone();
-    if (newObj->digitsCount > digits)
+    if (newObj->digitsCount > (wholenumber_t)digits)
     {
         // if we are going to lose digits because we're longer than the
         // current digits setting, raise the LOSTDIGITS condition
@@ -610,7 +596,7 @@ NumberString *NumberString::prepareOperatorNumber(size_t targetLength, size_t di
         // if we're longer than the target length, chop and potentially round
         if (newObj->digitsCount > targetLength)
         {
-            truncateToDigits(targetLength, rounding);
+            truncateToDigits(targetLength, newObj->numberDigits, rounding);
         }
     }
     // make sure this has the correct settings
@@ -628,26 +614,15 @@ NumberString *NumberString::prepareOperatorNumber(size_t targetLength, size_t di
  *
  * @return The operation result.
  */
-NumberString *NumberString::addSub(NumberString *other, ArithmeticOperation operation, size_t digits)
+NumberString *NumberString::addSub(NumberString *other, ArithmeticOperator operation, wholenumber_t digits)
 {
-    NumberString *left, *right, *result, *temp1;
-    char  *leftPtr,*rightPtr,*resultPtr;
-    char  *resultBuffer = NULL;
-    int   right_sign, carry, addDigit, rc;
-    wholenumber_t  LadjustDigits, RadjustDigits;
-    wholenumber_t  adjustDigits;
-    size_t ResultSize;
-    wholenumber_t aLeftExp, aRightExp, rightExp, leftExp, MinExp;
-    size_t rightLength, leftLength;
-    char  resultBufFast[FASTDIGITS*2+1];  /* for fast allocation if default    */
-
     // when performing the operations, we allow up to digits + 1 digits to particpate
-    size_t maxLength = digits  + 1;
+    wholenumber_t maxLength = (wholenumber_t)digits  + 1;
 
     // get local variables of the input object metrics since we might
     // need to copy the objects and adjust some settings.
     NumberString *left = this;
-    NumberSTring *right = other;
+    NumberString *right = other;
     wholenumber_t leftExp = left->numberExponent;
     wholenumber_t rightExp = right->numberExponent;
 
@@ -656,7 +631,7 @@ NumberString *NumberString::addSub(NumberString *other, ArithmeticOperation oper
 
     // now we need to check for truncation, including raising LOSTDIGITS
     // conditions if we do need to truncate
-    if (leftLength > digits)
+    if (leftLength > (wholenumber_t)digits)
     {
         // raise a numeric condition, which might not return
         reportCondition(GlobalNames::LOSTDIGITS, (RexxString *)this);
@@ -670,7 +645,7 @@ NumberString *NumberString::addSub(NumberString *other, ArithmeticOperation oper
     }
 
     // and repeat for the right number
-    if (rightLength > NumberDigits)
+    if (rightLength > digits)
     {
         reportCondition(GlobalNames::LOSTDIGITS, (RexxString *)other);
         if (rightLength > maxLength)
@@ -762,7 +737,7 @@ NumberString *NumberString::addSub(NumberString *other, ArithmeticOperation oper
     }
 
     // get a result object big enough to handle our maximum size result
-    NumberString *result = new (maxSize) NumberString (maxSize);
+    result = new (maxLength) NumberString (maxLength);
 
     // make sure all values are zero to start with
     result->numberSign = 0;
@@ -772,8 +747,7 @@ NumberString *NumberString::addSub(NumberString *other, ArithmeticOperation oper
 
     // point to the end of both numbers.
     char *leftPtr = left->numberDigits + leftLength - 1;
-    char *rightPtr = right->number + rightLength - 1;
-    char *resultPtr = NULL;
+    char *rightPtr = right->numberDigits + rightLength - 1;
 
     // See if we need oto adjust the number with respect to current
     // Digits setting.  Compute the amount we may need to
@@ -781,6 +755,7 @@ NumberString *NumberString::addSub(NumberString *other, ArithmeticOperation oper
     // a value of 0 or less means we are OK.
     wholenumber_t adjustedLeftDigits = (leftLength + adjustedLeftExp) - (wholenumber_t)maxLength;
     wholenumber_t adjustedRightDigits = (rightLength + adjustedRightExp) - (wholenumber_t)maxLength;
+    wholenumber_t adjustDigits = 0;
     // Do we need to adjust any numbers?
     if (adjustedLeftDigits > 0 || adjustedRightDigits > 0 )
     {
@@ -866,13 +841,13 @@ NumberString *NumberString::addSub(NumberString *other, ArithmeticOperation oper
     // we can allocate here, if we're in a "reasonable" digits setting.
     // we can go up to 36 digits with the default, which probably gets most
     // cases.
-    char resultBufFast[FASTDIGITS * 2 + 1];
+    char resultBufFast[FAST_BUFFER * 2 + 1];
     char *resultBuffer = resultBufFast;
 
     // if the digits are really big, then we need to allocate a larger buffer.
     // just allocate a buffer object and allow it to get garbage collected after
     // we're done.
-    if (digits > FASTDIGITS)
+    if (digits > FAST_BUFFER)
     {
         resultBuffer = new_buffer(digits * 2 + 1)->getData();
     }
@@ -898,7 +873,7 @@ NumberString *NumberString::addSub(NumberString *other, ArithmeticOperation oper
         // zeros added.  Handle this by moving digits of the right number into
         // the result.  For example,
         // xxxxxxx000     <- adjustedLeftExp = 3
-            yyyyyyyyy     <- adjustedRightExp = 0
+        //  yyyyyyyyy     <- adjustedRightExp = 0
         if (adjustedLeftExp != 0)
         {
             // while we have exponent left
@@ -974,7 +949,7 @@ NumberString *NumberString::addSub(NumberString *other, ArithmeticOperation oper
         // with carry outs still possible.
         while (leftPtr >= left->numberDigits)
         {
-            addDigit = carry + (*leftPtr--);
+            wholenumber_t addDigit = carry + (*leftPtr--);
             if (addDigit >= 10)
             {
                 carry = 1;
@@ -991,7 +966,7 @@ NumberString *NumberString::addSub(NumberString *other, ArithmeticOperation oper
         // and repeat with the right number
         while (rightPtr >= right->numberDigits)
         {
-            addDigit = carry + (*rightPtr--);
+            wholenumber_t addDigit = carry + (*rightPtr--);
             if (addDigit >= 10)
             {
                 carry = 1;
@@ -1002,13 +977,13 @@ NumberString *NumberString::addSub(NumberString *other, ArithmeticOperation oper
                 carry = 0;
             }
             *resultPtr-- = (char)addDigit;
-            result->length++;
+            result->digitsCount++;
         }
 
         // if we still have a carry from this, add an extra "1" at the front
         if (carry != 0)
         {
-            result->digitsCount++
+            result->digitsCount++;
             *resultPtr-- = 1;
         }
     }
@@ -1019,19 +994,20 @@ NumberString *NumberString::addSub(NumberString *other, ArithmeticOperation oper
         // compbination, then subtract the right from the left.
         if ((adjustedLeftExp + leftLength) > (adjustedRightExp + rightLength))
         {
-            subtractNumbers(left, leftPtr, adjusteLeftExp, right, rightPtr, adjustedRightExp, result, &resultPtr);
+            subtractNumbers(left, leftPtr, adjustedLeftExp, right, rightPtr, adjustedRightExp, result, resultPtr);
             // the result exponent is the exponent of the smaller number
-            result->numberExponent = adjustedLeftExponent != 0 ? rightExp : leftExp;
+            result->numberExponent = adjustedLeftExp != 0 ? rightExp : leftExp;
             // the result sign is that of the left
             result->numberSign = left->numberSign;
         }
         // right number bigger than the left?   We subtract the left from the right
         else if ((adjustedLeftExp + leftLength) < (adjustedRightExp + rightLength))
         {
-            subtractNumbers(right, rightPtr, adjustedRightExp, left, leftPtr, adjustedLeftExp, result, &resultPtr);
-            result->numberExponent = adjustedLeftExponent != 0 ? rightExp : leftExp;
+            subtractNumbers(right, rightPtr, adjustedRightExp, left, leftPtr, adjustedLeftExp, result, resultPtr);
+            // TODO:  double check this one to make sure this test is right.
+            result->numberExponent = adjustedLeftExp != 0 ? rightExp : leftExp;
             // we use the right sign for this (which might have been flipped for the operation)
-            result->numberSign = rightSign;
+            result->numberSign = (short)rightSign;
         }
 
         // here both numbers have same adjusted lexponent + length
@@ -1042,16 +1018,16 @@ NumberString *NumberString::addSub(NumberString *other, ArithmeticOperation oper
             // the right number is shorter.  Because of the adjusted exponents,
             // these digits actually line up at the same positions.  Things work
             // our more efficiently if we subtract the smaller number from the larger
-            if ((rc = memcmp(right->numberDigits, left->numberDigits, rightLength)) > 0)
+            if (memcmp(right->numberDigits, left->numberDigits, rightLength) > 0)
             {
                 // subtract the left from the right and keep the sign from the right.
-                subtractNumbers(right, rightPtr, adjustedRightExp, left, leftPtr, adjustedLeftExp, result, &resultPtr);
-                result->numberSign = rightSign;
+                subtractNumbers(right, rightPtr, adjustedRightExp, left, leftPtr, adjustedLeftExp, result, resultPtr);
+                result->numberSign = (short)rightSign;
             }
             else
             {
                 // subtracting right from left and using the sign from the left.
-                subtractNumbers(left, leftPtr, aLeftExp, right, rightPtr, aRightExp, result, &resultPtr);
+                subtractNumbers(left, leftPtr, adjustedLeftExp, right, rightPtr, adjustedRightExp, result, resultPtr);
                 result->numberSign = left->numberSign;
             }
             // we use the exponent from the left (which must be larger because it is the shorter number).
@@ -1061,19 +1037,20 @@ NumberString *NumberString::addSub(NumberString *other, ArithmeticOperation oper
         // from above.
         else
         {
+            int rc;
             // if the left number is larger, subtract the right from the left
             if ((rc = memcmp(left->numberDigits, right->numberDigits, leftLength)) > 0)
             {
-                subtractNumbers(left, leftPtr, adjustedLeftExp, right, rightPtr, adjustedRightExp, result, &resultPtr);
+                subtractNumbers(left, leftPtr, adjustedLeftExp, right, rightPtr, adjustedRightExp, result, resultPtr);
                 result->numberExponent = rightExp;
                 result->numberSign = left->numberSign;
             }
             // left number is smaller
             else if (rc != 0)
             {
-                subtractNumbers(right, rightPtr, adjustedRightExp, left, leftPtr, adjustedLeftExp, result, &resultPtr);
+                subtractNumbers(right, rightPtr, adjustedRightExp, left, leftPtr, adjustedLeftExp, result, resultPtr);
                 result->numberExponent = rightExp;
-                result->numberSign = rightSign;
+                result->numberSign = (short)rightSign;
             }
             // numbers compare equal for their lengths
             else
@@ -1081,9 +1058,9 @@ NumberString *NumberString::addSub(NumberString *other, ArithmeticOperation oper
                 // if the left length is shorter, then subtract the left from the right
                 if (leftLength < rightLength)
                 {
-                    subtractNumbers(right, rightPtr, adjustedRightExp, left, leftPtr, adjustedLeftExp, result, &resultPtr);
+                    subtractNumbers(right, rightPtr, adjustedRightExp, left, leftPtr, adjustedLeftExp, result, resultPtr);
                     result->numberExponent = rightExp;
-                    result->sign = rightSign;
+                    result->numberSign = (short)rightSign;
                 }
                 // the lengths are equal and they compare equal, so this result is zero.
                 else
@@ -1190,7 +1167,7 @@ void NumberString::subtractNumbers(NumberString *larger, const char *largerPtr, 
         {
             *resultPtr-- = '\0';
         }
-        result->digitCount++;
+        result->digitsCount++;
     }
 
     // ok, our strings have had the exponent mismatches handled.
@@ -1214,7 +1191,7 @@ void NumberString::subtractNumbers(NumberString *larger, const char *largerPtr, 
         }
         // add this to the result buffer
         *resultPtr-- = (char)subDigit;
-        result->length++;
+        result->digitsCount++;
     }
 
     // we might still have digits left on the larger number
@@ -1293,7 +1270,7 @@ char *NumberString::multiplyBaseSixteen(char *accum, char * highDigit )
     unsigned int carry = 0;
 
     // until we run out of digits, do the multiply.
-    while (OutPtr > HighDigit)
+    while (outPtr > highDigit)
     {
         // multiply the current digit by 10
         unsigned int digit = (unsigned int )((*outPtr * 10) + carry);

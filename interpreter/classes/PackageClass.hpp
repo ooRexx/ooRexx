@@ -94,6 +94,7 @@ public:
     bool          isTraceable();
     RexxString   *getLine(size_t position);
     void          attachSource(BufferClass *s);
+    void          checkRexxPackage();
 
     inline bool         needsInstallation() { return installRequired; }
     inline void         setNeedsInstallation() { installRequired = true; }

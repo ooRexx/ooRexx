@@ -48,6 +48,8 @@
 #include "CompoundVariableTail.hpp"
 #include "SystemInterpreter.hpp"
 #include "MethodArguments.hpp"
+#include "NumberStringClass.hpp"
+#include "DirectoryClass.hpp"
 
 // singleton class instance
 RexxClass *RexxString::classInstance = OREF_NULL;
@@ -625,7 +627,7 @@ wholenumber_t RexxString::comp(RexxObject *other)
     // if both are valid numbers, this is a numeric comparison.
     if (firstNum != OREF_NULL && secondNum != OREF_NULL)
     {
-        return firstNum->comp(secondNum);
+        return firstNum->comp(secondNum, number_fuzz());
     }
 
     // we're doing a string comparison, so get the string version of the other.
@@ -1142,7 +1144,7 @@ RexxString *RexxString::concat(RexxString *other)
 
     // just append the two string lengths
     builder.append(getStringData(), len1);
-    builder.append(other->getStringData(), len2)
+    builder.append(other->getStringData(), len2);
     return result;
 }
 
@@ -1182,7 +1184,7 @@ RexxString *RexxString::concatRexx(RexxObject *otherObj)
 
     // just append the two string lengths
     builder.append(getStringData(), len1);
-    builder.append(other->getStringData(), len2)
+    builder.append(other->getStringData(), len2);
     return result;
 }
 
@@ -1478,6 +1480,7 @@ RexxString *RexxString::lower()
 
         RexxString *newstring = raw_string(getLength());
         const char *data = getStringData();
+        const char *endData = data + getLength();
         char *outdata = newstring->getWritableData();
 
         // copy the data over, lowercasing as we go.
@@ -1807,7 +1810,7 @@ RexxObject *RexxString::operatorNot(RexxObject *other)
 RexxObject *RexxString::evaluate(RexxActivation *context, ExpressionStack *stack)
 {
     // place the string on the evaluation stack.
-    stack->push((this);
+    stack->push(this);
     // trace if necessary
     context->traceIntermediate(this, RexxActivation::TRACE_PREFIX_LITERAL);
     return this;

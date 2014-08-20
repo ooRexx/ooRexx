@@ -301,7 +301,7 @@ void NumberString::formatExponent(wholenumber_t exponent, char *buffer)
 /**
  * Check for an overflow situation with the exponent.
  */
-void NumberString::checkOverflow()
+void NumberStringBase::checkOverflow()
 {
     // if the adjusted exponent is too large
     if (numberExponent + digitsCount - 1 > Numerics::MAX_EXPONENT)
