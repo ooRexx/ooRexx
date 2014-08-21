@@ -1841,7 +1841,7 @@ RexxObject *LanguageParser::addText(RexxToken *token)
                         // just use the string value, but also try to create and
                         // attach the string's numeric value.
                         value = name;
-                        name->setNumberString((RexxObject *)value->numberString());
+                        name->setNumberString(value->numberString());
                     }
                     // and stash the retriever value so we can resolve this if used again.
                     literals->put(value, name);

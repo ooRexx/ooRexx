@@ -55,6 +55,7 @@
 #include "ProtectedObject.hpp"
 #include "RexxInternalApis.h"
 #include "PackageManager.hpp"
+#include "PackageClass.hpp"
 
 
 // global resource lock

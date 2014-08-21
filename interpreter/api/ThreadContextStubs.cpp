@@ -65,6 +65,7 @@
 #include "MethodArguments.hpp"
 #include "LanguageParser.hpp"
 #include "StemClass.hpp"
+#include "NumberStringClass.hpp"
 
 BEGIN_EXTERN_C()
 

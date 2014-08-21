@@ -61,10 +61,9 @@ class NativeCode : public BaseCode
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(Envelope *envelope);
 
-    virtual PackageClass *getPackageObject();
     virtual RexxClass *findClass(RexxString *className);
-    virtual BaseCode *setPackageObject(PackageClass *s);
-    SecurityManager *getSecurityManager();
+    virtual BaseCode  *setPackageObject(PackageClass *s);
+    SecurityManager   *getSecurityManager();
 
 protected:
 

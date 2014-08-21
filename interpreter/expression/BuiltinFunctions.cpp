@@ -58,6 +58,7 @@
 #include "SystemInterpreter.hpp"
 #include "SysFileSystem.hpp"
 #include "MethodArguments.hpp"
+#include "NumberStringClass.hpp"
 
 // lots of global names used here, so make the
 // namespace global.
@@ -1976,8 +1977,9 @@ BUILTIN(LINEIN)
     else
     {
         bool added = false;
+        Protected<RexxString> fullname;
         // get a stream for this name
-        RexxObject *stream = context->resolveStream(name, true, NULL, &added);
+        RexxObject *stream = context->resolveStream(name, true, fullname, &added);
         switch (argcount)
         {
             // process based on the arguments
@@ -2022,7 +2024,8 @@ BUILTIN(CHARIN)
 
     // resolve the stream name and send it the appropriate message
     bool added = false;
-    RexxObject *stream = context->resolveStream(name, true, NULL, &added);
+    Protected<RexxString> fullname;
+    RexxObject *stream = context->resolveStream(name, true, fullname, &added);
     switch (argcount)
     {
         case 0:
@@ -2075,9 +2078,9 @@ BUILTIN(LINEOUT)
     else
     {
         bool added;
-        RexxString *fullName;
+        Protected<RexxString> fullName;
         // resolve the stream name and send the message based on the arguments
-        RexxObject *stream = context->resolveStream(name, false, &fullName, &added);
+        RexxObject *stream = context->resolveStream(name, false, fullName, &added);
         switch (argcount)
         {
             case 0:
@@ -2117,8 +2120,9 @@ BUILTIN(CHAROUT)
     }
 
     bool added;
+    Protected<RexxString> fullname;
     // resolve the stream name
-    RexxObject *stream = context->resolveStream(name, false, NULL, &added);
+    RexxObject *stream = context->resolveStream(name, false, fullname, &added);
     switch (argcount)
     {
         case 0:
@@ -2169,8 +2173,9 @@ BUILTIN(LINES)
     else
     {
         bool added;
+        Protected<RexxString> fullname;
         // resolve the stream
-        RexxObject *stream = context->resolveStream(name, true, NULL, &added);
+        RexxObject *stream = context->resolveStream(name, true, fullname, &added);
         // and send the lines message with the option.
         result = stream->sendMessage(LINES, option);
     }
@@ -2211,7 +2216,8 @@ BUILTIN(CHARS)
 
     // resolve the stream and send it the CHARS message
     bool added;
-    RexxObject *stream = context->resolveStream(name, true, NULL, &added);
+    Protected<RexxString> fullname;
+    RexxObject *stream = context->resolveStream(name, true, fullname, &added);
     return stream->sendMessage(CHARS);
 }
 
@@ -2265,8 +2271,9 @@ BUILTIN(STREAM)
                     reportException(Error_Incorrect_call_maxarg, STREAM, IntegerTwo);
                 }
 
+                Protected<RexxString> fullname;
                 // get the stream object and get the state
-                RexxObject *stream = context->resolveStream(name, true, NULL, NULL);
+                RexxObject *stream = context->resolveStream(name, true, fullname, NULL);
                 return stream->sendMessage(STATE);
                 break;
             }
@@ -2280,7 +2287,8 @@ BUILTIN(STREAM)
                     reportException(Error_Incorrect_call_maxarg, STREAM, IntegerTwo);
                 }
 
-                RexxObject *stream = context->resolveStream(name, true, NULL, NULL);
+                Protected<RexxString> fullname;
+                RexxObject *stream = context->resolveStream(name, true, fullname, NULL);
                 return stream->sendMessage(DESCRIPTION);
                 break;
             }
@@ -2305,35 +2313,35 @@ BUILTIN(STREAM)
                 // an open request
                 if (command_upper->wordPos(new_string("OPEN"), OREF_NULL)->getValue() > 0)
                 {
-                    RexxString *fullName;
+                    Protected<RexxString> fullname;
                     bool added;
-                    RexxObject *stream = context->resolveStream(name, true, &fullName, &added);
+                    RexxObject *stream = context->resolveStream(name, true, fullname, &added);
                     RexxString *result = (RexxString *)stream->sendMessage(COMMAND, command);
                     // if open failed, remove the stream object from stream table again
                     if (!result->strCompare("READY:"))
                     {
-                        context->getStreams()->remove(fullName);
+                        context->getStreams()->remove(fullname);
                     }
                     return result;
                 }
                 // a close request
                 else if (command_upper->wordPos(new_string("CLOSE"), OREF_NULL)->getValue() > 0)
                 {
-                    RexxString *fullName;
                     bool added;
-                    RexxObject *stream = context->resolveStream(name, true, &fullName, &added);
+                    Protected<RexxString> fullname;
+                    RexxObject *stream = context->resolveStream(name, true, fullname, &added);
                     RexxString *result = (RexxString *)stream->sendMessage(COMMAND, command);
                     // remove this from the table after the close
-                    context->getStreams()->remove(fullName);
+                    context->getStreams()->remove(fullname);
                     return result;
                 }
                 // these are real operations that might cause an implicit open
                 else if (command_upper->wordPos(new_string("SEEK"), OREF_NULL)->getValue() > 0 ||
                     command_upper->wordPos(new_string("POSITON"), OREF_NULL)->getValue() > 0)
                 {
-                    RexxString *fullName;
                     bool added;
-                    RexxObject *stream = context->resolveStream(name, true, &fullName, &added);
+                    Protected<RexxString> fullname;
+                    RexxObject *stream = context->resolveStream(name, true, fullname, &added);
                     // this is a real operation, so pass along to the stream object
                     RexxString *result = (RexxString *)stream->sendMessage(COMMAND, command);
                     return result;
@@ -2341,7 +2349,8 @@ BUILTIN(STREAM)
                 // all other commands just pass to the resolved stream object
                 else
                 {
-                    RexxObject *stream = context->resolveStream(name, true, NULL, NULL);
+                    Protected<RexxString> fullname;
+                    RexxObject *stream = context->resolveStream(name, true, fullname, NULL);
                     return stream->sendMessage(COMMAND, command);
                 }
                 break;

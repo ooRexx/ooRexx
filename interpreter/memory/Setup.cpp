@@ -88,6 +88,7 @@
 #include "SetClass.hpp"
 #include "BagClass.hpp"
 #include "ActivityManager.hpp"
+#include "ProgramSource.hpp"
 
 
 /**

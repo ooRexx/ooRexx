@@ -68,10 +68,10 @@ public:
     static void unpackNibble(int Val, char *p);
     static char packNibble(const char *String);
     static RexxString *packHex(const char *String, size_t StringLength);
-    static size_t chGetSm(char *Destination, const char *Source, size_t Length, size_t Count, const char *Set, size_t *ScannedSize);
+    static size_t chGetSm(char *Destination, const char *Source, size_t Length, size_t Count, const char *Set, size_t &ScannedSize);
     static size_t validateSet(const char *String, size_t Length, const char *Set, int Modulus, bool Hex);
     static char packByte2(const char *Byte);
-    static int validateSet(const char *String, size_t Length, const char *Set, int Modulus, size_t &PackedSize );
+    static bool validateCharacterSet(const char *String, size_t Length, const char *Set, int Modulus, size_t &PackedSize);
     static const char *memcpbrk(const char *String, const char *Set, size_t Length);
     static RexxObject *dataType(RexxString *String, char Option );
     static size_t wordCount(const char *String, size_t   StringLength );

@@ -48,6 +48,7 @@
 #include "StringUtil.hpp"
 #include "QueueClass.hpp"
 #include "MethodArguments.hpp"
+#include "NumberStringClass.hpp"
 
 
 /**
@@ -101,7 +102,7 @@ RexxString *StringUtil::substr(const char *string, size_t stringLength, RexxInte
         padCount = length - substrLength;
     }
     RexxString *retval = raw_string(length);
-    StringClass::StringBuilder builder(retval);
+    RexxString::StringBuilder builder(retval);
 
     // copy the substring data
     builder.append(string + position, substrLength);
@@ -660,7 +661,7 @@ char StringUtil::packNibble(const char *string)
 
     memset(buf, '0', 4);                 // set first 4 bytes to zero
     memcpy(buf+4, string, 4);            // copy next 4 bytes from the string
-    int i = packByte(Buf);               // pack to a single byte
+    int i = packByte(buf);               // pack to a single byte
     return "0123456789ABCDEF"[i];        // convert to a printable character
 }
 
@@ -723,11 +724,12 @@ size_t StringUtil::validateSet(const char *string, size_t length, const char *se
     size_t residue = 0;
     const char *current = string;
     const char *spaceLocation = NULL;
+    char ch;
 
     // scan the entire string section
     for (; length; length--)
     {
-        char ch = *current++;
+        ch = *current++;
 
         // if this is in the set, then add in the count of digits
         if (ch != '\0' && strchr(set, ch) != NULL)
@@ -838,7 +840,7 @@ RexxString *StringUtil::packHex(const char *string, size_t stringLength)
     // if the string we're packing is a null string, the result is also a null string
     if (stringLength == 0)
     {
-        return GlobalNames::NullString;
+        return GlobalNames::NULLSTRING;
     }
 
     const char *source = string;
@@ -866,7 +868,7 @@ RexxString *StringUtil::packHex(const char *string, size_t stringLength)
         chGetSm(buf + 2 - b, source, stringLength, b, "0123456789ABCDEFabcdef", scanned);
         // now convert this into a single character and insert into the destination string
         *destination++ = packByte2(buf);
-        Source += scanned;
+        source += scanned;
         stringLength -= scanned;
         nibbles -= b;
     }
@@ -939,7 +941,7 @@ const char *StringUtil::memcpbrk(const char *string, const char *set, size_t len
  *
  * @return The count of located characters.
  */
-int StringUtil::validateSet(const char *string, size_t length, const char *set, int modulus, size_t &count)
+bool StringUtil::validateCharacterSet(const char *string, size_t length, const char *set, int modulus, size_t &count)
 {
     // leading whitespace not permitted
     if (*string == RexxString::ch_SPACE || *string == RexxString::ch_TAB)
@@ -952,11 +954,12 @@ int StringUtil::validateSet(const char *string, size_t length, const char *set, 
     size_t residue = 0;
     const char *current = string;
     const char *spaceLocation = NULL;
+    char ch;
 
     // scan the entire string section
     for (; length; length--)
     {
-        char ch = *current++;
+        ch = *current++;
 
         // if this is in the set, then add in the count of digits
         if (ch != '\0' && strchr(set, ch) != NULL)
@@ -1028,7 +1031,7 @@ RexxObject *StringUtil::dataType(RexxString *string, char option )
         case RexxString::DATATYPE_BINARY:
         {
             size_t count;
-            return booleanObject(len == 0 || valSet(scanp, len, RexxString::BINARY, 4, &count));
+            return booleanObject(len == 0 || validateCharacterSet(scanp, len, RexxString::BINARY, 4, count));
         }
 
         case RexxString::DATATYPE_LOWERCASE:
@@ -1070,7 +1073,7 @@ RexxObject *StringUtil::dataType(RexxString *string, char option )
         case RexxString::DATATYPE_HEX:
         {
             size_t count;
-            return booleanObject(len == 0 || valSet(scanp, len, RexxString::HEX_CHAR_STR, 2, &count));
+            return booleanObject(len == 0 || validateCharacterSet(scanp, len, RexxString::HEX_CHAR_STR, 2, count));
         }
 
         case RexxString::DATATYPE_SYMBOL:
@@ -1112,7 +1115,7 @@ size_t  StringUtil::wordCount(const char *string, size_t stringLength )
     }
 
     size_t count = 0;
-    StringClass::WordIterator counter(string, stringLength)
+    RexxString::WordIterator counter(string, stringLength);
 
     // count the words in the string
     while (counter.next())
@@ -1299,7 +1302,7 @@ RexxString *StringUtil::subWord(const char *data, size_t length, RexxInteger *po
     }
 
     // get an iterator
-    StringClass::WordIterator iterator(data, length);
+    RexxString::WordIterator iterator(data, length);
 
     // try to skip ahead to the target word...if we don't have that many words,
     // return a null string
@@ -1344,7 +1347,7 @@ ArrayClass *StringUtil::subWords(const char *data, size_t length, RexxInteger *p
     }
 
     // get an iterator
-    StringClass::WordIterator iterator(data, length);
+    RexxString::WordIterator iterator(data, length);
     // try to skip ahead to the target word...if we don't have that many words,
     // return an empty array
     if (!iterator.skipWords(wordPos))
@@ -1388,7 +1391,7 @@ RexxString *StringUtil::word(const char *data, size_t length, RexxInteger *posit
     }
 
     // get an iterator
-    StringClass::WordIterator iterator(data, length);
+    RexxString::WordIterator iterator(data, length);
     // try to skip ahead to the target word...if we don't have that many words,
     // return a null string
     if (!iterator.skipWords(wordPos))
@@ -1396,7 +1399,7 @@ RexxString *StringUtil::word(const char *data, size_t length, RexxInteger *posit
         return GlobalNames::NULLSTRING;
     }
 
-    return new_string(iterator.wordPointer(), iterator.wordLength())
+    return new_string(iterator.wordPointer(), iterator.wordLength());
 }
 
 
@@ -1412,7 +1415,7 @@ RexxString *StringUtil::word(const char *data, size_t length, RexxInteger *posit
 ArrayClass *StringUtil::words(const char *data, size_t length)
 {
     // get an iterator
-    StringClass::WordIterator iterator(data, length);
+    RexxString::WordIterator iterator(data, length);
 
     // we make this size zero so the size and the items count will match
     Protected<ArrayClass> result = new_array((size_t)0);
@@ -1440,7 +1443,7 @@ RexxInteger *StringUtil::wordIndex(const char *data, size_t length, RexxInteger 
     size_t wordPos = positionArgument(position, ARG_ONE);
 
     // get an iterator
-    StringClass::WordIterator iterator(data, length);
+    RexxString::WordIterator iterator(data, length);
     // try to skip ahead to the target word...if we don't have that many words,
     // return zero
     if (!iterator.skipWords(wordPos))
@@ -1468,7 +1471,7 @@ RexxInteger *StringUtil::wordLength(const char *data, size_t length, RexxInteger
     size_t wordPos = positionArgument(position , ARG_ONE);
 
     // get an iterator
-    StringClass::WordIterator iterator(data, length);
+    RexxString::WordIterator iterator(data, length);
     // try to skip ahead to the target word...if we don't have that many words,
     // return zero
     if (!iterator.skipWords(wordPos))
@@ -1516,14 +1519,14 @@ size_t StringUtil::wordPos(const char *data, size_t length, RexxString  *phrase,
     // we know how many potential search attempts we can make.
     size_t searchCount = (haystackWords - needleWords - count) + 2;
 
-    StringClass::WordIterator haystackIterator(haystack, haystackLength);
+    RexxString::WordIterator haystackIterator(haystack, haystackLength);
 
     // skip the haystack ahead to the target word.  We know we have at least
     // count words already
-    haystackLength.skipWords(count);
+    haystackIterator.skipWords(count);
 
     // now get an iterator for the needle and position at the first word.
-    StringClass::WordIterator needleIterator(needle, needleLength);
+    RexxString::WordIterator needleIterator(needle, needleLength);
     // this will work because we know the needle has at least one word
     needleIterator.next();
 
@@ -1535,8 +1538,8 @@ size_t StringUtil::wordPos(const char *data, size_t length, RexxString  *phrase,
     {
         // copy the current iterator positions.  This allows us to advance
         // without changing the originals
-        StringClass::WordIterator tempHaystack = haystackIterator;
-        StringClass::WordIterator tempNeedle = needleIterator;
+        RexxString::WordIterator tempHaystack = haystackIterator;
+        RexxString::WordIterator tempNeedle = needleIterator;
 
         // now compare each word in turn
         size_t i;
@@ -1602,14 +1605,14 @@ size_t StringUtil::caselessWordPos(const char *data, size_t length, RexxString  
     // we know how many potential search attempts we can make.
     size_t searchCount = (haystackWords - needleWords - count) + 2;
 
-    StringClass::WordIterator haystackIterator(haystack, haystackLength);
+    RexxString::WordIterator haystackIterator(haystack, haystackLength);
 
     // skip the haystack ahead to the target word.  We know we have at least
     // count words already
-    haystackLength.skipWords(count);
+    haystackIterator.skipWords(count);
 
     // now get an iterator for the needle and position at the first word.
-    StringClass::WordIterator needleIterator(needle, needleLength);
+    RexxString::WordIterator needleIterator(needle, needleLength);
     // this will work because we know the needle has at least one word
     needleIterator.next();
 
@@ -1621,8 +1624,8 @@ size_t StringUtil::caselessWordPos(const char *data, size_t length, RexxString  
     {
         // copy the current iterator positions.  This allows us to advance
         // without changing the originals
-        StringClass::WordIterator tempHaystack = haystackIterator;
-        StringClass::WordIterator tempNeedle = needleIterator;
+        RexxString::WordIterator tempHaystack = haystackIterator;
+        RexxString::WordIterator tempNeedle = needleIterator;
 
         // now compare each word in turn
         size_t i;

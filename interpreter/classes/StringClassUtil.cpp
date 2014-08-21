@@ -156,7 +156,7 @@ char optionArgument(RexxInternalObject *argument, const char *validOptions, size
     RexxString *parameter = (RexxString *)stringArgument(argument, position);
 
     // get the first character of the string
-    char option == toupper(parameter->getChar(0));
+    char option = toupper(parameter->getChar(0));
     // if not one of the valid options (null string is not valid), raise the error
     if (parameter->isNullString() || strchr(validOptions, option) == NULL)
     {

@@ -102,7 +102,7 @@ class RexxString : public RexxObject
      class WordIterator
      {
      public:
-         inline WordIterator(char *b, size_t l) : nextPosition(b), scanLength(l) {}
+         inline WordIterator(const char *b, size_t l) : nextPosition(b), scanLength(l) {}
          inline WordIterator(RexxString *s) : nextPosition(s->getStringData()), scanLength(s->getLength()) {}
 
          /**

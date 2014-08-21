@@ -249,7 +249,6 @@ class NumberString : public NumberStringBase
     }
 
     //quick test for a numeric overflow
-    void checkOverflow();
     void checkLostDigits(size_t digits);
     NumberString *operatorArgument(RexxObject *right);
 

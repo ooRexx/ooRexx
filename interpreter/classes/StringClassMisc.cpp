@@ -659,17 +659,6 @@ size_t RexxString::caselessPos(RexxString *needle, size_t _start)
 RexxString *RexxString::translate(RexxString *tableo, RexxString *tablei, RexxString *pad,
     RexxInteger *_start, RexxInteger *_range)
 {
-    RexxString *Retval;                  /* return value                      */
-    const char *OutTable;                /* output table                      */
-    size_t    OutTableLength;            /* length of output table            */
-    const char *InTable;                 /* input table                       */
-    char       *ScanPtr;                 /* scanning pointer                  */
-    size_t    ScanLength;                /* scanning length                   */
-    size_t    InTableLength;             /* length of input table             */
-    char      PadChar;                   /* pad character                     */
-    char      ch;                        /* current character                 */
-    size_t    Position;                  /* table position                    */
-
     // if there are no input or output table specified, and no pad, this is just an uppercase.
     if (tableo == OREF_NULL && tablei == OREF_NULL && pad == OREF_NULL)
     {
@@ -682,7 +671,7 @@ RexxString *RexxString::translate(RexxString *tableo, RexxString *tablei, RexxSt
     size_t outTableLength = tableo->getLength();
 
     tablei = optionalStringArgument(tablei, GlobalNames::NULLSTRING, ARG_TWO);
-    size_t nTableLength = tablei->getLength();
+    size_t inTableLength = tablei->getLength();
     const char *inTable = tablei->getStringData();
     const char *outTable = tableo->getStringData();
 

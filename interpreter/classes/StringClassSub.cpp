@@ -189,9 +189,9 @@ RexxString *RexxString::insert(RexxString  *newStrObj, RexxInteger *position, Re
     }
     // insert position beyond the length?  We might need to insert some leading
     // pad characters, the front part is everything and there is no back part to copy
-    else if (position >= targetLength)
+    else if (insertPosition >= targetLength)
     {
-        leadPad = position - targetLength;
+        leadPad = insertPosition - targetLength;
         frontLength = targetLength;
         backLength = 0;
     }
@@ -201,8 +201,8 @@ RexxString *RexxString::insert(RexxString  *newStrObj, RexxInteger *position, Re
     else
     {
         leadPad = 0;
-        frontLength = position;
-        backLength = targetLength - position;
+        frontLength = insertPosition;
+        backLength = targetLength - insertPosition;
     }
 
     // we might need to truncate the inserted string if the specified length is
@@ -221,7 +221,7 @@ RexxString *RexxString::insert(RexxString  *newStrObj, RexxInteger *position, Re
     builder.pad(padChar, leadPad);
 
     // if we have new string data to copy, this is next
-    builder.append(newStr->getStringData(), newStringLength);
+    builder.append(newStrObj->getStringData(), newStringLength);
 
     // and trailing pad required?
     builder.pad(padChar, padLength);
@@ -283,23 +283,10 @@ RexxString *RexxString::left(RexxInteger *_length, RexxString *pad)
  */
 RexxString *RexxString::overlay(RexxString *newStrObj, RexxInteger *position, RexxInteger *_length, RexxString  *pad)
 {
-    RexxString *Retval;                  /* return string                     */
-    RexxString *newStr;                  /* return string                     */
-    size_t   OverlayPos;                 /* overlay position                  */
-    size_t   OverlayLen;                 /* overlay length                    */
-    size_t   NewLen;                     /* length of overlay string          */
-    size_t   TargetLen;                  /* target length                     */
-    size_t   FrontLen;                   /* front length                      */
-    size_t   BackLen;                    /* back length                       */
-    size_t   FrontPad;                   /* front pad length                  */
-    size_t   BackPad;                    /* back pad length                   */
-    char     PadChar;                    /* pad character                     */
-    char    *Current;                    /* current copy location             */
-
     size_t targetLen = getLength();
     // make sure we have a real string value for the overlay
     newStrObj = stringArgument(newStrObj, ARG_ONE);
-    size_t newLen = newStr->getLength();
+    size_t newLen = newStrObj->getLength();
 
     // the overlay postion defaults to the first character
     size_t overlayPos = optionalPositionArgument(position, 1, ARG_TWO);
@@ -325,7 +312,7 @@ RexxString *RexxString::overlay(RexxString *newStrObj, RexxInteger *position, Re
 
     size_t frontPad = 0;
     // calculate the default split positions
-    size_t frontLen = overLayPos - 1;
+    size_t frontLen = overlayPos - 1;
     size_t backLen = targetLen - (overlayPos + overlayLen - 1);
 
     // if the overlay position is beyond the length of the target
@@ -353,7 +340,7 @@ RexxString *RexxString::overlay(RexxString *newStrObj, RexxInteger *position, Re
     // add any leading padding
     builder.pad(padChar, frontPad);
     // copy the overlay string (or portion of the overlay string)
-    builder.append(newStr->getStringData(), newLen);
+    builder.append(newStrObj->getStringData(), newLen);
     // add any possible back padding
     builder.pad(padChar, backPad);
     // and finally the trailing section
@@ -498,7 +485,7 @@ RexxString *RexxString::right(RexxInteger *_length, RexxString  *pad)
     }
 
     RexxString *retval = raw_string(size);
-    StringBuilfer builder(retval);
+    StringBuilder builder(retval);
 
     // the requested length might be longer than the target string, so
     // cap at that size

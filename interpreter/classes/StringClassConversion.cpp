@@ -48,6 +48,7 @@
 #include "ActivityManager.hpp"
 #include "StringUtil.hpp"
 #include "MethodArguments.hpp"
+#include "NumberStringClass.hpp"
 
 
 /**
@@ -207,7 +208,7 @@ RexxString *RexxString::decodeBase64()
             }
 
             // get the reduced digit value
-            char digitValue = (char)(match - DIGITS_BASE64);
+            int digitValue = (int)(match - DIGITS_BASE64);
 
             // digit value is the binary value of this digit.  Now, based
             // on which digit of the input set we're working on, we update
@@ -229,14 +230,14 @@ RexxString *RexxString::decodeBase64()
                 // third digit.  4 bits are used to complete the
                 // current character, the remaining 2 bits go into the next one.
                 case 2:
-                    *destination |= (char)(j >> 2);
+                    *destination |= (char)(digitValue >> 2);
                     destination++;
-                    *destination = (char)(j << 6);
+                    *destination = (char)(digitValue << 6);
                     break;
                 // last character of the set.  All 6 bits are inserted into
                 // the current output position.
                 case 3:
-                    *destination |= (char)j;
+                    *destination |= (char)digitValue;
                     destination++;
                     break;
             }
@@ -256,14 +257,8 @@ RexxString *RexxString::decodeBase64()
  */
 RexxString *RexxString::c2x()
 {
-    size_t      InputLength;             /* length of converted string        */
-    RexxString *Retval;                  /* return value                      */
-    const char *Source;                  /* input string pointer              */
-    char *      Destination;             /* output string pointer             */
-    char        ch;                      /* current character                 */
-
     // a null string is still a null string
-    size_t nputLength = getLength();
+    size_t inputLength = getLength();
     if (inputLength == 0)
     {
         return GlobalNames::NULLSTRING;
@@ -489,7 +484,7 @@ RexxString *RexxString::x2dC2d(RexxInteger *_length, bool type )
     // if this is a negative value, we perform the 2s complement negation operation
     // in place.  Note that we are working off of a copy of the original data, so this
     // is fine.
-    if (Negative)
+    if (negative)
     {
         char *scan = stringPtr;
         size_t tempSize = stringLength;
@@ -539,13 +534,13 @@ RexxString *RexxString::x2dC2d(RexxInteger *_length, bool type )
         *stringPtr &= 0x0f;
     }
 
-    scan = stringPtr;
+    char *scan = stringPtr;
 
     // all of this is done using the current digits setting, so get a buffer with
     // sufficient space to perform the math
     BufferClass *buffer = new_buffer(currentDigits + NumberString::OVERFLOWSPACE + 1);
     // we start building from the end forward
-    char *Accumulator = buffer->getData() + currentDigits + NumberString::OVERFLOWSPACE;
+    char *accumulator = buffer->getData() + currentDigits + NumberString::OVERFLOWSPACE;
     // make sure the buffer is cleared out
     memset(buffer->getData(), '\0', currentDigits + NumberString::OVERFLOWSPACE + 1);
     char *highDigit = accumulator - 1;
@@ -555,7 +550,7 @@ RexxString *RexxString::x2dC2d(RexxInteger *_length, bool type )
     {
         // ok, so for each nibble, we add to the accumulator under base 10, then
         // we multiply by 16 to perform a shift.
-        ch = *scan++;
+        int ch = *scan++;
 
         highDigit = NumberString::addToBaseTen((ch & 0xf0) >> 4, accumulator, highDigit);
         // multiply by 16
@@ -586,7 +581,7 @@ RexxString *RexxString::x2dC2d(RexxInteger *_length, bool type )
     // get accumulator length...this will be our final result length
     size_t decLength = (accumulator - highDigit);
     // now we need to turn the math digits into real characters for the result
-    tempLength = decLength;
+    size_t tempLength = decLength;
     scan = highDigit + 1;
     while (tempLength--)
     {
@@ -621,7 +616,7 @@ RexxString *RexxString::x2dC2d(RexxInteger *_length, bool type )
 RexxString *RexxString::b2x()
 {
     // a null bit string converts to a null string
-    if getLength() == 0)
+    if (isNullString())
     {
         return GlobalNames::NULLSTRING;
     }
@@ -629,7 +624,7 @@ RexxString *RexxString::b2x()
     // validate the string content, getting a bit count back.
     size_t bits = StringUtil::validateSet(getStringData(), getLength(), "01", 4, false);
     // every 4 bits will be one hex character in the result
-    RexxString *retval = raw_string((Bits + 3) / 4);
+    RexxString *retval = raw_string((bits + 3) / 4);
 
     char *destination = retval->getWritableData();
     const char *source = getStringData();
@@ -656,7 +651,7 @@ RexxString *RexxString::b2x()
         }
         size_t jump;        // string movement offset
         // get the next nibble worth of characters
-        StringUtil::chGetSm(&nibble[0] + (4 - excess), source, length, excess, "01", &jump);
+        StringUtil::chGetSm(&nibble[0] + (4 - excess), source, length, excess, "01", jump);
         // insert into the destination as a hex character
         *destination++ = StringUtil::packNibble(nibble);
         source += jump;
@@ -699,7 +694,7 @@ RexxString *RexxString::x2b()
             int val = StringUtil::hexDigitToInt(ch);
             StringUtil::unpackNibble(val, destination);
             destination += 4;
-            Nibbles--;
+            nibbles--;
         }
     }
     return retval;

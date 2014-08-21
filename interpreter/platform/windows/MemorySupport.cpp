@@ -200,7 +200,7 @@ MemorySegmentPool *MemorySegmentPool::createPool()
         newPool->nextLargeAlloc = ((char*) newPool) + Memory::MemoryAllocationSize;
 
         // Initialize this as a segment pool
-        new (newPool) MemorySegmentPool;
+        ::new (newPool) MemorySegmentPool;
         return newPool;
     }
     else

@@ -491,7 +491,7 @@ RexxInstruction *LanguageParser::sourceNewObject(size_t size, RexxBehaviour *_be
 {
     RexxInternalObject *newObject = new_object(size);
     newObject->setBehaviour(_behaviour);
-    new ((void *)newObject) RexxInstruction (clause, type);
+    ::new ((void *)newObject) RexxInstruction (clause, type);
     currentInstruction = (RexxInstruction *)newObject;
     return (RexxInstruction *)newObject;
 }
@@ -549,7 +549,7 @@ RexxInstruction *LanguageParser::addressNew()
     }
 
     RexxInstruction *newObject = new_instruction(ADDRESS, Address);
-    new ((void *)newObject) RexxInstructionAddress(dynamicAddress, environment, command);
+    ::new ((void *)newObject) RexxInstructionAddress(dynamicAddress, environment, command);
     return newObject;
 }
 
@@ -574,7 +574,7 @@ RexxInstruction *LanguageParser::assignmentNew(RexxToken  *target )
 
     // build an instruction object and return it.
     RexxInstruction *newObject = new_instruction(ASSIGNMENT, Assignment);
-    new ((void *)newObject) RexxInstructionAssignment(addVariable(target), expr);
+    ::new ((void *)newObject) RexxInstructionAssignment(addVariable(target), expr);
     return newObject;
 }
 
@@ -603,7 +603,7 @@ RexxInstruction *LanguageParser::assignmentOpNew(RexxToken *target, RexxToken *o
 
     // now everything is the same as an assignment operator
     RexxInstruction *newObject = new_instruction(ASSIGNMENT, Assignment);
-    new ((void *)newObject) RexxInstructionAssignment(variable, expr);
+    ::new ((void *)newObject) RexxInstructionAssignment(variable, expr);
     return newObject;
 }
 
@@ -718,7 +718,7 @@ RexxInstruction *LanguageParser::callOnNew(InstructionSubKeyword type)
 
     // create a new instruction object
     RexxInstruction *newObject = new_instruction(CALL_ON, CallOn);
-    new ((void *)newObject) RexxInstructionCallOn(conditionName, labelName, builtinIndex);
+    ::new ((void *)newObject) RexxInstructionCallOn(conditionName, labelName, builtinIndex);
 
     // if this is the ON form, we have some end parsing resolution to perform.
     if (type == SUBKEY_ON)
@@ -751,7 +751,7 @@ RexxInstruction *LanguageParser::dynamicCallNew(RexxToken *token)
 
     // create a new instruction object
     RexxInstruction *newObject = new_variable_instruction(CALL_VALUE, DynamicCall, sizeof(RexxInstructionDynamicCall) + (argCount - 1) * sizeof(RexxObject *));
-    new ((void *)newObject) RexxInstructionDynamicCall(targetName, argCount, subTerms);
+    ::new ((void *)newObject) RexxInstructionDynamicCall(targetName, argCount, subTerms);
 
     // NOTE:  The name of the call cannot be determined until run time, so we don't
     // add this to the reference list for later processing
@@ -831,7 +831,7 @@ RexxInstruction *LanguageParser::callNew()
 
     // create a new Call instruction.  This only handles the simple calles.
     RexxInstruction *newObject = new_variable_instruction(CALL, Call, sizeof(RexxInstructionCall) + (argCount - 1) * sizeof(RexxObject *));
-    new ((void *)newObject) RexxInstructionCall(targetName, argCount, subTerms, builtin_index);
+    ::new ((void *)newObject) RexxInstructionCall(targetName, argCount, subTerms, builtin_index);
 
     // add to our references list, but only if this is a form where
     // internal calls are allowed.
@@ -856,7 +856,7 @@ RexxInstruction *LanguageParser::commandNew()
     RexxObject *expression = parseExpression(TERM_EOC);
 
     RexxInstruction *newObject = new_instruction(COMMAND, Command);
-    new ((void *)newObject) RexxInstructionCommand(expression);
+    ::new ((void *)newObject) RexxInstructionCommand(expression);
     return newObject;
 }
 
@@ -990,21 +990,21 @@ RexxInstruction *LanguageParser::newControlledLoop(RexxString *label, RexxToken 
         case SUBKEY_NONE:
         {
             RexxInstruction *newObject = new_instruction(LOOP_CONTROLLED, ControlledDo);
-            new ((void *)newObject) RexxInstructionControlledDo(label, control);
+            ::new ((void *)newObject) RexxInstructionControlledDo(label, control);
             return newObject;
         }
         // Controlled loop with a WHILE conditional
         case SUBKEY_WHILE:
         {
             RexxInstruction *newObject = new_instruction(LOOP_CONTROLLED_WHILE, ControlledDoWhile);
-            new ((void *)newObject) RexxInstructionControlledDoWhile(label, control, conditional);
+            ::new ((void *)newObject) RexxInstructionControlledDoWhile(label, control, conditional);
             return newObject;
         }
         // Controlled loop with an UNTIL conditional.
         case SUBKEY_UNTIL:
         {
             RexxInstruction *newObject = new_instruction(LOOP_CONTROLLED_UNTIL, ControlledDoUntil);
-            new ((void *)newObject) RexxInstructionControlledDoUntil(label, control, conditional);
+            ::new ((void *)newObject) RexxInstructionControlledDoUntil(label, control, conditional);
             return newObject;
         }
     }
@@ -1062,21 +1062,21 @@ RexxInstruction *LanguageParser::newDoOverLoop(RexxString *label, RexxToken *nam
         case SUBKEY_NONE:
         {
             RexxInstruction *newObject = new_instruction(LOOP_OVER, DoOver);
-            new ((void *)newObject) RexxInstructionDoOver(label, control);
+            ::new ((void *)newObject) RexxInstructionDoOver(label, control);
             return newObject;
         }
         // DO OVER with a WHILE conditional
         case SUBKEY_WHILE:
         {
             RexxInstruction *newObject = new_instruction(LOOP_OVER_WHILE, DoOverWhile);
-            new ((void *)newObject) RexxInstructionDoOverWhile(label, control, conditional);
+            ::new ((void *)newObject) RexxInstructionDoOverWhile(label, control, conditional);
             return newObject;
         }
         // DO OVER with an UNTIL conditional.
         case SUBKEY_UNTIL:
         {
             RexxInstruction *newObject = new_instruction(LOOP_OVER_UNTIL, DoOverUntil);
-            new ((void *)newObject) RexxInstructionDoOverUntil(label, control, conditional);
+            ::new ((void *)newObject) RexxInstructionDoOverUntil(label, control, conditional);
             return newObject;
         }
     }
@@ -1094,7 +1094,7 @@ RexxInstruction *LanguageParser::newDoOverLoop(RexxString *label, RexxToken *nam
 RexxInstruction *LanguageParser::newSimpleDo(RexxString *label)
 {
     RexxInstruction *newObject = new_instruction(SIMPLE_BLOCK, SimpleDo);
-    new ((void *)newObject) RexxInstructionSimpleDo(label);
+    ::new ((void *)newObject) RexxInstructionSimpleDo(label);
     return newObject;
 }
 
@@ -1109,7 +1109,7 @@ RexxInstruction *LanguageParser::newSimpleDo(RexxString *label)
 RexxInstruction *LanguageParser::newLoopForever(RexxString *label)
 {
     RexxInstruction *newObject = new_instruction(LOOP_FOREVER, DoForever);
-    new ((void *)newObject) RexxInstructionDoForever(label);
+    ::new ((void *)newObject) RexxInstructionDoForever(label);
     return newObject;
 }
 
@@ -1124,7 +1124,7 @@ RexxInstruction *LanguageParser::newLoopForever(RexxString *label)
 RexxInstruction *LanguageParser::newLoopWhile(RexxString *label, WhileUntilLoop &conditional)
 {
     RexxInstruction *newObject = new_instruction(LOOP_WHILE, DoWhile);
-    new ((void *)newObject) RexxInstructionDoWhile(label, conditional);
+    ::new ((void *)newObject) RexxInstructionDoWhile(label, conditional);
     return newObject;
 }
 
@@ -1139,7 +1139,7 @@ RexxInstruction *LanguageParser::newLoopWhile(RexxString *label, WhileUntilLoop 
 RexxInstruction *LanguageParser::newLoopUntil(RexxString *label, WhileUntilLoop &conditional)
 {
     RexxInstruction *newObject = new_instruction(LOOP_UNTIL, DoUntil);
-    new ((void *)newObject) RexxInstructionDoUntil(label, conditional);
+    ::new ((void *)newObject) RexxInstructionDoUntil(label, conditional);
     return newObject;
 }
 
@@ -1240,21 +1240,21 @@ RexxInstruction *LanguageParser::parseCountLoop(RexxString *label)
         case SUBKEY_NONE:
         {
             RexxInstruction *newObject = new_instruction(LOOP_COUNT, DoCount);
-            new ((void *)newObject) RexxInstructionDoCount(label, forCount);
+            ::new ((void *)newObject) RexxInstructionDoCount(label, forCount);
             return newObject;
         }
         // DO count with a WHILE conditional
         case SUBKEY_WHILE:
         {
             RexxInstruction *newObject = new_instruction(LOOP_COUNT_WHILE, DoCountWhile);
-            new ((void *)newObject) RexxInstructionDoCountWhile(label, forCount, conditional);
+            ::new ((void *)newObject) RexxInstructionDoCountWhile(label, forCount, conditional);
             return newObject;
         }
         // DO count with an UNTIL conditional.
         case SUBKEY_UNTIL:
         {
             RexxInstruction *newObject = new_instruction(LOOP_COUNT_UNTIL, DoCountUntil);
-            new ((void *)newObject) RexxInstructionDoCountUntil(label, forCount, conditional);
+            ::new ((void *)newObject) RexxInstructionDoCountUntil(label, forCount, conditional);
             return newObject;
         }
     }
@@ -1443,7 +1443,7 @@ RexxInstruction *LanguageParser::dropNew()
 
     RexxInstruction *newObject = new_variable_instruction(DROP, Drop, sizeof(RexxInstructionDrop) + (variableCount - 1) * sizeof(RexxObject *));
     // this initializes from the sub term stack.
-    new ((void *)newObject) RexxInstructionDrop(variableCount, subTerms);
+    ::new ((void *)newObject) RexxInstructionDrop(variableCount, subTerms);
     return newObject;
 }
 
@@ -1463,7 +1463,7 @@ RexxInstruction *LanguageParser::dropNew()
 RexxInstruction *LanguageParser::elseNew(RexxToken  *token)
 {
     RexxInstruction *newObject = new_instruction(ELSE, Else);
-    new ((void *)newObject) RexxInstructionElse(token);
+    ::new ((void *)newObject) RexxInstructionElse(token);
     return newObject;
 }
 
@@ -1495,7 +1495,7 @@ RexxInstruction *LanguageParser::endNew()
     }
 
     RexxInstruction *newObject = new_instruction(END, End);
-    new((void *)newObject) RexxInstructionEnd(name);
+    ::new ((void *)newObject) RexxInstructionEnd(name);
     return newObject;
 }
 
@@ -1518,7 +1518,7 @@ RexxInstruction *LanguageParser::endNew()
 RexxInstruction *LanguageParser::endIfNew(RexxInstructionIf *parent)
 {
     RexxInstruction *newObject = new_instruction(ENDIF, EndIf);
-    new ((void *)newObject) RexxInstructionEndIf(parent);
+    ::new ((void *)newObject) RexxInstructionEndIf(parent);
     return newObject;
 }
 
@@ -1535,7 +1535,7 @@ RexxInstruction *LanguageParser::exitNew()
     // instruction instance.
     RexxObject *expression = parseExpression(TERM_EOC);
     RexxInstruction *newObject = new_instruction(EXIT, Exit);
-    new((void *)newObject) RexxInstructionExit(expression);
+    ::new ((void *)newObject) RexxInstructionExit(expression);
     return newObject;
 }
 
@@ -1561,7 +1561,7 @@ RexxInstruction *LanguageParser::exposeNew()
     size_t variableCount = processVariableList(KEYWORD_EXPOSE);
 
     RexxInstruction *newObject = new_variable_instruction(EXPOSE, Expose, sizeof(RexxInstructionExpose) + (variableCount - 1) * sizeof(RexxObject *));
-    new ((void *)newObject) RexxInstructionExpose(variableCount, subTerms);
+    ::new ((void *)newObject) RexxInstructionExpose(variableCount, subTerms);
     return newObject;
 }
 
@@ -1713,7 +1713,7 @@ RexxInstruction *LanguageParser::forwardNew()
     }
     // and create the forward object
     RexxInstruction *newObject = new_instruction(FORWARD, Forward);
-    new((void *)newObject) RexxInstructionForward(target, message, superClass, arguments, array, returnContinue);
+    ::new ((void *)newObject) RexxInstructionForward(target, message, superClass, arguments, array, returnContinue);
     return newObject;
 }
 
@@ -1808,7 +1808,7 @@ RexxInstruction *LanguageParser::guardNew()
 
     RexxInstruction *newObject = new_variable_instruction(GUARD, Guard,
         sizeof(RexxInstructionGuard) + (variable_count - 1) * sizeof(RexxObject *));
-    new ((void *)newObject) RexxInstructionGuard(expression, variable_list, guardOn);
+    ::new ((void *)newObject) RexxInstructionGuard(expression, variable_list, guardOn);
     return newObject;
 }
 
@@ -1836,7 +1836,7 @@ RexxInstruction *LanguageParser::ifNew(InstructionKeyword type)
     previousToken();
 
     RexxInstruction *newObject =  new_instruction(IF, If);
-    new ((void *)newObject) RexxInstructionIf(_condition, token);
+    ::new ((void *)newObject) RexxInstructionIf(_condition, token);
     // set the IF/WHEN type after construction.
     newObject->setType(type);
     return newObject;
@@ -1855,7 +1855,7 @@ RexxInstruction *LanguageParser::interpretNew()
     RexxObject *expression = requiredExpression(TERM_EOC, Error_Invalid_expression_interpret);
 
     RexxInstruction *newObject = new_instruction(INTERPRET, Interpret);
-    new ((void *)newObject) RexxInstructionInterpret(expression);
+    ::new ((void *)newObject) RexxInstructionInterpret(expression);
     return newObject;
 }
 
@@ -1882,7 +1882,7 @@ RexxInstruction *LanguageParser::labelNew(RexxToken *nameToken, RexxToken *colon
     // the clause ends with the colon.
     newObject->setEnd(location.getEndLine(), location.getEndOffset());
     // complete construction of this.
-    new ((void *)newObject) RexxInstructionLabel();
+    ::new ((void *)newObject) RexxInstructionLabel();
     return newObject;
 }
 
@@ -1915,7 +1915,7 @@ RexxInstruction *LanguageParser::leaveNew(InstructionKeyword type)
 
     // allocate the object and return
     RexxInstruction *newObject = type == KEYWORD_LEAVE ? new_instruction(LEAVE, Leave) : new_instruction(ITERATE, Leave);
-    new ((void *)newObject) RexxInstructionLeave(name);
+    ::new ((void *)newObject) RexxInstructionLeave(name);
     return newObject;
 }
 
@@ -1932,7 +1932,7 @@ RexxInstruction *LanguageParser::messageNew(RexxExpressionMessage *msg)
     ProtectedObject p(msg);
     // just allocate and initialize the object.
     RexxInstruction *newObject = new_variable_instruction(MESSAGE, Message, sizeof(RexxInstructionMessage) + (msg->argumentCount - 1) * sizeof(RexxObject *));
-    new ((void *)newObject) RexxInstructionMessage(msg);
+    ::new ((void *)newObject) RexxInstructionMessage(msg);
     return newObject;
 }
 
@@ -1950,7 +1950,7 @@ RexxInstruction *LanguageParser::doubleMessageNew(RexxExpressionMessage *msg)
     ProtectedObject p(msg);
     // just allocate and initialize the object.
     RexxInstruction *newObject = new_variable_instruction(MESSAGE_DOUBLE, Message, sizeof(RexxInstructionMessage) + (msg->argumentCount - 1) * sizeof(RexxObject *));
-    new ((void *)newObject) RexxInstructionMessage(msg);
+    ::new ((void *)newObject) RexxInstructionMessage(msg);
     return newObject;
 }
 
@@ -1970,7 +1970,7 @@ RexxInstruction *LanguageParser::messageAssignmentNew(RexxExpressionMessage *msg
 
     // allocate a new object.  NB:  a message instruction gets an extra argument, so we don't subtract one.
     RexxInstruction *newObject = new_variable_instruction(MESSAGE, Message, sizeof(RexxInstructionMessage) + (msg->argumentCount) * sizeof(RexxObject *));
-    new ((void *)newObject) RexxInstructionMessage(msg, expr);
+    ::new ((void *)newObject) RexxInstructionMessage(msg, expr);
     return newObject;
 }
 
@@ -2004,7 +2004,7 @@ RexxInstruction *LanguageParser::messageAssignmentOpNew(RexxExpressionMessage *m
 
     // allocate a new object.  NB:  a message instruction gets an extra argument, so we don't subtract one.
     RexxInstruction *newObject = new_variable_instruction(MESSAGE, Message, sizeof(RexxInstructionMessage) + (msg->argumentCount) * sizeof(RexxObject *));
-    new ((void *)newObject) RexxInstructionMessage(msg, expr);
+    ::new ((void *)newObject) RexxInstructionMessage(msg, expr);
     return newObject;
 }
 
@@ -2021,7 +2021,7 @@ RexxInstruction *LanguageParser::nopNew()
 
     // allocate and initialize the object.
     RexxInstruction *newObject = new_instruction(NOP, Nop);
-    new ((void *)newObject) RexxInstructionNop;
+    ::new ((void *)newObject) RexxInstructionNop;
     return newObject;
 }
 
@@ -2130,7 +2130,7 @@ RexxInstruction *LanguageParser::numericNew()
 
     // and create the instruction object.
     RexxInstruction *newObject = new_instruction(NUMERIC, Numeric);
-    new ((void *)newObject) RexxInstructionNumeric(expression, _flags);
+    ::new ((void *)newObject) RexxInstructionNumeric(expression, _flags);
     return newObject;
 }
 
@@ -2147,7 +2147,7 @@ RexxInstruction *LanguageParser::optionsNew()
     RexxObject *expression = requiredExpression(TERM_EOC, Error_Invalid_expression_options);
 
     RexxInstruction *newObject = new_instruction(OPTIONS, Options);
-    new((void *)newObject) RexxInstructionOptions(expression);
+    ::new ((void *)newObject) RexxInstructionOptions(expression);
     return newObject;
 }
 
@@ -2162,7 +2162,7 @@ RexxInstruction *LanguageParser::optionsNew()
 RexxInstruction *LanguageParser::otherwiseNew(RexxToken  *token)
 {
     RexxInstruction *newObject = new_instruction(OTHERWISE, Otherwise);
-    new ((void *)newObject) RexxInstructionOtherwise(token);
+    ::new ((void *)newObject) RexxInstructionOtherwise(token);
     return newObject;
 }
 
@@ -2506,7 +2506,7 @@ RexxInstruction *LanguageParser::parseNew(InstructionSubKeyword argPull)
 
     // and finally create the instruction from the accumulated information.
     RexxInstruction *newObject = new_variable_instruction(PARSE, Parse, sizeof(RexxInstructionParse) + (templateCount - 1) * sizeof(RexxObject *));
-    new ((void *)newObject) RexxInstructionParse(sourceExpression, stringSource, parseFlags, templateCount, parse_template);
+    ::new ((void *)newObject) RexxInstructionParse(sourceExpression, stringSource, parseFlags, templateCount, parse_template);
     return newObject;
 }
 
@@ -2534,7 +2534,7 @@ RexxInstruction *LanguageParser::procedureNew()
     }
 
     RexxInstruction *newObject = new_variable_instruction(PROCEDURE, Procedure, sizeof(RexxInstructionProcedure) + (variableCount - 1) * sizeof(RexxObject *));
-    new ((void *)newObject) RexxInstructionProcedure(variableCount, subTerms);
+    ::new ((void *)newObject) RexxInstructionProcedure(variableCount, subTerms);
     return newObject;
 }
 
@@ -2551,7 +2551,7 @@ RexxInstruction *LanguageParser::queueNew()
     RexxObject *expression = parseExpression(TERM_EOC);
 
     RexxInstruction *newObject = new_instruction(QUEUE, Queue);
-    new((void *)newObject) RexxInstructionQueue(expression);
+    ::new ((void *)newObject) RexxInstructionQueue(expression);
     return newObject;
 }
 
@@ -2570,7 +2570,7 @@ RexxInstruction *LanguageParser::pushNew()
     // NOTE:  PUSH and QUEUE share an implementation class, but the
     // instruction type identifies which operation is performed.
     RexxInstruction *newObject = new_instruction(PUSH, Queue);
-    new((void *)newObject) RexxInstructionQueue(expression);
+    ::new ((void *)newObject) RexxInstructionQueue(expression);
     return newObject;
 }
 
@@ -2810,7 +2810,7 @@ RexxInstruction *LanguageParser::raiseNew()
     {
         newObject = new_instruction(RAISE, Raise);
     }
-    new ((void *)newObject) RexxInstructionRaise(_condition, rcValue, description, additional, result, flags);
+    ::new ((void *)newObject) RexxInstructionRaise(_condition, rcValue, description, additional, result, flags);
     return newObject;
 }
 
@@ -2833,7 +2833,7 @@ RexxInstruction *LanguageParser::replyNew()
     RexxObject *expression = parseExpression(TERM_EOC);
 
     RexxInstruction *newObject = new_instruction(REPLY, Reply);
-    new ((void *)newObject) RexxInstructionReply(expression);
+    ::new ((void *)newObject) RexxInstructionReply(expression);
     return newObject;
 }
 
@@ -2850,7 +2850,7 @@ RexxInstruction *LanguageParser::returnNew()
     RexxObject *expression = parseExpression(TERM_EOC);
 
     RexxInstruction *newObject = new_instruction(RETURN, Return);
-    new ((void *)newObject) RexxInstructionReturn(expression);
+    ::new ((void *)newObject) RexxInstructionReturn(expression);
     return newObject;
 }
 
@@ -2867,7 +2867,7 @@ RexxInstruction *LanguageParser::sayNew()
     RexxObject *expression = parseExpression(TERM_EOC);
 
     RexxInstruction *newObject = new_instruction(SAY, Say);
-    new ((void *)newObject) RexxInstructionSay(expression);
+    ::new ((void *)newObject) RexxInstructionSay(expression);
     return newObject;
 }
 
@@ -2943,7 +2943,7 @@ RexxInstruction *LanguageParser::selectNew()
     {
         // ok, finally allocate this and return
         RexxInstruction *newObject = new_instruction(SELECT, Select);
-        new ((void *)newObject) RexxInstructionSelect(label);
+        ::new ((void *)newObject) RexxInstructionSelect(label);
         return  newObject;
     }
     // this the SELECT CASE version.  Fundamentally a different instruction.
@@ -2951,7 +2951,7 @@ RexxInstruction *LanguageParser::selectNew()
     {
         // ok, finally allocate this and return
         RexxInstruction *newObject = new_instruction(SELECT_CASE, SelectCase);
-        new ((void *)newObject) RexxInstructionSelectCase(label, caseExpr);
+        ::new ((void *)newObject) RexxInstructionSelectCase(label, caseExpr);
         return  newObject;
     }
 
@@ -2975,7 +2975,7 @@ RexxInstruction *LanguageParser::dynamicSignalNew()
 
     // create a new instruction object
     RexxInstruction *newObject = new_instruction(SIGNAL_VALUE, DynamicSignal);
-    new ((void *)newObject) RexxInstructionDynamicSignal(labelExpression);
+    ::new ((void *)newObject) RexxInstructionDynamicSignal(labelExpression);
 
     // NOTE:  because this uses dynamic resolution, this does not get
     // added to the reference list for processing.  There is nothing that
@@ -3083,7 +3083,7 @@ RexxInstruction *LanguageParser::signalOnNew(InstructionSubKeyword type)
 
     // create a new instruction object
     RexxInstruction *newObject = new_instruction(SIGNAL_ON, SignalOn);
-    new ((void *)newObject) RexxInstructionSignalOn(conditionName, labelName);
+    ::new ((void *)newObject) RexxInstructionSignalOn(conditionName, labelName);
 
     // if this is the ON form, we have some end parsing resolution to perform.
     if (type == SUBKEY_ON)
@@ -3162,7 +3162,7 @@ RexxInstruction *LanguageParser::signalNew()
 
     // create a new instruction object
     RexxInstruction *newObject = new_instruction(SIGNAL, Signal);
-    new ((void *)newObject) RexxInstructionSignal(labelName);
+    ::new ((void *)newObject) RexxInstructionSignal(labelName);
 
     // this requires a resolve call back once the labels are determined.
     addReference((RexxObject *)newObject);
@@ -3182,7 +3182,7 @@ RexxInstruction *LanguageParser::thenNew(RexxToken *token, RexxInstructionIf *pa
 {
     // no additional parsing needed here, we just create the instruction object.
     RexxInstruction *newObject = new_instruction(THEN, Then);
-    new ((void *)newObject) RexxInstructionThen(token, parent);
+    ::new ((void *)newObject) RexxInstructionThen(token, parent);
     return newObject;
 }
 
@@ -3206,7 +3206,7 @@ RexxInstructionIf *LanguageParser::whenCaseNew(RexxInstructionIf *original)
     // WHEN CASE class does not add or change any fields, this just
     // switches the class of the object.
 
-    new ((void *)original) RexxInstructionCaseWhen();
+    ::new ((void *)original) RexxInstructionCaseWhen();
     // change the type field and return the original object.
     original->setType(KEYWORD_SELECT_CASE);
     return original;
@@ -3335,15 +3335,15 @@ RexxInstruction *LanguageParser::traceNew()
     // this is one of three forms
     if (skipForm)
     {
-        new ((void *)newObject) RexxInstructionTrace(debug_skip);
+        ::new ((void *)newObject) RexxInstructionTrace(debug_skip);
     }
     else if (expression != OREF_NULL)
     {
-        new ((void *)newObject) RexxInstructionTrace(expression);
+        ::new ((void *)newObject) RexxInstructionTrace(expression);
     }
     else
     {
-        new ((void *)newObject) RexxInstructionTrace(settings);
+        ::new ((void *)newObject) RexxInstructionTrace(settings);
     }
 
     return newObject;
@@ -3481,7 +3481,7 @@ RexxInstruction *LanguageParser::useNew()
     }
 
     RexxInstruction *newObject = new_variable_instruction(USE, Use, sizeof(RexxInstructionUseStrict) + (variableCount == 0 ? 0 : (variableCount - 1)) * sizeof(UseVariable));
-    new ((void *)newObject) RexxInstructionUseStrict(variableCount, strictChecking, allowOptionals, variable_list, defaults_list);
+    ::new ((void *)newObject) RexxInstructionUseStrict(variableCount, strictChecking, allowOptionals, variable_list, defaults_list);
 
     return newObject;
 }

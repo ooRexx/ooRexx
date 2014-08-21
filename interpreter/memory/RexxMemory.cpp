@@ -72,6 +72,7 @@
 #include "MapTable.hpp"
 #include "SetClass.hpp"
 #include "BagClass.hpp"
+#include "NumberStringClass.hpp"
 
 // restore a class from its
 // associated primitive behaviour
@@ -1482,7 +1483,7 @@ void MemoryObject::setUpMemoryTables(MapTable *old2newTable)
     // fix up the previously allocated live stack to have the correct
     // characteristics...we're almost ready to go on the air.
     liveStack->setBehaviour(TheLiveStackBehaviour);
-    liveStack = new ((void *)liveStack) LiveStack(Memory::LiveStackSize);
+    liveStack = ::new ((void *)liveStack) LiveStack(Memory::LiveStackSize);
     // set up the old 2 new table provided for us
     old2new = old2newTable;
     // Now get our savestack

@@ -55,6 +55,7 @@
 #include "StemClass.hpp"
 #include "ActivationSettings.hpp"
 #include "BaseExecutable.hpp"
+#include "ProtectedObject.hpp"
 
 class RexxInstructionTrapBase;
 class ProtectedObject;
@@ -255,7 +256,7 @@ class RexxActivation : public ActivationBase
    void              pushControl(RexxObject *);
    void              closeStreams();
    void              checkTrapTable();
-   RexxObject       *resolveStream(RexxString *name, bool input, RexxString **fullName, bool *added);
+   RexxObject       *resolveStream(RexxString *name, bool input, Protected<RexxString> &fullName, bool *added);
    StringTable      *getStreams();
    RexxObject       *novalueHandler(RexxString *);
    RexxVariableBase *retriever(RexxString *);

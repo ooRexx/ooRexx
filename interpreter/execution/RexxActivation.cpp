@@ -1648,7 +1648,7 @@ VariableDictionary * RexxActivation::getObjectVariables()
  *
  * @return The backing stream object for the name.
  */
-RexxObject *RexxActivation::resolveStream(RexxString *name, bool input, RexxString **fullName, bool *added)
+RexxObject *RexxActivation::resolveStream(RexxString *name, bool input, Protected<RexxString> &fullName, bool *added)
 {
     // when the caller requires a stream table entry, then set the initial indicator.
     if (added != NULL)
@@ -1656,11 +1656,8 @@ RexxObject *RexxActivation::resolveStream(RexxString *name, bool input, RexxStri
         added = false;
     }
     StringTable *streamTable = getStreams();
-    // the default full name is the provided name.
-    if (fullName)
-    {
-        *fullName = name;
-    }
+    // the default full name is the initial one
+    fullName = name;
     // if length of name is 0, then it's the same as omitted.  This is
     // a request for either the default input or output stream.  The flag
     // tells us which one.
@@ -1693,10 +1690,7 @@ RexxObject *RexxActivation::resolveStream(RexxString *name, bool input, RexxStri
     {
         // get the fully qualified name
         RexxString *qualifiedName = SystemInterpreter::qualifyFileSystemName(name);
-        if (fullName)
-        {
-            *fullName = qualifiedName;
-        }
+        fullName = qualifiedName;
         // protect from GC
         ProtectedObject p(qualifiedName);
         // see if we have this in the table already.  If not opened yet, we need
