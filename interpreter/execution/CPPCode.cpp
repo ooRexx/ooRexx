@@ -499,7 +499,7 @@ CPPM(RexxObject::concatBlank),
 
 CPPM(RexxObject::newRexx),
 
-CPPM(RexxClass::setRexxDefined),
+CPPM(RexxClass::inheritInstanceMethods),
 CPPM(RexxClass::defaultNameRexx),
 CPPM(RexxClass::queryMixinClass),
 CPPM(RexxClass::getId),

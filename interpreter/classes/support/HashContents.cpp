@@ -144,6 +144,12 @@ HashContents::HashContents(size_t entries, size_t total)
  */
 void HashContents::initializeFreeChain()
 {
+    // initialize the next link in all bucket slots to NoMore.
+    for (ItemLink i = 0; i < bucketSize; i++)
+    {
+        entries[i].next = NoMore;
+    }
+
     // this is an empty bucket
     itemCount = 0;
 

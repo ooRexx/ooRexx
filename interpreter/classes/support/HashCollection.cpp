@@ -175,7 +175,7 @@ size_t HashCollection::calculateBucketSize(size_t capacity)
         capacity += 1;
     }
 
-    return 1;
+    return capacity;
 }
 
 

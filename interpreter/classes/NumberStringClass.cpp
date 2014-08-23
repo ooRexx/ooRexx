@@ -2329,6 +2329,7 @@ class NumberStringBuilder
 public:
     NumberStringBuilder(NumberString *s)
     {
+        number = s;
         // pointers for adding to the digits buffer
         current = s->numberDigits;
 

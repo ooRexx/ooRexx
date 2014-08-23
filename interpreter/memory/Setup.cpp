@@ -305,6 +305,9 @@ void MemoryObject::createImage()
     TheCommonRetrievers->put((RexxObject *)new RexxSimpleVariable(GlobalNames::RC, VARIABLE_RC), GlobalNames::RC);
     TheCommonRetrievers->put((RexxObject *)new RexxSimpleVariable(GlobalNames::RESULT, VARIABLE_RESULT), GlobalNames::RESULT);
 
+    // create the Rexx package so created classes can get added to it.
+    createRexxPackage();
+
 //***************************************************************************
 // The following Rexx classes that are exposed to the users are set up as
 // primitive classes.  These all inherit from object
@@ -398,7 +401,7 @@ StartClassDefinition(Class);
         AddProtectedMethod("MetaClass", RexxClass::getMetaClass, 0);
         AddMethod("Method", RexxClass::method, 1);
         AddMethod("Methods", RexxClass::methods, 1);
-        AddMethod("MixinClass", RexxClass::mixinClass, 3);
+        AddMethod("MixinClass", RexxClass::mixinClassRexx, 3);
         AddMethod("QueryMixinClass", RexxClass::queryMixinClass, 0);
         AddMethod("Subclass", RexxClass::subclassRexx, 3);
         AddProtectedMethod("Subclasses", RexxClass::getSubClasses, 0);
