@@ -131,8 +131,8 @@ exit
 ::METHOD string_cls_null
  return "00"x
 
-// Start of classes that exist only to add collections of methods to
-// primitive classes
+-- Start of classes that exist only to add collections of methods to
+-- primitive classes
 
 /*============================================================================*/
 /*    Additional S U P P L I E R methods                                      */
@@ -958,7 +958,7 @@ nomethod:
 
   .local~objectname = "The Local Directory"  -- give the local environment a nicer descriptive name.
 
-  // set up the system objects in the local environment
+  -- set up the system objects in the local environment
   .local~setentry('STDIN', input)
   .local~setentry('INPUT',.monitor~new(.stdin))
   .input~objectname = "The INPUT monitor"

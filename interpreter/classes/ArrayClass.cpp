@@ -810,24 +810,24 @@ RexxInternalObject *ArrayClass::deleteRexx(RexxObject *index)
  */
 void ArrayClass::openGap(size_t index, size_t elements)
 {
-    // is this larger than our current size?  If so, we have nothing to move
+    // is this larger than our current last element?  If so, we have nothing to move
     // but do need to expand the array size to accommodate the additional members
-    if (index > size())
+    if (index > lastItem)
     {
         ensureSpace(index + elements - 1);
     }
     else
     {
-        // the last element to move.  NOTE:  we check this BEFORE
-        // expanding the size, otherwise we move too many elements.
-        char *_end = (char *)slotAddress(this->size() + 1);
-
         // make sure we have space for the additional elements
         ensureSpace(size() + elements);
-                                             /* get the address of first element  */
+
+        // the last element to move.
+        char *_end = (char *)slotAddress(lastItem + 1);
+
+        // get the start and end of the gap
         char *_start = (char *)slotAddress(index);
         char *_target = (char *)slotAddress(index + elements);
-        /* shift the array over              */
+        // shift the array section over to create a gap
         memmove(_target, _start, _end - _start);
 
         // now null out all of the slots in the gap, using an
@@ -850,9 +850,15 @@ void ArrayClass::openGap(size_t index, size_t elements)
  */
 void ArrayClass::closeGap(size_t index, size_t elements)
 {
-    // if we're beyond the current size, nothing to do
-    if (index > size())
+    // if we're beyond the current last item, nothing to do here
+    if (index > lastItem)
     {
+        // if the index is within the size bounds of the
+        // array, we need to adjust the size
+        if (index <= size())
+        {
+            shrink(elements);
+        }
         return;
     }
 
@@ -867,6 +873,21 @@ void ArrayClass::closeGap(size_t index, size_t elements)
     {
         clearArrayItem(i);
     }
+
+    // we could have cleared out the last item when
+    // we cleared the gap, thus removing the need to
+    // shift anything
+    if (lastItem < index)
+    {
+        // if the index is within the size bounds of the
+        // array, we need to adjust the size
+        if (index <= size())
+        {
+            shrink(elements);
+        }
+        return;
+    }
+
     // get the address of first element and the first item to move.
     char *_target = (char *)slotAddress(index);
     char *_start =  (char *)slotAddress(index + elements);
@@ -876,8 +897,6 @@ void ArrayClass::closeGap(size_t index, size_t elements)
     memmove(_target, _start, _end - _start);
     // adjust the last element position
     lastItem -= elements;
-    // adjust the size downward
-    shrink(elements);
 }
 
 
@@ -1965,10 +1984,10 @@ void ArrayClass::extend(size_t toSize)
     // we don't need to reallocate anything here, just adjust the size values
     if (toSize <= maximumSize)
     {
-        // keep both the extension array and our information in sync
-        // (Both of these could be updating the same information)
+        // during marking, the main array and the expanson array both mark.  If we've
+        // extended, we need to keep the size at zero in the original.  If we've not
+        // extended, then updating the expansion array size also updates the original.
         expansionArray->arraySize = toSize;
-        arraySize = toSize;
         return;
     }
 
@@ -1983,7 +2002,7 @@ void ArrayClass::extend(size_t toSize)
     size_t newSize = size() + extendSize;
 
     // now allocate the extension array of the required size + some extra.
-    ArrayClass *newArray = (ArrayClass *)new_array(newSize);
+    ArrayClass *newArray = new (toSize, newSize) ArrayClass;
     // The extension array, by definition, will not be in old space, so
     // we can just copy everything in one shot.
     memcpy(newArray->data(), data(), dataSize());
@@ -1999,8 +2018,6 @@ void ArrayClass::extend(size_t toSize)
     setField(expansionArray, newArray);
     // keep max Size value in synch
     maximumSize = newArray->maximumSize;
-    // make sure size is correct.
-    newArray->arraySize = newSize;
 }
 
 

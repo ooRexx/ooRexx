@@ -213,7 +213,7 @@ class ArrayClass : public RexxObject
     void        resize();
     inline void ensureSpace(size_t newSize)
     {
-        // out of bounds?                    */
+        // out of bounds?
         if (newSize > size())
         {
             // expand to at least the given size

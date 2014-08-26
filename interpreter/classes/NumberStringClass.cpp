@@ -2596,7 +2596,7 @@ bool NumberString::parseNumber(const char *number, size_t length)
                     state = NUMBER_E;
                 }
                 // other non-digit?  We're no longer scanning a number.
-                else if (inch >= RexxString::ch_ZERO && inch <= RexxString::ch_NINE)
+                else if (inch < RexxString::ch_ZERO || inch > RexxString::ch_NINE)
                 {
                     return false;
                 }
@@ -2614,7 +2614,7 @@ bool NumberString::parseNumber(const char *number, size_t length)
             {
                 // not a digit immediately after the period, we don't have a
                 // number any more
-                if (inch >= RexxString::ch_ZERO && inch <= RexxString::ch_NINE)
+                if (inch < RexxString::ch_ZERO || inch > RexxString::ch_NINE)
                 {
                     return false;
                 }
@@ -2639,7 +2639,7 @@ bool NumberString::parseNumber(const char *number, size_t length)
                     state = NUMBER_E;
                 }
                 // non-digit other than an 'E'?, no longer a valid numeric.
-                else if (inch >= RexxString::ch_ZERO && inch <= RexxString::ch_NINE)
+                else if (inch < RexxString::ch_ZERO || inch > RexxString::ch_NINE)
                 {
                     return false;
                 }
