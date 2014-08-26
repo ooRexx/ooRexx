@@ -176,7 +176,7 @@ void RexxVariable::notify()
         // use an iterator to traverse the table
         HashContents::TableIterator iterator = dependents->iterator();
 
-        while (iterator.isAvailable())
+        for (; iterator.isAvailable(); iterator.next())
         {
             // copy these methods over any of our own.
             Activity *activity = (Activity *)iterator.index();

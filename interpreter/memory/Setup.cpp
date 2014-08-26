@@ -150,7 +150,7 @@ void MemoryObject::definePrivateMethod(const char *name, RexxBehaviour * behavio
  */
 void MemoryObject::addToEnvironment(const char *name, RexxInternalObject *value)
 {
-    TheEnvironment->put(getUpperGlobalName(name), value);
+    TheEnvironment->put(value, getUpperGlobalName(name));
 }
 
 
@@ -162,7 +162,7 @@ void MemoryObject::addToEnvironment(const char *name, RexxInternalObject *value)
  */
 void MemoryObject::addToSystem(const char *name, RexxInternalObject *value)
 {
-    TheSystem->put(getUpperGlobalName(name), value);
+    TheSystem->put(value, getUpperGlobalName(name));
 }
 
 
@@ -701,7 +701,7 @@ StartClassDefinition(Queue);
         AddMethod("Remove", QueueClass::removeRexx, 1);
         // the queue size is always the number of items, so remap that call
         // to the array items method.
-        AddMethod("Size", ArrayClass::items, 0);
+        AddMethod("Size", ArrayClass::itemsRexx, 0);
 
     CompleteMethodDefinitions();
 
@@ -1025,7 +1025,7 @@ StartClassDefinition(Package)
 
     CompleteClassMethodDefinitions();
 
-        AddProtectedMethod("SetSecurityManager", PackageClass::setSecurityManager, 1);
+        AddProtectedMethod("SetSecurityManager", PackageClass::setSecurityManagerRexx, 1);
         AddMethod("Source", PackageClass::getSourceRexx, 0);
         AddMethod("SourceLine", PackageClass::getSourceLineRexx, 1);
         AddMethod("SourceSize", PackageClass::getSourceSizeRexx, 0);
@@ -1147,7 +1147,7 @@ StartClassDefinition(MutableBuffer)
 
     CompleteClassMethodDefinitions();
 
-        AddMethod("Append", MutableBuffer::append, 1);
+        AddMethod("Append", MutableBuffer::appendRexx, 1);
         AddMethod("Insert", MutableBuffer::insert, 4);
         AddMethod("Overlay", MutableBuffer::overlay, 4);
         AddMethod("ReplaceAt", MutableBuffer::replaceAt, 4);

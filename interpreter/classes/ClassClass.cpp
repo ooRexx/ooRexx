@@ -464,7 +464,7 @@ RexxObject *RexxClass::inheritInstanceMethods(RexxClass *source)
     // loop through the table with an iterator.
     HashContents::TableIterator iterator = sourceMethods->iterator();
 
-    while (iterator.isAvailable())
+    for (; iterator.isAvailable(); iterator.next())
     {
         // get the name and the value, then add to this class object
         RexxString *methodName = (RexxString *)iterator.index();

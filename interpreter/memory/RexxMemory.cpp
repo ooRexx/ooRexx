@@ -184,6 +184,9 @@ void MemoryObject::initialize(bool restoringImage)
 
     // get the initial uninit table
     uninitTable = new_identity_table();
+    // and our list of objects that have gone out of scope and
+    // are waiting to have the uninit run
+    pendingUninits = new_queue(100);
 
     // is this image creation?  This will build and save the image, then
     // terminate

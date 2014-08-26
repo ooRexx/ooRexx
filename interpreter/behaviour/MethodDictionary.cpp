@@ -211,7 +211,7 @@ void MethodDictionary::replaceMethods(MethodDictionary *source)
     // use an iterator to traverse the table
     HashContents::TableIterator iterator = source->iterator();
 
-    while (iterator.isAvailable())
+    for (; iterator.isAvailable(); iterator.next())
     {
         // copy these methods over any of our own.
         MethodClass *method = (MethodClass *)iterator.value();
@@ -233,7 +233,7 @@ void MethodDictionary::replaceMethods(StringTable *source)
     // use an iterator to traverse the table
     HashContents::TableIterator iterator = source->iterator();
 
-    while (iterator.isAvailable())
+    for (; iterator.isAvailable(); iterator.next())
     {
         // copy these methods over any of our own.
         MethodClass *method = (MethodClass *)iterator.value();
@@ -421,7 +421,7 @@ SupplierClass *MethodDictionary::getMethods(RexxClass *scope)
     // use an iterator to traverse the table
     HashContents::TableIterator iterator = contents->iterator();
 
-    while (iterator.isAvailable())
+    for (; iterator.isAvailable(); iterator.next())
     {
         MethodClass *method = (MethodClass *)iterator.value();
         // we're only interested in the real method objects.
@@ -433,8 +433,6 @@ SupplierClass *MethodDictionary::getMethods(RexxClass *scope)
                 count++;
             }
         }
-        // step to the next item.
-        iterator.next();
     }
 
     ArrayClass *names = new_array(count);
@@ -446,7 +444,7 @@ SupplierClass *MethodDictionary::getMethods(RexxClass *scope)
     // traverse again, filling in the methods
     iterator = contents->iterator();
 
-    while (iterator.isAvailable())
+    for (; iterator.isAvailable(); iterator.next())
     {
         MethodClass *method = (MethodClass *)iterator.value();
         // we're only interested in the real method objects.
@@ -460,8 +458,6 @@ SupplierClass *MethodDictionary::getMethods(RexxClass *scope)
                 count++;
             }
         }
-        // step to the next item.
-        iterator.next();
     }
 
     // and return as a supplier
@@ -542,12 +538,10 @@ void MethodDictionary::mergeMethods(MethodDictionary *target)
     HashContents::TableIterator iterator = contents->iterator();
 
     // just copy in all of the method entries.
-    while (iterator.isAvailable())
+    for (; iterator.isAvailable(); iterator.next())
     {
         MethodClass *method = (MethodClass *)iterator.value();
         target->addMethod((RexxString *)iterator.index(), method);
-        // step to the next item.
-        iterator.next();
     }
 }
 

@@ -609,6 +609,11 @@ SupplierClass *RexxBehaviour::getMethods(RexxClass *scope)
  */
 void RexxBehaviour::addScope(RexxClass *scope)
 {
+    // create a method dictionary if we don't have one yet.
+    if (methodDictionary == OREF_NULL)
+    {
+        setField(methodDictionary, new MethodDictionary());
+    }
     // scoping is handled by the method dictionary.
     methodDictionary->addScope(scope);
 }
@@ -738,7 +743,7 @@ RexxObject *RexxBehaviour::defineMethods(StringTable *newMethods)
     // loop through the table with an iterator.
     HashContents::TableIterator iterator = newMethods->iterator();
 
-    while (iterator.isAvailable())
+    for (; iterator.isAvailable(); iterator.next())
     {
         // get the name and the value, then add to this class object
         RexxString *method_name = (RexxString *)iterator.index();

@@ -322,6 +322,7 @@ class ArrayClass : public RexxObject
     static RexxClass *classInstance;
     static ArrayClass *nullArray;
 
+    static const size_t DefaultArraySize = 16;     // default size for ooRexx allocation
 
  protected:
 
@@ -337,7 +338,6 @@ class ArrayClass : public RexxObject
     // maximum size we can handle
     static const size_t MaxFixedArraySize = (Numerics::MAX_WHOLENUMBER / 10) + 1;
     static const size_t MinimumArraySize = 8;      // the minimum size we allocate.
-    static const size_t DefaultArraySize = 16;     // default size for ooRexx allocation
     static const size_t MaximumExtendSize = 100;   // maximum "extra" size we tack on when extending
 
     size_t arraySize;                   // current logical size of the array

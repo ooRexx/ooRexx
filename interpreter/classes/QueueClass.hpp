@@ -75,5 +75,6 @@ class QueueClass : public ArrayClass
      static RexxClass *classInstance;
 };
 
-inline QueueClass *new_queue() { return new QueueClass; }
+inline QueueClass *new_queue() { return new(ArrayClass::DefaultArraySize) QueueClass; }
+inline QueueClass *new_queue(size_t s) { return new(s) QueueClass; }
 #endif
