@@ -293,6 +293,10 @@ void HashContents::append(RexxInternalObject *value, RexxInternalObject * index,
 
     // set the entry
     setEntry(newEntry, value, index);
+    // add this to the end of the chain
+    setNext(position, newEntry);
+    setNext(newEntry, NoMore);
+
     // we have a new item in the list.
     itemCount++;
 }

@@ -1685,7 +1685,7 @@ MutableBuffer *MutableBuffer::delWord(RexxInteger *position, RexxInteger *plengt
     // to the given word position...if we don't get there,
     // there is nothing to delete so we can just return the
     // original string.
-    if (!iterator.skipWords(_wordPos))
+    if (!iterator.skipWords(_wordPos - 1))
     {
         return this;
     }

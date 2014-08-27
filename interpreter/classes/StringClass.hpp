@@ -124,7 +124,6 @@ class RexxString : public RexxObject
                  {
                      break;
                  }
-                 scan++;
              }
 
              // we've either found a non blank or we ran out of string
@@ -151,7 +150,6 @@ class RexxString : public RexxObject
                  {
                      break;
                  }
-                 scan++;
              }
              string = scan;
              scanLength = length;
@@ -218,6 +216,7 @@ class RexxString : public RexxObject
              }
              return true;
          }
+
 
          // skip from the end of the current word to to the next word
          // or the end of the string
