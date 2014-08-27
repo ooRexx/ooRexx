@@ -1455,7 +1455,7 @@ RexxClass  *RexxClass::subclass(PackageClass *package, RexxString *class_id,
     if (enhancing_methods != OREF_NULL && enhancing_methods != TheNilObject)
     {
         // create a method dictionary and merge this into the class method dictionary
-        Protected<MethodDictionary> enhancing_class_methods = new_class->createMethodDictionary(enhancing_class_methods, new_class);
+        Protected<MethodDictionary> enhancing_class_methods = new_class->createMethodDictionary(enhancing_methods, new_class);
         // these are methods of the class object, not instances
         enhancing_class_methods->merge(new_class->classMethodDictionary);
     }

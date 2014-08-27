@@ -83,7 +83,7 @@ void *RexxBehaviour::operator new(size_t size, size_t typenum)
  * @param operator_methods
  *                   The associated operator methods.
  */
-RexxBehaviour::RexxBehaviour(size_t newTypenum, PCPPM *operator_methods)
+RexxBehaviour::RexxBehaviour(ClassTypeCode newTypenum, PCPPM *operator_methods)
 {
     // All behaviour objects have a behaviour object too.
     behaviour = getPrimitiveBehaviour(T_Behaviour);
@@ -273,7 +273,7 @@ void RexxBehaviour::copyBehaviour(RexxBehaviour *source)
 MethodClass *RexxBehaviour::defineMethod(const char *name, PCPPM entryPoint, size_t arguments, const char *entryPointName)
 {
     // we're doing this during an image build, so make sure we use the interned string name.
-    RexxString *n = memoryObject.getGlobalName(name);
+    RexxString *n = memoryObject.getUpperGlobalName(name);
     // create a method object using the resolved method pointer.
     MethodClass *method = new MethodClass(n, CPPCode::resolveExportedMethod(name, entryPoint, arguments, entryPointName));
     // now add this to the method dictionary, ensuring it is the only method by this name.
@@ -292,7 +292,7 @@ MethodClass *RexxBehaviour::defineMethod(const char *name, PCPPM entryPoint, siz
 void RexxBehaviour::hideMethod(const char *name)
 {
     // we're doing this during an image build, so make sure we use the interned string name.
-    RexxString *n = memoryObject.getGlobalName(name);
+    RexxString *n = memoryObject.getUpperGlobalName(name);
     // create a method dictionary if we don't have one yet.
     if (methodDictionary == OREF_NULL)
     {
@@ -688,6 +688,11 @@ ArrayClass *RexxBehaviour::allScopes()
  */
 bool RexxBehaviour::hasScope(RexxClass *scope)
 {
+    if (methodDictionary == OREF_NULL)
+    {
+        return false;
+    }
+
     return methodDictionary->hasScope(scope);
 }
 

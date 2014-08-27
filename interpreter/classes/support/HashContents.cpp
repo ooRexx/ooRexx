@@ -622,7 +622,7 @@ ArrayClass *HashContents::removeAll(RexxInternalObject *index)
             position = nextEntry(position);
         }
         // add this to the array and step again
-        result->put((RexxObject *)entryValue(position), i);
+        result->put(entryValue(position), i);
         // remove the link (which will also adjust the position
         removeChainLink(position, previous);
     }
@@ -868,7 +868,7 @@ ArrayClass  *HashContents::getAll(RexxInternalObject *index)
             position = nextEntry(position);
         }
         // add this to the array and step again
-        result->put((RexxObject *)entryValue(position), i);
+        result->put(entryValue(position), i);
         // step to the next chain item
         position = nextEntry(position);
     }
@@ -984,7 +984,7 @@ ArrayClass  *HashContents::allIndex(RexxInternalObject *item)
             {
                 // add to the result array, and if we've found the last match,
                 // time to return.
-                result->put((RexxObject *)entryIndex(position), nextIndex++);
+                result->put(entryIndex(position), nextIndex++);
                 if (nextIndex > count)
                 {
                     return result;
@@ -1229,7 +1229,7 @@ ArrayClass  *HashContents::allItems()
         {
             // add to the result array, and if we've found the last match,
             // time to return.
-            result->put((RexxObject *)entryIndex(position), nextIndex++);
+            result->put(entryIndex(position), nextIndex++);
             if (nextIndex > itemCount)
             {
                 return result;
@@ -1299,7 +1299,7 @@ ArrayClass *HashContents::allIndexes()
         {
             // add to the result array, and if we've found the last match,
             // time to return.
-            result->put((RexxObject *)entryValue(position), nextIndex++);
+            result->put(entryIndex(position), nextIndex++);
             if (nextIndex > itemCount)
             {
                 return result;
@@ -1337,7 +1337,7 @@ ArrayClass *HashContents::uniqueIndexes()
         while (position != NoMore && isInUse(position))
         {
             // add to the result table.
-            indexSet->put(TheNilObject, (RexxObject *)entryIndex(position));
+            indexSet->put(TheNilObject, entryIndex(position));
             // step to the next link in the chain
             position = nextEntry(position);
         }
@@ -1378,8 +1378,8 @@ SupplierClass *HashContents::supplier()
         while (position != NoMore && isInUse(position))
         {
             // add to the result table.
-            indexes->put((RexxObject *)entryIndex(position), nextIndex);
-            values->put((RexxObject *)entryValue(position), nextIndex++);
+            indexes->put(entryIndex(position), nextIndex);
+            values->put(entryValue(position), nextIndex++);
             if (nextIndex > count)
             {
                 // return the new supplier

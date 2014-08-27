@@ -513,7 +513,7 @@ void MethodDictionary::addScope(RexxClass *scope)
 {
     // only add a scope to the list if this is not already here.
     // this merges things together in the right order.
-    if (!scopeList->hasItem(scope))
+    if (!scopeList->hasIdentityItem(scope))
     {
         // append this to the scope list for this behaviour.  This is
         // our total class lookup scope and will be attached to the class
@@ -590,5 +590,5 @@ void MethodDictionary::merge(MethodDictionary *target)
  */
 bool MethodDictionary::hasScope(RexxClass *scope)
 {
-    return scopeList->hasItem(scope);
+    return scopeList->hasIdentityItem(scope);
 }

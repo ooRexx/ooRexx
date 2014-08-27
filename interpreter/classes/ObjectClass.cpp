@@ -83,7 +83,7 @@ void RexxObject::createInstance()
  */
 void *RexxObject::operator new (size_t size)
 {
-    return new_object(size, T_Method);
+    return new_object(size, T_Object);
 }
 
 
@@ -2744,7 +2744,9 @@ RexxObject *RexxObject::callOperatorMethod(size_t methodOffset, RexxObject *argu
  */
 void *RexxNilObject::operator new(size_t size)
 {
-    return new_object(size, T_NilObject);
+    // NOTE:  We create this using the Object behaviour, but
+    // will switch the identifier after this has been customized.
+    return new_object(size, T_Object);
 }
 
 

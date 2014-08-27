@@ -45,7 +45,6 @@
 use arg rexxPackage
 .environment~objectname = "The Environment Directory"
 rexxPackage~objectname = "The REXX Package"
-.nil~objectname = "The NIL object"
 
 -- add all of the public classes to .environment and to the
 -- REXX package
@@ -61,10 +60,10 @@ end
 rexxPackage~addClass('LOCALSERVER', .LocalServer)
 
 -- add string class constant methods
-.String~!define_class_method("NL", .methods~string_cls_nl)
-.String~!define_class_method("CR", .methods~string_cls_cr)
-.String~!define_class_method("TAB", .methods~string_cls_tab)
-.String~!define_class_method("NULL", .methods~string_cls_null)
+.String~defineClassMethod("NL", .methods~string_cls_nl)
+.String~defineClassMethod("CR", .methods~string_cls_cr)
+.String~defineClassMethod("TAB", .methods~string_cls_tab)
+.String~defineClassMethod("NULL", .methods~string_cls_null)
 
 -- Some classes have addtional methods added that are written in Rexx.
 -- we do a phony inherit to add those directly to the class instance

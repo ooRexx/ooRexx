@@ -2204,6 +2204,29 @@ bool ArrayClass::hasItem(RexxInternalObject *target)
 
 
 /**
+ * Test if an item is within the array.
+ *
+ * @param target The target test item.
+ *
+ * @return .true if this item exists in the array. .false if it does not
+ *         exist.
+ */
+bool ArrayClass::hasIdentityItem(RexxInternalObject *target)
+{
+    for (size_t i = 1; i <= lastItem; i++)
+    {
+        RexxInternalObject *test = get(i);
+
+        if (test == target)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+
+/**
  * Recursive routine to copy element from one multiDim array
  * to another.  This works in reverse order, drilling down to the
  * highest level, copying, and then unwinding to get the

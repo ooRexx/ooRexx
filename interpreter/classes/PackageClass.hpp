@@ -137,6 +137,7 @@ public:
     inline void         setTraceSetting(const TraceSetting &s) { packageSettings.setTraceSetting(s); }
     inline const TraceSetting &getTraceSetting() { return packageSettings.getTraceSetting(); }
     inline const PackageSetting &getSettings() { return packageSettings; }
+    inline bool  isRexxPackage() { return this == TheRexxPackage; }
 
            RexxString    *getTrace();
            void           detachSource();

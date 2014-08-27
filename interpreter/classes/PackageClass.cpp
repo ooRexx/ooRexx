@@ -796,6 +796,12 @@ RexxClass *PackageClass::findClass(RexxString *className)
         return classObject;
     }
 
+    // make sure we don't recurse if this is the Rexx package.
+    if (isRexxPackage())
+    {
+        return OREF_NULL;
+    }
+
     // now try for a system-defined class.
     classObject = TheRexxPackage->findClass(internalName);
     // return if we got one

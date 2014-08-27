@@ -1460,6 +1460,17 @@ EndClassDefinition(StackFrame);
     // initialize our thread vector for external calls.
     Activity::initializeThreadContext();
 
+    // define and suppress methods in the nil object
+    TheNilObject->defineInstanceMethod(getGlobalName("COPY"), (MethodClass *)TheNilObject, OREF_NULL);
+    TheNilObject->defineInstanceMethod(getGlobalName("START"), (MethodClass *)TheNilObject, OREF_NULL);
+    TheNilObject->defineInstanceMethod(getGlobalName("OBJECTNAME="), (MethodClass *)TheNilObject, OREF_NULL);
+    TheNilObject->objectNameEquals(new_string("The NIL object"));
+
+    // ok, .NIL has been constructed.  As a last step before saving the image, we need to change
+    // the type identifier in the behaviour so that this will get the correct virtual function table
+    // restored when the image reloads.
+    TheNilObject->behaviour->setClassType(T_NilObject);
+
 /******************************************************************************/
 /*      Complete the image build process, calling BaseClasses to establish    */
 /*      the rest of the REXX image.                                           */
@@ -1499,16 +1510,6 @@ EndClassDefinition(StackFrame);
         }
 
     }
-
-    /* define and suppress methods in the nil object */
-    TheNilObject->defineInstanceMethod(getGlobalName("COPY"), (MethodClass *)TheNilObject, OREF_NULL);
-    TheNilObject->defineInstanceMethod(getGlobalName("START"), (MethodClass *)TheNilObject, OREF_NULL);
-    TheNilObject->defineInstanceMethod(getGlobalName("OBJECTNAME="), (MethodClass *)TheNilObject, OREF_NULL);
-
-    // ok, .NIL has been constructed.  As a last step before saving the image, we need to change
-    // the type identifier in the behaviour so that this will get the correct virtual function table
-    // restored when the image reloads.
-    TheNilObject->behaviour->setClassType(T_NilObject);
 
     // disable the special class methods we only use during the image build phase.
     // this removes this from all of the subclasses as well

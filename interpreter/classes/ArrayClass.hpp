@@ -230,6 +230,7 @@ class ArrayClass : public RexxObject
     RexxObject  *fill(RexxInternalObject *);
     RexxObject  *hasItemRexx(RexxInternalObject *);
     bool         hasItem(RexxInternalObject *target);
+    bool         hasIdentityItem(RexxInternalObject *target);
     wholenumber_t sortCompare(RexxObject *comparator, RexxInternalObject *left, RexxInternalObject *right);
     ArrayClass  *stableSortRexx();
     ArrayClass  *stableSortWithRexx(RexxObject *comparator);

@@ -59,7 +59,7 @@ class RexxBehaviour : public RexxInternalObject
 
     static const uintptr_t INTERNALCLASS = (((uintptr_t)1) << ((sizeof(uintptr_t) * 8) - 1));
 
-    RexxBehaviour(size_t, PCPPM *);
+    RexxBehaviour(ClassTypeCode, PCPPM *);
     inline RexxBehaviour() {;};
     inline RexxBehaviour(RESTORETYPE restoreType) { ; };
 
@@ -110,8 +110,8 @@ class RexxBehaviour : public RexxInternalObject
            bool        hasScope(RexxClass *scope);
            void        addInstanceMethods(MethodDictionary *source);
 
-    inline void  setClassType(size_t n) { classType = (uint16_t)n; }
-    inline size_t getClassType()  { return (size_t)classType; }
+    inline void  setClassType(ClassTypeCode n) { classType = n; }
+    inline ClassTypeCode getClassType()  { return classType; }
     inline bool  isPrimitive()    {  return !behaviourFlags[NON_PRIMITIVE_BEHAVIOUR]; };
     inline bool  isNonPrimitive() {  return behaviourFlags[NON_PRIMITIVE_BEHAVIOUR]; };
     inline bool  isNotResolved()  {  return behaviourFlags[BEHAVIOUR_NOT_RESOLVED]; };
@@ -128,7 +128,7 @@ class RexxBehaviour : public RexxInternalObject
 
     inline RexxBehaviour *getSavedPrimitiveBehaviour()
     {
-        uintptr_t behaviourID = getClassType();
+        uintptr_t behaviourID = (uintptr_t)getClassType();
         // if this is an internal class, normalize this so we can
         // restore this to the correct value if we add additional internal classes.
         if (isInternalClass())
@@ -170,7 +170,7 @@ class RexxBehaviour : public RexxInternalObject
     } BehaviourFlag;
 
 
-    size_t   classType;                   // primitive class identifier
+    ClassTypeCode   classType;                 // primitive class identifier
     FlagSet<BehaviourFlag, 32> behaviourFlags; // various behaviour flag types
     MethodDictionary *methodDictionary;   // method dictionary obtained from our class.
     PCPPM      *operatorMethods;          // operator look-a-side table
