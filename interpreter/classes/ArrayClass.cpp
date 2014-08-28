@@ -764,8 +764,12 @@ RexxObject *ArrayClass::insertRexx(RexxInternalObject *value, RexxObject *index)
  */
 size_t ArrayClass::insert(RexxInternalObject *value, size_t index)
 {
+    // open an appropriate sized gap in the array.  Note that any adjustments
+    // to the lastItem are done in the open gap routine.  If we're inserting
+    // at the end, then the put() with the value will update lastItem
     openGap(index, 1);                // open an appropriate sized gap in the array
-    lastItem++;                       // even if inserting at the end, the last item will move.
+
+
     // only do the put() operation if we have a real value to put so that
     // the item count doesn't get updated incorrectly.
     if (value != OREF_NULL)
@@ -837,7 +841,11 @@ void ArrayClass::openGap(size_t index, size_t elements)
         {
             zeroItem(i);
         }
-        lastItem += elements;     // the position of the last element has now moved.
+        // we only adjust the last item position if there is a current last item.
+        if (lastItem != 0)
+        {
+            lastItem += elements;
+        }
     }
 }
 
@@ -895,7 +903,8 @@ void ArrayClass::closeGap(size_t index, size_t elements)
     char *_end = (char *)slotAddress(lastItem + 1);
     // shift the array over
     memmove(_target, _start, _end - _start);
-    // adjust the last element position
+    // adjust the last element position (NOTE:  because we needed to shift,
+    // we know that lastItem is non-zero)
     lastItem -= elements;
 }
 

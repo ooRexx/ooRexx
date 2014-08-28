@@ -70,7 +70,7 @@ public:
 
     RexxInternalObject *value();
     inline RexxInternalObject *get() { return referentObject; }
-    inline bool hasReferent() { return referentObject == OREF_NULL; }
+    inline bool hasReferent() { return referentObject != OREF_NULL; }
     void   clear();
 
     RexxObject *newRexx(RexxObject **args, size_t argc);

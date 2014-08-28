@@ -119,6 +119,11 @@ class ListContents : public RexxInternalObject
     // update a next entry
     void setNext(ItemLink position, ItemLink next) { entries[position].next = next; }
     void setPrevious(ItemLink position, ItemLink previous) { entries[position].previous = previous; }
+    void clearLinks(ItemLink position)
+    {
+        setNext(position, NoMore);
+        setPrevious(position, NoMore);
+    }
 
     // copy an entry contents into another entry
     inline void copyEntry(ItemLink target, ItemLink source)

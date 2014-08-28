@@ -281,8 +281,8 @@ class LanguageParser: public RexxInternalObject
     RexxInstructionIf *whenCaseNew(RexxInstructionIf *original);
 
     inline void        addReference(RexxObject *reference) { calls->addLast(reference); }
-    inline void        pushDo(RexxInstruction *i) { control->pushRexx((RexxObject *)i); }
-    inline RexxInstruction *popDo() { return (RexxInstruction *)(control->pullRexx()); };
+    inline void        pushDo(RexxInstruction *i) { control->push((RexxObject *)i); }
+    inline RexxInstruction *popDo() { return (RexxInstruction *)(control->pull()); };
     inline RexxInstruction *topDo() { return (RexxInstruction *)(control->peek()); };
     inline InstructionKeyword topDoType() { return ((RexxInstruction *)(control->peek()))->getType(); };
     inline bool topDoIsType(InstructionKeyword t) { return ((RexxInstruction *)(control->peek()))->isType(t); };

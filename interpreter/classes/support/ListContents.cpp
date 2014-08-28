@@ -171,7 +171,7 @@ void ListContents::mergeInto(ListContents *target)
     // as large as this one.
 
     // run the chain appending each item on to the target
-    for (size_t position = firstItem; position != NoMore; position = nextEntry(position))
+    for (ItemLink position = firstItem; position != NoMore; position = nextEntry(position))
     {
         target->append(entryValue(position));
     }
@@ -195,6 +195,7 @@ ListContents::ItemLink ListContents::allocateSlot(RexxInternalObject *value)
     freeChain = nextEntry(newItem);
 
     setValue(newItem, value);
+    clearLinks(newItem);
     return newItem;
 }
 
@@ -339,7 +340,7 @@ ListContents::ItemLink ListContents::insert(RexxInternalObject *value, ListConte
  */
 ListContents::ItemLink ListContents::append(RexxInternalObject *value)
 {
-    size_t newItem = allocateSlot(value);
+    ItemLink newItem = allocateSlot(value);
     // insert this at the end and return the index.
     insertAtEnd(newItem);
     return newItem;
@@ -576,7 +577,7 @@ ArrayClass *ListContents::allItems()
 {
     ArrayClass *itemArray = new_array(itemCount);
 
-    for (size_t position = firstItem; position != NoMore; position = nextEntry(position))
+    for (ItemLink position = firstItem; position != NoMore; position = nextEntry(position))
     {
         itemArray->append(entryValue(position));
     }
@@ -594,7 +595,7 @@ ArrayClass *ListContents::allIndexes()
 {
     ArrayClass *itemArray = new_array(itemCount);
 
-    for (size_t position = firstItem; position != NoMore; position = nextEntry(position))
+    for (ItemLink position = firstItem; position != NoMore; position = nextEntry(position))
     {
         itemArray->append(new_integer(position));
     }
@@ -609,7 +610,7 @@ ArrayClass *ListContents::allIndexes()
 void ListContents::empty()
 {
     // clear all of the entries so we handle old-to-new properly.
-    for (size_t position = firstItem; position != NoMore;)
+    for (ItemLink position = firstItem; position != NoMore;)
     {
         // get the next link before clearing
         ItemLink next = nextEntry(position);
@@ -652,7 +653,7 @@ void ListContents::setValue(ListContents::ItemLink position, RexxInternalObject 
 ListContents::ItemLink ListContents::getIndex(RexxInternalObject *target)
 {
     // scan until we get a hit.
-    for (size_t position = firstItem; position != NoMore; position = nextEntry(position))
+    for (ItemLink position = firstItem; position != NoMore; position = nextEntry(position))
     {
         if (target->equalValue(entryValue(position)))
         {
@@ -687,7 +688,7 @@ bool ListContents::hasItem(RexxInternalObject *target)
 RexxInternalObject *ListContents::removeItem(RexxInternalObject *target)
 {
     // scan for the item until we get a hit.  Return the object that is actually there.
-    for (size_t position = firstItem; position != NoMore; position = nextEntry(position))
+    for (ItemLink position = firstItem; position != NoMore; position = nextEntry(position))
     {
         if (target->equalValue(entryValue(position)))
         {
@@ -733,12 +734,11 @@ ArrayClass *ListContents::weakReferenceArray()
     // we might hit a GC window that could create more stale
     // references.
 
-    // make this larg enough to hold what is currently there.
-    // this could be more than we need, but that's fine.
-    // TODO:  make sure subclasses uses items() rather than size()
-    Protected<ArrayClass> result = new_array(items());
+    // make this large enough to hold what is currently there.
+    // this could be more than we need, but that's fine. The initial size is zero.
+    Protected<ArrayClass> result = new (0, items()) ArrayClass;
 
-    size_t position = firstItem;
+    ItemLink position = firstItem;
     while (position != NoMore)
     {
         // get the next position before processing the current link
