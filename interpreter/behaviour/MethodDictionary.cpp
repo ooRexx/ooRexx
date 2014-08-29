@@ -206,7 +206,7 @@ void MethodDictionary::replaceMethod(RexxString *methodName, MethodClass *method
  *
  * @param source The source method dictionary.
  */
-void MethodDictionary::replaceMethods(MethodDictionary *source)
+void MethodDictionary::replaceMethods(MethodDictionary *source, RexxClass *scope)
 {
     // use an iterator to traverse the table
     HashContents::TableIterator iterator = source->iterator();
@@ -216,6 +216,10 @@ void MethodDictionary::replaceMethods(MethodDictionary *source)
         // copy these methods over any of our own.
         MethodClass *method = (MethodClass *)iterator.value();
         RexxString *name = (RexxString *)iterator.index();
+        if (isMethod(method))
+        {
+            method->setScope(scope);
+        }
         replaceMethod(name, method);
     }
 }
@@ -223,12 +227,10 @@ void MethodDictionary::replaceMethods(MethodDictionary *source)
 
 /**
  * Overlay a collection of methods on top of this dictionary.
- * At this time, we're just adding the entries to the table.
- * These will be updated with correct scopes later.
  *
  * @param source The source method dictionary.
  */
-void MethodDictionary::replaceMethods(StringTable *source)
+void MethodDictionary::replaceMethods(StringTable *source, RexxClass *scope)
 {
     // use an iterator to traverse the table
     HashContents::TableIterator iterator = source->iterator();
@@ -238,7 +240,38 @@ void MethodDictionary::replaceMethods(StringTable *source)
         // copy these methods over any of our own.
         MethodClass *method = (MethodClass *)iterator.value();
         RexxString *name = (RexxString *)iterator.index();
+        if (isMethod(method))
+        {
+            method->setScope(scope);
+        }
         replaceMethod(name, method);
+    }
+}
+
+
+/**
+ * Add a collection of methods on top of this dictionary. These
+ * methods will override any methods already defined in this
+ * dictionary.
+ *
+ * @param source The source method dictionary.
+ * @param scope  The added method scopes.
+ */
+void MethodDictionary::addMethods(StringTable *source, RexxClass *scope)
+{
+    // use an iterator to traverse the table
+    HashContents::TableIterator iterator = source->iterator();
+
+    for (; iterator.isAvailable(); iterator.next())
+    {
+        // copy these methods over any of our own.
+        MethodClass *method = (MethodClass *)iterator.value();
+        RexxString *name = (RexxString *)iterator.index();
+        if (isMethod(method))
+        {
+            method->setScope(scope);
+        }
+        addMethod(name, method);
     }
 }
 

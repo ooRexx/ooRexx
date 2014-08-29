@@ -1497,8 +1497,8 @@ EndClassDefinition(StackFrame);
             // create an executable object for this.
             Protected<RoutineClass> loader = LanguageParser::createProgram(programName);
 
-            // we pass TheSystem as an argument to the core classes.
-            RexxObject *args = TheSystem;
+            // we pass the internal Rexx package as an argument to the setup program.
+            RexxObject *args = TheRexxPackage;
             ProtectedObject result;
             // now create the core program objects.
             loader->runProgram(ActivityManager::currentActivity, GlobalNames::PROGRAM, OREF_NULL, (RexxObject **)&args, 1, result);

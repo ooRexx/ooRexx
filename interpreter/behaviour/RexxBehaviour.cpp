@@ -345,7 +345,7 @@ void RexxBehaviour::inheritInstanceMethods(RexxBehaviour *source)
     // have this merge all of the methods from the other dictionary into
     // ours.  This will replace any existing methods (although we generally
     // only use this on an empty dictionary).
-    methodDictionary->replaceMethods(source->getMethodDictionary());
+    methodDictionary->replaceMethods(source->getMethodDictionary(), getOwningClass());
 }
 
 

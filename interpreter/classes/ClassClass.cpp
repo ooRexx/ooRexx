@@ -435,7 +435,7 @@ RexxObject *RexxClass::defineMethods(StringTable *newMethods)
 {
     // add these to the instance method dictionary we use to
     // build the behaviour.
-    instanceMethodDictionary->replaceMethods(newMethods);
+    instanceMethodDictionary->addMethods(newMethods, this);
 
     // see if we have an uninit method defined
     checkUninit();

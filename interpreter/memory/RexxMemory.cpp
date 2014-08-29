@@ -1122,6 +1122,7 @@ void MemoryObject::saveImage()
     saveArray->put(TheSystem,       saveArray_SYSTEM);
     saveArray->put(TheCommonRetrievers,    saveArray_COMMON_RETRIEVERS);
     saveArray->put(saveStrings(), saveArray_NAME_STRINGS);
+    saveArray->put(TheRexxPackage, saveArray_REXX_PACKAGE);
 
     // create an array for all of the primitive behaviours and fill it with
     // pointers to our primitive behaviours (only the exported ones need this).

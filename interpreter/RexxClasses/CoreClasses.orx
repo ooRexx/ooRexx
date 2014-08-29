@@ -43,6 +43,9 @@
 /******************************************************************************/
 
 use arg rexxPackage
+-- add the local server class to the Rexx package as a non public class
+rexxPackage~addClass('LOCALSERVER', .LocalServer)
+
 .environment~objectname = "The Environment Directory"
 rexxPackage~objectname = "The REXX Package"
 
@@ -55,9 +58,6 @@ do name over publicClasses
    .environment~put(class, name)
    rexxPackage~addPublicClass(name, class)
 end
-
--- add the local server class to the Rexx package as a non public class
-rexxPackage~addClass('LOCALSERVER', .LocalServer)
 
 -- add string class constant methods
 .String~defineClassMethod("NL", .methods~string_cls_nl)

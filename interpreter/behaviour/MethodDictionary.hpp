@@ -69,8 +69,9 @@ class MethodDictionary: public StringHashCollection
     MethodClass *getMethod(RexxString *methodName) { return (MethodClass *)get(methodName); }
     void addMethod(RexxString *methodName, MethodClass *method);
     void replaceMethod(RexxString *methodName, MethodClass *method);
-    void replaceMethods(MethodDictionary *source);
-    void replaceMethods(StringTable *source);
+    void replaceMethods(MethodDictionary *source, RexxClass *scope);
+    void replaceMethods(StringTable *source, RexxClass *scope);
+    void addMethods(StringTable *source, RexxClass *scope);
     bool removeMethod(RexxString *methodName);
     void hideMethod(RexxString *methodName);
     void removeInstanceMethod(RexxString *name);
