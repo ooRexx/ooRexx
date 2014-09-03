@@ -266,7 +266,11 @@ RexxString *RexxString::left(RexxInteger *_length, RexxString *pad)
 
     // if the requested length is longer than the string, we need to add
     // pad characters.
-    builder.pad(padChar, size-length);
+
+    if (size > length)
+    {
+        builder.pad(padChar, size - length);
+    }
     return retval;
 }
 
