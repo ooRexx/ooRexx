@@ -117,8 +117,7 @@ void RexxClass::live(size_t liveMark)
     memory_mark(baseClass);
     memory_mark(metaClass);
     memory_mark(superClass);
-    memory_mark(classSuperClasses);
-    memory_mark(instanceSuperClasses);
+    memory_mark(superClasses);
     memory_mark(subClasses);
     memory_mark(package);
     memory_mark(scopeSuperClass);
@@ -152,8 +151,7 @@ void RexxClass::liveGeneral(MarkReason reason)
     memory_mark_general(baseClass);
     memory_mark_general(metaClass);
     memory_mark_general(superClass);
-    memory_mark_general(classSuperClasses);
-    memory_mark_general(instanceSuperClasses);
+    memory_mark_general(superClasses);
     memory_mark_general(subClasses);
     memory_mark_general(package);
     memory_mark_general(scopeSuperClass);
@@ -383,7 +381,7 @@ RexxClass *RexxClass::getSuperClass()
         return (RexxClass *)TheNilObject;
     }
     // get the first item from the immediate list.
-    return (RexxClass *)instanceSuperClasses->getFirstItem();
+    return (RexxClass *)superClasses->getFirstItem();
 }
 
 
@@ -395,7 +393,7 @@ RexxClass *RexxClass::getSuperClass()
 ArrayClass *RexxClass::getSuperClasses()
 {
     // return a copy so it can't be modified.
-    return (ArrayClass *)instanceSuperClasses->copy();
+    return (ArrayClass *)superClasses->copy();
 }
 
 
@@ -505,7 +503,6 @@ RexxString *RexxClass::defaultName()
 MethodDictionary *RexxClass::getInstanceBehaviourDictionary()
 {
     // always return a copy of the dictionary
-    // TODO:  have the behaviour class do the not there/create the dictionary test.
     return instanceBehaviour->copyMethodDictionary();
 }
 
@@ -586,19 +583,15 @@ void RexxClass::buildFinalClassBehaviour()
 
     // The Baseclass for non-mixin classes is self
     setField(baseClass, this);
-    // The class superclasses list for OBJECT is an empty list.
-    setField(classSuperClasses, new_array());
     // as is the instance superclasses list
-    setField(instanceSuperClasses, new_array());
+    setField(superClasses, new_array());
     // create the subclasses list
     setField(subClasses, new_list());
     // is this is not the object classs, we have superclass information to add
     if (this != TheObjectClass)
     {
-        // object goes at the end...always
-        classSuperClasses->addLast(TheObjectClass);
-        // The instance superclasses for al' except OBJECT is OBJECT
-        instanceSuperClasses->addLast(TheObjectClass);
+        // The instance superclasses for all except OBJECT is OBJECT
+        superClasses->addLast(TheObjectClass);
         // and for OBJECT we need to add all the other classes as
         // subclasses except for the pseudo classes of integer and number string.
         if (this != TheIntegerClass && this != TheNumberStringClass)
@@ -612,6 +605,10 @@ void RexxClass::buildFinalClassBehaviour()
     behaviour->setOwningClass(TheClassClass);
     // these are primitive classes
     setPrimitive();
+
+    // add the scope information for quicker access
+    setField(scopeSuperClass, instanceBehaviour->immediateSuperScope());
+    setField(scopeSearchOrder, instanceBehaviour->allScopes())
 
     // check to see if we have an uninit methods.
     checkUninit();
@@ -639,8 +636,7 @@ void RexxClass::buildFinalClassBehaviour(RexxClass *superClass)
     setField(instanceMethodDictionary, getInstanceBehaviourDictionary());
 
     // set up the superclass/subclass relationships
-    setField(classSuperClasses, new_array(superClass));
-    setField(instanceSuperClasses, new_array(superClass));
+    setField(superClasses, new_array(superClass));
     // create the subclasses list
     setField(subClasses, new_list());
     // and add this as a subclass to our superclass
@@ -962,9 +958,9 @@ void RexxClass::createClassBehaviour(RexxBehaviour *target_class_behaviour)
     // we are going to call each of our superclasses, start from the last to the
     // first asking them to merge their information.  The last superclass should be
     // Object, the first will be our immediate superclass.
-    for (size_t index = classSuperClasses->items(); index > 0; index--)
+    for (size_t index = superClasses->items(); index > 0; index--)
     {
-        RexxClass *superclass = (RexxClass *)classSuperClasses->get(index);
+        RexxClass *superclass = (RexxClass *)superClasses->get(index);
         // if there is a superclass and this hasn't been added into this
         // behaviour yet, ask it to merge it's information into this.  We
         // can have dups when mixin classes are involved, since we inherit the
@@ -1018,9 +1014,9 @@ void RexxClass::createInstanceBehaviour(RexxBehaviour *target_instance_behaviour
     // like building the class behaviour, we process the superclasses in reverse
     // order, starting with Object, and overlay the information from each class
     // on top of the previous.
-    for (size_t index = instanceSuperClasses->size(); index > 0; index--)
+    for (size_t index = superClasses->size(); index > 0; index--)
     {
-        RexxClass *superclass = (RexxClass *)instanceSuperClasses->get(index);
+        RexxClass *superclass = (RexxClass *)superClasses->get(index);
         // it is possible for a superclass to have already been processed
         // during the recursive processes, so make sure we only do each class once.
         if (!target_instance_behaviour->hasScope(superclass))
@@ -1051,9 +1047,9 @@ void RexxClass::mergeBehaviour(RexxBehaviour *target_instance_behaviour)
 {
     // Call each of the superclasses in this superclass list starting from
     // the last going to the first
-    for (size_t index = instanceSuperClasses->size(); index > 0; index--)
+    for (size_t index = superClasses->size(); index > 0; index--)
     {
-        RexxClass *superclass = (RexxClass *)instanceSuperClasses->get(index);
+        RexxClass *superclass = (RexxClass *)superClasses->get(index);
         // if there is a superclass and it hasn't been added into this
         // behaviour yet, call and have it add itself                        */
         if (!target_instance_behaviour->hasScope(superclass))
@@ -1198,22 +1194,20 @@ RexxObject *RexxClass::inherit(RexxClass *mixin_class, RexxClass  *position)
     // if not specified, we're adding to the end of the inheritance list (typical)
     if (position == OREF_NULL)
     {
-        classSuperClasses->addLast(mixin_class);
-        instanceSuperClasses->addLast(mixin_class);
+        superClasses->addLast(mixin_class);
     }
     else
     {
-        // ok, now we need to find this in both superclass lists
-        size_t class_index = classSuperClasses->indexOf(position);
-        size_t  instance_index = instanceSuperClasses->indexOf(position);
-        if (class_index == 0 || instance_index == 0)
+        // we have an insertion position, find the target class in the superclasses
+        // list and insert it after that point.
+        size_t instanceIndex = superClasses->indexOf(position);
+
+        if (instanceIndex == 0)
         {
             reportException(Error_Execution_uninherit, this, position);
         }
 
-        // now insert into both lists at the specified position
-        classSuperClasses->insertAfter(mixin_class, class_index);
-        instanceSuperClasses->insertAfter(mixin_class, instance_index);
+        superClasses->insertAfter(mixin_class, instanceIndex);
     }
 
     // tell the mixin class that it has a new subclass
@@ -1252,14 +1246,12 @@ RexxObject *RexxClass::uninherit(RexxClass  *mixin_class)
 
     // this class must be a superclass of this class, but not the
     // immeidate superclass.
-    size_t class_index = classSuperClasses->indexOf(mixin_class);
-    size_t instance_index = instanceSuperClasses->indexOf(mixin_class);
+    size_t instance_index = superClasses->indexOf(mixin_class);
 
     // if good for both, go ahead and remove
-    if  (class_index > 1 && instance_index > 1)
+    if  (instance_index > 1)
     {
-        classSuperClasses->deleteItem(class_index);
-        instanceSuperClasses->deleteItem(instance_index);
+        superClasses->deleteItem(instance_index);
     }
     else
     {
@@ -1518,11 +1510,11 @@ bool RexxClass::isCompatibleWith(RexxClass *other)
 
     // if this is .object, there are no superclasses.  Otherwise, ask each of the superclasses
     // the same question.
-    if (instanceSuperClasses != OREF_NULL)
+    if (superClasses != OREF_NULL)
     {
-        for (size_t i = 1; i <= instanceSuperClasses->size(); i++)
+        for (size_t i = 1; i <= superClasses->size(); i++)
         {
-            if (((RexxClass *)instanceSuperClasses->get(i))->isCompatibleWith(other))
+            if (((RexxClass *)superClasses->get(i))->isCompatibleWith(other))
             {
                 return true;
             }
@@ -1619,8 +1611,6 @@ RexxClass  *RexxClass::newRexx(RexxObject **args, size_t argCount)
     new_class->behaviour = (RexxBehaviour *)new_class->instanceBehaviour->copy();
     // don't give access to this class' class mdict
     new_class->classMethodDictionary = new MethodDictionary();
-    // make this class the superclass
-    new_class->classSuperClasses = new_array(this);
     // and set the behaviour class
     new_class->behaviour->setOwningClass(this);
     // if this is a primitive class then there isn't any metaclass info yet
@@ -1644,7 +1634,7 @@ RexxClass  *RexxClass::newRexx(RexxObject **args, size_t argCount)
     // the immediate superclass is always object
     new_class->superClass = TheObjectClass;
     // make the instance_superclass list with OBJECT in it
-    new_class->instanceSuperClasses = new_array(TheObjectClass);
+    new_class->superClasses = new_array(TheObjectClass);
     // and set the behaviour class
     new_class->instanceBehaviour->setOwningClass(TheObjectClass);
     // set the scoping info

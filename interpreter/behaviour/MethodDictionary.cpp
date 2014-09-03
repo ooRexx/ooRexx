@@ -148,7 +148,7 @@ void MethodDictionary::addMethod(RexxString *methodName, MethodClass *method)
     // write .nil to the table
     if (method == OREF_NULL || method == TheNilObject)
     {
-        put(TheNilObject, methodName);
+        addFront(TheNilObject, methodName);
     }
     else
     {
@@ -218,7 +218,7 @@ void MethodDictionary::replaceMethods(MethodDictionary *source, RexxClass *scope
         RexxString *name = (RexxString *)iterator.index();
         if (isMethod(method))
         {
-            method->setScope(scope);
+            method = method->newScope(scope);
         }
         replaceMethod(name, method);
     }
@@ -242,7 +242,7 @@ void MethodDictionary::replaceMethods(StringTable *source, RexxClass *scope)
         RexxString *name = (RexxString *)iterator.index();
         if (isMethod(method))
         {
-            method->setScope(scope);
+            method = method->newScope(scope);
         }
         replaceMethod(name, method);
     }
@@ -269,7 +269,7 @@ void MethodDictionary::addMethods(StringTable *source, RexxClass *scope)
         RexxString *name = (RexxString *)iterator.index();
         if (isMethod(method))
         {
-            method->setScope(scope);
+            method = method->newScope(scope);
         }
         addMethod(name, method);
     }
@@ -557,24 +557,23 @@ void MethodDictionary::addScope(RexxClass *scope)
 
 
 /**
- * Merge our methods into another method dictionary.  Our
- * methods take precedence in the search order.
+ * Merge a dictionary's methods into our dictionary.  The new
+ * methods take precedence.
  *
- * @param target The target MethodDictionary.
+ * @param  The target MethodDictionary.
  */
 void MethodDictionary::mergeMethods(MethodDictionary *target)
 {
-    // allow the target to process this without needing to expand
-    // multiple times
-    target->ensureCapacity(items());
+    // make sure we have enough space to add all of these items
+    ensureCapacity(target->items());
     // use an iterator to traverse the table
-    HashContents::TableIterator iterator = contents->iterator();
+    HashContents::TableIterator iterator = target->iterator();
 
     // just copy in all of the method entries.
     for (; iterator.isAvailable(); iterator.next())
     {
         MethodClass *method = (MethodClass *)iterator.value();
-        target->addMethod((RexxString *)iterator.index(), method);
+        addMethod((RexxString *)iterator.index(), method);
     }
 }
 
@@ -583,18 +582,19 @@ void MethodDictionary::mergeMethods(MethodDictionary *target)
  * Merge the scopy information from a method dictionary
  * into ours.  We only add in new scope classes.
  *
- * @param target The target method dictionary.
+ * @param source The source method dictionary
  */
-void MethodDictionary::mergeScopes(MethodDictionary *target)
+void MethodDictionary::mergeScopes(MethodDictionary *source)
 {
-    size_t count = scopeList->items();
+    ArrayClass *sourceScopes = source->allScopes();
+    size_t count = sourceScopes->items();
     // we merge these in using the same order they were added
     // to our method dictionary.  The target method dictionary
     // will ignore any that is already has seen...the new ones will
     // get added to the end of the list.
     for (size_t i = 1; i <= count; i++)
     {
-        target->addScope((RexxClass *)scopeList->get(i));
+        addScope((RexxClass *)sourceScopes->get(i));
     }
 }
 
@@ -603,13 +603,13 @@ void MethodDictionary::mergeScopes(MethodDictionary *target)
  * Merge all of the method and scope information in this
  * method dictionary into the target dictionary.
  *
- * @param target The target we're merging into.
+ * @param souce The target we're merging from.
  */
-void MethodDictionary::merge(MethodDictionary *target)
+void MethodDictionary::merge(MethodDictionary *source)
 {
     // merge both the scopes and the target
-    mergeMethods(target);
-    mergeScopes(target);
+    mergeMethods(source);
+    mergeScopes(source);
 }
 
 

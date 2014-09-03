@@ -111,7 +111,6 @@ class RexxClass : public RexxObject
     RexxClass   *getMetaClass();
     RexxClass   *getSuperClass();
     ArrayClass  *getSuperClasses();
-    ArrayClass  *getClassSuperClasses() { return classSuperClasses; }
     ArrayClass  *getSubClasses();
 
     void         setInstanceBehaviour(RexxBehaviour *);
@@ -188,11 +187,8 @@ class RexxClass : public RexxObject
     RexxClass     *baseClass;          // Baseclass of this class
     RexxClass     *metaClass;          // Metaclass of this class
     RexxClass     *superClass;         // immediate super class of this class.
-    // the super class and any inherited mixins for class
-    // behaviour
-    ArrayClass     *classSuperClasses;
     // the super class and any inherited mixins that contribute to instance behaviour.
-    ArrayClass     *instanceSuperClasses;
+    ArrayClass     *superClasses;
     FlagSet<ClassFlag, 32> classFlags; // class attributes
 
     ListClass     *subClasses;         // our list of weak referenced subclasses

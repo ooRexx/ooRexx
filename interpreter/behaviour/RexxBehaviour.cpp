@@ -658,10 +658,10 @@ void RexxBehaviour::mergeMethodDictionary(MethodDictionary *sourceDictionary)
     }
     else
     {
-        // get a copy of the source dictionary and merge our methods into it.
-        Protected<MethodDictionary> newMethods = (MethodDictionary *)sourceDictionary->copy();
+        // get a copy of our dictionary and merge the new methods into it.
+        Protected<MethodDictionary> newMethods = (MethodDictionary *)methodDictionary->copy();
         // merge our methods and scope into the copy
-        methodDictionary->merge(newMethods);
+        newMethods->merge(sourceDictionary);
         // and replace our existing behaviour.
         setField(methodDictionary, newMethods);
     }
