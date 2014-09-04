@@ -192,6 +192,15 @@ ListContents::ItemLink ListContents::allocateSlot(RexxInternalObject *value)
 
     // get an item off of the chain and set the value
     ItemLink newItem = freeChain;
+
+    // belt-and-braces...this should not occur...but give a logic
+    // error if it does occur, since that indicates something bad has
+    // occurred.
+    if (newItem == NoMore)
+    {
+        Interpreter::logicError("Attempt to add an object to a full List contents");
+    }
+
     freeChain = nextEntry(newItem);
 
     setValue(newItem, value);

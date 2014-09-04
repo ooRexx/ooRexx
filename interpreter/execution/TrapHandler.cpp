@@ -72,7 +72,7 @@ void *TrapHandler::operator new(size_t size)
 TrapHandler::TrapHandler(RexxString *c, RexxInstructionTrapBase *h)
 {
     condition = c;
-    handler = handler;
+    handler = h;
     state = ON;
 }
 

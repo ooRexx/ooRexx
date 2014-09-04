@@ -781,9 +781,9 @@ StartClassDefinition(StringTable);
 
         AddMethod("Unknown", RexxObject::unknownRexx, 2);
         AddMethod("Entry", StringHashCollection::entryRexx, 1);
-        AddMethod("HasEntry", StringHashCollection::hasEntry, 1);
-        AddMethod("SetEntry", StringHashCollection::setEntry, 2);
-        AddMethod("RemoveEntry", StringHashCollection::removeEntry, 1);
+        AddMethod("HasEntry", StringHashCollection::hasEntryRexx, 1);
+        AddMethod("SetEntry", StringHashCollection::setEntryRexx, 2);
+        AddMethod("RemoveEntry", StringHashCollection::removeEntryRexx, 1);
 
     CompleteMethodDefinitions();
 

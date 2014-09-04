@@ -960,9 +960,9 @@ CPPM(HashCollection::hasItemRexx),
 CPPM(HashCollection::removeItemRexx),
 
 CPPM(StringHashCollection::entryRexx),
-CPPM(StringHashCollection::hasEntry),
-CPPM(StringHashCollection::setEntry),
-CPPM(StringHashCollection::removeEntry),
+CPPM(StringHashCollection::hasEntryRexx),
+CPPM(StringHashCollection::setEntryRexx),
+CPPM(StringHashCollection::removeEntryRexx),
 
 CPPM(RelationClass::removeItemRexx),
 CPPM(RelationClass::supplierRexx),

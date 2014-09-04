@@ -464,6 +464,9 @@ RexxObject *ListClass::insertRexx(RexxInternalObject *value, RexxObject *index)
  */
 size_t ListClass::insert(RexxInternalObject *value, size_t insertionPoint)
 {
+    // make sure we have enough space to add and then
+    // have the contents add this.
+    checkFull();
     return contents->insert(value, insertionPoint);
 }
 
@@ -477,6 +480,9 @@ size_t ListClass::insert(RexxInternalObject *value, size_t insertionPoint)
  */
 size_t ListClass::addLast(RexxInternalObject *value)
 {
+    // make sure we have enough space to add and then
+    // have the contents add this.
+    checkFull();
     return contents->insert(value, ListContents::AtEnd);
 }
 
@@ -490,6 +496,9 @@ size_t ListClass::addLast(RexxInternalObject *value)
  */
 size_t ListClass::addFirst(RexxInternalObject *value)
 {
+    // make sure we have enough space to add and then
+    // have the contents add this.
+    checkFull();
     return contents->insert(value, ListContents::AtBeginning);
 }
 
@@ -503,6 +512,9 @@ size_t ListClass::addFirst(RexxInternalObject *value)
  */
 size_t ListClass::append(RexxInternalObject *value)
 {
+    // make sure we have enough space to add and then
+    // have the contents add this.
+    checkFull();
     return contents->insertAtEnd(value);
 }
 

@@ -940,7 +940,7 @@ RexxInternalObject *ArrayClass::getRexx(RexxObject **arguments, size_t argCount)
 {
     size_t position;
     // validate the index
-    if (validateIndex(arguments, argCount, ARG_ONE, IndexAccess, position))
+    if (!validateIndex(arguments, argCount, ARG_ONE, IndexAccess, position))
     {
         // return .nil for anything out of bounds
         return TheNilObject;
