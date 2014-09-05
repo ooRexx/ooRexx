@@ -750,7 +750,7 @@ RexxObject *RexxInteger::power(RexxObject *other)
  *
  * @return The comparison result
  */
-bool RexxInteger::isEqual(RexxObject *other)
+bool RexxInteger::isEqual(RexxInternalObject *other)
 {
     // primitive version, no argument checking here
 

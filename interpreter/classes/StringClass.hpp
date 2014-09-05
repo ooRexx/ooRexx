@@ -314,29 +314,29 @@ class RexxString : public RexxObject
 
     HashCode getObjectHashCode();
 
-    bool         numberValue(wholenumber_t &result, size_t precision);
-    bool         numberValue(wholenumber_t &result);
-    bool         unsignedNumberValue(size_t &result, size_t precision);
-    bool         unsignedNumberValue(size_t &result);
-    bool         doubleValue(double &result);
-    NumberString *numberString();
-    RexxInteger *integerValue(size_t);
-    RexxString  *makeString();
-    ArrayClass   *makeArray();
+    virtual bool numberValue(wholenumber_t &result, size_t precision);
+    virtual bool numberValue(wholenumber_t &result);
+    virtual bool unsignedNumberValue(size_t &result, size_t precision);
+    virtual bool unsignedNumberValue(size_t &result);
+    virtual bool doubleValue(double &result);
+    virtual NumberString *numberString();
+    virtual RexxInteger *integerValue(size_t);
+    virtual RexxString  *makeString();
+    virtual ArrayClass   *makeArray();
     RexxString  *primitiveMakeString();
-    void         copyIntoTail(CompoundVariableTail *buffer);
-    RexxString  *stringValue();
-    bool         truthValue(int);
+    virtual void         copyIntoTail(CompoundVariableTail *buffer);
+    virtual RexxString  *stringValue();
+    virtual bool  truthValue(int);
     virtual bool logicalValue(logical_t &);
 
     // comparison methods
-    bool        isEqual(RexxObject *);
+    virtual bool isEqual(RexxInternalObject *);
     bool        primitiveIsEqual(RexxObject *);
     bool        primitiveCaselessIsEqual(RexxObject *);
     wholenumber_t strictComp(RexxObject *);
     wholenumber_t comp(RexxObject *);
     wholenumber_t stringComp(RexxString *);
-    wholenumber_t compareTo(RexxObject *);
+    virtual wholenumber_t compareTo(RexxInternalObject *);
     RexxObject  *equal(RexxObject *);
     RexxObject  *strictEqual(RexxObject *);
     RexxObject  *notEqual(RexxObject *);

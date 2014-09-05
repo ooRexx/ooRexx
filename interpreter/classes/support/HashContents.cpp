@@ -1229,7 +1229,7 @@ ArrayClass  *HashContents::allItems()
         {
             // add to the result array, and if we've found the last match,
             // time to return.
-            result->put(entryIndex(position), nextIndex++);
+            result->put(entryValue(position), nextIndex++);
             if (nextIndex > itemCount)
             {
                 return result;

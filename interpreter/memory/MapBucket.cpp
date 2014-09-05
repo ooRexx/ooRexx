@@ -303,7 +303,6 @@ bool MapBucket::put(size_t value, RexxInternalObject *index)
             entries[position].setValue(value);
             return true;
         }
-        position = entries[position].next;
         previous = position;
         position = entries[position].next;
     } while (position != NoMore);

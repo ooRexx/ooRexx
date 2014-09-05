@@ -894,7 +894,7 @@ RexxInternalObject *StringHashCollection::entryRexx(RexxInternalObject *entryNam
     // validate the index item and let entry handle it (entry
     // also takes care of the uppercase)
     validateIndex(entryName, ARG_ONE);
-    return entry((RexxString *)entryName);
+    return resultOrNil(entry((RexxString *)entryName));
 }
 
 

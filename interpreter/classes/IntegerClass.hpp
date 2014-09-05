@@ -82,7 +82,7 @@ class RexxInteger : public RexxObject
     MethodClass   *instanceMethod(RexxString *);
     SupplierClass *instanceMethods(RexxClass *);
 
-    bool        isEqual(RexxObject *);
+    bool        isEqual(RexxInternalObject *);
     wholenumber_t strictComp(RexxObject *);
     wholenumber_t comp(RexxObject *other);
 

@@ -197,7 +197,7 @@ class NumberString : public NumberStringBase
     virtual bool         truthValue(int);
     virtual bool logicalValue(logical_t &);
 
-    virtual bool        isEqual(RexxObject *);
+    virtual bool  isEqual(RexxInternalObject *);
     wholenumber_t strictComp(RexxObject *);
     wholenumber_t comp(RexxObject *, size_t fuzz);
     RexxObject  *equal(RexxObject *);

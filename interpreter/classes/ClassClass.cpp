@@ -229,7 +229,7 @@ RexxObject *RexxClass::strictEqual(RexxObject *other)
  *
  * @return true if the are equal, false otherwise.
  */
-bool RexxClass::isEqual(RexxObject *other)
+bool RexxClass::isEqual(RexxInternalObject *other)
 {
     // If a non-copied (Primitive) behaviour Then we can directly call primitive method
     if (behaviour->isPrimitive())
@@ -241,8 +241,8 @@ bool RexxClass::isEqual(RexxObject *other)
     {
         ProtectedObject r;
         // other wise giveuser version a chance
-        sendMessage(GlobalNames::STRICT_EQUAL, other, r);
-        return((RexxObject *)r)->truthValue(Error_Logical_value_method);
+        sendMessage(GlobalNames::STRICT_EQUAL, (RexxObject *)other, r);
+        return ((RexxObject *)r)->truthValue(Error_Logical_value_method);
     }
 }
 
@@ -1442,6 +1442,9 @@ RexxClass  *RexxClass::subclass(PackageClass *package, RexxString *class_id,
     new_class->instanceBehaviour->subclass(instanceBehaviour);
     // set this class as the superclass new class superclass list
     new_class->superClass = this;
+    // and also make this the superclass list...inherits will add to this
+    new_class->superClasses = new_array(this);
+
     // if we have enhancing methods, create an instance method dictionary using the
     // new class as the scope.
     if (enhancing_methods != OREF_NULL && enhancing_methods != TheNilObject)
@@ -1449,7 +1452,7 @@ RexxClass  *RexxClass::subclass(PackageClass *package, RexxString *class_id,
         // create a method dictionary and merge this into the class method dictionary
         Protected<MethodDictionary> enhancing_class_methods = new_class->createMethodDictionary(enhancing_methods, new_class);
         // these are methods of the class object, not instances
-        enhancing_class_methods->merge(new_class->classMethodDictionary);
+        new_class->classMethodDictionary->merge(enhancing_class_methods);
     }
 
     // start out the class behaviour clean
@@ -1462,6 +1465,10 @@ RexxClass  *RexxClass::subclass(PackageClass *package, RexxString *class_id,
     // now create the instance behaviour
     new_class->instanceBehaviour->clearMethodDictionary();
     new_class->createInstanceBehaviour(new_class->instanceBehaviour);
+
+    // add the scope information for quicker access
+    new_class->scopeSuperClass = new_class->instanceBehaviour->immediateSuperScope();
+    new_class->scopeSearchOrder = new_class->instanceBehaviour->allScopes();
     // this behaviour is owned by the new class
     new_class->instanceBehaviour->setOwningClass(new_class);
     // record that we have a new subclass to worry about if

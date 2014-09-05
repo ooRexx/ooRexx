@@ -2983,12 +2983,12 @@ RexxObject *NumberString::xorOp(RexxObject *operand)
  *
  * @return true if they are equal, false otherwise.
  */
-bool NumberString::isEqual(RexxObject *other)
+bool NumberString::isEqual(RexxInternalObject *other)
 {
     // this is rare and hard to do, but possible.
     if (isSubClassOrEnhanced())
     {
-        return sendMessage(GlobalNames::STRICT_EQUAL, other)->truthValue(Error_Logical_value_method);
+        return sendMessage(GlobalNames::STRICT_EQUAL, (RexxObject *)other)->truthValue(Error_Logical_value_method);
     }
 
     // perform the comparison using the string value because this is "==".
