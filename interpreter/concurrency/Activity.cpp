@@ -1090,7 +1090,7 @@ RexxString *Activity::messageSubstitution(RexxString *message, ArrayClass  *addi
         // append the next message section to the buffer
         newMessage->append(messageData + searchOffset, subposition - searchOffset - 1);
         // this will be where we start searching for the next one.
-        searchOffset = subposition + 2;
+        searchOffset = subposition + 1;
 
         // get the character following the '&'.  This should be a numeric
         // substitution number.  We only support digits 1-9.
@@ -1142,7 +1142,7 @@ RexxString *Activity::messageSubstitution(RexxString *message, ArrayClass  *addi
         newMessage->appendRexx(stringVal);
     }
     // append the remainder of the message to the buffer and convert to a string.
-    newMessage->append(messageData + searchOffset - 1, message->getLength() - searchOffset + 1);
+    newMessage->append(messageData + searchOffset, message->getLength() - searchOffset);
     return newMessage->makeString();
 }
 

@@ -3080,7 +3080,7 @@ wholenumber_t NumberString::comp(RexxObject *right, size_t fuzz)
     wholenumber_t adjustedRightExponent = rightNumber->numberExponent - minExponent;
 
     wholenumber_t adjustedLeftLength = digitsCount + adjustedLeftExponent;
-    wholenumber_t adjustedRightLength = digitsCount + adjustedRightExponent;
+    wholenumber_t adjustedRightLength = rightNumber->digitsCount + adjustedRightExponent;
 
     // get the digits value adjusted for the current fuzz.
     digits -= fuzz;
