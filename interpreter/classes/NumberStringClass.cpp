@@ -343,7 +343,7 @@ RexxString *NumberString::stringValue()
     // is a fast path for conversion.
     if (isAllInteger())
     {
-        size_t maxNumberSize = digitsCount + isNegative();
+        wholenumber_t maxNumberSize = digitsCount + isNegative();
 
         // get a new string of the exact length needed
         RexxString *stringObj = raw_string(maxNumberSize);
@@ -366,15 +366,16 @@ RexxString *NumberString::stringValue()
     // the number is not exponential yet.
     wholenumber_t expFactor = 0;
     wholenumber_t adjustedSize = numberExponent + digitsCount - 1;
-    size_t adjustedExponent = numberExponent;
+    wholenumber_t adjustedExponent = numberExponent;
 
     // null out the exponent string value for now.
     char  expstring[17];
+    expstring[0] = '\0';
 
     // have we hit the trigger value either
     // A) the number of digits to the left of the decimal exceeds the digits setting or
     // B) the number of digits to the right of the decimal point exceed twice the digits setting.
-    if ((adjustedSize >= (wholenumber_t)createdDigits) || ((size_t)Numerics::abs(numberExponent) > (createdDigits*2)) )
+    if ((adjustedSize >= createdDigits) || (Numerics::abs(numberExponent) > (createdDigits * 2)))
     {
         // we need to go exponential.  Need to make a number of adjustments based
         // on the formatting.
@@ -408,7 +409,7 @@ RexxString *NumberString::stringValue()
         adjustedSize = Numerics::abs(adjustedSize);
     }
 
-    size_t maxNumberSize;
+    wholenumber_t maxNumberSize;
 
     // if the adjusted exponent is not negative, then we are
     // shifting everything to the left, so the number is longer
@@ -478,10 +479,9 @@ RexxString *NumberString::stringValue()
     // partial decimal number
     else
     {
-        wholenumber_t integers = digitsCount - adjustedLength;
         // do the integer and decimal parts separately
-        builder.addIntegerPart(isNegative(), numberDigits, integers);
-        builder.addDecimalPart(numberDigits + integers, digitsCount - integers);
+        builder.addIntegerPart(isNegative(), numberDigits, adjustedLength);
+        builder.addDecimalPart(numberDigits + adjustedLength, digitsCount - adjustedLength);
         // and the exponent, if we have one.
         builder.addExponent(expstring);
     }

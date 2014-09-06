@@ -104,7 +104,7 @@ char *NumberString::addMultiplier(const char *top, size_t topLen, char *accumPtr
  */
 NumberString *NumberString::Multiply(NumberString *other)
 {
-    size_t digits = number_digits();
+    wholenumber_t digits = number_digits();
 
     // prepare both numbers, copying and rounding if necessary.
     NumberString *left = checkNumber(digits);
@@ -138,7 +138,7 @@ NumberString *NumberString::Multiply(NumberString *other)
     // if the digits are really big, then we need to allocate a larger buffer.
     // just allocate a buffer object and allow it to get garbage collected after
     // we're done.
-    if (digits > FAST_BUFFER)
+    if (totalDigits > FAST_BUFFER)
     {
         outPtr = new_buffer(totalDigits)->getData();
     }
@@ -147,14 +147,14 @@ NumberString *NumberString::Multiply(NumberString *other)
 
     // set up the initial accumulator
     char *accumPtr = outPtr;
-    size_t accumLen = 0;
+    wholenumber_t accumLen = 0;
 
     // this is where we start laying out the data...starting from the
     // far end of the buffer.
     char *resultPtr = accumPtr + totalDigits - 1;
     // we iterate through the small number multiplying with each of the
     // digits in the smaller number
-    char *current = smallNum->numberDigits + smallNum->digitsCount;
+    const char *current = smallNum->numberDigits + smallNum->digitsCount;
 
     // now process all of the digits
     for (size_t i = smallNum->digitsCount ; i > 0 ; i-- )
@@ -187,7 +187,7 @@ NumberString *NumberString::Multiply(NumberString *other)
         // we also need to chop the length to digits + 1 (we'll use that to round
         // the final result)
         extraDigits = accumLen -(digits + 1);
-        accumLen = digitsCount + 1;
+        accumLen = digits + 1;
     }
 
     // now get a numberstring object large enough to hold this result
@@ -217,8 +217,8 @@ NumberString *NumberString::Multiply(NumberString *other)
  *
  * @return the pointer to the first character of the result.
  */
-char *NumberString::subtractDivisor(const char *divisor, size_t divisorLength,
-    const char *dividend, size_t dividendLength, char *result, int mult)
+char *NumberString::subtractDivisor(const char *divisor, wholenumber_t divisorLength,
+    const char *dividend, wholenumber_t dividendLength, char *result, int mult)
 {
     // This rountine actually does the divide of the Best Guess
     //  Mult.  This Best guess is a guess at how many times the
@@ -246,7 +246,7 @@ char *NumberString::subtractDivisor(const char *divisor, size_t divisorLength,
     char *outPtr = result + 1;
     int carry = 0;
     // get the differench in length
-    size_t extra = divisorLength - dividendLength;
+    wholenumber_t extra = divisorLength - dividendLength;
 
     // process all digits in the dividend number
     while (dividendLength--)
@@ -274,11 +274,11 @@ char *NumberString::subtractDivisor(const char *divisor, size_t divisorLength,
 
     // are their extra characters to process?
     // we need to propagate any carries until this stops
-    if (extra)
+    if (extra > 0)
     {
         // if the carry is zero, we can just copy the remaining
         // digits over
-        if (carry != 0)
+        if (carry == 0)
         {
             while (extra--)
             {

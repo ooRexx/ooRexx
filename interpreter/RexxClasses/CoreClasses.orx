@@ -3104,7 +3104,6 @@ nomethod:
 --      are optional and default to zero.
 ::METHOD init
   expose timestamp
-
   numeric digits 20    -- need higher digits for time calculations
 
   select
@@ -3121,6 +3120,7 @@ nomethod:
           use strict arg days, hours, minutes, seconds, microseconds = 0
           timestamp = (((days * 24 * 3600) + (hours * 3600) + (minutes * 60) + seconds) * 1000000) + microseconds
   end
+
   -- this will validate the timestamp value
   timestamp = date('f', abs(timestamp), 'f') * sign(timestamp)
 

@@ -529,7 +529,7 @@ void NumberString::adjustPrecision(char *resultPtr, size_t digits)
  * @param digits The target digits (already determined that truncation is needed)
  * @param round
  */
-void NumberStringBase::truncateToDigits(size_t digits, char *digitsPtr, bool round)
+void NumberStringBase::truncateToDigits(wholenumber_t digits, char *digitsPtr, bool round)
 {
     numberExponent += digitsCount - digits;
     digitsCount = digits;
@@ -584,11 +584,11 @@ NumberString *NumberString::prepareNumber(size_t digits, bool rounding)
  *
  * @return A new number object no longer than the target length.
  */
-NumberString *NumberString::prepareOperatorNumber(wholenumber_t targetLength, size_t digits, bool rounding)
+NumberString *NumberString::prepareOperatorNumber(wholenumber_t targetLength, wholenumber_t digits, bool rounding)
 {
     // clone the starting number
     NumberString *newObj = clone();
-    if (newObj->digitsCount > (wholenumber_t)digits)
+    if (newObj->digitsCount > digits)
     {
         // if we are going to lose digits because we're longer than the
         // current digits setting, raise the LOSTDIGITS condition
@@ -596,7 +596,7 @@ NumberString *NumberString::prepareOperatorNumber(wholenumber_t targetLength, si
         // if we're longer than the target length, chop and potentially round
         if (newObj->digitsCount > targetLength)
         {
-            truncateToDigits(targetLength, newObj->numberDigits, rounding);
+            newObj->truncateToDigits(targetLength, newObj->numberDigits, rounding);
         }
     }
     // make sure this has the correct settings

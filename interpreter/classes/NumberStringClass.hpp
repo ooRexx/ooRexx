@@ -71,7 +71,7 @@ public:
     void   mathRound(char *);
     char  *stripLeadingZeros(char *);
     char  *adjustNumber(char *, char *, size_t, size_t);
-    void   truncateToDigits(size_t digits, char *digitsPtr, bool round);
+    void   truncateToDigits(wholenumber_t digits, char *digitsPtr, bool round);
     //quick test for a numeric overflow
     void checkOverflow();
 
@@ -80,7 +80,7 @@ public:
     RexxString *stringObject;          // converted string value
     FlagSet<NumberFlag, 16> numFlags;  // Flags for use by the Numberstring methods
     short numberSign;                  // sign for this number (-1 is neg)
-    size_t  createdDigits;             // the digits setting of from when object was created
+    wholenumber_t  createdDigits;      // the digits setting of from when object was created
     wholenumber_t numberExponent;      // the exponent value
     wholenumber_t digitsCount;         // the length of the number data (more conveniently managed as a signed number)
 };
@@ -253,7 +253,7 @@ class NumberString : public NumberStringBase
     NumberString *operatorArgument(RexxObject *right);
 
     NumberString *prepareNumber(size_t, bool);
-    NumberString *prepareOperatorNumber(wholenumber_t, size_t, bool);
+    NumberString *prepareOperatorNumber(wholenumber_t, wholenumber_t, bool);
     NumberString *copyIfNecessary();
     NumberString *copyForCurrentSettings();
     void              adjustPrecision(char *, size_t);
@@ -364,7 +364,7 @@ class NumberString : public NumberStringBase
                                   NumberString *smaller, const char *smallerPtr, wholenumber_t aSmallerExp,
                                   NumberString *result, char *&resultPtr);
     static char *addMultiplier(const char *, size_t, char *, int);
-    static char *subtractDivisor(const char *data1, size_t length1, const char *data2, size_t length2, char *result, int Mult);
+    static char *subtractDivisor(const char *data1, wholenumber_t length1, const char *data2, wholenumber_t length2, char *result, int Mult);
     static char *multiplyPower(const char *leftPtr, NumberStringBase *left, const char *rightPtr, NumberStringBase *right, char *OutPtr, size_t OutLen, wholenumber_t NumberDigits);
     static char *dividePower(const char *AccumPtr, NumberStringBase *Accum, char *Output, wholenumber_t NumberDigits);
     static char *addToBaseSixteen(int, char *, char *);
@@ -383,8 +383,11 @@ class NumberString : public NumberStringBase
     static const size_t HIBIT = ~SSIZE_MAX;
     static const size_t LOWBITS = SSIZE_MAX;
 
-    // special buffer allocation size
-    static const size_t FAST_BUFFER = 36;
+    // special buffer allocation size.  Since we occasionally use numeric
+    // digits 20 for date and time calculations, make sure we can handle at least
+    // that size for most operations.  That requires at least twice the digits value
+    // plus an extra.  For alignment purposes, makea multiple of 8 also.
+    static const size_t FAST_BUFFER = 48;
 
     char  numberDigits[4];                   // the digits for the number
 };
