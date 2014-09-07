@@ -395,8 +395,8 @@ NumberString *NumberString::Division(NumberString *other, ArithmeticOperator div
 
     size_t totalDigits = ((digits + 1) * 2) + 1;
 
-    char *leftPtr  = leftBufFast;
-    char *rightPtr = rightBufFast;
+    char *leftNum  = leftBufFast;
+    char *rightNum = rightBufFast;
     char *output   = outBufFast;
 
     // we have automatic buffers for these that will handle typical
@@ -405,18 +405,18 @@ NumberString *NumberString::Division(NumberString *other, ArithmeticOperator div
     if (totalDigits > FAST_BUFFER)
     {
         // we can use a single buffer and chop it up
-        leftPtr = new_buffer(totalDigits * 3)->getData();
-        rightPtr = leftPtr + totalDigits;
-        output = rightPtr + totalDigits;
+        leftNum = new_buffer(totalDigits * 3)->getData();
+        rightNum = leftNum + totalDigits;
+        output = rightNum + totalDigits;
     }
 
     // make a copy of the input data into the buffers and pad the
     // rest of the buffer with zeros
-    memcpy(leftPtr, left->numberDigits, left->digitsCount);
-    memset(leftPtr + left->digitsCount, '\0', totalDigits - left->digitsCount);
+    memcpy(leftNum, left->numberDigits, left->digitsCount);
+    memset(leftNum + left->digitsCount, '\0', totalDigits - left->digitsCount);
 
-    memcpy(rightPtr, right->numberDigits, right->digitsCount);
-    memset(rightPtr + right->digitsCount, '\0', totalDigits - right->digitsCount);
+    memcpy(rightNum, right->numberDigits, right->digitsCount);
+    memset(rightNum + right->digitsCount, '\0', totalDigits - right->digitsCount);
     char *resultPtr = output;
 
     // copy the numberstring information as well
@@ -430,8 +430,8 @@ NumberString *NumberString::Division(NumberString *other, ArithmeticOperator div
     // the original data
     if (divOP == OT_REMAINDER)
     {
-        saveLeftPtr  = leftPtr;
-        saveRightPtr = rightPtr;
+        saveLeftPtr  = leftNum;
+        saveRightPtr = rightNum;
         // force the dividend sign to be positive.
         saveRight->numberSign = 1;
     }
@@ -464,8 +464,6 @@ NumberString *NumberString::Division(NumberString *other, ArithmeticOperator div
     saveLeft->numberExponent = digits * 2 - saveLeft->digitsCount + 1;
     saveRight->numberExponent = rightPadding;
     wholenumber_t adjustLeft = 0;
-    char *leftNum = leftPtr;
-    char *rightNum = rightPtr;
 
     // When generating a best guess digits for result we will look
     // use the 1st 2 digits of the dividend (if there are 2)
@@ -586,11 +584,11 @@ NumberString *NumberString::Division(NumberString *other, ArithmeticOperator div
 
 
             // divide the digit through and see if we guessed correctly.
-            leftPtr = subtractDivisor(leftPtr, saveLeft->digitsCount, rightPtr, saveRight->digitsCount, leftPtr + saveLeft->digitsCount - 1, multiplier);
+            leftNum = subtractDivisor(leftNum, saveLeft->digitsCount, rightNum, saveRight->digitsCount, leftNum + saveLeft->digitsCount - 1, multiplier);
             // skip over any leading zeros
-            while (*leftPtr == 0 && saveLeft->digitsCount > 1)
+            while (*leftNum == 0 && saveLeft->digitsCount > 1)
             {
-                leftPtr++;
+                leftNum++;
                 saveLeft->digitsCount--;
             }
             // end of inner loop, go back and guess again !! This might have been the right guess.
@@ -623,7 +621,7 @@ NumberString *NumberString::Division(NumberString *other, ArithmeticOperator div
             }
         }
         // Was number reduced to zero?  We divided evenly
-        if (saveLeft->digitsCount == 1 && *leftPtr == '\0')
+        if (saveLeft->digitsCount == 1 && *leftNum == '\0')
         {
             break;
         }
@@ -675,7 +673,7 @@ NumberString *NumberString::Division(NumberString *other, ArithmeticOperator div
             if (*leftNum != 0)
             {
                 // this is our result
-                resultPtr = leftPtr;
+                resultPtr = leftNum;
                 // now we need to calculate the exponent, adjusting for any added zeros
                 saveLeftPtr += left->digitsCount;
                 saveRightPtr = resultPtr + saveLeft->digitsCount + adjustLeft;
@@ -936,6 +934,7 @@ NumberString *NumberString::power(RexxObject *PowerObj)
     memcpy(result->numberDigits, accumPtr, result->digitsCount);
     return result;
 }
+
 
 /**
  * Multiply numbers for the power operation

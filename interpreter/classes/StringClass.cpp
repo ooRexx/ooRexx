@@ -1255,7 +1255,7 @@ RexxString *RexxString::concatBlank(RexxObject *otherObj)
     builder.append(getStringData(), len1);
     // add the blank between
     builder.append(' ');
-    builder.append(getStringData(), len2);
+    builder.append(other->getStringData(), len2);
     return result;
 }
 

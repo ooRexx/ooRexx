@@ -329,34 +329,24 @@ ArrayClass::ArrayClass(RexxInternalObject **objs, size_t count)
  */
 RexxInternalObject *ArrayClass::copy()
 {
-    // if we've expanded in the past, then just copy the
-    // expansion array and update it with the appropriate
-    // values from this array.
+    // make a copy of of the main array
+    ArrayClass *newArray = (ArrayClass *)RexxObject::copy();
+    // have we expanded in the past?  Then we need to
+    // copy the expansion array too.  NOTE:  It would be tempting
+    // to just copy the expansion array and return that, but
+    // the possibilty that the array might have object variables
+    // (e.g., because of an OBJECTNAME= call) means we really can't do
+    // that directly.  It is easier to just copy both pieces when needed.
     if (hasExpanded())
     {
-        // make a copy of ourself
-        ArrayClass *newArray = (ArrayClass *)expansionArray->copy();
-        newArray->dimensions = dimensions;
-        // NOTE:  the array size and maximum size are already correct
-        // in the extension array.  We need to copy the other fields.
-        // In fact, the arraySize in the main array is the chopped
-        // size of the stub array, not the full size, so we definitely
-        // must not copy that.
-        newArray->lastItem = lastItem;
-        newArray->itemCount = itemCount;
-        // the copy of the extension array is now the only one.
-        newArray->expansionArray = newArray;
-        return newArray;
+        newArray->expansionArray = (ArrayClass *)expansionArray->copy();
     }
     else
     {
-        // make a copy of ourself
-        ArrayClass *newArray = (ArrayClass *)RexxObject::copy();
-        // The expansion array needs to point to itself in the new object,
-        // not back to us.
+        // make sure the new array is updated to point to itself
         newArray->expansionArray = newArray;
-        return newArray;
     }
+    return newArray;
 }
 
 

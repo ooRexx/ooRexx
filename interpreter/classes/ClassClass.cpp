@@ -529,11 +529,13 @@ void RexxClass::buildFinalClassBehaviour()
     // with OBJECT.  This unmerged mdict
     // is kept in this class's
     // class_instance_mdict field.
-    setField(instanceMethodDictionary, getInstanceBehaviourDictionary());
+    instanceMethodDictionary = getInstanceBehaviourDictionary();
+    // now clear the instance behaviour and start building anew
+    instanceBehaviour->clearMethodDictionary();
     // Add OBJECT to the behaviour scope table
     instanceBehaviour->addScope(TheObjectClass);
     // if this is not the object class, then we need to add object
-    // to the different behaviours
+    // to the different behaviours before we merge in our methods
     if (this != TheObjectClass)
     {
         // add to the instance behaviour scope
@@ -542,10 +544,13 @@ void RexxClass::buildFinalClassBehaviour()
         instanceBehaviour->merge(TheObjectBehaviour);
     }
 
+    // now add in the methods defined for this class
+    instanceBehaviour->mergeMethodDictionary(instanceMethodDictionary);
+
     // add this class to the scope table
     instanceBehaviour->addScope(this);
     // now we do the same thing with the class behaviour
-    setField(classMethodDictionary, getBehaviourDictionary());
+    classMethodDictionary = getBehaviourDictionary();
     // The merge of the mdict's is order specific. By processing OBJECT
     // first then CLASS and then the rest of the subclassable classes
     // the mdict's will be set up correctly.
@@ -566,7 +571,7 @@ void RexxClass::buildFinalClassBehaviour()
         behaviour->merge(TheObjectBehaviour);
         // and put them into the class mdict
         // so all the classes will inherit
-        setField(classMethodDictionary, getBehaviourDictionary());
+        classMethodDictionary = getBehaviourDictionary();
     }
     // if this isn't CLASS put CLASS in next
     if (this != TheClassClass)
@@ -579,14 +584,14 @@ void RexxClass::buildFinalClassBehaviour()
     // that's the behaviour information...now fill in other state data.
 
     // All primitive methods have TheClassClass as the meta class.
-    setField(metaClass, TheClassClass);
+    metaClass = TheClassClass;
 
     // The Baseclass for non-mixin classes is self
-    setField(baseClass, this);
+    baseClass = this;
     // as is the instance superclasses list
-    setField(superClasses, new_array());
+    superClasses = new_array();
     // create the subclasses list
-    setField(subClasses, new_list());
+    subClasses = new_list();
     // is this is not the object classs, we have superclass information to add
     if (this != TheObjectClass)
     {
@@ -607,8 +612,8 @@ void RexxClass::buildFinalClassBehaviour()
     setPrimitive();
 
     // add the scope information for quicker access
-    setField(scopeSuperClass, instanceBehaviour->immediateSuperScope());
-    setField(scopeSearchOrder, instanceBehaviour->allScopes())
+    scopeSuperClass = instanceBehaviour->immediateSuperScope();
+    scopeSearchOrder = instanceBehaviour->allScopes();
 
     // check to see if we have an uninit methods.
     checkUninit();

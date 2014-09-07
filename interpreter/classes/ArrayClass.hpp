@@ -310,7 +310,7 @@ class ArrayClass : public RexxObject
 
     inline bool isMultiDimensional() { return dimensions != OREF_NULL && dimensions->size() != 1; }
     inline bool isSingleDimensional() { return !isMultiDimensional(); }
-    inline bool hasExpanded() { return expansionArray != this; }
+    inline bool hasExpanded() { return expansionArray != this && expansionArray != OREF_NULL; }
 
     static ArrayClass *createMultidimensional(RexxInternalObject **dims, size_t count, RexxClass *);
     static inline ArrayClass *createMultidimensional(ArrayClass *dims, RexxClass *c)
