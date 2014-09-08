@@ -100,10 +100,19 @@ RexxObject *RexxString::abbrev(RexxString *info, RexxInteger *_length)
     }
 
     // we do a comparison for the info length
-    return booleanObject(memcmp(getStringData(), getStringData(), len2) == 0);
+    return booleanObject(memcmp(getStringData(), info->getStringData(), len2) == 0);
 }
 
 
+/**
+ * Test is a string is an abbreviation of a target string.
+ *
+ * @param info    The test string.  We're testing if info is an
+ *                abbreviation of the receiving string.
+ * @param _length The minumum length for being a valid abbreviation.
+ *
+ * @return .true if this qualfies as an abbreviation, .false if not.
+ */
 RexxObject *RexxString::caselessAbbrev(RexxString *info, RexxInteger *_length)
 {
     // make sure this is a good string argument
@@ -133,7 +142,7 @@ RexxObject *RexxString::caselessAbbrev(RexxString *info, RexxInteger *_length)
     }
 
     // we do a comparison for the info length
-    return booleanObject(StringUtil::caselessCompare(this->getStringData(), info->getStringData(), len2) == 0);
+    return booleanObject(StringUtil::caselessCompare(getStringData(), info->getStringData(), len2) == 0);
 }
 
 

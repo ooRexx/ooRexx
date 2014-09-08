@@ -2423,7 +2423,7 @@ public:
         // set the count of digits in the number
         number->digitsCount = current - number->numberDigits;
         // get the final exponent value
-        number->numberExponent = (exponent * exponentSign) + decimals;
+        number->numberExponent = (exponent * exponentSign) - decimals;
         // a couple of final exponent checks
         if (Numerics::abs(number->numberExponent) > Numerics::MAX_EXPONENT)
         {
@@ -2552,14 +2552,9 @@ bool NumberString::parseNumber(const char *number, size_t length)
             // sign but before the number
             case NUMBER_SIGN:
             {
-                // have whitespace after the sign?  need to scan that off
-                if (inch == RexxString::ch_SPACE || inch == RexxString::ch_TAB)
-                {
-                    state = NUMBER_SIGN_WHITESPACE;
-                }
                 // have a digit at the start?  Potential number, so
                 // we're looking for digits here.
-                else if (inch >= RexxString::ch_ZERO && inch <= RexxString::ch_NINE)
+                if (inch >= RexxString::ch_ZERO && inch <= RexxString::ch_NINE)
                 {
                     // this is an integer digit, add it to the number
                     builder.addIntegerDigit(inch);
@@ -2570,6 +2565,11 @@ bool NumberString::parseNumber(const char *number, size_t length)
                 else if (inch == RexxString::ch_PERIOD)
                 {
                     state = NUMBER_SPOINT;
+                }
+                // have whitespace after the sign?  need to scan that off
+                else if (inch == RexxString::ch_SPACE || inch == RexxString::ch_TAB)
+                {
+                    state = NUMBER_SIGN_WHITESPACE;
                 }
                 // a non-numeric character.  A number is not possible.
                 else
@@ -2582,10 +2582,16 @@ bool NumberString::parseNumber(const char *number, size_t length)
             // we're scanning digits, still potentially a number.
             case NUMBER_DIGIT:
             {
+                // other non-digit?  We're no longer scanning a number.
+                if (inch >= RexxString::ch_ZERO && inch <= RexxString::ch_NINE)
+                {
+                    // add this digit to the number, the state is unchanged
+                    builder.addIntegerDigit(inch);
+                }
                 // is this a period?  Since we're scanning digits, this
                 // is must be the first period and is a decimal point.
                 // switch to scanning the part after the decimal.
-                if (inch == RexxString::ch_PERIOD)
+                else if (inch == RexxString::ch_PERIOD)
                 {
                     state = NUMBER_POINT;
                 }
@@ -2595,15 +2601,16 @@ bool NumberString::parseNumber(const char *number, size_t length)
                 {
                     state = NUMBER_E;
                 }
-                // other non-digit?  We're no longer scanning a number.
-                else if (inch < RexxString::ch_ZERO || inch > RexxString::ch_NINE)
+                // could be trailing blanks here
+                else if (inch == RexxString::ch_SPACE || inch == RexxString::ch_TAB)
+                {
+                    state = NUMBER_TRAILING_WHITESPACE;
+                }
+                // something else
+                else
                 {
                     return false;
                 }
-
-                // add this digit to the number
-                builder.addIntegerDigit(inch);
-                // if we encounter a digit, the state is unchanged
                 break;
             }
 
@@ -2633,19 +2640,26 @@ bool NumberString::parseNumber(const char *number, size_t length)
             // the 'E' for exponential notation.
             case NUMBER_POINT:
             {
+                // found a digit?  add to the number and continue in the same state
+                if (inch >= RexxString::ch_ZERO && inch <= RexxString::ch_NINE)
+                {
+                    builder.addDecimalDigit(inch);
+                }
                 // potential exponential, switch scan to the exponent part.
-                if (inch == 'E' || inch == 'e')
+                else if (inch == 'E' || inch == 'e')
                 {
                     state = NUMBER_E;
                 }
+                // could be trailing blanks here
+                else if (inch == RexxString::ch_SPACE || inch == RexxString::ch_TAB)
+                {
+                    state = NUMBER_TRAILING_WHITESPACE;
+                }
                 // non-digit other than an 'E'?, no longer a valid numeric.
-                else if (inch < RexxString::ch_ZERO || inch > RexxString::ch_NINE)
+                else
                 {
                     return false;
                 }
-                // add this to the number
-                builder.addDecimalDigit(inch);
-                // if we find a digit, the state is unchanged.
                 break;
             }
 
@@ -2677,8 +2691,7 @@ bool NumberString::parseNumber(const char *number, size_t length)
 
             // we're scanning a potential numeric value, and we've just
             // had the sign, so we're looking for digits after that.   If there
-            // are no digits, then the sign actually terminated the symbol, so
-            // we need to back up.
+            // are no digits, we have a problem
             case NUMBER_ESIGN:
             {
                 // found a digit here?  switching into exponent scan mode.
@@ -2700,17 +2713,20 @@ bool NumberString::parseNumber(const char *number, size_t length)
             // although we can switch to whitespace
             case NUMBER_EDIGIT:
             {
+                if (inch >= RexxString::ch_ZERO && inch <= RexxString::ch_NINE)
+                {
+                    // process the digit
+                    builder.addExponentDigit(inch);
+                }
                 // have whitespace after the sign?  need to scan that off
-                if (inch == RexxString::ch_SPACE || inch == RexxString::ch_TAB)
+                else if (inch == RexxString::ch_SPACE || inch == RexxString::ch_TAB)
                 {
                     state = NUMBER_TRAILING_WHITESPACE;
                 }
-                else if (inch < RexxString::ch_ZERO || inch > RexxString::ch_NINE)
+                else
                 {
                     return false;
                 }
-                // process the digit
-                builder.addExponentDigit(inch);
                 break;
             }
 

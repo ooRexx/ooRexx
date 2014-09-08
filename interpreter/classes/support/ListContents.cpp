@@ -217,7 +217,7 @@ ListContents::ItemLink ListContents::allocateSlot(RexxInternalObject *value)
 void ListContents::insertAtEnd(ListContents::ItemLink newItem)
 {
     // first insertion into this list?
-    if (lastItem = NoMore)
+    if (lastItem == NoMore)
     {
         // make this the first and last, and leave all of its links
         // as terminators
@@ -240,7 +240,7 @@ void ListContents::insertAtEnd(ListContents::ItemLink newItem)
 void ListContents::insertAtFront(ListContents::ItemLink newItem)
 {
     // first insertion into this list?
-    if (firstItem = NoMore)
+    if (firstItem == NoMore)
     {
         // make this the first and last, and leave all of its links
         // as terminators
