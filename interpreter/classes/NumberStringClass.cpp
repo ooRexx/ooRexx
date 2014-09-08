@@ -530,12 +530,12 @@ bool NumberString::unsignedNumberValue(size_t &result)
  *
  * @return The converted value.
  */
-bool NumberString::numberValue(wholenumber_t &result, size_t numDigits)
+bool NumberString::numberValue(wholenumber_t &result, wholenumber_t numDigits)
 {
     // set up the default values
     bool carry = false;
     wholenumber_t numberExp = numberExponent;
-    size_t length = digitsCount;
+    wholenumber_t length = digitsCount;
 
     // if the number is exactly zero, then this is easy
     if (isZero())
@@ -614,13 +614,13 @@ bool NumberString::numberValue(wholenumber_t &result, size_t numDigits)
  *
  * @return true if the number could be converted, false otherwise.
  */
-bool NumberString::unsignedNumberValue(size_t &result, size_t numDigits)
+bool NumberString::unsignedNumberValue(size_t &result, wholenumber_t numDigits)
 {
     // set up the default values
 
     bool carry = false;
     wholenumber_t numberExp = numberExponent;
-    size_t length = digitsCount;
+    wholenumber_t length = digitsCount;
 
     // if the number is exactly zero, then this is easy
     if (isZero())
@@ -704,7 +704,7 @@ bool NumberString::doubleValue(double &result)
  * @return The value converted into an Integer object, or .nil
  *         if it does not convert.
  */
-RexxInteger *NumberString::integerValue(size_t digits)
+RexxInteger *NumberString::integerValue(wholenumber_t digits)
 {
 
     wholenumber_t integerNumber;
@@ -899,7 +899,7 @@ bool  NumberString::createUnsignedInt64Value(const char *thisnum, size_t intleng
  *
  * @return true if this can be converted to an integer, false if it fails.
  */
-bool NumberString::checkIntegerDigits(size_t numDigits, size_t &length,
+bool NumberString::checkIntegerDigits(wholenumber_t numDigits, wholenumber_t &length,
     wholenumber_t &exponent, bool &carry)
 {
     // set the initial values
@@ -931,7 +931,7 @@ bool NumberString::checkIntegerDigits(size_t numDigits, size_t &length,
     if (exponent < 0)
     {
         // the position of the decimal is the negation of the exponent
-        size_t decimalPos = (size_t)(-exponent);
+        wholenumber_t decimalPos = -exponent;
         // everything to the right of the decimal must be a zero.
         char compareChar = 0;
         // if we had a previous carry condition, this changes things a
@@ -986,12 +986,12 @@ bool NumberString::checkIntegerDigits(size_t numDigits, size_t &length,
  *
  * @return true if this converted ok, false otherwise.
  */
-bool NumberString::int64Value(int64_t *result, size_t numDigits)
+bool NumberString::int64Value(int64_t *result, wholenumber_t numDigits)
 {
     // set up the default values
     bool carry = false;
     wholenumber_t numberExp = numberExponent;
-    size_t numberLength = digitsCount;
+    wholenumber_t numberLength = digitsCount;
     uint64_t intnum;
 
     // if the number is exactly zero, then this is easy
@@ -1092,13 +1092,13 @@ bool NumberString::int64Value(int64_t *result, size_t numDigits)
  *
  * @return true if the value converted, false otherwise.
  */
-bool NumberString::unsignedInt64Value(uint64_t *result, size_t numDigits)
+bool NumberString::unsignedInt64Value(uint64_t *result, wholenumber_t numDigits)
 {
     // set up the default values
 
     bool carry = false;
     wholenumber_t numberExp = numberExponent;
-    size_t numberLength = digitsCount;
+    wholenumber_t numberLength = digitsCount;
 
     // if the number is exactly zero, then this is easy
     if (isZero())
@@ -3031,11 +3031,11 @@ wholenumber_t NumberString::strictComp(RexxObject *other)
  *
  * @param digits The digits setting to test.
  */
-void NumberString::checkLostDigits(size_t digits)
+void NumberString::checkLostDigits(wholenumber_t digits)
 {
-    if (digitsCount > (wholenumber_t)digits)
+    if (digitsCount > digits)
     {
-        reportCondition(GlobalNames::LOSTDIGITS, (RexxString *)this);
+        reportCondition(GlobalNames::LOSTDIGITS, this);
     }
 }
 
@@ -3069,7 +3069,7 @@ wholenumber_t NumberString::comp(RexxObject *right, size_t fuzz)
 
     // unfortunately, we need to perform any lostdigits checks before
     // handling any of the short cuts
-    wholenumber_t digits = (wholenumber_t)number_digits();
+    wholenumber_t digits = number_digits();
 
     checkLostDigits(digits);
     rightNumber->checkLostDigits(digits);
@@ -3479,7 +3479,7 @@ NumberString *NumberString::remainder(RexxObject *right)
  */
 NumberString *NumberString::copyIfNecessary()
 {
-    wholenumber_t digits = (wholenumber_t)number_digits();
+    wholenumber_t digits = number_digits();
     bool form = number_form();
 
     // if this number has problems with the current digits settings,
@@ -3512,13 +3512,10 @@ NumberString *NumberString::copyIfNecessary()
  */
 NumberString *NumberString::copyForCurrentSettings()
 {
-    size_t digits = number_digits();
-    bool form = number_form();
-
     NumberString *newNumber = clone();
     // inherit the current numeric settings and perform rounding, if
     // necessary
-    newNumber->setupNumber(digits, form);
+    newNumber->setupNumber(number_digits(), number_form());
     return newNumber;
 }
 
@@ -3914,7 +3911,7 @@ NumberString *NumberString::newInstanceFromDouble(double number)
  *
  * @return The formatted number, as a numberstring value.
  */
-NumberString *NumberString::newInstanceFromDouble(double number, size_t precision)
+NumberString *NumberString::newInstanceFromDouble(double number, wholenumber_t precision)
 {
     // There are some special double values involved here.  We just return some
     // special strings for those.

@@ -82,14 +82,14 @@ class StemClass : public RexxObject
     virtual RexxInternalObject *copy();
 
     void         copyFrom(CompoundVariableTable &_tails);
-    bool         numberValue(wholenumber_t &result, size_t precision);
-    bool         numberValue(wholenumber_t &result);
-    bool         unsignedNumberValue(size_t &result, size_t precision);
-    bool         unsignedNumberValue(size_t &result);
-    bool         doubleValue(double &result);
-    NumberString *numberString();
-    RexxInteger *integerValue(size_t);
-    RexxString  *stringValue();
+    virtual bool numberValue(wholenumber_t &result, wholenumber_t precision);
+    virtual bool numberValue(wholenumber_t &result);
+    virtual bool unsignedNumberValue(size_t &result, wholenumber_t precision);
+    virtual bool unsignedNumberValue(size_t &result);
+    virtual bool doubleValue(double &result);
+    virtual NumberString *numberString();
+    virtual RexxInteger *integerValue(wholenumber_t);
+    virtual RexxString  *stringValue();
     ArrayClass   *makeArray();
     ArrayClass   *allItems();
     ArrayClass   *allIndexes();

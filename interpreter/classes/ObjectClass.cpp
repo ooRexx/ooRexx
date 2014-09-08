@@ -1045,7 +1045,7 @@ MethodClass * RexxObject::methodLookup(RexxString *msgname)
  *
  * @return true if the number converted, false otherwise.
  */
-bool RexxInternalObject::numberValue(wholenumber_t &result, size_t digits)
+bool RexxInternalObject::numberValue(wholenumber_t &result, wholenumber_t digits)
 {
     return requestString()->numberValue(result, digits);
 }
@@ -1072,7 +1072,7 @@ bool RexxInternalObject::numberValue(wholenumber_t &result)
  *
  * @return true if the number converted, false otherwise.
  */
-bool RexxInternalObject::unsignedNumberValue(size_t &result, size_t digits)
+bool RexxInternalObject::unsignedNumberValue(size_t &result, wholenumber_t digits)
 {
 
     return requestString()->unsignedNumberValue(result, digits);
@@ -1114,7 +1114,7 @@ bool RexxInternalObject::doubleValue(double &result)
  * @return An integer object representation for the object or
  *         .nil
  */
-RexxInteger * RexxInternalObject::integerValue(size_t precision)
+RexxInteger * RexxInternalObject::integerValue(wholenumber_t precision)
 {
     return requestString()->integerValue(precision);
 }
@@ -1417,7 +1417,7 @@ RexxString *RexxInternalObject::requiredString(const char *name)
  *
  * @return An integer object version of this object, if possible.
  */
-RexxInteger *RexxInternalObject::requestInteger(size_t precision )
+RexxInteger *RexxInternalObject::requestInteger(wholenumber_t precision )
 {
     // primitive objects can optimize their own conversion.
     if (isBaseClass())
@@ -1440,7 +1440,7 @@ RexxInteger *RexxInternalObject::requestInteger(size_t precision )
  *
  * @return The converted object value.
  */
-RexxInteger *RexxInternalObject::requiredInteger(size_t position, size_t precision)
+RexxInteger *RexxInternalObject::requiredInteger(size_t position, wholenumber_t precision)
 {
     // do the common conversion
     RexxInteger *result = integerValue(precision);
@@ -1462,7 +1462,7 @@ RexxInteger *RexxInternalObject::requiredInteger(size_t position, size_t precisi
  *
  * @return true if the object converted ok, false for a conversion failure.
  */
-bool RexxInternalObject::requestNumber(wholenumber_t &result, size_t precision)
+bool RexxInternalObject::requestNumber(wholenumber_t &result, wholenumber_t precision)
 {
     // numberValue takes care of baseclass/subclass issues, so we just forward
     return numberValue(result, precision);
@@ -1477,7 +1477,7 @@ bool RexxInternalObject::requestNumber(wholenumber_t &result, size_t precision)
  *
  * @return true if the object converted ok, false for a conversion failure.
  */
-bool RexxInternalObject::requestUnsignedNumber(size_t &result, size_t precision)
+bool RexxInternalObject::requestUnsignedNumber(size_t &result, wholenumber_t precision)
 {
     // numberValue takes care of baseclass/subclass issues, so we just forward
     return unsignedNumberValue(result, precision);
@@ -1493,7 +1493,7 @@ bool RexxInternalObject::requestUnsignedNumber(size_t &result, size_t precision)
  *
  * @return The converted whole number.
  */
-wholenumber_t RexxInternalObject::requiredNumber(size_t position, size_t precision)
+wholenumber_t RexxInternalObject::requiredNumber(size_t position, wholenumber_t precision)
 {
     wholenumber_t  result;
 
@@ -1515,7 +1515,7 @@ wholenumber_t RexxInternalObject::requiredNumber(size_t position, size_t precisi
  *
  * @return The converted whole number.
  */
-size_t RexxInternalObject::requiredPositive(size_t position, size_t precision)
+size_t RexxInternalObject::requiredPositive(size_t position, wholenumber_t precision)
 {
     size_t result;
 
@@ -1538,7 +1538,7 @@ size_t RexxInternalObject::requiredPositive(size_t position, size_t precision)
  * @return The converted whole number.
  */
 // TODO:  should we have versions of this that take a name?
-size_t RexxInternalObject::requiredNonNegative(size_t position, size_t precision)
+size_t RexxInternalObject::requiredNonNegative(size_t position, wholenumber_t precision)
 {
     size_t result;
 

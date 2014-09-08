@@ -299,7 +299,7 @@ bool RexxInteger::numberValue(wholenumber_t &result)
  * @return true if the number converts ok under the current digits setting.  false
  *         for any conversion errors.
  */
-bool RexxInteger::numberValue(wholenumber_t &result, size_t digits)
+bool RexxInteger::numberValue(wholenumber_t &result, wholenumber_t digits)
 {
     // is this expressable as a number under the current digits value?
     if (!Numerics::isValid(value, digits))
@@ -342,7 +342,7 @@ bool RexxInteger::unsignedNumberValue(size_t &result)
  * @return true if the number converts ok under the current digits setting.  false
  *         for any conversion errors.
  */
-bool RexxInteger::unsignedNumberValue(size_t &result, size_t digits)
+bool RexxInteger::unsignedNumberValue(size_t &result, wholenumber_t digits)
 {
     // valid as a unsigned number in the current digits range?
     if (!Numerics::isValid(value, digits))
@@ -361,7 +361,7 @@ bool RexxInteger::unsignedNumberValue(size_t &result, size_t digits)
  *
  * @return The integer value of this integer...which is us.
  */
-RexxInteger *RexxInteger::integerValue(size_t digits)
+RexxInteger *RexxInteger::integerValue(wholenumber_t digits)
 {
     return this;
 }

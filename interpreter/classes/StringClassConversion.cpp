@@ -389,7 +389,7 @@ RexxString *RexxString::c2d(RexxInteger *_length)
  */
 RexxString *RexxString::x2dC2d(RexxInteger *_length, bool type )
 {
-    size_t currentDigits = number_digits();
+    wholenumber_t currentDigits = number_digits();
     size_t stringLength = getLength();
 
     // get the result size...

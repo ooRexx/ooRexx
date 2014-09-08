@@ -261,7 +261,7 @@ class RexxInternalObject : public RexxVirtualBase
     inline void   setInitHeader(size_t s, size_t markword)  { header.initHeader(s, markword); }
     inline void   setInitHeader(size_t markword)  { header.initHeader(markword); }
 
-           void setObjectType(size_t type);
+           void   setObjectType(size_t type);
 
     inline void   setObjectLive(size_t markword)  { header.setObjectMark(markword); }
     inline void   setHasReferences() { header.setHasReferences(); }
@@ -305,6 +305,7 @@ class RexxInternalObject : public RexxVirtualBase
 
     inline  HashCode     identityHash() { return HASHOREF(this); }
 
+    // TODO:  Try to cleanup the marking of virtual methods in the subclasses
     virtual bool         truthValue(int);
     virtual bool         logicalValue(logical_t &);
     virtual RexxString  *makeString();
@@ -313,10 +314,10 @@ class RexxInternalObject : public RexxVirtualBase
     virtual RexxString  *primitiveMakeString();
     virtual ArrayClass  *makeArray();
     virtual RexxString  *stringValue();
-    virtual RexxInteger *integerValue(size_t);
-    virtual bool         numberValue(wholenumber_t &result, size_t precision);
+    virtual RexxInteger *integerValue(wholenumber_t);
+    virtual bool         numberValue(wholenumber_t &result, wholenumber_t precision);
     virtual bool         numberValue(wholenumber_t &result);
-    virtual bool         unsignedNumberValue(size_t &result, size_t precision);
+    virtual bool         unsignedNumberValue(size_t &result, wholenumber_t precision);
     virtual bool         unsignedNumberValue(size_t &result);
     virtual bool         doubleValue(double &result);
     virtual NumberString *numberString();
@@ -342,20 +343,20 @@ class RexxInternalObject : public RexxVirtualBase
     RexxString  *requiredString(size_t);
     RexxString  *requiredString(const char *);
     RexxString  *requiredString();
-    RexxInteger *requiredInteger(size_t, size_t);
-    wholenumber_t requiredNumber(size_t position, size_t precision = Numerics::ARGUMENT_DIGITS);
-    size_t requiredPositive(size_t position, size_t precision = Numerics::ARGUMENT_DIGITS);
-    size_t requiredNonNegative(size_t position, size_t precision = Numerics::ARGUMENT_DIGITS);
+    RexxInteger *requiredInteger(size_t, wholenumber_t);
+    wholenumber_t requiredNumber(size_t position, wholenumber_t precision = Numerics::ARGUMENT_DIGITS);
+    size_t requiredPositive(size_t position, wholenumber_t precision = Numerics::ARGUMENT_DIGITS);
+    size_t requiredNonNegative(size_t position, wholenumber_t precision = Numerics::ARGUMENT_DIGITS);
 
     RexxString  *requestString();
     RexxString  *requestStringNoNOSTRING();
-    RexxInteger *requestInteger(size_t digits = Numerics::ARGUMENT_DIGITS);
-    bool         requestNumber(wholenumber_t &, size_t);
-    bool         requestUnsignedNumber(size_t &, size_t);
+    RexxInteger *requestInteger(wholenumber_t digits = Numerics::ARGUMENT_DIGITS);
+    bool         requestNumber(wholenumber_t &, wholenumber_t);
+    bool         requestUnsignedNumber(size_t &, wholenumber_t);
     ArrayClass  *requestArray();
 
-    ObjectHeader header;              /* memory management header          */
-    RexxBehaviour *behaviour;         /* the object's behaviour            */
+    ObjectHeader header;              // memory management header
+    RexxBehaviour *behaviour;         // the object's behaviour
 };
 
 

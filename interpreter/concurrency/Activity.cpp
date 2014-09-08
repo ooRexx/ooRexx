@@ -533,7 +533,7 @@ wholenumber_t Activity::errorNumber(DirectoryClass *conditionObject)
  * @return true if this was trapped via CALL ON, false for untrapped
  *         conditions.
  */
-bool Activity::raiseCondition(RexxString *condition, RexxObject *rc, RexxString *description, RexxObject *additional, RexxObject *result)
+bool Activity::raiseCondition(RexxString *condition, RexxObject *rc, RexxObject *description, RexxObject *additional, RexxObject *result)
 {
     // just create a condition object and process the traps.
     DirectoryClass *conditionObj = createConditionObject(condition, rc, description, additional, result);
@@ -589,7 +589,7 @@ bool Activity::raiseCondition(DirectoryClass *conditionObj)
  *
  * @return The constructed condition object (a directory).
  */
-DirectoryClass *Activity::createConditionObject(RexxString *condition, RexxObject *rc, RexxString *description, RexxObject *additional, RexxObject *result)
+DirectoryClass *Activity::createConditionObject(RexxString *condition, RexxObject *rc, RexxObject *description, RexxObject *additional, RexxObject *result)
 {
     // condition objects are directories
     DirectoryClass *conditionObj = new_directory();

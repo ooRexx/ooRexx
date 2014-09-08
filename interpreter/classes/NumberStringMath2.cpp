@@ -756,14 +756,14 @@ NumberString *NumberString::Division(NumberString *other, ArithmeticOperator div
  *
  * @return The power result.
  */
-NumberString *NumberString::power(RexxObject *PowerObj)
+NumberString *NumberString::power(RexxObject *powerObj)
 {
-    requiredArgument(PowerObj, ARG_ONE);
+    requiredArgument(powerObj, ARG_ONE);
     wholenumber_t powerValue;
 
-    if (!PowerObj->numberValue(powerValue, number_digits()))
+    if (!powerObj->numberValue(powerValue, number_digits()))
     {
-        reportException(Error_Invalid_whole_number_power, PowerObj);
+        reportException(Error_Invalid_whole_number_power, powerObj);
     }
 
     bool negativePower = false;
@@ -809,13 +809,13 @@ NumberString *NumberString::power(RexxObject *PowerObj)
     if ((highBits(Numerics::abs(left->numberExponent + left->digitsCount - 1)) +
          highBits(Numerics::abs(powerValue)) + 1) > SIZEBITS )
     {
-        reportException(Error_Overflow_overflow, this, GlobalNames::POWER, PowerObj);
+        reportException(Error_Overflow_overflow, this, GlobalNames::POWER, powerObj);
     }
 
     // we can also calculate the exponent magnitude ahead of time and fail this early.
     if (Numerics::abs(left->numberExponent + left->digitsCount - 1) * powerValue > Numerics::MAX_EXPONENT)
     {
-        reportException(Error_Overflow_overflow, this, GlobalNames::POWER, PowerObj);
+        reportException(Error_Overflow_overflow, this, GlobalNames::POWER, powerObj);
     }
 
     // anything raised to the 0th power is 1, this is an easy one.

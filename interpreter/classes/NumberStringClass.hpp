@@ -182,13 +182,13 @@ class NumberString : public NumberStringBase
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(Envelope *);
 
-    virtual bool numberValue(wholenumber_t &result, size_t precision);
+    virtual bool numberValue(wholenumber_t &result, wholenumber_t precision);
     virtual bool numberValue(wholenumber_t &result);
-    virtual bool unsignedNumberValue(size_t &result, size_t precision);
+    virtual bool unsignedNumberValue(size_t &result, wholenumber_t precision);
     virtual bool unsignedNumberValue(size_t &result);
     virtual bool doubleValue(double &result);
     virtual inline NumberString *numberString() { return this; }
-    virtual RexxInteger *integerValue(size_t);
+    virtual RexxInteger *integerValue(wholenumber_t);
     virtual RexxString  *makeString();
     virtual ArrayClass  *makeArray();
     virtual bool         hasMethod(RexxString *);
@@ -249,17 +249,17 @@ class NumberString : public NumberStringBase
     }
 
     //quick test for a numeric overflow
-    void checkLostDigits(size_t digits);
+    void checkLostDigits(wholenumber_t digits);
     NumberString *operatorArgument(RexxObject *right);
 
-    NumberString *prepareNumber(size_t, bool);
+    NumberString *prepareNumber(wholenumber_t, bool);
     NumberString *prepareOperatorNumber(wholenumber_t, wholenumber_t, bool);
     NumberString *copyIfNecessary();
     NumberString *copyForCurrentSettings();
     void              adjustPrecision(char *, size_t);
     void              adjustPrecision();
-    inline void       checkPrecision() { if (digitsCount > (wholenumber_t)createdDigits) adjustPrecision(); }
-    inline void       setNumericSettings(size_t digits, bool form)
+    inline void       checkPrecision() { if (digitsCount > createdDigits) adjustPrecision(); }
+    inline void       setNumericSettings(wholenumber_t digits, bool form)
     {
         createdDigits = digits;
         if (form == Numerics::FORM_SCIENTIFIC)
@@ -283,7 +283,7 @@ class NumberString : public NumberStringBase
         checkPrecision();
     }
 
-    inline void setupNumber(size_t digits, bool form)
+    inline void setupNumber(wholenumber_t digits, bool form)
     {
         // inherit the current numeric settings
         setNumericSettings(digits, form);
@@ -293,9 +293,9 @@ class NumberString : public NumberStringBase
 
     bool  createUnsignedValue(const char *thisnum, size_t intlength, int carry, wholenumber_t exponent, size_t maxValue, size_t &result);
     bool  createUnsignedInt64Value(const char *thisnum, size_t intlength, int carry, wholenumber_t exponent, uint64_t maxValue, uint64_t &result);
-    bool  checkIntegerDigits(size_t numDigits, size_t &numberLength, wholenumber_t &numberExponent, bool &carry);
-    bool  int64Value(int64_t *result, size_t numDigits);
-    bool  unsignedInt64Value(uint64_t *result, size_t numDigits);
+    bool  checkIntegerDigits(wholenumber_t numDigits, wholenumber_t &numberLength, wholenumber_t &numberExponent, bool &carry);
+    bool  int64Value(int64_t *result, wholenumber_t numDigits);
+    bool  unsignedInt64Value(uint64_t *result, wholenumber_t numDigits);
     void  formatInt64(int64_t integer);
     void  formatUnsignedInt64(uint64_t integer);
 
@@ -347,7 +347,7 @@ class NumberString : public NumberStringBase
     static PCPPM operatorMethods[];
 
     static NumberString *newInstanceFromDouble(double);
-    static NumberString *newInstanceFromDouble(double, size_t);
+    static NumberString *newInstanceFromDouble(double, wholenumber_t);
     static NumberString *newInstanceFromFloat(float);
     static NumberString *newInstanceFromWholenumber(wholenumber_t);
     static NumberString *newInstanceFromInt64(int64_t);

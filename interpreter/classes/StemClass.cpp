@@ -490,7 +490,7 @@ RexxString *StemClass::stringValue()
  *
  * @return true if this converted, false otherwise.
  */
-bool StemClass::numberValue(wholenumber_t &result, size_t digits)
+bool StemClass::numberValue(wholenumber_t &result, wholenumber_t digits)
 {
     return value->numberValue(result, digits);
 }
@@ -517,7 +517,7 @@ bool StemClass::numberValue(wholenumber_t &result)
  *
  * @return true if this converted, false otherwise.
  */
-bool StemClass::unsignedNumberValue(size_t &result, size_t digits)
+bool StemClass::unsignedNumberValue(size_t &result, wholenumber_t digits)
 {
     return value->unsignedNumberValue(result, digits);
 }
@@ -567,7 +567,7 @@ NumberString *StemClass::numberString()
  *
  * @return The Integer object or OREF_NULL if not valid.
  */
-RexxInteger *StemClass::integerValue(size_t precision)
+RexxInteger *StemClass::integerValue(wholenumber_t precision)
 {
     return value->integerValue(precision);
 }

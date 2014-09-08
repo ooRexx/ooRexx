@@ -314,13 +314,13 @@ class RexxString : public RexxObject
 
     HashCode getObjectHashCode();
 
-    virtual bool numberValue(wholenumber_t &result, size_t precision);
+    virtual bool numberValue(wholenumber_t &result, wholenumber_t precision);
     virtual bool numberValue(wholenumber_t &result);
-    virtual bool unsignedNumberValue(size_t &result, size_t precision);
+    virtual bool unsignedNumberValue(size_t &result, wholenumber_t precision);
     virtual bool unsignedNumberValue(size_t &result);
     virtual bool doubleValue(double &result);
     virtual NumberString *numberString();
-    virtual RexxInteger *integerValue(size_t);
+    virtual RexxInteger *integerValue(wholenumber_t);
     virtual RexxString  *makeString();
     virtual ArrayClass   *makeArray();
     RexxString  *primitiveMakeString();
@@ -725,7 +725,7 @@ class RexxString : public RexxObject
 
     HashCode hashValue;                      // stored has value
     size_t length;                           // string length
-    NumberString *numberStringValue;     // lookaside information
+    NumberString *numberStringValue;         // lookaside information
     FlagSet<StringFlag, 32> attributes;      // string attributes
     char stringData[4];                      // Start of the string data part
 };

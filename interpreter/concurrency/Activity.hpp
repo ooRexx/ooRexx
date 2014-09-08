@@ -108,9 +108,9 @@ class Activity : public RexxInternalObject
     wholenumber_t error(ActivationBase *, DirectoryClass *errorInfo);
     wholenumber_t errorNumber(DirectoryClass *conditionObject);
     wholenumber_t displayCondition(DirectoryClass *conditionObject);
-    bool        raiseCondition(RexxString *, RexxObject *, RexxString *, RexxObject *, RexxObject *);
+    bool        raiseCondition(RexxString *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
     bool        raiseCondition(DirectoryClass *);
-    DirectoryClass *createConditionObject(RexxString *, RexxObject *, RexxString *, RexxObject *, RexxObject *);
+    DirectoryClass *createConditionObject(RexxString *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
     void        raiseException(wholenumber_t, RexxString *, ArrayClass *, RexxObject *);
     DirectoryClass *createExceptionObject(wholenumber_t, RexxString *, ArrayClass *, RexxObject *);
     void        generateProgramInformation(DirectoryClass *exObj);

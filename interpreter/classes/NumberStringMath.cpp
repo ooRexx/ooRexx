@@ -66,7 +66,7 @@ RexxString *NumberString::d2xD2c(RexxObject *length, bool type)
 {
     // get the target length
     wholenumber_t resultSize = optionalLengthArgument(length, SIZE_MAX, ARG_ONE);
-    wholenumber_t currentDigits = (wholenumber_t)number_digits();
+    wholenumber_t currentDigits = number_digits();
     wholenumber_t targetLength = digitsCount;
 
     // already larger than the current digits setting?  That's an
@@ -274,8 +274,8 @@ NumberString *NumberString::maxMin(RexxObject **args, size_t argCount, Arithmeti
         return this;
     }
 
-    size_t saveFuzz = number_fuzz();
-    size_t saveDigits = number_digits();
+    wholenumber_t saveFuzz = number_fuzz();
+    wholenumber_t saveDigits = number_digits();
 
     // NB:  The min and max methods are defined as rounding the values to the
     // current digits settings, which bypasses the LOSTDIGITS condition
@@ -303,7 +303,7 @@ NumberString *NumberString::maxMin(RexxObject **args, size_t argCount, Arithmeti
             // we have a new min or max object.  Swap it
             if (compobj->comp(maxminobj, saveFuzz) == compResult)
             {
-                compobj;
+                maxminobj = compobj;
             }
         }
         // we have an invalid object type...that's an error
@@ -551,11 +551,11 @@ void NumberStringBase::truncateToDigits(wholenumber_t digits, char *digitsPtr, b
  * @return The new number that is now safe for modification and also
  *         rounded to the current digits setting.
  */
-NumberString *NumberString::prepareNumber(size_t digits, bool rounding)
+NumberString *NumberString::prepareNumber(wholenumber_t digits, bool rounding)
 {
     // make a copy of the number with a fresh setting of numeric creation information.
     NumberString *newObj = clone();
-    if (newObj->digitsCount > (wholenumber_t)digits)
+    if (newObj->digitsCount > digits)
     {
         // NOTE:  This version does NOT raise a LOSTDIGITS condition, since it
         // is used for formatting results from functions that are used to create

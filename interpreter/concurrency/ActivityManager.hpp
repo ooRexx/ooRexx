@@ -132,7 +132,7 @@ protected:
 
 
 // various exception/condition reporting routines
-inline void reportCondition(RexxString *condition, RexxString *description) { ActivityManager::currentActivity->raiseCondition(condition, OREF_NULL, description, OREF_NULL, OREF_NULL); }
+inline void reportCondition(RexxString *condition, RexxObject *description) { ActivityManager::currentActivity->raiseCondition(condition, OREF_NULL, description, OREF_NULL, OREF_NULL); }
 inline void reportNovalue(RexxString *description) { reportCondition(GlobalNames::NOVALUE, description); }
 inline void reportNostring(RexxString *description) { reportCondition(GlobalNames::NOSTRING, description); }
 

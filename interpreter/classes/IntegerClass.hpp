@@ -63,20 +63,20 @@ class RexxInteger : public RexxObject
     virtual void flatten(Envelope*);
     virtual HashCode getHashValue();
 
-    bool         numberValue(wholenumber_t &result, size_t precision);
-    bool         numberValue(wholenumber_t &result);
-    bool         unsignedNumberValue(size_t &result, size_t precision);
-    bool         unsignedNumberValue(size_t &result);
-    bool         doubleValue(double &result);
+    virtual bool numberValue(wholenumber_t &result, wholenumber_t precision);
+    virtual bool numberValue(wholenumber_t &result);
+    virtual bool unsignedNumberValue(size_t &result, wholenumber_t precision);
+    virtual bool unsignedNumberValue(size_t &result);
+    virtual bool doubleValue(double &result);
     NumberString *numberString();
-    RexxInteger *integerValue(size_t);
+    RexxInteger *integerValue(wholenumber_t);
     RexxString  *makeString();
     void         copyIntoTail(CompoundVariableTail *);
     bool         hasMethod(RexxString *);
     RexxString  *primitiveMakeString();
     RexxString  *stringValue();
-    ArrayClass   *makeArray();
-    bool         truthValue(int);
+    ArrayClass  *makeArray();
+    virtual bool truthValue(int);
     virtual bool logicalValue(logical_t &);
     bool         isInstanceOf(RexxClass *);
     MethodClass   *instanceMethod(RexxString *);

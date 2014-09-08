@@ -268,7 +268,7 @@ RexxString  *RexxString::primitiveMakeString()
  *
  * @return true if this converted successfully.
  */
-bool RexxString::numberValue(wholenumber_t &result, size_t digits)
+bool RexxString::numberValue(wholenumber_t &result, wholenumber_t digits)
 {
     // convert based off of requested string value.
     if (!isBaseClass())
@@ -320,7 +320,7 @@ bool RexxString::numberValue(wholenumber_t &result)
  *
  * @return true if this converted successfully.
  */
-bool RexxString::unsignedNumberValue(size_t &result, size_t digits)
+bool RexxString::unsignedNumberValue(size_t &result, wholenumber_t digits)
 {
     if (!isBaseClass())
     {
@@ -1630,7 +1630,7 @@ RexxString *RexxString::upper(size_t offset, size_t _length)
  *
  * @return An integer version of this string.
  */
-RexxInteger *RexxString::integerValue(size_t digits)
+RexxInteger *RexxString::integerValue(wholenumber_t digits)
 {
     // try to convert to a number string value...if that converts,
     // try to get an integer object from that.
