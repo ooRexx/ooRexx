@@ -472,7 +472,7 @@ RexxString *NumberString::stringValue()
     else if (adjustedLength >= digitsCount)
     {
         // build the integer section
-        builder.addIntegerPart(isNegative(), numberDigits, digitsCount, adjustedLength);
+        builder.addIntegerPart(isNegative(), numberDigits, digitsCount, adjustedLength - digitsCount);
         // add the exponent, if any
         builder.addExponent(expstring);
     }

@@ -337,8 +337,10 @@ void LanguageParser::live(size_t liveMark)
     memory_mark(activeClass);
     memory_mark(classes);
     memory_mark(unattachedMethods);
+    memory_mark(classDependencies);
     memory_mark(routines);
     memory_mark(publicRoutines);
+    memory_mark(requires);
     memory_mark(libraries);
 }
 
@@ -378,8 +380,10 @@ void LanguageParser::liveGeneral(MarkReason reason)
     memory_mark_general(activeClass);
     memory_mark_general(classes);
     memory_mark_general(unattachedMethods);
+    memory_mark_general(classDependencies);
     memory_mark_general(routines);
     memory_mark_general(publicRoutines);
+    memory_mark_general(requires);
     memory_mark_general(libraries);
 }
 

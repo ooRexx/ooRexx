@@ -345,7 +345,7 @@ bool RexxInteger::unsignedNumberValue(size_t &result)
 bool RexxInteger::unsignedNumberValue(size_t &result, wholenumber_t digits)
 {
     // valid as a unsigned number in the current digits range?
-    if (!Numerics::isValid(value, digits))
+    if (value < 0  || !Numerics::isValid(value, digits))
     {
         return false;
     }
