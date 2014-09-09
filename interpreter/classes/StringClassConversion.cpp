@@ -557,7 +557,7 @@ RexxString *RexxString::x2dC2d(RexxInteger *_length, bool type )
         highDigit = NumberString::multiplyBaseTen(accumulator, highDigit);
         // get the new accumulator length...if we're beyond the current digits
         // value, then we have an error
-        size_t decLength = (accumulator - highDigit);
+        wholenumber_t decLength = (accumulator - highDigit);
         if (decLength > currentDigits)
         {
             reportException(type == true ? Error_Incorrect_method_c2dbig : Error_Incorrect_method_x2dbig, currentDigits);
@@ -579,9 +579,9 @@ RexxString *RexxString::x2dC2d(RexxInteger *_length, bool type )
     }
 
     // get accumulator length...this will be our final result length
-    size_t decLength = (accumulator - highDigit);
+    wholenumber_t decLength = (accumulator - highDigit);
     // now we need to turn the math digits into real characters for the result
-    size_t tempLength = decLength;
+    wholenumber_t tempLength = decLength;
     scan = highDigit + 1;
     while (tempLength--)
     {

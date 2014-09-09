@@ -74,6 +74,27 @@ size_t lengthArgument(RexxInternalObject *argument, size_t position )
 
 
 /**
+ * Take in an agument passed to a method, convert it to a length
+ * object, verifying that the number is a non-negative value.
+ * If the argument is omitted, an error is raised.
+ *
+ * @param argument The argument reference to test.
+ * @param position The position of the argument (used for error reporting.)
+ *
+ * @return The argument converted to a non-negative integer value.
+ */
+size_t nonNegativeArgument(RexxInternalObject *argument, size_t position )
+{
+    if (argument == OREF_NULL)
+    {
+        missingArgument(position);
+    }
+
+    return argument->requiredNonNegative(ARG_ONE, Numerics::ARGUMENT_DIGITS);
+}
+
+
+/**
  * Take in an agument passed to a method, convert it to a position
  * value, verifying that the number is a positive value.
  * If the argument is omitted, an error is raised.

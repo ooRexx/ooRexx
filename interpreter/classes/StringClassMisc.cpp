@@ -202,7 +202,7 @@ RexxInteger *RexxString::compare(RexxString *other, RexxString *pad)
         // if this does not match the pad character, return the position
         if (string1[i] != padChar)
         {
-            return new_integer(i + 1);
+            return new_integer(leadLength + i + 1);
         }
     }
 
@@ -287,7 +287,7 @@ RexxInteger *RexxString::caselessCompare(RexxString *other, RexxString *pad)
 RexxString *RexxString::copies(RexxInteger *_copies)
 {
     // the copy count is required, and must
-    size_t count = lengthArgument(_copies, ARG_ONE);
+    size_t count = nonNegativeArgument(_copies, ARG_ONE);
     size_t len = getLength();
 
     // if no copies have been requested or we're making copies of

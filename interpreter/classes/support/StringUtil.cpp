@@ -1306,7 +1306,7 @@ RexxString *StringUtil::subWord(const char *data, size_t length, RexxInteger *po
 
     // try to skip ahead to the target word...if we don't have that many words,
     // return a null string
-    if (!iterator.skipWords(wordPos - 1))
+    if (!iterator.skipWords(wordPos))
     {
         return GlobalNames::NULLSTRING;
     }
@@ -1394,7 +1394,7 @@ RexxString *StringUtil::word(const char *data, size_t length, RexxInteger *posit
     RexxString::WordIterator iterator(data, length);
     // try to skip ahead to the target word...if we don't have that many words,
     // return a null string
-    if (!iterator.skipWords(wordPos - 1))
+    if (!iterator.skipWords(wordPos))
     {
         return GlobalNames::NULLSTRING;
     }
@@ -1446,7 +1446,7 @@ RexxInteger *StringUtil::wordIndex(const char *data, size_t length, RexxInteger 
     RexxString::WordIterator iterator(data, length);
     // try to skip ahead to the target word...if we don't have that many words,
     // return zero
-    if (!iterator.skipWords(wordPos - 1))
+    if (!iterator.skipWords(wordPos))
     {
         return IntegerZero;
     }
@@ -1474,7 +1474,7 @@ RexxInteger *StringUtil::wordLength(const char *data, size_t length, RexxInteger
     RexxString::WordIterator iterator(data, length);
     // try to skip ahead to the target word...if we don't have that many words,
     // return zero
-    if (!iterator.skipWords(wordPos - 1))
+    if (!iterator.skipWords(wordPos))
     {
         return IntegerZero;
     }
@@ -1523,7 +1523,7 @@ size_t StringUtil::wordPos(const char *data, size_t length, RexxString  *phrase,
 
     // skip the haystack ahead to the target word.  We know we have at least
     // count words already
-    haystackIterator.skipWords(count - 1);
+    haystackIterator.skipWords(count);
 
     // now get an iterator for the needle and position at the first word.
     RexxString::WordIterator needleIterator(needle, needleLength);
@@ -1609,7 +1609,7 @@ size_t StringUtil::caselessWordPos(const char *data, size_t length, RexxString  
 
     // skip the haystack ahead to the target word.  We know we have at least
     // count words already
-    haystackIterator.skipWords(count - 1);
+    haystackIterator.skipWords(count);
 
     // now get an iterator for the needle and position at the first word.
     RexxString::WordIterator needleIterator(needle, needleLength);

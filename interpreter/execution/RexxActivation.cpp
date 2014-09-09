@@ -1653,7 +1653,7 @@ RexxObject *RexxActivation::resolveStream(RexxString *name, bool input, Protecte
     // when the caller requires a stream table entry, then set the initial indicator.
     if (added != NULL)
     {
-        added = false;
+        *added = false;
     }
     StringTable *streamTable = getStreams();
     // the default full name is the initial one
@@ -1708,12 +1708,11 @@ RexxObject *RexxActivation::resolveStream(RexxString *name, bool input, Protecte
             }
             // create an instance of the stream class and create a new
             // instance
-            // TODO:  replace this with a REXX package lookup once that is done.
-            RexxObject *streamClass = (RexxObject *)TheEnvironment->get(GlobalNames::STREAM);
+            RexxObject *streamClass = (RexxObject *)TheRexxPackage->findClass(GlobalNames::STREAM);
             stream = streamClass->sendMessage(GlobalNames::NEW, name);
 
             // if we're requested to add this to the table, add it in and return the indicator.
-            if (added)
+            if (added != NULL)
             {
                 streamTable->put(stream, qualifiedName);
                 *added = true;

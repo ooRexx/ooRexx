@@ -1441,7 +1441,7 @@ RexxObject *NumberString::truncInternal(wholenumber_t needed_digits)
         if (integerDigits > 0)
         {
             // figure out how many decimal digits we need from the number
-            decimalDigits = Numerics::maxVal(digitsCount - integerDigits, needed_digits);
+            decimalDigits = Numerics::minVal(digitsCount - integerDigits, needed_digits);
             // if we need more than are available, calculate how much trailing pad we need.
             if (decimalDigits < needed_digits)
             {
@@ -1968,7 +1968,7 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
 
     // are we allowed to have exponential form?  Need to figure out
     // if we need to use this.
-    if (mathexp != 0)
+    if (mathexp > 0)
     {
         wholenumber_t adjustedLength = numberExponent + digitsCount - 1;
 
@@ -2133,7 +2133,7 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
             // no leading zeros, and we have fewer real digits
             else
             {
-                decimalDigits = digitsCount - adjustedDecimals;
+                decimalDigits = adjustedDecimals;
             }
             // in theory, everything has been adjusted to the point where
             // decimals is >= to the adjusted size
@@ -2160,7 +2160,7 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
             // we might need to add some trailing zeros when this is expanded out
             if (integers > digitsCount)
             {
-                trailingIntegerZeros = integers - digitsCount;
+                trailingDecimalZeros = integers - digitsCount;
             }
         }
     }
@@ -2179,7 +2179,7 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
         // all of the integers, then our value is 1 (for the leading "0").
         wholenumber_t neededIntegers = digitsCount + numberExponent;
 
-        if (neededIntegers < 0)
+        if (neededIntegers <= 0)
         {
             neededIntegers = 1;
             integerDigits = 0;
@@ -2217,7 +2217,7 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
 
     // add in the size for the integer stuff
     size += leadingSpaces;
-    size += integers;
+    size += integerDigits + trailingIntegerZeros;
 
     // if we have decimals needed, add in the decimals space and the period.
     if (decimals > 0)
@@ -2252,7 +2252,7 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
     builder.addIntegerPart(isNegative(), numberDigits, integerDigits, trailingIntegerZeros);
 
     // if we have a decimal portion, add that now
-    if (decimals > 0)
+    if (decimalDigits > 0)
     {
         builder.addDecimalPart(numberDigits + integerDigits, decimalDigits, leadingDecimalZeros, trailingDecimalZeros);
     }

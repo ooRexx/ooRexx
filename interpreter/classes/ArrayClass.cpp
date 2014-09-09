@@ -171,7 +171,7 @@ RexxObject *ArrayClass::ofRexx(RexxInternalObject **args, size_t argCount)
 size_t ArrayClass::validateSize(RexxInternalObject *size, size_t position)
 {
     // Make sure it's an integer
-    size_t totalSize = size->requiredNonNegative(position, number_digits());
+    size_t totalSize = nonNegativeArgument(size, position);
 
     if (totalSize >= MaxFixedArraySize)
     {
@@ -204,7 +204,7 @@ ArrayClass *ArrayClass::createMultidimensional(RexxInternalObject **dims, size_t
         // this creates a multi-dimensional array of zero size which will get resized
         // on the first assignment.  Doesn't really make sense, but it's perfectly legal.
         RexxInternalObject *currentDim = dims[i];
-        size_t currentSize = currentDim->requiredNonNegative(i + 1);
+        size_t currentSize = nonNegativeArgument(currentDim, i + 1);
         // going to do an overflow?  By dividing, we can detect a
         // wrap situation.
         if (currentSize != 0 && ((MaxFixedArraySize / currentSize) < totalSize))

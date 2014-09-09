@@ -131,7 +131,7 @@ RexxString *RexxString::bitOr(RexxString *string2, RexxString *pad)
     string2 = optionalStringArgument(string2, GlobalNames::NULLSTRING, ARG_ONE);
 
     size_t string2Len = string2->getLength();
-    // get the pad character...the default is 'ff'x.
+    // get the pad character...the default is '00'x.
     char padChar = optionalPadArgument(pad, (char)0x00, ARG_TWO);
 
     size_t string1Len = getLength();
@@ -198,7 +198,7 @@ RexxString *RexxString::bitXor(RexxString *string2, RexxString *pad)
     string2 = optionalStringArgument(string2, GlobalNames::NULLSTRING, ARG_ONE);
 
     size_t string2Len = string2->getLength();
-    // get the pad character...the default is 'ff'x.
+    // get the pad character...the default is '00'x.
     char padChar = optionalPadArgument(pad, (char)0x00, ARG_TWO);
 
     size_t string1Len = getLength();

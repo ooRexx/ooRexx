@@ -1319,7 +1319,7 @@ char *NumberString::addToBaseTen(int digit, char *accum, char *highDigit)
     while (digit != 0 || carry != 0)
     {
         digit += *accum + carry;
-        if (carry > 9)
+        if (digit > 9)
         {
             carry = digit / 10;
             digit %= 10;

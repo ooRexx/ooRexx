@@ -162,6 +162,19 @@ size_t lengthArgument(RexxInternalObject *o, size_t p);
 
 
 /**
+ * Parse a non-negative method argument.  this must be a
+ * non-negative whole number.  Raises a number if the argument
+ * was omitted or is not a length numeric value.
+ *
+ * @param o      The object to check.
+ * @param p      The argument position.
+ *
+ * @return The converted numeric value of the object.
+ */
+size_t nonNegativeArgument(RexxInternalObject *o, size_t p);
+
+
+/**
  * Parse an optional length method argument.  this must be a
  * non-negative whole number.  Raises a number if the argument
  * not a length numeric value.
@@ -306,7 +319,7 @@ inline char optionalOptionArgument(RexxInternalObject *o, const char *v, char d,
  */
 inline size_t optionalNonNegative(RexxInternalObject *o, size_t d, size_t p)
 {
-    return (o == OREF_NULL ? d : o->requiredNonNegative(p));
+    return o == OREF_NULL ? d : nonNegativeArgument(o, p);
 }
 
 
