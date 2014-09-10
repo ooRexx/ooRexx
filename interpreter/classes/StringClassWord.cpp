@@ -89,8 +89,9 @@ RexxString *RexxString::delWord(RexxInteger *position, RexxInteger *plength)
     size_t frontLength = iterator.wordPointer() - getStringData();
 
     // if we managed to locate the desired number of words, then skip
-    // over the trailing blanks to the next word or the end of the string.
-    if (iterator.skipWords(count))
+    // over the trailing blanks to the next word or the end of the string.  Note
+    // that we are positioned at the first word already, so we skip one fewer.
+    if (iterator.skipWords(count - 1))
     {
         iterator.skipBlanks();
     }

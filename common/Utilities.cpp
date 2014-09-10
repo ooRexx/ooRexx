@@ -49,24 +49,33 @@
 #include <sys/types.h>
 #include "Utilities.hpp"
 
-const char *Utilities::locateCharacter(
-  const char *string,                  /* search string                     */
-  const char *set,                     /* reference set                     */
-  size_t      length )                 /* size of string                    */
-/*********************************************************************/
-/*  Function:  Find first occurence of set member in memory          */
-/*********************************************************************/
+/**
+ * Locate the first occurrence of any character from a given set.
+ *
+ * @param string The string we're searching in.
+ * @param set    The set of characters to search for as an ASCII-Z string.
+ *               The terminating null is not part of the search set.
+ * @param length The length of the string we search in.
+ *
+ * @return The hit position or null if none of the characters are found.
+ */
+const char *Utilities::locateCharacter(const char *string, const char *set, size_t length )
 {
     while (length-- > 0)
-    {               /* search through string             */
-
+    {
+        // check for a match in the string.  NOTE:  this will return a hit
+        // for a null character, so we need to check for this after the fact
         if (strchr(set, *string))
-        {        /* find a match in ref set?          */
-            return string;
+        {
+            if (*string != '\0')
+            {
+                return string;
+            }
         }
-        string++;                          /* step the pointer                  */
+        string++;
     }
-    return NULL;                         /* return matched position           */
+    // no matched position
+    return NULL;
 }
 
 

@@ -1942,8 +1942,6 @@ RexxString  *NumberString::formatRexx(RexxObject *Integers, RexxObject *Decimals
 RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t decimals, wholenumber_t mathexp,
     wholenumber_t exptrigger, NumberString *original, size_t digits, bool form)
 {
-    bool   defaultExpSize = false;
-
     // if we have an exponent, we will format this early
     // so that we know the length.  Set this up as a null string
     // value to start.
@@ -1967,8 +1965,9 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
     wholenumber_t exponentSize = 0;
 
     // are we allowed to have exponential form?  Need to figure out
-    // if we need to use this.
-    if (mathexp > 0)
+    // if we need to use this.  NOTE:  The only not-allowed version is
+    // an explicit 0. The default value of -1 also applies here.
+    if (mathexp != 0)
     {
         wholenumber_t adjustedLength = numberExponent + digitsCount - 1;
 
@@ -1996,17 +1995,15 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
             // format the exponent to a string value now.
             Numerics::formatWholeNumber(adjustedLength, stringExponent);
             exponentSize = strlen(stringExponent);
-            // if the exponent size is defaulted, then reset to
-            // the actual size we have.
-            if (mathexp == -1)
+            // if the exponent size is not defaulted, then test that we have space
+            // to fit this.
+            if (mathexp != -1)
             {
-                mathexp = exponentSize;
-                defaultExpSize = true;
-            }
-            // not enough space for this exponent value?  That is an error.
-            if (exponentSize > mathexp)
-            {
-                reportException(Error_Incorrect_method_exponent_oversize, original, mathexp);
+                // not enough space for this exponent value?  That is an error.
+                if (exponentSize > mathexp)
+                {
+                    reportException(Error_Incorrect_method_exponent_oversize, original, mathexp);
+                }
             }
         }
     }
@@ -2085,7 +2082,7 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
                     wholenumber_t adjustedExponent = numberExponent + digitsCount - 1;
 
                     // redo the whole trigger thing
-                    if (mathexp != 0 && (adjustedExponent >= exptrigger || Numerics::abs(adjustedExponent) > exptrigger * 2))
+                    if (mathexp != 0 && (adjustedExponent >= exptrigger || Numerics::abs(numberExponent) > exptrigger * 2))
                     {
                         if (form == Numerics::FORM_ENGINEERING)
                         {
@@ -2101,20 +2098,18 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
                         expFactor = adjustedExponent;
                         // format exponent to a string
                         Numerics::formatWholeNumber(Numerics::abs(expFactor), stringExponent);
-                        // and get the new exponent size     */
+                        // and get the new exponent size
                         exponentSize = strlen(stringExponent);
 
-                        // TODO:  This is not really correct...we've wiped out mathexp
-                        // earlier, so this will no longer be -1.  Need to decouple this.
-                        if (mathexp == -1)
+                        // if we had an explicit exponent size, then make sure we can fit this
+                        // exponent in that space.
+                        if (mathexp != -1)
                         {
-                            mathexp = exponentSize;
-                        }
-
-                        // check for an overflow
-                        if (exponentSize > mathexp)
-                        {
-                            reportException(Error_Incorrect_method_exponent_oversize, original, mathexp);
+                            // not enough space for this exponent value?  That is an error.
+                            if (exponentSize > mathexp)
+                            {
+                                reportException(Error_Incorrect_method_exponent_oversize, original, mathexp);
+                            }
                         }
                     }
                 }
@@ -2236,7 +2231,7 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
         size += mathexp;
     }
     // spaces needed for exp
-    else if (mathexp > 0 && !defaultExpSize)
+    else if (mathexp > 0)
     {
         // this is all spaces
         exponentSpaces = mathexp + 2;
@@ -2342,6 +2337,7 @@ public:
         decimals = 0;
         // we don't accumulate digits until we hit some sort of
         // digit.
+        scannedDigits = 0;
         haveNonZero = false;
     }
 

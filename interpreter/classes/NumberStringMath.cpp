@@ -97,19 +97,16 @@ RexxString *NumberString::d2xD2c(RexxObject *length, bool type)
 
     size_t bufferLength = currentDigits + OVERFLOWSPACE;
 
-    if (resultSize == SIZE_MAX)
+    if (resultSize != SIZE_MAX)
     {
-        bufferLength = currentDigits + OVERFLOWSPACE;
-    }
-    else
-    {
-        resultSize = Numerics::maxVal(currentDigits, resultSize);
         // if this is the character function, we need more space, so double it
         if (type)
         {
             resultSize += resultSize;
         }
+        bufferLength = Numerics::maxVal(currentDigits, resultSize) + OVERFLOWSPACE;
     }
+
     BufferClass *target = new_buffer(bufferLength);
     char *scan = numberDigits;
 
@@ -188,29 +185,11 @@ RexxString *NumberString::d2xD2c(RexxObject *length, bool type)
     scan = highDigit + 1;
 
     // now calculate the final result size.
-    if (type == false)
+    if (resultSize == SIZE_MAX)
     {
-        // if this is D2X, result size is the actual digit
-        // size.
-        if (resultSize == SIZE_MAX)
-        {
-            resultSize = hexLength;
-        }
+        resultSize = hexLength;
     }
-    else
-    {
-        if (resultSize == SIZE_MAX)
-        {
-            resultSize = hexLength;
-        }
-        // for d2c, an explicit result size is the character size, not the
-        // nibble size.  We need to format at least twice as many characters
-        // then pack
-        else
-        {
-            resultSize += resultSize;
-        }
-    }
+
     size_t padSize = 0;
 
     // we might actually need to truncate
@@ -229,7 +208,7 @@ RexxString *NumberString::d2xD2c(RexxObject *length, bool type)
     }
 
     // do we need to pad?
-    if (padSize)
+    if (padSize != 0)
     {
         // step the result pointer back and add the padding character (either '0' or 'F',
         // depending on the sign of the number)
