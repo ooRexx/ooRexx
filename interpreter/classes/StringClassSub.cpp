@@ -477,7 +477,7 @@ RexxString *RexxString::right(RexxInteger *_length, RexxString  *pad)
     size_t sourceLength = getLength();
 
     // if the extraction length is zero, return a null string
-    if (sourceLength == 0)
+    if (size == 0)
     {
         return GlobalNames::NULLSTRING;
     }

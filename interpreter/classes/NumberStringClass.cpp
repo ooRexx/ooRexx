@@ -1463,7 +1463,7 @@ RexxObject *NumberString::truncInternal(wholenumber_t needed_digits)
             // this is the length of the whole decimal part, made
             // up of digits from the number and some number of padding zeros
             // between the period and the actual digits.
-            wholenumber_t decimalLength = -integerDigits;
+            wholenumber_t decimalLength = -numberExponent;
             // we have no real integer digits.
             integerDigits = 0;
 

@@ -122,8 +122,6 @@ void RexxLocalVariables::migrate(Activity *activity)
  */
 RexxVariable *RexxLocalVariables::findVariable(RexxString *name, size_t index)
 {
-    RexxVariable *variable = OREF_NULL;
-
     // we need to search for this by name, so if we have a variable
     // dictionary already created, this is a quick search.
     if (dictionary != OREF_NULL)
@@ -132,12 +130,13 @@ RexxVariable *RexxLocalVariables::findVariable(RexxString *name, size_t index)
         // because the variable might have been created dynamically (using
         // VALUE() or interpret, for example).  If we have a non-zero
         // index, store the value from the dictionary into the slot.
-        variable = dictionary->resolveVariable(name);
+        RexxVariable *variable = dictionary->resolveVariable(name);
         // if we have an index, fill in the cache entry.
         if (index != 0)
         {
             locals[index] = variable;
         }
+        return variable;
     }
     // first dynamic lookup...we might need to create the variable
     // dictionary.
@@ -154,7 +153,7 @@ RexxVariable *RexxLocalVariables::findVariable(RexxString *name, size_t index)
             // earlier.
             for (size_t i = 0; i < size; i++)
             {
-                variable = locals[i];
+                RexxVariable *variable = locals[i];
                 // if the slot exists at this position, check the name
                 if (variable != OREF_NULL)
                 {
