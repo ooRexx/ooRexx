@@ -1913,7 +1913,7 @@ RexxObject *NumberString::roundInternal()
 RexxString  *NumberString::formatRexx(RexxObject *Integers, RexxObject *Decimals,
   RexxObject *MathExp, RexxObject *ExpTrigger )
 {
-    size_t digits = number_digits();
+    wholenumber_t digits = number_digits();
     bool form = number_form();
 
     wholenumber_t integers = optionalNonNegative(Integers, -1, ARG_ONE);
@@ -1948,8 +1948,11 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
     char   stringExponent[15];
     stringExponent[0] = '\0';
 
-    // no exponent factor yet.
-    wholenumber_t expFactor = 0;
+    // This is the value displayed as an exponent...default this to zero
+    wholenumber_t displayedExponent = 0;
+    // we only turn this on if the number needs to have an exponent displayed.  If
+    // the calculated exponent
+    bool showExponent = false;
 
     // we need to calculate a whole bunch of size sections.  Initialize
     // them all to zero for now.
@@ -1959,6 +1962,7 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
     wholenumber_t trailingIntegerZeros = 0;
     wholenumber_t leadingDecimalZeros = 0;
     wholenumber_t decimalDigits = 0;
+    wholenumber_t decimalSpace = 0;
     wholenumber_t leadingExpZeros = 0;
     wholenumber_t exponentSpaces = 0;
     wholenumber_t trailingDecimalZeros = 0;
@@ -1975,8 +1979,11 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
         // than that on the call.  If the number of decimals is greater than the
         // trigger value, or the space required to format a pure decimal number or more than
         // twice the trigger value, we're in exponential form
-        if (adjustedLength >= exptrigger || Numerics::abs(numberExponent) > exptrigger * 2)
+        if (adjustedLength >= exptrigger || (adjustedLength < 0 && Numerics::abs(numberExponent) > exptrigger * 2))
         {
+            // we only handle this is the trigger is not explicitly zero
+            // we need to show the exponent if this is specified (so far)
+            showExponent = true;
             if (form == Numerics::FORM_ENGINEERING)
             {
                 // if the whole portion is decimals, force an adjustment two characters to the left.
@@ -1990,19 +1997,19 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
             // adjust the exponent value
             numberExponent = numberExponent - adjustedLength;
             // the exponent factor will be added in to the exponent when formatted
-            expFactor = adjustedLength;
-            adjustedLength = Numerics::abs(adjustedLength);
+            displayedExponent = adjustedLength;
             // format the exponent to a string value now.
-            Numerics::formatWholeNumber(adjustedLength, stringExponent);
+            Numerics::formatWholeNumber(Numerics::abs(displayedExponent), stringExponent);
             exponentSize = strlen(stringExponent);
             // if the exponent size is not defaulted, then test that we have space
             // to fit this.
             if (mathexp != -1)
             {
+                leadingExpZeros = mathexp - exponentSize;
                 // not enough space for this exponent value?  That is an error.
                 if (exponentSize > mathexp)
                 {
-                    reportException(Error_Incorrect_method_exponent_oversize, original, mathexp);
+                    reportException(Error_Incorrect_method_exponent_oversize, this, mathexp);
                 }
             }
         }
@@ -2014,12 +2021,14 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
         // a negative exponent determines how many decimal positions there are
         if (numberExponent < 0)
         {
-            decimals = -numberExponent;
+            decimalDigits = -numberExponent;
             // if this is a very large right shift, we may need some leading zeros.
-            if (decimals > digitsCount)
+            if (decimalDigits > digitsCount)
             {
-                leadingDecimalZeros = decimals - digitsCount;
+                leadingDecimalZeros = decimalDigits - digitsCount;
             }
+            // record the total decimal space (including the period)
+            decimalSpace = decimalDigits + leadingDecimalZeros;
         }
     }
     else
@@ -2070,20 +2079,26 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
                     // calculate new adjusted value, which means we have to redo
                     // the previous exponent calculation.
                     // needed for format(.999999,,4,2,2)
-                    if (mathexp != 0 && expFactor != 0)
+                    if (mathexp != 0 && displayedExponent != 0)
                     {
-                        // adjust the exponent back to the orignal
-                        numberExponent += expFactor;
-                        expFactor = 0;
+                        // adjust the exponent back to the orignal and set our display
+                        // exponent back to zero.
+                        numberExponent += displayedExponent;
+                        displayedExponent = 0;
                         strcpy(stringExponent, "0");
                         exponentSize = 1;
+                        // turn this all off for the moment
+                        showExponent = false;
                     }
 
                     wholenumber_t adjustedExponent = numberExponent + digitsCount - 1;
 
                     // redo the whole trigger thing
-                    if (mathexp != 0 && (adjustedExponent >= exptrigger || Numerics::abs(numberExponent) > exptrigger * 2))
+                    if (mathexp != 0 && (adjustedExponent >= exptrigger || (adjustedExponent < 0 && Numerics::abs(numberExponent) > exptrigger * 2)))
                     {
+                        // this might not have been set on originally, but only occurring because of
+                        // the rounding.
+                        showExponent = true;
                         if (form == Numerics::FORM_ENGINEERING)
                         {
                             if (adjustedExponent < 0)
@@ -2095,11 +2110,16 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
 
                         // reapply the exponent adjustment
                         numberExponent -= adjustedExponent;
-                        expFactor = adjustedExponent;
+                        displayedExponent = adjustedExponent;
                         // format exponent to a string
-                        Numerics::formatWholeNumber(Numerics::abs(expFactor), stringExponent);
+                        Numerics::formatWholeNumber(Numerics::abs(displayedExponent), stringExponent);
                         // and get the new exponent size
                         exponentSize = strlen(stringExponent);
+                        // if we have an explicit size, get the fill zeros as well.
+                        if (mathexp != -1)
+                        {
+                            leadingExpZeros = mathexp - exponentSize;
+                        }
 
                         // if we had an explicit exponent size, then make sure we can fit this
                         // exponent in that space.
@@ -2108,7 +2128,7 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
                             // not enough space for this exponent value?  That is an error.
                             if (exponentSize > mathexp)
                             {
-                                reportException(Error_Incorrect_method_exponent_oversize, original, mathexp);
+                                reportException(Error_Incorrect_method_exponent_oversize, this, mathexp);
                             }
                         }
                     }
@@ -2134,6 +2154,15 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
             // decimals is >= to the adjusted size
             trailingDecimalZeros = decimals - adjustedDecimals;
         }
+        // we have an explicit size specified, but the number itself has no decimals.
+        // these all become trailing zeros
+        else
+        {
+            trailingDecimalZeros = decimals;
+        }
+
+        // record the total decimal space (including the period)
+        decimalSpace = decimalDigits + leadingDecimalZeros + trailingDecimalZeros;
     }
 
     // using the default integers value?
@@ -2152,10 +2181,12 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
         else
         {
             integerDigits = integers;
-            // we might need to add some trailing zeros when this is expanded out
+            // we might need to add some trailing zeros when this is expanded out and also
+            // cap the digits we use
             if (integers > digitsCount)
             {
-                trailingDecimalZeros = integers - digitsCount;
+                integerDigits = digitsCount;
+                trailingIntegerZeros = integers - digitsCount;
             }
         }
     }
@@ -2187,7 +2218,8 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
             // zeros.
             if (neededIntegers > digitsCount)
             {
-                trailingDecimalZeros = neededIntegers - digitsCount;
+                integerDigits = digitsCount;
+                trailingIntegerZeros = neededIntegers - digitsCount;
             }
 
         }
@@ -2195,7 +2227,7 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
         // not enough room for this number?  this is an error
         if (integers < neededIntegers)
         {
-            reportException(Error_Incorrect_method_before_oversize, original, reqIntegers);
+            reportException(Error_Incorrect_method_before_oversize, this, reqIntegers);
         }
         // calculate the leading spaces now
         leadingSpaces = integers - neededIntegers;
@@ -2213,29 +2245,25 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
     // add in the size for the integer stuff
     size += leadingSpaces;
     size += integerDigits + trailingIntegerZeros;
-
-    // if we have decimals needed, add in the decimals space and the period.
-    if (decimals > 0)
+    // and the decimal part...don't forget to add in the period.
+    if (decimalSpace > 0)
     {
-        size += decimals + 1;
+        size += decimalSpace + 1;
     }
 
     // do we have an exponent to add?
-    if (expFactor != 0)
+    if (showExponent)
     {
-        // add two for the E and the sign,
-        size += 2;
-        // we might need some leading zeros on this
-        leadingExpZeros = mathexp - exponentSize;
-        // the mathexp size is what we want.
-        size += mathexp;
-    }
-    // spaces needed for exp
-    else if (mathexp > 0)
-    {
-        // this is all spaces
-        exponentSpaces = mathexp + 2;
-        size += exponentSpaces;
+        if (mathexp != -1 || displayedExponent != 0)
+        {
+            // this size is the same regardless of whether the exponent value is zero
+            // add two for the E and the sign,
+            size += 2;
+            // we might need some leading zeros on this if we have
+            // an explicit exponent size
+            // the mathexp size is what we want.
+            size += exponentSize + leadingExpZeros;
+        }
     }
 
     RexxString *result = raw_string(size);
@@ -2247,29 +2275,34 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
     builder.addIntegerPart(isNegative(), numberDigits, integerDigits, trailingIntegerZeros);
 
     // if we have a decimal portion, add that now
-    if (decimalDigits > 0)
+    if (decimalSpace > 0)
     {
         builder.addDecimalPart(numberDigits + integerDigits, decimalDigits, leadingDecimalZeros, trailingDecimalZeros);
     }
 
     // have an exponent to add?
-    if (expFactor != 0)
+    if (showExponent)
     {
-        // add the exponent marker
-        builder.append('E');
-        builder.addExponentSign(expFactor < 0);
-        // add any padding zeros needed.
-        builder.addZeros(leadingExpZeros);
-        // add the real exponent part
-        builder.append(stringExponent, exponentSize);
-    }
-    // we might have some spaces to pad if an explict exponent size was requested.
-    else
-    {
-        builder.addSpaces(exponentSpaces);
+        // if we have a non-zero exponent, then format it
+        if (displayedExponent != 0)
+        {
+            // add the exponent marker
+            builder.append('E');
+            builder.addExponentSign(displayedExponent < 0);
+            // add any padding zeros needed.
+            builder.addZeros(leadingExpZeros);
+            // add the real exponent part
+            builder.append(stringExponent, exponentSize);
+        }
+        // a zero exponent is always expressed as spaces, but only if we have an explicit size
+        else if (mathexp != -1)
+        {
+            builder.addSpaces(leadingExpZeros + exponentSize + 2);
+        }
     }
     return result;
 }
+
 
 // different scanning states for scanning numeric symbols
 typedef enum

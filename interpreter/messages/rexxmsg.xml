@@ -4231,7 +4231,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Incorrect_method_exponent_oversize</SymbolicName>
-        <Text>Exponent <q><Sub position="1" name="exponent"/></q> is too large for <Sub position="2" name="number"/> spaces</Text>
+        <Text>Exponent of <q><Sub position="1" name="exponent"/></q> is too large for <Sub position="2" name="number"/> spaces</Text>
       </SubMessage>
       <SubMessage>
         <Code>93</Code>
@@ -4240,7 +4240,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Incorrect_method_before_oversize</SymbolicName>
-        <Text>Integer part <q><Sub position="1" name="integer"/></q> is too large for <Sub position="2" name="number"/> spaces</Text>
+        <Text>Integer part of <q><Sub position="1" name="integer"/></q> is too large for <Sub position="2" name="number"/> spaces</Text>
       </SubMessage>
       <SubMessage>
         <Code>93</Code>

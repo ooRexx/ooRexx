@@ -3052,13 +3052,13 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>941</term>
 <listitem>
-<para>Exponent "<emphasis role="italic">exponent</emphasis>" is too large for <emphasis role="italic">number</emphasis> spaces</para>
+<para>Exponent of "<emphasis role="italic">exponent</emphasis>" is too large for <emphasis role="italic">number</emphasis> spaces</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>942</term>
 <listitem>
-<para>Integer part "<emphasis role="italic">integer</emphasis>" is too large for <emphasis role="italic">number</emphasis> spaces</para>
+<para>Integer part of "<emphasis role="italic">integer</emphasis>" is too large for <emphasis role="italic">number</emphasis> spaces</para>
 </listitem>
 </varlistentry>
 <varlistentry>
