@@ -1210,6 +1210,9 @@ StartClassDefinition(Integer)
 
     CompleteClassMethodDefinitions();
 
+        // TODO:  Add some more frequently used methods to integer and number string
+        // to bypass unknown.  The compareTo method is an obvious one.
+
         AddMethod("+", RexxInteger::plus, 1);
         AddMethod("-", RexxInteger::minus, 1);
         AddMethod("*", RexxInteger::multiply, 1);

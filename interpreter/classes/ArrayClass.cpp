@@ -896,6 +896,8 @@ void ArrayClass::closeGap(size_t index, size_t elements)
     // adjust the last element position (NOTE:  because we needed to shift,
     // we know that lastItem is non-zero)
     lastItem -= elements;
+    // reduce the size
+    shrink(elements);
 }
 
 
@@ -1596,7 +1598,7 @@ size_t ArrayClass::nextIndex(size_t index)
 {
     // scan from the next slot up to the last item position.  Note that
     // we allow a starting value of 0...useful for locating the first index!
-    for (size_t nextIndex = index +1; nextIndex <= lastItem; nextIndex++)
+    for (size_t nextIndex = index + 1; nextIndex <= lastItem; nextIndex++)
     {
         if (isOccupied(nextIndex))
         {
@@ -1643,12 +1645,13 @@ RexxObject *ArrayClass::nextRexx(RexxObject **arguments, size_t argCount)
 size_t ArrayClass::previousIndex(size_t index)
 {
     // no need to scan if past the end position...we know the answer.
-    if (index >= lastItem)
+    if (index > lastItem)
     {
         return lastItem;
     }
+
     // scan backwards from the starting index until we found an occupied slot.
-    for (size_t previous = index; previous > 0; previous--)
+    for (size_t previous = index - 1; previous > 0; previous--)
     {
         if (isOccupied(previous))
         {
@@ -2301,6 +2304,9 @@ void ArrayClass::extendMulti(RexxObject **index, size_t indexCount, size_t argPo
 
     // used for optimizing the copy operations
     size_t firstChangedDimension = getDimensions() + 1;
+    // this is a multiplier to calculate the total required
+    // array size.
+    size_t totalSize = 1;
 
     // extending from a single dimension into multi-dimension?
     // the subscripts determine everything.
@@ -2316,6 +2322,7 @@ void ArrayClass::extendMulti(RexxObject **index, size_t indexCount, size_t argPo
             // parse them as position arguments.  Validate each one
             // and just copy into the dimensions array
             size_t dimensionSize = positionArgument(index[i], i + 1);
+            totalSize = totalSize * dimensionSize;
             newDimArray->put(dimensionSize, i + 1);
         }
     }
@@ -2339,18 +2346,21 @@ void ArrayClass::extendMulti(RexxObject **index, size_t indexCount, size_t argPo
                 firstChangedDimension = Numerics::minVal(firstChangedDimension, i + 1);
             }
 
-            newDimArray->put(Numerics::maxVal(newDimensionSize, oldDimensionSize), i + 1);
+            size_t newSize = Numerics::maxVal(newDimensionSize, oldDimensionSize);
+            totalSize = totalSize * newSize;
+
+            newDimArray->put(newSize, i + 1);
         }
     }
 
 
     // Now create the new array for this dimension.  This also
     // creates the dimensions array in the new array
-    Protected<ArrayClass> newArray = new_array(indexCount, newDimArray);
+    Protected<ArrayClass> newArray = new_array(totalSize, newDimArray);
 
 
     // anything in the original?
-    if (size() > 0)
+    if (items() > 0)
     {
         // yes, move values into the new array.  This only occurs if we've
         // expanded one or more dimensions of a multi-dimension array, so we're
@@ -2394,7 +2404,7 @@ void ArrayClass::extendMulti(RexxObject **index, size_t indexCount, size_t argPo
     setField(expansionArray, newArray);
 
     // keep max Size value in sync with expansion
-    maximumSize = maximumSize;
+    maximumSize = newArray->maximumSize;
     // copy operation will have updated the items and last item
     // values in the expansion array.  Copy them into the base array
     itemCount = newArray->itemCount;
