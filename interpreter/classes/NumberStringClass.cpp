@@ -1489,12 +1489,12 @@ RexxObject *NumberString::truncInternal(wholenumber_t needed_digits)
                     // the sign needs to disappear
                     signOverHead = 0;
                     decimalDigits = 0;
-                    leadDecimalPadding = Numerics::maxVal(leadDecimalPadding, needed_digits);
+                    leadDecimalPadding = needed_digits;
                 }
                 // we're using all of the padding and at least one of the digits
                 else
                 {
-                    decimalDigits = Numerics::maxVal(decimalDigits, needed_digits - leadDecimalPadding);
+                    decimalDigits = Numerics::minVal(decimalDigits, needed_digits - leadDecimalPadding);
                 }
             }
         }

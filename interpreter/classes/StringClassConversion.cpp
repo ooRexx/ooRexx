@@ -459,7 +459,7 @@ RexxString *RexxString::x2dC2d(RexxInteger *_length, bool type )
             // specified length is the length of the hex characters, so we
             // need to be checking in a specific nibble in the packed hex string.
             size_t bytePosition = resultSize / 2;
-            size_t nibblePosition = resultSize % 2;
+            nibblePosition = resultSize % 2;
 
             // now we have a byte length for the target length.
             resultSize = bytePosition + nibblePosition;
@@ -525,10 +525,9 @@ RexxString *RexxString::x2dC2d(RexxInteger *_length, bool type )
         }
     }
 
-    // TODO:  Consider a version of this optimized for small values...
-
     // if we had an odd number of nibbles, make sure the top nibble is
-    // zeroed out.
+    // zeroed out.  This can only happen with X2D, but we want to make
+    // sure no bits in the other nibble can influence the result.
     if (nibblePosition != 0)
     {
         *stringPtr &= 0x0f;
