@@ -709,7 +709,7 @@ size_t ListClass::nextIndex(size_t index)
  */
 size_t ListClass::previousIndex(size_t index)
 {
-    return contents->nextIndex(index);
+    return contents->previousIndex(index);
 }
 
 

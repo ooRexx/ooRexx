@@ -250,7 +250,7 @@ void ListContents::insertAtFront(ListContents::ItemLink newItem)
     // insert before the first item
     else
     {
-        insertAfter(newItem, firstItem);
+        insertBefore(newItem, firstItem);
     }
 }
 
@@ -297,7 +297,7 @@ void ListContents::insertBefore(ListContents::ItemLink newItem, ListContents::It
     setNext(newItem, insertItem);
 
     // do we have a previous item?...if not, we're the new first item
-    if (previousEntry(insertItem) == NoMore)
+    if (previousEntry(newItem) == NoMore)
     {
         firstItem = newItem;
     }
@@ -325,7 +325,7 @@ ListContents::ItemLink ListContents::insert(RexxInternalObject *value, ListConte
     {
         insertAtEnd(newItem);
     }
-    if (index == AtBeginning)
+    else if (index == AtBeginning)
     {
         insertAtFront(newItem);
     }
@@ -447,7 +447,7 @@ void ListContents::removeItem(ListContents::ItemLink item)
  */
 RexxInternalObject *ListContents::get(ListContents::ItemLink index)
 {
-    return isIndexValid(index) ? OREF_NULL : entryValue(index);
+    return isIndexValid(index) ? entryValue(index) : OREF_NULL;
 }
 
 
@@ -626,6 +626,10 @@ void ListContents::empty()
         clearEntry(position);
         position = next;
     }
+
+    itemCount = 0;
+    firstItem = NoMore;
+    lastItem = NoMore;
 
     // reset the free chains
     initializeFreeChain();

@@ -736,6 +736,7 @@ CPPM(NumberString::strictEqual),
 CPPM(NumberString::hashCode),
 CPPM(NumberString::classObject),
 
+CPPM(QueueClass::initRexx),
 CPPM(QueueClass::pushRexx),
 CPPM(QueueClass::queueRexx),
 CPPM(QueueClass::pullRexx),

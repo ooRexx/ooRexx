@@ -693,12 +693,12 @@ StartClassDefinition(Queue);
 
         InheritInstanceMethods(Array);
 
+        AddMethod("Init", QueueClass::initRexx, 1);
         AddMethod("Push", QueueClass::pushRexx, 1);
         AddMethod("Peek", QueueClass::peek, 0);
         AddMethod("Pull", QueueClass::pullRexx, 0);
         AddMethod("Queue", QueueClass::queueRexx, 1);
         AddMethod("Put", QueueClass::putRexx, 2);
-        AddMethod("Remove", QueueClass::removeRexx, 1);
         // the queue size is always the number of items, so remap that call
         // to the array items method.
         AddMethod("Size", ArrayClass::itemsRexx, 0);

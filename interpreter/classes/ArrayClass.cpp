@@ -307,6 +307,13 @@ ArrayClass::ArrayClass(RexxInternalObject **objs, size_t count)
     itemCount = 0;
     lastItem = 0;
 
+    // if we are creating an empty array, then we need to add
+    // a dimension array so that this is properly dimensioned.
+    if (count == 0)
+    {
+        dimensions = new (1) NumberArray(1);
+    }
+
     // if we have array items, do a quick copy of the object references
     if (count != 0)
     {
@@ -790,7 +797,7 @@ RexxInternalObject *ArrayClass::deleteRexx(RexxObject *index)
     validateIndex(index, ARG_ONE, IndexAccess, position);
 
     // do the actual insertion
-    return deleteItem(position);
+    return resultOrNil(deleteItem(position));
 }
 
 
@@ -893,6 +900,11 @@ void ArrayClass::closeGap(size_t index, size_t elements)
     char *_end = (char *)slotAddress(lastItem + 1);
     // shift the array over
     memmove(_target, _start, _end - _start);
+    // because we track the item count, we need to ensure that
+    // the positions that we just copied out of are cleared out, otherwise
+    // the item count will not get incremented when these slots get reused.
+    _start = (char *)slotAddress(lastItem + 1 - elements);
+    memset(_start, 0,  _end - _start);
     // adjust the last element position (NOTE:  because we needed to shift,
     // we know that lastItem is non-zero)
     lastItem -= elements;
@@ -1428,7 +1440,11 @@ ArrayClass *ArrayClass::section(size_t start, size_t end)
         // last item fields are properly set up.
         for (size_t i = 1; i <= newSize; i++, start++)
         {
-            newArray->put(get(start), i);
+            RexxInternalObject *obj = get(start);
+            if (obj != OREF_NULL)
+            {
+                newArray->put(obj, i);
+            }
         }
         return newArray;
     }
@@ -1477,7 +1493,11 @@ ArrayClass *ArrayClass::sectionRexx(RexxObject *start, RexxObject *end)
     // copy all of the elements
     for (size_t i = 1; i <= nend; i++, nstart++)
     {
-        newArray->put(get(nstart), i);
+        RexxInternalObject *obj = get(nstart);
+        if (obj != OREF_NULL)
+        {
+            newArray->put(obj, i);
+        }
     }
 
     return newArray;
@@ -1759,7 +1779,7 @@ ArrayClass *ArrayClass::allIndexes()
     Protected<ArrayClass> newArray = (ArrayClass *)new_array(items());
 
     // loop through the array, copying all of the items.
-    for (size_t iterator = 1; iterator < lastItem; iterator++ )
+    for (size_t iterator = 1; iterator <= lastItem; iterator++ )
     {
         // if this is a real array item, add an index item to the
         // result collection.

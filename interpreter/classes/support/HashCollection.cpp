@@ -977,7 +977,7 @@ RexxObject *StringHashCollection::unknown(RexxString *msgname, ArrayClass *argum
     }
 
     // just a retrieval operation
-    return (RexxObject *)entry(message_value);
+    return (RexxObject *)resultOrNil(entry(message_value));
 }
 
 
@@ -1080,7 +1080,7 @@ void IndexOnlyHashCollection::validateValueIndex(RexxInternalObject *&value, Rex
 
     // index is optional, but if specified, it must be equal to
     // the index value.
-    if (index != OREF_NULL)
+    if (index != OREF_NULL && !contents->isIndexEqual(value, index))
     {
         reportException(Error_Incorrect_method_nomatch);
     }

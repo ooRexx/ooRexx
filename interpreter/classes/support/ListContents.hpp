@@ -65,6 +65,7 @@ class ListContents : public RexxInternalObject
     {
      public:
         inline bool isAvailable() { return value == OREF_NULL; }
+        inline bool isInUse() { return value != OREF_NULL; }
         RexxInternalObject *value;           // list element value
         size_t next;                         // next list element in chain
         size_t previous;                     // previous list element in chain
@@ -182,7 +183,7 @@ class ListContents : public RexxInternalObject
     // check if an entry is a real item
     inline bool isInUse(ItemLink postion)
     {
-        return !entries[postion].isAvailable();
+        return entries[postion].isInUse();
     }
 
     // step to the next position in the chain
@@ -230,7 +231,7 @@ class ListContents : public RexxInternalObject
     // test if an index position is valid in this table.
     inline bool isIndexValid(ItemLink i)
     {
-        return i < totalSize && isAvailable(i);
+        return i < totalSize && isInUse(i);
     }
 
     inline size_t items() { return itemCount; }
