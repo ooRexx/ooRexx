@@ -857,6 +857,7 @@ StartClassDefinition(Relation)
         AddMethod("HasItem", RelationClass::hasItemRexx, 2);
         AddMethod("AllIndex", RelationClass::allIndexRexx, 1);
         AddMethod("RemoveAll", RelationClass::removeAll, 1);
+        AddMethod("UniqueIndexes", RelationClass::uniqueIndexes, 0);
 
     CompleteMethodDefinitions();
 

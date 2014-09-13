@@ -2615,7 +2615,10 @@ RexxObject *RexxObject::copyRexx()
  */
 RexxObject *RexxObject::unknownRexx(RexxString *message, ArrayClass  *arguments)
 {
-  return unknown(message, arguments);
+    message = stringArgument(message, ARG_ONE);
+    arguments = arrayArgument(arguments, ARG_TWO);
+
+    return unknown(message, arguments);
 }
 
 

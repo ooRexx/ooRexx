@@ -75,6 +75,8 @@ end
 .bag~inheritInstanceMethods(.ManyItemMixin)
 -- set has its own set methods
 .set~inheritInstanceMethods(.SetMixin)
+-- as does Bat
+.bag~inheritInstanceMethods(.BagMixin)
 
 -- now handle real inherits for the primitive classes.
 
@@ -374,10 +376,8 @@ nomethod:
       -- an unknown method is an argument problem.  report it as such.
   raise syntax 93.948 array(1, "Collection")
 
-/* *************************************** */
-/*    S E T                   C L A S S    */
-/* *************************************** */
 
+-- a mixin for SET methods written in Rexx code
 ::CLASS 'SetMixin'
 
 /*****************************************/

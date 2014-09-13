@@ -227,7 +227,7 @@ ArrayClass *DirectoryClass::allIndexes()
 ArrayClass *DirectoryClass::allItems()
 {
     // get the base set
-    Protected<ArrayClass> itemArray = contents->allIndexes();
+    Protected<ArrayClass> itemArray = contents->allItems();
     // have a method table? we need to run the methods an append to the result
     if (methodTable != OREF_NULL)
     {

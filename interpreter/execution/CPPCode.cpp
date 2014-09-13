@@ -971,6 +971,7 @@ CPPM(RelationClass::itemsRexx),
 CPPM(RelationClass::hasItemRexx),
 CPPM(RelationClass::allIndexRexx),
 CPPM(RelationClass::removeAll),
+CPPM(RelationClass::uniqueIndexes),
 
 CPPM(RelationClass::newRexx),
 

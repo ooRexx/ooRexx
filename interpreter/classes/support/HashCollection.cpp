@@ -961,23 +961,19 @@ RexxInternalObject *StringHashCollection::setEntryRexx(RexxInternalObject *entry
  */
 RexxObject *StringHashCollection::unknown(RexxString *msgname, ArrayClass *arguments)
 {
-    // must have a first item and the required argument array
-    RexxString *message_value = stringArgument(msgname, ARG_ONE);
+    // The arguments have already been validated by the base Object method.
 
     // if this is the assignment form of message
-    if (message_value->endsWith('='))
+    if (msgname->endsWith('='))
     {
-        // make sure this is a good argument value.
-        arguments = arrayArgument(arguments, ARG_TWO);
-
         // extract the name part of the msg
-        message_value = message_value->extract(0, message_value->getLength() - 1);
+        msgname = msgname->extract(0, msgname->getLength() - 1);
         // do this as an assignment
-        return (RexxObject *)setEntryRexx(message_value, arguments->get(1));
+        return (RexxObject *)setEntryRexx(msgname, arguments->get(1));
     }
 
     // just a retrieval operation
-    return (RexxObject *)resultOrNil(entry(message_value));
+    return (RexxObject *)resultOrNil(entry(msgname));
 }
 
 

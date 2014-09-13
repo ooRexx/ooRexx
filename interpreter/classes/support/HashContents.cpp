@@ -530,7 +530,7 @@ bool HashContents::locateEntry(RexxInternalObject *index, RexxInternalObject *it
     previous = NoLink;
 
     // ok, run the chain searching for an index match.
-    while (isInUse(position))
+    while (position != NoMore && isInUse(position))
     {
         // have a match? return to the caller.  All of the position
         // stuff should be set now
@@ -752,13 +752,13 @@ RexxInternalObject *HashContents::nextItem(RexxInternalObject *value, RexxIntern
     ItemLink position = hashIndex(index);
 
     // loop the chain until we
-    while (isInUse(position))
+    while (position != NoMore && isInUse(position))
     {
         // if we've found the pair, search for the next entry with the same index value.
         if (entries[position].matches(index, value))
         {
             position = nextEntry(position);
-            while (isInUse(position))
+            while (position != NoMore && isInUse(position))
             {
                 // we're only looking for index matches from this point
                 if (entries[position].matches(index))
@@ -894,13 +894,15 @@ size_t HashContents::countAllIndex(RexxInternalObject *index, ItemLink &anchorPo
     anchorPosition = hashIndex(index);
     ItemLink position = anchorPosition;
 
-    while (isInUse(position))
+    while (position != NoMore && isInUse(position))
     {
         // compare the index values
         if (isIndex(position, index))
         {
             count++;
         }
+
+        position = nextEntry(position);
     }
     return count;
 }

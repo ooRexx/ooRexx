@@ -1694,12 +1694,8 @@ size_t ArrayClass::previousIndex(size_t index)
 RexxObject *ArrayClass::previousRexx(RexxObject **arguments, size_t argCount)
 {
     size_t position;
-    // go validate the index
-    if (!validateIndex(arguments, argCount, ARG_ONE, IndexAccess, position))
-    {
-        // out of bounds results in the .nil object
-        return TheNilObject;
-    }
+    // go validate the index...just ignore if out of bounds
+    validateIndex(arguments, argCount, ARG_ONE, IndexAccess, position);
 
     // go locate the next item
     return convertIndex(previousIndex(position));
