@@ -71,7 +71,6 @@ class RexxClass : public RexxObject
     virtual void liveGeneral(MarkReason reason);
 
     virtual RexxObject *makeProxy(Envelope*);
-    virtual bool        isEqual(RexxInternalObject *);
 
     virtual HashCode     hash();
     virtual HashCode     getHashValue();

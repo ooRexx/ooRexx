@@ -1963,6 +1963,9 @@ Output:
      FORWARD class (super) array ()-- forward to superclass, remove possible argument
   end
 
+-- override for the makestring method
+::method makestring
+  return self~string
 
 ::method string               -- create a string representation, using the optional delimiter
   expose size

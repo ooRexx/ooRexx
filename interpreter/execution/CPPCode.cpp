@@ -942,6 +942,7 @@ CPPM(BagClass::ofRexx),
 CPPM(DirectoryClass::newRexx),
 CPPM(DirectoryClass::initRexx),
 CPPM(DirectoryClass::setMethodRexx),
+CPPM(DirectoryClass::unsetMethodRexx),
 CPPM(DirectoryClass::removeRexx),
 
 CPPM(HashCollection::getRexx),

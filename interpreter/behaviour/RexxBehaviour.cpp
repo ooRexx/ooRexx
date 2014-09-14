@@ -536,7 +536,14 @@ RexxClass *RexxBehaviour::restoreClass()
  */
 RexxClass *RexxBehaviour::superScope(RexxClass *start_scope)
 {
-    return methodDictionary->findSuperScope(start_scope);
+    // methods executing after a setMethod or via RUN have a scope of
+    // .nil.  The superscope for those methods are the owning class
+    if (start_scope == TheNilObject)
+    {
+        return owningClass;
+    }
+    // class objects maintain this directly
+    return start_scope->getSuperScope();
 }
 
 

@@ -1548,6 +1548,7 @@ void HashContents::copyValues()
         {
             // copy the value at every position
             setValue(position, entryValue(position)->copy());
+            position = nextEntry(position);
         }
     }
 }

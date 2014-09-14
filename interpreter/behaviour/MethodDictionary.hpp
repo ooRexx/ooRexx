@@ -82,7 +82,6 @@ class MethodDictionary: public StringHashCollection
     SupplierClass *getMethods(RexxClass *scope);
     ArrayClass *getScopeList() { return scopeList; }
     RexxClass  *immediateSuperScope();
-    RexxClass  *findSuperScope(RexxClass *scope);
     void addScope(RexxClass *scope);
     void mergeMethods(MethodDictionary *target);
     void mergeScopes(MethodDictionary *target);

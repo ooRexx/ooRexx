@@ -504,6 +504,36 @@ RexxInternalObject *DirectoryClass::setMethodRexx(RexxString *entryname, MethodC
 
 
 /**
+ * unset a method of executable code into a directory object.
+ *
+ * @param entryname The name this is set under
+ *
+ * @return Nothing.
+ */
+RexxInternalObject *DirectoryClass::unsetMethodRexx(RexxString *entryname)
+{
+    // the entry name is always upper case
+    entryname = stringArgument(entryname, ARG_ONE)->upper();
+
+    // if unknown, remove this from the special place.
+    if (entryname->strCompare(GlobalNames::UNKNOWN))
+    {
+        clearField(unknownMethod);
+    }
+    else
+    {
+        // remove from the method table if we have one
+        if (methodTable != OREF_NULL)
+        {
+            methodTable->remove(entryname);
+        }
+    }
+
+    return OREF_NULL;
+}
+
+
+/**
  * Retrieve a value from the method table, if there is one.
  *
  * @param index  The target index.

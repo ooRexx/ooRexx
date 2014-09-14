@@ -79,6 +79,7 @@ class DirectoryClass : public StringHashCollection
 
     // stubs for additional exported directory methods.
     RexxInternalObject *setMethodRexx(RexxString *entryname, MethodClass *methodobj);
+    RexxInternalObject *unsetMethodRexx(RexxString *entryname);
 
     // some private helper methods.
     RexxInternalObject *methodTableValue(RexxInternalObject *index);

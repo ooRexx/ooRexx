@@ -331,8 +331,8 @@ ListContents::ItemLink ListContents::insert(RexxInternalObject *value, ListConte
     }
     else
     {
-        // this is inserted before the index position
-        insertBefore(newItem, index);
+        // this is inserted after the index position
+        insertAfter(newItem, index);
     }
 
     // return the new index

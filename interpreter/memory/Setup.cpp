@@ -829,7 +829,7 @@ StartClassDefinition(Directory)
         AddMethod("Init", DirectoryClass::initRexx, 1);
 
         AddProtectedMethod("SetMethod", DirectoryClass::setMethodRexx, 2);
-        AddProtectedMethod("UnsetMethod", DirectoryClass::removeRexx, 1);
+        AddProtectedMethod("UnsetMethod", DirectoryClass::unsetMethodRexx, 1);
 
     CompleteMethodDefinitions();
 

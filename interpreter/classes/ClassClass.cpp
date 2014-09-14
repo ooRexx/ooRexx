@@ -221,32 +221,6 @@ RexxObject *RexxClass::strictEqual(RexxObject *other)
 }
 
 
-
-/**
- * Compare two classes for equality.
- *
- * @param other  The other class to compare.
- *
- * @return true if the are equal, false otherwise.
- */
-bool RexxClass::isEqual(RexxInternalObject *other)
-{
-    // If a non-copied (Primitive) behaviour Then we can directly call primitive method
-    if (behaviour->isPrimitive())
-    {
-        // can compare at primitive level
-        return isEqual(other);
-    }
-    else
-    {
-        ProtectedObject r;
-        // other wise giveuser version a chance
-        sendMessage(GlobalNames::STRICT_EQUAL, (RexxObject *)other, r);
-        return ((RexxObject *)r)->truthValue(Error_Logical_value_method);
-    }
-}
-
-
 /**
  * Compare two classes
  *

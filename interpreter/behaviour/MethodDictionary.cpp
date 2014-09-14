@@ -523,21 +523,6 @@ RexxClass *MethodDictionary::immediateSuperScope()
 
 
 /**
- * Find the superscope for a class object.
- *
- * @param scope  The starting scope.
- *
- * @return The value set to SUPER for a method call.
- */
-RexxClass *MethodDictionary::findSuperScope(RexxClass *scope)
-{
-    // this is stored dirctly in the class object, so this is pretty
-    // easy.
-    return scope->getSuperScope();
-}
-
-
-/**
  * Add a scope to the scope table.  This is done unconditionall
  *
  * @param scope  The new scope to add.
