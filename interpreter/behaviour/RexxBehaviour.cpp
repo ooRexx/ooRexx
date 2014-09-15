@@ -543,7 +543,7 @@ RexxClass *RexxBehaviour::superScope(RexxClass *start_scope)
         return owningClass;
     }
     // class objects maintain this directly
-    return start_scope->getSuperScope();
+    return methodDictionary->resolveSuperScope(start_scope);
 }
 
 
@@ -555,7 +555,7 @@ RexxClass *RexxBehaviour::superScope(RexxClass *start_scope)
  */
 RexxClass *RexxBehaviour::immediateSuperScope()
 {
-    return methodDictionary->immediateSuperScope();
+    return methodDictionary->resolveSuperScope(owningClass);
 }
 
 
@@ -665,12 +665,8 @@ void RexxBehaviour::mergeMethodDictionary(MethodDictionary *sourceDictionary)
     }
     else
     {
-        // get a copy of our dictionary and merge the new methods into it.
-        Protected<MethodDictionary> newMethods = (MethodDictionary *)methodDictionary->copy();
         // merge our methods and scope into the copy
-        newMethods->merge(sourceDictionary);
-        // and replace our existing behaviour.
-        setField(methodDictionary, newMethods);
+        methodDictionary->merge(sourceDictionary);
     }
 }
 

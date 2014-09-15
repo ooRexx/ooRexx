@@ -120,8 +120,6 @@ void RexxClass::live(size_t liveMark)
     memory_mark(superClasses);
     memory_mark(subClasses);
     memory_mark(package);
-    memory_mark(scopeSuperClass);
-    memory_mark(scopeSearchOrder);
 }
 
 
@@ -154,8 +152,6 @@ void RexxClass::liveGeneral(MarkReason reason)
     memory_mark_general(superClasses);
     memory_mark_general(subClasses);
     memory_mark_general(package);
-    memory_mark_general(scopeSuperClass);
-    memory_mark_general(scopeSearchOrder);
 }
 
 
@@ -585,10 +581,6 @@ void RexxClass::buildFinalClassBehaviour()
     // these are primitive classes
     setPrimitive();
 
-    // add the scope information for quicker access
-    scopeSuperClass = instanceBehaviour->immediateSuperScope();
-    scopeSearchOrder = instanceBehaviour->allScopes();
-
     // check to see if we have an uninit methods.
     checkUninit();
 
@@ -647,15 +639,8 @@ void RexxClass::buildFinalClassBehaviour(RexxClass *superClass)
     // set up the new metaclass list
     setField(metaClass, TheClassClass);
 
-    // ok, now that we've built both the instance behaviour and
-    // the class behaviour, make sure we update our
-    // scope information.
-
-    setField(scopeSuperClass, instanceBehaviour->immediateSuperScope());
-    setField(scopeSearchOrder, instanceBehaviour->allScopes())
-
     // The Baseclass for non-mixin classes is self
-    setField(baseClass, this);
+    baseClass = this;
     // and point the instance behaviour back to this class
     instanceBehaviour->setOwningClass(this);
     // and the class behaviour to CLASS
@@ -720,7 +705,7 @@ RexxObject *RexxClass::defineMethod(RexxString *method_name, RexxObject *methodS
     // aren't enhanced
     setField(instanceBehaviour, (RexxBehaviour *)instanceBehaviour->copy());
     // add method to the instance method dictionary
-    instanceMethodDictionary->addMethod(dictionaryName, methodObject);
+    instanceMethodDictionary->replaceMethod(dictionaryName, methodObject);
     // any subclasses that we have need to redo their instance behaviour
     // this also updates our own behaviour table
     updateInstanceSubClasses();
@@ -881,13 +866,6 @@ void  RexxClass::updateSubClasses()
     // impact on metaclasses.
     createClassBehaviour(behaviour);
 
-    // ok, now that we've built both the instance behaviour and
-    // the class behaviour, make sure we update our
-    // scope information.
-
-    setField(scopeSuperClass, instanceBehaviour->immediateSuperScope());
-    setField(scopeSearchOrder, instanceBehaviour->allScopes())
-
     // check to see if we have an uninit method.
     checkUninit();
 
@@ -964,18 +942,12 @@ void RexxClass::createClassBehaviour(RexxBehaviour *target_class_behaviour)
                 metaClass->mergeInstanceMethodDictionary(target_class_behaviour);
             }
         }
-        // only merge the mdict for CLASS if this is a capable of being a metaclass
-        if ((this != TheClassClass) || (this == TheClassClass && isMetaClass()))
-        {
-            // Merge this class mdict with the target behaviour class mdict
-            target_class_behaviour->mergeMethodDictionary(classMethodDictionary);
-        }
+
+        // Merge this class mdict with the target behaviour class mdict
+        target_class_behaviour->mergeMethodDictionary(classMethodDictionary);
 
         // update the target behaviour scopes with this class, if necessary.
-        if (this != TheClassClass)
-        {
-            target_class_behaviour->addScope(this);
-        }
+        target_class_behaviour->addScope(this);
     }
 }
 
@@ -1445,9 +1417,6 @@ RexxClass  *RexxClass::subclass(PackageClass *package, RexxString *class_id,
     new_class->instanceBehaviour->clearMethodDictionary();
     new_class->createInstanceBehaviour(new_class->instanceBehaviour);
 
-    // add the scope information for quicker access
-    new_class->scopeSuperClass = new_class->instanceBehaviour->immediateSuperScope();
-    new_class->scopeSearchOrder = new_class->instanceBehaviour->allScopes();
     // this behaviour is owned by the new class
     new_class->instanceBehaviour->setOwningClass(new_class);
     // record that we have a new subclass to worry about if

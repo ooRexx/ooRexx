@@ -151,8 +151,6 @@ class RexxClass : public RexxObject
     inline void         setMetaClass() { classFlags.set(META_CLASS); }
            void         addSubClass(RexxClass *);
            void         removeSubclass(RexxClass *c);
-           RexxClass   *getSuperScope() { return scopeSuperClass; }
-           ArrayClass  *getScopeOrder() { return scopeSearchOrder; }
            void         checkUninit();
 
     static void processNewArgs(RexxObject **, size_t, RexxObject ***, size_t *, size_t, RexxObject **, RexxObject **);
@@ -192,7 +190,5 @@ class RexxClass : public RexxObject
 
     ListClass     *subClasses;         // our list of weak referenced subclasses
     PackageClass  *package;            // source we're defined in (if any)
-    RexxClass     *scopeSuperClass;    // the immediate superclass used for lookups starting from this point.
-    ArrayClass    *scopeSearchOrder;   // the search order used for searches starting from this scope position.
 };
 #endif

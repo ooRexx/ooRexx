@@ -73,6 +73,15 @@ MethodDictionary::MethodDictionary(size_t capacity) : StringHashCollection(capac
     // this keeps our main lookup order, defined by the inheritance order of the
     // superclasses and mixins.
     scopeList = new_array(DefaultScopeListSize);
+    // this defines the lookup order from each class in the hierarchy.
+    // because mixins can get inserted in the order, this is not
+    // necessarily determined by straight superclass order.  This is really
+    // a bug because it can screw up super calls if a mixin slips a method in and
+    // does not support the same signatures.  Unfortunately, a lot of code has been
+    // written using the broken behaviour and it would be difficult to change this
+    // at this point.  This table allows us to determine the superclass and perform
+    // superclass method lookup the respects this order.
+    scopeOrders = new_identity_table();
 }
 
 
@@ -85,6 +94,7 @@ void MethodDictionary::live(size_t liveMark)
 {
     memory_mark(contents);
     memory_mark(scopeList);
+    memory_mark(scopeOrders);
     memory_mark(objectVariables);
 }
 
@@ -98,6 +108,7 @@ void MethodDictionary::liveGeneral(MarkReason reason)
 {
     memory_mark_general(contents);
     memory_mark_general(scopeList);
+    memory_mark_general(scopeOrders);
     memory_mark_general(objectVariables);
 }
 
@@ -113,6 +124,7 @@ void MethodDictionary::flatten(Envelope *envelope)
 
     flattenRef(contents);
     flattenRef(scopeList);
+    flattenRef(scopeOrders);
     flattenRef(objectVariables);
 
     cleanUpFlatten
@@ -132,6 +144,7 @@ RexxInternalObject *MethodDictionary::copy()
     // and copy the contents as well
     newObj->contents = (HashContents *)contents->copy();
     newObj->scopeList = (ArrayClass *)scopeList->copy();
+    newObj->scopeOrders = (IdentityTable *)scopeOrders->copy();
     return newObj;
 }
 
@@ -386,7 +399,12 @@ void MethodDictionary::addInstanceMethods(MethodDictionary *source)
 MethodClass *MethodDictionary::findSuperMethod(RexxString *name, RexxClass *startScope)
 {
     // get the list of scopes "visible" from this starting scope.
-    ArrayClass *scopes = startScope->getScopeOrder();
+    ArrayClass *scopes = (ArrayClass *)scopeOrders->get(startScope);
+    // shouldn't happen, but worth checking for
+    if (scopes == OREF_NULL)
+    {
+        return OREF_NULL;
+    }
 
     // do we have a list to search through?  Now search the matching methods
     // for one with a scope in this list.
@@ -399,8 +417,13 @@ MethodClass *MethodDictionary::findSuperMethod(RexxString *name, RexxClass *star
         // we might have .nil in here as well as method objects.
         if (method != (MethodClass *)TheNilObject)
         {
-            // if this methos has a scope that's in the allowed list, return it.
-            if (scopes->hasItem(method->getScope()))
+            RexxClass *methodScope = method->getScope();
+
+            // if this method has a scope that's in the allowed list, return it.
+            // NOTE:  the scopes list does not include the scope itself, so we test
+            // separately.  The starting scope is frequently the target anyway, so
+            // this is generally more efficient
+            if (methodScope == startScope || scopes->hasIdentityItem(methodScope))
             {
                 return method;
             }
@@ -503,22 +526,28 @@ SupplierClass *MethodDictionary::getMethods(RexxClass *scope)
  * behaviour class list.  This determines what value is
  * used for the super variable on method calls.
  *
+ * @param scope  The scope we're resolving.
+ *
  * @return The immediate superclass value (return .nil for the Object
  *         class).
  */
-RexxClass *MethodDictionary::immediateSuperScope()
+RexxClass *MethodDictionary::resolveSuperScope(RexxClass *scope)
 {
-    // the owning class is going to be last class added to this list.
-    size_t ourClass = scopeList->items();
-    // Object will only have the single item defined.
-    // TODO:  Better check this!  Might be better to
-    // handle this elsewhere.
-    if (ourClass == 1)
+    ArrayClass *scopes = (ArrayClass *)scopeOrders->get(scope);
+    // should not happen, give a belt-and-braces return
+    if (scopes == OREF_NULL)
     {
         return (RexxClass *)TheNilObject;
     }
-    // return the previously added item
-    return (RexxClass *)scopeList->get(ourClass - 1);
+
+    // Object will have an empty array here...return .nil for that
+    if (scopes->isEmpty())
+    {
+        return (RexxClass *)TheNilObject;
+    }
+
+    // return the last item of the array, which is the immediate superscope.
+    return (RexxClass *)scopes->getLastItem();
 }
 
 
@@ -531,8 +560,14 @@ void MethodDictionary::addScope(RexxClass *scope)
 {
     // only add a scope to the list if this is not already here.
     // this merges things together in the right order.
-    if (!scopeList->hasIdentityItem(scope))
+    if (!scopeOrders->hasIndex(scope))
     {
+        // we take a snapshot of the current scope.  This is used both to
+        // determine the superscope and filter scoped method lookups.  Note that
+        // the added scope class is NOT part of the lookup
+        ArrayClass *orders = (ArrayClass *)scopeList->copy();
+        scopeOrders->put(orders, scope);
+
         // append this to the scope list for this behaviour.  This is
         // our total class lookup scope and will be attached to the class
         // object once the behaviour is fully constructed.
@@ -608,5 +643,5 @@ void MethodDictionary::merge(MethodDictionary *source)
  */
 bool MethodDictionary::hasScope(RexxClass *scope)
 {
-    return scopeList->hasIdentityItem(scope);
+    return scopeOrders->hasIndex(scope);
 }

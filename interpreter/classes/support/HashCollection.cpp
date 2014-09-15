@@ -160,17 +160,9 @@ size_t HashCollection::calculateBucketSize(size_t capacity)
         return MinimumBucketSize;
     }
 
-    // now hash up the requested value a bit to get a capacity
-    capacity = capacity - 1;
-    capacity |= capacity >> 1;
-    capacity |= capacity >> 2;
-    capacity |= capacity >> 4;
-    capacity |= capacity >> 8;
-    capacity |= capacity >> 16;
-
     // we prefer to have a odd number for the bucket size, so add
     // 1 if we end up with an even number.
-    if ((capacity | 1) == 0)
+    if ((capacity & 1) == 0)
     {
         capacity += 1;
     }

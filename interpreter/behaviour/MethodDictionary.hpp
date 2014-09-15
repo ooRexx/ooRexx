@@ -80,8 +80,7 @@ class MethodDictionary: public StringHashCollection
     MethodClass *findSuperMethod(RexxString *name, RexxClass *startScope);
     void setMethodScope(RexxClass *scope);
     SupplierClass *getMethods(RexxClass *scope);
-    ArrayClass *getScopeList() { return scopeList; }
-    RexxClass  *immediateSuperScope();
+    RexxClass  *resolveSuperScope(RexxClass *);
     void addScope(RexxClass *scope);
     void mergeMethods(MethodDictionary *target);
     void mergeScopes(MethodDictionary *target);
@@ -97,6 +96,7 @@ class MethodDictionary: public StringHashCollection
 
     StringTable *instanceMethods;     // any methods defined on this instance
     ArrayClass  *scopeList;           // the list of scope value order use for lookups
+    IdentityTable *scopeOrders;       // the scope orders for each class in the hierarchy.
 };
 
 #endif

@@ -97,7 +97,7 @@ public:
     // the number of newly created items to stack in the save stack
     static const size_t SaveStackSize = 10;
     // the maximum size for the startup image size
-    static const size_t MaxImageSize = 2000000;
+    static const size_t MaxImageSize = 3000000;
     // the size of a page
     static const size_t PageSize = 4096;
     // the standard memory pool allocation size.
