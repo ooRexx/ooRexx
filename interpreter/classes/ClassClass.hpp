@@ -101,7 +101,7 @@ class RexxClass : public RexxObject
     void        mergeBehaviour(RexxBehaviour *target_instance_behaviour);
     MethodDictionary *createMethodDictionary(RexxObject *sourceCollection, RexxClass *scope);
     MethodDictionary *copyInstanceMethods();
-    void mergeInstanceMethodDictionary(RexxBehaviour *targetBehaviour);
+    void mergeInstanceBehaviour(RexxBehaviour *targetBehaviour);
     void mergeClassMethodDictionary(RexxBehaviour *targetBehaviour);
 
     RexxObject  *queryMixinClass();

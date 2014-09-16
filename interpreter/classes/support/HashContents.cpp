@@ -439,6 +439,7 @@ bool HashContents::locateEntry(RexxInternalObject *index, ItemLink &position, It
     }
 
     // hit the end of the chain, we don't have this item
+    position = NoMore;
     return false;
 }
 
@@ -510,6 +511,90 @@ void HashContents::iterateNext(ItemLink &position, ItemLink &nextBucket)
     }
     // make sure this is marked as a failure
     position = NoMore;
+}
+
+
+/**
+ * Iterate to the next occupied entry of the list in reverse
+ * bucket order.
+ *
+ * @param position   The starting position.
+ * @param currentBucket The current bucket we're iterating on.
+ *
+ */
+void HashContents::iterateNextReverse(ItemLink &position, ItemLink &currentBucket)
+{
+    // The position will always be valid because we're backing up the chain to the
+    // bucket anchor.  If we're at the bucket anchor, we then locate the last position
+    // in the next occupied bucket
+    if (position == currentBucket)
+    {
+        // step to the next bucket and see if we have a next entry
+        currentBucket++;
+        locateNextBucketEnd(position, currentBucket);
+    }
+    // we're traversing
+    else
+    {
+        // we don't maintain back links, so we need to scan.  Not
+        // terribly efficient, but the buckets don't tend to get very long
+        // and we don't do this all that often.
+        locatePreviousEntry(position, currentBucket);
+    }
+}
+
+
+/**
+ * Locate the end of the next occupied hash bucket in this
+ * collection.
+ *
+ * @param position The returned position (NoMore indicates we've hit the end)
+ * @param currentBucket
+ *                 The starting bucket to search.  Updated to the new bucket
+ *                 if something is found.
+ */
+void HashContents::locateNextBucketEnd(ItemLink &position, ItemLink &currentBucket)
+{
+    // search each of the buckets in turn looking for an occupied one.
+    while (currentBucket < bucketSize)
+    {
+        // if we have an entry in the first position, this is the one we want
+        if (isInUse(currentBucket))
+        {
+            // set the pointer at the beginning
+            position = currentBucket;
+            // locate the last entry in the bucket
+            while(nextEntry(position) != NoMore)
+            {
+                position = nextEntry(position);
+            }
+            return;
+        }
+        // try the next bucket
+        currentBucket++;
+    }
+
+    // indicate we've hit the iteration end
+    position = NoMore;
+}
+
+
+/**
+ * Locate the entry that precedes the current bucket item.
+ *
+ * @param position The current position in the chain.  Note:  we've already determined
+ *                 that we are not at the anchor position.
+ * @param currentBucket
+ *                 The bucket anchor item.
+ */
+void HashContents::locatePreviousEntry(ItemLink &position, ItemLink currentBucket)
+{
+    // just run the chain until we find the next item
+    while (nextEntry(currentBucket) != position)
+    {
+        currentBucket = nextEntry(currentBucket);
+    }
+    position = currentBucket;
 }
 
 
@@ -1620,8 +1705,6 @@ HashContents::IndexIterator HashContents::iterator(RexxInternalObject *index)
  * Create an iterator for traversing through all of the
  * entries of the table
  *
- * @param index  The target index.
- *
  * @return A TableIterator item.
  */
 HashContents::TableIterator HashContents::iterator()
@@ -1634,4 +1717,23 @@ HashContents::TableIterator HashContents::iterator()
     iterateNext(position, nextBucket);
 
     return TableIterator(this, position, nextBucket);
+}
+
+
+/**
+ * Create an iterator for traversing through all of the
+ * entries of the table in reverse order
+ *
+ * @return A ReverseTableIterator item.
+ */
+HashContents::ReverseTableIterator HashContents::reverseIterator()
+{
+    ItemLink position = NoMore;
+    ItemLink currentBucket = 0;
+
+    // Ue use thnd the first real item.
+    // we don't really care if this succeeds or fails
+    locateNextBucketEnd(position, currentBucket);
+
+    return ReverseTableIterator(this, position, currentBucket);
 }

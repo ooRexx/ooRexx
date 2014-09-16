@@ -78,6 +78,7 @@ class HashCollection : public RexxObject
     void checkFull();
     static size_t calculateBucketSize(size_t capacity);
     HashContents::TableIterator iterator();
+    HashContents::ReverseTableIterator reverseIterator();
     HashContents::IndexIterator iterator(RexxInternalObject *index);
 
     // virtual methods that subclasses can override to provide special behaviour.

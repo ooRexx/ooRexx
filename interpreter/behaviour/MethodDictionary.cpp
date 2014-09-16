@@ -165,31 +165,25 @@ void MethodDictionary::addMethod(RexxString *methodName, MethodClass *method)
     }
     else
     {
-        // we need to check to see if we have an existing method.
-        // how this gets handled differs depending on what we find in the table.
-        MethodClass *tableMethod = (MethodClass *)getMethod(methodName);
-        // if this is a new method, just put it into the table.
-        if (tableMethod == OREF_NULL)
+        // when merging method dictionaries, we want to avoid having
+        // duplicate methods.  Scan all methods with the same name to
+        // see if we have an existing method with the same scope.
+        HashContents::IndexIterator iterator = contents->iterator(methodName);
+
+        for (; iterator.isAvailable(); iterator.next())
         {
-            put(method, methodName);
-        }
-        else
-        {
+            MethodClass *tableMethod = (MethodClass *)iterator.value();
             // if the scopes are the same, then we are replacing this
             // method in the table.
             if (tableMethod->isScope(method->getScope()))
             {
-               put(method, methodName);
-
-            }
-            else
-            {
-                // this is a method added at a new scope level, so
-                // we insert this into the table so it is in front of the existing method
-                // with the same name.
-                addFront(method, methodName);
+               iterator.replace(method);
+               return;
             }
         }
+
+        // this is a new method for this index...add it to the front
+        addFront(method, methodName);
     }
 }
 
@@ -586,14 +580,17 @@ void MethodDictionary::mergeMethods(MethodDictionary *target)
 {
     // make sure we have enough space to add all of these items
     ensureCapacity(target->items());
-    // use an iterator to traverse the table
-    HashContents::TableIterator iterator = target->iterator();
+    // use an iterator to traverse the table.  We traverse this in reverse
+    // order so that the methods get added to our directory in the same
+    // relative order that they appear in the source directory.
+    HashContents::ReverseTableIterator iterator = target->reverseIterator();
 
     // just copy in all of the method entries.
     for (; iterator.isAvailable(); iterator.next())
     {
         MethodClass *method = (MethodClass *)iterator.value();
-        addMethod((RexxString *)iterator.index(), method);
+        RexxString *name = (RexxString *)iterator.index();
+        addMethod(name, method);
     }
 }
 

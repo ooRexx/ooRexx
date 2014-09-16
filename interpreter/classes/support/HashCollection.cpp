@@ -745,6 +745,17 @@ HashContents::TableIterator HashCollection::iterator()
 
 
 /**
+ * Return an iterator for this collection.
+ *
+ * @return An iterator for the hash contens.
+ */
+HashContents::ReverseTableIterator HashCollection::reverseIterator()
+{
+    return contents->reverseIterator();
+}
+
+
+/**
  * Return an iterator for all elements with a given index
  *
  * @return An iterator for the hash contens.

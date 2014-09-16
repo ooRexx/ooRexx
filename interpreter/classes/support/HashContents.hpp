@@ -123,6 +123,36 @@ public:
         ItemLink nextBucket;
 	};
 
+
+    /**
+     * an iterator for iterating over all entries of the table in
+     * reverse lookup order.  Used for merging dictionaries where
+     * preserving relative order is critical.
+     */
+	class ReverseTableIterator
+	{
+		friend class HashContents;
+
+	public:
+        inline ReverseTableIterator() : contents(OREF_NULL), position(0), currentBucket(0) { }
+		inline ~ReverseTableIterator() {}
+
+        inline bool isAvailable()  { return position != NoMore; }
+        inline RexxInternalObject *value() { return contents->entryValue(position); }
+        inline RexxInternalObject *index() { return contents->entryIndex(position); }
+        inline void replace(RexxInternalObject *v) { contents->setValue(position, v); }
+        inline void next() { contents->iterateNextReverse(position, currentBucket); }
+
+	private:
+        // constructor for an index iterator
+		ReverseTableIterator(HashContents *c, ItemLink p, ItemLink n)
+            : contents(c), position(p), currentBucket(n) { }
+
+        HashContents *contents;
+        ItemLink position;
+        ItemLink currentBucket;
+	};
+
     /**
      * Small helper class for an entry stored in the contents.
      */
@@ -305,6 +335,9 @@ public:
     bool locateItem(RexxInternalObject *item, ItemLink &position, ItemLink &previous);
     void nextMatch(RexxInternalObject *index, ItemLink &position);
     void iterateNext(ItemLink &position, ItemLink &nextBucket);
+    void iterateNextReverse(ItemLink &position, ItemLink &nextBucket);
+    void locateNextBucketEnd(ItemLink &position, ItemLink &currentBucket);
+    void locatePreviousEntry(ItemLink &position, ItemLink currentBucket);
     ArrayClass *removeAll(RexxInternalObject *index);
     RexxInternalObject *removeItem(RexxInternalObject *value, RexxInternalObject *index);
     bool hasItem(RexxInternalObject *value, RexxInternalObject *index );
@@ -337,6 +370,7 @@ public:
 
     IndexIterator iterator(RexxInternalObject *index);
     TableIterator iterator();
+    ReverseTableIterator reverseIterator();
 
 protected:
 

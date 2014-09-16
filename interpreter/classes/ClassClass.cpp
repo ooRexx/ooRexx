@@ -937,9 +937,9 @@ void RexxClass::createClassBehaviour(RexxBehaviour *target_class_behaviour)
             // add whichever metaclasses have not been added yet
             if (!target_class_behaviour->hasScope(metaClass))
             {
-                // merge in the meta class method dictionary into our method dictionary.
+                // merge in the meta class instance method dictionary into our method dictionary.
                 // this also merges the scopes.
-                metaClass->mergeInstanceMethodDictionary(target_class_behaviour);
+                metaClass->mergeInstanceBehaviour(target_class_behaviour);
             }
         }
 
@@ -1716,15 +1716,15 @@ MethodDictionary *RexxClass::copyInstanceMethods()
 
 
 /**
- * Merge this classes instance method dictionary into a
+ * Merge the instance behaviour for this class into another
  * behaviour.
  *
  * @param targetBehaviour
  *               The target behaviour.
  */
-void RexxClass::mergeInstanceMethodDictionary(RexxBehaviour *targetBehaviour)
+void RexxClass::mergeInstanceBehaviour(RexxBehaviour *targetBehaviour)
 {
-    targetBehaviour->mergeMethodDictionary(instanceMethodDictionary);
+    targetBehaviour->merge(instanceBehaviour);
 }
 
 
