@@ -127,7 +127,7 @@ PackageClass *PackageClass::newRexx(RexxObject **init_args, size_t argCount)
     // parse the arguments
     RexxClass::processNewArgs(init_args, argCount, &init_args, &initCount, 2, (RexxObject **)&pgmname, (RexxObject **)&programSource);
 
-    PackageClass *package = OREF_NULL;
+    Protected<PackageClass> package;
 
     // get the package name as a string
     RexxString *nameString = stringArgument(pgmname, "name");
@@ -145,8 +145,6 @@ PackageClass *PackageClass::newRexx(RexxObject **init_args, size_t argCount)
         ArrayClass *sourceArray = arrayArgument(programSource, "source");
         package = instance->loadRequires(activity, nameString, sourceArray);
     }
-
-    ProtectedObject p(package);
 
     // handle Rexx class completion
     classThis->completeNewObject(package, init_args, initCount);
@@ -852,7 +850,8 @@ void PackageClass::install()
     {
         // In order to install, we need to call something.  We manage this by
         // creating a dummy stub routine that we can call to force things to install
-        Protected<RoutineClass> code = new RoutineClass(programName, new RexxCode(this, OREF_NULL));
+        SourceLocation loc;
+        Protected<RoutineClass> code = new RoutineClass(programName, new RexxCode(this, loc, OREF_NULL));
         ProtectedObject dummy;
         code->call(ActivityManager::currentActivity, programName, NULL, 0, dummy);
     }
@@ -1503,7 +1502,7 @@ RexxObject *PackageClass::loadLibraryRexx(RexxString *name)
     // have we already loaded this package?
     // may need to bootstrap it up first.
     LibraryPackage *package = PackageManager::loadLibrary(name);
-    return booleanObject(package == NULL);
+    return booleanObject(package != NULL);
 }
 
 

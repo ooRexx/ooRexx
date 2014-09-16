@@ -68,17 +68,20 @@ void *RexxCode::operator new(size_t size)
  * Initialize a RexxCode unit that can be attached to
  * a method or routine object and execute Rexx code.
  *
- * @param _source  The source object this was compiled from.
+ * @param _package
+ * @param loc      The location of the code block.
  * @param _start   The first instruction object in the execution chain.
  * @param _labels  The directory of labels in this code unit (can be null)
  * @param maxstack The maximum expression stack required to execute this code.
- * @param variable_index The number of pre-assigned variable
- *                       slots.
+ * @param variable_index
+ *                 The number of pre-assigned variable
+ *                 slots.
  */
-RexxCode::RexxCode(PackageClass *_package, RexxInstruction *_start, StringTable *_labels,
+RexxCode::RexxCode(PackageClass *_package, SourceLocation &loc, RexxInstruction *_start, StringTable *_labels,
      size_t maxstack, size_t  variable_index)
 {
     package = _package;
+    location = loc;
     start = _start;
     labels = _labels;
     // we add in a reasonable extra just in case the calculation got a little off.

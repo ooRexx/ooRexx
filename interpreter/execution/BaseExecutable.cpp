@@ -213,12 +213,11 @@ void BaseExecutable::processNewExecutableArgs(RexxObject **&init_args, size_t &a
 {
     RexxObject *pgmname;                 // method name
     RexxObject *source;                  // Array or string object
-    size_t initCount = 0;                // count of arguments we pass along
 
     // do the initial parse of the new arguments.
-    RexxClass::processNewArgs(init_args, argCount, &init_args, &initCount, 2, (RexxObject **)&pgmname, (RexxObject **)&source);
+    RexxClass::processNewArgs(init_args, argCount, &init_args, &argCount, 2, (RexxObject **)&pgmname, (RexxObject **)&source);
     // get the method name as a string
-    RexxString *nameString = stringArgument(pgmname, ARG_ONE);
+    name = stringArgument(pgmname, ARG_ONE);
     // make sure there is something for the second arg.
     requiredArgument(source, ARG_TWO);
 
@@ -228,11 +227,11 @@ void BaseExecutable::processNewExecutableArgs(RexxObject **&init_args, size_t &a
     // now process an optional sourcecontext argument
     sourceContext = OREF_NULL;
     // retrieve extra parameter if exists
-    if (initCount != 0)
+    if (argCount != 0)
     {
         RexxObject *option;
         // parse off an additional argument
-        RexxClass::processNewArgs(init_args, initCount, &init_args, &initCount, 1, &option, NULL);
+        RexxClass::processNewArgs(init_args, argCount, &init_args, &argCount, 1, &option, NULL);
         // if there are more than 3 options passed, it is possible this one was omitted
         // we're don
         if (option == OREF_NULL)

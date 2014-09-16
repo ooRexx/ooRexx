@@ -1292,9 +1292,23 @@ RexxCode *LanguageParser::translateBlock()
     {
         labels = OREF_NULL;
     }
+
+    // get a location for this block of code from the first and last instructions
+    SourceLocation blockLocation;
+    // a code block need not have any instructions, so only grab
+    // the location information if we have anything.  Otherwise, this will be
+    // all zeros.
+    if (firstInstruction != OREF_NULL)
+    {
+        blockLocation = firstInstruction->getLocation();
+        SourceLocation endLocation = lastInstruction->getLocation();
+        // set the end location
+        blockLocation.setEnd(endLocation);
+    }
+
     // now create a code object that is attached to the package.
     // this will have all of the information needed to execute this code.
-    RexxCode *code = new RexxCode(package, firstInstruction, labels, maxStack, variableIndex);
+    RexxCode *code = new RexxCode(package, blockLocation, firstInstruction, labels, maxStack, variableIndex);
 
     // we don't automatically create the labels when we translate the block because
     // they might have been provided by an interpret.  So always clear them out at the

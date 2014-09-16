@@ -889,8 +889,8 @@ PackageClass *InterpreterInstance::loadRequires(Activity *activity, RexxString *
 {
 
     // if we've already loaded this in this instance, just return it.
-    PackageClass *package = getRequiresFile(activity, shortName);
-    if (package != OREF_NULL)
+    Protected<PackageClass> package = getRequiresFile(activity, shortName);
+    if (!package.isNull())
     {
         return package;
     }
@@ -900,7 +900,7 @@ PackageClass *InterpreterInstance::loadRequires(Activity *activity, RexxString *
     {
         // if we've already loaded this in this instance, just return it.
         package = getRequiresFile(activity, fullName);
-        if (package != OREF_NULL)
+        if (!package.isNull())
         {
             // add this to the cache using the short name, since they resolve to the same
             addRequiresFile(shortName, OREF_NULL, package);

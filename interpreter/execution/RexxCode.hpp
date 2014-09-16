@@ -65,7 +65,7 @@ class RexxCode : public BaseCode
    // is generally off by one or two.
    const size_t MINIMUM_STACK_FRAME = 10;
 
-   RexxCode(PackageClass *s, RexxInstruction *i, StringTable *l = OREF_NULL, size_t f = 0, size_t v = RexxLocalVariables::FIRST_VARIABLE_INDEX);
+   RexxCode(PackageClass *s, SourceLocation &loc, RexxInstruction *i, StringTable *l = OREF_NULL, size_t f = 0, size_t v = RexxLocalVariables::FIRST_VARIABLE_INDEX);
    inline RexxCode(RESTORETYPE restoreType) { ; };
 
    virtual void live(size_t);

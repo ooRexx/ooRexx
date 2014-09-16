@@ -119,7 +119,15 @@ RexxString *ProgramSource::getStringLine(size_t position, size_t startOffset, si
 
     // protect from an overrun
     startOffset = Numerics::minVal(startOffset, lineLength);
-    endOffset = Numerics::minVal(endOffset, lineLength);
+    // we frequently ask for the entire line by giving an offset of zero.
+    if (endOffset == 0)
+    {
+        endOffset = lineLength;
+    }
+    else
+    {
+        endOffset = Numerics::minVal(endOffset, lineLength);
+    }
 
     // we can use this to extract from a position to the end by
     // specifying an end offset of 0
@@ -232,7 +240,7 @@ ArrayClass *ProgramSource::extractSourceLines(SourceLocation &location )
         {
             // get the single line and add to the source array.  Then we're done
             RexxString *line = extract(location);
-            source->put(source, 1);
+            source->put(line, 1);
             return source;
         }
 
