@@ -3499,6 +3499,12 @@ special character (such as a parenthesis).
 <para>User additions are not allowed to the REXX package.</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>985</term>
+<listitem>
+<para>User additions are not allowed to the REXX language classes.</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR99">

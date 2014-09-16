@@ -4869,6 +4869,15 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Execution_rexx_package_update</SymbolicName>
         <Text>User additions are not allowed to the REXX package.</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>98</Code>
+        <Subcode>985</Subcode>
+        <MessageNumber>742</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Execution_rexx_defined_class</SymbolicName>
+        <Text>User additions are not allowed to the REXX language classes.</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>

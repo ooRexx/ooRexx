@@ -666,7 +666,7 @@ RexxObject *RexxClass::defineMethod(RexxString *method_name, RexxObject *methodS
     // a NOMETHOD problem, as if the define method did not even exist.
     if ( isRexxDefined())
     {
-        reportNomethod(lastMessageName(), this);
+        reportException(Error_Execution_rexx_defined_class);
     }
 
     // the name is required and must be a string.  We always
@@ -772,7 +772,7 @@ RexxObject *RexxClass::deleteMethod(RexxString  *method_name)
     // we pretend this method does not exist for rexx defined classes.
     if (isRexxDefined())
     {
-        reportNomethod(lastMessageName(), this);
+        reportException(Error_Execution_rexx_defined_class);
     }
 
     // the method name must be a string, and we use the uppercase version...always!
@@ -1097,7 +1097,7 @@ RexxObject *RexxClass::inherit(RexxClass *mixin_class, RexxClass  *position)
     // another operation not permitted on Rexx defined classes.
     if (isRexxDefined())
     {
-        reportNomethod(lastMessageName(), this);
+        reportException(Error_Execution_rexx_defined_class);
     }
 
     // the mixin class is required
@@ -1189,7 +1189,7 @@ RexxObject *RexxClass::uninherit(RexxClass  *mixin_class)
     // modifying Rexx defined classes is forbidden.
     if (isRexxDefined())
     {
-        reportNomethod(lastMessageName(), this);
+        reportException(Error_Execution_rexx_defined_class);
     }
 
     // the target class is required
@@ -1257,7 +1257,7 @@ RexxObject *RexxClass::enhanced(RexxObject **args, size_t argCount)
     // source scope.
     Protected<MethodDictionary> enhanced_instance_mdict = dummy_subclass->createMethodDictionary(enhanced_methods, dummy_subclass);
     // enhance the instance behaviour of the dummy subclass with the new methods
-    enhanced_instance_mdict->merge(dummy_subclass->instanceMethodDictionary);
+    dummy_subclass->instanceMethodDictionary->merge(enhanced_instance_mdict);
     // and record the changes in behavior
     dummy_subclass->instanceBehaviour->addInstanceMethods(enhanced_instance_mdict);
     // recreate the instance behaviour
