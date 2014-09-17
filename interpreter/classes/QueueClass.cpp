@@ -103,6 +103,23 @@ bool QueueClass::validateIndex(RexxObject **index, size_t indexCount,
 
 
 /**
+ * Validate the insertion index for a queue collection.  For
+ * queues, the position must be location of an existing item
+ * within the bounds of the queue, unlike an array which
+ * can insert at empty slots or beyond the existing bounds.
+ *
+ * @param position The insertion index position.
+ */
+void QueueClass::checkInsertIndex(size_t position)
+{
+    if (position > lastItem)
+    {
+        reportException(Error_Incorrect_method_queue_index, position);
+    }
+}
+
+
+/**
  * Pull an item off of the stack, returning .nil if no items
  * are available
  *
@@ -173,13 +190,19 @@ RexxInternalObject *QueueClass::peek()
 RexxObject *QueueClass::putRexx(RexxInternalObject *value, RexxObject *index)
 {
     requiredArgument(value, ARG_ONE);
+    // make sure we have an index specified before trying to decode this.
+    requiredArgument(index, ARG_TWO);
 
     // Validate the index argument, but don't allow expansion.
     size_t position;
+
     if (!validateIndex(&index, 1, ARG_TWO, IndexAccess, position))
     {
         reportException(Error_Incorrect_method_index, index);
     }
+
+    // we can only update assigned items, so make sure this is within bounds.
+    checkInsertIndex(position);
 
     // set the new value and return nothing
     put(value, position);

@@ -56,9 +56,9 @@ class ArrayClass : public RexxObject
 
     enum
     {
-        RaiseBoundsInvalid = 0x00000002,
-        RaiseBoundsTooMany = 0x00000004,
-        ExtendUpper        = 0x00000010,
+        RaiseBoundsInvalid = 0x00000001,
+        RaiseBoundsTooMany = 0x00000002,
+        ExtendUpper        = 0x00000004,
         IndexAccess        = RaiseBoundsInvalid | RaiseBoundsTooMany,
         IndexUpdate        = IndexAccess | ExtendUpper,
     } IndexFlags;
@@ -179,6 +179,8 @@ class ArrayClass : public RexxObject
     // virtual so subclasses can screen out multidimensional support.
     virtual bool  validateIndex(RexxObject **, size_t, size_t, size_t, size_t &);
     inline bool   validateIndex(RexxObject *i, size_t start, size_t flags, size_t &p) { return validateIndex(&i, 1, start, flags, p); }
+    // this is a nop for the Array class.
+    virtual void  checkInsertIndex(size_t position) { }
     bool validateSingleDimensionIndex(RexxObject **index, size_t indexCount, size_t argPosition, size_t boundsError, size_t &position);
     bool validateMultiDimensionIndex(RexxObject **index, size_t indexCount, size_t argPosition, size_t boundsError, size_t &position);
     ArrayClass   *allocateArrayOfClass(size_t size);

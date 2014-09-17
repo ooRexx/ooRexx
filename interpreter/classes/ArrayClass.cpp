@@ -738,7 +738,12 @@ RexxObject *ArrayClass::insertRexx(RexxInternalObject *value, RexxObject *index)
     {
         // validate the index and expand if necessary.
         validateIndex(index, ARG_TWO, IndexAccess, position);
-        position = position + 1;          // we insert AFTER the given index, so bump this
+        // check that the position is good for this collection type.
+        // For arrays, all valid indexes are good.  For Queues,
+        // only indexes within the current occupied range are good.
+        checkInsertIndex(position);
+        // we insert AFTER the given index, so bump this
+        position = position + 1;
     }
 
     // do the actual insertion
@@ -795,6 +800,11 @@ RexxInternalObject *ArrayClass::deleteRexx(RexxObject *index)
 
     // validate the index and expand if necessary.
     validateIndex(index, ARG_ONE, IndexAccess, position);
+
+    // check that the position is good for this collection type.
+    // For arrays, all valid indexes are good.  For Queues,
+    // only indexes within the current occupied range are good.
+    checkInsertIndex(position);
 
     // do the actual insertion
     return resultOrNil(deleteItem(position));
