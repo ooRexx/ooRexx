@@ -268,7 +268,7 @@ RexxInteger *RexxString::caselessCompare(RexxString *other, RexxString *pad)
         // if this does not match the pad character, return the position
         if (toupper(string1[i]) != padChar)
         {
-            return new_integer(i + 1);
+            return new_integer(leadLength + i + 1);
         }
     }
 
@@ -515,7 +515,7 @@ RexxString *RexxString::caselessChangeStr(RexxString *needle, RexxString *newNee
     // we'll only change up to a specified count.  If not there, we do everything.
     size_t count = optionalPositive(countArg, Numerics::MAX_WHOLENUMBER, ARG_THREE);
     // The change count is bounded by the number of matches
-    count = Numerics::minVal(count, StringUtil::countStr(getStringData(), getLength(), needle));
+    count = Numerics::minVal(count, StringUtil::caselessCountStr(getStringData(), getLength(), needle));
 
     // if we don't have anything we can change, return the original string.
     if (count == 0)

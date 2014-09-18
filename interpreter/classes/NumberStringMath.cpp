@@ -95,7 +95,7 @@ RexxString *NumberString::d2xD2c(RexxObject *length, bool type)
         reportException(Error_Incorrect_method_d2xd2c);
     }
 
-    size_t bufferLength = currentDigits + OVERFLOWSPACE;
+    wholenumber_t bufferLength = currentDigits + OVERFLOWSPACE;
 
     if (resultSize != SIZE_MAX)
     {
@@ -358,7 +358,7 @@ void NumberStringBase::mathRound(char *numPtr)
 void NumberString::adjustPrecision()
 {
     // is the length of the number too big?
-    if (digitsCount > (wholenumber_t)createdDigits)
+    if (digitsCount > createdDigits)
     {
         // perform truncation and rounding.
         truncateToDigits(createdDigits, numberDigits, true);
@@ -407,35 +407,6 @@ size_t NumberString::highBits(size_t number)
 
 
 /**
- * Adjust the number data to be with the correct NUMERIC
- * DIGITS setting.
- *
- * @param numPtr    The pointer to the start of the current numeric data.
- * @param result    Where this should be copied back to after adjustment.
- * @param resultLen The length of the result area.  Data is copied relative
- *                  to the end of the data.
- * @param digits    The digits setting for the adjustment.
- *
- * @return The new number ptr after the copy.
- */
-char *NumberStringBase::adjustNumber(char *numPtr, char *result, size_t resultLen, size_t digits)
-{
-    // remove all leading zeros that might have occurred after the operation.
-    numPtr = stripLeadingZeros(numPtr);
-
-    // after stripping, is the length of the number larger than the digits setting?
-    if (digitsCount > (wholenumber_t)digits)
-    {
-        // perform truncation and rounding.
-        truncateToDigits(digits, numPtr, true);
-    }
-    // copy the data into the result area, aligned with the end of the
-    // buffer.  We return the pointer to the new start of the number
-    return (char *)memcpy(((result + resultLen - 1) - digitsCount), numPtr, digitsCount);
-}
-
-
-/**
  * Remove all leading zeros from a number after an arithmetic
  * operation.
  *
@@ -467,13 +438,13 @@ char *NumberStringBase::stripLeadingZeros(char *accumPtr)
  *                  process.
  * @param digits    The precision for making the adjustment.
  */
-void NumberString::adjustPrecision(char *resultPtr, size_t digits)
+void NumberString::adjustPrecision(char *resultPtr, wholenumber_t digits)
 {
     // is the length of the number too big?
-    if (digitsCount > (wholenumber_t)digits)
+    if (digitsCount > digits)
     {
         // adjust the length and the exponent for the truncation amount
-        wholenumber_t extra = digitsCount - (wholenumber_t)digits;
+        wholenumber_t extra = digitsCount - digits;
         digitsCount = digits;
         numberExponent += extra;
         // round the adjusted number, if necessary
@@ -596,7 +567,7 @@ NumberString *NumberString::prepareOperatorNumber(wholenumber_t targetLength, wh
 NumberString *NumberString::addSub(NumberString *other, ArithmeticOperator operation, wholenumber_t digits)
 {
     // when performing the operations, we allow up to digits + 1 digits to particpate
-    wholenumber_t maxLength = (wholenumber_t)digits  + 1;
+    wholenumber_t maxLength = digits  + 1;
 
     // get local variables of the input object metrics since we might
     // need to copy the objects and adjust some settings.
@@ -610,7 +581,7 @@ NumberString *NumberString::addSub(NumberString *other, ArithmeticOperator opera
 
     // now we need to check for truncation, including raising LOSTDIGITS
     // conditions if we do need to truncate
-    if (leftLength > (wholenumber_t)digits)
+    if (leftLength > digits)
     {
         // raise a numeric condition, which might not return
         reportCondition(GlobalNames::LOSTDIGITS, (RexxString *)this);
@@ -732,8 +703,8 @@ NumberString *NumberString::addSub(NumberString *other, ArithmeticOperator opera
     // Digits setting.  Compute the amount we may need to
     // adjust for each number. Using the adjusted exponents ....
     // a value of 0 or less means we are OK.
-    wholenumber_t adjustedLeftDigits = (leftLength + adjustedLeftExp) - (wholenumber_t)maxLength;
-    wholenumber_t adjustedRightDigits = (rightLength + adjustedRightExp) - (wholenumber_t)maxLength;
+    wholenumber_t adjustedLeftDigits = (leftLength + adjustedLeftExp) - maxLength;
+    wholenumber_t adjustedRightDigits = (rightLength + adjustedRightExp) - maxLength;
     wholenumber_t adjustDigits = 0;
     // Do we need to adjust any numbers?
     if (adjustedLeftDigits > 0 || adjustedRightDigits > 0 )

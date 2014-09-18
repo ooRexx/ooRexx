@@ -62,7 +62,7 @@
  *
  * @return The new accumulator top bounds.
  */
-char *NumberString::addMultiplier(const char *top, size_t topLen, char *accumPtr, int multChar)
+char *NumberString::addMultiplier(const char *top, wholenumber_t topLen, char *accumPtr, int multChar)
 {
     // no carry at the start
     int carry = 0;
@@ -750,6 +750,42 @@ NumberString *NumberString::Division(NumberString *other, ArithmeticOperator div
 
 
 /**
+ * Adjust the number data to be with the correct NUMERIC
+ * DIGITS setting.
+ *
+ * @param numPtr    The pointer to the start of the current numeric data.
+ * @param result    Where this should be copied back to after adjustment.
+ * @param resultLen The length of the result area.  Data is copied relative
+ *                  to the end of the data.
+ * @param digits    The digits setting for the adjustment.
+ *
+ * @return The new number ptr after the copy.
+ */
+char *NumberStringBase::adjustNumber(char *numPtr, char *result, wholenumber_t resultLen, wholenumber_t digits)
+{
+    // remove all leading zeros that might have occurred after the operation.
+    numPtr = stripLeadingZeros(numPtr);
+
+    // after stripping, is the length of the number larger than the digits setting?
+    if (digitsCount > digits)
+    {
+        // NOTE:  the original version had a bug where it was attempting to adjust the
+        // exponent, but because it updated the length first, the net adjustment was zero.
+        // I "fixed" this and completely broke the power operation.  I really don't understand
+        // why the exponent does not need adjusting here, but it appears it doesn't.
+
+        // adjust the length down to the digits value
+        digitsCount = digits;
+        // round the number.
+        mathRound(numPtr);
+    }
+    // copy the data into the result area, aligned with the end of the
+    // buffer.  We return the pointer to the new start of the number
+    return (char *)memcpy(((result + resultLen - 1) - digitsCount), numPtr, digitsCount);
+}
+
+
+/**
  * Perform the Arithmetic power operation
  *
  * @param PowerObj The power we're raising this number to.
@@ -844,7 +880,7 @@ NumberString *NumberString::power(RexxObject *powerObj)
     // add these extra digits into the working digits setting
     digits += (extra + 1);
     // and this is the size of the buffers we need for our accumulators
-    wholenumber_t accumLen = (wholenumber_t)(2 * (digits + 1)) + 1;
+    wholenumber_t accumLen = (2 * (digits + 1)) + 1;
 
     // get a single buffer object with space for two values of this size
     char *outPtr = new_buffer(accumLen * 2)->getData();
@@ -951,7 +987,7 @@ NumberString *NumberString::power(RexxObject *powerObj)
  */
 char *NumberString::multiplyPower(const char *leftPtr, NumberStringBase *left,
                      const char *rightPtr, NumberStringBase *right,
-                     char *outPtr, size_t outLen, wholenumber_t digits)
+                     char *outPtr, wholenumber_t outLen, wholenumber_t digits)
 {
     // clear the output buffer of any previous results
     memset(outPtr, '\0', outLen);
@@ -978,7 +1014,7 @@ char *NumberString::multiplyPower(const char *leftPtr, NumberStringBase *left,
         resultPtr--;
     }
     // get our new length
-    accumLen = (size_t)(++resultPtr - accumPtr) + right->digitsCount;
+    accumLen = (++resultPtr - accumPtr) + right->digitsCount;
 
     // we might need to truncate to our digits setting
     wholenumber_t extraDigits = accumLen > digits ? accumLen - digits : 0;

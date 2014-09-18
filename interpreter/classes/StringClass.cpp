@@ -1062,7 +1062,12 @@ RexxObject *RexxString::equal(RexxObject *other)
 
 RexxObject *RexxString::notEqual(RexxObject *other)
 {
-    CompareOperator(comp(other) != 0);
+    // this one returns true for .nil
+    if (other == TheNilObject)
+    {
+        return TheTrueObject;
+    }
+    return booleanObject(comp(other) != 0);
 }
 
 

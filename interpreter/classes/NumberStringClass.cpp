@@ -233,7 +233,7 @@ RexxString *NumberString::primitiveMakeString()
  *
  * @return true if this number has significant decimals.
  */
-bool NumberString::hasSignificantDecimals(size_t digits)
+bool NumberString::hasSignificantDecimals(wholenumber_t digits)
 {
     // if the exponent is not negative, then we can't have decimals.
     if (!hasDecimals())
@@ -534,6 +534,8 @@ bool NumberString::numberValue(wholenumber_t &result, wholenumber_t numDigits)
 {
     // set up the default values
     bool carry = false;
+    // we work off of copies of these values so that adjustments do not alter
+    // the original object.
     wholenumber_t numberExp = numberExponent;
     wholenumber_t length = digitsCount;
 
@@ -572,7 +574,7 @@ bool NumberString::numberValue(wholenumber_t &result, wholenumber_t numDigits)
     // if because of this adjustment, the decimal point lies to the left
     // of our first digit, then this value truncates to 0 (or 1, if a carry condition
     // resulted).
-    if (-numberExp>= (wholenumber_t)length)
+    if (-numberExp >= length)
     {
         // since we know a) this number is all decimals, and b) the
         // remaining decimals are either all 0 or all 9s with a carry,
@@ -619,6 +621,8 @@ bool NumberString::unsignedNumberValue(size_t &result, wholenumber_t numDigits)
     // set up the default values
 
     bool carry = false;
+    // we work off of copies of these values so that adjustments do not alter
+    // the original object.
     wholenumber_t numberExp = numberExponent;
     wholenumber_t length = digitsCount;
 
@@ -668,11 +672,11 @@ bool NumberString::unsignedNumberValue(size_t &result, wholenumber_t numDigits)
     if (numberExp < 0)
     {
         // now convert this into an unsigned value
-        return createUnsignedValue(numberDigits, digitsCount + numberExp, carry, 0, Numerics::maxValueForDigits(numDigits), result);
+        return createUnsignedValue(numberDigits, length + numberExp, carry, 0, Numerics::maxValueForDigits(numDigits), result);
     }
     else
     {
-        return createUnsignedValue(numberDigits, digitsCount, carry, numberExp, Numerics::maxValueForDigits(numDigits), result);
+        return createUnsignedValue(numberDigits, length, carry, numberExp, Numerics::maxValueForDigits(numDigits), result);
     }
 }
 
@@ -735,7 +739,7 @@ bool  NumberString::createUnsignedValue(const char *thisnum, size_t intlength, i
 {
     // if the exponent multiplier would cause an overflow, there's no point in doing
     // anything here
-    if (exponent > (wholenumber_t)Numerics::ARGUMENT_DIGITS)
+    if (exponent > Numerics::ARGUMENT_DIGITS)
     {
         return false;
     }
@@ -819,7 +823,7 @@ bool  NumberString::createUnsignedInt64Value(const char *thisnum, size_t intleng
 {
     // if the exponent multiplier would cause an overflow, there's no point in doing
     // anything here
-    if (exponent > (wholenumber_t)Numerics::DIGITS64)
+    if (exponent > Numerics::DIGITS64)
     {
         return false;
     }
@@ -990,6 +994,8 @@ bool NumberString::int64Value(int64_t *result, wholenumber_t numDigits)
 {
     // set up the default values
     bool carry = false;
+    // we work off of copies of these values so that adjustments do not alter
+    // the original object.
     wholenumber_t numberExp = numberExponent;
     wholenumber_t numberLength = digitsCount;
     uint64_t intnum;
@@ -1038,7 +1044,7 @@ bool NumberString::int64Value(int64_t *result, wholenumber_t numDigits)
     // if because of this adjustment, the decimal point lies to the left
     // of our first digit, then this value truncates to 0 (or 1, if a carry condition
     // resulted).
-    if (-numberExp>= (wholenumber_t)numberLength)
+    if (-numberExp>= numberLength)
     {
         // since we know a) this number is all decimals, and b) the
         // remaining decimals are either all 0 or all 9s with a carry,
@@ -1097,6 +1103,8 @@ bool NumberString::unsignedInt64Value(uint64_t *result, wholenumber_t numDigits)
     // set up the default values
 
     bool carry = false;
+    // we work off of copies of these values so that adjustments do not alter
+    // the original object.
     wholenumber_t numberExp = numberExponent;
     wholenumber_t numberLength = digitsCount;
 
@@ -1134,7 +1142,7 @@ bool NumberString::unsignedInt64Value(uint64_t *result, wholenumber_t numDigits)
     // if because of this adjustment, the decimal point lies to the left
     // of our first digit, then this value truncates to 0 (or 1, if a carry condition
     // resulted).
-    if (-numberExp>= (wholenumber_t)numberLength)
+    if (-numberExp >= numberLength)
     {
         // since we know a) this number is all decimals, and b) the
         // remaining decimals are either all 0 or all 9s with a carry,
@@ -1697,7 +1705,7 @@ RexxObject *NumberString::ceilingInternal()
         // to the value and then let trunc do the heavy lifting.
 
         // not have a decimal part?  If no decimal part, just pass to trunc
-        if (isAllInteger())
+        if (!hasDecimals())
         {
             return truncInternal(0);
         }
@@ -1940,7 +1948,7 @@ RexxString  *NumberString::formatRexx(RexxObject *Integers, RexxObject *Decimals
  * @return The formatted number.
  */
 RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t decimals, wholenumber_t mathexp,
-    wholenumber_t exptrigger, NumberString *original, size_t digits, bool form)
+    wholenumber_t exptrigger, NumberString *original, wholenumber_t digits, bool form)
 {
     // if we have an exponent, we will format this early
     // so that we know the length.  Set this up as a null string
@@ -3695,7 +3703,7 @@ bool NumberString::isInteger()
     // get size of the integer part of this number
     wholenumber_t adjustedLength = numberExponent + digitsCount;
     // ok, now do the exponent check...if we need one, not an integer
-    if ((adjustedLength >= (wholenumber_t)createdDigits) || (Numerics::abs(numberExponent) > (wholenumber_t)(createdDigits * 2)) )
+    if ((adjustedLength >= createdDigits) || (Numerics::abs(numberExponent) > createdDigits * 2) )
     {
         return false;
     }

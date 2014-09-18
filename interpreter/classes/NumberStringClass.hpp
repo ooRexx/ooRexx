@@ -70,7 +70,7 @@ public:
 
     void   mathRound(char *);
     char  *stripLeadingZeros(char *);
-    char  *adjustNumber(char *, char *, size_t, size_t);
+    char  *adjustNumber(char *, char *, wholenumber_t, wholenumber_t);
     void   truncateToDigits(wholenumber_t digits, char *digitsPtr, bool round);
     //quick test for a numeric overflow
     void checkOverflow();
@@ -217,7 +217,7 @@ class NumberString : public NumberStringBase
     NumberString *clone();
     void        setString(RexxString *);
     RexxString *formatRexx(RexxObject *, RexxObject *, RexxObject *, RexxObject *);
-    RexxString *formatInternal(wholenumber_t, wholenumber_t, wholenumber_t, wholenumber_t, NumberString *, size_t, bool);
+    RexxString *formatInternal(wholenumber_t, wholenumber_t, wholenumber_t, wholenumber_t, NumberString *, wholenumber_t, bool);
     RexxObject *operatorNot(RexxObject *);
     RexxObject *evaluate(RexxActivation *, ExpressionStack *);
     RexxObject *getValue(RexxActivation *context);
@@ -237,9 +237,9 @@ class NumberString : public NumberStringBase
     MethodClass   *instanceMethod(RexxString *);
     SupplierClass *instanceMethods(RexxClass *);
     RexxClass  *classObject();
-    inline NumberString *checkNumber(size_t digits)
+    inline NumberString *checkNumber(wholenumber_t digits)
     {
-       if (digitsCount > (wholenumber_t)digits)  // is the length larger than digits()?
+       if (digitsCount > digits)             // is the length larger than digits()?
        {
                                              // need to allocate a new number, but
                                              // we chop to digits + 1
@@ -256,7 +256,7 @@ class NumberString : public NumberStringBase
     NumberString *prepareOperatorNumber(wholenumber_t, wholenumber_t, bool);
     NumberString *copyIfNecessary();
     NumberString *copyForCurrentSettings();
-    void              adjustPrecision(char *, size_t);
+    void              adjustPrecision(char *, wholenumber_t);
     void              adjustPrecision();
     inline void       checkPrecision() { if (digitsCount > createdDigits) adjustPrecision(); }
     inline void       setNumericSettings(wholenumber_t digits, bool form)
@@ -341,7 +341,7 @@ class NumberString : public NumberStringBase
     inline bool isPositive() { return numberSign > 0; }
     inline bool isAllInteger() { return numberExponent == 0; }
     inline bool hasDecimals() { return numberExponent < 0; }
-           bool hasSignificantDecimals(size_t digits);
+           bool hasSignificantDecimals(wholenumber_t digits);
            void formatExponent(wholenumber_t exponent, char *buffer);
 
     static PCPPM operatorMethods[];
@@ -363,9 +363,9 @@ class NumberString : public NumberStringBase
     static void  subtractNumbers(NumberString *larger, const char *largerPtr, wholenumber_t aLargerExp,
                                   NumberString *smaller, const char *smallerPtr, wholenumber_t aSmallerExp,
                                   NumberString *result, char *&resultPtr);
-    static char *addMultiplier(const char *, size_t, char *, int);
+    static char *addMultiplier(const char *, wholenumber_t, char *, int);
     static char *subtractDivisor(const char *data1, wholenumber_t length1, const char *data2, wholenumber_t length2, char *result, int Mult);
-    static char *multiplyPower(const char *leftPtr, NumberStringBase *left, const char *rightPtr, NumberStringBase *right, char *OutPtr, size_t OutLen, wholenumber_t NumberDigits);
+    static char *multiplyPower(const char *leftPtr, NumberStringBase *left, const char *rightPtr, NumberStringBase *right, char *OutPtr, wholenumber_t OutLen, wholenumber_t NumberDigits);
     static char *dividePower(const char *AccumPtr, NumberStringBase *Accum, char *Output, wholenumber_t NumberDigits);
     static char *addToBaseSixteen(int, char *, char *);
     static char *addToBaseTen(int, char *, char *);
