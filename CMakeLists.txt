@@ -57,8 +57,8 @@ set (CMAKE_PDB_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 #/*----------------------------------------------------------------------------*/
 project (ooRexx)
 # The version of ooRexx to make
-set (ORX_MAJOR 4)
-set (ORX_MINOR 3)
+set (ORX_MAJOR 5)
+set (ORX_MINOR 0)
 set (ORX_MOD_LVL 0)
 set (ORX_BLD_LVL 0)
 set (ORX_VERSION ${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL})

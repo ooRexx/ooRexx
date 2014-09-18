@@ -129,7 +129,7 @@ NumberString *NumberString::Multiply(NumberString *other)
     }
 
     // get our buffer size
-    size_t totalDigits = (digits * 2) + 1;
+    size_t totalDigits = ((digits +1) * 2) + 1;
 
     // fast allocation buffer
     char resultBufFast[FAST_BUFFER];

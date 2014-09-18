@@ -376,7 +376,7 @@ RexxString *RexxString::replaceAt(RexxString  *newStrObj, RexxInteger *position,
     RexxString *newStr = stringArgument(newStrObj, ARG_ONE);
 
     // the length of the replacement string is the default replacement length
-    size_t newLen = getLength();
+    size_t newLen = newStr->getLength();
     // the overlay position is required
     size_t replacePos = positionArgument(position, ARG_TWO);
     // the replacement length is optional, and defaults to the length of the replacement string
@@ -416,13 +416,13 @@ RexxString *RexxString::replaceAt(RexxString  *newStrObj, RexxInteger *position,
     // add the front section
     builder.append(getStringData(), frontLen);
 
-    // padding only happens if we've copy the entire front portion
+    // padding only happens if we've copied the entire front portion
     builder.pad(padChar, padding);
 
     // copy the replacement string
     builder.append(newStr->getStringData(), newLen);
 
-    // the remainder, if there is any, get's copied after the
+    // the remainder, if there is any, gets copied after the
     // replacement string with no padding
     builder.append(getStringData() + replacePos + replaceLen - 1, backLen);
     return retval;

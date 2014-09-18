@@ -1693,9 +1693,9 @@ MutableBuffer *MutableBuffer::delWord(RexxInteger *position, RexxInteger *plengt
     // get the deletion point as an offset
     size_t deletePosition = iterator.wordPointer() - getStringData();
 
-    // if we managed to locate the desired number of words, then skip
-    // over the trailing blanks to the next word or the end of the string.
-    if (iterator.skipWords(count))
+    // We're positioned at the first word we're deleting.  Skip to the last
+    // word of the range, then skip over the trailing blanks.
+    if (iterator.skipWords(count - 1))
     {
         iterator.skipBlanks();
     }
@@ -1703,9 +1703,9 @@ MutableBuffer *MutableBuffer::delWord(RexxInteger *position, RexxInteger *plengt
     size_t endPosition = iterator.scanPosition() - getStringData();
 
     // delete the data
-    size_t gapSize = (deletePosition - endPosition);
+    size_t gapSize = endPosition - deletePosition;
     // close up the delete part
-    closeGap(deletePosition, gapSize, length);
+    closeGap(deletePosition, gapSize, length - (deletePosition + gapSize));
     // adjust for the deleted data
     dataLength -= gapSize;
     return this;
