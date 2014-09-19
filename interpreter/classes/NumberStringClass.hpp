@@ -336,7 +336,7 @@ class NumberString : public NumberStringBase
     }
 
     inline bool isZero() { return numberSign == 0; }
-    inline bool isOne() { return digitsCount == 1 && numberSign == 1 && numberExponent == 1 && numberDigits[0] == 1; }
+    inline bool isOne() { return digitsCount == 1 && numberSign == 1 && numberExponent == 0 && numberDigits[0] == 1; }
     inline bool isNegative() { return numberSign < 0; }
     inline bool isPositive() { return numberSign > 0; }
     inline bool isAllInteger() { return numberExponent == 0; }

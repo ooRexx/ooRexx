@@ -586,11 +586,7 @@ NumberString *NumberString::Division(NumberString *other, ArithmeticOperator div
             // divide the digit through and see if we guessed correctly.
             leftNum = subtractDivisor(leftNum, saveLeft->digitsCount, rightNum, saveRight->digitsCount, leftNum + saveLeft->digitsCount - 1, multiplier);
             // skip over any leading zeros
-            while (*leftNum == 0 && saveLeft->digitsCount > 1)
-            {
-                leftNum++;
-                saveLeft->digitsCount--;
-            }
+            leftNum = saveLeft->stripLeadingZeros(leftNum);
             // end of inner loop, go back and guess again !! This might have been the right guess.
         }
         // we only add zero digits if we have other digits.  non-zero
@@ -1052,7 +1048,7 @@ char *NumberString::dividePower(const char *accumPtr, NumberStringBase *accum, c
 
     // set up temporary buffers for the calculations
     char  leftBuffer[sizeof(NumberStringBase)];
-    char *leftPtr = new_buffer(totalDigits)->getData();
+    char *leftPtr = new_buffer(totalDigits * 2)->getData();
     char *result = leftPtr + totalDigits;
 
     NumberStringBase *left = (NumberStringBase *)leftBuffer;
@@ -1213,6 +1209,6 @@ char *NumberString::dividePower(const char *accumPtr, NumberStringBase *accum, c
     accum->digitsCount = resultDigits;
     accum->numberExponent = calcExp;
     // copy to the output buffer
-    memcpy(output, result, resultDigits);
+    memcpy(output, result - resultDigits, resultDigits);
     return output;
 }

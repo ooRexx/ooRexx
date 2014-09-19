@@ -1183,7 +1183,7 @@ bool  NumberString::truthValue(int errorcode)
     // 2) the exponent is zero, 3) the number has exactly one digits, and finally
     // 4) that single digit is a 1.  Thankfully, we rarely need to perform this test
     // on number strings!
-    else if (!(numberSign == 1 && numberExponent == 0 && digitsCount == 1 && *(numberDigits) == 1))
+    else if (!isOne())
     {
         reportException(errorcode, this);
     }
@@ -1212,7 +1212,7 @@ bool NumberString::logicalValue(logical_t &result)
     // 2) the exponent is zero, 3) the number has exactly one digits, and finally
     // 4) that single digit is a 1.  Thankfully, we rarely need to perform this test
     // on number strings!
-    else if (numberSign == 1 && numberExponent == 0 && digitsCount == 1 && *(numberDigits) == 1)
+    else if (isOne())
     {
         result = true;                   // this is true and the conversion worked
         return true;
@@ -3606,12 +3606,12 @@ RexxObject  *NumberString::notOp()
     // exactly zero?  We can handle this.
     if (isZero())
     {
-        return TheFalseObject;
+        return TheTrueObject;
     }
     // a test for one is pretty easy also
     if (isOne())
     {
-        return TheTrueObject;
+        return TheFalseObject;
     }
 
     // it is possible that there are some more complicated formatting
@@ -3633,12 +3633,12 @@ RexxObject  *NumberString::operatorNot(RexxObject *right)
     // exactly zero?  We can handle this.
     if (isZero())
     {
-        return TheFalseObject;
+        return TheTrueObject;
     }
     // a test for one is pretty easy also
     if (isOne())
     {
-        return TheTrueObject;
+        return TheFalseObject;
     }
 
     // it is possible that there are some more complicated formatting

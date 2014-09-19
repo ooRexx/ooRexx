@@ -538,7 +538,7 @@ class NormalSegmentSet : public MemorySegmentSet
               /* ideally, we'd like to add this sorted by size, but */
               /* this is called so frequently, attempting to sort */
               /* degrades performance by about 10%. */
-              largeDead.add(new (largeObject) DeadObject(deadLength));
+             largeDead.add(new (largeObject) DeadObject(deadLength));
         }
         else
         {
