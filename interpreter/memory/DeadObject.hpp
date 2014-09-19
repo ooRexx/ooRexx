@@ -45,6 +45,8 @@
 #ifndef Included_DeadObject
 #define Included_DeadObject
 
+#include <string.h>
+
 void FOUND(); void NOTFOUND();
 /* Dead chains are doubly linked lists.  The anchors are in the memoryobj dead   */
 /* arrays.  The first element of each dead list is a dead object 3 words long.   */

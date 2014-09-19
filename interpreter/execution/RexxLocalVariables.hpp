@@ -47,6 +47,7 @@
 
 #include "FlagSet.hpp"
 #include "VariableDictionary.hpp"
+#include <string.h>
 
 /**
  * Predefined index values for a stack frame.

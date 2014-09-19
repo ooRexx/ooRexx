@@ -44,6 +44,7 @@
 #ifndef Included_MemoryStack
 #define Included_MemoryStack
 
+#include <string.h>
 
 /**
  * A simple and fast stack object for doing memory management

@@ -44,6 +44,8 @@
 #ifndef Included_BufferClass
 #define Included_BufferClass
 
+#include <string.h>
+
 class BufferClassBase : public RexxObject
 {
 public:
