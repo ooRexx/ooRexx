@@ -178,7 +178,7 @@ void MemoryObject::completeSystemClass(const char *name, RexxClass *classObj)
 {
     // this gets added to the environment and the package in an uppercase name.
     RexxString *className = getUpperGlobalName(name);
-    TheEnvironment->put(className, classObj);
+    TheEnvironment->put(classObj, className);
     // this is added as a public class in this package.
     TheRexxPackage->addInstalledClass(className, classObj, true);
 }
@@ -351,9 +351,6 @@ void MemoryObject::createImage()
 
 // finalize a simple class definition
 #define CompleteClassDefinition(name) The##name##Class->buildFinalClassBehaviour();
-
-// finalize a class definition where a class is subclassed from something other than object.
-#define CompleteSubclassedClassDefinition(name, subclass) The##name##Class->buildFinalClassBehaviour(The##subclass##Class);
 
 // Add the created class object to the environment under its name and close
 // the local variable scope

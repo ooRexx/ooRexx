@@ -428,6 +428,7 @@ protected:
     RexxCode        *mainSection;        // the main section of code before any directives
     PushThroughStack *holdStack;         // stack for holding temporaries
     StringTable     *literals;           // root of associated literal list
+    StringTable     *dotVariables;       // root of associated dot variable values
     StringTable     *strings;            // common pool of created strings
     QueueClass      *control;            // queue of control structures
     QueueClass      *terms;              // stack of expression terms

@@ -3259,8 +3259,10 @@ RexxInstruction *LanguageParser::traceNew()
                         syntaxError(Error_Invalid_trace_trace, new_string(&badOption, 1));
                     }
                 }
+                // a valid number, this is the skip form
                 else
                 {
+                    skipForm = true;
                 }
             }
         }

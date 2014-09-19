@@ -325,6 +325,7 @@ void LanguageParser::live(size_t liveMark)
     memory_mark(holdStack);
     memory_mark(variables);
     memory_mark(literals);
+    memory_mark(dotVariables);
     memory_mark(labels);
     memory_mark(strings);
     memory_mark(guardVariables);
@@ -368,6 +369,7 @@ void LanguageParser::liveGeneral(MarkReason reason)
     memory_mark_general(holdStack);
     memory_mark_general(variables);
     memory_mark_general(literals);
+    memory_mark_general(dotVariables);
     memory_mark_general(labels);
     memory_mark_general(strings);
     memory_mark_general(guardVariables);
@@ -571,6 +573,7 @@ void LanguageParser::initializeForParsing()
     subTerms = new_queue();       // temporary stack for holding lists of terms
     operators = new_queue();      // the operator queue
     literals = new_string_table();   // table of literal values
+    dotVariables = new_string_table();   // table of dot variables
 
     // during an image build, we have a global string table.  If this is
     // available now, use it.
@@ -1802,7 +1805,7 @@ RexxObject *LanguageParser::addText(RexxToken *token)
 
     // NOTE:  We cannot check the literals table at the beginning without
     // knowing the type of token first.  It is possible for both a literal string
-    // and a variable name to have the same value, which could result in the
+    // and a variable name or dotvariable to have the same value, which could result in the
     // string constant getting used where a real variable retriever is required.
 
     // now switch on the major token class id.
@@ -1899,7 +1902,7 @@ RexxObject *LanguageParser::addText(RexxToken *token)
                     // we might already have processed this before.
                     // if not, we need to examine this and find the
                     // most appropriate form.
-                    RexxObject *retriever = (RexxObject *)literals->get(name);
+                    RexxObject *retriever = (RexxObject *)dotVariables->get(name);
                     if (retriever != OREF_NULL)
                     {
                         return retriever;
@@ -1911,7 +1914,7 @@ RexxObject *LanguageParser::addText(RexxToken *token)
                     retriever = (RexxObject *)new RexxDotVariable(shortName);
                     // we can add this to the literals list, since they do not
                     // depend upon context.
-                    literals->put(retriever, name);
+                    dotVariables->put(retriever, name);
                     return retriever;
                     break;
                 }

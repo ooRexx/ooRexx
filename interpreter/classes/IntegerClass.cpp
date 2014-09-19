@@ -502,10 +502,8 @@ SupplierClass *RexxInteger::instanceMethods(RexxClass *class_object)
  */
 RexxString *RexxInteger::concatBlank(RexxString *other)
 {
-    requiredArgument(other, ARG_ONE);
-    other = stringArgument(other, ARG_TWO);
     // concatenate with the string value
-    return stringValue()->concatWith(other, ' ');
+    return stringValue()->concatBlank(other);
 }
 
 
@@ -518,9 +516,7 @@ RexxString *RexxInteger::concatBlank(RexxString *other)
  */
 RexxString *RexxInteger::concat(RexxString *other )
 {
-    requiredArgument(other, ARG_ONE);
-    other = stringArgument(other, ARG_TWO);
-    return stringValue()->concat(other);
+    return stringValue()->concatRexx(other);
 }
 
 
