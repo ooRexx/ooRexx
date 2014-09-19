@@ -261,7 +261,7 @@ class ArrayClass : public RexxObject
            // NOTE:  only to be used during sorting!
     inline void         setSortItem(size_t position, RexxInternalObject *value) { expansionArray->objects[position - 1] = value; }
            void         setItem(size_t position, RexxInternalObject *value);
-           void         checkMultiDimensional(char *methodName);
+           void         checkMultiDimensional(const char *methodName);
            void         shrink(size_t amount);
 
     // check if we need to update the itemcount when writing to a given position.

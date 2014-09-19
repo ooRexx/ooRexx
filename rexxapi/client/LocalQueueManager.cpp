@@ -43,6 +43,7 @@
 #include "rexx.h"
 #include "ClientMessage.hpp"
 #include "Utilities.hpp"
+#include <ctype.h>
 
 // make sure we remember what we do for this process.
 bool LocalQueueManager::createdSessionQueue = false;

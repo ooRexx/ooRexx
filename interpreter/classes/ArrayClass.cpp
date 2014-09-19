@@ -412,7 +412,7 @@ void ArrayClass::flatten(Envelope *envelope)
  *
  * @param methodName The name of the method doing the checking.
  */
-void ArrayClass::checkMultiDimensional(char *methodName)
+void ArrayClass::checkMultiDimensional(const char *methodName)
 {
     if (isMultiDimensional())
     {

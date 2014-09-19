@@ -42,6 +42,7 @@
 #include "ClientMessage.hpp"
 #include "SysFile.hpp"
 #include "rexx.h"
+#include <stdio.h>
 
 
 /**
