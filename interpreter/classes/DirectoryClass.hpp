@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -41,63 +41,58 @@
 /* Primitive Directory Class Definitions                                      */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_RexxDirectory
-#define Included_RexxDirectory
+#ifndef Included_DirectoryClass
+#define Included_DirectoryClass
 
-#include "RexxCollection.hpp"
+#include "HashCollection.hpp"
 
-class RexxDirectory : public RexxHashTableCollection {
+class DirectoryClass : public StringHashCollection
+{
  public:
-  inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };
-  inline RexxDirectory(RESTORETYPE restoreType) { ; };
+    void        *operator new(size_t);
+    inline void  operator delete(void *) { ; }
 
-  void          live(size_t);
-  void          liveGeneral(int reason);
-  void          flatten(RexxEnvelope *);
-  RexxObject   *unflatten(RexxEnvelope *);
-  RexxObject   *copy();
-  RexxArray    *makeArray();
+    inline DirectoryClass(RESTORETYPE restoreType) { ; }
+           DirectoryClass(size_t capacity = HashCollection::DefaultTableSize) : methodTable(OREF_NULL), unknownMethod(OREF_NULL), StringHashCollection(capacity) { }
 
-  RexxArray    *requestArray();
-  RexxObject   *mergeItem(RexxObject *, RexxObject *);
-  RexxObject   *at(RexxString *);
-  RexxObject   *fastAt(RexxString *name) { return this->contents->stringGet(name);}
-  RexxObject   *atRexx(RexxString *);
-  RexxObject   *put(RexxObject *, RexxString *);
-  RexxObject   *entry(RexxString *);
-  RexxObject   *entryRexx(RexxString *);
-  RexxObject   *hasEntry(RexxString *);
-  RexxObject   *hasIndex(RexxString *);
-  size_t        items();
-  RexxObject   *itemsRexx();
-  RexxObject   *remove(RexxString *);
-  RexxObject   *removeRexx(RexxString *);
-  RexxObject   *setEntry(RexxString *, RexxObject *);
-  RexxObject   *setMethod(RexxString *, RexxMethod *);
-  RexxObject   *unknown(RexxString *, RexxArray *);
-  RexxSupplier *supplier();
-  RexxArray    *allItems();
-  RexxArray    *allIndexes();
-  void          reset();
-  RexxObject   *empty();
-  RexxObject   *isEmpty();
-  RexxObject   *indexRexx(RexxObject *);
-  RexxObject   *hasItem(RexxObject *);
-  RexxObject   *removeItem(RexxObject *);
+    RexxObject *newRexx(RexxObject **, size_t);
 
-  RexxObject   *newRexx(RexxObject **init_args, size_t);
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(Envelope *);
 
-  RexxTable  *method_table;            /* table of added methods            */
-  RexxMethod *unknown_method;          /* unknown method entry              */
+    virtual RexxInternalObject *copy();
 
-  static RexxDirectory *newInstance();
+    // virtual method overrides of the base collection class.
+    virtual size_t items();
+    virtual SupplierClass *supplier();
+    virtual ArrayClass *allIndexes();
+    virtual ArrayClass *allItems();
+    virtual bool hasIndex(RexxInternalObject *indexName);
+    virtual RexxInternalObject *remove(RexxInternalObject *entryname);
+    virtual RexxInternalObject *get(RexxInternalObject *index);
+    virtual void put(RexxInternalObject *value, RexxInternalObject *index);
+    virtual void empty();
+    virtual RexxInternalObject *getIndex(RexxInternalObject *target);
+    virtual bool hasItem(RexxInternalObject *target);
+    virtual RexxInternalObject *removeItem(RexxInternalObject *target);
 
-  static void createInstance();
-  // singleton class instance;
-  static RexxClass *classInstance;
+    // stubs for additional exported directory methods.
+    RexxInternalObject *setMethodRexx(RexxString *entryname, MethodClass *methodobj);
+    RexxInternalObject *unsetMethodRexx(RexxString *entryname);
+
+    // some private helper methods.
+    RexxInternalObject *methodTableValue(RexxInternalObject *index);
+    RexxInternalObject *unknownValue(RexxInternalObject *index);
+
+    StringTable *methodTable;            // table of added methods
+    MethodClass *unknownMethod;          // unknown method entry
+
+    static void createInstance();
+    // singleton class instance;
+    static RexxClass *classInstance;
 };
 
-
-inline RexxDirectory *new_directory() { return RexxDirectory::newInstance(); }
+inline DirectoryClass *new_directory(size_t capacity = HashCollection::DefaultTableSize) { return new DirectoryClass(capacity); }
 
 #endif

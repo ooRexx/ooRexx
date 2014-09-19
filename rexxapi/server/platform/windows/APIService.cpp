@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.ibm.com/developerworks/oss/CPLv1.0.htm                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -327,7 +327,7 @@ static void WINAPI ServiceMain(DWORD dwArgc, LPTSTR* lpszArgv)
  *         ERROR_FAILED_SERVICE_CONTROLLER_CONNECT and the service process will
  *         not have run.
  */
-bool startTheService(void)
+bool startTheService()
 {
     SERVICE_TABLE_ENTRY st[] =
     {
@@ -755,7 +755,7 @@ bool serviceIsRunning(SC_HANDLE hService)
  *
  * @return  One of the 4 service state enums.
  */
-ServiceStateType getServiceState(void)
+ServiceStateType getServiceState()
 {
     ServiceStateType state = uninstalled_state;
 
@@ -810,7 +810,7 @@ ServiceStateType getServiceState(void)
  *
  * @return True if now running as a Windows Service, otherwis false.
  */
-bool startAsWindowsService(void)
+bool startAsWindowsService()
 {
     bool started;
     DWORD errRC;

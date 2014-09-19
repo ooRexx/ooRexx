@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -45,7 +45,11 @@
 #define Included_SourceLocation
 
 
-class SourceLocation                   /* token/clause location information */
+/**
+ * Class uses to record location information for token,
+ * clauses, and instructions.
+ */
+class SourceLocation
 {
 public:
     inline size_t getLineNumber() { return startLine; }
@@ -62,6 +66,12 @@ public:
     {
         startLine = l.getLineNumber();
         startOffset = l.getOffset();
+    }
+
+    inline void adjustEnd(size_t l)
+    {
+        endLine = startLine;
+        endOffset = startOffset + l;
     }
 
     inline void setEnd(SourceLocation &l)
@@ -94,7 +104,7 @@ public:
         endOffset = end_offset;
     }
 
-    inline void setLocation(SourceLocation &l)
+    inline void setLocation(const SourceLocation &l)
     {
         startLine = l.startLine;
         startOffset = l.startOffset;

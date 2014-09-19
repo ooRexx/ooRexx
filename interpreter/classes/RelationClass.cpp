@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -36,220 +36,217 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                            RelationClass.c     */
+/* REXX Kernel                                                                */
 /*                                                                            */
-/* Primitive Table Class                                                      */
+/* Code for the Rexx relation class.                                          */
 /*                                                                            */
 /******************************************************************************/
 #include "RexxCore.h"
-#include "IntegerClass.hpp"
-#include "ArrayClass.hpp"
 #include "RelationClass.hpp"
-#include "SupplierClass.hpp"
+#include "MethodArguments.hpp"
 #include "ProtectedObject.hpp"
 
 // singleton class instance
-RexxClass *RexxRelation::classInstance = OREF_NULL;
+RexxClass *RelationClass::classInstance = OREF_NULL;
 
 
 /**
  * Create initial class object at bootstrap time.
  */
-void RexxRelation::createInstance()
+void RelationClass::createInstance()
 {
     CLASS_CREATE(Relation, "Relation", RexxClass);
 }
 
 
-RexxObject *RexxRelation::removeItem(
-  RexxObject *_value,                  /* value part of the tuple           */
-  RexxObject *_index)                  /* item to remove                    */
-/******************************************************************************/
-/* Function:  Remove an item from a relation using an index                   */
-/******************************************************************************/
+/**
+ * Create a new table object.
+ *
+ * @param size   the size of the object.
+ *
+ * @return Storage for creating a table object.
+ */
+void *RelationClass::operator new (size_t size)
 {
-    return this->contents->removeItem(_value, _index);
+    return new_object(size, T_Table);
 }
 
-RexxSupplier *RexxRelation::supplier(
-  RexxObject *_index )                 /* optional index                    */
-/******************************************************************************/
-/* Function:  Create a supplier for a relation                                */
-/******************************************************************************/
-{
-    RexxArray  *itemArray;               /* array of returned items           */
-    RexxArray  *indexArray;              /* array of indexes                  */
-    size_t   i;                          /* loop counter                      */
-    size_t   size;                       /* size of the array                 */
 
-    if (_index == OREF_NULL)              /* no index given?                   */
-    {
-        /* return the entire supplier        */
-        return this->contents->supplier();
-    }
-    else
-    {                               /* partial supplier                  */
-                                    /* get all of the items with index   */
-        itemArray = this->contents->getAll(_index);
-        size = itemArray->size();          /* get the array size                */
-        indexArray = new_array(size);      /* get an index array                */
-        for (i = 1; i <= size; i++)        /* loop through the index array      */
-        {
-            /* insert the same index here        */
-            indexArray->put(_index, i);
-        }
-        /* turn this into a supplier         */
-        return(RexxSupplier *)new_supplier(itemArray, indexArray);
-    }
+/**
+ * construct a RelationClass with a given size.
+ *
+ * @param capacity The required capacity.
+ */
+RelationClass::RelationClass(size_t capacity)
+{
+    // get a suggested bucket size for this capacity
+    // NOTE:  all of this needs to be done at the top-level constructor
+    // because of the way C++ constructors work.  As each
+    // previous contructor level gets called, the virtual function
+    // pointer gets changed to match the class of the contructor getting
+    // called.  We don't have access to our allocateContents() override
+    // until the final constructor is run.
+    size_t bucketSize = calculateBucketSize(capacity);
+    contents = allocateContents(bucketSize, bucketSize *2);
 }
 
-RexxObject *RexxRelation::itemsRexx(
-     RexxObject *_index )               /* optional target index             */
-/******************************************************************************/
-/* Function:  Return the count of items associated with the given index, or   */
-/*            the entire collection if the index is omitted.                  */
-/******************************************************************************/
+
+/**
+ * Create a new table instance from Rexx code.
+ *
+ * @param args     The new arguments.
+ * @param argCount The count of new arguments.
+ *
+ * @return The constructed instance.
+ */
+RexxObject *RelationClass::newRexx(RexxObject **args, size_t argCount)
 {
-    if (_index == OREF_NULL)
-    {           /* no index given?                   */
-                /* return count for everything       */
-        return new_integer(contents->totalEntries());
-    }
-    else
-    {
-        // just search and count
-        return new_integer(contents->countAll(_index));
-    }
+    // this class is defined on the object class, but this is actually attached
+    // to a class object instance.  Therefore, any use of the this pointer
+    // will be touching the wrong data.  Use the classThis pointer for calling
+    // any methods on this object from this method.
+    RexxClass *classThis = (RexxClass *)this;
+
+    // create the new identity table item (this version does not have a backing contents yet).
+    Protected<RelationClass> temp = new RelationClass(true);
+    // finish setting this up.
+    classThis->completeNewObject(temp, args, argCount);
+
+    // make sure this has been completely initialized
+    temp->initialize();
+    return temp;
 }
 
-RexxObject *RexxRelation::removeItemRexx(
-  RexxObject *_value,                   /* value part of the tuple           */
-  RexxObject *_index)                   /* item to remove                    */
-/******************************************************************************/
-/* Function:  Remove an item from a relation using an index                   */
-/******************************************************************************/
+
+/**
+ * Virtual method for allocating a new contents item for this
+ * collection.  Collections with special requirements should
+ * override this and return the appropriate subclass.
+ *
+ * @param bucketSize The bucket size of the collection.
+ * @param totalSize  The total capacity of the collection.
+ *
+ * @return A new HashContents object appropriate for this collection type.
+ */
+HashContents *RelationClass::allocateContents(size_t bucketSize, size_t totalSize)
 {
-    RexxObject *item;                    /* removed item                      */
-
-    requiredArgument(_value, ARG_ONE);            /* make sure we have a value         */
-
-    // standard remove form?
-    if (_index == OREF_NULL)
-    {
-        item = this->contents->removeItem(_value);
-    }
-    else    // multi-item form
-    {
-        item = this->contents->removeItem(_value, _index);
-    }
-    if (item == OREF_NULL)               /* If nothing found, give back .nil  */
-    {
-        item = TheNilObject;               /* (never return OREF_NULL to REXX)  */
-    }
-    return item;                         /* return removed value              */
+    return new (totalSize) MultiValueContents(bucketSize, totalSize);
 }
 
-RexxObject *RexxRelation::hasItem(
-  RexxObject *_value,                   /* value part of the tuple           */
-  RexxObject *_index)                   /* item to remove                    */
-/******************************************************************************/
-/* Function:  Remove an item from a relation using an index                   */
-/******************************************************************************/
+
+/**
+ * Remove an item from the collection using a value and
+ * an optional index qualifier.
+ *
+ * @param value  The item to remove.
+ * @param index  The index qualifier.
+ *
+ * @return The removed item.
+ */
+RexxInternalObject *RelationClass::removeItem(RexxInternalObject *value, RexxInternalObject *index)
 {
-    requiredArgument(_value, ARG_ONE);            /* make sure we have a value         */
-    if (_index == OREF_NULL)              // just an item search
-    {
-        return this->contents->hasItem(_value);
-    }
-    else   // tuple search
-    {
-        return this->contents->hasItem(_value, _index);
-    }
+    return contents->removeItem(value, index);
 }
 
-RexxObject *RexxRelation::allIndex(
-  RexxObject *_value)                   /* value to get                      */
-/******************************************************************************/
-/* Function:  return all indices with the same value                          */
-/******************************************************************************/
+
+/**
+ * Get a supplier for either the whole collection or a subset based
+ * on the index.
+ *
+ * @param index  The optional index.
+ *
+ * @return A supplier object for iterating over the collection items.
+ */
+SupplierClass *RelationClass::supplierRexx(RexxInternalObject *index)
 {
-    requiredArgument(_value, ARG_ONE);           /* make sure we have a value         */
-                                         /* just get from the hash table      */
-    return this->contents->allIndex(_value);
+    return contents->supplier(index);
 }
 
-RexxObject *RexxRelation::allAt(
-  RexxObject *_index)                   /* index to get                      */
-/******************************************************************************/
-/* Function:  return all values with the same index                           */
-/******************************************************************************/
+
+/**
+ * Returns the count of items in the collection, or if
+ * an index is specified, the number of items associated with that index.
+ *
+ * @param index The target index.
+ *
+ * @return The appropriate count of items.
+ */
+RexxInternalObject *RelationClass::itemsRexx(RexxInternalObject *index)
 {
-    requiredArgument(_index, ARG_ONE);           /* make sure we have an index        */
-                                       /* just get from the hash table      */
-    return this->contents->allIndex(_index);
+    return new_integer(contents->items(index));
+}
+
+
+/**
+ * Remove an item from a relation, optionally qualified with an index value.
+ *
+ * @param value The target value.
+ * @param index The optional index.
+ *
+ * @return The removed item, if any.
+ */
+RexxInternalObject *RelationClass::removeItemRexx(RexxInternalObject *value, RexxInternalObject *index)
+{
+    requiredArgument(value,ARG_ONE);
+    return resultOrNil(contents->removeItem(value, index));
+}
+
+
+/**
+ * Test for an existance of an item in the collection, optionally
+ * qualified by an index value.
+ *
+ * @param value  The target value.
+ * @param index  The optional index.
+ *
+ * @return .true if this was found, .false otherwise.
+ */
+RexxInternalObject *RelationClass::hasItemRexx(RexxInternalObject *value, RexxInternalObject *index)
+{
+    requiredArgument(value, ARG_ONE);
+    return booleanObject(contents->hasItem(value, index));
+}
+
+
+/**
+ * Return all indexes associated with a single value.
+ *
+ * @param value  The target value.
+ *
+ * @return The associated indexes.
+ */
+RexxInternalObject *RelationClass::allIndexRexx(RexxInternalObject *value)
+{
+    requiredArgument(value, ARG_ONE);
+    return this->contents->allIndex(value);
+}
+
+
+/**
+ * Return all values associated with the same index.
+ *
+ * @param index The target index.
+ *
+ * @return An array holding all of the indexes.
+ */
+RexxInternalObject *RelationClass::allAt(RexxInternalObject *index)
+{
+    requiredArgument(index, ARG_ONE);
+    return contents->allIndex(index);
 }
 
 
 /**
  * Remove all items with a given index.
  *
- * @param _index The index to remove.
+ * @param index The index to remove.
  *
  * @return An array of all removed items.  Returns an empty array
  *         if the index is not found.
  */
-RexxObject *RexxRelation::removeAll(RexxObject *_index)
+RexxInternalObject *RelationClass::removeAll(RexxInternalObject *index)
 {
-    requiredArgument(_index, ARG_ONE);           /* make sure we have an index        */
-                                       /* just get from the hash table      */
-    return this->contents->removeAll(_index);
-}
-
-
-RexxObject *RexxRelation::put(
-  RexxObject *_value,                   /* new value to add                  */
-  RexxObject *_index)                   /* index for insertion               */
-/******************************************************************************/
-/* Arguments:  Value, index                                                   */
-/*                                                                            */
-/*  Returned:  Nothing                                                        */
-/******************************************************************************/
-{
-    requiredArgument(_value, ARG_ONE);            /* make sure we have an value        */
-    requiredArgument(_index, ARG_TWO);            /* make sure we have an index        */
-    /* try to place in existing hashtab  */
-    RexxHashTable *newHash = this->contents->add(_value, _index);
-    if (newHash != OREF_NULL)            /* have a reallocation occur?        */
-    {
-        /* hook on the new hash table        */
-        OrefSet(this, this->contents, newHash);
-    }
-    return OREF_NULL;                    /* never returns anything            */
-}
-
-RexxObject *RexxRelation::newRexx(
-     RexxObject **init_args,           /* subclass init arguments           */
-     size_t       argCount)            /* the number of arguments           */
-/******************************************************************************/
-/* Function:  Create an instance of a relation                                */
-/******************************************************************************/
-{
-    RexxRelation *newObj = new_relation();             /* get a new relation                */
-    ProtectedObject p(newObj);
-    /* object parse_assignment behaviour */
-    newObj->setBehaviour(((RexxClass *)this)->getInstanceBehaviour());
-    /* Initialize the new list instance  */
-    newObj->sendMessage(OREF_INIT, init_args, argCount);
-    return newObj;                       /* return the new object             */
-}
-
-RexxRelation *RexxRelation::newInstance()
-/******************************************************************************/
-/* Function:  Create a new relation item                                      */
-/******************************************************************************/
-{
-    /* Get new object                    */
-    /* get a new object and hash         */
-    return(RexxRelation *)new_hashCollection(RexxHashTable::DEFAULT_HASH_SIZE, sizeof(RexxRelation), T_Relation);
+    requiredArgument(index, ARG_ONE);
+    return contents->removeAll(index);
 }
 

@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -47,26 +47,61 @@
 #include "RexxInstruction.hpp"
 #include "CallInstruction.hpp"
 
-#define signal_on        0x01          /* doing a signal on                 */
-
-class RexxInstructionSignal : public RexxInstructionCallBase {
+/**
+ * Instruction object for a "normal" SIGNAL instruction
+ * that jumps to a label location.
+ */
+class RexxInstructionSignal : public RexxInstructionCallBase
+{
  public:
-  inline void *operator new(size_t size, void *ptr) {return ptr;}
-  inline void  operator delete(void *) { }
-  inline void  operator delete(void *, void *) { }
+    RexxInstructionSignal(RexxString *);
+    inline RexxInstructionSignal(RESTORETYPE restoreType) { ; };
 
-  RexxInstructionSignal(RexxObject *, RexxString *, RexxString *, size_t);
-  inline RexxInstructionSignal(RESTORETYPE restoreType) { ; };
-  void execute(RexxActivation *, RexxExpressionStack *);
-  void live(size_t);
-  void liveGeneral(int reason);
-  void flatten(RexxEnvelope*);
-  void resolve (RexxDirectory *);
-  void trap (RexxActivation *, RexxDirectory *);
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(Envelope *);
 
-  RexxInstruction *target;             /* label to signal                   */
-  RexxString      *name;               /* name of the label to signal       */
-  RexxString      *condition;          /* condition trap name               */
-  RexxObject      *expression;         /* SIGNAL VALUE expression           */
+    virtual void execute(RexxActivation *, ExpressionStack *);
+    virtual void resolve (StringTable *);
+};
+
+
+/**
+ * An instruction object for a dynamic SIGNAL instruction
+ * (SIGNAL VALUE or SIGNAL expr).  This resolves the
+ * target label from an expression result at run time.
+ */
+class RexxInstructionDynamicSignal : public RexxInstructionDynamicCallBase
+{
+ public:
+    RexxInstructionDynamicSignal(RexxObject *);
+    inline RexxInstructionDynamicSignal(RESTORETYPE restoreType) { ; };
+
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(Envelope*);
+
+    virtual void execute(RexxActivation *, ExpressionStack *);
+};
+
+
+/**
+ * An instruction object to handle the basics of the SIGNAL
+ * ON/OFF instruction.
+ */
+class RexxInstructionSignalOn : public RexxInstructionTrapBase
+{
+ public:
+    RexxInstructionSignalOn(RexxString*, RexxString *);
+    inline RexxInstructionSignalOn(RESTORETYPE restoreType) { ; };
+
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(Envelope*);
+
+    virtual void execute(RexxActivation *, ExpressionStack *);
+    virtual void resolve(StringTable *);
+
+    virtual void trap(RexxActivation *context, DirectoryClass  *conditionObj);
 };
 #endif

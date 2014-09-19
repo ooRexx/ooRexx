@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -41,61 +41,12 @@
 /* Primitive Translator Abstract Directive Code                               */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "RequiresDirective.hpp"
 #include "Clause.hpp"
 #include "RexxActivation.hpp"
 
 
-/**
- * Construct a RequiresDirective.
- *
- * @param n      The name of the requires target.
- * @param clause The source file clause containing the directive.
- */
-RequiresDirective::RequiresDirective(RexxString *n, RexxClause *clause) : RexxDirective(clause, KEYWORD_REQUIRES)
-{
-    name = n;
-}
-
-/**
- * Normal garbage collecting live mark.
- *
- * @param liveMark The current live object mark.
- */
-void RequiresDirective::live(size_t liveMark)
-{
-    memory_mark(this->nextInstruction);  // must be first one marked (though normally null)
-    memory_mark(this->name);
-}
-
-
-/**
- * The generalized object marking routine.
- *
- * @param reason The processing faze we're running the mark on.
- */
-void RequiresDirective::liveGeneral(int reason)
-{
-    memory_mark_general(this->nextInstruction);  // must be first one marked (though normally null)
-    memory_mark_general(this->name);
-}
-
-
-/**
- * Flatten the directive instance.
- *
- * @param envelope The envelope we're flattening into.
- */
-void RequiresDirective::flatten(RexxEnvelope *envelope)
-{
-    setUpFlatten(RequiresDirective)
-
-        flatten_reference(newThis->nextInstruction, envelope);
-        flatten_reference(newThis->name, envelope);
-    cleanUpFlatten
-}
 
 
 /**
@@ -107,7 +58,64 @@ void RequiresDirective::flatten(RexxEnvelope *envelope)
  */
 void *RequiresDirective::operator new(size_t size)
 {
-    return new_object(size, T_RequiresDirective); /* Get new object                    */
+    return new_object(size, T_RequiresDirective);
+}
+
+
+/**
+ * Construct a RequiresDirective.
+ *
+ * @param n      The name of the requires target.
+ * @param clause The source file clause containing the directive.
+ */
+RequiresDirective::RequiresDirective(RexxString *n, RexxString *l, RexxClause *clause) : RexxDirective(clause, KEYWORD_REQUIRES)
+{
+    name = n;
+    label = l;
+}
+
+/**
+ * Normal garbage collecting live mark.
+ *
+ * @param liveMark The current live object mark.
+ */
+void RequiresDirective::live(size_t liveMark)
+{
+    // must be first one marked (though normally null)
+    memory_mark(nextInstruction);
+    memory_mark(name);
+    memory_mark(label);
+}
+
+
+/**
+ * The generalized object marking routine.
+ *
+ * @param reason The processing faze we're running the mark on.
+ */
+void RequiresDirective::liveGeneral(MarkReason reason)
+{
+    // must be first one marked (though normally null)
+    memory_mark_general(nextInstruction);
+    memory_mark_general(name);
+    memory_mark_general(label);
+}
+
+
+/**
+ * Flatten the directive instance.
+ *
+ * @param envelope The envelope we're flattening into.
+ */
+void RequiresDirective::flatten(Envelope *envelope)
+{
+    setUpFlatten(RequiresDirective)
+
+    flattenRef(nextInstruction);
+    flattenRef(name);
+    flattenRef(label);
+
+    cleanUpFlatten
 }
 
 
@@ -120,5 +128,7 @@ void *RequiresDirective::operator new(size_t size)
  */
 void RequiresDirective::install(RexxActivation *context)
 {
+
+    // TODO:  Need to sort out how the label is handled at load time
     context->loadRequires(name, this);
 }

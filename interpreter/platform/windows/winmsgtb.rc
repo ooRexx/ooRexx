@@ -2,7 +2,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -403,15 +403,15 @@ Error_Program_unreadable    "Failure during initialization"
    Error_Incorrect_method_supplier    "No more supplier items available"
    Error_Incorrect_method_nostring    "Method argument &1 must have a string value"
    Error_Incorrect_method_noarray    "Method argument &1 must have a single-dimensional array value"
-   Error_Incorrect_method_exponent_oversize    "Exponent ""&1"" is too large for &2 spaces"
-   Error_Incorrect_method_before_oversize    "Integer part ""&1"" is too large for &2 spaces"
+   Error_Incorrect_method_exponent_oversize    "Exponent of ""&1"" is too large for &2 spaces"
+   Error_Incorrect_method_before_oversize    "Integer part of ""&1"" is too large for &2 spaces"
    Error_Incorrect_method_string_nonumber    "&1 method target must be a number; found ""&2"""
    Error_Incorrect_method_nomessage    "Method argument &1 must be a message object"
    Error_Incorrect_method_message_noarg    "Missing argument in message array; argument &1 is required"
    Error_Incorrect_method_message    "A message array must be a single-dimensional array with 2 elements"
    Error_Incorrect_method_section    "Method SECTION can be used only on single-dimensional arrays"
    Error_Incorrect_method_noclass    "Method argument &1 must be of the &2 class"
-   Error_Incorrect_method_nomatch    "The index and value objects must be the same for PUT to an index-only collection"
+   Error_Incorrect_method_nomatch    "The value and index objects must be the same for PUT to an index-only collection"
    Error_No_method_name    "Object ""&1"" does not understand message ""&2"""
    Error_Execution_nodouble    "Unable to convert object ""&1"" to a double-float value"
    Error_Execution_library    "Unable to load library ""&1"""
@@ -628,7 +628,7 @@ Error_Program_unreadable    "Failure during initialization"
    Message_Translations_compiled_method_invocation    "       *-* Compiled method &1 with scope ""&2"""
    Message_Translations_compiled_routine_invocation    "       *-* Compiled routine &1"
    Message_Translations_no_source_available    "Package ""&1"" (no source available)"
-   Error_Incomplete_do_loop    "LOOP instruction on line &1 requires matching END"
+   Error_Incomplete_do_loop    "DO or LOOP instruction on line &1 requires matching END"
    Error_Invalid_subkeyword_attribute    "Unknown keyword on ::ATTRIBUTE directive; found ""&1"""
    Error_Translation_abstract_method    "Abstract methods cannot have a method body"
    Error_Translation_attribute_method    "Attribute methods cannot have a method body"
@@ -642,6 +642,10 @@ Error_Program_unreadable    "Failure during initialization"
    Message_Translations_sourceless_method_invocation    "Method &1 with scope ""&2"" in package ""&3"" (no source available)"
    Message_Translations_sourceless_routine_invocation    "Routine &1 in package ""&2"" (no source available)"
    Message_Translations_sourceless_program_invocation    "Program in ""&1"" (no source available)"
+   Error_Invalid_expression_select_case    "Missing expression following CASE keyword of a SELECT instruction"
+   Error_Translation_directive_method_routine    "Method or routine code may not contain directive instructions"
+   Error_Execution_rexx_package_update    "User additions are not allowed to the REXX package."
+   Error_Execution_rexx_defined_class    "User additions are not allowed to the REXX language classes."
    
 END
 

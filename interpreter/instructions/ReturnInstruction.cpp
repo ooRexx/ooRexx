@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -41,40 +41,36 @@
 /* Primitive Return Parse Class                                               */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "RexxActivation.hpp"
 #include "ReturnInstruction.hpp"
 
-RexxInstructionReturn::RexxInstructionReturn(
-    RexxObject *_expression)            /* assciated expression              */
-/******************************************************************************/
-/* Function:  Complete initialization of a RETURN instruction                 */
-/******************************************************************************/
+/**
+ * Constructor for a RETURN instruction.
+ *
+ * @param _expression
+ *               The optional value expression.
+ */
+RexxInstructionReturn::RexxInstructionReturn(RexxObject *_expression)
 {
-                                       /* save the expression               */
-  OrefSet(this, this->expression, _expression);
+    expression = _expression;
 }
 
-void RexxInstructionReturn::execute(
-    RexxActivation      *context,      /* current activation context        */
-    RexxExpressionStack *stack)        /* evaluation stack                  */
-/******************************************************************************/
-/* Function:  Execute a REXX RETURN instruction                               */
-/******************************************************************************/
+
+/**
+ * Execute a RETURN instruction.
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ */
+void RexxInstructionReturn::execute(RexxActivation *context, ExpressionStack *stack)
 {
-    context->traceInstruction(this);     /* trace if necessary                */
-    if (this->expression != OREF_NULL) /* given an expression value?        */
-    {
-        /* evaluate the expression           */
-        RexxObject *result = this->expression->evaluate(context, stack);
-        context->traceResult(result);      /* trace if necessary                */
-                                           /* get the expression value and tell */
-        context->returnFrom(result);       /* the activation to return with it  */
-    }
-    else
-    {
-        context->returnFrom(OREF_NULL);    /* return with no value              */
-    }
+    // trace the instruction if needed.
+    context->traceInstruction(this);
+
+    // evaluate the optional expression and tell the context to process a RETURN.
+    context->returnFrom(evaluateExpression(context, stack));
+    // NOTE:  We don't do a debug pause after a RETURN because we're no longer
+    // in that code context.
 }
 

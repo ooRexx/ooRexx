@@ -550,7 +550,7 @@ Say NOT EQUALS
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Incomplete_do_loop</SymbolicName>
-        <Text>LOOP instruction on line <Sub position="1" name="line_number"/> requires matching END</Text>
+        <Text>DO or LOOP instruction on line <Sub position="1" name="line_number"/> requires matching END</Text>
       </SubMessage>
     </Subcodes>
   </Message>
@@ -2501,6 +2501,15 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Invalid_expression_call</SymbolicName>
         <Text>Missing expression for calculated CALL name</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>35</Code>
+        <Subcode>933</Subcode>
+        <MessageNumber>739</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_expression_select_case</SymbolicName>
+        <Text>Missing expression following CASE keyword of a SELECT instruction</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>
@@ -4222,7 +4231,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Incorrect_method_exponent_oversize</SymbolicName>
-        <Text>Exponent <q><Sub position="1" name="exponent"/></q> is too large for <Sub position="2" name="number"/> spaces</Text>
+        <Text>Exponent of <q><Sub position="1" name="exponent"/></q> is too large for <Sub position="2" name="number"/> spaces</Text>
       </SubMessage>
       <SubMessage>
         <Code>93</Code>
@@ -4231,7 +4240,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Incorrect_method_before_oversize</SymbolicName>
-        <Text>Integer part <q><Sub position="1" name="integer"/></q> is too large for <Sub position="2" name="number"/> spaces</Text>
+        <Text>Integer part of <q><Sub position="1" name="integer"/></q> is too large for <Sub position="2" name="number"/> spaces</Text>
       </SubMessage>
       <SubMessage>
         <Code>93</Code>
@@ -4294,7 +4303,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Incorrect_method_nomatch</SymbolicName>
-        <Text>The index and value objects must be the same for PUT to an index-only collection</Text>
+        <Text>The value and index objects must be the same for PUT to an index-only collection</Text>
       </SubMessage>
       <SubMessage>
         <Code>93</Code>
@@ -4851,6 +4860,24 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Execution_invalid_thread</SymbolicName>
         <Text>Execution thread does not match API thread context.</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>98</Code>
+        <Subcode>984</Subcode>
+        <MessageNumber>741</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Execution_rexx_package_update</SymbolicName>
+        <Text>User additions are not allowed to the REXX package.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>98</Code>
+        <Subcode>985</Subcode>
+        <MessageNumber>742</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Execution_rexx_defined_class</SymbolicName>
+        <Text>User additions are not allowed to the REXX language classes.</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>
@@ -5204,6 +5231,15 @@ special character (such as a parenthesis).
         <Severity>Warning</Severity>
         <SymbolicName>Error_Translation_abstract_attribute</SymbolicName>
         <Text>Abstract attributes cannot have a method body</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>99</Code>
+        <Subcode>941</Subcode>
+        <MessageNumber>740</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Translation_directive_method_routine</SymbolicName>
+        <Text>Method or routine code may not contain directive instructions</Text>
       </SubMessage>
     </Subcodes>
   </Message>

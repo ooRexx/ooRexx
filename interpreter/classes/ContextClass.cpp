@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.ibm.com/developerworks/oss/CPLv1.0.htm                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -67,7 +67,6 @@ void RexxContext::createInstance()
  */
 void *RexxContext::operator new(size_t size)
 {
-    /* Get new object                    */
     return new_object(size, T_RexxContext);
 }
 
@@ -101,32 +100,25 @@ RexxObject *RexxContext::newRexx(RexxObject **args, size_t argc)
 }
 
 
+/**
+ * Generalized object marking.
+ *
+ * @param reason The reason for this live marking operation.
+ */
 void RexxContext::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
-    memory_mark(this->activation);
+    memory_mark(activation);
 }
 
-void RexxContext::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
+
+/**
+ * Generalized object marking.
+ *
+ * @param reason The reason for this live marking operation.
+ */
+void RexxContext::liveGeneral(MarkReason reason)
 {
-    memory_mark_general(this->activation);
-}
-
-void RexxContext::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
-{
-  setUpFlatten(RexxContext)
-
-  newThis->activation = OREF_NULL;   // this never should be getting flattened, so sever the connection
-
-  cleanUpFlatten
+    memory_mark_general(activation);
 }
 
 
@@ -201,7 +193,7 @@ RexxObject *RexxContext::getFuzz()
 RexxObject *RexxContext::getForm()
 {
     checkValid();
-    return activation->form() == Numerics::FORM_SCIENTIFIC ? OREF_SCIENTIFIC : OREF_ENGINEERING;
+    return activation->form() == Numerics::FORM_SCIENTIFIC ? GlobalNames::SCIENTIFIC : GlobalNames::ENGINEERING;
 }
 
 
@@ -240,7 +232,7 @@ RexxObject *RexxContext::getArgs()
     checkValid();
     RexxObject **arglist = activation->getMethodArgumentList();
     size_t size = activation->getMethodArgumentCount();
-    return new (size, arglist) RexxArray;
+    return new_array(size, arglist);
 }
 
 
@@ -252,9 +244,9 @@ RexxObject *RexxContext::getArgs()
 RexxObject *RexxContext::getCondition()
 {
     checkValid();
-                                       /* get current trapped condition     */
+    // we return a copy of the current condition if we have any
     RexxObject *conditionobj = activation->getConditionObj();
-    return conditionobj == OREF_NULL ? TheNilObject : conditionobj->copy();
+    return conditionobj == OREF_NULL ? TheNilObject : (RexxObject *)conditionobj->copy();
 }
 
 

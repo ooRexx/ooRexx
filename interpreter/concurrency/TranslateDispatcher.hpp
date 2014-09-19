@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -49,7 +49,7 @@ public:
     virtual ~TranslateDispatcher() { ; }
 
     virtual void run();
-    virtual void handleError(wholenumber_t, RexxDirectory *);
+    virtual void handleError(wholenumber_t, DirectoryClass *);
 
     const char *programName;             /* REXX program to run               */
     PRXSTRING  instore;                  /* Instore array                     */
@@ -64,7 +64,7 @@ public:
     virtual ~TranslateInstoreDispatcher() { ; }
 
     virtual void run();
-    virtual void handleError(wholenumber_t, RexxDirectory *);
+    virtual void handleError(wholenumber_t, DirectoryClass *);
 
     const char *programName;             /* REXX program to run               */
     CONSTRXSTRING *source;               // the image to translate

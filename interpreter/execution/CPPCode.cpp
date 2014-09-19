@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -41,8 +41,10 @@
 #include "ActivityManager.hpp"
 #include "ProtectedObject.hpp"
 #include "Interpreter.hpp"
-#include "RexxVariableDictionary.hpp"
+#include "VariableDictionary.hpp"
 #include "ActivationFrame.hpp"
+#include "ExpressionBaseVariable.hpp"
+#include "MethodArguments.hpp"
 
 
 /**
@@ -74,25 +76,18 @@ CPPCode::CPPCode(size_t index, PCPPM entry, size_t argcount)
 }
 
 
-void CPPCode::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
+/**
+ * Generalized object marking.  If restoring or unflattening,
+ * make sure we restore the method pointer.
+ *
+ * @param reason The reason for the call.
+ */
+void CPPCode::liveGeneral(MarkReason reason)
 {
-    if (reason == RESTORINGIMAGE)        /* restoring the image?              */
+    if (reason == RESTORINGIMAGE || reason == UNFLATTENINGOBJECT)
     {
-        this->cppEntry = exportedMethods[this->methodIndex];
+        cppEntry = exportedMethods[methodIndex];
     }
-}
-
-
-RexxObject *CPPCode::unflatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  unflatten an object                                             */
-/******************************************************************************/
-{
-    this->cppEntry = exportedMethods[this->methodIndex];
-    return (RexxObject *)this;
 }
 
 
@@ -108,7 +103,7 @@ RexxObject *CPPCode::unflatten(RexxEnvelope *envelope)
  * @param count    The argument count.
  * @param result   The returned result.
  */
-void CPPCode::run(RexxActivity *activity, RexxMethod *method, RexxObject *receiver, RexxString *messageName,
+void CPPCode::run(Activity *activity, MethodClass *method, RexxObject *receiver, RexxString *messageName,
     RexxObject **argPtr, size_t count, ProtectedObject &result)
 {
     InternalActivationFrame frame(activity, messageName, receiver, method, argPtr, count);
@@ -188,36 +183,44 @@ void CPPCode::run(RexxActivity *activity, RexxMethod *method, RexxObject *receiv
  */
 void *AttributeGetterCode::operator new(size_t size)
 {
-    // just allocate ane return
     return new_object(size, T_AttributeGetterCode);
 }
 
+
+/**
+ * Normal garbage collection live marking
+ *
+ * @param liveMark The current live mark.
+ */
 void AttributeGetterCode::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
-  memory_mark(this->attribute);
+    memory_mark(attribute);
 }
 
-void AttributeGetterCode::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
+
+/**
+ * Generalized object marking.
+ *
+ * @param reason The reason for this live marking operation.
+ */
+void AttributeGetterCode::liveGeneral(MarkReason reason)
 {
-  memory_mark_general(this->attribute);
+    memory_mark_general(attribute);
 }
 
-void AttributeGetterCode::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
+
+/**
+ * Flatten the table contents as part of a saved program.
+ *
+ * @param envelope The envelope we're flattening into.
+ */
+void AttributeGetterCode::flatten(Envelope *envelope)
 {
-  setUpFlatten(AttributeGetterCode)
+    setUpFlatten(AttributeGetterCode)
 
-  flatten_reference(newThis->attribute, envelope);
+    flattenRef(attribute);
 
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
 
@@ -233,7 +236,7 @@ void AttributeGetterCode::flatten(RexxEnvelope *envelope)
  * @param count    The argument count.
  * @param result   The returned result.
  */
-void AttributeGetterCode::run(RexxActivity *activity, RexxMethod *method, RexxObject *receiver, RexxString *messageName,
+void AttributeGetterCode::run(Activity *activity, MethodClass *method, RexxObject *receiver, RexxString *messageName,
     RexxObject **argPtr, size_t count, ProtectedObject &result)
 {
     // validate the number of arguments
@@ -246,9 +249,10 @@ void AttributeGetterCode::run(RexxActivity *activity, RexxMethod *method, RexxOb
     {
         result = attribute->getValue(receiver->getObjectVariables(method->getScope()));
     }
-    else {
+    else
+    {
         // get the variable pool and get the guard lock
-        RexxVariableDictionary *objectVariables = receiver->getObjectVariables(method->getScope());
+        VariableDictionary *objectVariables = receiver->getObjectVariables(method->getScope());
         objectVariables->reserve(activity);
         result = attribute->getValue(objectVariables);
         // and ensure we release this afterwards
@@ -266,7 +270,6 @@ void AttributeGetterCode::run(RexxActivity *activity, RexxMethod *method, RexxOb
  */
 void *AttributeSetterCode::operator new(size_t size)
 {
-    // just allocate ane return
     return new_object(size, T_AttributeSetterCode);
 }
 
@@ -283,7 +286,7 @@ void *AttributeSetterCode::operator new(size_t size)
  * @param count    The argument count.
  * @param result   The returned result.
  */
-void AttributeSetterCode::run(RexxActivity *activity, RexxMethod *method, RexxObject *receiver, RexxString *messageName,
+void AttributeSetterCode::run(Activity *activity, MethodClass *method, RexxObject *receiver, RexxString *messageName,
     RexxObject **argPtr, size_t count, ProtectedObject &result)
 {
     // validate the number of arguments
@@ -294,17 +297,19 @@ void AttributeSetterCode::run(RexxActivity *activity, RexxMethod *method, RexxOb
 
     if (count == 0 || *argPtr == OREF_NULL)
     {
-        missingArgument(1);
+        missingArgument(ARG_ONE);
     }
+
     // this is simplier if the method is not guarded
     if (!method->isGuarded())
     {
         // go set the attribue
         attribute->set(receiver->getObjectVariables(method->getScope()), argPtr[0]);
     }
-    else {
+    else
+    {
         // get the variable pool and get the guard lock
-        RexxVariableDictionary *objectVariables = receiver->getObjectVariables(method->getScope());
+        VariableDictionary *objectVariables = receiver->getObjectVariables(method->getScope());
         objectVariables->reserve(activity);
         // go set the attribue
         attribute->set(objectVariables, argPtr[0]);
@@ -323,37 +328,44 @@ void AttributeSetterCode::run(RexxActivity *activity, RexxMethod *method, RexxOb
  */
 void *ConstantGetterCode::operator new(size_t size)
 {
-    // just allocate ane return
     return new_object(size, T_AttributeGetterCode);
 }
 
 
+/**
+ * Normal garbage collection live marking
+ *
+ * @param liveMark The current live mark.
+ */
 void ConstantGetterCode::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
-  memory_mark(this->constantValue);
+    memory_mark(constantValue);
 }
 
-void ConstantGetterCode::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
+
+/**
+ * Generalized object marking.
+ *
+ * @param reason The reason for this live marking operation.
+ */
+void ConstantGetterCode::liveGeneral(MarkReason reason)
 {
-  memory_mark_general(this->constantValue);
+    memory_mark_general(constantValue);
 }
 
-void ConstantGetterCode::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
+
+/**
+ * Flatten the table contents as part of a saved program.
+ *
+ * @param envelope The envelope we're flattening into.
+ */
+void ConstantGetterCode::flatten(Envelope *envelope)
 {
-  setUpFlatten(ConstantGetterCode)
+    setUpFlatten(ConstantGetterCode)
 
-  flatten_reference(newThis->constantValue, envelope);
+    flattenRef(constantValue);
 
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
 
@@ -369,7 +381,7 @@ void ConstantGetterCode::flatten(RexxEnvelope *envelope)
  * @param count    The argument count.
  * @param result   The returned result.
  */
-void ConstantGetterCode::run(RexxActivity *activity, RexxMethod *method, RexxObject *receiver, RexxString *messageName,
+void ConstantGetterCode::run(Activity *activity, MethodClass *method, RexxObject *receiver, RexxString *messageName,
     RexxObject **argPtr, size_t count, ProtectedObject &result)
 {
     // validate the number of arguments
@@ -390,7 +402,6 @@ void ConstantGetterCode::run(RexxActivity *activity, RexxMethod *method, RexxObj
  */
 void *AbstractCode::operator new(size_t size)
 {
-    // just allocate ane return
     return new_object(size, T_AbstractCode);
 }
 
@@ -407,7 +418,7 @@ void *AbstractCode::operator new(size_t size)
  * @param count    The argument count.
  * @param result   The returned result.
  */
-void AbstractCode::run(RexxActivity *activity, RexxMethod *method, RexxObject *receiver, RexxString *messageName,
+void AbstractCode::run(Activity *activity, MethodClass *method, RexxObject *receiver, RexxString *messageName,
     RexxObject **argPtr, size_t count, ProtectedObject &result)
 {
     reportException(Error_Incorrect_method_abstract, messageName);
@@ -432,15 +443,14 @@ void AbstractCode::run(RexxActivity *activity, RexxMethod *method, RexxObject *r
 #include "MethodClass.hpp"
 #include "RoutineClass.hpp"
 #include "PackageClass.hpp"
-#include "RexxEnvelope.hpp"
+#include "Envelope.hpp"
 #include "MessageClass.hpp"
 #include "StemClass.hpp"
-#include "RexxMisc.hpp"
-#include "RexxNativeCode.hpp"
-#include "RexxActivity.hpp"
+#include "NativeCode.hpp"
+#include "Activity.hpp"
 #include "ActivityManager.hpp"
-#include "RexxNativeActivation.hpp"
-#include "RexxVariableDictionary.hpp"
+#include "NativeActivation.hpp"
+#include "VariableDictionary.hpp"
 #include "ExpressionVariable.hpp"
 #include "RexxLocalVariables.hpp"
 #include "ProtectedObject.hpp"
@@ -449,8 +459,14 @@ void AbstractCode::run(RexxActivity *activity, RexxMethod *method, RexxObject *r
 #include "WeakReferenceClass.hpp"
 #include "ContextClass.hpp"
 #include "StackFrameClass.hpp"
+#include "ActivityManager.hpp"
+#include "SetClass.hpp"
+#include "BagClass.hpp"
 
-PCPPM CPPCode::exportedMethods[] =     /* start of exported methods table   */
+// start of the exported methods table.  Any method used in Setup.cpp must also
+// be included in this table here so that methods can recover the pointer
+// to the backing code after being restored.
+PCPPM CPPCode::exportedMethods[] =
 {
 CPPM(RexxObject::objectName),
 CPPM(RexxObject::objectNameEquals),
@@ -467,12 +483,11 @@ CPPM(RexxObject::unsetMethod),
 CPPM(RexxObject::requestRexx),
 CPPM(RexxObject::makeStringRexx),
 CPPM(RexxObject::makeArrayRexx),
-CPPM(RexxInternalObject::hasUninit),
 CPPM(RexxObject::classObject),
 CPPM(RexxObject::equal),
 CPPM(RexxObject::strictEqual),
 CPPM(RexxObject::hashCode),
-CPPM(RexxObject::init),
+CPPM(RexxObject::initRexx),
 CPPM(RexxObject::strictNotEqual),
 CPPM(RexxObject::copyRexx),
 CPPM(RexxObject::defaultNameRexx),
@@ -486,7 +501,7 @@ CPPM(RexxObject::concatBlank),
 
 CPPM(RexxObject::newRexx),
 
-CPPM(RexxClass::setRexxDefined),       /* Class methods                     */
+CPPM(RexxClass::inheritInstanceMethods),
 CPPM(RexxClass::defaultNameRexx),
 CPPM(RexxClass::queryMixinClass),
 CPPM(RexxClass::getId),
@@ -495,7 +510,7 @@ CPPM(RexxClass::getMetaClass),
 CPPM(RexxClass::getSuperClasses),
 CPPM(RexxClass::getSuperClass),
 CPPM(RexxClass::getSubClasses),
-CPPM(RexxClass::defmeths),
+CPPM(RexxClass::defineMethods),
 CPPM(RexxClass::defineMethod),
 CPPM(RexxClass::defineMethods),
 CPPM(RexxClass::defineClassMethod),
@@ -506,7 +521,7 @@ CPPM(RexxClass::methods),
 CPPM(RexxClass::inherit),
 CPPM(RexxClass::uninherit),
 CPPM(RexxClass::enhanced),
-CPPM(RexxClass::mixinclassRexx),
+CPPM(RexxClass::mixinClassRexx),
 CPPM(RexxClass::subclassRexx),
 CPPM(RexxClass::equal),
 CPPM(RexxClass::strictEqual),
@@ -516,63 +531,42 @@ CPPM(RexxClass::getPackage),
 
 CPPM(RexxClass::newRexx),
 
-CPPM(RexxArray::sizeRexx),             /* Array methods                     */
-CPPM(RexxArray::itemsRexx),
-CPPM(RexxArray::dimension),
-CPPM(RexxArray::getDimensions),
-CPPM(RexxArray::supplier),
-CPPM(RexxArray::getRexx),
-CPPM(RexxArray::putRexx),
-CPPM(RexxArray::hasIndexRexx),
-CPPM(RexxArray::sectionRexx),
-CPPM(RexxArray::removeRexx),
-CPPM(RexxArray::firstRexx),
-CPPM(RexxArray::firstItem),
-CPPM(RexxArray::lastRexx),
-CPPM(RexxArray::lastItem),
-CPPM(RexxArray::nextRexx),
-CPPM(RexxArray::previousRexx),
-CPPM(RexxArray::appendRexx),
-CPPM(RexxArray::allIndexes),
-CPPM(RexxArray::allItems),
-CPPM(RexxArray::empty),
-CPPM(RexxArray::isEmpty),
-CPPM(RexxArray::index),
-CPPM(RexxArray::hasItem),
-CPPM(RexxArray::removeItem),
-CPPM(RexxArray::toString),
-CPPM(RexxArray::stableSortRexx),
-CPPM(RexxArray::stableSortWithRexx),
-CPPM(RexxArray::insertRexx),
-CPPM(RexxArray::deleteRexx),
-CPPM(RexxArray::fill),
+CPPM(ArrayClass::sizeRexx),
+CPPM(ArrayClass::itemsRexx),
+CPPM(ArrayClass::dimensionRexx),
+CPPM(ArrayClass::getDimensionsRexx),
+CPPM(ArrayClass::supplier),
+CPPM(ArrayClass::getRexx),
+CPPM(ArrayClass::putRexx),
+CPPM(ArrayClass::hasIndexRexx),
+CPPM(ArrayClass::sectionRexx),
+CPPM(ArrayClass::removeRexx),
+CPPM(ArrayClass::firstRexx),
+CPPM(ArrayClass::getFirstItem),
+CPPM(ArrayClass::lastRexx),
+CPPM(ArrayClass::getLastItem),
+CPPM(ArrayClass::nextRexx),
+CPPM(ArrayClass::previousRexx),
+CPPM(ArrayClass::appendRexx),
+CPPM(ArrayClass::allIndexes),
+CPPM(ArrayClass::allItems),
+CPPM(ArrayClass::empty),
+CPPM(ArrayClass::isEmptyRexx),
+CPPM(ArrayClass::indexRexx),
+CPPM(ArrayClass::hasItemRexx),
+CPPM(ArrayClass::removeItem),
+CPPM(ArrayClass::toString),
+CPPM(ArrayClass::stableSortRexx),
+CPPM(ArrayClass::stableSortWithRexx),
+CPPM(ArrayClass::insertRexx),
+CPPM(ArrayClass::deleteRexx),
+CPPM(ArrayClass::fill),
 
-CPPM(RexxArray::newRexx),
-CPPM(RexxArray::makeString),
-CPPM(RexxArray::of),
+CPPM(ArrayClass::newRexx),
+CPPM(ArrayClass::makeString),
+CPPM(ArrayClass::ofRexx),
 
-CPPM(RexxDirectory::atRexx),           /* Directory methods                 */
-CPPM(RexxDirectory::put),
-CPPM(RexxDirectory::entryRexx),
-CPPM(RexxDirectory::hasEntry),
-CPPM(RexxDirectory::hasIndex),
-CPPM(RexxDirectory::itemsRexx),
-CPPM(RexxHashTableCollection::merge),
-CPPM(RexxDirectory::removeRexx),
-CPPM(RexxDirectory::setEntry),
-CPPM(RexxDirectory::setMethod),
-CPPM(RexxDirectory::supplier),
-CPPM(RexxDirectory::allIndexes),
-CPPM(RexxDirectory::allItems),
-CPPM(RexxDirectory::empty),
-CPPM(RexxDirectory::isEmpty),
-CPPM(RexxDirectory::indexRexx),
-CPPM(RexxDirectory::hasItem),
-CPPM(RexxDirectory::removeItem),
-
-CPPM(RexxDirectory::newRexx),
-
-CPPM(RexxInteger::plus),               /* Integer methods                   */
+CPPM(RexxInteger::plus),
 CPPM(RexxInteger::minus),
 CPPM(RexxInteger::multiply),
 CPPM(RexxInteger::divide),
@@ -609,59 +603,63 @@ CPPM(RexxInteger::ceiling),
 CPPM(RexxInteger::round),
 CPPM(RexxInteger::classObject),
 
-CPPM(RexxList::value),                 /* list methods                      */
-CPPM(RexxList::remove),
-CPPM(RexxList::firstRexx),
-CPPM(RexxList::lastRexx),
-CPPM(RexxList::next),
-CPPM(RexxList::previous),
-CPPM(RexxList::hasIndex),
-CPPM(RexxList::supplier),
-CPPM(RexxList::itemsRexx),
-CPPM(RexxList::put),
-CPPM(RexxList::section),
-CPPM(RexxList::firstItem),
-CPPM(RexxList::lastItem),
-CPPM(RexxList::insertRexx),
-CPPM(RexxList::append),
-CPPM(RexxList::allIndexes),
-CPPM(RexxList::allItems),
-CPPM(RexxList::empty),
-CPPM(RexxList::isEmpty),
-CPPM(RexxList::index),
-CPPM(RexxList::hasItem),
-CPPM(RexxList::removeItem),
+CPPM(ListClass::initRexx),
+CPPM(ListClass::getRexx),
+CPPM(ListClass::putRexx),
+CPPM(ListClass::getRexx),
+CPPM(ListClass::firstItemRexx),
+CPPM(ListClass::hasIndexRexx),
+CPPM(ListClass::insertRexx),
+CPPM(ListClass::itemsRexx),
+CPPM(ListClass::lastItemRexx),
+CPPM(ListClass::firstRexx),
+CPPM(ListClass::lastRexx),
+CPPM(ListClass::nextRexx),
+CPPM(ListClass::previousRexx),
+CPPM(ListClass::putRexx),
+CPPM(ListClass::removeRexx),
+CPPM(ListClass::removeRexx),
+CPPM(ListClass::sectionRexx),
+CPPM(ListClass::supplier),
+CPPM(ListClass::appendRexx),
+CPPM(ListClass::allItems),
+CPPM(ListClass::allIndexes),
+CPPM(ListClass::emptyRexx),
+CPPM(ListClass::isEmptyRexx),
+CPPM(ListClass::indexRexx),
+CPPM(ListClass::hasItemRexx),
+CPPM(ListClass::removeItemRexx),
 
-CPPM(RexxList::newRexx),
-CPPM(RexxList::classOf),
+CPPM(ListClass::newRexx),
+CPPM(ListClass::ofRexx),
 
-CPPM(RexxMessage::notify),             /* Message methods                   */
-CPPM(RexxMessage::result),
-CPPM(RexxMessage::send),
-CPPM(RexxMessage::start),
-CPPM(RexxMessage::completed),
-CPPM(RexxMessage::hasError),
-CPPM(RexxMessage::errorCondition),
-CPPM(RexxMessage::messageTarget),
-CPPM(RexxMessage::messageName),
-CPPM(RexxMessage::arguments),
+CPPM(MessageClass::notify),
+CPPM(MessageClass::result),
+CPPM(MessageClass::send),
+CPPM(MessageClass::start),
+CPPM(MessageClass::completed),
+CPPM(MessageClass::hasError),
+CPPM(MessageClass::errorCondition),
+CPPM(MessageClass::messageTarget),
+CPPM(MessageClass::messageName),
+CPPM(MessageClass::arguments),
 
-CPPM(RexxMessage::newRexx),
+CPPM(MessageClass::newRexx),
 
-CPPM(RexxMethod::setUnguardedRexx),    /* Method methods                    */
-CPPM(RexxMethod::setGuardedRexx),
+CPPM(MethodClass::setUnguardedRexx),
+CPPM(MethodClass::setGuardedRexx),
 CPPM(BaseExecutable::source),
 CPPM(BaseExecutable::getPackage),
-CPPM(RexxMethod::setPrivateRexx),
-CPPM(RexxMethod::setProtectedRexx),
-CPPM(RexxMethod::setSecurityManager),
-CPPM(RexxMethod::isGuardedRexx),
-CPPM(RexxMethod::isPrivateRexx),
-CPPM(RexxMethod::isProtectedRexx),
+CPPM(MethodClass::setPrivateRexx),
+CPPM(MethodClass::setProtectedRexx),
+CPPM(MethodClass::setSecurityManager),
+CPPM(MethodClass::isGuardedRexx),
+CPPM(MethodClass::isPrivateRexx),
+CPPM(MethodClass::isProtectedRexx),
 
-CPPM(RexxMethod::newFileRexx),
-CPPM(RexxMethod::newRexx),
-CPPM(RexxMethod::loadExternalMethod),
+CPPM(MethodClass::newFileRexx),
+CPPM(MethodClass::newRexx),
+CPPM(MethodClass::loadExternalMethod),
 
 CPPM(RoutineClass::setSecurityManager),
 CPPM(RoutineClass::callRexx),
@@ -671,115 +669,102 @@ CPPM(RoutineClass::newFileRexx),
 CPPM(RoutineClass::newRexx),
 CPPM(RoutineClass::loadExternalRoutine),
 
-CPPM(PackageClass::setSecurityManager),
-CPPM(PackageClass::getSource),
+CPPM(PackageClass::setSecurityManagerRexx),
+CPPM(PackageClass::getProgramName),
+CPPM(PackageClass::getSourceRexx),
 CPPM(PackageClass::getSourceLineRexx),
-CPPM(PackageClass::getSourceSize),
-CPPM(PackageClass::getClasses),
-CPPM(PackageClass::getPublicClasses),
-CPPM(PackageClass::getImportedClasses),
-CPPM(PackageClass::getMethods),
-CPPM(PackageClass::getRoutines),
-CPPM(PackageClass::getPublicRoutines),
-CPPM(PackageClass::getImportedRoutines),
-CPPM(PackageClass::getImportedPackages),
-CPPM(PackageClass::loadPackage),
-CPPM(PackageClass::addPackage),
+CPPM(PackageClass::getSourceSizeRexx),
+CPPM(PackageClass::getClassesRexx),
+CPPM(PackageClass::getPublicClassesRexx),
+CPPM(PackageClass::getImportedClassesRexx),
+CPPM(PackageClass::getMethodsRexx),
+CPPM(PackageClass::getRoutinesRexx),
+CPPM(PackageClass::getPublicRoutinesRexx),
+CPPM(PackageClass::getImportedRoutinesRexx),
+CPPM(PackageClass::getImportedPackagesRexx),
+CPPM(PackageClass::loadPackageRexx),
+CPPM(PackageClass::addPackageRexx),
 CPPM(PackageClass::findClassRexx),
 CPPM(PackageClass::findRoutineRexx),
-CPPM(PackageClass::addRoutine),
-CPPM(PackageClass::addPublicRoutine),
-CPPM(PackageClass::addClass),
-CPPM(PackageClass::addPublicClass),
-CPPM(PackageClass::getName),
-CPPM(PackageClass::loadLibrary),
-CPPM(PackageClass::digits),
-CPPM(PackageClass::form),
-CPPM(PackageClass::fuzz),
-CPPM(PackageClass::trace),
+CPPM(PackageClass::addRoutineRexx),
+CPPM(PackageClass::addPublicRoutineRexx),
+CPPM(PackageClass::addClassRexx),
+CPPM(PackageClass::addPublicClassRexx),
+CPPM(PackageClass::loadLibraryRexx),
+CPPM(PackageClass::digitsRexx),
+CPPM(PackageClass::formRexx),
+CPPM(PackageClass::fuzzRexx),
+CPPM(PackageClass::traceRexx),
 
 CPPM(PackageClass::newRexx),
 
-CPPM(RexxNumberString::formatRexx),    /* NumberString methods              */
-CPPM(RexxNumberString::trunc),
-CPPM(RexxNumberString::floor),
-CPPM(RexxNumberString::ceiling),
-CPPM(RexxNumberString::round),
-CPPM(RexxNumberString::equal),
-CPPM(RexxNumberString::notEqual),
-CPPM(RexxNumberString::isLessThan),
-CPPM(RexxNumberString::isGreaterThan),
-CPPM(RexxNumberString::isGreaterOrEqual),
-CPPM(RexxNumberString::isLessOrEqual),
-CPPM(RexxNumberString::strictNotEqual),
-CPPM(RexxNumberString::strictLessThan),
-CPPM(RexxNumberString::strictGreaterThan),
-CPPM(RexxNumberString::strictGreaterOrEqual),
-CPPM(RexxNumberString::strictLessOrEqual),
-CPPM(RexxNumberString::plus),
-CPPM(RexxNumberString::minus),
-CPPM(RexxNumberString::multiply),
-CPPM(RexxNumberString::divide),
-CPPM(RexxNumberString::integerDivide),
-CPPM(RexxNumberString::remainder),
-CPPM(RexxNumberString::power),
-CPPM(RexxNumberString::abs),
-CPPM(RexxNumberString::Sign),
-CPPM(RexxNumberString::notOp),
-CPPM(RexxNumberString::andOp),
-CPPM(RexxNumberString::orOp),
-CPPM(RexxNumberString::xorOp),
-CPPM(RexxNumberString::Max),
-CPPM(RexxNumberString::Min),
-CPPM(RexxNumberString::isInteger),
-CPPM(RexxNumberString::d2c),
-CPPM(RexxNumberString::d2x),
-CPPM(RexxNumberString::d2xD2c),
-CPPM(RexxNumberString::strictEqual),
-CPPM(RexxNumberString::hashCode),
-CPPM(RexxNumberString::classObject),
+CPPM(NumberString::formatRexx),
+CPPM(NumberString::trunc),
+CPPM(NumberString::floor),
+CPPM(NumberString::ceiling),
+CPPM(NumberString::round),
+CPPM(NumberString::equal),
+CPPM(NumberString::notEqual),
+CPPM(NumberString::isLessThan),
+CPPM(NumberString::isGreaterThan),
+CPPM(NumberString::isGreaterOrEqual),
+CPPM(NumberString::isLessOrEqual),
+CPPM(NumberString::strictNotEqual),
+CPPM(NumberString::strictLessThan),
+CPPM(NumberString::strictGreaterThan),
+CPPM(NumberString::strictGreaterOrEqual),
+CPPM(NumberString::strictLessOrEqual),
+CPPM(NumberString::plus),
+CPPM(NumberString::minus),
+CPPM(NumberString::multiply),
+CPPM(NumberString::divide),
+CPPM(NumberString::integerDivide),
+CPPM(NumberString::remainder),
+CPPM(NumberString::power),
+CPPM(NumberString::abs),
+CPPM(NumberString::Sign),
+CPPM(NumberString::notOp),
+CPPM(NumberString::andOp),
+CPPM(NumberString::orOp),
+CPPM(NumberString::xorOp),
+CPPM(NumberString::Max),
+CPPM(NumberString::Min),
+CPPM(NumberString::d2c),
+CPPM(NumberString::d2x),
+CPPM(NumberString::d2xD2c),
+CPPM(NumberString::strictEqual),
+CPPM(NumberString::hashCode),
+CPPM(NumberString::classObject),
 
-CPPM(RexxQueue::supplier),             /* Queue methods                     */
-CPPM(RexxQueue::pushRexx),
-CPPM(RexxQueue::queueRexx),
-CPPM(RexxQueue::pullRexx),
-CPPM(RexxQueue::peek),
-CPPM(RexxQueue::put),
-CPPM(RexxQueue::at),
-CPPM(RexxQueue::hasindex),
-CPPM(RexxQueue::remove),
-CPPM(RexxQueue::append),
-CPPM(RexxQueue::allIndexes),
-CPPM(RexxQueue::index),
-CPPM(RexxQueue::firstRexx),
-CPPM(RexxQueue::lastRexx),
-CPPM(RexxQueue::next),
-CPPM(RexxQueue::previous),
-CPPM(RexxQueue::insert),
-CPPM(RexxQueue::section),
+CPPM(QueueClass::initRexx),
+CPPM(QueueClass::pushRexx),
+CPPM(QueueClass::queueRexx),
+CPPM(QueueClass::pullRexx),
+CPPM(QueueClass::peek),
+CPPM(QueueClass::putRexx),
 
-CPPM(RexxQueue::newRexx),
-CPPM(RexxQueue::ofRexx),
+CPPM(QueueClass::newRexx),
+CPPM(QueueClass::ofRexx),
 
-CPPM(RexxStem::bracket),               /* Stem methods                      */
-CPPM(RexxStem::bracketEqual),
-CPPM(RexxStem::request),
-CPPM(RexxStem::supplier),
-CPPM(RexxStem::allIndexes),
-CPPM(RexxStem::allItems),
-CPPM(RexxStem::empty),
-CPPM(RexxStem::isEmpty),
-CPPM(RexxStem::itemsRexx),
-CPPM(RexxStem::hasIndex),
-CPPM(RexxStem::remove),
-CPPM(RexxStem::index),
-CPPM(RexxStem::hasItem),
-CPPM(RexxStem::removeItem),
-CPPM(RexxStem::toDirectory),
+CPPM(StemClass::bracket),               /* Stem methods                      */
+CPPM(StemClass::bracketEqual),
+CPPM(StemClass::request),
+CPPM(StemClass::supplier),
+CPPM(StemClass::allIndexes),
+CPPM(StemClass::allItems),
+CPPM(StemClass::empty),
+CPPM(StemClass::isEmptyRexx),
+CPPM(StemClass::itemsRexx),
+CPPM(StemClass::hasIndex),
+CPPM(StemClass::remove),
+CPPM(StemClass::index),
+CPPM(StemClass::hasItem),
+CPPM(StemClass::removeItem),
+CPPM(StemClass::toDirectory),
 
-CPPM(RexxStem::newRexx),
+CPPM(StemClass::newRexx),
 
-CPPM(RexxString::lengthRexx),          /* String methods                    */
+CPPM(RexxString::lengthRexx),
 CPPM(RexxString::concatRexx),
 CPPM(RexxString::concatBlank),
 CPPM(RexxString::concatWith),
@@ -810,15 +795,9 @@ CPPM(RexxString::orOp),
 CPPM(RexxString::xorOp),
 CPPM(RexxString::Max),
 CPPM(RexxString::Min),
-CPPM(RexxString::isInteger),
 CPPM(RexxString::upperRexx),
 CPPM(RexxString::lowerRexx),
 
-                                          /* All BIF methods start here.  They */
-                                          /*  will be arranged according to the*/
-                                          /*  they are defined in.             */
-
-                                          /* following methods are in OKBSUBS  */
 CPPM(RexxString::center),
 CPPM(RexxString::delstr),
 CPPM(RexxString::insert),
@@ -831,7 +810,6 @@ CPPM(RexxString::substr),
 CPPM(RexxString::subchar),
 CPPM(RexxString::replaceAt),
 
-                                          /* following methods are in OKBWORD  */
 CPPM(RexxString::delWord),
 CPPM(RexxString::space),
 CPPM(RexxString::subWord),
@@ -842,8 +820,6 @@ CPPM(RexxString::wordLength),
 CPPM(RexxString::wordPos),
 CPPM(RexxString::caselessWordPos),
 CPPM(RexxString::words),
-
-                                          /* following methods are in OKBMISC  */
 
 CPPM(RexxString::changeStr),
 CPPM(RexxString::caselessChangeStr),
@@ -866,12 +842,9 @@ CPPM(RexxString::caselessContains),
 CPPM(RexxString::containsWord),
 CPPM(RexxString::caselessContainsWord),
 
-                                          /* following methods are in OKBBITS  */
 CPPM(RexxString::bitAnd),
 CPPM(RexxString::bitOr),
 CPPM(RexxString::bitXor),
-
-                                          /* following methods are in OKBCONV  */
 
 CPPM(RexxString::b2x),
 CPPM(RexxString::c2d),
@@ -898,102 +871,119 @@ CPPM(RexxString::equals),
 CPPM(RexxString::caselessEquals),
 CPPM(RexxString::compareToRexx),
 CPPM(RexxString::caselessCompareToRexx),
-                                          /* End of BIF methods                */
+
 CPPM(RexxString::makeArrayRexx),
 
 CPPM(RexxString::newRexx),
-CPPM(RexxMutableBufferClass::newRexx),
-CPPM(RexxMutableBuffer::lengthRexx),
-CPPM(RexxMutableBuffer::makeArrayRexx),
-CPPM(RexxMutableBuffer::append),
-CPPM(RexxMutableBuffer::insert),
-CPPM(RexxMutableBuffer::overlay),
-CPPM(RexxMutableBuffer::mydelete),
-CPPM(RexxMutableBuffer::substr),
-CPPM(RexxMutableBuffer::subchar),
-CPPM(RexxMutableBuffer::posRexx),
-CPPM(RexxMutableBuffer::lastPos),
-CPPM(RexxMutableBuffer::caselessPos),
-CPPM(RexxMutableBuffer::caselessLastPos),
-CPPM(RexxMutableBuffer::getBufferSize),
-CPPM(RexxMutableBuffer::setBufferSize),
-CPPM(RexxMutableBuffer::replaceAt),
-CPPM(RexxMutableBuffer::countStrRexx),
-CPPM(RexxMutableBuffer::caselessCountStrRexx),
-CPPM(RexxMutableBuffer::changeStr),
-CPPM(RexxMutableBuffer::caselessChangeStr),
-CPPM(RexxMutableBuffer::upper),
-CPPM(RexxMutableBuffer::lower),
-CPPM(RexxMutableBuffer::translate),
-CPPM(RexxMutableBuffer::match),
-CPPM(RexxMutableBuffer::caselessMatch),
-CPPM(RexxMutableBuffer::matchChar),
-CPPM(RexxMutableBuffer::caselessMatchChar),
-CPPM(RexxMutableBuffer::verify),
-CPPM(RexxMutableBuffer::space),
-CPPM(RexxMutableBuffer::subWord),
-CPPM(RexxMutableBuffer::subWords),
-CPPM(RexxMutableBuffer::word),
-CPPM(RexxMutableBuffer::wordIndex),
-CPPM(RexxMutableBuffer::wordLength),
-CPPM(RexxMutableBuffer::words),
-CPPM(RexxMutableBuffer::wordPos),
-CPPM(RexxMutableBuffer::caselessWordPos),
-CPPM(RexxMutableBuffer::delWord),
-CPPM(RexxMutableBuffer::containsRexx),
-CPPM(RexxMutableBuffer::caselessContains),
-CPPM(RexxMutableBuffer::containsWord),
-CPPM(RexxMutableBuffer::caselessContainsWord),
 
-CPPM(RexxSupplier::available),         /* Supplier methods                  */
-CPPM(RexxSupplier::next),
-CPPM(RexxSupplier::value),
-CPPM(RexxSupplier::index),
-CPPM(RexxSupplier::initRexx),
+CPPM(MutableBuffer::newRexx),
+CPPM(MutableBuffer::lengthRexx),
+CPPM(MutableBuffer::makeArrayRexx),
+CPPM(MutableBuffer::appendRexx),
+CPPM(MutableBuffer::insert),
+CPPM(MutableBuffer::overlay),
+CPPM(MutableBuffer::mydelete),
+CPPM(MutableBuffer::substr),
+CPPM(MutableBuffer::subchar),
+CPPM(MutableBuffer::posRexx),
+CPPM(MutableBuffer::lastPos),
+CPPM(MutableBuffer::caselessPos),
+CPPM(MutableBuffer::caselessLastPos),
+CPPM(MutableBuffer::getBufferSize),
+CPPM(MutableBuffer::setBufferSize),
+CPPM(MutableBuffer::replaceAt),
+CPPM(MutableBuffer::countStrRexx),
+CPPM(MutableBuffer::caselessCountStrRexx),
+CPPM(MutableBuffer::changeStr),
+CPPM(MutableBuffer::caselessChangeStr),
+CPPM(MutableBuffer::upper),
+CPPM(MutableBuffer::lower),
+CPPM(MutableBuffer::translate),
+CPPM(MutableBuffer::match),
+CPPM(MutableBuffer::caselessMatch),
+CPPM(MutableBuffer::matchChar),
+CPPM(MutableBuffer::caselessMatchChar),
+CPPM(MutableBuffer::verify),
+CPPM(MutableBuffer::space),
+CPPM(MutableBuffer::subWord),
+CPPM(MutableBuffer::subWords),
+CPPM(MutableBuffer::word),
+CPPM(MutableBuffer::wordIndex),
+CPPM(MutableBuffer::wordLength),
+CPPM(MutableBuffer::words),
+CPPM(MutableBuffer::wordPos),
+CPPM(MutableBuffer::caselessWordPos),
+CPPM(MutableBuffer::delWord),
+CPPM(MutableBuffer::containsRexx),
+CPPM(MutableBuffer::caselessContains),
+CPPM(MutableBuffer::containsWord),
+CPPM(MutableBuffer::caselessContainsWord),
 
-CPPM(RexxSupplierClass::newRexx),
+CPPM(SupplierClass::available),
+CPPM(SupplierClass::next),
+CPPM(SupplierClass::value),
+CPPM(SupplierClass::index),
+CPPM(SupplierClass::initRexx),
 
-                                       /* Table methods                     */
-CPPM(RexxHashTableCollection::removeRexx),
-CPPM(RexxHashTableCollection::getRexx),
-CPPM(RexxHashTableCollection::putRexx),
-CPPM(RexxHashTableCollection::addRexx),
-CPPM(RexxHashTableCollection::allAt),
-CPPM(RexxHashTableCollection::hasIndexRexx),
-CPPM(RexxHashTableCollection::merge),
-CPPM(RexxHashTableCollection::supplier),
-CPPM(RexxHashTableCollection::allItems),
-CPPM(RexxHashTableCollection::allIndexes),
-CPPM(RexxHashTableCollection::uniqueIndexes),
-CPPM(RexxHashTableCollection::empty),
-CPPM(RexxHashTableCollection::isEmpty),
-CPPM(RexxHashTableCollection::indexRexx),
-CPPM(RexxHashTableCollection::hasItemRexx),
-CPPM(RexxHashTableCollection::removeItemRexx),
+CPPM(SupplierClass::newRexx),
 
-CPPM(RexxTable::itemsRexx),
-CPPM(RexxTable::newRexx),
+CPPM(TableClass::itemsRexx),
+CPPM(TableClass::newRexx),
 
-CPPM(RexxIdentityTable::newRexx),
+CPPM(IdentityTable::newRexx),
+CPPM(StringTable::newRexx),
 
-CPPM(RexxRelation::put),               /* Relation methods                  */
-CPPM(RexxRelation::removeItemRexx),
-CPPM(RexxRelation::removeAll),
-CPPM(RexxRelation::allIndex),
-CPPM(RexxRelation::itemsRexx),
-CPPM(RexxRelation::supplier),
-CPPM(RexxRelation::hasItem),
+CPPM(SetClass::newRexx),
+CPPM(SetClass::ofRexx),
 
-CPPM(RexxRelation::newRexx),
+CPPM(BagClass::newRexx),
+CPPM(BagClass::ofRexx),
 
-CPPM(RexxLocal::local),                /* the .local environment methods    */
+CPPM(DirectoryClass::newRexx),
+CPPM(DirectoryClass::initRexx),
+CPPM(DirectoryClass::setMethodRexx),
+CPPM(DirectoryClass::unsetMethodRexx),
+CPPM(DirectoryClass::removeRexx),
 
-CPPM(RexxPointer::equal),
-CPPM(RexxPointer::notEqual),
-CPPM(RexxPointer::newRexx),
-CPPM(RexxPointer::isNull),
+CPPM(HashCollection::getRexx),
+CPPM(HashCollection::putRexx),
+CPPM(HashCollection::getRexx),
+CPPM(HashCollection::hasIndexRexx),
+CPPM(HashCollection::itemsRexx),
+CPPM(HashCollection::putRexx),
+CPPM(HashCollection::removeRexx),
+CPPM(HashCollection::supplier),
+CPPM(HashCollection::allItems),
+CPPM(HashCollection::allIndexes),
+CPPM(HashCollection::emptyRexx),
+CPPM(HashCollection::isEmptyRexx),
+CPPM(HashCollection::indexRexx),
+CPPM(HashCollection::hasItemRexx),
+CPPM(HashCollection::removeItemRexx),
 
-CPPM(RexxBuffer::newRexx),
+CPPM(StringHashCollection::entryRexx),
+CPPM(StringHashCollection::hasEntryRexx),
+CPPM(StringHashCollection::setEntryRexx),
+CPPM(StringHashCollection::removeEntryRexx),
+
+CPPM(RelationClass::removeItemRexx),
+CPPM(RelationClass::supplierRexx),
+CPPM(RelationClass::itemsRexx),
+CPPM(RelationClass::hasItemRexx),
+CPPM(RelationClass::allIndexRexx),
+CPPM(RelationClass::removeAll),
+CPPM(RelationClass::uniqueIndexes),
+
+CPPM(RelationClass::newRexx),
+
+CPPM(ActivityManager::getLocalRexx),
+
+CPPM(PointerClass::equal),
+CPPM(PointerClass::notEqual),
+CPPM(PointerClass::newRexx),
+CPPM(PointerClass::isNull),
+
+CPPM(BufferClass::newRexx),
 
 CPPM(WeakReference::newRexx),
 CPPM(WeakReference::value),
@@ -1021,7 +1011,8 @@ CPPM(StackFrameClass::getType),
 CPPM(StackFrameClass::getTarget),
 CPPM(StackFrameClass::getArguments),
 CPPM(StackFrameClass::newRexx),
-NULL                                   /* final terminating method          */
+// This NULL terminator is important to mark the end of the table.
+NULL
 };
 
 
@@ -1037,7 +1028,7 @@ NULL                                   /* final terminating method          */
  *
  * @return A CPPCode object for the wrappered method.
  */
-CPPCode *CPPCode::resolveExportedMethod(const char *name, PCPPM targetMethod, size_t argumentCount)
+CPPCode *CPPCode::resolveExportedMethod(const char *name, PCPPM targetMethod, size_t argumentCount, const char *entryPointName)
 {
     for (size_t i = 0; exportedMethods[i] != NULL; i++)
     {
@@ -1049,8 +1040,8 @@ CPPCode *CPPCode::resolveExportedMethod(const char *name, PCPPM targetMethod, si
     }
 
     char buffer[256];
-    sprintf(buffer,"Unresolved exported method:  %s", name);
-    /* this is a bad error               */
+    sprintf(buffer, "Unresolved exported method:  %s, entrypoint: %s", name, entryPointName == NULL ? "<unknown>" : entryPointName);
+    // this is a terminal error...problems in initial definitions
     Interpreter::logicError(buffer);
-    return NULL;                         /* needs a return value              */
+    return NULL;
 }

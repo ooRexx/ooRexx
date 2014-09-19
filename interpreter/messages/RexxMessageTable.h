@@ -2,7 +2,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -310,6 +310,7 @@ ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
       MINOR(Error_Invalid_expression_use_strict_default)
       MINOR(Error_Invalid_expression_parse)
       MINOR(Error_Invalid_expression_call)
+      MINOR(Error_Invalid_expression_select_case)
   MAJOR(Error_Unmatched_parenthesis)
       MINOR(Error_Unmatched_parenthesis_user_defined)
       MINOR(Error_Unmatched_parenthesis_paren)
@@ -600,6 +601,7 @@ ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
       MINOR(Error_Translation_constant_body)
       MINOR(Error_Translation_external_routine)
       MINOR(Error_Translation_abstract_attribute)
+      MINOR(Error_Translation_directive_method_routine)
   MAJOR(Error_at_line)
       MINOR(Message_Translations_error)
       MINOR(Message_Translations_running)

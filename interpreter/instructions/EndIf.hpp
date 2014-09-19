@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -38,7 +38,8 @@
 /******************************************************************************/
 /* REXX Kernel                                                     EndIf.hpp  */
 /*                                                                            */
-/* Primitive End If instruction Class Definitions                             */
+/* A class to represent the END of an IF instruction.  This will be the       */
+/* branch target for the end of the IF.                                       */
 /*                                                                            */
 /******************************************************************************/
 #ifndef Included_RexxInstructionEndIf
@@ -46,22 +47,25 @@
 
 #include "RexxInstruction.hpp"
 
-class RexxInstructionEndIf : public RexxInstructionSet {
+class RexxInstructionIf;
+
+class RexxInstructionEndIf : public RexxInstructionSet
+{
  public:
+    RexxInstructionEndIf(RexxInstructionIf *);
+    inline RexxInstructionEndIf(RESTORETYPE restoreType) { ; };
 
-  inline void *operator new(size_t size, void *ptr) {return ptr;}
-  inline void operator delete(void *) { }
-  inline void operator delete(void *, void *) { }
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(Envelope*);
 
-  RexxInstructionEndIf(RexxInstructionIf *);
-  inline RexxInstructionEndIf(RESTORETYPE restoreType) { ; };
-  void live(size_t);
-  void liveGeneral(int reason);
-  void flatten(RexxEnvelope*);
-  void execute(RexxActivation *, RexxExpressionStack *);
-  void setEndInstruction(RexxInstructionEndIf *);
+    virtual void execute(RexxActivation *, ExpressionStack *);
 
-  RexxInstruction   *else_end;         /* end of the else construct         */
-  RexxInstructionIf *parent;           /* parent IF/WHEN clause             */
+    virtual void setEndInstruction(RexxInstructionEndIf *);
+
+ protected:
+
+    RexxInstruction   *else_end;         // end of the ELSE construct
+    RexxInstructionIf *parent;           // parent IF/WHEN clause
 };
 #endif

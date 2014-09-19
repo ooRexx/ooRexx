@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -40,7 +40,8 @@
 #include "TranslateDispatcher.hpp"
 #include "RoutineClass.hpp"
 #include "ProtectedObject.hpp"
-#include "RexxNativeActivation.hpp"
+#include "NativeActivation.hpp"
+#include "LanguageParser.hpp"
 
 
 /**
@@ -53,7 +54,7 @@ void TranslateDispatcher::run()
 
     RoutineClass *program;
 
-    RexxString *name = OREF_NULLSTRING;     // name of the invoked program
+    RexxString *name = GlobalNames::NULLSTRING;     // name of the invoked program
     if (programName != NULL)       /* have an actual name?              */
     {
         /* get string version of the name    */
@@ -73,13 +74,13 @@ void TranslateDispatcher::run()
         }
         savedObjects.add(fullname);
         /* go translate the image            */
-        program = new RoutineClass(fullname);
+        program = LanguageParser::createProgram(fullname);
         savedObjects.add(program);
     }
     else                                 /* have an instore program           */
     {
         /* go handle instore parms           */
-        program = RoutineClass::processInstore(instore, name);
+        program = LanguageParser::processInstore(instore, name);
         if (program == OREF_NULL)           /* couldn't get it?                  */
         {
             /* got an error here                 */
@@ -101,7 +102,7 @@ void TranslateDispatcher::run()
  *
  * @param c      The condition information for the error.
  */
-void TranslateDispatcher::handleError(wholenumber_t r, RexxDirectory *c)
+void TranslateDispatcher::handleError(wholenumber_t r, DirectoryClass *c)
 {
     // use the base error handling and set our return code to the negated error code.
     ActivityDispatcher::handleError(rc, c);
@@ -118,7 +119,7 @@ void TranslateDispatcher::handleError(wholenumber_t r, RexxDirectory *c)
 void TranslateInstoreDispatcher::run()
 {
     ProtectedSet savedObjects;
-    RexxString *name = OREF_NULLSTRING;     // name of the invoked program
+    RexxString *name = GlobalNames::NULLSTRING;     // name of the invoked program
     if (programName != NULL)       /* have an actual name?              */
     {
         /* get string version of the name    */
@@ -133,7 +134,7 @@ void TranslateInstoreDispatcher::run()
     MAKERXSTRING(instore[1], NULL, 0);
 
     /* go handle instore parms           */
-    RoutineClass *program = RoutineClass::processInstore(instore, name);
+    RoutineClass *program = LanguageParser::processInstore(instore, name);
     if (program == OREF_NULL)           /* couldn't get it?                  */
     {
         /* got an error here                 */
@@ -151,7 +152,7 @@ void TranslateInstoreDispatcher::run()
  *
  * @param c      The condition information for the error.
  */
-void TranslateInstoreDispatcher::handleError(wholenumber_t r, RexxDirectory *c)
+void TranslateInstoreDispatcher::handleError(wholenumber_t r, DirectoryClass *c)
 {
     // use the base error handling and set our return code to the negated error code.
     ActivityDispatcher::handleError(rc, c);

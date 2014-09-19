@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.ibm.com/developerworks/oss/CPLv1.0.htm                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -41,89 +41,79 @@
 /* Primitive logical list evaluator                                           */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "QueueClass.hpp"
 #include "RexxActivation.hpp"
 #include "RexxInstruction.hpp"
 #include "ExpressionLogical.hpp"
-#include "StackClass.hpp"
-#include "RexxActivity.hpp"
+#include "Activity.hpp"
 #include "BuiltinFunctions.hpp"
-#include "SourceFile.hpp"
+#include "LanguageParser.hpp"
+
+
+/**
+ * Create a new logical list object.
+ *
+ * @param size   The size of the class object.
+ * @param count  The count of logical expressions.  Used to adjust the
+ *               allocated size to the requirements.
+ *
+ * @return A new RexxExpressionLogical object.
+ */
+void *RexxExpressionLogical::operator new(size_t size, size_t  count)
+{
+    return new_object(size + (count - 1) * sizeof(RexxObject *), T_LogicalTerm);
+}
+
 
 /**
  * Constructor for a RexxExpressionLogical object.
  *
- * @param source The source parsing context (used for raising errors)
  * @param count  The number of expressions in the list.
  * @param list   The accumulated list of expressions.
  */
-RexxExpressionLogical::RexxExpressionLogical(RexxSource *source, size_t count, RexxQueue  *list)
+RexxExpressionLogical::RexxExpressionLogical(size_t count, QueueClass *list)
 {
     expressionCount = count;
 
-    // the parsed expressions are stored in a queue, so we process them in
-    // reverse order.
-    while (count > 0)
-    {
-        RexxObject *condition = list->pop();
-        if (condition == OREF_NULL)
-        {
-            source->syntaxError(Error_Invalid_expression_logical_list);
-        }
-        OrefSet(this, this->expressions[--count], condition);
-    }
+    // now copy the expressions from the sub term stack
+    // NOTE:  The expressionss are in last-to-first order on the stack.
+    initializeObjectArray(count, expressions, RexxObject, list);
 }
+
 
 /**
  * The runtime, non-debug live marking routine.
  */
 void RexxExpressionLogical::live(size_t liveMark)
 {
-  size_t  i;                           /* loop counter                      */
-  size_t  count;                       /* argument count                    */
-
-  for (i = 0, count = this->expressionCount; i < count; i++)
-  {
-      memory_mark(this->expressions[i]);
-  }
+    memory_mark_array(expressionCount, expressions);
 }
+
 
 /**
  * The generalized live marking routine used for non-performance
  * critical marking operations.
  */
-void RexxExpressionLogical::liveGeneral(int reason)
+void RexxExpressionLogical::liveGeneral(MarkReason reason)
 {
-  size_t  i;                           /* loop counter                      */
-  size_t  count;                       /* argument count                    */
-
-  for (i = 0, count = this->expressionCount; i < count; i++)
-  {
-      memory_mark_general(this->expressions[i]);
-  }
+    memory_mark_general_array(expressionCount, expressions);
 }
+
 
 /**
  * The flattening routine, used for serializing object trees.
  *
  * @param envelope The envelope were's flattening into.
  */
-void RexxExpressionLogical::flatten(RexxEnvelope *envelope)
+void RexxExpressionLogical::flatten(Envelope *envelope)
 {
-  size_t  i;                           /* loop counter                      */
-  size_t  count;                       /* argument count                    */
+    setUpFlatten(RexxExpressionLogical)
 
-  setUpFlatten(RexxExpressionLogical)
+    flattenArrayRefs(expressionCount, expressions);
 
-  for (i = 0, count = this->expressionCount; i < count; i++)
-  {
-      flatten_reference(newThis->expressions[i], envelope);
-  }
-
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
 /**
@@ -134,7 +124,7 @@ void RexxExpressionLogical::flatten(RexxEnvelope *envelope)
  *
  * @return The result of the operation, either .true or .false.
  */
-RexxObject *RexxExpressionLogical::evaluate(RexxActivation *context, RexxExpressionStack *stack)
+RexxObject *RexxExpressionLogical::evaluate(RexxActivation *context, ExpressionStack *stack)
 {
     // loop through the expression list evaulating and then testing for the
     // logical value
@@ -163,20 +153,5 @@ RexxObject *RexxExpressionLogical::evaluate(RexxActivation *context, RexxExpress
         }
     }
     return TheTrueObject;      // all is truth
-}
-
-/**
- * Create a new logical list object.
- *
- * @param size   The size of the class object.
- * @param count  The count of logical expressions.  Used to adjust the
- *               allocated size to the requirements.
- *
- * @return A new RexxExpressionLogical object.
- */
-void *RexxExpressionLogical::operator new(size_t size, size_t  count)
-{
-                                         /* Get new object                    */
-    return new_object(size + (count - 1) * sizeof(RexxObject *), T_LogicalTerm);
 }
 

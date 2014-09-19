@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.ibm.com/developerworks/oss/CPLv1.0.htm                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -53,24 +53,24 @@
 // is enqueued to notify the owning object that a state change has occurred.
 class WeakReference : public RexxObject
 {
-    friend class RexxMemory;
+    friend class MemoryObject;
 public:
     inline WeakReference(RESTORETYPE restoreType) { ; };
     WeakReference();
-    WeakReference(RexxObject *referent);
+    WeakReference(RexxInternalObject *referent);
 
-    inline void *operator new(size_t, void *ptr) {return ptr;}
-    inline void  operator delete(void *, void *) {;}
-    void *operator new(size_t);
-    inline void  operator delete(void *) {;}
+           void *operator new(size_t);
 
-    void        live(size_t);
-    void        liveGeneral(int);
-    void        flatten(RexxEnvelope *);
-    RexxObject *unflatten(RexxEnvelope *);
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason);
+    virtual void flatten(Envelope *);
+    virtual RexxInternalObject *unflatten(Envelope *);
 
-    RexxObject *value();
-    inline RexxObject *get() { return referentObject; }
+    // TODO:  Weak reference might have some copy method issues
+
+    RexxInternalObject *value();
+    inline RexxInternalObject *get() { return referentObject; }
+    inline bool hasReferent() { return referentObject != OREF_NULL; }
     void   clear();
 
     RexxObject *newRexx(RexxObject **args, size_t argc);
@@ -81,8 +81,8 @@ public:
 
 protected:
 
-    RexxObject *referentObject;      // the object we refer to
-    WeakReference *nextReferenceList;  // used by memory management to keep track of reference objects
+    RexxInternalObject *referentObject;      // the object we refer to
+    WeakReference *nextReferenceList;        // used by memory management to keep track of reference objects
 };
 
 #endif

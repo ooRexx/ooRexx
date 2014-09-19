@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -44,493 +44,701 @@
 #ifndef Included_RexxString
 #define Included_RexxString
 
-#include "NumberStringClass.hpp"
 #include "IntegerClass.hpp"
 #include "StringUtil.hpp"
 #include "Utilities.hpp"
-                                       /* return values from the is_symbol  */
-                                       /* validation method                 */
-#define  STRING_BAD_VARIABLE   0
-#define  STRING_STEM           1
-#define  STRING_COMPOUND_NAME  2
-#define  STRING_LITERAL        3
-#define  STRING_LITERAL_DOT    4
-#define  STRING_NUMERIC        5
-#define  STRING_NAME           6
+#include "FlagSet.hpp"
 
-#define  STRING_HASLOWER       0x01    /* string does contain lowercase     */
-#define  STRING_NOLOWER        0x02    /* string does not contain lowercase */
-#define  STRING_NONNUMERIC     0x04    /* string is non-numeric             */
-
-#define  INITIAL_NAME_SIZE     10      /* first name table allocation       */
-#define  EXTENDED_NAME_SIZE    10      /* amount to extend table by         */
-                                       /* Strip function options     */
-#define  STRIP_BOTH                'B'
-#define  STRIP_LEADING             'L'
-#define  STRIP_TRAILING            'T'
-                                       /* Datatype function options  */
-#define  DATATYPE_ALPHANUMERIC     'A'
-#define  DATATYPE_BINARY           'B'
-#define  DATATYPE_LOWERCASE        'L'
-#define  DATATYPE_MIXEDCASE        'M'
-#define  DATATYPE_NUMBER           'N'
-#define  DATATYPE_SYMBOL           'S'
-#define  DATATYPE_VARIABLE         'V'
-#define  DATATYPE_UPPERCASE        'U'
-#define  DATATYPE_WHOLE_NUMBER     'W'
-#define  DATATYPE_HEX              'X'
-#define  DATATYPE_9DIGITS          '9'
-#define  DATATYPE_LOGICAL          'O' // lOgical.
-                                       /* Verify function options    */
-#define  VERIFY_MATCH              'M'
-#define  VERIFY_NOMATCH            'N'
-
-#define ch_SPACE ' '
-
-                                       /* character validation sets for the */
-                                       /* datatype function                 */
-#define  HEX_CHAR_STR   "0123456789ABCDEFabcdef"
-#define  ALPHANUM       \
-"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-#define  BINARI         "01"
-#define  LOWER_ALPHA    "abcdefghijklmnopqrstuvwxyz"
-#define  MIXED_ALPHA    \
-"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-#define  UPPER_ALPHA    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
-
-/*********************************************************************/
-/*                                                                   */
-/*      Name:                   IntToHexdigit                        */
-/*                                                                   */
-/*      Descriptive name:       convert int to hexadecimal digit     */
-/*                                                                   */
-/*      Returns:                A hexadecimal digit representing n.  */
-/*                                                                   */
-/*********************************************************************/
-
-                                       /* convert the number                */
-inline char IntToHexDigit(int n)
+/**
+ * Return type from string isSymbol() method.
+ */
+typedef enum
 {
-    return "0123456789ABCDEF"[n];
-}
+    STRING_BAD_VARIABLE,
+    STRING_STEM,
+    STRING_COMPOUND_NAME,
+    STRING_LITERAL,
+    STRING_LITERAL_DOT,
+    STRING_NUMERIC,
+    STRING_NAME
+} StringSymbolType;
 
 
- class RexxString : public RexxObject {
-  public:
-   inline void       *operator new(size_t size, void *ptr){return ptr;};
-   inline RexxString() {;} ;
-   inline RexxString(RESTORETYPE restoreType) { ; };
-
-   void        live(size_t);
-   void        liveGeneral(int reason);
-   void        flatten(RexxEnvelope *envelope);
-   RexxObject *unflatten(RexxEnvelope *);
-
-   virtual HashCode hash();
-   virtual HashCode getHashValue();
-
-   inline HashCode getStringHash()
-   {
-       if (hashValue == 0)                // if we've never generated this, the code is zero
-       {
-           stringsize_t len = this->getLength();
-
-           HashCode h = 0;
-           // the hash code is generated from all of the string characters.
-           // we do this in a lazy fashion, since most string objects never need to
-           // calculate a hash code, particularly the long ones.
-           // This hashing algorithm is very similar to that used for Java strings.
-           for (stringsize_t i = 0; i < len; i++)
-           {
-               h = 31 * h + this->stringData[i];
-           }
-           this->hashValue = h;
-       }
-       return hashValue;
-   }
-   HashCode getObjectHashCode();
-
-   bool         numberValue(wholenumber_t &result, size_t precision);
-   bool         numberValue(wholenumber_t &result);
-   bool         unsignedNumberValue(stringsize_t &result, size_t precision);
-   bool         unsignedNumberValue(stringsize_t &result);
-   bool         doubleValue(double &result);
-   RexxNumberString *numberString();
-   RexxInteger *integerValue(size_t);
-   RexxString  *makeString();
-   RexxArray   *makeArray();
-   RexxString  *primitiveMakeString();
-   void         copyIntoTail(RexxCompoundTail *buffer);
-   RexxString  *stringValue();
-   bool         truthValue(int);
-   virtual bool logicalValue(logical_t &);
-
-   bool        isEqual(RexxObject *);
-   bool        primitiveIsEqual(RexxObject *);
-   bool        primitiveCaselessIsEqual(RexxObject *);
-   wholenumber_t strictComp(RexxObject *);
-   wholenumber_t comp(RexxObject *);
-   wholenumber_t compareTo(RexxObject *);
-   RexxInteger *equal(RexxObject *);
-   RexxInteger *strictEqual(RexxObject *);
-   RexxInteger *notEqual(RexxObject *);
-   RexxInteger *strictNotEqual(RexxObject *);
-   RexxInteger *isGreaterThan(RexxObject *);
-   RexxInteger *isLessThan(RexxObject *);
-   RexxInteger *isGreaterOrEqual(RexxObject *);
-   RexxInteger *isLessOrEqual(RexxObject *);
-   RexxInteger *strictGreaterThan(RexxObject *);
-   RexxInteger *strictLessThan(RexxObject *);
-   RexxInteger *strictGreaterOrEqual(RexxObject *);
-   RexxInteger *strictLessOrEqual(RexxObject *);
-
-   size_t      copyData(size_t, char *, size_t);
-   RexxObject *lengthRexx();
-   RexxString *concatRexx(RexxObject *);
-   RexxString *concat(RexxString *);
-   RexxString *concatToCstring(const char *);
-   RexxString *concatWithCstring(const char *);
-   RexxString *concatBlank(RexxObject *);
-   bool        checkLower();
-   RexxString *upper();
-   RexxString *upper(size_t, size_t);
-   RexxString *upperRexx(RexxInteger *, RexxInteger *);
-   RexxString *lower();
-   RexxString *lower(size_t, size_t);
-   RexxString *lowerRexx(RexxInteger *, RexxInteger *);
-   RexxString *stringTrace();
-   void        setNumberString(RexxObject *);
-   RexxString *concatWith(RexxString *, char);
-
-   RexxObject *plus(RexxObject *right);
-   RexxObject *minus(RexxObject *right);
-   RexxObject *multiply(RexxObject *right);
-   RexxObject *divide(RexxObject *right);
-   RexxObject *integerDivide(RexxObject *right);
-   RexxObject *remainder(RexxObject *right);
-   RexxObject *power(RexxObject *right);
-   RexxObject *abs();
-   RexxObject *sign();
-   RexxObject *notOp();
-   RexxObject *operatorNot(RexxObject *);
-   RexxObject *andOp(RexxObject *);
-   RexxObject *orOp(RexxObject *);
-   RexxObject *xorOp(RexxObject *);
-   RexxObject *Max(RexxObject **args, size_t argCount);
-   RexxObject *Min(RexxObject **args, size_t argCount);
-   RexxObject *trunc(RexxInteger *decimals);
-   RexxObject *floor();
-   RexxObject *ceiling();
-   RexxObject *round();
-   RexxObject *format(RexxObject *Integers, RexxObject *Decimals, RexxObject *MathExp, RexxObject *ExpTrigger);
-   RexxObject *isInteger();
-   RexxObject *logicalOperation(RexxObject *, RexxObject *, unsigned int);
-   RexxString *extract(size_t offset, size_t sublength) { return newString(this->getStringData() + offset, sublength); }
-   RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
-   RexxObject *getValue(RexxActivation *);
-   RexxObject *getValue(RexxVariableDictionary *);
-   RexxObject *getRealValue(RexxActivation *);
-   RexxObject *getRealValue(RexxVariableDictionary *);
-                                       /* the following methods are in    */
-                                       /* OKBSUBS                         */
-   RexxString  *center(RexxInteger *, RexxString *);
-   RexxString  *delstr(RexxInteger *, RexxInteger *);
-   RexxString  *insert(RexxString *, RexxInteger *, RexxInteger *, RexxString *);
-   RexxString  *left(RexxInteger *, RexxString *);
-   RexxString  *overlay(RexxString *, RexxInteger *, RexxInteger *, RexxString *);
-   RexxString  *replaceAt(RexxString *, RexxInteger *, RexxInteger *, RexxString *);
-   RexxString  *reverse();
-   RexxString  *right(RexxInteger *, RexxString *);
-   RexxString  *strip(RexxString *, RexxString *);
-   RexxString  *substr(RexxInteger *, RexxInteger *, RexxString *);
-   RexxString  *subchar(RexxInteger *);
-   RexxString  *delWord(RexxInteger *, RexxInteger *);
-   RexxString  *space(RexxInteger *, RexxString *);
-   RexxString  *subWord(RexxInteger *, RexxInteger *);
-   RexxArray   *subWords(RexxInteger *, RexxInteger *);
-   RexxString  *word(RexxInteger *);
-   RexxInteger *wordIndex(RexxInteger *);
-   RexxInteger *wordLength(RexxInteger *);
-   RexxInteger *wordPos(RexxString *, RexxInteger *);
-   RexxInteger *caselessWordPos(RexxString *, RexxInteger *);
-   RexxObject  *containsWord(RexxString *, RexxInteger *);
-   RexxObject  *caselessContainsWord(RexxString *, RexxInteger *);
-   RexxInteger *words();
-                                       /* the following methods are in    */
-                                       /* OKBMISC                         */
-   RexxString  *changeStr(RexxString *, RexxString *, RexxInteger *);
-   RexxString  *caselessChangeStr(RexxString *, RexxString *, RexxInteger *);
-   RexxInteger *abbrev(RexxString *, RexxInteger *);
-   RexxInteger *caselessAbbrev(RexxString *, RexxInteger *);
-   RexxInteger *compare(RexxString *, RexxString *);
-   RexxInteger *caselessCompare(RexxString *, RexxString *);
-   RexxString  *copies(RexxInteger *);
-   RexxObject  *dataType(RexxString *);
-
-   RexxInteger *lastPosRexx(RexxString *, RexxInteger *, RexxInteger *);
-   RexxInteger *caselessLastPosRexx(RexxString *, RexxInteger *, RexxInteger *);
-   size_t       lastPos(RexxString  *needle, size_t start);
-   size_t       caselessLastPos(RexxString  *needle, size_t start);
-   const char * caselessLastPos(const char *needle, size_t needleLen, const char *haystack, size_t haystackLen);
-
-   RexxInteger *posRexx(RexxString *, RexxInteger *, RexxInteger *);
-   RexxInteger *caselessPosRexx(RexxString *, RexxInteger *, RexxInteger *);
-   RexxObject  *containsRexx(RexxString *, RexxInteger *, RexxInteger *);
-   RexxObject  *caselessContains(RexxString *, RexxInteger *, RexxInteger *);
-   size_t       pos(RexxString *, size_t);
-   size_t       caselessPos(RexxString *, size_t);
-
-   RexxString  *translate(RexxString *, RexxString *, RexxString *, RexxInteger *, RexxInteger *);
-   RexxInteger *verify(RexxString *, RexxString *, RexxInteger *, RexxInteger *);
-   RexxInteger *countStrRexx(RexxString *);
-   RexxInteger *caselessCountStrRexx(RexxString *);
-   size_t       caselessCountStr(RexxString *);
-                                       /* the following methods are in    */
-                                       /* OKBBITS                         */
-   RexxString  *bitAnd(RexxString *, RexxString *);
-   RexxString  *bitOr(RexxString *, RexxString *);
-   RexxString  *bitXor(RexxString *, RexxString *);
-                                       /* the following methods are in    */
-                                       /* OKBCONV                         */
-   RexxString  *b2x();
-   RexxString  *c2d(RexxInteger *);
-   RexxString  *c2x();
-   RexxString  *encodeBase64();
-   RexxString  *decodeBase64();
-   RexxString  *d2c(RexxInteger *);
-   RexxString  *d2x(RexxInteger *);
-   RexxString  *x2b();
-   RexxString  *x2c();
-   RexxString  *x2d(RexxInteger *);
-   RexxString  *x2dC2d(RexxInteger *, bool);
-
-   RexxInteger *match(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_);
-   RexxInteger *caselessMatch(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_);
-   bool primitiveMatch(stringsize_t start, RexxString *other, stringsize_t offset, stringsize_t len);
-   bool primitiveCaselessMatch(stringsize_t start, RexxString *other, stringsize_t offset, stringsize_t len);
-   RexxInteger *matchChar(RexxInteger *position_, RexxString *matchSet);
-   RexxInteger *caselessMatchChar(RexxInteger *position_, RexxString *matchSet);
-
-   RexxInteger *compareToRexx(RexxString *other, RexxInteger *start_, RexxInteger *len_);
-   RexxInteger *caselessCompareToRexx(RexxString *other, RexxInteger *start_, RexxInteger *len_);
-   RexxInteger *primitiveCompareTo(RexxString *other, stringsize_t start, stringsize_t len);
-   RexxInteger *primitiveCaselessCompareTo(RexxString *other, stringsize_t start, stringsize_t len);
-
-   RexxInteger *equals(RexxString *other);
-   RexxInteger *caselessEquals(RexxString *other);
-
-   RexxArray   *makeArrayRexx(RexxString *);
-
-/****************************************************************************/
-/*                                                                          */
-/*      RexxString Methods in OKBMISC.C                                     */
-/*                                                                          */
-/****************************************************************************/
-   int         isSymbol();
-
-/* Inline_functions */
-
-   inline size_t  getLength() { return this->length; };
-   inline void    setLength(size_t l) { this->length = l; };
-   inline void finish(stringsize_t l) { length = l; }
-   inline const char *getStringData() { return this->stringData; };
-   inline char *getWritableData() { return &this->stringData[0]; };
-   inline void put(size_t s, const void *b, size_t l) { memcpy(getWritableData() + s, b, l); };
-   inline void put(size_t s, RexxString *o) { put(s, o->getStringData(), o->getLength()); };
-   inline void set(size_t s,int c, size_t l) { memset((this->stringData+s), c, l); };
-   inline char getChar(size_t p) { return *(this->stringData+p); };
-   inline char putChar(size_t p,char c) { return *(this->stringData+p) = c; };
-   inline bool upperOnly() {return (this->Attributes&STRING_NOLOWER) != 0;};
-   inline bool hasLower() {return (this->Attributes&STRING_HASLOWER) != 0;};
-   inline void  setUpperOnly() { this->Attributes |= STRING_NOLOWER;};
-   inline void  setHasLower() { this->Attributes |= STRING_HASLOWER;};
-   inline bool  nonNumeric() {return (this->Attributes&STRING_NONNUMERIC) != 0;};
-   inline void  setNonNumeric() { this->Attributes |= STRING_NONNUMERIC;};
-   inline bool  strCompare(const char * s) {return this->memCompare((s), strlen(s));};
-   inline bool  strCaselessCompare(const char * s) { return (size_t)this->length == strlen(s) && Utilities::strCaselessCompare(s, this->stringData) == 0;}
-   inline bool  memCompare(const char * s, size_t l) { return l == this->length && memcmp(s, this->stringData, l) == 0; }
-   inline bool  memCompare(RexxString *other) { return other->length == this->length && memcmp(other->stringData, this->stringData, length) == 0; }
-   inline void  memCopy(char * s) { memcpy(s, stringData, length); }
-   inline void  toRxstring(CONSTRXSTRING &r) { r.strptr = getStringData(); r.strlength = getLength(); }
-   inline void  toRxstring(RXSTRING &r) { r.strptr = getWritableData(); r.strlength = getLength(); }
-          void  copyToRxstring(RXSTRING &r);
-   inline bool  endsWith(char c) { return this->length > 0 && this->stringData[this->length - 1] == c; }
-
-   RexxNumberString *createNumberString();
-
-   inline RexxNumberString *fastNumberString() {
-       if (this->nonNumeric())              /* Did we already try and convert to */
-                                            /* to a numberstring and fail?       */
-        return OREF_NULL;                   /* Yes, no need to try agian.        */
-
-       if (this->NumberString != OREF_NULL) /* see if we have already converted  */
-         return this->NumberString;         /* return the numberString Object.   */
-       return createNumberString();         /* go build the number string version */
-   }
-
-   inline int sortCompare(RexxString *other) {
-       size_t compareLength = length;
-       if (compareLength > other->length) {
-           compareLength = other->length;
-       }
-       int result = memcmp(stringData, other->stringData, compareLength);
-       if (result == 0) {
-           if (length > other->length) {
-               result = 1;
-           }
-           else if (length < other->length) {
-               result = -1;
-           }
-       }
-       return result;
-   }
-
-   inline int sortCaselessCompare(RexxString *other) {
-       size_t compareLength = length;
-       if (compareLength > other->length) {
-           compareLength = other->length;
-       }
-       int result = StringUtil::caselessCompare(stringData, other->stringData, compareLength);
-       if (result == 0) {
-           if (length > other->length) {
-               result = 1;
-           }
-           else if (length < other->length) {
-               result = -1;
-           }
-       }
-       return result;
-   }
-
-   inline int sortCompare(RexxString *other, size_t startCol, size_t colLength) {
-       int result = 0;
-       if ((startCol < length ) && (startCol < other->length)) {
-           size_t stringLength = length;
-           if (stringLength > other->length) {
-               stringLength = other->length;
-           }
-           stringLength = stringLength - startCol + 1;
-           size_t compareLength = colLength;
-           if (compareLength > stringLength) {
-               compareLength = stringLength;
-           }
-
-           result = memcmp(stringData + startCol, other->stringData + startCol, compareLength);
-           if (result == 0 && stringLength < colLength) {
-               if (length > other->length) {
-                   result = 1;
-               }
-               else if (length < other->length) {
-                   result = -1;
-               }
-           }
-       }
-       else {
-           if (length == other->length) {
-               result = 0;
-           }
-           else {
-               result = length < other->length ? -1 : 1;
-           }
-       }
-       return result;
-   }
-
-   inline int sortCaselessCompare(RexxString *other, size_t startCol, size_t colLength) {
-       int result = 0;
-       if ((startCol < length ) && (startCol < other->length)) {
-           size_t stringLength = length;
-           if (stringLength > other->length) {
-               stringLength = other->length;
-           }
-           stringLength = stringLength - startCol + 1;
-           size_t compareLength = colLength;
-           if (compareLength > stringLength) {
-               compareLength = stringLength;
-           }
-
-           result = StringUtil::caselessCompare(stringData + startCol, other->stringData + startCol, compareLength);
-           if (result == 0 && stringLength < colLength) {
-               if (length > other->length) {
-                   result = 1;
-               }
-               else if (length < other->length) {
-                   result = -1;
-               }
-           }
-       }
-       else {
-           if (length == other->length) {
-               result = 0;
-           }
-           else {
-               result = length < other->length ? -1 : 1;
-           }
-       }
-       return result;
-   }
+class RexxString : public RexxObject
+{
+ public:
+     typedef enum
+     {
+        STRING_HASLOWER,
+        STRING_NOLOWER,
+        STRING_HASUPPER,
+        STRING_NOUPPER,
+        STRING_NONNUMERIC,
+     } StringFlag;
 
 
-   static RexxString *newString(const char *, size_t);
-   static RexxString *rawString(size_t);
-   static RexxString *newUpperString(const char *, stringsize_t);
-   static RexxString *newString(double d);
-   static RexxString *newString(double d, size_t precision);
-   static RexxString *newProxy(const char *);
-   // NB:  newRexx() cannot be static and exported as an ooRexx method.
-          RexxString *newRexx(RexxObject **, size_t);
-   static PCPPM operatorMethods[];
+     /**
+      * A class for constructing a string value from a sequence
+      * of append steps.
+      */
+     class StringBuilder
+     {
+     public:
+         inline StringBuilder(char *b) : current(b) {}
+         inline StringBuilder(RexxString *s) : current(s->getWritableData()) {}
 
-   static void createInstance();
-   static RexxClass *classInstance;
+         inline void append(const char *d, size_t l)  { memcpy(current, d, l); current += l; }
+         inline void append(char c) { *current++ = c; }
+         inline void pad(char c, size_t l)  { memset(current, c, l); current += l; }
 
- protected:
-
-   HashCode hashValue;                 // stored has value
-   size_t length;                      /* string length                   */
-   RexxNumberString *NumberString;     /* lookaside information           */
-   size_t Attributes;                  /* string attributes               */
-   char stringData[4];                 /* Start of the string data part   */
- };
+     protected:
+         char *current;   // current output pointer
+     };
 
 
-// some handy functions for doing cstring/RexxString manipulations
+     /**
+      * A class for iterating through the words of a string.
+      */
+     class WordIterator
+     {
+     public:
+         inline WordIterator(const char *b, size_t l) : nextPosition(b), scanLength(l) {}
+         inline WordIterator(RexxString *s) : nextPosition(s->getStringData()), scanLength(s->getLength()) {}
 
- inline void * rmemcpy(void *t, RexxString *s, size_t len)
- {
-     return memcpy(t, s->getStringData(), len);
- }
+         /**
+          * Skip leading blanks in a string.
+          *
+          * @param String The target string.
+          * @param scanLength
+          *               The length of the string segment.
+          */
+         void skipBlanks(const char *&string, size_t &scanLength )
+         {
+             const char *scan = string;
+             size_t length = scanLength;
 
- inline int rmemcmp(const void *t, RexxString *s, size_t len)
- {
-     return memcmp(t, s->getStringData(), len);
- }
+             // just skip over any white space characters
+             for (;length > 0; scan++, length--)
+             {
+                 if (*scan != ' ' && *scan != '\t')
+                 {
+                     break;
+                 }
+             }
 
- inline char * rstrcpy(char *t, RexxString *s)
- {
-     return strcpy(t, s->getStringData());
- }
+             // we've either found a non blank or we ran out of string
+             string = scan;
+             scanLength = length;
+         }
 
- inline char * rstrcat(char *t, RexxString *s)
- {
-     return strcat(t, s->getStringData());
- }
+         /**
+          * Skip non-blank characters to the next whitespace char.
+          *
+          * @param String The source string.
+          * @param scanLength
+          *               The string length (update on return);
+          */
+         void skipNonBlanks(const char *&string, size_t &scanLength )
+         {
+             const char *scan = string;
+             size_t length = scanLength;
 
- inline int rstrcmp(const char *t, RexxString *s)
- {
-     return strcmp(t, s->getStringData());
- }
+             for (;length > 0; scan++, length--)
+             {
+                 // stop if we find a white space character
+                 if (*scan == ' ' || *scan == '\t')
+                 {
+                     break;
+                 }
+             }
+             string = scan;
+             scanLength = length;
+         }
+
+
+         /**
+          * Scan forward to the next word in the string.
+          *
+          * @return true if a word was found, false if we've run out out words.
+          */
+         inline bool next()
+         {
+             // NOTE: We leave the word pointer and length untouched until we
+             // have a hit so that after an iteration failure, we can still retrieve
+             // the last word.
+
+             // if out of string, this is a failure
+             if (scanLength == 0)
+             {
+                 return false;
+             }
+
+             // if we have string left
+             // skip over any blanks
+             skipBlanks(nextPosition, scanLength);
+             // if we ran out of string, there are no more words
+             if (scanLength == 0)
+             {
+                 return false;
+             }
+
+             // save the starting length
+             currentWordLength = scanLength;
+             // save the start of the word
+             currentWord = nextPosition;
+
+             // skip over the non-blank charactes
+             skipNonBlanks(nextPosition, scanLength);
+             // get the length of the next word
+             currentWordLength -= scanLength;
+             // we have a word
+             return true;
+         }
+
+
+         /**
+          * Skip over a given number of words.  Returns true if
+          * the count was reached before the end of the string, false
+          * if the end is reached first.
+          *
+          * @param count  The count to skip.
+          *
+          * @return true if count words were found.
+          */
+         inline bool skipWords(size_t count)
+         {
+             while (count--)
+             {
+                 if (!next())
+                 {
+                     return false;
+                 }
+             }
+             return true;
+         }
+
+
+         // skip from the end of the current word to to the next word
+         // or the end of the string
+         inline void skipBlanks()
+         {
+             skipBlanks(nextPosition, scanLength);
+         }
+
+
+         /**
+          * Compare the current word in two iterators.
+          *
+          * @param other  The other comparison.
+          *
+          * @return true if the words match, false otherwise
+          */
+         inline bool compare(WordIterator &other)
+         {
+             // length mismatch, can't be a match
+             if (currentWordLength != other.wordLength())
+             {
+                 return false;
+             }
+
+             // now compare the two words
+             return memcmp(currentWord, other.wordPointer(), currentWordLength) == 0;
+         }
+
+
+         /**
+          * Compare the current word in two iterators.
+          *
+          * @param other  The other comparison.
+          *
+          * @return true if the words match, false otherwise
+          */
+         inline bool caselessCompare(WordIterator &other)
+         {
+             // length mismatch, can't be a match
+             if (currentWordLength != other.wordLength())
+             {
+                 return false;
+             }
+
+             // now compare the two words
+             return StringUtil::caselessCompare(currentWord, other.wordPointer(), currentWordLength) == 0;
+         }
+
+
+         inline size_t wordLength() { return currentWordLength; }
+         inline const char *wordPointer() { return currentWord; }
+         inline const char *wordEndPointer() { return currentWord + currentWordLength; }
+         inline void append(StringBuilder &builder) { builder.append(currentWord, currentWordLength); }
+         inline void appendRemainder(StringBuilder &builder) { builder.append(nextPosition, scanLength); }
+         inline const char *scanPosition() { return nextPosition; }
+         inline size_t length() { return scanLength; }
+
+     protected:
+         const char *currentWord;       // the current word position
+         const char *nextPosition;      // the next scan position
+         size_t currentWordLength;      // the length of the current word match
+         size_t scanLength;             // the remaining scan length
+     };
+
+
+    inline RexxString() {;} ;
+    inline RexxString(RESTORETYPE restoreType) { ; }
+
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(Envelope *envelope);
+    virtual RexxInternalObject *unflatten(Envelope *);
+
+    virtual HashCode getHashValue();
+
+    inline HashCode getStringHash()
+    {
+        if (hashValue == 0)                // if we've never generated this, the code is zero
+        {
+            size_t len = getLength();
+
+            HashCode h = 0;
+            // the hash code is generated from all of the string characters.
+            // we do this in a lazy fashion, since most string objects never need to
+            // calculate a hash code, particularly the long ones.
+            // This hashing algorithm is very similar to that used for Java strings.
+            for (size_t i = 0; i < len; i++)
+            {
+                h = 31 * h + stringData[i];
+            }
+            hashValue = h;
+        }
+        return hashValue;
+    }
+
+    HashCode getObjectHashCode();
+
+    virtual bool numberValue(wholenumber_t &result, wholenumber_t precision);
+    virtual bool numberValue(wholenumber_t &result);
+    virtual bool unsignedNumberValue(size_t &result, wholenumber_t precision);
+    virtual bool unsignedNumberValue(size_t &result);
+    virtual bool doubleValue(double &result);
+    virtual NumberString *numberString();
+    virtual RexxInteger *integerValue(wholenumber_t);
+    virtual RexxString  *makeString();
+    virtual ArrayClass   *makeArray();
+    RexxString  *primitiveMakeString();
+    virtual void         copyIntoTail(CompoundVariableTail *buffer);
+    virtual RexxString  *stringValue();
+    virtual bool  truthValue(int);
+    virtual bool logicalValue(logical_t &);
+
+    // comparison methods
+    virtual bool isEqual(RexxInternalObject *);
+    bool        primitiveIsEqual(RexxObject *);
+    bool        primitiveCaselessIsEqual(RexxObject *);
+    wholenumber_t strictComp(RexxObject *);
+    wholenumber_t comp(RexxObject *);
+    wholenumber_t stringComp(RexxString *);
+    virtual wholenumber_t compareTo(RexxInternalObject *);
+    RexxObject  *equal(RexxObject *);
+    RexxObject  *strictEqual(RexxObject *);
+    RexxObject  *notEqual(RexxObject *);
+    RexxObject  *strictNotEqual(RexxObject *);
+    RexxObject  *isGreaterThan(RexxObject *);
+    RexxObject  *isLessThan(RexxObject *);
+    RexxObject  *isGreaterOrEqual(RexxObject *);
+    RexxObject  *isLessOrEqual(RexxObject *);
+    RexxObject  *strictGreaterThan(RexxObject *);
+    RexxObject  *strictLessThan(RexxObject *);
+    RexxObject  *strictGreaterOrEqual(RexxObject *);
+    RexxObject  *strictLessOrEqual(RexxObject *);
+
+    size_t      copyData(size_t, char *, size_t);
+    RexxObject *lengthRexx();
+    RexxString *concatRexx(RexxObject *);
+    RexxString *concat(RexxString *);
+    RexxString *concatToCstring(const char *);
+    RexxString *concatWithCstring(const char *);
+    RexxString *concatBlank(RexxObject *);
+    bool        checkLower();
+    bool        checkUpper();
+    RexxString *upper();
+    RexxString *upper(size_t, size_t);
+    RexxString *upperRexx(RexxInteger *, RexxInteger *);
+    RexxString *lower();
+    RexxString *lower(size_t, size_t);
+    RexxString *lowerRexx(RexxInteger *, RexxInteger *);
+    RexxString *stringTrace();
+    void        setNumberString(NumberString *);
+    RexxString *concatWith(RexxString *, char);
+
+    RexxObject *plus(RexxObject *right);
+    RexxObject *minus(RexxObject *right);
+    RexxObject *multiply(RexxObject *right);
+    RexxObject *divide(RexxObject *right);
+    RexxObject *integerDivide(RexxObject *right);
+    RexxObject *remainder(RexxObject *right);
+    RexxObject *power(RexxObject *right);
+    RexxObject *abs();
+    RexxObject *sign();
+    RexxObject *notOp();
+    RexxObject *operatorNot(RexxObject *);
+    RexxObject *andOp(RexxObject *);
+    RexxObject *orOp(RexxObject *);
+    RexxObject *xorOp(RexxObject *);
+    RexxObject *Max(RexxObject **args, size_t argCount);
+    RexxObject *Min(RexxObject **args, size_t argCount);
+    RexxObject *trunc(RexxInteger *decimals);
+    RexxObject *floor();
+    RexxObject *ceiling();
+    RexxObject *round();
+    RexxObject *format(RexxObject *Integers, RexxObject *Decimals, RexxObject *MathExp, RexxObject *ExpTrigger);
+    RexxObject *logicalOperation(RexxObject *, RexxObject *, unsigned int);
+    RexxString *extract(size_t offset, size_t sublength) { return newString(getStringData() + offset, sublength); }
+    RexxObject *evaluate(RexxActivation *, ExpressionStack *);
+    RexxObject *getValue(RexxActivation *);
+    RexxObject *getValue(VariableDictionary *);
+    RexxObject *getRealValue(RexxActivation *);
+    RexxObject *getRealValue(VariableDictionary *);
+                                        /* the following methods are in    */
+                                        /* OKBSUBS                         */
+    RexxString  *center(RexxInteger *, RexxString *);
+    RexxString  *delstr(RexxInteger *, RexxInteger *);
+    RexxString  *insert(RexxString *, RexxInteger *, RexxInteger *, RexxString *);
+    RexxString  *left(RexxInteger *, RexxString *);
+    RexxString  *overlay(RexxString *, RexxInteger *, RexxInteger *, RexxString *);
+    RexxString  *replaceAt(RexxString *, RexxInteger *, RexxInteger *, RexxString *);
+    RexxString  *reverse();
+    RexxString  *right(RexxInteger *, RexxString *);
+    RexxString  *strip(RexxString *, RexxString *);
+    RexxString  *substr(RexxInteger *, RexxInteger *, RexxString *);
+    RexxString  *subchar(RexxInteger *);
+    RexxString  *delWord(RexxInteger *, RexxInteger *);
+    RexxString  *space(RexxInteger *, RexxString *);
+    RexxString  *subWord(RexxInteger *, RexxInteger *);
+    ArrayClass   *subWords(RexxInteger *, RexxInteger *);
+    RexxString  *word(RexxInteger *);
+    RexxInteger *wordIndex(RexxInteger *);
+    RexxInteger *wordLength(RexxInteger *);
+    RexxInteger *wordPos(RexxString *, RexxInteger *);
+    RexxInteger *caselessWordPos(RexxString *, RexxInteger *);
+    RexxObject  *containsWord(RexxString *, RexxInteger *);
+    RexxObject  *caselessContainsWord(RexxString *, RexxInteger *);
+    RexxInteger *words();
+                                        /* the following methods are in    */
+                                        /* OKBMISC                         */
+    RexxString  *changeStr(RexxString *, RexxString *, RexxInteger *);
+    RexxString  *caselessChangeStr(RexxString *, RexxString *, RexxInteger *);
+    RexxObject  *abbrev(RexxString *, RexxInteger *);
+    RexxObject  *caselessAbbrev(RexxString *, RexxInteger *);
+    RexxInteger *compare(RexxString *, RexxString *);
+    RexxInteger *caselessCompare(RexxString *, RexxString *);
+    RexxString  *copies(RexxInteger *);
+    RexxObject  *dataType(RexxString *);
+
+    RexxInteger *lastPosRexx(RexxString *, RexxInteger *, RexxInteger *);
+    RexxInteger *caselessLastPosRexx(RexxString *, RexxInteger *, RexxInteger *);
+    size_t       lastPos(RexxString  *needle, size_t start);
+    size_t       caselessLastPos(RexxString  *needle, size_t start);
+    const char * caselessLastPos(const char *needle, size_t needleLen, const char *haystack, size_t haystackLen);
+
+    RexxInteger *posRexx(RexxString *, RexxInteger *, RexxInteger *);
+    RexxInteger *caselessPosRexx(RexxString *, RexxInteger *, RexxInteger *);
+    RexxObject  *containsRexx(RexxString *, RexxInteger *, RexxInteger *);
+    RexxObject  *caselessContains(RexxString *, RexxInteger *, RexxInteger *);
+    size_t       pos(RexxString *, size_t);
+    size_t       caselessPos(RexxString *, size_t);
+
+    RexxString  *translate(RexxString *, RexxString *, RexxString *, RexxInteger *, RexxInteger *);
+    RexxInteger *verify(RexxString *, RexxString *, RexxInteger *, RexxInteger *);
+    RexxInteger *countStrRexx(RexxString *);
+    RexxInteger *caselessCountStrRexx(RexxString *);
+    size_t       caselessCountStr(RexxString *);
+
+    RexxString  *bitAnd(RexxString *, RexxString *);
+    RexxString  *bitOr(RexxString *, RexxString *);
+    RexxString  *bitXor(RexxString *, RexxString *);
+
+    RexxString  *b2x();
+    RexxString  *c2d(RexxInteger *);
+    RexxString  *c2x();
+    RexxString  *encodeBase64();
+    RexxString  *decodeBase64();
+    RexxString  *d2c(RexxInteger *);
+    RexxString  *d2x(RexxInteger *);
+    RexxString  *x2b();
+    RexxString  *x2c();
+    RexxString  *x2d(RexxInteger *);
+    RexxString  *x2dC2d(RexxInteger *, bool);
+
+    RexxObject  *match(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_);
+    RexxObject  *caselessMatch(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_);
+    bool primitiveMatch(size_t start, RexxString *other, size_t offset, size_t len);
+    bool primitiveCaselessMatch(size_t start, RexxString *other, size_t offset, size_t len);
+    RexxObject  *matchChar(RexxInteger *position_, RexxString *matchSet);
+    RexxObject  *caselessMatchChar(RexxInteger *position_, RexxString *matchSet);
+
+    RexxInteger *compareToRexx(RexxString *other, RexxInteger *start_, RexxInteger *len_);
+    RexxInteger *caselessCompareToRexx(RexxString *other, RexxInteger *start_, RexxInteger *len_);
+    wholenumber_t primitiveCompareTo(RexxString *other, size_t start, size_t len);
+    wholenumber_t primitiveCaselessCompareTo(RexxString *other, size_t start, size_t len);
+    wholenumber_t primitiveCompareTo(RexxString *other);
+    wholenumber_t primitiveCaselessCompareTo(RexxString *other);
+
+    RexxObject  *equals(RexxString *other);
+    RexxObject  *caselessEquals(RexxString *other);
+
+    ArrayClass   *makeArrayRexx(RexxString *);
+
+    StringSymbolType isSymbol();
+
+// Inline_functions
+
+    inline RexxString *baseString() { return isBaseClass() ? this : requestString(); }
+    inline size_t  getLength() const { return length; }
+    inline bool isNullString() const { return length == 0; }
+    inline void  setLength(size_t l) { length = l; }
+    inline void  finish(size_t l) { length = l; }
+    inline const char *getStringData() const { return stringData; }
+    inline char *getWritableData() { return &stringData[0]; }
+    inline void  put(size_t s, const void *b, size_t l) { memcpy(getWritableData() + s, b, l); }
+    inline void  put(size_t s, RexxString *o) { put(s, o->getStringData(), o->getLength()); }
+    inline void  set(size_t s,int c, size_t l) { memset((stringData+s), c, l); }
+    inline char  getChar(size_t p) const { return *(stringData+p); }
+    inline char  putChar(size_t p,char c) { return *(stringData+p) = c; }
+    inline bool  upperOnly() const {return attributes[STRING_NOLOWER];}
+    inline bool  hasLower() const {return attributes[STRING_HASLOWER]; }
+    inline void  setUpperOnly() { attributes.set(STRING_NOLOWER);}
+    inline void  setHasLower() { attributes.set(STRING_HASLOWER);}
+    inline bool  lowerOnly() const {return attributes[STRING_NOUPPER];}
+    inline bool  hasUpper() const {return attributes[STRING_HASUPPER]; }
+    inline void  setLowerOnly() { attributes.set(STRING_NOUPPER);}
+    inline void  setHasUpper() { attributes.set(STRING_HASUPPER);}
+    inline bool  nonNumeric() const {return attributes[STRING_NONNUMERIC];}
+    inline void  setNonNumeric() { attributes.set(STRING_NONNUMERIC);}
+    inline bool  strCompare(const char * s) const { return memCompare((s), strlen(s)); }
+    inline bool  strCaselessCompare(const char * s) const { return (size_t)length == strlen(s) && Utilities::strCaselessCompare(s, stringData) == 0;}
+    inline bool  strCaselessCompare(RexxString *s) const { return length == s->getLength() && Utilities::strCaselessCompare(s->getStringData(), stringData) == 0;}
+    inline bool  memCompare(const char * s, size_t l) const { return l == length && memcmp(s, stringData, l) == 0; }
+    inline bool  memCompare(RexxString *other) const { return other->length == length && memcmp(other->stringData, stringData, length) == 0; }
+    inline bool  strCompare(RexxString *other) const { return other->length == length && memcmp(other->stringData, stringData, length) == 0; }
+    inline void  memCopy(char * s) const { memcpy(s, stringData, length); }
+    inline void  toRxstring(CONSTRXSTRING &r) { r.strptr = getStringData(); r.strlength = getLength(); }
+    inline void  toRxstring(RXSTRING &r) { r.strptr = getWritableData(); r.strlength = getLength(); }
+           void  copyToRxstring(RXSTRING &r);
+    inline bool  endsWith(char c) const { return length > 0 && stringData[length - 1] == c; }
+
+    inline int sortCompare(RexxString *other)
+    {
+        size_t compareLength = length;
+        if (compareLength > other->length)
+        {
+            compareLength = other->length;
+        }
+        int result = memcmp(stringData, other->stringData, compareLength);
+        if (result == 0)
+        {
+            if (length > other->length)
+            {
+                result = 1;
+            }
+            else if (length < other->length)
+            {
+                result = -1;
+            }
+        }
+        return result;
+    }
+
+    inline int sortCaselessCompare(RexxString *other)
+    {
+        size_t compareLength = length;
+        if (compareLength > other->length)
+        {
+            compareLength = other->length;
+        }
+        int result = StringUtil::caselessCompare(stringData, other->stringData, compareLength);
+        if (result == 0)
+        {
+            if (length > other->length)
+            {
+                result = 1;
+            }
+            else if (length < other->length)
+            {
+                result = -1;
+            }
+        }
+        return result;
+    }
+
+    inline int sortCompare(RexxString *other, size_t startCol, size_t colLength)
+    {
+        int result = 0;
+        if ((startCol < length ) && (startCol < other->length))
+        {
+            size_t stringLength = length;
+            if (stringLength > other->length)
+            {
+                stringLength = other->length;
+            }
+            stringLength = stringLength - startCol + 1;
+            size_t compareLength = colLength;
+            if (compareLength > stringLength)
+            {
+                compareLength = stringLength;
+            }
+
+            result = memcmp(stringData + startCol, other->stringData + startCol, compareLength);
+            if (result == 0 && stringLength < colLength)
+            {
+                if (length > other->length)
+                {
+                    result = 1;
+                }
+                else if (length < other->length)
+                {
+                    result = -1;
+                }
+            }
+        }
+        else
+        {
+            if (length == other->length)
+            {
+                result = 0;
+            }
+            else
+            {
+                result = length < other->length ? -1 : 1;
+            }
+        }
+        return result;
+    }
+
+    inline int sortCaselessCompare(RexxString *other, size_t startCol, size_t colLength)
+    {
+        int result = 0;
+        if ((startCol < length ) && (startCol < other->length))
+        {
+            size_t stringLength = length;
+            if (stringLength > other->length)
+            {
+                stringLength = other->length;
+            }
+            stringLength = stringLength - startCol + 1;
+            size_t compareLength = colLength;
+            if (compareLength > stringLength)
+            {
+                compareLength = stringLength;
+            }
+
+            result = StringUtil::caselessCompare(stringData + startCol, other->stringData + startCol, compareLength);
+            if (result == 0 && stringLength < colLength)
+            {
+                if (length > other->length)
+                {
+                    result = 1;
+                }
+                else if (length < other->length)
+                {
+                    result = -1;
+                }
+            }
+        }
+        else
+        {
+            if (length == other->length)
+            {
+                result = 0;
+            }
+            else
+            {
+                result = length < other->length ? -1 : 1;
+            }
+        }
+        return result;
+    }
+
+    static inline char intToHexDigit(int n)
+    {
+        return "0123456789ABCDEF"[n];
+    }
+
+
+    static RexxString *newString(const char *, size_t);
+    static RexxString *rawString(size_t);
+    static RexxString *newUpperString(const char *, size_t);
+    static RexxString *newString(double d);
+    static RexxString *newString(double d, size_t precision);
+    static RexxString *newProxy(const char *);
+    // NB:  newRexx() cannot be static and exported as an ooRexx method.
+           RexxString *newRexx(RexxObject **, size_t);
+    static PCPPM operatorMethods[];
+
+    static void createInstance();
+    static RexxClass *classInstance;
+
+    // Strip method options
+    static const char STRIP_BOTH =              'B';
+    static const char STRIP_LEADING =           'L';
+    static const char STRIP_TRAILING =          'T';
+
+    // Datatype method options
+    static const char DATATYPE_ALPHANUMERIC =   'A';
+    static const char DATATYPE_BINARY =         'B';
+    static const char DATATYPE_LOWERCASE =      'L';
+    static const char DATATYPE_MIXEDCASE =      'M';
+    static const char DATATYPE_NUMBER =         'N';
+    static const char DATATYPE_SYMBOL =         'S';
+    static const char DATATYPE_VARIABLE =       'V';
+    static const char DATATYPE_UPPERCASE =      'U';
+    static const char DATATYPE_WHOLE_NUMBER =   'W';
+    static const char DATATYPE_HEX =            'X';
+    static const char DATATYPE_9DIGITS =        '9';
+    static const char DATATYPE_LOGICAL =        'O';  // lOgical.
+
+    // Verify method options
+    static const char VERIFY_MATCH =            'M';
+    static const char VERIFY_NOMATCH =          'N';
+
+    // string white space characters
+    static const char ch_SPACE = ' ';
+    static const char ch_TAB   = '\t';
+
+    // Define char data used in in number string parsing
+    static const char ch_MINUS  = '-';
+    static const char ch_PLUS   = '+';
+    static const char ch_PERIOD = '.';
+    static const char ch_ZERO   = '0';
+    static const char ch_ONE    = '1';
+    static const char ch_FIVE   = '5';
+    static const char ch_NINE   = '9';
+
+    // character validation sets for the datatype function
+    static const char *HEX_CHAR_STR;
+    static const char *ALPHANUM;
+    static const char *BINARY;
+    static const char *LOWER_ALPHA;
+    static const char *MIXED_ALPHA;
+    static const char *UPPER_ALPHA;
+    static const char *DIGITS_BASE64;
+
+  protected:
+
+    HashCode hashValue;                      // stored has value
+    size_t length;                           // string length
+    NumberString *numberStringValue;         // lookaside information
+    FlagSet<StringFlag, 32> attributes;      // string attributes
+    char stringData[4];                      // Start of the string data part
+};
 
 
 // String creation inline functions
 
-inline RexxString *new_string(const char *s, stringsize_t l)
+inline RexxString *new_string(const char *s, size_t l)
 {
     return RexxString::newString(s, l);
 }
 
-inline RexxString *raw_string(stringsize_t l)
+inline RexxString *raw_string(size_t l)
 {
     return RexxString::rawString(l);
 }
@@ -574,7 +782,7 @@ inline RexxString *new_proxy(const char *name)
     return RexxString::newProxy(name);
 }
 
-inline RexxString *new_upper_string(const char *s, stringsize_t l)
+inline RexxString *new_upper_string(const char *s, size_t l)
 {
     return RexxString::newUpperString(s, l);
 }

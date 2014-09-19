@@ -57,8 +57,8 @@ set (CMAKE_PDB_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 #/*----------------------------------------------------------------------------*/
 project (ooRexx)
 # The version of ooRexx to make
-set (ORX_MAJOR 4)
-set (ORX_MINOR 3)
+set (ORX_MAJOR 5)
+set (ORX_MINOR 0)
 set (ORX_MOD_LVL 0)
 set (ORX_BLD_LVL 0)
 set (ORX_VERSION ${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL})
@@ -488,16 +488,17 @@ set (interpreter_api_sources ${build_interpreter_api_dir}/CallContextStubs.cpp
             ${build_interpreter_api_dir}/InterpreterInstanceStubs.cpp
             ${build_interpreter_api_dir}/MethodContextStubs.cpp
             ${build_interpreter_api_dir}/ThreadContextStubs.cpp)
-set (classes_support_sources ${build_classes_support_dir}/ProgramMetaData.cpp
-            ${build_classes_support_dir}/RexxCollection.cpp
-            ${build_classes_support_dir}/RexxCompoundElement.cpp
-            ${build_classes_support_dir}/RexxCompoundTable.cpp
-            ${build_classes_support_dir}/RexxCompoundTail.cpp
+set (classes_support_sources ${build_classes_support_dir}/HashCollection.cpp
+            ${build_classes_support_dir}/HashContents.cpp
+            ${build_classes_support_dir}/ListContents.cpp
+            ${build_classes_support_dir}/ProgramMetaData.cpp
+            ${build_classes_support_dir}/CompoundTableElement.cpp
+            ${build_classes_support_dir}/CompoundVariableTable.cpp
+            ${build_classes_support_dir}/CompoundVariableTail.cpp
             ${build_classes_support_dir}/RexxDateTime.cpp
-            ${build_classes_support_dir}/RexxHashTable.cpp
-            ${build_classes_support_dir}/RexxListTable.cpp
             ${build_classes_support_dir}/StringUtil.cpp)
 set (classes_sources ${build_classes_dir}/ArrayClass.cpp
+            ${build_classes_dir}/BagClass.cpp
             ${build_classes_dir}/BufferClass.cpp
             ${build_classes_dir}/ClassClass.cpp
             ${build_classes_dir}/ContextClass.cpp
@@ -517,7 +518,7 @@ set (classes_sources ${build_classes_dir}/ArrayClass.cpp
             ${build_classes_dir}/RelationClass.cpp
             ${build_classes_dir}/RoutineClass.cpp
             ${build_classes_dir}/RexxQueueMethods.cpp
-            ${build_classes_dir}/StackClass.cpp
+            ${build_classes_dir}/SetClass.cpp
             ${build_classes_dir}/StemClass.cpp
             ${build_classes_dir}/StringClass.cpp
             ${build_classes_dir}/StringClassBit.cpp
@@ -526,6 +527,7 @@ set (classes_sources ${build_classes_dir}/ArrayClass.cpp
             ${build_classes_dir}/StringClassSub.cpp
             ${build_classes_dir}/StringClassUtil.cpp
             ${build_classes_dir}/StringClassWord.cpp
+            ${build_classes_dir}/StringTableClass.cpp
             ${build_classes_dir}/SupplierClass.cpp
             ${build_classes_dir}/TableClass.cpp
             ${build_classes_dir}/IdentityTableClass.cpp
@@ -534,27 +536,37 @@ set (classes_sources ${build_classes_dir}/ArrayClass.cpp
 set (package_sources ${build_package_dir}/LibraryPackage.cpp
             ${build_package_dir}/PackageManager.cpp)
 set (memory_sources ${build_memory_dir}/DeadObject.cpp
+            ${build_memory_dir}/GlobalNames.cpp
+            ${build_memory_dir}/MapBucket.cpp
+            ${build_memory_dir}/MapTable.cpp
             ${build_memory_dir}/MemorySegment.cpp
+            ${build_memory_dir}/MemoryStack.cpp
             ${build_memory_dir}/MemoryStats.cpp
+            ${build_memory_dir}/NumberArray.cpp
             ${build_memory_dir}/ProtectedObject.cpp
-            ${build_memory_dir}/RexxEnvelope.cpp
-            ${build_memory_dir}/RexxInternalStack.cpp
-            ${build_memory_dir}/RexxSmartBuffer.cpp
+            ${build_memory_dir}/Envelope.cpp
+            ${build_memory_dir}/InternalStack.cpp
+            ${build_memory_dir}/SmartBuffer.cpp
             ${build_memory_dir}/UninitDispatcher.cpp
             ${build_memory_dir}/Setup.cpp
             ${build_memory_dir}/RexxMemory.cpp)
 set (execution_sources ${build_execution_dir}/CPPCode.cpp
+            ${build_execution_dir}/ActivationStack.cpp
             ${build_execution_dir}/RexxActivation.cpp
-            ${build_execution_dir}/RexxActivationStack.cpp
+            ${build_execution_dir}/BaseCode.cpp
             ${build_execution_dir}/RexxCode.cpp
+            ${build_execution_dir}/BaseExecutable.cpp
             ${build_execution_dir}/RexxLocalVariables.cpp
-            ${build_execution_dir}/RexxNativeActivation.cpp
-            ${build_execution_dir}/RexxNativeCode.cpp
+            ${build_execution_dir}/NativeActivation.cpp
+            ${build_execution_dir}/NativeCode.cpp
             ${build_execution_dir}/RexxVariable.cpp
-            ${build_execution_dir}/RexxVariableDictionary.cpp
-            ${build_execution_dir}/SecurityManager.cpp)
+            ${build_execution_dir}/TrapHandler.cpp
+            ${build_execution_dir}/VariableDictionary.cpp
+            ${build_execution_dir}/SecurityManager.cpp
+            ${build_execution_dir}/TraceSetting.cpp)
 set (behaviour_sources ${build_behaviour_dir}/PrimitiveBehaviours.cpp
             ${build_behaviour_dir}/RexxBehaviour.cpp
+            ${build_behaviour_dir}/MethodDictionary.cpp
             ${build_behaviour_dir}/VirtualFunctionTable.cpp)
 set (concurrency_sources ${build_concurrency_dir}/ActivityDispatcher.cpp
             ${build_concurrency_dir}/ActivityManager.cpp
@@ -564,7 +576,7 @@ set (concurrency_sources ${build_concurrency_dir}/ActivityDispatcher.cpp
             ${build_concurrency_dir}/ExitHandler.cpp
             ${build_concurrency_dir}/CommandHandler.cpp
             ${build_concurrency_dir}/MessageDispatcher.cpp
-            ${build_concurrency_dir}/RexxActivity.cpp
+            ${build_concurrency_dir}/Activity.cpp
             ${build_concurrency_dir}/RexxStartDispatcher.cpp
             ${build_concurrency_dir}/TranslateDispatcher.cpp)
 set (expression_sources ${build_expression_dir}/BuiltinFunctions.cpp
@@ -581,11 +593,18 @@ set (expression_sources ${build_expression_dir}/BuiltinFunctions.cpp
             ${build_expression_dir}/ExpressionLogical.cpp)
 set (instructions_sources  ${build_instructions_dir}/AddressInstruction.cpp
             ${build_instructions_dir}/AssignmentInstruction.cpp
+            ${build_instructions_dir}/BaseDoInstruction.cpp
             ${build_instructions_dir}/CallInstruction.cpp
             ${build_instructions_dir}/ClassDirective.cpp
             ${build_instructions_dir}/CommandInstruction.cpp
             ${build_instructions_dir}/DoBlock.cpp
-            ${build_instructions_dir}/DoInstruction.cpp
+            ${build_instructions_dir}/DoBlockComponents.cpp
+            ${build_instructions_dir}/DoCountInstruction.cpp
+            ${build_instructions_dir}/SimpleDoInstruction.cpp
+            ${build_instructions_dir}/ControlledDoInstruction.cpp
+            ${build_instructions_dir}/DoForeverInstruction.cpp
+            ${build_instructions_dir}/DoOverInstruction.cpp
+            ${build_instructions_dir}/DoWhileInstruction.cpp
             ${build_instructions_dir}/DropInstruction.cpp
             ${build_instructions_dir}/ElseInstruction.cpp
             ${build_instructions_dir}/EndIf.cpp
@@ -622,9 +641,11 @@ set (instructions_sources  ${build_instructions_dir}/AddressInstruction.cpp
             ${build_instructions_dir}/UseStrictInstruction.cpp)
 set (parser_sources ${build_parser_dir}/Clause.cpp
             ${build_parser_dir}/KeywordConstants.cpp
+            ${build_parser_dir}/DirectiveParser.cpp
             ${build_parser_dir}/InstructionParser.cpp
+            ${build_parser_dir}/LanguageParser.cpp
+            ${build_parser_dir}/ProgramSource.cpp
             ${build_parser_dir}/Scanner.cpp
-            ${build_parser_dir}/SourceFile.cpp
             ${build_parser_dir}/Token.cpp)
 set (platform_sources ${build_interpreter_platform_dir}/ErrorMessages.cpp
             ${build_interpreter_platform_dir}/ExternalFunctions.cpp
@@ -645,13 +666,10 @@ set (common_sources ${build_common_dir}/Utilities.cpp
             ${build_common_platform_dir}/SysLibrary.cpp
             ${build_common_platform_dir}/SysSemaphore.cpp
             ${build_common_platform_dir}/SysThread.cpp)
-set (runtime_sources ${build_runtime_dir}/GlobalData.cpp
-            ${build_runtime_dir}/GlobalNames.cpp
-            ${build_runtime_dir}/InternalPackage.cpp
+set (runtime_sources ${build_runtime_dir}/InternalPackage.cpp
             ${build_runtime_dir}/Interpreter.cpp
             ${build_runtime_dir}/InterpreterInstance.cpp
             ${build_runtime_dir}/Numerics.cpp
-            ${build_runtime_dir}/RexxMisc.cpp
             ${build_runtime_dir}/Version.cpp)
 set (streamlibrary_sources ${build_streamlibrary_dir}/StreamCommandParser.cpp
             ${build_streamlibrary_dir}/StreamNative.cpp

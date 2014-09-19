@@ -1,11 +1,11 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.ibm.com/developerworks/oss/CPLv1.0.htm                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -57,7 +57,7 @@ public:
     inline SysSocketConnection() : c(-1), errcode(CSERROR_OK), messageBuffer(NULL) { }
     inline SysSocketConnection(SOCKET sock) : c(sock), errcode(CSERROR_OK), messageBuffer(NULL) { }
     inline ~SysSocketConnection() { if (messageBuffer != NULL) { free(messageBuffer); } }
-    CSErrorCodeT getError(void)
+    CSErrorCodeT getError()
     {
         return errcode;
     };
@@ -131,7 +131,7 @@ public:
     ~SysServerConnection();
 
     bool isLocalConnection();
-    bool disconnect(void);
+    bool disconnect();
 
 protected:
     char *getMessageBuffer();
@@ -156,7 +156,7 @@ public:
     SysServerStream(const char *name);
     SysServerStream(int port);
     ~SysServerStream();
-    CSErrorCodeT getError(void)
+    CSErrorCodeT getError()
     {
         return errcode;
     };

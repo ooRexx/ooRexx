@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.ibm.com/developerworks/oss/CPLv1.0.htm                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -47,28 +47,38 @@
 #include "DirectoryClass.hpp"
 
 
+/**
+ * Allocate a new SecurityManager object.
+ *
+ * @param size   The base size of the object.
+ *
+ * @return Storage for a security manager.
+ */
 void *SecurityManager::operator new (size_t size)
 {
-                                         /* get a new method object           */
     return new_object(size, T_SecurityManager);
 }
 
 
+/**
+ * Generalized object marking.
+ *
+ * @param reason The reason for this live marking operation.
+ */
 void SecurityManager::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
-    memory_mark(this->manager);
+    memory_mark(manager);
 }
 
 
-void SecurityManager::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
+/**
+ * Generalized object marking.
+ *
+ * @param reason The reason for this live marking operation.
+ */
+void SecurityManager::liveGeneral(MarkReason reason)
 {
-    memory_mark_general(this->manager);
+    memory_mark_general(manager);
 }
 
 /**
@@ -85,15 +95,15 @@ RexxObject *SecurityManager::checkLocalAccess(RexxString *index)
         return OREF_NULL;
     }
 
-    RexxDirectory *securityArgs = new_directory();
+    DirectoryClass *securityArgs = new_directory();
     ProtectedObject p(securityArgs);
 
-    securityArgs->put(index, OREF_NAME);
-    securityArgs->put(TheNilObject, OREF_RESULT);
-    if (callSecurityManager(OREF_LOCAL, securityArgs))
+    securityArgs->put(index, GlobalNames::NAME);
+    securityArgs->put(TheNilObject, GlobalNames::RESULT);
+    if (callSecurityManager(GlobalNames::LOCAL, securityArgs))
     {
-                                       /* get the result and return         */
-        return securityArgs->fastAt(OREF_RESULT);
+        // the result is returned in the arguments
+        return (RexxObject *)securityArgs->get(GlobalNames::RESULT);
     }
     return OREF_NULL;   // not handled
 }
@@ -114,15 +124,14 @@ RexxObject *SecurityManager::checkEnvironmentAccess(RexxString *index)
         return OREF_NULL;
     }
 
-    RexxDirectory *securityArgs = new_directory();
+    DirectoryClass *securityArgs = new_directory();
     ProtectedObject p(securityArgs);
 
-    securityArgs->put(index, OREF_NAME);
-    securityArgs->put(TheNilObject, OREF_RESULT);
-    if (callSecurityManager(OREF_ENVIRONMENT, securityArgs))
+    securityArgs->put(index, GlobalNames::NAME);
+    securityArgs->put(TheNilObject, GlobalNames::RESULT);
+    if (callSecurityManager(GlobalNames::ENVIRONMENT, securityArgs))
     {
-                                       /* get the result and return         */
-        return securityArgs->fastAt(OREF_RESULT);
+        return (RexxObject *)securityArgs->get(GlobalNames::RESULT);
     }
     return OREF_NULL;   // not handled
 }
@@ -136,13 +145,13 @@ RexxObject *SecurityManager::checkEnvironmentAccess(RexxString *index)
  *
  * @return true if the security manager overrode this, false otherwise.
  */
-bool SecurityManager::callSecurityManager(RexxString *methodName, RexxDirectory *arguments)
+bool SecurityManager::callSecurityManager(RexxString *methodName, DirectoryClass *arguments)
 {
     // invoke the manager
     RexxObject *resultObj = manager->sendMessage(methodName, arguments);
-    if (resultObj == OREF_NULL)          /* no return result?                 */
+    // a result is required
+    if (resultObj == OREF_NULL)
     {
-                                         /* need to raise an exception        */
         reportException(Error_No_result_object_message, methodName);
     }
     return resultObj->truthValue(Error_Logical_value_authorization);
@@ -168,17 +177,17 @@ bool SecurityManager::checkProtectedMethod(RexxObject *target, RexxString *messa
     {
         return false;
     }
-    RexxDirectory *securityArgs = new_directory();
+    DirectoryClass *securityArgs = new_directory();
     ProtectedObject p(securityArgs);
 
-    securityArgs->put(target, OREF_OBJECTSYM);
-    securityArgs->put(messageName, OREF_NAME);
-    RexxArray *argumentArray = new (count, arguments) RexxArray;
-    securityArgs->put(argumentArray, OREF_ARGUMENTS);
-    if (callSecurityManager(OREF_METHODNAME, securityArgs))
+    securityArgs->put(target, GlobalNames::OBJECT);
+    securityArgs->put(messageName, GlobalNames::NAME);
+    ArrayClass *argumentArray = new_array(count, arguments);
+    securityArgs->put(argumentArray, GlobalNames::ARGUMENTS);
+    if (callSecurityManager(GlobalNames::METHOD, securityArgs))
     {
         // get the result and return
-        result = securityArgs->fastAt(OREF_RESULT);
+        result = securityArgs->get(GlobalNames::RESULT);
         return true;
     }
     return false;       // not handled
@@ -203,16 +212,16 @@ bool SecurityManager::checkFunctionCall(RexxString *functionName, size_t count, 
     {
         return false;
     }
-    RexxDirectory *securityArgs = new_directory();
+    DirectoryClass *securityArgs = new_directory();
     ProtectedObject p(securityArgs);
 
-    securityArgs->put(functionName, OREF_NAME);
-    RexxArray *argumentArray = new (count, arguments) RexxArray;
-    securityArgs->put(argumentArray, OREF_ARGUMENTS);
-    if (callSecurityManager(OREF_CALL, securityArgs))
+    securityArgs->put(functionName, GlobalNames::NAME);
+    ArrayClass *argumentArray = new_array(count, arguments);
+    securityArgs->put(argumentArray, GlobalNames::ARGUMENTS);
+    if (callSecurityManager(GlobalNames::CALL, securityArgs))
     {
         // get the result and return
-        result = securityArgs->fastAt(OREF_RESULT);
+        result = securityArgs->get(GlobalNames::RESULT);
         return true;
     }
     return false;       // not handled
@@ -230,39 +239,38 @@ bool SecurityManager::checkFunctionCall(RexxString *functionName, size_t count, 
  *
  * @return true if the security manager handled this call, false otherwise.
  */
-bool SecurityManager::checkCommand(RexxActivity *activity, RexxString *address, RexxString *command, ProtectedObject &result, ProtectedObject &condition)
+bool SecurityManager::checkCommand(Activity *activity, RexxString *address, RexxString *command, ProtectedObject &result, ProtectedObject &condition)
 {
     // no method here
     if (manager == OREF_NULL)
     {
         return false;
     }
-    RexxDirectory *securityArgs = new_directory();
+    DirectoryClass *securityArgs = new_directory();
     ProtectedObject p(securityArgs);
-                                       /* add the command                   */
-    securityArgs->put(command, OREF_COMMAND);
-    /* and the target                    */
-    securityArgs->put(address, OREF_ADDRESS);
-    /* did manager handle this?          */
-    if (callSecurityManager(OREF_COMMAND, securityArgs))
+    // add the command and the accress target
+    securityArgs->put(command, GlobalNames::COMMAND);
+    securityArgs->put(address, GlobalNames::ADDRESS);
+    // if the manager handled this, we need to decode the return stuff
+    if (callSecurityManager(GlobalNames::COMMAND, securityArgs))
     {
-        /* get the return code               */
-        result = securityArgs->fastAt(OREF_RC);
-        if ((RexxObject *)result == OREF_NULL)     /* no return code provide?           */
+        result = securityArgs->get(GlobalNames::RC);
+        // if no return code received, use a zero code
+        if ((RexxObject *)result == OREF_NULL)
         {
-            result = IntegerZero;      /* use a zero return code            */
+            result = IntegerZero;
         }
-        /* failure indicated?                */
-        if (securityArgs->fastAt(OREF_FAILURENAME) != OREF_NULL)
+        // failure indicated?  Need to raise a failure condition
+        if (securityArgs->get(GlobalNames::FAILURE) != OREF_NULL)
         {
             // raise the condition when things are done
-            condition = activity->createConditionObject(OREF_FAILURENAME, (RexxObject *)result, command, OREF_NULL, OREF_NULL);
+            condition = activity->createConditionObject(GlobalNames::FAILURE, (RexxObject *)result, command, OREF_NULL, OREF_NULL);
         }
-        /* how about an error condition?     */
-        else if (securityArgs->fastAt(OREF_ERRORNAME) != OREF_NULL)
+        // same for an error condition
+        else if (securityArgs->get(GlobalNames::ERRORNAME) != OREF_NULL)
         {
             // raise the condition when things are done
-            condition = activity->createConditionObject(OREF_ERRORNAME, (RexxObject *)result, command, OREF_NULL, OREF_NULL);
+            condition = activity->createConditionObject(GlobalNames::ERRORNAME, (RexxObject *)result, command, OREF_NULL, OREF_NULL);
         }
         return true;
     }
@@ -285,14 +293,14 @@ RexxObject *SecurityManager::checkStreamAccess(RexxString *name)
         return OREF_NULL;
     }
 
-    RexxDirectory *securityArgs = new_directory();
+    DirectoryClass *securityArgs = new_directory();
     ProtectedObject p(securityArgs);
 
-    securityArgs->put(name, OREF_NAME);
-    if (callSecurityManager(OREF_STREAM, securityArgs))
+    securityArgs->put(name, GlobalNames::NAME);
+    if (callSecurityManager(GlobalNames::STREAM, securityArgs))
     {
         // get the result and return
-        return securityArgs->fastAt(OREF_RESULT);
+        return (RexxObject *)securityArgs->get(GlobalNames::RESULT);
     }
     // not handled
     return OREF_NULL;
@@ -315,23 +323,23 @@ RexxString *SecurityManager::checkRequiresAccess(RexxString *name, RexxObject *&
         return name;
     }
 
-    RexxDirectory *securityArgs = new_directory();
+    DirectoryClass *securityArgs = new_directory();
     ProtectedObject p(securityArgs);
 
                                        /* add the program name              */
-    securityArgs->put(name, OREF_NAME);
+    securityArgs->put(name, GlobalNames::NAME);
                                        /* did manager handle this?          */
-    if (callSecurityManager(OREF_REQUIRES, securityArgs))
+    if (callSecurityManager(GlobalNames::REQUIRES, securityArgs))
     {
         // retrieve any security manager that the security manager wants us to use for
         // a new file.
-        RexxObject *secObject = securityArgs->fastAt(OREF_SECURITYMANAGER);
+        RexxObject *secObject = (RexxObject *)securityArgs->get(GlobalNames::SECURITYMANAGER);
         if (secObject != OREF_NULL && secObject != TheNilObject)
         {
             securityManager = secObject;
         }
         // the name can be replaced by the security manager
-        return (RexxString *)securityArgs->fastAt(OREF_NAME);
+        return (RexxString *)securityArgs->get(GlobalNames::NAME);
     }
     // not handled, return the name unchanged
     return name;

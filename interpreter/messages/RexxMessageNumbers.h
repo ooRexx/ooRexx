@@ -2,7 +2,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -642,6 +642,10 @@
 #define Message_Translations_sourceless_method_invocation_msg        736
 #define Message_Translations_sourceless_routine_invocation_msg       737
 #define Message_Translations_sourceless_program_invocation_msg       738
+#define Error_Invalid_expression_select_case_msg                     739
+#define Error_Translation_directive_method_routine_msg               740
+#define Error_Execution_rexx_package_update_msg                      741
+#define Error_Execution_rexx_defined_class_msg                       742
 
 
 #endif

@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -48,23 +48,26 @@
 
 #define forward_continue 0x01          /* doing continue rather than return */
 
-class RexxInstructionForward : public RexxInstruction {
+class RexxInstructionForward : public RexxInstruction
+{
  public:
-  inline void *operator new(size_t size, void *ptr) {return ptr;}
-  inline void operator delete(void *) { }
-  inline void operator delete(void *, void *) { }
+    inline RexxInstructionForward() { ; }
+    inline RexxInstructionForward(RESTORETYPE restoreType) { ; }
+           RexxInstructionForward(RexxObject *, RexxObject *, RexxObject *, RexxObject *, ArrayClass *, bool);
 
-  inline RexxInstructionForward(void) { ; }
-  inline RexxInstructionForward(RESTORETYPE restoreType) { ; }
-  void live(size_t);
-  void liveGeneral(int reason);
-  void flatten(RexxEnvelope*);
-  void execute(RexxActivation *, RexxExpressionStack *);
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(Envelope*);
 
-  RexxObject * target;                 /* forward target                    */
-  RexxObject * message;                /* forward message override          */
-  RexxObject * superClass;             /* message super class override      */
-  RexxObject * arguments;              /* argument expression               */
-  RexxArray  * array;                  /* argument array specification      */
+    virtual void execute(RexxActivation *, ExpressionStack *);
+
+ protected:
+
+    bool         continueExecution;      // doing continue rather than return
+    RexxObject * target;                 // forward target
+    RexxObject * message;                // forward message override
+    RexxObject * superClass;             // message super class override
+    RexxObject * arguments;              // argument expression
+    ArrayClass  * array;                  // argument array specification
 };
 #endif

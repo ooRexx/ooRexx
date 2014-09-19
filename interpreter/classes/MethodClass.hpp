@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -41,128 +41,87 @@
 /* Primitive Kernel Method Class Definitions                                  */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_RexxMethod
-#define Included_RexxMethod
+#ifndef Included_MethodClass
+#define Included_MethodClass
 
 #include "RexxCore.h"
+#include "BaseExecutable.hpp"
+#include "FlagSet.hpp"
 
-class RexxSource;
-class RexxActivity;
-class RexxMethod;
+class Activity;
+class MethodClass;
 class ProtectedObject;
-class RexxArray;
+class ArrayClass;
 class RexxClass;
 class PackageClass;
 
 
 /**
- * Base class for a code object.  Code objects can be invoked as
- * methods, or called.
+ * Base class for method object.  This is the frontend for
+ * The different types of executable code objects.
  */
-class BaseCode : public RexxInternalObject
+class MethodClass : public BaseExecutable
 {
-public:
-    virtual void run(RexxActivity *, RexxMethod *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
-    virtual void call(RexxActivity *, RoutineClass *, RexxString *,  RexxObject **, size_t, RexxString *, RexxString *, int, ProtectedObject &);
-    virtual void call(RexxActivity *, RoutineClass *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
-    virtual RexxArray *getSource();
-    virtual RexxObject *setSecurityManager(RexxObject *manager);
-    virtual RexxSource *getSourceObject();
-    virtual RexxClass *findClass(RexxString *className);
-    virtual BaseCode  *setSourceObject(RexxSource *s);
-    virtual PackageClass *getPackage();
-};
-                                       /* pointer to native method function */
-typedef uint16_t *(RexxEntry *PNATIVEMETHOD)(RexxMethodContext *, ValueDescriptor *);
-                                       /* pointer to native function function*/
-typedef uint16_t *(RexxEntry *PNATIVEROUTINE)(RexxCallContext *, ValueDescriptor *);
+ public:
+    void *operator new(size_t);
 
-typedef size_t (RexxEntry *PREGISTEREDROUTINE)(const char *, size_t, PCONSTRXSTRING, const char *, PRXSTRING);
+    MethodClass(RexxString *name, BaseCode *_code);
+    inline MethodClass(RESTORETYPE restoreType) { ; };
 
-class BaseExecutable : public RexxObject
-{
-public:
-    inline RexxSource *getSourceObject() { return code->getSourceObject(); };
-    inline BaseCode   *getCode() { return code; }
-    RexxArray  *getSource() { return code->getSource(); }
-    PackageClass *getPackage();
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(Envelope*);
 
-    RexxArray *source();
-    RexxClass *findClass(RexxString *className);
-    BaseExecutable *setSourceObject(RexxSource *s);
-    RexxString *getName() { return executableName; }
+    void         run(Activity *,  RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
+    MethodClass *newScope(RexxClass  *);
+    void         setScope(RexxClass  *);
+    SmartBuffer  *saveMethod();
+    RexxObject  *setUnguardedRexx();
+    RexxObject  *setGuardedRexx();
+    RexxObject  *setPrivateRexx();
+    RexxObject  *setProtectedRexx();
+    RexxObject  *setSecurityManager(RexxObject *);
 
-protected:
-    RexxString *executableName;     // the created name of this routine
-    BaseCode   *code;                   // the backing code object
-};
+    RexxObject  *isGuardedRexx();
+    RexxObject  *isPrivateRexx();
+    RexxObject  *isProtectedRexx();
 
+    inline bool  isGuarded()      {return !methodFlags[UNGUARDED_FLAG]; };
+    inline bool  isPrivate()      {return methodFlags[PRIVATE_FLAG];}
+    inline bool  isProtected()    {return methodFlags[PROTECTED_FLAG];}
+    inline bool  isSpecial()      {return methodFlags.any(PROTECTED_FLAG, PRIVATE_FLAG);}
 
- class RexxMethod : public BaseExecutable
- {
-  public:
-  void *operator new(size_t);
-  inline void *operator new(size_t size, void *ptr) { return ptr; };
-  RexxMethod(RexxString *name, BaseCode *_code);
-  RexxMethod(RexxString *name, RexxSource *source);
-  RexxMethod(RexxString *name);
-  RexxMethod(RexxString *name, RexxBuffer *source);
-  RexxMethod(RexxString *name, const char *data, size_t length);
-  RexxMethod(RexxString *name, RexxArray *source);
-  inline RexxMethod(RESTORETYPE restoreType) { ; };
+    inline void  setUnguarded()    {methodFlags.set(UNGUARDED_FLAG);};
+    inline void  setGuarded()      {methodFlags.reset(UNGUARDED_FLAG);};
+    inline void  setPrivate()      {methodFlags.set(PRIVATE_FLAG); };
+    inline void  setProtected()    {methodFlags.set(PROTECTED_FLAG); };
+    inline void  setUnprotected()  {methodFlags.reset(PROTECTED_FLAG); };
+    inline void  setPublic()       {methodFlags.reset(PRIVATE_FLAG); };
+           void  setAttributes(bool _private, bool _protected, bool _guarded);
+    inline RexxClass *getScope() { return scope; }
+    inline bool  isScope(RexxClass *s) {return scope == s;}
 
-  void execute(RexxObject *, RexxObject *);
-  void live(size_t);
-  void liveGeneral(int reason);
-  void flatten(RexxEnvelope*);
+    inline BaseCode  *getCode()     { return code; }
+    MethodClass  *newRexx(RexxObject **, size_t);
+    MethodClass  *newFileRexx(RexxString *);
+    MethodClass  *loadExternalMethod(RexxString *name, RexxString *descriptor);
 
-  void         run(RexxActivity *,  RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
-  RexxMethod  *newScope(RexxClass  *);
-  void         setScope(RexxClass  *);
-  RexxSmartBuffer  *saveMethod();
-  RexxObject  *setUnguardedRexx();
-  RexxObject  *setGuardedRexx();
-  RexxObject  *setPrivateRexx();
-  RexxObject  *setProtectedRexx();
-  RexxObject  *setSecurityManager(RexxObject *);
+    static MethodClass *newMethodObject(RexxString *, RexxObject *, RexxClass *, RexxObject *);
 
-  RexxObject  *isGuardedRexx();
-  RexxObject  *isPrivateRexx();
-  RexxObject  *isProtectedRexx();
-
-   inline bool   isGuarded()      {return (this->methodFlags & UNGUARDED_FLAG) == 0; };
-   inline bool   isPrivate()      {return (this->methodFlags & PRIVATE_FLAG) != 0;}
-   inline bool   isProtected()    {return (this->methodFlags & PROTECTED_FLAG) != 0;}
-   inline bool   isSpecial()      {return (this->methodFlags & (PROTECTED_FLAG | PRIVATE_FLAG)) != 0;}
-
-   inline void   setUnguarded()    {this->methodFlags |= UNGUARDED_FLAG;};
-   inline void   setGuarded()      {this->methodFlags &= ~UNGUARDED_FLAG;};
-   inline void   setPrivate()      {this->methodFlags |= (PRIVATE_FLAG | PROTECTED_FLAG);};
-   inline void   setProtected()    {this->methodFlags |= PROTECTED_FLAG;};
-          void   setAttributes(bool _private, bool _protected, bool _guarded);
-   inline RexxClass *getScope() {return this->scope;}
-
-   inline BaseCode  *getCode()     { return this->code; }
-   RexxMethod  *newRexx(RexxObject **, size_t);
-   RexxMethod  *newFileRexx(RexxString *);
-   RexxMethod  *loadExternalMethod(RexxString *name, RexxString *descriptor);
-
-   static RexxMethod  *newMethodObject(RexxString *, RexxObject *, RexxObject *, RexxSource *a);
-   static RexxMethod  *restore(RexxBuffer *, char *, size_t length);
-
-   static void createInstance();
-   static RexxClass *classInstance;
+    static void createInstance();
+    static RexxClass *classInstance;
 
  protected:
-   enum
-   {
-       PRIVATE_FLAG      = 0x01,        // private method
-       UNGUARDED_FLAG    = 0x02,        // Method can run with GUARD OFF
-       PROTECTED_FLAG    = 0x40,        // method is protected
-   };
 
-   size_t    methodFlags;              // method status flags
-   RexxClass  *scope;                  /* pointer to the method scope       */
+    typedef enum
+    {
+        PRIVATE_FLAG,                    // private method
+        UNGUARDED_FLAG,                  // Method can run with GUARD OFF
+        PROTECTED_FLAG,                  // method is protected
+    } MethodFlags;
+
+    FlagSet<MethodFlags, 32>  methodFlags;  // method status flags
+    RexxClass  *scope;                      // pointer to the method scope
 };
 
 #endif

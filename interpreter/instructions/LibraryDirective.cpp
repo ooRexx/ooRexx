@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -41,11 +41,23 @@
 /* Primitive Translator Abstract Directive Code                               */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "LibraryDirective.hpp"
 #include "Clause.hpp"
 #include "RexxActivation.hpp"
+
+
+/**
+ * Allocate a new requires directive.
+ *
+ * @param size   The size of the object.
+ *
+ * @return The memory for the new object.
+ */
+void *LibraryDirective::operator new(size_t size)
+{
+    return new_object(size, T_LibraryDirective); /* Get new object                    */
+}
 
 
 /**
@@ -66,8 +78,9 @@ LibraryDirective::LibraryDirective(RexxString *n, RexxClause *clause) : RexxDire
  */
 void LibraryDirective::live(size_t liveMark)
 {
-    memory_mark(this->nextInstruction);  // must be first one marked (though normally null)
-    memory_mark(this->name);
+    // must be first one marked (though normally null)
+    memory_mark(nextInstruction);
+    memory_mark(name);
 }
 
 
@@ -76,10 +89,11 @@ void LibraryDirective::live(size_t liveMark)
  *
  * @param reason The processing faze we're running the mark on.
  */
-void LibraryDirective::liveGeneral(int reason)
+void LibraryDirective::liveGeneral(MarkReason reason)
 {
-    memory_mark_general(this->nextInstruction);  // must be first one marked (though normally null)
-    memory_mark_general(this->name);
+    // must be first one marked (though normally null)
+    memory_mark_general(nextInstruction);
+    memory_mark_general(name);
 }
 
 
@@ -88,27 +102,14 @@ void LibraryDirective::liveGeneral(int reason)
  *
  * @param envelope The envelope we're flattening into.
  */
-void LibraryDirective::flatten(RexxEnvelope *envelope)
+void LibraryDirective::flatten(Envelope *envelope)
 {
     setUpFlatten(LibraryDirective)
 
-        flatten_reference(newThis->nextInstruction, envelope);
-        flatten_reference(newThis->name, envelope);
+        flattenRef(nextInstruction);
+        flattenRef(name);
 
     cleanUpFlatten
-}
-
-
-/**
- * Allocate a new requires directive.
- *
- * @param size   The size of the object.
- *
- * @return The memory for the new object.
- */
-void *LibraryDirective::operator new(size_t size)
-{
-    return new_object(size, T_LibraryDirective); /* Get new object                    */
 }
 
 

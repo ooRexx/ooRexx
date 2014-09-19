@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -47,25 +47,41 @@
 #include "ArrayClass.hpp"
 #include "ListClass.hpp"
 #include "MethodClass.hpp"
-#include "RexxActivity.hpp"
+#include "Activity.hpp"
 #include "RexxActivation.hpp"
-#include "RexxNativeActivation.hpp"
+#include "NativeActivation.hpp"
 #include "MessageClass.hpp"
-#include "RexxNativeCode.hpp"
+#include "NativeCode.hpp"
 #include "ProtectedObject.hpp"
+#include "MethodArguments.hpp"
 
 // singleton class instance
-RexxClass *RexxMessage::classInstance = OREF_NULL;
+RexxClass *MessageClass::classInstance = OREF_NULL;
+
+
+/**
+ * Create an instance of a message object.
+ *
+ * @param size   The base size of the object.
+ *
+ * @return The storage for the object in question.
+ */
+void *MessageClass::operator new(size_t size)
+{
+    return new_object(size, T_Message);
+}
 
 
 /**
  * Create initial class object at bootstrap time.
  */
-void RexxMessage::createInstance()
+void MessageClass::createInstance()
 {
     CLASS_CREATE(Message, "Message", RexxClass);
 }
 
+
+// TODO:  There are no tests for the message class.
 
 /**
  * Create a new message object.
@@ -76,337 +92,357 @@ void RexxMessage::createInstance()
  * @param scope   The starting scope (can be OREF_NULL).
  * @param _args   An array of arguments to the message.
  */
-RexxMessage::RexxMessage(RexxObject *_target, RexxString *msgName, RexxObject *scope, RexxArray *_args)
+MessageClass::MessageClass(RexxObject *_target, RexxString *msgName, RexxClass *scope, ArrayClass *_args)
 {
-                                         /* defult target is target specified */
-    OrefSet(this, this->receiver, _target);
-    OrefSet(this, this->target, _target); /* Target specified on new           */
-    /* Args to be sent wuth tmessage     */
-    OrefSet(this, this->args, _args);
-    OrefSet(this, this->message, msgName);
-    OrefSet(this, this->startscope, scope);
-
-    /* initialize a list of message to be*/
-    /* once we have a result.            */
-    OrefSet(this, this->interestedParties, new RexxList);
+    // default target is the specified target
+    receiver = _target;
+    // the target specified on the new
+    target = _target;
+    // Args to be sent with themessage (optional)
+    args = _args;
+    message = msgName;
+    startscope = scope;
 }
 
-void RexxMessage::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
+
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
+void MessageClass::live(size_t liveMark)
 {
-    memory_mark(this->receiver);
-    memory_mark(this->target);
-    memory_mark(this->message);
-    memory_mark(this->startscope);
-    memory_mark(this->args);
-    memory_mark(this->resultObject);
-    memory_mark(this->interestedParties);
-    memory_mark(this->condition);
-    memory_mark(this->startActivity);
-    memory_mark(this->objectVariables);
-    memory_mark(this->waitingActivities);
+    memory_mark(receiver);
+    memory_mark(target);
+    memory_mark(message);
+    memory_mark(startscope);
+    memory_mark(args);
+    memory_mark(resultObject);
+    memory_mark(interestedParties);
+    memory_mark(condition);
+    memory_mark(startActivity);
+    memory_mark(objectVariables);
+    memory_mark(waitingActivities);
 }
 
-void RexxMessage::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
+void MessageClass::liveGeneral(MarkReason reason)
 {
-    memory_mark_general(this->receiver);
-    memory_mark_general(this->target);
-    memory_mark_general(this->message);
-    memory_mark_general(this->startscope);
-    memory_mark_general(this->args);
-    memory_mark_general(this->resultObject);
-    memory_mark_general(this->interestedParties);
-    memory_mark_general(this->condition);
-    memory_mark_general(this->startActivity);
-    memory_mark_general(this->objectVariables);
-    memory_mark_general(this->waitingActivities);
+    memory_mark_general(receiver);
+    memory_mark_general(target);
+    memory_mark_general(message);
+    memory_mark_general(startscope);
+    memory_mark_general(args);
+    memory_mark_general(resultObject);
+    memory_mark_general(interestedParties);
+    memory_mark_general(condition);
+    memory_mark_general(startActivity);
+    memory_mark_general(objectVariables);
+    memory_mark_general(waitingActivities);
 }
 
-void RexxMessage::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
+
+/**
+ * Flatten a source object.
+ *
+ * @param envelope The envelope that will hold the flattened object.
+ */
+void MessageClass::flatten(Envelope *envelope)
 {
-  setUpFlatten(RexxMessage)
+    setUpFlatten(MessageClass)
 
-   flatten_reference(newThis->receiver, envelope);
-   flatten_reference(newThis->target, envelope);
-   flatten_reference(newThis->message, envelope);
-   flatten_reference(newThis->startscope, envelope);
-   flatten_reference(newThis->args, envelope);
-   flatten_reference(newThis->resultObject, envelope);
-   flatten_reference(newThis->interestedParties, envelope);
-   flatten_reference(newThis->condition, envelope);
-   flatten_reference(newThis->startActivity, envelope);
-   flatten_reference(newThis->objectVariables, envelope);
-   flatten_reference(newThis->waitingActivities, envelope);
+    flattenRef(receiver);
+    flattenRef(target);
+    flattenRef(message);
+    flattenRef(startscope);
+    flattenRef(args);
+    flattenRef(resultObject);
+    flattenRef(interestedParties);
+    flattenRef(condition);
+    flattenRef(startActivity);
+    flattenRef(objectVariables);
+    flattenRef(waitingActivities);
 
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
-RexxObject *RexxMessage::notify(RexxMessage *_message)
-/******************************************************************************/
-/* Function:  Add a message object to the notification list                   */
-/******************************************************************************/
+
+/**
+ * Add a message object to the completion notification list.
+ *
+ * @param _message The message object wishing to be notified.
+ *
+ * @return Instruction message type that returns nothing.
+ */
+RexxObject *MessageClass::notify(MessageClass *_message)
 {
-    /* is argument a real message object?*/
-    if (message != OREF_NULL && isOfClass(Message, _message))
+    // this is a required argument
+    if ( message == OREF_NULL)
     {
-        /* Yes, then add it to the           */
-        /* toBeNotified list.                */
-
-        if (this->allNotified())             /* Have all notifications been sent? */
-        {
-            /* Yes, then send notification right */
-            _message->send(OREF_NULL);         /* away                              */
-        }
-        else
-        {
-            /* nope, add it to list and wait for */
-            /*  for result.                      */
-            this->interestedParties->addLast(_message);
-        }
+        reportException(Error_Incorrect_method_noarg, IntegerOne);
     }
-    else
-    {                                /* nope, its and error, report it.   */
-        if ( message == OREF_NULL)
-        {
-            reportException(Error_Incorrect_method_noarg, IntegerOne);
-        }
-        else
-        {
-            reportException(Error_Incorrect_method_nomessage, _message);
-        }
-    }
-    return OREF_NULL;                     /* all done, we return nothing       */
-}
-
-RexxObject *RexxMessage::result(void)
-/******************************************************************************/
-/* Function:  Return the message result...will wait if the message isn't done */
-/******************************************************************************/
-{
-
-    /* Did send/satrt cause an error     */
-    /*condition Yes, we need to raise it */
-    /*here.                              */
-    if (this->raiseError())
+    // this must also be a real message object
+    else if (!isOfClass(Message, _message))
     {
-        ActivityManager::currentActivity->reraiseException(this->condition);
+        reportException(Error_Incorrect_method_nomessage, _message);
+    }
+
+    // got a real message object...now determine if we add this to the
+    // pending list or send an immediate notification.
+    if (allNotified())
+    {
+        // an immediate notification
+        _message->send(OREF_NULL);
     }
     else
     {
-        /* Quick test to see if result       */
-        /*already present                    */
-        if (!this->resultReturned())
+        // get a new array if this is the first one added.
+        if (interestedParties == OREF_NULL)
         {
-            /* got an activity available?        */
-            if (this->startActivity != OREF_NULL)
+            interestedParties = new_array();
+        }
+        // to be notified later
+        interestedParties->append(_message);
+    }
+    return OREF_NULL;
+}
+
+
+/**
+ * Return the message result object.  This will wait if
+ * the message has not completed.
+ *
+ * @return The result object (if any)
+ */
+RexxObject *MessageClass::result()
+{
+    // did running this message cause an error?  If so, we raise the same error
+    // condition here.
+    if (raiseError())
+    {
+        ActivityManager::currentActivity->reraiseException(condition);
+    }
+    else
+    {
+        // ok, no result ready yet, so we'll have to wait
+        if (!resultReturned())
+        {
+            // make sure we're not about to create a deadlock situation.
+            if (startActivity != OREF_NULL)
             {
-                /* go perform dead lock checks       */
-                this->startActivity->checkDeadLock(ActivityManager::currentActivity);
+                startActivity->checkDeadLock(ActivityManager::currentActivity);
             }
 
-            /* No result yet, now we need to wait*/
-            /*  until we get a result.           */
-            /* Is anyone else waiting ????       */
-            if (this->waitingActivities == OREF_NULL)
+            // we might be the first one to wait, so create the activities
+            // list if we are
+            if (waitingActivities == OREF_NULL)
             {
-                /* No, Create a waiting list         */
-                OrefSet(this, this->waitingActivities, new_list());
+                setField(waitingActivities, new_array());
             }
-            /* add this activity to the list     */
-            this->waitingActivities->addLast((RexxObject *)ActivityManager::currentActivity);
-            /* now go wait to be woken up        */
-            ActivityManager::currentActivity->waitReserve((RexxObject *)this);
-            if (this->raiseError())             /* do we need to raise an error.     */
+            // add our activity to the list
+            waitingActivities->append((RexxObject *)ActivityManager::currentActivity);
+            // and wait for the wake up call.
+            ActivityManager::currentActivity->waitReserve(this);
+            // the message has now completed, but this could now be an error.
+            if (raiseError())
             {
-                /* yes,                              */
-                this->setErrorReported();        /* indicate error was reported, and  */
-                /*  report and error.                */
+                // make sure the error is recored and we've raised the error,
+                // then raise the condition on this thread.
+                setErrorReported();
                 ActivityManager::currentActivity->reraiseException(this->condition);
             }
         }
     }
-    return this->resultObject;            /* ok, return the result.            */
+
+    // since this is requested via a method that will give an error if used
+    // in an expression, return .nil if there is no return value.
+    return resultOrNil(resultObject);
 }
 
-RexxObject *RexxMessage::send(RexxObject *_receiver)
-/******************************************************************************/
-/* Function:  Send the message contained by this message object               */
-/******************************************************************************/
+
+/**
+ * Send a message to the target receiver object (optional).
+ *
+ * @param _receiver The optional receiver object.
+ *
+ * @return Returns the message result.
+ */
+RexxObject *MessageClass::send(RexxObject *_receiver)
 {
-    if (this->msgSent())
+    // only one send per customer...
+    if (msgSent())
     {
-        /* Yes, this is an error             */
         reportException(Error_Execution_message_reuse);
     }
 
-    /* get the activity I'm running under*/
-    RexxActivity *myActivity = (RexxActivity *)ActivityManager::currentActivity;
-    /* If we have a pending start message*/
-    /*  sure this send is a result of    */
-    /*that message dispatch.             */
-    if (this->startPending() && myActivity != this->startActivity )
+    // we need the current activity to handle this
+    Activity *myActivity = ActivityManager::currentActivity;
+    // if we are waiting for things to start on another activity, this
+    // is also a reuse.
+    if (startPending() && myActivity != startActivity )
     {
-        /* Yes, this is an error             */
         reportException(Error_Execution_message_reuse);
     }
-    this->setMsgSent();                  /* indicate we were sent a message   */
 
-    if (_receiver != OREF_NULL)          /* new receiver specified?           */
+    // we're sending this synchronously, so mark this as used
+    setMsgSent();
+
+    // if we've been given a new receiver, then use that
+    if (_receiver != OREF_NULL)
     {
-        /* Yes, indicate this is the receiver*/
-        OrefSet(this, this->receiver, _receiver);
+        setField(receiver, _receiver);
     }
-    /* validate startscope               */
+
+    // validate the starting scope if we've been given one
     if (startscope != OREF_NULL)
     {
-        if (!this->receiver->behaviour->checkScope(this->startscope))
+        if (!receiver->behaviour->hasScope((RexxClass *)startscope))
         {
             reportException(Error_Incorrect_method_array_noclass, IntegerTwo);
         }
     }
-    /*  this is a primitive object?      */
-    /* tell the activation/nativeact, we */
-    /*are running under to let us know   */
-    /*if an error occured.               */
+
+
+    // ok, now tell the stack frame we're running under that
+    // we want to be notified any errors here.
     myActivity->getTopStackFrame()->setObjNotify(this);
-    /* set this for resource deadlock    */
-    /* checking purposes                 */
-    OrefSet(this, this->startActivity, myActivity);
-    ProtectedObject p(myActivity);
-    /*  call message_send to do the send */
-    /* and assign our result.            */
-    if (this->startscope != OREF_NULL)/* have a starting scope?            */
+
+    // mark what activity we're running this under for
+    // deadlock detection                */
+    setField(startActivity, myActivity);
+
+    // get a protected object for the result
+    ProtectedObject result(myActivity);
+    // now issue the message.
+    if (startscope != OREF_NULL)
     {
-        /* send it with an override          */
-        this->receiver->messageSend(this->message, (RexxObject **)this->args->data(), this->args->size(), this->startscope, p);
+        receiver->messageSend(message, (RexxObject **)args->data(), args->size(), startscope, result);
     }
     else                                 /* no over ride                      */
     {
-        this->receiver->messageSend(this->message, (RexxObject **)this->args->data(), this->args->size(), p);
+        receiver->messageSend(message, (RexxObject **)args->data(), args->size(), result);
     }
-    this->resultObject = (RexxObject *)p;
-    this->setResultReturned();           /* Indicate we have a result.        */
-    this->sendNotification();
-    return this->resultObject;           /* return the result of the send.    */
+    resultObject = result;
+    setResultReturned();
+    // notify any waiters and return the result object
+    sendNotification();
+    return resultObject;
 }
 
-RexxObject *RexxMessage::start(RexxObject *_receiver)
-/******************************************************************************/
-/* Function:  Since a start is to happen Async, we create a new activity      */
-/*            using ourselves as a dispatch target.                           */
-/******************************************************************************/
+
+/**
+ * Execute this message asynchronously by spawning a
+ * new thread and dispatching this message on the new thread.
+ *
+ * @param _receiver The optional receiver object.
+ *
+ * @return returns nothing as a instruction message send.
+ */
+RexxObject *MessageClass::start(RexxObject *_receiver)
 {
-    /* has message already been sent or  */
-    /* is another start message pending? */
-    if (this->msgSent() || this->startPending())
+    // We can only send this once, so if it has already been used
+    // or is dispatched for sending, this is an error.
+    if (msgSent() || startPending())
     {
-        /* Yes, this is an error             */
         reportException(Error_Execution_message_reuse);
     }
-    /* indicate object has received a    */
-    /*start we need this additional bit  */
-    /*so that the send message will      */
-    /*accept this msg                    */
-    this->setStartPending();
 
+    // ok, mark this as pending dispatch so that it can't be
+    // started a second time.
+    setStartPending();
 
-    if (_receiver != OREF_NULL)           /* new receiver specified?           */
+    // if we have a new receiver, replace the creation one.
+    if (_receiver != OREF_NULL)
     {
-        /* Yes, indicate this is the receiver*/
-        OrefSet(this, this->receiver, _receiver);
+        setField(receiver, _receiver);
     }
 
-    /* get the current activity          */
-    RexxActivity *oldActivity = ActivityManager::currentActivity;
-    /* Create the new activity           */
-    RexxActivity *newActivity = oldActivity->spawnReply();
-    /* indicate the activity the send    */
-    /*message should come in on.         */
-    OrefSet(this, this->startActivity, newActivity);
-    // tell the activity to run this
+    // spawn a new activity off of the old activity
+    Activity *oldActivity = ActivityManager::currentActivity;
+    Activity *newActivity = oldActivity->spawnReply();
+    // mark which activity we're running on, then dispatch the message
+    // on the new activity (which is sitting waiting for work to perform)
+    setField(startActivity, newActivity);
     newActivity->run(this);
-    return OREF_NULL;                    /* all done here, return to caller.  */
+    // we have no return value.
+    return OREF_NULL;
 }
 
-void RexxMessage::sendNotification(void)
-/******************************************************************************/
-/* Function : we now have a result from message send/start, so notify         */
-/*   all interested parties, and post the waitResult semopohore if it exists  */
-/******************************************************************************/
+
+/**
+ * Notify all interested parties after this message completed.
+ */
+void MessageClass::sendNotification()
 {
-    /* no longer care about any error    */
-    /*condition                          */
+    // we're no longer interested in any errors that occur.
     ActivityManager::currentActivity->getTopStackFrame()->setObjNotify(OREF_NULL);
-    /* others waiting for a result?      */
-    if (this->waitingActivities != OREF_NULL)
+    // if we have waiting activities, iterate over them and tell their activities to wake up
+    if (waitingActivities != OREF_NULL)
     {
-        size_t i = this->waitingActivities->getSize();/* get the waiting count             */
-        while (i--)                        /* while we have items               */
+        size_t count = waitingActivities->items();
+        for (size_t i = 1; i <= count; i++)
         {
-            /* get the first item                */
-            RexxActivity *waitingActivity = (RexxActivity *)this->waitingActivities->removeFirst();
-            waitingActivity->postDispatch();  /* go wake it up                     */
+            // get each activity and give them a poke.
+            Activity *waitingActivity = (Activity *)waitingActivities->get(i);
+            waitingActivity->postDispatch();
         }
-    }
-    /* now traverse the list of Iterested*/
-    /*  parties, and let them know we    */
-    /*have a result                      */
-    for (size_t listIndex = this->interestedParties->firstIndex() ;
-        listIndex != LIST_END;
-        listIndex = this->interestedParties->nextIndex(listIndex) )
-    {
-        /* Get the next message object to    */
-        /*process                            */
-        RexxMessage *thisMessage = (RexxMessage *)this->interestedParties->getValue(listIndex);
-        /* now just have this message send   */
-        /*its message                        */
-        thisMessage->send(OREF_NULL);
+        // clear the list so that we don't anchor those activities needlessly
+        waitingActivities = OREF_NULL;
     }
 
-    /* indicate we notified all          */
-    /*Interested parties.  Not used      */
-    /*yet....                            */
-    this->setAllNotified();
+    // now see if we have any interested parties to notify.
+    if (interestedParties != OREF_NULL)
+    {
+        size_t count = interestedParties->items();
+        for (size_t i = 1; i <= count; i++)
+        {
+            // get each message and give them a poke.
+            MessageClass *waitingMessage = (MessageClass *)interestedParties->get(i);
+            // trigger the message object in a cascade
+            waitingMessage->send(OREF_NULL);
+        }
+        // clear the list so that we don't anchor those messages needlessly
+        interestedParties = OREF_NULL;
+
+    }
+
+    // indicate we've notified everybody
+    setAllNotified();
 }
 
 
-void RexxMessage::error(
-    RexxDirectory *_condition)         /* error condition object            */
-/******************************************************************************/
-/* Function : called from nativaAct/Activation to notify us that the message  */
-/*   from SEND/START.                                                         */
-/******************************************************************************/
+/**
+ * Receive an error notificatiion from an activation.
+ *
+ * @param _condition The error condition object.
+ */
+void MessageClass::error(DirectoryClass *_condition)
 {
-    this->setRaiseError();               /* indicate we had an error condition*/
-                                         /* save the condition object in case */
-                                         /*we want it.                        */
-    OrefSet(this, this->condition, _condition);
-    this->sendNotification();            /* do cleanup items.                 */
+    // indicate we've had an error and save the condition object in case it
+    // was requested.
+    setRaiseError();
+    setField(condition, _condition);
+    // send out any completion notifications
+    sendNotification();
 }
 
-RexxObject *RexxMessage::completed(void)
-/******************************************************************************/
-/* Function:  Give a completed polling status                                 */
-/******************************************************************************/
+
+/**
+ * Give the message completion status.
+ *
+ * @return .true if this has completed, .false otherwise.
+ */
+RexxObject *MessageClass::completed()
 {
-    /* Test to see if result already     */
-    /*present or error occured in send?  */
-    if (this->resultReturned() || this->raiseError())
-    {
-        return(RexxObject *)TheTrueObject; /* Yes, return true                  */
-    }
-    else
-    {
-        return(RexxObject *)TheFalseObject;/* nope return false.                */
-    }
+    // we're complete if we have a result or have an error.
+    return booleanObject(resultReturned() || raiseError());
 }
 
 
@@ -417,17 +453,11 @@ RexxObject *RexxMessage::completed(void)
  * @return True if the message has terminated with an error condition,
  *         false if it is still running or has completed without error.
  */
-RexxObject *RexxMessage::hasError()
+RexxObject *MessageClass::hasError()
 {
-    if (this->raiseError())
-    {
-        return TheTrueObject;
-    }
-    else
-    {
-        return TheFalseObject;
-    }
+    return booleanObject(raiseError());
 }
+
 
 /**
  * Return any error condition information associated with the
@@ -437,17 +467,9 @@ RexxObject *RexxMessage::hasError()
  * @return Any condition object from a terminating error, or .nil if
  *         there was no error or the message is still running.
  */
-RexxObject *RexxMessage::errorCondition()
+RexxObject *MessageClass::errorCondition()
 {
-    if (this->condition == OREF_NULL)
-    {
-        return TheNilObject;
-    }
-    else
-    {
-        return this->condition;
-    }
-
+    return resultOrNil(condition);
 }
 
 
@@ -458,7 +480,7 @@ RexxObject *RexxMessage::errorCondition()
  *
  * @return The current message target.
  */
-RexxObject *RexxMessage::messageTarget()
+RexxObject *MessageClass::messageTarget()
 {
     return receiver;
 
@@ -470,7 +492,7 @@ RexxObject *RexxMessage::messageTarget()
  *
  * @return The string name of the message.
  */
-RexxString *RexxMessage::messageName()
+RexxString *MessageClass::messageName()
 {
     return message;
 }
@@ -481,47 +503,49 @@ RexxString *RexxMessage::messageName()
  *
  * @return A copy of the message arguments array.
  */
-RexxArray *RexxMessage::arguments()
+ArrayClass *MessageClass::arguments()
 {
-    return (RexxArray *)args->copy();
+    return (ArrayClass *)args->copy();
 }
 
 
-void *RexxMessage::operator new(size_t size)
-/******************************************************************************/
-/* Function:  Construct a new message object                                  */
-/******************************************************************************/
+/**
+ * Create a message object from Rexx code.
+ *
+ * @param msgArgs  The pointer to the new arguments.
+ * @param argCount The argument count.
+ *
+ * @return A new instance of the .Message class.
+ */
+RexxObject *MessageClass::newRexx(RexxObject **msgArgs, size_t argCount)
 {
-    return new_object(size, T_Message);       /* Get new object                    */
-}
-
-
-RexxObject *RexxMessage::newRexx(
-    RexxObject **msgArgs,              /* message argument array            */
-    size_t       argCount)             /* the number of arguments           */
-/******************************************************************************/
-/* Function:  Rexx level new routine                                          */
-/******************************************************************************/
-{
-    RexxArray  *argPtr = NULL;           // the arguments used with the message.
+    // this class is defined on the object class, but this is actually attached
+    // to a class object instance.  Therefore, any use of the this pointer
+    // will be touching the wrong data.  Use the classThis pointer for calling
+    // any methods on this object from this method.
+    RexxClass *classThis = (RexxClass *)this;
 
     size_t num_args = argCount;          /* get number of args passed         */
 
-    if (num_args < 2 )                   /* passed less than 2 args?          */
+    // the first two arguments are required
+    if (num_args < 2 )
     {
-        /* Yes, this is an error.            */
         reportException(Error_Incorrect_method_minarg,  IntegerTwo);
     }
-    RexxObject *_target   = msgArgs[0];              /* Get the receiver object           */
+
+    // The receiver and the message name are required
+    RexxObject *_target   = msgArgs[0];
     requiredArgument(_target, ARG_ONE);
-    RexxObject *_message  = msgArgs[1];              /* get the message .                 */
+    RexxObject *_message  = msgArgs[1];
+    requiredArgument(_message, ARG_TWO);
     RexxString *msgName;
-    RexxObject *_startScope;
+    RexxClass *_startScope;
     // decode the message argument into name and scope
     RexxObject::decodeMessageName(_target, _message, msgName, _startScope);
 
-    /* are there arguments to be sent    */
-    /*with the message?                  */
+    ArrayClass *argPtr;
+
+    // are there arguments to be sent with the message?
     if (num_args > 2 )
     {
         /* get 3rd arg only concerned w/ 1st */
@@ -531,7 +555,7 @@ RexxObject *RexxMessage::newRexx(
         if (optionString == OREF_NULL)
         {
             /* nope, use null array as argument  */
-            argPtr = (RexxArray *)TheNullArray->copy();
+            argPtr = (ArrayClass *)TheNullArray->copy();
         }
         else
         {
@@ -556,25 +580,24 @@ RexxObject *RexxMessage::newRexx(
                 }
 
                 /* get the array of arguments        */
-                argPtr = (RexxArray *)msgArgs[3];
+                argPtr = (ArrayClass *)msgArgs[3];
                 if (argPtr == OREF_NULL)       /* no array given?                   */
                 {
                     /* this is an error                  */
                     reportException(Error_Incorrect_method_noarg, IntegerFour);
                 }
                 /* force to array form               */
-                argPtr = (RexxArray *)REQUEST_ARRAY(argPtr);
+                argPtr = argPtr->requestArray(); ;
                 /* not an array?                     */
-                if (argPtr == TheNilObject || argPtr->getDimension() != 1)
+                if (argPtr == TheNilObject || argPtr->isMultiDimensional())
                 {
-                    /* raise an error                    */
                     reportException(Error_Incorrect_method_noarray, msgArgs[3]);
                 }
             }
             else if (option == 'i' )         /* specified as individual?          */
             {
                 /* yes, build array of all arguments */
-                argPtr = new (argCount - 3, msgArgs + 3) RexxArray;
+                argPtr = new_array(argCount - 3, msgArgs + 3);
             }
             else
             {
@@ -585,19 +608,16 @@ RexxObject *RexxMessage::newRexx(
     else
     {
         /* no args, use a null array.        */
-        argPtr = (RexxArray *)TheNullArray->copy();
+        argPtr = (ArrayClass *)TheNullArray->copy();
     }
     /* all args are parcelled out, go    */
     /*create the new message object...   */
-    RexxMessage *newMessage = new RexxMessage(_target, msgName, _startScope, argPtr);
-    /* actually a subclassed item?       */
-    if (((RexxClass *)this)->isPrimitive())
-    {
-        ProtectedObject p(newMessage);
-        /* Give new object its behaviour     */
-        newMessage->setBehaviour(((RexxClass *)this)->getInstanceBehaviour());
-        newMessage->sendMessage(OREF_INIT);/* call any rexx inits               */
-    }
+    MessageClass *newMessage = new MessageClass(_target, msgName, _startScope, argPtr);
+    ProtectedObject p(newMessage);
+
+    // handle Rexx class completion
+    classThis->completeNewObject(newMessage);
+
     return newMessage;                   /* return the new message            */
 }
 

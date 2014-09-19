@@ -36,8 +36,9 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* */
-.OLEObject~!REXXDefined
-.OLEVariant~!REXXDefined
+
+-- NOTE:  We only add these to the environment, they are not part of the
+-- REXX package.
 .environment~setentry("OLEOBJECT", .OLEObject)
 .environment~setentry("OLEVARIANT", .OLEVariant)
 

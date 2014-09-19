@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -44,19 +44,27 @@
 #ifndef Included_RexxVariableBase
 #define Included_RexxVariableBase
 
-class RexxVariableBase : public RexxInternalObject {
+/**
+ * Base class definition for "variable" objects.  These
+ * perform retrieval, assignment, etc. operations on
+ * different types of variables, hiding the details of
+ * the different types of variables.
+ */
+class RexxVariableBase : public RexxInternalObject
+{
  public:
-  RexxVariableBase() { ; };
-  virtual bool exists(RexxActivation *) { return false; }
-  virtual void set(RexxActivation *, RexxObject *) {;}
-  virtual void set(RexxVariableDictionary *, RexxObject *) {;}
-  virtual void assign(RexxActivation *, RexxExpressionStack *, RexxObject *) {;}
-  virtual void drop(RexxActivation *) {;}
-  virtual void drop(RexxVariableDictionary *) {;}
-  virtual void setGuard(RexxActivation *) {;}
-  virtual void clearGuard(RexxActivation *) {;}
-  virtual void expose(RexxActivation *, RexxExpressionStack *, RexxVariableDictionary *) {;}
-  virtual void procedureExpose(RexxActivation *, RexxActivation *, RexxExpressionStack *) {;}
+    RexxVariableBase() { ; };
+
+    virtual bool exists(RexxActivation *) { return false; }
+    virtual void set(RexxActivation *, RexxObject *) {;}
+    virtual void set(VariableDictionary *, RexxObject *) {;}
+    virtual void assign(RexxActivation *, RexxObject *) {;}
+    virtual void drop(RexxActivation *) {;}
+    virtual void drop(VariableDictionary *) {;}
+    virtual void setGuard(RexxActivation *) {;}
+    virtual void clearGuard(RexxActivation *) {;}
+    virtual void expose(RexxActivation *, VariableDictionary *) {;}
+    virtual void procedureExpose(RexxActivation *, RexxActivation *) {;}
 };
 
 #endif

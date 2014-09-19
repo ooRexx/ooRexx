@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -41,185 +41,281 @@
 /* Primitive NumberString Class Definitions                                   */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_RexxNumberString
-#define Included_RexxNumberString
+#ifndef Included_NumberString
+#define Included_NumberString
 
+#include "FlagSet.hpp"
 #include "Numerics.hpp"
-#include "NumberStringMath.hpp"
-
-/* Define char data used in OKNUMSTR   */
-#define ch_BLANK  ' '                       /* Define a Blank character.            */
-#define ch_MINUS  '-'                       /* Define the MINUS character           */
-#define ch_PLUS   '+'                       /* Define the PLUS character.           */
-#define ch_PERIOD '.'                       /* Define the DOT/PERIOD character.     */
-#define ch_ZERO   '0'                       /* Define the Zero  character.          */
-#define ch_ONE    '1'                       /* Define the One   character.          */
-#define ch_FIVE   '5'                       /* Define the Five  character.          */
-#define ch_NINE   '9'                       /* Define the Nine  character.          */
-#define ch_TAB    '\t'                      /* Define the alternate whitespace char */
-
-#define NumFormScientific  0x00000001       /* Define Numeric form setting at Object*/
-                                            /*  creation time.                      */
-#define NumberRounded      0x00000010       /* Indicate the number was rounded once */
-                                            /*  at NumDigits, avoid double rounding */
-
-#define OVERFLOWSPACE 2                /* space for numeric buffer overflow */
-
-#define SetNumberStringZero()                                           \
-      this->number[0] = '\0';               /* Make value a zero.*/     \
-      this->length = 1;                     /* Length is 1       */     \
-      this->sign = 0;                       /* Make sign Zero.   */     \
-      this->exp = 0;                        /* exponent is zero. */
+#include "StringClass.hpp"
 
 
-#define NumberStringRound(s,d) s->roundUp(s,d)
+/**
+ * A base NumberString object.  Occasionally, we create
+ * number string instances with no data part, so we have a base
+ * class for some of the portions.
+ */
+class NumberStringBase : public RexxObject
+{
+ friend class NumberString;
+ friend class NumberStringBuilder;
+public:
+    typedef enum
+    {
+        NumberFormScientific,
+        NumberRounded,
+    } NumberFlag;
 
- class RexxNumberStringBase : public RexxObject {
-   public:
-    inline RexxNumberStringBase() { ; }
+
+    inline NumberStringBase() { ; }
+
     void   mathRound(char *);
     char  *stripLeadingZeros(char *);
-    char * adjustNumber(char *, char *, size_t, size_t);
+    char  *adjustNumber(char *, char *, wholenumber_t, wholenumber_t);
+    void   truncateToDigits(wholenumber_t digits, char *digitsPtr, bool round);
+    //quick test for a numeric overflow
+    void checkOverflow();
 
-    RexxString *stringObject;          /* converted string value          */
-    short NumFlags;                    /* Flags for use by the Numberstring met*/
-    short sign;                        /* sign for this number (-1 is neg)     */
-    size_t  NumDigits;                 /* Maintain a copy of digits setting of */
-                                       /* From when object was created         */
-    wholenumber_t exp;
-    size_t  length;
- };
+  protected:
 
- class RexxNumberString : public RexxNumberStringBase {
+    RexxString *stringObject;          // converted string value
+    FlagSet<NumberFlag, 16> numFlags;  // Flags for use by the Numberstring methods
+    short numberSign;                  // sign for this number (-1 is neg)
+    wholenumber_t  createdDigits;      // the digits setting of from when object was created
+    wholenumber_t numberExponent;      // the exponent value
+    wholenumber_t digitsCount;         // the length of the number data (more conveniently managed as a signed number)
+};
+
+
+/**
+ * The "Full Monty" NumberString.  This implements most of the
+ * functions, and directly includes the string data.
+ */
+class NumberString : public NumberStringBase
+{
+ public:
+   /**
+    * Identifiers for different arithmetic operators.
+    */
+   typedef enum
+   {
+       OT_PLUS,
+       OT_MINUS,
+       OT_MULTIPLY,
+       OT_DIVIDE,
+       OT_INT_DIVIDE,
+       OT_REMAINDER,
+       OT_POWER,
+       OT_MAX,
+       OT_MIN,
+   } ArithmeticOperator;
+
+
+   /**
+    * A class for constructing a number value from a sequence of
+    * append steps.
+    */
+   class NumberBuilder
+   {
    public:
+       inline NumberBuilder(RexxString *s) : current(s->getWritableData()) {}
+
+       inline void addSign(bool isNegative) { if (isNegative) { *current = RexxString::ch_MINUS; current++; } }
+       inline void addExponentSign(bool isNegative) { *current = isNegative ? RexxString::ch_MINUS : RexxString::ch_PLUS; current++; }
+       inline void addDecimal() { append(RexxString::ch_PERIOD); }
+       inline void addExponent(const char *exp)
+       {
+           size_t len = strlen(exp);
+           memcpy(current, exp, len);
+           current += len;
+       }
+       inline void append(const char *d, size_t l)  { memcpy(current, d, l); current += l; }
+       inline void append(char c) { *current++ = c; }
+       inline void addDigits(const char *d, wholenumber_t len)
+       {
+           for (wholenumber_t i = 0; i < len; i++)
+           {
+               append(d[i] + RexxString::ch_ZERO);
+           }
+       }
+       inline void addZeroDecimal()  { append('0'); append('.'); }
+       inline void addZeros(wholenumber_t count)
+       {
+           memset(current, '0', count);
+           current += count;
+       }
+
+       inline void addSpaces(wholenumber_t count)
+       {
+           memset(current, ' ', count);
+           current += count;
+       }
+
+       inline void addIntegerPart(bool sign, const char *digits, wholenumber_t intDigits, wholenumber_t pad = 0)
+       {
+           addSign(sign);
+           addDigits(digits, intDigits);
+           addZeros(pad);
+       }
+
+       inline void addDecimalPart(const char *digits, wholenumber_t decimalDigits, wholenumber_t leadPad = 0, wholenumber_t trailingPad = 0)
+       {
+           addDecimal();
+           addZeros(leadPad);
+           addDigits(digits, decimalDigits);
+           addZeros(trailingPad);
+       }
+
+
+   protected:
+       char *current;   // current output pointer
+   };
+
     void         *operator new(size_t, size_t);
-    inline void  *operator new(size_t size, void *ptr) {return ptr;}
-    inline void   operator delete(void *) { ; }
     inline void   operator delete(void *, size_t) { }
-    inline void   operator delete(void *, void *) { }
 
-
-    RexxNumberString(size_t) ;
-    RexxNumberString(size_t, size_t) ;
-    inline RexxNumberString(RESTORETYPE restoreType) { ; };
+    NumberString(size_t) ;
+    NumberString(size_t, size_t) ;
+    inline NumberString(RESTORETYPE restoreType) { ; };
     virtual HashCode getHashValue();
-    void        live(size_t);
-    void        liveGeneral(int reason);
-    void        flatten(RexxEnvelope *);
 
-    bool         numberValue(wholenumber_t &result, size_t precision);
-    bool         numberValue(wholenumber_t &result);
-    bool         unsignedNumberValue(stringsize_t &result, size_t precision);
-    bool         unsignedNumberValue(stringsize_t &result);
-    bool         doubleValue(double &result);
-    inline RexxNumberString *numberString() { return this; }
-    RexxInteger *integerValue(size_t);
-    RexxString  *makeString();
-    RexxArray   *makeArray();
-    RexxInteger *hasMethod(RexxString *);
-    RexxString  *primitiveMakeString();
-    RexxString  *stringValue();
-    bool         truthValue(int);
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(Envelope *);
+
+    virtual bool numberValue(wholenumber_t &result, wholenumber_t precision);
+    virtual bool numberValue(wholenumber_t &result);
+    virtual bool unsignedNumberValue(size_t &result, wholenumber_t precision);
+    virtual bool unsignedNumberValue(size_t &result);
+    virtual bool doubleValue(double &result);
+    virtual inline NumberString *numberString() { return this; }
+    virtual RexxInteger *integerValue(wholenumber_t);
+    virtual RexxString  *makeString();
+    virtual ArrayClass  *makeArray();
+    virtual bool         hasMethod(RexxString *);
+    virtual RexxString  *primitiveMakeString();
+    virtual RexxString  *stringValue();
+    virtual bool         truthValue(int);
     virtual bool logicalValue(logical_t &);
 
-    bool        isEqual(RexxObject *);
+    virtual bool  isEqual(RexxInternalObject *);
     wholenumber_t strictComp(RexxObject *);
-    wholenumber_t comp(RexxObject *);
-    RexxInteger *equal(RexxObject *);
-    RexxInteger *strictEqual(RexxObject *);
-    RexxInteger *notEqual(RexxObject *);
-    RexxInteger *strictNotEqual(RexxObject *);
-    RexxInteger *isGreaterThan(RexxObject *);
-    RexxInteger *isLessThan(RexxObject *);
-    RexxInteger *isGreaterOrEqual(RexxObject *);
-    RexxInteger *isLessOrEqual(RexxObject *);
-    RexxInteger *strictGreaterThan(RexxObject *);
-    RexxInteger *strictLessThan(RexxObject *);
-    RexxInteger *strictGreaterOrEqual(RexxObject *);
-    RexxInteger *strictLessOrEqual(RexxObject *);
+    wholenumber_t comp(RexxObject *, size_t fuzz);
+    RexxObject  *equal(RexxObject *);
+    RexxObject  *strictEqual(RexxObject *);
+    RexxObject  *notEqual(RexxObject *);
+    RexxObject  *strictNotEqual(RexxObject *);
+    RexxObject  *isGreaterThan(RexxObject *);
+    RexxObject  *isLessThan(RexxObject *);
+    RexxObject  *isGreaterOrEqual(RexxObject *);
+    RexxObject  *isLessOrEqual(RexxObject *);
+    RexxObject  *strictGreaterThan(RexxObject *);
+    RexxObject  *strictLessThan(RexxObject *);
+    RexxObject  *strictGreaterOrEqual(RexxObject *);
+    RexxObject  *strictLessOrEqual(RexxObject *);
     RexxObject  *hashCode();
 
-    RexxNumberString *clone();
+    NumberString *clone();
     void        setString(RexxString *);
-    void        roundUp(int);
     RexxString *formatRexx(RexxObject *, RexxObject *, RexxObject *, RexxObject *);
-    RexxString *formatInternal(size_t, size_t, size_t, size_t, RexxNumberString *, size_t, bool);
+    RexxString *formatInternal(wholenumber_t, wholenumber_t, wholenumber_t, wholenumber_t, NumberString *, wholenumber_t, bool);
     RexxObject *operatorNot(RexxObject *);
-    RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
+    RexxObject *evaluate(RexxActivation *, ExpressionStack *);
     RexxObject *getValue(RexxActivation *context);
-    RexxObject *getValue(RexxVariableDictionary *dictionary);
+    RexxObject *getValue(VariableDictionary *dictionary);
     RexxObject *getRealValue(RexxActivation *);
-    RexxObject *getRealValue(RexxVariableDictionary *);
+    RexxObject *getRealValue(VariableDictionary *);
     RexxObject *trunc(RexxObject *);
-    RexxObject *truncInternal(size_t);
+    RexxObject *truncInternal(wholenumber_t);
     RexxObject *floor();
     RexxObject *floorInternal();
     RexxObject *ceiling();
     RexxObject *ceilingInternal();
     RexxObject *round();
     RexxObject *roundInternal();
-    RexxObject *unknown(RexxString *, RexxArray *);
+    RexxObject *unknown(RexxString *, ArrayClass *);
     bool        isInstanceOf(RexxClass *);
-    RexxMethod   *instanceMethod(RexxString *);
-    RexxSupplier *instanceMethods(RexxClass *);
+    MethodClass   *instanceMethod(RexxString *);
+    SupplierClass *instanceMethods(RexxClass *);
     RexxClass  *classObject();
-    inline RexxNumberString *checkNumber(size_t digits)
+    inline NumberString *checkNumber(wholenumber_t digits)
     {
-       if (this->length > digits)            // is the length larger than digits()?
+       if (digitsCount > digits)             // is the length larger than digits()?
        {
                                              // need to allocate a new number, but
                                              // we chop to digits + 1
-           return this->prepareOperatorNumber(digits + 1, digits, NOROUND);
+           return prepareOperatorNumber(digits + 1, digits, NOROUND);
        }
        return this;                          // no adjustment required
     }
 
-    RexxNumberString *prepareNumber(size_t, bool);
-    RexxNumberString *prepareOperatorNumber(size_t, size_t, bool);
-    void              adjustPrecision(char *, size_t);
+    //quick test for a numeric overflow
+    void checkLostDigits(wholenumber_t digits);
+    NumberString *operatorArgument(RexxObject *right);
+
+    NumberString *prepareNumber(wholenumber_t, bool);
+    NumberString *prepareOperatorNumber(wholenumber_t, wholenumber_t, bool);
+    NumberString *copyIfNecessary();
+    NumberString *copyForCurrentSettings();
+    void              adjustPrecision(char *, wholenumber_t);
     void              adjustPrecision();
-    inline void       checkPrecision() { if (length > NumDigits) adjustPrecision(); }
-    inline void       setNumericSettings(size_t digits, bool form)
+    inline void       checkPrecision() { if (digitsCount > createdDigits) adjustPrecision(); }
+    inline void       setNumericSettings(wholenumber_t digits, bool form)
     {
-        this->NumDigits = digits;
+        createdDigits = digits;
         if (form == Numerics::FORM_SCIENTIFIC)
-            this->NumFlags |= NumFormScientific;
+        {
+            numFlags.set(NumberFormScientific);
+        }
         else
-            this->NumFlags &= ~NumFormScientific;
+        {
+            numFlags.reset(NumberFormScientific);
+        }
     }
 
-    inline void       setupNumber()
+    inline bool isScientific() { return numFlags[NumberFormScientific]; }
+    inline bool isEngineering() { return !numFlags[NumberFormScientific]; }
+
+    inline void setupNumber()
     {
-        /* inherit the current numeric settings */
+        // inherit the current numeric settings
         setNumericSettings(number_digits(), number_form());
-        /* check for any required rounding */
+        // check for any required rounding
         checkPrecision();
     }
-    bool  createUnsignedValue(const char *thisnum, stringsize_t intlength, int carry, wholenumber_t exponent, size_t maxValue, size_t &result);
-    bool  createUnsignedInt64Value(const char *thisnum, stringsize_t intlength, int carry, wholenumber_t exponent, uint64_t maxValue, uint64_t &result);
-    bool  checkIntegerDigits(stringsize_t numDigits, stringsize_t &numberLength, wholenumber_t &numberExponent, bool &carry);
-    bool  int64Value(int64_t *result, stringsize_t numDigits);
-    bool  unsignedInt64Value(uint64_t *result, stringsize_t numDigits);
+
+    inline void setupNumber(wholenumber_t digits, bool form)
+    {
+        // inherit the current numeric settings
+        setNumericSettings(digits, form);
+        // check for any required rounding
+        checkPrecision();
+    }
+
+    bool  createUnsignedValue(const char *thisnum, size_t intlength, int carry, wholenumber_t exponent, size_t maxValue, size_t &result);
+    bool  createUnsignedInt64Value(const char *thisnum, size_t intlength, int carry, wholenumber_t exponent, uint64_t maxValue, uint64_t &result);
+    bool  checkIntegerDigits(wholenumber_t numDigits, wholenumber_t &numberLength, wholenumber_t &numberExponent, bool &carry);
+    bool  int64Value(int64_t *result, wholenumber_t numDigits);
+    bool  unsignedInt64Value(uint64_t *result, wholenumber_t numDigits);
     void  formatInt64(int64_t integer);
     void  formatUnsignedInt64(uint64_t integer);
 
-    RexxNumberString *addSub(RexxNumberString *, unsigned int, size_t);
-    RexxNumberString *plus(RexxObject *);
-    RexxNumberString *minus(RexxObject *);
-    RexxNumberString *multiply(RexxObject *);
-    RexxNumberString *divide(RexxObject *);
-    RexxNumberString *integerDivide(RexxObject *);
-    RexxNumberString *remainder(RexxObject *);
-    RexxNumberString *power(RexxObject *);
-    RexxNumberString *Multiply(RexxNumberString *);
-    RexxNumberString *Division(RexxNumberString *, unsigned int);
-    RexxNumberString *abs();
+    NumberString *addSub(NumberString *, ArithmeticOperator, wholenumber_t);
+    NumberString *plus(RexxObject *);
+    NumberString *minus(RexxObject *);
+    NumberString *multiply(RexxObject *);
+    NumberString *divide(RexxObject *);
+    NumberString *integerDivide(RexxObject *);
+    NumberString *remainder(RexxObject *);
+    NumberString *power(RexxObject *);
+    NumberString *Multiply(NumberString *);
+    NumberString *Division(NumberString *, ArithmeticOperator);
+    NumberString *abs();
     RexxInteger *Sign();
     RexxObject  *notOp();
-    RexxNumberString *Max(RexxObject **, size_t);
-    RexxNumberString *Min(RexxObject **, size_t);
-    RexxNumberString *maxMin(RexxObject **, size_t, unsigned int);
-    RexxObject *isInteger();
+    NumberString *Max(RexxObject **, size_t);
+    NumberString *Min(RexxObject **, size_t);
+    NumberString *maxMin(RexxObject **, size_t, ArithmeticOperator);
+    bool        isInteger();
     RexxString *d2c(RexxObject *);
     RexxString *d2x(RexxObject *);
     RexxString *d2xD2c(RexxObject *, bool);
@@ -228,87 +324,113 @@
     RexxObject *orOp(RexxObject *);
     RexxObject *andOp(RexxObject *);
     RexxObject *xorOp(RexxObject *);
-    void        formatNumber(wholenumber_t);
+    bool        parseNumber(const char *number, size_t length);
+    void        formatNumber(wholenumber_t integer);
     void        formatUnsignedNumber(size_t);
-    int         format(const char *, size_t);
-    inline void        setZero() {
-                   this->number[0] = '\0';               /* Make value a zero.*/
-                   this->length = 1;                     /* Length is 1       */
-                   this->sign = 0;                       /* Make sign Zero.   */
-                   this->exp = 0;                        /* exponent is zero. */
-                }
+    inline void setZero()
+    {
+        numberDigits[0] = '\0';         // Make value a zero.
+        digitsCount = 1;                // Length is 1
+        numberSign = 0;                 // Make sign Zero.
+        numberExponent = 0;             // exponent is zero.
+    }
+
+    inline bool isZero() { return numberSign == 0; }
+    inline bool isOne() { return digitsCount == 1 && numberSign == 1 && numberExponent == 0 && numberDigits[0] == 1; }
+    inline bool isNegative() { return numberSign < 0; }
+    inline bool isPositive() { return numberSign > 0; }
+    inline bool isAllInteger() { return numberExponent == 0; }
+    inline bool hasDecimals() { return numberExponent < 0; }
+           bool hasSignificantDecimals(wholenumber_t digits);
+           void formatExponent(wholenumber_t exponent, char *buffer);
 
     static PCPPM operatorMethods[];
 
-    static RexxNumberString *newInstanceFromDouble(double);
-    static RexxNumberString *newInstanceFromDouble(double, size_t);
-    static RexxNumberString *newInstanceFromFloat(float);
-    static RexxNumberString *newInstanceFromWholenumber(wholenumber_t);
-    static RexxNumberString *newInstanceFromInt64(int64_t);
-    static RexxNumberString *newInstanceFromUint64(uint64_t);
-    static RexxNumberString *newInstanceFromStringsize(stringsize_t);
-    static RexxNumberString *newInstance(const char *, stringsize_t);
+    static NumberString *newInstanceFromDouble(double);
+    static NumberString *newInstanceFromDouble(double, wholenumber_t);
+    static NumberString *newInstanceFromFloat(float);
+    static NumberString *newInstanceFromWholenumber(wholenumber_t);
+    static NumberString *newInstanceFromInt64(int64_t);
+    static NumberString *newInstanceFromUint64(uint64_t);
+    static NumberString *newInstanceFromStringsize(size_t);
+    static NumberString *newInstance(const char *, size_t);
 
 
     static void createInstance();
     static RexxClass *classInstance;
 
     static size_t highBits(size_t);
-    static void  subtractNumbers( RexxNumberString *larger, const char *largerPtr, wholenumber_t aLargerExp,
-                                  RexxNumberString *smaller, const char *smallerPtr, wholenumber_t aSmallerExp,
-                                  RexxNumberString *result, char **resultPtr);
-    static char *addMultiplier( char *, size_t, char *, int);
-    static char *subtractDivisor(char *data1, size_t length1, char *data2, size_t length2, char *result, int Mult);
-    static char *multiplyPower(char *leftPtr, RexxNumberStringBase *left, char *rightPtr, RexxNumberStringBase *right, char *OutPtr, size_t OutLen, size_t NumberDigits);
-    static char *dividePower(char *AccumPtr, RexxNumberStringBase *Accum, char *Output, size_t NumberDigits);
+    static void  subtractNumbers(NumberString *larger, const char *largerPtr, wholenumber_t aLargerExp,
+                                  NumberString *smaller, const char *smallerPtr, wholenumber_t aSmallerExp,
+                                  NumberString *result, char *&resultPtr);
+    static char *addMultiplier(const char *, wholenumber_t, char *, int);
+    static char *subtractDivisor(const char *data1, wholenumber_t length1, const char *data2, wholenumber_t length2, char *result, int Mult);
+    static char *multiplyPower(const char *leftPtr, NumberStringBase *left, const char *rightPtr, NumberStringBase *right, char *OutPtr, wholenumber_t OutLen, wholenumber_t NumberDigits);
+    static char *dividePower(const char *AccumPtr, NumberStringBase *Accum, char *Output, wholenumber_t NumberDigits);
     static char *addToBaseSixteen(int, char *, char *);
     static char *addToBaseTen(int, char *, char *);
     static char *multiplyBaseSixteen(char *, char *);
     static char *multiplyBaseTen(char *, char *);
 
-    char  number[4];
+    static const size_t OVERFLOWSPACE = 2;   // space for numeric buffer overflow
+
+    static const size_t BYTE_SIZE = 8;
+    static const size_t SIZEBITS = (sizeof(size_t) * BYTE_SIZE);
+    static const bool ROUND = true;
+    static const bool NOROUND = false;
+
+    // these are used for masking the power bits
+    static const size_t HIBIT = ~SSIZE_MAX;
+    static const size_t LOWBITS = SSIZE_MAX;
+
+    // special buffer allocation size.  Since we occasionally use numeric
+    // digits 20 for date and time calculations, make sure we can handle at least
+    // that size for most operations.  That requires at least twice the digits value
+    // plus an extra.  For alignment purposes, makea multiple of 8 also.
+    static const size_t FAST_BUFFER = 48;
+
+    char  numberDigits[4];                   // the digits for the number
 };
 
-void AdjustPrecision(RexxNumberString *, char *, int);
 
-inline RexxNumberString *new_numberstring(const char *s, stringsize_t l)
+inline NumberString *new_numberstring(const char *s, size_t l)
 {
-    return RexxNumberString::newInstance(s, l);
+    return NumberString::newInstance(s, l);
 }
 
-inline RexxNumberString *new_numberstringFromWholenumber(wholenumber_t n)
+inline NumberString *new_numberstringFromWholenumber(wholenumber_t n)
 {
-    return RexxNumberString::newInstanceFromWholenumber(n);
+    return NumberString::newInstanceFromWholenumber(n);
 }
 
-inline RexxNumberString *new_numberstringFromStringsize(stringsize_t n)
+inline NumberString *new_numberstringFromStringsize(size_t n)
 {
-    return RexxNumberString::newInstanceFromStringsize(n);
+    return NumberString::newInstanceFromStringsize(n);
 }
 
-inline RexxNumberString *new_numberstringFromInt64(int64_t n)
+inline NumberString *new_numberstringFromInt64(int64_t n)
 {
-    return RexxNumberString::newInstanceFromInt64(n);
+    return NumberString::newInstanceFromInt64(n);
 }
 
-inline RexxNumberString *new_numberstringFromUint64(uint64_t n)
+inline NumberString *new_numberstringFromUint64(uint64_t n)
 {
-    return RexxNumberString::newInstanceFromUint64(n);
+    return NumberString::newInstanceFromUint64(n);
 }
 
-inline RexxNumberString *new_numberstringFromDouble(double n)
+inline NumberString *new_numberstringFromDouble(double n)
 {
-    return RexxNumberString::newInstanceFromDouble(n);
+    return NumberString::newInstanceFromDouble(n);
 }
 
-inline RexxNumberString *new_numberstringFromDouble(double n, size_t p)
+inline NumberString *new_numberstringFromDouble(double n, size_t p)
 {
-    return RexxNumberString::newInstanceFromDouble(n, p);
+    return NumberString::newInstanceFromDouble(n, p);
 }
 
-inline RexxNumberString *new_numberstringFromFloat(float n)
+inline NumberString *new_numberstringFromFloat(float n)
 {
-    return RexxNumberString::newInstanceFromFloat(n);
+    return NumberString::newInstanceFromFloat(n);
 }
 
 #endif

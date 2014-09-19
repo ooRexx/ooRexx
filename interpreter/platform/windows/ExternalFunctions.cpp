@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -47,9 +47,6 @@
 /*    sysMessageBox - Method to pop up message box                            */
 /*                                                                            */
 /******************************************************************************/
-#include <stdio.h>                          /* Get printf, FILE type, etc.    */
-#include <string.h>                         /* Get strcpy, strcat, etc.       */
-#include <stdlib.h>                         /* Get system, max_path etc...    */
 #include <process.h>
 #include <direct.h>
 #include <windows.h>
@@ -58,10 +55,9 @@
 #include "RexxCore.h"                         /* global REXX definitions        */
 #include "StringClass.hpp"
 #include "ArrayClass.hpp"
-#include "RexxActivity.hpp"
+#include "Activity.hpp"
 #include "RexxActivation.hpp"
 #include "MethodClass.hpp"
-#include "SourceFile.hpp"
 #include "RexxInternalApis.h"          /* Get private REXXAPI API's         */
 #include "ProtectedObject.hpp"
 #include "StringUtil.hpp"
@@ -257,14 +253,14 @@ RexxRoutine2(RexxStringObject, sysFilespec, CSTRING, option, CSTRING, name)
 /******************************************************************************/
 bool SystemInterpreter::invokeExternalFunction(
   RexxActivation * activation,         /* Current Activation                */
-  RexxActivity   * activity,           /* activity in use                   */
+  Activity   * activity,           /* activity in use                   */
   RexxString     * target,             /* Name of external function         */
   RexxObject    ** arguments,          /* Argument array                    */
   size_t           argcount,           /* count of arguments                */
   RexxString     * calltype,           /* Type of call                      */
   ProtectedObject &result)
 {
-  if (activation->callMacroSpaceFunction(target, arguments, argcount, calltype, MS_PREORDER, result))
+  if (activation->callMacroSpaceFunction(target, arguments, argcount, calltype, RXMACRO_SEARCH_BEFORE, result))
   {
       return true;
   }
@@ -280,7 +276,7 @@ bool SystemInterpreter::invokeExternalFunction(
   }
                                        /* function.  If still not found,    */
                                        /* then raise an error               */
-  if (activation->callMacroSpaceFunction(target, arguments, argcount, calltype, MS_POSTORDER, result))
+  if (activation->callMacroSpaceFunction(target, arguments, argcount, calltype, RXMACRO_SEARCH_AFTER, result))
   {
       return true;
   }

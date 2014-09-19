@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.ibm.com/developerworks/oss/CPLv1.0.htm                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -36,26 +36,25 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                RexxPointer.cpp */
+/* REXX Kernel                                                PointerClass.cpp */
 /*                                                                            */
 /* Primitive Pointer Class                                                    */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
-#include <string.h>
 #include "RexxCore.h"
 #include "PointerClass.hpp"
 #include "ActivityManager.hpp"
+#include "MethodArguments.hpp"
 
 
-RexxClass *RexxPointer::classInstance = OREF_NULL;   // singleton class instance
-RexxPointer *RexxPointer::nullPointer = OREF_NULL;  // single version of a null pointer
+RexxClass *PointerClass::classInstance = OREF_NULL;   // singleton class instance
+PointerClass *PointerClass::nullPointer = OREF_NULL;   // single version of a null pointer
 
 
-void RexxPointer::createInstance()
-/******************************************************************************/
-/* Function:  Create initial bootstrap objects                                */
-/******************************************************************************/
+/**
+ * Perform class bootstrap activities.
+ */
+void PointerClass::createInstance()
 {
     CLASS_CREATE(Pointer, "Pointer", RexxClass);
     TheNullPointer = new_pointer(NULL);       // a NULL pointer object
@@ -69,7 +68,7 @@ void RexxPointer::createInstance()
  *
  * @return True if the two objects are equal, false otherwise.
  */
-RexxObject *RexxPointer::equal(RexxObject *other)
+RexxObject *PointerClass::equal(RexxObject *other)
 {
     requiredArgument(other, ARG_ONE);            /* must have the other argument      */
 
@@ -78,7 +77,7 @@ RexxObject *RexxPointer::equal(RexxObject *other)
         return TheFalseObject;
     }
 
-    return this->pointer() == ((RexxPointer *)other)->pointer() ? TheTrueObject : TheFalseObject;
+    return booleanObject(pointer() == ((PointerClass *)other)->pointer());
 }
 
 
@@ -89,7 +88,7 @@ RexxObject *RexxPointer::equal(RexxObject *other)
  *
  * @return True if the two objects are equal, false otherwise.
  */
-RexxObject *RexxPointer::notEqual(RexxObject *other)
+RexxObject *PointerClass::notEqual(RexxObject *other)
 {
     requiredArgument(other, ARG_ONE);            /* must have the other argument      */
 
@@ -98,14 +97,14 @@ RexxObject *RexxPointer::notEqual(RexxObject *other)
         return TheTrueObject;
     }
 
-    return this->pointer() != ((RexxPointer *)other)->pointer() ? TheTrueObject : TheFalseObject;
+    return booleanObject(pointer() != ((PointerClass *)other)->pointer());
 }
 
 
 /**
  * Override of the default hash value method.
  */
-HashCode RexxPointer::getHashValue()
+HashCode PointerClass::getHashValue()
 {
     // generate a hash from the pointer value...but obscure this a touch to get
     // a better bit distribution
@@ -113,22 +112,31 @@ HashCode RexxPointer::getHashValue()
 }
 
 
-void *RexxPointer::operator new(size_t size)
-/******************************************************************************/
-/* Function:  Create a new pointer object                                     */
-/******************************************************************************/
+/**
+ * Allocate memory for a pointer object.
+ *
+ * @param size   The size of the object.
+ *
+ * @return A new object configured for a pointer object.
+ */
+void *PointerClass::operator new(size_t size)
 {
-                                       /* Get new object                    */
-  RexxObject *newObject = new_object(size, T_Pointer);
-  newObject->setHasNoReferences();     /* this has no references            */
-  return (void *)newObject;            /* return the new object             */
+    RexxInternalObject *newObject = new_object(size, T_Pointer);
+    newObject->setHasNoReferences();     // this has no references
+    return (void *)newObject;
 }
 
 
-RexxObject *RexxPointer::newRexx(RexxObject **args, size_t argc)
-/******************************************************************************/
-/* Function:  Allocate a pointer object from Rexx code.                       */
-/******************************************************************************/
+/**
+ * The Rexx version of the new method.  This just raises
+ * an error.
+ *
+ * @param args   The argument pointer.
+ * @param argc   The count of arguments.
+ *
+ * @return No return, raises an exception.
+ */
+RexxObject *PointerClass::newRexx(RexxObject **args, size_t argc)
 {
     // we do not allow these to be allocated from Rexx code...
     reportException(Error_Unsupported_new_method, ((RexxClass *)this)->getId());
@@ -141,7 +149,7 @@ RexxObject *RexxPointer::newRexx(RexxObject **args, size_t argc)
  *
  * @return The character string value.
  */
-RexxString *RexxPointer::stringValue()
+RexxString *PointerClass::stringValue()
 {
     return Numerics::pointerToString(pointer());
 }
@@ -152,7 +160,7 @@ RexxString *RexxPointer::stringValue()
  *
  * @return True if the pointer value is NULL, false for non-null.
  */
-RexxObject *RexxPointer::isNull()
+RexxObject *PointerClass::isNull()
 {
-    return pointer() == NULL ? TheTrueObject : TheFalseObject;
+    return booleanObject(pointer() == NULL);
 }

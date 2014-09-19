@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -38,7 +38,7 @@
 /******************************************************************************/
 /* REXX Kernel                                           ElseInstruction.hpp  */
 /*                                                                            */
-/* Primitive ELSE instruction Class Definitions                               */
+/* ELSE instruction definition                                                */
 /*                                                                            */
 /******************************************************************************/
 #ifndef Included_RexxInstructionElse
@@ -46,24 +46,26 @@
 
 #include "RexxInstruction.hpp"
 
-class RexxEndInstructionEndIf;
+class RexxInstructionIf;
+class RexxInstructionEndIf;
 
-class RexxInstructionElse : public RexxInstructionSet {
+class RexxInstructionElse : public RexxInstructionSet
+{
  public:
+    RexxInstructionElse(RexxToken *);
+    inline RexxInstructionElse(RESTORETYPE restoreType) { ; };
 
-  inline void *operator new(size_t size, void *ptr) {return ptr;}
-  inline void operator delete(void *) { }
-  inline void operator delete(void *, void *) { }
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(Envelope*);
 
-  RexxInstructionElse(RexxToken *);
-  inline RexxInstructionElse(RESTORETYPE restoreType) { ; };
-  void live(size_t);
-  void liveGeneral(int reason);
-  void flatten(RexxEnvelope*);
-  void execute(RexxActivation *, RexxExpressionStack *);
-  void setEndInstruction(RexxInstructionEndIf *);
-  void setParent(RexxInstructionEndIf *);
+    virtual void execute(RexxActivation *, ExpressionStack *);
+    virtual void setEndInstruction(RexxInstructionEndIf *);
 
-  RexxInstructionIf *parent;           /* parent IF instruction             */
+    void setParent(RexxInstructionEndIf *);
+
+ protected:
+
+    RexxInstructionIf *parent;           /* parent IF instruction             */
 };
 #endif

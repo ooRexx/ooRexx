@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -41,35 +41,38 @@
 /* Primitive Relation Class Definitions                                       */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_RexxRelation
-#define Included_RexxRelation
+#ifndef Included_RelationClass
+#define Included_RelationClass
 
-#include "TableClass.hpp"
+#include "HashCollection.hpp"
 
-class RexxRelation : public RexxTable {
+class RelationClass : public EqualityHashCollection
+{
  public:
-   void * operator new(size_t);
-   inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };
-   inline RexxRelation(RESTORETYPE restoreType) { ; };
-   inline RexxRelation() { ; }
+     void        *operator new(size_t);
+     inline void  operator delete(void *) { ; }
 
-   RexxObject   *put(RexxObject *, RexxObject *);
-   RexxObject   *removeItemRexx(RexxObject *, RexxObject *);
-   RexxObject   *hasItem(RexxObject *, RexxObject *);
-   RexxObject   *allAt(RexxObject *);
-   RexxObject   *allIndex(RexxObject *);
-   RexxObject   *removeAll(RexxObject *);
-   RexxObject   *itemsRexx(RexxObject *);
-   RexxSupplier *supplier(RexxObject *);
-   RexxObject   *removeItem(RexxObject *, RexxObject *);
+    inline RelationClass(RESTORETYPE restoreType) { ; }
+           RelationClass(size_t capacity = HashCollection::DefaultTableSize);
+           RelationClass(bool fromRexx) { }
 
-   RexxObject   *newRexx(RexxObject **, size_t);
+    virtual HashContents *allocateContents(size_t bucketSize, size_t capacity);
 
-   static RexxRelation *newInstance();
-   static void createInstance();
-   static RexxClass *classInstance;
+    RexxObject *newRexx(RexxObject **, size_t);
+
+    RexxInternalObject *removeItem(RexxInternalObject *value, RexxInternalObject *index);
+    SupplierClass *supplierRexx(RexxInternalObject *index);
+    RexxInternalObject *itemsRexx(RexxInternalObject *index);
+    RexxInternalObject *removeItemRexx(RexxInternalObject *value, RexxInternalObject *index);
+    RexxInternalObject *hasItemRexx(RexxInternalObject *value, RexxInternalObject *index);
+    RexxInternalObject *allIndexRexx(RexxInternalObject *value);
+    RexxInternalObject *allAt(RexxInternalObject *index);
+    RexxInternalObject *removeAll(RexxInternalObject *index);
+
+    static void createInstance();
+    static RexxClass *classInstance;
 };
 
-inline RexxRelation *new_relation() { return RexxRelation::newInstance(); }
+inline RelationClass *new_relation(size_t capacity = HashCollection::DefaultTableSize) { return new RelationClass(capacity); }
 
 #endif

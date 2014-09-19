@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.ibm.com/developerworks/oss/CPLv1.0.htm                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -47,33 +47,32 @@
 #include "RexxCore.h"
 #include "ProtectedObject.hpp"
 
-class RexxDirectory;
+class DirectoryClass;
 
 class SecurityManager : public RexxInternalObject
 {
 public:
-    inline void *operator new(size_t, void *ptr) {return ptr;}
-    inline void  operator delete(void *, void *) {;}
     void *operator new(size_t);
     inline void  operator delete(void *) {;}
 
     inline SecurityManager(RexxObject *m) { manager = m; }
     inline SecurityManager(RESTORETYPE restoreType) { ; };
 
-    void         live(size_t);
-    void         liveGeneral(int reason);
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+
     RexxObject  *checkLocalAccess(RexxString *index);
     RexxObject  *checkEnvironmentAccess(RexxString *index);
     bool         checkProtectedMethod(RexxObject *target, RexxString *messageName, size_t count, RexxObject **arguments, ProtectedObject &result);
     bool         checkFunctionCall(RexxString *functionName, size_t count, RexxObject **arguments, ProtectedObject &result);
-    bool         checkCommand(RexxActivity *, RexxString *address, RexxString *command, ProtectedObject &result, ProtectedObject &condition);
+    bool         checkCommand(Activity *, RexxString *address, RexxString *command, ProtectedObject &result, ProtectedObject &condition);
     RexxObject  *checkStreamAccess(RexxString *name);
     RexxString  *checkRequiresAccess(RexxString *name, RexxObject *&securityManager);
 
 
 protected:
-    bool         callSecurityManager(RexxString *methodName, RexxDirectory *arguments);
 
+    bool         callSecurityManager(RexxString *methodName, DirectoryClass *arguments);
     RexxObject *manager;       // the wrappered manager object
 };
 

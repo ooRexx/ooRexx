@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -46,7 +46,431 @@
 
 #include "SourceLocation.hpp"
 
+class LanguageParser;
 
+/**
+ * A class for an entry in the various token keyword tables.
+ */
+class KeywordEntry
+{
+public:
+    /**
+     * Constructor for a keyword table entry.
+     *
+     * @param n      The string name of the keyword.
+     * @param code   The associated keyword tag mapping.
+     */
+    inline KeywordEntry(const char *n, int code)
+    {
+        name = n;
+        length = strlen(name);
+        keywordCode = code;
+    }
+
+    const char *name;                       // the keyword name
+    size_t      length;                     // length of the keyword string
+    int         keywordCode;                // the string-to-identifier mapping
+};
+
+
+// major token types
+typedef enum
+{
+    TOKEN_NULL       = 1,
+    TOKEN_BLANK,
+    TOKEN_SYMBOL,
+    TOKEN_LITERAL,
+    TOKEN_OPERATOR,
+    TOKEN_EOC,
+    TOKEN_COMMA,
+    TOKEN_PREFIX,
+    TOKEN_LEFT,
+    TOKEN_RIGHT,
+    TOKEN_POINT,
+    TOKEN_COLON,
+    TOKEN_TILDE,
+    TOKEN_DTILDE,
+    TOKEN_SQLEFT,
+    TOKEN_SQRIGHT,
+    TOKEN_DCOLON,
+    TOKEN_CONTINUE,
+    TOKEN_ASSIGNMENT,
+} TokenClass;
+
+// token extended types.  Each category gets is own
+// section of the numeric range.
+typedef enum
+{
+    SUBTYPE_NONE = 0,
+
+    // Operator sub-types.
+    // NOTE:  The operator subtypes are used for table
+    // lookups, so these need start with the index of
+    // 1.
+    OPERATOR_PLUS      = 1,
+    OPERATOR_SUBTRACT,
+    OPERATOR_MULTIPLY,
+    OPERATOR_DIVIDE,
+    OPERATOR_INTDIV,
+    OPERATOR_REMAINDER,
+    OPERATOR_POWER,
+    OPERATOR_ABUTTAL,
+    OPERATOR_CONCATENATE,
+    OPERATOR_BLANK,
+    OPERATOR_EQUAL,
+    OPERATOR_BACKSLASH_EQUAL,
+    OPERATOR_GREATERTHAN,
+    OPERATOR_BACKSLASH_GREATERTHAN,
+    OPERATOR_LESSTHAN,
+    OPERATOR_BACKSLASH_LESSTHAN,
+    OPERATOR_GREATERTHAN_EQUAL,
+    OPERATOR_LESSTHAN_EQUAL,
+    OPERATOR_STRICT_EQUAL,
+    OPERATOR_STRICT_BACKSLASH_EQUAL,
+    OPERATOR_STRICT_GREATERTHAN,
+    OPERATOR_STRICT_BACKSLASH_GREATERTHAN,
+    OPERATOR_STRICT_LESSTHAN,
+    OPERATOR_STRICT_BACKSLASH_LESSTHAN,
+    OPERATOR_STRICT_GREATERTHAN_EQUAL,
+    OPERATOR_STRICT_LESSTHAN_EQUAL,
+    OPERATOR_LESSTHAN_GREATERTHAN,
+    OPERATOR_GREATERTHAN_LESSTHAN,
+    OPERATOR_AND,
+    OPERATOR_OR,
+    OPERATOR_XOR,
+    OPERATOR_BACKSLASH,
+
+    // symbol characters
+    SYMBOL_CONSTANT  =  100,
+    SYMBOL_VARIABLE,
+    SYMBOL_NAME,
+    SYMBOL_COMPOUND,
+    SYMBOL_STEM,
+    SYMBOL_DUMMY,
+    SYMBOL_DOTSYMBOL,
+    INTEGER_CONSTANT,
+    LITERAL_STRING,
+    LITERAL_HEX,
+    LITERAL_BIN,
+
+    // special clause end types
+    CLAUSEEND_EOF = 200,
+    CLAUSEEND_SEMICOLON,
+    CLAUSEEND_EOL,
+    CLAUSEEND_NULL,
+
+} TokenSubclass;
+
+// various keyword enumerations
+
+// the keyword instruction and directive identifiers
+// IMPORTANT NOTE:  These constants are set into instruction
+// objects.  To preserve release-to-release compiled image
+// compatibility, new constants need to be added to the end
+// of this list.
+typedef enum
+{
+    KEYWORD_NONE = 0,
+    KEYWORD_ADDRESS,
+    KEYWORD_ARG,
+    KEYWORD_CALL,
+    KEYWORD_DO,
+    KEYWORD_DROP,
+    KEYWORD_EXIT,
+    KEYWORD_IF,
+    KEYWORD_INTERPRET,
+    KEYWORD_ITERATE,
+    KEYWORD_LEAVE,
+    KEYWORD_NOP,
+    KEYWORD_NUMERIC,
+    KEYWORD_OPTIONS,
+    KEYWORD_PARSE,
+    KEYWORD_PROCEDURE,
+    KEYWORD_PULL,
+    KEYWORD_PUSH,
+    KEYWORD_QUEUE,
+    KEYWORD_REPLY,
+    KEYWORD_RETURN,
+    KEYWORD_SAY,
+    KEYWORD_SELECT,
+    KEYWORD_SIGNAL,
+    KEYWORD_TRACE,
+    KEYWORD_GUARD,
+    KEYWORD_USE,
+    KEYWORD_EXPOSE,
+    KEYWORD_RAISE,
+    KEYWORD_ELSE,
+    KEYWORD_THEN,
+    KEYWORD_END,
+    KEYWORD_OTHERWISE,
+    KEYWORD_IFTHEN,
+    KEYWORD_WHENTHEN,
+    KEYWORD_WHEN,
+    KEYWORD_ASSIGNMENT,
+    KEYWORD_COMMAND,
+    KEYWORD_MESSAGE,
+    KEYWORD_LABEL,
+    KEYWORD_ENDIF,
+    KEYWORD_BLOCK,
+    KEYWORD_FIRST,
+    KEYWORD_LAST,
+    KEYWORD_ENDELSE,
+    KEYWORD_ENDTHEN,
+    KEYWORD_ENDWHEN,
+    KEYWORD_INSTRUCTION,
+    KEYWORD_FORWARD,
+    KEYWORD_LOOP,
+    KEYWORD_SIGNAL_VALUE,
+    KEYWORD_SIGNAL_ON,
+    KEYWORD_CALL_VALUE,
+    KEYWORD_CALL_ON,
+    KEYWORD_SIMPLE_BLOCK,
+    KEYWORD_LOOP_FOREVER,
+    KEYWORD_LOOP_OVER,
+    KEYWORD_LOOP_OVER_UNTIL,
+    KEYWORD_LOOP_OVER_WHILE,
+    KEYWORD_LOOP_CONTROLLED,
+    KEYWORD_LOOP_CONTROLLED_UNTIL,
+    KEYWORD_LOOP_CONTROLLED_WHILE,
+    KEYWORD_LOOP_COUNT,
+    KEYWORD_LOOP_COUNT_UNTIL,
+    KEYWORD_LOOP_COUNT_WHILE,
+    KEYWORD_LOOP_WHILE,
+    KEYWORD_LOOP_UNTIL,
+    KEYWORD_MESSAGE_DOUBLE,
+    KEYWORD_SELECT_CASE,
+    KEYWORD_WHEN_CASE,
+    KEYWORD_CLASS,
+    KEYWORD_LIBRARY,
+    KEYWORD_REQUIRES,
+
+} InstructionKeyword;
+
+// instruction subkeyword types
+typedef enum
+{
+    SUBKEY_NONE = 0,
+    SUBKEY_ARG,
+    SUBKEY_BY,
+    SUBKEY_DIGITS,
+    SUBKEY_END,
+    SUBKEY_ELSE,
+    SUBKEY_ENGINEERING,
+    SUBKEY_EXPOSE,
+    SUBKEY_FOR,
+    SUBKEY_FOREVER,
+    SUBKEY_FORM,
+    SUBKEY_FUZZ,
+    SUBKEY_LINEIN,
+    SUBKEY_LOWER,
+    SUBKEY_CASELESS,
+    SUBKEY_NAME,
+    SUBKEY_NOVALUE,
+    SUBKEY_OFF,
+    SUBKEY_ON,
+    SUBKEY_OTHERWISE,
+    SUBKEY_OVER,
+    SUBKEY_PULL,
+    SUBKEY_SCIENTIFIC,
+    SUBKEY_SOURCE,
+    SUBKEY_THEN,
+    SUBKEY_TO,
+    SUBKEY_UNTIL,
+    SUBKEY_UPPER,
+    SUBKEY_VALUE,
+    SUBKEY_VAR,
+    SUBKEY_VERSION,
+    SUBKEY_WHEN,
+    SUBKEY_WHILE,
+    SUBKEY_WITH,
+    SUBKEY_DESCRIPTION,
+    SUBKEY_ADDITIONAL,
+    SUBKEY_RESULT,
+    SUBKEY_ARRAY,
+    SUBKEY_RETURN,
+    SUBKEY_EXIT,
+    SUBKEY_CONTINUE,
+    SUBKEY_CLASS,
+    SUBKEY_MESSAGE,
+    SUBKEY_ARGUMENTS,
+    SUBKEY_LABEL,
+    SUBKEY_STRICT,
+    SUBKEY_TRUE,
+    SUBKEY_FALSE,
+    SUBKEY_CASE
+} InstructionSubKeyword;
+
+
+/**
+ * Keyword identifiers for directives.
+ */
+typedef enum
+{
+    DIRECTIVE_NONE = 0,
+    DIRECTIVE_METHOD,
+    DIRECTIVE_OPTIONS,
+    DIRECTIVE_REQUIRES,
+    DIRECTIVE_ROUTINE,
+    DIRECTIVE_CLASS,
+    DIRECTIVE_ATTRIBUTE,
+    DIRECTIVE_LIBRARY,
+    DIRECTIVE_CONSTANT
+} DirectiveKeyword;
+
+
+// Identify different token types returned by
+// locateToken()
+typedef enum
+{
+    NORMAL_CHAR,
+    SIGNIFICANT_BLANK,
+    CLAUSE_EOF,
+    CLAUSE_EOL,
+} CharacterClass;
+
+
+/**
+ * Keywords allowed on directive statements.
+ */
+typedef enum
+{
+    SUBDIRECTIVE_NONE = 0,
+    SUBDIRECTIVE_PUBLIC,
+    SUBDIRECTIVE_METACLASS,
+    SUBDIRECTIVE_INHERIT,
+    SUBDIRECTIVE_PRIVATE,
+    SUBDIRECTIVE_GUARDED,
+    SUBDIRECTIVE_CLASS,
+    SUBDIRECTIVE_EXTERNAL,
+    SUBDIRECTIVE_SUBCLASS,
+    SUBDIRECTIVE_UNGUARDED,
+    SUBDIRECTIVE_MIXINCLASS,
+    SUBDIRECTIVE_ATTRIBUTE,
+    SUBDIRECTIVE_PROTECTED,
+    SUBDIRECTIVE_ABSTRACT,
+    SUBDIRECTIVE_UNPROTECTED,
+    SUBDIRECTIVE_GET,
+    SUBDIRECTIVE_SET,
+    SUBDIRECTIVE_LIBRARY,
+    SUBDIRECTIVE_DIGITS,
+    SUBDIRECTIVE_FORM,
+    SUBDIRECTIVE_FUZZ,
+    SUBDIRECTIVE_TRACE,
+    SUBDIRECTIVE_LABEL,
+} DirectiveSubKeyword;
+
+
+/**
+ * Condition keyword posibilities
+ */
+typedef enum
+{
+    CONDITION_NONE = 0,
+    CONDITION_ANY,
+    CONDITION_ERROR,
+    CONDITION_FAILURE,
+    CONDITION_HALT,
+    CONDITION_NOMETHOD,
+    CONDITION_NOSTRING,
+    CONDITION_NOTREADY,
+    CONDITION_NOVALUE,
+    CONDITION_PROPAGATE,
+    CONDITION_SYNTAX,
+    CONDITION_USER,
+    CONDITION_LOSTDIGITS
+} ConditionKeyword;
+
+
+// markers for the builtin function
+typedef enum
+{
+    NO_BUILTIN  = 0,
+    BUILTIN_ABBREV,
+    BUILTIN_ABS,
+    BUILTIN_ADDRESS,
+    BUILTIN_ARG,
+    BUILTIN_B2X,
+    BUILTIN_BITAND,
+    BUILTIN_BITOR,
+    BUILTIN_BITXOR,
+    BUILTIN_C2D,
+    BUILTIN_C2X,
+    BUILTIN_CENTER,
+    BUILTIN_CENTRE,
+    BUILTIN_CHANGESTR,
+    BUILTIN_CHARIN,
+    BUILTIN_CHAROUT,
+    BUILTIN_CHARS,
+    BUILTIN_COMPARE,
+    BUILTIN_CONDITION,
+    BUILTIN_COPIES,
+    BUILTIN_COUNTSTR,
+    BUILTIN_D2C,
+    BUILTIN_D2X,
+    BUILTIN_DATATYPE,
+    BUILTIN_DATE,
+    BUILTIN_DELSTR,
+    BUILTIN_DELWORD,
+    BUILTIN_DIGITS,
+    BUILTIN_ERRORTEXT,
+    BUILTIN_FORM,
+    BUILTIN_FORMAT,
+    BUILTIN_FUZZ,
+    BUILTIN_INSERT,
+    BUILTIN_LASTPOS,
+    BUILTIN_LEFT,
+    BUILTIN_LENGTH,
+    BUILTIN_LINEIN,
+    BUILTIN_LINEOUT,
+    BUILTIN_LINES,
+    BUILTIN_MAX,
+    BUILTIN_MIN,
+    BUILTIN_OVERLAY,
+    BUILTIN_POS,
+    BUILTIN_QUEUED,
+    BUILTIN_RANDOM,
+    BUILTIN_REVERSE,
+    BUILTIN_RIGHT,
+    BUILTIN_RXQUEUE,
+    BUILTIN_SIGN,
+    BUILTIN_SOURCELINE,
+    BUILTIN_SPACE,
+    BUILTIN_STREAM,
+    BUILTIN_STRIP,
+    BUILTIN_SUBSTR,
+    BUILTIN_SUBWORD,
+    BUILTIN_SYMBOL,
+    BUILTIN_TIME,
+    BUILTIN_TRACE,
+    BUILTIN_TRANSLATE,
+    BUILTIN_TRUNC,
+    BUILTIN_VALUE,
+    BUILTIN_VAR,
+    BUILTIN_VERIFY,
+    BUILTIN_WORD,
+    BUILTIN_WORDINDEX,
+    BUILTIN_WORDLENGTH,
+    BUILTIN_WORDPOS,
+    BUILTIN_WORDS,
+    BUILTIN_X2B,
+    BUILTIN_X2C,
+    BUILTIN_X2D,
+    BUILTIN_XRANGE,
+    BUILTIN_USERID,
+    BUILTIN_LOWER,
+    BUILTIN_UPPER,
+    BUILTIN_RXFUNCADD,
+    BUILTIN_RXFUNCDROP,
+    BUILTIN_RXFUNCQUERY,
+    BUILTIN_ENDLOCAL,
+    BUILTIN_SETLOCAL,
+    BUILTIN_QUALIFY,
+} BuiltinCode;
+
+
+/******************************************************************************/
+/* various expression terminator sets                                         */
+/******************************************************************************/
 #define   TERM_EOC     0x00000001u     /* terminate on end of clause        */
 #define   TERM_RIGHT   0x00000002u     /* terminate on left paren           */
 #define   TERM_SQRIGHT 0x00000004u     /* terminate on left square bracket  */
@@ -59,367 +483,100 @@
 #define   TERM_THEN    0x00000200u     /* terminate on THEN keyword         */
 #define   TERM_KEYWORD 0x10000000u     /* perform keyword terminator checks */
                                        /* terminate on DO keywords          */
-#define   TERM_CONTROL (TERM_KEYWORD | TERM_TO | TERM_BY | TERM_FOR | TERM_WHILE | TERM_EOC)
+#define   TERM_CONTROL (TERM_KEYWORD | TERM_TO | TERM_BY | TERM_FOR | TERM_WHILE)
                                        /* terminate on DO conditionals      */
-#define   TERM_COND    (TERM_KEYWORD | TERM_WHILE | TERM_EOC)
+#define   TERM_COND    (TERM_KEYWORD | TERM_WHILE)
 
-#define   TERM_IF      (TERM_KEYWORD | TERM_THEN | TERM_EOC)
-
-/* token types */
-#define TOKEN_NULL        1201
-#define TOKEN_BLANK       TOKEN_NULL      + 1
-#define TOKEN_SYMBOL      TOKEN_BLANK     + 1
-#define TOKEN_LITERAL     TOKEN_SYMBOL    + 1
-#define TOKEN_OPERATOR    TOKEN_LITERAL   + 1
-#define TOKEN_EOC         TOKEN_OPERATOR  + 1
-#define TOKEN_COMMA       TOKEN_EOC       + 1
-#define TOKEN_PREFIX      TOKEN_COMMA     + 1
-#define TOKEN_LEFT        TOKEN_PREFIX    + 1
-#define TOKEN_RIGHT       TOKEN_LEFT      + 1
-#define TOKEN_POINT       TOKEN_RIGHT     + 1
-#define TOKEN_COLON       TOKEN_POINT     + 1
-#define TOKEN_TILDE       TOKEN_COLON     + 1
-#define TOKEN_DTILDE      TOKEN_TILDE     + 1
-#define TOKEN_SQLEFT      TOKEN_DTILDE    + 1
-#define TOKEN_SQRIGHT     TOKEN_SQLEFT    + 1
-#define TOKEN_DCOLON      TOKEN_SQRIGHT   + 1
-#define TOKEN_CONTINUE    TOKEN_DCOLON    + 1
-#define TOKEN_ASSIGNMENT  TOKEN_CONTINUE  + 1
-
-/* token extended types - symbols */
-#define SYMBOL_CONSTANT    1251
-#define SYMBOL_VARIABLE    1252
-#define SYMBOL_NAME        1253
-#define SYMBOL_COMPOUND    1254
-#define SYMBOL_STEM        1255
-#define SYMBOL_DUMMY       1256
-#define SYMBOL_DOTSYMBOL   1257
-#define INTEGER_CONSTANT   1258
-#define LITERAL_HEX        1259
-#define LITERAL_BIN        1260
-
-/* token extended types - operators */
-#define OPERATOR_PLUS                           1
-#define OPERATOR_SUBTRACT                       OPERATOR_PLUS                          + 1
-#define OPERATOR_MULTIPLY                       OPERATOR_SUBTRACT                      + 1
-#define OPERATOR_DIVIDE                         OPERATOR_MULTIPLY                      + 1
-#define OPERATOR_INTDIV                         OPERATOR_DIVIDE                        + 1
-#define OPERATOR_REMAINDER                      OPERATOR_INTDIV                        + 1
-#define OPERATOR_POWER                          OPERATOR_REMAINDER                     + 1
-#define OPERATOR_ABUTTAL                        OPERATOR_POWER                         + 1
-#define OPERATOR_CONCATENATE                    OPERATOR_ABUTTAL                       + 1
-#define OPERATOR_BLANK                          OPERATOR_CONCATENATE                   + 1
-#define OPERATOR_EQUAL                          OPERATOR_BLANK                         + 1
-#define OPERATOR_BACKSLASH_EQUAL                OPERATOR_EQUAL                         + 1
-#define OPERATOR_GREATERTHAN                    OPERATOR_BACKSLASH_EQUAL               + 1
-#define OPERATOR_BACKSLASH_GREATERTHAN          OPERATOR_GREATERTHAN                   + 1
-#define OPERATOR_LESSTHAN                       OPERATOR_BACKSLASH_GREATERTHAN         + 1
-#define OPERATOR_BACKSLASH_LESSTHAN             OPERATOR_LESSTHAN                      + 1
-#define OPERATOR_GREATERTHAN_EQUAL              OPERATOR_BACKSLASH_LESSTHAN            + 1
-#define OPERATOR_LESSTHAN_EQUAL                 OPERATOR_GREATERTHAN_EQUAL             + 1
-#define OPERATOR_STRICT_EQUAL                   OPERATOR_LESSTHAN_EQUAL                + 1
-#define OPERATOR_STRICT_BACKSLASH_EQUAL         OPERATOR_STRICT_EQUAL                  + 1
-#define OPERATOR_STRICT_GREATERTHAN             OPERATOR_STRICT_BACKSLASH_EQUAL        + 1
-#define OPERATOR_STRICT_BACKSLASH_GREATERTHAN   OPERATOR_STRICT_GREATERTHAN            + 1
-#define OPERATOR_STRICT_LESSTHAN                OPERATOR_STRICT_BACKSLASH_GREATERTHAN  + 1
-#define OPERATOR_STRICT_BACKSLASH_LESSTHAN      OPERATOR_STRICT_LESSTHAN               + 1
-#define OPERATOR_STRICT_GREATERTHAN_EQUAL       OPERATOR_STRICT_BACKSLASH_LESSTHAN     + 1
-#define OPERATOR_STRICT_LESSTHAN_EQUAL          OPERATOR_STRICT_GREATERTHAN_EQUAL      + 1
-#define OPERATOR_LESSTHAN_GREATERTHAN           OPERATOR_STRICT_LESSTHAN_EQUAL         + 1
-#define OPERATOR_GREATERTHAN_LESSTHAN           OPERATOR_LESSTHAN_GREATERTHAN          + 1
-#define OPERATOR_AND                            OPERATOR_GREATERTHAN_LESSTHAN          + 1
-#define OPERATOR_OR                             OPERATOR_AND                           + 1
-#define OPERATOR_XOR                            OPERATOR_OR                            + 1
-#define OPERATOR_BACKSLASH                      OPERATOR_XOR                           + 1
+#define   TERM_IF      (TERM_KEYWORD | TERM_THEN)
 
 
-/* token extended types - instruction keywords */
-#define KEYWORD_ADDRESS            1
-#define KEYWORD_ARG                KEYWORD_ADDRESS           + 1
-#define KEYWORD_CALL               KEYWORD_ARG               + 1
-#define KEYWORD_DO                 KEYWORD_CALL              + 1
-#define KEYWORD_DROP               KEYWORD_DO                + 1
-#define KEYWORD_EXIT               KEYWORD_DROP              + 1
-#define KEYWORD_IF                 KEYWORD_EXIT              + 1
-#define KEYWORD_INTERPRET          KEYWORD_IF                + 1
-#define KEYWORD_ITERATE            KEYWORD_INTERPRET         + 1
-#define KEYWORD_LEAVE              KEYWORD_ITERATE           + 1
-#define KEYWORD_METHOD             KEYWORD_LEAVE             + 1
-#define KEYWORD_NOP                KEYWORD_METHOD            + 1
-#define KEYWORD_NUMERIC            KEYWORD_NOP               + 1
-#define KEYWORD_OPTIONS            KEYWORD_NUMERIC           + 1
-#define KEYWORD_PARSE              KEYWORD_OPTIONS           + 1
-#define KEYWORD_PROCEDURE          KEYWORD_PARSE             + 1
-#define KEYWORD_PULL               KEYWORD_PROCEDURE         + 1
-#define KEYWORD_PUSH               KEYWORD_PULL              + 1
-#define KEYWORD_QUEUE              KEYWORD_PUSH              + 1
-#define KEYWORD_REPLY              KEYWORD_QUEUE             + 1
-#define KEYWORD_RETURN             KEYWORD_REPLY             + 1
-#define KEYWORD_SAY                KEYWORD_RETURN            + 1
-#define KEYWORD_SELECT             KEYWORD_SAY               + 1
-#define KEYWORD_SIGNAL             KEYWORD_SELECT            + 1
-#define KEYWORD_TRACE              KEYWORD_SIGNAL            + 1
-#define KEYWORD_VAR                KEYWORD_TRACE             + 1
-#define KEYWORD_GUARD              KEYWORD_VAR               + 1
-#define KEYWORD_USE                KEYWORD_GUARD             + 1
-#define KEYWORD_INITPROC           KEYWORD_USE               + 1
-#define KEYWORD_EXPOSE             KEYWORD_INITPROC          + 1
-#define KEYWORD_RAISE              KEYWORD_EXPOSE            + 1
-#define KEYWORD_ELSE               KEYWORD_RAISE             + 1
-#define KEYWORD_THEN               KEYWORD_ELSE              + 1
-#define KEYWORD_END                KEYWORD_THEN              + 1
-#define KEYWORD_OTHERWISE          KEYWORD_END               + 1
-#define KEYWORD_IFTHEN             KEYWORD_OTHERWISE         + 1
-#define KEYWORD_WHENTHEN           KEYWORD_IFTHEN            + 1
-#define KEYWORD_WHEN               KEYWORD_WHENTHEN          + 1
-#define KEYWORD_ASSIGNMENT         KEYWORD_WHEN              + 1
-#define KEYWORD_COMMAND            KEYWORD_ASSIGNMENT        + 1
-#define KEYWORD_MESSAGE            KEYWORD_COMMAND           + 1
-#define KEYWORD_LABEL              KEYWORD_MESSAGE           + 1
-#define KEYWORD_ENDIF              KEYWORD_LABEL             + 1
-#define KEYWORD_BLOCK              KEYWORD_ENDIF             + 1
-#define KEYWORD_FIRST              KEYWORD_BLOCK             + 1
-#define KEYWORD_LAST               KEYWORD_FIRST             + 1
-#define KEYWORD_ENDELSE            KEYWORD_LAST              + 1
-#define KEYWORD_ENDTHEN            KEYWORD_ENDELSE           + 1
-#define KEYWORD_ENDWHEN            KEYWORD_ENDTHEN           + 1
-#define KEYWORD_REQUIRES           KEYWORD_ENDWHEN           + 1
-#define KEYWORD_CLASS              KEYWORD_REQUIRES          + 1
-#define KEYWORD_INSTRUCTION        KEYWORD_CLASS             + 1
-#define KEYWORD_FORWARD            KEYWORD_INSTRUCTION       + 1
-#define KEYWORD_LOOP               KEYWORD_FORWARD           + 1
-#define KEYWORD_LIBRARY            KEYWORD_LOOP              + 1
-
-/* token extended types - instruction option keywords */
-#define SUBKEY_ARG         1
-#define SUBKEY_BY          SUBKEY_ARG         + 1
-#define SUBKEY_DIGITS      SUBKEY_BY          + 1
-#define SUBKEY_END         SUBKEY_DIGITS      + 1
-#define SUBKEY_ELSE        SUBKEY_END         + 1
-#define SUBKEY_ENGINEERING SUBKEY_ELSE        + 1
-#define SUBKEY_EXPOSE      SUBKEY_ENGINEERING + 1
-#define SUBKEY_FOR         SUBKEY_EXPOSE      + 1
-#define SUBKEY_FOREVER     SUBKEY_FOR         + 1
-#define SUBKEY_FORM        SUBKEY_FOREVER     + 1
-#define SUBKEY_FUZZ        SUBKEY_FORM        + 1
-#define SUBKEY_LINEIN      SUBKEY_FUZZ        + 1
-#define SUBKEY_LOWER       SUBKEY_LINEIN      + 1
-#define SUBKEY_CASELESS    SUBKEY_LOWER       + 1
-#define SUBKEY_NAME        SUBKEY_CASELESS    + 1
-#define SUBKEY_NOVALUE     SUBKEY_NAME        + 1
-#define SUBKEY_OFF         SUBKEY_NOVALUE     + 1
-#define SUBKEY_ON          SUBKEY_OFF         + 1
-#define SUBKEY_OTHERWISE   SUBKEY_ON          + 1
-#define SUBKEY_OVER        SUBKEY_OTHERWISE   + 1
-#define SUBKEY_PULL        SUBKEY_OVER        + 1
-#define SUBKEY_SCIENTIFIC  SUBKEY_PULL        + 1
-#define SUBKEY_SOURCE      SUBKEY_SCIENTIFIC  + 1
-#define SUBKEY_THEN        SUBKEY_SOURCE      + 1
-#define SUBKEY_TO          SUBKEY_THEN        + 1
-#define SUBKEY_UNTIL       SUBKEY_TO          + 1
-#define SUBKEY_UPPER       SUBKEY_UNTIL       + 1
-#define SUBKEY_VALUE       SUBKEY_UPPER       + 1
-#define SUBKEY_VAR         SUBKEY_VALUE       + 1
-#define SUBKEY_VERSION     SUBKEY_VAR         + 1
-#define SUBKEY_WHEN        SUBKEY_VERSION     + 1
-#define SUBKEY_WHILE       SUBKEY_WHEN        + 1
-#define SUBKEY_WITH        SUBKEY_WHILE       + 1
-#define SUBKEY_DESCRIPTION SUBKEY_WITH        + 1
-#define SUBKEY_ADDITIONAL  SUBKEY_DESCRIPTION + 1
-#define SUBKEY_RESULT      SUBKEY_ADDITIONAL  + 1
-#define SUBKEY_ARRAY       SUBKEY_RESULT      + 1
-#define SUBKEY_RETURN      SUBKEY_ARRAY       + 1
-#define SUBKEY_EXIT        SUBKEY_RETURN      + 1
-#define SUBKEY_CONTINUE    SUBKEY_EXIT        + 1
-#define SUBKEY_CLASS       SUBKEY_CONTINUE    + 1
-#define SUBKEY_MESSAGE     SUBKEY_CLASS       + 1
-#define SUBKEY_ARGUMENTS   SUBKEY_MESSAGE     + 1
-#define SUBKEY_LABEL       SUBKEY_ARGUMENTS   + 1
-#define SUBKEY_STRICT      SUBKEY_LABEL       + 1
-#define SUBKEY_TRUE        SUBKEY_STRICT      + 1
-#define SUBKEY_FALSE       SUBKEY_TRUE        + 1
-
-/* token extended types - end of clause */
-#define CLAUSEEND_EOF         2301
-#define CLAUSEEND_SEMICOLON   2302
-#define CLAUSEEND_EOL         2303
-#define CLAUSEEND_NULL        2304
-
-/* directive types */
-#define DIRECTIVE_REQUIRES  2401
-#define DIRECTIVE_CLASS     2402
-#define DIRECTIVE_METHOD    2403
-#define DIRECTIVE_ROUTINE   2404
-#define DIRECTIVE_ATTRIBUTE 2405
-#define DIRECTIVE_CONSTANT  2406
-#define DIRECTIVE_OPTIONS   2407
-
-/* directive sub-keywords */
-#define SUBDIRECTIVE_PUBLIC      2501
-#define SUBDIRECTIVE_METACLASS   2502
-#define SUBDIRECTIVE_INHERIT     2503
-#define SUBDIRECTIVE_PRIVATE     2504
-#define SUBDIRECTIVE_GUARDED     2505
-#define SUBDIRECTIVE_CLASS       2506
-#define SUBDIRECTIVE_EXTERNAL    2507
-#define SUBDIRECTIVE_SUBCLASS    2508
-#define SUBDIRECTIVE_UNGUARDED   2509
-#define SUBDIRECTIVE_MIXINCLASS  2510
-#define SUBDIRECTIVE_ATTRIBUTE   2511
-#define SUBDIRECTIVE_PROTECTED   2512
-#define SUBDIRECTIVE_ABSTRACT    2513
-#define SUBDIRECTIVE_UNPROTECTED 2514
-#define SUBDIRECTIVE_GET         2515
-#define SUBDIRECTIVE_SET         2516
-#define SUBDIRECTIVE_LIBRARY     2517
-#define SUBDIRECTIVE_DIGITS      2518
-#define SUBDIRECTIVE_FORM        2519
-#define SUBDIRECTIVE_FUZZ        2520
-#define SUBDIRECTIVE_TRACE       2521
-
-
-/* condition keywords */
-#define CONDITION_ANY        2601
-#define CONDITION_ERROR      2602
-#define CONDITION_FAILURE    2603
-#define CONDITION_HALT       2604
-#define CONDITION_NOMETHOD   2605
-#define CONDITION_NOSTRING   2606
-#define CONDITION_NOTREADY   2607
-#define CONDITION_NOVALUE    2608
-#define CONDITION_PROPAGATE  2609
-#define CONDITION_SYNTAX     2610
-#define CONDITION_USER       2611
-#define CONDITION_LOSTDIGITS 2612
-
-/* builtin function codes */
-#define  NO_BUILTIN                0   /* builtin function not found        */
-
-#define  BUILTIN_ABBREV            1
-#define  BUILTIN_ABS               BUILTIN_ABBREV           + 1
-#define  BUILTIN_ADDRESS           BUILTIN_ABS              + 1
-#define  BUILTIN_ARG               BUILTIN_ADDRESS          + 1
-#define  BUILTIN_B2X               BUILTIN_ARG              + 1
-#define  BUILTIN_BITAND            BUILTIN_B2X              + 1
-#define  BUILTIN_BITOR             BUILTIN_BITAND           + 1
-#define  BUILTIN_BITXOR            BUILTIN_BITOR            + 1
-#define  BUILTIN_C2D               BUILTIN_BITXOR           + 1
-#define  BUILTIN_C2X               BUILTIN_C2D              + 1
-#define  BUILTIN_CENTER            BUILTIN_C2X              + 1
-#define  BUILTIN_CENTRE            BUILTIN_CENTER           + 1
-#define  BUILTIN_CHANGESTR         BUILTIN_CENTRE           + 1
-#define  BUILTIN_CHARIN            BUILTIN_CHANGESTR        + 1
-#define  BUILTIN_CHAROUT           BUILTIN_CHARIN           + 1
-#define  BUILTIN_CHARS             BUILTIN_CHAROUT          + 1
-#define  BUILTIN_COMPARE           BUILTIN_CHARS            + 1
-#define  BUILTIN_CONDITION         BUILTIN_COMPARE          + 1
-#define  BUILTIN_COPIES            BUILTIN_CONDITION        + 1
-#define  BUILTIN_COUNTSTR          BUILTIN_COPIES           + 1
-#define  BUILTIN_D2C               BUILTIN_COUNTSTR         + 1
-#define  BUILTIN_D2X               BUILTIN_D2C              + 1
-#define  BUILTIN_DATATYPE          BUILTIN_D2X              + 1
-#define  BUILTIN_DATE              BUILTIN_DATATYPE         + 1
-#define  BUILTIN_DELSTR            BUILTIN_DATE             + 1
-#define  BUILTIN_DELWORD           BUILTIN_DELSTR           + 1
-#define  BUILTIN_DIGITS            BUILTIN_DELWORD          + 1
-#define  BUILTIN_ERRORTEXT         BUILTIN_DIGITS           + 1
-#define  BUILTIN_FORM              BUILTIN_ERRORTEXT        + 1
-#define  BUILTIN_FORMAT            BUILTIN_FORM             + 1
-#define  BUILTIN_FUZZ              BUILTIN_FORMAT           + 1
-#define  BUILTIN_INSERT            BUILTIN_FUZZ             + 1
-#define  BUILTIN_LASTPOS           BUILTIN_INSERT           + 1
-#define  BUILTIN_LEFT              BUILTIN_LASTPOS          + 1
-#define  BUILTIN_LENGTH            BUILTIN_LEFT             + 1
-#define  BUILTIN_LINEIN            BUILTIN_LENGTH           + 1
-#define  BUILTIN_LINEOUT           BUILTIN_LINEIN           + 1
-#define  BUILTIN_LINES             BUILTIN_LINEOUT          + 1
-#define  BUILTIN_MAX               BUILTIN_LINES            + 1
-#define  BUILTIN_MIN               BUILTIN_MAX              + 1
-#define  BUILTIN_OVERLAY           BUILTIN_MIN              + 1
-#define  BUILTIN_POS               BUILTIN_OVERLAY          + 1
-#define  BUILTIN_QUEUED            BUILTIN_POS              + 1
-#define  BUILTIN_RANDOM            BUILTIN_QUEUED           + 1
-#define  BUILTIN_REVERSE           BUILTIN_RANDOM           + 1
-#define  BUILTIN_RIGHT             BUILTIN_REVERSE          + 1
-#define  BUILTIN_SIGN              BUILTIN_RIGHT            + 1
-#define  BUILTIN_SOURCELINE        BUILTIN_SIGN             + 1
-#define  BUILTIN_SPACE             BUILTIN_SOURCELINE       + 1
-#define  BUILTIN_STREAM            BUILTIN_SPACE            + 1
-#define  BUILTIN_STRIP             BUILTIN_STREAM           + 1
-#define  BUILTIN_SUBSTR            BUILTIN_STRIP            + 1
-#define  BUILTIN_SUBWORD           BUILTIN_SUBSTR           + 1
-#define  BUILTIN_SYMBOL            BUILTIN_SUBWORD          + 1
-#define  BUILTIN_TIME              BUILTIN_SYMBOL           + 1
-#define  BUILTIN_TRACE             BUILTIN_TIME             + 1
-#define  BUILTIN_TRANSLATE         BUILTIN_TRACE            + 1
-#define  BUILTIN_TRUNC             BUILTIN_TRANSLATE        + 1
-#define  BUILTIN_VALUE             BUILTIN_TRUNC            + 1
-#define  BUILTIN_VAR               BUILTIN_VALUE            + 1
-#define  BUILTIN_VERIFY            BUILTIN_VAR              + 1
-#define  BUILTIN_WORD              BUILTIN_VERIFY           + 1
-#define  BUILTIN_WORDINDEX         BUILTIN_WORD             + 1
-#define  BUILTIN_WORDLENGTH        BUILTIN_WORDINDEX        + 1
-#define  BUILTIN_WORDPOS           BUILTIN_WORDLENGTH       + 1
-#define  BUILTIN_WORDS             BUILTIN_WORDPOS          + 1
-#define  BUILTIN_X2B               BUILTIN_WORDS            + 1
-#define  BUILTIN_X2C               BUILTIN_X2B              + 1
-#define  BUILTIN_X2D               BUILTIN_X2C              + 1
-#define  BUILTIN_XRANGE            BUILTIN_X2D              + 1
-// not sorted in alphabetically for security reasons...
-// WARNING: this makes tokenized scripts incomptabile with
-//          previous tokenized scripts (new tokenized scripts
-//          cannot be run on older versions if USERID is used)
-//          the magic number in the tokenized format is increased
-//          for that reason
-#define  BUILTIN_USERID            BUILTIN_XRANGE           + 1
-#define  BUILTIN_LOWER             BUILTIN_USERID           + 1
-#define  BUILTIN_UPPER             BUILTIN_LOWER            + 1
-#define  BUILTIN_RXFUNCADD         BUILTIN_UPPER            + 1
-#define  BUILTIN_RXFUNCDROP        BUILTIN_RXFUNCADD        + 1
-#define  BUILTIN_RXFUNCQUERY       BUILTIN_RXFUNCDROP       + 1
-#define  BUILTIN_ENDLOCAL          BUILTIN_RXFUNCQUERY      + 1
-#define  BUILTIN_SETLOCAL          BUILTIN_ENDLOCAL         + 1
-#define  BUILTIN_QUEUEEXIT         BUILTIN_SETLOCAL         + 1
-#define  BUILTIN_QUALIFY           BUILTIN_QUEUEEXIT        + 1
-
-
-
-class RexxToken : public RexxInternalObject {
+class RexxToken : public RexxInternalObject
+{
  public:
-  void      *operator new(size_t);
-  inline void      *operator new(size_t size, void *ptr) {return ptr;};
-  inline void  operator delete(void *) { ; }
-  inline void  operator delete(void *, void *) { ; }
+    void        *operator new(size_t);
+    inline void  operator delete(void *) { ; }
 
-  RexxToken(int, int, RexxString *, SourceLocation &);
-  inline RexxToken(RESTORETYPE restoreType) { ; };
-  void       live(size_t);
-  void       liveGeneral(int reason);
-  void       flatten(RexxEnvelope *);
-  inline void setStart(size_t l, size_t o) { tokenLocation.setStart(l, o); }
-  inline void setEnd(size_t l, size_t o) { tokenLocation.setEnd(l, o); }
+    inline RexxToken() { }
+    inline RexxToken(TokenClass c, SourceLocation &l, TokenSubclass sc = SUBTYPE_NONE, RexxString *v = OREF_NULL) : classId(c), subclass(sc),
+        stringValue(v), numeric(SUBTYPE_NONE), tokenLocation(l) { };
 
-  inline bool       isVariable() { return (this->subclass == SYMBOL_VARIABLE || this->subclass == SYMBOL_STEM || this->subclass == SYMBOL_COMPOUND); };
-  inline bool       isLiteral()  { return (this->classId == TOKEN_LITERAL); };
-  inline bool       isSymbolOrLiteral()  { return (this->classId == TOKEN_LITERAL) || (this->classId == TOKEN_SYMBOL); };
-  inline bool       isConstant()  { return (this->classId == TOKEN_SYMBOL && this->subclass != SYMBOL_VARIABLE && this->subclass != SYMBOL_STEM && this->subclass != SYMBOL_COMPOUND); };
-  inline bool       isSymbol() { return (this->classId == TOKEN_SYMBOL); };
-  inline bool       isOperator() { return (this->classId == TOKEN_OPERATOR); }
-  inline bool       isEndOfClause() { return this->classId == TOKEN_EOC; }
-  inline void       setNumeric(int v)   { this->numeric = v; };
-  inline const SourceLocation &getLocation() { return tokenLocation; }
-  inline void  setLocation(SourceLocation &l) { tokenLocation = l; }
-         void       checkAssignment(RexxSource *source, RexxString *newValue);
+    inline RexxToken(RESTORETYPE restoreType) { ; };
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
 
-  SourceLocation tokenLocation;        /* token source location             */
-  RexxString *value;                   /* token string value                */
-  int         classId;                 /* class of token                    */
-  int         subclass;                /* specialized type of token         */
-  int         numeric;                 /* even further specialization       */
+    inline void setStart(size_t l, size_t o) { tokenLocation.setStart(l, o); }
+    inline void setEnd(size_t l, size_t o) { tokenLocation.setEnd(l, o); }
+
+    inline bool       isType(TokenClass t) { return classId == t; }
+    inline bool       isType(TokenClass t1, TokenClass t2) { return classId == t1 || classId == t2; }
+    inline bool       isType(TokenClass t1, TokenClass t2, TokenClass t3) { return classId == t1 || classId == t2 || classId == t3; }
+    inline bool       isSubtype(TokenSubclass t) { return subclass == t; }
+    inline bool       isSubtype(TokenSubclass t1, TokenSubclass t2) { return subclass == t1 || subclass == t2; }
+    inline TokenClass type() { return classId; }
+    inline TokenSubclass  subtype() { return subclass; }
+    inline RexxString *value() { return stringValue; }
+           RexxString *upperValue();
+    inline void       setType(TokenClass t) { classId = t; }
+    inline void       setSubtype(TokenSubclass t) { subclass = t; }
+    inline void       setValue(RexxString *v) { stringValue = v; }
+    inline bool       isVariable() { return (subclass == SYMBOL_VARIABLE || subclass == SYMBOL_STEM || subclass == SYMBOL_COMPOUND); };
+    inline bool       isSimpleVariable() { return subclass == SYMBOL_VARIABLE; };
+    inline bool       isVariableOrDot() { return isVariable() || subclass == SYMBOL_DOTSYMBOL; };
+    inline bool       isDotSymbol() { return (subclass == SYMBOL_DOTSYMBOL); }
+    inline bool       isDot() { return (subclass == SYMBOL_DUMMY); }
+    inline bool       isLiteral()  { return classId == TOKEN_LITERAL; };
+    inline bool       isSymbolOrLiteral()  { return classId == TOKEN_LITERAL || this->classId == TOKEN_SYMBOL; };
+    inline bool       isConstant()  { return (classId == TOKEN_SYMBOL && subclass != SYMBOL_VARIABLE && subclass != SYMBOL_STEM && subclass != SYMBOL_COMPOUND); };
+    inline bool       isNumericSymbol()  { return (subclass == SYMBOL_CONSTANT); }
+    inline bool       isIntegerConstant() { return numeric == INTEGER_CONSTANT; }
+    inline bool       isSymbol() { return classId == TOKEN_SYMBOL; };
+    inline bool       isOperator() { return classId == TOKEN_OPERATOR; }
+    inline bool       isBlank() { return classId == TOKEN_BLANK; }
+    inline bool       isLeftParen() { return classId == TOKEN_LEFT; }
+    inline bool       isRightParen() { return classId == TOKEN_RIGHT; }
+    inline bool       isLeftBracket() { return classId == TOKEN_SQLEFT; }
+    inline bool       isRightBracket() { return classId == TOKEN_SQRIGHT; }
+    inline bool       isEndOfClause() { return classId == TOKEN_EOC; }
+    inline bool       isBlankSignificant() { return (classId == TOKEN_SYMBOL || classId == TOKEN_LITERAL ||
+         classId == TOKEN_RIGHT || classId == TOKEN_SQRIGHT); }
+    inline bool       isMessageOperator() { return classId == TOKEN_TILDE || classId == TOKEN_DTILDE || classId == TOKEN_SQLEFT; }
+    inline void       setNumeric(TokenSubclass v)   { this->numeric = v; };
+    inline const SourceLocation &getLocation() { return tokenLocation; }
+    inline void       setLocation(const SourceLocation &l) { tokenLocation = l; }
+           void       checkAssignment(LanguageParser *parser, RexxString *newValue);
+           int        precedence();
+           bool       isTerminator(int);
+           RexxString *displayValue();
+
+           InstructionKeyword keyword();
+           InstructionSubKeyword subKeyword();
+           BuiltinCode builtin();
+           ConditionKeyword condition();
+           InstructionSubKeyword parseOption();
+           DirectiveKeyword keyDirective();
+           DirectiveSubKeyword subDirective();
+    static BuiltinCode resolveBuiltin(RexxString *value);
+
+protected:
+
+    static int resolveKeyword(RexxString *token, KeywordEntry *table, size_t table_size);
+
+    RexxString   *stringValue;             // token string value
+    TokenClass    classId;                 // class of token
+    TokenSubclass subclass;                // specialized type of token
+    TokenSubclass numeric;                 // even further specialization
+    SourceLocation tokenLocation;          // token source location
+
+    // Tables of different keywords using in various contexts.
+    static KeywordEntry directives[];
+    static KeywordEntry keywordInstructions[];
+    static KeywordEntry subKeywords[];
+    static KeywordEntry builtinFunctions[];
+    static KeywordEntry conditionKeywords[];
+    static KeywordEntry parseOptions[];
+    static KeywordEntry subDirectives[];
 };
 
-
-inline RexxArray *new_arrayOfTokens(size_t n) { return memoryObject.newObjects(sizeof(RexxToken), n, T_Token); }
-inline RexxToken *new_token(int c, int s, RexxString *v, SourceLocation &l) { return new RexxToken (c, s, v, l); }
+inline RexxToken *new_token(TokenClass c, TokenSubclass s, RexxString *v, SourceLocation &l) { return new RexxToken (c, l, s, v); }
 
 #endif

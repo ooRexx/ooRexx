@@ -886,7 +886,7 @@ STDMETHODIMP OrxScript::Invoke(DISPID pDispID, REFIID riid, LCID plcid,
         VariantInit(mResult);
 
         // convert the arguments to Rexx objects for the call
-        RexxArrayObject args = dispParms2RexxArray(&dp);
+        RexxArrayObject args = dispParms2ArrayClass(&dp);
 
         runMethod(context, this, pDIDData->RexxCode, args, mResult, cd);
         FPRINTF2(logfile,"Rexx returned the following:\n");

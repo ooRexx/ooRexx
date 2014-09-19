@@ -1,11 +1,11 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.ibm.com/developerworks/oss/CPLv1.0.htm                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -48,9 +48,10 @@
 #include "ActivationApiContexts.hpp"
 #include "SysInterpreterInstance.hpp"
 
-class RexxDirectory;
+class DirectoryClass;
 class CommandHandler;
 class PackageClass;
+class RoutineClass;
 
 class InterpreterInstance : public RexxInternalObject
 {
@@ -59,42 +60,41 @@ class InterpreterInstance : public RexxInternalObject
 friend class SysInterpreterInstance;
 public:
 
+    void *operator new(size_t);
+    inline void  operator delete(void *) {;}
+
     // methods associated with actual interpreter instances
     inline InterpreterInstance(RESTORETYPE restoreType) { ; }
     InterpreterInstance();
 
-    inline void *operator new(size_t, void *ptr) {return ptr;}
-    inline void  operator delete(void *, void *) {;}
-    void *operator new(size_t);
-    inline void  operator delete(void *) {;}
-    void        live(size_t);
-    void        liveGeneral(int);
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason);
 
     RexxString *getDefaultEnvironment() { return defaultEnvironment; }
-    RexxActivity *getRootActivity() { return rootActivity; }
+    Activity *getRootActivity() { return rootActivity; }
 
     InterpreterInstance(ExitHandler *handlers);
-    void addActivity(RexxActivity *);
-    void removeActivity(RexxActivity *);
-    void initialize(RexxActivity *activity, RexxOption *options);
+    void addActivity(Activity *);
+    void removeActivity(Activity *);
+    void initialize(Activity *activity, RexxOption *options);
     bool terminate();
     void waitForCompletion();
     void attachToProcess();
-    RexxActivity *enterOnCurrentThread();
-    RexxActivity *attachThread();
+    Activity *enterOnCurrentThread();
+    Activity *attachThread();
     int attachThread(RexxThreadContext *&attachedContext);
     bool detachThread();
-    bool detachThread(RexxActivity *activity);
-    RexxActivity *spawnActivity(RexxActivity *parent);
+    bool detachThread(Activity *activity);
+    Activity *spawnActivity(Activity *parent);
     void exitCurrentThread();
-    RexxActivity *findActivity(thread_id_t threadId);
-    RexxActivity *findActivity();
-    RexxDirectory *getLocalEnvironment();
+    Activity *findActivity(thread_id_t threadId);
+    Activity *findActivity();
+    DirectoryClass *getLocalEnvironment();
     void copyExits(ExitHandler *target);
-    void activityDeactivated(RexxActivity *activity);
+    void activityDeactivated(Activity *activity);
     void addGlobalReference(RexxObject *o);
     void removeGlobalReference(RexxObject *o);
-    bool poolActivity(RexxActivity *activity);
+    bool poolActivity(Activity *activity);
     ExitHandler &getExitHandler(int exitNum) {  return exits[exitNum - 1]; }
     void setExitHandler(int exitNum, REXXPFN e) { getExitHandler(exitNum).setEntryPoint(e); }
     void setExitHandler(int exitNum, const char *e) { getExitHandler(exitNum).resolve(e); }
@@ -109,15 +109,15 @@ public:
     RexxInstance *getInstanceContext() { return &context.instanceContext; }
     RexxThreadContext *getRootThreadContext();
     RexxObject *getLocalEnvironment(RexxString *);
-    inline RexxDirectory *getLocal() { return localEnvironment; }
+    inline DirectoryClass *getLocal() { return localEnvironment; }
     void addCommandHandler(const char *name, const char *registeredName);
     void addCommandHandler(const char *name, REXXPFN entryPoint);
     CommandHandler *resolveCommandHandler(RexxString *name);
-    PackageClass *getRequiresFile(RexxActivity *activity, RexxString *name);
-    PackageClass *loadRequires(RexxActivity *activity, RexxString *shortName, const char *data, size_t length);
-    PackageClass *loadRequires(RexxActivity *activity, RexxString *shortName, RexxArray *source);
-    PackageClass *loadRequires(RexxActivity *activity, RexxString *shortName, RexxString *fullName);
-    void          runRequires(RexxActivity *activity, RexxString *name, RoutineClass *code);
+    PackageClass *getRequiresFile(Activity *activity, RexxString *name);
+    PackageClass *loadRequires(Activity *activity, RexxString *shortName, ArrayClass *source);
+    PackageClass *loadRequires(Activity *activity, RexxString *shortName, RexxString *fullName);
+    PackageClass *loadRequires(Activity *activity, RexxString *shortName, const char *data, size_t length);
+    void          runRequires(Activity *activity, RexxString *name, RoutineClass *code);
     void          addRequiresFile(RexxString *shortName, RexxString *fullName, PackageClass *package);
     inline void   setupProgram(RexxActivation *activation)
     {
@@ -129,24 +129,24 @@ protected:
     bool processOptions(RexxOption *options);
 
 
-    InstanceContext      context;            // our externalizied instance context
+    InstanceContext        context;          // our externalizied instance context
     SysInterpreterInstance sysInstance;      // our platform specific helper
 
-    RexxActivity        *rootActivity;       // the initial activity
+    Activity            *rootActivity;       // the initial activity
     SecurityManager     *securityManager;    // the security manager for our instance
-    RexxList            *allActivities;      // all activities associated with this instance
-    RexxIdentityTable   *globalReferences;   // our global reference table
+    QueueClass          *allActivities;      // all activities associated with this instance
+    IdentityTable       *globalReferences;   // our global reference table
     RexxString          *defaultEnvironment; // the default address environment
     RexxString          *searchPath;         // additional Rexx search path
-    RexxList            *searchExtensions;   // extensions to search on for external calls
+    ArrayClass          *searchExtensions;   // extensions to search on for external calls
     void                *applicationData;    // application specific data
-    RexxDirectory       *localEnvironment;   // the current local environment
-    RexxDirectory       *commandHandlers;    // our list of command environment handlers
-    RexxDirectory       *requiresFiles;      // our list of requires files used by this instance
+    DirectoryClass      *localEnvironment;   // the current local environment
+    StringTable         *commandHandlers;    // our list of command environment handlers
+    StringTable         *requiresFiles;      // our list of requires files used by this instance
 
-    bool terminating;                // shutdown indicator
-    bool terminated;                 // last thread cleared indicator
-    SysSemaphore terminationSem;     // used to signal that everything has shutdown
+    bool terminating;                        // shutdown indicator
+    bool terminated;                         // last thread cleared indicator
+    SysSemaphore terminationSem;             // used to signal that everything has shutdown
 
     // array of system exits
     ExitHandler exits[RXNOOFEXITS + 1];

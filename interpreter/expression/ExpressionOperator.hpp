@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -44,51 +44,53 @@
 #ifndef Included_RexxExpressionOperator
 #define Included_RexxExpressionOperator
 
-class RexxExpressionOperator : public RexxInternalObject {
+#include "Token.hpp"
+
+class RexxExpressionOperator : public RexxInternalObject
+{
  public:
-  inline RexxExpressionOperator() { ; }
+    inline RexxExpressionOperator() { ; }
 
-  RexxExpressionOperator(int, RexxObject *, RexxObject *);
-  inline RexxExpressionOperator(RESTORETYPE restoreType) { ; };
-  void   live(size_t);
-  void   liveGeneral(int reason);
-  void   flatten(RexxEnvelope *);
+    RexxExpressionOperator(TokenSubclass, RexxObject *, RexxObject *);
+    inline RexxExpressionOperator(RESTORETYPE restoreType) { ; };
+    virtual void   live(size_t);
+    virtual void   liveGeneral(MarkReason reason);
+    virtual void   flatten(Envelope *);
 
-  inline const char *operatorName() { return operatorNames[oper - 1]; }
+    inline const char *operatorName() { return operatorNames[oper]; }
 
 protected:
     // table of operator names
     static const char *operatorNames[];
 
-    int  oper;                           /* operator to perform               */
-    RexxObject *right_term;              /* right term of the operator        */
-    RexxObject *left_term;               /* left term of the operator         */
+    TokenSubclass  oper;                 // operation to perform
+    RexxObject *right_term;              // right term of the operator
+    RexxObject *left_term;               // left term of the operator
 };
 
-class RexxBinaryOperator : public RexxExpressionOperator {
+class RexxBinaryOperator : public RexxExpressionOperator
+{
  public:
-  void  *operator new(size_t);
-  inline void  *operator new(size_t size, void *ptr) {return ptr;};
-  inline void  operator delete(void *) { ; }
-  inline void  operator delete(void *, void *) { ; }
+    void  *operator new(size_t);
+    inline void  operator delete(void *) { ; }
 
-  inline RexxBinaryOperator(int op, RexxObject *left, RexxObject *right)
-      : RexxExpressionOperator(op, left, right) { ; }
-  inline RexxBinaryOperator(RESTORETYPE restoreType) { ; };
-  RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
+    inline RexxBinaryOperator(TokenSubclass op, RexxObject *left, RexxObject *right)
+        : RexxExpressionOperator(op, left, right) { ; }
+    inline RexxBinaryOperator(RESTORETYPE restoreType) { ; };
+
+    virtual RexxObject *evaluate(RexxActivation *, ExpressionStack *);
 };
 
 
 class RexxUnaryOperator : public RexxExpressionOperator {
  public:
-  void  *operator new(size_t);
-  inline void  *operator new(size_t size, void *ptr) {return ptr;};
-  inline void  operator delete(void *) { ; }
-  inline void  operator delete(void *, void *) { ; }
+    void  *operator new(size_t);
+    inline void  operator delete(void *) { ; }
 
-  inline RexxUnaryOperator(int op, RexxObject *left)
-      : RexxExpressionOperator(op, left, OREF_NULL) { ; }
-  inline RexxUnaryOperator(RESTORETYPE restoreType) { ; };
-  RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
+    inline RexxUnaryOperator(TokenSubclass op, RexxObject *left)
+        : RexxExpressionOperator(op, left, OREF_NULL) { ; }
+    inline RexxUnaryOperator(RESTORETYPE restoreType) { ; };
+
+    virtual RexxObject *evaluate(RexxActivation *, ExpressionStack *);
 };
 #endif

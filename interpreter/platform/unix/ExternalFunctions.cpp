@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -69,10 +69,9 @@
 #include "RexxCore.h"                         /* global REXX definitions        */
 #include "StringClass.hpp"
 #include "ArrayClass.hpp"
-#include "RexxActivity.hpp"
+#include "Activity.hpp"
 #include "RexxActivation.hpp"
 #include "MethodClass.hpp"
-#include "SourceFile.hpp"
 #include "RexxInternalApis.h"          /* Get private REXXAPI API's         */
 #include "ActivityManager.hpp"
 #include "ProtectedObject.hpp"
@@ -292,7 +291,7 @@ RexxRoutine2(RexxStringObject, sysFilespec, CSTRING, option, CSTRING, name)
             {                                /* compatibility to windows, no drive   */
                 return context->NullString();
             }
-        
+
         case FILESPEC_LOCATION:          /* extract the file name               */
             {                                /* everything to left of slash        */
                 return context->String(name, pathEnd - name);
@@ -344,14 +343,14 @@ RexxRoutine2(RexxStringObject, sysFilespec, CSTRING, option, CSTRING, name)
 /******************************************************************************/
 bool SystemInterpreter::invokeExternalFunction(
   RexxActivation * activation,         /* Current Activation                */
-  RexxActivity   * activity,           /* activity in use                   */
+  Activity   * activity,           /* activity in use                   */
   RexxString     * target,             /* Name of external function         */
   RexxObject    ** arguments,          /* Argument array                    */
   size_t           argcount,           /* count of arguments                */
   RexxString     * calltype,           /* Type of call                      */
   ProtectedObject &result)
 {
-    if (activation->callMacroSpaceFunction(target, arguments, argcount, calltype, MS_PREORDER, result))
+    if (activation->callMacroSpaceFunction(target, arguments, argcount, calltype, RXMACRO_SEARCH_BEFORE, result))
     {
         return true;
     }
@@ -367,7 +366,7 @@ bool SystemInterpreter::invokeExternalFunction(
     }
     /* function.  If still not found,    */
     /* then raise an error               */
-    if (activation->callMacroSpaceFunction(target, arguments, argcount, calltype, MS_POSTORDER, result))
+    if (activation->callMacroSpaceFunction(target, arguments, argcount, calltype, RXMACRO_SEARCH_AFTER, result))
     {
         return true;
     }
@@ -407,7 +406,7 @@ RexxObject *SystemInterpreter::pushEnvironment(RexxActivation *context)
  */
 RexxObject *SystemInterpreter::popEnvironment(RexxActivation *context)
 {
-    RexxBuffer *Current =  (RexxBuffer *)context->popEnvironment();/*  block, if ixisted.               */
+    BufferClass *Current =  (BufferClass *)context->popEnvironment();/*  block, if ixisted.               */
     if (TheNilObject == Current)         /* nothing saved?                    */
     {
         return TheFalseObject;             /* return failure value              */
@@ -435,7 +434,7 @@ RexxObject *SystemInterpreter::popEnvironment(RexxActivation *context)
 
 RexxObject *SystemInterpreter::buildEnvlist()
 {
-    RexxBuffer *newBuffer;               /* Buffer object to hold env  */
+    BufferClass *newBuffer;               /* Buffer object to hold env  */
     char      **Environment;             /* environment pointer        */
     size_t      size = 0;                /* size of the new buffer     */
     char       *curr_dir;                /* current directory          */

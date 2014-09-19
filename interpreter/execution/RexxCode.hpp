@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -44,64 +44,66 @@
 #ifndef Included_RexxCode
 #define Included_RexxCode
 
-#include "SourceFile.hpp"
-#include "MethodClass.hpp"
-#include "RoutineClass.hpp"
+#include "BaseCode.hpp"
+#include "RexxLocalVariables.hpp"
+#include "PackageClass.hpp"
+#include "ActivationSettings.hpp"
 
-                                       /* various types of call or function */
-                                       /* calls                             */
-#define INTERNAL_ROUTINE 1
-#define BUILTIN_ROUTINE  2
-#define EXTERNAL_ROUTINE 3
-#define DYNAMIC_ROUTINE  4
+class StringTable;
 
+/**
+ * The fundamental unit of Rexx code execution.  This
+ * anchors the pieces that allow Rexx code to run.
+ */
 class RexxCode : public BaseCode
 {
   public:
    void *operator new(size_t);
-   inline void *operator new(size_t size, void *ptr) {return ptr;};
    inline void  operator delete(void *) { ; }
-   inline void  operator delete(void *, void *) { ; }
 
-   RexxCode(RexxSource *, RexxInstruction *, RexxDirectory *, size_t, size_t);
+   // an extra added to the stack frame needed because the count
+   // is generally off by one or two.
+   const size_t MINIMUM_STACK_FRAME = 10;
+
+   RexxCode(PackageClass *s, SourceLocation &loc, RexxInstruction *i, StringTable *l = OREF_NULL, size_t f = 0, size_t v = RexxLocalVariables::FIRST_VARIABLE_INDEX);
    inline RexxCode(RESTORETYPE restoreType) { ; };
-   void live(size_t);
-   void liveGeneral(int reason);
-   void flatten(RexxEnvelope *);
-   RexxArray      * getSource();
-   RexxObject     * setSecurityManager(RexxObject *);
-   RexxString     * getProgramName();
-   inline RexxSource *getSourceObject() { return source; }
+
+   virtual void live(size_t);
+   virtual void liveGeneral(MarkReason reason);
+   virtual void flatten(Envelope *);
+
+   ArrayClass      *getSource();
+   RexxObject      *setSecurityManager(RexxObject *);
+   RexxString      *getProgramName();
+
    inline RexxInstruction *getFirstInstruction() { return start; }
-   inline RexxDirectory   *getLabels() { return labels; }
+   inline StringTable *getLabels() { return labels; }
    inline size_t getMaxStackSize() { return maxStack; }
    inline size_t getLocalVariableSize() { return vdictSize; }
-   inline RexxDirectory *getLocalRoutines() { return source->getLocalRoutines(); }
-   inline RexxDirectory *getPublicRoutines() { return source->getPublicRoutines(); }
-   inline void setLocalRoutines(RexxDirectory *r) { source->setLocalRoutines(r); }
-   inline void setPublicRoutines(RexxDirectory *r) { source->setPublicRoutines(r); }
-   inline bool isTraceable() { return source->isTraceable(); }
-   inline bool isInterpret() { return source->isInterpret(); }
-   inline RexxString *extract(SourceLocation &l) { return source->extract(l); }
-   inline SecurityManager *getSecurityManager() { return source->getSecurityManager(); }
-   inline void        install(RexxActivation *activation) { source->install(activation); }
-   inline RexxCode *interpret(RexxString *s, size_t n) { return source->interpret(s, labels, n); }
-   inline RexxDirectory *getMethods() { return source->getMethods(); };
-   inline RexxDirectory *getRoutines() { return source->getRoutines(); };
-   inline RoutineClass *findRoutine(RexxString *n) { return source->findRoutine(n); }
-   inline RexxString *resolveProgramName(RexxActivity *activity, RexxString *name) { return source->resolveProgramName(activity, name); }
-   inline void        mergeRequired(RexxSource *s) { source->mergeRequired(s); }
-   virtual void run(RexxActivity *, RexxMethod *, RexxObject *, RexxString *, RexxObject **,  size_t, ProtectedObject &);
-   virtual void call(RexxActivity *, RoutineClass *, RexxString *,  RexxObject **, size_t, RexxString *, RexxString *, int, ProtectedObject &);
-   virtual void call(RexxActivity *, RoutineClass *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
+   inline StringTable *getLocalRoutines() { return package->getLocalRoutines(); }
+   inline StringTable *getPublicRoutines() { return package->getPublicRoutines(); }
+   inline bool isTraceable() { return package->isTraceable(); }
+   inline RexxString *extract(SourceLocation &l) { return package->extract(l); }
+   inline SecurityManager *getSecurityManager() { return package->getSecurityManager(); }
+   inline void        install(RexxActivation *activation) { package->install(activation); }
+   inline StringTable *getMethods() { return package->getMethods(); };
+   inline StringTable *getRoutines() { return package->getRoutines(); };
+   inline RoutineClass *findRoutine(RexxString *n) { return package->findRoutine(n); }
+   inline RexxString *resolveProgramName(Activity *activity, RexxString *name) { return package->resolveProgramName(activity, name); }
+   inline void        mergeRequired(PackageClass *s) { package->mergeRequired(s); }
+          RexxCode *interpret(RexxString *source, size_t lineNumber);
+
+   // overrides for BaseCode classes
+   virtual void run(Activity *, MethodClass *, RexxObject *, RexxString *, RexxObject **,  size_t, ProtectedObject &);
+   virtual void call(Activity *, RoutineClass *, RexxString *,  RexxObject **, size_t, RexxString *, RexxString *, ActivationContext, ProtectedObject &);
+   virtual void call(Activity *, RoutineClass *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
 
 protected:
 
-  RexxSource      * source;            // the source this code belongs to.
-  RexxInstruction * start;             /* root of parse tree                */
-  RexxDirectory   * labels;            /* root of label list                */
-  size_t            maxStack;          /* maximum stack depth               */
-  size_t            vdictSize;         /* size of variable dictionary       */
-
+    RexxInstruction *start;             // root of instruction tree
+    SourceLocation   location;          // the full location of the code.
+    StringTable     *labels;            // list of labels in this code block
+    size_t           maxStack;          // maximum stack depth
+    size_t           vdictSize;         // size of variable dictionary
 };
 #endif

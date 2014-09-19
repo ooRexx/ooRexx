@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.ibm.com/developerworks/oss/CPLv1.0.htm                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -53,13 +53,13 @@
 
 class InterpreterInstance;
 class RexxDateTime;
-class RexxBuffer;
+class BufferClass;
 
 class SystemInterpreter
 {
 public:
     static void live(size_t);
-    static void liveGeneral(int reason);
+    static void liveGeneral(MarkReason reason);
 
     static void processStartup(HINSTANCE mod);
     static void processShutdown();
@@ -81,8 +81,6 @@ public:
     static RexxString *qualifyFileSystemName(RexxString *name);
     static void getCurrentTime(RexxDateTime *Date );
     static RexxString *getSystemName();
-    static RexxString *getSystemVersion();
-    static RexxString *getInternalSystemName();
     static RexxString *getSourceString(RexxString *callType, RexxString * programName);
     static void releaseResultMemory(void *);
     static void *allocateResultMemory(size_t);
@@ -91,10 +89,10 @@ public:
     static RexxString *getUserid();
     static bool valueFunction(RexxString *name, RexxObject *newValue, RexxString *selector, RexxObject *&result);
     static RexxString *getDefaultAddressName();
-    static bool invokeExternalFunction(RexxActivation *, RexxActivity *, RexxString *, RexxObject **, size_t, RexxString *, ProtectedObject &);
+    static bool invokeExternalFunction(RexxActivation *, Activity *, RexxString *, RexxObject **, size_t, RexxString *, ProtectedObject &);
     static void validateAddressName(RexxString *name );
-    static void loadImage(char **imageBuffer, size_t *imageSize);
-    static RexxBuffer *readProgram(const char *file_name);
+    static void loadImage(char *&imageBuffer, size_t &imageSize);
+    static BufferClass *readProgram(const char *file_name);
     static bool processSignal(DWORD dwCtrlType);
 
     static ULONG exceptionHostProcessId;

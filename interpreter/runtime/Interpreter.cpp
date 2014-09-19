@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.ibm.com/developerworks/oss/CPLv1.0.htm                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -48,19 +48,20 @@
 
 #include "Interpreter.hpp"
 #include "ActivityManager.hpp"
-#include "ListClass.hpp"
+#include "QueueClass.hpp"
 #include "SystemInterpreter.hpp"
 #include "InterpreterInstance.hpp"
 #include "DirectoryClass.hpp"
 #include "ProtectedObject.hpp"
 #include "RexxInternalApis.h"
 #include "PackageManager.hpp"
+#include "PackageClass.hpp"
 
 
 // global resource lock
 SysMutex Interpreter::resourceLock;
 
-RexxList *Interpreter::interpreterInstances = OREF_NULL;
+QueueClass *Interpreter::interpreterInstances = OREF_NULL;
 
 // the local server object
 RexxObject *Interpreter::localServer = OREF_NULL;
@@ -71,15 +72,24 @@ bool Interpreter::active = false;
 bool Interpreter::timeSliceElapsed = false;
 
 
+// exit return codes.
+const int RC_OK         = 0;
+const int RC_LOGIC_ERROR  = 2;
+
 /**
  * Initialize the interpreter subsystem.
  */
 void Interpreter::init()
 {
-    interpreterInstances = new_list();
+    interpreterInstances = new_queue();
 }
 
 
+/**
+ * Normal garbage collection live marking
+ *
+ * @param liveMark The current live mark.
+ */
 void Interpreter::live(size_t liveMark)
 {
     memory_mark(interpreterInstances);
@@ -87,9 +97,15 @@ void Interpreter::live(size_t liveMark)
     memory_mark(versionNumber);
 }
 
-void Interpreter::liveGeneral(int reason)
+
+/**
+ * Flatten the table contents as part of a saved program.
+ *
+ * @param envelope The envelope we're flattening into.
+ */
+void Interpreter::liveGeneral(MarkReason reason)
 {
-  if (!memoryObject.savingImage())
+  if (reason != SAVINGIMAGE)
   {
       memory_mark_general(interpreterInstances);
       memory_mark_general(localServer);
@@ -97,19 +113,24 @@ void Interpreter::liveGeneral(int reason)
   }
 }
 
+
+/**
+ * Perform new process initialization.
+ */
 void Interpreter::processStartup()
 {
     // the locks get create in order
     createLocks();
     ActivityManager::createLocks();
-    RexxMemory::createLocks();
     // make sure we have a session queue created for this process
 }
 
+
+/**
+ * Handle end of process shutdown.
+ */
 void Interpreter::processShutdown()
 {
-    // we destroy the locks in reverse order
-    RexxMemory::closeLocks();
     ActivityManager::closeLocks();
     closeLocks();
 }
@@ -134,24 +155,25 @@ void Interpreter::startInterpreter(InterpreterStartupMode mode)
         memoryObject.initialize(mode == RUN_MODE);
         RexxCreateSessionQueue();
         // create our instances list
-        interpreterInstances = new_list();
+        interpreterInstances = new_queue();
         // if we have a local server created already, don't recurse.
         if (localServer == OREF_NULL)
         {
             // Get an instance.  This also gives the root activity of the instance
             // the kernel lock.
             InstanceBlock instance;
-            /* get the local environment         */
-            /* get the server class              */
-            RexxObject *server_class = env_find(new_string("!SERVER"));
+
+            // TODO:  Reassess the server class
+            // get the server class from the local environment
+            RexxObject *server_class = (RexxObject *)TheRexxPackage->findClass(new_string("LOCALSERVER"));
 
             // NOTE:  This is a second block so that the
             // protected object's destructor gets run before
             // the activity is removed as the current activity.
             {
                 ProtectedObject result;
-                /* create a new server object        */
-                server_class->messageSend(OREF_NEW, OREF_NULL, 0, result);
+                // create a new server object
+                server_class->messageSend(GlobalNames::NEW, OREF_NULL, 0, result);
                 localServer = (RexxObject *)result;
             }
         }
@@ -171,7 +193,7 @@ void Interpreter::initLocal()
     {
         // this will insert the initial .local objects
         ProtectedObject result;
-        localServer->messageSend(OREF_INITINSTANCE, OREF_NULL, 0, result);
+        localServer->messageSend(new_string("INITINSTANCE"), OREF_NULL, 0, result);
     }
 }
 
@@ -206,7 +228,7 @@ bool Interpreter::terminateInterpreter()
             try
             {
                 // this may seem funny, but we need to create an instance
-                // so shut down so that the package manager can unload
+                // to shut down so that the package manager can unload
                 // the libraries (it needs to pass a RexxThreadContext
                 // pointer out to package unloaders, if they are defined)
                 InstanceBlock instance;
@@ -262,7 +284,7 @@ int Interpreter::createInstance(RexxInstance *&instance, RexxThreadContext *&thr
         instance = newInstance->getInstanceContext();
         threadContext = newInstance->getRootThreadContext();
         // we need to ensure we release the kernel lock before returning
-        RexxActivity *activity = newInstance->getRootActivity();
+        Activity *activity = newInstance->getRootActivity();
         activity->releaseAccess();
         // the activity needs to be in a deactivated state when we return.
         activity->deactivate();
@@ -307,7 +329,7 @@ InterpreterInstance *Interpreter::createInterpreterInstance(RexxOption *options)
 
     // get a new root activity for this instance.  This might result in pushing a prior level down the
     // stack
-    RexxActivity *rootActivity = ActivityManager::getRootActivity();
+    Activity *rootActivity = ActivityManager::getRootActivity();
     // ok, we have an active activity here, so now we can allocate a new instance and bootstrap everything.
     InterpreterInstance *instance = new InterpreterInstance();
 
@@ -351,13 +373,9 @@ bool Interpreter::haltAllActivities(RexxString *name)
     ResourceSection lock;
     bool result = true;
 
-    for (size_t listIndex = interpreterInstances->firstIndex() ;
-         listIndex != LIST_END;
-         listIndex = interpreterInstances->nextIndex(listIndex) )
+    for (size_t listIndex = 1; listIndex <= interpreterInstances->items(); listIndex++)
     {
-                                         /* Get the next message object to    */
-                                         /*process                            */
-        InterpreterInstance *instance = (InterpreterInstance *)interpreterInstances->getValue(listIndex);
+        InterpreterInstance *instance = (InterpreterInstance *)interpreterInstances->get(listIndex);
         // halt every thing
         result = result && instance->haltAllActivities(name);
     }
@@ -457,27 +475,29 @@ InstanceBlock::~InstanceBlock()
  *               The condition data structure that is populated with the
  *               condition information.
  */
-void Interpreter::decodeConditionData(RexxDirectory *conditionObj, RexxCondition *condData)
+void Interpreter::decodeConditionData(DirectoryClass *conditionObj, RexxCondition *condData)
 {
-    memset(condData, 0, sizeof(RexxCondition));
-    condData->code = messageNumber((RexxString *)conditionObj->at(OREF_CODE));
-    // just return the major part
-    condData->rc = messageNumber((RexxString *)conditionObj->at(OREF_RC))/1000;
-    condData->conditionName = (RexxStringObject)conditionObj->at(OREF_CONDITION);
+    using namespace GlobalNames;
 
-    RexxObject *temp = conditionObj->at(OREF_NAME_MESSAGE);
+    memset(condData, 0, sizeof(RexxCondition));
+    condData->code = messageNumber((RexxString *)conditionObj->get(CODE));
+    // just return the major part
+    condData->rc = messageNumber((RexxString *)conditionObj->get(RC))/1000;
+    condData->conditionName = (RexxStringObject)conditionObj->get(CONDITION);
+
+    RexxObject *temp = (RexxObject *)conditionObj->get(MESSAGE);
     if (temp != OREF_NULL)
     {
         condData->message = (RexxStringObject)temp;
     }
 
-    temp = conditionObj->at(OREF_ERRORTEXT);
+    temp = (RexxObject *)conditionObj->get(ERRORTEXT);
     if (temp != OREF_NULL)
     {
         condData->errortext = (RexxStringObject)temp;
     }
 
-    temp = conditionObj->at(OREF_DESCRIPTION);
+    temp = (RexxObject *)conditionObj->get(DESCRIPTION);
     if (temp != OREF_NULL)
     {
         condData->description = (RexxStringObject)temp;
@@ -485,7 +505,7 @@ void Interpreter::decodeConditionData(RexxDirectory *conditionObj, RexxCondition
 
     // this could be raised by a termination exit, so there might not be
     // position information available
-    temp = conditionObj->at(OREF_POSITION);
+    temp = (RexxObject *)conditionObj->get(POSITION);
     if (temp != OREF_NULL)
     {
         condData->position = ((RexxInteger *)temp)->wholeNumber();
@@ -495,13 +515,13 @@ void Interpreter::decodeConditionData(RexxDirectory *conditionObj, RexxCondition
         condData->position = 0;
     }
 
-    temp = conditionObj->at(OREF_PROGRAM);
+    temp = (RexxObject *)conditionObj->get(PROGRAM);
     if (temp != OREF_NULL)
     {
         condData->program = (RexxStringObject)temp;
     }
 
-    temp = conditionObj->at(OREF_ADDITIONAL);
+    temp = (RexxObject *)conditionObj->get(ADDITIONAL);
     if (temp != OREF_NULL)
     {
         condData->additional = (RexxArrayObject)temp;
@@ -519,16 +539,31 @@ void Interpreter::decodeConditionData(RexxDirectory *conditionObj, RexxCondition
  */
 RexxClass *Interpreter::findClass(RexxString *className)
 {
-    RexxString *internalName = className->upper();   /* upper case it                     */
-    /* send message to .local            */
-    RexxClass *classObject = (RexxClass *)(ActivityManager::getLocalEnvironment(internalName));
+    RexxString *internalName = className->upper();
+
+    // we search first in the REXX package to ensure that we are
+    // getting the real system classes rather than overrides somebody
+    // has poked into the environment
+
+    RexxClass *classObject;
+
+    if (TheRexxPackage != OREF_NULL)
+    {
+        classObject = TheRexxPackage->findClass(internalName);
+        if (classObject != OREF_NULL)
+        {
+            return classObject;
+        }
+    }
+
+    // if not in the system package, check .local, then .environment
+    classObject = (RexxClass *)(ActivityManager::getLocalEnvironment(internalName));
     if (classObject != OREF_NULL)
     {
         return classObject;
     }
 
-    /* last chance, try the environment  */
-    return(RexxClass *)(TheEnvironment->at(internalName));
+    return (RexxClass *)(TheEnvironment->get(internalName));
 }
 
 
@@ -539,62 +574,65 @@ RexxClass *Interpreter::findClass(RexxString *className)
  */
 RexxString *Interpreter::getCurrentQueue()
 {
-    RexxObject *queue = ActivityManager::getLocalEnvironment(OREF_REXXQUEUE);
+    RexxObject *queue = ActivityManager::getLocalEnvironment(GlobalNames::STDQUE);
 
-    if (queue == OREF_NULL)              /* no queue?                         */
+    if (queue == OREF_NULL)              // no queue set?  Default to session
     {
-        return OREF_SESSION;             // the session queue is the default
+        return GlobalNames::SESSION;     // the session queue is the default
     }
     // get the current name from the queue object.
-    return(RexxString *)queue->sendMessage(OREF_GET);
+    return(RexxString *)queue->sendMessage(GlobalNames::GET);
 }
 
 
+/**
+ * Raise a fatal logic error
+ *
+ * @param desc   The error description.
+ */
 void Interpreter::logicError (const char *desc)
-/******************************************************************************/
-/* Function:  Raise a fatal logic error                                       */
-/******************************************************************************/
 {
     printf("Logic error: %s\n",desc);
     exit(RC_LOGIC_ERROR);
 }
 
-wholenumber_t Interpreter::messageNumber(
-    RexxString *errorcode)             /* REXX error code as string         */
-/******************************************************************************/
-/* Function:  Parse out the error code string into the messagecode valuey     */
-/******************************************************************************/
+
+/**
+ * Parse out the error code string into the messagecode value
+ *
+ * @param errorcode The string version of the error code.
+ *
+ * @return The composite error code number.
+ */
+wholenumber_t Interpreter::messageNumber(RexxString *errorcode)
 {
-    const char *decimalPoint;            /* location of decimalPoint in errorcode*/
     wholenumber_t  primary = 0;          /* Primary part of error code, major */
     wholenumber_t  secondary = 0;        /* Secondary protion (minor code)    */
     wholenumber_t  count;
 
-    /* make sure we get errorcode as str */
+    // make sure this is a string
     errorcode = (RexxString *)errorcode->stringValue();
-    /* scan to decimal Point or end of   */
-    /* error code.                       */
+    // scan to decimal Point or end of error code.
+    const char *decimalPoint;
     for (decimalPoint = errorcode->getStringData(), count = 0; *decimalPoint && *decimalPoint != '.'; decimalPoint++, count++);
 
     // must be a whole number in the correct range
     if (!new_string(errorcode->getStringData(), count)->numberValue(primary) || primary < 1 || primary >= 100)
     {
-        /* Nope raise an error.              */
         reportException(Error_Expression_result_raise);
 
     }
+
     // now shift over the decimal position.
     primary *= 1000;
 
-
+    // was there a decimal point in this?
     if (*decimalPoint)
-    {                 /* Was there a decimal point specified?*/
-                      /* is the subcode invalid or too big?*/
+    {
         if (!new_string(decimalPoint + 1, errorcode->getLength() - count -1)->numberValue(secondary) || secondary < 0  || secondary >= 1000)
         {
-            /* Yes, raise an error.              */
             reportException(Error_Expression_result_raise);
         }
     }
-    return primary + secondary;          /* add two portions together, return */
+    return primary + secondary;          // add two portions together, return
 }

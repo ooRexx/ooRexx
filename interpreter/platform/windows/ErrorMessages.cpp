@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -35,9 +35,6 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
 #include "RexxMessageNumbers.h"
 #include "RexxCore.h"
 #include "StringClass.hpp"
@@ -65,17 +62,15 @@ RexxString * SystemInterpreter::getMessageHeader(wholenumber_t code )
  */
 RexxString *SystemInterpreter::getMessageText(wholenumber_t code)
 {
-    char dataArea[256];                /* buf addr to return message        */
-
-                                       /* loop through looking for the      */
-                                       /* error code                        */
+    char dataArea[256];
+    // if we can load this message, return as a string value.
     if (loadMessage(code, dataArea, sizeof(dataArea) - 1))
     {
         return new_string(dataArea);
     }
     else
     {
-        return OREF_NULL;                  /* no message retrieved              */
+        return OREF_NULL;
     }
 }
 

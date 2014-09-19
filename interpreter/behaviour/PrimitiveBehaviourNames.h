@@ -3,12 +3,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.ibm.com/developerworks/oss/CPLv1.0.htm                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -77,6 +77,8 @@
 #define TheSupplierClassBehaviour    (&RexxBehaviour::primitiveBehaviours[T_SupplierClass])
 #define TheTableBehaviour      (&RexxBehaviour::primitiveBehaviours[T_Table])
 #define TheTableClassBehaviour    (&RexxBehaviour::primitiveBehaviours[T_TableClass])
+#define TheStringTableBehaviour      (&RexxBehaviour::primitiveBehaviours[T_StringTable])
+#define TheStringTableClassBehaviour    (&RexxBehaviour::primitiveBehaviours[T_StringTableClass])
 #define TheRelationBehaviour      (&RexxBehaviour::primitiveBehaviours[T_Relation])
 #define TheRelationClassBehaviour    (&RexxBehaviour::primitiveBehaviours[T_RelationClass])
 #define TheMutableBufferBehaviour      (&RexxBehaviour::primitiveBehaviours[T_MutableBuffer])
@@ -97,9 +99,13 @@
 #define TheIdentityTableClassBehaviour    (&RexxBehaviour::primitiveBehaviours[T_IdentityTableClass])
 #define TheStackFrameBehaviour      (&RexxBehaviour::primitiveBehaviours[T_StackFrame])
 #define TheStackFrameClassBehaviour    (&RexxBehaviour::primitiveBehaviours[T_StackFrameClass])
+#define TheSetBehaviour      (&RexxBehaviour::primitiveBehaviours[T_Set])
+#define TheSetClassBehaviour    (&RexxBehaviour::primitiveBehaviours[T_SetClass])
+#define TheBagBehaviour      (&RexxBehaviour::primitiveBehaviours[T_Bag])
+#define TheBagClassBehaviour    (&RexxBehaviour::primitiveBehaviours[T_BagClass])
 #define TheNilObjectBehaviour      (&RexxBehaviour::primitiveBehaviours[T_NilObject])
 #define TheBehaviourBehaviour      (&RexxBehaviour::primitiveBehaviours[T_Behaviour])
-#define TheRexxSourceBehaviour      (&RexxBehaviour::primitiveBehaviours[T_RexxSource])
+#define TheMethodDictionaryBehaviour      (&RexxBehaviour::primitiveBehaviours[T_MethodDictionary])
 #define TheLibraryPackageBehaviour      (&RexxBehaviour::primitiveBehaviours[T_LibraryPackage])
 #define TheRexxCodeBehaviour      (&RexxBehaviour::primitiveBehaviours[T_RexxCode])
 #define TheNativeMethodBehaviour      (&RexxBehaviour::primitiveBehaviours[T_NativeMethod])
@@ -110,9 +116,12 @@
 #define TheAttributeSetterCodeBehaviour      (&RexxBehaviour::primitiveBehaviours[T_AttributeSetterCode])
 #define TheConstantGetterCodeBehaviour      (&RexxBehaviour::primitiveBehaviours[T_ConstantGetterCode])
 #define TheAbstractCodeBehaviour      (&RexxBehaviour::primitiveBehaviours[T_AbstractCode])
-#define TheHashTableBehaviour      (&RexxBehaviour::primitiveBehaviours[T_HashTable])
-#define TheListTableBehaviour      (&RexxBehaviour::primitiveBehaviours[T_ListTable])
 #define TheSmartBufferBehaviour      (&RexxBehaviour::primitiveBehaviours[T_SmartBuffer])
+#define TheIdentityHashContentsBehaviour      (&RexxBehaviour::primitiveBehaviours[T_IdentityHashContents])
+#define TheEqualityHashContentsBehaviour      (&RexxBehaviour::primitiveBehaviours[T_EqualityHashContents])
+#define TheMultiValueContentsBehaviour      (&RexxBehaviour::primitiveBehaviours[T_MultiValueContents])
+#define TheStringHashContentsBehaviour      (&RexxBehaviour::primitiveBehaviours[T_StringHashContents])
+#define TheListContentsBehaviour      (&RexxBehaviour::primitiveBehaviours[T_ListContents])
 #define TheVariableBehaviour      (&RexxBehaviour::primitiveBehaviours[T_Variable])
 #define TheVariableDictionaryBehaviour      (&RexxBehaviour::primitiveBehaviours[T_VariableDictionary])
 #define TheVariableTermBehaviour      (&RexxBehaviour::primitiveBehaviours[T_VariableTerm])
@@ -129,8 +138,22 @@
 #define TheAddressInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_AddressInstruction])
 #define TheAssignmentInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_AssignmentInstruction])
 #define TheCallInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_CallInstruction])
+#define TheDynamicCallInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_DynamicCallInstruction])
+#define TheCallOnInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_CallOnInstruction])
 #define TheCommandInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_CommandInstruction])
-#define TheDoInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_DoInstruction])
+#define TheSimpleDoInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_SimpleDoInstruction])
+#define TheDoForeverInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_DoForeverInstruction])
+#define TheDoOverInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_DoOverInstruction])
+#define TheDoOverUntilInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_DoOverUntilInstruction])
+#define TheDoOverWhileInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_DoOverWhileInstruction])
+#define TheControlledDoInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_ControlledDoInstruction])
+#define TheControlledDoUntilInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_ControlledDoUntilInstruction])
+#define TheControlledDoWhileInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_ControlledDoWhileInstruction])
+#define TheDoWhileInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_DoWhileInstruction])
+#define TheDoUntilInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_DoUntilInstruction])
+#define TheDoCountInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_DoCountInstruction])
+#define TheDoCountUntilInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_DoCountUntilInstruction])
+#define TheDoCountWhileInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_DoCountWhileInstruction])
 #define TheDropInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_DropInstruction])
 #define TheElseInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_ElseInstruction])
 #define TheEndInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_EndInstruction])
@@ -140,6 +163,7 @@
 #define TheForwardInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_ForwardInstruction])
 #define TheGuardInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_GuardInstruction])
 #define TheIfInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_IfInstruction])
+#define TheCaseWhenInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_CaseWhenInstruction])
 #define TheInterpretInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_InterpretInstruction])
 #define TheLabelInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_LabelInstruction])
 #define TheLeaveInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_LeaveInstruction])
@@ -156,7 +180,10 @@
 #define TheReturnInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_ReturnInstruction])
 #define TheSayInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_SayInstruction])
 #define TheSelectInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_SelectInstruction])
+#define TheSelectCaseInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_SelectCaseInstruction])
 #define TheSignalInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_SignalInstruction])
+#define TheDynamicSignalInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_DynamicSignalInstruction])
+#define TheSignalOnInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_SignalOnInstruction])
 #define TheThenInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_ThenInstruction])
 #define TheTraceInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_TraceInstruction])
 #define TheUseInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_UseInstruction])
@@ -165,20 +192,30 @@
 #define TheRequiresDirectiveBehaviour      (&RexxBehaviour::primitiveBehaviours[T_RequiresDirective])
 #define TheCompoundElementBehaviour      (&RexxBehaviour::primitiveBehaviours[T_CompoundElement])
 #define TheParseTriggerBehaviour      (&RexxBehaviour::primitiveBehaviours[T_ParseTrigger])
+#define TheProgramSourceBehaviour      (&RexxBehaviour::primitiveBehaviours[T_ProgramSource])
+#define TheArrayProgramSourceBehaviour      (&RexxBehaviour::primitiveBehaviours[T_ArrayProgramSource])
+#define TheBufferProgramSourceBehaviour      (&RexxBehaviour::primitiveBehaviours[T_BufferProgramSource])
+#define TheFileProgramSourceBehaviour      (&RexxBehaviour::primitiveBehaviours[T_FileProgramSource])
+#define TheNumberArrayBehaviour      (&RexxBehaviour::primitiveBehaviours[T_NumberArray])
 #define TheMemoryBehaviour      (&RexxBehaviour::primitiveBehaviours[T_Memory])
 #define TheInternalStackBehaviour      (&RexxBehaviour::primitiveBehaviours[T_InternalStack])
-#define TheStackBehaviour      (&RexxBehaviour::primitiveBehaviours[T_Stack])
+#define TheLiveStackBehaviour      (&RexxBehaviour::primitiveBehaviours[T_LiveStack])
+#define ThePushThroughStackBehaviour      (&RexxBehaviour::primitiveBehaviours[T_PushThroughStack])
 #define TheActivityBehaviour      (&RexxBehaviour::primitiveBehaviours[T_Activity])
 #define TheActivationBehaviour      (&RexxBehaviour::primitiveBehaviours[T_Activation])
 #define TheNativeActivationBehaviour      (&RexxBehaviour::primitiveBehaviours[T_NativeActivation])
 #define TheActivationFrameBufferBehaviour      (&RexxBehaviour::primitiveBehaviours[T_ActivationFrameBuffer])
 #define TheEnvelopeBehaviour      (&RexxBehaviour::primitiveBehaviours[T_Envelope])
+#define TheLanguageParserBehaviour      (&RexxBehaviour::primitiveBehaviours[T_LanguageParser])
 #define TheClauseBehaviour      (&RexxBehaviour::primitiveBehaviours[T_Clause])
 #define TheTokenBehaviour      (&RexxBehaviour::primitiveBehaviours[T_Token])
 #define TheDoBlockBehaviour      (&RexxBehaviour::primitiveBehaviours[T_DoBlock])
 #define TheInterpreterInstanceBehaviour      (&RexxBehaviour::primitiveBehaviours[T_InterpreterInstance])
 #define TheSecurityManagerBehaviour      (&RexxBehaviour::primitiveBehaviours[T_SecurityManager])
 #define TheCommandHandlerBehaviour      (&RexxBehaviour::primitiveBehaviours[T_CommandHandler])
+#define TheMapBucketBehaviour      (&RexxBehaviour::primitiveBehaviours[T_MapBucket])
+#define TheMapTableBehaviour      (&RexxBehaviour::primitiveBehaviours[T_MapTable])
+#define TheTrapHandlerBehaviour      (&RexxBehaviour::primitiveBehaviours[T_TrapHandler])
 
 
 /* -------------------------------------------------------------------------- */

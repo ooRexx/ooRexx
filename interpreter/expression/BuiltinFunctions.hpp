@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -42,31 +42,64 @@
 /*                                                                            */
 /******************************************************************************/
 
-#ifndef OTPBIF_INCLUDED
-#define OTPBIF_INCLUDED
+#ifndef BuiltinFunctions_INCLUDED
+#define BuiltinFunctions_INCLUDED
 
-#define fix_args(x) stack->expandArgs(argcount, x##_MIN, x##_MAX, CHAR_##x)
-#define check_args(x) stack->expandArgs(argcount, x##_MIN, x##_MAX, CHAR_##x)
+// Builtin functions are called with all arguments on the expression stack.
+// Individual arguments are retrieved relative to the starting position using
+// the defines set up for each function
 
-#define get_arg(x,n) stack->peek(argcount - x##_##n)
+// makes sure that we have our minimum or maximum number of arguments.
+#define fix_args(x) stack->expandArgs(argcount, x##_Min, x##_Max, #x)
+#define check_args(x) stack->expandArgs(argcount, x##_Min, x##_Max, #x)
 
+// get an individual argument from the stack, by name.
+#define get_arg(x,n) (RexxObject *)stack->peek(argcount - x##_##n)
+
+// get an argument from the stack that is required to be a string value.
 #define required_string(x,n) stack->requiredStringArg(argcount - x##_##n)
 #define optional_string(x,n) ((argcount >= x##_##n) ? stack->optionalStringArg(argcount - x##_##n) : OREF_NULL)
 
-#define required_integer(x,n) stack->requiredIntegerArg(argcount - x##_##n, argcount, CHAR_##x)
-#define optional_integer(x,n) ((argcount >= x##_##n) ? stack->optionalIntegerArg(argcount - x##_##n, argcount, CHAR_##x) : OREF_NULL)
+// get an argument from the stack that is required to be an integer value
+#define required_integer(x,n) stack->requiredIntegerArg(argcount - x##_##n, argcount, #x)
+#define optional_integer(x,n) ((argcount >= x##_##n) ? stack->optionalIntegerArg(argcount - x##_##n, argcount, #x) : OREF_NULL)
 
-#define required_big_integer(x,n) stack->requiredBigIntegerArg(argcount - x##_##n, argcount, CHAR_##x)
-#define optional_big_integer(x,n) ((argcount >= x##_##n) ? stack->optionalBigIntegerArg(argcount - x##_##n, argcount, CHAR_##x) : OREF_NULL)
+// get an argument from the stack that is required to be a "big" integer argument,
+// such as a file position.
+#define required_big_integer(x,n) stack->requiredBigIntegerArg(argcount - x##_##n, argcount, #x)
+#define optional_big_integer(x,n) ((argcount >= x##_##n) ? stack->optionalBigIntegerArg(argcount - x##_##n, argcount, #x) : OREF_NULL)
 
-#define optional_argument(x,n) ((argcount >= x##_##n) ? stack->peek(argcount - x##_##n) : OREF_NULL )
+// tests for optional arguments
+#define optional_argument(x,n) ((argcount >= x##_##n) ? (RexxObject *)stack->peek(argcount - x##_##n) : OREF_NULL )
 #define arg_exists(x,n) ((argcount >= x##_##n) ? false : stack->peek(argcount - x##_##n) != OREF_NULL )
 #define arg_omitted(x,n) ((argcount < x##_##n) ? true : stack->peek(argcount - x##_##n) == OREF_NULL )
 
-#define BUILTIN(x) RexxObject *builtin_function_##x ( RexxActivation * context, size_t argcount, RexxExpressionStack *stack )
+// prototype declaration for a builtin function
+#define BUILTIN(x) RexxObject *builtin_function_##x ( RexxActivation * context, size_t argcount, ExpressionStack *stack )
 
-#define positive_integer(n,f,p) if (n <= 0) reportException(Error_Incorrect_call_positive, CHAR_##f, p, n)
-#define nonnegative_integer(n,f,p) if (n < 0) reportException(Error_Incorrect_call_nonnegative, CHAR_##f, p, n)
+// error reporting tests for integer type arguments
+#define positive_integer(n,f,p) if (n <= 0) reportException(Error_Incorrect_call_positive, #f, p, n)
+#define nonnegative_integer(n,f,p) if (n < 0) reportException(Error_Incorrect_call_nonnegative, #f, p, n)
 
 #define  ALPHANUM "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+#define optional_pad(x,n) ((argcount >= x##_##n) ? checkPadArgument(#x, x##_##n, stack->optionalStringArg(argcount - x##_##n)) : OREF_NULL)
+
+// checks if pad is a single character string
+inline RexxString *checkPadArgument(const char *pFuncName, size_t position, RexxString *pad)
+{
+    // pads are typically optional, so accept if not there.
+    if (pad == OREF_NULL)
+    {
+        return OREF_NULL;
+    }
+
+    if (pad->getLength() != 1)
+    {
+        reportException(Error_Incorrect_call_pad, pFuncName, new_integer(position), pad);
+    }
+
+    return pad;
+}
+
 #endif

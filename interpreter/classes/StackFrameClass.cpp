@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.ibm.com/developerworks/oss/CPLv1.0.htm                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -43,8 +43,17 @@
 /******************************************************************************/
 #include "RexxCore.h"
 #include "StackFrameClass.hpp"
+#include "MethodArguments.hpp"
 
 RexxClass *StackFrameClass::classInstance = OREF_NULL;   // singleton class instance
+
+// the constants for the different frame types
+const char *StackFrameClass::FRAME_COMPILE = "COMPILE";
+const char *StackFrameClass::FRAME_ROUTINE = "ROUTINE";
+const char *StackFrameClass::FRAME_METHOD = "METHOD";
+const char *StackFrameClass::FRAME_INTERNAL_CALL = "INTERNALCALL";
+const char *StackFrameClass::FRAME_INTERPRET = "INTERPRET";
+const char *StackFrameClass::FRAME_PROGRAM = "PROGRAM";
 
 /**
  * Create initial bootstrap objects
@@ -74,7 +83,7 @@ void *StackFrameClass::operator new(size_t size)
  *
  * @param a      The activation we're attached to.
  */
-StackFrameClass::StackFrameClass(const char *ty, RexxString *n, BaseExecutable *e, RexxObject *tg, RexxArray *a, RexxString *t, size_t l)
+StackFrameClass::StackFrameClass(const char *ty, RexxString *n, BaseExecutable *e, RexxObject *tg, ArrayClass *a, RexxString *t, size_t l)
 {
     type = ty;
     name = n;
@@ -82,7 +91,7 @@ StackFrameClass::StackFrameClass(const char *ty, RexxString *n, BaseExecutable *
     // return value if requested, so make this a nullstring.
     if (name == OREF_NULL)
     {
-        name = OREF_NULLSTRING;
+        name = GlobalNames::NULLSTRING;
     }
     executable = e;
     target = tg;
@@ -115,42 +124,42 @@ void StackFrameClass::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-    memory_mark(this->name);
-    memory_mark(this->executable);
-    memory_mark(this->traceLine);
-    memory_mark(this->arguments);
-    memory_mark(this->target);
-    memory_mark(this->objectVariables);
+    memory_mark(name);
+    memory_mark(executable);
+    memory_mark(traceLine);
+    memory_mark(arguments);
+    memory_mark(target);
+    memory_mark(objectVariables);
 }
 
-void StackFrameClass::liveGeneral(int reason)
+void StackFrameClass::liveGeneral(MarkReason reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-    memory_mark_general(this->name);
-    memory_mark_general(this->executable);
-    memory_mark_general(this->traceLine);
-    memory_mark_general(this->arguments);
-    memory_mark_general(this->target);
-    memory_mark_general(this->objectVariables);
+    memory_mark_general(name);
+    memory_mark_general(executable);
+    memory_mark_general(traceLine);
+    memory_mark_general(arguments);
+    memory_mark_general(target);
+    memory_mark_general(objectVariables);
 }
 
-void StackFrameClass::flatten(RexxEnvelope *envelope)
+void StackFrameClass::flatten(Envelope *envelope)
 /******************************************************************************/
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
 {
-  setUpFlatten(StackFrameClass)
+    setUpFlatten(StackFrameClass)
 
-  newThis->name = OREF_NULL;   // this never should be getting flattened, so sever the connection
-  newThis->executable = OREF_NULL;
-  newThis->traceLine = OREF_NULL;
-  newThis->arguments = OREF_NULL;
-  newThis->target = OREF_NULL;
-  newThis->objectVariables = OREF_NULL;
+    newThis->name = OREF_NULL;   // this never should be getting flattened, so sever the connection
+    newThis->executable = OREF_NULL;
+    newThis->traceLine = OREF_NULL;
+    newThis->arguments = OREF_NULL;
+    newThis->target = OREF_NULL;
+    newThis->objectVariables = OREF_NULL;
 
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
 
@@ -196,11 +205,7 @@ RexxString *StackFrameClass::getTraceLine()
  */
 RexxObject *StackFrameClass::getExecutable()
 {
-    if (executable == OREF_NULL)
-    {
-        return TheNilObject;
-    }
-    return executable;
+    return resultOrNil(executable);
 }
 
 /**
@@ -226,7 +231,7 @@ RexxObject *StackFrameClass::getLine()
  * @return An array of arguments.  Returns an empty array if no
  *         arguments.
  */
-RexxArray *StackFrameClass::getArguments()
+ArrayClass *StackFrameClass::getArguments()
 {
     if (arguments == OREF_NULL)
     {
@@ -244,14 +249,14 @@ RexxArray *StackFrameClass::getArguments()
  *
  * @return The Source object instance for the stack frame.
  */
-RexxSource *StackFrameClass::getSourceObject()
+PackageClass *StackFrameClass::getPackageObject()
 {
     if (executable == OREF_NULL)
     {
         return OREF_NULL;
     }
 
-    return executable->getSourceObject();
+    return executable->getPackageObject();
 }
 
 
@@ -262,11 +267,7 @@ RexxSource *StackFrameClass::getSourceObject()
  */
 RexxObject *StackFrameClass::getTarget()
 {
-    if (target == OREF_NULL)
-    {
-        return TheNilObject;
-    }
-    return target;
+    return resultOrNil(target);
 }
 
 /**

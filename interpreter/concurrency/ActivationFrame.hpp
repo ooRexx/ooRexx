@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.ibm.com/developerworks/oss/CPLv1.0.htm                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -38,19 +38,23 @@
 #ifndef ActivationFrame_Included
 #define ActivationFrame_Included
 
-#include "RexxActivity.hpp"
+#include "Activity.hpp"
 
 class RexxActivation;
-class RexxNativeActivation;
-class RexxMethod;
+class NativeActivation;
+class MethodClass;
 class StackFrameClass;
-class RexxSource;
+class LanguageParser;
 
+
+/**
+ * The base class for all stack frames.
+ */
 class ActivationFrame
 {
-friend class RexxActivity;
-public:
-    inline ActivationFrame(RexxActivity *a) : activity(a)
+friend class Activity;
+ public:
+    inline ActivationFrame(Activity *a) : activity(a)
     {
         // it would be better to have the activity class do this, but because
         // we're doing this with inline methods, we run into a bit of a
@@ -67,78 +71,97 @@ public:
     }
 
     virtual RexxString *messageName() = 0;
-    virtual RexxMethod *method() = 0;
+    virtual BaseExecutable *executable() = 0;
     virtual StackFrameClass *createStackFrame() = 0;
-    virtual RexxSource *getSource() = 0;
+    virtual PackageClass *getPackage() = 0;
 
-protected:
+ protected:
+
     ActivationFrame *next;             // the next activation frame in the chain
-    RexxActivity *activity;            // the activity we're running on
+    Activity *activity;            // the activity we're running on
 };
 
 
+/**
+ * A stack frame representing running Rexx code.
+ */
 class RexxActivationFrame : public ActivationFrame
 {
-public:
-    inline RexxActivationFrame(RexxActivity *a, RexxActivation *context) : ActivationFrame(a), activation(context) { }
+ public:
+    inline RexxActivationFrame(Activity *a, RexxActivation *context) : ActivationFrame(a), activation(context) { }
 
     virtual RexxString *messageName();
-    virtual RexxMethod *method();
+    virtual BaseExecutable *executable();
     virtual StackFrameClass *createStackFrame();
-    virtual RexxSource *getSource();
+    virtual PackageClass *getPackage();
 
-protected:
+ protected:
+
     RexxActivation *activation;        // the activation backing this frame
 };
 
 
+/**
+ * A stack frame representing running native code.
+ */
 class NativeActivationFrame : public ActivationFrame
 {
-public:
-    inline NativeActivationFrame(RexxActivity *a, RexxNativeActivation *context) : ActivationFrame(a), activation(context) { }
+ public:
+    inline NativeActivationFrame(Activity *a, NativeActivation *context) : ActivationFrame(a), activation(context) { }
 
     virtual RexxString *messageName();
-    virtual RexxMethod *method();
+    virtual BaseExecutable *executable();
     virtual StackFrameClass *createStackFrame();
-    virtual RexxSource *getSource();
+    virtual PackageClass *getPackage();
 
-protected:
-    RexxNativeActivation *activation;        // the activation backing this frame
+ protected:
+
+    NativeActivation *activation;        // the activation backing this frame
 };
 
 
+/**
+ * A frame representing an internal C++ method call.
+ */
 class InternalActivationFrame : public ActivationFrame
 {
-public:
-    inline InternalActivationFrame(RexxActivity *a, RexxString *n, RexxObject *t, RexxMethod *m, RexxObject **args, size_t c)
+ public:
+    inline InternalActivationFrame(Activity *a, RexxString *n, RexxObject *t, MethodClass *m, RexxObject **args, size_t c)
         : ActivationFrame(a), name(n), target(t), frameMethod(m), argPtr(args), count(c) { }
 
     virtual RexxString *messageName();
-    virtual RexxMethod *method();
+    virtual BaseExecutable *executable();
     virtual StackFrameClass *createStackFrame();
-    virtual RexxSource *getSource();
+    virtual PackageClass *getPackage();
 
-protected:
+ protected:
+
     RexxString *name;                        // message name associated with the invocation
-    RexxMethod *frameMethod;                 // the backing method object
+    MethodClass *frameMethod;                // the backing method object
     RexxObject *target;                      // method target
     RexxObject **argPtr;                     // arguments passed to this instance
     size_t       count;                      // count of arguments
 };
 
 
-class ParseActivationFrame : public ActivationFrame
+/**
+ * A frame representing a source file being translated.
+ * A lot of syntax errors are generated with one of these
+ * at the top of the stack.
+ */
+class CompileActivationFrame : public ActivationFrame
 {
-public:
-    inline ParseActivationFrame(RexxActivity *a, RexxSource *s) : ActivationFrame(a), source(s) { }
+ public:
+    inline CompileActivationFrame(Activity *a, LanguageParser *p) : ActivationFrame(a), parser(p) { }
 
     virtual RexxString *messageName();
-    virtual RexxMethod *method();
+    virtual BaseExecutable *executable();
     virtual StackFrameClass *createStackFrame();
-    virtual RexxSource *getSource();
+    virtual PackageClass *getPackage();
 
 protected:
-    RexxSource *source;                      // the source object being parsed.
+
+    LanguageParser *parser;                  // the parser instance handling source translation.
 };
 
 #endif

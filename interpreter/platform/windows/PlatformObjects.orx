@@ -1,5 +1,6 @@
 -- set the endOfLine environment variable
+
 .environment~setentry('ENDOFLINE', '0d0a'x)
 
-/* load the OLE support under windows */
-  call 'orexxole.cls' 'REXX'
+-- load the OLE support under windows
+  call 'orexxole.cls'

@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -36,375 +36,396 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                RexxMemory.hpp  */
+/*                                                   RexxMemory.hpp           */
 /*                                                                            */
-/* Primitive Memory Class Definitions                                         */
+/* Interpreter memory management subsystem                                    */
 /*                                                                            */
 /******************************************************************************/
 
-#ifndef Included_RexxMemory
-#define Included_RexxMemory
+#ifndef Included_MemoryObject
+#define Included_MemoryObject
 
+#include "Memory.hpp"
+#include "MemoryStack.hpp"
 #include "SysSemaphore.hpp"
 #include "IdentityTableClass.hpp"
+#include "QueueClass.hpp"
 
 // this can be enabled to switch on memory profiling info
 //#define MEMPROFILE
 
-#ifdef __REXX64__
-// The minimum allocation unit for an object.
-// 16 is needed for 64-bit to maintain some required alignments
-#define ObjectGrain 16
-/* The unit of granularity for large allocation */
-#define LargeAllocationUnit 2048
-/* The unit of granularity for extremely large objects */
-#define VeryLargeAllocationUnit 8192
-/* Minimum size of an object.  This is not the actual minimum size, */
-/* but we allocate objects with an 8-byte granularity */
-/* this is the granularity for objects greater than 16Mb. */
-#define VeryLargeObjectGrain    512
-
-/* Minimum size of an object.  This is not the actual minimum size, */
-/* but we allocate objects with a defined granularity */
-/* This is the smallest object we'll allocate from storage.  */
-#define MinimumObjectSize ((size_t)48)
-#define MaximumObjectSize ((size_t)0xfffffffffffffff0ull)
-#else
-/* The minimum allocation unit for an object.   */
-#define ObjectGrain 8
-/* The unit of granularity for large allocation */
-#define LargeAllocationUnit 1024
-/* The unit of granularity for extremely large objects */
-#define VeryLargeAllocationUnit 4096
-/* this is the granularity for objects greater than 16Mb. */
-#define VeryLargeObjectGrain    256
-
-/* Minimum size of an object.  This is not the actual minimum size, */
-/* but we allocate objects with an 8-byte granularity */
-/* This is the smallest object we'll allocate from storage.  */
-#define MinimumObjectSize ((size_t)24)
-#define MaximumObjectSize ((size_t)0xfffffff0)
-#endif
-
-inline void SetObjectLive(void *o, size_t mark) {
-    ((RexxObject *)o)->setObjectLive(mark);
-}
-#define IsObjectGrained(o)  ((((size_t)o)%ObjectGrain) == 0)
-#define IsValidSize(s) ((s) >= MinimumObjectSize && ((s) % ObjectGrain) == 0)
-
-inline size_t roundObjectBoundary(size_t n) { return RXROUNDUP(n,ObjectGrain); }
-inline size_t roundLargeObjectAllocation(size_t n) { return RXROUNDUP(n, LargeAllocationUnit); }
-inline size_t roundObjectResize(size_t n) { return RXROUNDUP(n, ObjectGrain); }
-
-class RexxActivationFrameBuffer;
+class ActivationFrameBuffer;
 class MemorySegment;
 class MemorySegmentPool;
-class RexxMethod;
+class MethodClass;
 class RexxVariable;
 class WeakReference;
-class RexxIdentityTable;
+class IdentityTable;
 class GlobalProtectedObject;
+class MapTable;
+class BufferClass;
+class StringTable;
 
 #ifdef _DEBUG
-class RexxMemory;
+class MemoryObject;
 #endif
 
-
-enum
-{
-    LIVEMARK,
-    RESTORINGIMAGE,
-    SAVINGIMAGE,
-    FLATTENINGOBJECT,
-    UNFLATTENINGOBJECT,
-};
-                                       /* This class is implemented in      */
-                                       /*OS2MEM.C, since the function is    */
-                                       /*system dependant.                  */
 typedef char MEMORY_POOL_STATE;
 
-class MemorySegmentPoolHeader {
+class MemorySegmentPoolHeader
+{
 #ifdef _DEBUG
- friend class RexxMemory;
+ friend class MemoryObject;
 #endif
 
  protected:
-   MemorySegmentPool *next;
-   MemorySegment     *spareSegment;
-   char  *nextAlloc;
-   char  *nextLargeAlloc;
-   size_t uncommitted;
-   size_t reserved;            // force aligment of the state data....
+     MemorySegmentPool *next;
+     MemorySegment     *spareSegment;
+     char  *nextAlloc;
+     char  *nextLargeAlloc;
+     size_t uncommitted;
+     size_t reserved;            // force aligment of the state data....
 };
 
+
+/**
+ * Class for managing memory pools. We define the interfaces
+ * here, but the platform code implements most of the methods.
+ */
 class MemorySegmentPool : public MemorySegmentPoolHeader
 {
 #ifdef _DEBUG
- friend class RexxMemory;
+ friend class MemoryObject;
 #endif
- friend bool SysAccessPool(MemorySegmentPool **);
  public:
-   void          *operator new(size_t size, size_t minSize);
-   void          *operator new(size_t size, void *pool) { return pool;}
-   inline void    operator delete(void *) { }
-   inline void    operator delete(void *, size_t) { }
-   inline void    operator delete(void *, void *) { }
+     void          *operator new(size_t size, size_t minSize);
+     inline void    operator delete(void *, size_t) { }
 
-   static MemorySegmentPool *createPool();
+     static MemorySegmentPool *createPool();
 
-   MemorySegmentPool();
-   MemorySegment *newSegment(size_t minSize);
-   MemorySegment *newLargeSegment(size_t minSize);
-   void               freePool(void);
-   MemorySegmentPool *nextPool() {return this->next;}
-   void               setNext( MemorySegmentPool *nextPool ); /* CHM - def.96: new function */
+     MemorySegmentPool();
+     MemorySegment *newSegment(size_t minSize);
+     MemorySegment *newLargeSegment(size_t minSize);
+     void               freePool();
+     MemorySegmentPool *nextPool() {return next;}
+     void               setNext( MemorySegmentPool *nextPool ); /* CHM - def.96: new function */
 
  private:
-   char           state[8];    // must be at the end of the structure.
+     char           state[8];    // must be at the end of the structure.
 };
 
 #include "MemoryStats.hpp"
 #include "MemorySegment.hpp"
 
-class RexxMemory : public RexxInternalObject
+
+/**
+ * A base class for handling general mark operations.  The
+ * called mark is forwarded to a current marking object that
+ * then performs the needed marking operation.
+ */
+class MarkHandler
 {
-#ifdef _DEBUG
-  friend class RexxInstructionOptions;
-#endif
  public:
-  inline RexxMemory();
-  inline RexxMemory(RESTORETYPE restoreType) { ; };
-
-  inline operator RexxObject*() { return (RexxObject *)this; };
-  inline RexxObject *operator=(DeadObject *d) { return (RexxObject *)this; };
-
-  void live(size_t);
-  void liveGeneral(int reason);
-  void flatten(RexxEnvelope *);
-  RexxObject  *makeProxy(RexxEnvelope *);
-
-  void        initialize(bool restoringImage);
-  MemorySegment *newSegment(size_t requestLength, size_t minLength);
-  MemorySegment *newLargeSegment(size_t requestLength, size_t minLength);
-  RexxObject *oldObject(size_t size);
-  inline RexxObject *newObject(size_t size) { return newObject(size, T_Object); }
-  RexxObject *newObject(size_t size, size_t type);
-  RexxObject *temporaryObject(size_t size);
-  RexxArray  *newObjects(size_t size, size_t count, size_t objectType);
-  void        reSize(RexxObject *, size_t);
-  void        checkUninit();
-  void        runUninits();
-  void        removeUninitObject(RexxObject *obj);
-  void        addUninitObject(RexxObject *obj);
-  bool        isPendingUninit(RexxObject *obj);
-  inline void checkUninitQueue() { if (pendingUninits > 0) runUninits(); }
-
-  void        markObjects(void);
-  void        markObjectsMain(RexxObject *);
-  void        killOrphans(RexxObject *);
-  void        mark(RexxObject *);
-  void        markGeneral(void *);
-  void        collect();
-  inline RexxObject *saveObject(RexxInternalObject *saveObj) {this->saveTable->add((RexxObject *)saveObj, (RexxObject *)saveObj); return (RexxObject *)saveObj;}
-  inline void        discardObject(RexxInternalObject *obj) {this->saveTable->remove((RexxObject *)obj);};
-  inline void        removeHold(RexxInternalObject *obj) { this->saveStack->remove((RexxObject *)obj); }
-  void        discardHoldObject(RexxInternalObject *obj);
-  RexxObject *holdObject(RexxInternalObject *obj);
-  void        saveImage();
-  bool        savingImage() { return saveimage; }
-  bool        restoringImage() { return restoreimage; }
-  RexxObject *setDump(RexxObject *);
-  inline bool queryDump() {return this->dumpEnable;};
-  RexxObject *dump();
-  void        dumpObject(RexxObject *objectRef, FILE *outfile);
-  void        setObjectOffset(size_t offset);
-  void        setEnvelope(RexxEnvelope *);
-  inline void        setMarkTable(RexxTable *marktable) {this->markTable = marktable;};
-  inline void        setOrphanCheck(bool orphancheck) {this->orphanCheck = orphancheck; };
-  RexxObject *checkSetOref(RexxObject *, RexxObject **, RexxObject *, const char *, int);
-  RexxObject *setOref(void *index, RexxObject *value);
-  RexxStack  *getFlattenStack();
-  void        returnFlattenStack();
-  RexxObject *reclaim();
-  RexxObject *setParms(RexxObject *, RexxObject *);
-  RexxObject *gutCheck();
-  void        memoryPoolAdded(MemorySegmentPool *);
-  void        shutdown();
-  void        liveStackFull();
-  void        dumpMemoryProfile();
-  char *      allocateImageBuffer(size_t size);
-  void        logVerboseOutput(const char *message, void *sub1, void *sub2);
-  inline void verboseMessage(const char *message) {
-#ifdef VERBOSE_GC
-      logVerboseOutput(message, NULL, NULL);
-#endif
-  }
-
-  inline void verboseMessage(const char *message, size_t sub1) {
-#ifdef VERBOSE_GC
-      logVerboseOutput(message, (void *)sub1, NULL);
-#endif
-  }
-
-  inline void verboseMessage(const char *message, size_t sub1, size_t sub2) {
-#ifdef VERBOSE_GC
-      logVerboseOutput(message, (void *)sub1, (void *)sub2);
-#endif
-  }
-
-  inline void logObjectStats(RexxObject *obj) { imageStats->logObject(obj); }
-  inline void pushSaveStack(RexxObject *obj) { saveStack->push(obj); }
-  inline void removeSavedObject(RexxObject *obj) { saveStack->remove(obj); }
-  inline void disableOrefChecks() { checkSetOK = false; }
-  inline void enableOrefChecks() { checkSetOK = true; }
-  inline void clearSaveStack() {
-                                       /* remove all objects from the save- */
-                                       /* stack. to be really oo, this      */
-                                       /* should be done in RexxSaveStack,  */
-                                       /* but we do it here for speed...    */
-    memset(saveStack->stack, 0, sizeof(RexxObject*) * saveStack->size);
-  }
-
-  void        checkAllocs();
-  RexxObject *dumpImageStats();
-  static void createLocks();
-  static void closeLocks();
-  void        scavengeSegmentSets(MemorySegmentSet *requester, size_t allocationLength);
-  void        setUpMemoryTables(RexxIdentityTable *old2newTable);
-  void        collectAndUninit(bool clearStack);
-  void        lastChanceUninit();
-  inline RexxDirectory *getGlobalStrings() { return globalStrings; }
-  void        addWeakReference(WeakReference *ref);
-  void        checkWeakReferences();
-
-  static void restore();
-  static void buildVirtualFunctionTable();
-  static void create();
-  static void createImage();
-  static RexxString *getGlobalName(const char *value);
-  static void createStrings();
-  static RexxArray *saveStrings();
-  static void restoreStrings(RexxArray *stringArray);
-
-  static void *virtualFunctionTable[];             /* table of virtual functions        */
-  static PCPPM exportedMethods[];      /* start of exported methods table   */
-
-  size_t markWord;                     /* current marking counter           */
-  int    markReason;                   // reason for calling liveGeneral()
-  RexxVariable *variableCache;         /* our cache of variable objects     */
-  GlobalProtectedObject *protectedObjects;  // specially protected objects
-
-  static RexxDirectory *environment;      // global environment
-  static RexxDirectory *functionsDir;     // statically defined requires
-  static RexxDirectory *commonRetrievers; // statically defined requires
-  static RexxDirectory *kernel;           // the kernel directory
-  static RexxDirectory *system;           // the system directory
-
-private:
-
-/******************************************************************************/
-/* Define location of objects saved in SaveArray during Saveimage processing  */
-/*  and used during restart processing.                                       */
-/* Currently only used in OKMEMORY.C                                          */
-/******************************************************************************/
-enum
-{
-    saveArray_ENV = 1,
-    saveArray_KERNEL,
-    saveArray_NAME_STRINGS,
-    saveArray_TRUE,
-    saveArray_FALSE,
-    saveArray_NIL,
-    saveArray_GLOBAL_STRINGS,
-    saveArray_CLASS,
-    saveArray_PBEHAV,
-    saveArray_PACKAGES,
-    saveArray_NULLA,
-    saveArray_NULLPOINTER,
-    saveArray_SYSTEM,
-    saveArray_FUNCTIONS,
-    saveArray_COMMON_RETRIEVERS,
-    saveArray_highest = saveArray_COMMON_RETRIEVERS
+    // pure virtual method for handling the mark operation.
+    virtual void mark(RexxInternalObject **field, RexxInternalObject *object);
 };
 
 
-  inline void checkLiveStack() { if (!liveStack->checkRoom()) liveStackFull(); }
-  inline void pushLiveStack(RexxObject *obj) { checkLiveStack(); liveStack->fastPush(obj); }
-  inline RexxObject * popLiveStack() { return (RexxObject *)liveStack->fastPop(); }
-  inline void bumpMarkWord() { markWord ^= MarkMask; }
-  inline void restoreMark(RexxObject *markObject, RexxObject **pMarkObject) {
-                                       /* we update the object's location   */
-      *pMarkObject = (RexxObject *)((size_t)markObject + relocation);
-  }
+class MemoryObject : public RexxInternalObject
+{
+ public:
+    inline MemoryObject();
+    inline MemoryObject(RESTORETYPE restoreType) { ; };
 
-  inline void unflattenMark(RexxObject *markObject, RexxObject **pMarkObject) {
-                                       /* do the unflatten                  */
-      *pMarkObject = markObject->unflatten(this->envelope);
-  }
+    inline operator RexxObject*() { return (RexxObject *)this; };
+    inline RexxObject *operator=(DeadObject *d) { return (RexxObject *)this; };
 
-  inline void restoreObjectMark(RexxObject *markObject, RexxObject **pMarkObject) {
-                                         /* update the object reference       */
-      markObject = (RexxObject *)((char *)markObject + objOffset);
-      markObject->setObjectLive(markWord); /* Then Mark this object as live.    */
-      *pMarkObject = markObject;         /* now set this back again           */
-  }
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+
+    void        initialize(bool restoringImage);
+    MemorySegment *newSegment(size_t requestLength, size_t minLength);
+    MemorySegment *newLargeSegment(size_t requestLength, size_t minLength);
+    RexxInternalObject *oldObject(size_t size);
+    inline RexxInternalObject *newObject(size_t size) { return newObject(size, T_Object); }
+    RexxInternalObject *newObject(size_t size, size_t type);
+    RexxInternalObject *temporaryObject(size_t size);
+    ArrayClass *newObjects(size_t size, size_t count, size_t objectType);
+    void        reSize(RexxInternalObject *, size_t);
+    void        checkUninit();
+    void        runUninits();
+    void        removeUninitObject(RexxInternalObject *obj);
+    void        addUninitObject(RexxInternalObject *obj);
+    inline void checkUninitQueue() { if (!pendingUninits->isEmpty()) runUninits(); }
+    RexxInternalObject *unflattenObjectBuffer(BufferClass *sourceBuffer, char *startPointer, size_t dataLength);
+    void        unflattenProxyObjects(Envelope *envelope, RexxInternalObject *firstObject, RexxInternalObject *endObject);
+
+    void        markObjects();
+    void        markObjectsMain(RexxInternalObject *);
+    void        mark(RexxInternalObject *);
+    void        markGeneral(void *);
+    void        tracingMark(RexxInternalObject *root, MarkReason reason);
+    void        collect();
+    inline void removeHold(RexxInternalObject *obj) { saveStack->remove(obj); }
+    RexxInternalObject *holdObject(RexxInternalObject *obj);
+    void        saveImage();
+    void        setOref(RexxInternalObject *variable, RexxInternalObject *value);
+    void        memoryPoolAdded(MemorySegmentPool *);
+    void        shutdown();
+    void        liveStackFull();
+    char *      allocateImageBuffer(size_t size);
+    void        logVerboseOutput(const char *message, void *sub1, void *sub2);
+    inline void verboseMessage(const char *message) {
+  #ifdef VERBOSE_GC
+        logVerboseOutput(message, NULL, NULL);
+  #endif
+    }
+
+    inline void verboseMessage(const char *message, size_t sub1) {
+  #ifdef VERBOSE_GC
+        logVerboseOutput(message, (void *)sub1, NULL);
+  #endif
+    }
+
+    inline void verboseMessage(const char *message, size_t sub1, size_t sub2) {
+  #ifdef VERBOSE_GC
+        logVerboseOutput(message, (void *)sub1, (void *)sub2);
+  #endif
+    }
+
+    inline void logObjectStats(RexxInternalObject *obj) { imageStats->logObject(obj); }
+    inline void pushSaveStack(RexxInternalObject *obj) { saveStack->push(obj); }
+    inline void removeSavedObject(RexxInternalObject *obj) { saveStack->remove(obj); }
+    inline void clearSaveStack() { saveStack->clear(); }
+
+    void        checkAllocs();
+    void        dumpImageStats();
+    void        scavengeSegmentSets(MemorySegmentSet *requester, size_t allocationLength);
+    void        setUpMemoryTables(MapTable *old2newTable);
+    void        collectAndUninit(bool clearStack);
+    void        lastChanceUninit();
+    inline StringTable *getGlobalStrings() { return globalStrings; }
+    void        addWeakReference(WeakReference *ref);
+    void        checkWeakReferences();
+
+    void restore();
+    void buildVirtualFunctionTable();
+    void create();
+    void createImage();
+    RexxString *getGlobalName(const char *value);
+    RexxString *getUpperGlobalName(const char *value);
+    void createStrings();
+    ArrayClass *saveStrings();
+    void restoreStrings(ArrayClass *stringArray);
+
+    inline void checkLiveStack() { if (!liveStack->checkRoom()) liveStackFull(); }
+    inline void pushLiveStack(RexxInternalObject *obj) { checkLiveStack(); liveStack->push(obj); }
+    inline RexxInternalObject * popLiveStack() { return liveStack->pop(); }
+    inline void bumpMarkWord() { markWord ^= ObjectHeader::MarkMask; }
+
+    // set the live mark in an object referenced by a void pointer
+    static inline void setObjectLive(void *o, size_t mark)
+    {
+        ((RexxInternalObject *)o)->setObjectLive(mark);
+    }
+
+    static void *virtualFunctionTable[];     // table of virtual functions
+    static PCPPM exportedMethods[];          // start of exported methods table
+
+    size_t markWord;                         // current marking counter
+    RexxVariable *variableCache;             // our cache of variable objects
+    GlobalProtectedObject *protectedObjects; // specially protected objects
+
+    DirectoryClass *environment;             // global environment
+    StringTable    *commonRetrievers;        // statically defined requires
+
+    StringTable    *system;                  // the system directory...anchors stuff we don't want to expose in environment
+    PackageClass   *rexxPackage;             // the main rexx package
+
+private:
 
 
-/* object validation method --used to find and diagnose broken object references       */
-  void saveImageMark(RexxObject *markObject, RexxObject **pMarkObject);
-  void orphanCheckMark(RexxObject *markObject, RexxObject **pMarkObject);
+    /******************************************************************************/
+    /* Define location of objects saved in SaveArray during Saveimage processing  */
+    /*  and used during restart processing.                                       */
+    /* Currently only used in MemoryObject                                        */
+    /******************************************************************************/
+    enum
+    {
+        saveArray_ENV = 1,
+        saveArray_SYSTEM,
+        saveArray_NAME_STRINGS,
+        saveArray_TRUE,
+        saveArray_FALSE,
+        saveArray_NIL,
+        saveArray_GLOBAL_STRINGS,
+        saveArray_CLASS,
+        saveArray_PBEHAV,
+        saveArray_PACKAGES,
+        saveArray_NULLA,
+        saveArray_NULLPOINTER,
+        saveArray_REXX_PACKAGE,
+        saveArray_COMMON_RETRIEVERS,
+        saveArray_highest = saveArray_COMMON_RETRIEVERS
+    };
 
-  bool inObjectStorage(RexxObject *obj);
-  bool inSharedObjectStorage(RexxObject *obj);
-  bool objectReferenceOK(RexxObject *o);
-  void restoreImage();
 
-  static void defineKernelMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments);
-  static void defineProtectedKernelMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments);
-  static void definePrivateKernelMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments);
 
-  RexxStack  *liveStack;
-  RexxStack  *flattenStack;
-  RexxSaveStack      *saveStack;
-  RexxIdentityTable  *saveTable;
-  RexxTable  *markTable;               /* tabobjects to start a memory mark */
-                                       /*  if building/restoring image,     */
-                                       /*OREF_ENV, else old2new             */
-  RexxIdentityTable  *old2new;           /* remd set                          */
-  RexxIdentityTable  *uninitTable;       // the table of objects with uninit methods
-  size_t            pendingUninits;    // objects waiting to have uninits run
-  bool              processingUninits; // true when we are processing the uninit table
+    void restoreImage();
 
-  MemorySegmentPool *firstPool;        /* First segmentPool block.          */
-  MemorySegmentPool *currentPool;      /* Curent segmentPool being carved   */
-  OldSpaceSegmentSet oldSpaceSegments;
-  NormalSegmentSet newSpaceNormalSegments;
-  LargeSegmentSet  newSpaceLargeSegments;
-  char *image_buffer;                  /* the buffer used for image save/restore operations */
-  size_t image_offset;                 /* the offset information for the image */
-  size_t relocation;                   /* image save/restore relocation factor */
-  bool dumpEnable;                     /* enabled for dumps?                */
-  bool saveimage;                      /* we're saving the image */
-  bool restoreimage;                   /* we're restoring the image */
-  bool checkSetOK;                     /* OREF checking is enabled          */
-                                       /* enabled for checking for bad      */
-                                       /*OREF's?                            */
-  bool orphanCheck;
-  size_t objOffset;                    /* offset of arriving mobile objects */
-                                       /* envelope for arriving mobile      */
-                                       /*objects                            */
-  RexxEnvelope *envelope;
-  RexxStack *originalLiveStack;        /* original live stack allocation    */
-  MemoryStats *imageStats;             /* current statistics collector      */
+    void setMarkHandler(MarkHandler *h) { currentMarkHandler = h; }
+    void resetMarkHandler() { currentMarkHandler = &defaultMarkHandler; }
 
-  size_t allocations;                  /* number of allocations since last GC */
-  size_t collections;                  /* number of garbage collections     */
-  WeakReference *weakReferenceList;    // list of active weak references
+    void defineMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments, const char *entryPointName);
+    void defineProtectedMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments, const char *entryPointName);
+    void definePrivateMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments, const char *entryPointName);
+    void addToEnvironment(const char *name, RexxInternalObject *value);
+    void addToSystem(const char *name, RexxInternalObject *value);
+    void completeSystemClass(const char *name, RexxClass *classObj);
+    void createRexxPackage();
 
-  static RexxDirectory *globalStrings; // table of global strings
-  static SysMutex flattenMutex;        /* locks for various memory processes */
-  static SysMutex unflattenMutex;
-  static SysMutex envelopeMutex;
+    LiveStack  *liveStack;               // stack used for memory marking
+    PushThroughStack *saveStack;         // our temporary protection stack
+
+    MapTable         *old2new;           // the table for tracking old2new references.
+    IdentityTable    *uninitTable;       // the table of objects with uninit methods
+    QueueClass       *pendingUninits;    // objects waiting to have uninits run
+    bool              processingUninits; // true when we are processing the uninit table
+    WeakReference    *weakReferenceList; // list of active weak references
+
+    MemorySegmentPool *firstPool;        // First segmentPool block.
+    MemorySegmentPool *currentPool;      // Curent segmentPool being carved
+    OldSpaceSegmentSet oldSpaceSegments;
+    NormalSegmentSet newSpaceNormalSegments;
+    LargeSegmentSet  newSpaceLargeSegments;
+
+    MarkHandler *currentMarkHandler;     // current handler for liveGeneral marking
+    MarkHandler  defaultMarkHandler;     // the default mark handler
+
+    LiveStack *originalLiveStack;        // original live stack allocation
+    MemoryStats *imageStats;             // current statistics collector
+
+    size_t allocations;                  // number of allocations since last GC
+    size_t collections;                  // number of garbage collections
+
+    char *restoredImage;                 // our restored image.
+    StringTable   *globalStrings;        // table of global strings
+};
+
+
+/**
+ * A marking object used during image restore to convert
+ * buffer offsets back into pointer values.
+ */
+class ImageRestoreMarkHandler : public MarkHandler
+{
+public:
+
+    ImageRestoreMarkHandler(char *r) : relocation(r) { }
+
+    // pure virtual method for handling the mark operation.
+    virtual void mark(RexxInternalObject **field, RexxInternalObject *object)
+    {
+        // the object reference is an offset.  Add in the address
+        // of the buffer start
+        *field = *(RexxInternalObject *)(relocation + (size_t)object);
+    }
+
+    char *relocation;       // the relative relocation amount
+};
+
+
+/**
+ * A marking object used during object unflattening to convert
+ * buffer offsets back into pointer values.
+ */
+class UnflatteningMarkHandler : public MarkHandler
+{
+public:
+
+    UnflatteningMarkHandler(char *r, size_t m) : relocation(r), markWord(m) { }
+
+    // pure virtual method for handling the mark operation.
+    virtual void mark(RexxInternalObject **field, RexxInternalObject *object)
+    {
+        // At this point, the object pointer is actually an offset and
+        // the base buffer pointer is our location value
+        object = (RexxInternalObject *)(relocation + (size_t)object);
+        *field = object;
+        // make sure this object is set to the current mark word
+        // so that all objects will get marked correctly on the next pass.
+        object->setObjectLive(markWord);
+    }
+
+    char  *relocation;       // the buffer we're restoring into.
+    size_t markWord;         // the current mark word
+};
+
+
+/**
+ * A mark handler for the unflatten phase of envelope
+ * restoral.
+ */
+class EnvelopeMarkHandler : public MarkHandler
+{
+public:
+    EnvelopeMarkHandler(Envelope *e) : envelope(e) { }
+
+    // pure virtual method for handling the mark operation.
+    virtual void mark(RexxInternalObject **field, RexxInternalObject *object)
+    {
+        // do the unflatten operation
+        *field = object->unflatten(envelope);
+    }
+
+    Envelope *envelope;
+};
+
+
+/**
+ * A mark handler for handling image save flattening.
+ */
+class ImageSaveMarkHandler : public MarkHandler
+{
+public:
+    ImageSaveMarkHandler(MemoryObject *m, size_t mw, char *b, size_t o) : memory(m), markWord(mw), imageBuffer(b), imageOffset(o) { }
+
+    // pure virtual method for handling the mark operation.
+    virtual void mark(RexxInternalObject **pMarkObject, RexxInternalObject *markObject);
+
+
+    MemoryObject *memory;    // the memory object
+    size_t markWord;         // the current mark word
+    char  *imageBuffer;      // the buffer used for image save/restore operations
+    size_t imageOffset;      // the offset information for the image
+};
+
+
+/**
+ * A mark handler for handling general live set tracing
+ */
+class TracingMarkHandler : public MarkHandler
+{
+public:
+    TracingMarkHandler(MemoryObject *m, size_t mw) : memory(m), markWord(mw) { }
+
+    // pure virtual method for handling the mark operation.
+    virtual void mark(RexxInternalObject **pMarkObject, RexxInternalObject *markObject)
+    {
+        // Save image processing.  We only handle this if the object has not
+        // already been marked.
+        if (!markObject->isObjectLive(markWord))
+        {
+            // now immediately mark this
+            markObject->setObjectLive(markWord);
+            // push this object on to the live stack so it's references can be marked later.
+            memory->pushLiveStack(markObject);
+        }
+    }
+
+
+    MemoryObject *memory;    // the memory object
+    size_t markWord;         // the current mark word
 };
 
 
@@ -412,36 +433,67 @@ enum
 /* Memory management macros                                                   */
 /******************************************************************************/
 
+inline void holdObject(RexxInternalObject *o) { memoryObject.holdObject(o); }
 
-inline void saveObject(RexxInternalObject *o) { memoryObject.saveObject((RexxObject *)o); }
-inline void discardObject(RexxInternalObject *o) { memoryObject.discardObject((RexxObject *)o); }
-inline void holdObject(RexxInternalObject *o) { memoryObject.holdObject((RexxObject *)o); }
-inline void discardHoldObject(RexxInternalObject *o) { memoryObject.discardHoldObject((RexxObject *)(o)); }
+inline RexxInternalObject *new_object(size_t s) { return memoryObject.newObject(s); }
+inline RexxInternalObject *new_object(size_t s, size_t t) { return memoryObject.newObject(s, t); }
+
+inline ArrayClass *new_arrayOfObject(size_t s, size_t c, size_t t)  { return memoryObject.newObjects(s, c, t); }
 
 
-inline RexxObject *new_object(size_t s) { return memoryObject.newObject(s); }
-inline RexxObject *new_object(size_t s, size_t t) { return memoryObject.newObject(s, t); }
+// memory marking macros.  These are macros because they use the assumed arguments
+// passed to the live method
+#define ObjectNeedsMarking(oref) ((oref) != OREF_NULL && !((oref)->isObjectMarked(liveMark)) )
+#define memory_mark(oref)  if (ObjectNeedsMarking(oref)) memoryObject.mark(oref)
+#define memory_mark_general(oref) (memoryObject.markGeneral((void *)&(oref)))
 
-inline RexxArray *new_arrayOfObject(size_t s, size_t c, size_t t)  { return memoryObject.newObjects(s, c, t); }
+// some convenience macros for marking arrays of objects.
+#define memory_mark_array(count, array) \
+  for (size_t i = 0; i < count; i++)    \
+  {                                     \
+      memory_mark(array[i]);            \
+  }
 
+#define memory_mark_general_array(count, array) \
+  for (size_t i = 0; i < count; i++)            \
+  {                                             \
+      memory_mark_general(array[i]);            \
+  }
+
+// Following macros are for Flattening and unflattening of objects
+// Some notes on what is going on here.  The flatten() method gets called on an object
+// after it has been moved into the envelope buffer, so the this pointer is
+// to the copied object, not the original.  On a call to flattenReference(), it might
+// be necessary to allocate a larger buffer.  When that happens, the copied object gets
+// moved to a new location and the newThis pointer gets updated to the new object location.
+// it is necessary to copy the this pointer and also declare the newThis pointer as volatile
+// so that the change in pointer value doesn't get optimized out by the compiler.
+
+// set up for flattening.  This sets up the newThis pointer and also gets some
+// information from the envelope.  The type argument allows newThis to be declared with
+// the correct type.
 #define setUpFlatten(type)        \
   {                               \
   size_t newSelf = envelope->currentOffset; \
   type * volatile newThis = (type *)this;   // NB:  This is declared volatile to avoid optimizer problems.
 
+// just a block closer for the block created by setUpFlatten.
 #define cleanUpFlatten                    \
  }
 
-#define ObjectNeedsMarking(oref) ((oref) != OREF_NULL && !((oref)->isObjectMarked(liveMark)) )
-#define memory_mark(oref)  if (ObjectNeedsMarking(oref)) memoryObject.mark((RexxObject *)(oref))
-#define memory_mark_general(oref) (memoryObject.markGeneral((void *)&(oref)))
+// newer, simplified form.  Just give the name of the field.
+#define flattenRef(oref)  if ((newThis->oref) != OREF_NULL) envelope->flattenReference((void *)&newThis, newSelf, (void *)&(newThis->oref))
 
-/* Following macros are for Flattening and unflattening of objects  */
-#define flatten_reference(oref,envel)  if (oref) envel->flattenReference((void *)&newThis, newSelf, (void *)&(oref))
+// a version for flattening arrays of objects.  Give the count field and the name of the array.
+#define flattenArrayRefs(count, array)          \
+  for (size_t i = 0; i < count; i++)            \
+  {                                             \
+      flattenRef(array[i]);                     \
+  }
 
 // declare a class creation routine
 // for classes with their own
 // explicit class objects
-#define CLASS_CREATE(name, id, className) The##name##Class = (className *)new (sizeof(className), id, The##name##ClassBehaviour, The##name##Behaviour) RexxClass;
+#define CLASS_CREATE(name, id, className) The##name##Class = new className(id, The##name##ClassBehaviour, The##name##Behaviour);
 
 #endif

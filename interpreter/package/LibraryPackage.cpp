@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.ibm.com/developerworks/oss/CPLv1.0.htm                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -46,8 +46,8 @@
 #include "LibraryPackage.hpp"
 #include "PackageManager.hpp"
 #include "Interpreter.hpp"
-#include "RexxNativeCode.hpp"
-#include "DirectoryClass.hpp"
+#include "NativeCode.hpp"
+#include "StringTableClass.hpp"
 #include "RoutineClass.hpp"
 #include "ProtectedObject.hpp"
 
@@ -72,7 +72,7 @@ void *LibraryPackage::operator new(size_t size)
  */
 LibraryPackage::LibraryPackage(RexxString *n)
 {
-    OrefSet(this, libraryName, n);
+    libraryName = n;
 }
 
 /**
@@ -85,13 +85,13 @@ LibraryPackage::LibraryPackage(RexxString *n)
  */
 LibraryPackage::LibraryPackage(RexxString *n, RexxPackageEntry *p)
 {
-    OrefSet(this, libraryName, n);
-    ProtectedObject p2(this);
+    libraryName = n;
     // store the registered package entry
     package = p;
     // this is an internal package.
     internal = true;
 }
+
 
 /**
  * Normal live marking.
@@ -103,10 +103,11 @@ void LibraryPackage::live(size_t liveMark)
     memory_mark(methods);
 }
 
+
 /**
  * Generalized live marking.
  */
-void LibraryPackage::liveGeneral(int reason)
+void LibraryPackage::liveGeneral(MarkReason reason)
 {
     memory_mark_general(libraryName);
     memory_mark_general(routines);
@@ -252,7 +253,7 @@ void LibraryPackage::loadRoutines(RexxRoutineEntry *table)
     }
 
     // create a directory of loaded routines
-    OrefSet(this, routines, new_directory());
+    setField(routines, new_string_table());
 
     while (table->style != 0)
     {
@@ -262,14 +263,14 @@ void LibraryPackage::loadRoutines(RexxRoutineEntry *table)
         RexxString *target = new_upper_string(table->name);
         RexxString *routineName = new_string(table->name);
 
-        RexxRoutine *func = OREF_NULL;
+        BaseNativeRoutine *func = OREF_NULL;
         if (table->style == ROUTINE_CLASSIC_STYLE)
         {
             func = new RegisteredRoutine(libraryName, routineName, (RexxRoutineHandler *)table->entryPoint);
         }
         else
         {
-            func = new RexxNativeRoutine(libraryName, routineName, (PNATIVEROUTINE)table->entryPoint);
+            func = new NativeRoutine(libraryName, routineName, (PNATIVEROUTINE)table->entryPoint);
         }
 
         RoutineClass *routine = new RoutineClass(routineName, func);
@@ -354,18 +355,18 @@ RexxRoutineEntry *LibraryPackage::locateRoutineEntry(RexxString *name)
  *
  * @param name   Name of the target method.
  *
- * @return A RexxNativeCode object for this method, if located.
+ * @return A NativeCode object for this method, if located.
  */
-RexxNativeMethod *LibraryPackage::resolveMethod(RexxString *name)
+NativeMethod *LibraryPackage::resolveMethod(RexxString *name)
 {
     // create our methods table if not yet created.
     if (methods == OREF_NULL)
     {
-        OrefSet(this, methods, new_directory());
+        setField(methods, new_string_table());
     }
 
     // see if this is in the table yet.
-    RexxNativeMethod *code = (RexxNativeMethod *)methods->at(name);
+    NativeMethod *code = (NativeMethod *)methods->get(name);
     if (code == OREF_NULL)
     {
         // find the package definition
@@ -373,7 +374,7 @@ RexxNativeMethod *LibraryPackage::resolveMethod(RexxString *name)
         // if we found one with this name, create a native method out of it.
         if (entry != NULL)
         {
-            code = new RexxNativeMethod(libraryName, name, (PNATIVEMETHOD)entry->entryPoint);
+            code = new NativeMethod(libraryName, name, (PNATIVEMETHOD)entry->entryPoint);
             methods->put((RexxObject *)code, name);
             return code;
         }
@@ -390,12 +391,12 @@ RexxNativeMethod *LibraryPackage::resolveMethod(RexxString *name)
  *
  * @param name   Name of the target method.
  *
- * @return A RexxNativeCode object for this method, if located.
+ * @return A NativeCode object for this method, if located.
  */
 RoutineClass *LibraryPackage::resolveRoutine(RexxString *name)
 {
     // we resolve all of these at load time, so this is either in the table, or it's not.
-    return (RoutineClass *)routines->at(name);
+    return (RoutineClass *)routines->get(name);
 }
 
 

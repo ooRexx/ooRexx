@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -44,129 +44,138 @@
 #ifndef Included_RexxBehaviour
 #define Included_RexxBehaviour
 
-#define INTERNALCLASS (((uintptr_t)1) << ((sizeof(uintptr_t) * 8) - 1))
-
- class RexxBehaviour : public RexxInternalObject
- {
-  public:
-  void *operator new(size_t, size_t);
-  inline void *operator new(size_t size, void *ptr) {return ptr;};
-  inline void  operator delete(void *) { ; }
-  inline void  operator delete(void *, size_t) { }
-  inline void  operator delete(void *, void *) { ; }
-
-  RexxBehaviour(size_t, PCPPM *);
-  inline RexxBehaviour() {;};
-  inline RexxBehaviour(RESTORETYPE restoreType) { ; };
-  void live(size_t);
-  void liveGeneral(int reason);
-  void flatten(RexxEnvelope*);
-  RexxObject *copy();
-  void        copyBehaviour(RexxBehaviour *source);
-  RexxObject *define(RexxString *, RexxMethod *);
-  RexxMethod *define(const char *, PCPPM, size_t);
-  void        addMethod(RexxString *, RexxMethod *);
-  void        removeMethod(RexxString *);
-  RexxMethod *methodObject(RexxString *);
-  RexxMethod *methodLookup( RexxString *);
-  RexxMethod *getMethod( RexxString *);
-  RexxObject *deleteMethod(RexxString *);
-  void restore(RexxBehaviour *);
-  RexxClass  *restoreClass();
-  RexxObject *superScope( RexxObject *);
-  RexxMethod *superMethod(RexxString *, RexxObject *);
-  void        setMethodDictionaryScope( RexxObject *);
-  RexxObject *setScopes( RexxIdentityTable *);
-  RexxObject *addScope( RexxObject *);
-  RexxObject *mergeScope( RexxObject *);
-  bool        checkScope( RexxObject *);
-  void        subclass(RexxBehaviour *);
-  RexxSupplier *getMethods(RexxObject *scope);
-
-  void        resolveNonPrimitiveBehaviour();
-
-  void merge( RexxBehaviour *);
-  void methodDictionaryMerge( RexxTable *);
+#include "FlagSet.hpp"
 
 
-   inline RexxIdentityTable  *getScopes()       { return this->scopes; };
-   inline RexxTable  *getMethodDictionary()   { return this->methodDictionary; };
-   inline void        setMethodDictionary(RexxTable * m) { OrefSet(this, this->methodDictionary, m); };
-   inline void        setInstanceMethodDictionary(RexxTable * m) { OrefSet(this, this->instanceMethodDictionary, m); };
-   inline RexxTable  *getInstanceMethodDictionary()   { return this->instanceMethodDictionary; };
-   inline RexxClass  *getOwningClass()        { return this->owningClass;};
-   inline void        setOwningClass(RexxClass *c)  { OrefSet(this, this->owningClass,  c); };
+/**
+ * The class that defines base object behaviour (i.e., what methods can be invoked)
+ */
+class RexxBehaviour : public RexxInternalObject
+{
+ public:
+    void *operator new(size_t, size_t);
+    inline void  operator delete(void *, size_t) { }
 
-   inline void setClassType(size_t n) { classType = (uint16_t)n; }
-   inline size_t getClassType()  { return (size_t)classType; }
-   inline bool  isPrimitive()    {  return (behaviourFlags & NON_PRIMITIVE_BEHAVIOUR) == 0; };
-   inline bool  isNonPrimitive() {  return (behaviourFlags & NON_PRIMITIVE_BEHAVIOUR) != 0; };
-   inline bool  isNotResolved()  {  return (behaviourFlags & BEHAVIOUR_NOT_RESOLVED) != 0; };
-   inline bool  isResolved()     {  return (behaviourFlags & BEHAVIOUR_NOT_RESOLVED) == 0; };
-   inline bool  isEnhanced()     {  return (behaviourFlags & ENHANCED_OBJECT) != 0; };
-   inline bool  isInternalClass()  {  return (behaviourFlags & INTERNAL_CLASS) != 0; };
-   inline bool  isTransientClass()  {  return (behaviourFlags & TRANSIENT_CLASS) != 0; };
-   inline void  setResolved()    {  behaviourFlags &= ~BEHAVIOUR_NOT_RESOLVED; };
-   inline void  setNotResolved() {  behaviourFlags |= BEHAVIOUR_NOT_RESOLVED; };
-   inline void  setEnhanced()    {  behaviourFlags |= ENHANCED_OBJECT; };
-   inline void  setNonPrimitive() {  behaviourFlags |= NON_PRIMITIVE_BEHAVIOUR; };
-   inline void  setInternalClass() { behaviourFlags |= INTERNAL_CLASS; };
-   inline void  setTransientClass() { behaviourFlags |= TRANSIENT_CLASS; };
 
-   inline RexxBehaviour *getSavedPrimitiveBehaviour()
-   {
-       uintptr_t behaviourID = (uintptr_t)this->getClassType();
-       // if this is an internal class, normalize this so we can
-       // restore this to the correct value if we add additional internal classes.
-       if (isInternalClass())
-       {
-           behaviourID -= T_Last_Exported_Class;
-           behaviourID |= INTERNALCLASS;
-       }
-       return (RexxBehaviour *)behaviourID;
-   }
+    static const uintptr_t INTERNALCLASS = (((uintptr_t)1) << ((sizeof(uintptr_t) * 8) - 1));
 
-   static inline RexxBehaviour *restoreSavedPrimitiveBehaviour(RexxBehaviour *b)
-   {
-       uintptr_t behaviourID = (uintptr_t)b;
-       // if this is an internal class, we need to convert back to
-       // the relative internal class id
-       if ((behaviourID & INTERNALCLASS) != 0)
-       {
-           behaviourID &= ~INTERNALCLASS;    // turn off the internal marker
-           behaviourID += T_Last_Exported_Class; // turn back into an internal class
-       }
-       return &primitiveBehaviours[behaviourID];          // translate back into proper behaviour
-   }
+    RexxBehaviour(ClassTypeCode, PCPPM *);
+    inline RexxBehaviour() {;};
+    inline RexxBehaviour(RESTORETYPE restoreType) { ; };
 
-   inline PCPPM getOperatorMethod(size_t index) { return operatorMethods[index]; }
-   static inline RexxBehaviour *getPrimitiveBehaviour(size_t index) { return &primitiveBehaviours[index]; }
-   static inline PCPPM *getOperatorMethods(size_t index) { return getPrimitiveBehaviour(index)->operatorMethods; }
-   // table of primitive behaviour objects
-   static RexxBehaviour primitiveBehaviours[];
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(Envelope*);
+    virtual RexxInternalObject *copy();
+
+    void         copyBehaviour();
+    void         copyBehaviour(RexxBehaviour *source);
+    void         defineMethod(RexxString *, MethodClass *);
+    RexxObject  *defineMethods(StringTable *);
+    MethodClass *defineMethod(const char *, PCPPM, size_t, const char *);
+    void         addInstanceMethod(RexxString *, MethodClass *);
+    void         removeInstanceMethod(RexxString *);
+    void         hideMethod(const char *name);
+    void         replaceMethod(RexxString *methodName, MethodClass *method);
+    void         inheritInstanceMethods(RexxBehaviour *source);
+    void         setMethodDictionaryScope(RexxClass *scope);
+    MethodClass *getMethodObject(RexxString *messageName );
+    MethodClass *methodObject(RexxString *);
+    MethodClass *methodLookup(RexxString *);
+    bool         hasMethod(RexxString *name)  { return methodLookup(name) != OREF_NULL; }
+    MethodClass *getMethod(RexxString *);
+    void         deleteMethod(RexxString *);
+    void         restore(RexxBehaviour *);
+    RexxClass   *restoreClass();
+    RexxClass   *superScope(RexxClass *);
+    MethodClass *superMethod(RexxString *, RexxClass *);
+    void         subclass(RexxBehaviour *);
+    SupplierClass *getMethods(RexxClass *scope);
+
+    void        resolveNonPrimitiveBehaviour();
+
+    void        merge(RexxBehaviour *);
+    void        mergeMethodDictionary(MethodDictionary *);
+    MethodDictionary *copyMethodDictionary();
+
+    inline MethodDictionary *getMethodDictionary()   { return methodDictionary; };
+           bool        hasInstanceMethods();
+           void        setMethodDictionary(MethodDictionary *m);
+    inline void        clearMethodDictionary() { setMethodDictionary(OREF_NULL); }
+    inline RexxClass  *getOwningClass()        { return owningClass;};
+           void        setOwningClass(RexxClass *c);
+           ArrayClass *allScopes();
+           void        addScope(RexxClass *scope);
+           RexxClass  *immediateSuperScope();
+           bool        hasScope(RexxClass *scope);
+           void        addInstanceMethods(MethodDictionary *source);
+
+    inline void  setClassType(ClassTypeCode n) { classType = n; }
+    inline ClassTypeCode getClassType()  { return classType; }
+    inline bool  isPrimitive()    {  return !behaviourFlags[NON_PRIMITIVE_BEHAVIOUR]; };
+    inline bool  isNonPrimitive() {  return behaviourFlags[NON_PRIMITIVE_BEHAVIOUR]; };
+    inline bool  isNotResolved()  {  return behaviourFlags[BEHAVIOUR_NOT_RESOLVED]; };
+    inline bool  isResolved()     {  return !behaviourFlags[BEHAVIOUR_NOT_RESOLVED]; };
+    inline bool  isEnhanced()     {  return behaviourFlags[ENHANCED_OBJECT]; };
+    inline bool  isInternalClass()  {  return behaviourFlags[INTERNAL_CLASS]; };
+    inline bool  isTransientClass()  {  return behaviourFlags[TRANSIENT_CLASS]; };
+    inline void  setResolved()    {  behaviourFlags.reset(BEHAVIOUR_NOT_RESOLVED); };
+    inline void  setNotResolved() {  behaviourFlags.set(BEHAVIOUR_NOT_RESOLVED); };
+    inline void  setEnhanced()    {  behaviourFlags.set(ENHANCED_OBJECT); };
+    inline void  setNonPrimitive() {  behaviourFlags.set(NON_PRIMITIVE_BEHAVIOUR); };
+    inline void  setInternalClass() { behaviourFlags.set(INTERNAL_CLASS); };
+    inline void  setTransientClass() { behaviourFlags.set(TRANSIENT_CLASS); };
+
+    inline RexxBehaviour *getSavedPrimitiveBehaviour()
+    {
+        uintptr_t behaviourID = (uintptr_t)getClassType();
+        // if this is an internal class, normalize this so we can
+        // restore this to the correct value if we add additional internal classes.
+        if (isInternalClass())
+        {
+            behaviourID -= T_Last_Exported_Class;
+            behaviourID |= INTERNALCLASS;
+        }
+        return (RexxBehaviour *)behaviourID;
+    }
+
+    static inline RexxBehaviour *restoreSavedPrimitiveBehaviour(RexxBehaviour *b)
+    {
+        uintptr_t behaviourID = (uintptr_t)b;
+        // if this is an internal class, we need to convert back to
+        // the relative internal class id
+        if ((behaviourID & INTERNALCLASS) != 0)
+        {
+            behaviourID &= ~INTERNALCLASS;    // turn off the internal marker
+            behaviourID += T_Last_Exported_Class; // turn back into an internal class
+        }
+        return &primitiveBehaviours[behaviourID];          // translate back into proper behaviour
+    }
+
+    inline PCPPM getOperatorMethod(size_t index) { return operatorMethods[index]; }
+    static inline RexxBehaviour *getPrimitiveBehaviour(size_t index) { return &primitiveBehaviours[index]; }
+    static inline PCPPM *getOperatorMethods(size_t index) { return getPrimitiveBehaviour(index)->operatorMethods; }
+    // table of primitive behaviour objects
+    static RexxBehaviour primitiveBehaviours[];
 
  protected:
 
-   enum
-   {
-       NON_PRIMITIVE_BEHAVIOUR = 0x0001,
-       ENHANCED_OBJECT         = 0x0002,
-       INTERNAL_CLASS          = 0x0004,
-       TRANSIENT_CLASS         = 0x0008,
-       BEHAVIOUR_NOT_RESOLVED  = 0x0010
-   };
+    typedef enum
+    {
+        NON_PRIMITIVE_BEHAVIOUR,
+        ENHANCED_OBJECT,
+        INTERNAL_CLASS,
+        TRANSIENT_CLASS,
+        BEHAVIOUR_NOT_RESOLVED,
+    } BehaviourFlag;
 
 
-   uint16_t classType;         // primitive class identifier
-   uint16_t behaviourFlags;    // various behaviour flag types
-   RexxIdentityTable  *scopes;           /* scopes table                      */
-   RexxTable  *methodDictionary;       /* method dictionary                 */
-   PCPPM      *operatorMethods;        /* operator look-a-side table        */
-   RexxClass  *owningClass;            /* class that created this object    */
-                                       /* methods added via SETMETHOD       */
-   RexxTable  *instanceMethodDictionary;
-
- };
+    ClassTypeCode   classType;                 // primitive class identifier
+    FlagSet<BehaviourFlag, 32> behaviourFlags; // various behaviour flag types
+    MethodDictionary *methodDictionary;   // method dictionary obtained from our class.
+    PCPPM      *operatorMethods;          // operator look-a-side table
+    RexxClass  *owningClass;              // class that created this object
+};
 
 
 /******************************************************************************/
@@ -174,5 +183,17 @@
 /******************************************************************************/
 
 #include "PrimitiveBehaviourNames.h"
+
+
+// test if an object is of a particular class
+#define isOfClass(t,r) (r)->isObjectType(The##t##Behaviour)
+#define isOfClassType(t,r) (r)->isObjectType(T_##t)
+
+inline bool isString(RexxInternalObject *o) { return isOfClass(String, o); }
+inline bool isInteger(RexxInternalObject *o) { return isOfClass(Integer, o); }
+inline bool isNumberString(RexxInternalObject *o) { return isOfClass(NumberString, o); }
+inline bool isArray(RexxInternalObject *o) { return isOfClass(Array, o); }
+inline bool isStem(RexxInternalObject *o) { return isOfClass(Stem, o); }
+inline bool isMethod(RexxInternalObject *o) { return isOfClass(Method, o); }
 
 #endif

@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -46,27 +46,20 @@
 #include "RoutineClass.hpp"
 #include "MethodClass.hpp"
 
-#define FRAME_PARSE "PARSE"
-#define FRAME_ROUTINE "ROUTINE"
-#define FRAME_METHOD "METHOD"
-#define FRAME_INTERNAL_CALL "INTERNALCALL"
-#define FRAME_INTERPRET "INTERPRET"
-#define FRAME_PROGRAM "PROGRAM"
-
-class RexxSource;
-class RexxArray;
+class PackageClass;
+class ArrayClass;
 
 class StackFrameClass : public RexxObject
 {
 public:
     void *operator new(size_t);
-    inline void *operator new(size_t size, void *ptr) { return ptr; };
-    StackFrameClass(const char *type, RexxString *name, BaseExecutable *p, RexxObject *target, RexxArray *arguments, RexxString *t, size_t l);
+
+    StackFrameClass(const char *type, RexxString *name, BaseExecutable *p, RexxObject *target, ArrayClass *arguments, RexxString *t, size_t l);
     inline StackFrameClass(RESTORETYPE restoreType) { ; };
 
-    void live(size_t);
-    void liveGeneral(int reason);
-    void flatten(RexxEnvelope*);
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(Envelope*);
 
     static void createInstance();
     static RexxClass *classInstance;
@@ -77,19 +70,28 @@ public:
     RexxObject *getTarget();
     RexxObject *getLine();
     RexxString *getTraceLine();
-    RexxArray  *getArguments();
-    RexxSource *getSourceObject();
+    ArrayClass  *getArguments();
+    PackageClass *getPackageObject();
     virtual     RexxString  *makeString();
     virtual     RexxString  *stringValue();
 
     RexxObject *newRexx(RexxObject **args, size_t argc);
 
+    // frame identifier constants
+    static const char *FRAME_COMPILE;
+    static const char *FRAME_ROUTINE;
+    static const char *FRAME_METHOD;
+    static const char *FRAME_INTERNAL_CALL;
+    static const char *FRAME_INTERPRET;
+    static const char *FRAME_PROGRAM;
+
 protected:
+
     const char *type;               // the type of frame
     RexxString *name;               // the name of the item at that stack frame instance
     BaseExecutable *executable;     // the executable associated with this frame instance
     RexxObject *target;             // the target object, if a message send
-    RexxArray *arguments;           // arguments to the method/routine
+    ArrayClass *arguments;           // arguments to the method/routine
     size_t          line;           // the frame line position (MAX_SIZE indicates no line available)
     RexxString *traceLine;          // a tracing line
 };

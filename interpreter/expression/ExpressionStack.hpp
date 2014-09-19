@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -42,61 +42,61 @@
 /*                                                                            */
 /******************************************************************************/
 
-#ifndef Included_RexxExpressionStack
-#define Included_RexxExpressionStack
+#ifndef Included_ExpressionStack
+#define Included_ExpressionStack
 
 #include "ArrayClass.hpp"
 
 class ProtectedObject;
-class RexxActivity;
+class Activity;
 
-class RexxExpressionStack {
+class ExpressionStack
+{
  public:
+    ExpressionStack(RexxInternalObject **frames, size_t items) { stack = frames; size = items; top = stack; }
+    ExpressionStack() { stack = OREF_NULL; size = 0; top = stack; }
 
-  inline void *operator new(size_t size, void *ptr) { return ptr;};
-  RexxExpressionStack(RexxObject **frames, size_t items) { stack = frames; size = items; top = stack; }
-  RexxExpressionStack() { stack = OREF_NULL; size = 0; top = stack; }
-  void live(size_t);
-  void liveGeneral(int reason);
-  void flatten(RexxEnvelope *);
-  void         expandArgs(size_t, size_t, size_t, const char *);
-  RexxString * requiredStringArg(size_t);
-  RexxString * optionalStringArg(size_t);
-  RexxInteger *requiredIntegerArg(size_t, size_t, const char *);
-  RexxInteger *optionalIntegerArg(size_t, size_t, const char *);
-  RexxObject *requiredBigIntegerArg(size_t, size_t, const char *);
-  RexxObject *optionalBigIntegerArg(size_t, size_t, const char *);
-  void         migrate(RexxActivity *);
+    void live(size_t);
+    void liveGeneral(MarkReason reason);
 
-  inline void setFrame(RexxObject **frames, size_t items) { stack = frames; size = items; top = stack; *top = OREF_NULL; }
+    void         expandArgs(size_t, size_t, size_t, const char *);
+    RexxString * requiredStringArg(size_t);
+    RexxString * optionalStringArg(size_t);
+    RexxInteger *requiredIntegerArg(size_t, size_t, const char *);
+    RexxInteger *optionalIntegerArg(size_t, size_t, const char *);
+    RexxObject * requiredBigIntegerArg(size_t, size_t, const char *);
+    RexxObject * optionalBigIntegerArg(size_t, size_t, const char *);
+    void         migrate(Activity *);
 
-  inline void send(RexxString *message, RexxObject *scope, size_t count, ProtectedObject &result) {
-                 (*(this->top - count))->messageSend(message, (RexxObject **)(this->top - count + 1), count, scope, result); };
-  inline void send(RexxString *message, size_t count, ProtectedObject &result) {
-                 (*(this->top - count))->messageSend(message, (RexxObject **)(this->top -count + 1), count, result); };
-  inline void         push(RexxObject *value) { *(++this->top) = value; };
-  inline RexxObject * pop() { return *(this->top--); };
-  inline RexxObject * fastPop() { return *(this->top--); };
-  inline RexxArray  * argumentArray(size_t count) { return (new (count, (RexxObject **)(this->top - (count - 1))) RexxArray); };
-  inline RexxObject **arguments(size_t count) { return (RexxObject **)(this->top - (count - 1)); };
-  inline void         replace(size_t offset, RexxObject *value) { *(this->top - offset) = value; };
-  inline size_t       getSize() {return this->size;};
-  inline RexxObject * getTop()  {return *(this->top);};
-  inline void         operatorResult(RexxObject *value) { *(--this->top) = value; };
-  inline void         prefixResult(RexxObject *value)   { *(this->top) = value; };
-  inline void         popn(size_t c) {this->top -= c;};
-  inline void         clear() {this->top = this->stack;};
-  inline RexxObject * peek(size_t v) {return *(this->top - v);};
-  inline RexxObject **pointer(size_t v) {return (this->top - v); };
-  inline size_t       location() {return this->top - this->stack;};
-  inline void         setTop(size_t v) {this->top = this->stack + v;};
-  inline void         toss() { this->top--; };
-  inline RexxObject **getFrame() { return stack; }
+    inline void setFrame(RexxInternalObject **frames, size_t items) { stack = frames; size = items; top = stack; *top = OREF_NULL; }
+
+    inline void send(RexxString *message, RexxClass *scope, size_t count, ProtectedObject &result) {
+                   ((RexxObject *)(*(top - count)))->messageSend(message, arguments(count), count, scope, result); };
+    inline void send(RexxString *message, size_t count, ProtectedObject &result) {
+                   ((RexxObject *)(*(top - count)))->messageSend(message, arguments(count), count, result); };
+    inline void         push(RexxInternalObject *value) { *(++top) = value; };
+    inline RexxInternalObject  *pop() { return *(top--); };
+    inline ArrayClass  *argumentArray(size_t count) { return new_array(count, (RexxInternalObject **)(top - (count - 1))); };
+    inline RexxObject **arguments(size_t count) { return (RexxObject **)(top - (count - 1)); };
+    inline void         replace(size_t offset, RexxObject *value) { *(top - offset) = value; };
+    inline size_t       getSize() {return size;};
+    inline RexxInternalObject * getTop()  {return *(top);};
+    inline void         operatorResult(RexxObject *value) { *(--top) = value; };
+    inline void         prefixResult(RexxObject *value)   { *(top) = value; };
+    inline void         popn(size_t c) {top -= c;};
+    inline void         clear() {top = stack;};
+    inline RexxInternalObject * peek(size_t v) {return *(top - v);};
+    inline RexxInternalObject **pointer(size_t v) {return (top - v); };
+    inline size_t       location() {return top - stack;};
+    inline void         setTop(size_t v) {top = stack + v;};
+    inline void         toss() { top--; };
+    inline RexxInternalObject **getFrame() { return stack; }
 
 protected:
 
-  size_t size;                         /* size of the expstack              */
-  RexxObject **top;                    /* current expstack top location     */
-  RexxObject **stack;                  /* actual stack values               */
+    size_t size;                         // size of the expstack
+    RexxInternalObject **top;            // current expstack top location
+    RexxInternalObject **stack;          // actual stack values
+
 };
 #endif

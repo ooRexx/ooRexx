@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -41,41 +41,49 @@
 /* Primitive Supplier Class Definition                                        */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_RexxSupplier
-#define Included_RexxSupplier
+#ifndef Included_SupplierClass
+#define Included_SupplierClass
 
- class RexxSupplier : public RexxObject {
-  public:
-   inline RexxSupplier(RESTORETYPE restoreType) { ; };
-   RexxSupplier(RexxArray  *, RexxArray  *);
-   RexxSupplier();
+class RexxInteger;
+class ArrayClass;
 
-   void       *operator new(size_t);
-   inline void       *operator new(size_t size, void *ptr) { return ptr; };
+class SupplierClass : public RexxObject
+{
+ public:
+           void *operator new(size_t);
+    inline void  operator delete(void *) {;}
 
-   void        live(size_t);
-   void        liveGeneral(int reason);
-   void        flatten(RexxEnvelope *);
-   RexxInteger *available();
-   RexxObject  *next();
-   RexxObject  *value();
-   RexxObject  *index();
-   RexxObject  *initRexx(RexxArray *values, RexxArray *indexes);
+    inline SupplierClass(RESTORETYPE restoreType) { ; };
+    SupplierClass(ArrayClass  *, ArrayClass  *);
+    SupplierClass();
 
-   static void createInstance();
-   static RexxClass *classInstance;
+
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(Envelope *);
+
+    bool         isAvailable();
+    RexxObject  *available();
+    RexxObject  *next();
+    RexxInternalObject *value();
+    RexxInternalObject *index();
+    RexxObject  *initRexx(ArrayClass *values, ArrayClass *indexes);
+    RexxObject  *newRexx(RexxObject **, size_t);
+    ArrayClass  *getIndexes() { return indexes; }
+    ArrayClass  *getValues() { return values; }
+    void         append(ArrayClass *, ArrayClass *);
+    void         append(SupplierClass *);
+
+    static void createInstance();
+    static RexxClass *classInstance;
 
  protected:
-   RexxArray  *values;                 /* array of values                   */
-   RexxArray  *indexes;                /* array of indexes                  */
-   size_t position;                    /* current array position            */
 
- };
- class RexxSupplierClass : public RexxClass  {
-  public:
-   RexxObject  *newRexx(RexxObject **, size_t);
- };
+    ArrayClass  *values;                 // array of values
+    ArrayClass  *indexes;                // array of indexes
+    size_t position;                     // current array position
+};
 
+inline SupplierClass *new_supplier(ArrayClass *values, ArrayClass *indexes) { return new SupplierClass(values, indexes); }
 
- inline RexxSupplier *new_supplier(RexxArray *c, RexxArray *f) { return new RexxSupplier(c, f); }
- #endif
+#endif

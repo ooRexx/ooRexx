@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -44,42 +44,46 @@
 #ifndef Included_RexxInstructionTarget
 #define Included_RexxInstructionTarget
 
-#define PARSE_UPPER     1              /* Uppercase parsed string           */
-#define PARSE_LOWER     2              /* Lowercase parsed string           */
-#define PARSE_CASELESS  1              /* do case insensitive searches      */
+#include "FlagSet.hpp"
+#include "ParseInstruction.hpp"
 
-class RexxTarget {
+class RexxTarget
+{
  public:
-  inline void *operator new(size_t size, void *ptr) {return ptr;};
-  inline RexxTarget() { ; }
-  inline RexxTarget (RESTORETYPE restoreType) { ; };
-  void        init (RexxObject *, RexxObject **, size_t, size_t, bool, RexxActivation *, RexxExpressionStack *);
-  void        next(RexxActivation *);
-  void        moveToEnd();
-  void        forward(stringsize_t);
-  void        forwardLength(stringsize_t);
-  void        absolute(stringsize_t);
-  void        backward(stringsize_t);
-  void        backwardLength(stringsize_t);
-  void        search(RexxString *);
-  void        caselessSearch(RexxString *);
-  RexxString *getWord();
-  RexxString *remainder();
-  void        skipRemainder() { this->subcurrent = this->end;      /* eat the remainder piece           */ }
-  void        skipWord();
+    inline RexxTarget() { ; }
+    inline RexxTarget (RESTORETYPE restoreType) { ; };
 
-  RexxString * string;                 /* parsed string                     */
-  RexxObject **arglist;                /* argument list for PARSE ARG       */
-  RexxExpressionStack *stack;          // context expression stack (used for anchoring values for GC).
-  size_t  stackTop;                    // top location of the epxression stack
-  size_t  argcount;
-  stringsize_t  start;                 /* start of substring                */
-  stringsize_t  end;                   /* end of the substring              */
-  stringsize_t  string_length;         /* length of the string              */
-  stringsize_t  pattern_end;           /* end of matched pattern            */
-  stringsize_t  pattern_start;         /* start of matched pattern          */
-  stringsize_t  subcurrent;            /* current location for word parse   */
-  size_t  next_argument;               /* next PARSE ARG argument           */
-  size_t  translate;                   /* string translation flag           */
+    void        init (RexxObject *, RexxObject **, size_t, FlagSet<ParseFlags, 32>, bool, RexxActivation *, ExpressionStack *);
+    void        next(RexxActivation *);
+    void        moveToEnd();
+    void        forward(size_t);
+    void        forwardLength(size_t);
+    void        absolute(size_t);
+    void        backward(size_t);
+    void        backwardLength(size_t);
+    void        search(RexxString *);
+    void        caselessSearch(RexxString *);
+    RexxString *getWord();
+    RexxString *remainder();
+    inline void skipRemainder() { subcurrent = end; }
+    void        skipWord();
+
+ protected:
+
+    RexxString * string;                 // current string being parsed
+    RexxObject **arglist;                // argument list for PARSE ARG
+    ExpressionStack *stack;          // context expression stack (used for anchoring values for GC).
+    size_t  stackTop;                    // top location of the epxression stack
+    size_t  argcount;                    // count of arguments if PARSE ARG
+    size_t  next_argument;               // next PARSE ARG argument
+    FlagSet<ParseFlags, 32>  translate;  // string translation flags
+
+    // parsing position state starts here
+    size_t  string_length;         // length of the string
+    size_t  start;                 // This is the start of the substring what will be parsed into variables
+    size_t  end;                   // end of the substring section
+    size_t  pattern_start;         // start of the last matched position
+    size_t  pattern_end;           // end of the last match position (for numeric triggers, same as pattern_start)
+    size_t  subcurrent;            // current location used for parsing into words
 };
 #endif

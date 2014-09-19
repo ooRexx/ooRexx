@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -42,19 +42,19 @@
 
 #include "ActivityDispatcher.hpp"
 
-class RexxMessage;
+class MessageClass;
 
 class MessageDispatcher : public ActivityDispatcher
 {
 public:
-    inline MessageDispatcher(RexxMessage *m) : ActivityDispatcher(), message(m) { ; }
+    inline MessageDispatcher(MessageClass *m) : ActivityDispatcher(), message(m) { ; }
     virtual ~MessageDispatcher() { ; }
 
     virtual void run();
-    virtual void handleError(wholenumber_t, RexxDirectory *);
+    virtual void handleError(wholenumber_t, DirectoryClass *);
 
 protected:
-    RexxMessage *message;         // the dispatchable message
+    MessageClass *message;         // the dispatchable message
 };
 
 

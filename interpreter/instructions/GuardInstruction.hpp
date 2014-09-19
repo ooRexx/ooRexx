@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -46,24 +46,23 @@
 
 #include "RexxInstruction.hpp"
 
-#define guard_on_form 0x01             /* guard ON instruction              */
-
-class RexxInstructionGuard : public RexxInstruction {
+class RexxInstructionGuard : public RexxInstruction
+{
  public:
+    RexxInstructionGuard(RexxObject*, ArrayClass *, bool);
+    inline RexxInstructionGuard(RESTORETYPE restoreType) { ; };
 
-  inline void *operator new(size_t size, void *ptr) {return ptr;}
-  inline void operator delete(void *) { }
-  inline void operator delete(void *, void *) { }
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(Envelope*);
 
-  RexxInstructionGuard(RexxObject*, RexxArray *, bool);
-  inline RexxInstructionGuard(RESTORETYPE restoreType) { ; };
-  void live(size_t);
-  void liveGeneral(int reason);
-  void flatten(RexxEnvelope*);
-  void execute(RexxActivation *, RexxExpressionStack *);
+    virtual void execute(RexxActivation *, ExpressionStack *);
 
-  RexxObject       *expression;        /* guard expression                  */
-  size_t            variableCount;     // number of guard variables
-  RexxVariableBase *variables[1];      /* set of guard variables            */
+ protected:
+
+    bool              guardOn;           // ON or OFF form
+    RexxObject       *expression;        // guard expression
+    size_t            variableCount;     // number of guard variables
+    RexxVariableBase *variables[1];      // set of guard variables            */
 };
 #endif

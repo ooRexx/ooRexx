@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -38,27 +38,31 @@
 #ifndef Included_ActivityManager
 #define Included_ActivityManager
 
+#include "Activity.hpp"
+#include "ActivationSettings.hpp"
 #include <deque>
+#include "GlobalNames.hpp"
 
-class RexxIdentityTable;
-class RexxStack;
+class IdentityTable;
+class LiveStack;
 class RexxCode;
 class RoutineClass;
-class RexxNativeActivation;
+class NativeActivation;
+class QueueClass;
 
 class ActivityManager
 {
 public:
     static void live(size_t);
-    static void liveGeneral(int reason);
+    static void liveGeneral(MarkReason reason);
 
-    static void addWaitingActivity(RexxActivity *a, bool release);
+    static void addWaitingActivity(Activity *a, bool release);
     static inline bool hasWaiters() { return !waitingActivities.empty(); }
-    static RexxActivity *findActivity();
-    static RexxActivity *findActivity(thread_id_t);
-    static RexxActivity *getActivity();
-    static void returnActivity(RexxActivity *);
-    static void activityEnded(RexxActivity *);
+    static Activity *findActivity();
+    static Activity *findActivity(thread_id_t);
+    static Activity *getActivity();
+    static void returnActivity(Activity *);
+    static void activityEnded(Activity *);
     static void shutdown();
     static void checkShutdown();
     static void createInterpreter();
@@ -69,30 +73,36 @@ public:
     static void createLocks();
     static void closeLocks();
     static void init();
-    static RexxActivation *newActivation(RexxActivity *activity, RoutineClass *routine, RexxCode *code, RexxString *calltype, RexxString *environment, int context);
-    static RexxActivation *newActivation(RexxActivity *activity, RexxActivation *parent, RexxCode *code, int context);
-    static RexxActivation *newActivation(RexxActivity *activity, RexxMethod *method, RexxCode *code);
-    static RexxNativeActivation *newNativeActivation(RexxActivity *activity, RexxActivation *parent);
-    static RexxNativeActivation *newNativeActivation(RexxActivity *activity);
-    static RexxActivity *createNewActivity();
-    static RexxActivity *createCurrentActivity();
-    static RexxActivity *createNewActivity(RexxActivity *);
+    static RexxActivation *newActivation(Activity *activity, RoutineClass *routine, RexxCode *code, RexxString *calltype, RexxString *environment, ActivationContext context);
+    static RexxActivation *newActivation(Activity *activity, RexxActivation *parent, RexxCode *code, ActivationContext context);
+    static RexxActivation *newActivation(Activity *activity, MethodClass *method, RexxCode *code);
+    static NativeActivation *newNativeActivation(Activity *activity, RexxActivation *parent);
+    static NativeActivation *newNativeActivation(Activity *activity);
+    static Activity *createNewActivity();
+    static Activity *createCurrentActivity();
+    static Activity *createNewActivity(Activity *);
     static void haltAllActivities(RexxString *);
     static void traceAllActivities(bool on);
     static bool setActivityTrace(thread_id_t thread_id, bool on_or_off);
     static void clearActivityPool();
-    static bool poolActivity(RexxActivity *activity);
+    static bool poolActivity(Activity *activity);
     static bool haltActivity(thread_id_t thread_id, RexxString * description);
     static void yieldCurrentActivity();
     static void exit(int retcode);
-    static void relinquish(RexxActivity *activity);
-    static RexxActivity *getRootActivity();
-    static void returnRootActivity(RexxActivity *activity);
-    static RexxActivity *attachThread();
+    static void relinquish(Activity *activity);
+    static Activity *getRootActivity();
+    static void returnRootActivity(Activity *activity);
+    static Activity *attachThread();
     static RexxObject *getLocalEnvironment(RexxString *name);
-    static RexxDirectory *getLocal();
+    static DirectoryClass *getLocal();
 
-    static RexxActivity * volatile currentActivity;   // the currently active thread
+    // non-static method that is attached to the environment directory
+    DirectoryClass *getLocalRexx()
+    {
+        return getLocal();
+    }
+
+    static Activity * volatile currentActivity;   // the currently active thread
 
     static inline void postTermination()
     {
@@ -105,40 +115,33 @@ public:
     }
 
 protected:
-    enum
-    {
-        MAX_THREAD_POOL_SIZE = 5,       // maximum number of activities we'll pool
-    };
 
-                                        /* activities in use                 */
-    static RexxList         *activeActivities;
-                                        /* free activities                   */
-    static RexxList         *availableActivities;
-                                        /* table of all localact             */
-    static RexxList         *allActivities;
-    static RexxIdentityTable  *subClasses;   /* SubClasses...one per system       */
-    static bool              processTerminating;  // shutdown processing started
-    static size_t            interpreterInstances;  // number of times an interpreter has been created.
+    // maximum number of activities we'll pool
+    static const size_t MAX_THREAD_POOL_SIZE = 5;
 
-    static SysMutex          kernelSemaphore;       // global kernel semaphore lock
-    static SysSemaphore      terminationSem;    // used to signal that everything has shutdown
-    static volatile bool sentinel;  // used to ensure proper ordering of updates
-    static std::deque<RexxActivity *>waitingActivities;   // queue of waiting activities
+    static QueueClass       *availableActivities;     // table of available activities
+    static QueueClass       *allActivities;           // table of all activities
+    static bool              processTerminating;      // shutdown processing started
+    static size_t            interpreterInstances;    // number of times an interpreter has been created.
+
+    static SysMutex          kernelSemaphore;         // global kernel semaphore lock
+    static SysSemaphore      terminationSem;          // used to signal that everything has shutdown
+    static volatile bool sentinel;                    // used to ensure proper ordering of updates
+    static std::deque<Activity *>waitingActivities;   // queue of waiting activities
 };
 
 
-                                       /* various exception/condition       */
-                                       /* reporting routines                */
-inline void reportCondition(RexxString *condition, RexxString *description) { ActivityManager::currentActivity->raiseCondition(condition, OREF_NULL, description, OREF_NULL, OREF_NULL); }
-inline void reportNovalue(RexxString *description) { reportCondition(OREF_NOVALUE, description); }
-inline void reportNostring(RexxString *description) { reportCondition(OREF_NOSTRING, description); }
+// various exception/condition reporting routines
+inline void reportCondition(RexxString *condition, RexxObject *description) { ActivityManager::currentActivity->raiseCondition(condition, OREF_NULL, description, OREF_NULL, OREF_NULL); }
+inline void reportNovalue(RexxString *description) { reportCondition(GlobalNames::NOVALUE, description); }
+inline void reportNostring(RexxString *description) { reportCondition(GlobalNames::NOSTRING, description); }
 
 inline void reportException(wholenumber_t error)
 {
     ActivityManager::currentActivity->reportAnException(error);
 }
 
-inline void reportException(wholenumber_t error, RexxArray *args)
+inline void reportException(wholenumber_t error, ArrayClass *args)
 {
     ActivityManager::currentActivity->raiseException(error, OREF_NULL, args, OREF_NULL);
 }
@@ -235,40 +238,25 @@ inline void reportException(wholenumber_t error, const char *a1, RexxObject *a2,
 
 inline void reportNomethod(RexxString *message, RexxObject *receiver)
 {
-    if (!ActivityManager::currentActivity->raiseCondition(OREF_NOMETHOD, OREF_NULL, message, receiver, OREF_NULL))
+    if (!ActivityManager::currentActivity->raiseCondition(GlobalNames::NOMETHOD, OREF_NULL, message, receiver, OREF_NULL))
     {
-                                           /* raise as a syntax error           */
         reportException(Error_No_method_name, receiver, message);
     }
 }
 
 
-inline void missingArgument(size_t argumentPosition)
-{
-                                       /* just raise the error              */
-    reportException(Error_Incorrect_method_noarg, argumentPosition);
-}
+inline Activity *new_activity()  { return ActivityManager::createNewActivity(); }
+inline Activity *new_activity(Activity *parent)  { return ActivityManager::createNewActivity(parent); }
 
 
-inline RexxActivity *new_activity()  { return ActivityManager::createNewActivity(); }
-inline RexxActivity *new_activity(RexxActivity *parent)  { return ActivityManager::createNewActivity(parent); }
-
-
+/**
+ * Return name of last message sent via messageSend()
+ *
+ * @return
+ */
 inline RexxString *lastMessageName()
-/******************************************************************************/
-/* Function:  Return name of last message sent via messageSend()              */
-/******************************************************************************/
 {
   return ActivityManager::currentActivity->getLastMessageName();
-}
-
-inline RexxMethod *lastMethod()
-/******************************************************************************/
-/* Function:  Return last invoked method object (for use by kernel methods    */
-/*            only)                                                           */
-/******************************************************************************/
-{
-    return ActivityManager::currentActivity->getLastMethod();
 }
 
 
@@ -291,7 +279,34 @@ public:
         activity->requestAccess();
     }
 protected:
-    RexxActivity *activity;
+    Activity *activity;
+};
+
+
+/**
+ * Obtain a lock on a semaphore in "safe" fashion.  This will
+ * release the kernel lock if it needs to wait on the
+ * target semaphore to keep from locking out other threads.
+ */
+class SafeLock
+{
+public:
+    inline SafeLock(SysMutex &l) : lock(l)
+    {
+        // make sure we grab the target semaphore first, then
+        // the kernel semaphore.
+        UnsafeBlock releaser;
+        lock.request();
+    }
+
+
+    inline ~SafeLock()
+    {
+        lock.release();
+    }
+
+protected:
+     SysMutex &lock;
 };
 
 
@@ -314,7 +329,7 @@ public:
         activity->enterKernel();
     }
 protected:
-    RexxActivity *activity;
+    Activity *activity;
 };
 
 
@@ -326,8 +341,8 @@ public:
     ~NativeContextBlock();
     RexxObject *protect(RexxObject *o);
 
-    RexxNativeActivation *self;        // the native activation we operate under
-    RexxActivity         *activity;    // our current activity
+    NativeActivation *self;        // the native activation we operate under
+    Activity         *activity;    // our current activity
     InterpreterInstance  *instance;    // potential interpreter instance
 };
 

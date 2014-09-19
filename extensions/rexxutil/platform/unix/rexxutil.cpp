@@ -1940,7 +1940,7 @@ RexxRoutine2(RexxObjectPtr, SysCreateEventSem, OPTIONAL_CSTRING, name, OPTIONAL_
 * Return:    result - return code from DosOpenEventSem                   *
 *************************************************************************/
 
-RexxMethod1(uintptr_t, SysOpenEventSem, CSTRING, name)
+RexxRoutine1(uintptr_t, SysOpenEventSem, CSTRING, name)
 {
     RXSEMDATA *semdata;
 
@@ -1967,7 +1967,7 @@ RexxMethod1(uintptr_t, SysOpenEventSem, CSTRING, name)
 * Return:    result - return code from DosResetEventSem                  *
 *************************************************************************/
 
-RexxMethod1(int, SysResetEventSem, uintptr_t, vhandle)
+RexxRoutine1(int, SysResetEventSem, uintptr_t, vhandle)
 {
     RXSEMDATA *semdata = (RXSEMDATA *)vhandle;
 
@@ -1986,7 +1986,7 @@ RexxMethod1(int, SysResetEventSem, uintptr_t, vhandle)
 * Return:    result - return code from DosPostEventSem                   *
 *************************************************************************/
 
-RexxMethod1(int, SysPostEventSem, uintptr_t, vhandle)
+RexxRoutine1(int, SysPostEventSem, uintptr_t, vhandle)
 {
     RXSEMDATA *semdata = (RXSEMDATA *)vhandle;
     int rc;
@@ -2009,7 +2009,7 @@ RexxMethod1(int, SysPostEventSem, uintptr_t, vhandle)
 * Return:    result - return code from DosCloseEventSem                  *
 *************************************************************************/
 
-RexxMethod1(int, SysCloseEventSem, uintptr_t, vhandle)
+RexxRoutine1(int, SysCloseEventSem, uintptr_t, vhandle)
 {
     RXSEMDATA *semdata = (RXSEMDATA *)vhandle;
 

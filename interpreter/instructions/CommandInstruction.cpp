@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -41,40 +41,49 @@
 /* Primitive Command Parse Class                                              */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "RexxActivation.hpp"
 #include "CommandInstruction.hpp"
+#include "MethodArguments.hpp"
 
 
-RexxInstructionCommand::RexxInstructionCommand(
-    RexxObject *_expression)            /* command expression                */
-/******************************************************************************/
-/* Function:  Complete initialzation a command instruction object             */
-/******************************************************************************/
+/**
+ * Constructor for a command instruction.
+ *
+ * @param _expression
+ *               The required expression for this command.
+ */
+RexxInstructionCommand::RexxInstructionCommand(RexxObject *_expression)
 {
-                                       /* save the command expression       */
-  OrefSet(this, this->expression, _expression);
+
+    expression = _expression;
 }
 
-void RexxInstructionCommand::execute(
-    RexxActivation      *context,      /* current activation context        */
-    RexxExpressionStack *stack )       /* evaluation stack                  */
-/****************************************************************************/
-/* Function:  Execute a REXX command instruction                            */
-/****************************************************************************/
+
+/**
+ * Execute a command instruction.
+ *
+ * @param context The current program activation context.
+ * @param stack   The current expression stack.
+ */
+void RexxInstructionCommand::execute(RexxActivation *context, ExpressionStack *stack )
 {
-    context->traceCommand(this);         /* trace if necessary                */
-                                         /* get the expression value          */
-    RexxObject *result = this->expression->evaluate(context, stack);
-    RexxString *command = REQUEST_STRING(result);    /* force to string form              */
-    /* are we tracing commands?          */
+    context->traceCommand(this);
+
+    // NOTE:  Because commands have special tracing requirements, we don't use
+    // the superclass methods for evaluating this expression.
+
+    // get the expression result and convert to a string value
+    RexxObject *result = expression->evaluate(context, stack);
+    RexxString *command = result->requestString();
+    // are we tracing commands?
     if (context->tracingCommands())
     {
-        /* then we always trace full command */
-        context->traceValue((RexxObject *)command, TRACE_PREFIX_RESULT);
+        // trace the full command result
+        context->traceResultValue(command);
     }
-    /* go process the command            */
+
+    // finally, execute this command in the current address environment
     context->command(context->getAddress(), command);
 }
 

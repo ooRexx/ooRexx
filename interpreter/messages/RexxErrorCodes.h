@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -307,6 +307,7 @@
 #define Error_Invalid_expression_use_strict_default        35930
 #define Error_Invalid_expression_parse                     35931
 #define Error_Invalid_expression_call                      35932
+#define Error_Invalid_expression_select_case               35933
 #define Error_Unmatched_parenthesis                        36000
 #define Error_Unmatched_parenthesis_user_defined           36900
 #define Error_Unmatched_parenthesis_paren                  36901
@@ -558,6 +559,8 @@
 #define Error_Execution_context_not_active                 98981
 #define Error_Execution_library_version                    98982
 #define Error_Execution_invalid_thread                     98983
+#define Error_Execution_rexx_package_update                98984
+#define Error_Execution_rexx_defined_class                 98985
 #define Error_Translation                                  99000
 #define Error_Translation_user_defined                     99900
 #define Error_Translation_duplicate_class                  99901
@@ -597,6 +600,7 @@
 #define Error_Translation_constant_body                    99938
 #define Error_Translation_external_routine                 99939
 #define Error_Translation_abstract_attribute               99940
+#define Error_Translation_directive_method_routine         99941
 #define Error_at_line                                      101000
 #define Message_Translations_error                         101001
 #define Message_Translations_running                       101002

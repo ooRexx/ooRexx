@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                   CallInstruction.hpp  */
+/* REXX Kernel                                           CallInstruction.hpp  */
 /*                                                                            */
 /* Primitive CALL instruction Class Definitions                               */
 /*                                                                            */
@@ -45,49 +45,129 @@
 #define Included_RexxInstructionCall
 
 #include "RexxInstruction.hpp"
+#include "Token.hpp"
+
+class QueueClass;
+class StringTable;
 
 
-class RexxInstructionCallBase : public RexxInstruction {
+/**
+ * Base class for all instruction types that need a
+ * resolution step (i.e., SIGNAL and CALL).
+ */
+class RexxInstructionCallBase : public RexxInstruction
+{
  public:
-  inline RexxInstructionCallBase() { ; };
-  virtual void resolve(RexxDirectory *) { ; };
-  virtual void trap(RexxActivation *, RexxDirectory *) { ; };
+    inline RexxInstructionCallBase() { ; };
+    // subclasses must provide this
+    virtual void resolve(StringTable *) = 0;
 
-  RexxObject      * name;              /* name to call                      */
-  RexxInstruction * target;            /* routine to call                   */
-  RexxString      * condition;         /* condition trap name               */
-  uint16_t     argumentCount;          // number of arguments
-  uint16_t     builtinIndex;           // builtin function index
+ protected:
+
+    RexxString      *targetName;              // name to call
+    RexxInstruction *targetInstruction;       // resolved instruction target if this is internal
 };
 
-class RexxInstructionCall : public RexxInstructionCallBase {
+
+/**
+ * Base class for instruction types that resolve a target by
+ * evaluating at run time (i.e, SIGNAL VALUE or CALL (expr)
+ */
+class RexxInstructionDynamicCallBase : public RexxInstruction
+{
  public:
-     enum
-     {
-         call_nointernal  = 0x01,         // bypass internal routine calls
-         call_type_mask   = 0x0e,         // type of call
-         call_internal    = 0x02,         // internal call
-         call_builtin     = 0x06,         // builtin call
-         call_external    = 0x0e,         // external call
-         call_dynamic     = 0x10,         // dynamic call
-         call_on_off      = 0x20,         // call ON/OFF instruction
-     };
+    inline RexxInstructionDynamicCallBase() { ; };
 
-  inline void *operator new(size_t size, void *ptr) {return ptr;}
-  inline void operator delete(void *) { }
-  inline void operator delete(void *, void *) { }
+ protected:
 
-  RexxInstructionCall(RexxObject *, RexxString *, size_t, RexxQueue *, size_t, size_t);
-  inline RexxInstructionCall(RESTORETYPE restoreType) { ; };
-  void live(size_t);
-  void liveGeneral(int reason);
-  void flatten(RexxEnvelope*);
-  void execute(RexxActivation *, RexxExpressionStack *);
-  void resolve(RexxDirectory *);
-  void trap(RexxActivation *, RexxDirectory *);
+    RexxObject      *dynamicName;             // we don't have a static name or resolved target for this.
+};
+
+
+/**
+ * Base class for SIGNAL/CALL ON trap instructions.
+ */
+class RexxInstructionTrapBase : public RexxInstructionCallBase
+{
+ public:
+    inline RexxInstructionTrapBase() { ; };
+    virtual void trap(RexxActivation *, DirectoryClass *) { ; };
+
+ protected:
+
+    RexxString *conditionName;         // the condition trap name
+};
+
+
+/**
+ * A typical call instruction.  This only handles
+ * the static CALL cases, not CALL ON/OFF
+ */
+class RexxInstructionCall : public RexxInstructionCallBase
+{
+ public:
+    RexxInstructionCall(RexxString *, size_t, QueueClass *, BuiltinCode);
+    inline RexxInstructionCall(RESTORETYPE restoreType) { ; };
+
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(Envelope*);
+
+    virtual void execute(RexxActivation *, ExpressionStack *);
+    virtual void resolve(StringTable *);
 
 protected:
 
-    RexxObject * arguments[1];           // argument list
+    BuiltinCode  builtinIndex;           // builtin function index
+    size_t       argumentCount;          // number of arguments
+    RexxObject  *arguments[1];           // argument list
+};
+
+
+/**
+ * A call instruction that resolves the target at runtime
+ * based on a resolved expression.
+ */
+class RexxInstructionDynamicCall : public RexxInstructionDynamicCallBase
+{
+ public:
+    RexxInstructionDynamicCall(RexxObject *, size_t, QueueClass *);
+    inline RexxInstructionDynamicCall(RESTORETYPE restoreType) { ; };
+
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(Envelope*);
+
+    virtual void execute(RexxActivation *, ExpressionStack *);
+
+protected:
+
+    size_t       argumentCount;          // number of arguments
+    RexxObject  *arguments[1];           // argument list
+};
+
+
+/**
+ * An instruction object to handle the basics of the
+ * CALL ON/OFF instruction.
+ */
+class RexxInstructionCallOn : public RexxInstructionTrapBase
+{
+ public:
+    RexxInstructionCallOn(RexxString*, RexxString *, BuiltinCode);
+    inline RexxInstructionCallOn(RESTORETYPE restoreType) { ; };
+
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(Envelope*);
+
+    virtual void execute(RexxActivation *, ExpressionStack *);
+    virtual void resolve(StringTable *);
+
+    virtual void trap(RexxActivation *context, DirectoryClass  *conditionObj);
+
+protected:
+
+    BuiltinCode  builtinIndex;           // builtin function index
 };
 #endif

@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -55,7 +55,7 @@
 #include "StringClass.hpp"
 // #include "RexxNativeAPI.h"                      /*  THUTHUREXX native interface*/
 #include "DirectoryClass.hpp"
-#include "RexxActivity.hpp"
+#include "Activity.hpp"
 #include "RexxActivation.hpp"
 #include "ActivityManager.hpp"
 #include "PointerClass.hpp"
@@ -88,42 +88,9 @@
 
 #define LOADED_OBJECTS 100
 
-RexxString *SystemInterpreter::getInternalSystemName()
-{
-    return getSystemName();     // this is the same
-}
 
-RexxString *SystemInterpreter::getSystemName()
-/******************************************************************************/
-/* Function: Get System Name                                                  */
-/******************************************************************************/
-{
-#if defined(AIX)
-    return new_string("AIX");
-#elif defined(OPSYS_SUN)
-    return new_string("SUNOS");
-#else
-    return new_string("LINUX");
-#endif
-
-}
-
-
-RexxString *SystemInterpreter::getSystemVersion()
-/******************************************************************************/
-/* Function:   Return the system specific version identifier that is stored   */
-/*             in the image.                                                  */
-/******************************************************************************/
-{
-    struct utsname info;                 /* info structur              */
-
-    uname(&info);                        /* get the info               */
-
-    return new_string(info.release);    /* return as a string                */
-}
-
-
-#define MAX_ADDRESS_NAME_LENGTH  250   /* maximum command environment name  */
+// maximum length of an environment name.
+const size_t MAX_ADDRESS_NAME_LENGTH = 250;
 
 
 /**
@@ -133,13 +100,13 @@ RexxString *SystemInterpreter::getSystemVersion()
  */
 void SystemInterpreter::validateAddressName(RexxString *name )
 {
-    /* name too long?                    */
+    // only complain if it is too long.
     if (name->getLength() > MAX_ADDRESS_NAME_LENGTH)
     {
-        /* go report an error                */
         reportException(Error_Environment_name_name, MAX_ADDRESS_NAME_LENGTH, name);
     }
 }
+
 
 RexxString * SystemInterpreter::getSourceString(RexxString * callType, RexxString * programName )
 /******************************************************************************/

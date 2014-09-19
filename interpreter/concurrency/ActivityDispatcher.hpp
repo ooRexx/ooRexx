@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -41,8 +41,8 @@
 #define ActivityDispatcher_included
 
 
-class RexxDirectory;
-class RexxNativeActivation;
+class DirectoryClass;
+class NativeActivation;
 
 class ActivityDispatcher
 {
@@ -51,21 +51,21 @@ public:
     virtual ~ActivityDispatcher() { ; }
 
     virtual void run();
-    virtual void handleError(wholenumber_t, RexxDirectory *);
-    virtual void handleError(RexxDirectory *);
+    virtual void handleError(wholenumber_t, DirectoryClass *);
+    virtual void handleError(DirectoryClass *);
     virtual void invoke();
     virtual void invoke(RexxOption *);
     virtual void invoke(PRXSYSEXIT exits, const char *env);
 
-    inline void setContext(RexxActivity *act, RexxNativeActivation *a) { activity = act; activation = a; }
+    inline void setContext(Activity *act, NativeActivation *a) { activity = act; activation = a; }
 
     wholenumber_t  rc;                 // error return code
-    RexxDirectory *conditionData;      // any condition data posted due to an activity error
+    DirectoryClass *conditionData;      // any condition data posted due to an activity error
 
 protected:
 
-    RexxActivity *activity;            // the activity we're running on
-    RexxNativeActivation *activation;  // the native activation we're running under
+    Activity *activity;            // the activity we're running on
+    NativeActivation *activation;  // the native activation we're running under
 };
 
 

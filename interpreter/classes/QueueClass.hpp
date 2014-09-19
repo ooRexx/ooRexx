@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -41,50 +41,41 @@
 /* Primitive Queue Class Definitions                                          */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_RexxQueue
-#define Included_RexxQueue
+#ifndef Included_QueueClass
+#define Included_QueueClass
 
-#include "ListClass.hpp"
+#include "ArrayClass.hpp"
 
-class RexxQueue : public RexxList {
+class QueueClass : public ArrayClass
+{
  public:
 
- void *operator new(size_t);
- inline void *operator new(size_t size, void *ptr) {return ptr;};
- inline RexxQueue() {;};
- inline RexxQueue(RESTORETYPE restoreType) { ; };
- RexxObject *pullRexx();
- RexxObject *pushRexx(RexxObject *);
- RexxObject *queueRexx(RexxObject *);
- LISTENTRY *locateEntry(RexxObject *, RexxObject *);
- RexxObject *put(RexxObject *, RexxObject *);
- RexxObject *at(RexxObject *);
- RexxObject *remove(RexxObject *);
- RexxObject *hasindex(RexxObject *);
- RexxObject *peek();
- RexxObject *supplier();
- RexxObject *newRexx(RexxObject **, size_t);
- RexxQueue  *ofRexx(RexxObject **, size_t);
- RexxObject *append(RexxObject *);
- RexxArray  *allIndexes();
- RexxObject *index(RexxObject *);
- RexxObject *firstRexx();
- RexxObject *lastRexx();
- RexxObject *next(RexxObject *);
- RexxObject *previous(RexxObject *);
- size_t      entryToIndex(size_t target);
- RexxObject *insert(RexxObject *, RexxObject *);
- RexxObject   *section(RexxObject *, RexxObject *);
- RexxObject   *sectionSubclass(LISTENTRY *, size_t);
+     void * operator new(size_t, size_t = DefaultArraySize, size_t = DefaultArraySize);
 
- inline RexxObject *pop() { return this->removeFirst();};
- inline void push(RexxObject *obj) { this->addFirst(obj);};
- inline void queue(RexxObject *obj) { this->addLast(obj);};
+     inline QueueClass() {;};
+     inline QueueClass(RESTORETYPE restoreType) { ; };
 
- static void createInstance();
- static RexxClass *classInstance;
+     virtual bool validateIndex(RexxObject **index, size_t indexCount, size_t argPosition, size_t boundsError, size_t &position);
+     virtual void checkInsertIndex(size_t position);
+     RexxInternalObject *pullRexx();
+     RexxObject *pushRexx(RexxInternalObject *item);
+     RexxObject *queueRexx(RexxInternalObject *item);
+     RexxInternalObject *peek();
+     RexxObject *putRexx(RexxInternalObject *value, RexxObject *index);
+     RexxObject *initRexx(RexxObject *initialSize);
 
+     inline RexxInternalObject *pop() { return deleteItem(1);}
+     inline RexxInternalObject *pull() { return deleteItem(1);}
+     inline void push(RexxInternalObject *obj) { addFirst(obj); }
+     inline void queue(RexxInternalObject *obj) { addLast(obj); }
+     virtual RexxInternalObject *remove(size_t index);
+     RexxObject *newRexx(RexxObject **init_args, size_t argCount);
+     QueueClass *ofRexx(RexxObject **args, size_t argCount);
+
+     static void createInstance();
+     static RexxClass *classInstance;
 };
 
-inline RexxQueue *new_queue() { return new RexxQueue; }
+inline QueueClass *new_queue() { return new(ArrayClass::DefaultArraySize) QueueClass; }
+inline QueueClass *new_queue(size_t s) { return new(s) QueueClass; }
 #endif

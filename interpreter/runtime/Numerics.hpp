@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.ibm.com/developerworks/oss/CPLv1.0.htm                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -45,52 +45,85 @@
 #ifndef Included_Numerics
 #define Included_Numerics
 
+#include "RexxCore.h"
 
-class NumericSettings                  // "global" numeric settings         */
+
+/**
+ * A class for processing different numeric settings
+ */
+class NumericSettings
 {
-    public:
-      NumericSettings();
-      size_t digits;                       /* numeric digits setting            */
-      size_t fuzz;                         /* numeric fuzz setting              */
-      bool form;                           /* numeric form setting              */
-};                                         /* global activation settings        */
+ public:
+
+    NumericSettings();
+
+    void setDefault();
+
+    inline void   setDigits(wholenumber_t d) { digits = d; }
+    inline wholenumber_t getDigits() const { return digits; }
+    inline void   setForm(bool f) { form = f; }
+    inline bool   getForm() const { return form; }
+    inline void   setFuzz(wholenumber_t f) { fuzz = f; }
+    inline wholenumber_t getFuzz() const { return fuzz; }
+
+protected:
+
+    wholenumber_t digits;                 // numeric digits setting
+    wholenumber_t fuzz;                   // numeric fuzz setting
+    bool   form;                          // numeric form setting
+};
 
 
+/**
+ * A class for holding all numeric-based settings and
+ * some numeric oriented static methods.
+ */
 class Numerics
 {
 public:
-    static const wholenumber_t MAX_WHOLENUMBER;
-    static const wholenumber_t MIN_WHOLENUMBER;
-    static const wholenumber_t MAX_EXPONENT;
-    static const wholenumber_t MIN_EXPONENT;
-    static const size_t DEFAULT_DIGITS;
-    // a digits setting for full range integer conversion
-    static const size_t ARGUMENT_DIGITS;
+#ifdef __REXX64__
+    static const wholenumber_t Numerics::MAX_WHOLENUMBER = __INT64_C(999999999999999999);
+    static const wholenumber_t Numerics::MIN_WHOLENUMBER = __INT64_C(-999999999999999999);
     // the digits setting used internally for function/method arguments to allow
     // for the full range
-    static const size_t SIZE_DIGITS;
-    static const size_t  MAX_STRINGSIZE;
+    static const wholenumber_t Numerics::ARGUMENT_DIGITS  = ((size_t)18);
+    // this is the digits setting for full size binary settings
+    static const wholenumber_t Numerics::SIZE_DIGITS  = ((size_t)20);
+#else
+    static const wholenumber_t Numerics::MAX_WHOLENUMBER = 999999999;
+    static const wholenumber_t Numerics::MIN_WHOLENUMBER = -999999999;
+        // the digits setting used internally for function/method arguments to allow
+        // for the full binary value range
+    static const wholenumber_t Numerics::ARGUMENT_DIGITS  = ((size_t)9);
+    // this is the digits setting for full size binary settings
+    static const wholenumber_t Numerics::SIZE_DIGITS  = ((size_t)10);
+#endif
+
+    static const wholenumber_t MAX_EXPONENT = 999999999;
+    static const wholenumber_t MIN_EXPONENT = -999999999;
+    static const wholenumber_t DEFAULT_DIGITS  = ((size_t)9);
+    // a digits setting for full range integer conversion
+    static const size_t  MAX_STRINGSIZE = MAX_WHOLENUMBER;
 
     // max numeric digits value for explicit 64-bit conversions
-    static const size_t DIGITS64;
-    static const bool FORM_SCIENTIFIC;
-    static const bool FORM_ENGINEERING;
+    static const wholenumber_t DIGITS64 = ((size_t)20);
+    static const bool FORM_SCIENTIFIC = false;
+    static const bool FORM_ENGINEERING = true;
 
-    static const size_t DEFAULT_FUZZ;
-                                     /* default numeric form setting      */
-    static const bool DEFAULT_FORM;
+    static const wholenumber_t DEFAULT_FUZZ = 0;
+    static const bool DEFAULT_FORM = FORM_SCIENTIFIC;
 
     static const wholenumber_t validMaxWhole[];      // table of maximum values per digits setting
 
     static RexxObject *wholenumberToObject(wholenumber_t v);
-    static RexxObject *stringsizeToObject(stringsize_t v);
+    static RexxObject *stringsizeToObject(size_t v);
     static RexxObject *int64ToObject(int64_t v);
     static RexxObject *uint64ToObject(uint64_t v);
     static RexxObject *uintptrToObject(uintptr_t v);
     static RexxObject *intptrToObject(intptr_t v);
 
     static bool objectToWholeNumber(RexxObject *o, wholenumber_t &result, wholenumber_t max, wholenumber_t min);
-    static bool objectToStringSize(RexxObject *o, stringsize_t &result, stringsize_t max);
+    static bool objectToStringSize(RexxObject *o, size_t &result, size_t max);
     static bool objectToSignedInteger(RexxObject *o, ssize_t &result, ssize_t max, ssize_t min);
     static bool objectToUnsignedInteger(RexxObject *o, size_t &result, size_t max);
     static bool objectToInt64(RexxObject *o, int64_t &result);
@@ -100,24 +133,24 @@ public:
     static RexxObject *int64Object(RexxObject *source);
 
     static size_t formatWholeNumber(wholenumber_t integer, char *dest);
-    static size_t formatStringSize(stringsize_t integer, char *dest);
+    static size_t formatStringSize(size_t integer, char *dest);
     static size_t formatInt64(int64_t integer, char *dest);
     static size_t formatUnsignedInt64(uint64_t integer, char *dest);
 
     static size_t normalizeWholeNumber(wholenumber_t integer, char *dest);
 
-    static size_t digits() { return settings->digits; }
-    static size_t fuzz()   { return settings->fuzz; }
-    static bool   form()   { return settings->form; }
-    static void   setCurrentSettings(NumericSettings *s) { settings = s; }
-    static NumericSettings *setDefaultSettings() { settings = &defaultSettings; return settings; }
-    static NumericSettings *getDefaultSettings() { return &defaultSettings; }
+    static wholenumber_t digits() { return settings->getDigits(); }
+    static wholenumber_t fuzz()   { return settings->getFuzz(); }
+    static bool   form()   { return settings->getForm(); }
+    static void   setCurrentSettings(const NumericSettings *s) { settings = s; }
+    static const NumericSettings *setDefaultSettings() { settings = &defaultSettings; return settings; }
+    static const NumericSettings *getDefaultSettings() { return &defaultSettings; }
     static inline wholenumber_t abs(wholenumber_t n) { return n < 0 ? -n : n; }
     static inline wholenumber_t minVal(wholenumber_t n1, wholenumber_t n2) { return n2 > n1 ? n1 : n2; }
-    static inline stringsize_t minVal(stringsize_t n1, stringsize_t n2) { return n2 > n1 ? n1 : n2; }
+    static inline size_t minVal(size_t n1, size_t n2) { return n2 > n1 ? n1 : n2; }
     static inline wholenumber_t maxVal(wholenumber_t n1, wholenumber_t n2) { return n2 > n1 ? n2 : n1; }
-    static inline stringsize_t maxVal(stringsize_t n1, stringsize_t n2) { return n2 > n1 ? n2 : n1; }
-    static inline wholenumber_t maxValueForDigits(size_t d)
+    static inline size_t maxVal(size_t n1, size_t n2) { return n2 > n1 ? n2 : n1; }
+    static inline wholenumber_t maxValueForDigits(wholenumber_t d)
     {
         if (d > ARGUMENT_DIGITS)
         {
@@ -136,17 +169,24 @@ public:
 
     static RexxString *pointerToString(void *);
 
+    static inline bool isValid(wholenumber_t v) { return v <= Numerics::MAX_WHOLENUMBER && v >= Numerics::MIN_WHOLENUMBER; }
+    // this has a different name because when compiling for 64-bit, wholenumber_t and int64_t are the same and
+    // the compiler complains.  The first is for validating a whole number value, the second is for validating an
+    // explicit 64-bit value.
+    static inline bool isValid64Bit(int64_t v) { return v <= Numerics::MAX_WHOLENUMBER && v >= Numerics::MIN_WHOLENUMBER; }
+    static inline bool isValid(wholenumber_t v, size_t digits)  {return digits >= DEFAULT_DIGITS || abs(v) < validMaxWhole[digits - 1]; }
+
 
 protected:
 
-    static NumericSettings *settings;
-    static NumericSettings  defaultSettings;
+    static const NumericSettings *settings;
+    static const NumericSettings  defaultSettings;
 };
 
 
-inline size_t number_digits() { return Numerics::digits(); }
-inline size_t number_fuzz()   { return Numerics::fuzz(); }
+inline wholenumber_t number_digits() { return Numerics::digits(); }
+inline wholenumber_t number_fuzz()   { return Numerics::fuzz(); }
 inline bool   number_form()   { return Numerics::form(); }
-inline size_t number_fuzzydigits()   { return number_digits() - number_fuzz(); }
+inline wholenumber_t number_fuzzydigits()   { return number_digits() - number_fuzz(); }
 #endif
 

@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -45,7 +45,7 @@
 #define Included_StringUtil
 
 class RexxInteger;
-class RexxArray;
+class ArrayClass;
 
 class StringUtil
 {
@@ -59,37 +59,34 @@ public:
     static size_t lastPos(const char *stringData, size_t hastackLen, RexxString  *needle, size_t _start, size_t _range);
     static const char *lastPos(const char *needle, size_t needleLen, const char *haystack, size_t haystackLen);
     static RexxString *subchar(const char *stringData, size_t stringLength, RexxInteger *positionArg);
-    static RexxArray *makearray(const char *start, size_t length, RexxString *separator);
+    static ArrayClass *makearray(const char *start, size_t length, RexxString *separator);
     static size_t caselessLastPos(const char *stringData, size_t hastackLen, RexxString  *needle, size_t _start, size_t range);
-    static const char * caselessLastPos(const char *needle, size_t needleLen, const char *haystack, size_t haystackLen);
+    static const char *caselessLastPos(const char *needle, size_t needleLen, const char *haystack, size_t haystackLen);
     static int caselessCompare(const char *, const char *, size_t);
     static int hexDigitToInt(char  ch);
     static char packByte(const char *String);
     static void unpackNibble(int Val, char *p);
     static char packNibble(const char *String);
     static RexxString *packHex(const char *String, size_t StringLength);
-    static size_t chGetSm(char *Destination, const char *Source, size_t Length, size_t Count, const char *Set, size_t *ScannedSize);
+    static size_t chGetSm(char *Destination, const char *Source, size_t Length, size_t Count, const char *Set, size_t &ScannedSize);
     static size_t validateSet(const char *String, size_t Length, const char *Set, int Modulus, bool Hex);
     static char packByte2(const char *Byte);
-    static int valSet(const char *String, size_t Length, const char *Set, int Modulus, size_t *PackedSize );
+    static bool validateCharacterSet(const char *String, size_t Length, const char *Set, int Modulus, size_t &PackedSize);
     static const char *memcpbrk(const char *String, const char *Set, size_t Length);
     static RexxObject *dataType(RexxString *String, char Option );
     static size_t wordCount(const char *String, size_t   StringLength );
-    static void skipNonBlanks(const char **String, size_t *StringLength);
-    static void skipBlanks(const char **String, size_t *StringLength);
-    static size_t nextWord(const char **String, size_t *StringLength, const char **NextString );
     static size_t countStr(const char *hayStack, size_t hayStackLength, RexxString *needle);
     static size_t caselessCountStr(const char *hayStack, size_t hayStackLength, RexxString *needle);
     static size_t memPos(const char *string, size_t length, char target);
     static RexxInteger *verify(const char *data, size_t stringLen, RexxString  *ref, RexxString  *option, RexxInteger *_start, RexxInteger *range);
     static RexxString *subWord(const char *data, size_t length, RexxInteger *position, RexxInteger *plength);
-    static RexxArray *subWords(const char *data, size_t length, RexxInteger *position, RexxInteger *plength);
+    static ArrayClass *subWords(const char *data, size_t length, RexxInteger *position, RexxInteger *plength);
     static RexxString *word(const char *data, size_t length, RexxInteger *position);
     static RexxInteger *wordIndex(const char *data, size_t length, RexxInteger *position);
     static RexxInteger *wordLength(const char *data, size_t length, RexxInteger *position);
-    static stringsize_t wordPos(const char *data, size_t length, RexxString  *phrase, RexxInteger *pstart);
-    static stringsize_t caselessWordPos(const char *data, size_t length, RexxString  *phrase, RexxInteger *pstart);
-    static RexxArray   *words(const char *data, size_t length);
+    static size_t wordPos(const char *data, size_t length, RexxString  *phrase, RexxInteger *pstart);
+    static size_t caselessWordPos(const char *data, size_t length, RexxString  *phrase, RexxInteger *pstart);
+    static ArrayClass   *words(const char *data, size_t length);
     static const char  *locateSeparator(const char *start, const char *end, const char *sepData, size_t sepLength);
 
     static inline bool matchCharacter(char ch, const char *charSet, size_t len)

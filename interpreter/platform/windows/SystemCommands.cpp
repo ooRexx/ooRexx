@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -45,14 +45,11 @@
 /*  Internal routines:                                                        */
 /*    sys_command - Run a command through system command processor.           */
 /******************************************************************************/
-#include <string.h>                    /* Get strcpy, strcat, etc.       */
-
 #include <process.h>
-#include <stdlib.h>
 
 #include "RexxCore.h"                    /* global REXX declarations     */
 #include "StringClass.hpp"
-#include "RexxActivity.hpp"
+#include "Activity.hpp"
 #include "ActivityManager.hpp"
 #include "ProtectedObject.hpp"
 #include "RexxInternalApis.h"          /* Get private REXXAPI API's         */
@@ -80,7 +77,7 @@
  */
 RexxString *SystemInterpreter::getDefaultAddressName()
 {
-    return OREF_INITIALADDRESS;
+    return GlobalNames::INITIALADDRESS;
 }
 
 

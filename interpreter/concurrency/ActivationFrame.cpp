@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.ibm.com/developerworks/oss/CPLv1.0.htm                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -39,7 +39,7 @@
 #include "RexxCore.h"
 #include "ActivationFrame.hpp"
 #include "RexxActivation.hpp"
-#include "RexxNativeActivation.hpp"
+#include "NativeActivation.hpp"
 #include "StackFrameClass.hpp"
 
 RexxString *RexxActivationFrame::messageName()
@@ -47,9 +47,9 @@ RexxString *RexxActivationFrame::messageName()
     return activation->getMessageName();
 }
 
-RexxMethod *RexxActivationFrame::method()
+BaseExecutable *RexxActivationFrame::executable()
 {
-    return (RexxMethod *)activation->getExecutableObject();
+    return activation->getExecutableObject();
 }
 
 StackFrameClass *RexxActivationFrame::createStackFrame()
@@ -57,9 +57,9 @@ StackFrameClass *RexxActivationFrame::createStackFrame()
     return activation->createStackFrame();
 }
 
-RexxSource *RexxActivationFrame::getSource()
+PackageClass *RexxActivationFrame::getPackage()
 {
-    return activation->getEffectiveSourceObject();
+    return activation->getEffectivePackageObject();
 }
 
 RexxString *NativeActivationFrame::messageName()
@@ -67,9 +67,9 @@ RexxString *NativeActivationFrame::messageName()
     return activation->getMessageName();
 }
 
-RexxMethod *NativeActivationFrame::method()
+BaseExecutable *NativeActivationFrame::executable()
 {
-    return (RexxMethod *)activation->getExecutableObject();
+    return activation->getExecutableObject();
 }
 
 StackFrameClass *NativeActivationFrame::createStackFrame()
@@ -77,9 +77,9 @@ StackFrameClass *NativeActivationFrame::createStackFrame()
     return activation->createStackFrame();
 }
 
-RexxSource *NativeActivationFrame::getSource()
+PackageClass *NativeActivationFrame::getPackage()
 {
-    return activation->getSourceObject();
+    return activation->getPackageObject();
 }
 
 RexxString *InternalActivationFrame::messageName()
@@ -87,42 +87,42 @@ RexxString *InternalActivationFrame::messageName()
     return name;
 }
 
-RexxMethod *InternalActivationFrame::method()
+BaseExecutable *InternalActivationFrame::executable()
 {
     return frameMethod;
 }
 
 StackFrameClass *InternalActivationFrame::createStackFrame()
 {
-    RexxArray *info = new_array(name, frameMethod->getScope()->getId());
+    ArrayClass *info = new_array(name, frameMethod->getScope()->getId());
     ProtectedObject p(info);
 
     RexxString *message = activity->buildMessage(Message_Translations_compiled_method_invocation, info);
     p = message;
-    return new StackFrameClass(FRAME_METHOD, name, frameMethod, target, new_array(count, argPtr), message, SIZE_MAX);
+    return new StackFrameClass(StackFrameClass::FRAME_METHOD, name, frameMethod, target, new_array(count, argPtr), message, SIZE_MAX);
 }
 
-RexxSource *InternalActivationFrame::getSource()
+PackageClass *InternalActivationFrame::getPackage()
 {
     return OREF_NULL;
 }
 
-RexxString *ParseActivationFrame::messageName()
+RexxString *CompileActivationFrame::messageName()
 {
     return OREF_NULL;
 }
 
-RexxMethod *ParseActivationFrame::method()
+BaseExecutable *CompileActivationFrame::executable()
 {
     return OREF_NULL;
 }
 
-StackFrameClass *ParseActivationFrame::createStackFrame()
+StackFrameClass *CompileActivationFrame::createStackFrame()
 {
-    return source->createStackFrame();
+    return parser->createStackFrame();
 }
 
-RexxSource *ParseActivationFrame::getSource()
+PackageClass *CompileActivationFrame::getPackage()
 {
-    return source;
+    return parser->getPackage();
 }

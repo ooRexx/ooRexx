@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -44,80 +44,155 @@
 #ifndef Included_RexxInstruction
 #define Included_RexxInstruction
 
+#include "Token.hpp"
+
 class RexxInstructionEnd;
 class RexxInstructionEndIf;
-class RexxSource;
 class RexxClause;
+class LanguageParser;
 
 #include "SourceLocation.hpp"
 
-class RexxInstruction : public RexxInternalObject {
+/**
+ * Base class for all instruction objects.  Defines
+ * behavior common to all instructions, such as having
+ * a successor instruction and recording the instruction
+ * location.
+ */
+class RexxInstruction : public RexxInternalObject
+{
+ friend class RexxActivation;
  public:
-         void *operator new(size_t);
-  inline void *operator new(size_t size, void *objectPtr) { return objectPtr; }
-  inline void  operator delete(void *) { }
-  inline void  operator delete(void *, void *) { }
+           void *operator new(size_t);
+    inline void  operator delete(void *) { }
 
-  RexxInstruction(RexxClause *clause, int type);
-  inline RexxInstruction(RESTORETYPE restoreType) { ; };
-  inline RexxInstruction() { ; }
+    RexxInstruction(RexxClause *clause, InstructionKeyword type);
+    inline RexxInstruction(RESTORETYPE restoreType) { ; };
+    inline RexxInstruction() { ; }
 
-  void live(size_t);
-  void liveGeneral(int reason);
-  void flatten(RexxEnvelope *);
-  inline const SourceLocation &getLocation() { return instructionLocation; }
-  inline void  setLocation(SourceLocation &l) { instructionLocation = l; }
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(Envelope *);
 
-  virtual void execute(RexxActivation *, RexxExpressionStack *) { ; };
+    virtual void execute(RexxActivation *, ExpressionStack *) { ; };
+    // indicates whether this is a block instruction type that requires
+    // a matching END
+    virtual bool isBlock() { return false; }
+    // indicates if this is a complex control construct.
+    virtual bool isControl() { return false; }
 
-  inline void setNext(RexxInstruction *next) { OrefSet(this, this->nextInstruction, next); };
-  void        setStart(size_t line, size_t off) { instructionLocation.setStart(line, off); }
-  void        setEnd(size_t line, size_t off) { instructionLocation.setEnd(line, off); }
-  inline      void        setType(size_t type) { instructionType = (uint16_t)type; };
-  inline      size_t      getType()            { return instructionType;  };
-  inline      bool        isType(size_t type)  { return instructionType == type; }
-  inline      size_t      getLineNumber()      { return instructionLocation.getLineNumber(); }
+    inline const SourceLocation &getLocation() { return instructionLocation; }
+    inline void  setLocation(const SourceLocation &l) { instructionLocation = l; }
 
-  uint16_t    instructionType;            // name of the instruction           */
-  uint16_t    instructionFlags;           // general flag area
+    // NOTE:  This method is only used during program translation, so we can skip using
+    // OrefSet to set this variable.
+    inline void setNext(RexxInstruction *next) { nextInstruction = next; };
+    void        setStart(size_t line, size_t off) { instructionLocation.setStart(line, off); }
+    void        setEnd(size_t line, size_t off) { instructionLocation.setEnd(line, off); }
+    inline      void        setType(InstructionKeyword type) { instructionType = type; };
+    inline      InstructionKeyword getType()     { return instructionType;  };
+    inline      bool        isType(InstructionKeyword type)  { return instructionType == type; }
+    inline      size_t      getLineNumber()      { return instructionLocation.getLineNumber(); }
 
-  SourceLocation    instructionLocation;  // location of the instruction in its source
-  RexxInstruction  *nextInstruction;      // the next instruction object in the assembled chain.
+    InstructionKeyword  instructionType;    // name of the instruction
+    SourceLocation    instructionLocation;  // location of the instruction in its source
+    RexxInstruction  *nextInstruction;      // the next instruction object in the assembled chain.
 };
 
+// types of END terminators
+typedef enum
+{
+    DO_BLOCK,
+    SELECT_BLOCK,
+    OTHERWISE_BLOCK,
+    LOOP_BLOCK,
+    LABELED_SELECT_BLOCK,
+    LABELED_OTHERWISE_BLOCK,
+    LABELED_DO_BLOCK,
+} EndBlockType;
 
-class RexxDoBlock;
+class DoBlock;
 
-class RexxBlockInstruction : public RexxInstruction {
-public:
+/**
+ * Base class for all Block instruction types.  This
+ * defines the interface that all block instructions must
+ * implement to handle resolutions.
+ */
+class RexxBlockInstruction : public RexxInstruction
+{
+ public:
     RexxBlockInstruction() {;};
     RexxBlockInstruction(RESTORETYPE restoreType) { ; };
 
-    virtual bool isLabel(RexxString *) { return false; }
-    virtual RexxString *getLabel() { return OREF_NULL; };
+    // virtual functions required by subclasses to override.
+
+    virtual bool isBlock() { return true; }
+    // all block instructions are also control instructions.
+    virtual bool isControl() { return true; }
+    virtual EndBlockType getEndStyle() = 0;
     virtual bool isLoop() { return false; };
-    virtual void matchEnd(RexxInstructionEnd *, RexxSource *) { ; };
-    virtual void terminate(RexxActivation *, RexxDoBlock *) { ; };
+    virtual void matchEnd(RexxInstructionEnd *, LanguageParser *) { ; };
+    virtual void terminate(RexxActivation *, DoBlock *) { ; };
+
+    // inherited behaviour
+    // NOTE: tokens on ends and label instructions are interned strings, so
+    // we can just do pointer compares
+    bool isLabel(RexxString *name) { return name == label; }
+    RexxString *getLabel() { return label; };
+
+    RexxString *label;         // the block instruction label
+    RexxInstructionEnd *end;   // the END matching the block instruction
 };
 
 
-class RexxInstructionSet : public RexxInstruction {
+/**
+ * Base instruction for instructions that need to have an end
+ * position set.
+ */
+class RexxInstructionSet : public RexxInstruction
+{
  public:
-  RexxInstructionSet() {;};
-  RexxInstructionSet(RESTORETYPE restoreType) { ; };
+    RexxInstructionSet() {;};
+    RexxInstructionSet(RESTORETYPE restoreType) { ; };
 
-  virtual void setEndInstruction(RexxInstructionEndIf *) {;}
+    virtual void setEndInstruction(RexxInstructionEndIf *) {;}
 };
 
-class RexxInstructionExpression : public RexxInstruction {
+/**
+ * Common definition for instructions that are a keyword
+ * with a single expression (SAY, INTERPRET, etc.).  This is
+ * common enough to warrant a subclass.
+ */
+class RexxInstructionExpression : public RexxInstruction
+{
  public:
-  RexxInstructionExpression() { ; };
-  RexxInstructionExpression(RESTORETYPE restoreType) { ; };
+    RexxInstructionExpression() { ; };
+    RexxInstructionExpression(RESTORETYPE restoreType) { ; };
 
-  void live(size_t);
-  void liveGeneral(int reason);
-  void flatten(RexxEnvelope *);
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(Envelope *);
 
-  RexxObject *expression;              /* expression to evaluate            */
+    RexxObject *evaluateExpression(RexxActivation *context, ExpressionStack *stack);
+    RexxString *evaluateStringExpression(RexxActivation *context, ExpressionStack *stack);
+
+ protected:
+    RexxObject *expression;              // expression to evaluate
 };
+
+// a convenience macro for initializing instruction/expression objects.
+// for many of the instructions, they have a variable size array
+// that are initialized in reverse order using items pulled from a
+// provided queue.  This simplifies this initialization process and
+// ensures it is done correctly.  NOTE:  This decrements the count
+// variable so make sure you use the one from the argument list!!!!!!
+
+#define initializeObjectArray(count, array, type, queue) \
+{                                                  \
+    while (count > 0)                              \
+    {                                              \
+        array[--count] = (type *)queue->pop();     \
+    }                                              \
+}
+
 #endif

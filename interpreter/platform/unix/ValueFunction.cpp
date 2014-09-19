@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -134,7 +134,7 @@ bool SystemInterpreter::valueFunction(
   if (OldValue != NULL)                /* have a value already?   */
     result = new_string(OldValue);    /* Yes -  convert to Rexx string     */
   else
-    result = OREF_NULLSTRING;          /* otherwise, return null            */
+    result = GlobalNames::NULLSTRING;          /* otherwise, return null            */
 
   if (NewValue != OREF_NULL)           /* if there's a new value, set it    */
   {

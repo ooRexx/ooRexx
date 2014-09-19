@@ -1,0 +1,82 @@
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/*                                                                            */
+/* This program and the accompanying materials are made available under       */
+/* the terms of the Common Public License v1.0 which accompanies this         */
+/* distribution. A copy is also available at the following address:           */
+/* http://www.oorexx.org/license.html                                         */
+/*                                                                            */
+/* Redistribution and use in source and binary forms, with or                 */
+/* without modification, are permitted provided that the following            */
+/* conditions are met:                                                        */
+/*                                                                            */
+/* Redistributions of source code must retain the above copyright             */
+/* notice, this list of conditions and the following disclaimer.              */
+/* Redistributions in binary form must reproduce the above copyright          */
+/* notice, this list of conditions and the following disclaimer in            */
+/* the documentation and/or other materials provided with the distribution.   */
+/*                                                                            */
+/* Neither the name of Rexx Language Association nor the names                */
+/* of its contributors may be used to endorse or promote products             */
+/* derived from this software without specific prior written permission.      */
+/*                                                                            */
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS          */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   */
+/* OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,      */
+/* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   */
+/* TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,        */
+/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY     */
+/* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    */
+/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
+/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+/******************************************************************************/
+/*                                                                            */
+/* Class to encapuslate the various settings that can be inherited from a     */
+/* package instance to standardize how these settings are managed.            */
+/*                                                                            */
+/******************************************************************************/
+#ifndef Included_PackageSetting
+#define Included_PackageSetting
+
+#include "TraceSetting.hpp"
+#include "Numerics.hpp"
+
+/**
+ * A class for processing different numeric settings
+ */
+class PackageSetting
+{
+ public:
+
+    PackageSetting() { }
+
+    // initialize the default values
+    inline void setDefault()
+    {
+        numericSettings.setDefault();
+        traceSettings.setDefault();
+    }
+
+    inline void   setDigits(size_t d) { numericSettings.setDigits(d); }
+    inline size_t getDigits() const { return numericSettings.getDigits(); }
+    inline void   setForm(bool f)  { numericSettings.setForm(f); }
+    inline bool   getForm() const { return numericSettings.getForm(); }
+    inline void   setFuzz(size_t f) { numericSettings.setFuzz(f); }
+    inline size_t getFuzz() const { return numericSettings.getFuzz(); }
+    inline void   setTraceSetting(const TraceSetting &s) { traceSettings = s; }
+    inline bool   isDebug() { return traceSettings.isDebug(); }
+    inline const  TraceSetting &getTraceSetting() const { return traceSettings; }
+    inline RexxString *getTrace() { return traceSettings.toString(); }
+
+    NumericSettings numericSettings;       // the package numeric settings
+    TraceSetting    traceSettings;         // the package trace setting
+};
+
+#endif
+

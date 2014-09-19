@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -42,7 +42,8 @@
 #include "RoutineClass.hpp"
 #include "SystemInterpreter.hpp"
 #include "InterpreterInstance.hpp"
-#include "RexxNativeActivation.hpp"
+#include "NativeActivation.hpp"
+#include "LanguageParser.hpp"
 
 
 /**
@@ -57,18 +58,18 @@ void RexxStartDispatcher::run()
     rc = 0;
     retcode = 0;
 
-    RexxString *name = OREF_NULLSTRING;     // name of the invoked program
+    RexxString *name = GlobalNames::NULLSTRING;     // name of the invoked program
     RexxString *fullname = name;            // default the fulllength name to the simple name
 
-    if (programName != NULL)       /* have an actual name?              */
+    // if we've been given an actual name, get the string version of it
+    if (programName != NULL)
     {
-        /* get string version of the name    */
         name = new_string(programName);
+        savedObjects.add(name);
     }
 
-    savedObjects.add(name);              /* protect from garbage collect      */
     // get an array version of the arguments and protect
-    RexxArray *new_arglist = new_array(argcount);
+    ArrayClass *new_arglist = new_array(argcount);
     savedObjects.add(new_arglist);
 
     // for compatibility reasons, if this is a command invocation and there is a leading blank
@@ -77,14 +78,14 @@ void RexxStartDispatcher::run()
     {
         new_arglist->put(new_string(arglist[0].strptr + 1, arglist[0].strlength - 1), 1);
     }
-    else {
-        /* loop through the argument list    */
+    // we need to create an array argument list from the RXSTRINGs
+    else
+    {
         for (size_t i = 0; i < argcount; i++)
         {
-            /* have a real argument?             */
+            // only add real arguments
             if (arglist[i].strptr != NULL)
             {
-                /* add to the argument array         */
                 new_arglist->put(new_string(arglist[i]), i + 1);
             }
         }
@@ -92,84 +93,85 @@ void RexxStartDispatcher::run()
 
     RexxString *source_calltype;
 
-    switch (calltype)                      /* turn calltype into a string       */
+    // now get the calltype as a character string to used in
+    // the source string. .
+    switch (calltype)
     {
-        case  RXCOMMAND:                   /* command invocation                */
-            source_calltype = OREF_COMMAND;  /* this is the 'COMMAND' string      */
+        case  RXCOMMAND:
+            source_calltype = GlobalNames::COMMAND;
             break;
 
-        case  RXFUNCTION:                  /* function invocation               */
-            /* 'FUNCTION' string                 */
-            source_calltype = OREF_FUNCTIONNAME;
+        case  RXFUNCTION:
+            source_calltype = GlobalNames::FUNCTION;
             break;
 
-        case  RXSUBROUTINE:                /* subroutine invocation             */
-            /* 'SUBROUTINE' string               */
-            source_calltype = OREF_SUBROUTINE;
+        case  RXSUBROUTINE:
+            source_calltype = GlobalNames::SUBROUTINE;
             break;
 
+        // if not specified, call it a COMMAND.
         default:
-            source_calltype = OREF_COMMAND;  /* this is the 'COMMAND' string      */
+            source_calltype = GlobalNames::COMMAND;
             break;
     }
 
-    RoutineClass *program = OREF_NULL;
+    Protected<RoutineClass> program;
 
-    if (instore == NULL)                     /* no instore request?               */
+    // if not an instore request, we load this from a file.
+    if (instore == NULL)
     {
-        /* go resolve the name               */
         fullname = activity->resolveProgramName(name, OREF_NULL, OREF_NULL);
-        if (fullname == OREF_NULL)         /* not found?                        */
+        if (fullname == OREF_NULL)
         {
-            /* got an error here                 */
             reportException(Error_Program_unreadable_notfound, name);
         }
         savedObjects.add(fullname);
-                                           /* try to restore saved image        */
-        program = RoutineClass::fromFile(fullname);
+        program = LanguageParser::createProgramFromFile(fullname);
     }
-    else                                 /* have an instore program           */
+    // we either need to parse the instore source or restore from a
+    // previous image.
+    else
     {
-        /* go handle instore parms           */
-        program = RoutineClass::processInstore(instore, name);
-        if (program == OREF_NULL)        /* couldn't get it?                  */
+        program = LanguageParser::processInstore(instore, name);
+        if (program.isNull())
         {
-            /* got an error here                 */
             reportException(Error_Program_unreadable_name, name);
         }
     }
 
     RexxString *initial_address = activity->getInstance()->getDefaultEnvironment();
-    /* actually need to run this?        */
-    if (program != OREF_NULL)
+    // actually need to run this?
+    if (!program.isNull())
     {
         ProtectedObject program_result;
         // call the program
-        program->runProgram(activity, source_calltype, initial_address, new_arglist->data(), argcount, program_result);
-        if (result != NULL)          /* if return provided for            */
+        program->runProgram(activity, source_calltype, initial_address, new_arglist->messageArgs(), argcount, program_result);
+
+        // provided for a return result (that's optional)
+        if (result != NULL)
         {
-            /* actually have a result to return? */
+            // actually have a result to return?
             if ((RexxObject *)program_result != OREF_NULL)
             {
-                /* force to a string value           */
+                // force to a string value
                 program_result = ((RexxObject *)program_result)->stringValue();
                 // copy this into the result RXSTRING
                 ((RexxString *)program_result)->copyToRxstring(*result);
             }
-            else                             /* make this an invalid string       */
+            // nothing to return
+            else
             {
                 MAKERXSTRING(*result, NULL, 0);
             }
         }
-                                             /* If there is a return val...       */
+
+        // if we have a return result and it is an integer value, return that as a return code.
         if ((RexxObject *)program_result != OREF_NULL)
         {
             wholenumber_t return_code;
 
-            /* if a whole number...              */
             if (((RexxObject *)program_result)->numberValue(return_code) && return_code <= SHRT_MAX && return_code >= SHRT_MIN)
             {
-                /* ...copy to return code.           */
                 retcode = (short)return_code;
             }
         }
@@ -183,7 +185,7 @@ void RexxStartDispatcher::run()
  *
  * @param c      The condition information for the error.
  */
-void RexxStartDispatcher::handleError(wholenumber_t r, RexxDirectory *c)
+void RexxStartDispatcher::handleError(wholenumber_t r, DirectoryClass *c)
 {
     // use the base error handling and set our return code to the negated error code.
     ActivityDispatcher::handleError(-r, c);
@@ -202,12 +204,12 @@ void CallRoutineDispatcher::run()
     if (arguments != OREF_NULL)
     {
         // we use a null string for the name when things are called directly
-        routine->call(activity, OREF_NULLSTRING, arguments->data(), arguments->size(), result);
+        routine->call(activity, GlobalNames::NULLSTRING, arguments->messageArgs(), arguments->messageArgCount(), result);
     }
     else
     {
         // we use a null string for the name when things are called directly
-        routine->call(activity, OREF_NULLSTRING, NULL, 0, result);
+        routine->call(activity, GlobalNames::NULLSTRING, NULL, 0, result);
     }
 }
 
@@ -219,22 +221,20 @@ void CallRoutineDispatcher::run()
 void CallProgramDispatcher::run()
 {
     RexxString *targetName = new_string(program);
-    /* go resolve the name               */
+    //we are resolving from a program name
     RexxString *name = activity->resolveProgramName(targetName, OREF_NULL, OREF_NULL);
-    if (name == OREF_NULL)                /* not found?                        */
+    if (name == OREF_NULL)
     {
-        /* got an error here                 */
         reportException(Error_Program_unreadable_notfound, targetName);
     }
     ProtectedObject p(name);
     // create a routine from this file
-    RoutineClass *routine = RoutineClass::fromFile(name);
-    p = routine;
+    Protected<RoutineClass> routine = LanguageParser::createProgramFromFile(name);
 
     if (arguments != OREF_NULL)
     {
         // use the provided name for the call name
-        routine->runProgram(activity, arguments->data(), arguments->size(), result);
+        routine->runProgram(activity, arguments->messageArgs(), arguments->messageArgCount(), result);
     }
     else
     {

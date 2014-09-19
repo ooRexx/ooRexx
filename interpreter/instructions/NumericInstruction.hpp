@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -45,23 +45,27 @@
 #define Included_RexxInstructionNumeric
 
 #include "RexxInstruction.hpp"
+#include "FlagSet.hpp"
 
-#define numeric_engineering 0x01       /* this is form engineering          */
-#define numeric_digits      0x02
-#define numeric_fuzz        0x04
-#define numeric_form        0x08
-#define numeric_form_default 0x10      // using default engineering form
+typedef enum
+{
+    numeric_scientific,
+    numeric_engineering,
+    numeric_digits,
+    numeric_fuzz,
+    numeric_form,
+    numeric_form_default
+} NumericInstructionFlags;
 
-#define numeric_type_mask   0x0e
-
-class RexxInstructionNumeric : public RexxInstructionExpression {
+class RexxInstructionNumeric : public RexxInstructionExpression
+{
  public:
-  inline void *operator new(size_t size, void *ptr) {return ptr;}
-  inline void operator delete(void *) { }
-  inline void operator delete(void *, void *) { }
+    RexxInstructionNumeric(RexxObject *, FlagSet<NumericInstructionFlags, 32>);
+    inline RexxInstructionNumeric(RESTORETYPE restoreType) { ; };
+    virtual void execute(RexxActivation *, ExpressionStack *);
 
-  RexxInstructionNumeric(RexxObject *, unsigned short, size_t);
-  inline RexxInstructionNumeric(RESTORETYPE restoreType) { ; };
-  void execute(RexxActivation *, RexxExpressionStack *);
+ protected:
+
+    FlagSet<NumericInstructionFlags, 32> numericFlags;
 };
 #endif

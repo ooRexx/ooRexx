@@ -6,12 +6,12 @@
 <xsl:text>/*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.ibm.com/developerworks/oss/CPLv1.0.htm                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -53,6 +53,7 @@
 /* --            ==================================================        -- */
 /* -------------------------------------------------------------------------- */
 
+#include &lt;new&gt;
 #include "RexxCore.h"
 
    </xsl:text>
@@ -66,8 +67,8 @@
 </xsl:for-each>
 <xsl:text>
 
-           
-void *RexxMemory::virtualFunctionTable[T_Last_Class_Type + 1] = {NULL};
+
+void *MemoryObject::virtualFunctionTable[T_Last_Class_Type + 1] = {NULL};
 
 /******************************************************************************/
 /* Function:  This small function is necessary to void optimizer problems on  */
@@ -80,7 +81,7 @@ void *getVftPointer(void *loc)
     return *((void **)loc);
 }
 
-void RexxMemory::buildVirtualFunctionTable()
+void MemoryObject::buildVirtualFunctionTable()
 /******************************************************************************/
 /* Function:  This routine will build an array of the virtualFunctions        */
 /*            There will be one for each Class.                               */
@@ -96,16 +97,16 @@ void RexxMemory::buildVirtualFunctionTable()
 
    <xsl:for-each select="Exported/Class">
    <xsl:text>
-   objectPtr = new (objectLoc) </xsl:text><xsl:value-of select="@class"/><xsl:text>(RESTOREIMAGE);
+   objectPtr = ::new (objectLoc) </xsl:text><xsl:value-of select="@class"/><xsl:text>(RESTOREIMAGE);
    virtualFunctionTable[T_</xsl:text><xsl:value-of select="@id"/><xsl:text>] = getVftPointer(objectLoc);
    </xsl:text>
    <xsl:if test="@classclass">
    <xsl:text>
-   objectPtr = new (objectLoc) </xsl:text><xsl:value-of select="@classclass"/><xsl:text>(RESTOREIMAGE);</xsl:text>
+   objectPtr = ::new (objectLoc) </xsl:text><xsl:value-of select="@classclass"/><xsl:text>(RESTOREIMAGE);</xsl:text>
    </xsl:if>
    <xsl:if test="not(@classclass)">
    <xsl:text>
-   objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);</xsl:text>
+   objectPtr = ::new (objectLoc) RexxClass(RESTOREIMAGE);</xsl:text>
    </xsl:if>
    <xsl:text>
    virtualFunctionTable[T_</xsl:text><xsl:value-of select="@id"/><xsl:text>Class] = getVftPointer(objectLoc);
@@ -115,7 +116,7 @@ void RexxMemory::buildVirtualFunctionTable()
 
    <xsl:for-each select="Internal/Class">
    <xsl:text>
-   objectPtr = new (objectLoc) </xsl:text><xsl:value-of select="@class"/><xsl:text>(RESTOREIMAGE);
+   objectPtr = ::new (objectLoc) </xsl:text><xsl:value-of select="@class"/><xsl:text>(RESTOREIMAGE);
    virtualFunctionTable[T_</xsl:text><xsl:value-of select="@id"/><xsl:text>] = getVftPointer(objectLoc);
    </xsl:text>
    </xsl:for-each>
@@ -123,13 +124,13 @@ void RexxMemory::buildVirtualFunctionTable()
    <xsl:for-each select="Transient/Class">
    <xsl:if test="@objectvirtual">
    <xsl:text>
-   objectPtr = new (objectLoc) RexxObject(RESTOREIMAGE);
+   objectPtr = ::new (objectLoc) RexxObject(RESTOREIMAGE);
    virtualFunctionTable[T_</xsl:text><xsl:value-of select="@id"/><xsl:text>] = getVftPointer(objectLoc);
    </xsl:text>
    </xsl:if>
    <xsl:if test="not(@objectvirtual)">
    <xsl:text>
-   objectPtr = new (objectLoc) </xsl:text><xsl:value-of select="@class"/><xsl:text>(RESTOREIMAGE);
+   objectPtr = ::new (objectLoc) </xsl:text><xsl:value-of select="@class"/><xsl:text>(RESTOREIMAGE);
    virtualFunctionTable[T_</xsl:text><xsl:value-of select="@id"/><xsl:text>] = getVftPointer(objectLoc);
    </xsl:text>
    </xsl:if>

@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -41,109 +41,111 @@
 /* Primitive List Class Definitions                                           */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_RexxList
-#define Included_RexxList
+#ifndef Included_ListClass
+#define Included_ListClass
 
-#include "RexxListTable.hpp"
+#include "ListContents.hpp"
 
-#define INITIAL_LIST_SIZE     5        /* initial list allocation           */
-#define EXTEND_LIST_SIZE      5        /* amount to extend by each time     */
-                                       /* size of buffer for a given number */
-                                       /* of list entries                   */
-#define TABLE_SIZE(n)         ((n)*sizeof(LISTENTRY))
-                                       /* number of list entries in a given */
-                                       /* buffer size                       */
-#define ENTRY_COUNT(n)        ((n)/sizeof(LISTENTRY))
-                                       /* address of a given buffer entry   */
-#define ENTRY_POINTER(n)      (this->table->getData() + n)
-#define ENTRY_INDEX(p)        (p - this->table->getData())
-#define LIST_END              ((size_t)-1) /* end of list marker                */
-#define NOT_ACTIVE            ((size_t)-2) /* free element marker               */
+class RexxObject;
 
- class RexxList : public RexxObject {
-     friend class RexxListTable;
-  public:
-   void * operator new(size_t);
-   inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };
-   inline RexxList(RESTORETYPE restoreType) { ; };
-   inline RexxList() { ; }
+class ListClass : public RexxObject
+{
+  friend class ListTable;
+ public:
+    void * operator new(size_t);
 
-   void          init();
-   void          live(size_t);
-   void          liveGeneral(int reason);
-   void          flatten(RexxEnvelope *);
-   RexxObject   *copy();
-   RexxArray    *makeArray();
-   RexxArray    *allItems();
-   RexxArray    *allIndexes();
-   RexxArray    *requestArray();
+    inline ListClass(RESTORETYPE restoreType) { ; };
+    ListClass(size_t capacity = DefaultListSize);
+    ListClass::ListClass(bool fromRexx) { }
 
-   RexxObject   *value(RexxObject *);
-   RexxObject   *remove(RexxObject *);
-   RexxObject   *primitiveRemove(LISTENTRY *);
-   size_t        firstIndex() { return first; }
-   size_t        lastIndex() { return last; }
-   size_t        nextIndex(size_t i);
-   size_t        previousIndex(size_t i);
-   RexxObject   *getValue(size_t i);
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(Envelope *);
 
-   RexxObject   *firstRexx();
-   RexxObject   *lastRexx();
-   RexxObject   *next(RexxObject *);
-   RexxObject   *previous(RexxObject *);
-   RexxObject   *hasIndex(RexxObject *);
-   RexxSupplier *supplier();
-   RexxObject   *itemsRexx();
-   inline size_t items() { return count; };
-   RexxObject   *insert(RexxObject *, RexxObject *);
-   RexxObject   *put(RexxObject *, RexxObject *);
-   RexxObject   *section(RexxObject *, RexxObject *);
-   RexxObject   *sectionSubclass(LISTENTRY *, size_t);
-   RexxObject   *firstItem();
-   RexxObject   *lastItem();
-   RexxObject   *insertRexx(RexxObject *, RexxObject *);
-   void          partitionBuffer(size_t, size_t);
-   RexxArray    *makeArrayIndices();
-   size_t        getFree();
-   RexxObject   *add(RexxObject *, RexxObject *);
-   RexxObject   *removeFirst() { return (this->first != LIST_END) ? this->primitiveRemove(ENTRY_POINTER(this->first)) : TheNilObject; }
-   RexxObject   *removeLast() { return (this->last != LIST_END) ? this->primitiveRemove(ENTRY_POINTER(this->last)) : TheNilObject; }
-   RexxObject   *removeFirstItem() { return (this->first != LIST_END) ? this->primitiveRemove(ENTRY_POINTER(this->first)) : OREF_NULL; }
-   RexxObject   *removeLastItem() { return (this->last != LIST_END) ? this->primitiveRemove(ENTRY_POINTER(this->last)) : OREF_NULL; }
-   RexxObject   *removeIndex(size_t i) { return this->primitiveRemove(ENTRY_POINTER(i)); }
-   LISTENTRY    *getEntry(RexxObject *, RexxObject *);
-   LISTENTRY    *getEntry(size_t);
-   RexxObject   *indexOfValue(RexxObject *);
-   RexxObject   *empty();
-   RexxObject   *isEmpty();
-   RexxObject  *index(RexxObject *);
-   RexxObject  *hasItem(RexxObject *);
-   RexxObject  *removeItem(RexxObject *);
-   RexxObject  *removeObject(RexxObject *);
+    virtual RexxInternalObject *copy();
+    virtual ArrayClass *makeArray();
+    virtual ArrayClass *requestArray();
 
-   void          addLast(RexxObject *value);
-   void          addFirst(RexxObject *value);
-   inline size_t getSize() {return this->count;}
-   RexxObject   *append(RexxObject *);
-   RexxArray    *weakReferenceArray();
+    // APIS for use from other parts of the interpreter
+    void put(RexxInternalObject *value, size_t index);
+    RexxInternalObject *get(size_t index);
+    ListClass *section(size_t index, size_t count);
+    size_t insert(RexxInternalObject *value, size_t insertionPoint);
+    size_t addLast(RexxInternalObject *value);
+    size_t addFirst(RexxInternalObject *value);
+    size_t append(RexxInternalObject *value);
+    RexxInternalObject *remove(size_t index);
+    RexxInternalObject *firstItem();
+    RexxInternalObject *lastItem();
+    size_t firstIndex();
+    size_t lastIndex();
+    size_t nextIndex(size_t index);
+    size_t previousIndex(size_t _index);
+    bool hasIndex(size_t index);
+    bool hasItem(RexxInternalObject *target);
+    ArrayClass *allItems();
+    void empty();
+    bool isEmpty();
+    ArrayClass *allIndexes();
+    size_t getIndex(RexxInternalObject *target);
 
-   RexxList     *newRexx(RexxObject **, size_t);
-   RexxList     *classOf(RexxObject **, size_t);
+    RexxInternalObject *removeItem(RexxInternalObject *target);
+    SupplierClass *supplier();
+    size_t items();
+    ArrayClass *weakReferenceArray();
 
-   static void createInstance();
-   static RexxClass *classInstance;
+    // The exported Rexx methods
+    RexxObject *initRexx(RexxObject *initialSize);
+    RexxInternalObject *putRexx(RexxInternalObject *value, RexxObject *argIndex);
+    RexxInternalObject *getRexx(RexxObject *argIndex);
+    RexxObject *sectionRexx(RexxObject *argIndex, RexxObject *count);
+    RexxObject *insertRexx(RexxInternalObject *value, RexxObject *index);
+    RexxObject *appendRexx(RexxInternalObject *value);
+    RexxInternalObject *removeRexx(RexxObject *index);
+    RexxInternalObject *firstItemRexx();
+    RexxInternalObject *lastItemRexx();
+    RexxInternalObject *firstRexx();
+    RexxObject *lastRexx();
+    RexxObject *nextRexx(RexxObject *index);
+    RexxObject *previousRexx(RexxObject *index);
+    RexxObject *hasIndexRexx(RexxObject *index);
+    RexxObject *emptyRexx();
+    RexxObject *isEmptyRexx();
+    RexxObject *indexRexx(RexxInternalObject *target);
+    RexxInternalObject *removeItemRexx(RexxInternalObject *target);
+    RexxObject *itemsRexx();
+    RexxObject *hasItemRexx(RexxInternalObject *target);
+
+    // Class related methods
+    ListClass     *newRexx(RexxObject **, size_t);
+    ListClass     *ofRexx(RexxObject **, size_t);
+
+    static void createInstance();
+    static RexxClass *classInstance;
+
+    // the default size of a list (and also the minimum size we'll create)
+    static const size_t DefaultListSize = 10;
+    // generally, we try to expand by doubling the current size.  However,
+    // once we get larger, we'll only expand in capped increments.
+    static const size_t MaxExpansionSize = 100;
 
  protected:
 
-   RexxListTable *table;                 /* list table  item                  */
-   size_t first;                         /* first real element index          */
-   size_t last;                          /* last real element index           */
-   size_t count;                         /* count of items in the list        */
-   size_t size;                          /* element slots in the buffer       */
-   size_t free;                          /* start of free element chain       */
- };
+    // internal support methods
+    void initialize(size_t capacity = ListClass::DefaultListSize);
+    ListContents::ItemLink validateIndex(RexxObject *index, size_t position);
+    ListContents::ItemLink validateInsertionIndex(RexxObject *index, size_t position);
+    ListContents::ItemLink requiredIndex(RexxObject *index, size_t position);
+    void expandContents();
+    void expandContents(size_t capacity );
+    void ensureCapacity(size_t delta);
+    void checkFull();
+    RexxObject *indexObject(ListContents::ItemLink index);
+
+    ListContents *contents;               // list table  item
+};
 
 
-inline RexxList *new_list() { return new RexxList; }
+inline ListClass *new_list(size_t capacity = ListClass::DefaultListSize) { return new ListClass(capacity); }
 
 #endif

@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -139,7 +139,7 @@ RexxString *SysInterpreterInstance::resolveProgramName(RexxString *_name, RexxSt
 }
 
 
-void SystemInterpreter::loadImage(char **imageBuffer, size_t *imageSize)
+void SystemInterpreter::loadImage(char *&imageBuffer, size_t &imageSize)
 /*******************************************************************/
 /* Function : Load the image into storage                          */
 /*******************************************************************/
@@ -167,18 +167,18 @@ void SystemInterpreter::loadImage(char **imageBuffer, size_t *imageSize)
     }
 
     /* Read in the size of the image     */
-    if (!fread(imageSize, 1, sizeof(size_t), image))
+    if (!fread(&imageSize, 1, sizeof(size_t), image))
     {
         Interpreter::logicError("could not check the size of the image");
     }
     /* Create new segment for image      */
-    *imageBuffer = (char *)memoryObject.allocateImageBuffer(*imageSize);
+    imageBuffer = (char *)memoryObject.allocateImageBuffer(imageSize);
     /* Create an object the size of the  */
     /* image. We will be overwriting the */
     /* object header.                    */
     /* read in the image, store the      */
     /* the size read                     */
-    if (!(*imageSize = fread(*imageBuffer, 1, *imageSize, image)))
+    if (!(imageSize = fread(imageBuffer, 1, imageSize, image)))
     {
         Interpreter::logicError("could not read in the image");
     }
@@ -186,7 +186,7 @@ void SystemInterpreter::loadImage(char **imageBuffer, size_t *imageSize)
 }
 
 
-RexxBuffer *SystemInterpreter::readProgram(const char *file_name)
+BufferClass *SystemInterpreter::readProgram(const char *file_name)
 /*******************************************************************/
 /* Function:  Read a program into a buffer                         */
 /*******************************************************************/
@@ -204,7 +204,7 @@ RexxBuffer *SystemInterpreter::readProgram(const char *file_name)
         buffersize = ftell(handle);          /* get the file size                 */
         fseek(handle, 0, SEEK_SET);          /* seek back to the file beginning   */
     }
-    RexxBuffer *buffer = new_buffer(buffersize);     /* get a buffer object               */
+    BufferClass *buffer = new_buffer(buffersize);     /* get a buffer object               */
     ProtectedObject p(buffer);
     {
         UnsafeBlock releaser;

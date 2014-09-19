@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.ibm.com/developerworks/oss/CPLv1.0.htm                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -48,7 +48,7 @@
 #include "windows.h"
 #include <stdio.h>
 
-class RexxActivity;
+class Activity;
 
 class SysActivity
 {
@@ -57,7 +57,7 @@ public:
 
     inline SysActivity() : threadId(0), hThread(NULL) { }
     inline bool equals(thread_id_t t) { return threadId == t; }
-    void create(RexxActivity *activity, size_t stackSize);
+    void create(Activity *activity, size_t stackSize);
     void close();
     void useCurrentThread();
     bool validateThread();

@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -45,7 +45,6 @@
 /* for these particular methods and tables.                                   */
 /*                                                                            */
 /******************************************************************************/
-#include <string.h>
 #include "RexxCore.h"
 #include "TableClass.hpp"
 #include "RexxMemory.hpp"
@@ -63,15 +62,14 @@
 #include "SupplierClass.hpp"
 #include "MethodClass.hpp"
 #include "RoutineClass.hpp"
-#include "RexxEnvelope.hpp"
+#include "Envelope.hpp"
 #include "MessageClass.hpp"
 #include "StemClass.hpp"
-#include "RexxMisc.hpp"
-#include "RexxNativeCode.hpp"
-#include "RexxActivity.hpp"
+#include "NativeCode.hpp"
+#include "Activity.hpp"
 #include "ActivityManager.hpp"
-#include "RexxNativeActivation.hpp"
-#include "RexxVariableDictionary.hpp"
+#include "NativeActivation.hpp"
+#include "VariableDictionary.hpp"
 #include "ExpressionVariable.hpp"
 #include "RexxLocalVariables.hpp"
 #include "ProtectedObject.hpp"
@@ -86,1449 +84,1441 @@
 #include "PackageClass.hpp"
 #include "ContextClass.hpp"
 #include "StackFrameClass.hpp"
+#include "LanguageParser.hpp"
+#include "SetClass.hpp"
+#include "BagClass.hpp"
+#include "ActivityManager.hpp"
+#include "ProgramSource.hpp"
 
 
-void RexxMemory::defineKernelMethod(
-    const char    * name,              /* ASCII-Z name for the method       */
-    RexxBehaviour * behaviour,         /* behaviour to use                  */
-    PCPPM           entryPoint,        /* method's entry point              */
-    size_t          arguments )        /* count of arguments                */
-/******************************************************************************/
-/* Function:  Add a C++ method to an object's behaviour                       */
-/******************************************************************************/
+/**
+ * Add a C++ method to an object's behaviour.
+ *
+ * @param name       The name of the method.
+ * @param behaviour  The target behaviour.
+ * @param entryPoint The entry point of the C++ method that implements the
+ *                   method.
+ * @param arguments  The method argument style (argument count or array indicator).
+ */
+void MemoryObject::defineMethod(const char *name, RexxBehaviour *behaviour, PCPPM entryPoint, size_t arguments, const char *entryPointName)
 {
-    behaviour->define(name, entryPoint, arguments);
-}
-
-void RexxMemory::defineProtectedKernelMethod(
-    const char    * name,              /* ASCII-Z name for the method       */
-    RexxBehaviour * behaviour,         /* behaviour to use                  */
-    PCPPM           entryPoint,        /* method's entry point              */
-    size_t          arguments )        /* count of arguments                */
-/******************************************************************************/
-/* Function:  Add a C++ method to an object's behaviour                       */
-/******************************************************************************/
-{
-    RexxMethod *method = behaviour->define(name, entryPoint, arguments);
-    method->setProtected();              /* make this protected               */
+    behaviour->defineMethod(name, entryPoint, arguments, entryPointName);
 }
 
 
-void RexxMemory::definePrivateKernelMethod(
-    const char    * name,              /* ASCII-Z name for the method       */
-    RexxBehaviour * behaviour,         /* behaviour to use                  */
-    PCPPM           entryPoint,        /* method's entry point              */
-    size_t          arguments )        /* count of arguments                */
-/******************************************************************************/
-/* Function:  Add a C++ method to an object's behaviour                       */
-/******************************************************************************/
+/**
+ * Add a C++ method to an object's behaviour.  This method is
+ * marked as protected.
+ *
+ * @param name       The name of the method.
+ * @param behaviour  The target behaviour.
+ * @param entryPoint The entry point of the C++ method that implements the
+ *                   method.
+ * @param arguments  The method argument style (argument count or array indicator).
+ */
+void MemoryObject::defineProtectedMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments, const char *entryPointName)
 {
-    RexxMethod *method = behaviour->define(name, entryPoint, arguments);
-    method->setProtected();              /* make this protected               */
-    method->setPrivate();                /* make this protected               */
+    MethodClass *method = behaviour->defineMethod(name, entryPoint, arguments, entryPointName);
+    // mark as protected after the fact
+    method->setProtected();
 }
 
 
-void RexxMemory::createImage()
-/******************************************************************************/
-/* Function:  Initialize the kernel on image build                            */
-/******************************************************************************/
+/**
+ * Add a C++ method to an object's behaviour.  This method is
+ * marked as private.
+ *
+ * @param name       The name of the method.
+ * @param behaviour  The target behaviour.
+ * @param entryPoint The entry point of the C++ method that implements the
+ *                   method.
+ * @param arguments  The method argument style (argument count or array indicator).
+ */
+void MemoryObject::definePrivateMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments, const char *entryPointName)
 {
-  RexxMemory::create();                /* create initial memory stuff       */
-
-  Interpreter::init();                 // the interpreter subsystem first
-  ActivityManager::init();             /* Initialize the activity managers  */
-  // Get an instance.  This also gives the root activity of the instance
-  // the kernel lock.
-  Interpreter::createInterpreterInstance();
-  memoryObject.createStrings();        /* create all of the OREF_ strings   */
-  // initializer for native libraries
-  PackageManager::initialize();
-
-                                       /* avoid that through caching        */
-                                       /* TheTrueObject == IntegerOne etc.  */
-  TheTrueObject  = new RexxInteger(1);
-  TheFalseObject = new RexxInteger(0);
-
-
-  TheNilObject = new RexxNilObject;
-                                       /* We don't move the NIL object, we  */
-                                       /*will use the remote systems NIL    */
-                                       /*object.                            */
-  TheNilObject->makeProxiedObject();
-
-                                       /* create string first               */
-  RexxString::createInstance();
-  RexxObject::createInstance();
-  RexxTable::createInstance();
-  RexxIdentityTable::createInstance();
-  RexxRelation::createInstance();
-
-  TheFunctionsDirectory = new_directory();
-
-                                       /* If first one through, generate all   */
-  IntegerZero    = new_integer(0);    /*  static integers we want to use...   */
-  IntegerOne     = new_integer(1);    /* This will allow us to use the static */
-  IntegerTwo     = new_integer(2);    /* integers instead of having to do a   */
-  IntegerThree   = new_integer(3);    /* new_integer every time....           */
-  IntegerFour    = new_integer(4);
-  IntegerFive    = new_integer(5);
-  IntegerSix     = new_integer(6);
-  IntegerSeven   = new_integer(7);
-  IntegerEight   = new_integer(8);
-  IntegerNine    = new_integer(9);
-  IntegerMinusOne = new_integer(-1);
-
-
-                                       /* RexxNumberString                  */
-  // NOTE:  The number string class lies about its identity
-  RexxNumberString::createInstance();
-  RexxArray::createInstance();
-
-  // The pointer class needs to be created early because other classes
-  // use the instances to store information.
-  RexxPointer::createInstance();
-
-  RexxDirectory::createInstance();
-  CLASS_CREATE(Directory, "Directory", RexxClass);  /* RexxDirectory                     */
-  TheEnvironment = new_directory();    /* create the environment directory  */
-                                       /* setup OREF_ENV as the mark start  */
-                                       /* point                             */
-  memoryObject.setMarkTable((RexxTable *)TheEnvironment);
-  TheKernel = new_directory();         /* now add the kernel and system     */
-  TheSystem = new_directory();         /* directories                       */
-                                       /* Indicate these objects will not be*/
-                                       /*  moved to another system, rather  */
-                                       /*  will re-establish themselves on  */
-                                       /*  the remote system.               */
-  TheEnvironment->makeProxiedObject();
-  TheKernel->makeProxiedObject();
-  TheSystem->makeProxiedObject();
-
-                                       /* RexxMethod                        */
-  RexxMethod::createInstance();
-  RoutineClass::createInstance();
-  PackageClass::createInstance();
-  RexxContext::createInstance();
-  RexxQueue::createInstance();
-  RexxList::createInstance();
-  RexxStem::createInstance();
-  RexxSupplier::createInstance();
-  RexxMessage::createInstance();
-  RexxMutableBuffer::createInstance();
-
-  RexxBuffer::createInstance();
-  WeakReference::createInstance();
-  StackFrameClass::createInstance();
-
-                                       /* build the common retriever tables */
-  TheCommonRetrievers = (RexxDirectory *)new_directory();
-                                       /* add all of the special variables  */
-  TheCommonRetrievers->put((RexxObject *)new RexxParseVariable(OREF_SELF, VARIABLE_SELF), OREF_SELF);
-  TheCommonRetrievers->put((RexxObject *)new RexxParseVariable(OREF_SUPER, VARIABLE_SUPER), OREF_SUPER);
-  TheCommonRetrievers->put((RexxObject *)new RexxParseVariable(OREF_SIGL, VARIABLE_SIGL), OREF_SIGL);
-  TheCommonRetrievers->put((RexxObject *)new RexxParseVariable(OREF_RC, VARIABLE_RC), OREF_RC);
-  TheCommonRetrievers->put((RexxObject *)new RexxParseVariable(OREF_RESULT, VARIABLE_RESULT), OREF_RESULT);
-  memoryObject.enableOrefChecks();     /* enable setCheckOrefs...           */
-
-/******************************************************************************/
-/* The following Rexx classes that are exposed to the users are set up as    */
-/* subclassable classes.                                                     */
-/*****************************************************************************/
-
-     /* The NEW method is exposed for the CLASS class behaviour.             */
-     /* The CLASS class needs the methods of the CLASS instance behaviour    */
-     /* so the instance behaviour methods are also in the CLASS class mdict. */
-     /*                                                                      */
-     /* Also Since the CLASS class needs OBJECT instance methods the         */
-     /* OBJECT class is setup. Then the class method SUBCLASSABLE can be     */
-     /* invoked on OBJECT then CLASS and then all the subclassable classes.  */
-
-                                       /* add the Rexx class NEW method     */
-  defineKernelMethod(CHAR_NEW, TheClassClassBehaviour, CPPM(RexxClass::newRexx), A_COUNT);
-
-                                       /* set the scope of the method to    */
-                                       /* the CLASS scope                   */
-  TheClassClassBehaviour->setMethodDictionaryScope(TheClassClass);
-
-                                       /* add the instance methods to the   */
-                                       /* class's instance mdict            */
-  defineProtectedKernelMethod(CHAR_BASECLASS       ,TheClassBehaviour, CPPM(RexxClass::getBaseClass), 0);
-  defineProtectedKernelMethod(CHAR_DEFINE          ,TheClassBehaviour, CPPM(RexxClass::defineMethod), 2);
-  defineProtectedKernelMethod(CHAR_DEFINE_METHODS  ,TheClassBehaviour, CPPM(RexxClass::defineMethods), 1);
-  defineProtectedKernelMethod("!DEFINE_CLASS_METHOD"  ,TheClassBehaviour, CPPM(RexxClass::defineClassMethod), 2);
-  defineProtectedKernelMethod(CHAR_DELETE ,TheClassBehaviour, CPPM(RexxClass::deleteMethod), 1);
-  defineKernelMethod(CHAR_ENHANCED        ,TheClassBehaviour, CPPM(RexxClass::enhanced), A_COUNT);
-  defineKernelMethod(CHAR_ID              ,TheClassBehaviour, CPPM(RexxClass::getId), 0);
-  defineKernelMethod(CHAR_INHERIT         ,TheClassBehaviour, CPPM(RexxClass::inherit), 2);
-  defineProtectedKernelMethod(CHAR_METACLASS       ,TheClassBehaviour, CPPM(RexxClass::getMetaClass), 0);
-  defineKernelMethod(CHAR_METHOD          ,TheClassBehaviour, CPPM(RexxClass::method), 1);
-  defineKernelMethod(CHAR_METHODS         ,TheClassBehaviour, CPPM(RexxClass::methods), 1);
-  defineKernelMethod(CHAR_MIXINCLASS      ,TheClassBehaviour, CPPM(RexxClass::mixinclassRexx), 3);
-  defineKernelMethod(CHAR_QUERYMIXINCLASS ,TheClassBehaviour, CPPM(RexxClass::queryMixinClass), 0);
-  defineKernelMethod(CHAR_SUBCLASS        ,TheClassBehaviour, CPPM(RexxClass::subclassRexx), 3);
-  defineProtectedKernelMethod(CHAR_SUBCLASSES      ,TheClassBehaviour, CPPM(RexxClass::getSubClasses), 0);
-  defineProtectedKernelMethod(CHAR_SUPERCLASSES    ,TheClassBehaviour, CPPM(RexxClass::getSuperClasses), 0);
-  defineProtectedKernelMethod(CHAR_SUPERCLASS      ,TheClassBehaviour, CPPM(RexxClass::getSuperClass), 0);
-  defineProtectedKernelMethod(CHAR_UNINHERIT       ,TheClassBehaviour, CPPM(RexxClass::uninherit), 1);
-                                       /* Class operator methods....        */
-  defineKernelMethod(CHAR_EQUAL                  ,TheClassBehaviour, CPPM(RexxClass::equal), 1);
-  defineKernelMethod(CHAR_STRICT_EQUAL           ,TheClassBehaviour, CPPM(RexxClass::strictEqual), 1);
-  defineKernelMethod(CHAR_BACKSLASH_EQUAL        ,TheClassBehaviour, CPPM(RexxClass::notEqual), 1);
-  defineKernelMethod(CHAR_LESSTHAN_GREATERTHAN   ,TheClassBehaviour, CPPM(RexxClass::notEqual), 1);
-  defineKernelMethod(CHAR_GREATERTHAN_LESSTHAN   ,TheClassBehaviour, CPPM(RexxClass::notEqual), 1);
-  defineKernelMethod(CHAR_STRICT_BACKSLASH_EQUAL ,TheClassBehaviour, CPPM(RexxClass::notEqual), 1);
-  defineKernelMethod(CHAR_ISSUBCLASSOF           ,TheClassBehaviour, CPPM(RexxClass::isSubclassOf), 1);
-  defineProtectedKernelMethod(CHAR_SHRIEKREXXDEFINED,TheClassBehaviour, CPPM(RexxClass::setRexxDefined), 0);
-  defineKernelMethod(CHAR_DEFAULTNAME            ,TheClassBehaviour, CPPM(RexxClass::defaultNameRexx), 0);
-  defineKernelMethod(CHAR_PACKAGE                ,TheClassBehaviour, CPPM(RexxClass::getPackage), 0);
-  // this is explicitly inserted into the class behaviour because it gets used
-  // prior to the instance behavior merges.
-  defineKernelMethod(CHAR_HASHCODE               ,TheClassBehaviour, CPPM(RexxObject::hashCode), 0);
-  // this is a NOP by default, so we'll just use the object init method as a fill in.
-  defineKernelMethod(CHAR_ACTIVATE               ,TheClassBehaviour, CPPM(RexxObject::init), 0);
-
-                                       /* set the scope of the methods to   */
-                                       /* the CLASS scope                   */
-  TheClassBehaviour->setMethodDictionaryScope(TheClassClass);
-
-     /************************************************************************/
-     /*                                                                      */
-     /* The OBJECT class and instance behaviour mdict's are needed next      */
-     /*                                                                      */
-     /************************************************************************/
-
-                                       /* add the NEW method to the OBJECT  */
-                                       /* behaviour mdict                   */
-  defineKernelMethod(CHAR_NEW, TheObjectClassBehaviour, CPPM(RexxObject::newRexx), A_COUNT);
-
-                                       /* set the scope of the method to    */
-                                       /* the OBJECT scope                  */
-  TheObjectClassBehaviour->setMethodDictionaryScope(TheObjectClass);
-
-                                       /* now set up the instance behaviour */
-                                       /* mdict                             */
-  defineKernelMethod(CHAR_INIT                   ,TheObjectBehaviour, CPPM(RexxObject::init), 0);
-  defineKernelMethod(CHAR_EQUAL                  ,TheObjectBehaviour, CPPM(RexxObject::equal), 1);
-  defineKernelMethod(CHAR_STRICT_EQUAL           ,TheObjectBehaviour, CPPM(RexxObject::strictEqual), 1);
-  defineKernelMethod(CHAR_HASHCODE               ,TheObjectBehaviour, CPPM(RexxObject::hashCode), 0);
-  defineKernelMethod(CHAR_BACKSLASH_EQUAL        ,TheObjectBehaviour, CPPM(RexxObject::notEqual), 1);
-  defineKernelMethod(CHAR_LESSTHAN_GREATERTHAN   ,TheObjectBehaviour, CPPM(RexxObject::notEqual), 1);
-  defineKernelMethod(CHAR_GREATERTHAN_LESSTHAN   ,TheObjectBehaviour, CPPM(RexxObject::notEqual), 1);
-  defineKernelMethod(CHAR_STRICT_BACKSLASH_EQUAL ,TheObjectBehaviour, CPPM(RexxObject::strictNotEqual), 1);
-  defineKernelMethod(CHAR_NULLSTRING             ,TheObjectBehaviour, CPPM(RexxObject::concatRexx), 1);
-  defineKernelMethod(CHAR_BLANK                  ,TheObjectBehaviour, CPPM(RexxObject::concatBlank), 1);
-  defineKernelMethod(CHAR_CONCATENATE            ,TheObjectBehaviour, CPPM(RexxObject::concatRexx), 1);
-  defineKernelMethod(CHAR_COPY                   ,TheObjectBehaviour, CPPM(RexxObject::copyRexx), 0);
-  defineKernelMethod(CHAR_CLASS                  ,TheObjectBehaviour, CPPM(RexxObject::classObject), 0);
-  defineKernelMethod(CHAR_HASMETHOD              ,TheObjectBehaviour, CPPM(RexxObject::hasMethodRexx), 1);
-  defineKernelMethod(CHAR_DEFAULTNAME            ,TheObjectBehaviour, CPPM(RexxObject::defaultNameRexx), 0);
-  defineKernelMethod(CHAR_OBJECTNAME             ,TheObjectBehaviour, CPPM(RexxObject::objectName), 0);
-  defineKernelMethod(CHAR_OBJECTNAMEEQUALS       ,TheObjectBehaviour, CPPM(RexxObject::objectNameEquals), 1);
-  defineKernelMethod(CHAR_REQUEST                ,TheObjectBehaviour, CPPM(RexxObject::requestRexx), 1);
-  defineKernelMethod(CHAR_START                  ,TheObjectBehaviour, CPPM(RexxObject::start), A_COUNT);
-  defineKernelMethod("STARTWITH"                 ,TheObjectBehaviour, CPPM(RexxObject::startWith), 2);
-  defineKernelMethod("SEND"                      ,TheObjectBehaviour, CPPM(RexxObject::send), A_COUNT);
-  defineKernelMethod("SENDWITH"                  ,TheObjectBehaviour, CPPM(RexxObject::sendWith), 2);
-  defineKernelMethod(CHAR_STRING                 ,TheObjectBehaviour, CPPM(RexxObject::stringRexx), 0);
-  defineKernelMethod(CHAR_ISINSTANCEOF           ,TheObjectBehaviour, CPPM(RexxObject::isInstanceOfRexx), 1);
-  defineKernelMethod(CHAR_ISA                    ,TheObjectBehaviour, CPPM(RexxObject::isInstanceOfRexx), 1);
-  defineKernelMethod(CHAR_INSTANCEMETHOD         ,TheObjectBehaviour, CPPM(RexxObject::instanceMethodRexx), 1);
-  defineKernelMethod(CHAR_INSTANCEMETHODS        ,TheObjectBehaviour, CPPM(RexxObject::instanceMethodsRexx), 1);
-  defineKernelMethod(CHAR_IDENTITYHASH           ,TheObjectBehaviour, CPPM(RexxObject::identityHashRexx), 0);
-  definePrivateKernelMethod(CHAR_RUN             ,TheObjectBehaviour, CPPM(RexxObject::run), A_COUNT);
-  definePrivateKernelMethod(CHAR_SETMETHOD       ,TheObjectBehaviour, CPPM(RexxObject::setMethod), 3);
-  definePrivateKernelMethod(CHAR_UNSETMETHOD     ,TheObjectBehaviour, CPPM(RexxObject::unsetMethod), 1);
-                                       /* set the scope of the methods to   */
-                                       /* the OBJECT scope                  */
-  TheObjectBehaviour->setMethodDictionaryScope(TheObjectClass);
-                                       /* Now call the class subclassable   */
-                                       /* method for OBJECT then CLASS      */
-  TheObjectClass->subClassable(true);
-  TheClassClass->subClassable(true);
-
-  /************************************** The rest of the classes can now be */
-  /************************************** set up.                            */
-
-  /***************************************************************************/
-  /*           ARRAY                                                         */
-  /***************************************************************************/
-
-  defineKernelMethod(CHAR_NEW, TheArrayClassBehaviour, CPPM(RexxArray::newRexx), A_COUNT);
-  defineKernelMethod(CHAR_OF,  TheArrayClassBehaviour, CPPM(RexxArray::of), A_COUNT);
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  TheArrayClassBehaviour->setMethodDictionaryScope(TheArrayClass);
-
-  defineKernelMethod(CHAR_BRACKETS     ,TheArrayBehaviour, CPPM(RexxArray::getRexx), A_COUNT);
-  defineKernelMethod(CHAR_BRACKETSEQUAL,TheArrayBehaviour, CPPM(RexxArray::putRexx), A_COUNT);
-  defineKernelMethod(CHAR_AT           ,TheArrayBehaviour, CPPM(RexxArray::getRexx), A_COUNT);
-  defineKernelMethod(CHAR_DIMENSION    ,TheArrayBehaviour, CPPM(RexxArray::dimension), 1);
-  defineKernelMethod("DIMENSIONS"      ,TheArrayBehaviour, CPPM(RexxArray::getDimensions), 0);
-  defineKernelMethod(CHAR_HASINDEX     ,TheArrayBehaviour, CPPM(RexxArray::hasIndexRexx), A_COUNT);
-  defineKernelMethod(CHAR_ITEMS        ,TheArrayBehaviour, CPPM(RexxArray::itemsRexx), 0);
-  defineKernelMethod(CHAR_MAKEARRAY    ,TheArrayBehaviour, CPPM(RexxObject::makeArrayRexx), 0);
-  defineKernelMethod(CHAR_PUT          ,TheArrayBehaviour, CPPM(RexxArray::putRexx), A_COUNT);
-  defineKernelMethod(CHAR_REMOVE       ,TheArrayBehaviour, CPPM(RexxArray::removeRexx), A_COUNT);
-  defineKernelMethod(CHAR_SECTION      ,TheArrayBehaviour, CPPM(RexxArray::sectionRexx), 2);
-  defineKernelMethod(CHAR_SIZE         ,TheArrayBehaviour, CPPM(RexxArray::sizeRexx), 0);
-  defineKernelMethod(CHAR_SUPPLIER     ,TheArrayBehaviour, CPPM(RexxArray::supplier), 0);
-  defineKernelMethod(CHAR_FIRST        ,TheArrayBehaviour, CPPM(RexxArray::firstRexx), 0);
-  defineKernelMethod(CHAR_FIRSTITEM    ,TheArrayBehaviour, CPPM(RexxArray::firstItem), 0);
-  defineKernelMethod(CHAR_LAST         ,TheArrayBehaviour, CPPM(RexxArray::lastRexx), 0);
-  defineKernelMethod(CHAR_LASTITEM     ,TheArrayBehaviour, CPPM(RexxArray::lastItem), 0);
-  defineKernelMethod(CHAR_NEXT         ,TheArrayBehaviour, CPPM(RexxArray::nextRexx), A_COUNT);
-  defineKernelMethod(CHAR_PREVIOUS     ,TheArrayBehaviour, CPPM(RexxArray::previousRexx), A_COUNT);
-  defineKernelMethod(CHAR_APPEND       ,TheArrayBehaviour, CPPM(RexxArray::appendRexx), 1);
-  defineKernelMethod(CHAR_MAKESTRING   ,TheArrayBehaviour, CPPM(RexxArray::makeString), 2);
-  defineKernelMethod(CHAR_TOSTRING     ,TheArrayBehaviour, CPPM(RexxArray::toString), 2);
-  defineKernelMethod(CHAR_ALLINDEXES   ,TheArrayBehaviour, CPPM(RexxArray::allIndexes), 0);
-  defineKernelMethod(CHAR_ALLITEMS     ,TheArrayBehaviour, CPPM(RexxArray::allItems), 0);
-  defineKernelMethod(CHAR_EMPTY        ,TheArrayBehaviour, CPPM(RexxArray::empty), 0);
-  defineKernelMethod(CHAR_ISEMPTY      ,TheArrayBehaviour, CPPM(RexxArray::isEmpty), 0);
-  defineKernelMethod(CHAR_INDEX        ,TheArrayBehaviour, CPPM(RexxArray::index), 1);
-  defineKernelMethod(CHAR_HASITEM      ,TheArrayBehaviour, CPPM(RexxArray::hasItem), 1);
-  defineKernelMethod(CHAR_REMOVEITEM   ,TheArrayBehaviour, CPPM(RexxArray::removeItem), 1);
-  defineKernelMethod(CHAR_INSERT       ,TheArrayBehaviour, CPPM(RexxArray::insertRexx), 2);
-  defineKernelMethod(CHAR_DELETE       ,TheArrayBehaviour, CPPM(RexxArray::deleteRexx), 1);
-  defineKernelMethod("FILL"            ,TheArrayBehaviour, CPPM(RexxArray::fill), 1);
-  // there have been some problems with the quick sort used as the default sort, so map everything
-  // to the stable sort.  The stable sort, in theory, uses more memory, but in practice, this is not true.
-  defineKernelMethod(CHAR_SORT         ,TheArrayBehaviour, CPPM(RexxArray::stableSortRexx), 0);
-  defineKernelMethod(CHAR_SORTWITH     ,TheArrayBehaviour, CPPM(RexxArray::stableSortWithRexx), 1);
-  defineKernelMethod(CHAR_STABLESORT   ,TheArrayBehaviour, CPPM(RexxArray::stableSortRexx), 0);
-  defineKernelMethod(CHAR_STABLESORTWITH ,TheArrayBehaviour, CPPM(RexxArray::stableSortWithRexx), 1);
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  TheArrayBehaviour->setMethodDictionaryScope(TheArrayClass);
-
-                                       /* Now call the class subclassable   */
-                                       /* method                            */
-  TheArrayClass->subClassable(false);
-
-  /***************************************************************************/
-  /*           DIRECTORY                                                     */
-  /***************************************************************************/
-
-  defineKernelMethod(CHAR_NEW           , TheDirectoryClassBehaviour, CPPM(RexxDirectory::newRexx), A_COUNT);
-
-                                       /* set the scope of the method to    */
-                                       /* this classes oref                 */
-  TheDirectoryClassBehaviour->setMethodDictionaryScope(TheDirectoryClass);
-
-                                       /* add the instance methods          */
-  defineKernelMethod(CHAR_BRACKETS      , TheDirectoryBehaviour, CPPM(RexxDirectory::atRexx), 1);
-  defineKernelMethod(CHAR_BRACKETSEQUAL , TheDirectoryBehaviour, CPPM(RexxDirectory::put), 2);
-  defineKernelMethod(CHAR_AT            , TheDirectoryBehaviour, CPPM(RexxDirectory::atRexx), 1);
-  defineKernelMethod(CHAR_ENTRY         , TheDirectoryBehaviour, CPPM(RexxDirectory::entryRexx), 1);
-  defineKernelMethod(CHAR_HASENTRY      , TheDirectoryBehaviour, CPPM(RexxDirectory::hasEntry), 1);
-  defineKernelMethod(CHAR_HASINDEX      , TheDirectoryBehaviour, CPPM(RexxDirectory::hasIndex), 1);
-  defineKernelMethod(CHAR_ITEMS         , TheDirectoryBehaviour, CPPM(RexxDirectory::itemsRexx), 0);
-  defineKernelMethod(CHAR_MAKEARRAY     , TheDirectoryBehaviour, CPPM(RexxObject::makeArrayRexx), 0);
-  defineKernelMethod(CHAR_ALLITEMS      , TheDirectoryBehaviour, CPPM(RexxDirectory::allItems), 0);
-  defineKernelMethod(CHAR_ALLINDEXES    , TheDirectoryBehaviour, CPPM(RexxDirectory::allIndexes), 0);
-  defineKernelMethod(CHAR_EMPTY         , TheDirectoryBehaviour, CPPM(RexxDirectory::empty), 0);
-  defineKernelMethod(CHAR_ISEMPTY       , TheDirectoryBehaviour, CPPM(RexxDirectory::isEmpty), 0);
-  defineKernelMethod(CHAR_PUT           , TheDirectoryBehaviour, CPPM(RexxDirectory::put), 2);
-  defineKernelMethod(CHAR_REMOVE        , TheDirectoryBehaviour, CPPM(RexxDirectory::removeRexx), 1);
-  defineKernelMethod(CHAR_SETENTRY      , TheDirectoryBehaviour, CPPM(RexxDirectory::setEntry), 2);
-  defineProtectedKernelMethod(CHAR_SETMETHOD   , TheDirectoryBehaviour, CPPM(RexxDirectory::setMethod), 2);
-  defineKernelMethod(CHAR_SUPPLIER      , TheDirectoryBehaviour, CPPM(RexxDirectory::supplier), 0);
-  defineKernelMethod(CHAR_UNKNOWN       , TheDirectoryBehaviour, CPPM(RexxObject::unknownRexx), 2);
-  defineProtectedKernelMethod(CHAR_UNSETMETHOD   , TheDirectoryBehaviour, CPPM(RexxDirectory::removeRexx), 1);
-  defineKernelMethod(CHAR_INDEX        , TheDirectoryBehaviour, CPPM(RexxDirectory::indexRexx), 1);
-  defineKernelMethod(CHAR_HASITEM      , TheDirectoryBehaviour, CPPM(RexxDirectory::hasItem), 1);
-  defineKernelMethod(CHAR_REMOVEITEM   , TheDirectoryBehaviour, CPPM(RexxDirectory::removeItem), 1);
-
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  TheDirectoryBehaviour->setMethodDictionaryScope(TheDirectoryClass);
-
-                                       /* Now call the class subclassable   */
-                                       /* method                            */
-  TheDirectoryClass->subClassable(false);
-
-
-  /***************************************************************************/
-  /*           LIST                                                          */
-  /***************************************************************************/
-
-                                       /* add the class behaviour methods   */
-  defineKernelMethod(CHAR_NEW           , TheListClassBehaviour, CPPM(RexxList::newRexx), A_COUNT);
-  defineKernelMethod(CHAR_OF            , TheListClassBehaviour, CPPM(RexxList::classOf), A_COUNT);
-
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  TheListClassBehaviour->setMethodDictionaryScope(TheListClass);
-
-                                       /* add the instance behaviour methods*/
-  defineKernelMethod(CHAR_BRACKETS     ,TheListBehaviour, CPPM(RexxList::value), 1);
-  defineKernelMethod(CHAR_BRACKETSEQUAL,TheListBehaviour, CPPM(RexxList::put), 2);
-  defineKernelMethod(CHAR_MAKEARRAY    ,TheListBehaviour, CPPM(RexxObject::makeArrayRexx), 0);
-  defineKernelMethod(CHAR_AT           ,TheListBehaviour, CPPM(RexxList::value), 1);
-  defineKernelMethod(CHAR_FIRSTITEM    ,TheListBehaviour, CPPM(RexxList::firstItem), 0);
-  defineKernelMethod(CHAR_HASINDEX     ,TheListBehaviour, CPPM(RexxList::hasIndex), 1);
-  defineKernelMethod(CHAR_INSERT       ,TheListBehaviour, CPPM(RexxList::insertRexx), 2);
-  defineKernelMethod(CHAR_ITEMS        ,TheListBehaviour, CPPM(RexxList::itemsRexx), 0);
-  defineKernelMethod(CHAR_LASTITEM     ,TheListBehaviour, CPPM(RexxList::lastItem), 0);
-  defineKernelMethod(CHAR_FIRST        ,TheListBehaviour, CPPM(RexxList::firstRexx), 0);
-  defineKernelMethod(CHAR_LAST         ,TheListBehaviour, CPPM(RexxList::lastRexx), 0);
-  defineKernelMethod(CHAR_NEXT         ,TheListBehaviour, CPPM(RexxList::next), 1);
-  defineKernelMethod(CHAR_PREVIOUS     ,TheListBehaviour, CPPM(RexxList::previous), 1);
-  defineKernelMethod(CHAR_PUT          ,TheListBehaviour, CPPM(RexxList::put), 2);
-  defineKernelMethod(CHAR_REMOVE       ,TheListBehaviour, CPPM(RexxList::remove), 1);
-  // DELETE is the same as REMOVE for the List class
-  defineKernelMethod(CHAR_DELETE       ,TheListBehaviour, CPPM(RexxList::remove), 1);
-  defineKernelMethod(CHAR_SECTION      ,TheListBehaviour, CPPM(RexxList::section), 2);
-  defineKernelMethod(CHAR_SUPPLIER     ,TheListBehaviour, CPPM(RexxList::supplier), 0);
-  defineKernelMethod(CHAR_APPEND       ,TheListBehaviour, CPPM(RexxList::append), 1);
-  defineKernelMethod(CHAR_ALLITEMS     ,TheListBehaviour, CPPM(RexxList::allItems), 0);
-  defineKernelMethod(CHAR_ALLINDEXES   ,TheListBehaviour, CPPM(RexxList::allIndexes), 0);
-  defineKernelMethod(CHAR_EMPTY        ,TheListBehaviour, CPPM(RexxList::empty), 0);
-  defineKernelMethod(CHAR_ISEMPTY      ,TheListBehaviour, CPPM(RexxList::isEmpty), 0);
-  defineKernelMethod(CHAR_INDEX        ,TheListBehaviour, CPPM(RexxList::index), 1);
-  defineKernelMethod(CHAR_HASITEM      ,TheListBehaviour, CPPM(RexxList::hasItem), 1);
-  defineKernelMethod(CHAR_REMOVEITEM   ,TheListBehaviour, CPPM(RexxList::removeItem), 1);
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  TheListBehaviour->setMethodDictionaryScope(TheListClass);
-
-                                       /* Now call the class subclassable   */
-                                       /* method                            */
-  TheListClass->subClassable(false);
-
-  /***************************************************************************/
-  /*           MESSAGE                                                       */
-  /***************************************************************************/
-
-                                       /* Define the NEW method in the      */
-                                       /* class behaviour mdict             */
-  defineKernelMethod(CHAR_NEW      , TheMessageClassBehaviour, CPPM(RexxMessage::newRexx), A_COUNT);
-
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  TheMessageClassBehaviour->setMethodDictionaryScope(TheMessageClass);
-
-                                       /* Add the instance methods to the   */
-                                       /* instance behaviour mdict          */
-
-  defineKernelMethod(CHAR_COMPLETED, TheMessageBehaviour, CPPM(RexxMessage::completed), 0);
-  defineKernelMethod(CHAR_HASERROR,  TheMessageBehaviour, CPPM(RexxMessage::hasError), 0);
-  defineKernelMethod(CHAR_NOTIFY   , TheMessageBehaviour, CPPM(RexxMessage::notify), 1);
-  defineKernelMethod(CHAR_RESULT   , TheMessageBehaviour, CPPM(RexxMessage::result), 0);
-  defineKernelMethod(CHAR_TARGET   , TheMessageBehaviour, CPPM(RexxMessage::messageTarget), 0);
-  defineKernelMethod(CHAR_MESSAGENAME  , TheMessageBehaviour, CPPM(RexxMessage::messageName), 0);
-  defineKernelMethod(CHAR_ARGUMENTS  , TheMessageBehaviour, CPPM(RexxMessage::arguments), 0);
-  defineKernelMethod(CHAR_ERRORCONDITION , TheMessageBehaviour, CPPM(RexxMessage::errorCondition), 0);
-  defineKernelMethod(CHAR_SEND     , TheMessageBehaviour, CPPM(RexxMessage::send), 1);
-  defineKernelMethod(CHAR_START    , TheMessageBehaviour, CPPM(RexxMessage::start), 1);
-
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  TheMessageBehaviour->setMethodDictionaryScope(TheMessageClass);
-
-                                       /* Now call the class subclassable   */
-                                       /* method                            */
-  TheMessageClass->subClassable(true);
-
-  /***************************************************************************/
-  /*           METHOD                                                        */
-  /***************************************************************************/
-
-                                       /* Add the NEW methods to the        */
-                                       /* class behaviour                   */
-  defineKernelMethod(CHAR_NEW     , TheMethodClassBehaviour, CPPM(RexxMethod::newRexx), A_COUNT);
-  defineKernelMethod(CHAR_NEWFILE , TheMethodClassBehaviour, CPPM(RexxMethod::newFileRexx), 1);
-  defineKernelMethod("LOADEXTERNALMETHOD" , TheMethodClassBehaviour, CPPM(RexxMethod::loadExternalMethod), 2);
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  TheMethodClassBehaviour->setMethodDictionaryScope(TheMethodClass);
-
-                                       /* Add the instance methods to the   */
-                                       /* instance behaviour mdict          */
-  defineKernelMethod(CHAR_SETUNGUARDED ,TheMethodBehaviour, CPPM(RexxMethod::setUnguardedRexx), 0);
-  defineKernelMethod(CHAR_SETGUARDED   ,TheMethodBehaviour, CPPM(RexxMethod::setGuardedRexx), 0);
-  defineKernelMethod(CHAR_SETPRIVATE   ,TheMethodBehaviour, CPPM(RexxMethod::setPrivateRexx), 0);
-  defineKernelMethod(CHAR_ISGUARDED    ,TheMethodBehaviour, CPPM(RexxMethod::isGuardedRexx), 0);
-  defineKernelMethod(CHAR_ISPRIVATE    ,TheMethodBehaviour, CPPM(RexxMethod::isPrivateRexx), 0);
-  defineKernelMethod(CHAR_ISPROTECTED  ,TheMethodBehaviour, CPPM(RexxMethod::isProtectedRexx), 0);
-  defineProtectedKernelMethod(CHAR_SETPROTECTED ,TheMethodBehaviour, CPPM(RexxMethod::setProtectedRexx), 0);
-  defineProtectedKernelMethod(CHAR_SETSECURITYMANAGER ,TheMethodBehaviour, CPPM(RexxMethod::setSecurityManager), 1);
-  defineKernelMethod(CHAR_SOURCE       ,TheMethodBehaviour, CPPM(BaseExecutable::source), 0);
-  defineKernelMethod(CHAR_PACKAGE      ,TheMethodBehaviour, CPPM(BaseExecutable::getPackage), 0);
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  TheMethodBehaviour->setMethodDictionaryScope(TheMethodClass);
-
-                                       /* Now call the class subclassable   */
-                                       /* method                            */
-  TheMethodClass->subClassable(true);
-
-  /***************************************************************************/
-  /*           ROUTINE                                                       */
-  /***************************************************************************/
-
-                                       /* Add the NEW methods to the        */
-                                       /* class behaviour                   */
-  defineKernelMethod(CHAR_NEW     , TheRoutineClassBehaviour, CPPM(RoutineClass::newRexx), A_COUNT);
-  defineKernelMethod(CHAR_NEWFILE , TheRoutineClassBehaviour, CPPM(RoutineClass::newFileRexx), 1);
-  defineKernelMethod("LOADEXTERNALROUTINE" , TheRoutineClassBehaviour, CPPM(RoutineClass::loadExternalRoutine), 2);
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  TheRoutineClassBehaviour->setMethodDictionaryScope(TheRoutineClass);
-
-                                       /* Add the instance methods to the   */
-                                       /* instance behaviour mdict          */
-  defineProtectedKernelMethod(CHAR_SETSECURITYMANAGER ,TheRoutineBehaviour, CPPM(RoutineClass::setSecurityManager), 1);
-  defineKernelMethod(CHAR_SOURCE       ,TheRoutineBehaviour, CPPM(BaseExecutable::source), 0);
-  defineKernelMethod(CHAR_PACKAGE      ,TheRoutineBehaviour, CPPM(BaseExecutable::getPackage), 0);
-  defineKernelMethod(CHAR_CALL         ,TheRoutineBehaviour, CPPM(RoutineClass::callRexx), A_COUNT);
-  defineKernelMethod(CHAR_CALLWITH     ,TheRoutineBehaviour, CPPM(RoutineClass::callWithRexx), 1);
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  TheRoutineBehaviour->setMethodDictionaryScope(TheRoutineClass);
-
-                                       /* Now call the class subclassable   */
-                                       /* method                            */
-  TheRoutineClass->subClassable(true);
-
-
-  /***************************************************************************/
-  /*           Package                                                       */
-  /***************************************************************************/
-
-                                       /* Add the NEW methods to the        */
-                                       /* class behaviour                   */
-  defineKernelMethod(CHAR_NEW     , ThePackageClassBehaviour, CPPM(PackageClass::newRexx), A_COUNT);
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  ThePackageClassBehaviour->setMethodDictionaryScope(ThePackageClass);
-
-                                       /* Add the instance methods to the   */
-                                       /* instance behaviour mdict          */
-  defineProtectedKernelMethod(CHAR_SETSECURITYMANAGER ,ThePackageBehaviour, CPPM(PackageClass::setSecurityManager), 1);
-  defineKernelMethod(CHAR_SOURCE      ,ThePackageBehaviour, CPPM(PackageClass::getSource), 0);
-  defineKernelMethod(CHAR_SOURCELINE  ,ThePackageBehaviour, CPPM(PackageClass::getSourceLineRexx), 1);
-  defineKernelMethod(CHAR_SOURCESIZE  ,ThePackageBehaviour, CPPM(PackageClass::getSourceSize), 0);
-  defineKernelMethod(CHAR_CLASSES     ,ThePackageBehaviour, CPPM(PackageClass::getClasses), 0);
-  defineKernelMethod(CHAR_PUBLICCLASSES ,ThePackageBehaviour, CPPM(PackageClass::getPublicClasses), 0);
-  defineKernelMethod(CHAR_IMPORTEDCLASSES ,ThePackageBehaviour, CPPM(PackageClass::getImportedClasses), 0);
-  defineKernelMethod(CHAR_DEFINEDMETHODS, ThePackageBehaviour, CPPM(PackageClass::getMethods), 0);
-  defineKernelMethod(CHAR_ROUTINES    ,ThePackageBehaviour, CPPM(PackageClass::getRoutines), 0);
-  defineKernelMethod(CHAR_PUBLICROUTINES    ,ThePackageBehaviour, CPPM(PackageClass::getPublicRoutines), 0);
-  defineKernelMethod(CHAR_IMPORTEDROUTINES    ,ThePackageBehaviour, CPPM(PackageClass::getImportedRoutines), 0);
-  defineKernelMethod(CHAR_IMPORTEDPACKAGES    ,ThePackageBehaviour, CPPM(PackageClass::getImportedPackages), 0);
-  defineKernelMethod(CHAR_LOADPACKAGE         ,ThePackageBehaviour, CPPM(PackageClass::loadPackage), 2);
-  defineKernelMethod(CHAR_ADDPACKAGE          ,ThePackageBehaviour, CPPM(PackageClass::addPackage), 1);
-  defineKernelMethod(CHAR_FINDCLASS           ,ThePackageBehaviour, CPPM(PackageClass::findClassRexx), 1);
-  defineKernelMethod(CHAR_FINDROUTINE         ,ThePackageBehaviour, CPPM(PackageClass::findRoutineRexx), 1);
-  defineKernelMethod(CHAR_ADDROUTINE          ,ThePackageBehaviour, CPPM(PackageClass::addRoutine), 2);
-  defineKernelMethod(CHAR_ADDPUBLICROUTINE    ,ThePackageBehaviour, CPPM(PackageClass::addPublicRoutine), 2);
-  defineKernelMethod(CHAR_ADDCLASS            ,ThePackageBehaviour, CPPM(PackageClass::addClass), 2);
-  defineKernelMethod(CHAR_ADDPUBLICCLASS      ,ThePackageBehaviour, CPPM(PackageClass::addPublicClass), 2);
-  defineKernelMethod(CHAR_NAME                ,ThePackageBehaviour, CPPM(PackageClass::getName), 0);
-  defineKernelMethod("LOADLIBRARY"            ,ThePackageBehaviour, CPPM(PackageClass::loadLibrary), 1);
-  defineKernelMethod("DIGITS"                 ,ThePackageBehaviour, CPPM(PackageClass::digits), 0);
-  defineKernelMethod("FORM"                   ,ThePackageBehaviour, CPPM(PackageClass::form), 0);
-  defineKernelMethod("FUZZ"                   ,ThePackageBehaviour, CPPM(PackageClass::fuzz), 0);
-  defineKernelMethod("TRACE"                  ,ThePackageBehaviour, CPPM(PackageClass::trace), 0);
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  ThePackageBehaviour->setMethodDictionaryScope(ThePackageClass);
-
-                                       /* Now call the class subclassable   */
-                                       /* method                            */
-  ThePackageClass->subClassable(true);
-
-
-  /***************************************************************************/
-  /*           RexxContext                                                   */
-  /***************************************************************************/
-
-                                       /* Add the NEW methods to the        */
-                                       /* class behaviour                   */
-  defineKernelMethod(CHAR_NEW     ,TheRexxContextClassBehaviour, CPPM(RexxContext::newRexx), A_COUNT);
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  TheRexxContextClassBehaviour->setMethodDictionaryScope(TheRexxContextClass);
-
-  defineKernelMethod(CHAR_COPY          ,TheRexxContextBehaviour, CPPM(RexxContext::copyRexx), 0);
-  defineKernelMethod(CHAR_PACKAGE       ,TheRexxContextBehaviour, CPPM(RexxContext::getPackage), 0);
-  defineKernelMethod(CHAR_EXECUTABLE    ,TheRexxContextBehaviour, CPPM(RexxContext::getExecutable), 0);
-  defineKernelMethod(CHAR_FORM          ,TheRexxContextBehaviour, CPPM(RexxContext::getForm), 0);
-  defineKernelMethod(CHAR_FUZZ          ,TheRexxContextBehaviour, CPPM(RexxContext::getFuzz), 0);
-  defineKernelMethod(CHAR_DIGITS        ,TheRexxContextBehaviour, CPPM(RexxContext::getDigits), 0);
-  defineKernelMethod(CHAR_VARIABLES     ,TheRexxContextBehaviour, CPPM(RexxContext::getVariables), 0);
-  defineKernelMethod(CHAR_ARGS          ,TheRexxContextBehaviour, CPPM(RexxContext::getArgs), 0);
-  defineKernelMethod(CHAR_CONDITION     ,TheRexxContextBehaviour, CPPM(RexxContext::getCondition), 0);
-  defineKernelMethod("LINE"             ,TheRexxContextBehaviour, CPPM(RexxContext::getLine), 0);
-  defineKernelMethod("RS"               ,TheRexxContextBehaviour, CPPM(RexxContext::getRS), 0);
-  defineKernelMethod(CHAR_NAME          ,TheRexxContextBehaviour, CPPM(RexxContext::getName), 0);
-  defineKernelMethod("STACKFRAMES"      ,TheRexxContextBehaviour, CPPM(RexxContext::getStackFrames), 0);
-
-                                       /* Add the instance methods to the   */
-                                       /* instance behaviour mdict          */
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  TheRexxContextBehaviour->setMethodDictionaryScope(TheRexxContextClass);
-
-                                       /* Now call the class subclassable   */
-                                       /* method                            */
-  TheRexxContextClass->subClassable(true);
-
-  /***************************************************************************/
-  /*           QUEUE                                                         */
-  /***************************************************************************/
-
-                                       /* Add the NEW method to the class   */
-                                       /* behaviour mdict                   */
-  defineKernelMethod(CHAR_NEW, TheQueueClassBehaviour, CPPM(RexxQueue::newRexx), A_COUNT);
-  defineKernelMethod(CHAR_OF,  TheQueueClassBehaviour, CPPM(RexxQueue::ofRexx), A_COUNT);
-
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  TheQueueClassBehaviour->setMethodDictionaryScope(TheQueueClass);
-
-                                       /* Add the instance methods to the   */
-                                       /* instance method mdict             */
-
-  defineKernelMethod(CHAR_MAKEARRAY     ,TheQueueBehaviour, CPPM(RexxObject::makeArrayRexx), 0);
-  defineKernelMethod(CHAR_ITEMS         ,TheQueueBehaviour, CPPM(RexxList::itemsRexx), 0);
-  defineKernelMethod(CHAR_SUPPLIER      ,TheQueueBehaviour, CPPM(RexxQueue::supplier), 0);
-  defineKernelMethod(CHAR_PUSH          ,TheQueueBehaviour, CPPM(RexxQueue::pushRexx), 1);
-  defineKernelMethod(CHAR_PEEK          ,TheQueueBehaviour, CPPM(RexxQueue::peek), 0);
-  defineKernelMethod(CHAR_PULL          ,TheQueueBehaviour, CPPM(RexxQueue::pullRexx), 0);
-  defineKernelMethod(CHAR_QUEUE         ,TheQueueBehaviour, CPPM(RexxQueue::queueRexx), 1);
-  defineKernelMethod(CHAR_BRACKETS      ,TheQueueBehaviour, CPPM(RexxQueue::at), 1);
-  defineKernelMethod(CHAR_BRACKETSEQUAL ,TheQueueBehaviour, CPPM(RexxQueue::put), 2);
-  defineKernelMethod(CHAR_AT            ,TheQueueBehaviour, CPPM(RexxQueue::at), 1);
-  defineKernelMethod(CHAR_HASINDEX      ,TheQueueBehaviour, CPPM(RexxQueue::hasindex), 1);
-  defineKernelMethod(CHAR_PUT           ,TheQueueBehaviour, CPPM(RexxQueue::put), 2);
-  defineKernelMethod(CHAR_REMOVE        ,TheQueueBehaviour, CPPM(RexxQueue::remove), 1);
-  // REMOVE and DELETE are synonyms for the QUEUE class
-  defineKernelMethod(CHAR_DELETE        ,TheQueueBehaviour, CPPM(RexxQueue::remove), 1);
-  defineKernelMethod(CHAR_APPEND        ,TheQueueBehaviour, CPPM(RexxQueue::append), 1);
-  defineKernelMethod(CHAR_ALLITEMS      ,TheQueueBehaviour, CPPM(RexxList::allItems), 0);
-  defineKernelMethod(CHAR_ALLINDEXES    ,TheQueueBehaviour, CPPM(RexxQueue::allIndexes), 0);
-  defineKernelMethod(CHAR_EMPTY         ,TheQueueBehaviour, CPPM(RexxList::empty), 0);
-  defineKernelMethod(CHAR_ISEMPTY       ,TheQueueBehaviour, CPPM(RexxList::isEmpty), 0);
-  defineKernelMethod(CHAR_INDEX         ,TheQueueBehaviour, CPPM(RexxQueue::index), 1);
-  defineKernelMethod(CHAR_HASITEM       ,TheQueueBehaviour, CPPM(RexxList::hasItem), 1);
-  defineKernelMethod(CHAR_REMOVEITEM    ,TheQueueBehaviour, CPPM(RexxList::removeItem), 1);
-  defineKernelMethod(CHAR_FIRST         ,TheQueueBehaviour, CPPM(RexxQueue::firstRexx), 0);
-  defineKernelMethod(CHAR_FIRSTITEM     ,TheQueueBehaviour, CPPM(RexxList::firstItem), 0);
-  defineKernelMethod(CHAR_LAST          ,TheQueueBehaviour, CPPM(RexxQueue::lastRexx), 0);
-  defineKernelMethod(CHAR_LASTITEM      ,TheQueueBehaviour, CPPM(RexxList::lastItem), 0);
-  defineKernelMethod(CHAR_NEXT          ,TheQueueBehaviour, CPPM(RexxQueue::next), 1);
-  defineKernelMethod(CHAR_PREVIOUS      ,TheQueueBehaviour, CPPM(RexxQueue::previous), 1);
-  defineKernelMethod(CHAR_INSERT        ,TheQueueBehaviour, CPPM(RexxQueue::insert), 2);
-  defineKernelMethod(CHAR_SECTION       ,TheQueueBehaviour, CPPM(RexxQueue::section), 2);
-
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  TheQueueBehaviour->setMethodDictionaryScope(TheQueueClass);
-
-                                       /* Now call the class subclassable   */
-                                       /* method                            */
-  TheQueueClass->subClassable(false);
-
-  /***************************************************************************/
-  /*           RELATION                                                      */
-  /***************************************************************************/
-
-                                       /* Add the NEW method to the         */
-                                       /* class behaviour mdict             */
-  defineKernelMethod(CHAR_NEW          , TheRelationClassBehaviour, CPPM(RexxRelation::newRexx), A_COUNT);
-
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  TheRelationClassBehaviour->setMethodDictionaryScope(TheRelationClass);
-
-                                       /* Add the instance methods to the   */
-                                       /* instance behaviour mdict          */
-  defineKernelMethod(CHAR_BRACKETS     , TheRelationBehaviour, CPPM(RexxHashTableCollection::getRexx), 1);
-  defineKernelMethod(CHAR_BRACKETSEQUAL, TheRelationBehaviour, CPPM(RexxRelation::put), 2);
-  defineKernelMethod(CHAR_ALLAT        , TheRelationBehaviour, CPPM(RexxHashTableCollection::allAt), 1);
-  defineKernelMethod(CHAR_ALLINDEX     , TheRelationBehaviour, CPPM(RexxRelation::allIndex), 1);
-  defineKernelMethod(CHAR_MAKEARRAY    , TheRelationBehaviour, CPPM(RexxObject::makeArrayRexx), 0);
-  defineKernelMethod(CHAR_AT           , TheRelationBehaviour, CPPM(RexxHashTableCollection::getRexx), 1);
-  defineKernelMethod(CHAR_HASINDEX     , TheRelationBehaviour, CPPM(RexxHashTableCollection::hasIndexRexx), 1);
-  defineKernelMethod(CHAR_HASITEM      , TheRelationBehaviour, CPPM(RexxRelation::hasItem), 2);
-  defineKernelMethod(CHAR_INDEX        , TheRelationBehaviour, CPPM(RexxHashTableCollection::indexRexx), 1);
-  defineKernelMethod(CHAR_ITEMS        , TheRelationBehaviour, CPPM(RexxRelation::itemsRexx), 1);
-  defineKernelMethod(CHAR_PUT          , TheRelationBehaviour, CPPM(RexxRelation::put), 2);
-  defineKernelMethod(CHAR_REMOVE       , TheRelationBehaviour, CPPM(RexxHashTableCollection::removeRexx), 1);
-  defineKernelMethod(CHAR_REMOVEITEM   , TheRelationBehaviour, CPPM(RexxRelation::removeItemRexx), 2);
-  defineKernelMethod(CHAR_SUPPLIER     , TheRelationBehaviour, CPPM(RexxRelation::supplier), 1);
-  defineKernelMethod(CHAR_ALLITEMS     , TheRelationBehaviour, CPPM(RexxHashTableCollection::allItems), 0);
-  defineKernelMethod(CHAR_ALLINDEXES   , TheRelationBehaviour, CPPM(RexxHashTableCollection::allIndexes), 0);
-  defineKernelMethod("UNIQUEINDEXES"   , TheRelationBehaviour, CPPM(RexxHashTableCollection::uniqueIndexes), 0);
-  defineKernelMethod(CHAR_EMPTY        , TheRelationBehaviour, CPPM(RexxHashTableCollection::empty), 0);
-  defineKernelMethod(CHAR_ISEMPTY      , TheRelationBehaviour, CPPM(RexxHashTableCollection::isEmpty), 0);
-  defineKernelMethod("REMOVEALL"       , TheRelationBehaviour, CPPM(RexxRelation::removeAll), 1);
-
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  TheRelationBehaviour->setMethodDictionaryScope(TheRelationClass);
-
-                                       /* Now call the class subclassable   */
-                                       /* method                            */
-  TheRelationClass->subClassable(false);
-
-  /***************************************************************************/
-  /*           STEM                                                          */
-  /***************************************************************************/
-
-                                       /* Add the NEW method to the class   */
-                                       /* behaviour mdict                   */
-  defineKernelMethod(CHAR_NEW, TheStemClassBehaviour, CPPM(RexxStem::newRexx), A_COUNT);
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  TheStemClassBehaviour->setMethodDictionaryScope(TheStemClass);
-
-                                       /* Add the instance methods to the   */
-                                       /* instance behaviour mdict          */
-  defineKernelMethod(CHAR_BRACKETS      ,TheStemBehaviour, CPPM(RexxStem::bracket), A_COUNT);
-  defineKernelMethod(CHAR_BRACKETSEQUAL ,TheStemBehaviour, CPPM(RexxStem::bracketEqual), A_COUNT);
-  defineKernelMethod(CHAR_AT            ,TheStemBehaviour, CPPM(RexxStem::bracket), A_COUNT);
-  defineKernelMethod(CHAR_PUT           ,TheStemBehaviour, CPPM(RexxStem::bracketEqual), A_COUNT);
-  defineKernelMethod(CHAR_MAKEARRAY     ,TheStemBehaviour, CPPM(RexxObject::makeArrayRexx), 0);
-  defineKernelMethod(CHAR_REQUEST       ,TheStemBehaviour, CPPM(RexxStem::request), 1);
-  defineKernelMethod(CHAR_SUPPLIER      ,TheStemBehaviour, CPPM(RexxStem::supplier), 0);
-  defineKernelMethod(CHAR_ALLINDEXES    ,TheStemBehaviour, CPPM(RexxStem::allIndexes), 0);
-  defineKernelMethod(CHAR_ALLITEMS      ,TheStemBehaviour, CPPM(RexxStem::allItems), 0);
-  defineKernelMethod(CHAR_EMPTY         ,TheStemBehaviour, CPPM(RexxStem::empty), 0);
-  defineKernelMethod(CHAR_ISEMPTY       ,TheStemBehaviour, CPPM(RexxStem::isEmpty), 0);
-  defineKernelMethod(CHAR_UNKNOWN       ,TheStemBehaviour, CPPM(RexxObject::unknownRexx), 2);
-
-  defineKernelMethod(CHAR_ITEMS         ,TheStemBehaviour, CPPM(RexxStem::itemsRexx), 0);
-  defineKernelMethod(CHAR_HASINDEX      ,TheStemBehaviour, CPPM(RexxStem::hasIndex), A_COUNT);
-  defineKernelMethod(CHAR_REMOVE        ,TheStemBehaviour, CPPM(RexxStem::remove), A_COUNT);
-  defineKernelMethod(CHAR_INDEX         ,TheStemBehaviour, CPPM(RexxStem::index), 1);
-  defineKernelMethod(CHAR_HASITEM       ,TheStemBehaviour, CPPM(RexxStem::hasItem), 1);
-  defineKernelMethod(CHAR_REMOVEITEM    ,TheStemBehaviour, CPPM(RexxStem::removeItem), 1);
-  defineKernelMethod(CHAR_TODIRECTORY   ,TheStemBehaviour, CPPM(RexxStem::toDirectory), 0);
-
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  TheStemBehaviour->setMethodDictionaryScope(TheStemClass);
-
-                                       /* delete these methods from stems by*/
-                                       /* using .nil as the methobj         */
-  TheStemBehaviour->define(getGlobalName(CHAR_STRICT_EQUAL)          , OREF_NULL);
-  TheStemBehaviour->define(getGlobalName(CHAR_EQUAL)                 , OREF_NULL);
-  TheStemBehaviour->define(getGlobalName(CHAR_STRICT_BACKSLASH_EQUAL), OREF_NULL);
-  TheStemBehaviour->define(getGlobalName(CHAR_BACKSLASH_EQUAL)       , OREF_NULL);
-  TheStemBehaviour->define(getGlobalName(CHAR_LESSTHAN_GREATERTHAN)  , OREF_NULL);
-  TheStemBehaviour->define(getGlobalName(CHAR_GREATERTHAN_LESSTHAN)  , OREF_NULL);
-
-                                       /* Now call the class subclassable   */
-                                       /* method                            */
-  TheStemClass->subClassable(false);
-
-  /***************************************************************************/
-  /*           STRING                                                        */
-  /***************************************************************************/
-
-                                       /* Add the NEW method to the class   */
-                                       /* behaviour mdict                   */
-  defineKernelMethod(CHAR_NEW, TheStringClassBehaviour, CPPM(RexxString::newRexx), A_COUNT);
-
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  TheStringClassBehaviour->setMethodDictionaryScope(TheStringClass);
-
-                                       /* Add the instance methods to the   */
-                                       /* instance behaviour mdict          */
-  defineKernelMethod(CHAR_NULLSTRING                   ,TheStringBehaviour, CPPM(RexxString::concatRexx), 1);
-  defineKernelMethod(CHAR_BLANK                        ,TheStringBehaviour, CPPM(RexxString::concatBlank), 1);
-  defineKernelMethod(CHAR_CONCATENATE                  ,TheStringBehaviour, CPPM(RexxString::concatRexx), 1);
-  defineKernelMethod(CHAR_LENGTH                       ,TheStringBehaviour, CPPM(RexxString::lengthRexx), 0);
-  defineKernelMethod(CHAR_CENTER                       ,TheStringBehaviour, CPPM(RexxString::center), 2);
-  defineKernelMethod(CHAR_CENTRE                       ,TheStringBehaviour, CPPM(RexxString::center), 2);
-  defineKernelMethod(CHAR_DATATYPE                     ,TheStringBehaviour, CPPM(RexxString::dataType), 1);
-  defineKernelMethod(CHAR_DELSTR                       ,TheStringBehaviour, CPPM(RexxString::delstr), 2);
-  defineKernelMethod(CHAR_FORMAT                       ,TheStringBehaviour, CPPM(RexxString::format), 4);
-  defineKernelMethod(CHAR_INSERT                       ,TheStringBehaviour, CPPM(RexxString::insert), 4);
-  defineKernelMethod(CHAR_LEFT                         ,TheStringBehaviour, CPPM(RexxString::left), 2);
-  defineKernelMethod(CHAR_OVERLAY                      ,TheStringBehaviour, CPPM(RexxString::overlay), 4);
-  defineKernelMethod(CHAR_REPLACEAT                    ,TheStringBehaviour, CPPM(RexxString::replaceAt), 4);
-  defineKernelMethod(CHAR_REVERSE                      ,TheStringBehaviour, CPPM(RexxString::reverse), 0);
-  defineKernelMethod(CHAR_RIGHT                        ,TheStringBehaviour, CPPM(RexxString::right), 2);
-  defineKernelMethod(CHAR_STRIP                        ,TheStringBehaviour, CPPM(RexxString::strip), 2);
-  defineKernelMethod(CHAR_SUBSTR                       ,TheStringBehaviour, CPPM(RexxString::substr), 3);
-  defineKernelMethod(CHAR_SUBCHAR                      ,TheStringBehaviour, CPPM(RexxString::subchar), 1);
-  defineKernelMethod(CHAR_DELWORD                      ,TheStringBehaviour, CPPM(RexxString::delWord), 2);
-  defineKernelMethod(CHAR_SPACE                        ,TheStringBehaviour, CPPM(RexxString::space), 2);
-  defineKernelMethod(CHAR_SUBWORD                      ,TheStringBehaviour, CPPM(RexxString::subWord), 2);
-  defineKernelMethod("SUBWORDS"                        ,TheStringBehaviour, CPPM(RexxString::subWords), 2);
-  defineKernelMethod("FLOOR"                           ,TheStringBehaviour, CPPM(RexxString::floor), 0);
-  defineKernelMethod("CEILING"                         ,TheStringBehaviour, CPPM(RexxString::ceiling), 0);
-  defineKernelMethod("ROUND"                           ,TheStringBehaviour, CPPM(RexxString::round), 0);
-  defineKernelMethod(CHAR_TRUNC                        ,TheStringBehaviour, CPPM(RexxString::trunc), 1);
-  defineKernelMethod(CHAR_WORD                         ,TheStringBehaviour, CPPM(RexxString::word), 1);
-  defineKernelMethod(CHAR_WORDINDEX                    ,TheStringBehaviour, CPPM(RexxString::wordIndex), 1);
-  defineKernelMethod(CHAR_WORDLENGTH                   ,TheStringBehaviour, CPPM(RexxString::wordLength), 1);
-  defineKernelMethod(CHAR_WORDPOS                      ,TheStringBehaviour, CPPM(RexxString::wordPos), 2);
-  defineKernelMethod(CHAR_CASELESSWORDPOS              ,TheStringBehaviour, CPPM(RexxString::caselessWordPos), 2);
-  defineKernelMethod(CHAR_WORDS                        ,TheStringBehaviour, CPPM(RexxString::words), 0);
-  defineKernelMethod(CHAR_ABBREV                       ,TheStringBehaviour, CPPM(RexxString::abbrev), 2);
-  defineKernelMethod(CHAR_CASELESSABBREV               ,TheStringBehaviour, CPPM(RexxString::caselessAbbrev), 2);
-  defineKernelMethod(CHAR_CHANGESTR                    ,TheStringBehaviour, CPPM(RexxString::changeStr), 3);
-  defineKernelMethod(CHAR_CASELESSCHANGESTR            ,TheStringBehaviour, CPPM(RexxString::caselessChangeStr), 3);
-  defineKernelMethod(CHAR_COMPARE                      ,TheStringBehaviour, CPPM(RexxString::compare), 2);
-  defineKernelMethod(CHAR_CASELESSCOMPARE              ,TheStringBehaviour, CPPM(RexxString::caselessCompare), 2);
-  defineKernelMethod(CHAR_COPIES                       ,TheStringBehaviour, CPPM(RexxString::copies), 1);
-  defineKernelMethod(CHAR_COUNTSTR                     ,TheStringBehaviour, CPPM(RexxString::countStrRexx), 1);
-  defineKernelMethod(CHAR_CASELESSCOUNTSTR             ,TheStringBehaviour, CPPM(RexxString::caselessCountStrRexx), 1);
-  defineKernelMethod(CHAR_LASTPOS                      ,TheStringBehaviour, CPPM(RexxString::lastPosRexx), 3);
-  defineKernelMethod(CHAR_POS                          ,TheStringBehaviour, CPPM(RexxString::posRexx), 3);
-  defineKernelMethod("CONTAINS"                        ,TheStringBehaviour, CPPM(RexxString::containsRexx), 3);
-  defineKernelMethod("CASELESSCONTAINS"                ,TheStringBehaviour, CPPM(RexxString::caselessContains), 3);
-  defineKernelMethod("CONTAINSWORD"                    ,TheStringBehaviour, CPPM(RexxString::containsWord), 2);
-  defineKernelMethod("CASELESSCONTAINSWORD"            ,TheStringBehaviour, CPPM(RexxString::caselessContainsWord), 2);
-  defineKernelMethod(CHAR_CASELESSLASTPOS              ,TheStringBehaviour, CPPM(RexxString::caselessLastPosRexx), 3);
-  defineKernelMethod(CHAR_CASELESSPOS                  ,TheStringBehaviour, CPPM(RexxString::caselessPosRexx), 3);
-  defineKernelMethod(CHAR_TRANSLATE                    ,TheStringBehaviour, CPPM(RexxString::translate), 5);
-  defineKernelMethod(CHAR_VERIFY                       ,TheStringBehaviour, CPPM(RexxString::verify), 4);
-  defineKernelMethod(CHAR_BITAND                       ,TheStringBehaviour, CPPM(RexxString::bitAnd), 2);
-  defineKernelMethod(CHAR_BITOR                        ,TheStringBehaviour, CPPM(RexxString::bitOr), 2);
-  defineKernelMethod(CHAR_BITXOR                       ,TheStringBehaviour, CPPM(RexxString::bitXor), 2);
-  defineKernelMethod(CHAR_B2X                          ,TheStringBehaviour, CPPM(RexxString::b2x), 0);
-  defineKernelMethod(CHAR_C2D                          ,TheStringBehaviour, CPPM(RexxString::c2d), 1);
-  defineKernelMethod(CHAR_C2X                          ,TheStringBehaviour, CPPM(RexxString::c2x), 0);
-  defineKernelMethod(CHAR_D2C                          ,TheStringBehaviour, CPPM(RexxString::d2c), 1);
-  defineKernelMethod(CHAR_D2X                          ,TheStringBehaviour, CPPM(RexxString::d2x), 1);
-  defineKernelMethod(CHAR_X2B                          ,TheStringBehaviour, CPPM(RexxString::x2b), 0);
-  defineKernelMethod(CHAR_X2C                          ,TheStringBehaviour, CPPM(RexxString::x2c), 0);
-  defineKernelMethod(CHAR_X2D                          ,TheStringBehaviour, CPPM(RexxString::x2d), 1);
-  defineKernelMethod(CHAR_ENCODEBASE64                 ,TheStringBehaviour, CPPM(RexxString::encodeBase64), 0);
-  defineKernelMethod(CHAR_DECODEBASE64                 ,TheStringBehaviour, CPPM(RexxString::decodeBase64), 0);
-  defineKernelMethod(CHAR_MAKESTRING                   ,TheStringBehaviour, CPPM(RexxObject::makeStringRexx), 0);
-  defineKernelMethod(CHAR_ABS                          ,TheStringBehaviour, CPPM(RexxString::abs), 0);
-  defineKernelMethod(CHAR_ORXMAX                          ,TheStringBehaviour, CPPM(RexxString::Max), A_COUNT);
-  defineKernelMethod(CHAR_ORXMIN                          ,TheStringBehaviour, CPPM(RexxString::Min), A_COUNT);
-  defineKernelMethod(CHAR_SIGN                         ,TheStringBehaviour, CPPM(RexxString::sign), 0);
-  defineKernelMethod(CHAR_EQUAL                        ,TheStringBehaviour, CPPM(RexxString::equal), 1);
-  defineKernelMethod(CHAR_BACKSLASH_EQUAL              ,TheStringBehaviour, CPPM(RexxString::notEqual), 1);
-  defineKernelMethod(CHAR_LESSTHAN_GREATERTHAN         ,TheStringBehaviour, CPPM(RexxString::notEqual), 1);
-  defineKernelMethod(CHAR_GREATERTHAN_LESSTHAN         ,TheStringBehaviour, CPPM(RexxString::notEqual), 1);
-  defineKernelMethod(CHAR_GREATERTHAN                  ,TheStringBehaviour, CPPM(RexxString::isGreaterThan), 1);
-  defineKernelMethod(CHAR_LESSTHAN                     ,TheStringBehaviour, CPPM(RexxString::isLessThan), 1);
-  defineKernelMethod(CHAR_GREATERTHAN_EQUAL            ,TheStringBehaviour, CPPM(RexxString::isGreaterOrEqual), 1);
-  defineKernelMethod(CHAR_BACKSLASH_LESSTHAN           ,TheStringBehaviour, CPPM(RexxString::isGreaterOrEqual), 1);
-  defineKernelMethod(CHAR_LESSTHAN_EQUAL               ,TheStringBehaviour, CPPM(RexxString::isLessOrEqual), 1);
-  defineKernelMethod(CHAR_BACKSLASH_GREATERTHAN        ,TheStringBehaviour, CPPM(RexxString::isLessOrEqual), 1);
-  defineKernelMethod(CHAR_STRICT_EQUAL                 ,TheStringBehaviour, CPPM(RexxString::strictEqual), 1);
-  defineKernelMethod(CHAR_STRICT_BACKSLASH_EQUAL       ,TheStringBehaviour, CPPM(RexxString::strictNotEqual), 1);
-  defineKernelMethod(CHAR_STRICT_GREATERTHAN           ,TheStringBehaviour, CPPM(RexxString::strictGreaterThan), 1);
-  defineKernelMethod(CHAR_STRICT_LESSTHAN              ,TheStringBehaviour, CPPM(RexxString::strictLessThan), 1);
-  defineKernelMethod(CHAR_STRICT_GREATERTHAN_EQUAL     ,TheStringBehaviour, CPPM(RexxString::strictGreaterOrEqual), 1);
-  defineKernelMethod(CHAR_STRICT_BACKSLASH_LESSTHAN    ,TheStringBehaviour, CPPM(RexxString::strictGreaterOrEqual), 1);
-  defineKernelMethod(CHAR_STRICT_LESSTHAN_EQUAL        ,TheStringBehaviour, CPPM(RexxString::strictLessOrEqual), 1);
-  defineKernelMethod(CHAR_STRICT_BACKSLASH_GREATERTHAN ,TheStringBehaviour, CPPM(RexxString::strictLessOrEqual), 1);
-  defineKernelMethod(CHAR_PLUS                         ,TheStringBehaviour, CPPM(RexxString::plus), 1);
-  defineKernelMethod(CHAR_SUBTRACT                     ,TheStringBehaviour, CPPM(RexxString::minus), 1);
-  defineKernelMethod(CHAR_MULTIPLY                     ,TheStringBehaviour, CPPM(RexxString::multiply), 1);
-  defineKernelMethod(CHAR_POWER                        ,TheStringBehaviour, CPPM(RexxString::power), 1);
-  defineKernelMethod(CHAR_DIVIDE                       ,TheStringBehaviour, CPPM(RexxString::divide), 1);
-  defineKernelMethod(CHAR_INTDIV                       ,TheStringBehaviour, CPPM(RexxString::integerDivide), 1);
-  defineKernelMethod(CHAR_REMAINDER                    ,TheStringBehaviour, CPPM(RexxString::remainder), 1);
-  defineKernelMethod(CHAR_BACKSLASH                    ,TheStringBehaviour, CPPM(RexxString::notOp), 0);
-  defineKernelMethod(CHAR_AND                          ,TheStringBehaviour, CPPM(RexxString::andOp), 1);
-  defineKernelMethod(CHAR_OR                           ,TheStringBehaviour, CPPM(RexxString::orOp), 1);
-  defineKernelMethod(CHAR_XOR                          ,TheStringBehaviour, CPPM(RexxString::xorOp), 1);
-  defineKernelMethod(CHAR_MAKEARRAY                    ,TheStringBehaviour, CPPM(RexxString::makeArrayRexx), 1);
-  defineKernelMethod(CHAR_LOWER                        ,TheStringBehaviour, CPPM(RexxString::lowerRexx), 2);
-  defineKernelMethod(CHAR_UPPER                        ,TheStringBehaviour, CPPM(RexxString::upperRexx), 2);
-  defineKernelMethod(CHAR_MATCH                        ,TheStringBehaviour, CPPM(RexxString::match), 4);
-  defineKernelMethod(CHAR_CASELESSMATCH                ,TheStringBehaviour, CPPM(RexxString::caselessMatch), 4);
-  defineKernelMethod(CHAR_MATCHCHAR                    ,TheStringBehaviour, CPPM(RexxString::matchChar), 2);
-  defineKernelMethod(CHAR_CASELESSMATCHCHAR            ,TheStringBehaviour, CPPM(RexxString::caselessMatchChar), 2);
-  defineKernelMethod(CHAR_EQUALS                       ,TheStringBehaviour, CPPM(RexxString::equals), 1);
-  defineKernelMethod(CHAR_CASELESSEQUALS               ,TheStringBehaviour, CPPM(RexxString::caselessEquals), 1);
-  defineKernelMethod(CHAR_COMPARETO                    ,TheStringBehaviour, CPPM(RexxString::compareToRexx), 3);
-  defineKernelMethod(CHAR_CASELESSCOMPARETO            ,TheStringBehaviour, CPPM(RexxString::caselessCompareToRexx), 3);
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  TheStringBehaviour->setMethodDictionaryScope(TheStringClass);
-
-                                       /* Now call the class subclassable   */
-                                       /* method                            */
-  TheStringClass->subClassable(false);
-
-
-  /***************************************************************************/
-  /*           MUTABLEBUFFER                                                 */
-  /***************************************************************************/
-
-                                       /* Add the NEW method to the class   */
-                                       /* behaviour mdict                   */
-  defineKernelMethod(CHAR_NEW, TheMutableBufferClassBehaviour, CPPM(RexxMutableBufferClass::newRexx), A_COUNT);
-
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  TheMutableBufferClassBehaviour->setMethodDictionaryScope(TheMutableBufferClass);
-
-                                       /* Add the instance methods to the   */
-                                       /* instance behaviour mdict          */
-  defineKernelMethod(CHAR_APPEND                       ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::append), 1);
-  defineKernelMethod(CHAR_INSERT                       ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::insert), 4);
-  defineKernelMethod(CHAR_OVERLAY                      ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::overlay), 4);
-  defineKernelMethod(CHAR_REPLACEAT                    ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::replaceAt), 4);
-  defineKernelMethod(CHAR_DELETE                       ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::mydelete), 2);
-  defineKernelMethod(CHAR_DELSTR                       ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::mydelete), 2);
-  defineKernelMethod(CHAR_SUBSTR                       ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::substr), 3);
-  defineKernelMethod(CHAR_POS                          ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::posRexx), 3);
-  defineKernelMethod(CHAR_LASTPOS                      ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::lastPos), 3);
-  defineKernelMethod("CONTAINS"                        ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::containsRexx), 3);
-  defineKernelMethod("CASELESSCONTAINS"                ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::caselessContains), 3);
-  defineKernelMethod("CONTAINSWORD"                    ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::containsWord), 2);
-  defineKernelMethod("CASELESSCONTAINSWORD"            ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::caselessContainsWord), 2);
-  defineKernelMethod(CHAR_CASELESSPOS                  ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::caselessPos), 3);
-  defineKernelMethod(CHAR_CASELESSLASTPOS              ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::caselessLastPos), 3);
-  defineKernelMethod(CHAR_SUBCHAR                      ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::subchar), 1);
-  defineKernelMethod(CHAR_GETBUFFERSIZE                ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::getBufferSize), 0);
-  defineKernelMethod(CHAR_SETBUFFERSIZE                ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::setBufferSize), 1);
-
-  defineKernelMethod(CHAR_LENGTH                       ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::lengthRexx), 0);
-  defineKernelMethod(CHAR_MAKEARRAY                    ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::makeArrayRexx), 1);
-  defineKernelMethod(CHAR_STRING                       ,TheMutableBufferBehaviour, CPPM(RexxObject::makeStringRexx), 0);
-  defineKernelMethod(CHAR_COUNTSTR                     ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::countStrRexx), 1);
-  defineKernelMethod(CHAR_CASELESSCOUNTSTR             ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::caselessCountStrRexx), 1);
-  defineKernelMethod(CHAR_CHANGESTR                    ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::changeStr), 3);
-  defineKernelMethod(CHAR_CASELESSCHANGESTR            ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::caselessChangeStr), 3);
-  defineKernelMethod(CHAR_UPPER                        ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::upper), 2);
-  defineKernelMethod(CHAR_LOWER                        ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::lower), 2);
-  defineKernelMethod(CHAR_TRANSLATE                    ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::translate), 5);
-  defineKernelMethod(CHAR_MATCH                        ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::match), 4);
-  defineKernelMethod(CHAR_CASELESSMATCH                ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::caselessMatch), 4);
-  defineKernelMethod(CHAR_MATCHCHAR                    ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::matchChar), 2);
-  defineKernelMethod(CHAR_CASELESSMATCHCHAR            ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::caselessMatchChar), 2);
-  defineKernelMethod(CHAR_VERIFY                       ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::verify), 4);
-  defineKernelMethod(CHAR_SPACE                        ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::space), 2);
-  defineKernelMethod(CHAR_SUBWORD                      ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::subWord), 2);
-  defineKernelMethod("SUBWORDS"                        ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::subWords), 2);
-  defineKernelMethod(CHAR_WORD                         ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::word), 1);
-  defineKernelMethod(CHAR_WORDINDEX                    ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::wordIndex), 1);
-  defineKernelMethod(CHAR_WORDLENGTH                   ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::wordLength), 1);
-  defineKernelMethod(CHAR_WORDS                        ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::words), 0);
-  defineKernelMethod(CHAR_WORDPOS                      ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::wordPos), 2);
-  defineKernelMethod(CHAR_CASELESSWORDPOS              ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::caselessWordPos), 2);
-  defineKernelMethod(CHAR_DELWORD                      ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::delWord), 2);
-
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  TheMutableBufferBehaviour->setMethodDictionaryScope(TheMutableBufferClass);
-                                       /* Now call the class subclassable   */
-                                       /* method                            */
-  TheMutableBufferClass->subClassable(true);
-
-  /***************************************************************************/
-  /*             INTEGER                                                     */
-  /***************************************************************************/
-
-    /* If the integer class was set up correctly it would have the           */
-    /* class_id method in its own class but instead it points to the one     */
-    /* in the string class.                                                 .*/
-
-  defineKernelMethod(CHAR_NEW, TheIntegerClassBehaviour, CPPM(RexxString::newRexx), A_COUNT);
-
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  TheIntegerClassBehaviour->setMethodDictionaryScope(TheIntegerClass);
-
-                                       /* Add the instance methods to the   */
-                                       /* instance behaviour mdict          */
-  defineKernelMethod(CHAR_PLUS                         ,TheIntegerBehaviour, CPPM(RexxInteger::plus), 1);
-  defineKernelMethod(CHAR_SUBTRACT                     ,TheIntegerBehaviour, CPPM(RexxInteger::minus), 1);
-  defineKernelMethod(CHAR_MULTIPLY                     ,TheIntegerBehaviour, CPPM(RexxInteger::multiply), 1);
-  defineKernelMethod(CHAR_POWER                        ,TheIntegerBehaviour, CPPM(RexxInteger::power), 1);
-  defineKernelMethod(CHAR_DIVIDE                       ,TheIntegerBehaviour, CPPM(RexxInteger::divide), 1);
-  defineKernelMethod(CHAR_INTDIV                       ,TheIntegerBehaviour, CPPM(RexxInteger::integerDivide), 1);
-  defineKernelMethod(CHAR_REMAINDER                    ,TheIntegerBehaviour, CPPM(RexxInteger::remainder), 1);
-  defineKernelMethod(CHAR_BACKSLASH                    ,TheIntegerBehaviour, CPPM(RexxInteger::notOp), 0);
-  defineKernelMethod(CHAR_AND                          ,TheIntegerBehaviour, CPPM(RexxInteger::andOp), 1);
-  defineKernelMethod(CHAR_OR                           ,TheIntegerBehaviour, CPPM(RexxInteger::orOp), 1);
-  defineKernelMethod(CHAR_XOR                          ,TheIntegerBehaviour, CPPM(RexxInteger::xorOp), 1);
-  defineKernelMethod(CHAR_UNKNOWN                      ,TheIntegerBehaviour, CPPM(RexxObject::unknownRexx), 2);
-  defineKernelMethod(CHAR_D2C                          ,TheIntegerBehaviour, CPPM(RexxInteger::d2c), 1);
-  defineKernelMethod(CHAR_D2X                          ,TheIntegerBehaviour, CPPM(RexxInteger::d2x), 1);
-  defineKernelMethod(CHAR_ABS                          ,TheIntegerBehaviour, CPPM(RexxInteger::abs), 0);
-  defineKernelMethod(CHAR_ORXMAX                          ,TheIntegerBehaviour, CPPM(RexxInteger::Max), A_COUNT);
-  defineKernelMethod(CHAR_ORXMIN                          ,TheIntegerBehaviour, CPPM(RexxInteger::Min), A_COUNT);
-  defineKernelMethod(CHAR_SIGN                         ,TheIntegerBehaviour, CPPM(RexxInteger::sign), 0);
-  defineKernelMethod(CHAR_EQUAL                        ,TheIntegerBehaviour, CPPM(RexxInteger::equal), 1);
-  defineKernelMethod(CHAR_BACKSLASH_EQUAL              ,TheIntegerBehaviour, CPPM(RexxInteger::notEqual), 1);
-  defineKernelMethod(CHAR_LESSTHAN_GREATERTHAN         ,TheIntegerBehaviour, CPPM(RexxInteger::notEqual), 1);
-  defineKernelMethod(CHAR_GREATERTHAN_LESSTHAN         ,TheIntegerBehaviour, CPPM(RexxInteger::notEqual), 1);
-  defineKernelMethod(CHAR_GREATERTHAN                  ,TheIntegerBehaviour, CPPM(RexxInteger::isGreaterThan), 1);
-  defineKernelMethod(CHAR_LESSTHAN                     ,TheIntegerBehaviour, CPPM(RexxInteger::isLessThan), 1);
-  defineKernelMethod(CHAR_GREATERTHAN_EQUAL            ,TheIntegerBehaviour, CPPM(RexxInteger::isGreaterOrEqual), 1);
-  defineKernelMethod(CHAR_BACKSLASH_LESSTHAN           ,TheIntegerBehaviour, CPPM(RexxInteger::isGreaterOrEqual), 1);
-  defineKernelMethod(CHAR_LESSTHAN_EQUAL               ,TheIntegerBehaviour, CPPM(RexxInteger::isLessOrEqual), 1);
-  defineKernelMethod(CHAR_BACKSLASH_GREATERTHAN        ,TheIntegerBehaviour, CPPM(RexxInteger::isLessOrEqual), 1);
-  defineKernelMethod(CHAR_STRICT_EQUAL                 ,TheIntegerBehaviour, CPPM(RexxInteger::strictEqual), 1);
-  defineKernelMethod(CHAR_HASHCODE                     ,TheIntegerBehaviour, CPPM(RexxInteger::hashCode), 1);
-  defineKernelMethod(CHAR_STRICT_BACKSLASH_EQUAL       ,TheIntegerBehaviour, CPPM(RexxInteger::strictNotEqual), 1);
-  defineKernelMethod(CHAR_STRICT_GREATERTHAN           ,TheIntegerBehaviour, CPPM(RexxInteger::strictGreaterThan), 1);
-  defineKernelMethod(CHAR_STRICT_LESSTHAN              ,TheIntegerBehaviour, CPPM(RexxInteger::strictLessThan), 1);
-  defineKernelMethod(CHAR_STRICT_GREATERTHAN_EQUAL     ,TheIntegerBehaviour, CPPM(RexxInteger::strictGreaterOrEqual), 1);
-  defineKernelMethod(CHAR_STRICT_BACKSLASH_LESSTHAN    ,TheIntegerBehaviour, CPPM(RexxInteger::strictGreaterOrEqual), 1);
-  defineKernelMethod(CHAR_STRICT_LESSTHAN_EQUAL        ,TheIntegerBehaviour, CPPM(RexxInteger::strictLessOrEqual), 1);
-  defineKernelMethod(CHAR_STRICT_BACKSLASH_GREATERTHAN ,TheIntegerBehaviour, CPPM(RexxInteger::strictLessOrEqual), 1);
-  defineKernelMethod(CHAR_MAKESTRING                   ,TheIntegerBehaviour, CPPM(RexxObject::makeStringRexx), 0);
-  defineKernelMethod(CHAR_FORMAT                       ,TheIntegerBehaviour, CPPM(RexxInteger::format), 4);
-  defineKernelMethod(CHAR_TRUNC                        ,TheIntegerBehaviour, CPPM(RexxInteger::trunc), 1);
-  defineKernelMethod("FLOOR"                           ,TheIntegerBehaviour, CPPM(RexxInteger::floor), 0);
-  defineKernelMethod("CEILING"                         ,TheIntegerBehaviour, CPPM(RexxInteger::ceiling), 0);
-  defineKernelMethod("ROUND"                           ,TheIntegerBehaviour, CPPM(RexxInteger::round), 0);
-  defineKernelMethod(CHAR_CLASS                        ,TheIntegerBehaviour, CPPM(RexxInteger::classObject), 0);
-
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  TheIntegerBehaviour->setMethodDictionaryScope(TheIntegerClass);
-
-                                       /* Now call the class subclassable   */
-                                       /* method                            */
-  TheIntegerClass->subClassable(true);
-
-  /***************************************************************************/
-  /*             NUMBERSTRING                                                */
-  /***************************************************************************/
-
-     /* If the numberstring class was set up correctly it should have the    */
-     /* class_id method in its own class but instead it points to the one    */
-     /* in the string class.                                                 */
-
-  defineKernelMethod(CHAR_NEW, TheNumberStringClassBehaviour, CPPM(RexxString::newRexx), A_COUNT);
-
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  TheNumberStringClassBehaviour->setMethodDictionaryScope(TheNumberStringClass);
-
-                                       /* Add the instance methods to this  */
-                                       /* instance behaviour mdict          */
-  defineKernelMethod(CHAR_UNKNOWN                      ,TheNumberStringBehaviour, CPPM(RexxObject::unknownRexx), 2);
-  defineKernelMethod(CHAR_ABS                          ,TheNumberStringBehaviour, CPPM(RexxNumberString::abs), 0);
-  defineKernelMethod(CHAR_ORXMAX                          ,TheNumberStringBehaviour, CPPM(RexxNumberString::Max), A_COUNT);
-  defineKernelMethod(CHAR_ORXMIN                          ,TheNumberStringBehaviour, CPPM(RexxNumberString::Min), A_COUNT);
-  defineKernelMethod(CHAR_SIGN                         ,TheNumberStringBehaviour, CPPM(RexxNumberString::Sign), 0);
-  defineKernelMethod(CHAR_D2C                          ,TheNumberStringBehaviour, CPPM(RexxNumberString::d2c), 1);
-  defineKernelMethod(CHAR_D2X                          ,TheNumberStringBehaviour, CPPM(RexxNumberString::d2x), 1);
-  defineKernelMethod(CHAR_EQUAL                        ,TheNumberStringBehaviour, CPPM(RexxNumberString::equal), 1);
-  defineKernelMethod(CHAR_BACKSLASH_EQUAL              ,TheNumberStringBehaviour, CPPM(RexxNumberString::notEqual), 1);
-  defineKernelMethod(CHAR_LESSTHAN_GREATERTHAN         ,TheNumberStringBehaviour, CPPM(RexxNumberString::notEqual), 1);
-  defineKernelMethod(CHAR_GREATERTHAN_LESSTHAN         ,TheNumberStringBehaviour, CPPM(RexxNumberString::notEqual), 1);
-  defineKernelMethod(CHAR_GREATERTHAN                  ,TheNumberStringBehaviour, CPPM(RexxNumberString::isGreaterThan), 1);
-  defineKernelMethod(CHAR_LESSTHAN                     ,TheNumberStringBehaviour, CPPM(RexxNumberString::isLessThan), 1);
-  defineKernelMethod(CHAR_GREATERTHAN_EQUAL            ,TheNumberStringBehaviour, CPPM(RexxNumberString::isGreaterOrEqual), 1);
-  defineKernelMethod(CHAR_BACKSLASH_LESSTHAN           ,TheNumberStringBehaviour, CPPM(RexxNumberString::isGreaterOrEqual), 1);
-  defineKernelMethod(CHAR_LESSTHAN_EQUAL               ,TheNumberStringBehaviour, CPPM(RexxNumberString::isLessOrEqual), 1);
-  defineKernelMethod(CHAR_BACKSLASH_GREATERTHAN        ,TheNumberStringBehaviour, CPPM(RexxNumberString::isLessOrEqual), 1);
-  defineKernelMethod(CHAR_STRICT_EQUAL                 ,TheNumberStringBehaviour, CPPM(RexxNumberString::strictEqual), 1);
-  defineKernelMethod(CHAR_HASHCODE                     ,TheNumberStringBehaviour, CPPM(RexxNumberString::hashCode), 0);
-  defineKernelMethod(CHAR_STRICT_BACKSLASH_EQUAL       ,TheNumberStringBehaviour, CPPM(RexxNumberString::strictNotEqual), 1);
-  defineKernelMethod(CHAR_STRICT_GREATERTHAN           ,TheNumberStringBehaviour, CPPM(RexxNumberString::strictGreaterThan), 1);
-  defineKernelMethod(CHAR_STRICT_LESSTHAN              ,TheNumberStringBehaviour, CPPM(RexxNumberString::strictLessThan), 1);
-  defineKernelMethod(CHAR_STRICT_GREATERTHAN_EQUAL     ,TheNumberStringBehaviour, CPPM(RexxNumberString::strictGreaterOrEqual), 1);
-  defineKernelMethod(CHAR_STRICT_BACKSLASH_LESSTHAN    ,TheNumberStringBehaviour, CPPM(RexxNumberString::strictGreaterOrEqual), 1);
-  defineKernelMethod(CHAR_STRICT_LESSTHAN_EQUAL        ,TheNumberStringBehaviour, CPPM(RexxNumberString::strictLessOrEqual), 1);
-  defineKernelMethod(CHAR_STRICT_BACKSLASH_GREATERTHAN ,TheNumberStringBehaviour, CPPM(RexxNumberString::strictLessOrEqual), 1);
-  defineKernelMethod(CHAR_PLUS                         ,TheNumberStringBehaviour, CPPM(RexxNumberString::plus), 1);
-  defineKernelMethod(CHAR_SUBTRACT                     ,TheNumberStringBehaviour, CPPM(RexxNumberString::minus), 1);
-  defineKernelMethod(CHAR_MULTIPLY                     ,TheNumberStringBehaviour, CPPM(RexxNumberString::multiply), 1);
-  defineKernelMethod(CHAR_POWER                        ,TheNumberStringBehaviour, CPPM(RexxNumberString::power), 1);
-  defineKernelMethod(CHAR_DIVIDE                       ,TheNumberStringBehaviour, CPPM(RexxNumberString::divide), 1);
-  defineKernelMethod(CHAR_INTDIV                       ,TheNumberStringBehaviour, CPPM(RexxNumberString::integerDivide), 1);
-  defineKernelMethod(CHAR_REMAINDER                    ,TheNumberStringBehaviour, CPPM(RexxNumberString::remainder), 1);
-  defineKernelMethod(CHAR_BACKSLASH                    ,TheNumberStringBehaviour, CPPM(RexxNumberString::notOp), 0);
-  defineKernelMethod(CHAR_AND                          ,TheNumberStringBehaviour, CPPM(RexxNumberString::andOp), 1);
-  defineKernelMethod(CHAR_OR                           ,TheNumberStringBehaviour, CPPM(RexxNumberString::orOp), 1);
-  defineKernelMethod(CHAR_XOR                          ,TheNumberStringBehaviour, CPPM(RexxNumberString::xorOp), 1);
-  defineKernelMethod(CHAR_MAKESTRING                   ,TheNumberStringBehaviour, CPPM(RexxObject::makeStringRexx), 0);
-  defineKernelMethod(CHAR_FORMAT                       ,TheNumberStringBehaviour, CPPM(RexxNumberString::formatRexx), 4);
-  defineKernelMethod(CHAR_TRUNC                        ,TheNumberStringBehaviour, CPPM(RexxNumberString::trunc), 1);
-  defineKernelMethod("FLOOR"                           ,TheNumberStringBehaviour, CPPM(RexxNumberString::floor), 0);
-  defineKernelMethod("CEILING"                         ,TheNumberStringBehaviour, CPPM(RexxNumberString::ceiling), 0);
-  defineKernelMethod("ROUND"                           ,TheNumberStringBehaviour, CPPM(RexxNumberString::round), 0);
-  defineKernelMethod(CHAR_CLASS                        ,TheNumberStringBehaviour, CPPM(RexxNumberString::classObject), 0);
-
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  TheNumberStringBehaviour->setMethodDictionaryScope(TheNumberStringClass);
-
-                                       /* Now call the class subclassable   */
-                                       /* method                            */
-  TheNumberStringClass->subClassable(true);
-
-
-  /***************************************************************************/
-  /*           SUPPLIER                                                      */
-  /***************************************************************************/
-                                       /* Add the NEW methods to the class  */
-                                       /* behaviour mdict                   */
-  defineKernelMethod(CHAR_NEW, TheSupplierClassBehaviour, CPPM(RexxSupplierClass::newRexx), A_COUNT);
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  TheSupplierClassBehaviour->setMethodDictionaryScope(TheSupplierClass);
-
-
-                                       /* Add the instance methods to the   */
-                                       /* instance behaviour mdict          */
-
-  defineKernelMethod(CHAR_AVAILABLE ,TheSupplierBehaviour, CPPM(RexxSupplier::available), 0);
-  defineKernelMethod(CHAR_INDEX     ,TheSupplierBehaviour, CPPM(RexxSupplier::index), 0);
-  defineKernelMethod(CHAR_NEXT      ,TheSupplierBehaviour, CPPM(RexxSupplier::next), 0);
-  defineKernelMethod(CHAR_ITEM      ,TheSupplierBehaviour, CPPM(RexxSupplier::value), 0);
-  defineKernelMethod(CHAR_INIT      ,TheSupplierBehaviour, CPPM(RexxSupplier::initRexx), 2);
-
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  TheSupplierBehaviour->setMethodDictionaryScope(TheSupplierClass);
-
-                                       /* Now call the class subclassable   */
-                                       /* method                            */
-  TheSupplierClass->subClassable(false);
-
-  /***************************************************************************/
-  /*           TABLE                                                         */
-  /***************************************************************************/
-
-                                       /* Add the NEW methods to the class  */
-                                       /* behaviour mdict                   */
-  defineKernelMethod(CHAR_NEW          , TheTableClassBehaviour, CPPM(RexxTable::newRexx), A_COUNT);
-
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  TheTableClassBehaviour->setMethodDictionaryScope(TheTableClass);
-
-                                       /* Add the instance methods to the   */
-                                       /* instance behaviour mdict          */
-  defineKernelMethod(CHAR_BRACKETS     , TheTableBehaviour, CPPM(RexxHashTableCollection::getRexx), 1);
-  defineKernelMethod(CHAR_BRACKETSEQUAL, TheTableBehaviour, CPPM(RexxHashTableCollection::putRexx), 2);
-  defineKernelMethod(CHAR_MAKEARRAY    , TheTableBehaviour, CPPM(RexxObject::makeArrayRexx), 0);
-  defineKernelMethod(CHAR_AT           , TheTableBehaviour, CPPM(RexxHashTableCollection::getRexx), 1);
-  defineKernelMethod(CHAR_HASINDEX     , TheTableBehaviour, CPPM(RexxHashTableCollection::hasIndexRexx), 1);
-  defineKernelMethod(CHAR_ITEMS        , TheTableBehaviour, CPPM(RexxTable::itemsRexx), 0);
-  defineKernelMethod(CHAR_PUT          , TheTableBehaviour, CPPM(RexxHashTableCollection::putRexx), 2);
-  defineKernelMethod(CHAR_REMOVE       , TheTableBehaviour, CPPM(RexxHashTableCollection::removeRexx), 1);
-  defineKernelMethod(CHAR_SUPPLIER     , TheTableBehaviour, CPPM(RexxHashTableCollection::supplier), 0);
-  defineKernelMethod(CHAR_ALLITEMS     , TheTableBehaviour, CPPM(RexxHashTableCollection::allItems), 0);
-  defineKernelMethod(CHAR_ALLINDEXES   , TheTableBehaviour, CPPM(RexxHashTableCollection::allIndexes), 0);
-  defineKernelMethod(CHAR_EMPTY        , TheTableBehaviour, CPPM(RexxHashTableCollection::empty), 0);
-  defineKernelMethod(CHAR_ISEMPTY      , TheTableBehaviour, CPPM(RexxHashTableCollection::isEmpty), 0);
-  defineKernelMethod(CHAR_INDEX        , TheTableBehaviour, CPPM(RexxHashTableCollection::indexRexx), 1);
-  defineKernelMethod(CHAR_HASITEM      , TheTableBehaviour, CPPM(RexxHashTableCollection::hasItemRexx), 1);
-  defineKernelMethod(CHAR_REMOVEITEM   , TheTableBehaviour, CPPM(RexxHashTableCollection::removeItemRexx), 1);
-
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  TheTableBehaviour->setMethodDictionaryScope(TheTableClass);
-
-                                       /* Now call the class subclassable   */
-                                       /* method                            */
-  TheTableClass->subClassable(false);
-
-  /***************************************************************************/
-  /*           IDENTITYTABLE                                                 */
-  /***************************************************************************/
-
-                                       /* Add the NEW methods to the class  */
-                                       /* behaviour mdict                   */
-  defineKernelMethod(CHAR_NEW          , TheIdentityTableClassBehaviour, CPPM(RexxIdentityTable::newRexx), A_COUNT);
-
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  TheIdentityTableClassBehaviour->setMethodDictionaryScope(TheIdentityTableClass);
-
-                                       /* Add the instance methods to the   */
-                                       /* instance behaviour mdict          */
-  defineKernelMethod(CHAR_BRACKETS     , TheIdentityTableBehaviour, CPPM(RexxHashTableCollection::getRexx), 1);
-  defineKernelMethod(CHAR_BRACKETSEQUAL, TheIdentityTableBehaviour, CPPM(RexxHashTableCollection::putRexx), 2);
-  defineKernelMethod(CHAR_MAKEARRAY    , TheIdentityTableBehaviour, CPPM(RexxObject::makeArrayRexx), 0);
-  defineKernelMethod(CHAR_AT           , TheIdentityTableBehaviour, CPPM(RexxHashTableCollection::getRexx), 1);
-  defineKernelMethod(CHAR_HASINDEX     , TheIdentityTableBehaviour, CPPM(RexxHashTableCollection::hasIndexRexx), 1);
-  defineKernelMethod(CHAR_ITEMS        , TheIdentityTableBehaviour, CPPM(RexxTable::itemsRexx), 0);
-  defineKernelMethod(CHAR_PUT          , TheIdentityTableBehaviour, CPPM(RexxHashTableCollection::putRexx), 2);
-  defineKernelMethod(CHAR_REMOVE       , TheIdentityTableBehaviour, CPPM(RexxHashTableCollection::removeRexx), 1);
-  defineKernelMethod(CHAR_SUPPLIER     , TheIdentityTableBehaviour, CPPM(RexxHashTableCollection::supplier), 0);
-  defineKernelMethod(CHAR_ALLITEMS     , TheIdentityTableBehaviour, CPPM(RexxHashTableCollection::allItems), 0);
-  defineKernelMethod(CHAR_ALLINDEXES   , TheIdentityTableBehaviour, CPPM(RexxHashTableCollection::allIndexes), 0);
-  defineKernelMethod(CHAR_EMPTY        , TheIdentityTableBehaviour, CPPM(RexxHashTableCollection::empty), 0);
-  defineKernelMethod(CHAR_ISEMPTY      , TheIdentityTableBehaviour, CPPM(RexxHashTableCollection::isEmpty), 0);
-  defineKernelMethod(CHAR_INDEX        , TheIdentityTableBehaviour, CPPM(RexxHashTableCollection::indexRexx), 1);
-  defineKernelMethod(CHAR_HASITEM      , TheIdentityTableBehaviour, CPPM(RexxHashTableCollection::hasItemRexx), 1);
-  defineKernelMethod(CHAR_REMOVEITEM   , TheIdentityTableBehaviour, CPPM(RexxHashTableCollection::removeItemRexx), 1);
-
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  TheIdentityTableBehaviour->setMethodDictionaryScope(TheIdentityTableClass);
-
-                                       /* Now call the class subclassable   */
-                                       /* method                            */
-  TheIdentityTableClass->subClassable(false);
-
-
-  /***************************************************************************/
-  /*           POINTER                                                       */
-  /***************************************************************************/
-                                       /* Add the NEW methods to the class  */
-                                       /* behaviour mdict                   */
-  defineKernelMethod(CHAR_NEW, ThePointerClassBehaviour, CPPM(RexxPointer::newRexx), A_COUNT);
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  ThePointerClassBehaviour->setMethodDictionaryScope(ThePointerClass);
-
-
-                                       /* Add the instance methods to the   */
-                                       /* instance behaviour mdict          */
-  defineKernelMethod(CHAR_EQUAL                        ,ThePointerBehaviour, CPPM(RexxPointer::equal), 1);
-  defineKernelMethod(CHAR_BACKSLASH_EQUAL              ,ThePointerBehaviour, CPPM(RexxPointer::notEqual), 1);
-  defineKernelMethod(CHAR_STRICT_EQUAL                 ,ThePointerBehaviour, CPPM(RexxPointer::equal), 1);
-  defineKernelMethod(CHAR_STRICT_BACKSLASH_EQUAL       ,ThePointerBehaviour, CPPM(RexxPointer::notEqual), 1);
-  defineKernelMethod(CHAR_ISNULL                       ,ThePointerBehaviour, CPPM(RexxPointer::isNull), 0);
-
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  ThePointerBehaviour->setMethodDictionaryScope(ThePointerClass);
-
-                                       /* Now call the class subclassable   */
-                                       /* method                            */
-  ThePointerClass->subClassable(false);
-
-
-  /***************************************************************************/
-  /*           BUFFER                                                        */
-  /***************************************************************************/
-                                       /* Add the NEW methods to the class  */
-                                       /* behaviour mdict                   */
-  defineKernelMethod(CHAR_NEW, TheBufferClassBehaviour, CPPM(RexxBuffer::newRexx), A_COUNT);
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  TheBufferClassBehaviour->setMethodDictionaryScope(TheBufferClass);
-
-
-                                       /* Add the instance methods to the   */
-                                       /* instance behaviour mdict          */
-
-  // NO instance methods on buffer
-
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  TheBufferBehaviour->setMethodDictionaryScope(TheBufferClass);
-
-                                       /* Now call the class subclassable   */
-                                       /* method                            */
-  TheBufferClass->subClassable(false);
-
-
-  /***************************************************************************/
-  /*           WEAKREFERENCE                                                 */
-  /***************************************************************************/
-                                       /* Add the NEW methods to the class  */
-                                       /* behaviour mdict                   */
-  defineKernelMethod(CHAR_NEW, TheWeakReferenceClassBehaviour, CPPM(WeakReference::newRexx), A_COUNT);
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  TheWeakReferenceClassBehaviour->setMethodDictionaryScope(TheWeakReferenceClass);
-
-
-                                       /* Add the instance methods to the   */
-                                       /* instance behaviour mdict          */
-  defineKernelMethod(CHAR_VALUE                        ,TheWeakReferenceBehaviour, CPPM(WeakReference::value), 0);
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  TheWeakReferenceBehaviour->setMethodDictionaryScope(TheWeakReferenceClass);
-
-                                       /* Now call the class subclassable   */
-                                       /* method                            */
-  TheWeakReferenceClass->subClassable(false);
-
-
-  /***************************************************************************/
-  /*           STACKFRAME                                                    */
-  /***************************************************************************/
-                                       /* Add the NEW methods to the class  */
-                                       /* behaviour mdict                   */
-  defineKernelMethod(CHAR_NEW, TheStackFrameClassBehaviour, CPPM(StackFrameClass::newRexx), A_COUNT);
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  TheStackFrameClassBehaviour->setMethodDictionaryScope(TheStackFrameClass);
-
-
-                                       /* Add the instance methods to the   */
-                                       /* instance behaviour mdict          */
-  defineKernelMethod("NAME", TheStackFrameBehaviour, CPPM(StackFrameClass::getName), 0);
-  defineKernelMethod("EXECUTABLE", TheStackFrameBehaviour, CPPM(StackFrameClass::getExecutable), 0);
-  defineKernelMethod("LINE", TheStackFrameBehaviour, CPPM(StackFrameClass::getLine), 0);
-  defineKernelMethod("TARGET", TheStackFrameBehaviour, CPPM(StackFrameClass::getTarget), 0);
-  defineKernelMethod("TRACELINE", TheStackFrameBehaviour, CPPM(StackFrameClass::getTraceLine), 0);
-  defineKernelMethod("TYPE", TheStackFrameBehaviour, CPPM(StackFrameClass::getType), 0);
-  defineKernelMethod("ARGUMENTS", TheStackFrameBehaviour, CPPM(StackFrameClass::getArguments), 0);
-  // the string method just maps to TRACELINE
-  defineKernelMethod("STRING", TheStackFrameBehaviour, CPPM(StackFrameClass::getTraceLine), 0);
-  defineKernelMethod("MAKESTRING", TheStackFrameBehaviour, CPPM(StackFrameClass::getTraceLine), 0);
-
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  TheStackFrameBehaviour->setMethodDictionaryScope(TheStackFrameClass);
-
-                                       /* Now call the class subclassable   */
-                                       /* method                            */
-  TheStackFrameClass->subClassable(false);
-
-  /***************************************************************************/
-  /***************************************************************************/
-  /***************************************************************************/
-    /* These classes don't have any class methods                            */
-    /*  and are not subclassed from object                                   */
-
-#define kernel_public(name, object, dir)  ((RexxDirectory *)dir)->setEntry(getGlobalName(name), (RexxObject *)object)
-
-  /* put the kernel-provided public objects in the environment directory */
-  kernel_public(CHAR_ARRAY            ,TheArrayClass   ,TheEnvironment);
-  kernel_public(CHAR_CLASS            ,TheClassClass   ,TheEnvironment);
-  kernel_public(CHAR_DIRECTORY        ,TheDirectoryClass ,TheEnvironment);
-  kernel_public(CHAR_ENVIRONMENT      ,TheEnvironment  ,TheEnvironment);
-  kernel_public(CHAR_FALSE            ,TheFalseObject  ,TheEnvironment);
-  kernel_public(CHAR_KERNEL           ,TheKernel       ,TheEnvironment);
-  kernel_public(CHAR_LIST             ,TheListClass    ,TheEnvironment);
-  kernel_public(CHAR_MESSAGE          ,TheMessageClass ,TheEnvironment);
-  kernel_public(CHAR_METHOD           ,TheMethodClass  ,TheEnvironment);
-  kernel_public(CHAR_ROUTINE          ,TheRoutineClass ,TheEnvironment);
-  kernel_public(CHAR_PACKAGE          ,ThePackageClass ,TheEnvironment);
-  kernel_public(CHAR_REXXCONTEXT      ,TheRexxContextClass ,TheEnvironment);
-  kernel_public(CHAR_NIL              ,TheNilObject    ,TheEnvironment);
-  kernel_public(CHAR_OBJECT           ,TheObjectClass  ,TheEnvironment);
-  kernel_public(CHAR_QUEUE            ,TheQueueClass   ,TheEnvironment);
-  kernel_public(CHAR_RELATION         ,TheRelationClass,TheEnvironment);
-  kernel_public(CHAR_STRING           ,TheStringClass  ,TheEnvironment);
-  kernel_public(CHAR_MUTABLEBUFFER    ,TheMutableBufferClass  ,TheEnvironment);
-  kernel_public(CHAR_STEM             ,TheStemClass    ,TheEnvironment);
-  kernel_public(CHAR_SUPPLIER         ,TheSupplierClass,TheEnvironment);
-  kernel_public(CHAR_SYSTEM           ,TheSystem       ,TheEnvironment);
-  kernel_public(CHAR_TABLE            ,TheTableClass   ,TheEnvironment);
-  kernel_public(CHAR_IDENTITYTABLE    ,TheIdentityTableClass,TheEnvironment);
-  kernel_public(CHAR_POINTER          ,ThePointerClass ,TheEnvironment);
-  kernel_public(CHAR_BUFFER           ,TheBufferClass  ,TheEnvironment);
-  kernel_public(CHAR_WEAKREFERENCE    ,TheWeakReferenceClass  ,TheEnvironment);
-  kernel_public("STACKFRAME"          ,TheStackFrameClass  ,TheEnvironment);
-  kernel_public(CHAR_TRUE             ,TheTrueObject   ,TheEnvironment);
-
-  /* set up the kernel directory (MEMORY done elsewhere) */
-  kernel_public(CHAR_INTEGER          ,TheIntegerClass     , TheKernel);
-  kernel_public(CHAR_NUMBERSTRING     ,TheNumberStringClass, TheKernel);
-
-  // TODO:  Make the kernel directory part of the memory object, but not in the
-  // environment.
-
-  kernel_public(CHAR_FUNCTIONS        ,TheFunctionsDirectory  ,TheKernel);
-  kernel_public(CHAR_NULLARRAY        ,TheNullArray           ,TheKernel);
-  kernel_public(CHAR_NULLPOINTER      ,TheNullPointer         ,TheKernel);
-  kernel_public(CHAR_COMMON_RETRIEVERS,TheCommonRetrievers    ,TheKernel);
-  kernel_public(CHAR_ENVIRONMENT      ,TheEnvironment         ,TheKernel);
-
-                                       /* set Oryx version                  */
-  kernel_public(CHAR_VERSION, Interpreter::getVersionNumber(), TheKernel);
-                                       /* set the system name               */
-  kernel_public(CHAR_NAME, SystemInterpreter::getSystemName(), TheSystem);
-                                       /* set the internal system name      */
-  kernel_public(CHAR_INTERNALNAME, SystemInterpreter::getInternalSystemName(), TheSystem);
-                                       /* and the system version info       */
-  kernel_public(CHAR_VERSION, SystemInterpreter::getSystemVersion(), TheSystem);
-  // initialize our thread vector for external calls.
-  RexxActivity::initializeThreadContext();
+    MethodClass *method = behaviour->defineMethod(name, entryPoint, arguments, entryPointName);
+    // mark the method as private
+    method->setPrivate();
+}
+
+
+/**
+ * Add a object to the environment using the provided name.
+ *
+ * @param name   The name of the new environment entry.
+ * @param value  The value added.
+ */
+void MemoryObject::addToEnvironment(const char *name, RexxInternalObject *value)
+{
+    TheEnvironment->put(value, getUpperGlobalName(name));
+}
+
+
+/**
+ * Add a object to the kernel directory using the provided name.
+ *
+ * @param name   The name of the new environment entry.
+ * @param value  The value added.
+ */
+void MemoryObject::addToSystem(const char *name, RexxInternalObject *value)
+{
+    TheSystem->put(value, getUpperGlobalName(name));
+}
+
+
+/**
+ * Finalize a system class during image construction.  This
+ * places the class in the Environment and also adds it to
+ * the Rexx package.
+ *
+ * @param name     The class name.
+ * @param classObj The class object.
+ */
+void MemoryObject::completeSystemClass(const char *name, RexxClass *classObj)
+{
+    // this gets added to the environment and the package in an uppercase name.
+    RexxString *className = getUpperGlobalName(name);
+    TheEnvironment->put(classObj, className);
+    // this is added as a public class in this package.
+    TheRexxPackage->addInstalledClass(className, classObj, true);
+}
+
+
+/**
+ * Create the base Rexx package object.  All Rexx-defined classes
+ * in the image will be added to this package.
+ */
+void MemoryObject::createRexxPackage()
+{
+    // this is a dummy package named "REXX" with the place holder
+    // sourceless program source
+    rexxPackage = new PackageClass(GlobalNames::REXX, new ProgramSource());
+}
+
+
+/**
+ * Initialize the Rexx memory environment during an image built.
+ */
+void MemoryObject::createImage()
+{
+    // perform the initial memory environment setup.  We can create
+    // new objects once this is done.
+
+    // NOTE:  this creates both the Integer and Class class objects, so those
+    // don't appear in the list below
+
+    // TODO:  Assess whether that is still really appropriate.
+    MemoryObject::create();
+
+    // initialize the base interpreter subsystem
+    Interpreter::init();
+    // initialize the activity manager.  We can create active threads once this is done.
+    ActivityManager::init();
+    // Get an instance.  This also gives the root activity of the instance
+    // the kernel lock.
+    Interpreter::createInterpreterInstance();
+    // create our table of constant string values
+    memoryObject.createStrings();
+    // initializer for native libraries
+    PackageManager::initialize();
+
+
+    // Create some special Rexx objects.
+    TheTrueObject  = new RexxInteger(1);
+    TheFalseObject = new RexxInteger(0);
+
+    TheNilObject = new RexxNilObject;
+
+    // start creating the various class objects so that Rexx code can create instances.
+
+    // string and object are fairly critical
+    RexxString::createInstance();
+    RexxObject::createInstance();
+
+    // The pointer class needs to be created early because other classes
+    // use the instances to store information.
+    PointerClass::createInstance();
+
+    // Buffer also can be used for internal data
+    BufferClass::createInstance();
+
+    // the different collection classes
+    ArrayClass::createInstance();
+    TableClass::createInstance();
+    IdentityTable::createInstance();
+    RelationClass::createInstance();
+    StringTable::createInstance();
+    DirectoryClass::createInstance();
+    SetClass::createInstance();
+    BagClass::createInstance();
+    ListClass::createInstance();
+    QueueClass::createInstance();
+
+    // We keep handy references to a number of commonly used
+    // integer objects.
+    IntegerZero    = new_integer(0);
+    IntegerOne     = new_integer(1);
+    IntegerTwo     = new_integer(2);
+    IntegerThree   = new_integer(3);
+    IntegerFour    = new_integer(4);
+    IntegerFive    = new_integer(5);
+    IntegerSix     = new_integer(6);
+    IntegerSeven   = new_integer(7);
+    IntegerEight   = new_integer(8);
+    IntegerNine    = new_integer(9);
+    IntegerMinusOne = new_integer(-1);
+
+    // NOTE:  The number string class lies about its identity
+    NumberString::createInstance();
+
+    // create the environment directory
+    TheEnvironment = new_directory();
+
+    // add kernel and system directories, and mark all of these as proxied objects.
+    TheSystem = new_string_table();
+
+    TheEnvironment->makeProxiedObject();
+    TheSystem->makeProxiedObject();
+
+    // create more of the exported classes
+    MethodClass::createInstance();
+    RoutineClass::createInstance();
+    PackageClass::createInstance();
+    RexxContext::createInstance();
+    StemClass::createInstance();
+    SupplierClass::createInstance();
+    MessageClass::createInstance();
+    MutableBuffer::createInstance();
+
+    WeakReference::createInstance();
+    StackFrameClass::createInstance();
+
+    // build the common retrievers table.  This is needed before we can parse an
+    // Rexx code.
+    TheCommonRetrievers = new_string_table();
+
+    // These special variables are always assigned the same slot positions in all
+    // Rexx code contexts.
+    TheCommonRetrievers->put((RexxObject *)new RexxSimpleVariable(GlobalNames::SELF, VARIABLE_SELF), GlobalNames::SELF);
+    TheCommonRetrievers->put((RexxObject *)new RexxSimpleVariable(GlobalNames::SUPER, VARIABLE_SUPER), GlobalNames::SUPER);
+    TheCommonRetrievers->put((RexxObject *)new RexxSimpleVariable(GlobalNames::SIGL, VARIABLE_SIGL), GlobalNames::SIGL);
+    TheCommonRetrievers->put((RexxObject *)new RexxSimpleVariable(GlobalNames::RC, VARIABLE_RC), GlobalNames::RC);
+    TheCommonRetrievers->put((RexxObject *)new RexxSimpleVariable(GlobalNames::RESULT, VARIABLE_RESULT), GlobalNames::RESULT);
+
+    // create the Rexx package so created classes can get added to it.
+    createRexxPackage();
+
+//***************************************************************************
+// The following Rexx classes that are exposed to the users are set up as
+// primitive classes.  These all inherit from object
+//***************************************************************************
+
+// macros for simplifying building each class definition.
+
+// start a definition for a new class.  This sets up some variables in a
+// local variable scope that identify which behaviours we are working with.
+#define StartClassDefinition(name) \
+    {\
+        RexxBehaviour *currentClassBehaviour = The##name##ClassBehaviour; \
+        RexxBehaviour *currentInstanceBehaviour = The##name##Behaviour;   \
+        RexxClass *currentClass = The##name##Class;
+
+// define a new class method
+#define AddClassMethod(name, entryPoint, args) defineMethod(name, currentClassBehaviour, CPPM(entryPoint), args, #entryPoint);
+#define AddClassProtectedMethod(name, entryPoint, args) defineProtectedMethod(name, currentClassBehaviour, CPPM(entryPoint), args, #entryPoint);
+#define AddClassPrivateMethod(name, entryPoint, args) definePrivateMethod(name, currentClassBehaviour, CPPM(entryPoint), args, #entryPoint);
+#define HideClassMethod(name) currentClassBehaviour->hideMethod(name);
+
+// inherit class method definitions from a previously created class
+#define InheritClassMethods(source) currentClassBehaviour->inheritInstanceMethods(The##source##ClassBehaviour);
+
+// define a new instance method
+#define AddMethod(name, entryPoint, args) defineMethod(name, currentInstanceBehaviour, CPPM(entryPoint), args, #entryPoint);
+#define AddProtectedMethod(name, entryPoint, args) defineProtectedMethod(name, currentInstanceBehaviour, CPPM(entryPoint), args, #entryPoint);
+#define AddPrivateMethod(name, entryPoint, args) definePrivateMethod(name, currentInstanceBehaviour, CPPM(entryPoint), args, #entryPoint);
+#define HideMethod(name) currentInstanceBehaviour->hideMethod(name);
+
+// inherit instance method definitions from a previously created class
+#define InheritInstanceMethods(source) currentInstanceBehaviour->inheritInstanceMethods(The##source##Behaviour);
+
+// do final initialization after done defining class methods
+#define CompleteClassMethodDefinitions() \
+    currentClassBehaviour->setMethodDictionaryScope(currentClass);
+
+// do final initialization after done defining instance methods
+#define CompleteMethodDefinitions() \
+    currentInstanceBehaviour->setMethodDictionaryScope(currentClass);
+
+// finalize a simple class definition
+#define CompleteClassDefinition(name) The##name##Class->buildFinalClassBehaviour();
+
+// Add the created class object to the environment under its name and close
+// the local variable scope
+#define EndClassDefinition(name) \
+    completeSystemClass(#name, currentClass); \
+}
+
+// Finish up one of the special classes (Integer and NumberString).  Those are
+// real classes, but are kept hidden.
+#define EndSpecialClassDefinition(name) \
+    addToSystem(#name, currentClass); \
+}
+
+
+// CLASS and OBJECT get some special treatment.  The process of building the final behaviour
+// for all of the primitive classes requires information from the CLASS and OBJECT behaviours.
+// This is true for CLASS and OBJECT as well (it gets a little recursive at the beginning.
+// So, for these two, we define all of the methods that are to be implemented by the classes,
+// then after both are built, we can finally build the final behaviours of both classes.
+// For all other classes, their behaviours can be built as soon as the definitions are complete.
+
+    /************************************************************************/
+    /*                                                                      */
+    /* The CLASS  class                                                     */
+    /*                                                                      */
+    /************************************************************************/
+StartClassDefinition(Class);
+    // for the CLASS object, we only add the NEW method.
+        AddClassMethod("New", RexxClass::newRexx, A_COUNT);
+
+    CompleteClassMethodDefinitions();
+
+    // now the normal instance methods for a CLASS object.
+        AddProtectedMethod("BaseClass", RexxClass::getBaseClass, 0);
+        AddProtectedMethod("Define", RexxClass::defineMethod, 2);
+        // these two are special and will be removed at the end of
+        // the image build
+        AddProtectedMethod("DefineClassMethod", RexxClass::defineClassMethod, 2);
+        AddProtectedMethod("InheritInstanceMethods", RexxClass::inheritInstanceMethods, 1)
+
+        AddProtectedMethod("Delete", RexxClass::deleteMethod, 1);
+        AddMethod("Enhanced", RexxClass::enhanced, A_COUNT);
+        AddMethod("ID", RexxClass::getId, 0);
+        AddMethod("Inherit", RexxClass::inherit, 2);
+        AddProtectedMethod("MetaClass", RexxClass::getMetaClass, 0);
+        AddMethod("Method", RexxClass::method, 1);
+        AddMethod("Methods", RexxClass::methods, 1);
+        AddMethod("MixinClass", RexxClass::mixinClassRexx, 3);
+        AddMethod("QueryMixinClass", RexxClass::queryMixinClass, 0);
+        AddMethod("Subclass", RexxClass::subclassRexx, 3);
+        AddProtectedMethod("Subclasses", RexxClass::getSubClasses, 0);
+        AddProtectedMethod("Superclasses", RexxClass::getSuperClasses, 0);
+        AddProtectedMethod("Superclass", RexxClass::getSuperClass, 0);
+        AddProtectedMethod("Uninherit", RexxClass::uninherit, 1);
+
+        AddMethod("IsSubclassOf", RexxClass::isSubclassOf, 1);
+        AddMethod("DefaultName", RexxClass::defaultNameRexx, 0);
+        AddMethod("Package", RexxClass::getPackage, 0);
+
+    // operator methods
+        AddMethod("=", RexxClass::equal, 1);
+        AddMethod("==", RexxClass::strictEqual, 1);
+        AddMethod("\\=", RexxClass::notEqual, 1);
+        AddMethod("<>", RexxClass::notEqual, 1);
+        AddMethod("><", RexxClass::notEqual, 1);
+        AddMethod("\\==", RexxClass::notEqual, 1);
+
+    // this is explicitly inserted into the class behaviour because it gets used
+    // prior to the instance behavior merges.
+        AddMethod("HashCode", RexxClass::hashCode, 0);
+    // this is a NOP by default, so we'll just use the object init method as a fill in.
+        AddMethod("Activate", RexxObject::initRexx, 0);
+
+    CompleteMethodDefinitions();
+
+EndClassDefinition(Class);
+
+       /************************************************************************/
+       /*                                                                      */
+       /* The OBJECT class                                                     */
+       /*                                                                      */
+       /************************************************************************/
+
+StartClassDefinition(Object);
+
+    // for the OBJECT class object, we only add the NEW method.
+        AddClassMethod("New", RexxObject::newRexx, A_COUNT);
+
+    CompleteClassMethodDefinitions();
+
+    // Now Object instance methods
+
+        AddMethod("Init", RexxObject::initRexx, 0);
+        AddMethod("=", RexxObject::equal, 1);
+        AddMethod("==", RexxObject::strictEqual, 1);
+        AddMethod("HashCode", RexxObject::hashCode, 0);
+        AddMethod("\\=", RexxObject::notEqual, 1);
+        AddMethod("<>", RexxObject::notEqual, 1);
+        AddMethod("><", RexxObject::notEqual, 1);
+        AddMethod("\\==", RexxObject::strictNotEqual, 1);
+        AddMethod("", RexxObject::concatRexx, 1);
+        AddMethod(" ", RexxObject::concatBlank, 1);
+        AddMethod("||", RexxObject::concatRexx, 1);
+        AddMethod("Copy", RexxObject::copyRexx, 0);
+        AddMethod("Class", RexxObject::classObject, 0);
+        AddMethod("HasMethod", RexxObject::hasMethodRexx, 1);
+        AddMethod("DefaultName", RexxObject::defaultNameRexx, 0);
+        AddMethod("ObjectName", RexxObject::objectName, 0);
+        AddMethod("ObjectName=", RexxObject::objectNameEquals, 1);
+        AddMethod("Request", RexxObject::requestRexx, 1);
+        AddMethod("Start", RexxObject::start, A_COUNT);
+        AddMethod("STARTWITH", RexxObject::startWith, 2);
+        AddMethod("SEND", RexxObject::send, A_COUNT);
+        AddMethod("SENDWITH", RexxObject::sendWith, 2);
+        AddMethod("String", RexxObject::stringRexx, 0);
+        AddMethod("IsInstanceOf", RexxObject::isInstanceOfRexx, 1);
+        AddMethod("IsA", RexxObject::isInstanceOfRexx, 1);
+        AddMethod("InstanceMethod", RexxObject::instanceMethodRexx, 1);
+        AddMethod("InstanceMethods", RexxObject::instanceMethodsRexx, 1);
+        AddMethod("IdentityHash", RexxObject::identityHashRexx, 0);
+        AddPrivateMethod("Run", RexxObject::run, A_COUNT);
+        AddPrivateMethod("SetMethod", RexxObject::setMethod, 3);
+        AddPrivateMethod("UnsetMethod", RexxObject::unsetMethod, 1);
+
+    CompleteMethodDefinitions();
+
+EndClassDefinition(Object);
+
+// now we can complete the definitions of both Object and Class (must be in this order)
+
+CompleteClassDefinition(Object);
+CompleteClassDefinition(Class);
+
+
+// Now we can set up the rest of the defintions and complete them normally.
+
+
+    /***************************************************************************/
+    /*           STRING                                                        */
+    /***************************************************************************/
+
+StartClassDefinition(String)
+
+        AddClassMethod("New", RexxString::newRexx, A_COUNT);
+
+    CompleteClassMethodDefinitions();
+
+        AddMethod("", RexxString::concatRexx, 1);
+        AddMethod(" ", RexxString::concatBlank, 1);
+        AddMethod("||", RexxString::concatRexx, 1);
+        AddMethod("Length", RexxString::lengthRexx, 0);
+        AddMethod("Center", RexxString::center, 2);
+        AddMethod("Centre", RexxString::center, 2);
+        AddMethod("Datatype", RexxString::dataType, 1);
+        AddMethod("Delstr", RexxString::delstr, 2);
+        AddMethod("Format", RexxString::format, 4);
+        AddMethod("Insert", RexxString::insert, 4);
+        AddMethod("Left", RexxString::left, 2);
+        AddMethod("Overlay", RexxString::overlay, 4);
+        AddMethod("ReplaceAt", RexxString::replaceAt, 4);
+        AddMethod("Reverse", RexxString::reverse, 0);
+        AddMethod("Right", RexxString::right, 2);
+        AddMethod("Strip", RexxString::strip, 2);
+        AddMethod("Substr", RexxString::substr, 3);
+        AddMethod("SubChar", RexxString::subchar, 1);
+        AddMethod("DelWord", RexxString::delWord, 2);
+        AddMethod("Space", RexxString::space, 2);
+        AddMethod("SubWord", RexxString::subWord, 2);
+        AddMethod("SUBWORDS", RexxString::subWords, 2);
+        AddMethod("FLOOR", RexxString::floor, 0);
+        AddMethod("CEILING", RexxString::ceiling, 0);
+        AddMethod("ROUND", RexxString::round, 0);
+        AddMethod("Trunc", RexxString::trunc, 1);
+        AddMethod("Word", RexxString::word, 1);
+        AddMethod("WordIndex", RexxString::wordIndex, 1);
+        AddMethod("WordLength", RexxString::wordLength, 1);
+        AddMethod("WordPos", RexxString::wordPos, 2);
+        AddMethod("CaselessWordPos", RexxString::caselessWordPos, 2);
+        AddMethod("Words", RexxString::words, 0);
+        AddMethod("Abbrev", RexxString::abbrev, 2);
+        AddMethod("CaselessAbbrev", RexxString::caselessAbbrev, 2);
+        AddMethod("ChangeStr", RexxString::changeStr, 3);
+        AddMethod("CaselessChangeStr", RexxString::caselessChangeStr, 3);
+        AddMethod("Compare", RexxString::compare, 2);
+        AddMethod("CaselessCompare", RexxString::caselessCompare, 2);
+        AddMethod("Copies", RexxString::copies, 1);
+        AddMethod("CountStr", RexxString::countStrRexx, 1);
+        AddMethod("CaselessCountStr", RexxString::caselessCountStrRexx, 1);
+        AddMethod("LastPos", RexxString::lastPosRexx, 3);
+        AddMethod("Pos", RexxString::posRexx, 3);
+        AddMethod("CONTAINS", RexxString::containsRexx, 3);
+        AddMethod("CASELESSCONTAINS", RexxString::caselessContains, 3);
+        AddMethod("CONTAINSWORD", RexxString::containsWord, 2);
+        AddMethod("CASELESSCONTAINSWORD", RexxString::caselessContainsWord, 2);
+        AddMethod("CaselessLastPos", RexxString::caselessLastPosRexx, 3);
+        AddMethod("CaselessPos", RexxString::caselessPosRexx, 3);
+        AddMethod("Translate", RexxString::translate, 5);
+        AddMethod("Verify", RexxString::verify, 4);
+        AddMethod("BitAnd", RexxString::bitAnd, 2);
+        AddMethod("BitOr", RexxString::bitOr, 2);
+        AddMethod("BitXor", RexxString::bitXor, 2);
+        AddMethod("B2X", RexxString::b2x, 0);
+        AddMethod("C2D", RexxString::c2d, 1);
+        AddMethod("C2X", RexxString::c2x, 0);
+        AddMethod("D2C", RexxString::d2c, 1);
+        AddMethod("D2X", RexxString::d2x, 1);
+        AddMethod("X2B", RexxString::x2b, 0);
+        AddMethod("X2C", RexxString::x2c, 0);
+        AddMethod("X2D", RexxString::x2d, 1);
+        AddMethod("EncodeBase64", RexxString::encodeBase64, 0);
+        AddMethod("DecodeBase64", RexxString::decodeBase64, 0);
+        AddMethod("MakeString", RexxObject::makeStringRexx, 0);
+        AddMethod("Abs", RexxString::abs, 0);
+        AddMethod("Max", RexxString::Max, A_COUNT);
+        AddMethod("Min", RexxString::Min, A_COUNT);
+        AddMethod("Sign", RexxString::sign, 0);
+        AddMethod("=", RexxString::equal, 1);
+        AddMethod("\\=", RexxString::notEqual, 1);
+        AddMethod("<>", RexxString::notEqual, 1);
+        AddMethod("><", RexxString::notEqual, 1);
+        AddMethod(">", RexxString::isGreaterThan, 1);
+        AddMethod("<", RexxString::isLessThan, 1);
+        AddMethod(">=", RexxString::isGreaterOrEqual, 1);
+        AddMethod("\\<", RexxString::isGreaterOrEqual, 1);
+        AddMethod("<=", RexxString::isLessOrEqual, 1);
+        AddMethod("\\>", RexxString::isLessOrEqual, 1);
+        AddMethod("==", RexxString::strictEqual, 1);
+        AddMethod("\\==", RexxString::strictNotEqual, 1);
+        AddMethod(">>", RexxString::strictGreaterThan, 1);
+        AddMethod("<<", RexxString::strictLessThan, 1);
+        AddMethod(">>=", RexxString::strictGreaterOrEqual, 1);
+        AddMethod("\\<<", RexxString::strictGreaterOrEqual, 1);
+        AddMethod("<<=", RexxString::strictLessOrEqual, 1);
+        AddMethod("\\>>", RexxString::strictLessOrEqual, 1);
+        AddMethod("+", RexxString::plus, 1);
+        AddMethod("-", RexxString::minus, 1);
+        AddMethod("*", RexxString::multiply, 1);
+        AddMethod("**", RexxString::power, 1);
+        AddMethod("/", RexxString::divide, 1);
+        AddMethod("%", RexxString::integerDivide, 1);
+        AddMethod("//", RexxString::remainder, 1);
+        AddMethod("\\", RexxString::notOp, 0);
+        AddMethod("&", RexxString::andOp, 1);
+        AddMethod("|", RexxString::orOp, 1);
+        AddMethod("&&", RexxString::xorOp, 1);
+        AddMethod("MakeArray", RexxString::makeArrayRexx, 1);
+        AddMethod("Lower", RexxString::lowerRexx, 2);
+        AddMethod("Upper", RexxString::upperRexx, 2);
+        AddMethod("Match", RexxString::match, 4);
+        AddMethod("CaselessMatch", RexxString::caselessMatch, 4);
+        AddMethod("MatchChar", RexxString::matchChar, 2);
+        AddMethod("CaselessMatchChar", RexxString::caselessMatchChar, 2);
+        AddMethod("Equals", RexxString::equals, 1);
+        AddMethod("CaselessEquals", RexxString::caselessEquals, 1);
+        AddMethod("CompareTo", RexxString::compareToRexx, 3);
+        AddMethod("CaselessCompareTo", RexxString::caselessCompareToRexx, 3);
+
+    CompleteMethodDefinitions();
+
+    CompleteClassDefinition(String);
+
+EndClassDefinition(String);
+
+
+    /***************************************************************************/
+    /* ARRAY class                                                             */
+    /***************************************************************************/
+
+StartClassDefinition(Array);
+
+        AddClassMethod("New", ArrayClass::newRexx, A_COUNT);
+        AddClassMethod("Of", ArrayClass::ofRexx, A_COUNT);
+
+    CompleteClassMethodDefinitions();
+
+        AddMethod("[]", ArrayClass::getRexx, A_COUNT);
+        AddMethod("[]=", ArrayClass::putRexx, A_COUNT);
+        AddMethod("At", ArrayClass::getRexx, A_COUNT);
+        AddMethod("Dimension", ArrayClass::dimensionRexx, 1);
+        AddMethod("Dimensions", ArrayClass::getDimensionsRexx, 0);
+        AddMethod("HasIndex", ArrayClass::hasIndexRexx, A_COUNT);
+        AddMethod("Items", ArrayClass::itemsRexx, 0);
+        AddMethod("MakeArray", RexxObject::makeArrayRexx, 0);
+        AddMethod("Put", ArrayClass::putRexx, A_COUNT);
+        AddMethod("Remove", ArrayClass::removeRexx, A_COUNT);
+        AddMethod("Section", ArrayClass::sectionRexx, 2);
+        AddMethod("Size", ArrayClass::sizeRexx, 0);
+        AddMethod("Supplier", ArrayClass::supplier, 0);
+        AddMethod("First", ArrayClass::firstRexx, 0);
+        AddMethod("FirstItem", ArrayClass::getFirstItem, 0);
+        AddMethod("Last", ArrayClass::lastRexx, 0);
+        AddMethod("LastItem", ArrayClass::getLastItem, 0);
+        AddMethod("Next", ArrayClass::nextRexx, A_COUNT);
+        AddMethod("Previous", ArrayClass::previousRexx, A_COUNT);
+        AddMethod("Append", ArrayClass::appendRexx, 1);
+        AddMethod("MakeString", ArrayClass::makeString, 2);
+        AddMethod("ToString", ArrayClass::toString, 2);
+        AddMethod("AllIndexes", ArrayClass::allIndexes, 0);
+        AddMethod("AllItems", ArrayClass::allItems, 0);
+        AddMethod("Empty", ArrayClass::empty, 0);
+        AddMethod("IsEmpty", ArrayClass::isEmptyRexx, 0);
+        AddMethod("Index", ArrayClass::indexRexx, 1);
+        AddMethod("HasItem", ArrayClass::hasItemRexx, 1);
+        AddMethod("RemoveItem", ArrayClass::removeItem, 1);
+        AddMethod("Insert", ArrayClass::insertRexx, 2);
+        AddMethod("Delete", ArrayClass::deleteRexx, 1);
+        AddMethod("Fill", ArrayClass::fill, 1);
+
+    // there have been some problems with the quick sort used as the default sort, so map everything
+    // to the stable sort.  The stable sort, in theory, uses more memory, but in practice, this is not true.
+        AddMethod("Sort", ArrayClass::stableSortRexx, 0);
+        AddMethod("SortWith", ArrayClass::stableSortWithRexx, 1);
+        AddMethod("StableSort", ArrayClass::stableSortRexx, 0);
+        AddMethod("StableSortWith", ArrayClass::stableSortWithRexx, 1);
+
+    CompleteMethodDefinitions();
+
+    CompleteClassDefinition(Array);
+
+EndClassDefinition(Array);
+
+
+    /***************************************************************************/
+    /*           QUEUE                                                         */
+    /***************************************************************************/
+
+StartClassDefinition(Queue);
+
+        AddClassMethod("New", QueueClass::newRexx, A_COUNT);
+        AddClassMethod("Of", QueueClass::ofRexx, A_COUNT);
+
+    CompleteClassMethodDefinitions();
+
+    // QUEUE is implemented as a subclass of Array, so most of its instance
+    // methods are the same as the Array ones.  We can inherit those in one shot,
+    // then make whatever required additions or replacements.
+
+        InheritInstanceMethods(Array);
+
+        AddMethod("Init", QueueClass::initRexx, 1);
+        AddMethod("Push", QueueClass::pushRexx, 1);
+        AddMethod("Peek", QueueClass::peek, 0);
+        AddMethod("Pull", QueueClass::pullRexx, 0);
+        AddMethod("Queue", QueueClass::queueRexx, 1);
+        AddMethod("Put", QueueClass::putRexx, 2);
+        // the queue size is always the number of items, so remap that call
+        // to the array items method.
+        AddMethod("Size", ArrayClass::itemsRexx, 0);
+
+    CompleteMethodDefinitions();
+
+    CompleteClassDefinition(Queue);
+
+EndClassDefinition(Queue);
+
+    /***************************************************************************/
+    /*           IDENTITYTABLE                                                 */
+    /***************************************************************************/
+
+// Do all of the hash-based collections as a group, since we can directly inherit a
+// lot of the methods from previous collections.
+
+StartClassDefinition(IdentityTable);
+
+        AddClassMethod("New", IdentityTable::newRexx, A_COUNT);
+
+    CompleteClassMethodDefinitions();
+
+        AddMethod("[]", HashCollection::getRexx, 1);
+        AddMethod("[]=", HashCollection::putRexx, 2);
+        AddMethod("MakeArray", RexxObject::makeArrayRexx, 0);
+        AddMethod("At", HashCollection::getRexx, 1);
+        AddMethod("HasIndex", HashCollection::hasIndexRexx, 1);
+        AddMethod("Items", HashCollection::itemsRexx, 0);
+        AddMethod("Put", HashCollection::putRexx, 2);
+        AddMethod("Remove", HashCollection::removeRexx, 1);
+        AddMethod("Supplier", HashCollection::supplier, 0);
+        AddMethod("AllItems", HashCollection::allItems, 0);
+        AddMethod("AllIndexes", HashCollection::allIndexes, 0);
+        AddMethod("Empty", HashCollection::emptyRexx, 0);
+        AddMethod("IsEmpty", HashCollection::isEmptyRexx, 0);
+        AddMethod("Index", HashCollection::indexRexx, 1);
+        AddMethod("HasItem", HashCollection::hasItemRexx, 1);
+        AddMethod("RemoveItem", HashCollection::removeItemRexx, 1);
+
+    CompleteMethodDefinitions();
+
+    CompleteClassDefinition(IdentityTable);
+
+EndClassDefinition(IdentityTable);
+
+
+    /***************************************************************************/
+    /*           TABLE                                                         */
+    /***************************************************************************/
+
+StartClassDefinition(Table);
+
+        AddClassMethod("New", TableClass::newRexx, A_COUNT);
+
+    CompleteClassMethodDefinitions();
+
+        // most of the hash collection methods can be inherited
+        InheritInstanceMethods(IdentityTable);
+
+    CompleteMethodDefinitions();
+
+    CompleteClassDefinition(Table);
+
+EndClassDefinition(Table);
+
+
+    /***************************************************************************/
+    /*           STRINGTABLE                                                   */
+    /***************************************************************************/
+
+StartClassDefinition(StringTable);
+
+        AddClassMethod("New", StringTable::newRexx, A_COUNT);
+
+    CompleteClassMethodDefinitions();
+
+        // most of the hash collection methods can be inherited
+        InheritInstanceMethods(IdentityTable);
+
+        AddMethod("Unknown", RexxObject::unknownRexx, 2);
+        AddMethod("Entry", StringHashCollection::entryRexx, 1);
+        AddMethod("HasEntry", StringHashCollection::hasEntryRexx, 1);
+        AddMethod("SetEntry", StringHashCollection::setEntryRexx, 2);
+        AddMethod("RemoveEntry", StringHashCollection::removeEntryRexx, 1);
+
+    CompleteMethodDefinitions();
+
+    CompleteClassDefinition(StringTable);
+
+EndClassDefinition(StringTable);
+
+
+    /***************************************************************************/
+    /*           SET                                                           */
+    /***************************************************************************/
+
+StartClassDefinition(Set)
+
+        AddClassMethod("New", SetClass::newRexx, A_COUNT);
+        AddClassMethod("Of", SetClass::ofRexx, A_COUNT);
+
+    CompleteClassMethodDefinitions();
+
+        // most of the hash collection methods can be inherited
+        InheritInstanceMethods(IdentityTable);
+
+    CompleteMethodDefinitions();
+
+    CompleteClassDefinition(Set);
+
+EndClassDefinition(Set);
+
+
+    /***************************************************************************/
+    /*           DIRECTORY                                                     */
+    /***************************************************************************/
+
+StartClassDefinition(Directory)
+
+        AddClassMethod("New", DirectoryClass::newRexx, A_COUNT);
+
+    CompleteClassMethodDefinitions();
+
+    // many of the hash collection methods can be inherited
+        InheritInstanceMethods(StringTable);
+
+        AddMethod("Init", DirectoryClass::initRexx, 1);
+
+        AddProtectedMethod("SetMethod", DirectoryClass::setMethodRexx, 2);
+        AddProtectedMethod("UnsetMethod", DirectoryClass::unsetMethodRexx, 1);
+
+    CompleteMethodDefinitions();
+
+    CompleteClassDefinition(Directory);
+
+EndClassDefinition(Directory);
+
+
+    /***************************************************************************/
+    /*           RELATION                                                      */
+    /***************************************************************************/
+
+StartClassDefinition(Relation)
+
+        AddClassMethod("New", RelationClass::newRexx, A_COUNT);
+
+    CompleteClassMethodDefinitions();
+
+    // many of the hash collection methods can be inherited
+        InheritInstanceMethods(IdentityTable);
+
+        AddMethod("RemoveItem", RelationClass::removeItemRexx, 2);
+        AddMethod("Supplier", RelationClass::supplierRexx, 1);
+        AddMethod("Items", RelationClass::itemsRexx, 1);
+        AddMethod("HasItem", RelationClass::hasItemRexx, 2);
+        AddMethod("AllIndex", RelationClass::allIndexRexx, 1);
+        AddMethod("RemoveAll", RelationClass::removeAll, 1);
+        AddMethod("UniqueIndexes", RelationClass::uniqueIndexes, 0);
+
+    CompleteMethodDefinitions();
+
+    CompleteClassDefinition(Relation);
+
+EndClassDefinition(Relation);
+
+
+    /***************************************************************************/
+    /*           Bag                                                           */
+    /***************************************************************************/
+
+StartClassDefinition(Bag)
+
+        AddClassMethod("New", BagClass::newRexx, A_COUNT);
+        AddClassMethod("Of", BagClass::ofRexx, A_COUNT);
+
+    CompleteClassMethodDefinitions();
+
+    // many of the hash collection methods can be inherited
+        InheritInstanceMethods(Relation);
+
+    CompleteMethodDefinitions();
+
+    CompleteClassDefinition(Bag);
+
+EndClassDefinition(Bag);
+
+
+    /***************************************************************************/
+    /*           LIST                                                          */
+    /***************************************************************************/
+
+StartClassDefinition(List)
+
+        AddClassMethod("New", ListClass::newRexx, A_COUNT);
+        AddClassMethod("Of", ListClass::ofRexx, A_COUNT);
+
+    CompleteClassMethodDefinitions();
+
+        AddMethod("Init", ListClass::initRexx, 1);
+        AddMethod("[]", ListClass::getRexx, 1);
+        AddMethod("[]=", ListClass::putRexx, 2);
+        AddMethod("MakeArray", RexxObject::makeArrayRexx, 0);
+        AddMethod("At", ListClass::getRexx, 1);
+        AddMethod("FirstItem", ListClass::firstItemRexx, 0);
+        AddMethod("HasIndex", ListClass::hasIndexRexx, 1);
+        AddMethod("Insert", ListClass::insertRexx, 2);
+        AddMethod("Items", ListClass::itemsRexx, 0);
+        AddMethod("LastItem", ListClass::lastItemRexx, 0);
+        AddMethod("First", ListClass::firstRexx, 0);
+        AddMethod("Last", ListClass::lastRexx, 0);
+        AddMethod("Next", ListClass::nextRexx, 1);
+        AddMethod("Previous", ListClass::previousRexx, 1);
+        AddMethod("Put", ListClass::putRexx, 2);
+        AddMethod("Remove", ListClass::removeRexx, 1);
+    // DELETE is the same as REMOVE for the List class
+        AddMethod("Delete", ListClass::removeRexx, 1);
+        AddMethod("Section", ListClass::sectionRexx, 2);
+        AddMethod("Supplier", ListClass::supplier, 0);
+        AddMethod("Append", ListClass::appendRexx, 1);
+        AddMethod("AllItems", ListClass::allItems, 0);
+        AddMethod("AllIndexes", ListClass::allIndexes, 0);
+        AddMethod("Empty", ListClass::emptyRexx, 0);
+        AddMethod("IsEmpty", ListClass::isEmptyRexx, 0);
+        AddMethod("Index", ListClass::indexRexx, 1);
+        AddMethod("HasItem", ListClass::hasItemRexx, 1);
+        AddMethod("RemoveItem", ListClass::removeItemRexx, 1);
+
+    CompleteMethodDefinitions();
+
+    CompleteClassDefinition(List);
+
+EndClassDefinition(List);
+
+    /***************************************************************************/
+    /*           MESSAGE                                                       */
+    /***************************************************************************/
+
+StartClassDefinition(Message)
+
+        AddClassMethod("New", MessageClass::newRexx, A_COUNT);
+
+    CompleteClassMethodDefinitions();
+
+        AddMethod("Completed", MessageClass::completed, 0);
+        AddMethod("HasError", MessageClass::hasError, 0);
+        AddMethod("Notify", MessageClass::notify, 1);
+        AddMethod("Result", MessageClass::result, 0);
+        AddMethod("Target", MessageClass::messageTarget, 0);
+        AddMethod("MessageName", MessageClass::messageName, 0);
+        AddMethod("Arguments", MessageClass::arguments, 0);
+        AddMethod("ErrorCondition", MessageClass::errorCondition, 0);
+        AddMethod("Send", MessageClass::send, 1);
+        AddMethod("Start", MessageClass::start, 1);
+
+    CompleteMethodDefinitions();
+
+    CompleteClassDefinition(Message);
+
+EndClassDefinition(Message);
+
+
+    /***************************************************************************/
+    /*           METHOD                                                        */
+    /***************************************************************************/
+
+StartClassDefinition(Method)
+
+        AddClassMethod("New", MethodClass::newRexx, A_COUNT);
+        AddClassMethod("NewFile", MethodClass::newFileRexx, 1);
+        AddClassMethod("LoadExternalMethod", MethodClass::loadExternalMethod, 2);
+
+    CompleteClassMethodDefinitions();
+
+        AddMethod("SetUnguarded", MethodClass::setUnguardedRexx, 0);
+        AddMethod("SetGuarded", MethodClass::setGuardedRexx, 0);
+        AddMethod("SetPrivate", MethodClass::setPrivateRexx, 0);
+        AddMethod("IsGuarded", MethodClass::isGuardedRexx, 0);
+        AddMethod("IsPrivate", MethodClass::isPrivateRexx, 0);
+        AddMethod("IsProtected", MethodClass::isProtectedRexx, 0);
+        AddProtectedMethod("SetProtected", MethodClass::setProtectedRexx, 0);
+        AddProtectedMethod("SetSecurityManager", MethodClass::setSecurityManager, 1);
+        AddMethod("Source", BaseExecutable::source, 0);
+        AddMethod("Package", BaseExecutable::getPackage, 0);
+
+    CompleteMethodDefinitions();
+
+    CompleteClassDefinition(Method);
+
+EndClassDefinition(Method);
+
+
+    /***************************************************************************/
+    /*           ROUTINE                                                       */
+    /***************************************************************************/
+
+StartClassDefinition(Routine)
+
+        AddClassMethod("New", RoutineClass::newRexx, A_COUNT);
+        AddClassMethod("NewFile", RoutineClass::newFileRexx, 1);
+        AddClassMethod("LoadExternalRoutine", RoutineClass::loadExternalRoutine, 2);
+
+    CompleteClassMethodDefinitions();
+
+        AddProtectedMethod("SetSecurityManager", RoutineClass::setSecurityManager, 1);
+        AddMethod("Source", BaseExecutable::source, 0);
+        AddMethod("Package", BaseExecutable::getPackage, 0);
+        AddMethod("Call", RoutineClass::callRexx, A_COUNT);
+        AddMethod("CallWith", RoutineClass::callWithRexx, 1);
+
+    CompleteMethodDefinitions();
+
+    CompleteClassDefinition(Routine);
+
+EndClassDefinition(Routine);
+
+
+    /***************************************************************************/
+    /*           Package                                                       */
+    /***************************************************************************/
+
+StartClassDefinition(Package)
+
+        AddClassMethod("New", PackageClass::newRexx, A_COUNT);
+
+    CompleteClassMethodDefinitions();
+
+        AddProtectedMethod("SetSecurityManager", PackageClass::setSecurityManagerRexx, 1);
+        AddMethod("Source", PackageClass::getSourceRexx, 0);
+        AddMethod("SourceLine", PackageClass::getSourceLineRexx, 1);
+        AddMethod("SourceSize", PackageClass::getSourceSizeRexx, 0);
+        AddMethod("Classes", PackageClass::getClassesRexx, 0);
+        AddMethod("PublicClasses", PackageClass::getPublicClassesRexx, 0);
+        AddMethod("ImportedClasses", PackageClass::getImportedClassesRexx, 0);
+        AddMethod("DefinedMethods", PackageClass::getMethodsRexx, 0);
+        AddMethod("Routines", PackageClass::getRoutinesRexx, 0);
+        AddMethod("PublicRoutines", PackageClass::getPublicRoutinesRexx, 0);
+        AddMethod("ImportedRoutines", PackageClass::getImportedRoutinesRexx, 0);
+        AddMethod("ImportedPackages", PackageClass::getImportedPackagesRexx, 0);
+        AddMethod("LoadPackage", PackageClass::loadPackageRexx, 2);
+        AddMethod("AddPackage", PackageClass::addPackageRexx, 1);
+        AddMethod("FindClass", PackageClass::findClassRexx, 1);
+        AddMethod("FindRoutine", PackageClass::findRoutineRexx, 1);
+        AddMethod("AddRoutine", PackageClass::addRoutineRexx, 2);
+        AddMethod("AddPublicRoutine", PackageClass::addPublicRoutineRexx, 2);
+        AddMethod("AddClass", PackageClass::addClassRexx, 2);
+        AddMethod("AddPublicClass", PackageClass::addPublicClassRexx, 2);
+        AddMethod("Name", PackageClass::getProgramName, 0);
+        AddMethod("LoadLibrary", PackageClass::loadLibraryRexx, 1);
+        AddMethod("Digits", PackageClass::digitsRexx, 0);
+        AddMethod("Form", PackageClass::formRexx, 0);
+        AddMethod("Fuzz", PackageClass::fuzzRexx, 0);
+        AddMethod("Trace", PackageClass::traceRexx, 0);
+
+    CompleteMethodDefinitions();
+
+    CompleteClassDefinition(Package);
+
+EndClassDefinition(Package);
+
+
+    /***************************************************************************/
+    /*           RexxContext                                                   */
+    /***************************************************************************/
+
+StartClassDefinition(RexxContext)
+
+        AddClassMethod("New", RexxContext::newRexx, A_COUNT);
+
+    CompleteClassMethodDefinitions();
+
+        AddMethod("Copy", RexxContext::copyRexx, 0);
+        AddMethod("Package", RexxContext::getPackage, 0);
+        AddMethod("Executable", RexxContext::getExecutable, 0);
+        AddMethod("Form", RexxContext::getForm, 0);
+        AddMethod("Fuzz", RexxContext::getFuzz, 0);
+        AddMethod("Digits", RexxContext::getDigits, 0);
+        AddMethod("Variables", RexxContext::getVariables, 0);
+        AddMethod("Args", RexxContext::getArgs, 0);
+        AddMethod("Condition", RexxContext::getCondition, 0);
+        AddMethod("Line", RexxContext::getLine, 0);
+        AddMethod("RS", RexxContext::getRS, 0);
+        AddMethod("Name", RexxContext::getName, 0);
+        AddMethod("StackFrames", RexxContext::getStackFrames, 0);
+
+    CompleteMethodDefinitions();
+
+    CompleteClassDefinition(RexxContext);
+
+EndClassDefinition(RexxContext);
+
+
+    /***************************************************************************/
+    /*           STEM                                                          */
+    /***************************************************************************/
+
+StartClassDefinition(Stem)
+
+        AddClassMethod("New", StemClass::newRexx, A_COUNT);
+
+    CompleteClassMethodDefinitions();
+
+        AddMethod("[]", StemClass::bracket, A_COUNT);
+        AddMethod("[]=", StemClass::bracketEqual, A_COUNT);
+        AddMethod("At", StemClass::bracket, A_COUNT);
+        AddMethod("Put", StemClass::bracketEqual, A_COUNT);
+        AddMethod("MakeArray", RexxObject::makeArrayRexx, 0);
+        AddMethod("Request", StemClass::request, 1);
+        AddMethod("Supplier", StemClass::supplier, 0);
+        AddMethod("AllIndexes", StemClass::allIndexes, 0);
+        AddMethod("AllItems", StemClass::allItems, 0);
+        AddMethod("Empty", StemClass::empty, 0);
+        AddMethod("IsEmpty", StemClass::isEmptyRexx, 0);
+        AddMethod("Unknown", RexxObject::unknownRexx, 2);
+
+        AddMethod("Items", StemClass::itemsRexx, 0);
+        AddMethod("HasIndex", StemClass::hasIndex, A_COUNT);
+        AddMethod("Remove", StemClass::remove, A_COUNT);
+        AddMethod("Index", StemClass::index, 1);
+        AddMethod("HasItem", StemClass::hasItem, 1);
+        AddMethod("RemoveItem", StemClass::removeItem, 1);
+        AddMethod("ToDirectory", StemClass::toDirectory, 0);
+
+    // We want various operator methods that we inherit from the object
+    // class to be redirected to our unknown method, so we block these methods
+    // in our instance method directory.
+        HideMethod("==");
+        HideMethod("=");
+        HideMethod("\\==");
+        HideMethod("\\=");
+        HideMethod("<>");
+        HideMethod("><");
+
+    CompleteMethodDefinitions();
+
+    CompleteClassDefinition(Stem);
+
+EndClassDefinition(Stem);
+
+    /***************************************************************************/
+    /*           MUTABLEBUFFER                                                 */
+    /***************************************************************************/
+
+StartClassDefinition(MutableBuffer)
+
+        AddClassMethod("New", MutableBuffer::newRexx, A_COUNT);
+
+    CompleteClassMethodDefinitions();
+
+        AddMethod("Append", MutableBuffer::appendRexx, 1);
+        AddMethod("Insert", MutableBuffer::insert, 4);
+        AddMethod("Overlay", MutableBuffer::overlay, 4);
+        AddMethod("ReplaceAt", MutableBuffer::replaceAt, 4);
+        AddMethod("Delete", MutableBuffer::mydelete, 2);
+        AddMethod("DelStr", MutableBuffer::mydelete, 2);
+        AddMethod("Substr", MutableBuffer::substr, 3);
+        AddMethod("Pos", MutableBuffer::posRexx, 3);
+        AddMethod("LastPos", MutableBuffer::lastPos, 3);
+        AddMethod("Contains", MutableBuffer::containsRexx, 3);
+        AddMethod("CaselessContains", MutableBuffer::caselessContains, 3);
+        AddMethod("ContainsWord", MutableBuffer::containsWord, 2);
+        AddMethod("CaselessContainsWord", MutableBuffer::caselessContainsWord, 2);
+        AddMethod("CaselessPos", MutableBuffer::caselessPos, 3);
+        AddMethod("CaselessLastPos", MutableBuffer::caselessLastPos, 3);
+        AddMethod("SubChar", MutableBuffer::subchar, 1);
+        AddMethod("GetBufferSize", MutableBuffer::getBufferSize, 0);
+        AddMethod("SetBufferSize", MutableBuffer::setBufferSize, 1);
+
+        AddMethod("Length", MutableBuffer::lengthRexx, 0);
+        AddMethod("MakeArray", MutableBuffer::makeArrayRexx, 1);
+        AddMethod("String", RexxObject::makeStringRexx, 0);
+        AddMethod("CountStr", MutableBuffer::countStrRexx, 1);
+        AddMethod("CaselessCountStr", MutableBuffer::caselessCountStrRexx, 1);
+        AddMethod("ChangeStr", MutableBuffer::changeStr, 3);
+        AddMethod("CaselessChangeStr", MutableBuffer::caselessChangeStr, 3);
+        AddMethod("Upper", MutableBuffer::upper, 2);
+        AddMethod("Lower", MutableBuffer::lower, 2);
+        AddMethod("Translate", MutableBuffer::translate, 5);
+        AddMethod("Match", MutableBuffer::match, 4);
+        AddMethod("CaselessMatch", MutableBuffer::caselessMatch, 4);
+        AddMethod("MatchChar", MutableBuffer::matchChar, 2);
+        AddMethod("CaselessMatchChar", MutableBuffer::caselessMatchChar, 2);
+        AddMethod("Verify", MutableBuffer::verify, 4);
+        AddMethod("Space", MutableBuffer::space, 2);
+        AddMethod("SubWord", MutableBuffer::subWord, 2);
+        AddMethod("SubWords", MutableBuffer::subWords, 2);
+        AddMethod("Word", MutableBuffer::word, 1);
+        AddMethod("WordIndex", MutableBuffer::wordIndex, 1);
+        AddMethod("WordLength", MutableBuffer::wordLength, 1);
+        AddMethod("Words", MutableBuffer::words, 0);
+        AddMethod("WordPos", MutableBuffer::wordPos, 2);
+        AddMethod("CaselessWordPos", MutableBuffer::caselessWordPos, 2);
+        AddMethod("DelWord", MutableBuffer::delWord, 2);
+
+    CompleteMethodDefinitions();
+
+    CompleteClassDefinition(MutableBuffer);
+
+EndClassDefinition(MutableBuffer);
+
+    /***************************************************************************/
+    /*             INTEGER                                                     */
+    /***************************************************************************/
+
+StartClassDefinition(Integer)
+
+    // NOTE that we are pointing the new method at the String version...part of the
+    // fakeout that the Integer class does.
+        AddClassMethod("New", RexxString::newRexx, A_COUNT);
+
+    CompleteClassMethodDefinitions();
+
+        // TODO:  Add some more frequently used methods to integer and number string
+        // to bypass unknown.  The compareTo method is an obvious one.
+
+        AddMethod("+", RexxInteger::plus, 1);
+        AddMethod("-", RexxInteger::minus, 1);
+        AddMethod("*", RexxInteger::multiply, 1);
+        AddMethod("**", RexxInteger::power, 1);
+        AddMethod("/", RexxInteger::divide, 1);
+        AddMethod("%", RexxInteger::integerDivide, 1);
+        AddMethod("//", RexxInteger::remainder, 1);
+        AddMethod("\\", RexxInteger::notOp, 0);
+        AddMethod("&", RexxInteger::andOp, 1);
+        AddMethod("|", RexxInteger::orOp, 1);
+        AddMethod("&&", RexxInteger::xorOp, 1);
+        AddMethod("Unknown", RexxObject::unknownRexx, 2);
+        AddMethod("D2C", RexxInteger::d2c, 1);
+        AddMethod("D2X", RexxInteger::d2x, 1);
+        AddMethod("Abs", RexxInteger::abs, 0);
+        AddMethod("Max", RexxInteger::Max, A_COUNT);
+        AddMethod("Min", RexxInteger::Min, A_COUNT);
+        AddMethod("Sign", RexxInteger::sign, 0);
+        AddMethod("Equal", RexxInteger::equal, 1);
+        AddMethod("\\=", RexxInteger::notEqual, 1);
+        AddMethod("<>", RexxInteger::notEqual, 1);
+        AddMethod("><", RexxInteger::notEqual, 1);
+        AddMethod(">", RexxInteger::isGreaterThan, 1);
+        AddMethod("<", RexxInteger::isLessThan, 1);
+        AddMethod(">=", RexxInteger::isGreaterOrEqual, 1);
+        AddMethod("\\<", RexxInteger::isGreaterOrEqual, 1);
+        AddMethod("<=", RexxInteger::isLessOrEqual, 1);
+        AddMethod("\\>", RexxInteger::isLessOrEqual, 1);
+        AddMethod("==", RexxInteger::strictEqual, 1);
+        AddMethod("HashCode", RexxInteger::hashCode, 1);
+        AddMethod("\\==", RexxInteger::strictNotEqual, 1);
+        AddMethod(">>", RexxInteger::strictGreaterThan, 1);
+        AddMethod("<<", RexxInteger::strictLessThan, 1);
+        AddMethod(">>=", RexxInteger::strictGreaterOrEqual, 1);
+        AddMethod("\\<<", RexxInteger::strictGreaterOrEqual, 1);
+        AddMethod("<<=", RexxInteger::strictLessOrEqual, 1);
+        AddMethod("\\>>", RexxInteger::strictLessOrEqual, 1);
+        AddMethod("MakeString", RexxObject::makeStringRexx, 0);
+        AddMethod("Format", RexxInteger::format, 4);
+        AddMethod("Trunc", RexxInteger::trunc, 1);
+        AddMethod("Floor", RexxInteger::floor, 0);
+        AddMethod("Ceiling", RexxInteger::ceiling, 0);
+        AddMethod("Round", RexxInteger::round, 0);
+        AddMethod("Class", RexxInteger::classObject, 0);
+
+    CompleteMethodDefinitions();
+
+    CompleteClassDefinition(Integer);
+
+EndSpecialClassDefinition(Integer);
+
+
+    /***************************************************************************/
+    /*             NUMBERSTRING                                                */
+    /***************************************************************************/
+
+StartClassDefinition(NumberString)
+
+    // NOTE that we are pointing the new method at the String version...part of the
+    // fakeout that the NumberString class does.
+        AddClassMethod("New", RexxString::newRexx, A_COUNT);
+
+    CompleteClassMethodDefinitions();
+
+        AddMethod("Unknown", RexxObject::unknownRexx, 2);
+        AddMethod("Abs", NumberString::abs, 0);
+        AddMethod("Max", NumberString::Max, A_COUNT);
+        AddMethod("Min", NumberString::Min, A_COUNT);
+        AddMethod("Sign", NumberString::Sign, 0);
+        AddMethod("D2C", NumberString::d2c, 1);
+        AddMethod("D2X", NumberString::d2x, 1);
+        AddMethod("=", NumberString::equal, 1);
+        AddMethod("\\=", NumberString::notEqual, 1);
+        AddMethod("<>", NumberString::notEqual, 1);
+        AddMethod("><", NumberString::notEqual, 1);
+        AddMethod(">", NumberString::isGreaterThan, 1);
+        AddMethod("<", NumberString::isLessThan, 1);
+        AddMethod(">=", NumberString::isGreaterOrEqual, 1);
+        AddMethod("\\<", NumberString::isGreaterOrEqual, 1);
+        AddMethod("<=", NumberString::isLessOrEqual, 1);
+        AddMethod("\\>", NumberString::isLessOrEqual, 1);
+        AddMethod("==", NumberString::strictEqual, 1);
+        AddMethod("HashCode", NumberString::hashCode, 0);
+        AddMethod("\\==", NumberString::strictNotEqual, 1);
+        AddMethod(">>", NumberString::strictGreaterThan, 1);
+        AddMethod("<<", NumberString::strictLessThan, 1);
+        AddMethod(">>=", NumberString::strictGreaterOrEqual, 1);
+        AddMethod("\\<<", NumberString::strictGreaterOrEqual, 1);
+        AddMethod("<<=", NumberString::strictLessOrEqual, 1);
+        AddMethod("\\>>", NumberString::strictLessOrEqual, 1);
+        AddMethod("+", NumberString::plus, 1);
+        AddMethod("-", NumberString::minus, 1);
+        AddMethod("*", NumberString::multiply, 1);
+        AddMethod("**", NumberString::power, 1);
+        AddMethod("/", NumberString::divide, 1);
+        AddMethod("%", NumberString::integerDivide, 1);
+        AddMethod("//", NumberString::remainder, 1);
+        AddMethod("\\", NumberString::notOp, 0);
+        AddMethod("&", NumberString::andOp, 1);
+        AddMethod("|", NumberString::orOp, 1);
+        AddMethod("&&", NumberString::xorOp, 1);
+        AddMethod("MakeString", RexxObject::makeStringRexx, 0);
+        AddMethod("Format", NumberString::formatRexx, 4);
+        AddMethod("Trunc", NumberString::trunc, 1);
+        AddMethod("Floor", NumberString::floor, 0);
+        AddMethod("Ceiling", NumberString::ceiling, 0);
+        AddMethod("Round", NumberString::round, 0);
+        AddMethod("Class", NumberString::classObject, 0);
+
+    CompleteMethodDefinitions();
+
+    CompleteClassDefinition(NumberString);
+
+EndSpecialClassDefinition(NumberString);
+
+
+    /***************************************************************************/
+    /*           SUPPLIER                                                      */
+    /***************************************************************************/
+
+StartClassDefinition(Supplier)
+
+        AddClassMethod("New", SupplierClass::newRexx, A_COUNT);
+
+    CompleteClassMethodDefinitions();
+
+        AddMethod("Available", SupplierClass::available, 0);
+        AddMethod("Index", SupplierClass::index, 0);
+        AddMethod("Next", SupplierClass::next, 0);
+        AddMethod("Item", SupplierClass::value, 0);
+        AddMethod("Init", SupplierClass::initRexx, 2);
+
+    CompleteMethodDefinitions();
+
+    CompleteClassDefinition(Supplier);
+
+EndClassDefinition(Supplier);
+
+
+    /***************************************************************************/
+    /*           POINTER                                                       */
+    /***************************************************************************/
+
+StartClassDefinition(Pointer)
+
+        AddClassMethod("New", PointerClass::newRexx, A_COUNT);
+
+    CompleteClassMethodDefinitions();
+
+        AddMethod("=", PointerClass::equal, 1);
+        AddMethod("\\=", PointerClass::notEqual, 1);
+        AddMethod("==", PointerClass::equal, 1);
+        AddMethod("\\==", PointerClass::notEqual, 1);
+        AddMethod("IsNull", PointerClass::isNull, 0);
+
+    CompleteMethodDefinitions();
+
+    CompleteClassDefinition(Pointer);
+
+EndClassDefinition(Pointer);
+
+
+    /***************************************************************************/
+    /*           BUFFER                                                        */
+    /***************************************************************************/
+
+StartClassDefinition(Buffer)
+
+        AddClassMethod("New", BufferClass::newRexx, A_COUNT);
+
+    CompleteClassMethodDefinitions();
+
+    // NO instance methods on buffer
+
+    CompleteMethodDefinitions();
+
+    CompleteClassDefinition(Buffer);
+
+EndClassDefinition(Buffer);
+
+
+    /***************************************************************************/
+    /*           WEAKREFERENCE                                                 */
+    /***************************************************************************/
+
+StartClassDefinition(WeakReference)
+
+        AddClassMethod("New", WeakReference::newRexx, A_COUNT);
+
+    CompleteClassMethodDefinitions();
+
+        AddMethod("Value", WeakReference::value, 0);
+
+    CompleteMethodDefinitions();
+
+    CompleteClassDefinition(WeakReference);
+
+EndClassDefinition(WeakReference);
+
+
+    /***************************************************************************/
+    /*           STACKFRAME                                                    */
+    /***************************************************************************/
+
+StartClassDefinition(StackFrame)
+
+        AddClassMethod("New", StackFrameClass::newRexx, A_COUNT);
+
+    CompleteClassMethodDefinitions();
+
+        AddMethod("Name", StackFrameClass::getName, 0);
+        AddMethod("Executable", StackFrameClass::getExecutable, 0);
+        AddMethod("Line", StackFrameClass::getLine, 0);
+        AddMethod("Target", StackFrameClass::getTarget, 0);
+        AddMethod("TraceLine", StackFrameClass::getTraceLine, 0);
+        AddMethod("Type", StackFrameClass::getType, 0);
+        AddMethod("Arguments", StackFrameClass::getArguments, 0);
+        // the string method just maps to TRACELINE
+        AddMethod("String", StackFrameClass::getTraceLine, 0);
+        AddMethod("MakeString", StackFrameClass::getTraceLine, 0);
+
+    CompleteMethodDefinitions();
+
+    CompleteClassDefinition(StackFrame);
+
+EndClassDefinition(StackFrame);
+
+    /***************************************************************************/
+    /***************************************************************************/
+    /***************************************************************************/
+
+    // now add entries to the environment
+    addToEnvironment("ENVIRONMENT", TheEnvironment);
+    addToEnvironment("NIL" ,TheNilObject);
+    addToEnvironment("FALSE", TheFalseObject);
+    addToEnvironment("TRUE", TheTrueObject);
+
+    // set up the kernel directory
+    addToSystem("INTEGER", TheIntegerClass);
+    addToSystem("NUMBERSTRING", TheNumberStringClass);
+
+    addToSystem("NULLARRAY", TheNullArray);
+    addToSystem("NULLPOINTER", TheNullPointer);
+    addToSystem("COMMONRETRIEVERS", TheCommonRetrievers);
+    addToSystem("ENVIRONMENT", TheEnvironment);
+
+    addToSystem("VERSION", Interpreter::getVersionNumber());
+    // initialize our thread vector for external calls.
+    Activity::initializeThreadContext();
+
+    // define and suppress methods in the nil object
+    TheNilObject->defineInstanceMethod(getGlobalName("COPY"), (MethodClass *)TheNilObject, OREF_NULL);
+    TheNilObject->defineInstanceMethod(getGlobalName("START"), (MethodClass *)TheNilObject, OREF_NULL);
+    TheNilObject->defineInstanceMethod(getGlobalName("OBJECTNAME="), (MethodClass *)TheNilObject, OREF_NULL);
+    TheNilObject->objectNameEquals(new_string("The NIL object"));
+
+    // ok, .NIL has been constructed.  As a last step before saving the image, we need to change
+    // the type identifier in the behaviour so that this will get the correct virtual function table
+    // restored when the image reloads.
+    TheNilObject->behaviour->setClassType(T_NilObject);
 
 /******************************************************************************/
 /*      Complete the image build process, calling BaseClasses to establish    */
 /*      the rest of the REXX image.                                           */
 /******************************************************************************/
 
-  /* set up the kernel methods that will be defined on OBJECT classes in  */
-  /*  BaseClasses.ORX and ORYXJ.ORX.                                            */
-  {
-                                           /* create a kernel methods directory */
-      RexxDirectory *kernel_methods = new_directory();
-      ProtectedObject p1(kernel_methods);   // protect from GC
-      kernel_methods->put(new RexxMethod(getGlobalName(CHAR_LOCAL), CPPCode::resolveExportedMethod(CHAR_LOCAL, CPPM(RexxLocal::local), 0)), getGlobalName(CHAR_LOCAL));
+    // set up the kernel methods that will be defined on OBJECT classes in
+    // CoreClasses.orx
+    {
+        // create a method used to retrieve the .Local environment.  We set this on the
+        // .Environment directory.
+        Protected<MethodClass> localMethod = new MethodClass(getGlobalName("LOCAL"), CPPCode::resolveExportedMethod("Local", CPPM(ActivityManager::getLocalRexx), 0, "ActivityManager::getLocalRexx"));
 
-                                           /* create the BaseClasses method and run it*/
-      RexxString *symb = getGlobalName(BASEIMAGELOAD);   /* get a name version of the string  */
-                                           /* go resolve the program name       */
-      RexxString *programName = ActivityManager::currentActivity->resolveProgramName(symb, OREF_NULL, OREF_NULL);
-      // create a new stack frame to run under
-      ActivityManager::currentActivity->createNewActivationStack();
-      try
-      {
-                                               /* create a method object out of this*/
-          RoutineClass *loader = new RoutineClass(programName);
+        // add this to the environment directory.
+        TheEnvironment->setMethodRexx(getGlobalName("LOCAL"), localMethod);
 
+        // CoreClasses contains additional classes written in Rexx and enhances some of the
+        // base classes with methods written in Rexx.
+        RexxString *symb = getGlobalName(BASEIMAGELOAD);
+        RexxString *programName = ActivityManager::currentActivity->resolveProgramName(symb, OREF_NULL, OREF_NULL);
+        // create a new stack frame to run under
+        ActivityManager::currentActivity->createNewActivationStack();
+        try
+        {
+            // create an executable object for this.
+            Protected<RoutineClass> loader = LanguageParser::createProgram(programName);
 
-          RexxObject *args = kernel_methods;   // temporary to avoid type-punning warnings
-          ProtectedObject result;
-                                               /* now call BaseClasses to finish the image*/
-          loader->runProgram(ActivityManager::currentActivity, OREF_PROGRAM, OREF_NULL, (RexxObject **)&args, 1, result);
-      }
-      catch (ActivityException )
-      {
-          ActivityManager::currentActivity->error();          /* do error cleanup                  */
-          Interpreter::logicError("Error building kernel image.  Image not saved.");
-      }
+            // we pass the internal Rexx package as an argument to the setup program.
+            RexxObject *args = TheRexxPackage;
+            ProtectedObject result;
+            // now create the core program objects.
+            loader->runProgram(ActivityManager::currentActivity, GlobalNames::PROGRAM, OREF_NULL, (RexxObject **)&args, 1, result);
+        }
+        catch (ActivityException )
+        {
+            ActivityManager::currentActivity->error();          /* do error cleanup                  */
+            Interpreter::logicError("Error building kernel image.  Image not saved.");
+        }
 
-  }
+    }
 
-  /* define and suppress methods in the nil object */
-  TheNilObject->defMethod(getGlobalName(CHAR_COPY), (RexxMethod *)TheNilObject);
-  TheNilObject->defMethod(getGlobalName(CHAR_START), (RexxMethod *)TheNilObject);
-  TheNilObject->defMethod(getGlobalName(CHAR_OBJECTNAMEEQUALS), (RexxMethod *)TheNilObject);
+    // disable the special class methods we only use during the image build phase.
+    // this removes this from all of the subclasses as well
+    TheObjectClass->removeClassMethod(new_string("DEFINECLASSMETHOD"));
+    TheObjectClass->removeClassMethod(new_string("INHERITINSTANCEMETHODS"));
 
-  // ok, .NIL has been constructed.  As a last step before saving the image, we need to change
-  // the type identifier in the behaviour so that this will get the correct virtual function table
-  // restored when the image reloads.
-  TheNilObject->behaviour->setClassType(T_NilObject);
-
-  RexxClass *ordered = (RexxClass *)TheEnvironment->get(getGlobalName(CHAR_ORDEREDCOLLECTION));
-
-  TheArrayClass->inherit(ordered, OREF_NULL);
-  TheArrayClass->setRexxDefined();
-
-  TheQueueClass->inherit(ordered, OREF_NULL);
-  TheQueueClass->setRexxDefined();
-
-  TheListClass->inherit(ordered, OREF_NULL);
-  TheListClass->setRexxDefined();
-
-  RexxClass *map = (RexxClass *)TheEnvironment->get(getGlobalName(CHAR_MAPCOLLECTION));
-
-  TheTableClass->inherit(map, OREF_NULL);
-  TheTableClass->setRexxDefined();
-
-  TheIdentityTableClass->inherit(map, OREF_NULL);
-  TheIdentityTableClass->setRexxDefined();
-
-  TheRelationClass->inherit(map, OREF_NULL);
-  TheRelationClass->setRexxDefined();
-
-  TheDirectoryClass->inherit(map, OREF_NULL);
-  TheDirectoryClass->setRexxDefined();
-
-  TheStemClass->inherit(map, OREF_NULL);
-  TheStemClass->setRexxDefined();
-
-  RexxClass *comparable = (RexxClass *)TheEnvironment->get(getGlobalName(CHAR_COMPARABLE));
-
-  TheStringClass->inherit(comparable, OREF_NULL);
-  TheStringClass->setRexxDefined();
-
-  // disable the special class methods we only use during the image build phase.
-  // this removes this from all of the subclasses as well
-  TheObjectClass->removeClassMethod(new_string(CHAR_DEFINE_METHODS));
-  TheObjectClass->removeClassMethod(new_string(CHAR_SHRIEKREXXDEFINED));
-  TheObjectClass->removeClassMethod(new_string("!DEFINE_CLASS_METHOD"));
-
-  // now save the image
-  memoryObject.saveImage();
-  ActivityManager::returnActivity(ActivityManager::currentActivity);
-  exit(RC_OK);                         // successful build
+    // now save the image
+    memoryObject.saveImage();
+    ActivityManager::returnActivity(ActivityManager::currentActivity);
+    exit(0);                         // successful build
 }

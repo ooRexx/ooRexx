@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.ibm.com/developerworks/oss/CPLv1.0.htm                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -47,21 +47,19 @@
 #include "RexxCore.h"
 #include "CallbackDispatcher.hpp"
 
-class RexxActivity;
+class Activity;
 
 class CommandHandler : public RexxInternalObject
 {
 public:
-    inline void *operator new(size_t size, void *ptr) { return ptr; }
     void        *operator new(size_t size);
     inline void  operator delete(void *) { ; }
-    inline void  operator delete(void *, void *) { ; }
 
     inline CommandHandler(RESTORETYPE restoreType) { ; };
     inline CommandHandler(REXXPFN e) : entryPoint(e) { type = DIRECT; }
     inline CommandHandler(const char *n) : entryPoint(NULL) { type = UNRESOLVED; resolve(n); }
 
-    void call(RexxActivity *activity, RexxActivation *activation, RexxString *address, RexxString *command, ProtectedObject &rc, ProtectedObject &condition);
+    void call(Activity *activity, RexxActivation *activation, RexxString *address, RexxString *command, ProtectedObject &rc, ProtectedObject &condition);
     void resolve(const char *name);
     inline bool isResolved() { return type != UNRESOLVED; }
 
@@ -82,13 +80,13 @@ protected:
 class CommandHandlerDispatcher : public CallbackDispatcher
 {
 public:
-    CommandHandlerDispatcher(RexxActivity * a, REXXPFN e, RexxString *c);
+    CommandHandlerDispatcher(Activity * a, REXXPFN e, RexxString *c);
     virtual ~CommandHandlerDispatcher() { ; }
 
     virtual void run();
     void complete(RexxString *command, ProtectedObject &result, ProtectedObject &condition);
 
-    RexxActivity *activity;               // the activity we're dispatching on
+    Activity *activity;                   // the activity we're dispatching on
     REXXPFN    entryPoint;                // resolved exit entry point
     CONSTRXSTRING  rxstrcmd;              // invoked command
     RXSTRING       retstr;                // passed back result
@@ -106,7 +104,7 @@ public:
     virtual ~ContextCommandHandlerDispatcher() { ; }
 
     virtual void run();
-    virtual void handleError(RexxDirectory *);
+    virtual void handleError(DirectoryClass *);
 
     REXXPFN   entryPoint;                 // the installed command handler
     RexxString *address;                  // the address environment

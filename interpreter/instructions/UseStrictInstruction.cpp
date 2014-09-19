@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -41,7 +41,6 @@
 /* Primitive USE STRICT instruction class                                     */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "ArrayClass.hpp"
 #include "QueueClass.hpp"
@@ -50,7 +49,19 @@
 #include "ExpressionBaseVariable.hpp"
 
 
-RexxInstructionUseStrict::RexxInstructionUseStrict(size_t count, bool strict, bool extraAllowed, RexxQueue *variable_list, RexxQueue *defaults)
+/**
+ * Initialize a USE instruction instance.
+ *
+ * @param count    The count of arguments to process.
+ * @param strict   Indicates whether strict argument rules are to be applied.
+ * @param extraAllowed
+ *                 Indicates extra variables are allowed because ... was
+ *                 used on the end of the argument list.
+ * @param variable_list
+ *                 The list of variable objects.
+ * @param defaults The list of defaults to apply to arguments.
+ */
+RexxInstructionUseStrict::RexxInstructionUseStrict(size_t count, bool strict, bool extraAllowed, QueueClass *variable_list, QueueClass *defaults)
 {
     // set the variable count and the option flag
     variableCount = count;
@@ -64,8 +75,8 @@ RexxInstructionUseStrict::RexxInstructionUseStrict(size_t count, bool strict, bo
     {
         // decrement first, so we store at the correct offset.
         count--;
-        OrefSet(this, variables[count].variable, (RexxVariableBase *)variable_list->pop());
-        OrefSet(this, variables[count].defaultValue, defaults->pop());
+        variables[count].variable = (RexxVariableBase *)variable_list->pop();
+        variables[count].defaultValue = (RexxObject *)defaults->pop();
 
         // if this is a real variable, see if this is the last of the required ones.
         if (minimumRequired < count + 1 && variables[count].variable != OREF_NULL)
@@ -81,69 +92,76 @@ RexxInstructionUseStrict::RexxInstructionUseStrict(size_t count, bool strict, bo
 
 
 /**
- * The runtime, non-debug live marking routine.
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
  */
 void RexxInstructionUseStrict::live(size_t liveMark)
 {
-  size_t i;                            /* loop counter                      */
-  size_t count;                        /* argument count                    */
-
-  memory_mark(this->nextInstruction);  /* must be first one marked          */
-  for (i = 0, count = variableCount; i < count; i++)
-  {
-      memory_mark(this->variables[i].variable);
-      memory_mark(this->variables[i].defaultValue);
-  }
+    // must be first object marked
+    memory_mark(nextInstruction);
+    for (size_t i = 0; i < variableCount; i++)
+    {
+        memory_mark(variables[i].variable);
+        memory_mark(variables[i].defaultValue);
+    }
 }
 
 
-/**
- * The generalized live marking routine used for non-performance
- * critical marking operations.
- */
-void RexxInstructionUseStrict::liveGeneral(int reason)
-{
-  size_t i;                            /* loop counter                      */
-  size_t count;                        /* argument count                    */
-
-                                       /* must be first one marked          */
-  memory_mark_general(this->nextInstruction);
-  for (i = 0, count = variableCount; i < count; i++)
-  {
-      memory_mark_general(this->variables[i].variable);
-      memory_mark_general(this->variables[i].defaultValue);
-  }
-}
-
 
 /**
- * The flattening routine, used for serializing object trees.
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
  *
- * @param envelope The envelope were's flattening into.
+ * @param reason The reason for the marking call.
  */
-void RexxInstructionUseStrict::flatten(RexxEnvelope *envelope)
+void RexxInstructionUseStrict::liveGeneral(MarkReason reason)
 {
-  size_t i;                            /* loop counter                      */
-  size_t count;                        /* argument count                    */
-
-  setUpFlatten(RexxInstructionUseStrict)
-
-  flatten_reference(newThis->nextInstruction, envelope);
-  for (i = 0, count = variableCount; i < count; i++)
-  {
-      flatten_reference(newThis->variables[i].variable, envelope);
-      flatten_reference(newThis->variables[i].defaultValue, envelope);
-  }
-  cleanUpFlatten
+    // must be first object marked
+    memory_mark_general(nextInstruction);
+    for (size_t i = 0; i < variableCount; i++)
+    {
+        memory_mark_general(variables[i].variable);
+        memory_mark_general(variables[i].defaultValue);
+    }
 }
 
 
-void RexxInstructionUseStrict::execute(RexxActivation *context, RexxExpressionStack *stack)
+/**
+ * Flatten a source object.
+ *
+ * @param envelope The envelope that will hold the flattened object.
+ */
+void RexxInstructionUseStrict::flatten(Envelope *envelope)
 {
-    context->traceInstruction(this);     // trace if necessary
+    setUpFlatten(RexxInstructionUseStrict)
+
+    flattenRef(nextInstruction);
+    for (size_t i = 0; i < variableCount; i++)
+    {
+        flattenRef(variables[i].variable);
+        flattenRef(variables[i].defaultValue);
+    }
+    cleanUpFlatten
+}
+
+
+/**
+ * Execute a USE instruction
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ */
+void RexxInstructionUseStrict::execute(RexxActivation *context, ExpressionStack *stack)
+{
+    // trace if necessary
+    context->traceInstruction(this);
+
     // get the argument information from the context
     RexxObject **arglist = context->getMethodArgumentList();
     size_t argcount = context->getMethodArgumentCount();
+
     // strict checking means we need to enforce min/max limits
     if (strictChecking)
     {
@@ -160,6 +178,7 @@ void RexxInstructionUseStrict::execute(RexxActivation *context, RexxExpressionSt
                 reportException(Error_Incorrect_call_minarg, context->getCallname(), minimumRequired);
             }
         }
+
         // potentially too many?
         if (!variableSize && argcount > variableCount)
         {
@@ -188,7 +207,7 @@ void RexxInstructionUseStrict::execute(RexxActivation *context, RexxExpressionSt
             {
                 context->traceResult(argument);  // trace if necessary
                 // assign the value
-                variable->assign(context, stack, argument);
+                variable->assign(context, argument);
             }
             else
             {
@@ -203,7 +222,7 @@ void RexxInstructionUseStrict::execute(RexxActivation *context, RexxExpressionSt
                     defaultValue = defaultValue->evaluate(context, stack);
                     context->traceResult(defaultValue);  // trace if necessary
                     // assign the value
-                    variable->assign(context, stack, defaultValue);
+                    variable->assign(context, defaultValue);
                     stack->pop();    // remove the value from the stack
                 }
                 else
@@ -212,7 +231,6 @@ void RexxInstructionUseStrict::execute(RexxActivation *context, RexxExpressionSt
                     if (!strictChecking)
                     {
                         variable->drop(context);
-
                     }
                     else
                     {

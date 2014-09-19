@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -42,145 +42,74 @@
 /*                                                                            */
 /******************************************************************************/
 
-use arg kernel_methods
-                                       /* name the common objects           */
-.environment~objectname = "The Environment Directory"
-.kernel~objectname = "The kernel directory"
-.nil~objectname = "The NIL object"
+use arg rexxPackage
+-- add the local server class to the Rexx package as a non public class
+rexxPackage~addClass('LOCALSERVER', .LocalServer)
 
--- Add serialization support
-call "Serializable.orx"
+.environment~objectname = "The Environment Directory"
+rexxPackage~objectname = "The REXX Package"
+
+-- add all of the public classes to .environment and to the
+-- REXX package
+publicClasses = .context~package~publicClasses
+
+do name over publicClasses
+   class = publicClasses[name]
+   .environment~put(class, name)
+   rexxPackage~addPublicClass(name, class)
+end
 
 -- add string class constant methods
-.String~!define_class_method("NL", .methods~string_cls_nl)
-.String~!define_class_method("CR", .methods~string_cls_cr)
-.String~!define_class_method("TAB", .methods~string_cls_tab)
-.String~!define_class_method("NULL", .methods~string_cls_null)
+.String~defineClassMethod("NL", .methods~string_cls_nl)
+.String~defineClassMethod("CR", .methods~string_cls_cr)
+.String~defineClassMethod("TAB", .methods~string_cls_tab)
+.String~defineClassMethod("NULL", .methods~string_cls_null)
 
-set_methods = .table~new               /* get a table directory             */
-                                       /* add the many item methods       */
-set_methods~put(.methods~many_union,        'UNION')
-set_methods~put(.methods~many_subset,       'SUBSET')
-set_methods~put(.methods~many_intersection, 'INTERSECTION')
-set_methods~put(.methods~many_difference,   'DIFFERENCE')
-set_methods~put(.methods~many_xor,          'XOR')
-.relation~!define_methods(set_methods) /* add to relation                   */
+-- Some classes have addtional methods added that are written in Rexx.
+-- we do a phony inherit to add those directly to the class instance
+-- dictionary.
 
-.collection~!rexxdefined
-.orderedcollection~!rexxdefined
-.mapcollection~!rexxdefined
+.supplier~inheritInstanceMethods(.SupplierMixin)
+-- bag and relation both get this one, which redefines the set methods
+.relation~inheritInstanceMethods(.ManyItemMixin)
+.bag~inheritInstanceMethods(.ManyItemMixin)
+-- set has its own set methods
+.set~inheritInstanceMethods(.SetMixin)
+-- as does Bat
+.bag~inheritInstanceMethods(.BagMixin)
 
-supplier_methods = .table~new
+-- now handle real inherits for the primitive classes.
 
-supplier_methods~put(.methods~supplier_allitems, 'ALLITEMS')
-supplier_methods~put(.methods~supplier_allindexes, 'ALLINDEXES')
-supplier_methods~put(.methods~supplier_getarrays, 'GETARRAYS')
-supplier_methods~put(.methods~supplier_supplier, 'SUPPLIER')
+-- string class is a comparable item
 
-.supplier~!define_methods(supplier_methods)
-.supplier~!rexxdefined
+.string~inherit(.Comparable)
 
-.environment~setentry('COLLECTION', .collection)
-.environment~setentry('ORDEREDCOLLECTION', .orderedcollection)
-.environment~setentry('MAPCOLLECTION', .mapcollection)
-.environment~setentry('SETCOLLECTION', .setcollection)
+-- the ordered collections (which also handles Collection)
 
-.environment~setentry('COMPARABLE', .comparable)
-.environment~setentry('COMPARATOR', .comparator)
-.environment~setentry('DESCENDINGCOMPARATOR', .descendingcomparator)
-.environment~setentry('CASELESSCOMPARATOR', .caselesscomparator)
-.environment~setentry('CASELESSDESCENDINGCOMPARATOR', .caselessdescendingcomparator)
-.environment~setentry('COLUMNCOMPARATOR', .columncomparator)
-.environment~setentry('CASELESSCOLUMNCOMPARATOR', .caselesscolumncomparator)
-.environment~setentry('INVERTINGCOMPARATOR', .invertingcomparator)
-.environment~setentry('NUMERICCOMPARATOR', .numericcomparator)
-.environment~setentry('ORDERABLE', .orderable)
+.array~inherit(.OrderedCollection)
+.list~inherit(.OrderedCollection)
+.queue~inherit(.OrderedCollection)
 
-server = .object~subclass('server')
-server_mdict = .table~new
+-- the different Map collections
 
-server_mdict~put(.methods~server_init, 'INIT')
-server_mdict~put(.methods~server_init_instance, 'INITINSTANCE')
+.identityTable~inherit(.MapCollection)
+.table~inherit(.MapCollection)
+.stringTable~inherit(.MapCollection)
+.directory~inherit(.MapCollection)
+.relation~inherit(.MapCollection)
+.set~inherit(.MapCollection)
+.bag~inherit(.MapCollection)
+.stem~inherit(.MapCollection)
 
-server~!define_methods(server_mdict)
-server~!rexxdefined                     /* Mark as unchangeable          */
-.environment~setentry('!server', server)
+-- set and bag are also set collections
 
-/* make references to .local return the local environment */
-.environment~setmethod('LOCAL',kernel_methods['LOCAL'])
+.set~inherit(.SetCollection)
+.bag~inherit(.SetCollection)
 
 
-.Monitor~!REXXDefined                  /* define this as "unchangeable"     */
-.Set~define('PUT', .methods['PUT'])    /* add common methods to SET and BAG */
-.Set~define('[]=', .methods['PUT'])
-.Set~!REXXDefined
+call 'StreamClasses.orx' rexxPackage
 
-.Bag~define('PUT', .methods['PUT'])
-.Bag~define('[]=', .methods['PUT'])
-.Bag~!REXXDefined
-
-.Array~inherit(.Serializable)
-array_methods = .Table~new
-array_methods~put(.methods~array_wo, "WRITEOBJECT")
-array_methods~put(.methods~array_ro, "READOBJECT")
-.Array~!define_methods(array_methods)
-
-.Directory~inherit(.Serializable)
-directory_methods = .Table~new
-directory_methods~put(.methods~directory_wo, "WRITEOBJECT")
-directory_methods~put(.methods~directory_ro, "READOBJECT")
-.Directory~!define_methods(directory_methods)
-
-mb_methods = .Table~new
-mb_methods~put(.methods~mutablebuffer_wo, "WRITEOBJECT")
-mb_methods~put(.methods~mutablebuffer_ro, "READOBJECT")
-.MutableBuffer~inherit(.Serializable)
-.MutableBuffer~!define_methods(mb_methods)
-
-.Relation~inherit(.Serializable)
-.Relation~!define_methods(directory_methods)
-
-.Table~inherit(.Serializable)
-.Table~!define_methods(directory_methods)
-
-.Stem~inherit(.Serializable)
-stem_methods = .Table~new
-stem_methods~put(.methods~stem_wo, "WRITEOBJECT")
-stem_methods~put(.methods~stem_ro, "READOBJECT")
-.Stem~!define_methods(stem_methods)
-
-.Queue~inherit(.Serializable)
-queue_methods = .Table~new
-queue_methods~put(.methods~queue_wo, "WRITEOBJECT")
-queue_methods~put(.methods~queue_ro, "READOBJECT")
-.Queue~!define_methods(queue_methods)
-
-.Alarm~!REXXDefined
-.CircularQueue~!REXXDefined
-.Properties~!REXXDefined
-.DateTime~!REXXDefined
-.TimeSpan~!REXXDefined
-.ArgUtil~!REXXDefined
-
-.environment~setentry('MONITOR', .Monitor)
-.environment~setentry('SET', .Set)
-.environment~setentry('BAG', .Bag)
-.environment~setentry('CIRCULARQUEUE', .CircularQueue)
-.environment~setentry('PROPERTIES', .Properties)
-.environment~setentry('ALARM', .Alarm)
-.environment~setentry('DATETIME', .DateTime)
-.environment~setentry('TIMESPAN', .TimeSpan)
-.environment~setentry('ARGUTIL', .ArgUtil)
-
-.environment~setEntry('SERIALIZABLE', .Serializable)
-.environment~setEntry('SERIALIZEFUNCTIONS', .SerializeFunctions)
-
-call 'StreamClasses.orx'
-
-call 'PlatformObjects.orx'                   -- now load platform-specific builtin classes
-
--- add all of the defined routine functions into our global list
-.kernel~functions['RXQUEUE'] = .routines~rxqueue
+call 'PlatformObjects.orx' rexxPackage       -- now load platform-specific builtin classes
 
 exit
 
@@ -203,105 +132,17 @@ exit
 ::METHOD string_cls_null
  return "00"x
 
-/* Serializable support methods */
-::METHOD array_wo
-    use strict arg handler
-    handler~writeNumber(self~items)
-    do i over self
-        handler~writeObject(i)
-    end
+-- Start of classes that exist only to add collections of methods to
+-- primitive classes
 
-::METHOD array_ro
-    use strict arg handler
-    count = handler~readNumber
-    self[count] = .nil
-    do i = 1 to count
-        self[i] = handler~readObject
-    end
-
-::METHOD queue_wo
-    use strict arg handler
-    handler~writeNumber(self~items)
-    do i over self
-        handler~writeObject(i)
-    end
-
-::METHOD queue_ro
-    use strict arg handler
-    count = handler~readNumber
-    do i = 1 to count
-        self~append(handler~readObject)
-    end
-
-::METHOD stem_wo
-    use strict arg handler
-    handler~writeObject(self[])
-    handler~writeNumber(self~items)
-    do i over self
-        handler~writeObject(i)
-    end
-
-::METHOD stem_ro
-    use strict arg handler
-    self[] = handler~readObject
-    count = handler~readNumber
-    self[count] = .nil
-    do i = 1 to count
-        self[i] = handler~readObject
-    end
-
--- directory methods are also used for relation and table
-::METHOD directory_wo
-    use strict arg handler
-    handler~writeNumber(self~items)
-    content = self~supplier
-    do while content~available
-        handler~writeObject(content~index)
-        handler~writeObject(content~item)
-        content~next
-    end
-
-::METHOD directory_ro
-    use strict arg handler
-    count = handler~readNumber
-    do i = 1 to count
-        index = handler~readObject
-        item = handler~readObject
-        self[index] = item
-    end
-
-::METHOD mutablebuffer_wo
-    use strict arg handler
-    handler~writeObject(self~string)
-
-::METHOD mutablebuffer_ro
-    use strict arg handler
-    -- just append the string representation to the empty buffer
-    self~append(handler~readObject)
-
--- Methods cannot be serialized at the moment - later this code may be used.
-/*
-::METHOD method_wo
-    use strict arg handler
-    if Object~source~size = 0 then
-        raise syntax 93.900 array ("Unable to serialize method without source")
-    handler~writeNumber(self~isGuarded*4+self~isPrivate*2+self~isProtected)
-    handler~writeObject(self~source)
-
--- This does not work yet.
-::METHOD method_ro
-    use strict arg handler
-    m =    .Method~new('', Caller~FromSerializedData(arguments))
-    if mode~bitAnd(4) = 4 then m~setGuarded
-    if mode~bitAnd(2) = 2 then m~setPrivate
-    if mode~bitAnd(1) = 1 then m~setProtected
-    return m
-
-*/
 /*============================================================================*/
 /*    Additional S U P P L I E R methods                                      */
 /*============================================================================*/
-::method supplier_allItems
+
+::class "SupplierMixin"
+-- retrieve all items from the supplier from the current
+-- iteration point
+::method allItems
   expose items
   use strict arg    -- enforces no arguments
 
@@ -309,8 +150,8 @@ exit
 
   return items
 
-
-::method supplier_allIndexes
+-- retrieve all indexes from the current iteration point to the end
+::method allIndexes
   expose indexes
   use strict arg    -- enforces no arguments
 
@@ -318,8 +159,8 @@ exit
 
   return indexes
 
-
-::method supplier_getArrays private
+-- private method used to build the arrays used for allIndexes and allItems
+::method getArrays private
   expose indexes items
 
   if \var('INDEXES') then do
@@ -333,34 +174,22 @@ exit
      end
   end
 
-
-::method supplier_supplier
+-- allow a supplier to be given in any context where
+-- an object that implements supplier can be used.  This
+-- just returns the current object.
+::method supplier
   use strict arg
   return self
 
-/* Unattached methods used by SET and BAG */
-
-/*****************************************/
-/* PUT           method                  */
-/*****************************************/
-::METHOD put                           /* add an entry to the set           */
-use strict arg index, value=(index)    /* get the index                     */
-
-  if index \== value then              /* these must be identical           */
-    raise syntax 93.949                /* this is an error                  */
-  self~put:super(index, index)         /* add to the table                  */
-  return
-
-
 
 /*============================================================================*/
-/*    M A N Y I T E M       M I X I N         (for Relation)                  */
+/*    M A N Y I T E M       M I X I N         (for Relation and Bag)          */
 /*============================================================================*/
-
+::class "ManyItemMixin"
 /*****************************************/
 /* UNION         method                  */
 /*****************************************/
-::METHOD many_union                    -- union of collections
+::METHOD Union                         -- union of collections
 use strict arg other
 
 signal on nomethod                     -- trap unknown method calls
@@ -395,7 +224,7 @@ nomethod:
 /*****************************************/
 /* DIFFERENCE    method                  */
 /*****************************************/
-::METHOD many_difference               -- take the difference of collections
+::METHOD difference                    -- take the difference of collections
 use strict arg other
 
 signal on nomethod                     -- trap unknown method calls
@@ -430,7 +259,7 @@ nomethod:
 /*****************************************/
 /* XOR           method                  */
 /*****************************************/
-::METHOD many_xor                      -- take the exclusive or of a relation
+::METHOD xor                           -- take the exclusive or of a relation
 use strict arg other
 
 signal on nomethod                     -- trap unknown method calls
@@ -472,7 +301,7 @@ nomethod:
 /*****************************************/
 /* INTERSECTION  method                  */
 /*****************************************/
-::METHOD many_intersection             -- take the intersection of relations
+::METHOD intersection                  -- take the intersection of relations
 use strict arg other
 
 signal on nomethod                     -- trap unknown method calls
@@ -516,7 +345,7 @@ nomethod:
 /*****************************************/
 /* SUBSET        method                  */
 /*****************************************/
-::METHOD many_subset                   -- do we have a subset?
+::METHOD subset                        -- do we have a subset?
 use strict arg other
 
 signal on nomethod                     -- trap unknown method calls
@@ -548,45 +377,339 @@ nomethod:
   raise syntax 93.948 array(1, "Collection")
 
 
-::METHOD server_init
- /* initialize a server */
-  expose input output error
- /* set system objects in the local environment */
-  input = .stream~new('STDIN')~~command('open')
-  output = .stream~new('STDOUT')~~command('open nobuffer')
-  error = .stream~new('STDERR')~~command('open nobuffer')
-  self~initinstance
+-- a mixin for SET methods written in Rexx code
+::CLASS 'SetMixin'
 
-::METHOD server_init_instance
- /* initialize a server */
-  expose input output error
+/*****************************************/
+/* XOR        method                     */
+/*****************************************/
+::METHOD xor                           -- take the exclusive or of a set
+use strict arg other                   -- get the companion object
 
-  .local~objectname = "The Local Directory"  -- give the local environment a nicer descriptive name.
+signal on nomethod
 
-  .local~setentry('LOCALSERVER', self)
+new = self~copy                        -- work off of a copy
+if other~isA(.Collection) then
+    values = other~allitems            -- get all of the items from the other collection
+else
+    values = other~makearray           -- ask for an array version of the source
+count = values~items
 
- /* set system objects in the local environment */
-  .local~setentry('STDIN', input)
-  .local~setentry('INPUT',.monitor~new(.stdin))
-  .input~objectname = "The INPUT monitor"
-  .local~setentry('DEBUGINPUT', .monitor~new(.input))
-  .debuginput~objectname = "The DEBUG INPUT monitor"
-  .local~setentry('STDOUT', output)
-  .local~setentry('OUTPUT',.monitor~new(.stdout))
-  .output~objectname = "The OUTPUT monitor"
-  .local~setentry('STDERR', error)
-  .local~setentry('ERROR', .monitor~new(.stderr))
-  .error~objectname = "The ERROR monitor"
-  .local~setentry('TRACEOUTPUT',.monitor~new(.error))
-  .traceoutput~objectname = "The TRACE OUTPUT monitor"
+do i = 1 to count
+    index = values[i]
+    -- if in the collection, remove it from the result.
+    -- otherwise, add to the result
+    if self~hasindex(index) then
+        new~remove(index)
+    else
+        new~put(index)
+end
 
-  .local~setentry('STDQUE',.RexxQueue~new('SESSION'))
+return new                             -- return the XOR collection
+
+nomethod:
+  raise syntax 93.948 array(1, "Collection") -- no, complain about it
+
+/*****************************************/
+/* INTERSECTION  method                  */
+/*****************************************/
+::METHOD intersection                  -- take the intersection of sets
+use strict arg other                   -- get the companion object
+
+signal on nomethod
+
+new = self~class~new                   -- use a new instance
+
+if other~isA(.Collection) then
+    values = other~allitems            -- get all of the items from the other collection
+else
+    values = other~makearray           -- ask for an array version of the source
+count = values~items
+
+do i = 1 to count
+    index = values[i]
+    -- if we have one of these, put into the result
+    -- NB:  Since this is a SET, there will only be one copy accumulated.
+    if self~hasindex(index) then
+         new~put(index)
+end
+
+return new                             -- return the difference collection
+
+nomethod:                              -- unknown method sent
+  raise syntax 93.948 array(1, "Collection")
+
+
+/*****************************************/
+/* UNION         method                  */
+/*****************************************/
+::METHOD union                         -- take the union of sets
+use strict arg other                   -- get the companion object
+
+signal on nomethod
+
+new = self~copy                        -- use a copy of this instance
+
+if other~isA(.Collection) then
+    values = other~allitems            -- get all of the items from the other collection
+else
+    values = other~makearray           -- ask for an array version of the source
+count = values~items
+
+do i = 1 to count
+    index = values[i]
+    -- only add if not already there
+    if \new~hasindex(index) then
+         new~put(index)
+end
+
+return new                             -- return the union collection
+
+nomethod:                              -- unknown method sent
+  raise syntax 93.948 array(1, "Collection")
+
+
+/*****************************************/
+/* SUBSET        method                  */
+/*****************************************/
+::METHOD subset                        -- do we have a subset?
+use strict arg other                   -- get the companion object
+
+signal on nomethod
+
+new = self~copy                        -- use a copy of this instance
+
+values = other~allitems                -- get all of the items from the other collection
+count = values~items
+
+do i = 1 to count
+    index = values[i]
+    -- subtract each item
+    new~remove(index)
+end
+
+return new~isempty                     -- subset of this is empty
+
+nomethod:                              -- unknown method sent
+  raise syntax 93.948 array(1, "Collection")
+
+
+/*****************************************/
+/* PUTALL        method                  */
+/*****************************************/
+::METHOD putall
+  use strict arg other                   -- get the companion object
+
+  signal on nomethod
+
+  if other~isA(.Collection) then
+      values = other~allitems            -- get all of the items from the other collection
+  else
+      values = other~makearray           -- ask for an array version of the source
+
+  count = values~items
+
+  do i = 1 to count
+      -- just put each item into the set
+      self~put(values[i])
+  end
+
+  return                                 -- no return value
+
+  nomethod:                              -- unknown method sent
+    raise syntax 93.948 array(1, "Collection")
+
+/*****************************************/
+/* HASITEM       method                  */
+/*****************************************/
+::method hasItem
+  -- the inherited hasItem is less efficient than
+  -- hasIndex.  Since the item and index must
+  -- be the same for Sets, map HASITEM to the
+  -- more efficient HASINDEX.
+  forward message('HASINDEX')
+
+
+/* *************************************** */
+/*    B A G                   C L A S S    */
+/* *************************************** */
+
+::CLASS 'BagMixin'
+
+/*****************************************/
+/* UNION         method                  */
+/*****************************************/
+::METHOD union
+use strict arg other                   -- get the companion object
+
+signal on nomethod
+
+new = self~copy                        -- work off of a copy
+if other~isA(.Collection) then
+    values = other~allitems            -- get all of the items from the other collection
+else
+    values = other~makearray           -- ask for an array version of the source
+count = values~items
+
+do i = 1 to count
+    index = values[i]
+    -- just add each item
+    new~put(index)
+end
+
+return new                             -- return the XOR collection
+
+nomethod:
+  raise syntax 93.948 array(1, "Collection") -- no, complain about it
+
+/*****************************************/
+/* XOR           method                  */
+/*****************************************/
+::METHOD xor
+use strict arg other                   -- get the companion object
+
+signal on nomethod
+
+new = self~copy                        -- copy ourselves
+catcher = self~class~new               -- and create an empty result
+
+if other~isA(.Collection) then
+    values = other~allitems            -- get all of the items from the other collection
+else
+    values = other~makearray           -- ask for an array version of the source
+count = values~items
+
+do i = 1 to count
+    index = values[i]
+    -- if the index is not in the reference, we
+    -- copy it to the catcher, otherwise we remove it from the reference
+    if new~hasindex(index) then
+        new~remove(index)
+    else
+        catcher~put(index)
+end
+
+new~putall(catcher)                    -- remerge the two collections
+return new
+
+nomethod:
+  raise syntax 93.948 array(1, "Collection") -- no, complain about it
+
+/*****************************************/
+/* INTERSECTION  method                  */
+/*****************************************/
+::METHOD intersection
+use strict arg other                   -- get the companion object
+
+signal on nomethod
+
+new = self~class~new                   -- start with a new collection
+object = self~copy                     -- copy the target collection
+
+if other~isA(.Collection) then
+    values = other~allitems            -- get all of the items from the other collection
+else
+    values = other~makearray           -- ask for an array version of the source
+count = values~items
+
+do i = 1 to count
+    index = values[i]
+    -- if the reference collection contains this index, then
+    -- add to the result and remove from the reference.
+    if object~hasindex(index) then do
+        new~put(index)
+        object~remove(index)
+    end
+end
+
+return new                             -- and return the new collection
+
+nomethod:
+  raise syntax 93.948 array(1, "Collection") -- no, complain about it
+
+/*****************************************/
+/* DIFFERENCE method                     */
+/*****************************************/
+::METHOD difference
+use strict arg other                   -- get the companion object
+
+signal on nomethod
+
+new = self~copy                        -- copy the target collection
+
+if other~isA(.Collection) then
+    values = other~allitems            -- get all of the items from the other collection
+else
+    values = other~makearray           -- ask for an array version of the source
+count = values~items
+
+do i = 1 to count
+    index = values[i]
+    new~remove(index)                  -- just subtract this from the copy
+end
+
+return new                             -- and return the new collection
+
+nomethod:
+  raise syntax 93.948 array(1, "Collection") -- no, complain about it
+
+/*****************************************/
+/* SUBSET        method                  */
+/*****************************************/
+::METHOD subset
+use strict arg other                   -- get the companion object
+
+signal on nomethod
+
+new = self~copy                        -- copy the target collection
+
+if other~isA(.Collection) then
+    values = other~allitems            -- get all of the items from the other collection
+else
+    values = other~makearray           -- ask for an array version of the source
+count = values~items
+
+do i = 1 to count
+    index = values[i]
+    new~remove(index)                  -- just subtract this from the copy
+end
+
+return new~isempty                     -- and test to see if we used everything up
+
+nomethod:
+  raise syntax 93.948 array(1, "Collection") -- no, complain about it
+
+
+/*****************************************/
+/* PUTALL        method                  */
+/*****************************************/
+::METHOD putall
+  use strict arg other                   -- get the companion object
+
+  signal on nomethod
+
+  if other~isA(.Collection) then
+      values = other~allitems            -- get all of the items from the other collection
+  else
+      values = other~makearray           -- ask for an array version of the source
+
+  count = values~items
+
+  do i = 1 to count
+      -- just put each item into the set
+      self~put(values[i])
+  end
+
+  return                                 -- no return value
+
+  nomethod:                              -- unknown method sent
+    raise syntax 93.948 array(1, "Collection")
 
 
 -- tagging classes for Collection class types
 -- methods defined for all collection classes, abstract methods must be implemented
 -- by subclasses
-::CLASS 'Collection' MIXINCLASS Object
+::CLASS 'Collection' MIXINCLASS Object Public
 ::METHOD 'at'           ABSTRACT
 ::METHOD '[]'           ABSTRACT
 ::METHOD 'put'          ABSTRACT
@@ -814,15 +937,46 @@ nomethod:
       -- an unknown method is an argument problem.  report it as such.
   raise syntax 93.948 array(1, "Collection")
 
-/** Serialization support **/
-::CLASS "Serializable" MIXINCLASS Object PUBLIC
-::METHOD writeObject ABSTRACT
-::METHOD readObject ABSTRACT
+-- the local server class is a hidden class that holds and
+-- processes information related to .local
+::CLASS "LocalServer"
+::METHOD init
+  expose input output error
 
+  -- this init method runs once and creates the standard input streams,
+  -- which are global across all of the interpreter instances
+  input = .stream~new('STDIN')~~command('open')
+  output = .stream~new('STDOUT')~~command('open nobuffer')
+  error = .stream~new('STDERR')~~command('open nobuffer')
+  self~initinstance
+
+-- initinstance is called for every new instance added to the
+-- interpreter environment.  This initializes the values in .local
+::METHOD initInstance
+  expose input output error
+
+  .local~objectname = "The Local Directory"  -- give the local environment a nicer descriptive name.
+
+  -- set up the system objects in the local environment
+  .local~setentry('STDIN', input)
+  .local~setentry('INPUT',.monitor~new(.stdin))
+  .input~objectname = "The INPUT monitor"
+  .local~setentry('DEBUGINPUT', .monitor~new(.input))
+  .debuginput~objectname = "The DEBUG INPUT monitor"
+  .local~setentry('STDOUT', output)
+  .local~setentry('OUTPUT',.monitor~new(.stdout))
+  .output~objectname = "The OUTPUT monitor"
+  .local~setentry('STDERR', error)
+  .local~setentry('ERROR', .monitor~new(.stderr))
+  .error~objectname = "The ERROR monitor"
+  .local~setentry('TRACEOUTPUT',.monitor~new(.error))
+  .traceoutput~objectname = "The TRACE OUTPUT monitor"
+
+  .local~setentry('STDQUE',.RexxQueue~new('SESSION'))
 
 
 -- methods defined for OrderedCollection classes
-::CLASS 'OrderedCollection' MIXINCLASS Collection
+::CLASS 'OrderedCollection' MIXINCLASS Collection Public
 -- abstract methods for ordered insertion/deletion
 ::method 'insert' ABSTRACT
 ::method 'delete' ABSTRACT
@@ -834,7 +988,6 @@ nomethod:
 ::method 'previous' ABSTRACT
 ::method 'firstItem' ABSTRACT
 ::method 'lastItem' ABSTRACT
-
 
 /*****************************************/
 /* APPENDALL     method                  */
@@ -1046,7 +1199,7 @@ nomethod:
 ::METHOD sortwith
   forward message('STABLESORTWITH') -- just use the stable variety
 
-::CLASS 'MapCollection' MIXINCLASS Collection
+::CLASS 'MapCollection' MIXINCLASS Collection Public
 
 /*****************************************/
 /* PUTALL        method                  */
@@ -1072,48 +1225,33 @@ nomethod:
   return self~allIndexes
 
 
-::CLASS 'SetCollection' MIXINCLASS Collection INHERIT Serializable
-::METHOD writeObject
-    use strict arg handler
-    handler~writeNumber(items)
-    do i over self
-        handler~writeObject(i)
-    end
-
-::METHOD readObject
-    use strict arg handler
-    count = handler~readNumber
-    do i = 1 to count
-        o = handler~readObject
-        self~put(o, o)
-    end
-
+::CLASS 'SetCollection' MIXINCLASS Collection Public
 
 -- sort comparison classes.
-::CLASS 'Comparable' MIXINCLASS Object
+::CLASS 'Comparable' MIXINCLASS Object Public
 ::METHOD compareTo ABSTRACT
 
-::CLASS 'Comparator' MIXINCLASS Object
+::CLASS 'Comparator' MIXINCLASS Object Public
 ::METHOD compare
 use strict arg left, right
 return left~compareTo(right)
 
-::CLASS 'DescendingComparator' MIXINCLASS Comparator
+::CLASS 'DescendingComparator' MIXINCLASS Comparator Public
 ::METHOD compare
 use strict arg left, right
 return -left~compareTo(right)
 
-::CLASS 'CaselessComparator' MIXINCLASS Comparator
+::CLASS 'CaselessComparator' MIXINCLASS Comparator Public
 ::METHOD compare
 use strict arg left, right
 return left~caselessCompareTo(right)
 
-::CLASS 'CaselessDescendingComparator' MIXINCLASS Comparator
+::CLASS 'CaselessDescendingComparator' MIXINCLASS Comparator Public
 ::METHOD compare
 use strict arg left, right
 return -left~caselessCompareTo(right)
 
-::CLASS 'ColumnComparator' MIXINCLASS Comparator
+::CLASS 'ColumnComparator' MIXINCLASS Comparator Public
 ::METHOD init
 expose start length
 use strict arg start, length
@@ -1124,7 +1262,7 @@ expose start length
 use strict arg left, right
 return left~compareTo(right, start, length)
 
-::CLASS 'InvertingComparator' MIXINCLASS Comparator
+::CLASS 'InvertingComparator' MIXINCLASS Comparator Public
 ::METHOD init
 expose comparator
 use strict arg comparator
@@ -1137,7 +1275,7 @@ return -comparator~compare(left, right)
 
 -- string sorting comparator to order items
 -- based on numeric comparison rules
-::CLASS 'NumericComparator' MIXINCLASS Comparator
+::CLASS 'NumericComparator' MIXINCLASS Comparator Public
 ::METHOD init
 expose precision
 use strict arg precision = (digits())
@@ -1155,7 +1293,7 @@ numeric digits precision
 -- value for an ordering comparison.
 return sign(left - right)
 
-::CLASS 'CaselessColumnComparator' MIXINCLASS Comparator
+::CLASS 'CaselessColumnComparator' MIXINCLASS Comparator Public
 ::METHOD init
 expose start length
 use strict arg start, length
@@ -1177,7 +1315,7 @@ return left~caselessCompareTo(right, start, length)
  /* are processed by the monitor unknown method.                           */
  /**************************************************************************/
 
-::CLASS 'Monitor'
+::CLASS 'Monitor' Public
 
 ::METHOD init
  /**************************************************************************/
@@ -1246,366 +1384,6 @@ return left~caselessCompareTo(right, start, length)
   forward to (destination~peek) message (msgname) arguments (arglist)
 
 
-/* *************************************** */
-/*    S E T                   C L A S S    */
-/* *************************************** */
-
-::CLASS 'Set' SUBCLASS table INHERIT setcollection
-/*****************************************/
-/* OF         method                     */
-/*****************************************/
-::METHOD of CLASS
-new = self~new                         /* create a new set                  */
-do i = 1 to arg()                      /* loop through all the arguments    */
-  if arg(i, 'O') then                  /* omitted argument?                 */
-    raise syntax 93.903 array (i)      /* raise an error                    */
-  new~put(arg(i))                      /* add this argument                 */
-end
-return new                             /* return new set                    */
-
-/*****************************************/
-/* XOR        method                     */
-/*****************************************/
-::METHOD xor                           -- take the exclusive or of a set
-use strict arg other                   -- get the companion object
-
-signal on nomethod
-
-new = self~copy                        -- work off of a copy
-if other~isA(.Collection) then
-    values = other~allitems            -- get all of the items from the other collection
-else
-    values = other~makearray           -- ask for an array version of the source
-count = values~items
-
-do i = 1 to count
-    index = values[i]
-    -- if in the collection, remove it from the result.
-    -- otherwise, add to the result
-    if self~hasindex(index) then
-        new~remove(index)
-    else
-        new~put(index)
-end
-
-return new                             -- return the XOR collection
-
-nomethod:
-  raise syntax 93.948 array(1, "Collection") -- no, complain about it
-
-/*****************************************/
-/* INTERSECTION  method                  */
-/*****************************************/
-::METHOD intersection                  -- take the intersection of sets
-use strict arg other                   -- get the companion object
-
-signal on nomethod
-
-new = self~class~new                   -- use a new instance
-
-if other~isA(.Collection) then
-    values = other~allitems            -- get all of the items from the other collection
-else
-    values = other~makearray           -- ask for an array version of the source
-count = values~items
-
-do i = 1 to count
-    index = values[i]
-    -- if we have one of these, put into the result
-    -- NB:  Since this is a SET, there will only be one copy accumulated.
-    if self~hasindex(index) then
-         new~put(index)
-end
-
-return new                             -- return the difference collection
-
-nomethod:                              -- unknown method sent
-  raise syntax 93.948 array(1, "Collection")
-
-
-/*****************************************/
-/* UNION         method                  */
-/*****************************************/
-::METHOD union                         -- take the union of sets
-use strict arg other                   -- get the companion object
-
-signal on nomethod
-
-new = self~copy                        -- use a copy of this instance
-
-if other~isA(.Collection) then
-    values = other~allitems            -- get all of the items from the other collection
-else
-    values = other~makearray           -- ask for an array version of the source
-count = values~items
-
-do i = 1 to count
-    index = values[i]
-    -- only add if not already there
-    if \new~hasindex(index) then
-         new~put(index)
-end
-
-return new                             -- return the union collection
-
-nomethod:                              -- unknown method sent
-  raise syntax 93.948 array(1, "Collection")
-
-
-/*****************************************/
-/* SUBSET        method                  */
-/*****************************************/
-::METHOD subset                        -- do we have a subset?
-use strict arg other                   -- get the companion object
-
-signal on nomethod
-
-new = self~copy                        -- use a copy of this instance
-
-values = other~allitems                -- get all of the items from the other collection
-count = values~items
-
-do i = 1 to count
-    index = values[i]
-    -- subtract each item
-    new~remove(index)
-end
-
-return new~isempty                     -- subset of this is empty
-
-nomethod:                              -- unknown method sent
-  raise syntax 93.948 array(1, "Collection")
-
-
-/*****************************************/
-/* PUTALL        method                  */
-/*****************************************/
-::METHOD putall
-  use strict arg other                   -- get the companion object
-
-  signal on nomethod
-
-  if other~isA(.Collection) then
-      values = other~allitems            -- get all of the items from the other collection
-  else
-      values = other~makearray           -- ask for an array version of the source
-
-  count = values~items
-
-  do i = 1 to count
-      -- just put each item into the set
-      self~put(values[i])
-  end
-
-  return                                 -- no return value
-
-  nomethod:                              -- unknown method sent
-    raise syntax 93.948 array(1, "Collection")
-
-/*****************************************/
-/* HASITEM       method                  */
-/*****************************************/
-::method hasItem
-  -- the inherited hasItem is less efficient than
-  -- hasIndex.  Since the item and index must
-  -- be the same for Sets, map HASITEM to the
-  -- more efficient HASINDEX.
-  forward message('HASINDEX')
-
-
-/* *************************************** */
-/*    B A G                   C L A S S    */
-/* *************************************** */
-
-::CLASS 'Bag' SUBCLASS relation INHERIT setcollection
-::METHOD of CLASS
-
-new = self~new                         /* create a new bag                  */
-do i = 1 to arg()                      /* loop through all the arguments    */
-  if arg(i, 'O') then                  /* omitted argument?                 */
-    raise syntax 93.903 array (i)      /* raise an error                    */
-  new~put(arg(i))                      /* add this argument                 */
-end
-return new                             /* return new bag                    */
-
-/*****************************************/
-/* UNION         method                  */
-/*****************************************/
-::METHOD union
-use strict arg other                   -- get the companion object
-
-signal on nomethod
-
-new = self~copy                        -- work off of a copy
-if other~isA(.Collection) then
-    values = other~allitems            -- get all of the items from the other collection
-else
-    values = other~makearray           -- ask for an array version of the source
-count = values~items
-
-do i = 1 to count
-    index = values[i]
-    -- just add each item
-    new~put(index)
-end
-
-return new                             -- return the XOR collection
-
-nomethod:
-  raise syntax 93.948 array(1, "Collection") -- no, complain about it
-
-/*****************************************/
-/* XOR           method                  */
-/*****************************************/
-::METHOD xor
-use strict arg other                   -- get the companion object
-
-signal on nomethod
-
-new = self~copy                        -- copy ourselves
-catcher = self~class~new               -- and create an empty result
-
-if other~isA(.Collection) then
-    values = other~allitems            -- get all of the items from the other collection
-else
-    values = other~makearray           -- ask for an array version of the source
-count = values~items
-
-do i = 1 to count
-    index = values[i]
-    -- if the index is not in the reference, we
-    -- copy it to the catcher, otherwise we remove it from the reference
-    if new~hasindex(index) then
-        new~remove(index)
-    else
-        catcher~put(index)
-end
-
-new~putall(catcher)                    -- remerge the two collections
-return new
-
-nomethod:
-  raise syntax 93.948 array(1, "Collection") -- no, complain about it
-
-/*****************************************/
-/* INTERSECTION  method                  */
-/*****************************************/
-::METHOD intersection
-use strict arg other                   -- get the companion object
-
-signal on nomethod
-
-new = self~class~new                   -- start with a new collection
-object = self~copy                     -- copy the target collection
-
-if other~isA(.Collection) then
-    values = other~allitems            -- get all of the items from the other collection
-else
-    values = other~makearray           -- ask for an array version of the source
-count = values~items
-
-do i = 1 to count
-    index = values[i]
-    -- if the reference collection contains this index, then
-    -- add to the result and remove from the reference.
-    if object~hasindex(index) then do
-        new~put(index)
-        object~remove(index)
-    end
-end
-
-return new                             -- and return the new collection
-
-nomethod:
-  raise syntax 93.948 array(1, "Collection") -- no, complain about it
-
-/*****************************************/
-/* DIFFERENCE method                     */
-/*****************************************/
-::METHOD difference
-use strict arg other                   -- get the companion object
-
-signal on nomethod
-
-new = self~copy                        -- copy the target collection
-
-if other~isA(.Collection) then
-    values = other~allitems            -- get all of the items from the other collection
-else
-    values = other~makearray           -- ask for an array version of the source
-count = values~items
-
-do i = 1 to count
-    index = values[i]
-    new~remove(index)                  -- just subtract this from the copy
-end
-
-return new                             -- and return the new collection
-
-nomethod:
-  raise syntax 93.948 array(1, "Collection") -- no, complain about it
-
-/*****************************************/
-/* SUBSET        method                  */
-/*****************************************/
-::METHOD subset
-use strict arg other                   -- get the companion object
-
-signal on nomethod
-
-new = self~copy                        -- copy the target collection
-
-if other~isA(.Collection) then
-    values = other~allitems            -- get all of the items from the other collection
-else
-    values = other~makearray           -- ask for an array version of the source
-count = values~items
-
-do i = 1 to count
-    index = values[i]
-    new~remove(index)                  -- just subtract this from the copy
-end
-
-return new~isempty                     -- and test to see if we used everything up
-
-nomethod:
-  raise syntax 93.948 array(1, "Collection") -- no, complain about it
-
-
-/*****************************************/
-/* PUTALL        method                  */
-/*****************************************/
-::METHOD putall
-  use strict arg other                   -- get the companion object
-
-  signal on nomethod
-
-  if other~isA(.Collection) then
-      values = other~allitems            -- get all of the items from the other collection
-  else
-      values = other~makearray           -- ask for an array version of the source
-
-  count = values~items
-
-  do i = 1 to count
-      -- just put each item into the set
-      self~put(values[i])
-  end
-
-  return                                 -- no return value
-
-  nomethod:                              -- unknown method sent
-    raise syntax 93.948 array(1, "Collection")
-
-/*****************************************/
-/* HASITEM       method                  */
-/*****************************************/
-::method hasItem
-  -- the inherited hasItem is less efficient than
-  -- hasIndex.  Since the item and index must
-  -- be the same for Sets, map HASITEM to the
-  -- more efficient HASINDEX.
-  forward message('HASINDEX')
 
 /* ******************************** */
 /*    A L A R M        C L A S S    */
@@ -1616,7 +1394,7 @@ nomethod:
  /* time. A pending alram request can also be cancelled.                   */
  /**************************************************************************/
 
-::CLASS 'Alarm' SUBCLASS object
+::CLASS 'Alarm' SUBCLASS object Public
 
 ::METHOD init
  /**************************************************************************/
@@ -2185,6 +1963,9 @@ Output:
      FORWARD class (super) array ()-- forward to superclass, remove possible argument
   end
 
+-- override for the makestring method
+::method makestring
+  return self~string
 
 ::method string               -- create a string representation, using the optional delimiter
   expose size
@@ -3326,7 +3107,6 @@ nomethod:
 --      are optional and default to zero.
 ::METHOD init
   expose timestamp
-
   numeric digits 20    -- need higher digits for time calculations
 
   select
@@ -3343,6 +3123,7 @@ nomethod:
           use strict arg days, hours, minutes, seconds, microseconds = 0
           timestamp = (((days * 24 * 3600) + (hours * 3600) + (minutes * 60) + seconds) * 1000000) + microseconds
   end
+
   -- this will validate the timestamp value
   timestamp = date('f', abs(timestamp), 'f') * sign(timestamp)
 
@@ -3790,64 +3571,6 @@ nomethod:
   if \obj~isa(class) then do
       raise syntax 88.914 array(name, class~id)
   end
-
-
-
-/* **************************************** */
-/*    F U N C T I O N S                     */
-/* **************************************** */
-
-::routine rxqueue
-  use arg keyword, queue_name
-  parse upper var keyword keyword
-  signal on syntax
-  if arg() > 2 then
-     raise syntax 40.004 array ('RXQUEUE', 2)
-
-  if substr(keyword,1,1) = 'G' then
-    if arg() > 1 then
-      raise syntax 40.004 array ('RXQUEUE', 1)
-    else
-      return .stdque~get
-
-  if substr(keyword,1,1) = 'S' then do
-    queue_name = !queueexit(queue_name)/* give the exit a pass     */
-    if symbol(queue_name) = 'BAD' then
-      raise syntax 40.026 array ('RXQUEUE', 2, queue_name)
-    return .stdque~set(queue_name)
-  end
-
-  if substr(keyword,1,1) = 'C' then do
-    if symbol(queue_name) = 'BAD' then
-      raise syntax 40.026 array ('RXQUEUE', 2, queue_name)
-    if (Arg(2,'o') = 1) then
-      return .RexxQueue~create
-    else
-      return .RexxQueue~create(queue_name)
-  end
-
-  if substr(keyword,1,1) = 'O' then do
-    if symbol(queue_name) = 'BAD' then
-      raise syntax 40.026 array ('RXQUEUE', 2, queue_name)
-    return .RexxQueue~open(queue_name)
-  end
-
-  if substr(keyword,1,1) = 'e' then do
-    if symbol(queue_name) = 'BAD' then
-      raise syntax 40.026 array ('RXQUEUE', 2, queue_name)
-    return .RexxQueue~exists(queue_name)
-  end
-
-  if substr(keyword,1,1) = 'D' then do
-    if symbol(queue_name) = 'BAD' then
-      raise syntax 40.026 array ('RXQUEUE', 2, queue_name)
-    return .RexxQueue~delete(queue_name)
-  end
-  raise syntax 40.904 array ('RXQUEUE', 1, 'CDGS', keyword)
-  return
-
-syntax: raise propagate
-
 
 
 -- A mixin class for easily adding comparison methods to a

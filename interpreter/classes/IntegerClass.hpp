@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -44,126 +44,123 @@
 #ifndef Included_RexxInteger
 #define Included_RexxInteger
 
-#include "NumberStringClass.hpp"
+#include "ClassClass.hpp"
 
-void integer_create (void);
-#define INTEGERCACHELOW  -10
-#define INTEGERCACHESIZE 100
-#define MAX_INTEGER_LENGTH 10
+void integer_create ();
 
 class RexxIntegerClass;
 
-class RexxInteger : public RexxObject {
+class RexxInteger : public RexxObject
+{
  public:
-  inline RexxInteger(RESTORETYPE restoreType) { ; };
-  inline RexxInteger(wholenumber_t intValue) { this->value = intValue; };
-  inline void *operator new(size_t size, void *ptr) {return ptr;};
-  void *operator new(size_t);
-  void live(size_t);
-  void liveGeneral(int reason);
-  void flatten(RexxEnvelope*);
-  virtual HashCode getHashValue();
+    inline RexxInteger(RESTORETYPE restoreType) { ; };
+    inline RexxInteger(wholenumber_t intValue) { value = intValue; };
 
-  bool         numberValue(wholenumber_t &result, size_t precision);
-  bool         numberValue(wholenumber_t &result);
-  bool         unsignedNumberValue(stringsize_t &result, size_t precision);
-  bool         unsignedNumberValue(stringsize_t &result);
-  bool         doubleValue(double &result);
-  RexxNumberString *numberString();
-  RexxInteger *integerValue(size_t);
-  RexxString  *makeString();
-  void         copyIntoTail(RexxCompoundTail *);
-  RexxInteger *hasMethod(RexxString *);
-  RexxString  *primitiveMakeString();
-  RexxString  *stringValue();
-  RexxArray   *makeArray();
-  bool         truthValue(int);
-  virtual bool logicalValue(logical_t &);
-  bool         isInstanceOf(RexxClass *);
-  RexxMethod   *instanceMethod(RexxString *);
-  RexxSupplier *instanceMethods(RexxClass *);
+    void *operator new(size_t);
 
-  bool        isEqual(RexxObject *);
-  wholenumber_t strictComp(RexxObject *);
-  wholenumber_t comp(RexxObject *other);
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(Envelope*);
+    virtual HashCode getHashValue();
 
-  RexxInteger *equal(RexxObject *);
-  RexxInteger *strictEqual(RexxObject *);
-  RexxInteger *notEqual(RexxObject *);
-  RexxInteger *strictNotEqual(RexxObject *);
-  RexxInteger *isGreaterThan(RexxObject *);
-  RexxInteger *isLessThan(RexxObject *);
-  RexxInteger *isGreaterOrEqual(RexxObject *);
-  RexxInteger *isLessOrEqual(RexxObject *);
-  RexxInteger *strictGreaterThan(RexxObject *);
-  RexxInteger *strictLessThan(RexxObject *);
-  RexxInteger *strictGreaterOrEqual(RexxObject *);
-  RexxInteger *strictLessOrEqual(RexxObject *);
-  RexxObject  *hashCode();
+    virtual bool numberValue(wholenumber_t &result, wholenumber_t precision);
+    virtual bool numberValue(wholenumber_t &result);
+    virtual bool unsignedNumberValue(size_t &result, wholenumber_t precision);
+    virtual bool unsignedNumberValue(size_t &result);
+    virtual bool doubleValue(double &result);
+    NumberString *numberString();
+    RexxInteger *integerValue(wholenumber_t);
+    RexxString  *makeString();
+    void         copyIntoTail(CompoundVariableTail *);
+    bool         hasMethod(RexxString *);
+    RexxString  *primitiveMakeString();
+    RexxString  *stringValue();
+    ArrayClass  *makeArray();
+    virtual bool truthValue(int);
+    virtual bool logicalValue(logical_t &);
+    bool         isInstanceOf(RexxClass *);
+    MethodClass   *instanceMethod(RexxString *);
+    SupplierClass *instanceMethods(RexxClass *);
 
-  RexxObject *unknown(RexxString *, RexxArray *);
-  RexxObject *plus(RexxInteger *);
-  RexxObject *minus(RexxInteger *);
-  RexxObject *multiply(RexxInteger *);
-  RexxObject *divide(RexxInteger *);
-  RexxObject *integerDivide(RexxInteger *);
-  RexxObject *remainder(RexxInteger *);
-  RexxObject *power(RexxObject *);
-  RexxObject *notOp();
-  RexxObject *operatorNot(RexxObject *);
-  RexxObject *andOp(RexxObject *);
-  RexxObject *orOp(RexxObject *);
-  RexxObject *xorOp(RexxObject *);
+    bool        isEqual(RexxInternalObject *);
+    wholenumber_t strictComp(RexxObject *);
+    wholenumber_t comp(RexxObject *other);
 
-  RexxObject *abs();
-  RexxObject *sign();
-  RexxObject *Max(RexxObject **, size_t);
-  RexxObject *Min(RexxObject **, size_t);
-  RexxObject *trunc(RexxObject *);
-  RexxObject *floor();
-  RexxObject *ceiling();
-  RexxObject *round();
-  RexxObject *format(RexxObject *, RexxObject *, RexxObject *, RexxObject *);
-  RexxObject *d2c(RexxObject *);
-  RexxObject *d2x(RexxObject *);
-  RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
-  RexxObject *getValue(RexxActivation *);
-  RexxObject *getValue(RexxVariableDictionary *);
-  RexxObject *getRealValue(RexxActivation *);
-  RexxObject *getRealValue(RexxVariableDictionary *);
-  RexxString *concat(RexxString *);
-  RexxString *concatBlank(RexxString *);
-  void        setString(RexxString *string);
-  RexxClass  *classObject();
-                                       /* numberstring operator forwarders  */
-  koper (integer_operator_not)
+    RexxObject  *equal(RexxObject *);
+    RexxObject  *strictEqual(RexxObject *);
+    RexxObject  *notEqual(RexxObject *);
+    RexxObject  *strictNotEqual(RexxObject *);
+    RexxObject  *isGreaterThan(RexxObject *);
+    RexxObject  *isLessThan(RexxObject *);
+    RexxObject  *isGreaterOrEqual(RexxObject *);
+    RexxObject  *isLessOrEqual(RexxObject *);
+    RexxObject  *strictGreaterThan(RexxObject *);
+    RexxObject  *strictLessThan(RexxObject *);
+    RexxObject  *strictGreaterOrEqual(RexxObject *);
+    RexxObject  *strictLessOrEqual(RexxObject *);
+    RexxObject  *hashCode();
 
-  inline wholenumber_t getValue() {return this->value;}
-  inline wholenumber_t wholeNumber() {return this->value;}
-  inline stringsize_t stringSize() {return (stringsize_t)this->value;}
-  inline wholenumber_t incrementValue() {return ++this->value;}
-  inline wholenumber_t decrementValue() {return --this->value;}
-  inline RexxString *getStringrep() {return this->stringrep;}
+    RexxObject *unknown(RexxString *, ArrayClass *);
+    RexxObject *plus(RexxInteger *);
+    RexxObject *minus(RexxInteger *);
+    RexxObject *multiply(RexxInteger *);
+    RexxObject *divide(RexxInteger *);
+    RexxObject *integerDivide(RexxInteger *);
+    RexxObject *remainder(RexxInteger *);
+    RexxObject *power(RexxObject *);
+    RexxObject *notOp();
+    RexxObject *operatorNot(RexxObject *);
+    RexxObject *andOp(RexxObject *);
+    RexxObject *orOp(RexxObject *);
+    RexxObject *xorOp(RexxObject *);
 
-  static void createInstance();
-  static PCPPM operatorMethods[];
-  static RexxIntegerClass *classInstance;
+    RexxObject *abs();
+    RexxObject *sign();
+    RexxObject *Max(RexxObject **, size_t);
+    RexxObject *Min(RexxObject **, size_t);
+    RexxObject *trunc(RexxObject *);
+    RexxObject *floor();
+    RexxObject *ceiling();
+    RexxObject *round();
+    RexxObject *format(RexxObject *, RexxObject *, RexxObject *, RexxObject *);
+    RexxObject *d2c(RexxObject *);
+    RexxObject *d2x(RexxObject *);
+    RexxObject *evaluate(RexxActivation *, ExpressionStack *);
+    RexxObject *getValue(RexxActivation *);
+    RexxObject *getValue(VariableDictionary *);
+    RexxObject *getRealValue(RexxActivation *);
+    RexxObject *getRealValue(VariableDictionary *);
+    RexxString *concat(RexxString *);
+    RexxString *concatBlank(RexxString *);
+    void        setString(RexxString *string);
+    RexxClass  *classObject();
+                                         /* numberstring operator forwarders  */
+    koper (integer_operator_not)
 
-  static RexxInteger *falseObject;
-  static RexxInteger *trueObject;
-  static RexxInteger *nullPointer;
+    inline wholenumber_t getValue() {return value;}
+    inline wholenumber_t wholeNumber() {return value;}
+    inline size_t stringSize() {return (size_t)value;}
+    inline RexxString *getStringrep() {return stringrep;}
 
-  static RexxInteger *integerZero;
-  static RexxInteger *integerOne;
-  static RexxInteger *integerTwo;
-  static RexxInteger *integerThree;
-  static RexxInteger *integerFour;
-  static RexxInteger *integerFive;
-  static RexxInteger *integerSix;
-  static RexxInteger *integerSeven;
-  static RexxInteger *integerEight;
-  static RexxInteger *integerNine;
-  static RexxInteger *integerMinusOne;
+    static void createInstance();
+    static PCPPM operatorMethods[];
+    static RexxIntegerClass *classInstance;
+
+    static RexxInteger *falseObject;
+    static RexxInteger *trueObject;
+    static RexxInteger *nullPointer;
+
+    static RexxInteger *integerZero;
+    static RexxInteger *integerOne;
+    static RexxInteger *integerTwo;
+    static RexxInteger *integerThree;
+    static RexxInteger *integerFour;
+    static RexxInteger *integerFive;
+    static RexxInteger *integerSix;
+    static RexxInteger *integerSeven;
+    static RexxInteger *integerEight;
+    static RexxInteger *integerNine;
+    static RexxInteger *integerMinusOne;
 
 protected:
 
@@ -173,25 +170,35 @@ protected:
     static wholenumber_t validMaxWhole[];  // table of maximum values per digits setting
 };
 
-class RexxIntegerClass : public RexxClass {
+class RexxIntegerClass : public RexxClass
+{
  public:
-  RexxIntegerClass(RESTORETYPE restoreType) { ; };
-  void *operator new(size_t size, void *ptr) {return ptr;};
-  void *operator new (size_t);
-  void *operator new(size_t size, size_t size1, const char *className, RexxBehaviour *classBehave, RexxBehaviour *instance) { return new (size, className, classBehave, instance) RexxClass; }
-  inline void operator delete(void *, void *ptr) { }
-  inline void operator delete (void *) { }
-  inline void operator delete(void *, size_t, const char *, RexxBehaviour *, RexxBehaviour *) { }
+    RexxIntegerClass(RESTORETYPE restoreType) { ; };
+    inline RexxIntegerClass(const char *id , RexxBehaviour *classBehaviour, RexxBehaviour *instanceBehaviour) :
+        RexxClass(id, classBehaviour, instanceBehaviour) { }
 
-  RexxIntegerClass();
-  inline RexxInteger *newCache(wholenumber_t value) {if (value >= INTEGERCACHELOW && value < INTEGERCACHESIZE)
-                                       return this->integercache[value - INTEGERCACHELOW];
-                                     else
-                                       return new RexxInteger (value); };
-  void live(size_t);
-  void liveGeneral(int reason);
-                                     /* array of fast aloocation integers 0-99      */
-  RexxInteger *integercache[INTEGERCACHESIZE - INTEGERCACHELOW];
+    static const int IntegerCacheLow = -10;
+    static const int IntegerCacheSize = 100;
+
+    inline RexxInteger *newCache(wholenumber_t value)
+    {
+        if (value >= IntegerCacheLow && value < IntegerCacheSize)
+        {
+            return integercache[value - IntegerCacheLow];
+        }
+        else
+        {
+            return new RexxInteger (value);
+        }
+    }
+
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+
+    void initCache();
+
+    // array of fast aloocation integers -10 to 90
+    RexxInteger *integercache[IntegerCacheSize - IntegerCacheLow];
 };
 
 

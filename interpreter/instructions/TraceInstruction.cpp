@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -41,107 +41,144 @@
 /* Primitive Trace Parse Class                                                */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "RexxActivation.hpp"
 #include "TraceInstruction.hpp"
-#include "SourceFile.hpp"
+#include "LanguageParser.hpp"
+#include "MethodArguments.hpp"
 
 
 /**
  * Initialize a Trace instruction.
  *
- * @param _expression
- *                   A potential expression to evaluate.
- * @param trace      The new trace setting (can be zero if numeric or dynamic form).
- * @param flags      The translated trace flags for setting-based forms.
- * @param debug_skip A potential debug_skip value.
+ * @param s      The new trace settings.
  */
-RexxInstructionTrace::RexxInstructionTrace(RexxObject *_expression, size_t trace, size_t flags, wholenumber_t debug_skip )
+RexxInstructionTrace::RexxInstructionTrace(TraceSetting s)
 {
-                                       /* process the expression            */
-   OrefSet(this, this->expression, _expression);
-   this->debugskip = debug_skip;       /* copy the skip value               */
-   traceSetting = trace;               /* and the trace setting             */
-   traceFlags = flags;
+    settings = s;
+    skip = false;
 }
 
+
+/**
+ * Initialize a Trace Value instruction.
+ *
+ * @param e      The value expression.
+ */
+RexxInstructionTrace::RexxInstructionTrace(RexxObject *e)
+{
+    expression = e;
+    skip = false;
+}
+
+
+/**
+ * Initialize a Trace suppress instruction.
+ *
+ * @param e      The value expression.
+ */
+RexxInstructionTrace::RexxInstructionTrace(wholenumber_t s)
+{
+    debugSkip = s;
+    skip = true;
+}
+
+
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
 void RexxInstructionTrace::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
-  memory_mark(this->nextInstruction);  /* must be first one marked          */
-  memory_mark(this->expression);
+    // this must be the first object marked
+    memory_mark(nextInstruction);
+    memory_mark(expression);
 }
 
-void RexxInstructionTrace::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
+void RexxInstructionTrace::liveGeneral(MarkReason reason)
 {
-                                       /* must be first one marked          */
-  memory_mark_general(this->nextInstruction);
-  memory_mark_general(this->expression);
+    // this must be the first object marked
+    memory_mark_general(nextInstruction);
+    memory_mark_general(expression);
 }
 
-void RexxInstructionTrace::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
+void RexxInstructionTrace::flatten(Envelope *envelope)
 {
-  setUpFlatten(RexxInstructionTrace)
+    setUpFlatten(RexxInstructionTrace)
 
-  flatten_reference(newThis->nextInstruction, envelope);
-  flatten_reference(newThis->expression, envelope);
+    flattenRef(nextInstruction);
+    flattenRef(expression);
 
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
-void RexxInstructionTrace::execute(
-    RexxActivation      *context,      /* current activation context        */
-    RexxExpressionStack *stack)        /* evaluation stack                  */
-/******************************************************************************/
-/* Function:  Execute a REXX TRACE instruction                                */
-/******************************************************************************/
+/**
+ * Execute a TRACE instruction
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ */
+void RexxInstructionTrace::execute(RexxActivation *context, ExpressionStack *stack)
 {
-    RexxObject  *result;                 /* expression result                 */
-    RexxString  *value;                  /* string version of expression      */
+    // trace if needed.
+    context->traceInstruction(this);
 
-    context->traceInstruction(this);     /* trace if necessary                */
-    // is this a debug skip request (the setting value is zero in that case)
-    if ((traceSetting&TRACE_SETTING_MASK) == 0)
+    // if this is the debug skip form, turn on the trace suppression
+    if (skip)
     {
-                                         /* turn on the skip mode             */
-        context->debugSkip(this->debugskip, (traceSetting&DEBUG_NOTRACE) != 0);
+        // turn on the skip mode in the context.  A negative value also suppresses
+        // the tracing.
+        context->debugSkip(debugSkip);
     }
-    /* non-dynamic form?                 */
-    else if (this->expression == OREF_NULL)
+    // non-dynamic form?
+    else if (expression == OREF_NULL)
     {
-        if (!context->inDebug())           /* not in debug mode?                */
+        // if not in debug mode, we just do the setting.  The TRACE instruction
+        // is ignored in debug mode, although we do trace everything
+        if (!context->inDebug())
         {
-                                           /* just change the setting           */
-            context->setTrace(traceSetting, traceFlags);
+            context->setTrace(settings);
         }
         else
         {
-            context->pauseInstruction();     /* do debug pause if necessary       */
+            // we're in debug, so do the pause
+            context->pauseInstruction();
         }
     }
-    else                               /* need to evaluate an expression    */
+    // dynamic form, requiring an expression evaluation.
+    else
     {
-        /* get the expression value          */
-        result = this->expression->evaluate(context, stack);
-        value = REQUEST_STRING(result);    /* force to string form              */
-        context->traceResult(result);      /* trace if necessary                */
-        if (!context->inDebug())           /* not in debug mode?                */
+        // evaluate, and get as a string value
+        RexxObject *result = expression->evaluate(context, stack);
+        RexxString *value = result->requestString();
+        // Even trace gets traced :-)
+        context->traceResult(result);
+        // again, we don't change anything if we're already in debug mode.
+        if (!context->inDebug())
         {
-                                           /* now change the setting            */
             context->setTrace(value);
         }
         else
         {
-            context->pauseInstruction();     /* do debug pause if necessary       */
+            // in debug mode means we do need to pause.
+            context->pauseInstruction();
         }
     }
 }

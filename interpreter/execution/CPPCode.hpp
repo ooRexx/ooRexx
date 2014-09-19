@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -42,6 +42,9 @@
 #include "MethodClass.hpp"
 
 
+// pass arguments as pointer/count pair
+const size_t A_COUNT   = 127;
+
 /**
  * Class for a method-wrappered CPP internal method.
  */
@@ -49,21 +52,21 @@ class CPPCode : public BaseCode
 {
 public:
     void *operator new(size_t);
-    inline void *operator new(size_t size, void *ptr) { return ptr; };
     inline void operator delete(void *) { }
-    inline void operator delete(void *, void *) { }
+
     CPPCode(size_t, PCPPM, size_t);
     inline CPPCode(RESTORETYPE restoreType) { ; };
-    void liveGeneral(int reason);
-    RexxObject *unflatten(RexxEnvelope *envelope);
 
-    void run(RexxActivity *, RexxMethod *, RexxObject *, RexxString *, RexxObject **, size_t, ProtectedObject &);
+    virtual void liveGeneral(MarkReason reason);
 
-    static CPPCode *resolveExportedMethod(const char *, PCPPM targetMethod, size_t argcount);
+    virtual void run(Activity *, MethodClass *, RexxObject *, RexxString *, RexxObject **, size_t, ProtectedObject &);
+
+    static CPPCode *resolveExportedMethod(const char *name, PCPPM targetMethod, size_t argcount, const char* entryPointName);
     // The table of exported methods.
     static PCPPM exportedMethods[];
 
 protected:
+
     uint16_t   methodIndex;           // kernel method number
     uint16_t   argumentCount;         // argument count
     PCPPM      cppEntry;              // C++ Method entry point.
@@ -77,19 +80,19 @@ class AttributeGetterCode : public BaseCode
 {
 public:
     void *operator new(size_t);
-    inline void *operator new(size_t size, void *ptr) { return ptr; };
     inline void operator delete(void *) { }
-    inline void operator delete(void *, void *) { }
+
     inline AttributeGetterCode(RexxVariableBase *a) { attribute = a; }
     inline AttributeGetterCode(RESTORETYPE restoreType) { ; };
-    void live(size_t);
-    void liveGeneral(int reason);
-    void flatten(RexxEnvelope*);
 
-    void run(RexxActivity *, RexxMethod *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(Envelope*);
+
+    virtual void run(Activity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
 
 protected:
-    RexxVariableBase *attribute;      /* method attribute info             */
+    RexxVariableBase *attribute;      // method attribute info
 };
 
 
@@ -100,13 +103,12 @@ class AttributeSetterCode : public AttributeGetterCode
 {
 public:
     void *operator new(size_t);
-    inline void *operator new(size_t size, void *ptr) { return ptr; };
     inline void operator delete(void *) { }
-    inline void operator delete(void *, void *) { }
+
     inline AttributeSetterCode(RexxVariableBase *a) : AttributeGetterCode(a) { }
     inline AttributeSetterCode(RESTORETYPE restoreType) : AttributeGetterCode(restoreType) { }
 
-    void run(RexxActivity *, RexxMethod *, RexxObject *, RexxString *,  RexxObject **, size_t,  ProtectedObject &);
+    virtual void run(Activity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t,  ProtectedObject &);
 };
 
 
@@ -117,16 +119,16 @@ class ConstantGetterCode : public BaseCode
 {
 public:
     void *operator new(size_t);
-    inline void *operator new(size_t size, void *ptr) { return ptr; };
     inline void operator delete(void *) { }
-    inline void operator delete(void *, void *) { }
+
     inline ConstantGetterCode(RexxObject * v) { constantValue = v; }
     inline ConstantGetterCode(RESTORETYPE restoreType) { }
-    void live(size_t);
-    void liveGeneral(int reason);
-    void flatten(RexxEnvelope*);
 
-    void run(RexxActivity *, RexxMethod *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(Envelope*);
+
+    void run(Activity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
 
 protected:
     RexxObject *constantValue;        // the returned constant value
@@ -140,13 +142,12 @@ class AbstractCode : public BaseCode
 {
 public:
     void *operator new(size_t);
-    inline void *operator new(size_t size, void *ptr) { return ptr; };
     inline void operator delete(void *) { }
-    inline void operator delete(void *, void *) { }
+
     inline AbstractCode() { }
     inline AbstractCode(RESTORETYPE restoreType) { }
 
-    void run(RexxActivity *, RexxMethod *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
+    virtual void run(Activity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
 };
 
 #endif

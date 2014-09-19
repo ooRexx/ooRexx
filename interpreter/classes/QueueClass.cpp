@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                               QueueClass.c     */
+/* REXX Kernel                                               QueueClass.cpp   */
 /*                                                                            */
 /* Primitive Queue Class                                                      */
 /*                                                                            */
@@ -47,623 +47,257 @@
 #include "SupplierClass.hpp"
 #include "ActivityManager.hpp"
 #include "ProtectedObject.hpp"
+#include "MethodArguments.hpp"
 
 // singleton class instance
-RexxClass *RexxQueue::classInstance = OREF_NULL;
+RexxClass *QueueClass::classInstance = OREF_NULL;
 
 
 /**
  * Create initial class object at bootstrap time.
  */
-void RexxQueue::createInstance()
+void QueueClass::createInstance()
 {
     CLASS_CREATE(Queue, "Queue", RexxClass);
 }
 
 
-RexxObject *RexxQueue::pullRexx()
-/******************************************************************************/
-/* Function:  Pull an item off of the stack, returning .nil if no items       */
-/*            are available                                                   */
-/******************************************************************************/
-{
-    RexxObject *item = this->pop();                  /* remove the first item             */
-    if (item == OREF_NULL)               /* nothing there?                    */
-    {
-        item = TheNilObject;               /* use .nil instead                  */
-    }
-    return item;                         /* return the pulled item            */
-}
-
-RexxObject *RexxQueue::pushRexx(RexxObject *item)
-
-/******************************************************************************/
-/* Function:  Push an item onto the queue                                     */
-/******************************************************************************/
-{
-
-  requiredArgument(item, ARG_ONE);             /* make sure we have an argument     */
-  this->push(item);                    /* push onto the queue               */
-  return OREF_NULL;                    /* return nothing                    */
-}
-
-
-
 /**
- * Append an item after the last item in the list.
+ * Create an instance of the Queue class.
  *
- * @param value  The value to append.
+ * @param size   The base size of the object.
  *
- * @return The index of the appended item.
+ * @return An initialized queue object.
  */
-RexxObject *RexxQueue::append(RexxObject *item)
+void *QueueClass::operator new(size_t size, size_t capacity, size_t maxSize)
 {
-
-  requiredArgument(item, ARG_ONE);             /* make sure we have an argument     */
-  this->queue(item);                   /* push onto the queue               */
-  // the insertion index is the position.
-  return new_integer(this->count);
-}
-
-
-RexxObject *RexxQueue::queueRexx(RexxObject *item)
-/******************************************************************************/
-/* Function:  Push an item onto the queue                                     */
-/******************************************************************************/
-{
-  requiredArgument(item, ARG_ONE);             /* make sure we have an argument     */
-                                       /* add to the end of the queue       */
-  this->queue(item);
-  return OREF_NULL;                    /* return nothing                    */
-}
-
-
-LISTENTRY *RexxQueue::locateEntry(RexxObject *_index, RexxObject *position)
-/******************************************************************************/
-/* Function:  Resolve a queue index argument to a list index                  */
-/******************************************************************************/
-{
-    // we must have an index
-    if (_index == OREF_NULL)
-    {
-        reportException(Error_Incorrect_method_noarg, position);
-    }
-
-    // and it must be a valid whole number
-    RexxInteger *integerIndex = (RexxInteger *)REQUEST_INTEGER(_index);
-    if (integerIndex == TheNilObject)
-    {
-        reportException(Error_Incorrect_method_queue_index, _index);
-    }
-    // and positive
-    wholenumber_t item_index = integerIndex->wholeNumber();
-    if (item_index < 1)
-    {
-        reportException(Error_Incorrect_method_queue_index, _index);
-    }
-
-    // we need to iterate through the entries to locate this
-    size_t listIndex = this->first;
-    while (listIndex != LIST_END)
-    {
-        // have we reached the entry?  return the item
-        item_index--;
-        if (item_index == 0)
-        {
-            return ENTRY_POINTER(listIndex);
-        }
-        // step to the next entry
-        listIndex = ENTRY_POINTER(listIndex)->next;
-    }
-    return NULL;          // this queue item not found
-}
-
-
-RexxObject *RexxQueue::put(
-    RexxObject *_value,                 /* value to add                      */
-    RexxObject *_index)                 /* target index                      */
-/******************************************************************************/
-/* Function:  Replace the value of an item already in the queue.              */
-/******************************************************************************/
-{
-    requiredArgument(_value, ARG_ONE);           /* must have a value also            */
-                                         /* locate this entry                 */
-    LISTENTRY *list_index = this->locateEntry(_index, IntegerTwo);
-    if (list_index == NULL)              /* not a valid index?                */
-    {
-        /* raise an error                    */
-        reportException(Error_Incorrect_method_queue_index, _index);
-    }
-    OrefSet(this->table, list_index->value, _value);
-    return OREF_NULL;                    /* return nothing at all             */
-}
-
-RexxObject *RexxQueue::at(RexxObject *_index)
-                                                                                                                    /* queue index item                  */
-/******************************************************************************/
-/* Function:  Retrieve the value for a given queue index                      */
-/******************************************************************************/
-{
-    /* locate this entry                 */
-    LISTENTRY *list_index = this->locateEntry(_index, IntegerOne);
-    if (list_index == NULL)              /* not a valid index?                */
-    {
-        return TheNilObject;               /* doesn't exist, return .NIL        */
-    }
-    RexxObject *result = list_index->value;  /* get the list entry                */
-    if (result == OREF_NULL)             /* not there?                        */
-    {
-        result = TheNilObject;             /* just return NIL                   */
-    }
-    return(RexxObject *)result;         /* return this item                  */
+    // we're really allocating an array item
+    return (void *)ArrayClass::allocateNewObject(size, capacity, maxSize, T_Queue);
 }
 
 
 /**
- * Insert an item into the queue at a specific index position.
+ * Process and validate a queue index.  This overrides the base
+ * array class validation to disable the multi-dimensional
+ * support.  If the index is out of bounds in any dimension it
+ * will either return false or raise an error, depending on the
+ * bounds checking parameter.
  *
- * @param value  The value to insert.
- * @param index  The index.  This can be omitted, which inserts at the end, .nil
- *               which inserts at the beginning, or a valid existing index.
+ * @param index      The array of objects representing the index.
+ * @param indexCount The count of index items.
+ * @param argPosition  The argument position (used for error
+ *               reporting)
+ * @param boundsError Flags indicating how bounds errors should
+ *                   be handled.
+ * @param position   The returned flattened index pointing to the actual
+ *                   item in the array.
  *
- * @return The inserted object's index.
+ * @return true if this was a valid index (within bounds) based
+ *         on the bounds checking flags.
  */
-RexxObject *RexxQueue::insert(RexxObject *_value, RexxObject *_index)
+bool QueueClass::validateIndex(RexxObject **index, size_t indexCount,
+    size_t argPosition, size_t boundsError, size_t &position)
 {
-    LISTENTRY *element;                  /* list element                      */
-    LISTENTRY *new_element;              /* new insertion element             */
-    size_t     new_index;                /* index of new inserted item        */
-
-    requiredArgument(_value, ARG_ONE);           /* must have a value to insert       */
-
-                                         /* make sure we have room to insert  */
-    new_index = this->getFree();
-    /* point to the actual element       */
-    new_element = ENTRY_POINTER(new_index);
-    if (_index == TheNilObject)          /* inserting at the front?           */
-    {
-        element = NULL;                    /* flag this as new                  */
-    }
-    else if (_index == OREF_NULL)
-    {      /* inserting at the end?             */
-        if (this->last == LIST_END)        /* currently empty?                  */
-        {
-            element = NULL;                  /* just use the front insert code    */
-        }
-        else                               /* insert after the last element     */
-        {
-            element = ENTRY_POINTER(this->last);
-        }
-    }
-    else
-    {
-        /* locate this entry                 */
-        element = this->locateEntry(_index, IntegerTwo);
-        if (element == NULL)               /* index doesn't exist?              */
-        {
-            /* raise an error                    */
-            reportException(Error_Incorrect_method_queue_index, _index);
-        }
-    }
-    this->count++;                       /* increase our count                */
-                                         /* set the value                     */
-    OrefSet(this->table, new_element->value, _value);
-    if (element == NULL)
-    {               /* adding at the front               */
-        if (this->last == LIST_END)
-        {      /* first element added?              */
-            this->first = new_index;         /* set this as the first             */
-            this->last = new_index;          /* and the last                      */
-            new_element->next = LIST_END;    /* this is the last element          */
-            new_element->previous = LIST_END;/* in both directions                */
-        }
-        else
-        {                             /* adding at the front               */
-
-            new_element->next = this->first; /* previous is current first         */
-            new_element->previous = LIST_END;/* nothing before this               */
-                                             /* point to the first element        */
-            element = ENTRY_POINTER(this->first);
-            element->previous = new_index;   /* point it at the new entry         */
-            this->first = new_index;         /* this is the new first element     */
-        }
-    }
-    else
-    {                               /* have a real insertion point       */
-                                    /* set the next pointer              */
-        new_element->previous = ENTRY_INDEX(element);
-
-        if (element->next == LIST_END)     /* inserting at the end?             */
-        {
-            this->last = new_index;          /* new first element                 */
-        }
-        else                               /* fudge the next element            */
-        {
-            ENTRY_POINTER(element->next)->previous = new_index;
-        }
-        new_element->next = element->next; /* insert after this element         */
-        element->next = new_index;         /* new following one                 */
-                                           /* point at the insertion point      */
-        new_element->previous = ENTRY_INDEX(element);
-    }
-    /* return this index item            */
-    return new_integer(entryToIndex(new_index));
-}
-
-
-RexxObject *RexxQueue::remove(RexxObject *_index)
-/******************************************************************************/
-/* Function:  Remove a given queue item                                       */
-/******************************************************************************/
-{
-                                       /* locate this entry                 */
-  LISTENTRY *list_index = this->locateEntry(_index, IntegerOne);
-                                       /* remove from the list              */
-  return this->primitiveRemove(list_index);
-}
-
-RexxObject *RexxQueue::hasindex(RexxObject *_index)
-                                                                                                                    /* queue index item                  */
-/******************************************************************************/
-/* Function:  Return an index existence flag                                  */
-/******************************************************************************/
-{
-                                       /* locate this entry                 */
-  LISTENTRY *list_index = this->locateEntry(_index, IntegerOne);
-                                       /* return an existence flag          */
-  return (( list_index != NULL) ? TheTrueObject : TheFalseObject);
-}
-
-RexxObject *RexxQueue::peek()
-/******************************************************************************/
-/* Function:  Return the first element of the queue without removing it       */
-/******************************************************************************/
-{
-    return firstItem();
-}
-
-
-RexxObject *RexxQueue::supplier()
-/******************************************************************************/
-/* Function:  Create a supplier for a queue object                            */
-/******************************************************************************/
-{
-    RexxArray *values = this->makeArray();          /* convert into an array             */
-    /* turn this into a supplier         */
-    return new_supplier(values, OREF_NULL);
+    return validateSingleDimensionIndex(index, indexCount, argPosition, boundsError, position);
 }
 
 
 /**
- * Retrieve an array containing all index values for the queue.
- * For queue classes, the indices are the integers 1 - items(), so
- * this is generally a pretty silly way to access this.
+ * Validate the insertion index for a queue collection.  For
+ * queues, the position must be location of an existing item
+ * within the bounds of the queue, unlike an array which
+ * can insert at empty slots or beyond the existing bounds.
  *
- * @return An array containing all of the queue indices.
+ * @param position The insertion index position.
  */
-RexxArray *RexxQueue::allIndexes()
+void QueueClass::checkInsertIndex(size_t position)
 {
-    // create an array and protect it.
-    size_t arraysize = this->items();
-
-    RexxArray *result = new_array(arraysize);
-    ProtectedObject p(result);
-
-    // now just make an array containing each index value.
-    for (size_t i = 1; i <= arraysize; i++)
+    if (position > lastItem)
     {
-        result->put(new_integer(i), i);
-    }
-    return result;
-}
-
-
-/**
- * Return the index of the first item with a matching value
- * in the list.  Returns .nil if the object is not found.
- *
- * @param target The target object.
- *
- * @return The index of the item, or .nil.
- */
-RexxObject *RexxQueue::index(RexxObject *target)
-{
-    // we require the index to be there.
-    requiredArgument(target, ARG_ONE);
-
-    // ok, now run the list looking for the target item
-    size_t nextEntry = this->first;
-    for (size_t i = 1; i <= this->count; i++)
-    {
-        LISTENTRY *element = ENTRY_POINTER(nextEntry);
-        // if we got a match, return the item
-        if (target->equalValue(element->value))
-        {
-            // queue indices are positional.
-            return new_integer(i);
-        }
-        nextEntry = element->next;
-    }
-    // no match
-    return TheNilObject;
-}
-
-
-RexxObject *RexxQueue::firstRexx(void)
-/******************************************************************************/
-/* Function:  Return index of the first list item                             */
-/******************************************************************************/
-{
-    if (this->first == LIST_END)
-    {
-        return TheNilObject;     // empty queue is the .nil object
-    }
-
-    else
-    {
-        return (RexxObject *)IntegerOne;   // first index is always one
-    }
-}
-
-
-RexxObject *RexxQueue::lastRexx(void)
-/******************************************************************************/
-/* Function:  Return index of the last list item                              */
-/******************************************************************************/
-{
-    if (this->last == LIST_END)
-    {
-        return TheNilObject;        // no last item is an empty queue...return .nil
-
-    }
-    else
-    {
-                                    // return the item count as the final index
-        return (RexxObject *)new_integer(this->items());
-    }
-}
-
-RexxObject *RexxQueue::next(
-     RexxObject *_index)               /* index of the target item          */
-/******************************************************************************/
-/* Function:  Return the next item after the given indexed item               */
-/******************************************************************************/
-{
-    LISTENTRY *element;                /* current working entry             */
-                                       /* locate this entry                 */
-    element = this->locateEntry(_index, (RexxObject *)IntegerOne);
-    if (element == NULL)                 /* not a valid index?                */
-    {
-        reportException(Error_Incorrect_method_queue_index, _index);
-    }
-
-    if (element->next == LIST_END)     /* no next item?                     */
-    {
-        return TheNilObject;           /* just return .nil                  */
-    }
-    else
-    {
-                                       /* return the next item              */
-        return (RexxObject *)new_integer(entryToIndex(element->next));
-    }
-}
-
-
-RexxObject *RexxQueue::previous(
-     RexxObject *_index)               /* index of the target item          */
-/******************************************************************************/
-/* Function:  Return the item previous to the indexed item                    */
-/******************************************************************************/
-{
-    /* locate this entry                 */
-    LISTENTRY *element = this->locateEntry(_index, (RexxObject *)IntegerOne);
-    if (element == NULL)                 /* not a valid index?                */
-    {
-        /* raise an error                    */
-        reportException(Error_Incorrect_method_queue_index, _index);
-    }
-
-    if (element->previous == LIST_END)   /* no previous item?                 */
-    {
-        return TheNilObject;               /* just return .nil                  */
-    }
-    else
-    {                               /* return the previous item index    */
-        return(RexxObject *)new_integer(entryToIndex(element->previous));
+        reportException(Error_Incorrect_method_queue_index, position);
     }
 }
 
 
 /**
- * Convert an entry index into a queue index relative to the
- * beginning.
+ * Pull an item off of the stack, returning .nil if no items
+ * are available
  *
- * @param target The target index position.
- *
- * @return The queue index value.
+ * @return The popped item, or .nil if the queue is empty.
  */
-size_t RexxQueue::entryToIndex(size_t target)
+RexxInternalObject *QueueClass::pullRexx()
 {
-    size_t current = this->first;
-    size_t counter = 0;
-    while (current != LIST_END)
-    {
-        counter++;
-        if (current == target)
-        {
-            return counter;
-        }
-
-        current = ENTRY_POINTER(current)->next;
-    }
-
-    return 0;
+    return resultOrNil(pop());
 }
-
-/**
- * Create a sublist of this queue.
- *
- * @param _index The starting index
- * @param _count The size of the subset to extract.
- *
- * @return A new instance of this class containing the subsection items.
- */
-RexxObject *RexxQueue::section(RexxObject *_index, RexxObject *_count )
-{
-    size_t counter;                      /* object counter                    */
-                                         /* locate this entry                 */
-    LISTENTRY *element = this->locateEntry(_index, (RexxObject *)IntegerOne);
-    if (_count != OREF_NULL)
-    {           /* have a count?                     */
-                /* Make sure it's a good integer     */
-        counter = _count->requiredNonNegative(ARG_TWO);
-    }
-    else
-    {
-        counter = 999999999;               /* just use largest possible count   */
-    }
-    if (element == NULL)                 /* index doesn't exist?              */
-                                         /* raise an error                    */
-        reportException(Error_Incorrect_method_index, _index);
-    if (!isOfClass(Queue, this))              /* actually a queue subclass?         */
-    {
-        /* need to do this the slow way      */
-        return this->sectionSubclass(element, counter);
-    }
-    RexxQueue *result = new RexxQueue;     /* create a new queue instance       */
-    ProtectedObject p(result);
-    /* while still more to go and not at */
-    /* the end of the list               */
-    while (counter--> 0)
-    {               /* while still more items            */
-                    /* add the this item to new list     */
-        result->addLast(element->value);
-        if (element->next == LIST_END)     /* this the last one?                */
-        {
-            break;                           /* done sectioning                   */
-        }
-                                             /* step to the next item             */
-        element = ENTRY_POINTER(element->next);
-    }
-    return result;                       /* return the sectioned list         */
-}
-
 
 
 /**
- * Section method used when dealing with a subclass of the Queue class.
+ * Push an item on to the queue.
  *
- * @param element The starting element.
- * @param counter the number of items to extract.
+ * @param item   The item to add.
  *
- * @return A new instance of the target class containing the
- *         subsection elements.
+ * @return Returns nothing.
  */
-RexxObject *RexxQueue::sectionSubclass(LISTENTRY *element, size_t counter)
+RexxObject *QueueClass::pushRexx(RexxInternalObject *item)
 {
-    ProtectedObject r;
-    /* create a new list                 */
-    this->behaviour->getOwningClass()->sendMessage(OREF_NEW, r);
-    RexxQueue *newQueue = (RexxQueue *)(RexxObject *)r;
-    /* while still more to go and not at */
-    /* the end of the list               */
-    while (counter-- > 0)                /* while still more items            */
+    requiredArgument(item, ARG_ONE);
+    push(item);
+    return OREF_NULL;
+}
+
+
+/**
+ * Queue an item on this queue.
+ *
+ * @param item   The item to add to the queue.
+ *
+ * @return Returns nothing.
+ */
+RexxObject *QueueClass::queueRexx(RexxInternalObject *item)
+{
+    requiredArgument(item, ARG_ONE);
+
+    queue(item);
+    return OREF_NULL;
+}
+
+
+/**
+ * Return the first item of the queue without removing it.
+ *
+ * @return The first object from the queue.
+ */
+RexxInternalObject *QueueClass::peek()
+{
+    return getFirstItem();
+}
+
+
+/**
+ * The Rexx stub for the Queue PUT method. replaces the Array
+ * version because it has slightly different semantics for index
+ * validation.  The only valid indexes are those within range
+ * and the size is not adjusted for a put out of bounds.
+ *
+ * @param arguments The array of all arguments sent to the
+ *                  method (variable arguments allowed
+ *                  here...the first argument is the item being
+ *                  added, all other arguments are the index).
+ * @param argCount  The number of arguments in the method call.
+ *
+ * @return Always return nothing.
+ */
+RexxObject *QueueClass::putRexx(RexxInternalObject *value, RexxObject *index)
+{
+    requiredArgument(value, ARG_ONE);
+    // make sure we have an index specified before trying to decode this.
+    requiredArgument(index, ARG_TWO);
+
+    // Validate the index argument, but don't allow expansion.
+    size_t position;
+
+    if (!validateIndex(&index, 1, ARG_TWO, IndexAccess, position))
     {
-        /* add the this item to new list     */
-        newQueue->sendMessage(OREF_INSERT, element->value);
-        if (element->next == LIST_END)     /* this the last one?                */
+        reportException(Error_Incorrect_method_index, index);
+    }
+
+    // we can only update assigned items, so make sure this is within bounds.
+    checkInsertIndex(position);
+
+    // set the new value and return nothing
+    put(value, position);
+    return OREF_NULL;
+}
+
+
+/**
+ * Remove an object from the array.  This redefines remove() to
+ * be a delete operation.
+ *
+ * @param index  The target index position.
+ *
+ * @return The removed object, if any.  Returns OREF_NULL if there
+ *         is no item at that index.
+ */
+RexxInternalObject *QueueClass::remove(size_t index)
+{
+    return deleteItem(index);
+}
+
+
+/**
+ * The init method for this class.  This does delayed
+ * initialization of this object until a INIT message is
+ * received during initialization.
+ *
+ * @param initialSize
+ *               The initial list size (optional)
+ *
+ * @return Always returns nothing
+ */
+RexxObject *QueueClass::initRexx(RexxObject *initialSize)
+{
+    // It would be nice to do this expansion in the new method, but it sort
+    // of messes up subclasses (e.g. CircularQueue) if we steal the first new
+    // argument.  We will set the capacity here, even if it means an immediate expansion
+
+    // the capacity is optional, but must be a positive numeric value
+    size_t capacity = optionalLengthArgument(initialSize, DefaultArraySize, ARG_ONE);
+    ensureSpace(capacity);
+    return OREF_NULL;
+}
+
+
+/**
+ * Create an instance of a queue object from Rexx code.
+ *
+ * @param init_args The pointer to the arguments.
+ * @param argCount  The count of arguments.
+ *
+ * @return A new instance of the queue class.
+ */
+RexxObject *QueueClass::newRexx(RexxObject **init_args, size_t argCount)
+{
+    // this class is defined on the object class, but this is actually attached
+    // to a class object instance.  Therefore, any use of the this pointer
+    // will be touching the wrong data.  Use the classThis pointer for calling
+    // any methods on this object from this method.
+    RexxClass *classThis = (RexxClass *)this;
+
+    Protected<QueueClass> newObj = new QueueClass;
+
+    // handle Rexx class completion
+    classThis->completeNewObject(newObj, init_args, argCount);
+    return newObj;
+}
+
+
+/**
+ * Create an instance of the queue class and fill it with objects.
+ *
+ * @param args     The argument pointer.
+ * @param argCount The count of arguments.
+ *
+ * @return An instance of the queue class populated with objects.
+ */
+QueueClass *QueueClass::ofRexx(RexxObject **args, size_t argCount)
+{
+    // create a queue object.
+    Protected<QueueClass> newQueue = (QueueClass *)QueueClass::newRexx(NULL, 0);
+
+    for (size_t i = 0; i < argCount; i++)
+    {
+        // add each item, but ommitted arguments are an error.
+        RexxObject *item = args[i];
+        if (item == OREF_NULL)
         {
-            break;                           /* done sectioning                   */
+            reportException(Error_Incorrect_method_noarg, i + 1);
         }
-                                             /* step to the next item             */
-        element = ENTRY_POINTER(element->next);
+        newQueue->append(item);
     }
-    return newQueue;                      /* return the sectioned list         */
-}
-
-
-RexxObject *RexxQueue::newRexx(RexxObject **init_args, size_t argCount)
-/******************************************************************************/
-/* Function:  Create an instance of a queue                                   */
-/******************************************************************************/
-{
-    RexxObject *newObj =  new RexxQueue;             /* get a new queue                   */
-    ProtectedObject p(newObj);
-    /* Initialize the new list instance  */
-    newObj->setBehaviour(((RexxClass *)this)->getInstanceBehaviour());
-    if (((RexxClass *)this)->hasUninitDefined())
-    {
-        newObj->hasUninit();
-    }
-
-    newObj->sendMessage(OREF_INIT, init_args, argCount);
-    return(RexxObject *)newObj;         /* return the new object             */
-}
-
-RexxQueue *RexxQueue::ofRexx(
-     RexxObject **args,                /* array of list items               */
-     size_t       argCount)            /* size of the argument array        */
-/******************************************************************************/
-/* Function:  Create a new queue containing the given items                   */
-/******************************************************************************/
-{
-    size_t   arraysize;                  /* size of the array                 */
-    size_t   i;                          /* loop counter                      */
-    RexxObject *item;                    /* item to add                       */
-
-    if (TheQueueClass == ((RexxClass *)this))
-    {        /* creating an internel list item?   */
-        RexxQueue *newQueue;                 /* newly created list                */
-        arraysize = argCount;              /* get the array size                */
-        newQueue = new RexxQueue;          /* get a new list                    */
-        ProtectedObject p(newQueue);
-        for (i = 0; i < arraysize; i++)
-        {  /* step through the array            */
-            item = args[i];                  /* get the next item                 */
-            if (item == OREF_NULL)
-            {         /* omitted item?                     */
-                      /* raise an error on this            */
-                reportException(Error_Incorrect_method_noarg, i + 1);
-            }
-            /* add this to the list end          */
-            newQueue->addLast(item);
-        }
-        return newQueue;
-    }
-    else
-    {
-        ProtectedObject result;
-        arraysize = argCount;              /* get the array size                */
-                                           /* get a new list                    */
-        this->sendMessage(OREF_NEW, result);
-        RexxQueue *newQueue = (RexxQueue *)(RexxObject *)result;
-        for (i = 0; i < arraysize; i++)
-        {  /* step through the array            */
-            item = args[i];                  /* get the next item                 */
-            if (item == OREF_NULL)
-            {         /* omitted item?                     */
-                      /* raise an error on this            */
-                reportException(Error_Incorrect_method_noarg, i + 1);
-            }
-            /* add this to the list end          */
-            newQueue->sendMessage(OREF_QUEUENAME, item);
-        }
-        return newQueue;                     /* give back the list                */
-    }
+    return newQueue;
 }
 
 
 
-void *RexxQueue::operator new(size_t size)
-/******************************************************************************/
-/* Function:  Create an instance of a queue                                   */
-/******************************************************************************/
-{
-    /* Get new object                    */
-    RexxQueue *newQueue = (RexxQueue *)new (INITIAL_LIST_SIZE, size) RexxListTable;
-    /* Give new object its behaviour     */
-    newQueue->setBehaviour(TheQueueBehaviour);
-    newQueue->init();                    /* finish initializing               */
-    return newQueue;                     /* return the new list item          */
-}
 

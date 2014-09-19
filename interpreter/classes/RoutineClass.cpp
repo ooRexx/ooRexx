@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -41,32 +41,26 @@
 /* Primitive Routine Class                                                    */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "ArrayClass.hpp"
 #include "RexxCode.hpp"
-#include "RexxNativeCode.hpp"
-#include "RexxActivity.hpp"
+#include "NativeCode.hpp"
+#include "Activity.hpp"
 #include "RexxActivation.hpp"
-#include "RexxNativeActivation.hpp"
-#include "MethodClass.hpp"
+#include "NativeActivation.hpp"
+#include "RoutineClass.hpp"
 #include "PackageClass.hpp"
-#include "SourceFile.hpp"
 #include "DirectoryClass.hpp"
 #include "ProtectedObject.hpp"
 #include "BufferClass.hpp"
-#include "RexxInternalApis.h"
-#include "RexxSmartBuffer.hpp"
+#include "SmartBuffer.hpp"
 #include "ProgramMetaData.hpp"
 #include "Utilities.hpp"
-#include "SystemInterpreter.hpp"
 #include "PackageManager.hpp"
 #include "InterpreterInstance.hpp"
-#include <ctype.h>
-
+#include "LanguageParser.hpp"
+#include "MethodArguments.hpp"
 
 // singleton class instance
 RexxClass *RoutineClass::classInstance = OREF_NULL;
@@ -82,6 +76,19 @@ void RoutineClass::createInstance()
 
 
 /**
+ * Allocate memory for a new Routine instance.
+ *
+ * @param size   The size of the object.
+ *
+ * @return An allocated object configured for a Routine object.
+ */
+void *RoutineClass::operator new (size_t size)
+{
+    return new_object(size, T_Routine);
+}
+
+
+/**
  * Initialize a Routine object from a generated code object. Generally
  * used for routines generated from ::ROUTINE directives.
  *
@@ -90,166 +97,94 @@ void RoutineClass::createInstance()
  */
 RoutineClass::RoutineClass(RexxString *name, BaseCode *codeObj)
 {
-    OrefSet(this, this->code, codeObj);  /* store the code                    */
-    OrefSet(this, this->executableName, name);
+    code = codeObj;
+    executableName = name;
 }
 
 
 /**
- * Initialize a RoutineClass object from a file source.
+ * Perform garbage collection on a live object.
  *
- * @param name   The routine name (and the resolved name of the file).
+ * @param liveMark The current live mark.
  */
-RoutineClass::RoutineClass(RexxString *name)
-{
-    // we need to protect this object until the constructor completes.
-    // the code generation step will create lots of new objects, giving a
-    // pretty high probability that it will be collected.
-    ProtectedObject p(this);
-    OrefSet(this, this->executableName, name);
-    // get a source object to generat this from
-    RexxSource *_source = new RexxSource(name);
-    ProtectedObject p2(_source);
-    // generate our code object and make the file hook up.
-    RexxCode *codeObj = _source->generateCode(false);
-    OrefSet(this, this->code, codeObj);
-}
-
-
-/**
- * Initialize a Routine object using a buffered source.
- *
- * @param name   The name of the routine.
- * @param source the source buffer.
- */
-RoutineClass::RoutineClass(RexxString *name, RexxBuffer *s)
-{
-    // we need to protect this object until the constructor completes.
-    // the code generation step will create lots of new objects, giving a
-    // pretty high probability that it will be collected.
-    ProtectedObject p(this);
-    OrefSet(this, this->executableName, name);
-    // get a source object to generat this from
-    RexxSource *_source = new RexxSource(name, s);
-    ProtectedObject p2(_source);
-    // generate our code object and make the file hook up.
-    RexxCode *codeObj = _source->generateCode(false);
-    OrefSet(this, this->code, codeObj);
-}
-
-
-/**
- * Initialize a Routine object using directly provided source.
- *
- * @param name   The name of the routine.
- * @param data   The source data buffer pointer.
- * @param length the length of the source buffer.
- */
-RoutineClass::RoutineClass(RexxString *name, const char *data, size_t length)
-{
-    // we need to protect this object until the constructor completes.
-    // the code generation step will create lots of new objects, giving a
-    // pretty high probability that it will be collected.
-    ProtectedObject p(this);
-    OrefSet(this, this->executableName, name);
-    // get a source object to generat this from
-    RexxSource *_source = new RexxSource(name, data, length);
-    ProtectedObject p2(_source);
-    // generate our code object and make the file hook up.
-    RexxCode *codeObj = _source->generateCode(false);
-    OrefSet(this, this->code, codeObj);
-}
-
-
-/**
- * Initialize a Routine object using an array source.
- *
- * @param name   The name of the routine.
- * @param source the source buffer.
- */
-RoutineClass::RoutineClass(RexxString *name, RexxArray *s)
-{
-    // we need to protect this object until the constructor completes.
-    // the code generation step will create lots of new objects, giving a
-    // pretty high probability that it will be collected.
-    ProtectedObject p(this);
-    OrefSet(this, this->executableName, name);
-    // get a source object to generat this from
-    RexxSource *_source = new RexxSource(name, s);
-    ProtectedObject p2(_source);
-    // generate our code object and make the file hook up.
-    RexxCode *codeObj = _source->generateCode(false);
-    OrefSet(this, this->code, codeObj);
-}
-
-
 void RoutineClass::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
-    memory_mark(this->code);
-    memory_mark(this->executableName);
-    memory_mark(this->objectVariables);
-}
-
-void RoutineClass::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
-{
-    memory_mark_general(this->code);
-    memory_mark_general(this->executableName);
-    memory_mark_general(this->objectVariables);
-}
-
-void RoutineClass::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
-{
-  setUpFlatten(RoutineClass)
-
-   flatten_reference(newThis->code, envelope);
-   flatten_reference(newThis->executableName, envelope);
-   flatten_reference(newThis->objectVariables, envelope);
-
-  cleanUpFlatten
+    memory_mark(code);
+    memory_mark(executableName);
+    memory_mark(objectVariables);
 }
 
 
-void RoutineClass::call(
-    RexxActivity *activity,            /* activity running under            */
-    RexxString *msgname,               /* message to be run                 */
-    RexxObject**argPtr,                /* arguments to the method           */
-    size_t      argcount,              /* the count of arguments            */
-    ProtectedObject &result)           // the method result
-/******************************************************************************/
-/* Function:  Call a method as a top level program or external function call  */
-/******************************************************************************/
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
+void RoutineClass::liveGeneral(MarkReason reason)
 {
-    ProtectedObject p(this);           // belt-and-braces to make sure this is protected
+    memory_mark_general(code);
+    memory_mark_general(executableName);
+    memory_mark_general(objectVariables);
+}
+
+
+/**
+ * Flatten a source object.
+ *
+ * @param envelope The envelope that will hold the flattened object.
+ */
+void RoutineClass::flatten(Envelope *envelope)
+{
+    setUpFlatten(RoutineClass)
+
+     flattenRef(code);
+     flattenRef(executableName);
+     flattenRef(objectVariables);
+
+    cleanUpFlatten
+}
+
+
+/**
+ * Call a Routine as a top-level program or an external method call.
+ *
+ * @param activity The current activity.
+ * @param routineName The name of the program or routine.
+ * @param argPtr   The pointer to the call arguments.
+ * @param argcount The argument count.
+ * @param result   The result object used to pass the value back.
+ */
+void RoutineClass::call(Activity *activity, RexxString *routineName, RexxObject**argPtr,
+    size_t argcount, ProtectedObject &result)
+{
     // just forward this to the code object
-    code->call(activity, this, msgname, argPtr, argcount, result);
+    code->call(activity, this, routineName, argPtr, argcount, result);
 }
 
 
-void RoutineClass::call(
-    RexxActivity *activity,            /* activity running under            */
-    RexxString *msgname,               /* message to be run                 */
-    RexxObject**argPtr,                /* arguments to the method           */
-    size_t      argcount,              /* the count of arguments            */
-    RexxString *calltype,              /* COMMAND/ROUTINE/FUNCTION          */
-    RexxString *environment,           /* initial command environment       */
-    int   context,                     /* type of context                   */
-    ProtectedObject &result)           // the method result
-/******************************************************************************/
-/* Function:  Call a method as a top level program or external function call  */
-/******************************************************************************/
+/**
+ * Call a routine as a top-level program or external call
+ * context.
+ *
+ * @param activity The activity we're running on.
+ * @param routineName
+ *                 The name of the routine.
+ * @param argPtr   The pointer to the call arguments.
+ * @param argcount The count of arguments.
+ * @param calltype The string CALLTYPE (ROUTINE, FUNCTION, etc.)
+ * @param environment
+ *                 The initial address name.
+ * @param context  The context of the call (internal call, interpret, etc.)
+ * @param result
+ */
+void RoutineClass::call(Activity *activity, RexxString *routineName,
+    RexxObject**argPtr, size_t argcount, RexxString *calltype,
+    RexxString *environment, int context, ProtectedObject &result)
 {
-    ProtectedObject p(this);           // belt-and-braces to make sure this is protected
     // just forward this to the code object
-    code->call(activity, this, msgname, argPtr, argcount, calltype, environment, context, result);
+    code->call(activity, this, routineName, argPtr, argcount, calltype, environment, context, result);
 }
 
 
@@ -277,69 +212,82 @@ RexxObject *RoutineClass::callRexx(RexxObject **args, size_t count)
  *
  * @return The call result (if any).
  */
-RexxObject *RoutineClass::callWithRexx(RexxArray *args)
+RexxObject *RoutineClass::callWithRexx(ArrayClass *args)
 {
     // this is required and must be an array
     args = arrayArgument(args, ARG_ONE);
 
     ProtectedObject result;
-
-    code->call(ActivityManager::currentActivity, this, executableName, args->data(), args->size(), result);
+    code->call(ActivityManager::currentActivity, this, executableName, args->messageArgs(), args->messageArgCount(), result);
     return (RexxObject *)result;
 }
 
 
 
-void RoutineClass::runProgram(
-    RexxActivity *activity,
-    RexxString * calltype,             /* type of invocation                */
-    RexxString * environment,          /* initial address                   */
-    RexxObject **arguments,            /* array of arguments                */
-    size_t       argCount,             /* the number of arguments           */
-    ProtectedObject &result)           // the method result
-/****************************************************************************/
-/* Function:  Run a method as a program                                     */
-/****************************************************************************/
+/**
+ * Run a Routine object as a top-level program.
+ *
+ * @param activity  The current activity.
+ * @param calltype  The string call type.
+ * @param environment
+ *                  The initial environment name.
+ * @param arguments Poiner to the arguments.
+ * @param argCount  The count of arguments.
+ * @param result    A protected object used to pass back the result.
+ */
+void RoutineClass::runProgram(Activity *activity, RexxString * calltype,
+    RexxString * environment, RexxObject **arguments, size_t       argCount,
+    ProtectedObject &result)
 {
-    ProtectedObject p(this);           // belt-and-braces to make sure this is protected
     code->call(activity, this, executableName, arguments, argCount, calltype, environment, PROGRAMCALL, result);
 }
 
 
-void RoutineClass::runProgram(
-    RexxActivity *activity,
-    RexxObject **arguments,            /* array of arguments                */
-    size_t       argCount,             /* the number of arguments           */
-    ProtectedObject &result)           // the method result
-/****************************************************************************/
-/* Function:  Run a method as a program                                     */
-/****************************************************************************/
+/**
+ * Run a program via simpler means, allowing most details
+ * to default.
+ *
+ * @param activity  The current activity.
+ * @param arguments The program arguments.
+ * @param argCount  The count of arguments.
+ * @param result    A ProtectedObject used to return (and protect) the result.
+ */
+void RoutineClass::runProgram(Activity *activity, RexxObject **arguments,
+    size_t argCount, ProtectedObject &result)
 {
-    ProtectedObject p(this);           // belt-and-braces to make sure this is protected
-    code->call(activity, this, executableName, arguments, argCount, OREF_COMMAND, activity->getInstance()->getDefaultEnvironment(), PROGRAMCALL, result);
+    code->call(activity, this, executableName, arguments, argCount, GlobalNames::COMMAND, activity->getInstance()->getDefaultEnvironment(), PROGRAMCALL, result);
 }
 
 
-RexxObject *RoutineClass::setSecurityManager(
-    RexxObject *manager)               /* supplied security manager         */
-/******************************************************************************/
-/* Function:  Associate a security manager with a method's source             */
-/******************************************************************************/
+/**
+ * Associate a security manager with a routine's source package.
+ *
+ * @param manager The security manager object.
+ *
+ * @return The return value from the code object.
+ */
+RexxObject *RoutineClass::setSecurityManager(RexxObject *manager)
 {
     return code->setSecurityManager(manager);
 }
 
 
-RexxBuffer *RoutineClass::save()
-/******************************************************************************/
-/* Function: Flatten translated method into a buffer for storage into EA's etc*/
-/******************************************************************************/
+/**
+ * Translate the translated program into a buffer.
+ *
+ * @return The flattened object.
+ */
+BufferClass *RoutineClass::save()
 {
-                                         /* Get new envelope object           */
-    RexxEnvelope *envelope = new RexxEnvelope;
+    // TODO:  I suspect we really should do this on a copied version
+    // so we don't lose the source connection.
+
+    // detach the source from this routine object before saving
+    detachSource();
+
+    Envelope *envelope = new Envelope;
     ProtectedObject p(envelope);
-                                         /* now pack up the envelope for      */
-                                         /* saving.                           */
+    // now pack into an envelope;
     return envelope->pack(this);
 }
 
@@ -352,7 +300,7 @@ RexxBuffer *RoutineClass::save()
 void RoutineClass::save(PRXSTRING outBuffer)
 {
     ProtectedObject p(this);
-    RexxBuffer *methodBuffer = save();  /* flatten the routine               */
+    BufferClass *methodBuffer = save();  /* flatten the routine               */
     // create a full buffer of the data, plus the information header.
     ProgramMetaData *data = new (methodBuffer) ProgramMetaData(methodBuffer);
     // we just hand this buffer of data right over...that's all, we're done.
@@ -377,7 +325,7 @@ void RoutineClass::save(const char *filename)
     ProtectedObject p(this);
 
     // save to a flattened buffer
-    RexxBuffer *buffer = save();
+    BufferClass *buffer = save();
     ProtectedObject p2(buffer);
 
     // create an image header
@@ -392,316 +340,6 @@ void RoutineClass::save(const char *filename)
 }
 
 
-void *RoutineClass::operator new (size_t size)
-/******************************************************************************/
-/* Function:  create a new method instance                                    */
-/******************************************************************************/
-{
-                                         /* get a new method object           */
-    return new_object(size, T_Routine);
-}
-
-
-/**
- * Construct a Routine using different forms of in-memory
- * source file.
- *
- * @param pgmname  The name of the program.
- * @param source   The program source.  This can be a string or an array of strings.
- * @param position The argument position used for error reporting.
- * @param parentSource
- *                 A parent source context used to provide additional class and
- *                 routine definitions.
- *
- * @return A constructed Routine object.
- */
-RoutineClass *RoutineClass::newRoutineObject(RexxString *pgmname, RexxObject *source, RexxObject *position, RexxSource *parentSource)
-{
-    // request this as an array.  If not convertable, then we'll use it as a string
-    RexxArray *newSourceArray = source->requestArray();
-    /* couldn't convert?                 */
-    if (newSourceArray == (RexxArray *)TheNilObject)
-    {
-        /* get the string representation     */
-        RexxString *sourceString = source->makeString();
-        /* got back .nil?                    */
-        if (sourceString == (RexxString *)TheNilObject)
-        {
-            /* raise an error                    */
-            reportException(Error_Incorrect_method_no_method, position);
-        }
-        /* wrap an array around the value    */
-        newSourceArray = new_array(sourceString);
-    }
-    else                                 /* have an array, make sure all      */
-    {
-        /* is it single dimensional?         */
-        if (newSourceArray->getDimension() != 1)
-        {
-            /* raise an error                    */
-            reportException(Error_Incorrect_method_noarray, position);
-        }
-        /*  element are strings.             */
-        /* Make a source array safe.         */
-        ProtectedObject p(newSourceArray);
-        /* Make sure all elements in array   */
-        for (size_t counter = 1; counter <= newSourceArray->size(); counter++)
-        {
-            /* Get element as string object      */
-            RexxString *sourceString = newSourceArray ->get(counter)->makeString();
-            /* Did it convert?                   */
-            if (sourceString == (RexxString *)TheNilObject)
-            {
-                /* and report the error.             */
-                reportException(Error_Incorrect_method_nostring_inarray, IntegerTwo);
-            }
-            else
-            {
-                /* itsa string add to source array   */
-                newSourceArray ->put(sourceString, counter);
-            }
-        }
-    }
-
-    // create the routine
-    RoutineClass *result = new RoutineClass(pgmname, newSourceArray);
-    ProtectedObject p(result);
-
-    p = result;    // switch the protectiong
-
-    // if we've been provided with a scope, use it
-    if (parentSource == OREF_NULL)
-    {
-        // see if we have an active context and use the current source as the basis for the lookup
-        RexxActivation *currentContext = ActivityManager::currentActivity->getCurrentRexxFrame();
-        if (currentContext != OREF_NULL)
-        {
-            parentSource = currentContext->getSourceObject();
-        }
-    }
-
-    // if there is a parent source, then merge in the scope information
-    if (parentSource != OREF_NULL)
-    {
-        result->getSourceObject()->inheritSourceContext(parentSource);
-    }
-
-    return result;
-}
-
-
-/**
- * Construct a Routine using different forms of in-memory
- * source file.
- *
- * @param pgmname  The name of the program.
- * @param source   The program source.  This can be a string or an array of strings.
- * @param position The argument position used for error reporting.
- * @param parentSource
- *                 A parent source context used to provide additional class and
- *                 routine definitions.
- *
- * @return A constructed Routine object.
- */
-RoutineClass *RoutineClass::newRoutineObject(RexxString *pgmname, RexxArray *source, RexxObject *position)
-{
-    // request this as an array.  If not convertable, then we'll use it as a string
-    RexxArray *newSourceArray = source->requestArray();
-    /* couldn't convert?                 */
-    if (newSourceArray == (RexxArray *)TheNilObject)
-    {
-       /* raise an error                    */
-       reportException(Error_Incorrect_method_no_method, position);
-    }
-    else                                 /* have an array, make sure all      */
-    {
-        /* is it single dimensional?         */
-        if (newSourceArray->getDimension() != 1)
-        {
-            /* raise an error                    */
-            reportException(Error_Incorrect_method_noarray, position);
-        }
-        /*  element are strings.             */
-        /* Make a source array safe.         */
-        ProtectedObject p(newSourceArray);
-        /* Make sure all elements in array   */
-        for (size_t counter = 1; counter <= newSourceArray->size(); counter++)
-        {
-            /* Get element as string object      */
-            RexxString *sourceString = newSourceArray ->get(counter)->makeString();
-            /* Did it convert?                   */
-            if (sourceString == (RexxString *)TheNilObject)
-            {
-                /* and report the error.             */
-                reportException(Error_Incorrect_method_nostring_inarray, IntegerTwo);
-            }
-            else
-            {
-                /* itsa string add to source array   */
-                newSourceArray ->put(sourceString, counter);
-            }
-        }
-    }
-    // create the routine
-    return new RoutineClass(pgmname, newSourceArray);
-}
-
-
-RoutineClass *RoutineClass::newRexx(
-    RexxObject **init_args,            /* subclass init arguments           */
-    size_t       argCount)             /* number of arguments passed        */
-/******************************************************************************/
-/* Function:  Create a new method from REXX code contained in a string or an  */
-/*            array                                                           */
-/******************************************************************************/
-{
-    RexxObject *pgmname;                 /* method name                       */
-    RexxObject *_source;                 /* Array or string object            */
-    RexxObject *option = OREF_NULL;
-    size_t initCount = 0;                /* count of arguments we pass along  */
-
-                                         /* break up the arguments            */
-
-    RexxClass::processNewArgs(init_args, argCount, &init_args, &initCount, 2, (RexxObject **)&pgmname, (RexxObject **)&_source);
-    /* get the method name as a string   */
-    RexxString *nameString = stringArgument(pgmname, ARG_ONE);
-    requiredArgument(_source, ARG_TWO);          /* make sure we have the second too  */
-
-    RexxSource *sourceContext = OREF_NULL;
-    // retrieve extra parameter if exists
-    if (initCount != 0)
-    {
-        RexxClass::processNewArgs(init_args, initCount, &init_args, &initCount, 1, (RexxObject **)&option, NULL);
-        if (isOfClass(Method, option))
-        {
-            sourceContext = ((RexxMethod *)option)->getSourceObject();
-        }
-        if (isOfClass(Routine, option))
-        {
-            sourceContext = ((RoutineClass *)option)->getSourceObject();
-        }
-        else if (isOfClass(Package, option))
-        {
-            sourceContext = ((PackageClass *)option)->getSourceObject();
-        }
-        else
-        {
-            reportException(Error_Incorrect_method_argType, IntegerThree, "Method, Routine, or Package object");
-        }
-    }
-
-    RoutineClass *newRoutine = newRoutineObject(nameString, _source, IntegerTwo, sourceContext);
-    ProtectedObject p(newRoutine);
-    /* Give new object its behaviour     */
-    newRoutine->setBehaviour(((RexxClass *)this)->getInstanceBehaviour());
-    if (((RexxClass *)this)->hasUninitDefined())
-    {
-        newRoutine->hasUninit();         /* Make sure everyone is notified.   */
-    }
-    /* now send an INIT message          */
-    newRoutine->sendMessage(OREF_INIT, init_args, initCount);
-    return newRoutine;                   /* return the new method             */
-}
-
-
-RoutineClass *RoutineClass::newFileRexx(
-    RexxString *filename)              /* name of the target file           */
-/******************************************************************************/
-/* Function:  Create a method from a fully resolved file name                 */
-/******************************************************************************/
-{
-                                       /* get the method name as a string   */
-  filename = stringArgument(filename, ARG_ONE);
-                                       /* finish up processing of this      */
-  RoutineClass * newMethod = new RoutineClass(filename);
-  ProtectedObject p2(newMethod);
-                                       /* Give new object its behaviour     */
-  newMethod->setBehaviour(((RexxClass *)this)->getInstanceBehaviour());
-  /* does object have an UNINT method  */
-   if (((RexxClass *)this)->hasUninitDefined())
-   {
-     newMethod->hasUninit();           /* Make sure everyone is notified.   */
-   }
-                                       /* now send an INIT message          */
-  newMethod->sendMessage(OREF_INIT);
-  return newMethod;
-}
-
-
-/**
- * Create a routine from a macrospace source.
- *
- * @param name   The name of the macrospace item.
- *
- * @return The inflatted macrospace routine.
- */
-RoutineClass *RoutineClass::restoreFromMacroSpace(RexxString *name)
-{
-    RXSTRING buffer;                     /* instorage buffer                  */
-
-    MAKERXSTRING(buffer, NULL, 0);
-    /* get the image of function         */
-    RexxResolveMacroFunction(name->getStringData(), &buffer);
-    /* unflatten the method now          */
-    RoutineClass *routine = restore(&buffer, name);
-    // release the buffer memory
-    SystemInterpreter::releaseResultMemory(buffer.strptr);
-    return routine;
-}
-
-
-RoutineClass *RoutineClass::processInstore(PRXSTRING instore, RexxString * name )
-/******************************************************************************/
-/* Function:  Process instorage execution arguments                           */
-/******************************************************************************/
-{
-    // just a generic empty one indicating that we should check the macrospace?
-    if (instore[0].strptr == NULL && instore[1].strptr == NULL)
-    {
-        unsigned short temp;
-
-        /* see if this exists                */
-        if (!RexxQueryMacro(name->getStringData(), &temp))
-        {
-            return restoreFromMacroSpace(name);
-        }
-        return OREF_NULL;         // not found
-    }
-    if (instore[1].strptr != NULL)       /* have an image                     */
-    {
-        /* go convert into a method          */
-        RoutineClass *routine = restore(&instore[1], name);
-        if (routine != OREF_NULL)
-        {         /* did it unflatten successfully?    */
-            if (instore[0].strptr != NULL)   /* have source also?                 */
-            {
-                /* get a buffer object               */
-                RexxBuffer *source_buffer = new_buffer(instore[0]);
-                /* reconnect this with the source    */
-                routine->getSourceObject()->setBufferedSource(source_buffer);
-            }
-            return routine;                  /* go return it                      */
-        }
-    }
-    if (instore[0].strptr != NULL)       /* have instorage source             */
-    {
-        /* get a buffer object               */
-        RexxBuffer *source_buffer = new_buffer(instore[0]);
-        if (source_buffer->getData()[0] == '#' && source_buffer->getData()[1] == '!')
-        {
-            memcpy(source_buffer->getData(), "--", 2);
-        }
-
-        /* translate this source             */
-        RoutineClass *routine = new RoutineClass(name, source_buffer);
-        ProtectedObject p(routine);
-        /* return this back in instore[1]    */
-        routine->save(&instore[1]);
-        return routine;                    /* return translated source          */
-    }
-    return OREF_NULL;                    /* processing failed                 */
-}
-
 /**
  * Restore a saved routine directly from character data.
  *
@@ -713,41 +351,42 @@ RoutineClass *RoutineClass::processInstore(PRXSTRING instore, RexxString * name 
 RoutineClass *RoutineClass::restore(const char *data, size_t length)
 {
     // create a buffer object and restore from it
-    RexxBuffer *buffer = new_buffer(data, length);
+    BufferClass *buffer = new_buffer(data, length);
     ProtectedObject p(buffer);
     return restore(buffer, buffer->getData(), length);
 }
 
 
-RoutineClass *RoutineClass::restore(
-    RexxBuffer *buffer,                /* buffer containing the method      */
-    char *startPointer,                /* first character of the method     */
-    size_t length)                     // length of data to unflatten
-/******************************************************************************/
-/* Function: Unflatten a translated method.  Passed a buffer object containing*/
-/*           the method                                                       */
-/******************************************************************************/
+/**
+ * Unflatten a saved Routine object.
+ *
+ * @param buffer The buffer containing the saved data.
+ * @param startPointer
+ *               The pointer to the start of the flattened data.
+ * @param length The length of the flattened data.
+ *
+ * @return A restored Routine object.
+ */
+RoutineClass *RoutineClass::restore(BufferClass *buffer, char *startPointer, size_t length)
 {
-                                       /* Get new envelope object           */
-  RexxEnvelope *envelope  = new RexxEnvelope;
-  ProtectedObject p(envelope);
-                                       /* now puff up the method object     */
-  envelope->puff(buffer, startPointer, length);
-                                       /* The receiver object is an envelope*/
-                                       /* whose receiver is the actual      */
-                                       /* method object we're restoring     */
-  return (RoutineClass *)envelope->getReceiver();
+    // get an envelope and puff up the object
+    Protected<Envelope> envelope  = new Envelope;
+    envelope->puff(buffer, startPointer, length);
+    // the envelope receiver object is our return value.
+    return (RoutineClass *)envelope->getReceiver();
 }
 
 
 /**
  * Restore a program from a simple buffer.
  *
- * @param buffer The source buffer.
+ * @param fileName The file name of the program we're restoring from.
+ * @param buffer   The source buffer.  This contains all of the saved metadata
+ *                 ahead of the the flattened object.
  *
  * @return The inflated Routine object, if valid.
  */
-RoutineClass *RoutineClass::restore(RexxString *fileName, RexxBuffer *buffer)
+RoutineClass *RoutineClass::restore(RexxString *fileName, BufferClass *buffer)
 {
     const char *data = buffer->getData();
 
@@ -778,7 +417,8 @@ RoutineClass *RoutineClass::restore(RexxString *fileName, RexxBuffer *buffer)
     }
     // this should be valid...try to restore.
     RoutineClass *routine = restore(buffer, metaData->getImageData(), metaData->getImageSize());
-    routine->getSourceObject()->setProgramName(fileName);
+    // change the program name to match the file this was restored from
+    routine->getPackageObject()->setProgramName(fileName);
     return routine;
 }
 
@@ -807,7 +447,6 @@ RoutineClass *RoutineClass::restore(RXSTRING *inData, RexxString *name)
         data++;
     }
 
-
     ProgramMetaData *metaData = (ProgramMetaData *)data;
     bool badVersion;
     // make sure this is valid for interpreter
@@ -820,47 +459,78 @@ RoutineClass *RoutineClass::restore(RXSTRING *inData, RexxString *name)
         }
         return OREF_NULL;
     }
-    RexxBuffer *bufferData = metaData->extractBufferData();
+    BufferClass *bufferData = metaData->extractBufferData();
     ProtectedObject p(bufferData);
     // we're restoring from the beginning of this.
     RoutineClass *routine = restore(bufferData, bufferData->getData(), metaData->getImageSize());
     // if this restored properly (and it should), reconnect it to the source file
     if (routine != OREF_NULL)
     {
-        routine->getSourceObject()->setProgramName(name);
+        routine->getPackageObject()->setProgramName(name);
     }
     return routine;
 }
 
 
 /**
- * Retrieve a routine object from a file.  This will first attempt
- * to restore a previously translated image, then will try to
- * translate the source if that fails.
+ * Create a new method from REXX code contained in a string or an
+ * array
+ *
+ * @param init_args The array of arguments to the new method.
+ * @param argCount  The argument count.
+ *
+ * @return A new method object.
+ */
+RoutineClass *RoutineClass::newRexx(RexxObject **init_args, size_t argCount)
+{
+    // this class is defined on the object class, but this is actually attached
+    // to a class object instance.  Therefore, any use of the this pointer
+    // will be touching the wrong data.  Use the classThis pointer for calling
+    // any methods on this object from this method.
+    RexxClass *classThis = (RexxClass *)this;
+
+    RexxString *programName;
+    Protected<ArrayClass> sourceArray;
+    PackageClass *sourceContext;
+
+    // parse all of the options
+    processNewExecutableArgs(init_args, argCount, programName, sourceArray, sourceContext);
+
+    // go create a method from whatever we were given for source.
+    Protected<RoutineClass> newRoutine = LanguageParser::createRoutine(programName, sourceArray, sourceContext);
+
+    // finish up the object creation.  Set the correct instance behavior (this could
+    // be a subclass), check for uninit methods, and finally, send an init message using any
+    // left over arguments.
+    classThis->completeNewObject(newRoutine, init_args, argCount);
+    return newRoutine;
+}
+
+
+/**
+ * Create a method object from a file.
  *
  * @param filename The target file name.
  *
- * @return A resulting Routine object, if possible.
+ * @return The created method object.
  */
-RoutineClass *RoutineClass::fromFile(RexxString *filename)
+RoutineClass *RoutineClass::newFileRexx(RexxString *filename)
 {
-                                         /* load the program file             */
-    RexxBuffer *program_buffer = SystemInterpreter::readProgram(filename->getStringData());
-    if (program_buffer == OREF_NULL)     /* Program not found or read error?  */
-    {
-        /* report this                       */
-        reportException(Error_Program_unreadable_name, filename);
-    }
+    // this class is defined on the object class, but this is actually attached
+    // to a class object instance.  Therefore, any use of the this pointer
+    // will be touching the wrong data.  Use the classThis pointer for calling
+    // any methods on this object from this method.
+    RexxClass *classThis = (RexxClass *)this;
 
-    // try to restore a flattened program first
-    RoutineClass *routine = restore(filename, program_buffer);
-    if (routine != OREF_NULL)
-    {
-        return routine;
-    }
+    // get the method name as a string
+    filename = stringArgument(filename, ARG_ONE);
 
-    // process this from the source
-    return new RoutineClass(filename, program_buffer);
+    RoutineClass *newRoutine = LanguageParser::createRoutine(filename);
+    ProtectedObject p(newRoutine);
+
+    // complete the initialization
+    classThis->completeNewObject(newRoutine);
+    return newRoutine;
 }
 
 
@@ -876,46 +546,39 @@ RoutineClass *RoutineClass::loadExternalRoutine(RexxString *name, RexxString *de
 {
     name = stringArgument(name, "name");
     descriptor = stringArgument(descriptor, "descriptor");
-    /* convert external into words       */
-    RexxArray *_words = StringUtil::words(descriptor->getStringData(), descriptor->getLength());
-    ProtectedObject p(_words);
+
+    // convert external into words
+    Protected<ArrayClass> words = StringUtil::words(descriptor->getStringData(), descriptor->getLength());
     // "LIBRARY libbar [foo]"
-    if (((RexxString *)(_words->get(1)))->strCompare(CHAR_LIBRARY))
+    if (((RexxString *)(words->get(1)))->strCompare("LIBRARY"))
     {
         RexxString *library = OREF_NULL;
         // the default entry point name is the internal name
         RexxString *entry = name;
 
         // full library with entry name version?
-        if (_words->size() == 3)
+        if (words->size() == 3)
         {
-            library = (RexxString *)_words->get(2);
-            entry = (RexxString *)_words->get(3);
+            library = (RexxString *)words->get(2);
+            entry = (RexxString *)words->get(3);
         }
-        else if (_words->size() == 2)
+        else if (words->size() == 2)
         {
-            library = (RexxString *)_words->get(2);
+            library = (RexxString *)words->get(2);
         }
         else  // wrong number of tokens
         {
-            /* this is an error                  */
             reportException(Error_Translation_bad_external, descriptor);
         }
 
-                                     /* create a new native method        */
+        // create a new native method
         RoutineClass *routine = PackageManager::loadRoutine(library, entry);
-        // raise an exception if this entry point is not found.
-        if (routine == OREF_NULL)
-        {
-             return (RoutineClass *)TheNilObject;
-        }
-        return routine;
+        return (RoutineClass *)resultOrNil(routine);
     }
     else
     {
-        /* unknown external type             */
+        // unknown external type
         reportException(Error_Translation_bad_external, descriptor);
     }
     return OREF_NULL;
 }
-

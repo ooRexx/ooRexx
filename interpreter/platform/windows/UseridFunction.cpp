@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -37,24 +37,20 @@
 /*----------------------------------------------------------------------------*/
 
 #include <windows.h>
-#include <stdlib.h>
 
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "ActivityManager.hpp"
 #include "SystemInterpreter.hpp"
 
-#define ACCOUNT_BUFFER_SIZE  256
+const size_t ACCOUNT_BUFFER_SIZE = 256;
 
 
-/*********************************************************************/
-/*                                                                   */
-/*   Subroutine Name:   SysUserid                                    */
-/*                                                                   */
-/*   Descriptive Name:  retrieve current userid                      */
-/*                                                                   */
-/*********************************************************************/
-
+/**
+ * retrieve current userid
+ *
+ * @return The current userid, as a string.
+ */
 RexxString *SystemInterpreter::getUserid()
 {
     char account_buffer[ACCOUNT_BUFFER_SIZE];
@@ -74,7 +70,7 @@ RexxString *SystemInterpreter::getUserid()
                 account = (char*) malloc(account_size);
                 break;
             default:
-                reportException(Error_Function_no_data_function, CHAR_USERID);
+                reportException(Error_Function_no_data_function, "USERID");
                 break;
         }
     }

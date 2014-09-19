@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -44,34 +44,29 @@
 #ifndef Included_RoutineClass
 #define Included_RoutineClass
 
-#include "MethodClass.hpp"
+#include "BaseExecutable.hpp"
 
 class RoutineClass : public BaseExecutable
 {
 public:
     void *operator new(size_t);
-    inline void *operator new(size_t size, void *ptr) { return ptr; };
+
     RoutineClass(RexxString *n, BaseCode *_code);
-    RoutineClass(RexxString *name);
-    RoutineClass(RexxString *name, RexxBuffer *source);
-    RoutineClass(RexxString *name, const char *data, size_t length);
-    RoutineClass(RexxString *name, RexxArray *source);
     inline RoutineClass(RESTORETYPE restoreType) { ; };
 
-    void execute(RexxObject *, RexxObject *);
-    void live(size_t);
-    void liveGeneral(int reason);
-    void flatten(RexxEnvelope*);
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(Envelope*);
 
-    void          call(RexxActivity *,  RexxString *,  RexxObject **, size_t, RexxString *, RexxString *, int, ProtectedObject &);
-    void          call(RexxActivity *,  RexxString *,  RexxObject **, size_t, ProtectedObject &);
-    void          runProgram(RexxActivity *activity, RexxString * calltype, RexxString * environment, RexxObject **arguments, size_t argCount, ProtectedObject &result);
-    void          runProgram(RexxActivity *activity, RexxObject **arguments, size_t argCount, ProtectedObject &result);
+    virtual void call(Activity *,  RexxString *,  RexxObject **, size_t, RexxString *, RexxString *, int, ProtectedObject &);
+    virtual void call(Activity *,  RexxString *,  RexxObject **, size_t, ProtectedObject &);
+    virtual void runProgram(Activity *activity, RexxString * calltype, RexxString * environment, RexxObject **arguments, size_t argCount, ProtectedObject &result);
+    virtual void runProgram(Activity *activity, RexxObject **arguments, size_t argCount, ProtectedObject &result);
 
     RexxObject   *callRexx(RexxObject **, size_t);
-    RexxObject   *callWithRexx(RexxArray *);
+    RexxObject   *callWithRexx(ArrayClass *);
 
-    RexxBuffer *save();
+    BufferClass *save();
     void save(PRXSTRING outBuffer);
     void save(const char *filename);
     RexxObject  *setSecurityManager(RexxObject *);
@@ -80,18 +75,14 @@ public:
     RoutineClass *newFileRexx(RexxString *);
     RoutineClass *loadExternalRoutine(RexxString *name, RexxString *descriptor);
 
-    static RoutineClass *restore(RexxBuffer *, char *, size_t length);
+    // various static classes for reading from a file and restoring potential
+    // compiled images.
+    static RoutineClass *restore(BufferClass *, char *, size_t length);
     static RoutineClass *restore(const char *data, size_t length);
-    static RoutineClass *restore(RexxString *fileName, RexxBuffer *buffer);
+    static RoutineClass *restore(RexxString *fileName, BufferClass *buffer);
     static RoutineClass *restoreFromMacroSpace(RexxString *name);
-    static RoutineClass *restore(RexxBuffer *buffer);
+    static RoutineClass *restore(BufferClass *buffer);
     static RoutineClass *restore(RXSTRING *inData, RexxString *name);
-    static RoutineClass *fromFile(RexxString *filename);
-
-    static RoutineClass *newRoutineObject(RexxString *, RexxObject *, RexxObject *, RexxSource *s);
-    static RoutineClass *newRoutineObject(RexxString *, RexxArray *, RexxObject *);
-
-    static RoutineClass *processInstore(PRXSTRING instore, RexxString * name );
 
     static void createInstance();
     static RexxClass *classInstance;

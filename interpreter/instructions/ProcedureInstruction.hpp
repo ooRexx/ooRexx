@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -48,18 +48,18 @@
 
 class RexxInstructionProcedure : public RexxInstruction {
  public:
-  inline void *operator new(size_t size, void *ptr) {return ptr;}
-  inline void  operator delete(void *) { }
-  inline void operator delete(void *, void *) { }
+    RexxInstructionProcedure(size_t, QueueClass *);
+    inline RexxInstructionProcedure(RESTORETYPE restoreType) { ; };
 
-  RexxInstructionProcedure(size_t, RexxQueue *);
-  inline RexxInstructionProcedure(RESTORETYPE restoreType) { ; };
-  void live(size_t);
-  void liveGeneral(int reason);
-  void flatten(RexxEnvelope*);
-  void execute(RexxActivation *, RexxExpressionStack *);
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(Envelope*);
 
-  size_t variableCount;                // count of variables
-  RexxVariableBase *variables[1];      /* list of exposed variables         */
+    virtual void execute(RexxActivation *, ExpressionStack *);
+
+protected:
+
+    size_t variableCount;                // count of variables
+    RexxVariableBase *variables[1];      // list of variables to expose
 };
 #endif

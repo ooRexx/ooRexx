@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.ibm.com/developerworks/oss/CPLv1.0.htm                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -50,27 +50,28 @@
 class BaseCode;
 class RoutineClass;
 class ProtectedObject;
-class RexxArray;
-class RexxActivity;
-class RexxNativeMethod;
+class ArrayClass;
+class Activity;
+class NativeMethod;
 class ProtectedObject;
 class PackageClass;
+class StringTable;
 
 class PackageManager
 {
 public:
     static void live(size_t liveMark);
-    static void liveGeneral(int reason);
+    static void liveGeneral(MarkReason reason);
 
     static void initialize();
-    static RexxArray *getImageData();
-    static void restore(RexxArray *imageArray);
+    static ArrayClass *getImageData();
+    static void restore(ArrayClass *imageArray);
     static void restore();
     static LibraryPackage    *getLibrary(RexxString *name);
     static LibraryPackage    *loadLibrary(RexxString *name);
     static void        unload();
-    static RexxNativeMethod  *resolveMethod(RexxString *packageName, RexxString *methodName);
-    static RexxNativeMethod  *loadMethod(RexxString *packageName, RexxString *methodName);
+    static NativeMethod  *resolveMethod(RexxString *packageName, RexxString *methodName);
+    static NativeMethod  *loadMethod(RexxString *packageName, RexxString *methodName);
     static RoutineClass *resolveRoutine(RexxString *function, RexxString *packageName, RexxString *procedure);
     static RoutineClass *resolveRoutine(RexxString *packageName, RexxString *function);
     static RoutineClass *loadRoutine(RexxString *packageName, RexxString *function);
@@ -86,14 +87,14 @@ public:
     static RexxObject *addRegisteredRoutine(RexxString *name, RexxString *module, RexxString *proc);
     static RexxObject *dropRegisteredRoutine(RexxString *name);
     static RexxObject *queryRegisteredRoutine(RexxString *name);
-    static bool        callNativeRoutine(RexxActivity *activity, RexxString *name,
+    static bool        callNativeRoutine(Activity *activity, RexxString *name,
         RexxObject **arguments, size_t argcount, ProtectedObject &result);
 
-    static RoutineClass *loadRequires(RexxActivity *activity, RexxString *shortName, RexxString *resolvedName, ProtectedObject &result);
-    static RoutineClass *getMacroSpaceRequires(RexxActivity *activity, RexxString *name, ProtectedObject &result, RexxObject *securityManager);
-    static RoutineClass *getRequiresFile(RexxActivity *activity, RexxString *name, RexxObject *securityManager, ProtectedObject &result);
-    static RoutineClass *loadRequires(RexxActivity *activity, RexxString *name, const char *data, size_t length, ProtectedObject &result);
-    static RoutineClass *loadRequires(RexxActivity *activity, RexxString *name, RexxArray *data, ProtectedObject &result);
+    static RoutineClass *loadRequires(Activity *activity, RexxString *shortName, RexxString *resolvedName, ProtectedObject &result);
+    static RoutineClass *getMacroSpaceRequires(Activity *activity, RexxString *name, ProtectedObject &result, RexxObject *securityManager);
+    static RoutineClass *getRequiresFile(Activity *activity, RexxString *name, RexxObject *securityManager, ProtectedObject &result);
+    static RoutineClass *loadRequires(Activity *activity, RexxString *name, ArrayClass *data, ProtectedObject &result);
+    static RoutineClass *loadRequires(Activity *activity, RexxString *name, const char *data, size_t length, ProtectedObject &result);
 
 protected:
 
@@ -108,18 +109,18 @@ protected:
         IMAGE_ARRAY_SIZE = IMAGE_REQUIRES
     };
 
-    static RexxDirectory *imagePackages;        // our loaded packages
-    static RexxDirectory *imagePackageRoutines; // table of functions loaded from packages
-    static RexxDirectory *imageRegisteredRoutines;  // table of functions resolved by older registration mechanisms
-    static RexxDirectory *imageLoadedRequires;      // table of previously loaded requires files
+    static StringTable    *imagePackages;            // our loaded packages
+    static StringTable    *imagePackageRoutines;     // table of functions loaded from packages
+    static StringTable    *imageRegisteredRoutines;  // table of functions resolved by older registration mechanisms
+    static StringTable    *imageLoadedRequires;      // table of previously loaded requires files
 
 
-    static RexxDirectory *packages;        // our loaded packages
-    static RexxDirectory *packageRoutines; // table of functions loaded from packages
-    static RexxDirectory *registeredRoutines;  // table of functions resolved by older registration mechanisms
-    static RexxDirectory *loadedRequires;      // table of previously loaded requires files
+    static StringTable    *packages;            // our loaded packages
+    static StringTable    *packageRoutines;     // table of functions loaded from packages
+    static StringTable    *registeredRoutines;  // table of functions resolved by older registration mechanisms
+    static StringTable    *loadedRequires;      // table of previously loaded requires files
 
-    static RexxPackageEntry *rexxPackage;   // internal generated REXX package
+    static RexxPackageEntry *rexxPackage;       // internal generated REXX package
 };
 
 #endif

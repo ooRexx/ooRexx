@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -40,7 +40,7 @@
 #include "MessageDispatcher.hpp"
 #include "ProtectedObject.hpp"
 #include "MessageClass.hpp"
-#include "RexxNativeActivation.hpp"
+#include "NativeActivation.hpp"
 
 
 /**
@@ -50,7 +50,7 @@
 void MessageDispatcher::run()
 {
     // must invoke the message object
-    message->sendMessage(OREF_SEND);
+    message->sendMessage(GlobalNames::SEND);
 }
 
 
@@ -60,7 +60,7 @@ void MessageDispatcher::run()
  *
  * @param c      The condition information for the error.
  */
-void MessageDispatcher::handleError(wholenumber_t r, RexxDirectory *c)
+void MessageDispatcher::handleError(wholenumber_t r, DirectoryClass *c)
 {
     // use the base error handling and set our return code to the negated error code.
     ActivityDispatcher::handleError(-r, c);

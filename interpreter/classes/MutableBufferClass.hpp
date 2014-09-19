@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -41,110 +41,108 @@
 /* Primitive MutableBuffer Class Definition                                   */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_RexxMutableBuffer
-#define Included_RexxMutableBuffer
+#ifndef Included_MutableBuffer
+#define Included_MutableBuffer
 
 #include "StringClass.hpp"
 #include "IntegerClass.hpp"
 #include "BufferClass.hpp"
 
-class RexxMutableBuffer;
-class RexxClass;
 
-class RexxMutableBufferClass : public RexxClass {
+/**
+ * A string-like object where in-place updating of the data is permitted.
+ */
+class MutableBuffer : public RexxObject
+{
  public:
-   RexxMutableBufferClass(RESTORETYPE restoreType) { ; };
-   void *operator new(size_t size, void *ptr) { return ptr; };
-   RexxMutableBuffer *newRexx(RexxObject**, size_t);
-};
+           void *operator new(size_t size);
 
- class RexxMutableBuffer : public RexxObject {
-     friend class RexxMutableBufferClass;
-  public:
-   inline void       *operator new(size_t size, void *ptr){return ptr;};
-          void       *operator new(size_t size, RexxClass *bufferClass);
-          void       *operator new(size_t size);
-                      RexxMutableBuffer();
-                      RexxMutableBuffer(size_t, size_t);
-   inline             RexxMutableBuffer(RESTORETYPE restoreType) { ; };
+           MutableBuffer();
+           MutableBuffer(size_t, size_t);
+    inline MutableBuffer(RESTORETYPE restoreType) { ; };
 
-   void               live(size_t);
-   void               liveGeneral(int reason);
-   void               flatten(RexxEnvelope *envelope);
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(Envelope *envelope);
 
-   RexxObject        *copy();
-   void               ensureCapacity(size_t addedLength);
+    virtual RexxInternalObject *copy();
+    void        ensureCapacity(size_t addedLength);
 
-   RexxObject        *lengthRexx();
+    RexxObject *lengthRexx();
 
-   RexxMutableBuffer *append(RexxObject*);
-   RexxMutableBuffer *insert(RexxObject*, RexxObject*, RexxObject*, RexxObject*);
-   RexxMutableBuffer *overlay(RexxObject*, RexxObject*, RexxObject*, RexxObject*);
-   RexxMutableBuffer *replaceAt(RexxObject *str, RexxObject *pos, RexxObject *len, RexxObject *pad);
-   RexxMutableBuffer *mydelete(RexxObject*, RexxObject*);
-   RexxString        *substr(RexxInteger *startPosition, RexxInteger *len, RexxString *pad);
-   RexxInteger       *lastPos(RexxString *needle, RexxInteger *_start, RexxInteger *_range);
-   RexxInteger       *posRexx(RexxString *needle, RexxInteger *_start, RexxInteger *_range);
-   RexxObject        *containsRexx(RexxString *needle, RexxInteger *_start, RexxInteger *_range);
-   RexxInteger       *caselessLastPos(RexxString *needle, RexxInteger *_start, RexxInteger *_range);
-   RexxInteger       *caselessPos(RexxString *needle, RexxInteger *_start, RexxInteger *_range);
-   RexxObject        *caselessContains(RexxString *needle, RexxInteger *_start, RexxInteger *_range);
-   RexxString        *subchar(RexxInteger *startPosition);
+    MutableBuffer *appendRexx(RexxObject*);
+    MutableBuffer *insert(RexxObject*, RexxObject*, RexxObject*, RexxObject*);
+    MutableBuffer *overlay(RexxObject*, RexxObject*, RexxObject*, RexxObject*);
+    MutableBuffer *replaceAt(RexxObject *str, RexxObject *pos, RexxObject *len, RexxObject *pad);
+    MutableBuffer *mydelete(RexxObject*, RexxObject*);
+    RexxString    *substr(RexxInteger *startPosition, RexxInteger *len, RexxString *pad);
+    RexxInteger   *lastPos(RexxString *needle, RexxInteger *_start, RexxInteger *_range);
+    RexxInteger   *posRexx(RexxString *needle, RexxInteger *_start, RexxInteger *_range);
+    RexxObject    *containsRexx(RexxString *needle, RexxInteger *_start, RexxInteger *_range);
+    RexxInteger   *caselessLastPos(RexxString *needle, RexxInteger *_start, RexxInteger *_range);
+    RexxInteger   *caselessPos(RexxString *needle, RexxInteger *_start, RexxInteger *_range);
+    RexxObject    *caselessContains(RexxString *needle, RexxInteger *_start, RexxInteger *_range);
+    RexxString    *subchar(RexxInteger *startPosition);
 
-   RexxInteger       *getBufferSize() { return new_integer(bufferLength); }
-   RexxObject        *setBufferSize(RexxInteger*);
-   RexxArray         *makeArrayRexx(RexxString *div);
-   RexxArray         *makeArray();
-   RexxString        *makeString();
-   RexxString        *primitiveMakeString();
-   RexxInteger       *countStrRexx(RexxString *needle);
-   RexxInteger       *caselessCountStrRexx(RexxString *needle);
-   RexxMutableBuffer *changeStr(RexxString *needle, RexxString *newNeedle, RexxInteger *countArg);
-   RexxMutableBuffer *caselessChangeStr(RexxString *needle, RexxString *newNeedle, RexxInteger *countArg);
-   RexxMutableBuffer *upper(RexxInteger *_start, RexxInteger *_length);
-   RexxMutableBuffer *lower(RexxInteger *_start, RexxInteger *_length);
-   RexxMutableBuffer *translate(RexxString *tableo, RexxString *tablei, RexxString *pad, RexxInteger *, RexxInteger *);
-   RexxInteger *match(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_);
-   RexxInteger *caselessMatch(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_);
-   bool primitiveMatch(stringsize_t start, RexxString *other, stringsize_t offset, stringsize_t len);
-   bool primitiveCaselessMatch(stringsize_t start, RexxString *other, stringsize_t offset, stringsize_t len);
-   RexxInteger *matchChar(RexxInteger *position_, RexxString *matchSet);
-   RexxInteger *caselessMatchChar(RexxInteger *position_, RexxString *matchSet);
-   RexxInteger *verify(RexxString *, RexxString *, RexxInteger *, RexxInteger *);
-   RexxString  *subWord(RexxInteger *, RexxInteger *);
-   RexxArray   *subWords(RexxInteger *, RexxInteger *);
-   RexxString  *word(RexxInteger *);
-   RexxInteger *wordIndex(RexxInteger *);
-   RexxInteger *wordLength(RexxInteger *);
-   RexxInteger *words();
-   RexxInteger *wordPos(RexxString *, RexxInteger *);
-   RexxInteger *caselessWordPos(RexxString *, RexxInteger *);
-   RexxObject  *containsWord(RexxString *, RexxInteger *);
-   RexxObject  *caselessContainsWord(RexxString *, RexxInteger *);
-   RexxMutableBuffer *delWord(RexxInteger *position, RexxInteger *plength);
-   RexxMutableBuffer *space(RexxInteger *space_count, RexxString  *pad);
+    RexxInteger   *getBufferSize() { return new_integer(bufferLength); }
+    RexxObject    *setBufferSize(RexxInteger*);
+    ArrayClass    *makeArrayRexx(RexxString *div);
+    ArrayClass    *makeArray();
+    RexxString    *makeString();
+    RexxString    *primitiveMakeString();
+    RexxInteger   *countStrRexx(RexxString *needle);
+    RexxInteger   *caselessCountStrRexx(RexxString *needle);
+    MutableBuffer *changeStr(RexxString *needle, RexxString *newNeedle, RexxInteger *countArg);
+    MutableBuffer *caselessChangeStr(RexxString *needle, RexxString *newNeedle, RexxInteger *countArg);
+    MutableBuffer *upper(RexxInteger *_start, RexxInteger *_length);
+    MutableBuffer *lower(RexxInteger *_start, RexxInteger *_length);
+    MutableBuffer *translate(RexxString *tableo, RexxString *tablei, RexxString *pad, RexxInteger *, RexxInteger *);
+    RexxObject  *match(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_);
+    RexxObject  *caselessMatch(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_);
+    bool primitiveMatch(size_t start, RexxString *other, size_t offset, size_t len);
+    bool primitiveCaselessMatch(size_t start, RexxString *other, size_t offset, size_t len);
+    RexxObject  *matchChar(RexxInteger *position_, RexxString *matchSet);
+    RexxObject  *caselessMatchChar(RexxInteger *position_, RexxString *matchSet);
+    RexxInteger *verify(RexxString *, RexxString *, RexxInteger *, RexxInteger *);
+    RexxString  *subWord(RexxInteger *, RexxInteger *);
+    ArrayClass  *subWords(RexxInteger *, RexxInteger *);
+    RexxString  *word(RexxInteger *);
+    RexxInteger *wordIndex(RexxInteger *);
+    RexxInteger *wordLength(RexxInteger *);
+    RexxInteger *words();
+    RexxInteger *wordPos(RexxString *, RexxInteger *);
+    RexxInteger *caselessWordPos(RexxString *, RexxInteger *);
+    RexxObject  *containsWord(RexxString *, RexxInteger *);
+    RexxObject  *caselessContainsWord(RexxString *, RexxInteger *);
+    MutableBuffer *delWord(RexxInteger *position, RexxInteger *plength);
+    MutableBuffer *space(RexxInteger *space_count, RexxString  *pad);
 
-   inline const char *getStringData() { return data->getData(); }
-   inline size_t      getLength()     { return dataLength; }
-   inline char *      getData()       { return data->getData(); }
-   inline void copyData(size_t offset, const char *string, size_t l) { data->copyData(offset, string, l); }
-   inline void openGap(size_t offset, size_t _size, size_t tailSize) { data->openGap(offset, _size, tailSize); }
-   inline void closeGap(size_t offset, size_t _size, size_t tailSize) { data->closeGap(offset, _size, tailSize); }
-   inline void adjustGap(size_t offset, size_t _size, size_t _newSize) { data->adjustGap(offset, _size, _newSize, dataLength); }
-   inline void setData(size_t offset, char character, size_t l) { data->setData(offset, character, l); }
-          size_t setDataLength(size_t l);
-   inline char getChar(size_t offset) { return getData()[offset]; }
-   inline size_t getCapacity() { return bufferLength; }
-          char *setCapacity(size_t newLength);
+    inline const char *getStringData() { return data->getData(); }
+    inline size_t      getLength()     { return dataLength; }
+    inline char *      getData()       { return data->getData(); }
+           void append(const char *string, size_t l);
+    inline void copyData(size_t offset, const char *string, size_t l) { data->copyData(offset, string, l); }
+    inline void openGap(size_t offset, size_t _size, size_t tailSize) { data->openGap(offset, _size, tailSize); }
+    inline void closeGap(size_t offset, size_t _size, size_t tailSize) { data->closeGap(offset, _size, tailSize); }
+    inline void adjustGap(size_t offset, size_t _size, size_t _newSize) { data->adjustGap(offset, _size, _newSize, dataLength); }
+    inline void setData(size_t offset, char character, size_t l) { data->setData(offset, character, l); }
+           size_t setDataLength(size_t l);
+    inline char getChar(size_t offset) { return getData()[offset]; }
+    inline size_t getCapacity() { return bufferLength; }
+           char *setCapacity(size_t newLength);
 
+           MutableBuffer *newRexx(RexxObject**, size_t);
 
-   static void createInstance();
-   static RexxClass *classInstance;
+    static const size_t DEFAULT_BUFFER_LENGTH = 256;
+
+    static void createInstance();
+    static RexxClass *classInstance;
 
  protected:
-   size_t             bufferLength;    /* buffer length                   */
-   size_t             defaultSize;     /* default size when emptied       */
-   size_t             dataLength;      // current length of data
-   RexxBuffer        *data;            /* buffer used for the data        */
- };
+
+     size_t             bufferLength;    /* buffer length                   */
+     size_t             defaultSize;     /* default size when emptied       */
+     size_t             dataLength;      // current length of data
+     BufferClass        *data;            /* buffer used for the data        */
+};
 #endif

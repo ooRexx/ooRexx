@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -41,38 +41,32 @@
 /* Primitive Table Collection Class Definition                                */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_RexxTable
-#define Included_RexxTable
+#ifndef Included_TableClass
+#define Included_TableClass
 
-#include "RexxCollection.hpp"
+#include "HashCollection.hpp"
 
-class RexxTable : public RexxHashTableCollection {
-  public:
-   inline RexxTable() {;}
-   inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };
-                                       /* So it doesn't need to do anythin*/
-   inline RexxTable(RESTORETYPE restoreType) { ; };
+/**
+ * Exported table class where indexing is done using object
+ * equality semantics.
+ *
+ */
+class TableClass : public EqualityHashCollection
+{
+ public:
+     void        *operator new(size_t);
+     inline void  operator delete(void *) { ; }
 
-   RexxObject * itemsRexx();
-   void         reset();
-   RexxObject * putNodupe(RexxObject *, RexxObject *);
-   RexxObject * stringPut(RexxObject *, RexxString *);
-   RexxObject * stringAdd(RexxObject *, RexxString *);
-   RexxObject * addOffset(size_t, RexxObject *);
-   RexxObject * replace(RexxObject *newValue, HashLink pos) {return this->contents->replace(newValue, pos); };
-   RexxArray  * allAt(RexxObject *key)  { return this->contents->getAll(key); }
-   void         reHash();
-   RexxArray  * requestArray();
-   inline RexxArray  * stringGetAll(RexxString *key) {return this->contents->stringGetAll(key); };
-   inline       RexxObject * stringGet(RexxString *key) {return this->contents->stringGet(key); };
+    inline TableClass(RESTORETYPE restoreType) { ; }
+           TableClass(size_t capacity = HashCollection::DefaultTableSize) : EqualityHashCollection(capacity) { }
+           TableClass(bool fromRexx) { }
 
-   RexxObject *newRexx(RexxObject **, size_t);
-   static RexxTable  *newInstance();
-   static void createInstance();
-   static RexxClass *classInstance;
+    RexxObject *newRexx(RexxObject **, size_t);
 
+    static void createInstance();
+    static RexxClass *classInstance;
 };
 
-inline RexxTable *new_table()             { return RexxTable::newInstance(); }
+inline TableClass *new_table(size_t capacity = HashCollection::DefaultTableSize) { return new TableClass(capacity); }
 
 #endif

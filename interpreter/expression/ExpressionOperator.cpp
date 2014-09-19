@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -41,13 +41,16 @@
 /* Primitive Operator Parse Class                                             */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "RexxActivation.hpp"
 #include "ExpressionOperator.hpp"
 
+// Table for transforming an operator back into its
+// string name.  These strings must match the operator subclass
+// enum defined in RexxToken (TokenSubclass)
 const char *RexxExpressionOperator::operatorNames[] =
 {
+    "",   // dummy value because the operators start at 1.
     "+",
     "-",
     "*",
@@ -84,105 +87,130 @@ const char *RexxExpressionOperator::operatorNames[] =
 
 
 
-RexxExpressionOperator::RexxExpressionOperator(
-    int         op,                    /* operator index                    */
-    RexxObject *left,                  /* left expression objects           */
-    RexxObject *right)                 /* right expression objects          */
-/******************************************************************************/
-/* Function:  Initialize a translator operator object                         */
-/******************************************************************************/
+
+/**
+ * Create a new Unary operator object.
+ *
+ * @param size   The size of the C++ object.
+ *
+ * @return Storage for the object instance.
+ */
+void *RexxUnaryOperator::operator new(size_t size)
 {
-                                       /* just fill in the three terms      */
-  this->oper = op;
-  OrefSet(this, this->left_term, left);
-  OrefSet(this, this->right_term, right);
+    return new_object(size, T_UnaryOperatorTerm);
 }
 
-
-RexxObject *RexxBinaryOperator::evaluate(
-    RexxActivation      *context,      /* current activation context        */
-    RexxExpressionStack *stack )       /* evaluation stack                  */
-/******************************************************************************/
-/* Function:  Execute a REXX binary operator                                  */
-/******************************************************************************/
+/**
+ * Create a new Binary operator object.
+ *
+ * @param size   The size of the C++ object.
+ *
+ * @return Storage for the object instance.
+ */
+void *RexxBinaryOperator::operator new(size_t size)
 {
-    /* evaluate the target               */
-    RexxObject *left = this->left_term->evaluate(context, stack);
-    /* evaluate the right term           */
-    RexxObject *right = this->right_term->evaluate(context, stack);
-    /* evaluate the message              */
-    RexxObject *result = callOperatorMethod(left, this->oper, right);
-    /* replace top two stack elements    */
-    stack->operatorResult(result);       /* with this one                     */
-                                         /* trace if necessary                */
-    context->traceOperator(operatorName(), result);
-    return result;                       /* return the result                 */
+    return new_object(size, T_BinaryOperatorTerm);
 }
 
-RexxObject *RexxUnaryOperator::evaluate(
-    RexxActivation      *context,      /* current activation context        */
-    RexxExpressionStack *stack )       /* evaluation stack                  */
-/******************************************************************************/
-/* Function:  Execute a REXX prefix operator                                  */
-/******************************************************************************/
+/**
+ * Initialize an expression operator.
+ *
+ * @param op     The operator subcode.
+ * @param left   The left side of the expression.
+ * @param right  The right side of the expression (null if this is
+ *               not a binarry operator).
+ */
+RexxExpressionOperator::RexxExpressionOperator(TokenSubclass op, RexxObject *left, RexxObject *right)
 {
-    /* evaluate the target               */
-    RexxObject *term = this->left_term->evaluate(context, stack);
-    /* process this directly             */
-    RexxObject *result = callOperatorMethod(term, this->oper, OREF_NULL);
-    stack->prefixResult(result);         /* replace the top element           */
-                                         /* trace if necessary                */
-    context->tracePrefix(operatorName(), result);
-    return result;                       /* return the result                 */
+    oper = op;
+    left_term = left;
+    right_term = right;
 }
 
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
 void RexxExpressionOperator::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
-  memory_mark(this->left_term);
-  memory_mark(this->right_term);
+    memory_mark(left_term);
+    memory_mark(right_term);
 }
 
-void RexxExpressionOperator::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
+void RexxExpressionOperator::liveGeneral(MarkReason reason)
 {
-  memory_mark_general(this->left_term);
-  memory_mark_general(this->right_term);
+  memory_mark_general(left_term);
+  memory_mark_general(right_term);
 }
 
-void RexxExpressionOperator::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
+
+/**
+ * Flatten a source object.
+ *
+ * @param envelope The envelope that will hold the flattened object.
+ */
+void RexxExpressionOperator::flatten(Envelope *envelope)
 {
    setUpFlatten(RexxExpressionOperator)
 
-   flatten_reference(newThis->left_term, envelope);
-   flatten_reference(newThis->right_term, envelope);
+   flattenRef(left_term);
+   flattenRef(right_term);
 
    cleanUpFlatten
 }
 
 
-void *RexxUnaryOperator::operator new(size_t size)
-/******************************************************************************/
-/* Function:  Create a new translator object                                  */
-/******************************************************************************/
+/**
+ * Evaluate an operator expression term
+ *
+ * @param context The current execution context.
+ * @param stack   The expression stack from the context.
+ *
+ * @return The operation result object.
+ */
+RexxObject *RexxBinaryOperator::evaluate(RexxActivation *context, ExpressionStack *stack )
 {
-                                       /* Get new object                    */
-    return new_object(size, T_UnaryOperatorTerm);
+    // evaluate both expression terms
+    RexxObject *left = left_term->evaluate(context, stack);
+    RexxObject *right = right_term->evaluate(context, stack);
+    // and finally evaluate the operation itself.  The left term is
+    // the target of the message and determines how this is invoked.
+    RexxObject *result = left->callOperatorMethod(oper, right);
+    // replace top two stack elements with our result
+    stack->operatorResult(result);
+    // trace the result if necessary
+    context->traceOperator(operatorName(), result);
+    return result;
 }
 
-void *RexxBinaryOperator::operator new(size_t size)
-/******************************************************************************/
-/* Function:  Create a new translator object                                  */
-/******************************************************************************/
+
+/**
+ * Evaluate a Unary operation.
+ *
+ * @param context The current execution context.
+ * @param stack   The context evaluation stack.
+ *
+ * @return The operation result.
+ */
+RexxObject *RexxUnaryOperator::evaluate(RexxActivation *context, ExpressionStack *stack )
 {
-                                       /* Get new object                    */
-    return new_object(size, T_BinaryOperatorTerm);
+    // we only have a single term to evaluate
+    RexxObject *term = left_term->evaluate(context, stack);
+    // and forward to the operator type
+    RexxObject *result = term->callOperatorMethod(oper, OREF_NULL);
+    // we only replace one term on the stack.
+    stack->prefixResult(result);
+    context->tracePrefix(operatorName(), result);
+    return result;
 }
+
+
 

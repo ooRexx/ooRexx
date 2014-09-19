@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.ibm.com/developerworks/oss/CPLv1.0.htm                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -45,34 +45,41 @@
 #include "RexxCore.h"
 #include "WeakReferenceClass.hpp"
 #include "ProtectedObject.hpp"
+#include "MethodArguments.hpp"
 
 
 RexxClass *WeakReference::classInstance = OREF_NULL;   // singleton class instance
 
+/**
+ * Create initial bootstrap objects
+ */
 void WeakReference::createInstance()
-/******************************************************************************/
-/* Function:  Create initial bootstrap objects                                */
-/******************************************************************************/
 {
     CLASS_CREATE(WeakReference, "WeakReference", RexxClass);
 }
 
+
+/**
+ * Create a new pointer object
+ *
+ * @param size   The size of the object.
+ *
+ * @return The backing memory for an object.
+ */
 void *WeakReference::operator new(size_t size)
-/******************************************************************************/
-/* Function:  Create a new pointer object                                     */
-/******************************************************************************/
 {
-                                       /* Get new object                    */
     // NB:  We can't just mark this as having no references.  There are operations
     // where we need to have the marking routines called.
     return new_object(size, T_WeakReference);
 }
 
 
-WeakReference::WeakReference(RexxObject *r)
-/******************************************************************************/
-/* Function:  Construct a non-notifying weak reference                        */
-/******************************************************************************/
+/**
+ * Construct a non-notifying weak reference
+ *
+ * @param r      The referent object.
+ */
+WeakReference::WeakReference(RexxInternalObject *r)
 {
     // NOTE:  We do not use OrefSet here, since we don't want the referenced
     // objects to be added to the old to new table.
@@ -82,10 +89,10 @@ WeakReference::WeakReference(RexxObject *r)
 }
 
 
+/**
+ * Construct a non-notifying weak reference
+ */
 WeakReference::WeakReference()
-/******************************************************************************/
-/* Function:  Construct a non-notifying weak reference                        */
-/******************************************************************************/
 {
     // NOTE:  We do not use OrefSet here, since we don't want the referenced
     // objects to be added to the old to new table.
@@ -95,24 +102,28 @@ WeakReference::WeakReference()
 }
 
 
+/**
+ * Normal garbage collection live marking
+ *
+ * @param liveMark The current live mark.
+ */
 void WeakReference::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
 {
     // we need to get called, but we don't do any marking of the referent.
     // we do, however, need to mark the object variables in case this is a subclass.
-    memory_mark(this->objectVariables);
+    memory_mark(objectVariables);
 }
 
 
-void WeakReference::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
+/**
+ * Generalized object marking.
+ *
+ * @param reason The reason for this live marking operation.
+ */
+void WeakReference::liveGeneral(MarkReason reason)
 {
     // this might be a subclass, so we need to mark the object variables always
-    memory_mark_general(this->objectVariables);
+    memory_mark_general(objectVariables);
     // these references are only marked during a save or restore image process.
     // NOTE:  WeakReference objects saved in the Rexx image get removed from the
     // weak reference list and just become normal objects.  Since the weak references
@@ -125,41 +136,46 @@ void WeakReference::liveGeneral(int reason)
     }
 }
 
-void WeakReference::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
+
+/**
+ * Flatten the table contents as part of a saved program.
+ *
+ * @param envelope The envelope we're flattening into.
+ */
+void WeakReference::flatten(Envelope *envelope)
 {
-  setUpFlatten(WeakReference)
-   // not normally needed, but this might be a subclass
-   flatten_reference(newThis->objectVariables, envelope);
-   flatten_reference(newThis->referentObject, envelope);
+    setUpFlatten(WeakReference)
+    // not normally needed, but this might be a subclass
+    flattenRef(objectVariables);
+    flattenRef(referentObject);
 
-   // make sure the new version has nulled out list pointers
-   newThis->nextReferenceList = OREF_NULL;
+    // make sure the new version has nulled out list pointers
+    newThis->nextReferenceList = OREF_NULL;
 
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
-RexxObject *WeakReference::unflatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  unflatten an object                                             */
-/******************************************************************************/
+
+/**
+ * unflatten an object
+ *
+ * @param envelope The owning envelope.
+ *
+ * @return The replacement object (always just this)
+ */
+RexxInternalObject *WeakReference::unflatten(Envelope *envelope)
 {
-    // if we still have a reference to handle, then add this to the
-    // tracking list
-    if (referentObject != OREF_NULL)
-    {
-        memoryObject.addWeakReference(this);
-    }
-    return (RexxObject *)this;           /* return ourself.                   */
+    // We add ourselves unconditionally as a weak object, even if the referenent
+    // is null, since we could have a new one assigned.
+    memoryObject.addWeakReference(this);
+    return this;
 }
 
+
+/**
+ * clear an object reference.
+ */
 void WeakReference::clear()
-/******************************************************************************/
-/* Function:  clear an object reference, and potentially move to notification */
-/* queue so the notification object can be "tapped"                           */
-/******************************************************************************/
 {
     // NOTE:  We do not use OrefSet here, since we don't want the referenced
     // objects to be added to the old to new table.
@@ -174,39 +190,39 @@ void WeakReference::clear()
  * @return The referenced object, or .nil if the object has been garbage
  *         collected.
  */
-RexxObject *WeakReference::value()
+RexxInternalObject *WeakReference::value()
 {
-    if (referentObject == OREF_NULL)
-    {
-        return TheNilObject;
-    }
-    return referentObject;
+    return resultOrNil(referentObject);
 }
 
 
+/**
+ * Create a new weak reference value.
+ *
+ * @param init_args The new arguments.
+ * @param argCount  The count of arguments
+ *
+ * @return A new WeakReference object.
+ */
 RexxObject *WeakReference::newRexx(RexxObject **init_args, size_t argCount)
-/******************************************************************************/
-/* Arguments: Subclass init arguments                                         */
-/* Function:  Create a new string value (used primarily for subclasses)       */
-/******************************************************************************/
 {
-  RexxObject *refObj;                  /* string value                      */
+    // this class is defined on the object class, but this is actually attached
+    // to a class object instance.  Therefore, any use of the this pointer
+    // will be touching the wrong data.  Use the classThis pointer for calling
+    // any methods on this object from this method.
+    RexxClass *classThis = (RexxClass *)this;
 
-                                       /* break up the arguments            */
-  RexxClass::processNewArgs(init_args, argCount, &init_args, &argCount, 1, &refObj, NULL);
-  // must have a value
-  requiredArgument(refObj, ARG_ONE);
-  // create a new weakReference
-  RexxObject *newObj = new WeakReference(refObj);
-  ProtectedObject p(newObj);
-  // override the behaviour in case this is a subclass
-  newObj->setBehaviour(((RexxClass *)this)->getInstanceBehaviour());
-  if (((RexxClass *)this)->hasUninitDefined())
-  {
-      newObj->hasUninit();
-  }
+    RexxObject *refObj;
 
-                                       /* Initialize the new instance       */
-  newObj->sendMessage(OREF_INIT, init_args, argCount);
-  return newObj;                       /* return the new instance           */
+    RexxClass::processNewArgs(init_args, argCount, &init_args, &argCount, 1, &refObj, NULL);
+    // must have a value
+    requiredArgument(refObj, ARG_ONE);
+    // create a new weakReference
+    RexxObject *newObj = new WeakReference(refObj);
+    ProtectedObject p(newObj);
+
+    // handle Rexx class completion
+    classThis->completeNewObject(newObj, init_args, argCount);
+
+    return newObj;
 }

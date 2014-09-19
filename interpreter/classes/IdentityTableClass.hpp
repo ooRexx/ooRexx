@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -41,37 +41,32 @@
 /* Primitive IdentityTable Collection Class Definition                        */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_RexxIdentityTable
-#define Included_RexxIdentityTable
+#ifndef Included_IdentityTable
+#define Included_IdentityTable
 
-#include "TableClass.hpp"
+#include "HashCollection.hpp"
 
-class RexxIdentityTable : public RexxTable {
-  public:
-   void * operator new(size_t size, void *objectPtr) { return objectPtr; };
-                                       /* So it doesn't need to do anythin*/
-   inline RexxIdentityTable(RESTORETYPE restoreType) { ; };
+/**
+ * Exported table class where indexing is done using object
+ * identity
+ */
+class IdentityTable : public IdentityHashCollection
+{
+ public:
+     void        *operator new(size_t);
+     inline void  operator delete(void *) { ; }
 
-   virtual RexxObject *remove(RexxObject *key);
-   virtual RexxObject *get(RexxObject *key);
-   virtual RexxObject *put(RexxObject *, RexxObject *);
-   virtual RexxObject *add(RexxObject *, RexxObject *);
-   virtual RexxObject *removeItem(RexxObject *value);
-   virtual RexxObject *hasItem(RexxObject *targetIndex);
-   virtual RexxObject *getIndex(RexxObject * value);
+    inline IdentityTable(RESTORETYPE restoreType) { ; }
+           IdentityTable(size_t capacity) : IdentityHashCollection(capacity) { }
+           IdentityTable(bool fromRexx) { }
 
-   inline RexxObject  *hasItem(RexxObject *newValue, RexxObject *targetIndex) {return this->contents->primitiveHasItem(newValue, targetIndex); };
-   inline RexxArray   *allAt(RexxObject *key) {return this->contents->primitiveGetAll(key);}
-   inline RexxObject  *findSuperScope(RexxObject *v) { return this->contents->primitiveNextItem(v, TheNilObject); };
+    RexxObject *newRexx(RexxObject **, size_t);
 
-   RexxObject *newRexx(RexxObject **, size_t);
-   static void createInstance();
-   static RexxIdentityTable *newInstance(size_t size);
-   static RexxClass *classInstance;
+    static void createInstance();
+    static RexxClass *classInstance;
 };
 
-
-inline RexxIdentityTable *new_identity_table() { return RexxIdentityTable::newInstance(RexxHashTable::DEFAULT_HASH_SIZE); }
+inline IdentityTable *new_identity_table() { return new IdentityTable(HashCollection::DefaultTableSize); }
 
 #endif
 

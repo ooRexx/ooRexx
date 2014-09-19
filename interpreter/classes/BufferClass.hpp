@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -41,14 +41,14 @@
 /* Primitive Buffer Class Definitions                                         */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_RexxBuffer
-#define Included_RexxBuffer
+#ifndef Included_BufferClass
+#define Included_BufferClass
 
-class RexxBufferBase : public RexxObject
+class BufferClassBase : public RexxObject
 {
 public:
 
-    inline RexxBufferBase() {;};
+    inline BufferClassBase() {;};
 
     inline size_t getDataLength() { return this->dataLength; }
     inline size_t getBufferSize() { return this->bufferSize; }
@@ -88,19 +88,24 @@ protected:
 };
 
 
-class RexxBuffer : public RexxBufferBase
+class BufferClass : public BufferClassBase
 {
 public:
     void *operator new(size_t, size_t);
-    inline void *operator new(size_t size, void *ptr) {return ptr;};
-    inline void  operator delete(void *) { ; }
     inline void  operator delete(void *, size_t) { ; }
-    inline void  operator delete(void *, void *) { ; }
 
-    inline RexxBuffer() {;}
-    inline RexxBuffer(RESTORETYPE restoreType) { ; }
+    inline BufferClass(size_t length)
+    {
+        // initialize the length values
+        bufferSize = length;
+        dataLength = length;
+        // buffers have no references.
+        setHasNoReferences();
+    }
 
-    RexxBuffer *expand(size_t);
+    inline BufferClass(RESTORETYPE restoreType) { ; }
+
+    BufferClass *expand(size_t);
     RexxObject *newRexx(RexxObject **args, size_t argc);
     virtual char *getData() { return data; }
 
@@ -113,25 +118,25 @@ protected:
 };
 
 
- inline RexxBuffer *new_buffer(size_t s) { return new (s) RexxBuffer; }
- inline RexxBuffer *new_buffer(CONSTRXSTRING &r)
- {
-     RexxBuffer *b = new_buffer(r.strlength);
-     b->copyData(r);
-     return b;
- }
+inline BufferClass *new_buffer(size_t s) { return new (s) BufferClass(s); }
+inline BufferClass *new_buffer(CONSTRXSTRING &r)
+{
+    BufferClass *b = new_buffer(r.strlength);
+    b->copyData(r);
+    return b;
+}
 
- inline RexxBuffer *new_buffer(RXSTRING &r)
- {
-     RexxBuffer *b = new_buffer(r.strlength);
-     b->copyData(r);
-     return b;
- }
+inline BufferClass *new_buffer(RXSTRING &r)
+{
+    BufferClass *b = new_buffer(r.strlength);
+    b->copyData(r);
+    return b;
+}
 
- inline RexxBuffer *new_buffer(const char *data, size_t length)
- {
-     RexxBuffer *b = new_buffer(length);
-     b->copyData(0, data, length);
-     return b;
- }
+inline BufferClass *new_buffer(const char *data, size_t length)
+{
+    BufferClass *b = new_buffer(length);
+    b->copyData(0, data, length);
+    return b;
+}
 #endif

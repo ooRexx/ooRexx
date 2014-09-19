@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.ibm.com/developerworks/oss/CPLv1.0.htm                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -50,17 +50,9 @@
 #include <limits.h>
 
 #ifdef __REXX64__
-const wholenumber_t Numerics::MAX_WHOLENUMBER = __INT64_C(999999999999999999);
-const wholenumber_t Numerics::MIN_WHOLENUMBER = __INT64_C(-999999999999999999);
-    // the digits setting used internally for function/method arguments to allow
-    // for the full range
-const size_t Numerics::ARGUMENT_DIGITS  = ((size_t)18);
-// this is the digits setting for full size binary settings
-const size_t Numerics::SIZE_DIGITS  = ((size_t)20);
 
-
-/* Array for valid whole number at various digits settings */
-/*  for value 1-18.                                         */
+// Array for valid whole number at various digits settings
+//  for value 1-18.
 const wholenumber_t Numerics::validMaxWhole[] = {10,
                                            100,
                                            1000,
@@ -80,17 +72,9 @@ const wholenumber_t Numerics::validMaxWhole[] = {10,
                                            100000000000000000,
                                            1000000000000000000};
 #else
-const wholenumber_t Numerics::MAX_WHOLENUMBER = 999999999;
-const wholenumber_t Numerics::MIN_WHOLENUMBER = -999999999;
-    // the digits setting used internally for function/method arguments to allow
-    // for the full binary value range
-const size_t Numerics::ARGUMENT_DIGITS  = ((size_t)9);
-// this is the digits setting for full size binary settings
-const size_t Numerics::SIZE_DIGITS  = ((size_t)10);
 
-
-/* Array for valid whole number at various digits settings */
-/*  for value 1-9.                                         */
+// Array for valid whole number at various digits settings
+//  for value 1-9.
 const wholenumber_t Numerics::validMaxWhole[] = {10,
                                            100,
                                            1000,
@@ -102,26 +86,24 @@ const wholenumber_t Numerics::validMaxWhole[] = {10,
                                            1000000000};
 #endif
 
-const wholenumber_t Numerics::MAX_EXPONENT = 999999999;
-const wholenumber_t Numerics::MIN_EXPONENT = -999999999;
-// this is the matching component to a whole number
-const stringsize_t  Numerics::MAX_STRINGSIZE = MAX_WHOLENUMBER;
-    // max numeric digits value for explicit 64-bit conversions
-const size_t Numerics::DIGITS64 = ((size_t)20);
-// numeric digits 9 is always the default
-const size_t Numerics::DEFAULT_DIGITS  = ((size_t)9);
-const bool Numerics::FORM_SCIENTIFIC    = false;
-const bool Numerics::FORM_ENGINEERING   = true;
-
-const size_t Numerics::DEFAULT_FUZZ    = ((size_t)0); /* default numeric fuzz setting      */
-                                     /* default numeric form setting      */
-const bool Numerics::DEFAULT_FORM = Numerics::FORM_SCIENTIFIC;
-
-NumericSettings Numerics::defaultSettings;
-NumericSettings *Numerics::settings = &Numerics::defaultSettings;
+const NumericSettings Numerics::defaultSettings;
+const NumericSettings *Numerics::settings = &Numerics::defaultSettings;
 
 
+
+/**
+ * Initialize a NumericSettings object.
+ */
 NumericSettings::NumericSettings()
+{
+    setDefault();
+}
+
+
+/**
+ * Set the default numeric settings.
+ */
+void NumericSettings::setDefault()
 {
     digits = Numerics::DEFAULT_DIGITS;
     fuzz = Numerics::DEFAULT_FUZZ;
@@ -163,7 +145,7 @@ RexxObject *Numerics::uint64ToObject(uint64_t v)
     // in the range for an integer object?
     if (v <= (uint64_t)MAX_WHOLENUMBER)
     {
-        return new_integer((stringsize_t)v);
+        return new_integer((size_t)v);
     }
     // out of range, we need to use a numberstring for this, using the full
     // allowable digits range
@@ -200,17 +182,18 @@ RexxObject *Numerics::wholenumberToObject(wholenumber_t v)
  *
  * @return The Rexx object version of this number.
  */
-RexxObject *Numerics::stringsizeToObject(stringsize_t v)
+RexxObject *Numerics::stringsizeToObject(size_t v)
 {
     // in the range for an integer object?
-    if (v <= (stringsize_t)MAX_WHOLENUMBER)
+    if (v <= (size_t)MAX_WHOLENUMBER)
     {
-        return new_integer((stringsize_t)v);
+        return new_integer((size_t)v);
     }
     // out of range, we need to use a numberstring for this, using the full
     // allowable digits range
     return new_numberstringFromStringsize(v);
 }
+
 
 /**
  * Convert an object into a whole number value.
@@ -234,7 +217,7 @@ bool Numerics::objectToWholeNumber(RexxObject *source, wholenumber_t &result, wh
     else
     {
         // get this as a numberstring (which it might already be)
-        RexxNumberString *nString = source->numberString();
+        NumberString *nString = source->numberString();
         // not convertible to number string?  get out now
         if (nString == OREF_NULL)
         {
@@ -277,7 +260,7 @@ bool Numerics::objectToSignedInteger(RexxObject *source, ssize_t &result, ssize_
     else
     {
         // get this as a numberstring (which it might already be)
-        RexxNumberString *nString = source->numberString();
+        NumberString *nString = source->numberString();
         // not convertible to number string?  get out now
         if (nString == OREF_NULL)
         {
@@ -309,7 +292,7 @@ bool Numerics::objectToSignedInteger(RexxObject *source, ssize_t &result, ssize_
  * @return true if the number converted properly, false for any
  *         conversion errors.
  */
-bool Numerics::objectToStringSize(RexxObject *source, stringsize_t &result, stringsize_t maxValue)
+bool Numerics::objectToStringSize(RexxObject *source, size_t &result, size_t maxValue)
 {
     // is this an integer value (very common)
     if (isInteger(source))
@@ -326,7 +309,7 @@ bool Numerics::objectToStringSize(RexxObject *source, stringsize_t &result, stri
     else
     {
         // get this as a numberstring (which it might already be)
-        RexxNumberString *nString = source->numberString();
+        NumberString *nString = source->numberString();
         // not convertible to number string?  get out now
         if (nString == OREF_NULL)
         {
@@ -339,7 +322,7 @@ bool Numerics::objectToStringSize(RexxObject *source, stringsize_t &result, stri
         {
             if ( temp <= maxValue )
             {
-                result = (stringsize_t)temp;
+                result = (size_t)temp;
                 return true;
             }
         }
@@ -375,7 +358,7 @@ bool Numerics::objectToUnsignedInteger(RexxObject *source, size_t &result, size_
     else
     {
         // get this as a numberstring (which it might already be)
-        RexxNumberString *nString = source->numberString();
+        NumberString *nString = source->numberString();
         // not convertible to number string?  get out now
         if (nString == OREF_NULL)
         {
@@ -388,7 +371,7 @@ bool Numerics::objectToUnsignedInteger(RexxObject *source, size_t &result, size_
         {
             if ( temp <= maxValue )
             {
-                result = (stringsize_t)temp;
+                result = (size_t)temp;
                 return true;
             }
         }
@@ -407,11 +390,6 @@ bool Numerics::objectToUnsignedInteger(RexxObject *source, size_t &result, size_
  *         conversion errors.
  */
 bool Numerics::objectToInt64(RexxObject *source, int64_t &result)
-/******************************************************************************/
-/* Function:  Convert a Rexx object into a numeric value within the specified */
-/* value range.  If the value is not convertable to an integer value or is    */
-/* outside of the specified range, false is returned.                         */
-/******************************************************************************/
 {
     // is this an integer value (very common)
     if (isInteger(source))
@@ -422,7 +400,7 @@ bool Numerics::objectToInt64(RexxObject *source, int64_t &result)
     else
     {
         // get this as a numberstring (which it might already be)
-        RexxNumberString *nString = source->numberString();
+        NumberString *nString = source->numberString();
         // not convertible to number string?  get out now
         if (nString == OREF_NULL)
         {
@@ -454,7 +432,7 @@ RexxObject *Numerics::int64Object(RexxObject *source)
     else
     {
         // get this as a numberstring (which it might already be)
-        RexxNumberString *nString = source->numberString();
+        NumberString *nString = source->numberString();
         // not convertible to number string?  get out now
         if (nString == OREF_NULL)
         {
@@ -481,11 +459,6 @@ RexxObject *Numerics::int64Object(RexxObject *source)
  *         conversion errors.
  */
 bool Numerics::objectToUnsignedInt64(RexxObject *source, uint64_t &result)
-/******************************************************************************/
-/* Function:  Convert a Rexx object into a numeric value within the specified */
-/* value range.  If the value is not convertable to an integer value or is    */
-/* outside of the specified range, false is returned.                         */
-/******************************************************************************/
 {
     // is this an integer value (very common)
     if (isInteger(source))
@@ -501,7 +474,7 @@ bool Numerics::objectToUnsignedInt64(RexxObject *source, uint64_t &result)
     else
     {
         // get this as a numberstring (which it might already be)
-        RexxNumberString *nString = source->numberString();
+        NumberString *nString = source->numberString();
         // not convertible to number string?  get out now
         if (nString == OREF_NULL)
         {
@@ -525,7 +498,7 @@ bool Numerics::objectToUnsignedInt64(RexxObject *source, uint64_t &result)
  */
 bool Numerics::objectToUintptr(RexxObject *source, uintptr_t &result)
 {
-    stringsize_t temp;
+    size_t temp;
     // if it didn't convert for the range, give a failure back
     if (!Numerics::objectToUnsignedInteger(source, temp, UINTPTR_MAX))
     {
@@ -569,7 +542,7 @@ bool Numerics::objectToIntptr(RexxObject *source, intptr_t &result)
  *
  * @return The length of the converted number.
  */
-stringsize_t Numerics::formatWholeNumber(wholenumber_t integer, char *dest)
+size_t Numerics::formatWholeNumber(wholenumber_t integer, char *dest)
 {
     // zero? this is pretty easy
     if (integer == 0)
@@ -617,7 +590,7 @@ stringsize_t Numerics::formatWholeNumber(wholenumber_t integer, char *dest)
     }
 
     // copy into the buffer and set the length
-    stringsize_t length = sizeof(buffer) - index;
+    size_t length = sizeof(buffer) - index;
     memcpy(dest, &buffer[index], length);
     // make sure we have a terminating null
     dest[length] = '\0';
@@ -634,7 +607,7 @@ stringsize_t Numerics::formatWholeNumber(wholenumber_t integer, char *dest)
  *
  * @return The length of the converted number.
  */
-stringsize_t Numerics::normalizeWholeNumber(wholenumber_t integer, char *dest)
+size_t Numerics::normalizeWholeNumber(wholenumber_t integer, char *dest)
 {
     // zero? this is pretty easy
     if (integer == 0)
@@ -679,12 +652,13 @@ stringsize_t Numerics::normalizeWholeNumber(wholenumber_t integer, char *dest)
     }
 
     // copy into the buffer and set the length
-    stringsize_t length = sizeof(buffer) - index;
+    size_t length = sizeof(buffer) - index;
     memcpy(dest, &buffer[index], length);
     // make sure we have a terminating null
     dest[length] = '\0';
     return length;
 }
+
 
 /**
  * Do portable formatting of a stringsize value into an ascii
@@ -695,7 +669,7 @@ stringsize_t Numerics::normalizeWholeNumber(wholenumber_t integer, char *dest)
  *
  * @return The length of the converted number.
  */
-stringsize_t Numerics::formatStringSize(stringsize_t integer, char *dest)
+size_t Numerics::formatStringSize(size_t integer, char *dest)
 {
     // zero? this is pretty easy
     if (integer == 0)
@@ -719,7 +693,7 @@ stringsize_t Numerics::formatStringSize(stringsize_t integer, char *dest)
     }
 
     // copy into the buffer and set the length
-    stringsize_t length = sizeof(buffer) - index;
+    size_t length = sizeof(buffer) - index;
     memcpy(dest, &buffer[index], length);
     // make sure we have a terminating null
     dest[length] = '\0';
@@ -736,7 +710,7 @@ stringsize_t Numerics::formatStringSize(stringsize_t integer, char *dest)
  *
  * @return The length of the converted number.
  */
-stringsize_t Numerics::formatInt64(int64_t integer, char *dest)
+size_t Numerics::formatInt64(int64_t integer, char *dest)
 {
     // zero? this is pretty easy
     if (integer == 0)
@@ -784,7 +758,7 @@ stringsize_t Numerics::formatInt64(int64_t integer, char *dest)
     }
 
     // copy into the buffer and set the length
-    stringsize_t length = sizeof(buffer) - index;
+    size_t length = sizeof(buffer) - index;
     memcpy(dest, &buffer[index], length);
     // make sure we have a terminating null
     dest[length] = '\0';
@@ -801,7 +775,7 @@ stringsize_t Numerics::formatInt64(int64_t integer, char *dest)
  *
  * @return The length of the converted number.
  */
-stringsize_t Numerics::formatUnsignedInt64(uint64_t integer, char *dest)
+size_t Numerics::formatUnsignedInt64(uint64_t integer, char *dest)
 {
     // zero? this is pretty easy
     if (integer == 0)
@@ -825,7 +799,7 @@ stringsize_t Numerics::formatUnsignedInt64(uint64_t integer, char *dest)
     }
 
     // copy into the buffer and set the length
-    stringsize_t length = sizeof(buffer) - index;
+    size_t length = sizeof(buffer) - index;
     memcpy(dest, &buffer[index], length);
     // make sure we have a terminating null
     dest[length] = '\0';
@@ -851,7 +825,7 @@ RexxObject *Numerics::uintptrToObject(uintptr_t v)
     // out of range, we need to use a numberstring for this, using the full
     // allowable digits range.  Note that this assumes we maintain the connection
     // that a wholenumber_t is the same size as an intptr_t.
-    return new_numberstringFromStringsize((stringsize_t)v);
+    return new_numberstringFromStringsize((size_t)v);
 }
 
 
@@ -897,12 +871,12 @@ RexxString *Numerics::pointerToString(void *p)
     // format this into a chracter string
     char temp[32];
     // unfortunately, the formation of %p is not consistent across platforms.
-    // We first format this directly, and if the value does not be
+    // We first format this directly, and if the value does not give use the
+    // desired form, we force it.
     sprintf(temp, "%p", p);
     if (temp[1] != 'x')
     {
         sprintf(temp, "0x%p", p);
     }
     return new_string(temp);
-
 }

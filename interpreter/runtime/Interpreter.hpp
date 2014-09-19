@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.ibm.com/developerworks/oss/CPLv1.0.htm                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -53,8 +53,8 @@
 #include "SysSemaphore.hpp"
 
 class InterpreterInstance;
-class RexxList;
-class RexxActivity;
+class ListClass;
+class Activity;
 
 class Interpreter
 {
@@ -68,7 +68,7 @@ public:
     static void init();
 
     static void live(size_t);
-    static void liveGeneral(int reason);
+    static void liveGeneral(MarkReason reason);
 
     static void processStartup();
     static void processShutdown();
@@ -131,7 +131,7 @@ public:
     static inline void setTimeSliceElapsed() { timeSliceElapsed = true; }
     static inline void clearTimeSliceElapsed() { timeSliceElapsed = false; }
     static bool haltAllActivities(RexxString *);
-    static void decodeConditionData(RexxDirectory *conditionObj, RexxCondition *condData);
+    static void decodeConditionData(DirectoryClass *conditionObj, RexxCondition *condData);
     static RexxClass *findClass(RexxString *className);
     static RexxString *getCurrentQueue();
 
@@ -142,7 +142,7 @@ protected:
     static SysMutex  resourceLock;   // use to lock resources accessed outside of kernel global lock
     static int    initializations;   // indicates whether we're terminated or not
     static bool   timeSliceElapsed;  // indicates we've had a timer interrupt
-    static RexxList *interpreterInstances;  // the set of interpreter instances
+    static QueueClass *interpreterInstances;  // the set of interpreter instances
     static bool   active;            // indicates whether the interpreter is initialized
     static RexxString *versionNumber;  // our version number information
 };
@@ -202,7 +202,7 @@ public:
     InstanceBlock(PRXSYSEXIT exits, const char *env);
     ~InstanceBlock();
 
-    RexxActivity         *activity;    // our current activity
+    Activity         *activity;    // our current activity
     InterpreterInstance  *instance;    // potential interpreter instance
 };
 
