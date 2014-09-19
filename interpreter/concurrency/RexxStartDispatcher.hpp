@@ -43,6 +43,8 @@
 #include "ActivityDispatcher.hpp"
 #include "ProtectedObject.hpp"
 
+class RoutineClass;
+
 /**
  * A dispatcher for processing a RexxStart call.
  */

@@ -45,9 +45,9 @@
 #ifndef Included_CompoundVariableTail
 #define Included_CompoundVariableTail
 
-#include "ProtectedObject.hpp"
 #include "LanguageParser.hpp"
 #include "BufferClass.hpp"
+#include "ProtectedObject.hpp"
 
 class BufferClass;
 

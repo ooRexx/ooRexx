@@ -59,6 +59,7 @@
 
 
 class ProtectedObject;
+class ProtectedBase;
 class PackageClass;
 class MethodClass;
 class InterpreterInstance;

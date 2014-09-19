@@ -42,6 +42,8 @@
 #include "ProtectedObject.hpp"
 #include "NativeActivation.hpp"
 #include "LanguageParser.hpp"
+#include "GlobalNames.hpp"
+#include "ActivityManager.hpp"
 
 
 /**

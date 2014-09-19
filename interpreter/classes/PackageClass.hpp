@@ -45,8 +45,11 @@
 
 #include "SecurityManager.hpp"
 #include "PackageSetting.hpp"
+#include "SourceLocation.hpp"
 
 class ProgramSource;
+class RexxCode;
+class RoutineClass;
 
 
 /**

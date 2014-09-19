@@ -45,7 +45,6 @@
 #define SecurityManager_Included
 
 #include "RexxCore.h"
-#include "ProtectedObject.hpp"
 
 class DirectoryClass;
 

@@ -46,7 +46,8 @@
 #include "BufferClass.hpp"
 #include "SmartBuffer.hpp"
 #include "SystemInterpreter.hpp"
-
+#include "GlobalNames.hpp"
+#include "ActivityManager.hpp"
 
 
 /**

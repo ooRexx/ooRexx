@@ -45,7 +45,7 @@
 #define Included_BaseExecutable
 
 #include "BaseCode.hpp"
-
+#include "ProtectedObject.hpp"
 
 /**
  * Base class for all executable objects.  Executable

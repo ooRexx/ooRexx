@@ -45,6 +45,8 @@
 #include "MethodDictionary.hpp"
 #include "MethodClass.hpp"
 #include "SupplierClass.hpp"
+#include "VariableDictionary.hpp"
+#include "StringTableClass.hpp"
 
 /**
  * Create a new table object.

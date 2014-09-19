@@ -41,6 +41,8 @@
 
 #include "MethodClass.hpp"
 
+class RexxVariableBase;
+
 
 // pass arguments as pointer/count pair
 const size_t A_COUNT   = 127;

@@ -41,6 +41,7 @@
 #include "ProtectedObject.hpp"
 #include "MessageClass.hpp"
 #include "NativeActivation.hpp"
+#include "GlobalNames.hpp"
 
 
 /**

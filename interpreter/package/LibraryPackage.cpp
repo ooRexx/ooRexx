@@ -50,6 +50,7 @@
 #include "StringTableClass.hpp"
 #include "RoutineClass.hpp"
 #include "ProtectedObject.hpp"
+#include "ActivityManager.hpp"
 
 /**
  * Create a new LibraryPackage object instance.

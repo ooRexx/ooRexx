@@ -47,6 +47,7 @@
 #include "BufferClass.hpp"
 #include "Numerics.hpp"
 #include "ExpressionVariable.hpp"
+#include "GlobalNames.hpp"
 
 
 /**

@@ -48,6 +48,7 @@
 #include "NativeCode.hpp"
 #include "PackageManager.hpp"
 #include "PackageClass.hpp"
+#include "ActivityManager.hpp"
 
 
 /**

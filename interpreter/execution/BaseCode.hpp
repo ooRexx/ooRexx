@@ -45,7 +45,9 @@
 #define Included_BaseCode
 
 #include "RexxCore.h"
-#include "ProtectedObject.hpp"
+
+class ProtectedObject;
+class RoutineClass;
 
 /**
  * Base class for a code object.  Code objects can be invoked as

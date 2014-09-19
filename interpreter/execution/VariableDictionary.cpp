@@ -59,6 +59,7 @@
 #include "LanguageParser.hpp"
 #include "HashCollection.hpp"
 #include "DirectoryClass.hpp"
+#include "GlobalNames.hpp"
 
 
 /**

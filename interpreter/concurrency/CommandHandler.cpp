@@ -48,6 +48,7 @@
 #include "ProtectedObject.hpp"
 #include "SystemInterpreter.hpp"
 #include "DirectoryClass.hpp"
+#include "ActivityManager.hpp"
 
 
 /**

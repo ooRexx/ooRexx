@@ -45,6 +45,9 @@
 #include "RexxCore.h"
 #include "SecurityManager.hpp"
 #include "DirectoryClass.hpp"
+#include "ProtectedObject.hpp"
+#include "GlobalNames.hpp"
+#include "ActivityManager.hpp"
 
 
 /**

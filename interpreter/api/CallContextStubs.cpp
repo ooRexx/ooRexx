@@ -50,6 +50,7 @@
 #include "MethodClass.hpp"
 #include "PackageClass.hpp"
 #include "DirectoryClass.hpp"
+#include "ActivityManager.hpp"
 
 BEGIN_EXTERN_C()
 

@@ -50,6 +50,7 @@
 #include "ActivationSettings.hpp"
 
 class StringTable;
+class RexxInstruction;
 
 /**
  * The fundamental unit of Rexx code execution.  This
