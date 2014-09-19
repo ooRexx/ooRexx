@@ -649,9 +649,7 @@ bool SysFile::gets(char *buffer, size_t bufferLen, size_t &bytesRead)
         return false;
     }
 
-    // null terminate, set the length, and return
-    buffer[i] = '\0';
-    // this is the length minus the terminating null
+    // this is the length of the read data (including new lines)
     bytesRead = i;
     // return an error state, but not EOF status.
     return !error();

@@ -664,8 +664,6 @@ bool SysFile::gets(char *mybuffer, size_t bufferLen, size_t &bytesRead)
         return false;
     }
 
-    // null terminate, set the length, and return
-    mybuffer[i] = '\0';
     // this is the length minus the terminating null
     bytesRead = i;
     // return an error state, but not EOF status.

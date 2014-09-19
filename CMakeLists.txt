@@ -246,7 +246,7 @@ check_function_exists(fstat HAVE_FSTAT)
 check_function_exists(gcvt HAVE_GCVT)
 check_function_exists(geteuid HAVE_GETEUID)
 check_function_exists(getpgrp HAVE_GETPGRP)
-check_function_exists(getpwuid HAVE_GETPUID)
+check_function_exists(getpwuid HAVE_GETPWUID)
 check_function_exists(gettimeofday HAVE_GETTIMEOFDAY)
 check_function_exists(getuserattr HAVE_GETUSERATTR)
 check_function_exists(IDtouser HAVE_IDTOUSER)
@@ -1785,6 +1785,11 @@ if (BUILD_RPM)
      ")
    # This pevents the rpm from generating these subdirectories in the install.
    set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION
+      ${CMAKE_INSTALL_PREFIX}
+      ${CMAKE_INSTALL_PREFIX}/bin
+      ${CMAKE_INSTALL_PREFIX}/lib
+      ${CMAKE_INSTALL_PREFIX}/lib64
+      ${CMAKE_INSTALL_PREFIX}/share
       ${CMAKE_INSTALL_PREFIX}/share/man
       ${CMAKE_INSTALL_PREFIX}/share/man/man1
       ${CMAKE_INSTALL_PREFIX}/share/applications
@@ -1803,7 +1808,9 @@ if (BUILD_RPM)
    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/platform/unix/rpm_post.in ${CMAKE_CURRENT_SOURCE_DIR}/platform/unix/rpm_post)
    set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/platform/unix/rpm_post)
    set(CPACK_RPM_PRE_UNINSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/platform/unix/rpm_preun)
-   if (${INSTALL_LIB_DIR} STREQUAL ${CMAKE_INSTALL_PREFIX}/lib64)
+   if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "s390x")
+      set(orx_install_arch "s390x")
+   elseif (${INSTALL_LIB_DIR} STREQUAL ${CMAKE_INSTALL_PREFIX}/lib64)
       set(orx_install_arch "x86_64")
    else ()
       set(orx_install_arch "i386")
@@ -1871,7 +1878,9 @@ if (BUILD_DEB)
            GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
    set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
            "${CMAKE_BINARY_DIR}/postinst;${CMAKE_BINARY_DIR}/prerm;")
-   if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
+   if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "s390x")
+      set(orx_install_arch "s390x")
+   elseif (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
       set(orx_install_arch "x86_64")
    else ()
       set(orx_install_arch "i386")
