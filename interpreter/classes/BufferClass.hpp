@@ -94,7 +94,7 @@ class BufferClass : public BufferClassBase
 {
 public:
     void *operator new(size_t, size_t);
-    inline void  operator delete(void *, size_t) { ; }
+    inline void  operator delete(void *) { ; }
 
     inline BufferClass(size_t length)
     {

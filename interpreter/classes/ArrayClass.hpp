@@ -133,7 +133,7 @@ class ArrayClass : public RexxObject
     };
 
     void * operator new(size_t, size_t = DefaultArraySize, size_t = DefaultArraySize);
-    inline void operator delete(void *, size_t, size_t) {;}
+    inline void operator delete(void *) {;}
 
     static ArrayClass *allocateNewObject(size_t size, size_t items, size_t maxSize, size_t type);
 

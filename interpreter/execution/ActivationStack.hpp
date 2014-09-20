@@ -54,8 +54,7 @@ class ActivationFrameBuffer : public RexxInternalObject
 {
     public:
             void *operator new(size_t size, size_t entries);
-     inline void  operator delete(void *, void *) { ; }
-     inline void  operator delete(void *, size_t) { ; }
+     inline void  operator delete(void *) { ; }
 
      ActivationFrameBuffer() { ; }
      ActivationFrameBuffer(size_t entries);
