@@ -50,6 +50,9 @@
 #include "StringUtil.hpp"
 #include "MethodArguments.hpp"
 
+#include <stdio.h>
+#include <math.h>
+
 // singleton class instance
 RexxClass *NumberString::classInstance = OREF_NULL;
 
