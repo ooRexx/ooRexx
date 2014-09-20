@@ -201,6 +201,7 @@ class PushThroughStack : public RexxInternalObject
         stack[current] = OREF_NULL;
         // now move back an item, with wrap protection.
         decrementCurrent();
+        return obj;
     }
 
     LiveStack  *reallocate(size_t increment);

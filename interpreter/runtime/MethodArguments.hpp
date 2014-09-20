@@ -45,7 +45,7 @@
 /* Globally required include files                                            */
 /******************************************************************************/
 #ifndef MethodArguments_Included
-#define MethodArguments_Include
+#define MethodArguments_Included
 
 #include "ActivityManager.hpp"
 
