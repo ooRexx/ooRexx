@@ -991,7 +991,7 @@ void Activity::generateProgramInformation(DirectoryClass *exobj)
     if (package != OREF_NULL && !package->isOldSpace())
     {
         exobj->put(package->getProgramName(), PROGRAM);
-        exobj->put(package, PACKAGE_STRING);
+        exobj->put(package, PACKAGE_NAME);
     }
     else
     {
@@ -1165,14 +1165,14 @@ void Activity::reraiseException(DirectoryClass *exobj)
         // set the position and program name
         exobj->put(new_integer(activation->currentLine()), POSITION);
         exobj->put(package->getProgramName(), PROGRAM);
-        exobj->put(package, PACKAGE_STRING);
+        exobj->put(package, PACKAGE_NAME);
     }
     else
     {
         // remove the old package information.
         exobj->remove(POSITION);
         exobj->remove(PROGRAM);
-        exobj->remove(PACKAGE_STRING);
+        exobj->remove(PACKAGE_NAME);
     }
 
     // get the error code and redo the message information
