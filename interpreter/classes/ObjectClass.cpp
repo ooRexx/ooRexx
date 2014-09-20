@@ -70,7 +70,7 @@ RexxObject *RexxNilObject::nilObject = OREF_NULL;
  */
 void RexxObject::createInstance()
 {
-    CLASS_CREATE(Object, "Object", RexxClass);
+    CLASS_CREATE(Object);
 }
 
 

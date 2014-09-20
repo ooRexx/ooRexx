@@ -55,7 +55,7 @@ RexxClass *WeakReference::classInstance = OREF_NULL;   // singleton class instan
  */
 void WeakReference::createInstance()
 {
-    CLASS_CREATE(WeakReference, "WeakReference", RexxClass);
+    CLASS_CREATE(WeakReference);
 }
 
 

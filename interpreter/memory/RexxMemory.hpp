@@ -494,6 +494,8 @@ inline ArrayClass *new_arrayOfObject(size_t s, size_t c, size_t t)  { return mem
 // declare a class creation routine
 // for classes with their own
 // explicit class objects
-#define CLASS_CREATE(name, id, className) The##name##Class = new className(id, The##name##ClassBehaviour, The##name##Behaviour);
+#define CLASS_CREATE(name) The##name##Class = new RexxClass(#name, The##name##ClassBehaviour, The##name##Behaviour);
+
+#define CLASS_CREATE_SPECIAL(name, id, className) The##name##Class = new className(id, The##name##ClassBehaviour, The##name##Behaviour);
 
 #endif

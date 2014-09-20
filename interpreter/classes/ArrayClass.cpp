@@ -65,7 +65,7 @@ ArrayClass *ArrayClass::nullArray = OREF_NULL;
  */
 void ArrayClass::createInstance()
 {
-    CLASS_CREATE(Array, "Array", RexxClass);
+    CLASS_CREATE(Array);
     // the null array is useful for some internal purposes.
     // this should never be used in a situation where it might get
     // handed out out, since user code might add items to it.

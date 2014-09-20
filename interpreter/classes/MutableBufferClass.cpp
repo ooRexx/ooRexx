@@ -59,7 +59,7 @@ RexxClass *MutableBuffer::classInstance = OREF_NULL;
  */
 void MutableBuffer::createInstance()
 {
-    CLASS_CREATE(MutableBuffer, "MutableBuffer", RexxClass);
+    CLASS_CREATE(MutableBuffer);
 }
 
 

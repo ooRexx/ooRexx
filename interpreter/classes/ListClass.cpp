@@ -60,7 +60,7 @@ RexxClass *ListClass::classInstance = OREF_NULL;
  */
 void ListClass::createInstance()
 {
-    CLASS_CREATE(List, "List", RexxClass);
+    CLASS_CREATE(List);
 }
 
 

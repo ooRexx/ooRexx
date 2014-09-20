@@ -73,7 +73,7 @@ const char *RexxString::DIGITS_BASE64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklm
  */
 void RexxString::createInstance()
 {
-    CLASS_CREATE(String, "String", RexxClass);
+    CLASS_CREATE(String);
 }
 
 

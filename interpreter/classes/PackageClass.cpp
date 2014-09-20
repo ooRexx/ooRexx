@@ -70,7 +70,7 @@ RexxClass *PackageClass::classInstance = OREF_NULL;
  */
 void PackageClass::createInstance()
 {
-    CLASS_CREATE(Package, "Package", RexxClass);
+    CLASS_CREATE(Package)
 }
 
 

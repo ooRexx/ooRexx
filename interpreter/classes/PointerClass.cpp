@@ -56,7 +56,7 @@ PointerClass *PointerClass::nullPointer = OREF_NULL;   // single version of a nu
  */
 void PointerClass::createInstance()
 {
-    CLASS_CREATE(Pointer, "Pointer", RexxClass);
+    CLASS_CREATE(Pointer);
     TheNullPointer = new_pointer(NULL);       // a NULL pointer object
 }
 

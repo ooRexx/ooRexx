@@ -55,7 +55,7 @@ RexxClass *TableClass::classInstance = OREF_NULL;
  */
 void TableClass::createInstance()
 {
-    CLASS_CREATE(Table, "Table", RexxClass);
+    CLASS_CREATE(Table);
 }
 
 

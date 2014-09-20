@@ -60,7 +60,7 @@ const char *StackFrameClass::FRAME_PROGRAM = "PROGRAM";
  */
 void StackFrameClass::createInstance()
 {
-    CLASS_CREATE(StackFrame, "StackFrame", RexxClass);
+    CLASS_CREATE(StackFrame);
 }
 
 

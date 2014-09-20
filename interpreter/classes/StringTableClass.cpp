@@ -55,7 +55,7 @@ RexxClass *StringTable::classInstance = OREF_NULL;
  */
 void StringTable::createInstance()
 {
-    CLASS_CREATE(StringTable, "StringTable", RexxClass);
+    CLASS_CREATE(StringTable);
 }
 
 

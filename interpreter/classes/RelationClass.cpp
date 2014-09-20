@@ -55,7 +55,7 @@ RexxClass *RelationClass::classInstance = OREF_NULL;
  */
 void RelationClass::createInstance()
 {
-    CLASS_CREATE(Relation, "Relation", RexxClass);
+    CLASS_CREATE(Relation);
 }
 
 

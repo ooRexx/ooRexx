@@ -1140,9 +1140,7 @@ size_t rxArgCount(RexxMethodContext * context)
  *
  * @note  This function is using some things that work on Windows, but cause
  *        errors on Linux.  Just comment out until it can be researched.
- *        TODO PLEASE fix this.
  */
-#ifdef _WIN32
 bool rxStr2Number(RexxMethodContext *c, CSTRING str, uint64_t *number, size_t pos)
 {
     char *end;
@@ -1154,7 +1152,6 @@ bool rxStr2Number(RexxMethodContext *c, CSTRING str, uint64_t *number, size_t po
     }
     return true;
 }
-#endif
 
 /*
  * This function behaves exactly like rxStr2Number(), except it is for 32-bit

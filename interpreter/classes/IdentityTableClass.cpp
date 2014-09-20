@@ -56,7 +56,7 @@ RexxClass *IdentityTable::classInstance = OREF_NULL;
  */
 void IdentityTable::createInstance()
 {
-    CLASS_CREATE(IdentityTable, "IdentityTable", RexxClass);
+    CLASS_CREATE(IdentityTable);
 }
 
 

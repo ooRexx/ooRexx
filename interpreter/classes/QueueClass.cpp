@@ -58,7 +58,7 @@ RexxClass *QueueClass::classInstance = OREF_NULL;
  */
 void QueueClass::createInstance()
 {
-    CLASS_CREATE(Queue, "Queue", RexxClass);
+    CLASS_CREATE(Queue);
 }
 
 

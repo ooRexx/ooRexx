@@ -77,7 +77,7 @@ void *MessageClass::operator new(size_t size)
  */
 void MessageClass::createInstance()
 {
-    CLASS_CREATE(Message, "Message", RexxClass);
+    CLASS_CREATE(Message);
 }
 
 

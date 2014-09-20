@@ -93,7 +93,6 @@ void ActivityManager::init()
  */
 void ActivityManager::live(size_t liveMark)
 {
-    // TODO:  consider using std::vector for these collections.
     memory_mark(availableActivities);
     memory_mark(allActivities);
 }
@@ -426,7 +425,6 @@ bool ActivityManager::poolActivity(Activity *activity)
         activity->cleanupActivityResources();
 
         // remove this from the activity list
-        // TODO:  make sure that queue removeItem() is a delete.
         allActivities->removeItem(activity);
         return false;
     }

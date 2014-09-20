@@ -55,9 +55,7 @@ RexxClass *SetClass::classInstance = OREF_NULL;
  */
 void SetClass::createInstance()
 {
-    // TODO:  simplify CLASS_CREATE() by defaulting RexxClass...and possibly generating
-    // the both the create method and the static variable initializer.
-    CLASS_CREATE(Set, "Set", RexxClass);
+    CLASS_CREATE(Set);
 }
 
 

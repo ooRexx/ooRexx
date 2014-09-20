@@ -55,7 +55,7 @@ RexxClass *BufferClass::classInstance = OREF_NULL;   // singleton class instance
  */
 void BufferClass::createInstance()
 {
-    CLASS_CREATE(Buffer, "Buffer", RexxClass);
+    CLASS_CREATE(Buffer);
 }
 
 

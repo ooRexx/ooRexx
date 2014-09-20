@@ -73,7 +73,7 @@ RexxClass *RoutineClass::classInstance = OREF_NULL;
  */
 void RoutineClass::createInstance()
 {
-    CLASS_CREATE(Routine, "Routine", RexxClass);
+    CLASS_CREATE(Routine);
 }
 
 

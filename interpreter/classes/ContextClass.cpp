@@ -54,7 +54,7 @@ RexxClass *RexxContext::classInstance = OREF_NULL;   // singleton class instance
  */
 void RexxContext::createInstance()
 {
-    CLASS_CREATE(RexxContext, "RexxContext", RexxClass);
+    CLASS_CREATE(RexxContext);
 }
 
 

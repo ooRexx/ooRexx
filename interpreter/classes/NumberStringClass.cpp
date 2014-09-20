@@ -62,7 +62,7 @@ RexxClass *NumberString::classInstance = OREF_NULL;
  */
 void NumberString::createInstance()
 {
-    CLASS_CREATE(NumberString, "String", RexxClass);
+    CLASS_CREATE_SPECIAL(NumberString, "String", RexxClass);
 }
 
 

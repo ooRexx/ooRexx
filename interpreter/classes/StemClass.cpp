@@ -64,7 +64,7 @@ RexxClass *StemClass::classInstance = OREF_NULL;
  */
 void StemClass::createInstance()
 {
-    CLASS_CREATE(Stem, "Stem", RexxClass);
+    CLASS_CREATE(Stem);
 }
 
 

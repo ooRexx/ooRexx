@@ -59,7 +59,7 @@ RexxClass *DirectoryClass::classInstance = OREF_NULL;
  */
 void DirectoryClass::createInstance()
 {
-    CLASS_CREATE(Directory, "Directory", RexxClass);
+    CLASS_CREATE(Directory);
 }
 
 

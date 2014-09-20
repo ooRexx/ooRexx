@@ -1507,7 +1507,7 @@ void *RexxInteger::operator new(size_t size)
  */
 void RexxInteger::createInstance()
 {
-    CLASS_CREATE(Integer, "String", RexxIntegerClass);
+    CLASS_CREATE_SPECIAL(Integer, "String", RexxIntegerClass);
     TheIntegerClass->initCache();
 }
 

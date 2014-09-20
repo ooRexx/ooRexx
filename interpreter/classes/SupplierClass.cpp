@@ -59,7 +59,7 @@ RexxClass *SupplierClass::classInstance = OREF_NULL;
  */
 void SupplierClass::createInstance()
 {
-    CLASS_CREATE(Supplier, "Supplier", RexxClass);
+    CLASS_CREATE(Supplier);
 }
 
 

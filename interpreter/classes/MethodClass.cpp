@@ -71,7 +71,7 @@ RexxClass *MethodClass::classInstance = OREF_NULL;
  */
 void MethodClass::createInstance()
 {
-    CLASS_CREATE(Method, "Method", RexxClass);
+    CLASS_CREATE(Method);
 }
 
 

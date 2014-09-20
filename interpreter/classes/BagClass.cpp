@@ -54,9 +54,7 @@ RexxClass *BagClass::classInstance = OREF_NULL;
  */
 void BagClass::createInstance()
 {
-    // TODO:  simplify CLASS_CREATE() by defaulting RexxClass...and possibly generating
-    // the both the create method and the static variable initializer.
-    CLASS_CREATE(Bag, "Bag", RexxClass);
+    CLASS_CREATE(Bag);
 }
 
 
