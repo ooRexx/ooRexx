@@ -364,7 +364,7 @@ class LanguageParser: public RexxInternalObject
 
 
     // other useful static scanning routines
-    static StringSymbolType LanguageParser::scanSymbol(RexxString *string);
+    static StringSymbolType scanSymbol(RexxString *string);
 
     static inline bool isSymbolCharacter(unsigned int ch)
     {
@@ -403,7 +403,7 @@ class LanguageParser: public RexxInternalObject
     static pbuiltin builtinTable[];
 
     // an invalid 8-bit character marker.
-    const unsigned int INVALID_CHARACTER = 0x100;
+    static const unsigned int INVALID_CHARACTER = 0x100;
 
     // maximum length of a symbol
     static const size_t MAX_SYMBOL_LENGTH = 250;

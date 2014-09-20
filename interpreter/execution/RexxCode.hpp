@@ -64,7 +64,7 @@ class RexxCode : public BaseCode
 
    // an extra added to the stack frame needed because the count
    // is generally off by one or two.
-   const size_t MINIMUM_STACK_FRAME = 10;
+   static const size_t MINIMUM_STACK_FRAME = 10;
 
    RexxCode(PackageClass *s, SourceLocation &loc, RexxInstruction *i, StringTable *l = OREF_NULL, size_t f = 0, size_t v = RexxLocalVariables::FIRST_VARIABLE_INDEX);
    inline RexxCode(RESTORETYPE restoreType) { ; };

@@ -190,7 +190,7 @@ class CompoundVariableTail
    inline size_t getLength() { return length; }
    inline const char *getTail()  { return tail; }
 
-   const size_t ALLOCATION_PAD = 100;
+   static const size_t ALLOCATION_PAD = 100;
 
  protected:
 
