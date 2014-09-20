@@ -46,6 +46,8 @@
 #include "ExpressionBaseVariable.hpp"
 #include "MethodArguments.hpp"
 
+#include <stdio.h>
+
 
 /**
  * Allocate a new CPP code object.

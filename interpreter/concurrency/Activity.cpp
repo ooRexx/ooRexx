@@ -75,6 +75,8 @@
 #include "MethodArguments.hpp"
 #include "MutableBufferClass.hpp"
 
+#include <stdio.h>
+
 // we use lots of global names here.
 using namespace GlobalNames;
 

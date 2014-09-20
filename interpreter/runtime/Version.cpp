@@ -45,16 +45,18 @@
 #include "StringClass.hpp"
 #include "Interpreter.hpp"
 
-const char *  build_date = __DATE__;  /* date of last build                */
+#include <stdio.h>
+
+const char *build_date = __DATE__;  /* date of last build                */
 
 RexxString *Interpreter::versionNumber = OREF_NULL;
 
+/**
+ * Generate a version number string for the interpreter.
+ *
+ * @return The interpreter version string.
+ */
 RexxString *Interpreter::getVersionNumber()
-/******************************************************************************/
-/* Arguments:  None                                                           */
-/*                                                                            */
-/*  Returned:  Version string                                                 */
-/******************************************************************************/
 {
     if (versionNumber == OREF_NULL)
     {

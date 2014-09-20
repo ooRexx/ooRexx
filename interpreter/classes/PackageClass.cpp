@@ -59,6 +59,8 @@
 #include "RequiresDirective.hpp"
 #include "ClassDirective.hpp"
 
+#include <stdio.h>
+
 // singleton class instance
 RexxClass *PackageClass::classInstance = OREF_NULL;
 

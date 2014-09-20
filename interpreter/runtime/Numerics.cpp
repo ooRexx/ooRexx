@@ -47,7 +47,9 @@
 #include "Numerics.hpp"
 #include "NumberStringClass.hpp"
 #include "IntegerClass.hpp"
+
 #include <limits.h>
+#include <stdio.h>
 
 #ifdef __REXX64__
 

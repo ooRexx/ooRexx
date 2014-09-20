@@ -56,6 +56,8 @@
 #include "RexxInternalApis.h"
 #include "SystemInterpreter.hpp"
 
+#include <stdio.h>
+
 
 int REXXENTRY RexxTerminate()
 /******************************************************************************/

@@ -44,6 +44,8 @@
 #include "RexxCore.h"
 #include "ActivityManager.hpp"
 
+#include <stdio.h>
+
 // the threshold to trigger expansion of the normal segment set.
 const double NormalSegmentSet::NormalMemoryExpansionThreshold = .30;
 // The point where we consider releasing segments

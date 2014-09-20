@@ -60,6 +60,8 @@
 #include "MethodArguments.hpp"
 #include "NumberStringClass.hpp"
 
+#include <stdio.h>
+
 // lots of global names used here, so make the
 // namespace global.
 using namespace GlobalNames;

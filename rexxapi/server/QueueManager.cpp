@@ -40,6 +40,7 @@
 #include "APIServer.hpp"
 #include <time.h>
 #include <new>
+#include <stdio.h>
 #include "stdio.h"
 #include "Utilities.hpp"
 #include "SynchronizedBlock.hpp"

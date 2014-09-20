@@ -47,6 +47,8 @@
 #include "LanguageParser.hpp"
 #include "GlobalNames.hpp"
 
+#include <stdio.h>
+
 
 /*********************************************************************
 *  The following table detects alphanumeric characters and           *
