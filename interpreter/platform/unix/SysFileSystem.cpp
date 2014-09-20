@@ -91,7 +91,7 @@ bool SysFileSystem::searchFileName(const char* name, char *fullName )
     if (strstr(name, "/") != NULL || name[0] == '~' || name[0] == '.')
     {
         bool done = SysFileSystem::canonicalizeName(fullName);
-        if (done == false || fileExists(tempPath) == false)
+        if (done == false || fileExists(fullName) == false)
         {
             fullName[0] = '\0';
             return false;
