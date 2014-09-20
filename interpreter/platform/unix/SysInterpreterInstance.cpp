@@ -90,16 +90,19 @@ void SysInterpreterInstance::addSearchExtension(const char *name)
 {
     // if the extension is not already in the extension list, add it
     RexxString *ext = new_string(name);
-    if (instance->searchExtensions->hasItem(ext) == TheFalseObject)
+    if (instance->searchExtensions->hasItem(ext))
     {
         instance->searchExtensions->append(ext);
     }
 }
 
+
+/**
+ * Do system specific program setup
+ *
+ * @param activation The activation for the top-level program.
+ */
 void SysInterpreterInstance::setupProgram(RexxActivation *activation)
-/******************************************************************************/
-/* Function:  Do system specific program setup                                */
-/******************************************************************************/
 {
     // trace this activation if turned on externally when the instance was started
     if (externalTraceEnabled)
