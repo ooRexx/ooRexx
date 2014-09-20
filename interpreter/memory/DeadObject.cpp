@@ -45,6 +45,8 @@
 #include "RexxMemory.hpp"
 #include "Interpreter.hpp"
 
+#include <stdio.h>
+
 void DeadObjectPool::dumpMemoryProfile(FILE *outFile)
 /******************************************************************************/
 /* Function:  Dump statistics for this dead object pool.                      */
