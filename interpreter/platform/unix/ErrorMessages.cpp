@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -77,8 +77,8 @@ typedef struct msgEntry {              /* define for error table entries    */
  int    msgid;                         /* error message number              */
 } ERROR_MESSAGE;
 
-#include "MessageClassNumbers.h"        /* include  definition of errorcodes */
-#include "MessageClassTable.h"          /* include actual table definition   */
+#include "RexxMessageNumbers.h"        /* include  definition of errorcodes */
+#include "RexxMessageTable.h"          /* include actual table definition   */
 
 #ifdef LINUX
 //#define SECOND_PARAMETER MCLoadAll   /* different sign. Lin-AIX           */
