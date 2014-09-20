@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -53,6 +53,8 @@
 #include "SystemInterpreter.hpp"
 #include "InterpreterInstance.hpp"
 #include "SysFileSystem.hpp"
+#include "ActivityManager.hpp"
+
 #include <string.h>
 #include <stdio.h>
 #include <stddef.h>
@@ -119,9 +121,9 @@ RexxString *SysInterpreterInstance::resolveProgramName(RexxString *_name, RexxSt
     }
 
     // ok, now time to try each of the individual extensions along the way.
-    for (size_t i = instance->searchExtensions->firstIndex(); i != LIST_END; i = instance->searchExtensions->nextIndex(i))
+    for (size_t i = 1; i <= instance->searchExtensions->items(); i++)
     {
-        RexxString *ext = (RexxString *)instance->searchExtensions->getValue(i);
+        RexxString *ext = (RexxString *)instance->searchExtensions->get(i);
 
         if (SysFileSystem::searchName(name, searchPath.path, ext->getStringData(), resolvedName))
         {
