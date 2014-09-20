@@ -469,7 +469,6 @@ BUILTIN(WORDPOS)
     return string->wordPos(phrase, start);
 }
 
-// TODO: Check on how/when the string uppercase flag is set
 
 BUILTIN(WORDS)
 {

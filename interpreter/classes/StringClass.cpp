@@ -2075,7 +2075,7 @@ RexxString *RexxString::newRexx(RexxObject **init_args, size_t argCount)
 
     // break up the arguments
     RexxObject *stringObj;
-    RexxClass::processNewArgs(init_args, argCount, &init_args, &argCount, 1, (RexxObject **)&stringObj, NULL);
+    RexxClass::processNewArgs(init_args, argCount, init_args, argCount, 1, stringObj, NULL);
     // force argument to string value
     RexxString *string = stringArgument(stringObj, ARG_ONE);
     // we can't use this value directly because we will adjust the

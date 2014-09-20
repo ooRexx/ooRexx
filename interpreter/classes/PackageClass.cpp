@@ -127,7 +127,7 @@ PackageClass *PackageClass::newRexx(RexxObject **init_args, size_t argCount)
     InterpreterInstance *instance = activity->getInstance();
 
     // parse the arguments
-    RexxClass::processNewArgs(init_args, argCount, &init_args, &initCount, 2, (RexxObject **)&pgmname, (RexxObject **)&programSource);
+    RexxClass::processNewArgs(init_args, argCount, init_args, initCount, 2, pgmname, &programSource);
 
     Protected<PackageClass> package;
 

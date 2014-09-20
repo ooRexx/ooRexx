@@ -155,9 +155,6 @@ void RexxClass::liveGeneral(MarkReason reason)
 }
 
 
-// TODO:  no flatten method for classes?
-
-
 /**
  * Make a proxy object from a class.
  *
@@ -1074,9 +1071,6 @@ MethodDictionary *RexxClass::createMethodDictionary(RexxObject *sourceCollection
         newDictionary->addMethod(table_method_name, newMethod);
     }
 
-    // TODO:  Figure out when the scope gets added to this dictionary.  Might not be
-    // required, but it could be useful when doing merges.
-
     return newDictionary;
 }
 
@@ -1660,46 +1654,50 @@ void RexxClass::completeNewObject(RexxObject *obj, RexxObject **initArgs, size_t
 }
 
 
-// TODO:  Finish cleaning this file up
-void RexxClass::processNewArgs(
-    RexxObject **arg_array,            /* source argument array             */
-    size_t       argCount,             /* size of the argument array        */
-    RexxObject***init_args,            /* remainder arguments               */
-    size_t      *remainderSize,        /* remaining count of arguments      */
-    size_t       required,             /* number of arguments we require    */
-    RexxObject **argument1,            /* first returned argument           */
-    RexxObject **argument2 )           /* second return argument            */
-/******************************************************************************/
-/* Function:  Divide up a class new arglist into new arguments and init args  */
-/******************************************************************************/
+/**
+ * Common routine for processing class new method arguments.
+ *
+ * @param arg_array The original array of arguments.
+ * @param argCount  The count of arguments passed to the new method.
+ * @param init_args The arguments left for an INIT method after processing the new argument.
+ * @param remainderSize
+ *                  The count of arguments remaining after stripping off the
+ *                  new arguments.
+ * @param required  The count of required arguments.
+ * @param argument1 Pointer to the first argument.
+ * @param argument2 Pointer to the second argument.
+ */
+void RexxClass::processNewArgs(RexxObject **arg_array, size_t argCount, RexxObject**&init_args,
+    size_t &remainderSize, size_t required, RexxObject *&argument1, RexxObject **argument2 )
 {
-    *argument1 = OREF_NULL;              /* clear the first argument          */
-    if (argCount >= 1)                   /* have at least one argument?       */
+    // we only get called if we have at least one argument to process.  The second argument
+    // is optional.  If we have an argument, then set it to the first item.
+    argument1 = OREF_NULL;
+    if (argCount >= 1)
     {
-        *argument1 = arg_array[0];         /* get the first argument            */
+        argument1 = arg_array[0];
     }
+
+    // if we need at least two arguments, handle this too.
     if (required == 2)
-    {                 /* processing two arguments?         */
+    {
+        *argument2 = OREF_NULL;
         if (argCount >= 2)                 /* get at least 2?                   */
         {
             *argument2 = arg_array[1];       /* get the second argument           */
         }
-        else
-        {
-            *argument2 = OREF_NULL;          /* clear the second argument         */
-        }
     }
-    /* get the init args part            */
-    *init_args = arg_array + required;
-    /* if we have at least the required arguments, reduce the count. */
-    /* Otherwise, set this to zero. */
+    // now update the argument pointer and count
+    init_args = arg_array + required;
+    // if we have at least the required arguments, reduce the count.
+    // Otherwise, set this to zero.
     if (argCount >= required)
     {
-        *remainderSize = argCount - required;
+        remainderSize = argCount - required;
     }
     else
     {
-        *remainderSize = 0;
+        remainderSize = 0;
     }
 }
 

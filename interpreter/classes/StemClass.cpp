@@ -100,7 +100,7 @@ RexxObject *StemClass::newRexx(RexxObject **init_args, size_t       argCount)
     // the name is an optional argument, we'll just pass along to the constructor which will
     // perform the validation.
     RexxObject *name;
-    RexxClass::processNewArgs(init_args, argCount, &init_args, &argCount, 1, (RexxObject **)&name, NULL);
+    RexxClass::processNewArgs(init_args, argCount, init_args, argCount, 1, name, NULL);
 
     Protected<StemClass> newObj = new StemClass ((RexxString *)name);
 

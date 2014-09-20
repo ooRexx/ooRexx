@@ -153,7 +153,7 @@ class RexxClass : public RexxObject
            void         removeSubclass(RexxClass *c);
            void         checkUninit();
 
-    static void processNewArgs(RexxObject **, size_t, RexxObject ***, size_t *, size_t, RexxObject **, RexxObject **);
+    static void processNewArgs(RexxObject **, size_t, RexxObject **&, size_t &, size_t, RexxObject *&, RexxObject **);
 
     static void createInstance();
     // singleton class instance;
