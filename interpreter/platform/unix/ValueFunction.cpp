@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -36,9 +36,9 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX AIX Support                                             aixvalue.c    */
+/* REXX Unit Support                                                          */
 /*                                                                            */
-/* AIX system specific VALUE() built-in function routine                      */
+/* Unix system specific VALUE() built-in function routine                     */
 /*                                                                            */
 /******************************************************************************/
 
@@ -46,10 +46,15 @@
 #include "StringClass.hpp"
 #include "ActivityManager.hpp"
 #include "SystemInterpreter.hpp"
+#include "MethodArguments.hpp"
+
 #include <unistd.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #define  SELECTOR  "ENVIRONMENT"       /* environment selector              */
+
+// TODO:  Clean this up
 
 extern int putflag;
 
