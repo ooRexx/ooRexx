@@ -60,7 +60,7 @@
 // the size of a pointer
 #define MIN_C_STACK 1024*(32 + sizeof(void *))
 #define TOTAL_STACK_SIZE 1024*512
-#define C_STACK_SIZE 60000
+#define C_STACK_SIZE TOTAL_STACK_SIZE
 
 #define SysCall _cdecl
 

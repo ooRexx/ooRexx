@@ -348,7 +348,6 @@ Activity::Activity(bool createThread)
         // the main thread might shut us down before we get a chance to perform
         // whatever function we're getting asked to run.
         activate();
-        // TODO:  check out whether this is an appropriate STACK size.
         currentThread.create(this, C_STACK_SIZE);
     }
     // we are creating an activity that represents the thread
@@ -358,7 +357,6 @@ Activity::Activity(bool createThread)
         // run on the current thread
         currentThread.useCurrentThread();
         // reset the stack base for this thread.
-        // TODO:  What is the TOTAL_STACK_SIZE value?
         stackBase = currentThread.getStackBase(TOTAL_STACK_SIZE);
     }
 }

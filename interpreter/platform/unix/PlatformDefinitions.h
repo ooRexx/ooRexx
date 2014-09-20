@@ -55,7 +55,7 @@
 /* REQUIRED:  The implemenation must decide on the C_STACK_SIZE defining      */
 /* constants that are compiler/linker dependent.                              */
 /******************************************************************************/
-#define MIN_C_STACK 1024*16
+#define MIN_C_STACK 1024*(32 + sizeof(void *))
 #define TOTAL_STACK_SIZE 1024*512
 #define C_STACK_SIZE TOTAL_STACK_SIZE
 
