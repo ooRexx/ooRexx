@@ -51,6 +51,10 @@
 #include "NumberStringClass.hpp"
 #include "DirectoryClass.hpp"
 
+#include <stdio.h>
+#include <math.h>
+#include <limits>
+
 // singleton class instance
 RexxClass *RexxString::classInstance = OREF_NULL;
 
