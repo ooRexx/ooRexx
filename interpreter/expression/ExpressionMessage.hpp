@@ -52,7 +52,7 @@ class RexxExpressionMessage : public RexxVariableBase
  friend class LanguageParser;
  public:
     void *operator new(size_t, size_t);
-    inline void  operator delete(void *, size_t) { ; }
+    inline void  operator delete(void *) { ; }
 
     RexxExpressionMessage(RexxObject *, RexxString *, RexxObject *, size_t, QueueClass *, bool);
     inline RexxExpressionMessage(RESTORETYPE restoreType) { ; };

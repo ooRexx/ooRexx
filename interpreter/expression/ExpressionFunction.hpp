@@ -51,7 +51,7 @@ class RexxExpressionFunction : public RexxInternalObject
 {
  public:
     void *operator new(size_t, size_t);
-    inline void  operator delete(void *, size_t) { ; }
+    inline void  operator delete(void *) { ; }
 
     RexxExpressionFunction(RexxString *, size_t, QueueClass *, BuiltinCode);
     inline RexxExpressionFunction(RESTORETYPE restoreType) { ; };

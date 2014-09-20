@@ -52,7 +52,7 @@ class InternalStack : public RexxInternalObject
     inline void  operator delete(void *) { ; }
 
     InternalStack() { ; }
-    InternalStack::InternalStack(size_t stackSize);
+    InternalStack(size_t stackSize);
     inline InternalStack(RESTORETYPE restoreType) { ; }
 
     virtual void live(size_t);

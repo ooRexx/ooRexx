@@ -64,7 +64,7 @@ class ParseTrigger : public RexxInternalObject
 {
  public:
     void        *operator new(size_t, size_t);
-    inline void  operator delete(void *, size_t) { }
+    inline void  operator delete(void *) { }
 
     ParseTrigger(ParseTriggerType, RexxObject *, size_t, QueueClass *);
     inline ParseTrigger(RESTORETYPE restoreType) { ; };

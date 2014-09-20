@@ -64,6 +64,8 @@
  *
  * @return A pointer to the target primitive behaviour.
  */
+// TODO:  This probably should not be done in the NEW, but rather
+// use a placement new operator
 void *RexxBehaviour::operator new(size_t size, size_t typenum)
 {
     // return a pointer to the static primitive one

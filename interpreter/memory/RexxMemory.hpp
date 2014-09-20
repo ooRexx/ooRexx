@@ -99,7 +99,7 @@ class MemorySegmentPool : public MemorySegmentPoolHeader
 #endif
  public:
      void          *operator new(size_t size, size_t minSize);
-     inline void    operator delete(void *, size_t) { }
+     inline void    operator delete(void *) { }
 
      static MemorySegmentPool *createPool();
 

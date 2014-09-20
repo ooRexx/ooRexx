@@ -171,7 +171,7 @@ class NumberString : public NumberStringBase
    };
 
     void         *operator new(size_t, size_t);
-    inline void   operator delete(void *, size_t) { }
+    inline void   operator delete(void *) { }
 
     NumberString(size_t) ;
     NumberString(size_t, size_t) ;

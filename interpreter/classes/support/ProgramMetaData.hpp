@@ -45,8 +45,9 @@ class BufferClass;
 class ProgramMetaData
 {
 public:
+    // TODO:  This NEW method doesn't seem right...
     void *operator new (size_t size, BufferClass *buff);
-    void operator delete (void *p, BufferClass *buff) { SystemInterpreter::releaseResultMemory(p); }
+    void operator delete (void *p) { SystemInterpreter::releaseResultMemory(p); }
 
     ProgramMetaData();
     ProgramMetaData(BufferClass *);

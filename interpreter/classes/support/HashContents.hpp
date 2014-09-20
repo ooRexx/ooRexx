@@ -391,7 +391,7 @@ class IdentityHashContents : public HashContents
 {
 public:
            void * operator new(size_t size, size_t capacity);
-    inline void  operator delete(void *, size_t) { ; }
+    inline void  operator delete(void *) { ; }
 
     inline IdentityHashContents() { ; };
     inline IdentityHashContents(RESTORETYPE restoreType) { ; };
@@ -444,7 +444,7 @@ class MultiValueContents : public EqualityHashContents
 {
 public:
            void *operator new(size_t size, size_t capacity);
-    inline void  operator delete(void *, size_t) { ; }
+    inline void  operator delete(void *) { ; }
 
     inline MultiValueContents() { ; };
     inline MultiValueContents(RESTORETYPE restoreType) { ; };
@@ -466,7 +466,7 @@ class StringHashContents : public EqualityHashContents
 {
 public:
            void *operator new(size_t size, size_t capacity);
-    inline void  operator delete(void *, size_t) { ; }
+    inline void  operator delete(void *) { ; }
 
     inline StringHashContents() { ; };
     inline StringHashContents(RESTORETYPE restoreType) { ; };

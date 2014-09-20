@@ -72,7 +72,7 @@ class ListContents : public RexxInternalObject
     };
 
            void *operator new(size_t, size_t);
-    inline void  operator delete(void *, size_t) { }
+    inline void  operator delete(void *) { }
 
     inline ListContents(RESTORETYPE restoreType) { ; };
     inline ListContents() {;};
