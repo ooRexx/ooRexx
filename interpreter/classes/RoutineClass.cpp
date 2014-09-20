@@ -61,6 +61,8 @@
 #include "InterpreterInstance.hpp"
 #include "LanguageParser.hpp"
 #include "MethodArguments.hpp"
+#include <stdio.h>
+
 
 // singleton class instance
 RexxClass *RoutineClass::classInstance = OREF_NULL;
