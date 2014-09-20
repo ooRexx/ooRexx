@@ -204,9 +204,6 @@ RexxActivation::RexxActivation(Activity *_activity, RexxActivation *_parent, Rex
     _parent->putSettings(settings);
     // step the trace indentation level for this internal nesting
     settings.traceIndent++;
-    // the random seed is copied from the calling activity, this led
-    // to reproducable random sequences even though no specific seed was given!
-    adjustRandomSeed();
 
     // if we are doing an internal call, we've inherited our
     // caller's trap state, but if we change anything, then we need
@@ -286,10 +283,6 @@ RexxActivation::RexxActivation(Activity *_activity, RoutineClass *_routine, Rexx
 
     // this is a top level call, so we get a fresh random seed
     randomSeed = activity->getRandomSeed();
-
-    // the random seed is copied from the calling activity, this led
-    // to reproducable random sequences even though no specific seed was given!
-    adjustRandomSeed();
 
     // copy the source security manager
     settings.securityManager = code->getSecurityManager();
@@ -2960,17 +2953,12 @@ uint64_t RexxActivation::getRandomSeed(RexxInteger *seed)
         // flipping all of the bits gives us a better spread.  Supplied seeds tend to
         // be smaller numbers with lots of zero bits.
         randomSeed = ~randomSeed;
-        // an scramble it a bit further.
+        // and scramble it a bit further.
         for (size_t i = 0; i < 13; i++)
         {
             randomSeed = RANDOMIZE(randomSeed);
         }
     }
-
-    // now apply a randomization to whatever we have set
-    randomSeed = RANDOMIZE(randomSeed);
-    // set the seed at the activity level
-    activity->setRandomSeed(randomSeed);
     return randomSeed;
 }
 

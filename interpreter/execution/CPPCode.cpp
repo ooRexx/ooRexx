@@ -45,6 +45,7 @@
 #include "ActivationFrame.hpp"
 #include "ExpressionBaseVariable.hpp"
 #include "MethodArguments.hpp"
+#include "PackageClass.hpp"
 
 #include <stdio.h>
 
@@ -79,6 +80,17 @@ CPPCode::CPPCode(size_t index, PCPPM entry, size_t argcount)
 
 
 /**
+ * Normal garbage collection live marking
+ *
+ * @param liveMark The current live mark.
+ */
+void CPPCode::live(size_t liveMark)
+{
+    memory_mark(package);
+}
+
+
+/**
  * Generalized object marking.  If restoring or unflattening,
  * make sure we restore the method pointer.
  *
@@ -86,7 +98,13 @@ CPPCode::CPPCode(size_t index, PCPPM entry, size_t argcount)
  */
 void CPPCode::liveGeneral(MarkReason reason)
 {
-    if (reason == RESTORINGIMAGE || reason == UNFLATTENINGOBJECT)
+    // if we're getting ready to save the image, replace the source
+    // package with the global REXX package
+    if (reason == PREPARINGIMAGE)
+    {
+        package = TheRexxPackage;
+    }
+    else if (reason == RESTORINGIMAGE || reason == UNFLATTENINGOBJECT)
     {
         cppEntry = exportedMethods[methodIndex];
     }

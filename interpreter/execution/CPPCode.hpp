@@ -59,6 +59,7 @@ public:
     CPPCode(size_t, PCPPM, size_t);
     inline CPPCode(RESTORETYPE restoreType) { ; };
 
+    virtual void live(size_t mark);
     virtual void liveGeneral(MarkReason reason);
 
     virtual void run(Activity *, MethodClass *, RexxObject *, RexxString *, RexxObject **, size_t, ProtectedObject &);

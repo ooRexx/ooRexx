@@ -251,8 +251,7 @@ class Activity : public RexxInternalObject
     inline bool        checkRequires(RexxString *n) { return runningRequires(n) != OREF_NULL; }
     inline void        waitForDispatch() { runsem.wait(); }
     inline void        clearWait()  { runsem.reset(); }
-    inline uint64_t    getRandomSeed() { return randomSeed; }
-    inline void setRandomSeed(uint64_t seed) { randomSeed = seed; };
+           uint64_t    getRandomSeed();
            RexxString *getLastMessageName();
 
     inline RexxThreadContext *getThreadContext() { return &threadContext.threadContext; }

@@ -248,7 +248,6 @@ class RexxActivation : public ActivationBase
    void              processTraps();
    void              mergeTraps(QueueClass *);
    uint64_t          getRandomSeed(RexxInteger *);
-   void              adjustRandomSeed() { randomSeed += (uint64_t)(uintptr_t)this; }
    VariableDictionary *getObjectVariables();
    StringTable     * getLabels();
    RexxString      * getProgramName();

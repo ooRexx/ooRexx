@@ -391,8 +391,6 @@ Activity *Activity::spawnReply()
  */
 void Activity::generateRandomNumberSeed()
 {
-    // TODO:  Re-examine how the initial seed is used in RexxActivation.
-
     // we use our own random number generator, but it's perfectly
     // to use the C library one to generate a random initial seed.
     randomSeed = 0;
@@ -404,12 +402,20 @@ void Activity::generateRandomNumberSeed()
     {
         randomSeed = randomSeed << 16 ^ rand();
     }
+}
 
-    // scramble the seed a few times using our randomization code.
-    for (int i = 0; i < 13; i++)
-    {
-        randomSeed = RexxActivation::RANDOMIZE(randomSeed);
-    }
+
+/**
+ * Get a new random seed value for a new activation.
+ *
+ * @return A random seed value.  Each call will return a unique value.
+ */
+uint64_t Activity::getRandomSeed()
+{
+    // randomize this a little from the last version to knock things
+    // off sequence.
+    randomSeed = randomSeed << 16 ^ rand();
+    return randomSeed;
 }
 
 
@@ -983,10 +989,9 @@ void Activity::generateProgramInformation(DirectoryClass *exobj)
         }
     }
 
-    // TODO:  This really should be done in the package class.
     // if we have source, and this is not part of the interpreter image,
     // add program information
-    if (package != OREF_NULL && !package->isOldSpace())
+    if (package != OREF_NULL)
     {
         exobj->put(package->getProgramName(), PROGRAM);
         exobj->put(package, PACKAGE_REF);
@@ -2162,7 +2167,6 @@ bool Activity::callTerminalInputExit(RexxActivation *activation, RexxString *&in
         {
             return true;
         }
-        // TODO:  This could use a helper method.
         // process the return value
         inputstring = new_string(exit_parm.rxsiotrd_retc);
         if (exit_parm.rxsiotrd_retc.strptr != retbuffer)
