@@ -60,30 +60,24 @@
 #include <errno.h>
 #include "SysFileSystem.hpp"
 #include "Utilities.hpp"
+#include "ActivityManager.hpp"
 
 const char SysFileSystem::EOF_Marker = 0x1A;
 const char *SysFileSystem::EOL_Marker = "\n";
 const char SysFileSystem::PathDelimiter = '/';
 
-/*********************************************************************/
-/*                                                                   */
-/* FUNCTION    : SearchFileName                                      */
-/*                                                                   */
-/* DESCRIPTION : Search for a given filename, returning the fully    */
-/*               resolved name if it is found.                       */
-/*                                                                   */
-/*********************************************************************/
-
-bool SysFileSystem::searchFileName(
-  const char* name,                    /* name of rexx proc to check        */
-  char *     fullName )                /* fully resolved name               */
+/**
+ * Search for a given filename, returning the fully
+ * resolved name if it is found.
+ *
+ * @param name     The original name.
+ * @param fullName A pointer to the buffer where the resolved name is returned.
+ *
+ * @return True if the file was found, false otherwise.
+ */
+bool SysFileSystem::searchFileName(const char* name, char *fullName )
 {
-    size_t nameLength;                   /* length of name                    */
-    char tempPath[MaximumFileNameBuffer];// temporary place to store the path/name
-    char * currentpath;                  // current path
-    char * sep;                          // next colon in the path
-
-    nameLength = strlen(name);           /* get length of incoming name       */
+    size_t nameLength = strlen(name);
 
     /* if name is too small or big */
     if (nameLength < 1 || nameLength > MaximumFileNameBuffer)
@@ -96,34 +90,35 @@ bool SysFileSystem::searchFileName(
 	/* (beware, don't test "." because files like ".hidden" alone are candidate for search in PATH */
     if (strstr(name, "/") != NULL || name[0] == '~' || name[0] == '.')
     {
-        bool done = SysFileSystem::canonicalizeName(tempPath);
+        bool done = SysFileSystem::canonicalizeName(fullName);
         if (done == false || fileExists(tempPath) == false)
         {
             fullName[0] = '\0';
             return false;
         }
-        strcpy(fullName, tempPath);
         return true;
     }
 
     /* there was no leading path so try the current directory */
+    char tempPath[MaximumFileNameBuffer];// temporary place to store the path/name
     getcwd(tempPath, MaximumFileNameBuffer);
     strcat(tempPath, "/");
     strcat(tempPath, name);
-    if (fileExists(name) == true)
+    if (fileExists(tempPath) == true)
     {
-        strcpy(fullName, name);
+        strcpy(fullName, tempPath);
         return true;
     }
 
     /* it was not in the current directory so search the PATH */
-    currentpath = getenv("PATH");
+    const char *currentpath = getenv("PATH");
     if (currentpath == NULL)
     {
         fullName[0] = '\0';
         return false;
     }
-    sep = strchr(currentpath, ':');
+
+    const char *sep = strchr(currentpath, ':');
     while (sep != NULL)
     {
         /* try each entry in the PATH */
@@ -140,7 +135,8 @@ bool SysFileSystem::searchFileName(
         currentpath = sep + 1;
         sep = strchr(currentpath, ':');
     }
-    /* the last entry in the PATH may not be terminated by a colon */
+
+    /* the last entry in the PATH might not be terminated by a colon */
     if (*currentpath != '\0')
     {
         strcpy(tempPath, currentpath);
@@ -158,26 +154,25 @@ bool SysFileSystem::searchFileName(
     return false;
 }
 
-/*********************************************************************/
-/*                                                                   */
-/* FUNCTION    : getTempFileName                                     */
-/*                                                                   */
-/* DESCRIPTION : Returns a temp file name.                           */
-/*                                                                   */
-/*********************************************************************/
+/**
+ * Generate a temporary file name.
+ *
+ * @return
+ */
 const char *SysFileSystem::getTempFileName()
 {
     return tmpnam(NULL);
 }
 
 
-void SysFileSystem::qualifyStreamName(
-  const char *name,                   // input name
-  char *fullName,                     // the output name
-  size_t bufferSize)                  // size of the output buffer
-/*******************************************************************/
-/* Function:  Qualify a stream name for this system                */
-/*******************************************************************/
+/**
+ * Get the fully qualified name for a file.
+ *
+ * @param name       The input file name.
+ * @param fullName   The return full file name
+ * @param bufferSize The size of the full name buffer.
+ */
+void SysFileSystem::qualifyStreamName(const char *name, char *fullName, size_t bufferSize)
 {
     char tempPath[MaximumFileNameBuffer]; // temporary place to store the path/name
 
@@ -207,6 +202,7 @@ void SysFileSystem::qualifyStreamName(
     }
     return;
 }
+
 
 /**
  * Test if a given file exists.
