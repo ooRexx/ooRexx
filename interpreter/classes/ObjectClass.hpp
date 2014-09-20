@@ -45,6 +45,7 @@
 #define Included_RexxObject
 
 #include <new>
+#include <string.h>
 #include "Numerics.hpp"
 
 class RexxInternalObject;

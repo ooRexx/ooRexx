@@ -48,6 +48,7 @@
 #include "StringUtil.hpp"
 #include "Utilities.hpp"
 #include "FlagSet.hpp"
+#include <string.h>
 
 /**
  * Return type from string isSymbol() method.

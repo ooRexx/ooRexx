@@ -56,7 +56,7 @@ class ListClass : public RexxObject
 
     inline ListClass(RESTORETYPE restoreType) { ; };
     ListClass(size_t capacity = DefaultListSize);
-    ListClass::ListClass(bool fromRexx) { }
+    ListClass(bool fromRexx) { }
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
@@ -132,7 +132,7 @@ class ListClass : public RexxObject
  protected:
 
     // internal support methods
-    void initialize(size_t capacity = ListClass::DefaultListSize);
+    void initialize(size_t capacity = DefaultListSize);
     ListContents::ItemLink validateIndex(RexxObject *index, size_t position);
     ListContents::ItemLink validateInsertionIndex(RexxObject *index, size_t position);
     ListContents::ItemLink requiredIndex(RexxObject *index, size_t position);

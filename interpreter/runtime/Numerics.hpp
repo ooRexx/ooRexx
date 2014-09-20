@@ -82,31 +82,31 @@ class Numerics
 {
 public:
 #ifdef __REXX64__
-    static const wholenumber_t Numerics::MAX_WHOLENUMBER = __INT64_C(999999999999999999);
-    static const wholenumber_t Numerics::MIN_WHOLENUMBER = __INT64_C(-999999999999999999);
+    static const wholenumber_t MAX_WHOLENUMBER = __INT64_C(999999999999999999);
+    static const wholenumber_t MIN_WHOLENUMBER = __INT64_C(-999999999999999999);
     // the digits setting used internally for function/method arguments to allow
     // for the full range
-    static const wholenumber_t Numerics::ARGUMENT_DIGITS  = ((size_t)18);
+    static const wholenumber_t ARGUMENT_DIGITS  = 18;
     // this is the digits setting for full size binary settings
-    static const wholenumber_t Numerics::SIZE_DIGITS  = ((size_t)20);
+    static const wholenumber_t SIZE_DIGITS  = 20;
 #else
-    static const wholenumber_t Numerics::MAX_WHOLENUMBER = 999999999;
-    static const wholenumber_t Numerics::MIN_WHOLENUMBER = -999999999;
+    static const wholenumber_t MAX_WHOLENUMBER = 999999999;
+    static const wholenumber_t MIN_WHOLENUMBER = -999999999;
         // the digits setting used internally for function/method arguments to allow
         // for the full binary value range
-    static const wholenumber_t Numerics::ARGUMENT_DIGITS  = ((size_t)9);
+    static const wholenumber_t ARGUMENT_DIGITS  = 9;
     // this is the digits setting for full size binary settings
-    static const wholenumber_t Numerics::SIZE_DIGITS  = ((size_t)10);
+    static const wholenumber_t SIZE_DIGITS  = 10;
 #endif
 
     static const wholenumber_t MAX_EXPONENT = 999999999;
     static const wholenumber_t MIN_EXPONENT = -999999999;
-    static const wholenumber_t DEFAULT_DIGITS  = ((size_t)9);
+    static const wholenumber_t DEFAULT_DIGITS  = 9;
     // a digits setting for full range integer conversion
     static const size_t  MAX_STRINGSIZE = MAX_WHOLENUMBER;
 
     // max numeric digits value for explicit 64-bit conversions
-    static const wholenumber_t DIGITS64 = ((size_t)20);
+    static const wholenumber_t DIGITS64 = 20;
     static const bool FORM_SCIENTIFIC = false;
     static const bool FORM_ENGINEERING = true;
 
@@ -169,11 +169,11 @@ public:
 
     static RexxString *pointerToString(void *);
 
-    static inline bool isValid(wholenumber_t v) { return v <= Numerics::MAX_WHOLENUMBER && v >= Numerics::MIN_WHOLENUMBER; }
+    static inline bool isValid(wholenumber_t v) { return v <= MAX_WHOLENUMBER && v >= MIN_WHOLENUMBER; }
     // this has a different name because when compiling for 64-bit, wholenumber_t and int64_t are the same and
     // the compiler complains.  The first is for validating a whole number value, the second is for validating an
     // explicit 64-bit value.
-    static inline bool isValid64Bit(int64_t v) { return v <= Numerics::MAX_WHOLENUMBER && v >= Numerics::MIN_WHOLENUMBER; }
+    static inline bool isValid64Bit(int64_t v) { return v <= MAX_WHOLENUMBER && v >= MIN_WHOLENUMBER; }
     static inline bool isValid(wholenumber_t v, size_t digits)  {return digits >= DEFAULT_DIGITS || abs(v) < validMaxWhole[digits - 1]; }
 
 
