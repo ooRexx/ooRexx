@@ -61,7 +61,7 @@
 #endif
 
 #include "rexx.h"
-#include "MessageClassNumbers.h"
+#include "RexxMessageNumbers.h"
 #define REXXMESSAGEFILE    "rexx.cat"
 
 #define BUFFERLEN         256           /* Length of message bufs used        */
