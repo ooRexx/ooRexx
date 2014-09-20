@@ -407,7 +407,7 @@ class EqualityHashContents : public HashContents
 {
 public:
            void *operator new(size_t size, size_t capacity);
-    inline void  operator delete(void *, size_t) { ; }
+    inline void  operator delete(void *) { ; }
 
     inline EqualityHashContents() { ; };
     inline EqualityHashContents(RESTORETYPE restoreType) { ; };
