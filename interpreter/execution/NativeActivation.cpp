@@ -68,6 +68,8 @@
 #include "MethodArguments.hpp"
 #include "ExpressionStem.hpp"
 
+#include <stdio.h>
+
 
 /**
  * Allocate a new native Activation.
