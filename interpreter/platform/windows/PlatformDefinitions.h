@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -36,9 +36,9 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX WIN32 Support                                           winrexx.h     */
+/* REXX Windows support                                                       */
 /*                                                                            */
-/* WIN32 master definition file                                               */
+/* Windows master definition file                                             */
 /*                                                                            */
 /******************************************************************************/
 
@@ -49,8 +49,8 @@
 /* Wherever possible, reasonable defaults are provided for these settings.    */
 /******************************************************************************/
 
-#ifndef WINREXX_H                        /* provide a define here to protect  */
-#define WINREXX_H                        /* against multiple includes         */
+#ifndef PlatformDefinitions_Included
+#define PlatformDefinitions_Included
 
 /******************************************************************************/
 /* REQUIRED:  The implemenation must decide on the C_STACK_SIZE defining      */
@@ -88,13 +88,6 @@
 // Make this clearer? Mutually exclusive with NOTIMER?
 #define TIMESLICE
 #define FIXEDTIMERS
-
-/******************************************************************************/
-/* OPTIONAL:  If the implementation enables external scripting support, then  */
-/* additional hand-shaking with an the exernal environment is enabled for     */
-/* providing default values for uninitialized variables.                      */
-/******************************************************************************/
-#define SCRIPTING
 
 /******************************************************************************/
 /* REQUIRED:  Define the string used for the default initial address setting. */
@@ -135,22 +128,10 @@
 /* OPTIONAL:  Finally, any other global defined constants for system specific */
 /* code usage.                                                                */
 /******************************************************************************/
- // Re-directed output...
- #include <stdio.h>                    // for following file ref...
  // another annoying incompatibility in MS compiler.
 #if _MSC_VER < 1800
 #define isnan(x) _isnan(x)
 #endif
 
- // Exception handling
- typedef BOOL __stdcall CONSOLECTRLHANDLER(DWORD);
- CONSOLECTRLHANDLER WinConsoleCtrlHandler;
-
- #define WinBeginExceptions SetConsoleCtrlHandler(&WinConsoleCtrlHandler, true);\
-                            __try {
- #define WinEndExceptions } __except ( WinExceptionFilter(GetExceptionCode( ))) {  }\
-                            SetConsoleCtrlHandler(&WinConsoleCtrlHandler, FALSE);
-
- int WinExceptionFilter( int xCode );
 #endif
 

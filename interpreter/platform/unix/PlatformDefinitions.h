@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -36,9 +36,9 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX AIX/Linux Support                                          aixrexx.h  */
+/* REXX unis support                                                          */
 /*                                                                            */
-/* AIX/Linux master definition file                                           */
+/* Unix master definition file                                                */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -48,8 +48,8 @@
 /* Wherever possible, reasonable defaults are provided for these settings.    */
 /******************************************************************************/
 
-#ifndef AIXREXX_H                      /* provide a define here to protect  */
-#define AIXREXX_H                      /* against multiple includes         */
+#ifndef PlatformDefinitions_Included
+#define PlatformDefinitions_Included
 
 /******************************************************************************/
 /* REQUIRED:  The implemenation must decide on the C_STACK_SIZE defining      */
@@ -65,14 +65,6 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-
-
-#ifdef LINUX
-#define FNONBLOCK       O_NONBLOCK
-#endif
-
-
-#define RXTRACE_SUPPORT
 
 /******************************************************************************/
 /* OPTIONAL:  Perform stack checking on new message invocations.  If this type*/
@@ -95,13 +87,6 @@
 /******************************************************************************/
 
 /* #define TIMESLICE  */
-
-/******************************************************************************/
-/* OPTIONAL:  If the implementation enables external scripting support, then  */
-/* additional hand-shaking with an the exernal environment is enabled for     */
-/* providing default values for uninitialized variables.                      */
-/******************************************************************************/
-//#define SCRIPTING
 
 /******************************************************************************/
 /* REQUIRED:  Define the REXX type for semaphores.  These can be system       */
@@ -170,18 +155,6 @@ inline char **getEnvironment()
 /******************************************************************************/
 
 #define DEFRXSTRING 256                /* Default RXSTRING return size      */
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#define REXXTIMESLICE 100              /* 100 milliseconds (1/10 second)    */
-
-#include "APIDefinitions.h"
-
-#ifdef __cplusplus
-}
-#endif
 
 /*
  * OPTIONAL: For EBCDIC systems.
