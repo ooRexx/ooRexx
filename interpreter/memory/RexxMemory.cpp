@@ -75,6 +75,7 @@
 #include "NumberStringClass.hpp"
 
 #include <stdio.h>
+#include <stdarg.h>
 
 // restore a class from its
 // associated primitive behaviour
