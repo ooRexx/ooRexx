@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -36,9 +36,9 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX AIX Support                                             aixmem.c      */
+/* REXX Unix Support                                                          */
 /*                                                                            */
-/* AIX memory management routines                                             */
+/* Unix memory management routines                                            */
 /*                                                                            */
 /******************************************************************************/
 
@@ -51,59 +51,112 @@
 #include "Memory.hpp"
 
 
-/*********************************************************************/
-/*                                                                   */
-/*   Function:  Allocate a block of memory suitable to pass back to  */
-/*              another program as a return result                   */
-/*                                                                   */
-/*********************************************************************/
-void * SystemInterpreter::allocateResultMemory(
-   size_t   Size )                     /* size to allocate                  */
+/**
+ * Allocate a block of memory suitable to pass back to
+ * another program as a return result
+ *
+ * @param size   The memory size to allocate.
+ *
+ * @return The pointer to the allocated memory.
+ */
+void * SystemInterpreter::allocateResultMemory(size_t size)
 {
-    return malloc(Size);
-}
-
-/*********************************************************************/
-/*                                                                   */
-/*   Function:  Release a block of memory given to us by an outside  */
-/*              agent as a return result                             */
-/*                                                                   */
-/*********************************************************************/
-void SystemInterpreter::releaseResultMemory(
-  void  *MemoryBlock)                  /* pointer to the result memory      */
-{
-    free(MemoryBlock);                   /* release this block                */
+    return malloc(size);
 }
 
 
+/**
+ * Release a block of memory given to us by an outside
+ * agent as a return result
+ *
+ * @param memoryBlock
+ *               The block of memory to release.
+ */
+void SystemInterpreter::releaseResultMemory(void *memoryBlock)
+{
+    free(memoryBlock);
+}
+
+
+/**
+ * Create a new MemoryPool block.
+ *
+ * @param size    The size of the block
+ * @param minSize The minimum size we can accept.
+ *
+ * @return The memory for a new block
+ */
+void *MemorySegmentPool::operator new(size_t size, size_t minSize)
+{
+    /* Add pool object overhead to minSiz*/
+    minSize += MemorySegment::MemorySegmentPoolOverhead;
+
+    size_t poolSize = Memory::MemoryAllocationSize;
+    if (minSize > Memory::MemoryAllocationSize)               /* Asking for more than default pool */
+    {
+        /* compute actual request size.      */
+        poolSize = MemorySegment::roundToSegmentPoolSize(minSize);
+    }
+
+    void *tmpPtr = calloc(poolSize,1);
+    if (!tmpPtr)                       /* Error on commit?                  */
+    {
+        reportException(Error_System_resources);
+    }
+
+    MemorySegmentPool *newPool = (MemorySegmentPool *) tmpPtr;
+
+    size_t initialSegSize;
+    if (minSize < MemorySegment::SegmentSize)
+    {
+        initialSegSize = Memory::roundPageSize(MemorySegment::SegmentSize);
+    }
+    else
+    {
+        initialSegSize = Memory::roundPageSize(minSize);
+    }
+
+    newPool->spareSegment = new (((char *)newPool) + MemorySegment::MemorySegmentPoolOverhead)
+                            MemorySegment (initialSegSize - MemorySegment::MemorySegmentPoolOverhead);
+    newPool->uncommitted = poolSize - initialSegSize;
+#ifdef _DEBUG
+    newPool->reserved = poolSize;
+#endif
+
+    newPool->nextAlloc = (char *)newPool + initialSegSize;
+
+    /* start allocating large segments   */
+    /* from the end of the pool.         */
+    newPool->nextLargeAlloc = ((char*) newPool) + poolSize;
+
+    return newPool;
+}
+
+
+/**
+ * Create a the initial memory pool for the interpreter.
+ *
+ * @param pool   pointer for the returned pool.
+ *
+ * @return
+ */
 MemorySegmentPool *MemorySegmentPool::createPool()
-/*********************************************************************/
-/*   Function:  Access/Create the 1st block as Named Storage         */
-/*              return true is an access, false is created.          */
-/*********************************************************************/
 {
-    MemorySegmentPool *  newPool;
-    void  *tmpPtr;
-    size_t segmentSize;
-
-    /* create the shared memory segemnt  */
-    /* if already exists then this       */
-    /* isn't a coldstart.                */
-    tmpPtr = (void *)calloc(Memory::MemoryAllocationSize, 1);
+    void *tmpPtr = (void *)calloc(Memory::MemoryAllocationSize, 1);
     if (tmpPtr == NULL)              /* Error on commit?                  */
     {
         reportException(Error_System_resources);
     }
 
-    newPool = (MemorySegmentPool *)tmpPtr;
-    segmentSize = Memory::roundPageSize(SegmentSize);
+    MemorySegmentPool *newPool = (MemorySegmentPool *)tmpPtr;
+    size_t segmentSize = Memory::roundPageSize(MemorySegment::SegmentSize);
 
     /* Since memory may not be ready     */
     /* for a segment we keep it as a spar*/
     /* and will give it to memory on     */
     /* 1st request for a new segment.    */
 
-    newPool->spareSegment = new (((char *)newPool) + MemorySegmentPoolOverhead) MemorySegment (segmentSize - MemorySegmentPoolOverhead);
+    newPool->spareSegment = new (((char *)newPool) + MemorySegment::MemorySegmentPoolOverhead) MemorySegment (segmentSize - MemorySegment::MemorySegmentPoolOverhead);
     /* compute actual usable space.      */
     newPool->uncommitted = Memory::MemoryAllocationSize - segmentSize;
 #ifdef _DEBUG
@@ -121,97 +174,40 @@ MemorySegmentPool *MemorySegmentPool::createPool()
     return newPool;                    /* newly created.                    */
 }
 
-void *MemorySegmentPool::operator new(size_t size, size_t minSize)
-/*********************************************************************/
-/* Function:: Create a new MemoryPool block                          */
-/*                                                                   */
-/*********************************************************************/
-{
-  MemorySegmentPool *newPool;
-  void  *tmpPtr;
-  size_t initialSegSize;
-  size_t poolSize;
 
-                                       /* Add pool object overhead to minSiz*/
-  minSize += MemorySegmentPoolOverhead;
-  if (minSize > Memory::MemoryAllocationSize)               /* Asking for more than default pool */
-  {
-                                       /* compute actual request size.      */
-      poolSize = MemorySegment::roundToSegmentPoolSize(minSize);
-  }
-  else
-  {
-      poolSize = Memory::MemoryAllocationSize;
-  }
-
-
-   tmpPtr = calloc(poolSize,1);
-   if (!tmpPtr)                       /* Error on commit?                  */
-   {
-      reportException(Error_System_resources);
-   }
-
-   newPool = (MemorySegmentPool *) tmpPtr;
-
-   if (minSize < SegmentSize)
-   {
-       initialSegSize = Memory::roundPageSize(MemorySegment::SegmentSize);
-   }
-   else
-   {
-       initialSegSize = Memory::roundPageSize(minSize);
-   }
-
-   newPool->spareSegment = new (((char *)newPool) + MemorySegment::MemorySegmentPoolOverhead)
-       MemorySegment (initialSegSize - MemorySegment::MemorySegmentPoolOverhead);
-   newPool->uncommitted = poolSize - initialSegSize;
-#ifdef _DEBUG
-   newPool->reserved = poolSize;
-#endif
-
-   newPool->nextAlloc = (char *)newPool + initialSegSize;
-
-                                       /* start allocating large segments   */
-                                       /* from the end of the pool.         */
-   newPool->nextLargeAlloc = ((char*) newPool) + poolSize;
-
-   return newPool;
-}
-
+/**
+ * Constructor for a MemorySementPool object.
+ */
 MemorySegmentPool::MemorySegmentPool()
-/*********************************************************************/
-/* Function:: Constructor for memoryPool block.                      */
-/*   set next to NULL, size to size,                                 */
-/*                                                                   */
-/*********************************************************************/
 {
     next  = NULL;                 /* No next pointer right now         */
 }
 
+
+/**
+ * Create a new segment of a given minimum size
+ *
+ * @param minSize The minimum required size.
+ *
+ * @return The new memory segment object.
+ */
 MemorySegment *MemorySegmentPool::newSegment(size_t minSize)
-/*********************************************************************/
-/* Function:: Constructor for memoryPool block.                      */
-/*   set next to NULL, size to size,                                 */
-/*                                                                   */
-/*********************************************************************/
 {
-    size_t  segmentSize;
-    MemorySegment *newSeg;
-    MemorySegmentPool *newPool;
     /* Any spare segments left over      */
     /* from initial pool alloc?          */
     /* And big enough for this request?  */
     if (spareSegment && spareSegment->size() >= minSize)
     {
-        newSeg = spareSegment;      /* no longer have a spare            */
+        MemorySegment *newSeg = spareSegment;      /* no longer have a spare            */
         spareSegment = NULL;
         return newSeg;                    /* return this segment for allocation*/
     }
-    segmentSize = Memory::roundPageSize(minSize); /* compute commit size       */
+
+    size_t segmentSize = Memory::roundPageSize(minSize); /* compute commit size       */
     /* enough space for request          */
     if (uncommitted >= segmentSize)
     {
-        newSeg = new (nextAlloc) MemorySegment (segmentSize);
+        MemorySegment *newSeg = new (nextAlloc) MemorySegment (segmentSize);
 
         uncommitted -= segmentSize; /* Adjust uncommitted amount         */
         nextAlloc += segmentSize;   /* Adjust to next Allocation addr    */
@@ -219,7 +215,7 @@ MemorySegment *MemorySegmentPool::newSegment(size_t minSize)
     }
     else                                /* uncommitted not enough need a new pool */
     {
-        newPool = new (minSize) MemorySegmentPool;
+        MemorySegmentPool *newPool = new (minSize) MemorySegmentPool;
         if (newPool)
         {                    /* Did we get a new Pool?            */
             next = newPool;         /* Anchor it to end of chain         */
@@ -233,41 +229,42 @@ MemorySegment *MemorySegmentPool::newSegment(size_t minSize)
     }
 }
 
-MemorySegment *MemorySegmentPool::newLargeSegment(size_t minSize)
-/*********************************************************************/
-/* Function: Allocate a large segment from the other end of the pool */
-/*********************************************************************/
-{
-    size_t segmentSize;
-    MemorySegment *newSeg;
-    MemorySegmentPool *newPool;
 
+/**
+ * Create a new segment of a given minimum size
+ *
+ * @param minSize The minimum required size.
+ *
+ * @return The new memory segment object.
+ */
+MemorySegment *MemorySegmentPool::newLargeSegment(size_t minSize)
+{
     /* Any spare segments left over      */
     /* from initial pool alloc?          */
     /* And big enough for this request?  */
     if (spareSegment && spareSegment->size() >= minSize)
     {
-        newSeg = spareSegment;      /* no longer have a spare            */
+        MemorySegment *newSeg = spareSegment;      /* no longer have a spare            */
         spareSegment = NULL;
         return newSeg;                    /* return this segment for allocation*/
     }
 
     /* compute commit size               */
-    segmentSize = Memory::roundPageSize(minSize);
+    size_t segmentSize = Memory::roundPageSize(minSize);
     /* enough space for request          */
     if (uncommitted >= segmentSize)
     {
         nextLargeAlloc = nextLargeAlloc - segmentSize; // already calloc'd on AIX, just move pointer
 
         /* Create new segment.               */
-        newSeg = new (nextLargeAlloc) MemorySegment (segmentSize);
+        MemorySegment *newSeg = new (nextLargeAlloc) MemorySegment (segmentSize);
         uncommitted -= segmentSize; /* Adjust uncommitted amount         */
         // nextLargeAlloc does not have to be adjusted, will be correct
         return newSeg;
     }
     else
     {
-        newPool = new (minSize) MemorySegmentPool;
+        MemorySegmentPool *newPool = new (minSize) MemorySegmentPool;
         if (newPool)                      /* Did we get a new Pool?            */
         {
             /* Make sure new pool is added to the end of list   */
@@ -282,19 +279,22 @@ MemorySegment *MemorySegmentPool::newLargeSegment(size_t minSize)
     }
 }
 
+
+/**
+ * Release the memory associated with a pool
+ */
 void MemorySegmentPool::freePool()       // add return value
-/*********************************************************************/
-/* Function:: Free this pool object                                  */
-/*********************************************************************/
 {
     free(this);
 }
 
-/******************** added by weigold *******************************/
+
+/**
+ * Chain a memory pool to another pool
+ *
+ * @param nextPool The next pool in the chain.
+ */
 void MemorySegmentPool::setNext( MemorySegmentPool *nextPoolPtr )
-/*********************************************************************/
-/* Function:: set the next pointer                                   */
-/*********************************************************************/
 {
    next = nextPoolPtr;
 }
