@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -325,7 +325,7 @@ RexxReturnCode REXXENTRY Aspi_Read_All_Elements_Of_A_Specific_Stem_From_REXX_VP(
       temp->shvnext = NULL;
       temp->shvname.strlength = strlen(array);
       temp->shvname.strptr = (char *) malloc(strlen(array)+1);
-      strcpy(temp->shvname.strptr, array);
+      strcpy((char *)temp->shvname.strptr, array);
       temp->shvvalue.strptr = NULL; /*** let Rexx allocate for me ***/
       temp->shvcode = RXSHV_SYFET;
    }
