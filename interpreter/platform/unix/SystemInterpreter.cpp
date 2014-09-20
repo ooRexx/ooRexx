@@ -35,21 +35,13 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/*****************************************************************************/
-/* REXX Windows Support                                                      */
-/*                                                                           */
-/* Main Windows interpreter control.  This is the preferred location for     */
-/* all platform dependent global variables.                                  */
-/* The interpreter does not instantiate an instance of this                  */
-/* class, so most variables and methods should be static.                    */
-/*                                                                           */
-/*                                                                           */
-/*****************************************************************************/
 
 #include <termios.h>
+#include <stdio.h>
 #include "RexxCore.h"
 #include "SystemInterpreter.hpp"
 #include "Interpreter.hpp"
+#include "GlobalNames.hpp"
 
 sigset_t SystemInterpreter::oldmask;
 sigset_t SystemInterpreter::newmask;
@@ -102,17 +94,17 @@ void signalHandler(int sig)
     // if the signal is a ctrl-C, we perform a halt operation
     if (sig == SIGINT)
     {
-        Interpreter::haltAllActivities(OREF_SIGINT_STRING);
+        Interpreter::haltAllActivities(GlobalNames::SIGINT_STRING);
         return;
     }
     else if (sig == SIGTERM)
     {
-        Interpreter::haltAllActivities(OREF_SIGTERM_STRING);
+        Interpreter::haltAllActivities(GlobalNames::SIGTERM_STRING);
         return;
     }
     else if (sig == SIGHUP)
     {
-        Interpreter::haltAllActivities(OREF_SIGHUP_STRING);
+        Interpreter::haltAllActivities(GlobalNames::SIGHUP_STRING);
         return;
     }
     else
