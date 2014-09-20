@@ -81,8 +81,6 @@ class MapBucket : public RexxInternalObject
     bool         append(size_t value, RexxInternalObject * index, MapLink position);
     void         merge(MapBucket *other);
 
-    typedef size_t MapLink;                  // a link to another map item
-
     // We never get saved in the image or flattened with other objects, so we can just use the
     // identity hash to generate the index
     inline MapLink hashIndex(RexxInternalObject *obj) { return (MapLink)(obj->identityHash() % bucketSize); }
