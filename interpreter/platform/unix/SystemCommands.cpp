@@ -52,12 +52,13 @@
 /*    sys_command - Run a command through system command processor.           */
 /******************************************************************************/
 
-#include <string.h>                         /* Get strcpy, strcat, etc.       */
+#include <string.h>
 #include <sys/wait.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <stdio.h>
 
-#include "RexxCore.h"                         /* global REXX declarations       */
+#include "RexxCore.h"
 #include "StringClass.hpp"
 #include "Activity.hpp"
 #include "ActivityManager.hpp"
@@ -762,7 +763,6 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStrin
                     exit(1);
                 }
                 execvp(args[0], args);           /* Invoke command directly   */
-                perror(" *E* Address COMMAND");  /* If we get to this point,  */
                 exit(1);                         /* we couldn't run the       */
             }
             else
