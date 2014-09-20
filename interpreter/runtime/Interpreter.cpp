@@ -57,6 +57,8 @@
 #include "PackageManager.hpp"
 #include "PackageClass.hpp"
 
+#include <stdio.h>
+
 
 // global resource lock
 SysMutex Interpreter::resourceLock;

@@ -74,6 +74,8 @@
 #include "BagClass.hpp"
 #include "NumberStringClass.hpp"
 
+#include <stdio.h>
+
 // restore a class from its
 // associated primitive behaviour
 // (already restored by memory_init)
