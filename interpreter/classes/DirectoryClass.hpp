@@ -61,6 +61,8 @@ class DirectoryClass : public StringHashCollection
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(Envelope *);
 
+    virtual RexxObject *makeProxy(Envelope*);
+
     virtual RexxInternalObject *copy();
 
     // virtual method overrides of the base collection class.

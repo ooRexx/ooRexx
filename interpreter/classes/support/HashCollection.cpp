@@ -229,9 +229,6 @@ RexxInternalObject *HashCollection::unflatten(Envelope *envelope)
 
 
 /**
- * TODO:  The makeProxy object needs to be in the directory class, since that
- * is where it happens.
- *
  * Copy a hash-based collection object.
  *
  * @return A new instance of this collection.

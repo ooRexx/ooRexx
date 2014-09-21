@@ -140,17 +140,17 @@ void RexxObject::flatten(Envelope *envelope)
  *
  * @return The proxy object, which is usually a name.
  */
-RexxObject * RexxInternalObject::makeProxy(Envelope *envelope)
+RexxObject *RexxInternalObject::makeProxy(Envelope *envelope)
 {
     // we are generally only called if the class is marked as a proxy class.
     // we recognize .nil, but don't handle any other special objects here.
     if (this == TheNilObject)
     {
-        return(RexxObject *)new_proxy("NIL");
+        return (RexxObject *)new_proxy("NIL");
     }
     else
     {
-        return(RexxObject *)this;
+        return (RexxObject *)this;
     }
 }
 

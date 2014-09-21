@@ -123,6 +123,29 @@ void DirectoryClass::flatten(Envelope *envelope)
 
 
 /**
+ * Make a proxy object for one of the special directories (e.g.,
+ * the environment directory)
+ *
+ * @param envelope The envelope we're flattening into.
+ *
+ * @return A string proxy name for this object.
+ */
+RexxObject *DirectoryClass::makeProxy(Envelope *envelope)
+{
+    // the environment directory is the only one that needs this treatment
+    if (this == TheEnvironment)
+    {
+        return new_proxy("ENVIRONMENT");
+    }
+    else
+    {
+        Interpreter::logicError("Don't know how to generate a proxy object for an object");
+    }
+    return OREF_NULL;
+}
+
+
+/**
  * Copy a directory item.
  *
  * @return A copy of the item.

@@ -70,7 +70,7 @@ class RexxClass : public RexxObject
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
 
-    virtual RexxObject *makeProxy(Envelope*);
+    virtual RexxObject * makeProxy(Envelope*);
 
     virtual HashCode     hash();
     virtual HashCode     getHashValue();

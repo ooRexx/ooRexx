@@ -206,7 +206,6 @@ void CompoundVariableTail::buildTail(RexxObject **tails, size_t count)
     bool first = true;
     // copy in each piece, with dots added after the first.
 
-    // TODO:  add a special case for 1 tail, which is probably common.
     for (size_t i = 0; i < count; i++)
     {
         if (!first)
