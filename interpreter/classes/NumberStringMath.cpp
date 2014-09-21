@@ -218,7 +218,6 @@ RexxString *NumberString::d2xD2c(RexxObject *length, bool type)
     // if this is d2c, we need to pack the hex digits into character values.
     if (type == true)
     {
-        // TODO:  should we have a more efficient version of this that assumes no blanks?
         return StringUtil::packHex(scan, resultSize);
     }
     // for d2x, we can just create the string version now
@@ -245,12 +244,6 @@ NumberString *NumberString::maxMin(RexxObject **args, size_t argCount, Arithmeti
     // a greater comparison.
     wholenumber_t compResult = operation == OT_MAX ? 1 : -1;
 
-    // if there are no other numbers to compare against, this is the result.
-    // TODO:  Does this need rounding?
-    if (argCount == 0)
-    {
-        return this;
-    }
 
     wholenumber_t saveFuzz = number_fuzz();
     wholenumber_t saveDigits = number_digits();
@@ -259,6 +252,12 @@ NumberString *NumberString::maxMin(RexxObject **args, size_t argCount, Arithmeti
     // current digits settings, which bypasses the LOSTDIGITS condition
     // The target number gets rounded also
     Protected<NumberString> maxminobj = prepareNumber(saveDigits, ROUND);
+
+    // if there are no other numbers to compare against, this is the result.
+    if (argCount == 0)
+    {
+        return maxminobj;
+    }
 
     // now looop through all of the arguments
     for (size_t arg = 0; arg < argCount; arg++)
