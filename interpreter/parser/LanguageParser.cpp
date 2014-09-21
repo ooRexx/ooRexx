@@ -2064,9 +2064,6 @@ void LanguageParser::setGuard()
  */
 ArrayClass *LanguageParser::getGuard()
 {
-    // TODO:  Might want to check if the variable retrievers might be a better
-    // option here.
-
     // get the indices as an array of names.
     ArrayClass *guards = guardVariables->makeArray();
     // turn off collection by tossing the table.

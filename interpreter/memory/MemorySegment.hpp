@@ -149,6 +149,9 @@ class MemorySegment : public MemorySegmentHeader
    inline size_t realSize() { return segmentSize + MemorySegmentOverhead; }
    inline char *start() { return segmentStart; }
    inline char *end() { return segmentStart + segmentSize; }
+   inline RexxInternalObject *startObject() { return (RexxInternalObject *)start(); }
+   inline RexxInternalObject *endObject() { return (RexxInternalObject *)end(); }
+
    inline bool isReal() { return segmentSize != 0; }
    inline bool isEmpty() { return liveObjects == 0; }
    void   dump(const char *owner, size_t counter, FILE *keyfile, FILE *dumpfile);

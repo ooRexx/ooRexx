@@ -61,27 +61,27 @@ void SegmentStats::clear()
 }
 
 
-void SegmentStats::recordObject(MemoryStats *memStats, char *obj)
-/******************************************************************************/
-/* Function:  Accumulate memory statistics for a scanned object               */
-/******************************************************************************/
+/**
+ * Accumulate memory statistics for a scanned object
+ *
+ * @param memStats The memory stats we're recording into.
+ * @param obj      The object we're recording.
+ */
+void SegmentStats::recordObject(MemoryStats *memStats, RexxInternalObject *obj)
 {
-    /* get size of this object           */
-    size_t bytes = ((RexxObject *)obj)->getObjectSize();
+    // tally the size of the object
+    size_t bytes = obj->getObjectSize();
     totalBytes += bytes;
-    /* Is this object alive?             */
-    if (((RexxObject *)obj)->isObjectLive(memoryObject.markWord))
+    // if the object is alive, log the type information.
+    if (obj->isObjectLive(memoryObject.markWord))
     {
-        /* update the type specific counters */
-        memStats->logObject((RexxObject *)obj);
-        /* update total live bytes           */
+        memStats->logObject(obj);
         liveBytes += bytes;
-        /* and total number of live objs     */
         liveObjects++;
     }
+    // this is a dead object
     else
     {
-        /* its a dead object, update total dead objects */
         deadObjects++;
         deadBytes += bytes;
     }

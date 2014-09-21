@@ -52,134 +52,159 @@ const double NormalSegmentSet::NormalMemoryExpansionThreshold = .30;
 const double NormalSegmentSet::NormalMemoryContractionThreshold = .70;
 
 
+/**
+ * Dump information about an individual segment
+ *
+ * @param owner    The name of the owning segment set.
+ * @param counter  The current object counter.
+ * @param keyfile  The output file for the dump information.
+ * @param dumpfile The full dump file.
+ */
 void MemorySegment::dump(const char *owner, size_t counter, FILE *keyfile, FILE *dumpfile)
-/******************************************************************************/
-/* Function:  Dump information about an individual segment                    */
-/******************************************************************************/
 {
-                                       /* print header for segment          */
-      fprintf(stderr,"Dumping %s Segment %lu from %p for %lu\n", owner, counter, &segmentStart, segmentSize);
-                                       /* now dump the segment              */
-      fprintf(keyfile, "%s addr.%lu = %p\n", owner, counter, &segmentStart);
-      fprintf(keyfile, "%s size.%lu = %lu\n", owner, counter, segmentSize);
-      fwrite(&segmentStart, 1, segmentSize, dumpfile);
+                                     /* print header for segment          */
+    fprintf(stderr,"Dumping %s Segment %lu from %p for %lu\n", owner, counter, &segmentStart, segmentSize);
+                                     /* now dump the segment              */
+    fprintf(keyfile, "%s addr.%lu = %p\n", owner, counter, &segmentStart);
+    fprintf(keyfile, "%s size.%lu = %lu\n", owner, counter, segmentSize);
+    fwrite(&segmentStart, 1, segmentSize, dumpfile);
 }
 
 
+/**
+ * return a pointer to the last object in a segment if, and only if
+ * the object is a dead one.  This is used to check the trailing deadspace
+ * in the segment for purposes of combining the segments.
+ *
+ * @return The pointer to the last object in the segment, if this object is
+ *         a dead object.
+ */
 DeadObject *MemorySegment::lastDeadObject()
-/******************************************************************************/
-/* Function:  return a pointer to the last object in a segment if, and only if*/
-/* the object is a dead one.  This is used to check the trailing deadspace    */
-/* in the segment for purposes of combining the segments.                     */
-/******************************************************************************/
 {
-    char *objectPtr, *endPtr;
-    char *lastObjectPtr = NULL;
+    RexxInternalObject *lastObjectPtr = OREF_NULL;
 
-    /* just scan all of the objects until we've reached the end of */
-    /* the segment */
-    for (objectPtr = start(), endPtr = end();
-        objectPtr < endPtr;
-        objectPtr += ((RexxInternalObject *)objectPtr)->getObjectSize())
+    RexxInternalObject *objectPtr = startObject();
+    RexxInternalObject *endPtr = endObject();
+
+    // just scan all of the objects until we've reached the end of
+    // the segment
+    for (;objectPtr < endPtr; objectPtr = objectPtr->nextObject())
     {
         lastObjectPtr = objectPtr;
     }
 
-    if (!((RexxInternalObject *)lastObjectPtr)->isObjectLive(memoryObject.markWord))
+    // if this object is not live, return the pointer as a dead object
+    if (!lastObjectPtr->isObjectLive(memoryObject.markWord))
     {
-        return(DeadObject *)lastObjectPtr;
+        return (DeadObject *)lastObjectPtr;
     }
-    return NULL;
+    return OREF_NULL;
 }
 
 
+/**
+ * return a pointer to the first object in a segment if, and only
+ * if the object is a dead one.  This is used to check the leading deadspace
+ * in the segment for purposes of combining the segments.
+ *
+ * @return The first dead object, or OREF_NULL if no dead objects are found.
+ */
 DeadObject *MemorySegment::firstDeadObject()
-/******************************************************************************/
-/* Function:  return a pointer to the first object in a segment if, and only  */
-/* if the object is a dead one.  This is used to check the leading deadspace  */
-/* in the segment for purposes of combining the segments.                     */
-/******************************************************************************/
 {
-    if (!((RexxInternalObject *)start())->isObjectLive(memoryObject.markWord))
+    if (!startObject()->isObjectLive(memoryObject.markWord))
     {
-        return(DeadObject *)start();
+        return (DeadObject *)startObject();
     }
     return NULL;
 }
 
 
+/**
+ * Accumulate memory statistics for a segment
+ *
+ * @param memStats The memory stats accumulator
+ * @param stats    The segment stats accumulator
+ */
 void MemorySegment::gatherObjectStats(MemoryStats *memStats, SegmentStats *stats)
-/******************************************************************************/
-/* Function:  Accumulate memory statistics for a segment                      */
-/******************************************************************************/
 {
-    char *op;
-    char *ep;
-    /* for all objects in this segment   */
-    for (op = start(), ep = end(); op < ep; op += ((RexxInternalObject *)op)->getObjectSize())
+    RexxInternalObject *op = startObject();
+    RexxInternalObject *ep = endObject();
+
+    // for all objects in this segment, record the object information
+    for (; op < ep; op = op->nextObject())
     {
-        /* record the information about this object */
         stats->recordObject(memStats, op);
     }
 }
 
 
+/**
+ * Dump information about the each of the segments
+ *
+ * @param keyfile  The keyfile for the output
+ * @param dumpfile The dumpfile for dump information.
+ */
 void MemorySegmentSet::dumpSegments(FILE *keyfile, FILE *dumpfile)
-/******************************************************************************/
-/* Function:  Dump information about the each of the segments                 */
-/******************************************************************************/
 {
-    MemorySegment *segment;
     size_t counter = 0;
 
-    for (segment = first(); segment != NULL; segment = next(segment))
+    for (MemorySegment *segment = first(); segment != NULL; segment = next(segment))
     {
         segment->dump(name, ++counter, keyfile, dumpfile);
     }
 }
 
+
+/**
+ * Dump profile informaton about a segment set (empty for base
+ * class)
+ *
+ * @param outfile The profile output file.
+ */
 void MemorySegmentSet::dumpMemoryProfile(FILE *outfile)
-/******************************************************************************/
-/* Function:  Dump profile informaton about a segment set (empty for base     */
-/* class)                                                                     */
-/******************************************************************************/
 {
 }
 
+
+/**
+ * Dump profile informaton about the large allocation segment set
+ *
+ * @param outfile The target dump file.
+ */
 void LargeSegmentSet::dumpMemoryProfile(FILE *outfile)
-/******************************************************************************/
-/* Function:  Dump profile informaton about the large allocation segment set  */
-/******************************************************************************/
 {
     fprintf(outfile, "Memory profile for large object allocations\n\n");
-    /* all the work is done by the dead caches */
+    // all the work is done by the dead caches
     deadCache.dumpMemoryProfile(outfile);
 }
 
 
+/**
+ * Dump profile informaton about the normal allocation segment set
+ *
+ * @param outfile The target dump file.
+ */
 void NormalSegmentSet::dumpMemoryProfile(FILE *outfile)
-/******************************************************************************/
-/* Function:  Dump profile informaton about the normal allocation segment set */
-/******************************************************************************/
 {
-    int i;
-
     fprintf(outfile, "Memory profile for normal object allocations\n\n");
-    /* all the work is done by the dead caches */
+    // all the work is done by the dead caches
     largeDead.dumpMemoryProfile(outfile);
 
-    for (i = FirstDeadPool; i < DeadPools; i++) {
+    for (int i = FirstDeadPool; i < DeadPools; i++)
+    {
         subpools[i].dumpMemoryProfile(outfile);
     }
 }
 
 
+/**
+ * do dead object overlap validation checking.
+ *
+ * @param obj    The object to check.
+ */
 void NormalSegmentSet::checkObjectOverlap(DeadObject *obj)
-/******************************************************************************/
-/* Function:  do dead object overlap validation checking.                     */
-/******************************************************************************/
 {
-    /* all the work is done by the dead caches */
+    // all the work is done by the dead caches
     largeDead.checkObjectOverlap(obj);
 
     for (int i = FirstDeadPool - 1; i < DeadPools; i++)
@@ -1117,10 +1142,6 @@ void MemorySegmentSet::sweep()
 /* allocations.                                                               */
 /******************************************************************************/
 {
-    MemorySegment *sweepSegment;
-    char  *objectPtr, *endPtr, *nextObjectPtr;
-    size_t deadLength;
-    size_t bytes;
     size_t mark = memoryObject.markWord;
 
     /* do the sweep preparation (this differs for particular segment */
@@ -1128,25 +1149,29 @@ void MemorySegmentSet::sweep()
     prepareForSweep();
     /* go through the segments in order, until we've swept the */
     /* entire set */
-    sweepSegment = first();
+    MemorySegment *sweepSegment = first();
     while (sweepSegment != NULL)
     {
         /* clear our live objects counter    */
         sweepSegment->liveObjects = 0;
+        RexxInternalObject *objectPtr = sweepSegment->startObject();
+        RexxInternalObject *endPtr = sweepSegment->endObject();
+
         /* for all objects in segment */
-        for (objectPtr = sweepSegment->start(), endPtr = sweepSegment->end(); objectPtr < endPtr; )
+
+        while (objectPtr < endPtr)
         {
             /* this a live object?               */
-            if (objectIsLive(objectPtr, mark))
+            if (objectPtr->isObjectLive(mark))
             {
                 /* Get size of object for stats and  */
-                bytes = ((RexxInternalObject *)objectPtr)->getObjectSize();
+                size_t bytes = objectPtr->getObjectSize();
                 /* do any reference checking         */
                 validateObject(bytes);
                 /* update our tracking counters */
                 liveObjectBytes += bytes;
                 /* point to next object in segment.  */
-                objectPtr += bytes;
+                objectPtr = objectPtr->nextObject();
                 /* bump the live object counter      */
                 sweepSegment->liveObjects++;
             }
@@ -1154,16 +1179,16 @@ void MemorySegmentSet::sweep()
             else
             {
                 /* get the object's size */
-                deadLength = ((RexxInternalObject *)objectPtr)->getObjectSize();
+                size_t deadLength = objectPtr->getObjectSize();
                 /* do any reference checking         */
                 validateObject(deadLength);
 
-                for (nextObjectPtr = objectPtr + deadLength;
-                    (nextObjectPtr < endPtr) && objectIsNotLive(nextObjectPtr, mark);
-                    nextObjectPtr += bytes)
+                RexxInternalObject *nextObjectPtr = objectPtr->nextObject();
+
+                for (; (nextObjectPtr < endPtr) && nextObjectPtr->isObjectDead(mark); nextObjectPtr = nextObjectPtr->nextObject())
                 {
                     /* get the object size */
-                    bytes = ((RexxInternalObject *)nextObjectPtr)->getObjectSize();
+                    size_t bytes = nextObjectPtr->getObjectSize();
                     /* do any reference checking         */
                     validateObject(bytes);
                     /* add in the size of this dead body */
@@ -1174,7 +1199,7 @@ void MemorySegmentSet::sweep()
                 /* now add to the dead chain */
                 addDeadObject((char *)objectPtr, deadLength);
                 /* update object Pointers.           */
-                objectPtr += deadLength;
+                objectPtr = objectPtr->nextObject(deadLength);
             }
         }
         /* go to the next segment in the pool*/
@@ -1777,26 +1802,27 @@ void MemorySegmentSet::gatherStats(MemoryStats *memStats, SegmentStats *stats)
 }
 
 
+/**
+ * Perform a marking operation on all objects in a segment
+ * (only called for an image restore)
+ */
 void MemorySegment::markAllObjects()
-/******************************************************************************/
-/* Function:  Perform a marking operation on all objects in a segment         */
-/******************************************************************************/
 {
-    char *op, *ep;
-    for (op = start(), ep = end(); op < ep; )
+    RexxInternalObject *op = startObject();
+    RexxInternalObject *ep = endObject();
+    while (op < ep)
     {
         /* mark behaviour live               */
-        memory_mark_general(((RexxInternalObject *)op)->behaviour);
+        memory_mark_general(op->behaviour);
 
         /* Does this object have other Obj   */
         /*refs?                              */
-        if (((RexxInternalObject *)op)->hasReferences())
+        if (op->hasReferences())
         {
             /*  yes, Then lets mark them         */
-            ((RexxInternalObject *)op)->liveGeneral(RESTORINGIMAGE);
+            op->liveGeneral(RESTORINGIMAGE);
         }
-        // TODO:  use more of nextObject();
-        op += ((RexxInternalObject *)op)->getObjectSize();   /* move to next object               */
+        op =op->nextObject();   /* move to next object               */
     }
 }
 
@@ -1807,8 +1833,7 @@ void OldSpaceSegmentSet::markOldSpaceObjects()
 /******************************************************************************/
 {
     /* mark the restored image segment */
-    MemorySegment *segment;
-    for (segment = first(); segment != NULL; segment = next(segment))
+    for (MemorySegment *segment = first(); segment != NULL; segment = next(segment))
     {
         segment->markAllObjects();
     }

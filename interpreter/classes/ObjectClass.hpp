@@ -253,7 +253,8 @@ class RexxInternalObject : public RexxVirtualBase
     inline size_t getObjectDataSize() { return getObjectSize() - getObjectHeaderSize(); }
     inline void  *getObjectDataSpace() { return ((char *)this) + getObjectHeaderSize(); }
 
-    inline RexxObject *nextObject() { return (RexxObject *)(((char *)this) + getObjectSize()); }
+    inline RexxInternalObject *nextObject() { return (RexxInternalObject *)(((char *)this) + getObjectSize()); }
+    inline RexxInternalObject *nextObject(size_t l) { return (RexxInternalObject *)(((char *)this) + l); }
     // these clear everything after the hash value.
     inline void   clearObject() { memset(getObjectDataSpace(), '\0', getObjectDataSize()); }
     inline void   clearObject(size_t l) { memset(getObjectDataSpace(), '\0', l - getObjectHeaderSize()); }

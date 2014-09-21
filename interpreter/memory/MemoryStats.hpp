@@ -79,7 +79,7 @@ class SegmentStats
         name(id) { }
 
     void    clear();
-    void    recordObject(MemoryStats *memStats, char *obj);
+    void    recordObject(MemoryStats *memStats, RexxInternalObject *obj);
     void    printStats();
 
   protected:
