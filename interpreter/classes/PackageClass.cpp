@@ -1175,7 +1175,6 @@ StringTable *PackageClass::getClassesRexx()
  *
  * @return A directory of the public classes.
  */
-// TODO:  String table needs to have ENTRY/SETENTRY etc. classes
 StringTable *PackageClass::getPublicClassesRexx()
 {
     // we need to return a copy.  The source might necessarily have any of these,
@@ -1225,7 +1224,6 @@ StringTable *PackageClass::getRoutinesRexx()
     // so we return an empty directory if it's not there.
     StringTable *routines = getInstalledRoutines();
 
-    // TODO:  add a helper method for this.
     if (routines != OREF_NULL)
     {
         return (StringTable *)routines->copy();

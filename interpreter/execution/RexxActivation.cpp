@@ -610,7 +610,6 @@ RexxObject * RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxOb
                 // not doing time slicing, so just relinquish every so often.
                 if (++instructionCount > MAX_INSTRUCTIONS)
                 {
-                    // TODO:  make sure this is optimized for single-thread execution.
                     activity->relinquish();
                     instructionCount = 0;
                 }
@@ -3723,7 +3722,6 @@ bool RexxActivation::doDebugPause()
  * @param clause the clause to trace.
  * @param prefix
  */
-// TODO:  used a enum type for the prefix argument.
 void RexxActivation::traceClause(RexxInstruction *clause, TracePrefix prefix)
 {
     // we might be in a state where tracing is suppressed, or there's no source available.

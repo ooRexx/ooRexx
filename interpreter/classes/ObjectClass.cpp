@@ -423,7 +423,13 @@ HashCode RexxObject::hash()
         // we have some other type of object, so we need to request a hash code
         // by sending the HASHCODE() message.
         sendMessage(GlobalNames::HASHCODE, result);
-        // TODO:  probably need to have a value check here.
+
+        // TODO:  Add a test for this condition
+        // we need to have a return value for this.
+        if (result.isNull())
+        {
+            reportException(Error_No_result_object_message, new_string("HASHCODE"));
+        }
 
         // the default version sends us a string containing binary data.
         // if the string is long enough for that, we reverse the process.  Otherwise,
@@ -595,7 +601,6 @@ void RexxObject::copyObjectVariables(RexxObject *newObj)
  */
 MethodClass * RexxObject::checkPrivate(MethodClass *method )
 {
-    // TODO:  are there places where the activation context can be passed in?
     // get the calling activaiton context
     ActivationBase *activation = ActivityManager::currentActivity->getTopStackFrame();
     if (activation != OREF_NULL)
@@ -1394,7 +1399,6 @@ RexxString *RexxInternalObject::requiredString(size_t position )
  *
  * @return The converted string value.
  */
-// TODO:  Convert more error checking to this form.
 RexxString *RexxInternalObject::requiredString(const char *name)
 {
     // try to convert first
@@ -1718,7 +1722,7 @@ RexxClass *RexxObject::classObject()
  *
  * @return Returns nothing.
  */
-RexxObject  *RexxObject::setMethod(RexxString *msgname, MethodClass *methobj, RexxString *option)
+RexxObject *RexxObject::setMethod(RexxString *msgname, MethodClass *methobj, RexxString *option)
 {
     // get the message name as a string
     msgname = stringArgument(msgname, ARG_ONE)->upper();
@@ -2646,8 +2650,6 @@ RexxNilObject::RexxNilObject()
 {
     // use the initial identify hash and save this.
     hashValue = identityHash();
-    // TODO:  Should memory have a special table of proxied objects?  Not
-    // really relevant currently, since we don't really use proxies.
     // we are a special proxy object.
     makeProxiedObject();
 }
