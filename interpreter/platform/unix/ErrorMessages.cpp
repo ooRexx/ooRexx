@@ -83,9 +83,12 @@ typedef struct msgEntry {              /* define for error table entries    */
 #ifdef LINUX
 //#define SECOND_PARAMETER MCLoadAll   /* different sign. Lin-AIX           */
 #define SECOND_PARAMETER 1             /* different sign. Lin-AIX           */
-#define CATD_ERR -1                    /* Duplicate for AIX                 */
 #else
 #define SECOND_PARAMETER 0             /* 0 for no  NL_CAT_LOCALE           */
+#endif
+
+#ifndef CATD_ERR
+#define CATD_ERR ((nl_catd)-1)         /* Duplicate for AIX                 */
 #endif
 
 
@@ -116,10 +119,10 @@ RexxString *SystemInterpreter::getMessageText(wholenumber_t code )
 
             msgid = p->msgid;                 /* get msg number associated w/ error*/
                                               /* open message catalog in NLSPATH   */
-            if ((catd = catopen(REXXMESSAGEFILE, SECOND_PARAMETER)) == (nl_catd)CATD_ERR)
+            if ((catd = catopen(REXXMESSAGEFILE, SECOND_PARAMETER)) == CATD_ERR)
             {
                 sprintf(DataArea, "%s/%s", ORX_CATDIR, REXXMESSAGEFILE);
-                if ((catd = catopen(DataArea, SECOND_PARAMETER)) == (nl_catd)CATD_ERR)
+                if ((catd = catopen(DataArea, SECOND_PARAMETER)) == CATD_ERR)
                 {
                     sprintf(DataArea, "Cannot open REXX message catalog %s.  Not in NLSPATH or %s.",
                             REXXMESSAGEFILE, ORX_CATDIR);
@@ -131,7 +134,7 @@ RexxString *SystemInterpreter::getMessageText(wholenumber_t code )
             {
 #if defined(OPSYS_LINUX) && !defined(OPSYS_SUN)
                 sprintf(DataArea, "%s/%s", ORX_CATDIR, REXXMESSAGEFILE);
-                if ((catd = catopen(DataArea, SECOND_PARAMETER)) == (nl_catd)CATD_ERR)
+                if ((catd = catopen(DataArea, SECOND_PARAMETER)) == CATD_ERR)
                 {
                     sprintf(DataArea, "Cannot open REXX message catalog %s.  Not in NLSPATH or %s.",
                             REXXMESSAGEFILE, ORX_CATDIR);
