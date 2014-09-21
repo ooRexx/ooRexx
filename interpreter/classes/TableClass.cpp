@@ -82,6 +82,8 @@ void *TableClass::operator new (size_t size)
  */
 RexxObject *TableClass::newRexx(RexxObject **args, size_t argCount)
 {
+    // TODO:  Add test cases for the hinting init methods
+
     // this class is defined on the object class, but this is actually attached
     // to a class object instance.  Therefore, any use of the this pointer
     // will be touching the wrong data.  Use the classThis pointer for calling

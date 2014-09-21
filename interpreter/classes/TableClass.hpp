@@ -59,6 +59,7 @@ class TableClass : public EqualityHashCollection
 
     inline TableClass(RESTORETYPE restoreType) { ; }
            TableClass(size_t capacity = HashCollection::DefaultTableSize) : EqualityHashCollection(capacity) { }
+           // special verson that delays initialization until the init method.
            TableClass(bool fromRexx) { }
 
     RexxObject *newRexx(RexxObject **, size_t);

@@ -735,6 +735,7 @@ StartClassDefinition(IdentityTable);
         AddMethod("Index", HashCollection::indexRexx, 1);
         AddMethod("HasItem", HashCollection::hasItemRexx, 1);
         AddMethod("RemoveItem", HashCollection::removeItemRexx, 1);
+        AddMethod("Init", HashCollection::initRexx, 1);
 
     CompleteMethodDefinitions();
 

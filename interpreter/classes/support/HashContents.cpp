@@ -1411,8 +1411,7 @@ ArrayClass *HashContents::uniqueIndexes()
     // for tables with no duplicates, this is the same as allIndexes.
     // however, this method is only exposed for relations/bags, so we'll
     // leave the implementation in the base
-    // TODO:  good use for a hinting version
-    Protected<TableClass> indexSet = new_table();
+    Protected<TableClass> indexSet = new_table(items());
 
     for (size_t i = 0; i < bucketSize; i++)
     {
