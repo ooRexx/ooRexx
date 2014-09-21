@@ -49,7 +49,6 @@
 #include "BufferClass.hpp"
 #include "ActivityManager.hpp"
 #include "ProtectedObject.hpp"
-#include "ActivationBase.hpp"
 #include "MethodArguments.hpp"
 
 

@@ -1723,7 +1723,7 @@ VariableDictionary *NativeActivation::methodVariables()
         {
             MethodClass *method = (MethodClass *)executable;
             // ok, we need to locate the object variable dictionary in the method's scope
-            objectVariables = receiver->getObjectVariables(method->getScope());
+            objectVariables = receiver->getObjectVariables(getScope());
             // if we are a guarded method, grab the variable lock
             if (objectScope == SCOPE_RELEASED && method->isGuarded())
             {
@@ -1824,22 +1824,24 @@ uint64_t NativeActivation::unsignedInt64Value(RexxObject *o, size_t position)
 }
 
 
-// TODO:  Cleanup not finished here
-
-const char *NativeActivation::cstring(
-    RexxObject *object)                /* object to convert                 */
-/******************************************************************************/
-/* Function:  Return an object as a CSTRING                                   */
-/******************************************************************************/
+/**
+ * Convert an object into a CSTRING pointer.
+ *
+ * @param object The source object.
+ *
+ * @return The CSTRING version of the object.
+ */
+const char *NativeActivation::cstring(RexxObject *object)
 {
-    /* force to a string value           */
+    // force to a string value, making sure to protect the string
+    // if a different object is returned.
     RexxString *string = (RexxString *)object->stringValue();
-    if (string != object)                /* different value?                  */
+    if (string != object)
     {
-        /* make it safe                      */
         createLocalReference(string);
     }
-    return string->getStringData();           /* just point to the string data     */
+    // return the pointer to the string data
+    return string->getStringData();
 }
 
 
@@ -1865,28 +1867,34 @@ void *NativeActivation::pointerString(RexxObject *object, size_t position)
 }
 
 
+/**
+ * Convert an object to a double
+ *
+ * @param object   The object to convert.
+ * @param position The argument position for error reporting.
+ *
+ * @return The converted double value.
+ */
 double NativeActivation::getDoubleValue(RexxObject *object, size_t position)
-/******************************************************************************/
-/* Function:  Convert an object to a double                                   */
-/******************************************************************************/
 {
-    double r;                            /* returned result                   */
-                                         /* convert and check result          */
+    double r;
+    // convert to a double, raising an error if this is invalid.
     if (!object->doubleValue(r))
     {
-        /* conversion error                  */
         reportException(Error_Invalid_argument_double, position + 1, object);
     }
-    return r;                            /* return converted number           */
+    return r;
 }
 
 
+/**
+ * Returns "unwrapped" C or C++ object associated with this
+ * object instance.  If the variable CSELF does not exist, then
+ * NULL is returned.
+ *
+ * @return The unwrapped value.
+ */
 void *NativeActivation::cself()
-/******************************************************************************/
-/* Function:  Returns "unwrapped" C or C++ object associated with this        */
-/*            object instance.  If the variable CSELF does not exist, then    */
-/*            NULL is returned.                                               */
-/******************************************************************************/
 {
     // if this is a method invocation, ask the receiver object to figure this out.
     if (receiver != OREF_NULL)
@@ -1894,18 +1902,21 @@ void *NativeActivation::cself()
         // this is necessary to get turn on a guard lock if the method
         // is guarded.  Failure to do this can cause multithreading problems.
         methodVariables();
-        return receiver->getCSelf(((MethodClass *)executable)->getScope());
+        return receiver->getCSelf(getScope());
     }
     // nope, call context doesn't allow this
     return OREF_NULL;
 }
 
 
-void *NativeActivation::pointer(
-    RexxObject *object)                /* object to convert                 */
-/******************************************************************************/
-/* Function:  Return as a pointer the value of an integer                     */
-/******************************************************************************/
+/**
+ * Dereference the pointer value inside a pointer object.
+ *
+ * @param object The source pointer object.
+ *
+ * @return The pointer value, or NULL if this is not a pointer object.
+ */
+void *NativeActivation::pointer(RexxObject *object)
 {
     if (!object->isInstanceOf(ThePointerClass))
     {
@@ -1916,100 +1927,123 @@ void *NativeActivation::pointer(
 }
 
 
+/**
+ * Redispatch an activation on a different activity
+ *
+ * @return The dispatched method result.
+ */
 RexxObject *NativeActivation::dispatch()
-/******************************************************************************/
-/* Function:  Redispatch an activation on a different activity                */
-/******************************************************************************/
 {
     ProtectedObject r;
-    run((MethodClass *)executable, (NativeMethod *)code, receiver, messageName, argList, argCount, r);  /* just do a method run              */
+    // just run the method
+    run((MethodClass *)executable, (NativeMethod *)code, receiver, messageName, argList, argCount, r);
     return (RexxObject *)r;
 }
 
-size_t NativeActivation::digits()
-/******************************************************************************/
-/* Function:  Return the current digits setting                               */
-/******************************************************************************/
+
+/**
+ * Return the current digits setting for the context.
+ *
+ * @return The digits value
+ */
+wholenumber_t NativeActivation::digits()
 {
-    /* have a real one?                  */
+    // if we have a parent context, return the value from that, otherwise
+    // just return the defalue.
     if (activation == OREF_NULL)
     {
-        return Numerics::DEFAULT_DIGITS;   /*  no, just return default value    */
+        return Numerics::DEFAULT_DIGITS;
     }
     else
     {
-        return activation->digits();       /* pass on the the sender            */
+        return activation->digits();
     }
 }
 
-size_t NativeActivation::fuzz()
-/******************************************************************************/
-/* Function:  Return the current fuzz setting                                 */
-/******************************************************************************/
+
+/**
+ * Return the context fuzz() setting.
+ *
+ * @return The current fuzz setting.
+ */
+wholenumber_t NativeActivation::fuzz()
 {
-    /* have a real one?                  */
+    // if we have a parent context, return the value from that, otherwise
+    // just return the defalue.
     if (activation == OREF_NULL)
     {
-        return Numerics::DEFAULT_FUZZ;     /*  no, just return default value    */
+        return Numerics::DEFAULT_FUZZ;
     }
     else
     {
-        return activation->fuzz();         /* pass on the the sender            */
+        return activation->fuzz();
     }
 }
 
+
+/**
+ * Return the current context form setting.
+ *
+ * @return The form setting.
+ */
 bool NativeActivation::form()
-/******************************************************************************/
-/* Function:  Return the curren form setting                                  */
-/******************************************************************************/
 {
-    /* have a real one?                  */
+    // if we have a parent context, return the value from that, otherwise
+    // just return the defalue.
     if (activation == OREF_NULL)
     {
-        return Numerics::DEFAULT_FORM;     /*  no, just return default value    */
+        return Numerics::DEFAULT_FORM;
     }
     else
     {
-        return activation->form();         /* pass on the the sender            */
+        return activation->form();
     }
 }
 
-void NativeActivation::setDigits(
-    size_t _digits)                     /* new NUMERIC DIGITS value          */
-/******************************************************************************/
-/* Function:  Set a new numeric digits setting                                */
-/******************************************************************************/
+
+/**
+ * Set the digits setting in the calling context.
+ *
+ * @param _digits The new digits setting.
+ */
+void NativeActivation::setDigits(wholenumber_t _digits)
 {
-    /* have a real one?                  */
+    // if we're in a call context, set this
     if (activation == OREF_NULL)
     {
-        activation->setDigits(_digits);      /* just forward the set              */
+        activation->setDigits(_digits);
     }
 }
 
-void NativeActivation::setFuzz(
-    size_t _fuzz )                     /* new NUMERIC FUZZ value            */
-/******************************************************************************/
-/* Function:  Set a new numeric fuzz setting                                  */
-/******************************************************************************/
+/**
+ * Set a new fuzz setting in the current context.
+ *
+ * @param _fuzz  The new fuzz value.
+ */
+void NativeActivation::setFuzz(wholenumber_t _fuzz )
 {
-    /* have a real one?                  */
+    // if we're in a call context, set this
     if (activation != OREF_NULL)
     {
-        activation->setFuzz(_fuzz);         /* just forward the set              */
+        activation->setFuzz(_fuzz);
     }
 }
 
-void NativeActivation::setForm(
-    bool _form )                        /* new NUMERIC FORM value            */
+
+/**
+ * update the numeric form setting in the current call context.
+ *
+ * @param _form  The new form setting.
+ */
+void NativeActivation::setForm(bool _form)
 /******************************************************************************/
 /* Function:  Set a new numeric form setting                                  */
 /******************************************************************************/
 {
-    /* have a real one?                  */
+    // only process if we're in a call context.
     if (activation == OREF_NULL)
     {
-        activation->setForm(_form);        /* just forward the set              */
+        activation->setForm(_form);
     }
 }
 
@@ -2177,7 +2211,7 @@ void NativeActivation::guardOn()
     if (objectVariables == OREF_NULL)
     {
         // grab the object variables associated with this object
-        objectVariables = receiver->getObjectVariables(((MethodClass *)executable)->getScope());
+        objectVariables = receiver->getObjectVariables(getScope());
     }
     // only reserve these if we don't already have them reserved.
     if (objectScope == SCOPE_RELEASED)
@@ -2360,9 +2394,9 @@ RexxObject *NativeActivation::getArgument(size_t index)
  *
  * @return The superclass scope object.
  */
-RexxObject *NativeActivation::getSuper()
+RexxClass *NativeActivation::getSuper()
 {
-    return receiver->superScope(((MethodClass *)executable)->getScope());
+    return receiver->superScope(getScope());
 }
 
 /**
@@ -2370,7 +2404,7 @@ RexxObject *NativeActivation::getSuper()
  *
  * @return The current method scope object.
  */
-RexxObject *NativeActivation::getScope()
+RexxClass *NativeActivation::getScope()
 {
     return ((MethodClass *)executable)->getScope();
 }
@@ -3168,7 +3202,7 @@ StackFrameClass *NativeActivation::createStackFrame()
     }
     else
     {
-        ArrayClass *info = new_array(getMessageName(), ((MethodClass *)getExecutableObject())->getScope()->getId());
+        ArrayClass *info = new_array(getMessageName(), getScope()->getId());
         ProtectedObject p(info);
 
         RexxString *message = activity->buildMessage(Message_Translations_compiled_method_invocation, info);

@@ -131,12 +131,12 @@ public:
     inline StringTable *getImportedRoutines() { install(); return mergedPublicRoutines; }
     inline StringTable *getDefinedMethods() { install(); return unattachedMethods; }
     inline ArrayClass  *getPackages() { install(); return loadedPackages; }
-    inline void         setDigits(size_t d) { packageSettings.setDigits(d); }
-    inline size_t       getDigits() { return packageSettings.getDigits(); }
+    inline void         setDigits(wholenumber_t d) { packageSettings.setDigits(d); }
+    inline wholenumber_t getDigits() { return packageSettings.getDigits(); }
     inline void         setForm(bool f) { packageSettings.setForm(f); }
     inline bool         getForm() { return packageSettings.getForm(); }
-    inline void         setFuzz(size_t f) { packageSettings.setFuzz(f); }
-    inline size_t       getFuzz() { return packageSettings.getFuzz(); }
+    inline void         setFuzz(wholenumber_t f) { packageSettings.setFuzz(f); }
+    inline wholenumber_t getFuzz() { return packageSettings.getFuzz(); }
     inline void         setTraceSetting(const TraceSetting &s) { packageSettings.setTraceSetting(s); }
     inline const TraceSetting &getTraceSetting() { return packageSettings.getTraceSetting(); }
     inline const PackageSetting &getSettings() { return packageSettings; }

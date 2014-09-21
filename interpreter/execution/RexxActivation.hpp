@@ -127,14 +127,15 @@ class RexxActivation : public ActivationBase
    virtual void live(size_t);
    virtual void liveGeneral(MarkReason reason);
 
-   RexxObject *dispatch();
-   size_t      digits();
-   size_t      fuzz();
-   bool        form();
-   void        setDigits(size_t);
-   void        setFuzz(size_t);
-   void        setForm(bool);
-   bool        trap(RexxString *, DirectoryClass *);
+   virtual RexxObject *dispatch();
+   virtual wholenumber_t digits();
+   virtual wholenumber_t fuzz();
+   virtual bool form();
+   virtual void setDigits(wholenumber_t);
+   virtual void setFuzz(wholenumber_t);
+   virtual void setForm(bool);
+   virtual bool trap(RexxString *, DirectoryClass *);
+
    void        setObjNotify(MessageClass *);
    void        termination();
    void        inheritPackageSettings();

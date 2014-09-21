@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -40,18 +40,15 @@
 #endif
 
 #include <pthread.h>
-#if defined(OPSYS_SUN)
-#include <sched.h>
-#endif
 #include "RexxCore.h"
 #include "IntegerClass.hpp"
 #include "RexxDateTime.hpp"
 #include "SystemInterpreter.hpp"
 
-#ifdef AIX
-#include <time.h>
-#else
+#ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
+#else
+#include <time.h>
 #endif
 
 

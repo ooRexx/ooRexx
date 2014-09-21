@@ -1879,7 +1879,7 @@ void RexxActivation::guardOn()
  *
  * @return The package digits setting
  */
-size_t RexxActivation::digits()
+wholenumber_t RexxActivation::digits()
 {
     return settings.packageSettings.getDigits();
 }
@@ -1890,7 +1890,7 @@ size_t RexxActivation::digits()
  *
  * @return The package fuzz setting
  */
-size_t RexxActivation::fuzz()
+wholenumber_t RexxActivation::fuzz()
 {
     return settings.packageSettings.getFuzz();
 }
@@ -1912,7 +1912,7 @@ bool RexxActivation::form()
  *
  * @param digitsVal The new digits value.
  */
-void RexxActivation::setDigits(size_t digitsVal)
+void RexxActivation::setDigits(wholenumber_t digitsVal)
 {
     settings.packageSettings.setDigits(digitsVal);
 }
@@ -1923,7 +1923,7 @@ void RexxActivation::setDigits(size_t digitsVal)
  *
  * @param fuzzVal   The new fuzz value.
  */
-void RexxActivation::setFuzz(size_t fuzzVal)
+void RexxActivation::setFuzz(wholenumber_t fuzzVal)
 {
     settings.packageSettings.setFuzz(fuzzVal);
 }

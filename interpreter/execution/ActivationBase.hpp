@@ -72,14 +72,14 @@ public:
     inline ActivationBase() {;};
     inline ActivationBase(RESTORETYPE restoreType) { ; };
     virtual RexxObject  *dispatch() {return NULL;};
-    virtual size_t digits() {return Numerics::DEFAULT_DIGITS;};
-    virtual size_t fuzz() {return Numerics::DEFAULT_FUZZ;};
+    virtual wholenumber_t digits() {return Numerics::DEFAULT_DIGITS;};
+    virtual wholenumber_t fuzz() {return Numerics::DEFAULT_FUZZ;};
     virtual bool form() {return Numerics::DEFAULT_FORM;};
     virtual const NumericSettings *getNumericSettings() { return Numerics::getDefaultSettings(); }
     virtual RexxActivation *getRexxContext() { return OREF_NULL; }
     virtual RexxActivation *findRexxContext() { return OREF_NULL; }
-    virtual void setDigits(size_t) {;};
-    virtual void setFuzz(size_t) {;};
+    virtual void setDigits(wholenumber_t) {;};
+    virtual void setFuzz(wholenumber_t) {;};
     virtual void setForm(bool) {;}
     virtual bool trap(RexxString *, DirectoryClass *) {return false;};
     virtual void setObjNotify(MessageClass *) {;};

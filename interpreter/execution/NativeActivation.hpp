@@ -84,6 +84,14 @@ class NativeActivation : public ActivationBase
     virtual void run(MethodClass *_method, NativeMethod *_code, RexxObject  *_receiver,
         RexxString  *_msgname, RexxObject **_arglist, size_t _argcount, ProtectedObject &resultObj);
 
+    virtual RexxObject *dispatch();
+    virtual wholenumber_t digits();
+    virtual wholenumber_t fuzz();
+    virtual bool   form();
+    virtual void   setDigits(wholenumber_t);
+    virtual void   setFuzz(wholenumber_t);
+    virtual void   setForm(bool);
+
     void run(ActivityDispatcher &dispatcher);
     void run(CallbackDispatcher &dispatcher);
     void run(TrappingDispatcher &dispatcher);
@@ -99,13 +107,6 @@ class NativeActivation : public ActivationBase
     void  *buffer();
     void  *pointer(RexxObject *);
     void  *pointerString(RexxObject *object, size_t position);
-    RexxObject *dispatch();
-    size_t digits();
-    size_t fuzz();
-    bool   form();
-    void   setDigits(size_t);
-    void   setFuzz(size_t);
-    void   setForm(bool);
     void   guardOff();
     void   guardOn();
     void   enableVariablepool();
@@ -116,8 +117,8 @@ class NativeActivation : public ActivationBase
     void   raiseCondition(RexxString *condition, RexxString *description, RexxObject *additional, RexxObject *result);
     ArrayClass *getArguments();
     RexxObject *getArgument(size_t index);
-    RexxObject *getSuper();
-    RexxObject *getScope();
+    RexxClass  *getSuper();
+    RexxClass  *getScope();
     StemClass *resolveStemVariable(RexxObject *s);
     RexxClass *findClass(RexxString *className);
     RexxClass *findCallerClass(RexxString *className);
