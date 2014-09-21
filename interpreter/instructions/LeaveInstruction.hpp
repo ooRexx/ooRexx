@@ -46,7 +46,8 @@
 
 #include "RexxInstruction.hpp"
 
-class RexxInstructionLeave : public RexxInstruction {
+class RexxInstructionLeave : public RexxInstruction
+{
  public:
     RexxInstructionLeave(RexxString *);
     inline RexxInstructionLeave(RESTORETYPE restoreType) { ; };

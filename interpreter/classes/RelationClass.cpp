@@ -157,7 +157,7 @@ RexxInternalObject *RelationClass::removeItem(RexxInternalObject *value, RexxInt
  *
  * @return A supplier object for iterating over the collection items.
  */
-SupplierClass *RelationClass::supplierRexx(RexxInternalObject *index)
+SupplierClass *RelationClass::supplierRexx(RexxObject *index)
 {
     return contents->supplier(index);
 }
@@ -171,7 +171,7 @@ SupplierClass *RelationClass::supplierRexx(RexxInternalObject *index)
  *
  * @return The appropriate count of items.
  */
-RexxInternalObject *RelationClass::itemsRexx(RexxInternalObject *index)
+RexxObject *RelationClass::itemsRexx(RexxObject *index)
 {
     return new_integer(contents->items(index));
 }
@@ -185,7 +185,7 @@ RexxInternalObject *RelationClass::itemsRexx(RexxInternalObject *index)
  *
  * @return The removed item, if any.
  */
-RexxInternalObject *RelationClass::removeItemRexx(RexxInternalObject *value, RexxInternalObject *index)
+RexxObject *RelationClass::removeItemRexx(RexxObject *value, RexxObject *index)
 {
     requiredArgument(value,ARG_ONE);
     return resultOrNil(contents->removeItem(value, index));
@@ -201,7 +201,7 @@ RexxInternalObject *RelationClass::removeItemRexx(RexxInternalObject *value, Rex
  *
  * @return .true if this was found, .false otherwise.
  */
-RexxInternalObject *RelationClass::hasItemRexx(RexxInternalObject *value, RexxInternalObject *index)
+RexxObject *RelationClass::hasItemRexx(RexxObject *value, RexxObject *index)
 {
     requiredArgument(value, ARG_ONE);
     return booleanObject(contents->hasItem(value, index));
@@ -215,10 +215,10 @@ RexxInternalObject *RelationClass::hasItemRexx(RexxInternalObject *value, RexxIn
  *
  * @return The associated indexes.
  */
-RexxInternalObject *RelationClass::allIndexRexx(RexxInternalObject *value)
+ArrayClass *RelationClass::allIndexRexx(RexxObject *value)
 {
     requiredArgument(value, ARG_ONE);
-    return this->contents->allIndex(value);
+    return contents->allIndex(value);
 }
 
 
@@ -229,7 +229,7 @@ RexxInternalObject *RelationClass::allIndexRexx(RexxInternalObject *value)
  *
  * @return An array holding all of the indexes.
  */
-RexxInternalObject *RelationClass::allAt(RexxInternalObject *index)
+ArrayClass *RelationClass::allAt(RexxObject *index)
 {
     requiredArgument(index, ARG_ONE);
     return contents->allIndex(index);
@@ -244,7 +244,7 @@ RexxInternalObject *RelationClass::allAt(RexxInternalObject *index)
  * @return An array of all removed items.  Returns an empty array
  *         if the index is not found.
  */
-RexxInternalObject *RelationClass::removeAll(RexxInternalObject *index)
+ArrayClass *RelationClass::removeAll(RexxObject *index)
 {
     requiredArgument(index, ARG_ONE);
     return contents->removeAll(index);

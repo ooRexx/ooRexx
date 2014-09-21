@@ -61,8 +61,8 @@ class RexxInstructionRaise : public RexxInstruction
 {
  public:
     inline RexxInstructionRaise(RESTORETYPE restoreType) { ; };
-    RexxInstructionRaise(RexxString *_condition, RexxObject *_expression, RexxObject *_description,
-        RexxObject *_additional, RexxObject *_result, FlagSet<RaiseInstructionFlags, 32> flags);
+    RexxInstructionRaise(RexxString *_condition, RexxInternalObject *_expression, RexxInternalObject *_description,
+        RexxInternalObject *_additional, RexxInternalObject *_result, FlagSet<RaiseInstructionFlags, 32> flags);
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
@@ -73,11 +73,11 @@ class RexxInstructionRaise : public RexxInstruction
  protected:
 
     FlagSet<RaiseInstructionFlags, 32>  instructionFlags;   // instruction control flags
-    RexxObject *rcValue;                 // RC value expression
+    RexxInternalObject *rcValue;         // RC value expression
     RexxString *conditionName;           // condition trap name
-    RexxObject *description;             // condition description
-    RexxObject *resultValue;             // condition result
+    RexxInternalObject *description;     // condition description
+    RexxInternalObject *resultValue;     // condition result
     size_t      arrayCount;              // count of additional items
-    RexxObject *additional[1];           // additional specified information
+    RexxInternalObject *additional[1];   // additional specified information
 };
 #endif

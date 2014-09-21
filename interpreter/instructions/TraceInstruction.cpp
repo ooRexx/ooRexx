@@ -65,7 +65,7 @@ RexxInstructionTrace::RexxInstructionTrace(TraceSetting s)
  *
  * @param e      The value expression.
  */
-RexxInstructionTrace::RexxInstructionTrace(RexxObject *e)
+RexxInstructionTrace::RexxInstructionTrace(RexxInternalObject *e)
 {
     expression = e;
     skip = false;

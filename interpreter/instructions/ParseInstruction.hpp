@@ -61,7 +61,7 @@ typedef enum
 class RexxInstructionParse : public RexxInstruction
 {
  public:
-    RexxInstructionParse(RexxObject *expr, InstructionSubKeyword source,
+    RexxInstructionParse(RexxInternalObject *expr, InstructionSubKeyword source,
         FlagSet<ParseFlags, 32>, size_t templateCount, QueueClass *parse_template);
     inline RexxInstructionParse(RESTORETYPE restoreType) { ; };
 
@@ -74,7 +74,7 @@ class RexxInstructionParse : public RexxInstruction
  protected:
     FlagSet<ParseFlags, 32>  parseFlags;         // parsing control flags
     InstructionSubKeyword stringSource;          // where the parsed data originates
-    RexxObject       *expression;                // parse value expression
+    RexxInternalObject *expression;              // parse value expression
     size_t            triggerCount;              // number of triggers
     ParseTrigger     *triggers[1];               // parsing triggers
 };

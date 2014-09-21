@@ -152,7 +152,7 @@ void RexxInstructionSignal::execute(RexxActivation *context, ExpressionStack *st
  *
  * @param labelName The name of the target label.
  */
-RexxInstructionDynamicSignal::RexxInstructionDynamicSignal(RexxObject *expr)
+RexxInstructionDynamicSignal::RexxInstructionDynamicSignal(RexxInternalObject *expr)
 {
     dynamicName = expr;
 }

@@ -165,8 +165,7 @@ void Interpreter::startInterpreter(InterpreterStartupMode mode)
             // the kernel lock.
             InstanceBlock instance;
 
-            // TODO:  Reassess the server class
-            // get the server class from the local environment
+            // get the server class from the REXX package where it is a non-public class
             RexxObject *server_class = (RexxObject *)TheRexxPackage->findClass(new_string("LOCALSERVER"));
 
             // NOTE:  This is a second block so that the

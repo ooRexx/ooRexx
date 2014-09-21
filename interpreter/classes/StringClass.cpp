@@ -502,7 +502,6 @@ RexxObject *RexxString::lengthRexx()
  */
 bool RexxString::isEqual(RexxInternalObject *otherObj)
 {
-    requiredArgument(otherObj, ARG_ONE);
     // if not a primitive, we need to go the full == message route.
     if (!isBaseClass())
     {
@@ -593,7 +592,7 @@ wholenumber_t RexxString::compareTo(RexxInternalObject *other )
     if (isBaseClass())
     {
         // there should be a faster version of this...
-        return primitiveCompareTo(stringArgument(other, ARG_ONE));
+        return primitiveCompareTo(stringArgument((RexxObject *)other, ARG_ONE));
     }
     else
     {

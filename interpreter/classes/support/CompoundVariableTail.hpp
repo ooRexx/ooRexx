@@ -55,21 +55,21 @@ class CompoundVariableTail
 {
   public:
    // build up a tail using a variable dictionary for resolving variable references
-   inline CompoundVariableTail(VariableDictionary *dictionary, RexxObject **tails, size_t tailCount)
+   inline CompoundVariableTail(VariableDictionary *dictionary, RexxInternalObject **tails, size_t tailCount)
    {
        init();                                  // do the common initialization
        buildTail(dictionary, tails, tailCount); // build the full tail up
    }
 
    // build up a tail using an activation variable context for resolving references
-   inline CompoundVariableTail(RexxActivation *context, RexxObject **tails, size_t tailCount)
+   inline CompoundVariableTail(RexxActivation *context, RexxInternalObject **tails, size_t tailCount)
    {
        init();
        buildTail(context, tails, tailCount);
    }
 
    // build up a tail using an array of resolved object (an argument list from a [] method call)
-   inline CompoundVariableTail(RexxObject **tails, size_t count)
+   inline CompoundVariableTail(RexxInternalObject **tails, size_t count)
    {
        init();
        buildTail(tails, count);
@@ -105,7 +105,7 @@ class CompoundVariableTail
 
    // build a tail from an array of objects.  The resolve flag indicates whether
    // these are constants or variables.
-   inline CompoundVariableTail(RexxObject **tails, size_t count, bool resolve)
+   inline CompoundVariableTail(RexxInternalObject **tails, size_t count, bool resolve)
    {
        init();
        if (resolve)
@@ -154,14 +154,14 @@ class CompoundVariableTail
        value = OREF_NULL;                       // and no string value yet
    }
 
-   void buildTail(VariableDictionary *dictionary, RexxObject **tails, size_t tailCount);
-   void buildTail(RexxActivation *context, RexxObject **tails, size_t tailCount);
-   void buildTail(RexxObject **tails, size_t count);
+   void buildTail(VariableDictionary *dictionary, RexxInternalObject **tails, size_t tailCount);
+   void buildTail(RexxActivation *context, RexxInternalObject **tails, size_t tailCount);
+   void buildTail(RexxInternalObject **tails, size_t count);
    void buildTail(RexxString *tail);
    void buildTail(RexxString *tail, size_t index);
    void buildTail(size_t index);
    void buildTail(const char *index);
-   void buildUnresolvedTail(RexxObject **tails, size_t count);
+   void buildUnresolvedTail(RexxInternalObject **tails, size_t count);
 
    inline void addDot() { append('.'); }
    inline int compare(RexxString *name)

@@ -74,7 +74,7 @@ RexxInstructionCall::RexxInstructionCall(RexxString *name, size_t argCount,
 
     // now copy any arguments from the sub term stack
     // NOTE:  The arguments are in last-to-first order on the stack.
-    initializeObjectArray(argCount, arguments, RexxObject, argList);
+    initializeObjectArray(argCount, arguments, RexxInternalObject, argList);
 }
 
 
@@ -225,7 +225,7 @@ void RexxInstructionCall::execute(RexxActivation *context, ExpressionStack *stac
  * @param argCount The count of arguments.
  * @param argList  A queue of the arguments (stored in reverse evaluation order)
  */
-RexxInstructionDynamicCall::RexxInstructionDynamicCall(RexxObject *expr, size_t argCount,
+RexxInstructionDynamicCall::RexxInstructionDynamicCall(RexxInternalObject *expr, size_t argCount,
     QueueClass  *argList)
 {
     dynamicName = expr;

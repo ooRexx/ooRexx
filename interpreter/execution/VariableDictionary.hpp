@@ -91,7 +91,7 @@ class VariableDictionary : public RexxInternalObject
              return dictionaryIterator.isAvailable();
          }
 
-         inline RexxInternalObject *value()
+         inline RexxObject *value()
          {
              if (currentStem != OREF_NULL)
              {
@@ -166,7 +166,7 @@ class VariableDictionary : public RexxInternalObject
     virtual void         copyValues();
             VariableDictionary *deepCopy();
 
-    RexxInternalObject  *realValue(RexxString *name);
+    RexxObject  *realValue(RexxString *name);
     inline StemClass *getStem(RexxString *stemName) { return (StemClass *)getStemVariable(stemName)->getVariableValue(); }
     RexxVariable *createStemVariable(RexxString *stemName);
     RexxVariable *createVariable(RexxString *stemName);
@@ -202,24 +202,24 @@ class VariableDictionary : public RexxInternalObject
         return variable;
     }
 
-    void setCompoundVariable(RexxString *stemName, RexxObject **tail, size_t tailCount, RexxInternalObject *value);
-    void dropCompoundVariable(RexxString *stemName, RexxObject **tail, size_t tailCount);
+    void setCompoundVariable(RexxString *stemName, RexxInternalObject **tail, size_t tailCount, RexxObject *value);
+    void dropCompoundVariable(RexxString *stemName, RexxInternalObject **tail, size_t tailCount);
     StringTable *getAllVariables();
     DirectoryClass *getVariableDirectory();
     inline void remove(RexxString *n) { contents->remove(n); }
 
-    void         set(RexxString *, RexxInternalObject *);
+    void         set(RexxString *, RexxObject *);
     void         drop(RexxString *);
     void         dropStemVariable(RexxString *);
     void         reserve(Activity *);
     void         release(Activity *);
     bool         transfer(Activity *);
 
-    CompoundTableElement *getCompoundVariable(RexxString *stemName, RexxObject **tail, size_t tailCount);
-    RexxInternalObject  *getCompoundVariableValue(RexxString *stemName, RexxObject **tail, size_t tailCount);
-    RexxInternalObject  *getCompoundVariableRealValue(RexxString *stem, RexxObject **tail, size_t tailCount);
+    CompoundTableElement *getCompoundVariable(RexxString *stemName, RexxInternalObject **tail, size_t tailCount);
+    RexxObject  *getCompoundVariableValue(RexxString *stemName, RexxInternalObject **tail, size_t tailCount);
+    RexxObject  *getCompoundVariableRealValue(RexxString *stem, RexxInternalObject **tail, size_t tailCount);
 
-    RexxInternalObject  *realStemValue(RexxString *stemName);
+    RexxObject  *realStemValue(RexxString *stemName);
 
     inline bool isScope(RexxClass *otherScope) { return scope == otherScope; }
     inline VariableDictionary *getNextDictionary() { return nextDictionary; }

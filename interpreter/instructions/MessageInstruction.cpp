@@ -73,7 +73,7 @@ RexxInstructionMessage::RexxInstructionMessage(RexxExpressionMessage *message)
  * @param message    The source message expression object.
  * @param expression The expression assignment value (passed as the first object).
  */
-RexxInstructionMessage::RexxInstructionMessage(RexxExpressionMessage *message, RexxObject *expression)
+RexxInstructionMessage::RexxInstructionMessage(RexxExpressionMessage *message, RexxInternalObject *expression)
 {
     target = message->target;
     super = message->super;

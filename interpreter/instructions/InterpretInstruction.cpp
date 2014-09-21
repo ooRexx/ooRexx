@@ -53,7 +53,7 @@
  * @param _expression
  *               The required expression for the instruction to interpret.
  */
-RexxInstructionInterpret::RexxInstructionInterpret(RexxObject *_expression)
+RexxInstructionInterpret::RexxInstructionInterpret(RexxInternalObject *_expression)
 {
     expression = _expression;
 }

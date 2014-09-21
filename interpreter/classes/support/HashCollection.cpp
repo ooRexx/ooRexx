@@ -277,7 +277,7 @@ void HashCollection::mergeItem(RexxInternalObject *value, RexxInternalObject *in
  * @param index    The method index value.
  * @param position The argument position for error reporting.
  */
-void HashCollection::validateIndex(RexxInternalObject *&index, size_t position)
+void HashCollection::validateIndex(RexxObject *&index, size_t position)
 {
     index = requiredArgument(index, position);    // make sure we have an index
 }
@@ -295,7 +295,7 @@ void HashCollection::validateIndex(RexxInternalObject *&index, size_t position)
  *                 the value is indicated by the first position, and the
  *                 index is one position greater.
  */
-void HashCollection::validateValueIndex(RexxInternalObject *&value, RexxInternalObject *&index, size_t position)
+void HashCollection::validateValueIndex(RexxObject *&value, RexxObject *&index, size_t position)
 {
     // the default is to apply existance validation to the value, and index validation to the index.
     value = requiredArgument(value, position);        // make sure we have an value
@@ -313,7 +313,7 @@ void HashCollection::validateValueIndex(RexxInternalObject *&value, RexxInternal
  *
  * @return The removed object, or .nil if the index was not found.
  */
-RexxInternalObject *HashCollection::removeRexx(RexxInternalObject *index)
+RexxObject *HashCollection::removeRexx(RexxObject *index)
 {
     // validate the argument for this collection type
     validateIndex(index, ARG_ONE);
@@ -345,7 +345,7 @@ RexxInternalObject *HashCollection::remove(RexxInternalObject *index)
  *
  * @return An array of all matching index items.
  */
-ArrayClass *HashCollection::allAtRexx(RexxInternalObject *index)
+ArrayClass *HashCollection::allAtRexx(RexxObject *index)
 {
     validateIndex(index, ARG_ONE);
     return contents->getAll(index);
@@ -362,7 +362,7 @@ ArrayClass *HashCollection::allAtRexx(RexxInternalObject *index)
  * @return The fetched object, or .nil if the index does not
  *         exist in the collection.
  */
-RexxInternalObject *HashCollection::getRexx(RexxInternalObject *index)
+RexxObject *HashCollection::getRexx(RexxObject *index)
 {
     validateIndex(index, ARG_ONE);
     return resultOrNil(get(index));
@@ -396,7 +396,7 @@ RexxInternalObject *HashCollection::get(RexxInternalObject *key)
  *
  * @return Always returns OREF_NULL.
  */
-RexxInternalObject *HashCollection::putRexx(RexxInternalObject *item, RexxInternalObject *index)
+RexxObject *HashCollection::putRexx(RexxObject *item, RexxObject *index)
 {
     // validate both the index and value
     validateValueIndex(item, index, ARG_ONE);
@@ -530,7 +530,7 @@ void HashCollection::copyValues()
  * @return True if the index exists, false if the index does not
  *         exist.
  */
-RexxInternalObject *HashCollection::hasIndexRexx(RexxInternalObject *index)
+RexxObject *HashCollection::hasIndexRexx(RexxObject *index)
 {
     validateIndex(index, ARG_ONE);
     return booleanObject(hasIndex(index));
@@ -559,7 +559,7 @@ bool HashCollection::hasIndex(RexxInternalObject *index)
  * @return The index for the target object, or .nil if no object was
  *         found.
  */
-RexxInternalObject *HashCollection::indexRexx(RexxInternalObject *target)
+RexxObject *HashCollection::indexRexx(RexxObject *target)
 {
     // required argument
     requiredArgument(target, ARG_ONE);
@@ -591,7 +591,7 @@ RexxInternalObject *HashCollection::getIndex(RexxInternalObject *target)
  *
  * @return The target object again.
  */
-RexxInternalObject *HashCollection::removeItemRexx(RexxInternalObject *target)
+RexxObject *HashCollection::removeItemRexx(RexxObject *target)
 {
     // required argument
     requiredArgument(target, ARG_ONE);
@@ -621,7 +621,7 @@ RexxInternalObject *HashCollection::removeItem(RexxInternalObject *target)
  *
  * @return .true if the object exists, .false otherwise.
  */
-RexxObject *HashCollection::hasItemRexx(RexxInternalObject *target)
+RexxObject *HashCollection::hasItemRexx(RexxObject *target)
 {
     requiredArgument(target, ARG_ONE);
     return booleanObject(hasItem(target));
@@ -850,18 +850,19 @@ RexxInternalObject *StringHashCollection::removeEntry(RexxString *index)
  *
  * @return Returns nothing.
  */
-RexxInternalObject *StringHashCollection::setEntry(RexxString *entryName, RexxInternalObject *entryObj)
+void StringHashCollection::setEntry(RexxString *entryName, RexxInternalObject *entryObj)
 {
     // set entry is a little different than put, in that the value argument is optional.
     // no argument is a remove operation
     if (entryObj == OREF_NULL)
     {
-        return remove(entryName->upper());
+        remove(entryName->upper());
     }
-
-    // this is just a PUT operation with an uppercase index.
-    put(entryObj, entryName->upper());
-    return OREF_NULL;
+    else
+    {
+        // this is just a PUT operation with an uppercase index.
+        put(entryObj, entryName->upper());
+    }
 }
 
 
@@ -889,7 +890,7 @@ bool StringHashCollection::hasEntry(RexxString *entryName)
  *
  * @return The entry value, if it has one.
  */
-RexxInternalObject *StringHashCollection::entryRexx(RexxInternalObject *entryName)
+RexxObject *StringHashCollection::entryRexx(RexxObject *entryName)
 {
     // validate the index item and let entry handle it (entry
     // also takes care of the uppercase)
@@ -908,12 +909,12 @@ RexxInternalObject *StringHashCollection::entryRexx(RexxInternalObject *entryNam
  *
  * @return The removed entry value, if it has one.
  */
-RexxInternalObject *StringHashCollection::removeEntryRexx(RexxInternalObject *entryName)
+RexxObject *StringHashCollection::removeEntryRexx(RexxObject *entryName)
 {
     // validate the index item and let entry handle it (entry
     // also takes care of the uppercase)
     validateIndex(entryName, ARG_ONE);
-    return removeEntry((RexxString *)entryName);
+    return resultOrNil(removeEntry((RexxString *)entryName));
 }
 
 
@@ -925,7 +926,7 @@ RexxInternalObject *StringHashCollection::removeEntryRexx(RexxInternalObject *en
  *
  * @return .true of the diectoy has the entry, false otherwise.
  */
-RexxObject *StringHashCollection::hasEntryRexx(RexxInternalObject *entryName)
+RexxObject *StringHashCollection::hasEntryRexx(RexxObject *entryName)
 {
     validateIndex(entryName, ARG_ONE);
     // get as an uppercase string
@@ -941,11 +942,12 @@ RexxObject *StringHashCollection::hasEntryRexx(RexxInternalObject *entryName)
  *
  * @return Returns nothing.
  */
-RexxInternalObject *StringHashCollection::setEntryRexx(RexxInternalObject *entryName, RexxInternalObject *entryObj)
+RexxObject *StringHashCollection::setEntryRexx(RexxObject *entryName, RexxObject *entryObj)
 {
     // validate the argument and perform the base operation
     validateIndex(entryName, ARG_ONE);
-    return setEntry((RexxString *)entryName, entryObj);
+    setEntry((RexxString *)entryName, entryObj);
+    return OREF_NULL;
 }
 
 
@@ -969,11 +971,11 @@ RexxObject *StringHashCollection::unknown(RexxString *msgname, ArrayClass *argum
         // extract the name part of the msg
         msgname = msgname->extract(0, msgname->getLength() - 1);
         // do this as an assignment
-        return (RexxObject *)setEntryRexx(msgname, arguments->get(1));
+        return setEntryRexx(msgname, (RexxObject *)arguments->get(1));
     }
 
     // just a retrieval operation
-    return (RexxObject *)resultOrNil(entry(msgname));
+    return resultOrNil(entry(msgname));
 }
 
 
@@ -1050,7 +1052,7 @@ HashContents *EqualityHashCollection::allocateContents(size_t bucketSize, size_t
  * @param index    The method index value.
  * @param position The argument position for error reporting.
  */
-void StringHashCollection::validateIndex(RexxInternalObject *&index, size_t position)
+void StringHashCollection::validateIndex(RexxObject *&index, size_t position)
 {
     index = stringArgument(index, position);    // make sure we have an index, and it is a string value.
 }
@@ -1069,7 +1071,7 @@ void StringHashCollection::validateIndex(RexxInternalObject *&index, size_t posi
  *                 the value is indicated by the first position, and the
  *                 index is one position greater.
  */
-void IndexOnlyHashCollection::validateValueIndex(RexxInternalObject *&value, RexxInternalObject *&index, size_t position)
+void IndexOnlyHashCollection::validateValueIndex(RexxObject *&value, RexxObject *&index, size_t position)
 {
     // ok, the value (the first argument) is required
     value = requiredArgument(value, position);

@@ -212,17 +212,17 @@ void RexxInstructionUseStrict::execute(RexxActivation *context, ExpressionStack 
             else
             {
                 // grab a potential default value
-                RexxObject *defaultValue = variables[i].defaultValue;
+                RexxInternalObject *defaultValue = variables[i].defaultValue;
 
                 // and omitted argument is only value if we've marked it as optional
                 // by giving it a default value
                 if (defaultValue != OREF_NULL)
                 {
                     // evaluate the default value now
-                    defaultValue = defaultValue->evaluate(context, stack);
-                    context->traceResult(defaultValue);  // trace if necessary
+                    RexxObject *value = defaultValue->evaluate(context, stack);
+                    context->traceResult(value);  // trace if necessary
                     // assign the value
-                    variable->assign(context, defaultValue);
+                    variable->assign(context, value);
                     stack->pop();    // remove the value from the stack
                 }
                 else

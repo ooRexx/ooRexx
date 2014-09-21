@@ -2757,7 +2757,7 @@ bool  Activity::callTraceTestExit(RexxActivation *activation, bool currentsettin
  *
  * @return The handled flag.
  */
-bool Activity::callNovalueExit(RexxActivation *activation, RexxString *variableName, RexxInternalObject *&value)
+bool Activity::callNovalueExit(RexxActivation *activation, RexxString *variableName, RexxObject *&value)
 {
     if (isExitEnabled(RXNOVAL))
     {

@@ -46,10 +46,11 @@
 
 #include "RexxInstruction.hpp"
 
-class RexxInstructionMessage : public RexxInstruction {
+class RexxInstructionMessage : public RexxInstruction
+{
  public:
     RexxInstructionMessage(RexxExpressionMessage *);
-    RexxInstructionMessage(RexxExpressionMessage *, RexxObject *);
+    RexxInstructionMessage(RexxExpressionMessage *, RexxInternalObject *);
     inline RexxInstructionMessage(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
@@ -61,9 +62,9 @@ class RexxInstructionMessage : public RexxInstruction {
 protected:
 
     RexxString *name;                    // name of the message
-    RexxObject *target;                  // target subexpression
-    RexxObject *super;                   // super class target
+    RexxInternalObject *target;          // target subexpression
+    RexxInternalObject *super;           // super class target
     size_t      argumentCount;           // number of arguments
-    RexxObject *arguments[1];            // list of argument subexpressions
+    RexxInternalObject *arguments[1];    // list of argument subexpressions
 };
 #endif

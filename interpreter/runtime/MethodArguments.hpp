@@ -83,7 +83,7 @@ inline void missingArgument(size_t argumentPosition)
  * @param object   The reference to check.
  * @param position the position of the argument for the error message.
  */
-inline RexxInternalObject *requiredArgument(RexxInternalObject *object, size_t position)
+inline RexxObject *requiredArgument(RexxObject *object, size_t position)
 {
     if (object == OREF_NULL)
     {
@@ -103,7 +103,7 @@ inline RexxInternalObject *requiredArgument(RexxInternalObject *object, size_t p
  *
  * @return The String value of the object, if it really has a string value.
  */
-inline RexxString *stringArgument(RexxInternalObject *object, size_t position)
+inline RexxString *stringArgument(RexxObject *object, size_t position)
 {
     if (object == OREF_NULL)
     {
@@ -123,7 +123,7 @@ inline RexxString *stringArgument(RexxInternalObject *object, size_t position)
  *
  * @return The string value of the object if it truely has a string value.
  */
-inline RexxString *stringArgument(RexxInternalObject *object, const char *name)
+inline RexxString *stringArgument(RexxObject *object, const char *name)
 {
     if (object == OREF_NULL)
     {
@@ -135,14 +135,14 @@ inline RexxString *stringArgument(RexxInternalObject *object, const char *name)
 
 
 // handle an optional string argument where a default argument value is provided.
-inline RexxString *optionalStringArgument(RexxInternalObject *o, RexxString *d, size_t p)
+inline RexxString *optionalStringArgument(RexxObject *o, RexxString *d, size_t p)
 {
     return (o == OREF_NULL ? d : stringArgument(o, p));
 }
 
 
 // handle an optional string argument where a default argument value is provided.
-inline RexxString *optionalStringArgument(RexxInternalObject *o, RexxString *d, const char *p)
+inline RexxString *optionalStringArgument(RexxObject *o, RexxString *d, const char *p)
 {
     return (o == OREF_NULL ? d : stringArgument(o, p));
 }
@@ -158,7 +158,7 @@ inline RexxString *optionalStringArgument(RexxInternalObject *o, RexxString *d, 
  *
  * @return The converted numeric value of the object.
  */
-size_t lengthArgument(RexxInternalObject *o, size_t p);
+size_t lengthArgument(RexxObject *o, size_t p);
 
 
 /**
@@ -171,7 +171,7 @@ size_t lengthArgument(RexxInternalObject *o, size_t p);
  *
  * @return The converted numeric value of the object.
  */
-size_t nonNegativeArgument(RexxInternalObject *o, size_t p);
+size_t nonNegativeArgument(RexxObject *o, size_t p);
 
 
 /**
@@ -185,7 +185,7 @@ size_t nonNegativeArgument(RexxInternalObject *o, size_t p);
  *
  * @return The converted numeric value of the object.
  */
-inline size_t optionalLengthArgument(RexxInternalObject *o, size_t d, size_t p)
+inline size_t optionalLengthArgument(RexxObject *o, size_t d, size_t p)
 {
     return (o == OREF_NULL ? d : lengthArgument(o, p));
 }
@@ -201,7 +201,7 @@ inline size_t optionalLengthArgument(RexxInternalObject *o, size_t d, size_t p)
  *
  * @return The converted numeric value of the object.
  */
-size_t positionArgument(RexxInternalObject *o, size_t p);
+size_t positionArgument(RexxObject *o, size_t p);
 
 
 /**
@@ -215,7 +215,7 @@ size_t positionArgument(RexxInternalObject *o, size_t p);
  *
  * @return The converted numeric value of the object.
  */
-inline size_t optionalPositionArgument(RexxInternalObject *o, size_t d, size_t p)
+inline size_t optionalPositionArgument(RexxObject *o, size_t d, size_t p)
 {
     return (o == OREF_NULL ? d : positionArgument(o, p));
 }
@@ -231,7 +231,7 @@ inline size_t optionalPositionArgument(RexxInternalObject *o, size_t d, size_t p
  *
  * @return The pad character from the argument string.
  */
-char padArgument(RexxInternalObject *o, size_t p);
+char padArgument(RexxObject *o, size_t p);
 
 
 
@@ -245,7 +245,7 @@ char padArgument(RexxInternalObject *o, size_t p);
  *
  * @return The pad character from the argument string.
  */
-inline char optionalPadArgument(RexxInternalObject *o, char d, size_t p)
+inline char optionalPadArgument(RexxObject *o, char d, size_t p)
 {
     return (o == OREF_NULL ? d : padArgument(o, p));
 }
@@ -259,7 +259,7 @@ inline char optionalPadArgument(RexxInternalObject *o, char d, size_t p)
  *
  * @return The first character of the option string.
  */
-char optionArgument(RexxInternalObject *o, size_t p);
+char optionArgument(RexxObject *o, size_t p);
 
 
 /**
@@ -272,7 +272,7 @@ char optionArgument(RexxInternalObject *o, size_t p);
  *
  * @return The first character of the option string.
  */
-char optionArgument(RexxInternalObject *o, const char *validOptions, size_t p);
+char optionArgument(RexxObject *o, const char *validOptions, size_t p);
 
 
 /**
@@ -285,7 +285,7 @@ char optionArgument(RexxInternalObject *o, const char *validOptions, size_t p);
  *
  * @return The first character of the option string.
  */
-inline char optionalOptionArgument(RexxInternalObject *o, char d, size_t p)
+inline char optionalOptionArgument(RexxObject *o, char d, size_t p)
 {
     return (o == OREF_NULL ? d : optionArgument(o, p));
 }
@@ -302,7 +302,7 @@ inline char optionalOptionArgument(RexxInternalObject *o, char d, size_t p)
  *
  * @return The first character of the option string.
  */
-inline char optionalOptionArgument(RexxInternalObject *o, const char *v, char d, size_t p)
+inline char optionalOptionArgument(RexxObject *o, const char *v, char d, size_t p)
 {
     return (o == OREF_NULL ? d : optionArgument(o, v, p));
 }
@@ -317,7 +317,7 @@ inline char optionalOptionArgument(RexxInternalObject *o, const char *v, char d,
  *
  * @return The converted numeric value.
  */
-inline size_t optionalNonNegative(RexxInternalObject *o, size_t d, size_t p)
+inline size_t optionalNonNegative(RexxObject *o, size_t d, size_t p)
 {
     return o == OREF_NULL ? d : nonNegativeArgument(o, p);
 }
@@ -332,7 +332,7 @@ inline size_t optionalNonNegative(RexxInternalObject *o, size_t d, size_t p)
  *
  * @return The converted numeric value.
  */
-inline size_t optionalPositive(RexxInternalObject *o, size_t d, size_t p)
+inline size_t optionalPositive(RexxObject *o, size_t d, size_t p)
 {
     return (o == OREF_NULL ? d : o->requiredPositive(p));
 }
@@ -347,7 +347,7 @@ inline size_t optionalPositive(RexxInternalObject *o, size_t d, size_t p)
  *
  * @return A converted single-dimension array.
  */
-inline ArrayClass *arrayArgument(RexxInternalObject *object, size_t position)
+inline ArrayClass *arrayArgument(RexxObject *object, size_t position)
 {
     // this is required.
     if (object == OREF_NULL)
@@ -375,7 +375,7 @@ inline ArrayClass *arrayArgument(RexxInternalObject *object, size_t position)
  *
  * @return A converted single-dimension array.
  */
-inline ArrayClass *arrayArgument(RexxInternalObject *object, const char *name)
+inline ArrayClass *arrayArgument(RexxObject *object, const char *name)
 {
     if (object == OREF_NULL)
     {
@@ -399,7 +399,7 @@ inline ArrayClass *arrayArgument(RexxInternalObject *object, const char *name)
  * @param clazz  The class type to check it against.
  * @param name   The argument name for error reporting.
  */
-inline void classArgument(RexxInternalObject *object, RexxClass *clazz, const char *name)
+inline void classArgument(RexxObject *object, RexxClass *clazz, const char *name)
 {
     if (object == OREF_NULL)
     {

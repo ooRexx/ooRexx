@@ -1371,7 +1371,7 @@ void LanguageParser::resolveDependencies()
                 {
                     nextInstall = currentClass;
                     // add this to the class ordering
-                    classOrder->append((RexxObject *)nextInstall);
+                    classOrder->append(nextInstall);
                     // remove this from the processing list
                     classes->deleteItem(i);
                     break;
@@ -1540,7 +1540,7 @@ void LanguageParser::captureGuardVariable(RexxString *varname, RexxVariableBase 
         if (isExposed(varname))
         {
             // add to the guard list
-            guardVariables->put((RexxObject *)retriever, (RexxObject *)retriever);
+            guardVariables->put(retriever, retriever);
         }
     }
 }
@@ -1580,7 +1580,7 @@ RexxVariableBase *LanguageParser::addSimpleVariable(RexxString *varname)
             retriever = new RexxSimpleVariable(varname, 0);
         }
         // and add this to the table.
-        variables->put((RexxObject *)retriever, varname);
+        variables->put(retriever, varname);
     }
     // Small optimization here.  In order for a variable to be added to the
     // guard variable list, it must have been exposed already.  That means
@@ -1621,7 +1621,7 @@ RexxStemVariable *LanguageParser::addStem(RexxString *stemName)
             // interpret uses dynamic lookup
             retriever = new RexxStemVariable(stemName, 0);
         }
-        variables->put((RexxObject *)retriever, stemName);
+        variables->put(retriever, stemName);
     }
     // Small optimization here.  In order for a variable to be added to the
     // guard variable list, it must have been exposed already.  That means
@@ -1708,7 +1708,7 @@ RexxCompoundVariable *LanguageParser::addCompound(RexxString *name)
             // this is a real variable piece.  Add this to the global
             // variable table and push its retriever on to the term stack
             // for safe keeping.
-            subTerms->push((RexxObject *)(addSimpleVariable(tail)));
+            subTerms->push((addSimpleVariable(tail)));
         }
         else
         {
@@ -1725,7 +1725,7 @@ RexxCompoundVariable *LanguageParser::addCompound(RexxString *name)
     // add this to the retriever table so that all references to a compound variable with the
     // same full name will resolved to the same retriever.  We're safe just using the
     // variables table for this.
-    variables->put((RexxObject *)retriever, name);
+    variables->put(retriever, name);
 
     // NOTE: compound variables do get get added to the guard list.
     return retriever;
@@ -1798,7 +1798,7 @@ RexxVariableBase *LanguageParser::addVariable(RexxToken *token)
 // reused.  The variables, however, contain information that is unique
 // to each code block within the package.  These need to be kept in a
 // different list that is rebuilt in each code block.
-RexxObject *LanguageParser::addText(RexxToken *token)
+RexxInternalObject *LanguageParser::addText(RexxToken *token)
 {
     // these should be text type tokens that have a real value.
     RexxString *name = token->value();
@@ -1826,13 +1826,13 @@ RexxObject *LanguageParser::addText(RexxToken *token)
                     // we might already have processed this before.
                     // if not, we need to examine this and find the
                     // most appropriate form.
-                    RexxObject *retriever = (RexxObject *)literals->get(name);
+                    RexxInternalObject *retriever = literals->get(name);
                     if (retriever != OREF_NULL)
                     {
                         return retriever;
                     }
 
-                    RexxObject *value;
+                    RexxInternalObject *value;
 
                     // if this is a pure integer value within the default
                     // digits, create an integer object
@@ -1876,14 +1876,14 @@ RexxObject *LanguageParser::addText(RexxToken *token)
                 case SYMBOL_VARIABLE:
                 {
                     // do the variable resolution
-                    return (RexxObject *)addSimpleVariable(name);
+                    return addSimpleVariable(name);
                     break;
                 }
 
                 // stem variable, handled much like simple variables.
                 case SYMBOL_STEM:
                 {
-                    return (RexxObject *)addStem(name);
+                    return addStem(name);
                     break;
                 }
 
@@ -1891,7 +1891,7 @@ RexxObject *LanguageParser::addText(RexxToken *token)
                 // component pieces.
                 case SYMBOL_COMPOUND:
                 {
-                    return (RexxObject *)addCompound(name);
+                    return addCompound(name);
                     break;
                 }
 
@@ -1902,7 +1902,7 @@ RexxObject *LanguageParser::addText(RexxToken *token)
                     // we might already have processed this before.
                     // if not, we need to examine this and find the
                     // most appropriate form.
-                    RexxObject *retriever = (RexxObject *)dotVariables->get(name);
+                    RexxInternalObject *retriever = dotVariables->get(name);
                     if (retriever != OREF_NULL)
                     {
                         return retriever;
@@ -1911,7 +1911,7 @@ RexxObject *LanguageParser::addText(RexxToken *token)
                     // create the shorter name and add to the common set
                     RexxString *shortName = commonString(name->extract(1, name->getLength() - 1));
                     // create a retriever for this using the shorter name.
-                    retriever = (RexxObject *)new RexxDotVariable(shortName);
+                    retriever = new RexxDotVariable(shortName);
                     // we can add this to the literals list, since they do not
                     // depend upon context.
                     dotVariables->put(retriever, name);
@@ -1928,7 +1928,7 @@ RexxObject *LanguageParser::addText(RexxToken *token)
             // we might already have processed this before.
             // if not, we need to examine this and find the
             // most appropriate form.
-            RexxObject *retriever = (RexxObject *)literals->get(name);
+            RexxInternalObject *retriever = literals->get(name);
             if (retriever != OREF_NULL)
             {
                 return retriever;
@@ -2016,7 +2016,7 @@ void LanguageParser::addLabel(RexxInstruction *label, RexxString *labelname )
 {
     if (!labels->hasIndex(labelname))
     {
-        labels->put((RexxObject *)label, labelname);
+        labels->put(label, labelname);
     }
 }
 
@@ -2085,7 +2085,7 @@ ArrayClass *LanguageParser::getGuard()
  * @return An object that can be used to evaluate this option
  *         expression.
  */
-RexxObject *LanguageParser::parseConstantExpression()
+RexxInternalObject *LanguageParser::parseConstantExpression()
 {
     // everthing keys off of the first token.
     RexxToken *token = nextReal();
@@ -2122,7 +2122,7 @@ RexxObject *LanguageParser::parseConstantExpression()
     {
         // parse our a subexpression, terminating on the end of clause or
         // a right paren (the right paren is actually the required terminator)
-        RexxObject *exp = parseSubExpression(TERM_RIGHT);
+        RexxInternalObject *exp = parseSubExpression(TERM_RIGHT);
         // now verify that the terminator token was a right paren.  If not,
         // issue an error message using the original opening token so we know
         // which one is an issue.
@@ -2148,12 +2148,12 @@ RexxObject *LanguageParser::parseConstantExpression()
  *
  * @return The parsed expression.
  */
-RexxObject *LanguageParser::parenExpression(RexxToken *start)
+RexxInternalObject *LanguageParser::parenExpression(RexxToken *start)
 {
     // NB, the opening paren has already been parsed off and is in
     // the start token, which we only need for error reporting.
 
-    RexxObject *expression = parseSubExpression(TERM_RIGHT);
+    RexxInternalObject *expression = parseSubExpression(TERM_RIGHT);
 
     // this must be terminated by a right paren
     if (!nextToken()->isRightParen())
@@ -2177,7 +2177,7 @@ RexxObject *LanguageParser::parenExpression(RexxToken *start)
  *
  * @return An executable expression object.
  */
-RexxObject *LanguageParser::parseExpression(int terminators)
+RexxInternalObject *LanguageParser::parseExpression(int terminators)
 {
     // get the first real token.  This will skip over all of the
     // white space, comments, etc. to get to the real meat of the expression.
@@ -2203,12 +2203,12 @@ RexxObject *LanguageParser::parseExpression(int terminators)
  *
  * @return
  */
-RexxObject *LanguageParser::parseSubExpression(int terminators )
+RexxInternalObject *LanguageParser::parseSubExpression(int terminators )
 {
     // generally, expressions proceed with term-operator-term, with various modifications.
     // start by processing of a term value.
-    RexxObject *left = parseMessageSubterm(terminators);
-    RexxObject *right = OREF_NULL;
+    RexxInternalObject *left = parseMessageSubterm(terminators);
+    RexxInternalObject *right = OREF_NULL;
 
     // hmmm, nothing found, so we're done.
     if (left == OREF_NULL)
@@ -2243,7 +2243,7 @@ RexxObject *LanguageParser::parseSubExpression(int terminators )
 
                 // create a message term from the target...this also figures out
                 // the message name and any arguments.
-                RexxObject *subexpression = parseMessage(left, token->isType(TOKEN_DTILDE), terminators);
+                RexxInternalObject *subexpression = parseMessage(left, token->isType(TOKEN_DTILDE), terminators);
                 // that goes back on the term stack
                 pushTerm(subexpression);
                 break;
@@ -2256,7 +2256,7 @@ RexxObject *LanguageParser::parseSubExpression(int terminators )
                 left = requiredTerm(token);
                 // this is a message to the left term, and may (ok, probably) have
                 // arguments as well
-                RexxObject *subexpression = parseCollectionMessage(token, left);
+                RexxInternalObject *subexpression = parseCollectionMessage(token, left);
                 // and this goes back on to the term stack
                 pushTerm(subexpression);
                 break;
@@ -2338,7 +2338,7 @@ RexxObject *LanguageParser::parseSubExpression(int terminators )
                     // pop off the top operator, and push a new term on the stack to
                     // replace this.
                     RexxToken *op = popOperator();
-                    pushTerm((RexxObject *)new RexxBinaryOperator(op->subtype(), left, right));
+                    pushTerm(new RexxBinaryOperator(op->subtype(), left, right));
                 }
 
                 // finished popping lower precedence items.  Now push this operator on
@@ -2421,7 +2421,7 @@ RexxObject *LanguageParser::parseSubExpression(int terminators )
         left = requiredTerm(token);
 
         // all of these operators are binaries, and get pushed back on the stack
-        pushTerm((RexxObject *)new RexxBinaryOperator(token->subtype(), left, right));
+        pushTerm(new RexxBinaryOperator(token->subtype(), left, right));
         // and pop another operator.
         token = popOperator();
     }
@@ -2497,7 +2497,7 @@ size_t LanguageParser::parseArgList(RexxToken *firstToken, int terminators )
     for (;;)
     {
         // parse off an argument expression
-        RexxObject *subExpr = parseSubExpression(terminators | TERM_COMMA);
+        RexxInternalObject *subExpr = parseSubExpression(terminators | TERM_COMMA);
         // We have two term stacks.  The main term stack is used for expression evaluation.
         // the subTerm stack is used for processing expression lists like this.
         // NOTE that we need to use pushSubTerm here so that the required expression stack
@@ -2558,7 +2558,7 @@ size_t LanguageParser::parseArgList(RexxToken *firstToken, int terminators )
  *
  * @return A function expression object that can invoke this function.
  */
-RexxObject *LanguageParser::parseFunction(RexxToken *token, RexxToken *name)
+RexxInternalObject *LanguageParser::parseFunction(RexxToken *token, RexxToken *name)
 {
     // parse off the argument list, leaving the arguments in the subterm stack.
     // NOTE:  Because we have a closed () construct delimiting the function arguments,
@@ -2567,7 +2567,7 @@ RexxObject *LanguageParser::parseFunction(RexxToken *token, RexxToken *name)
 
     // create a function item.  This will also pull the argument items from the
     // subterm stack
-    RexxObject *func = (RexxObject *)new (argCount) RexxExpressionFunction(name->value(), argCount,
+    RexxInternalObject *func = new (argCount) RexxExpressionFunction(name->value(), argCount,
         subTerms, name->builtin());
 
     // at this point, we can't resolve the final target of this call.  It could be
@@ -2595,9 +2595,9 @@ RexxObject *LanguageParser::parseFunction(RexxToken *token, RexxToken *name)
  *
  * @return A message expression object.
  */
-RexxObject *LanguageParser::parseCollectionMessage(RexxToken *token, RexxObject *target)
+RexxInternalObject *LanguageParser::parseCollectionMessage(RexxToken *token, RexxInternalObject *target)
 {
-    // this was popped from the term stack, so we need to give is a little protection
+    // this was popped from the term stack, so we need to give it a little protection
     // until we're done parsing.
     ProtectedObject p(target);
 
@@ -2606,7 +2606,7 @@ RexxObject *LanguageParser::parseCollectionMessage(RexxToken *token, RexxObject 
     size_t argCount = parseArgList(token, (TERM_SQRIGHT));
 
     // create the message item.
-    RexxObject *msg = (RexxObject *)new (argCount) RexxExpressionMessage(target, GlobalNames::BRACKETS,
+    RexxInternalObject *msg = new (argCount) RexxExpressionMessage(target, GlobalNames::BRACKETS,
         (RexxObject *)OREF_NULL, argCount, subTerms, false);
     // give this a little short-term GC protection.
     holdObject(msg);
@@ -2655,10 +2655,10 @@ RexxToken  *LanguageParser::getToken(int terminators, int errorcode)
  *
  * @return An object to execute the message send.
  */
-RexxObject *LanguageParser::parseMessage(RexxObject *target, bool doubleTilde, int terminators )
+RexxInternalObject *LanguageParser::parseMessage(RexxInternalObject *target, bool doubleTilde, int terminators )
 {
     // this message might have a superclass override...default is none.
-    RexxObject *super = OREF_NULL;
+    RexxInternalObject *super = OREF_NULL;
     // no arguments yet
     size_t argCount = 0;
 
@@ -2727,7 +2727,7 @@ RexxObject *LanguageParser::parseMessage(RexxObject *target, bool doubleTilde, i
 
     // got all of the pieces, now create the message object and give it some short term
     // protection from GC.
-    RexxObject *msg =  (RexxObject *)new (argCount) RexxExpressionMessage(target, messagename, super, argCount, subTerms, doubleTilde);
+    RexxInternalObject *msg =  new (argCount) RexxExpressionMessage(target, messagename, super, argCount, subTerms, doubleTilde);
     holdObject(msg);
     // now safe to pop the message target object we saved.
     popTerm();
@@ -2747,11 +2747,11 @@ RexxObject *LanguageParser::parseMessage(RexxObject *target, bool doubleTilde, i
  *         the clause position pointer will either be unchanged or
  *         positioned at the next token of the clause.
  */
-RexxObject *LanguageParser::parseVariableOrMessageTerm()
+RexxInternalObject *LanguageParser::parseVariableOrMessageTerm()
 {
     // try for a message term first.  If not successful, see if the
     // next token is a variable symbol.
-    RexxObject *result = parseMessageTerm();
+    RexxInternalObject *result = parseMessageTerm();
     if (result == OREF_NULL)
     {
         RexxToken *_first = nextReal();
@@ -2786,7 +2786,7 @@ RexxObject *LanguageParser::parseVariableOrMessageTerm()
  *
  * @return The message term execution element.
  */
-RexxObject *LanguageParser::parseMessageTerm()
+RexxInternalObject *LanguageParser::parseMessageTerm()
 {
     // save the current position so we can reset cleanly
     size_t mark = markPosition();
@@ -2840,11 +2840,11 @@ RexxObject *LanguageParser::parseMessageTerm()
     }
 
     // get the first message term
-    RexxObject *start = parseSubTerm(TERM_EOC);
+    RexxInternalObject *start = parseSubTerm(TERM_EOC);
     // save this on the term stack
     pushTerm(start);
 
-    RexxObject *term = OREF_NULL;         // an allocated message term
+    RexxInternalObject *term = OREF_NULL;         // an allocated message term
     token = nextToken();
 
     // the leading message term can be a cascade of messages, so
@@ -2903,7 +2903,7 @@ RexxObject *LanguageParser::parseMessageTerm()
  * @return An object to represent this message term.  Returns
  *         OREF_NULL if no suitable term is found.
  */
-RexxObject *LanguageParser::parseMessageSubterm(int terminators)
+RexxInternalObject *LanguageParser::parseMessageSubterm(int terminators)
 {
     // get the first token.  If we've hit a terminator here, this could be
     // the real end of the expression.  The caller context will figure out
@@ -2935,13 +2935,13 @@ RexxObject *LanguageParser::parseMessageSubterm(int terminators)
                 // on this, which might find a chain of prefix operators (except,
                 // as I'm sure Walter Pachl will be sure to point out, --, which
                 // will be treated as a line comment :-)
-                RexxObject *term = parseMessageSubterm(terminators);
+                RexxInternalObject *term = parseMessageSubterm(terminators);
                 if (term == OREF_NULL)
                 {
                     syntaxError(Error_Invalid_expression_prefix, token);
                 }
                 // create a new unary operator using the subtype code.
-                return (RexxObject *)new RexxUnaryOperator(token->subtype(), term);
+                return new RexxUnaryOperator(token->subtype(), term);
                 break;
             }
 
@@ -2958,7 +2958,7 @@ RexxObject *LanguageParser::parseMessageSubterm(int terminators)
         // put the token back and try parsing off a subTerm (smaller subset, no
         // prefix stuff allowed).
         previousToken();
-        RexxObject *term = parseSubTerm(terminators);
+        RexxInternalObject *term = parseSubTerm(terminators);
         // protect on the term stack
         pushTerm(term);
         // ok, now see if this is actually a message send target by checking
@@ -3003,7 +3003,7 @@ RexxObject *LanguageParser::parseMessageSubterm(int terminators)
  *
  * @return An executable object for the message term.
  */
-RexxObject *LanguageParser::parseSubTerm(int terminators)
+RexxInternalObject *LanguageParser::parseSubTerm(int terminators)
 {
     // get the first token and make sure we really have something here.
     // The caller knows how to deal with a missing term.
@@ -3026,7 +3026,7 @@ RexxObject *LanguageParser::parseSubTerm(int terminators)
         {
             // parse off the parenthetical.  This might not return anything if there
             // are nothing in the parens.  This is an error.
-            RexxObject *term = parseSubExpression(TERM_RIGHT);
+            RexxInternalObject *term = parseSubExpression(TERM_RIGHT);
             if (term == OREF_NULL)
             {
                 syntaxError(Error_Invalid_expression_general, token);
@@ -3110,7 +3110,7 @@ RexxObject *LanguageParser::parseSubTerm(int terminators)
  *
  * @param term   The term object.
  */
-void LanguageParser::pushTerm(RexxObject *term )
+void LanguageParser::pushTerm(RexxInternalObject *term )
 {
     // push the term on to the stack.
     terms->push(term);
@@ -3127,13 +3127,13 @@ void LanguageParser::pushTerm(RexxObject *term )
  *
  * @return The popped object.
  */
-RexxObject *LanguageParser::popTerm()
+RexxInternalObject *LanguageParser::popTerm()
 {
     // reduce the stack count
     currentStack--;
     // pop the object off of the stack and give it some short-term
     // GC protection.
-    RexxObject *term = (RexxObject *)terms->pop();
+    RexxInternalObject *term = terms->pop();
     holdObject(term);
     return term;
 }
@@ -3148,7 +3148,7 @@ RexxObject *LanguageParser::popTerm()
  *
  * @param term   The term object.
  */
-void LanguageParser::pushSubTerm(RexxObject *term )
+void LanguageParser::pushSubTerm(RexxInternalObject *term )
 {
     // push the term on to the stack.
     subTerms->push(term);
@@ -3170,12 +3170,12 @@ void LanguageParser::pushSubTerm(RexxObject *term )
  *
  * @return The object popped off of the stack.
  */
-RexxObject *LanguageParser::requiredTerm(RexxToken *token, int errorCode)
+RexxInternalObject *LanguageParser::requiredTerm(RexxToken *token, int errorCode)
 {
     // we track the size count when we push/pop
     currentStack--;
     // pop the term off of the stack
-    RexxObject *term = (RexxObject *)terms->pop();
+    RexxInternalObject *term = terms->pop();
     // we need a term, if this is not here, this is a syntax error
     if (term == OREF_NULL)
     {
@@ -3193,16 +3193,16 @@ RexxObject *LanguageParser::requiredTerm(RexxToken *token, int errorCode)
  *
  * @return The last object popped.
  */
-RexxObject *LanguageParser::popNTerms(size_t count)
+RexxInternalObject *LanguageParser::popNTerms(size_t count)
 {
-    RexxObject *result = OREF_NULL;
+    RexxInternalObject *result = OREF_NULL;
 
     // reduce the stack size
     currentStack -= count;
     // and pop that many elements
     while (count--)
     {
-        result = (RexxObject *)terms->pop();
+        result = terms->pop();
     }
     // if we have a return item, protect it for a little while.
     if (result != OREF_NULL)
@@ -3333,7 +3333,7 @@ void LanguageParser::errorToken(int errorcode, RexxToken *token )
  */
 void LanguageParser::error(int errorcode, RexxObject *value )
 {
-   ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(value), OREF_NULL);
+    ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(value), OREF_NULL);
 }
 
 
@@ -3346,7 +3346,7 @@ void LanguageParser::error(int errorcode, RexxObject *value )
  */
 void LanguageParser::error(int errorcode, RexxObject *value1, RexxObject *value2 )
 {
-   ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(value1, value2), OREF_NULL);
+    ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(value1, value2), OREF_NULL);
 }
 
 
@@ -3438,7 +3438,7 @@ void LanguageParser::blockError(RexxInstruction *instruction)
  *         element if a single expression is located, and a complex
  *         logical expression operator for a list of expressions.
  */
-RexxObject *LanguageParser::parseLogical(int terminators)
+RexxInternalObject *LanguageParser::parseLogical(int terminators)
 {
     // These are not delimited lists, but are part of keyword contexts where
     // other keywords terminate the expression (e.g., IF, WHEN, WHILE), so we
@@ -3459,7 +3459,7 @@ RexxObject *LanguageParser::parseLogical(int terminators)
     for (;;)
     {
         // parse off an argument expression
-        RexxObject *subExpr = parseSubExpression(terminators | TERM_COMMA);
+        RexxInternalObject *subExpr = parseSubExpression(terminators | TERM_COMMA);
         // all sub expressions are required here.
         if (subExpr == OREF_NULL)
         {
@@ -3488,12 +3488,12 @@ RexxObject *LanguageParser::parseLogical(int terminators)
     // one (most common situation), just pop the top item and return it
     if (total == 1)
     {
-        return (RexxObject *)subTerms->pop();
+        return subTerms->pop();
     }
 
     // composite tis expression into a single object that can evaluate the
     // multiple expressions.
-    return (RexxObject *)new (total) RexxExpressionLogical(total, subTerms);
+    return new (total) RexxExpressionLogical(total, subTerms);
 }
 
 

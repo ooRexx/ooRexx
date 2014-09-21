@@ -80,7 +80,7 @@ class ForLoop
 
      void setup(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool forKeyword);
 
-    RexxObject       *forCount;          // number of iterations
+    RexxInternalObject *forCount;          // number of iterations
 };
 
 
@@ -121,9 +121,9 @@ class ControlledLoop : public ForLoop
     void setup(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock);
 
     RexxVariableBase *control;           // control variable retriever
-    RexxObject       *initial;           // initial control expression
-    RexxObject       *to;                // final target value
-    RexxObject       *by;                // control increment value
+    RexxInternalObject *initial;         // initial control expression
+    RexxInternalObject *to;              // final target value
+    RexxInternalObject *by;              // control increment value
     uint8_t           expressions[3];    // controlled loop expression order
 };
 
@@ -152,7 +152,7 @@ class OverLoop
         ExpressionStack *stack, DoBlock *doblock);
 
     RexxVariableBase *control;           // control variable retriever
-    RexxObject *      target;            // supplier for the array we do over
+    RexxInternalObject *target;          // supplier for the array we do over
 };
 
 
@@ -179,7 +179,7 @@ public:
     bool checkWhile(RexxActivation *context, ExpressionStack *stack);
     bool checkUntil(RexxActivation *context, ExpressionStack *stack);
 
-    RexxObject *conditional;      // a while or until condition
+    RexxInternalObject *conditional;      // a while or until condition
 };
 
 

@@ -49,7 +49,7 @@
 class RexxInstructionInterpret : public RexxInstructionExpression
 {
  public:
-    RexxInstructionInterpret(RexxObject *);
+    RexxInstructionInterpret(RexxInternalObject *);
     inline RexxInstructionInterpret(RESTORETYPE restoreType) { ; };
 
     virtual void execute(RexxActivation *, ExpressionStack *);

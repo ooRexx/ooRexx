@@ -46,11 +46,12 @@
 
 #include "RexxInstruction.hpp"
 
-class RexxInstructionAddress : public RexxInstruction {
+class RexxInstructionAddress : public RexxInstruction
+{
  public:
     inline void operator delete(void *) { }
 
-    RexxInstructionAddress(RexxObject *, RexxString *, RexxObject *);
+    RexxInstructionAddress(RexxInternalObject *, RexxString *, RexxInternalObject *);
     inline RexxInstructionAddress(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
@@ -59,8 +60,8 @@ class RexxInstructionAddress : public RexxInstruction {
 
     virtual void execute(RexxActivation *, ExpressionStack *);
 
-    RexxObject *dynamicAddress;              // ADDRESS VALUE expression
+    RexxInternalObject *dynamicAddress;      // ADDRESS VALUE expression
     RexxString *environment;                 // An environment string (static form)
-    RexxObject *command;                     // A command expression
+    RexxInternalObject *command;             // A command expression
 };
 #endif

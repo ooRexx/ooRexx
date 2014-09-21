@@ -506,7 +506,7 @@ CompoundTableElement *CompoundVariableTable::findEntry(CompoundVariableTail &tai
  *
  * @return The current variable value.
  */
-RexxInternalObject *CompoundVariableTable::TableIterator::value()
+RexxObject *CompoundVariableTable::TableIterator::value()
 {
     return current->getVariableValue();
 }
@@ -539,7 +539,7 @@ RexxString *CompoundVariableTable::TableIterator::name(RexxString *stemName)
  *
  * @return The current variable name.
  */
-void CompoundVariableTable::TableIterator::replace(RexxInternalObject *v)
+void CompoundVariableTable::TableIterator::replace(RexxObject *v)
 {
     current->setValue(v);
 }

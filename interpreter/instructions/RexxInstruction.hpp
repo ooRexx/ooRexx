@@ -177,7 +177,7 @@ class RexxInstructionExpression : public RexxInstruction
     RexxString *evaluateStringExpression(RexxActivation *context, ExpressionStack *stack);
 
  protected:
-    RexxObject *expression;              // expression to evaluate
+    RexxInternalObject *expression;     // expression to evaluate
 };
 
 // a convenience macro for initializing instruction/expression objects.

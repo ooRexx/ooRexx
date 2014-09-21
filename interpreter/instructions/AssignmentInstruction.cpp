@@ -46,7 +46,7 @@
 #include "RexxActivation.hpp"
 #include "AssignmentInstruction.hpp"
 
-RexxInstructionAssignment::RexxInstructionAssignment(RexxVariableBase *target, RexxObject *_expression)
+RexxInstructionAssignment::RexxInstructionAssignment(RexxVariableBase *target, RexxInternalObject *_expression)
 {
     variable = target;
     expression = _expression;

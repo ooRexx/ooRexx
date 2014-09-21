@@ -46,14 +46,12 @@
 
 #include "RexxInstruction.hpp"
 
-#define forward_continue 0x01          /* doing continue rather than return */
-
 class RexxInstructionForward : public RexxInstruction
 {
  public:
     inline RexxInstructionForward() { ; }
     inline RexxInstructionForward(RESTORETYPE restoreType) { ; }
-           RexxInstructionForward(RexxObject *, RexxObject *, RexxObject *, RexxObject *, ArrayClass *, bool);
+           RexxInstructionForward(RexxInternalObject *, RexxInternalObject *, RexxInternalObject *, RexxInternalObject *, ArrayClass *, bool);
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
@@ -64,10 +62,10 @@ class RexxInstructionForward : public RexxInstruction
  protected:
 
     bool         continueExecution;      // doing continue rather than return
-    RexxObject * target;                 // forward target
-    RexxObject * message;                // forward message override
-    RexxObject * superClass;             // message super class override
-    RexxObject * arguments;              // argument expression
-    ArrayClass  * array;                  // argument array specification
+    RexxInternalObject *target;          // forward target
+    RexxInternalObject *message;         // forward message override
+    RexxInternalObject *superClass;      // message super class override
+    RexxInternalObject *arguments;       // argument expression
+    ArrayClass  *array;                  // argument array specification
 };
 #endif

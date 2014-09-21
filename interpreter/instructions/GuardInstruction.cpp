@@ -57,8 +57,8 @@
  *               the list of guard variables in the expression.
  * @param on_off indicates whether this is GUARD ON or GUARD OFF.
  */
-RexxInstructionGuard::RexxInstructionGuard(RexxObject *_expression,
-    ArrayClass  *variable_list, bool        on_off)
+RexxInstructionGuard::RexxInstructionGuard(RexxInternalObject *_expression,
+    ArrayClass  *variable_list, bool on_off)
 {
     expression = _expression;
     guardOn = on_off;

@@ -65,9 +65,9 @@ class RexxVariable : public RexxInternalObject
     void         drop();
     void         notify();
     void         uninform(Activity *);
-    void         setStem(RexxInternalObject *);
+    void         setStem(RexxObject *);
 
-    inline void set(RexxInternalObject *value)
+    inline void set(RexxObject *value)
     {
         setField(variableValue, value);
         if (dependents != OREF_NULL)
@@ -76,17 +76,19 @@ class RexxVariable : public RexxInternalObject
         }
     };
 
-    inline RexxInternalObject *getVariableValue() { return variableValue; };
-    inline RexxInternalObject *getResolvedValue() { return variableValue != OREF_NULL ? variableValue : (RexxObject *)variableName; };
+    inline RexxObject *getVariableValue() { return variableValue; };
+    inline RexxObject *getResolvedValue() { return variableValue != OREF_NULL ? variableValue : variableName; };
     inline RexxString *getName() { return variableName; }
     inline void setName(RexxString *name) { setField(variableName, name); }
 
+    // NOTE:  this is only called for local variables, which will never be in oldspace,
+    // so setField is not needed.
     inline void reset(RexxString *name)
     {
-        creator       = OREF_NULL;        /* this is unowned                   */
-        variableValue = OREF_NULL;        /* clear out the hash value          */
-        variableName  = name;             /* fill in the name                  */
-        dependents = OREF_NULL;           /* and the dependents                */
+        creator       = OREF_NULL;        // this is unowned
+        variableValue = OREF_NULL;        // clear out the hash value
+        variableName  = name;             // fill in the name
+        dependents = OREF_NULL;           // and the dependents
     }
 
     // Note:  This does not use setField() since it will only occur with
@@ -100,7 +102,7 @@ class RexxVariable : public RexxInternalObject
 protected:
 
     RexxString *variableName;            // the name of the variable
-    RexxInternalObject *variableValue;   // the assigned value of the variable.
+    RexxObject *variableValue;           // the assigned value of the variable.
     RexxActivation *creator;             // the activation that created this variable
     IdentityTable  *dependents;          // guard expression dependents
 };

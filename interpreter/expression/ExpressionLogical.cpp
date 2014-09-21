@@ -79,7 +79,7 @@ RexxExpressionLogical::RexxExpressionLogical(size_t count, QueueClass *list)
 
     // now copy the expressions from the sub term stack
     // NOTE:  The expressionss are in last-to-first order on the stack.
-    initializeObjectArray(count, expressions, RexxObject, list);
+    initializeObjectArray(count, expressions, RexxInternalObject, list);
 }
 
 

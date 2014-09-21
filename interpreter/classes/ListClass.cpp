@@ -339,7 +339,7 @@ RexxObject *ListClass::indexObject(ListContents::ItemLink index)
  *
  * @return returns nothing.
  */
-RexxInternalObject *ListClass::putRexx(RexxInternalObject *value, RexxObject *argIndex)
+RexxInternalObject *ListClass::putRexx(RexxObject *value, RexxObject *argIndex)
 {
     ListContents::ItemLink index = requiredIndex(argIndex, ARG_TWO);
 
@@ -443,7 +443,7 @@ ListClass *ListClass::section(size_t index, size_t count)
  *
  * @return The index for the inserted item.
  */
-RexxObject *ListClass::insertRexx(RexxInternalObject *value, RexxObject *index)
+RexxObject *ListClass::insertRexx(RexxObject *value, RexxObject *index)
 {
     // figure out where to insert.
     ListContents::ItemLink insertionPoint = validateInsertionIndex(index, ARG_TWO);
@@ -526,7 +526,7 @@ size_t ListClass::append(RexxInternalObject *value)
  *
  * @return An object version of the index.
  */
-RexxObject *ListClass::appendRexx(RexxInternalObject *value)
+RexxObject *ListClass::appendRexx(RexxObject *value)
 {
     requiredArgument(value, ARG_ONE);
     return new_integer(append(value));
@@ -539,7 +539,7 @@ RexxObject *ListClass::appendRexx(RexxInternalObject *value)
  *
  * @return The removed item.
  */
-RexxInternalObject *ListClass::removeRexx(RexxObject *argIndex)
+RexxObject *ListClass::removeRexx(RexxObject *argIndex)
 {
     // out of bounds is not an issue here...
     ListContents::ItemLink index = validateIndex(argIndex, ARG_ONE);
@@ -565,7 +565,7 @@ RexxInternalObject *ListClass::remove(size_t index)
  *
  * @return The item, or .nil if the list is empty.
  */
-RexxInternalObject *ListClass::firstItemRexx()
+RexxObject *ListClass::firstItemRexx()
 {
     return resultOrNil(firstItem());
 }
@@ -587,7 +587,7 @@ RexxInternalObject *ListClass::firstItem()
  *
  * @return The first item, or .nil if the list is empty.
  */
-RexxInternalObject *ListClass::lastItemRexx()
+RexxObject *ListClass::lastItemRexx()
 {
     return resultOrNil(lastItem());
 }
@@ -610,7 +610,7 @@ RexxInternalObject *ListClass::lastItem()
  *
  * @return The index value, or the .nil if the list is empty.
  */
-RexxInternalObject *ListClass::firstRexx()
+RexxObject *ListClass::firstRexx()
 {
     return indexObject(firstIndex());
 }
@@ -838,7 +838,7 @@ ArrayClass *ListClass::allIndexes()
  *
  * @return The index of the item, or .nil.
  */
-RexxObject *ListClass::indexRexx(RexxInternalObject *target)
+RexxObject *ListClass::indexRexx(RexxObject *target)
 {
     // we require the index to be there.
     requiredArgument(target, ARG_ONE);
@@ -869,7 +869,7 @@ size_t ListClass::getIndex(RexxInternalObject *target)
  *
  * @return .true if there is a match, .false otherwise.
  */
-RexxObject *ListClass::hasItemRexx(RexxInternalObject *target)
+RexxObject *ListClass::hasItemRexx(RexxObject *target)
 {
     // we require the index to be there.
     requiredArgument(target, ARG_ONE);
@@ -897,7 +897,7 @@ bool ListClass::hasItem(RexxInternalObject *target)
  *
  * @return The target item.
  */
-RexxInternalObject *ListClass::removeItemRexx(RexxInternalObject *target)
+RexxInternalObject *ListClass::removeItemRexx(RexxObject *target)
 {
     // we require the index to be there.
     requiredArgument(target, ARG_ONE);

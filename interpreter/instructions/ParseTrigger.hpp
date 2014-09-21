@@ -66,7 +66,7 @@ class ParseTrigger : public RexxInternalObject
     void        *operator new(size_t, size_t);
     inline void  operator delete(void *) { }
 
-    ParseTrigger(ParseTriggerType, RexxObject *, size_t, QueueClass *);
+    ParseTrigger(ParseTriggerType, RexxInternalObject *, size_t, QueueClass *);
     inline ParseTrigger(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
@@ -80,7 +80,7 @@ class ParseTrigger : public RexxInternalObject
 protected:
 
     ParseTriggerType  triggerType;       // type of trigger
-    RexxObject *value;                   // value associated with trigger (can be an expression)
+    RexxInternalObject *value;           // value associated with trigger (can be an expression)
     size_t      variableCount;           // count of variables to assign after applying trigger
     RexxVariableBase *variables[1];      // after applying trigger
 };

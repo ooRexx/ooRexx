@@ -54,7 +54,7 @@ class RexxExpressionMessage : public RexxVariableBase
     void *operator new(size_t, size_t);
     inline void  operator delete(void *) { ; }
 
-    RexxExpressionMessage(RexxObject *, RexxString *, RexxObject *, size_t, QueueClass *, bool);
+    RexxExpressionMessage(RexxInternalObject *, RexxString *, RexxInternalObject *, size_t, QueueClass *, bool);
     inline RexxExpressionMessage(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
@@ -69,11 +69,11 @@ class RexxExpressionMessage : public RexxVariableBase
 
  protected:
 
-    RexxObject * target;                 // target subexpression
-    RexxString * messageName;            // the message name
-    RexxObject * super;                  // super class target
+    RexxInternalObject * target;         // target subexpression
+    RexxString *messageName;             // the message name
+    RexxInternalObject *super;           // super class target
     bool   doubleTilde;                  // this is the double tilde form
     size_t argumentCount;                // number of message arguments
-    RexxObject * arguments[1];           // list of argument subexpressions
+    RexxInternalObject *arguments[1];    // list of argument subexpressions
 };
 #endif

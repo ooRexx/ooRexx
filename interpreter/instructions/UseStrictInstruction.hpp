@@ -50,7 +50,7 @@ class UseVariable
 {
 public:
     RexxVariableBase *variable;        // the variable accessor
-    RexxObject *defaultValue;          // default value for optional variables
+    RexxInternalObject *defaultValue;  // default value for optional variables
 };
 
 

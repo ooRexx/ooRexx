@@ -57,8 +57,8 @@
  *                 A static environment name.
  * @param _command A command expression to be issued.
  */
-RexxInstructionAddress::RexxInstructionAddress(RexxObject *_expression,
-    RexxString *_environment, RexxObject *_command)
+RexxInstructionAddress::RexxInstructionAddress(RexxInternalObject *_expression,
+    RexxString *_environment, RexxInternalObject *_command)
 {
 
     dynamicAddress = _expression;

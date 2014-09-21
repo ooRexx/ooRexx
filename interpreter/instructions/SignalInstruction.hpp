@@ -74,7 +74,7 @@ class RexxInstructionSignal : public RexxInstructionCallBase
 class RexxInstructionDynamicSignal : public RexxInstructionDynamicCallBase
 {
  public:
-    RexxInstructionDynamicSignal(RexxObject *);
+    RexxInstructionDynamicSignal(RexxInternalObject *);
     inline RexxInstructionDynamicSignal(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);

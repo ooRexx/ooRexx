@@ -83,7 +83,7 @@ class CompoundTableElement : public RexxVariable
     }
     inline void expose(CompoundTableElement *real) { setField(realElement, real); }
     inline RexxString *createCompoundName(RexxString *stemName) { return stemName->concat(getName()); }
-    inline void setValue(RexxInternalObject *value) { set(value); }
+    inline void setValue(RexxObject *value) { set(value); }
 
     static CompoundTableElement *newInstance(RexxString *name);
 

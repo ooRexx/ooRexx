@@ -49,7 +49,7 @@
 class RexxInstructionAssignment : public RexxInstruction
 {
  public:
-    RexxInstructionAssignment(RexxVariableBase *, RexxObject *);
+    RexxInstructionAssignment(RexxVariableBase *, RexxInternalObject *);
     inline RexxInstructionAssignment(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
@@ -60,7 +60,7 @@ class RexxInstructionAssignment : public RexxInstruction
 
  protected:
 
-    RexxObject       *expression;        // assignment expression
+    RexxInternalObject *expression;      // assignment expression
     RexxVariableBase *variable;          // assignment target
 };
 #endif

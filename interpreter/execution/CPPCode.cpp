@@ -580,7 +580,7 @@ CPPM(ArrayClass::stableSortRexx),
 CPPM(ArrayClass::stableSortWithRexx),
 CPPM(ArrayClass::insertRexx),
 CPPM(ArrayClass::deleteRexx),
-CPPM(ArrayClass::fill),
+CPPM(ArrayClass::fillRexx),
 
 CPPM(ArrayClass::newRexx),
 CPPM(ArrayClass::makeString),

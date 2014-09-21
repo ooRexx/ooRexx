@@ -51,7 +51,7 @@ class RexxExpressionOperator : public RexxInternalObject
  public:
     inline RexxExpressionOperator() { ; }
 
-    RexxExpressionOperator(TokenSubclass, RexxObject *, RexxObject *);
+    RexxExpressionOperator(TokenSubclass, RexxInternalObject *, RexxInternalObject *);
     inline RexxExpressionOperator(RESTORETYPE restoreType) { ; };
     virtual void   live(size_t);
     virtual void   liveGeneral(MarkReason reason);
@@ -64,8 +64,8 @@ protected:
     static const char *operatorNames[];
 
     TokenSubclass  oper;                 // operation to perform
-    RexxObject *right_term;              // right term of the operator
-    RexxObject *left_term;               // left term of the operator
+    RexxInternalObject *right_term;      // right term of the operator
+    RexxInternalObject *left_term;       // left term of the operator
 };
 
 class RexxBinaryOperator : public RexxExpressionOperator
@@ -74,7 +74,7 @@ class RexxBinaryOperator : public RexxExpressionOperator
     void  *operator new(size_t);
     inline void  operator delete(void *) { ; }
 
-    inline RexxBinaryOperator(TokenSubclass op, RexxObject *left, RexxObject *right)
+    inline RexxBinaryOperator(TokenSubclass op, RexxInternalObject *left, RexxInternalObject *right)
         : RexxExpressionOperator(op, left, right) { ; }
     inline RexxBinaryOperator(RESTORETYPE restoreType) { ; };
 
@@ -87,7 +87,7 @@ class RexxUnaryOperator : public RexxExpressionOperator {
     void  *operator new(size_t);
     inline void  operator delete(void *) { ; }
 
-    inline RexxUnaryOperator(TokenSubclass op, RexxObject *left)
+    inline RexxUnaryOperator(TokenSubclass op, RexxInternalObject *left)
         : RexxExpressionOperator(op, left, OREF_NULL) { ; }
     inline RexxUnaryOperator(RESTORETYPE restoreType) { ; };
 

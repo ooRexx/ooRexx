@@ -65,7 +65,7 @@ class RexxExpressionLogical : public RexxInternalObject
 protected:
 
     size_t  expressionCount;      // the number of expressions in our list
-    RexxObject *expressions[1];   // the list of epxressions to validate
+    RexxInternalObject *expressions[1];   // the list of epxressions to validate
 };
 #endif
 

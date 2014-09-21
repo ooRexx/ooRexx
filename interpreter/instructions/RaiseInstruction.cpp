@@ -68,8 +68,8 @@
  * @param array      The subTerm queue holding the ARRAY() option expressions.
  * @param flags      Additional control flags.
  */
-RexxInstructionRaise::RexxInstructionRaise(RexxString *_condition, RexxObject *_expression,
-    RexxObject *_description, RexxObject *_additional, RexxObject *_result,
+RexxInstructionRaise::RexxInstructionRaise(RexxString *_condition, RexxInternalObject *_expression,
+    RexxInternalObject *_description, RexxInternalObject *_additional, RexxInternalObject *_result,
     FlagSet<RaiseInstructionFlags, 32> flags)
 {
     // just copy the argument information

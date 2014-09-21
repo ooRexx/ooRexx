@@ -70,6 +70,6 @@ protected:
     RexxInstruction *target;             // internal routine to call
     size_t  builtinIndex;                // resolved builtin function index
     size_t  argumentCount;               // count of arguments
-    RexxObject *arguments[1];            // argument list
+    RexxInternalObject *arguments[1];    // argument list
 };
 #endif

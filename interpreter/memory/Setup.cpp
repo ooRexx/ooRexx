@@ -657,7 +657,7 @@ StartClassDefinition(Array);
         AddMethod("RemoveItem", ArrayClass::removeItem, 1);
         AddMethod("Insert", ArrayClass::insertRexx, 2);
         AddMethod("Delete", ArrayClass::deleteRexx, 1);
-        AddMethod("Fill", ArrayClass::fill, 1);
+        AddMethod("Fill", ArrayClass::fillRexx, 1);
 
     // there have been some problems with the quick sort used as the default sort, so map everything
     // to the stable sort.  The stable sort, in theory, uses more memory, but in practice, this is not true.

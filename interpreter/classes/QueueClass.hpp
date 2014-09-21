@@ -57,11 +57,11 @@ class QueueClass : public ArrayClass
 
      virtual bool validateIndex(RexxObject **index, size_t indexCount, size_t argPosition, size_t boundsError, size_t &position);
      virtual void checkInsertIndex(size_t position);
-     RexxInternalObject *pullRexx();
-     RexxObject *pushRexx(RexxInternalObject *item);
-     RexxObject *queueRexx(RexxInternalObject *item);
+     RexxObject *pullRexx();
+     RexxObject *pushRexx(RexxObject *item);
+     RexxObject *queueRexx(RexxObject *item);
      RexxInternalObject *peek();
-     RexxObject *putRexx(RexxInternalObject *value, RexxObject *index);
+     RexxObject *putRexx(RexxObject *value, RexxObject *index);
      RexxObject *initRexx(RexxObject *initialSize);
 
      inline RexxInternalObject *pop() { return deleteItem(1);}

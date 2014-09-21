@@ -60,7 +60,7 @@ typedef enum
 class RexxInstructionNumeric : public RexxInstructionExpression
 {
  public:
-    RexxInstructionNumeric(RexxObject *, FlagSet<NumericInstructionFlags, 32>);
+    RexxInstructionNumeric(RexxInternalObject *, FlagSet<NumericInstructionFlags, 32>);
     inline RexxInstructionNumeric(RESTORETYPE restoreType) { ; };
     virtual void execute(RexxActivation *, ExpressionStack *);
 

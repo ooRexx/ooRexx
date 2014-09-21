@@ -212,9 +212,9 @@ class RexxActivation : public ActivationBase
    size_t            currentLine();
    void              arguments(RexxObject *);
    void              traceValue(RexxObject *, TracePrefix);
-   void              traceCompoundValue(TracePrefix prefix, RexxString *stemName, RexxObject **tails, size_t tailCount, CompoundVariableTail &tail);
-   void              traceCompoundValue(TracePrefix prefix, RexxString *stem, RexxObject **tails, size_t tailCount, const char *marker, RexxObject * value);
-   void              traceTaggedValue(TracePrefix prefix, const char *tagPrefix, bool quoteTag, RexxString *tag, const char *marker, RexxObject * value);
+   void              traceCompoundValue(TracePrefix prefix, RexxString *stemName, RexxInternalObject **tails, size_t tailCount, CompoundVariableTail &tail);
+   void              traceCompoundValue(TracePrefix prefix, RexxString *stem, RexxInternalObject **tails, size_t tailCount, const char *marker, RexxObject * value);
+   void              traceTaggedValue(TracePrefix prefix, const char *tagPrefix, bool quoteTag, RexxString *tag, const char *marker, RexxObject *value);
    void              traceOperatorValue(TracePrefix prefix, const char *tag, RexxObject *value);
    void              traceSourceString();
    void              traceClause(RexxInstruction *, TracePrefix);
@@ -260,7 +260,7 @@ class RexxActivation : public ActivationBase
    RexxObject       *novalueHandler(RexxString *);
    RexxVariableBase *retriever(RexxString *);
    RexxVariableBase *directRetriever(RexxString *);
-   RexxInternalObject *handleNovalueEvent(RexxString *name, RexxInternalObject *defaultValue, RexxVariable *variable);
+   RexxObject       *handleNovalueEvent(RexxString *name, RexxObject *defaultValue, RexxVariable *variable);
    PackageClass     *getPackageObject() { return packageObject; }
    inline PackageClass *getEffectivePackageObject()
    {
@@ -325,10 +325,10 @@ class RexxActivation : public ActivationBase
        { if (settings.intermediateTrace) { traceOperatorValue(TRACE_PREFIX_PREFIX, n, v); } };
    inline void              traceAssignment(RexxString *n, RexxObject *v)
        { if (settings.intermediateTrace) { traceTaggedValue(TRACE_PREFIX_ASSIGNMENT, NULL, false, n, ASSIGNMENT_MARKER, v); } };
-   inline void              traceCompoundName(RexxString *stemVar, RexxObject **tails, size_t tailCount, CompoundVariableTail &tail) { if (settings.intermediateTrace) traceCompoundValue(TRACE_PREFIX_COMPOUND, stemVar, tails, tailCount, VALUE_MARKER, tail.createCompoundName(stemVar)); };
-   inline void              traceCompoundName(RexxString *stemVar, RexxObject **tails, size_t tailCount, RexxString *tail) { if (settings.intermediateTrace) traceCompoundValue(TRACE_PREFIX_COMPOUND, stemVar, tails, tailCount, VALUE_MARKER, stemVar->concat(tail)); };
-   inline void              traceCompound(RexxString *stemVar, RexxObject **tails, size_t tailCount, RexxObject *value) { if (settings.intermediateTrace) traceCompoundValue(TRACE_PREFIX_VARIABLE, stemVar, tails, tailCount, VALUE_MARKER, value); };
-   inline void              traceCompoundAssignment(RexxString *stemVar, RexxObject **tails, size_t tailCount, RexxObject *value) { if (settings.intermediateTrace) traceCompoundValue(TRACE_PREFIX_ASSIGNMENT, stemVar, tails, tailCount, ASSIGNMENT_MARKER, value); };
+   inline void              traceCompoundName(RexxString *stemVar, RexxInternalObject **tails, size_t tailCount, CompoundVariableTail &tail) { if (settings.intermediateTrace) traceCompoundValue(TRACE_PREFIX_COMPOUND, stemVar, tails, tailCount, VALUE_MARKER, tail.createCompoundName(stemVar)); };
+   inline void              traceCompoundName(RexxString *stemVar, RexxInternalObject **tails, size_t tailCount, RexxString *tail) { if (settings.intermediateTrace) traceCompoundValue(TRACE_PREFIX_COMPOUND, stemVar, tails, tailCount, VALUE_MARKER, stemVar->concat(tail)); };
+   inline void              traceCompound(RexxString *stemVar, RexxInternalObject **tails, size_t tailCount, RexxObject *value) { if (settings.intermediateTrace) traceCompoundValue(TRACE_PREFIX_VARIABLE, stemVar, tails, tailCount, VALUE_MARKER, value); };
+   inline void              traceCompoundAssignment(RexxString *stemVar, RexxInternalObject **tails, size_t tailCount, RexxObject *value) { if (settings.intermediateTrace) traceCompoundValue(TRACE_PREFIX_ASSIGNMENT, stemVar, tails, tailCount, ASSIGNMENT_MARKER, value); };
    inline void              clearTraceSettings() { settings.packageSettings.traceSettings.setTraceOff(); settings.intermediateTrace = false; }
    inline bool              tracingResults() {return settings.packageSettings.traceSettings.tracingResults(); }
    inline bool              tracingAll() {return settings.packageSettings.traceSettings.tracingAll(); }
@@ -475,7 +475,7 @@ class RexxActivation : public ActivationBase
        settings.localVariables.updateVariable(variable);
    }
 
-   inline void setLocalVariable(RexxString *name, size_t index, RexxInternalObject *value)
+   inline void setLocalVariable(RexxString *name, size_t index, RexxObject *value)
    {
        RexxVariable *variable = getLocalVariable(name, index);
        variable->set(value);
@@ -487,15 +487,15 @@ class RexxActivation : public ActivationBase
        variable->drop();
    }
 
-   RexxInternalObject *evaluateLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount);
-   RexxInternalObject *getLocalCompoundVariableValue(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount);
-   RexxInternalObject *getLocalCompoundVariableRealValue(RexxString *localstem, size_t index, RexxObject **tail, size_t tailCount);
-   CompoundTableElement *getLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount);
-   CompoundTableElement *exposeLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount);
-   bool localCompoundVariableExists(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount);
-   void assignLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount, RexxInternalObject *value);
-   void setLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount, RexxInternalObject *value);
-   void dropLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount);
+   RexxObject *evaluateLocalCompoundVariable(RexxString *stemName, size_t index, RexxInternalObject **tail, size_t tailCount);
+   RexxObject *getLocalCompoundVariableValue(RexxString *stemName, size_t index, RexxInternalObject **tail, size_t tailCount);
+   RexxObject *getLocalCompoundVariableRealValue(RexxString *localstem, size_t index, RexxInternalObject **tail, size_t tailCount);
+   CompoundTableElement *getLocalCompoundVariable(RexxString *stemName, size_t index, RexxInternalObject **tail, size_t tailCount);
+   CompoundTableElement *exposeLocalCompoundVariable(RexxString *stemName, size_t index, RexxInternalObject **tail, size_t tailCount);
+   bool localCompoundVariableExists(RexxString *stemName, size_t index, RexxInternalObject **tail, size_t tailCount);
+   void assignLocalCompoundVariable(RexxString *stemName, size_t index, RexxInternalObject **tail, size_t tailCount, RexxObject *value);
+   void setLocalCompoundVariable(RexxString *stemName, size_t index, RexxInternalObject **tail, size_t tailCount, RexxObject *value);
+   void dropLocalCompoundVariable(RexxString *stemName, size_t index, RexxInternalObject **tail, size_t tailCount);
 
    inline bool novalueEnabled() { return settings.localVariables.getNovalue(); }
 

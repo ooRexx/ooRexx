@@ -57,7 +57,7 @@
  * @param tails  An array of tail elements.
  * @param count  The count of tail elements.
  */
-void CompoundVariableTail::buildUnresolvedTail(RexxObject **tails, size_t count)
+void CompoundVariableTail::buildUnresolvedTail(RexxInternalObject **tails, size_t count)
 {
     bool first = true;
 
@@ -70,7 +70,7 @@ void CompoundVariableTail::buildUnresolvedTail(RexxObject **tails, size_t count)
         }
 
         first = false;
-        RexxObject *part = tails[i];
+        RexxInternalObject *part = tails[i];
         // this could be ommitted in a [] list
         if (part != OREF_NULL)
         {
@@ -98,13 +98,13 @@ void CompoundVariableTail::buildUnresolvedTail(RexxObject **tails, size_t count)
  * @param tails
  * @param tailCount
  */
-void CompoundVariableTail::buildTail(VariableDictionary *dictionary, RexxObject **tails, size_t tailCount)
+void CompoundVariableTail::buildTail(VariableDictionary *dictionary, RexxInternalObject **tails, size_t tailCount)
 {
     // a single element is easiest, and common enough that we optimize for it.
     if (tailCount == 1)
     {
         // get the tail value
-        RexxObject *_tail = tails[0]->getValue(dictionary);
+        RexxInternalObject *_tail = tails[0]->getValue(dictionary);
         // if it is an integer type, we might be able to address the string representation directly.
         if (isInteger(_tail))
         {
@@ -150,13 +150,13 @@ void CompoundVariableTail::buildTail(VariableDictionary *dictionary, RexxObject 
  * @param tails
  * @param tailCount
  */
-void CompoundVariableTail::buildTail(RexxActivation *context, RexxObject **tails, size_t tailCount)
+void CompoundVariableTail::buildTail(RexxActivation *context, RexxInternalObject **tails, size_t tailCount)
 {
     // a single element is easiest, and common enough that we optimize for it.
     if (tailCount == 1)
     {
         // get the tail value
-        RexxObject *_tail = tails[0]->getValue(context);
+        RexxInternalObject *_tail = tails[0]->getValue(context);
         // if it is an integer type, we might be able to address the string representation directly.
         if (isInteger(_tail))
         {
@@ -201,7 +201,7 @@ void CompoundVariableTail::buildTail(RexxActivation *context, RexxObject **tails
  * @param tails  The array of tails.
  * @param count  The count of tails.
  */
-void CompoundVariableTail::buildTail(RexxObject **tails, size_t count)
+void CompoundVariableTail::buildTail(RexxInternalObject **tails, size_t count)
 {
     bool first = true;
     // copy in each piece, with dots added after the first.
@@ -214,9 +214,7 @@ void CompoundVariableTail::buildTail(RexxObject **tails, size_t count)
         }
         first = false;
 
-        // This cast is assuming this is a string, but it can be any object
-        // type.  copyIntoTail takes care of that.
-        RexxString *part = (RexxString *)tails[i];
+        RexxInternalObject *part = (RexxInternalObject *)tails[i];
         // omitted pices are null strings
         if (part == OREF_NULL)
         {

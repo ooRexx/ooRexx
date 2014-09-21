@@ -84,15 +84,15 @@ void *RexxExpressionMessage::operator new(size_t size, size_t argCount)
  * @param double_form
  *                 A flag indicating if this is a ~ or ~~ operation.
  */
-RexxExpressionMessage::RexxExpressionMessage(RexxObject *_target, RexxString *name,
-    RexxObject *_super, size_t argCount, QueueClass *arglist, bool double_form)
+RexxExpressionMessage::RexxExpressionMessage(RexxInternalObject *_target, RexxString *name,
+    RexxInternalObject *_super, size_t argCount, QueueClass *arglist, bool double_form)
 {
     messageName = name;
     target = _target;
     super = _super;
     doubleTilde = double_form;
     argumentCount = argCount;
-    initializeObjectArray(argCount, arguments, RexxObject, arglist);
+    initializeObjectArray(argCount, arguments, RexxInternalObject, arglist);
 }
 
 

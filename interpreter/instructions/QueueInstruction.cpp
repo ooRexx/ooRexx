@@ -48,7 +48,7 @@
 #include "QueueInstruction.hpp"
 
 
-RexxInstructionQueue::RexxInstructionQueue(RexxObject *_expression)
+RexxInstructionQueue::RexxInstructionQueue(RexxInternalObject *_expression)
 {
     expression = _expression;
 }

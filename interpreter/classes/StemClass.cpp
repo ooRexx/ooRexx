@@ -210,7 +210,7 @@ void StemClass::flatten(Envelope *envelope)
  *
  * @param _value The new value to set.
  */
-void StemClass::setValue(RexxInternalObject *newValue)
+void StemClass::setValue(RexxObject *newValue)
 {
     setField(value, newValue);           // set the new value
     dropped = false;                     // now have an explict value
@@ -253,7 +253,7 @@ RexxObject *StemClass::unknown(RexxString *msgname, ArrayClass  *arguments)
     msgname = stringArgument(msgname, ARG_ONE);
     arguments = arrayArgument(arguments, ARG_TWO);
     // send the message on to our current value object
-    return ((RexxObject *)value)->sendMessage(msgname, arguments);
+    return value->sendMessage(msgname, arguments);
 }
 
 
@@ -276,7 +276,7 @@ RexxInternalObject *StemClass::bracket(RexxObject **tailElements, size_t argCoun
         return value;
     }
     // create a searchable tail, and perform the lookup
-    CompoundVariableTail resolved_tail(tailElements, argCount);
+    CompoundVariableTail resolved_tail((RexxInternalObject **)tailElements, argCount);
     return evaluateCompoundVariableValue(OREF_NULL, stemName, resolved_tail);
 }
 
@@ -297,7 +297,7 @@ RexxObject *StemClass::hasIndex(RexxObject **tailElements, size_t argCount)
         return TheTrueObject;          // we always have something here
     }
     // compose the tail element
-    CompoundVariableTail resolved_tail(tailElements, argCount);
+    CompoundVariableTail resolved_tail((RexxInternalObject **)tailElements, argCount);
     // see if we have a compound
     CompoundTableElement *compound = findCompoundVariable(resolved_tail);
     // if there's a variable there, and it has a real value, then
@@ -328,7 +328,7 @@ RexxInternalObject *StemClass::remove(RexxObject **tailElements, size_t argCount
     }
 
     // compose the tail element
-    CompoundVariableTail resolved_tail(tailElements, argCount);
+    CompoundVariableTail resolved_tail((RexxInternalObject **)tailElements, argCount);
     CompoundTableElement *compound = findCompoundVariable(resolved_tail);
     // if there's a variable there, and it has a real value, then
     // we have something to remove
@@ -431,7 +431,7 @@ RexxObject *StemClass::bracketEqual(RexxObject **tailElements, size_t argCount)
     {
         reportException(Error_Incorrect_method_noarg, IntegerOne);
     }
-    RexxInternalObject *newValue = requiredArgument(tailElements[0], ARG_ONE);
+    RexxObject *newValue = requiredArgument(tailElements[0], ARG_ONE);
 
     // if the argument count is 1, we're just setting the default value
     if (argCount == 1)
@@ -452,7 +452,7 @@ RexxObject *StemClass::bracketEqual(RexxObject **tailElements, size_t argCount)
 
     // create a searchable tail from the array elements
     // and set the variable value
-    CompoundVariableTail resolved_tail(tailElements + 1, argCount - 1);
+    CompoundVariableTail resolved_tail((RexxInternalObject **)(tailElements + 1), argCount - 1);
     CompoundTableElement *variable = getCompoundVariable(resolved_tail);
     variable->set(newValue);
     return OREF_NULL;
@@ -602,7 +602,7 @@ RexxObject *StemClass::request(RexxString *makeclass)
         }
     }
     // let the default value handle everything else
-    ((RexxObject *)value)->sendMessage(GlobalNames::REQUEST, makeclass, result);
+    value->sendMessage(GlobalNames::REQUEST, makeclass, result);
     return result;
 }
 
@@ -694,7 +694,7 @@ void StemClass::dropCompoundVariable(CompoundVariableTail &name)
  * @param name     The target name.
  * @param newValue The new value to assign.
  */
-void StemClass::setCompoundVariable(CompoundVariableTail &name, RexxInternalObject *newValue)
+void StemClass::setCompoundVariable(CompoundVariableTail &name, RexxObject *newValue)
 {
     CompoundTableElement *variable = getCompoundVariable(name);
     variable->set(newValue);
@@ -737,7 +737,7 @@ ArrayClass *StemClass::tailArray()
  *
  * @return The variable value.
  */
-RexxInternalObject *StemClass::evaluateCompoundVariableValue(RexxActivation *context, RexxString *stemVariableName, CompoundVariableTail &resolved_tail)
+RexxObject *StemClass::evaluateCompoundVariableValue(RexxActivation *context, RexxString *stemVariableName, CompoundVariableTail &resolved_tail)
 {
     CompoundTableElement *variable = findCompoundVariable(resolved_tail);
     // if we do not have a variable, then we need to sort out what the
@@ -759,7 +759,7 @@ RexxInternalObject *StemClass::evaluateCompoundVariableValue(RexxActivation *con
             // the tail_name is the fully resolved variable, used for NOVALUE reporting.
             // the defaultValue is the value that's returned as the expression result,
             // which is derived from the stem object.
-            RexxInternalObject *defaultValue = resolved_tail.createCompoundName(stemVariableName);
+            RexxObject *defaultValue = resolved_tail.createCompoundName(stemVariableName);
             // take care of any novalue situations
             return handleNovalue(context, tail_name, defaultValue, variable);
         }
@@ -768,7 +768,7 @@ RexxInternalObject *StemClass::evaluateCompoundVariableValue(RexxActivation *con
     {
         // get the variable value.  If there is no value, we've been
         // explicitly dropped so we need to do the novalue bit.
-        RexxInternalObject *varValue = variable->getVariableValue();
+        RexxObject *varValue = variable->getVariableValue();
         if (varValue == OREF_NULL)
         {
 
@@ -776,7 +776,7 @@ RexxInternalObject *StemClass::evaluateCompoundVariableValue(RexxActivation *con
             // the tail_name is the fully resolved variable, used for NOVALUE reporting.
             // the defaultValue is the value that's returned as the expression result,
             // which is derived from the stem object.
-            RexxInternalObject *defaultValue = resolved_tail.createCompoundName(stemVariableName);
+            RexxObject *defaultValue = resolved_tail.createCompoundName(stemVariableName);
             // take care of any novalue situations
             return handleNovalue(context, tail_name, defaultValue, variable);
         }
@@ -793,7 +793,7 @@ RexxInternalObject *StemClass::evaluateCompoundVariableValue(RexxActivation *con
  *
  * @return The variable value, or OREF_NULL if the variable is not set.
  */
-RexxInternalObject *StemClass::getCompoundVariableValue(CompoundVariableTail &resolved_tail)
+RexxObject *StemClass::getCompoundVariableValue(CompoundVariableTail &resolved_tail)
 {
     CompoundTableElement *variable = findCompoundVariable(resolved_tail);
     if (variable == OREF_NULL)
@@ -812,7 +812,7 @@ RexxInternalObject *StemClass::getCompoundVariableValue(CompoundVariableTail &re
     else
     {
         // have a variable, now see if this has a value assigned.
-        RexxInternalObject *varValue = variable->getVariableValue();
+        RexxObject *varValue = variable->getVariableValue();
         if (varValue == OREF_NULL)
         {
             return resolved_tail.createCompoundName(stemName);
@@ -834,7 +834,7 @@ RexxInternalObject *StemClass::getCompoundVariableValue(CompoundVariableTail &re
  * @return The variable value, or OREF_NULL if the variable does not
  *         have an explicit value.
  */
-RexxInternalObject *StemClass::getCompoundVariableRealValue(CompoundVariableTail &resolved_tail)
+RexxObject *StemClass::getCompoundVariableRealValue(CompoundVariableTail &resolved_tail)
 {
     // first resolve the compound variable.
     RexxVariable *variable = findCompoundVariable(resolved_tail);
@@ -865,7 +865,7 @@ RexxInternalObject *StemClass::getCompoundVariableRealValue(CompoundVariableTail
  *
  * @return The real assigned value (no default processing)
  */
-RexxInternalObject *StemClass::realCompoundVariableValue(CompoundVariableTail &resolved_tail)
+RexxObject *StemClass::realCompoundVariableValue(CompoundVariableTail &resolved_tail)
 {
     CompoundTableElement *variable = findCompoundVariable(resolved_tail);
     // if no variable found, then its value is either an explictly set stem
@@ -899,8 +899,8 @@ RexxInternalObject *StemClass::realCompoundVariableValue(CompoundVariableTail &r
  *
  * @return Either the name, or a novalue handler replacement value.
  */
-RexxInternalObject *StemClass::handleNovalue(RexxActivation *context, RexxString *name,
-    RexxInternalObject *defaultValue, CompoundTableElement *variable)
+RexxObject *StemClass::handleNovalue(RexxActivation *context, RexxString *name,
+    RexxObject *defaultValue, CompoundTableElement *variable)
 {
     if (context != OREF_NULL)
     {
@@ -1123,7 +1123,7 @@ DirectoryClass *StemClass::toDirectory()
  * @param tail   The index of the target value.
  * @param value  The new value to assign.
  */
-void StemClass::setElement(const char *tail, RexxInternalObject *newValue)
+void StemClass::setElement(const char *tail, RexxObject *newValue)
 {
     CompoundVariableTail resolved_tail(tail);
     RexxVariable *variable = getCompoundVariable(resolved_tail);
@@ -1138,7 +1138,7 @@ void StemClass::setElement(const char *tail, RexxInternalObject *newValue)
  * @param tail   The index of the target value.
  * @param value  The new value to assign.
  */
-void StemClass::setElement(size_t tail, RexxInternalObject *newValue)
+void StemClass::setElement(size_t tail, RexxObject *newValue)
 {
     CompoundVariableTail resolved_tail(tail);
     RexxVariable *variable = getCompoundVariable(resolved_tail);
@@ -1154,7 +1154,7 @@ void StemClass::setElement(size_t tail, RexxInternalObject *newValue)
  * @return The object value.  If the stem element does not exist or
  *         has been dropped, this returns OREF_NULL.
  */
-RexxInternalObject *StemClass::getElement(size_t tail)
+RexxObject *StemClass::getElement(size_t tail)
 {
     CompoundVariableTail resolved_tail(tail);
 
@@ -1170,7 +1170,7 @@ RexxInternalObject *StemClass::getElement(size_t tail)
  * @return The object value.  If the stem element does not exist or
  *         has been dropped, this returns OREF_NULL.
  */
-RexxInternalObject *StemClass::getElement(const char *tail)
+RexxObject *StemClass::getElement(const char *tail)
 {
 
     CompoundVariableTail resolved_tail(tail);
@@ -1186,7 +1186,7 @@ RexxInternalObject *StemClass::getElement(const char *tail)
  * @return The variable value.  Returns OREF_NULL if not assigned or
  *         dropped.
  */
-RexxInternalObject *StemClass::getElement(CompoundVariableTail &resolved_tail)
+RexxObject *StemClass::getElement(CompoundVariableTail &resolved_tail)
 {
     // see if we have a variable...if we do, return its value (a dropped variable
     // has a value of OREF_NULL).  If not found, return OREF_NULL;
@@ -1634,7 +1634,7 @@ bool StemClass::sort(RexxString *prefix, int order, int type, size_t _first, siz
     for (i = 1; i <= bounds; i++)
     {
         CompoundTableElement *element = (CompoundTableElement *)array->get(i);
-        RexxInternalObject *_value = array->get(i + bounds);
+        RexxObject *_value = (RexxObject *)array->get(i + bounds);
         element->set(_value);
     }
     return true;

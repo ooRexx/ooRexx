@@ -51,7 +51,7 @@ class RexxInstructionIf : public RexxInstructionSet
 {
  public:
      RexxInstructionIf() { };
-    RexxInstructionIf(RexxObject *, RexxToken *);
+    RexxInstructionIf(RexxInternalObject *, RexxToken *);
     inline RexxInstructionIf(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
@@ -68,7 +68,7 @@ class RexxInstructionIf : public RexxInstructionSet
 
  protected:
 
-    RexxObject           *condition;     // condition expression to evaluate
+    RexxInternalObject   *condition;     // condition expression to evaluate
     RexxInstructionEndIf *else_location; // else instruction to process
 };
 

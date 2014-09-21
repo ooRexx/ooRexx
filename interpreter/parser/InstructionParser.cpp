@@ -199,7 +199,7 @@ RexxInstruction *LanguageParser::nextInstruction()
     // reset to the beginning and parse off the first term (which could be a
     // message send)
     firstToken();
-    RexxObject *term = parseMessageTerm();
+    RexxInternalObject *term = parseMessageTerm();
     // a lot depends on the nature of the second token
     second = nextToken();
 
@@ -226,7 +226,7 @@ RexxInstruction *LanguageParser::nextInstruction()
 
             // we need an expression following the op token, again, using the rest of the
             // instruction.
-            RexxObject *subexpression = parseSubExpression(TERM_EOC);
+            RexxInternalObject *subexpression = parseSubExpression(TERM_EOC);
             if (subexpression == OREF_NULL)
             {
                 syntaxError(Error_Invalid_expression_general, second);
@@ -239,7 +239,7 @@ RexxInstruction *LanguageParser::nextInstruction()
         {
             ProtectedObject p(term);
             // we need an expression following the op token
-            RexxObject *subexpression = parseSubExpression(TERM_EOC);
+            RexxInternalObject *subexpression = parseSubExpression(TERM_EOC);
             if (subexpression == OREF_NULL)
             {
                 syntaxError(Error_Invalid_expression_general, second);
@@ -504,9 +504,9 @@ RexxInstruction *LanguageParser::sourceNewObject(size_t size, RexxBehaviour *_be
  */
 RexxInstruction *LanguageParser::addressNew()
 {
-    RexxObject *dynamicAddress = OREF_NULL;
+    RexxInternalObject *dynamicAddress = OREF_NULL;
     RexxString *environment = OREF_NULL;
-    RexxObject *command = OREF_NULL;
+    RexxInternalObject *command = OREF_NULL;
     RexxToken *token = nextReal();
 
     // have something to process?  Having nothing is not an error, it
@@ -570,7 +570,7 @@ RexxInstruction *LanguageParser::assignmentNew(RexxToken  *target )
     needVariable(target);
     // everthing after the "=" is the expression that is assigned to the variable.
     // The expression is required.
-    RexxObject *expr = requiredExpression(TERM_EOC, Error_Invalid_expression_assign);
+    RexxInternalObject *expr = requiredExpression(TERM_EOC, Error_Invalid_expression_assign);
 
     // build an instruction object and return it.
     RexxInstruction *newObject = new_instruction(ASSIGNMENT, Assignment);
@@ -593,13 +593,13 @@ RexxInstruction *LanguageParser::assignmentOpNew(RexxToken *target, RexxToken *o
     // make sure this is a variable
     needVariable(target);
     // we require an expression for the additional part, which is required
-    RexxObject *expr = requiredExpression(TERM_EOC, Error_Invalid_expression_assign);
+    RexxInternalObject *expr = requiredExpression(TERM_EOC, Error_Invalid_expression_assign);
 
     // get a retriever for this, of the appropriate type
     RexxVariableBase *variable = addVariable(target);
 
     // now add a binary operator to this expression tree
-    expr = (RexxObject *)new RexxBinaryOperator(operation->subtype(), (RexxObject *)variable, expr);
+    expr = new RexxBinaryOperator(operation->subtype(), variable, expr);
 
     // now everything is the same as an assignment operator
     RexxInstruction *newObject = new_instruction(ASSIGNMENT, Assignment);
@@ -723,7 +723,7 @@ RexxInstruction *LanguageParser::callOnNew(InstructionSubKeyword type)
     // if this is the ON form, we have some end parsing resolution to perform.
     if (type == SUBKEY_ON)
     {
-        addReference((RexxObject *)newObject);
+        addReference(newObject);
     }
     return newObject;
 }
@@ -740,7 +740,7 @@ RexxInstruction *LanguageParser::callOnNew(InstructionSubKeyword type)
 RexxInstruction *LanguageParser::dynamicCallNew(RexxToken *token)
 {
     // this is a full expression in parens
-    RexxObject *targetName = parenExpression(token);
+    RexxInternalObject *targetName = parenExpression(token);
     // an expression is required
     if (name == OREF_NULL)
     {
@@ -837,7 +837,7 @@ RexxInstruction *LanguageParser::callNew()
     // internal calls are allowed.
     if (!noInternal)
     {
-        addReference((RexxObject *)newObject);
+        addReference(newObject);
     }
     return newObject;
 }
@@ -853,7 +853,7 @@ RexxInstruction *LanguageParser::commandNew()
     // this is pretty simple...parse the optional expresson and create the
     // instruction instance.  NOTE:  we already know we have something to
     // parse, so there's no need to check for a missing expression.
-    RexxObject *expression = parseExpression(TERM_EOC);
+    RexxInternalObject *expression = parseExpression(TERM_EOC);
 
     RexxInstruction *newObject = new_instruction(COMMAND, Command);
     ::new ((void *)newObject) RexxInstructionCommand(expression);
@@ -1533,7 +1533,7 @@ RexxInstruction *LanguageParser::exitNew()
 {
     // this is pretty simple...parse the optional expresson and create the
     // instruction instance.
-    RexxObject *expression = parseExpression(TERM_EOC);
+    RexxInternalObject *expression = parseExpression(TERM_EOC);
     RexxInstruction *newObject = new_instruction(EXIT, Exit);
     ::new ((void *)newObject) RexxInstructionExit(expression);
     return newObject;
@@ -1581,10 +1581,10 @@ RexxInstruction *LanguageParser::forwardNew()
 
     // variables for all of the instruction pieces.
     bool returnContinue = false;
-    RexxObject *target = OREF_NULL;
-    RexxObject *message = OREF_NULL;
-    RexxObject *superClass = OREF_NULL;
-    RexxObject *arguments = OREF_NULL;
+    RexxInternalObject *target = OREF_NULL;
+    RexxInternalObject *message = OREF_NULL;
+    RexxInternalObject *superClass = OREF_NULL;
+    RexxInternalObject *arguments = OREF_NULL;
     ArrayClass  *array = OREF_NULL;
 
     // and start parsing
@@ -1730,7 +1730,7 @@ RexxInstruction *LanguageParser::guardNew()
         syntaxError(Error_Translation_guard_interpret);
     }
 
-    RexxObject *expression = OREF_NULL;
+    RexxInternalObject *expression = OREF_NULL;
     ArrayClass *variable_list = OREF_NULL;
     size_t variable_count = 0;
 
@@ -1825,7 +1825,7 @@ RexxInstruction *LanguageParser::guardNew()
 RexxInstruction *LanguageParser::ifNew(InstructionKeyword type)
 {
     // ok, get a conditional expression
-    RexxObject *_condition = requiredLogicalExpression(TERM_IF, type == KEYWORD_IF ? Error_Invalid_expression_if : Error_Invalid_expression_when);
+    RexxInternalObject *_condition = requiredLogicalExpression(TERM_IF, type == KEYWORD_IF ? Error_Invalid_expression_if : Error_Invalid_expression_when);
 
     // get to the terminator token for this (likely a THEN, but it could
     // be an EOC.  We use this to update the end location for the instruction since
@@ -1852,7 +1852,7 @@ RexxInstruction *LanguageParser::interpretNew()
 {
     // this is pretty simple...parse the optional expresson and create the
     // instruction instance.
-    RexxObject *expression = requiredExpression(TERM_EOC, Error_Invalid_expression_interpret);
+    RexxInternalObject *expression = requiredExpression(TERM_EOC, Error_Invalid_expression_interpret);
 
     RexxInstruction *newObject = new_instruction(INTERPRET, Interpret);
     ::new ((void *)newObject) RexxInstructionInterpret(expression);
@@ -1963,7 +1963,7 @@ RexxInstruction *LanguageParser::doubleMessageNew(RexxExpressionMessage *msg)
  *
  * @return A new instruction to process this assignment.
  */
-RexxInstruction *LanguageParser::messageAssignmentNew(RexxExpressionMessage *msg, RexxObject *expr)
+RexxInstruction *LanguageParser::messageAssignmentNew(RexxExpressionMessage *msg, RexxInternalObject *expr)
 {
     ProtectedObject p(msg);               // protect this
     msg->makeAssignment(this);            // convert into an assignment message
@@ -1987,7 +1987,7 @@ RexxInstruction *LanguageParser::messageAssignmentNew(RexxExpressionMessage *msg
  *
  * @return The constructed message operator.
  */
-RexxInstruction *LanguageParser::messageAssignmentOpNew(RexxExpressionMessage *msg, RexxToken *operation, RexxObject *expr)
+RexxInstruction *LanguageParser::messageAssignmentOpNew(RexxExpressionMessage *msg, RexxToken *operation, RexxInternalObject *expr)
 {
     ProtectedObject p(expr);        // the message term is already protected, also need to protect this portion
     // There are two things that go on now with the message term,
@@ -1995,12 +1995,12 @@ RexxInstruction *LanguageParser::messageAssignmentOpNew(RexxExpressionMessage *m
     // part.  We copy the original message object to use as a retriever, then
     // convert the original to an assignment message by changing the message name.
 
-    RexxObject *retriever = (RexxObject *)msg->copy();
+    RexxInternalObject *retriever = msg->copy();
 
     msg->makeAssignment(this);       // convert into an assignment message (the original message term)
 
     // now add a binary operator to this expression tree using the message copy.
-    expr = (RexxObject *)new RexxBinaryOperator(operation->subtype(), retriever, expr);
+    expr = new RexxBinaryOperator(operation->subtype(), retriever, expr);
 
     // allocate a new object.  NB:  a message instruction gets an extra argument, so we don't subtract one.
     RexxInstruction *newObject = new_variable_instruction(MESSAGE, Message, sizeof(RexxInstructionMessage) + (msg->argumentCount) * sizeof(RexxObject *));
@@ -2033,7 +2033,7 @@ RexxInstruction *LanguageParser::nopNew()
  */
 RexxInstruction *LanguageParser::numericNew()
 {
-    RexxObject *expression = OREF_NULL;
+    RexxInternalObject *expression = OREF_NULL;
     FlagSet<NumericInstructionFlags, 32> _flags;
 
     // get to the first real token of the instruction
@@ -2144,7 +2144,7 @@ RexxInstruction *LanguageParser::optionsNew()
 {
     // this is pretty simple...parse the optional expresson and create the
     // instruction instance.
-    RexxObject *expression = requiredExpression(TERM_EOC, Error_Invalid_expression_options);
+    RexxInternalObject *expression = requiredExpression(TERM_EOC, Error_Invalid_expression_options);
 
     RexxInstruction *newObject = new_instruction(OPTIONS, Options);
     ::new ((void *)newObject) RexxInstructionOptions(expression);
@@ -2331,7 +2331,7 @@ RexxInstruction *LanguageParser::parseNew(InstructionSubKeyword argPull)
             // skip this because there are no variables to assign.
             if (variableCount > 0)
             {
-                parse_template->push((RexxObject *)new (variableCount) ParseTrigger(TRIGGER_END, (RexxObject *)OREF_NULL, variableCount, _variables));
+                parse_template->push(new (variableCount) ParseTrigger(TRIGGER_END, OREF_NULL, variableCount, _variables));
                 templateCount++;
             }
             variableCount = 0;               // have a new set of variables (well, we're done, really)
@@ -2344,7 +2344,7 @@ RexxInstruction *LanguageParser::parseNew(InstructionSubKeyword argPull)
         {
             if (variableCount > 0)
             {
-                parse_template->push((RexxObject *)new (variableCount) ParseTrigger(TRIGGER_END, (RexxObject *)OREF_NULL, variableCount, _variables));
+                parse_template->push(new (variableCount) ParseTrigger(TRIGGER_END, OREF_NULL, variableCount, _variables));
                 templateCount++;
             }
             // now add an empty fence item to the list...make sure the count is incremented
@@ -2402,22 +2402,22 @@ RexxInstruction *LanguageParser::parseNew(InstructionSubKeyword argPull)
                     syntaxError(Error_Invalid_expression_parse);
                 }
 
-                parse_template->push((RexxObject *)new (variableCount) ParseTrigger(trigger_type,
-                    (RexxObject *)subExpr, variableCount, _variables));
+                parse_template->push(new (variableCount) ParseTrigger(trigger_type,
+                    subExpr, variableCount, _variables));
                 variableCount = 0;
                 templateCount++;
             }
             // not an expression, we need to find a symbol here.
             else if (token->isSymbol())
             {
-                // non variable symbol?              */
+                // non variable symbol?
                 if (token->isVariable())
                 {
                     syntaxError(Error_Invalid_template_position, token);
                 }
 
                 // add a trigger of the given type.
-                parse_template->push((RexxObject *)new (variableCount) ParseTrigger(trigger_type,
+                parse_template->push(new (variableCount) ParseTrigger(trigger_type,
                     addText(token), variableCount, _variables));
                 variableCount = 0;
                 templateCount++;
@@ -2444,8 +2444,8 @@ RexxInstruction *LanguageParser::parseNew(InstructionSubKeyword argPull)
                 syntaxError(Error_Invalid_expression_parse);
             }
 
-            parse_template->push((RexxObject *)new (variableCount) ParseTrigger(parseFlags[parse_caseless] ? TRIGGER_MIXED : TRIGGER_STRING,
-                (RexxObject *)subExpr, variableCount, _variables));
+            parse_template->push(new (variableCount) ParseTrigger(parseFlags[parse_caseless] ? TRIGGER_MIXED : TRIGGER_STRING,
+                subExpr, variableCount, _variables));
             variableCount = 0;
             templateCount++;
         }
@@ -2453,7 +2453,7 @@ RexxInstruction *LanguageParser::parseNew(InstructionSubKeyword argPull)
         else if (token->isLiteral())
         {
 
-            parse_template->push((RexxObject *)new (variableCount) ParseTrigger(parseFlags[parse_caseless] ? TRIGGER_MIXED : TRIGGER_STRING,
+            parse_template->push(new (variableCount) ParseTrigger(parseFlags[parse_caseless] ? TRIGGER_MIXED : TRIGGER_STRING,
                 addText(token), variableCount, _variables));
             variableCount = 0;
             templateCount++;
@@ -2464,7 +2464,7 @@ RexxInstruction *LanguageParser::parseNew(InstructionSubKeyword argPull)
             // absolute positioning
             if (token->isNumericSymbol())
             {
-                parse_template->push((RexxObject *)new (variableCount) ParseTrigger(TRIGGER_ABSOLUTE,
+                parse_template->push(new (variableCount) ParseTrigger(TRIGGER_ABSOLUTE,
                     addText(token), variableCount, _variables));
                 variableCount = 0;
 
@@ -2486,7 +2486,7 @@ RexxInstruction *LanguageParser::parseNew(InstructionSubKeyword argPull)
                     // this is potentially a message term...step back
                     // and parse as one. This also catches simple variables
                     previousToken();
-                    RexxObject *term = parseVariableOrMessageTerm();
+                    RexxInternalObject *term = parseVariableOrMessageTerm();
                     if (term == OREF_NULL)
                     {
                         syntaxError(Error_Variable_expected_PARSE, token);
@@ -2548,7 +2548,7 @@ RexxInstruction *LanguageParser::queueNew()
 {
     // this is pretty simple...parse the optional expresson and create the
     // instruction instance.
-    RexxObject *expression = parseExpression(TERM_EOC);
+    RexxInternalObject *expression = parseExpression(TERM_EOC);
 
     RexxInstruction *newObject = new_instruction(QUEUE, Queue);
     ::new ((void *)newObject) RexxInstructionQueue(expression);
@@ -2565,7 +2565,7 @@ RexxInstruction *LanguageParser::pushNew()
 {
     // this is pretty simple...parse the optional expresson and create the
     // instruction instance.
-    RexxObject *expression = parseExpression(TERM_EOC);
+    RexxInternalObject *expression = parseExpression(TERM_EOC);
 
     // NOTE:  PUSH and QUEUE share an implementation class, but the
     // instruction type identifies which operation is performed.
@@ -2583,10 +2583,10 @@ RexxInstruction *LanguageParser::pushNew()
 RexxInstruction *LanguageParser::raiseNew()
 {
     ArrayClass *arrayItems = OREF_NULL;
-    RexxObject *rcValue = OREF_NULL;
-    RexxObject *description = OREF_NULL;
-    RexxObject *additional = OREF_NULL;
-    RexxObject *result = OREF_NULL;
+    RexxInternalObject *rcValue = OREF_NULL;
+    RexxInternalObject *description = OREF_NULL;
+    RexxInternalObject *additional = OREF_NULL;
+    RexxInternalObject *result = OREF_NULL;
     FlagSet<RaiseInstructionFlags, 32> flags;
 
     // ok, get the first TOKEN
@@ -2830,7 +2830,7 @@ RexxInstruction *LanguageParser::replyNew()
 
     // this is pretty simple...parse the optional expresson and create the
     // instruction instance.
-    RexxObject *expression = parseExpression(TERM_EOC);
+    RexxInternalObject *expression = parseExpression(TERM_EOC);
 
     RexxInstruction *newObject = new_instruction(REPLY, Reply);
     ::new ((void *)newObject) RexxInstructionReply(expression);
@@ -2847,7 +2847,7 @@ RexxInstruction *LanguageParser::returnNew()
 {
     // this is pretty simple...parse the optional expresson and create the
     // instruction instance.
-    RexxObject *expression = parseExpression(TERM_EOC);
+    RexxInternalObject *expression = parseExpression(TERM_EOC);
 
     RexxInstruction *newObject = new_instruction(RETURN, Return);
     ::new ((void *)newObject) RexxInstructionReturn(expression);
@@ -2864,7 +2864,7 @@ RexxInstruction *LanguageParser::sayNew()
 {
     // this is pretty simple...parse the optional expresson and create the
     // instruction instance.
-    RexxObject *expression = parseExpression(TERM_EOC);
+    RexxInternalObject *expression = parseExpression(TERM_EOC);
 
     RexxInstruction *newObject = new_instruction(SAY, Say);
     ::new ((void *)newObject) RexxInstructionSay(expression);
@@ -2885,7 +2885,7 @@ RexxInstruction *LanguageParser::selectNew()
     // classes for the two different functions.
     RexxToken *token = nextReal();
     RexxString *label = OREF_NULL;
-    RexxObject *caseExpr = OREF_NULL;
+    RexxInternalObject *caseExpr = OREF_NULL;
 
     // ok, if this is more than just SELECT, we need to handle both a LABEL option
     // (which must be first) and a potential CASE option, which creates a completely different
@@ -2971,7 +2971,7 @@ RexxInstruction *LanguageParser::dynamicSignalNew()
 {
     // we are already positioned for processing the label expression, so
     // parse it off now.
-    RexxObject *labelExpression = requiredExpression(TERM_EOC, Error_Invalid_expression_signal);
+    RexxInternalObject *labelExpression = requiredExpression(TERM_EOC, Error_Invalid_expression_signal);
 
     // create a new instruction object
     RexxInstruction *newObject = new_instruction(SIGNAL_VALUE, DynamicSignal);
@@ -3088,7 +3088,7 @@ RexxInstruction *LanguageParser::signalOnNew(InstructionSubKeyword type)
     // if this is the ON form, we have some end parsing resolution to perform.
     if (type == SUBKEY_ON)
     {
-        addReference((RexxObject *)newObject);
+        addReference(newObject);
     }
 
     return newObject;
@@ -3165,7 +3165,7 @@ RexxInstruction *LanguageParser::signalNew()
     ::new ((void *)newObject) RexxInstructionSignal(labelName);
 
     // this requires a resolve call back once the labels are determined.
-    addReference((RexxObject *)newObject);
+    addReference(newObject);
     return newObject;
 }
 
@@ -3223,7 +3223,7 @@ RexxInstruction *LanguageParser::traceNew()
     TraceSetting settings;                      // the parsed trace setting flags
     bool skipForm = false;                      // set default trace mode
     wholenumber_t debug_skip = 0;               // no skipping
-    RexxObject *expression = OREF_NULL;         // not expression form
+    RexxInternalObject *expression = OREF_NULL; // not expression form
 
     // ok, start processing for real
     RexxToken *token = nextReal();              // get the next token
@@ -3423,7 +3423,7 @@ RexxInstruction *LanguageParser::useNew()
 
             previousToken();       // push the current token back for term processing
             // see if we can get a variable or a message term from this
-            RexxObject *retriever = parseVariableOrMessageTerm();
+            RexxInternalObject *retriever = parseVariableOrMessageTerm();
             if (retriever == OREF_NULL)
             {
                 syntaxError(Error_Variable_expected_USE, token);
@@ -3451,7 +3451,7 @@ RexxInstruction *LanguageParser::useNew()
                 // this is a constant expression value.  Single token forms
                 // are fine without parens, more complex forms require parens as
                 // delimiters.
-                RexxObject *defaultValue = parseConstantExpression();
+                RexxInternalObject *defaultValue = parseConstantExpression();
                 // no expression is an error
                 if (defaultValue == OREF_NULL)
                 {
@@ -3569,21 +3569,11 @@ size_t LanguageParser::processVariableList(InstructionKeyword type )
             {
                 syntaxError(Error_Symbol_expected_varref);
             }
-            // non-variable symbol?
-            if (token->isNumericSymbol())
-            {
-                syntaxError(Error_Invalid_variable_number, token);
-            }
-            // the dummy dot?
-            else if (token->isDot())
-            {
-                syntaxError(Error_Invalid_variable_period, token);
-            }
 
             // get a retriever for the variable in the parens
-            RexxObject *retriever = addText(token);
+            RexxVariableBase *retriever = addVariable(token);
             // and wrap this in a variable reference, which handles the indirection.
-            retriever = (RexxObject *)new RexxVariableReference((RexxVariableBase *)retriever);
+            retriever = new RexxVariableReference(retriever);
             // add this to the queue
             subTerms->queue(retriever);
 
@@ -3644,9 +3634,9 @@ size_t LanguageParser::processVariableList(InstructionKeyword type )
  *
  * @return A parsed out expression object.
  */
-RexxObject *LanguageParser::parseLoopConditional(InstructionSubKeyword &conditionType, int error_message )
+RexxInternalObject *LanguageParser::parseLoopConditional(InstructionSubKeyword &conditionType, int error_message )
 {
-    RexxObject *conditional = OREF_NULL;
+    RexxInternalObject *conditional = OREF_NULL;
 
     // no type detected yet
     conditionType = SUBKEY_NONE;

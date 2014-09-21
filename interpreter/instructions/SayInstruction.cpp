@@ -53,7 +53,7 @@
  * @param _expression
  *               The optional expression.
  */
-RexxInstructionSay::RexxInstructionSay(RexxObject *_expression)
+RexxInstructionSay::RexxInstructionSay(RexxInternalObject *_expression)
 {
     expression = _expression;
 }

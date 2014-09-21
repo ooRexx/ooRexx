@@ -120,7 +120,7 @@ void *RexxBinaryOperator::operator new(size_t size)
  * @param right  The right side of the expression (null if this is
  *               not a binarry operator).
  */
-RexxExpressionOperator::RexxExpressionOperator(TokenSubclass op, RexxObject *left, RexxObject *right)
+RexxExpressionOperator::RexxExpressionOperator(TokenSubclass op, RexxInternalObject *left, RexxInternalObject *right)
 {
     oper = op;
     left_term = left;

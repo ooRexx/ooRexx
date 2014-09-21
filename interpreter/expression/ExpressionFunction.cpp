@@ -93,7 +93,7 @@ RexxExpressionFunction::RexxExpressionFunction(RexxString *function_name,
 
     // now copy any arguments from the sub term stack
     // NOTE:  The arguments are in last-to-first order on the stack.
-    initializeObjectArray(argCount, arguments, RexxObject, argList);
+    initializeObjectArray(argCount, arguments, RexxInternalObject, argList);
 }
 
 

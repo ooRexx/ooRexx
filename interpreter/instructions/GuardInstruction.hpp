@@ -49,7 +49,7 @@
 class RexxInstructionGuard : public RexxInstruction
 {
  public:
-    RexxInstructionGuard(RexxObject*, ArrayClass *, bool);
+    RexxInstructionGuard(RexxInternalObject*, ArrayClass *, bool);
     inline RexxInstructionGuard(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
@@ -61,7 +61,7 @@ class RexxInstructionGuard : public RexxInstruction
  protected:
 
     bool              guardOn;           // ON or OFF form
-    RexxObject       *expression;        // guard expression
+    RexxInternalObject *expression;      // guard expression
     size_t            variableCount;     // number of guard variables
     RexxVariableBase *variables[1];      // set of guard variables            */
 };

@@ -125,7 +125,7 @@ void QueueClass::checkInsertIndex(size_t position)
  *
  * @return The popped item, or .nil if the queue is empty.
  */
-RexxInternalObject *QueueClass::pullRexx()
+RexxObject *QueueClass::pullRexx()
 {
     return resultOrNil(pop());
 }
@@ -138,7 +138,7 @@ RexxInternalObject *QueueClass::pullRexx()
  *
  * @return Returns nothing.
  */
-RexxObject *QueueClass::pushRexx(RexxInternalObject *item)
+RexxObject *QueueClass::pushRexx(RexxObject *item)
 {
     requiredArgument(item, ARG_ONE);
     push(item);
@@ -153,7 +153,7 @@ RexxObject *QueueClass::pushRexx(RexxInternalObject *item)
  *
  * @return Returns nothing.
  */
-RexxObject *QueueClass::queueRexx(RexxInternalObject *item)
+RexxObject *QueueClass::queueRexx(RexxObject *item)
 {
     requiredArgument(item, ARG_ONE);
 
@@ -187,7 +187,7 @@ RexxInternalObject *QueueClass::peek()
  *
  * @return Always return nothing.
  */
-RexxObject *QueueClass::putRexx(RexxInternalObject *value, RexxObject *index)
+RexxObject *QueueClass::putRexx(RexxObject *value, RexxObject *index)
 {
     requiredArgument(value, ARG_ONE);
     // make sure we have an index specified before trying to decode this.

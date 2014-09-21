@@ -805,7 +805,7 @@ void RexxActivation::processTraps()
             RexxInternalObject *rc = conditionObj->get(GlobalNames::RC);
             if (rc != OREF_NULL)
             {
-                setLocalVariable(GlobalNames::RC, VARIABLE_RC, rc);
+                setLocalVariable(GlobalNames::RC, VARIABLE_RC, (RexxObject *)rc);
             }
 
             // it's possible that the condition can raise an error because of a
@@ -2200,9 +2200,9 @@ bool RexxActivation::trap(RexxString *condition, DirectoryClass *exceptionObject
  *
  * @return A value for that variable.
  */
-RexxInternalObject *RexxActivation::handleNovalueEvent(RexxString *name, RexxInternalObject *defaultValue, RexxVariable *variable)
+RexxObject *RexxActivation::handleNovalueEvent(RexxString *name, RexxObject *defaultValue, RexxVariable *variable)
 {
-    RexxInternalObject *value = novalueHandler(name);
+    RexxObject *value = novalueHandler(name);
     // If the handler returns anything other than .nil, this is a
     // value
     if (value != TheNilObject)
@@ -3337,7 +3337,7 @@ void RexxActivation::traceOperatorValue(TracePrefix prefix, const char *tag, Rex
  * @param tailCount The count of tail elements.
  * @param value     The resolved tail element
  */
-void RexxActivation::traceCompoundValue(TracePrefix prefix, RexxString *stemName, RexxObject **tails, size_t tailCount,
+void RexxActivation::traceCompoundValue(TracePrefix prefix, RexxString *stemName, RexxInternalObject **tails, size_t tailCount,
      CompoundVariableTail &tail)
 {
     traceCompoundValue(prefix, stemName, tails, tailCount, VALUE_MARKER, tail.createCompoundName(stemName));
@@ -3354,7 +3354,7 @@ void RexxActivation::traceCompoundValue(TracePrefix prefix, RexxString *stemName
  * @param tailCount The count of tail elements.
  * @param value     The associated trace value.
  */
-void RexxActivation::traceCompoundValue(TracePrefix prefix, RexxString *stemName, RexxObject **tails, size_t tailCount, const char *marker,
+void RexxActivation::traceCompoundValue(TracePrefix prefix, RexxString *stemName, RexxInternalObject **tails, size_t tailCount, const char *marker,
      RexxObject *value)
 {
     // the trace settings would normally require us to trace this, but there are conditions
@@ -4087,13 +4087,13 @@ PackageClass *RexxActivation::getPackage()
  *
  * @return The value of the variable.
  */
-RexxInternalObject *RexxActivation::evaluateLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount)
+RexxObject *RexxActivation::evaluateLocalCompoundVariable(RexxString *stemName, size_t index, RexxInternalObject **tail, size_t tailCount)
 {
     CompoundVariableTail resolved_tail(this, tail, tailCount);
 
     // locate the stem variable and get the value from there.
     StemClass *stem_table = getLocalStem(stemName, index);
-    RexxInternalObject *value = stem_table->evaluateCompoundVariableValue(this, stemName, resolved_tail);
+    RexxObject *value = stem_table->evaluateCompoundVariableValue(this, stemName, resolved_tail);
     if (tracingIntermediates())
     {
         traceCompoundName(stemName, tail, tailCount, resolved_tail);
@@ -4113,7 +4113,7 @@ RexxInternalObject *RexxActivation::evaluateLocalCompoundVariable(RexxString *st
  *
  * @return The variable value (or OREF_NULL if not found)
  */
-RexxInternalObject *RexxActivation::getLocalCompoundVariableValue(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount)
+RexxObject *RexxActivation::getLocalCompoundVariableValue(RexxString *stemName, size_t index, RexxInternalObject **tail, size_t tailCount)
 {
     CompoundVariableTail resolved_tail(this, tail, tailCount);
 
@@ -4132,7 +4132,7 @@ RexxInternalObject *RexxActivation::getLocalCompoundVariableValue(RexxString *st
  *
  * @return The variable value (or OREF_NULL if not found)
  */
-RexxInternalObject *RexxActivation::getLocalCompoundVariableRealValue(RexxString *localstem, size_t index, RexxObject **tail, size_t tailCount)
+RexxObject *RexxActivation::getLocalCompoundVariableRealValue(RexxString *localstem, size_t index, RexxInternalObject **tail, size_t tailCount)
 {
     CompoundVariableTail resolved_tail(this, tail, tailCount);
 
@@ -4151,7 +4151,7 @@ RexxInternalObject *RexxActivation::getLocalCompoundVariableRealValue(RexxString
  *
  * @return The variable value (or OREF_NULL if not found)
  */
-CompoundTableElement *RexxActivation::getLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount)
+CompoundTableElement *RexxActivation::getLocalCompoundVariable(RexxString *stemName, size_t index, RexxInternalObject **tail, size_t tailCount)
 {
     CompoundVariableTail resolved_tail(this, tail, tailCount);
 
@@ -4170,7 +4170,7 @@ CompoundTableElement *RexxActivation::getLocalCompoundVariable(RexxString *stemN
  *
  * @return The variable value (or OREF_NULL if not found)
  */
-CompoundTableElement *RexxActivation::exposeLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount)
+CompoundTableElement *RexxActivation::exposeLocalCompoundVariable(RexxString *stemName, size_t index, RexxInternalObject **tail, size_t tailCount)
 {
     CompoundVariableTail resolved_tail(this, tail, tailCount);
 
@@ -4189,7 +4189,7 @@ CompoundTableElement *RexxActivation::exposeLocalCompoundVariable(RexxString *st
  *
  * @return true if the variable exists, false if not.
  */
-bool RexxActivation::localCompoundVariableExists(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount)
+bool RexxActivation::localCompoundVariableExists(RexxString *stemName, size_t index, RexxInternalObject **tail, size_t tailCount)
 {
     CompoundVariableTail resolved_tail(this, tail, tailCount);
 
@@ -4207,7 +4207,7 @@ bool RexxActivation::localCompoundVariableExists(RexxString *stemName, size_t in
  * @param tailCount The count of tail elements.
  * @param value     The value to assign.
  */
-void RexxActivation::assignLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount, RexxInternalObject *value)
+void RexxActivation::assignLocalCompoundVariable(RexxString *stemName, size_t index, RexxInternalObject **tail, size_t tailCount, RexxObject *value)
 {
     CompoundVariableTail resolved_tail(this, tail, tailCount);
 
@@ -4216,7 +4216,7 @@ void RexxActivation::assignLocalCompoundVariable(RexxString *stemName, size_t in
     if (tracingIntermediates())
     {
         traceCompoundName(stemName, tail, tailCount, resolved_tail);
-        traceCompoundAssignment(stemName, tail, tailCount, (RexxObject *)value);
+        traceCompoundAssignment(stemName, tail, tailCount, value);
     }
 }
 
@@ -4230,7 +4230,7 @@ void RexxActivation::assignLocalCompoundVariable(RexxString *stemName, size_t in
  * @param tailCount The count of tail elements.
  * @param value     The value to assign.
  */
-void RexxActivation::setLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount, RexxInternalObject *value)
+void RexxActivation::setLocalCompoundVariable(RexxString *stemName, size_t index, RexxInternalObject **tail, size_t tailCount, RexxObject *value)
 {
     CompoundVariableTail resolved_tail(this, tail, tailCount);
 
@@ -4247,7 +4247,7 @@ void RexxActivation::setLocalCompoundVariable(RexxString *stemName, size_t index
  * @param tail      The array of tail elements.
  * @param tailCount The count of tail elements.
  */
-void RexxActivation::dropLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount)
+void RexxActivation::dropLocalCompoundVariable(RexxString *stemName, size_t index, RexxInternalObject **tail, size_t tailCount)
 {
     CompoundVariableTail resolved_tail(this, tail, tailCount);
     StemClass *stem_table = getLocalStem(stemName, index);

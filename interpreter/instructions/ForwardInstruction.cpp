@@ -59,7 +59,7 @@
  * @param a      The args specified via the ARRAY() option.
  * @param c      the continue/return flag.
  */
-RexxInstructionForward::RexxInstructionForward(RexxObject * t, RexxObject *m, RexxObject *s, RexxObject *args, ArrayClass *a, bool c)
+RexxInstructionForward::RexxInstructionForward(RexxInternalObject * t, RexxInternalObject *m, RexxInternalObject *s, RexxInternalObject *args, ArrayClass *a, bool c)
 {
     target = t;
     message = m;

@@ -51,7 +51,7 @@
  * @param _expression
  *               The optional return result expression.
  */
-RexxInstructionReply::RexxInstructionReply(RexxObject *_expression)
+RexxInstructionReply::RexxInstructionReply(RexxInternalObject *_expression)
 {
     expression = _expression;
 }

@@ -91,7 +91,7 @@ public:
 class RexxInstructionSelectCase : public RexxInstructionSelect
 {
 public:
-    RexxInstructionSelectCase(RexxString *label, RexxObject *condition);
+    RexxInstructionSelectCase(RexxString *label, RexxInternalObject *condition);
     inline RexxInstructionSelectCase(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
@@ -101,6 +101,6 @@ public:
     // required by RexxInstructon
     virtual void execute(RexxActivation *, ExpressionStack *);
 
-    RexxObject *caseExpr;  // the SELECT CASE expression.
+    RexxInternalObject *caseExpr;  // the SELECT CASE expression.
 };
 #endif

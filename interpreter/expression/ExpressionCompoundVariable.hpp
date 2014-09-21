@@ -93,6 +93,6 @@ protected:
     RexxString *stemName;                // the stem variable name
     size_t      stemIndex;               // stem variable lookaside table index
     size_t      tailCount;               // count of tails.
-    RexxObject *tails[1];                // array of tail elements
+    RexxInternalObject *tails[1];        // array of tail elements
 };
 #endif

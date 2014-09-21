@@ -197,7 +197,7 @@ void RexxVariable::notify()
  *
  * @param value  The value to set.
  */
-void RexxVariable::setStem(RexxInternalObject *value)
+void RexxVariable::setStem(RexxObject *value)
 {
     // if this is a stem-to-stem assignment, we replace the current variable's
     // stem object.

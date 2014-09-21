@@ -53,7 +53,7 @@
  * @param _expression
  *               The required expression for this command.
  */
-RexxInstructionCommand::RexxInstructionCommand(RexxObject *_expression)
+RexxInstructionCommand::RexxInstructionCommand(RexxInternalObject *_expression)
 {
 
     expression = _expression;

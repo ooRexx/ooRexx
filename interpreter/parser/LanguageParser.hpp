@@ -119,7 +119,7 @@ class LanguageParser: public RexxInternalObject
 
     void         installPackage();
     StackFrameClass *createStackFrame();
-    void        holdObject(RexxObject *object) { holdStack->push(object);};
+    void        holdObject(RexxInternalObject *object) { holdStack->push(object);};
 
     // token scanning methods
     void        scanComment();
@@ -164,7 +164,7 @@ class LanguageParser: public RexxInternalObject
     RexxCompoundVariable *addCompound(RexxString *);
     void        expose(RexxString *);
     RexxString *commonString(RexxString *);
-    RexxObject *addText(RexxToken *);
+    RexxInternalObject *addText(RexxToken *);
     RexxVariableBase *addVariable(RexxToken *);
     void        addClause(RexxInstruction *);
     void        addLabel(RexxInstruction *, RexxString *);
@@ -196,9 +196,9 @@ class LanguageParser: public RexxInternalObject
         previousToken();
     }
 
-    inline RexxObject *requiredLogicalExpression(int terminators, int error)
+    inline RexxInternalObject *requiredLogicalExpression(int terminators, int error)
     {
-        RexxObject *conditional = parseLogical(terminators);
+        RexxInternalObject *conditional = parseLogical(terminators);
         if (conditional == OREF_NULL)
         {
             syntaxError(error);
@@ -206,9 +206,9 @@ class LanguageParser: public RexxInternalObject
         return conditional;
     }
 
-    inline RexxObject *requiredExpression(int terminators, int error)
+    inline RexxInternalObject *requiredExpression(int terminators, int error)
     {
-        RexxObject *expression = parseExpression(terminators);
+        RexxInternalObject *expression = parseExpression(terminators);
         if (expression == OREF_NULL)
         {
             syntaxError(error);
@@ -257,8 +257,8 @@ class LanguageParser: public RexxInternalObject
     RexxInstruction *leaveNew(InstructionKeyword type);
     RexxInstruction *messageNew(RexxExpressionMessage *);
     RexxInstruction *doubleMessageNew(RexxExpressionMessage *msg);
-    RexxInstruction *messageAssignmentNew(RexxExpressionMessage *, RexxObject *);
-    RexxInstruction *messageAssignmentOpNew(RexxExpressionMessage *, RexxToken *, RexxObject *);
+    RexxInstruction *messageAssignmentNew(RexxExpressionMessage *, RexxInternalObject *);
+    RexxInstruction *messageAssignmentOpNew(RexxExpressionMessage *, RexxToken *, RexxInternalObject *);
     RexxInstruction *nopNew();
     RexxInstruction *numericNew();
     RexxInstruction *optionsNew();
@@ -280,8 +280,8 @@ class LanguageParser: public RexxInternalObject
     RexxInstruction *useNew();
     RexxInstructionIf *whenCaseNew(RexxInstructionIf *original);
 
-    inline void        addReference(RexxObject *reference) { calls->addLast(reference); }
-    inline void        pushDo(RexxInstruction *i) { control->push((RexxObject *)i); }
+    inline void        addReference(RexxInternalObject *reference) { calls->addLast(reference); }
+    inline void        pushDo(RexxInstruction *i) { control->push(i); }
     inline RexxInstruction *popDo() { return (RexxInstruction *)(control->pull()); };
     inline RexxInstruction *topDo() { return (RexxInstruction *)(control->peek()); };
     inline InstructionKeyword topDoType() { return ((RexxInstruction *)(control->peek()))->getType(); };
@@ -318,29 +318,29 @@ class LanguageParser: public RexxInternalObject
     void        addClassDirective(RexxString *name, ClassDirective *directive);
 
     // expression parsing methods
-    RexxObject *parseConstantExpression();
-    RexxObject *parenExpression(RexxToken *);
-    RexxObject *parseExpression(int);
-    RexxObject *parseSubExpression(int);
+    RexxInternalObject *parseConstantExpression();
+    RexxInternalObject *parenExpression(RexxToken *);
+    RexxInternalObject *parseExpression(int);
+    RexxInternalObject *parseSubExpression(int);
     size_t      parseArgList(RexxToken *, int);
     ArrayClass  *parseArgArray(RexxToken *, int);
-    RexxObject *parseFunction(RexxToken *, RexxToken *);
-    RexxObject *parseCollectionMessage(RexxToken *, RexxObject *);
-    RexxObject *parseMessage(RexxObject *, bool, int);
-    RexxObject *parseMessageTerm();
-    RexxObject *parseVariableOrMessageTerm();
-    RexxObject *parseMessageSubterm(int);
-    RexxObject *parseSubTerm(int);
-    RexxObject *parseLoopConditional(InstructionSubKeyword &, int);
-    RexxObject *parseLogical(int terminators);
-    inline void        pushOperator(RexxToken *operatorToken) { operators->pushRexx((RexxObject *)operatorToken); };
-    inline RexxToken  *popOperator() { return (RexxToken *)(operators->pullRexx()); };
+    RexxInternalObject *parseFunction(RexxToken *, RexxToken *);
+    RexxInternalObject *parseCollectionMessage(RexxToken *, RexxInternalObject *);
+    RexxInternalObject *parseMessage(RexxInternalObject *, bool, int);
+    RexxInternalObject *parseMessageTerm();
+    RexxInternalObject *parseVariableOrMessageTerm();
+    RexxInternalObject *parseMessageSubterm(int);
+    RexxInternalObject *parseSubTerm(int);
+    RexxInternalObject *parseLoopConditional(InstructionSubKeyword &, int);
+    RexxInternalObject *parseLogical(int terminators);
+    inline void        pushOperator(RexxToken *operatorToken) { operators->push(operatorToken); };
+    inline RexxToken  *popOperator() { return (RexxToken *)(operators->pull()); };
     inline RexxToken  *topOperator() { return (RexxToken *)(operators->peek()); };
-    void        pushTerm(RexxObject *);
-    void        pushSubTerm(RexxObject *);
-    RexxObject *requiredTerm(RexxToken *token, int errorCode = Error_Invalid_expression_general);
-    RexxObject *popTerm();
-    RexxObject *popNTerms(size_t);
+    void        pushTerm(RexxInternalObject *);
+    void        pushSubTerm(RexxInternalObject *);
+    RexxInternalObject *requiredTerm(RexxToken *token, int errorCode = Error_Invalid_expression_general);
+    RexxInternalObject *popTerm();
+    RexxInternalObject *popNTerms(size_t);
 
     // various error processing methods
     void        error(int);

@@ -49,7 +49,7 @@
 class RexxInstructionSay : public RexxInstructionExpression
 {
  public:
-    RexxInstructionSay(RexxObject*);
+    RexxInstructionSay(RexxInternalObject*);
     inline RexxInstructionSay(RESTORETYPE restoreType) { ; };
 
     virtual void execute(RexxActivation *, ExpressionStack *);

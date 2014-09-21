@@ -57,7 +57,7 @@
  *
  * @return The argument converted to a non-negative integer value.
  */
-size_t lengthArgument(RexxInternalObject *argument, size_t position )
+size_t lengthArgument(RexxObject *argument, size_t position )
 {
     if (argument == OREF_NULL)
     {
@@ -67,7 +67,7 @@ size_t lengthArgument(RexxInternalObject *argument, size_t position )
     // converted using the ARGUMENT_DIGITS value
     if (!argument->unsignedNumberValue(value, Numerics::ARGUMENT_DIGITS))
     {
-        reportException(Error_Incorrect_method_length, (RexxObject *)argument);
+        reportException(Error_Incorrect_method_length, argument);
     }
     return value;
 }
@@ -83,7 +83,7 @@ size_t lengthArgument(RexxInternalObject *argument, size_t position )
  *
  * @return The argument converted to a non-negative integer value.
  */
-size_t nonNegativeArgument(RexxInternalObject *argument, size_t position )
+size_t nonNegativeArgument(RexxObject *argument, size_t position )
 {
     if (argument == OREF_NULL)
     {
@@ -104,7 +104,7 @@ size_t nonNegativeArgument(RexxInternalObject *argument, size_t position )
  *
  * @return The converted numeric value.
  */
-size_t positionArgument(RexxInternalObject *argument, size_t position )
+size_t positionArgument(RexxObject *argument, size_t position )
 {
     if (argument == OREF_NULL)
     {
@@ -114,7 +114,7 @@ size_t positionArgument(RexxInternalObject *argument, size_t position )
 
     if (!argument->unsignedNumberValue(value, Numerics::ARGUMENT_DIGITS) || value == 0)
     {
-        reportException(Error_Incorrect_method_position, (RexxObject *)argument);
+        reportException(Error_Incorrect_method_position, argument);
     }
     return value;
 }
@@ -130,13 +130,13 @@ size_t positionArgument(RexxInternalObject *argument, size_t position )
  *
  * @return The first character of the option.
  */
-char padArgument(RexxInternalObject *argument, size_t position)
+char padArgument(RexxObject *argument, size_t position)
 {
     RexxString *parameter = (RexxString *)stringArgument(argument, position);
     // pad characters must be a single character long
     if (parameter->getLength() != 1)
     {
-        reportException(Error_Incorrect_method_pad, (RexxObject *)argument);
+        reportException(Error_Incorrect_method_pad, argument);
     }
     return parameter->getChar(0);
 }
@@ -152,10 +152,10 @@ char padArgument(RexxInternalObject *argument, size_t position)
  *
  * @return The first character of the option string.
  */
-char optionArgument(RexxInternalObject *argument, size_t position)
+char optionArgument(RexxObject *argument, size_t position)
 {
     // must be a string value
-    RexxString *parameter = (RexxString *)stringArgument(argument, position);
+    RexxString *parameter = stringArgument(argument, position);
     return toupper(parameter->getChar(0));
 }
 
@@ -171,10 +171,10 @@ char optionArgument(RexxInternalObject *argument, size_t position)
  *
  * @return The first character of the option string.
  */
-char optionArgument(RexxInternalObject *argument, const char *validOptions, size_t position)
+char optionArgument(RexxObject *argument, const char *validOptions, size_t position)
 {
     // must be a string value
-    RexxString *parameter = (RexxString *)stringArgument(argument, position);
+    RexxString *parameter = stringArgument(argument, position);
 
     // get the first character of the string
     char option = toupper(parameter->getChar(0));

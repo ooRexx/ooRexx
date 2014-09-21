@@ -96,25 +96,25 @@ class ListClass : public RexxObject
 
     // The exported Rexx methods
     RexxObject *initRexx(RexxObject *initialSize);
-    RexxInternalObject *putRexx(RexxInternalObject *value, RexxObject *argIndex);
+    RexxInternalObject *putRexx(RexxObject *value, RexxObject *argIndex);
     RexxInternalObject *getRexx(RexxObject *argIndex);
     RexxObject *sectionRexx(RexxObject *argIndex, RexxObject *count);
-    RexxObject *insertRexx(RexxInternalObject *value, RexxObject *index);
-    RexxObject *appendRexx(RexxInternalObject *value);
-    RexxInternalObject *removeRexx(RexxObject *index);
-    RexxInternalObject *firstItemRexx();
-    RexxInternalObject *lastItemRexx();
-    RexxInternalObject *firstRexx();
+    RexxObject *insertRexx(RexxObject *value, RexxObject *index);
+    RexxObject *appendRexx(RexxObject *value);
+    RexxObject *removeRexx(RexxObject *index);
+    RexxObject *firstItemRexx();
+    RexxObject *lastItemRexx();
+    RexxObject *firstRexx();
     RexxObject *lastRexx();
     RexxObject *nextRexx(RexxObject *index);
     RexxObject *previousRexx(RexxObject *index);
     RexxObject *hasIndexRexx(RexxObject *index);
     RexxObject *emptyRexx();
     RexxObject *isEmptyRexx();
-    RexxObject *indexRexx(RexxInternalObject *target);
-    RexxInternalObject *removeItemRexx(RexxInternalObject *target);
+    RexxObject *indexRexx(RexxObject *target);
+    RexxInternalObject *removeItemRexx(RexxObject *target);
     RexxObject *itemsRexx();
-    RexxObject *hasItemRexx(RexxInternalObject *target);
+    RexxObject *hasItemRexx(RexxObject *target);
 
     // Class related methods
     ListClass     *newRexx(RexxObject **, size_t);

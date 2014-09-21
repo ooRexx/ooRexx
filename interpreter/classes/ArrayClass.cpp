@@ -82,7 +82,7 @@ void ArrayClass::createInstance()
  *
  * @return An allocated Array item of the target class.
  */
-RexxObject *ArrayClass::newRexx(RexxInternalObject **arguments, size_t argCount)
+RexxObject *ArrayClass::newRexx(RexxObject **arguments, size_t argCount)
 {
     // this method is defined as an instance method, but this is actually attached
     // to a class object instance.  Therefore, any use of the this pointer
@@ -103,7 +103,7 @@ RexxObject *ArrayClass::newRexx(RexxInternalObject **arguments, size_t argCount)
     // an array of sizes to create a multi-dimension array.
     if (argCount == 1)
     {
-        RexxInternalObject *currentDim = arguments[0];
+        RexxObject *currentDim = arguments[0];
         // specified as an array of dimensions?
         // this gets special handling
         if (currentDim != OREF_NULL && isArray(currentDim))
@@ -140,7 +140,7 @@ RexxObject *ArrayClass::newRexx(RexxInternalObject **arguments, size_t argCount)
  *
  * @return A new array of the target class, populated with the argument objects.
  */
-RexxObject *ArrayClass::ofRexx(RexxInternalObject **args, size_t argCount)
+RexxObject *ArrayClass::ofRexx(RexxObject **args, size_t argCount)
 {
     // this method is defined as an instance method, but this is actually attached
     // to a class object instance.  Therefore, any use of the this pointer
@@ -152,7 +152,7 @@ RexxObject *ArrayClass::ofRexx(RexxInternalObject **args, size_t argCount)
     // size for the added items.  The completeNewObject call will turn this into
     // the correct class if this is a subclass getting created.  The constructor
     // fills in the array before we call init (cheating a bit, but I don't care!)
-    Protected<ArrayClass> newArray = new (argCount) ArrayClass(args, argCount);
+    Protected<ArrayClass> newArray = new (argCount) ArrayClass((RexxInternalObject **)args, argCount);
 
     // finish the class initialization and init calls.
     classThis->completeNewObject(newArray);
@@ -168,7 +168,7 @@ RexxObject *ArrayClass::ofRexx(RexxInternalObject **args, size_t argCount)
  *
  * @return The size, converted to binary.
  */
-size_t ArrayClass::validateSize(RexxInternalObject *size, size_t position)
+size_t ArrayClass::validateSize(RexxObject *size, size_t position)
 {
     // Make sure it's an integer
     size_t totalSize = nonNegativeArgument(size, position);
@@ -189,7 +189,7 @@ size_t ArrayClass::validateSize(RexxInternalObject *size, size_t position)
  *
  * @return The created array
  */
-ArrayClass *ArrayClass::createMultidimensional(RexxInternalObject **dims, size_t count, RexxClass *classThis)
+ArrayClass *ArrayClass::createMultidimensional(RexxObject **dims, size_t count, RexxClass *classThis)
 {
     // Working with a multi-dimension array, so get a dimension array
     Protected<NumberArray> dim_array = new (count) NumberArray(count);
@@ -203,7 +203,7 @@ ArrayClass *ArrayClass::createMultidimensional(RexxInternalObject **dims, size_t
         // ...a dimension of 0 really does not make sense, right, but does work.
         // this creates a multi-dimensional array of zero size which will get resized
         // on the first assignment.  Doesn't really make sense, but it's perfectly legal.
-        RexxInternalObject *currentDim = dims[i];
+        RexxObject *currentDim = dims[i];
         size_t currentSize = nonNegativeArgument(currentDim, i + 1);
         // going to do an overflow?  By dividing, we can detect a
         // wrap situation.
@@ -600,12 +600,28 @@ RexxObject *ArrayClass::putRexx(RexxObject **arguments, size_t argCount)
 /**
  * Fill all locations of the array with the given object
  *
+ * @param value  The object that will fill the array.
+ *
  * @return No return value.
  */
-RexxObject *ArrayClass::fill(RexxInternalObject *value)
+RexxObject *ArrayClass::fillRexx(RexxObject *value)
 {
     requiredArgument(value, ARG_ONE);
 
+    // perform the fill
+    fill(value);
+
+    return OREF_NULL;     // no real return value
+}
+
+
+/**
+ * Fill all locations of the array with the given object
+ *
+ * @param value  The object used to fill the array.
+ */
+void ArrayClass::fill(RexxInternalObject *value)
+{
     for (size_t i = 1; i <= size(); i++)
     {
         // set the item using the fast version...we
@@ -616,8 +632,6 @@ RexxObject *ArrayClass::fill(RexxInternalObject *value)
     // we are full...item count and last item are both maxed out.
     itemCount = size();
     lastItem = size();
-
-    return OREF_NULL;     // no real return value
 }
 
 
@@ -681,7 +695,7 @@ RexxObject *ArrayClass::isEmptyRexx()
  *
  * @return The index of the appended item.
  */
-RexxObject *ArrayClass::appendRexx(RexxInternalObject *value)
+RexxObject *ArrayClass::appendRexx(RexxObject *value)
 {
     requiredArgument(value, ARG_ONE);
     checkMultiDimensional("APPEND");
@@ -720,7 +734,7 @@ size_t ArrayClass::append(RexxInternalObject *value)
  *
  * @return The index of the inserted valued.
  */
-RexxObject *ArrayClass::insertRexx(RexxInternalObject *value, RexxObject *index)
+RexxObject *ArrayClass::insertRexx(RexxObject *value, RexxObject *index)
 {
     checkMultiDimensional("INSERT");
 
@@ -2149,7 +2163,7 @@ RexxObject* ArrayClass::indexToArray(size_t idx)
  * @return The index for the array.  For a multi-dimensional array, this
  *         returns an array of indices.
  */
-RexxObject *ArrayClass::indexRexx(RexxInternalObject *target)
+RexxObject *ArrayClass::indexRexx(RexxObject *target)
 {
     // we require the target to be there.
     requiredArgument(target, ARG_ONE);
@@ -2169,7 +2183,7 @@ RexxObject *ArrayClass::indexRexx(RexxInternalObject *target)
  *
  * @return The removed object (same as target).
  */
-RexxInternalObject *ArrayClass::removeItemRexx(RexxInternalObject *target)
+RexxInternalObject *ArrayClass::removeItemRexx(RexxObject *target)
 {
     // we require the index to be there.
     requiredArgument(target, ARG_ONE);
@@ -2208,7 +2222,7 @@ RexxInternalObject *ArrayClass::removeItem(RexxInternalObject *target)
  * @return .true if this item exists in the array. .false if it does not
  *         exist.
  */
-RexxObject *ArrayClass::hasItemRexx(RexxInternalObject *target)
+RexxObject *ArrayClass::hasItemRexx(RexxObject *target)
 {
     // this is pretty simple.  One argument, required, and just search to see
     // if we have it.

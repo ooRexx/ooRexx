@@ -275,7 +275,7 @@ void RexxInstructionSelect::setOtherwise(RexxInstructionOtherwise *_otherwise)
  *
  * @param name   The optional label name.
  */
-RexxInstructionSelectCase::RexxInstructionSelectCase(RexxString *name, RexxObject *expr)
+RexxInstructionSelectCase::RexxInstructionSelectCase(RexxString *name, RexxInternalObject *expr)
 {
     // we keep track of each WHEN that is added to the select.
     // once we get the END instruction, we can update each of the WHENs

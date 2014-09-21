@@ -90,7 +90,7 @@ void * RexxCompoundVariable::operator new(size_t size, size_t tailCount)
  * @param tailList  The queue for obtaining the tail elements (pushed on in reverse order)
  * @param _tailCount The count of the tail elements.
  */
-RexxCompoundVariable::RexxCompoundVariable(RexxString * _stemName,
+RexxCompoundVariable::RexxCompoundVariable(RexxString *_stemName,
     size_t index, QueueClass *tailList, size_t _tailCount)
 {
     tailCount = _tailCount;
@@ -98,7 +98,7 @@ RexxCompoundVariable::RexxCompoundVariable(RexxString * _stemName,
     stemIndex = index;
 
     // initialize the list of tails
-    initializeObjectArray(_tailCount, tails, RexxObject, tailList);
+    initializeObjectArray(_tailCount, tails, RexxInternalObject, tailList);
 }
 
 
@@ -354,7 +354,7 @@ bool RexxCompoundVariable::exists(RexxActivation *context)
  */
 void RexxCompoundVariable::assign(RexxActivation *context, RexxObject *value )
 {
-    context->assignLocalCompoundVariable(stemName, stemIndex, (RexxObject **)&tails[0], tailCount, value);
+    context->assignLocalCompoundVariable(stemName, stemIndex, &tails[0], tailCount, value);
 }
 
 
@@ -391,14 +391,14 @@ void RexxCompoundVariable::drop(VariableDictionary *dictionary)
 void RexxCompoundVariable::procedureExpose(RexxActivation *context, RexxActivation *parent)
 {
     // first get (and possible create) the compound variable in the parent context.
-    CompoundTableElement *variable = parent->exposeLocalCompoundVariable(stemName, stemIndex, (RexxObject **)&tails[0], tailCount);
+    CompoundTableElement *variable = parent->exposeLocalCompoundVariable(stemName, stemIndex, &tails[0], tailCount);
     // get the stem index from the current level.  This may end up
     // creating the stem that holds the exposed value.
     StemClass *stem_table = context->getLocalStem(stemName, stemIndex);
     // have the stem expose this
     stem_table->expose(variable);
     // trace resolved compound name
-    context->traceCompoundName(stemName, (RexxObject **)&tails[0], tailCount, variable->getName());
+    context->traceCompoundName(stemName, &tails[0], tailCount, variable->getName());
 }
 
 
@@ -424,7 +424,7 @@ void RexxCompoundVariable::expose(RexxActivation *context, VariableDictionary *o
     // have the stem expose this
     stem_table->expose(variable);
     // trace resolved compound name
-    context->traceCompoundName(stemName, (RexxObject **)&tails[0], tailCount, variable->getName());
+    context->traceCompoundName(stemName, &tails[0], tailCount, variable->getName());
 }
 
 

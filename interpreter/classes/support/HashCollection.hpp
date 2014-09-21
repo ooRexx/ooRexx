@@ -66,8 +66,8 @@ class HashCollection : public RexxObject
     virtual ArrayClass *makeArray();
 
     virtual HashContents *allocateContents(size_t bucketSize, size_t capacity) = 0;
-    virtual void validateIndex(RexxInternalObject *&index, size_t position);
-    virtual void validateValueIndex(RexxInternalObject *&value, RexxInternalObject *&index, size_t position);
+    virtual void validateIndex(RexxObject *&index, size_t position);
+    virtual void validateValueIndex(RexxObject *&value, RexxObject *&index, size_t position);
     virtual bool requiresRehash() { return true; }
 
     void initialize(size_t capacity = DefaultTableSize);
@@ -98,15 +98,15 @@ class HashCollection : public RexxObject
 
     // the Exported Rexx methods.  These methods cannot be virtual methods.
     RexxObject           *initRexx(RexxObject *);
-    RexxInternalObject   *removeRexx(RexxInternalObject *);
-    RexxInternalObject   *getRexx(RexxInternalObject *);
-    RexxInternalObject   *putRexx(RexxInternalObject *, RexxInternalObject *);
-    RexxInternalObject   *addRexx(RexxInternalObject *, RexxInternalObject *);
-    RexxInternalObject   *hasIndexRexx(RexxInternalObject *);
-    RexxObject           *hasItemRexx(RexxInternalObject *);
-    RexxInternalObject   *removeItemRexx(RexxInternalObject *value);
-    ArrayClass           *allAtRexx(RexxInternalObject *);
-    RexxInternalObject   *indexRexx(RexxInternalObject * value);
+    RexxObject           *removeRexx(RexxObject *);
+    RexxObject           *getRexx(RexxObject *);
+    RexxObject           *putRexx(RexxObject *, RexxObject *);
+    RexxObject           *addRexx(RexxObject *, RexxObject *);
+    RexxObject           *hasIndexRexx(RexxObject *);
+    RexxObject           *hasItemRexx(RexxObject *);
+    RexxObject           *removeItemRexx(RexxObject *value);
+    ArrayClass           *allAtRexx(RexxObject *);
+    RexxObject           *indexRexx(RexxObject * value);
     SupplierClass        *supplierRexx();
     ArrayClass           *allItemsRexx();
     ArrayClass           *allIndexesRexx();
@@ -180,23 +180,23 @@ public:
     inline  StringHashCollection() { ; }
 
     virtual HashContents *allocateContents(size_t bucketSize, size_t capacity);
-    virtual void validateIndex(RexxInternalObject *&index, size_t position);
+    virtual void validateIndex(RexxObject *&index, size_t position);
     // string collections don't require a rehash
     virtual bool requiresRehash() { return false; }
 
     // additional string oriented lookup functions
     // base implementations of extra directory methods.
     virtual bool hasEntry(RexxString *entryName);
-    virtual RexxInternalObject *setEntry(RexxString *entryname, RexxInternalObject *entryobj);
+    virtual void setEntry(RexxString *entryname, RexxInternalObject *entryobj);
     virtual RexxInternalObject *entry(RexxString *index);
     virtual RexxInternalObject *removeEntry(RexxString *index);
     virtual RexxObject *unknown(RexxString *msgname, ArrayClass *arguments);
 
     // Rexx stubs for these additional functions.
-    RexxInternalObject *entryRexx(RexxInternalObject *entryName);
-    RexxObject         *hasEntryRexx(RexxInternalObject *entryName);
-    RexxInternalObject *setEntryRexx(RexxInternalObject *entryname, RexxInternalObject *entryobj);
-    RexxInternalObject *removeEntryRexx(RexxInternalObject *entryName);
+    RexxObject *entryRexx(RexxObject *entryName);
+    RexxObject *hasEntryRexx(RexxObject *entryName);
+    RexxObject *setEntryRexx(RexxObject *entryname, RexxObject *entryobj);
+    RexxObject *removeEntryRexx(RexxObject *entryName);
 };
 
 
@@ -211,7 +211,7 @@ public:
             IndexOnlyHashCollection(size_t capacity) : EqualityHashCollection(capacity) { }
     inline  IndexOnlyHashCollection() { ; }
 
-    virtual void validateValueIndex(RexxInternalObject *&value, RexxInternalObject *&index, size_t position);
+    virtual void validateValueIndex(RexxObject *&value, RexxObject *&index, size_t position);
     virtual bool hasItem(RexxInternalObject *);
     virtual RexxInternalObject *getIndex(RexxInternalObject * value);
     virtual void put(RexxInternalObject *v) { HashCollection::put(v, v); }

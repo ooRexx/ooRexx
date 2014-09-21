@@ -52,7 +52,7 @@ class RexxInstructionTrace : public RexxInstruction
 public:
     RexxInstructionTrace(TraceSetting);
     RexxInstructionTrace(wholenumber_t);
-    RexxInstructionTrace(RexxObject *);
+    RexxInstructionTrace(RexxInternalObject *);
     inline RexxInstructionTrace(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
@@ -63,7 +63,7 @@ public:
 
 protected:
 
-    RexxObject   *expression;              // trace value expression
+    RexxInternalObject *expression;        // trace value expression
     wholenumber_t debugSkip;               // clauses to skip
     bool          skip;                    // indicates this is a skip-type instruction
     TraceSetting  settings;                // new trace setting

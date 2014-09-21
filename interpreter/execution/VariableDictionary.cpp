@@ -304,7 +304,7 @@ void VariableDictionary::copyValues()
  *
  * @return The true assigned value of the variable.
  */
-RexxInternalObject *VariableDictionary::realValue(RexxString *name)
+RexxObject *VariableDictionary::realValue(RexxString *name)
 {
     // locate the variable in the dictionary. If we don't get one, return null.
     RexxVariable *variable = resolveVariable(name);
@@ -362,7 +362,7 @@ void VariableDictionary::dropStemVariable(RexxString *name)
  *
  * @return The value of the compound variable, or OREF_NULL if it does not exist.
  */
-CompoundTableElement *VariableDictionary::getCompoundVariable(RexxString *stemName, RexxObject **tail, size_t      tailCount)
+CompoundTableElement *VariableDictionary::getCompoundVariable(RexxString *stemName, RexxInternalObject **tail, size_t tailCount)
 {
     CompoundVariableTail resolved_tail(this, tail, tailCount);
 
@@ -383,7 +383,7 @@ CompoundTableElement *VariableDictionary::getCompoundVariable(RexxString *stemNa
  * @return The variable value, including substituting of the string
  *         name of the variable if it does not exist.
  */
-RexxInternalObject *VariableDictionary::getCompoundVariableValue(RexxString *stemName, RexxObject **tail, size_t tailCount)
+RexxObject *VariableDictionary::getCompoundVariableValue(RexxString *stemName, RexxInternalObject **tail, size_t tailCount)
 {
     CompoundVariableTail resolved_tail(this, tail, tailCount);
 
@@ -406,8 +406,8 @@ RexxInternalObject *VariableDictionary::getCompoundVariableValue(RexxString *ste
  * @return Either the variable value, or OREF_NULL for unassigned
  *         variables.
  */
-RexxInternalObject *VariableDictionary::getCompoundVariableRealValue(RexxString *stem,
-     RexxObject **tail, size_t tailCount)
+RexxObject *VariableDictionary::getCompoundVariableRealValue(RexxString *stem,
+     RexxInternalObject **tail, size_t tailCount)
 {
     CompoundVariableTail resolved_tail(this, tail, tailCount);
 
@@ -425,7 +425,7 @@ RexxInternalObject *VariableDictionary::getCompoundVariableRealValue(RexxString 
  * @return The backing stem object, or OREF_NULL if this stem
  *         variable has not been used in this context.
  */
-RexxInternalObject  *VariableDictionary::realStemValue(RexxString *stemName)
+RexxObject *VariableDictionary::realStemValue(RexxString *stemName)
 {
   return getStem(stemName);
 }
@@ -489,7 +489,7 @@ RexxVariable  *VariableDictionary::createVariable(RexxString *name)
  * @param name   The variable name.
  * @param value  The value object.
  */
-void VariableDictionary::set(RexxString *name, RexxInternalObject *value)
+void VariableDictionary::set(RexxString *name, RexxObject *value)
 {
     // this will create the variable object if it does not exist.
     RexxVariable *variable = getVariable(name);
@@ -505,9 +505,6 @@ void VariableDictionary::set(RexxString *name, RexxInternalObject *value)
  */
 void VariableDictionary::reserve(Activity *activity)
 {
-    // TODO:  Could have issues here during error termination.  Investigate
-    // whether guard state is cleared on stack unwind.
-
     // not reserved at all?  This is easy.
     if (reservingActivity == OREF_NULL)
     {
@@ -677,7 +674,7 @@ DirectoryClass *VariableDictionary::getVariableDirectory()
  * @param tailCount The count of tail elements.
  * @param value     The value to set.
  */
-void VariableDictionary::setCompoundVariable(RexxString *stemName, RexxObject **tail, size_t tailCount, RexxInternalObject *value)
+void VariableDictionary::setCompoundVariable(RexxString *stemName, RexxInternalObject **tail, size_t tailCount, RexxObject *value)
 {
     CompoundVariableTail resolved_tail(this, tail, tailCount);
     // get, and potentially create, the stem object.
@@ -695,7 +692,7 @@ void VariableDictionary::setCompoundVariable(RexxString *stemName, RexxObject **
  * @param tailCount The count of tail elements.
  * @param value     The value to set.
  */
-void VariableDictionary::dropCompoundVariable(RexxString *stemName, RexxObject **tail, size_t tailCount)
+void VariableDictionary::dropCompoundVariable(RexxString *stemName, RexxInternalObject **tail, size_t tailCount)
 {
     CompoundVariableTail resolved_tail(this, tail, tailCount);
     // get the backing stem
@@ -715,7 +712,7 @@ void VariableDictionary::dropCompoundVariable(RexxString *stemName, RexxObject *
  * @return An appropriate variable retriever.  Returns NULL if the
  *         name is not a valid variable name.
  */
-RexxVariableBase  *VariableDictionary::getVariableRetriever(RexxString  *variable )
+RexxVariableBase *VariableDictionary::getVariableRetriever(RexxString *variable )
 {
     // All variables for symbolic access have uppercase names.
     variable = variable->upper();

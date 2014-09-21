@@ -80,7 +80,7 @@ class RexxInstructionDynamicCallBase : public RexxInstruction
 
  protected:
 
-    RexxObject      *dynamicName;             // we don't have a static name or resolved target for this.
+    RexxInternalObject *dynamicName;       // we don't have a static name or resolved target for this.
 };
 
 
@@ -120,7 +120,7 @@ protected:
 
     BuiltinCode  builtinIndex;           // builtin function index
     size_t       argumentCount;          // number of arguments
-    RexxObject  *arguments[1];           // argument list
+    RexxInternalObject  *arguments[1];   // argument list
 };
 
 
@@ -131,7 +131,7 @@ protected:
 class RexxInstructionDynamicCall : public RexxInstructionDynamicCallBase
 {
  public:
-    RexxInstructionDynamicCall(RexxObject *, size_t, QueueClass *);
+    RexxInstructionDynamicCall(RexxInternalObject *, size_t, QueueClass *);
     inline RexxInstructionDynamicCall(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
@@ -143,7 +143,7 @@ class RexxInstructionDynamicCall : public RexxInstructionDynamicCallBase
 protected:
 
     size_t       argumentCount;          // number of arguments
-    RexxObject  *arguments[1];           // argument list
+    RexxInternalObject  *arguments[1];   // argument list
 };
 
 

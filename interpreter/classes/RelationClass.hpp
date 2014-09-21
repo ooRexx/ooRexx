@@ -61,13 +61,13 @@ class RelationClass : public EqualityHashCollection
     RexxObject *newRexx(RexxObject **, size_t);
 
     RexxInternalObject *removeItem(RexxInternalObject *value, RexxInternalObject *index);
-    SupplierClass *supplierRexx(RexxInternalObject *index);
-    RexxInternalObject *itemsRexx(RexxInternalObject *index);
-    RexxInternalObject *removeItemRexx(RexxInternalObject *value, RexxInternalObject *index);
-    RexxInternalObject *hasItemRexx(RexxInternalObject *value, RexxInternalObject *index);
-    RexxInternalObject *allIndexRexx(RexxInternalObject *value);
-    RexxInternalObject *allAt(RexxInternalObject *index);
-    RexxInternalObject *removeAll(RexxInternalObject *index);
+    SupplierClass *supplierRexx(RexxObject *index);
+    RexxObject *itemsRexx(RexxObject *index);
+    RexxObject *removeItemRexx(RexxObject *value, RexxObject *index);
+    RexxObject *hasItemRexx(RexxObject *value, RexxObject *index);
+    ArrayClass *allIndexRexx(RexxObject *value);
+    ArrayClass *allAt(RexxObject *index);
+    ArrayClass *removeAll(RexxObject *index);
 
     static void createInstance();
     static RexxClass *classInstance;

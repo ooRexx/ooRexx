@@ -74,7 +74,7 @@ void  *ParseTrigger::operator new(size_t size, size_t variableCount)
  *                   The count of variables in this parse section.
  * @param _variables The list of variables to assign.
  */
-ParseTrigger::ParseTrigger(ParseTriggerType type, RexxObject *_value, size_t _variableCount,
+ParseTrigger::ParseTrigger(ParseTriggerType type, RexxInternalObject *_value, size_t _variableCount,
     QueueClass  *_variables)
 {
     triggerType = type;

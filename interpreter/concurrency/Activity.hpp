@@ -196,7 +196,7 @@ class Activity : public RexxInternalObject
     bool callHaltTestExit(RexxActivation *);
     bool callHaltClearExit(RexxActivation *);
     bool callTraceTestExit(RexxActivation *, bool);
-    bool callNovalueExit(RexxActivation *, RexxString *, RexxInternalObject *&);
+    bool callNovalueExit(RexxActivation *, RexxString *, RexxObject *&);
     bool callValueExit(RexxActivation *, RexxString *, RexxString *, RexxObject *, RexxObject *&);
     void traceOutput(RexxActivation *, RexxString *);
     void sayOutput(RexxActivation *, RexxString *);

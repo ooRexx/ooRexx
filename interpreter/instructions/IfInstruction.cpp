@@ -55,7 +55,7 @@
  *                   This is where we mark the end of the
  *                   instruction.
  */
-RexxInstructionIf::RexxInstructionIf(RexxObject *_condition, RexxToken *thenToken)
+RexxInstructionIf::RexxInstructionIf(RexxInternalObject *_condition, RexxToken *thenToken)
 {
     condition = _condition;
     //get the location from the THEN token and use its location to set

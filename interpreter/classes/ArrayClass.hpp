@@ -170,8 +170,8 @@ class ArrayClass : public RexxObject
     virtual RexxInternalObject *remove(size_t);
     RexxInternalObject  *removeRexx(RexxObject **, size_t);
     RexxInternalObject  *removeItem(RexxInternalObject *target);
-    RexxInternalObject  *removeItemRexx(RexxInternalObject *target);
-    RexxObject   *appendRexx(RexxInternalObject *);
+    RexxInternalObject  *removeItemRexx(RexxObject *target);
+    RexxObject   *appendRexx(RexxObject *);
     size_t        append(RexxInternalObject *);
     void          appendAll(ArrayClass *);
     void          setExpansion(RexxObject * expansion);
@@ -208,9 +208,9 @@ class ArrayClass : public RexxObject
     SupplierClass *supplier();
     RexxObject  *join(ArrayClass *);
     void         extend(size_t);
-    static size_t validateSize(RexxInternalObject *size, size_t position);
+    static size_t validateSize(RexxObject *size, size_t position);
     size_t      indexOf(RexxInternalObject *);
-    RexxObject *indexRexx(RexxInternalObject *target);
+    RexxObject *indexRexx(RexxObject *target);
     void        extendMulti(RexxObject **, size_t, size_t);
     void        resize();
     inline void ensureSpace(size_t newSize)
@@ -224,19 +224,20 @@ class ArrayClass : public RexxObject
     }
     inline bool isFixedDimension() { return dimensions != OREF_NULL || size() != 0; }
 
-    RexxObject  *newRexx(RexxInternalObject **, size_t);
-    RexxObject  *ofRexx(RexxInternalObject **, size_t);
+    RexxObject  *newRexx(RexxObject **, size_t);
+    RexxObject  *ofRexx(RexxObject **, size_t);
     RexxObject  *empty();
     bool         isEmpty();
     RexxObject  *isEmptyRexx();
-    RexxObject  *fill(RexxInternalObject *);
-    RexxObject  *hasItemRexx(RexxInternalObject *);
+    RexxObject  *fillRexx(RexxObject *);
+    void         fill(RexxInternalObject *);
+    RexxObject  *hasItemRexx(RexxObject *);
     bool         hasItem(RexxInternalObject *target);
     bool         hasIdentityItem(RexxInternalObject *target);
     wholenumber_t sortCompare(RexxObject *comparator, RexxInternalObject *left, RexxInternalObject *right);
     ArrayClass  *stableSortRexx();
     ArrayClass  *stableSortWithRexx(RexxObject *comparator);
-    RexxObject  *insertRexx(RexxInternalObject *value, RexxObject *index);
+    RexxObject  *insertRexx(RexxObject *value, RexxObject *index);
     size_t       insert(RexxInternalObject *value, size_t index);
     RexxInternalObject  *deleteRexx(RexxObject *index);
     RexxInternalObject  *deleteItem(size_t index);
@@ -314,10 +315,10 @@ class ArrayClass : public RexxObject
     inline bool isSingleDimensional() { return !isMultiDimensional(); }
     inline bool hasExpanded() { return expansionArray != this && expansionArray != OREF_NULL; }
 
-    static ArrayClass *createMultidimensional(RexxInternalObject **dims, size_t count, RexxClass *);
+    static ArrayClass *createMultidimensional(RexxObject **dims, size_t count, RexxClass *);
     static inline ArrayClass *createMultidimensional(ArrayClass *dims, RexxClass *c)
     {
-        return createMultidimensional(dims->data(), dims->items(), c);
+        return createMultidimensional((RexxObject **)dims->data(), dims->items(), c);
     }
 
     static void createInstance();

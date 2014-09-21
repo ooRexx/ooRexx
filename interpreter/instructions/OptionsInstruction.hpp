@@ -50,7 +50,7 @@ class RexxInstructionOptions : public RexxInstructionExpression
 {
  public:
     inline RexxInstructionOptions(RESTORETYPE restoreType) { ; };
-    RexxInstructionOptions(RexxObject *);
+    RexxInstructionOptions(RexxInternalObject *);
 
     virtual void execute(RexxActivation *, ExpressionStack *);
 };

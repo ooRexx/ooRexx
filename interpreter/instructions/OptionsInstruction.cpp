@@ -53,7 +53,7 @@
  * @param _expression
  *               The expression to evaluate for the options string.
  */
-RexxInstructionOptions::RexxInstructionOptions(RexxObject *_expression)
+RexxInstructionOptions::RexxInstructionOptions(RexxInternalObject *_expression)
 {
     expression = _expression;
 }
