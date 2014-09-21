@@ -1269,11 +1269,11 @@ RexxMethod1(RexxObjectPtr, dlgutil_getGuid_cls, OPTIONAL_logical_t, conventional
 }
 
 
-RexxMethod1(int16_t, dlgutil_shiWord_cls, int32_t, dw) { return HIWORD(dw); }
-RexxMethod1(int16_t, dlgutil_sloWord_cls, int32_t, dw) { return LOWORD(dw); }
+RexxMethod1(int16_t, dlgutil_shiWord_cls, ssize_t, dw) { return HIWORD(dw); }
+RexxMethod1(int16_t, dlgutil_sloWord_cls, ssize_t, dw) { return LOWORD(dw); }
 
-RexxMethod1(uint16_t, dlgutil_hiWord_cls, uint32_t, dw) { return HIWORD(dw); }
-RexxMethod1(uint16_t, dlgutil_loWord_cls, uint32_t, dw) { return LOWORD(dw); }
+RexxMethod1(uint16_t, dlgutil_hiWord_cls, size_t, dw) { return HIWORD(dw); }
+RexxMethod1(uint16_t, dlgutil_loWord_cls, size_t, dw) { return LOWORD(dw); }
 
 RexxMethod2(intptr_t, dlgutil_makeLPARAM_cls, int16_t, loWord, int16_t, hiWord) { return MAKELPARAM(loWord, hiWord); }
 RexxMethod2(uintptr_t, dlgutil_makeWPARAM_cls, int16_t, loWord, int16_t, hiWord) { return MAKEWPARAM(loWord, hiWord); }
