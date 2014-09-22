@@ -46,7 +46,7 @@
 #include <fcntl.h>
 
 
-const char * compiledHeader = "/**/@REXX";
+const char *compiledHeader = "/**/@REXX";
 
 
 /**

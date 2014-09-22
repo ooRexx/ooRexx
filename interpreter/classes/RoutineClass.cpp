@@ -302,10 +302,11 @@ BufferClass *RoutineClass::save()
 void RoutineClass::save(PRXSTRING outBuffer)
 {
     ProtectedObject p(this);
-    BufferClass *methodBuffer = save();  /* flatten the routine               */
+    // flatten the routine
+    Protected<BufferClass> methodBuffer = save();
     // create a full buffer of the data, plus the information header.
     ProgramMetaData *data = new (methodBuffer) ProgramMetaData(methodBuffer);
-    // we just hand this buffer of data right over...that's all, we're done.
+    // we just hand this buffer of data right over...that's all, we're done...
     outBuffer->strptr = (char *)data;
     outBuffer->strlength = data->getDataSize();
 }

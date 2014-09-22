@@ -166,7 +166,6 @@ class ActivationSettings
       DirectoryClass *conditionObj;        // current condition object
       RexxObject    **parentArgList;       // arguments to top level program
       size_t          parentArgCount;      // number of arguments to the top level program
-      // TODO:  should this be a base executable?
       RexxCode       *parentCode;          // source of the parent method
       RexxString     *currentAddress;      // current address environment
       RexxString     *alternateAddress;    // alternate address environment

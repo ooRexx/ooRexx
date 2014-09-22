@@ -212,14 +212,6 @@ typedef RexxObject *  (RexxObject::*PCPPMC1)(RexxObject **, size_t);
 typedef RexxObject *  (RexxObject::*PCPPM)();
 #define CPPM(n) ((PCPPM)&n)
 
-
-// the shift amount for generating a hash value from an object reference.
-// TODO:  Might want to vary this depending on the grain size...This definitely needs
-// adjusting for 64-bit.
-#define OREFSHIFT 3
-                                       /* generate hash value from OREF     */
-inline uintptr_t HASHOREF(RexxVirtualBase *r) { return ((uintptr_t)r) >> OREFSHIFT; }
-
 /**
  * Base class for an object Rexx object.  This class
  * is used for internal objects only.  An internal object
@@ -305,7 +297,10 @@ class RexxInternalObject : public RexxVirtualBase
     virtual HashCode     hash()  { return getHashValue(); }
     virtual HashCode     getHashValue()  { return identityHash(); }
 
-    inline  HashCode     identityHash() { return HASHOREF(this); }
+    // the pointer will be a multiple of our object grain size and have a lot of zero
+    // bits at the top end.  Take the complement of all of the bits to get an odd
+    // number and more bits to get fewer collisions.
+    inline  HashCode     identityHash() { return ((uintptr_t)this) ^ UINTPTR_MAX; }
 
     // TODO:  Try to cleanup the marking of virtual methods in the subclasses
     virtual bool         truthValue(int);

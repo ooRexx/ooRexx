@@ -2003,7 +2003,6 @@ RexxString *RexxString::newUpperString(const char * string, size_t length)
  */
 RexxString *RexxString::newString(double number)
 {
-    // TODO:  Is this the best way to handle this?
     return new_numberstringFromDouble(number)->stringValue();
 }
 

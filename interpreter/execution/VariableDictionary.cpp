@@ -961,8 +961,6 @@ RexxVariableBase *VariableDictionary::buildCompoundVariable(RexxString *variable
     }
 
     // create and return a new compound
-
-    // TODO:  check the queue class items() vs getSize() usage.
     return new (tails->items()) RexxCompoundVariable(stem, 0, tails, tails->items());
 }
 

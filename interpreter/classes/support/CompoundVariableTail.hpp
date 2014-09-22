@@ -168,7 +168,6 @@ class CompoundVariableTail
    {
        // since we sort using both the length and comparison result, we can't just do
        // a string compare.
-       // TODO:  Consider adding a string method with this semantic.
        wholenumber_t rc = (wholenumber_t)length - (wholenumber_t)name->getLength();
        if (rc == 0)
        {
