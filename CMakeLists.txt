@@ -280,12 +280,6 @@ check_c_source_compiles("#include <pthread.h>
                          tryme = PTHREAD_MUTEX_RECURSIVE;
                          return 0;}"
                         HAVE_PTHREAD_MUTEX_RECURSIVE)
-check_c_source_compiles("#include <pthread.h>
-                         int main(int arg, char **argv) {
-                         int tryme;
-                         tryme = PTHREAD_MUTEX_RECURSIVE_NP;
-                         return 0;}"
-                        HAVE_PTHREAD_MUTEX_RECURSIVE_NP)
 check_symbol_exists(PTHREAD_MUTEX_RECURSIVE_NP "pthread.h" HAVE_PTHREAD_MUTEX_RECURSIVE_NP)
 check_include_file(pwd.h HAVE_PWD_H)
 check_include_file(sched.h HAVE_SCHED_H)

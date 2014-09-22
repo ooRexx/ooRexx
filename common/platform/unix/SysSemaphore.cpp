@@ -108,9 +108,7 @@ void SysSemaphore::create()
         iRC = pthread_mutexattr_init(&mutexattr);
         if ( iRC == 0 )
         {
-    #if defined( HAVE_PTHREAD_MUTEX_RECURSIVE_NP ) /* Linux most likely */
-            iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE_NP);
-    #elif defined( HAVE_PTHREAD_MUTEX_RECURSIVE )
+    #if defined( HAVE_PTHREAD_MUTEX_RECURSIVE ) /* Linux most likely */
             iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE);
     #elif defined( HAVE_PTHREAD_MUTEX_ERRORCHECK )
             iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_ERRORCHECK);
@@ -255,9 +253,7 @@ void SysMutex::create()
     iRC = pthread_mutexattr_init(&mutexattr);
     if ( iRC == 0 )
     {
-    #if defined( HAVE_PTHREAD_MUTEX_RECURSIVE_NP ) /* Linux most likely */
-            iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE_NP);
-    #elif defined( HAVE_PTHREAD_MUTEX_RECURSIVE )
+    #if defined( HAVE_PTHREAD_MUTEX_RECURSIVE ) /* Linux most likely */
             iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE);
     #elif defined( HAVE_PTHREAD_MUTEX_ERRORCHECK )
             iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_ERRORCHECK);

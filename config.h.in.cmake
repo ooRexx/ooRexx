@@ -93,9 +93,6 @@
 /* Define to 1 if PTHREAD_MUTEX_RECURSIVE is a valid value */
 #cmakedefine HAVE_PTHREAD_MUTEX_RECURSIVE
 
-/* Define to 1 if PTHREAD_MUTEX_RECURSIVE_NP is a valid value */
-#cmakedefine HAVE_PTHREAD_MUTEX_RECURSIVE_NP
-
 /* Define to 1 if you have the <pwd.h> header file. */
 #cmakedefine HAVE_PWD_H
 
