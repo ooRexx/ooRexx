@@ -952,16 +952,57 @@ RexxObject *StringHashCollection::setEntryRexx(RexxObject *entryName, RexxObject
 
 
 /**
- * This is the REXX version of unknown.  It invokes entry_rexx
- * instead of entry, to ensure the proper error checking and
- * return value handling is performed.
+ * Process UNKNOWN messages for a string hash collection object,
+ * forwarding them to the string value.  We need this and
+ * processUnknown because the collections are documented as
+ * having an UNKNKOWN method.
+ *
+ * @param message   The message target.
+ * @param arguments The message arguments.
+ *
+ * @return The message result.
+ */
+RexxObject *StringHashCollection::unknownRexx(RexxString *message, ArrayClass *arguments)
+{
+    message = stringArgument(message, ARG_ONE);
+    arguments = arrayArgument(arguments, ARG_TWO);
+
+    return unknown(message, arguments->messageArgs(), arguments->messageArgCount());
+}
+
+
+/**
+ * Process an unknown message condition on an object.  This is
+ * an optimized bypass for the Object default method that can
+ * bypass creating an array for the arguments and sending the
+ * UNKNOWN message to the object.  Since many things funnel
+ * through the integer unknown method, this is a big
+ * optimization.
+ *
+ * @param messageName
+ *                  The target message name.
+ * @param arguments The message arguments.
+ * @param count     The count of arguments.
+ * @param result    The return result protected object.
+ */
+void StringHashCollection::processUnknown(RexxString *messageName, RexxObject **arguments, size_t count, ProtectedObject &result)
+{
+    // go to the unknown handler
+    result = unknown(messageName, arguments, count);
+}
+
+
+/**
+ * This is the actual processing version of unknown.  Both
+ * processUnknown and unknownRexx pass things along to this
+ * method.
  *
  * @param msgname   The message name.
  * @param arguments The message arguments
  *
  * @return Either a result object or nothing, depending on whether this is a set or get operation.
  */
-RexxObject *StringHashCollection::unknown(RexxString *msgname, ArrayClass *arguments)
+RexxObject *StringHashCollection::unknown(RexxString *msgname, RexxObject **arguments, size_t argCount)
 {
     // The arguments have already been validated by the base Object method.
 
@@ -970,8 +1011,12 @@ RexxObject *StringHashCollection::unknown(RexxString *msgname, ArrayClass *argum
     {
         // extract the name part of the msg
         msgname = msgname->extract(0, msgname->getLength() - 1);
+
         // do this as an assignment
-        return setEntryRexx(msgname, (RexxObject *)arguments->get(1));
+        RexxObject *value = (RexxObject *)arguments[0];
+
+        // set entry validates whether we have a value
+        return setEntryRexx(msgname, value);
     }
 
     // just a retrieval operation

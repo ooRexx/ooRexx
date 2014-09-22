@@ -81,7 +81,8 @@ class StemClass : public RexxObject
     virtual void flatten(Envelope*);
     virtual RexxInternalObject *copy();
 
-    void         copyFrom(CompoundVariableTable &_tails);
+    virtual void processUnknown(RexxString *, RexxObject **, size_t, ProtectedObject &);
+    virtual void copyFrom(CompoundVariableTable &_tails);
     virtual bool numberValue(wholenumber_t &result, wholenumber_t precision);
     virtual bool numberValue(wholenumber_t &result);
     virtual bool unsignedNumberValue(size_t &result, wholenumber_t precision);
@@ -103,7 +104,6 @@ class StemClass : public RexxObject
 
     void        dropValue();
     RexxInternalObject *getStemValue();
-    RexxObject *unknown (RexxString *, ArrayClass *);
     RexxInternalObject *bracket (RexxObject **, size_t);
     RexxObject *bracketEqual(RexxObject **, size_t);
 
@@ -112,6 +112,7 @@ class StemClass : public RexxObject
     RexxObject *hasItem(RexxInternalObject *);
     RexxObject *index(RexxInternalObject *);
     RexxObject *itemsRexx();
+    RexxObject *unknownRexx(RexxString *message, ArrayClass  *arguments);
     RexxInternalObject *removeItem(RexxInternalObject *);
 
 

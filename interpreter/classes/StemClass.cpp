@@ -240,20 +240,43 @@ RexxInternalObject *StemClass::getStemValue()
 
 
 /**
- * Forward an unknown method to the default stem value.
+ * Process UNKNOWN messages for a string hash collection object,
+ * forwarding them to the string value.  We need this and
+ * processUnknown because the collections are documented as
+ * having an UNKNKOWN method.
  *
- * @param msgname   The message name.
- * @param arguments The unknown arguments.
+ * @param message   The message target.
+ * @param arguments The message arguments.
  *
- * @return The result of the forwarded message.
+ * @return The message result.
  */
-RexxObject *StemClass::unknown(RexxString *msgname, ArrayClass  *arguments)
+RexxObject *StemClass::unknownRexx(RexxString *message, ArrayClass *arguments)
 {
-    // validate the arguments
-    msgname = stringArgument(msgname, ARG_ONE);
+    message = stringArgument(message, ARG_ONE);
     arguments = arrayArgument(arguments, ARG_TWO);
-    // send the message on to our current value object
-    return value->sendMessage(msgname, arguments);
+
+    return value->sendMessage(message, arguments);
+}
+
+
+/**
+ * Process an unknown message condition on an object.  This is
+ * an optimized bypass for the Object default method that can
+ * bypass creating an array for the arguments and sending the
+ * UNKNOWN message to the object.  Since many things funnel
+ * through the integer unknown method, this is a big
+ * optimization.
+ *
+ * @param messageName
+ *                  The target message name.
+ * @param arguments The message arguments.
+ * @param count     The count of arguments.
+ * @param result    The return result protected object.
+ */
+void StemClass::processUnknown(RexxString *messageName, RexxObject **arguments, size_t count, ProtectedObject &result)
+{
+    // just send this as a message directly to the string object.
+    value->messageSend(messageName, arguments, count, result);
 }
 
 

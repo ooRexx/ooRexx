@@ -433,18 +433,25 @@ bool RexxInteger::logicalValue(logical_t &result)
  */
 #define integer_forward(m,o) ((this)->numberString()->m(o))
 
+
 /**
- * Intercept unknown messages to an integer object and reissue
- * them against the string value.
+ * Process an unknown message condition on an object.  This is
+ * an optimized bypass for the Object default method that can
+ * bypass creating an array for the arguments and sending the
+ * UNKNOWN message to the object.  Since many things funnel
+ * through the integer unknown method, this is a big
+ * optimization.
  *
- * @param msgname   The unknown message name.
- * @param arguments The arguments to the message.
- *
- * @return The message result from the object's string value.
+ * @param messageName
+ *                  The target message name.
+ * @param arguments The message arguments.
+ * @param count     The count of arguments.
+ * @param result    The return result protected object.
  */
-RexxObject *RexxInteger::unknown(RexxString *msgname, ArrayClass *arguments)
+void RexxInteger::processUnknown(RexxString *messageName, RexxObject **arguments, size_t count, ProtectedObject &result)
 {
-    return stringValue()->sendMessage(msgname, arguments);
+    // just send this as a message directly to the string object.
+    stringValue()->messageSend(messageName, arguments, count, result);
 }
 
 
@@ -534,6 +541,7 @@ RexxObject *RexxInteger::plus(RexxInteger *other)
     {
         return integer_forward(plus, other);
     }
+
     // if this is a plus operation, we just return this object as the result
     if (other == OREF_NULL)
     {

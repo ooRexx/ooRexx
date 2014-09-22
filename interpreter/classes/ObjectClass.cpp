@@ -2619,22 +2619,6 @@ RexxObject *RexxObject::copyRexx()
     return (RexxObject *)copy();
 }
 
-/**
- * Exported access to an object virtual function
- *
- * @param message   The message target.
- * @param arguments The message arguments.
- *
- * @return The message result.
- */
-RexxObject *RexxObject::unknownRexx(RexxString *message, ArrayClass  *arguments)
-{
-    message = stringArgument(message, ARG_ONE);
-    arguments = arrayArgument(arguments, ARG_TWO);
-
-    return unknown(message, arguments);
-}
-
 
 /**
  * Exported access to an object virtual function

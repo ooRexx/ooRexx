@@ -2945,17 +2945,23 @@ void NumberString::formatUnsignedInt64(uint64_t integer)
 
 
 /**
- * Forward all unknown messages to the numberstring's string
- * representation
+ * Process an unknown message condition on an object.  This is
+ * an optimized bypass for the Object default method that can
+ * bypass creating an array for the arguments and sending the
+ * UNKNOWN message to the object.  Since many things funnel
+ * through the integer unknown method, this is a big
+ * optimization.
  *
- * @param msgname   The message name.
+ * @param messageName
+ *                  The target message name.
  * @param arguments The message arguments.
- *
- * @return The message result.
+ * @param count     The count of arguments.
+ * @param result    The return result protected object.
  */
-RexxObject *NumberString::unknown(RexxString *msgname, ArrayClass *arguments)
+void NumberString::processUnknown(RexxString *messageName, RexxObject **arguments, size_t count, ProtectedObject &result)
 {
-    return stringValue()->sendMessage(msgname, arguments);
+    // just send this as a message directly to the string object.
+    stringValue()->messageSend(messageName, arguments, count, result);
 }
 
 

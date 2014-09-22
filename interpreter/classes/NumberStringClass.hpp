@@ -198,6 +198,8 @@ class NumberString : public NumberStringBase
     virtual bool logicalValue(logical_t &);
 
     virtual bool  isEqual(RexxInternalObject *);
+    virtual void processUnknown(RexxString *, RexxObject **, size_t, ProtectedObject &);
+
     wholenumber_t strictComp(RexxObject *);
     wholenumber_t comp(RexxObject *, size_t fuzz);
     RexxObject  *equal(RexxObject *);
@@ -232,7 +234,6 @@ class NumberString : public NumberStringBase
     RexxObject *ceilingInternal();
     RexxObject *round();
     RexxObject *roundInternal();
-    RexxObject *unknown(RexxString *, ArrayClass *);
     bool        isInstanceOf(RexxClass *);
     MethodClass   *instanceMethod(RexxString *);
     SupplierClass *instanceMethods(RexxClass *);

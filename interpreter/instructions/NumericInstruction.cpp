@@ -98,7 +98,7 @@ void RexxInstructionNumeric::execute(RexxActivation *context, ExpressionStack *s
                 reportException(Error_Invalid_whole_number_digits, result);
             }
             // digits cannot be less than or equal to fuzz
-            if (setting <= context->fuzz())
+            if ((wholenumber_t)setting <= context->fuzz())
             {
                 reportException(Error_Expression_result_digits, setting, context->fuzz());
             }
@@ -128,7 +128,7 @@ void RexxInstructionNumeric::execute(RexxActivation *context, ExpressionStack *s
             }
 
             // cannot be greater than or equal to digits
-            if (setting >= context->digits())
+            if ((wholenumber_t)setting >= context->digits())
             {
                 reportException(Error_Expression_result_digits, context->digits(), setting);
             }

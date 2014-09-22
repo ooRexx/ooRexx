@@ -68,6 +68,8 @@ class RexxInteger : public RexxObject
     virtual bool unsignedNumberValue(size_t &result, wholenumber_t precision);
     virtual bool unsignedNumberValue(size_t &result);
     virtual bool doubleValue(double &result);
+    virtual void processUnknown(RexxString *, RexxObject **, size_t, ProtectedObject &);
+
     NumberString *numberString();
     RexxInteger *integerValue(wholenumber_t);
     RexxString  *makeString();
@@ -100,7 +102,6 @@ class RexxInteger : public RexxObject
     RexxObject  *strictLessOrEqual(RexxObject *);
     RexxObject  *hashCode();
 
-    RexxObject *unknown(RexxString *, ArrayClass *);
     RexxObject *plus(RexxInteger *);
     RexxObject *minus(RexxInteger *);
     RexxObject *multiply(RexxInteger *);
@@ -134,8 +135,6 @@ class RexxInteger : public RexxObject
     RexxString *concatBlank(RexxString *);
     void        setString(RexxString *string);
     RexxClass  *classObject();
-                                         /* numberstring operator forwarders  */
-    koper (integer_operator_not)
 
     inline wholenumber_t getValue() {return value;}
     inline wholenumber_t wholeNumber() {return value;}

@@ -190,13 +190,15 @@ public:
     virtual void setEntry(RexxString *entryname, RexxInternalObject *entryobj);
     virtual RexxInternalObject *entry(RexxString *index);
     virtual RexxInternalObject *removeEntry(RexxString *index);
-    virtual RexxObject *unknown(RexxString *msgname, ArrayClass *arguments);
+    virtual RexxObject *unknown(RexxString *msgname, RexxObject **arguments, size_t count);
+    virtual void processUnknown(RexxString *, RexxObject **, size_t, ProtectedObject &);
 
     // Rexx stubs for these additional functions.
     RexxObject *entryRexx(RexxObject *entryName);
     RexxObject *hasEntryRexx(RexxObject *entryName);
     RexxObject *setEntryRexx(RexxObject *entryname, RexxObject *entryobj);
     RexxObject *removeEntryRexx(RexxObject *entryName);
+    RexxObject *unknownRexx(RexxString *message, ArrayClass  *arguments);
 };
 
 

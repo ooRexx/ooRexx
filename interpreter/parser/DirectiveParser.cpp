@@ -779,7 +779,7 @@ void LanguageParser::optionsDirective()
                         syntaxError(Error_Invalid_whole_number_digits, token->value());
                     }
                     // problem with the fuzz setting?
-                    if (digits <= package->getFuzz())
+                    if ((wholenumber_t)digits <= package->getFuzz())
                     {
                         reportException(Error_Expression_result_digits, digits, package->getFuzz());
                     }
@@ -834,7 +834,7 @@ void LanguageParser::optionsDirective()
                         syntaxError(Error_Invalid_whole_number_fuzz, value);
                     }
                     // validate with the digits setting
-                    if (fuzz >= package->getDigits())
+                    if ((wholenumber_t)fuzz >= package->getDigits())
                     {
                         reportException(Error_Expression_result_digits, package->getDigits(), fuzz);
                     }

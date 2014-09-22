@@ -777,7 +777,7 @@ StartClassDefinition(StringTable);
         // most of the hash collection methods can be inherited
         InheritInstanceMethods(IdentityTable);
 
-        AddMethod("Unknown", RexxObject::unknownRexx, 2);
+        AddMethod("Unknown", StringHashCollection::unknownRexx, 2);
         AddMethod("Entry", StringHashCollection::entryRexx, 1);
         AddMethod("HasEntry", StringHashCollection::hasEntryRexx, 1);
         AddMethod("SetEntry", StringHashCollection::setEntryRexx, 2);
@@ -1110,7 +1110,7 @@ StartClassDefinition(Stem)
         AddMethod("AllItems", StemClass::allItems, 0);
         AddMethod("Empty", StemClass::empty, 0);
         AddMethod("IsEmpty", StemClass::isEmptyRexx, 0);
-        AddMethod("Unknown", RexxObject::unknownRexx, 2);
+        AddMethod("Unknown", StemClass::unknownRexx, 2);
 
         AddMethod("Items", StemClass::itemsRexx, 0);
         AddMethod("HasIndex", StemClass::hasIndex, A_COUNT);
@@ -1223,7 +1223,6 @@ StartClassDefinition(Integer)
         AddMethod("&", RexxInteger::andOp, 1);
         AddMethod("|", RexxInteger::orOp, 1);
         AddMethod("&&", RexxInteger::xorOp, 1);
-        AddMethod("Unknown", RexxObject::unknownRexx, 2);
         AddMethod("D2C", RexxInteger::d2c, 1);
         AddMethod("D2X", RexxInteger::d2x, 1);
         AddMethod("Abs", RexxInteger::abs, 0);
@@ -1276,7 +1275,6 @@ StartClassDefinition(NumberString)
 
     CompleteClassMethodDefinitions();
 
-        AddMethod("Unknown", RexxObject::unknownRexx, 2);
         AddMethod("Abs", NumberString::abs, 0);
         AddMethod("Max", NumberString::Max, A_COUNT);
         AddMethod("Min", NumberString::Min, A_COUNT);

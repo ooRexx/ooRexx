@@ -106,9 +106,6 @@ class ArrayClass;
 class MemoryObject;
 class RexxString;
 
-// used for building short hand operator method definitions.
-#define koper(name) RexxObject *name(RexxObject *);
-
 /******************************************************************************/
 /* Global Objects - General                                                   */
 /******************************************************************************/

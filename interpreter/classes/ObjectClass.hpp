@@ -417,7 +417,6 @@ class RexxObject : public RexxInternalObject
 
     virtual RexxObject  *defineInstanceMethod(RexxString *, MethodClass *, RexxClass *);
     virtual RexxString  *defaultName();
-    virtual RexxObject  *unknown(RexxString *msg, ArrayClass *args) {return OREF_NULL;};
     virtual bool         hasMethod(RexxString *msg);
             RexxObject  *hasMethodRexx(RexxString *);
             bool         hasUninitMethod();
@@ -432,6 +431,7 @@ class RexxObject : public RexxInternalObject
     virtual RexxInternalObject *copy();
     virtual HashCode     hash();
     virtual RexxString  *stringValue();
+    virtual void processUnknown(RexxString *, RexxObject **, size_t, ProtectedObject &);
 
     bool         isInstanceOf(RexxClass *);
     RexxObject  *isInstanceOfRexx(RexxClass *);
@@ -456,7 +456,6 @@ class RexxObject : public RexxInternalObject
     void         messageSend(RexxString *, RexxObject **, size_t, ProtectedObject &);
     void         messageSend(RexxString *, RexxObject **, size_t, RexxClass *, ProtectedObject &);
     MethodClass  *checkPrivate(MethodClass *);
-    void         processUnknown(RexxString *, RexxObject **, size_t, ProtectedObject &);
     void         processProtectedMethod(RexxString *, MethodClass *, RexxObject **, size_t, ProtectedObject &);
     void         sendMessage(RexxString *, ArrayClass *, ProtectedObject &);
     inline void  sendMessage(RexxString *message, ProtectedObject &result) { this->messageSend(message, OREF_NULL, 0, result); };
@@ -510,13 +509,15 @@ class RexxObject : public RexxInternalObject
     RexxObject  *makeArrayRexx();
     RexxString  *defaultNameRexx();
     RexxObject  *copyRexx();
-    RexxObject  *unknownRexx(RexxString *, ArrayClass *);
     void *getCSelf();
     void *getCSelf(RexxClass *scope);
 
     RexxObject *callOperatorMethod(size_t methodOffset, RexxObject *argument);
 
  // Define operator methods here.
+
+// used for building short hand operator method definitions.
+#define koper(name) RexxObject *name(RexxObject *);
 
     koper  (operator_plus)
     koper  (operator_minus)
