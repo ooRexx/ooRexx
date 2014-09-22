@@ -343,7 +343,7 @@ Activity *ActivityManager::createNewActivity()
         activity = new Activity(true);
         lock.reacquire();
         // add this to our table of all activities
-        allActivities->append((RexxObject *)activity);
+        allActivities->append(activity);
     }
     else
     {
@@ -729,7 +729,7 @@ void ActivityManager::returnRootActivity(Activity *activity)
     ResourceSection lock;                // need the control block locks
     // remove this from the activity list so it will never get
     // picked up again.
-    allActivities->removeItem((RexxObject *)activity);
+    allActivities->removeItem(activity);
 }
 
 

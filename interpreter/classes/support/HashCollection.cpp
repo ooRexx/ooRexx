@@ -1013,7 +1013,7 @@ RexxObject *StringHashCollection::unknown(RexxString *msgname, RexxObject **argu
         msgname = msgname->extract(0, msgname->getLength() - 1);
 
         // do this as an assignment
-        RexxObject *value = (RexxObject *)arguments[0];
+        RexxObject *value = arguments[0];
 
         // set entry validates whether we have a value
         return setEntryRexx(msgname, value);

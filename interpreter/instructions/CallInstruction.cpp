@@ -204,10 +204,10 @@ void RexxInstructionCall::execute(RexxActivation *context, ExpressionStack *stac
 
     // did we get a result returned?  We need to either set or drop
     // the result variable and potentially trace this.
-    if ((RexxObject *)result != OREF_NULL)   /* result returned?                  */
+    if (!result.isNull())
     {
-        context->setLocalVariable(GlobalNames::RESULT, VARIABLE_RESULT, (RexxObject *)result);
-        context->traceResult((RexxObject *)result);
+        context->setLocalVariable(GlobalNames::RESULT, VARIABLE_RESULT, result);
+        context->traceResult(result);
     }
     else
     {
@@ -359,10 +359,10 @@ void RexxInstructionDynamicCall::execute(RexxActivation *context, ExpressionStac
 
     // did we get a result returned?  We need to either set or drop
     // the result variable and potentially trace this.
-    if ((RexxObject *)result != OREF_NULL)
+    if (!result.isNull())
     {
-        context->setLocalVariable(GlobalNames::RESULT, VARIABLE_RESULT, (RexxObject *)result);
-        context->traceResult((RexxObject *)result);
+        context->setLocalVariable(GlobalNames::RESULT, VARIABLE_RESULT, result);
+        context->traceResult(result);
     }
     else
     {

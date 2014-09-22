@@ -230,7 +230,7 @@ void RexxInstructionForward::execute(RexxActivation *context, ExpressionStack *s
         // if we have a result, then we need to trace this and set the result variable
         if (!result.isNull())
         {
-            context->traceResult((RexxObject *)result);
+            context->traceResult(result);
             context->setLocalVariable(GlobalNames::RESULT, VARIABLE_RESULT, result);
         }
         // ne result returned, so we drop the RESULT variable

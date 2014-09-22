@@ -1445,7 +1445,7 @@ void Activity::pushStackFrame(ActivationBase *new_activation)
 {
     checkActivationStack();         // make sure the stack is not filled
     // push on to the stack and bump the depth
-    activations->push((RexxObject *)new_activation);
+    activations->push(new_activation);
     stackFrameDepth++;
     // update the frame information.
     // if we're not creating a new frame set, link up the new frame with its predecessor
@@ -1474,7 +1474,7 @@ void Activity::createNewActivationStack()
     NativeActivation *new_activation = ActivityManager::newNativeActivation(this);
     new_activation->setStackBase();
     // create a new root element on the stack and bump the depth indicator
-    activations->push((RexxObject *)new_activation);
+    activations->push(new_activation);
     stackFrameDepth++;
     // update the frame information.
     updateFrameMarkers();
@@ -1497,7 +1497,7 @@ void Activity::popStackFrame(bool  reply)
     // push it back on to the stack
     if (poppedStackFrame->isStackBase())
     {
-        activations->push((RexxObject *)poppedStackFrame);
+        activations->push(poppedStackFrame);
         stackFrameDepth++;
     }
     else
@@ -1577,7 +1577,7 @@ void Activity::unwindStackFrame()
             // is the bottom stack frame here, then push it back on.
             if (stackFrameDepth == 0)
             {
-                activations->push((RexxObject *)poppedActivation);
+                activations->push(poppedActivation);
                 stackFrameDepth++;
             }
             break;
@@ -2568,7 +2568,7 @@ bool  Activity::callPullExit(RexxActivation *activation, RexxString *&inputstrin
  *
  * @return The handled flag.
  */
-bool  Activity::callPushExit(RexxActivation *activation, RexxString *outputString, int lifo_flag)
+bool  Activity::callPushExit(RexxActivation *activation, RexxString *outputString, QueueOrder lifo_flag)
 {
     if (isExitEnabled(RXMSQ))
     {
@@ -2853,7 +2853,7 @@ void  Activity::traceOutput(RexxActivation *activation, RexxString *line)
     // if the exit passes on the call, we write this to the .traceouput
     if (callTraceExit(activation, line))
     {
-        RexxObject *stream = (RexxObject *)getLocalEnvironment(TRACEOUTPUT);
+        RexxObject *stream = getLocalEnvironment(TRACEOUTPUT);
 
         if (stream != OREF_NULL && stream != TheNilObject)
         {
@@ -2878,7 +2878,7 @@ void Activity::sayOutput(RexxActivation *activation, RexxString *line)
     if (callSayExit(activation, line))
     {
         // say output goes to .output
-        RexxObject *stream = (RexxObject *)getLocalEnvironment(OUTPUT);
+        RexxObject *stream = getLocalEnvironment(OUTPUT);
         if (stream != OREF_NULL && stream != TheNilObject)
         {
             stream->sendMessage(SAY, line);
@@ -3011,7 +3011,7 @@ RexxString *Activity::lineIn(RexxActivation *activation)
  * @param line       The line to push/queue
  * @param order      The queuing order.
  */
-void Activity::queue(RexxActivation *activation, RexxString *line, int order)
+void Activity::queue(RexxActivation *activation, RexxString *line, QueueOrder order)
 {
     if (callPushExit(activation, line, order))
     {
@@ -3021,11 +3021,11 @@ void Activity::queue(RexxActivation *activation, RexxString *line, int order)
         {
             if (order == QUEUE_LIFO)
             {
-                targetQueue->sendMessage(PUSH, (RexxObject *)line);
+                targetQueue->sendMessage(PUSH, line);
             }
             else
             {
-                targetQueue->sendMessage(QUEUE, (RexxObject *)line);
+                targetQueue->sendMessage(QUEUE, line);
             }
         }
     }

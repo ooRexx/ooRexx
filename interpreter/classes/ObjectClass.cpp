@@ -190,7 +190,7 @@ bool RexxInternalObject::isEqual(RexxInternalObject *other)
     {
         ProtectedObject result;
         ((RexxObject *)this)->sendMessage(GlobalNames::STRICT_EQUAL, (RexxObject *)other, result);
-        return ((RexxObject *)result)->truthValue(Error_Logical_value_method);
+        return result->truthValue(Error_Logical_value_method);
     }
 }
 
@@ -233,14 +233,14 @@ wholenumber_t RexxInternalObject::compareTo(RexxInternalObject *other )
 
     ((RexxObject *)this)->sendMessage(GlobalNames::COMPARETO, (RexxObject *)other, result);
     // the result is required
-    if ((RexxObject *)result == OREF_NULL)
+    if (result.isNull())
     {
         reportException(Error_No_result_object_message, GlobalNames::COMPARETO);
     }
     wholenumber_t comparison;
 
     // the comparison value is a signed number, it has to convert
-    if (!((RexxObject *)result)->numberValue(comparison))
+    if (!result->numberValue(comparison))
     {
         reportException(Error_Invalid_whole_number_compareto, (RexxObject *)result);
     }
@@ -399,7 +399,7 @@ RexxObject *RexxObject::hashCode()
 {
     // get the hash value directly, then turn it into a binary string value
     HashCode h = getHashValue();
-    return (RexxObject *)new_string((char *)&h, sizeof(HashCode));
+    return new_string((char *)&h, sizeof(HashCode));
 }
 
 
@@ -434,7 +434,7 @@ HashCode RexxObject::hash()
         // the default version sends us a string containing binary data.
         // if the string is long enough for that, we reverse the process.  Otherwise,
         // we'll just take the hash code from the string object.
-        return ((RexxObject *)result)->stringValue()->getObjectHashCode();
+        return result->stringValue()->getObjectHashCode();
     }
 }
 
@@ -599,7 +599,7 @@ void RexxObject::copyObjectVariables(RexxObject *newObj)
  *
  * @return An executable method, or OREF_NULL if this cannot be called.
  */
-MethodClass * RexxObject::checkPrivate(MethodClass *method )
+MethodClass *RexxObject::checkPrivate(MethodClass *method )
 {
     // get the calling activaiton context
     ActivationBase *activation = ActivityManager::currentActivity->getTopStackFrame();
@@ -607,7 +607,7 @@ MethodClass * RexxObject::checkPrivate(MethodClass *method )
     {
         // if the sending and receiving object are the same, this is allowed.
         RexxObject *sender = activation->getReceiver();
-        if (sender == (RexxObject *)this)
+        if (sender == this)
         {
             return method;
         }
@@ -651,7 +651,7 @@ RexxObject *RexxObject::sendMessage(RexxString *message, ArrayClass *args)
 {
     ProtectedObject r;
     sendMessage(message, args, r);
-    return (RexxObject *)r;
+    return r;
 }
 
 
@@ -666,7 +666,7 @@ RexxObject *RexxObject::sendMessage(RexxString *message)
 {
     ProtectedObject r;
     sendMessage(message, r);
-    return (RexxObject *)r;
+    return r;
 }
 
 
@@ -683,7 +683,7 @@ RexxObject *RexxObject::sendMessage(RexxString *message, RexxObject **args, size
 {
     ProtectedObject r;
     sendMessage(message, args, argCount, r);
-    return (RexxObject *)r;
+    return r;
 }
 
 
@@ -699,7 +699,7 @@ RexxObject *RexxObject::sendMessage(RexxString *message, RexxObject *argument1)
 {
     ProtectedObject r;
     sendMessage(message, argument1, r);
-    return (RexxObject *)r;
+    return r;
 }
 
 
@@ -716,7 +716,7 @@ RexxObject *RexxObject::sendMessage(RexxString *message, RexxObject *argument1, 
 {
     ProtectedObject r;
     sendMessage(message, argument1, argument2, r);
-    return (RexxObject *)r;
+    return r;
 }
 
 
@@ -734,7 +734,7 @@ RexxObject *RexxObject::sendMessage(RexxString *message, RexxObject *argument1, 
 {
     ProtectedObject r;
     sendMessage(message, argument1, argument2, argument3, r);
-    return (RexxObject *)r;
+    return r;
 }
 
 
@@ -753,7 +753,7 @@ RexxObject *RexxObject::sendMessage(RexxString *message, RexxObject *argument1, 
 {
     ProtectedObject r;
     sendMessage(message, argument1, argument2, argument3, argument4, r);
-    return (RexxObject *)r;
+    return r;
 }
 
 
@@ -772,7 +772,7 @@ RexxObject *RexxObject::sendMessage(RexxString *message, RexxObject *argument1, 
 {
     ProtectedObject r;
     sendMessage(message, argument1, argument2, argument3, argument4, argument5, r);
-    return (RexxObject *)r;
+    return r;
 }
 
 
@@ -1588,12 +1588,12 @@ ArrayClass *RexxInternalObject::requestArray()
  */
 RexxString *RexxObject::objectName()
 {
-    ProtectedObject string_value;
+    Protected<RexxString> string_value;
 
     // this is always stored in the object class scope
-    string_value = getObjectVariable(GlobalNames::OBJECTNAME, TheObjectClass);
+    string_value = (RexxString *)getObjectVariable(GlobalNames::OBJECTNAME, TheObjectClass);
     // if not found, we fall back to default means.
-    if ((RexxObject *)string_value == OREF_NULL)
+    if (string_value.isNull())
     {
         // if still a primitive class, we construct a default name
         if (isBaseClass())
@@ -1605,13 +1605,13 @@ RexxString *RexxObject::objectName()
         sendMessage(GlobalNames::DEFAULTNAME, string_value);
         // it is possible we got nothing back from this method.  Prevent
         // potential crashes by returning the default default.
-        if ((RexxObject *)string_value == OREF_NULL)
+        if (string_value.isNull())
         {
             return defaultName();
         }
     }
     // we need to make sure this is a real string value.
-    return ((RexxString *)string_value)->stringValue();
+    return string_value->stringValue();
 }
 
 
@@ -2017,7 +2017,7 @@ void RexxObject::decodeMessageName(RexxObject *target, RexxObject *message, Rexx
  */
 void RexxInternalObject::hasUninit()
 {
-    memoryObject.addUninitObject((RexxObject *)this);
+    memoryObject.addUninitObject(this);
 }
 
 
@@ -2474,11 +2474,11 @@ RexxInternalObject *RexxInternalObject::clone()
 {\
     ProtectedObject result;                                                     \
     messageSend(GlobalNames::message, &operand, 1, result);                      \
-    if ((RexxObject *)result == OREF_NULL)                                           \
+    if (result.isNull())                                                         \
     {  \
         reportException(Error_No_result_object_message, GlobalNames::message); \
     }  \
-    return (RexxObject *)result;                                                 \
+    return result;                                                               \
 }\
 
 
@@ -2487,11 +2487,11 @@ RexxInternalObject *RexxInternalObject::clone()
 {\
     ProtectedObject result;                                                     \
     messageSend(GlobalNames::message, &operand, operand == OREF_NULL ? 0 : 1, result); \
-    if ((RexxObject *)result == OREF_NULL)                                                     \
+    if (result.isNull())                                                                        \
     {  \
         reportException(Error_No_result_object_message, GlobalNames::message); \
     }  \
-    return (RexxObject *)result;                                                 \
+    return result;                                                               \
 }\
 
 

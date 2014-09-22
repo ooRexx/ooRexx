@@ -299,11 +299,11 @@ void MemoryObject::createImage()
 
     // These special variables are always assigned the same slot positions in all
     // Rexx code contexts.
-    TheCommonRetrievers->put((RexxObject *)new RexxSimpleVariable(GlobalNames::SELF, VARIABLE_SELF), GlobalNames::SELF);
-    TheCommonRetrievers->put((RexxObject *)new RexxSimpleVariable(GlobalNames::SUPER, VARIABLE_SUPER), GlobalNames::SUPER);
-    TheCommonRetrievers->put((RexxObject *)new RexxSimpleVariable(GlobalNames::SIGL, VARIABLE_SIGL), GlobalNames::SIGL);
-    TheCommonRetrievers->put((RexxObject *)new RexxSimpleVariable(GlobalNames::RC, VARIABLE_RC), GlobalNames::RC);
-    TheCommonRetrievers->put((RexxObject *)new RexxSimpleVariable(GlobalNames::RESULT, VARIABLE_RESULT), GlobalNames::RESULT);
+    TheCommonRetrievers->put(new RexxSimpleVariable(GlobalNames::SELF, VARIABLE_SELF), GlobalNames::SELF);
+    TheCommonRetrievers->put(new RexxSimpleVariable(GlobalNames::SUPER, VARIABLE_SUPER), GlobalNames::SUPER);
+    TheCommonRetrievers->put(new RexxSimpleVariable(GlobalNames::SIGL, VARIABLE_SIGL), GlobalNames::SIGL);
+    TheCommonRetrievers->put(new RexxSimpleVariable(GlobalNames::RC, VARIABLE_RC), GlobalNames::RC);
+    TheCommonRetrievers->put(new RexxSimpleVariable(GlobalNames::RESULT, VARIABLE_RESULT), GlobalNames::RESULT);
 
     // create the Rexx package so created classes can get added to it.
     createRexxPackage();

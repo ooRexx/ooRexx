@@ -219,10 +219,10 @@ void RexxInstructionMessage::execute(RexxActivation *context, ExpressionStack *s
     }
 
     // if we have a result, trace it and assign it to the variable result.
-    if ((RexxObject *)result != OREF_NULL)
+    if (!result.isNull())
     {
-        context->traceResult((RexxObject *)result);
-        context->setLocalVariable(GlobalNames::RESULT, VARIABLE_RESULT, (RexxObject *)result);
+        context->traceResult(result);
+        context->setLocalVariable(GlobalNames::RESULT, VARIABLE_RESULT, result);
     }
     // for no result, we drop the RESULT variable
     else

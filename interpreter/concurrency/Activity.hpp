@@ -73,11 +73,6 @@ class ActivationBase;
 class NativeActivation;
 class RexxActivation;
 
-/* interface values for the          */
-/* activity_queue method             */
-// TODO:  Get rid of these defines
-#define QUEUE_FIFO 1
-#define QUEUE_LIFO 2
 
 typedef enum
 {
@@ -94,6 +89,15 @@ class Activity : public RexxInternalObject
   friend class ProtectedBase;
   friend class ActivationFrame;
  public:
+
+    typedef enum
+    {
+        QUEUE_FIFO,
+        QUEUE_LIFO,
+    } QueueOrder;
+
+
+
     void *operator new(size_t);
     inline void  operator delete(void *) { ; }
 
@@ -191,7 +195,7 @@ class Activity : public RexxInternalObject
     bool callScriptingExit(RexxActivation *, RexxString *, bool, ProtectedObject &, RexxObject **, size_t);
     bool callCommandExit(RexxActivation *, RexxString *, RexxString *, ProtectedObject &result, ProtectedObject &condition);
     bool callPullExit(RexxActivation *, RexxString *&);
-    bool callPushExit(RexxActivation *, RexxString *, int);
+    bool callPushExit(RexxActivation *, RexxString *, QueueOrder);
     bool callQueueSizeExit(RexxActivation *, RexxInteger *&);
     bool callQueueNameExit(RexxActivation *, RexxString *&);
     bool callHaltTestExit(RexxActivation *);
@@ -201,7 +205,7 @@ class Activity : public RexxInternalObject
     bool callValueExit(RexxActivation *, RexxString *, RexxString *, RexxObject *, RexxObject *&);
     void traceOutput(RexxActivation *, RexxString *);
     void sayOutput(RexxActivation *, RexxString *);
-    void queue(RexxActivation *, RexxString *, int);
+    void queue(RexxActivation *, RexxString *, QueueOrder);
     RexxString *traceInput(RexxActivation *);
     RexxString *pullInput(RexxActivation *);
     RexxObject *lineOut(RexxString *);

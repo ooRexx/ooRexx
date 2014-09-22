@@ -376,7 +376,7 @@ NativeMethod *LibraryPackage::resolveMethod(RexxString *name)
         if (entry != NULL)
         {
             code = new NativeMethod(libraryName, name, (PNATIVEMETHOD)entry->entryPoint);
-            methods->put((RexxObject *)code, name);
+            methods->put(code, name);
             return code;
         }
         // This, we know from nothing....

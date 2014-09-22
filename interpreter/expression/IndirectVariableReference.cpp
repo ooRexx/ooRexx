@@ -162,7 +162,7 @@ ArrayClass *RexxVariableReference::list(RexxActivation *context)
             reportException(Error_Symbol_expected_expose);
         }
         // replace the name with the retriever
-        list->put((RexxObject *)retriever, i);
+        list->put(retriever, i);
     }
     return list;
 }

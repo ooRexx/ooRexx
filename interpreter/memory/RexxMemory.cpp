@@ -1132,7 +1132,7 @@ void MemoryObject::saveImage()
     ArrayClass *primitive_behaviours= (ArrayClass *)new_array(T_Last_Exported_Class + 1);
     for (size_t i = 0; i <= T_Last_Exported_Class; i++)
     {
-        primitive_behaviours->put((RexxObject *)RexxBehaviour::getPrimitiveBehaviour(i), i + 1);
+        primitive_behaviours->put(RexxBehaviour::getPrimitiveBehaviour(i), i + 1);
     }
 
     // add these to the save array

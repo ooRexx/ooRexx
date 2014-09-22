@@ -203,7 +203,7 @@ RexxObject *RoutineClass::callRexx(RexxObject **args, size_t count)
     ProtectedObject result;
 
     code->call(ActivityManager::currentActivity, this, executableName, args, count, result);
-    return (RexxObject *)result;
+    return result;
 }
 
 
@@ -221,7 +221,7 @@ RexxObject *RoutineClass::callWithRexx(ArrayClass *args)
 
     ProtectedObject result;
     code->call(ActivityManager::currentActivity, this, executableName, args->messageArgs(), args->messageArgCount(), result);
-    return (RexxObject *)result;
+    return result;
 }
 
 

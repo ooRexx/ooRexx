@@ -225,15 +225,15 @@ RexxObject *RexxExpressionMessage::evaluate(RexxActivation *context, ExpressionS
     }
 
     // we're in an expression here, so a result is required.
-    if ((RexxObject *)result == OREF_NULL)
+    if (result.isNull())
     {
         reportException(Error_No_result_object_message, messageName);
     }
 
     // trace if necessary
-    context->traceMessage(messageName, (RexxObject *)result);
+    context->traceMessage(messageName, result);
 
-    return (RexxObject *)result;
+    return result;
 }
 
 
@@ -307,7 +307,7 @@ void RexxExpressionMessage::assign(RexxActivation *context, RexxObject *value)
         stack->send(messageName, _super, argcount + 1, result);
     }
 
-    context->traceAssignment(messageName, (RexxObject *)result);
+    context->traceAssignment(messageName, result);
     // remove all arguments (arguments + target + assignment value)
     stack->popn(argcount + 2);
 }

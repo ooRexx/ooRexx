@@ -197,7 +197,7 @@ void RexxInstructionRaise::execute(RexxActivation *context, ExpressionStack *sta
         // convert this to decimal, then create an integer object
         // that we replace the input rc value with
         wholenumber_t msgNum = Interpreter::messageNumber(errorcode);
-        rc = (RexxObject *)new_integer(msgNum);
+        rc = new_integer(msgNum);
     }
 
     // Reasonable defaults are set up, now see if we have explicit things given

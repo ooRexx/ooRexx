@@ -212,7 +212,7 @@ SupplierClass *DirectoryClass::supplier()
             method->run(ActivityManager::currentActivity, this, name, NULL, 0, v);
 
             indexes->append(name);
-            values->append((RexxObject *)v);
+            values->append(v);
         }
         // append the method table part to the existing supplier
         supplier->append(values, indexes);
@@ -265,7 +265,7 @@ ArrayClass *DirectoryClass::allItems()
             // run the method, using the directory as the receiver
             method->run(ActivityManager::currentActivity, this, name, NULL, 0, v);
 
-            itemArray->append((RexxObject *)v);
+            itemArray->append(v);
         }
     }
     return itemArray;

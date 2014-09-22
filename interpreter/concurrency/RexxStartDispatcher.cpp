@@ -153,10 +153,10 @@ void RexxStartDispatcher::run()
         if (result != NULL)
         {
             // actually have a result to return?
-            if ((RexxObject *)program_result != OREF_NULL)
+            if (!program_result.isNull())
             {
                 // force to a string value
-                program_result = ((RexxObject *)program_result)->stringValue();
+                program_result = program_result->stringValue();
                 // copy this into the result RXSTRING
                 ((RexxString *)program_result)->copyToRxstring(*result);
             }
@@ -168,11 +168,11 @@ void RexxStartDispatcher::run()
         }
 
         // if we have a return result and it is an integer value, return that as a return code.
-        if ((RexxObject *)program_result != OREF_NULL)
+        if (!program_result.isNull())
         {
             wholenumber_t return_code;
 
-            if (((RexxObject *)program_result)->numberValue(return_code) && return_code <= SHRT_MAX && return_code >= SHRT_MIN)
+            if (program_result->numberValue(return_code) && return_code <= SHRT_MAX && return_code >= SHRT_MIN)
             {
                 retcode = (short)return_code;
             }

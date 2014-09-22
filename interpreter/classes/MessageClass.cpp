@@ -247,7 +247,7 @@ RexxObject *MessageClass::result()
                 setField(waitingActivities, new_array());
             }
             // add our activity to the list
-            waitingActivities->append((RexxObject *)ActivityManager::currentActivity);
+            waitingActivities->append(ActivityManager::currentActivity);
             // and wait for the wake up call.
             ActivityManager::currentActivity->waitReserve(this);
             // the message has now completed, but this could now be an error.

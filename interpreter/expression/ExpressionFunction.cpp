@@ -205,7 +205,7 @@ RexxObject *RexxExpressionFunction::evaluate(RexxActivation *context, Expression
     // if this was resolved to a builtin, call directly
     else if (builtinIndex != NO_BUILTIN)
     {
-        result = (RexxObject *) (*(LanguageParser::builtinTable[builtinIndex]))(context, argumentCount, stack);
+        result = (*(LanguageParser::builtinTable[builtinIndex]))(context, argumentCount, stack);
     }
     else
     {
@@ -213,16 +213,16 @@ RexxObject *RexxExpressionFunction::evaluate(RexxActivation *context, Expression
     }
 
     // functions must have a return result
-    if ((RexxObject *)result == OREF_NULL)
+    if (result.isNull())
     {
          reportException(Error_Function_no_data_function, functionName);
     }
 
     // remove the arguments from the stack and push our result
     stack->setTop(stacktop);
-    stack->push((RexxObject *)result);
+    stack->push(result);
 
     // trace if needed and return the result
-    context->traceFunction(functionName, (RexxObject *)result);
-    return(RexxObject *)result;
+    context->traceFunction(functionName, result);
+    return result;
 }

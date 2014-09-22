@@ -78,7 +78,7 @@ class ProtectedObject : public ProtectedBase
     {
         if (protectedObject != OREF_NULL)
         {
-            holdObject((RexxObject *)protectedObject);
+            holdObject(protectedObject);
         }
     }
 
@@ -149,6 +149,12 @@ class ProtectedObject : public ProtectedBase
         return protectedObject == OREF_NULL;
     }
 
+    // pointer access
+    inline RexxObject * operator->()
+    {
+        return (RexxObject *)protectedObject;
+    }
+
 protected:
     RexxInternalObject *protectedObject;   // The object we're protecting
 };
@@ -207,18 +213,6 @@ public:
     inline bool operator == (objType *o)
     {
         return protectedObject == o;
-    }
-
-    // cast conversion operators for some very common uses of protected object.
-    inline operator RexxObject *()
-    {
-        return (RexxObject *)protectedObject;
-    }
-
-    // cast conversion operators for some very common uses of protected object.
-    inline operator RexxInternalObject *()
-    {
-        return (RexxInternalObject *)protectedObject;
     }
 
     inline operator RexxObjectPtr ()

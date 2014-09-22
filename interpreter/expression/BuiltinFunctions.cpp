@@ -1704,7 +1704,7 @@ BUILTIN(VALUE)
             reportException(Error_Incorrect_call_symbol, "VALUE", IntegerOne, variable);
         }
         // get the variable value
-        RexxObject *result = (RexxObject *)retriever->getValue(context);
+        RexxObject *result = retriever->getValue(context);
         // given a new value?  Assign that
         if (newvalue != OREF_NULL)
         {
@@ -2062,7 +2062,7 @@ BUILTIN(LINEOUT)
     if (check_queue(name))
     {
 
-        if (context->getActivity()->callPushExit(context, string, QUEUE_FIFO))
+        if (context->getActivity()->callPushExit(context, string, Activity::QUEUE_FIFO))
         {
             // lineout always queues to the queue
             if (string != OREF_NULL)
@@ -2376,7 +2376,7 @@ BUILTIN(QUEUED)
     // see if the exit handles this, otherwise send a message to the current queue
     if (context->getActivity()->callQueueSizeExit(context, queuesize))
     {
-        RexxObject *queue = (RexxObject *)context->getLocalEnvironment(STDQUE);
+        RexxObject *queue = context->getLocalEnvironment(STDQUE);
         return queue->sendMessage(QUEUED);
     }
     else
@@ -2601,7 +2601,7 @@ BUILTIN(RXQUEUE)
     RexxString *queueName = optional_string(RXQUEUE, name);
 
     // all of the options here manipulate stdque, so get this upfront.
-    RexxObject *queue = (RexxObject *)context->getLocalEnvironment(STDQUE);
+    RexxObject *queue = context->getLocalEnvironment(STDQUE);
 
     switch (toupper(option->getChar(0)))
     {

@@ -1235,7 +1235,7 @@ RexxObject *RexxActivation::forward(RexxObject  *target, RexxString  *message,
         {
             target->messageSend(message, arguments, argcount, superClass, r);
         }
-        return (RexxObject *)r;
+        return r;
     }
     // this activation becomes a phantom, and we issued the
     // message as if we don't exist.
@@ -1265,7 +1265,7 @@ RexxObject *RexxActivation::forward(RexxObject  *target, RexxString  *message,
             target->messageSend(message, arguments, argcount, superClass, r);
         }
         // set the return value for end-of-activation processing to handle.
-        result = (RexxObject *)r;
+        result = r;
         // terminate this activation
         termination();
         return OREF_NULL;
@@ -1700,7 +1700,7 @@ RexxObject *RexxActivation::resolveStream(RexxString *name, bool input, Protecte
             }
             // create an instance of the stream class and create a new
             // instance
-            RexxObject *streamClass = (RexxObject *)TheRexxPackage->findClass(GlobalNames::STREAM);
+            RexxClass *streamClass = TheRexxPackage->findClass(GlobalNames::STREAM);
             stream = streamClass->sendMessage(GlobalNames::NEW, name);
 
             // if we're requested to add this to the table, add it in and return the indicator.
@@ -2558,31 +2558,31 @@ RexxObject *RexxActivation::externalCall(RexxString *target, RexxObject **argume
     {
         // call and return the result
         routine->call(activity, target, arguments, argcount, calltype, OREF_NULL, EXTERNALCALL, resultObj);
-        return(RexxObject *)resultObj;
+        return resultObj;
     }
 
     // Step 2a:  See if the function call exit fields this one
     if (!activity->callObjectFunctionExit(this, target, calltype == GlobalNames::FUNCTION, resultObj, arguments, argcount))
     {
-        return(RexxObject *)resultObj;
+        return resultObj;
     }
 
     // Step 2b:  See if the function call exit fields this one
     if (!activity->callFunctionExit(this, target, calltype == GlobalNames::FUNCTION, resultObj, arguments, argcount))
     {
-        return(RexxObject *)resultObj;
+        return resultObj;
     }
 
     // Step 3:  Perform all platform-specific searches
     if (SystemInterpreter::invokeExternalFunction(this, activity, target, arguments, argcount, calltype, resultObj))
     {
-        return(RexxObject *)resultObj;
+        return resultObj;
     }
 
     // Step 4:  Check scripting exit, which is after most of the checks
     if (!activity->callScriptingExit(this, target, calltype == GlobalNames::FUNCTION, resultObj, arguments, argcount))
     {
-        return(RexxObject *)resultObj;
+        return resultObj;
     }
 
     // if it's made it through all of these steps without finding anything, we
@@ -3779,12 +3779,12 @@ void RexxActivation::command(RexxString *address, RexxString *commandString)
             // No handler for this environment.  Give a default return code and
             // raise a failure condition.
             commandResult = new_integer(RXSUBCOM_NOTREG);   // just use the not registered return code
-            condition = activity->createConditionObject(GlobalNames::FAILURE, (RexxObject *)commandResult, commandString, OREF_NULL, OREF_NULL);
+            condition = activity->createConditionObject(GlobalNames::FAILURE, commandResult, commandString, OREF_NULL, OREF_NULL);
         }
     }
 
     // now process the command result.
-    RexxObject *rc = (RexxObject *)commandResult;
+    RexxObject *rc = commandResult;
     DirectoryClass *conditionObj = (DirectoryClass *)(RexxObject *)condition;
 
     bool failureCondition = false;    // don't have a failure condition yet
@@ -4097,7 +4097,7 @@ RexxObject *RexxActivation::evaluateLocalCompoundVariable(RexxString *stemName, 
     if (tracingIntermediates())
     {
         traceCompoundName(stemName, tail, tailCount, resolved_tail);
-        traceCompound(stemName, tail, tailCount, (RexxObject *)value);
+        traceCompound(stemName, tail, tailCount, value);
     }
     return value;
 }

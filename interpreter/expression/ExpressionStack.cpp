@@ -313,7 +313,7 @@ RexxObject *ExpressionStack::optionalBigIntegerArg(size_t position, size_t argco
     // returns a null value if it doesn't convert properly
     if (newArgument == OREF_NULL)
     {
-        reportException(Error_Incorrect_call_whole, function, argcount - position, (RexxObject *)argument);
+        reportException(Error_Incorrect_call_whole, function, argcount - position, argument);
     }
     // replace original object on the stack
     replace(position, newArgument);

@@ -102,7 +102,7 @@ RexxInternalObject *MapTable::copy()
     // copy this object first
     MapTable *newObj = (MapTable *)RexxInternalObject::copy();
     newObj->contents = (MapBucket *)contents->copy();
-    return (RexxObject *)newObj;
+    return newObj;
 }
 
 

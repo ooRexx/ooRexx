@@ -159,7 +159,7 @@ void CommandHandlerDispatcher::complete(RexxString *command, ProtectedObject &re
         // if it doesn't convert)
         result = new_string(retstr.strptr, retstr.strlength);
         // try to get this as a numeric value
-        ((RexxObject *)result)->numberValue(sbrc);
+        result->numberValue(sbrc);
         // handle any buffer reallocation
         if (retstr.strptr != default_return_buffer)
         {
@@ -177,12 +177,12 @@ void CommandHandlerDispatcher::complete(RexxString *command, ProtectedObject &re
     if (flags & (unsigned short)RXSUBCOM_FAILURE)
     {
         // raise the condition when things are done
-        condition = (RexxObject *)activity->createConditionObject(GlobalNames::FAILURE, (RexxObject *)result, command, OREF_NULL, OREF_NULL);
+        condition = activity->createConditionObject(GlobalNames::FAILURE, result, command, OREF_NULL, OREF_NULL);
     }
     else if (flags & (unsigned short)RXSUBCOM_ERROR)
     {
         // raise the condition when things are done
-        condition = (RexxObject *)activity->createConditionObject(GlobalNames::ERRORNAME, (RexxObject *)result, command, OREF_NULL, OREF_NULL);
+        condition = activity->createConditionObject(GlobalNames::ERRORNAME, result, command, OREF_NULL, OREF_NULL);
     }
 }
 

@@ -259,7 +259,7 @@ bool SecurityManager::checkCommand(Activity *activity, RexxString *address, Rexx
     {
         result = securityArgs->get(GlobalNames::RC);
         // if no return code received, use a zero code
-        if ((RexxObject *)result == OREF_NULL)
+        if (result.isNull())
         {
             result = IntegerZero;
         }
@@ -267,13 +267,13 @@ bool SecurityManager::checkCommand(Activity *activity, RexxString *address, Rexx
         if (securityArgs->get(GlobalNames::FAILURE) != OREF_NULL)
         {
             // raise the condition when things are done
-            condition = activity->createConditionObject(GlobalNames::FAILURE, (RexxObject *)result, command, OREF_NULL, OREF_NULL);
+            condition = activity->createConditionObject(GlobalNames::FAILURE, result, command, OREF_NULL, OREF_NULL);
         }
         // same for an error condition
         else if (securityArgs->get(GlobalNames::ERRORNAME) != OREF_NULL)
         {
             // raise the condition when things are done
-            condition = activity->createConditionObject(GlobalNames::ERRORNAME, (RexxObject *)result, command, OREF_NULL, OREF_NULL);
+            condition = activity->createConditionObject(GlobalNames::ERRORNAME, result, command, OREF_NULL, OREF_NULL);
         }
         return true;
     }

@@ -166,7 +166,7 @@ void Interpreter::startInterpreter(InterpreterStartupMode mode)
             InstanceBlock instance;
 
             // get the server class from the REXX package where it is a non-public class
-            RexxObject *server_class = (RexxObject *)TheRexxPackage->findClass(new_string("LOCALSERVER"));
+            RexxClass *server_class = TheRexxPackage->findClass(new_string("LOCALSERVER"));
 
             // NOTE:  This is a second block so that the
             // protected object's destructor gets run before
@@ -338,7 +338,7 @@ InterpreterInstance *Interpreter::createInterpreterInstance(RexxOption *options)
         ResourceSection lock;
 
         // add this to the active list
-        interpreterInstances->append((RexxObject *)instance);
+        interpreterInstances->append(instance);
     }
 
     // now that this is protected from garbage collection, go and initialize everything
@@ -361,7 +361,7 @@ bool Interpreter::terminateInterpreterInstance(InterpreterInstance *instance)
     // the active list.
     ResourceSection lock;
 
-    interpreterInstances->removeItem((RexxObject *)instance);
+    interpreterInstances->removeItem(instance);
     return true;
 }
 

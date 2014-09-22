@@ -1778,11 +1778,11 @@ void LanguageParser::requiresDirective()
     // this is either a library directive or a requires directive
     if (isLibrary)
     {
-        libraries->append((RexxObject *)new LibraryDirective(name, clause));
+        libraries->append(new LibraryDirective(name, clause));
     }
     else
     {
-        requires->append((RexxObject *)new RequiresDirective(name, label, clause));
+        requires->append(new RequiresDirective(name, label, clause));
     }
 }
 

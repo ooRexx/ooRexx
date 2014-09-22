@@ -255,7 +255,7 @@ void RexxInstructionSelect::matchEnd(RexxInstructionEnd *partner, LanguageParser
 void RexxInstructionSelect::addWhen(RexxInstructionIf *when)
 {
     // just add to the queue
-    whenList->push((RexxObject *)when);
+    whenList->push(when);
 }
 
 

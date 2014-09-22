@@ -1937,7 +1937,7 @@ RexxObject *NativeActivation::dispatch()
     ProtectedObject r;
     // just run the method
     run((MethodClass *)executable, (NativeMethod *)code, receiver, messageName, argList, argCount, r);
-    return (RexxObject *)r;
+    return r;
 }
 
 
@@ -2344,7 +2344,7 @@ bool NativeActivation::trap(RexxString *condition, DirectoryClass * exception_ob
  */
 void NativeActivation::raiseCondition(RexxString *condition, RexxString *description, RexxObject *additional, RexxObject *_result)
 {
-    result = (RexxObject *)_result;
+    result = _result;
     activity->raiseCondition(condition, OREF_NULL, description, additional, result);
 
     // We only return here if no activation above us has trapped this.  If we do return, then
@@ -2481,7 +2481,7 @@ RexxObject *NativeActivation::getContextVariable(const char *name)
     resetNext();
 
     // have a non-name retriever?
-    if (isString((RexxObject *)retriever))
+    if (isString(retriever))
     {
         // the value is the retriever
         return (RexxObject *)retriever;
@@ -2505,7 +2505,7 @@ void NativeActivation::setContextVariable(const char *name, RexxObject *value)
     // get the REXX activation for the target context
     RexxVariableBase *retriever = VariableDictionary::getVariableRetriever(new_string(name));
     // if this didn't parse, it's an illegal name
-    if (retriever == OREF_NULL || isString((RexxObject *)retriever))
+    if (retriever == OREF_NULL || isString(retriever))
     {
         return;
     }
@@ -2526,7 +2526,7 @@ void NativeActivation::dropContextVariable(const char *name)
     // get the REXX activation for the target context
     RexxVariableBase *retriever = VariableDictionary::getVariableRetriever(new_string(name));
     // if this didn't parse, it's an illegal name
-    if (retriever == OREF_NULL || isString((RexxObject *)retriever))
+    if (retriever == OREF_NULL || isString(retriever))
     {
         return;
     }
@@ -2568,7 +2568,7 @@ RexxObject *NativeActivation::getObjectVariable(const char *name)
     // if this didn't parse, it's an illegal name
     // we also don't allow compound variables here because the source for
     // resolving the tail pieces is not defined.
-    if (retriever == OREF_NULL || isString((RexxObject *)retriever) || isOfClassType(CompoundVariableTerm, retriever))
+    if (retriever == OREF_NULL || isString(retriever) || isOfClassType(CompoundVariableTerm, retriever))
     {
         return OREF_NULL;
     }
@@ -2592,7 +2592,7 @@ void NativeActivation::setObjectVariable(const char *name, RexxObject *value)
     // if this didn't parse, it's an illegal name
     // we also don't allow compound variables here because the source for
     // resolving the tail pieces is not defined.
-    if (retriever == OREF_NULL || isString((RexxObject *)retriever) || isOfClassType(CompoundVariableTerm, retriever))
+    if (retriever == OREF_NULL || isString(retriever) || isOfClassType(CompoundVariableTerm, retriever))
     {
         return;
     }
@@ -2615,7 +2615,7 @@ void NativeActivation::dropObjectVariable(const char *name)
     // if this didn't parse, it's an illegal name
     // we also don't allow compound variables here because the source for
     // resolving the tail pieces is not defined.
-    if (retriever == OREF_NULL || isString((RexxObject *)retriever) || isOfClassType(CompoundVariableTerm, retriever))
+    if (retriever == OREF_NULL || isString(retriever) || isOfClassType(CompoundVariableTerm, retriever))
     {
         return;
     }

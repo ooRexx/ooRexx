@@ -386,7 +386,7 @@ void RexxClass::addSubClass(RexxClass *subClass)
     // wrap a weak reference around the subclass
     WeakReference *ref = new WeakReference(subClass);
     // add this to the front of the subclass list
-    subClasses->addFirst((RexxObject *)ref);
+    subClasses->addFirst(ref);
 }
 
 
@@ -690,7 +690,7 @@ RexxObject *RexxClass::defineMethod(RexxString *method_name, RexxObject *methodS
     }
     // if we have a real method object, then the scope has already been set
     // and alse check if this is an uninit method, which is a special case.
-    if (TheNilObject != methodObject)
+    if ((MethodClass *)TheNilObject != methodObject)
     {
         if (method_name->strCompare("UNINIT"))
         {
@@ -1242,7 +1242,7 @@ RexxObject *RexxClass::enhanced(RexxObject **args, size_t argCount)
     }
 
     // ok, get the table argument and make sure we really got something.
-    RexxObject *enhanced_methods = (RexxObject *)args[0];
+    RexxObject *enhanced_methods = args[0];
     requiredArgument(enhanced_methods, ARG_ONE);
 
     // create a dummy subclass of the receiver class

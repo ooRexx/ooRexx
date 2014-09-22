@@ -684,7 +684,7 @@ bool ArrayClass::isEmpty()
  */
 RexxObject *ArrayClass::isEmptyRexx()
 {
-    return (RexxObject *)booleanObject(isEmpty());
+    return booleanObject(isEmpty());
 }
 
 
@@ -1743,7 +1743,7 @@ RexxObject *ArrayClass::hasIndexRexx(RexxObject **index, size_t indexCount)
         return TheFalseObject;
     }
     // now check the slot position
-    return (RexxObject *)booleanObject(hasIndex(position));
+    return booleanObject(hasIndex(position));
 }
 
 
@@ -2224,7 +2224,7 @@ RexxObject *ArrayClass::hasItemRexx(RexxObject *target)
     // this is pretty simple.  One argument, required, and just search to see
     // if we have it.
     requiredArgument(target, ARG_ONE);
-    return (RexxObject *)booleanObject(findSingleIndexItem(target) != 0);
+    return booleanObject(findSingleIndexItem(target) != 0);
 }
 
 
@@ -2773,13 +2773,13 @@ wholenumber_t ArrayClass::WithSortComparator::compare(RexxInternalObject *first,
 {
     ProtectedObject result;
     comparator->sendMessage(GlobalNames::COMPARE, (RexxObject *)first, (RexxObject *)second, result);
-    if ((RexxObject *)result == OREF_NULL)
+    if (result.isNull())
     {
         reportException(Error_No_result_object_message, GlobalNames::COMPARE);
     }
 
     wholenumber_t comparison;
-    if (!((RexxObject *)result)->numberValue(comparison, Numerics::DEFAULT_DIGITS))
+    if (!result->numberValue(comparison, Numerics::DEFAULT_DIGITS))
     {
         reportException(Error_Invalid_whole_number_compare, (RexxObject *)result);
     }

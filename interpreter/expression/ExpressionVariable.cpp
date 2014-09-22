@@ -128,12 +128,12 @@ RexxObject *RexxSimpleVariable::evaluate(RexxActivation *context, ExpressionStac
 {
     // look up the variable
     RexxVariable *variable = context->getLocalVariable(variableName, index);
-    RexxObject *value = (RexxObject *)variable->getVariableValue();
+    RexxObject *value = variable->getVariableValue();
     // we need to do novalue checks.
     if (value == OREF_NULL)
     {
         // try the various novalue mechanisms
-        value = (RexxObject *)context->handleNovalueEvent(variableName, variableName, variable);
+        value = context->handleNovalueEvent(variableName, variableName, variable);
     }
     // stack, trace, and return
     stack->push(value);
@@ -154,7 +154,7 @@ RexxObject *RexxSimpleVariable::evaluate(RexxActivation *context, ExpressionStac
 RexxObject *RexxSimpleVariable::getValue(VariableDictionary *dictionary)
 {
     RexxVariable *variable = dictionary->getVariable(variableName);
-    RexxObject *value = (RexxObject *)variable->getVariableValue();
+    RexxObject *value = variable->getVariableValue();
     // if no variable yet, return the name.
     if (value == OREF_NULL)
     {
@@ -175,7 +175,7 @@ RexxObject *RexxSimpleVariable::getValue(VariableDictionary *dictionary)
 RexxObject  *RexxSimpleVariable::getValue(RexxActivation *context)
 {
     RexxVariable *variable = context->getLocalVariable(variableName, index);
-    RexxObject *value = (RexxObject *)variable->getVariableValue();
+    RexxObject *value = variable->getVariableValue();
     // use the variable name if not set.
     if (value == OREF_NULL)
     {
@@ -197,7 +197,7 @@ RexxObject  *RexxSimpleVariable::getValue(RexxActivation *context)
 RexxObject *RexxSimpleVariable::getRealValue(VariableDictionary *dictionary)
 {
     RexxVariable *variable = dictionary->getVariable(variableName);
-    return (RexxObject *)variable->getVariableValue();
+    return variable->getVariableValue();
 }
 
 
@@ -214,7 +214,7 @@ RexxObject *RexxSimpleVariable::getRealValue(VariableDictionary *dictionary)
 RexxObject  *RexxSimpleVariable::getRealValue(RexxActivation *context)
 {
     RexxVariable *variable = context->getLocalVariable(variableName, index);
-    return (RexxObject *)variable->getVariableValue();
+    return variable->getVariableValue();
 }
 
 

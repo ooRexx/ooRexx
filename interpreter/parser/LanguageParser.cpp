@@ -2604,7 +2604,7 @@ RexxInternalObject *LanguageParser::parseCollectionMessage(RexxToken *token, Rex
 
     // create the message item.
     RexxInternalObject *msg = new (argCount) RexxExpressionMessage(target, GlobalNames::BRACKETS,
-        (RexxObject *)OREF_NULL, argCount, subTerms, false);
+        OREF_NULL, argCount, subTerms, false);
     // give this a little short-term GC protection.
     holdObject(msg);
     return msg;
