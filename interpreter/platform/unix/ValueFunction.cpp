@@ -68,7 +68,7 @@
 bool SystemInterpreter::valueFunction(RexxString *name, RexxObject *newValue, RexxString *selector, RexxObject *&result)
 {
     // we only recognize the environemnt selector
-    if (selector->strCaselessCompare(SELECTOR) != 0)
+    if (!selector->strCaselessCompare(SELECTOR))
     {
         return false;                    // we can't handle this one
     }
