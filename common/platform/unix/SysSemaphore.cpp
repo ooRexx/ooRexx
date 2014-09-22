@@ -114,8 +114,9 @@ void SysSemaphore::create()
             iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE);
     #elif defined( HAVE_PTHREAD_MUTEX_ERRORCHECK )
             iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_ERRORCHECK);
+    // no valid mutex errors found, likely a config.h problem
     #else
-            fprintf(stderr," *** ERROR: Unknown 2nd argument to pthread_mutexattr_settype()!\n");
+            #error Configuration error for pthread semaphores.  Check the defines in config.h
     #endif
         }
         if ( iRC == 0 )

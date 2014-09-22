@@ -1726,7 +1726,7 @@ if (WIN32 AND DOC_SOURCE_DIR)
          COMMENT "Building NSIS file install manifests")
 
       # and finally, build the installer manifests
-      add_custom_target(nsis_template_installer
+      add_custom_target(nsis_template_installers
          DEPENDS nsis_file_manifests
                  nsis_install_dirs
                  nsis_includes

@@ -1385,9 +1385,6 @@ bool ArrayClass::validateMultiDimensionIndex(RexxObject **index, size_t indexCou
                     // need to extend a second time.
                     return validateMultiDimensionIndex(index, indexCount, argPosition, boundsError, position);
                 }
-                // TODO:  Technically, we should probably validate that the rest of the arguments are at
-                // least valid.
-
                 // probably a get request, so just say this is out of bounds
                 else
                 {

@@ -1730,16 +1730,23 @@ RexxObject *RexxObject::setMethod(RexxString *msgname, MethodClass *methobj, Rex
     // by default, the added scope is .nil, which is the object scope.
     RexxClass *targetScope = (RexxClass *)TheNilObject;
 
-    // TODO:  Understand what the option does...it seems like a NOP.
+    // By default, we add this method using the floating scope, which is a
+    // non-specific scope shared by all set methods.  This can also be defined
+    // using "OBJECT" scope, which really should be "CLASS" scope.  "OBJECT" scope
+    // uses the
     if (option != OREF_NULL)
     {
         option = stringArgument(option, ARG_THREE);
+
+        // OBJECT scope means we attach this as a method of the defining class (top-level
+        // of the hierarchy.
         if (Utilities::strCaselessCompare("OBJECT", option->getStringData()) == 0)
         {
             // define this scope on the class object, not the object level.
             targetScope = classObject();
         }
-        // FLOAT is the only other possibility, which is the default
+        // FLOAT is the only other possibility, which is the default.  This is
+        // the .nil scope.
         else if (Utilities::strCaselessCompare("FLOAT",option->getStringData()) != 0)
         {
             reportException(Error_Incorrect_call_list, "SETMETHOD", IntegerThree, "\"FLOAT\", \"OBJECT\"", option);
