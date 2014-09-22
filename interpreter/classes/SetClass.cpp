@@ -66,8 +66,6 @@ void SetClass::createInstance()
  *
  * @return Storage for creating a table object.
  */
-
-// TODO:  We might be able to generate some of the new methods automatically too.
 void *SetClass::operator new (size_t size)
 {
     return new_object(size, T_Set);

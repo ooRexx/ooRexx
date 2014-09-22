@@ -54,8 +54,6 @@
 
 #define BUFFERLEN         256          /* Length of message bufs used       */
 
-// TODO:  Add these to the official API list
-
 void DisplayError(HINSTANCE hDll, int err_no)
 {
    char str[BUFFERLEN];

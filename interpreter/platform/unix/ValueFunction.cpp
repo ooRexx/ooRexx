@@ -54,105 +54,51 @@
 
 #define  SELECTOR  "ENVIRONMENT"       /* environment selector              */
 
-// TODO:  Clean this up
 
-extern int putflag;
-
-/*********************************************************************/
-/*                                                                   */
-/*   Subroutine Name:   SetEnvironmentVariable                       */
-/*                                                                   */
-/*   Descriptive Name:  set value of environment variable            */
-/*                                                                   */
-/*********************************************************************/
-
-int SetEnvironmentVariable(
-  RexxString * Name,                   /* variable name                     */
-  RexxString * Value )                 /* new variable value                */
-
+/**
+ * Process a value function call for external repositories.
+ *
+ * @param Name     The variable name.
+ * @param NewValue The new value to assign to that variable.
+ * @param Selector The variable pool selector.
+ * @param result   The returned existing value.
+ *
+ * @return true if this worked, false otherwise.
+ */
+bool SystemInterpreter::valueFunction(RexxString *name, RexxObject *newValue, RexxString *selector, RexxObject *&result)
 {
-  char  *Env_Var_String = NULL;        /* Environment variable string for   */
-  size_t size;                         /* size of the string                */
-  char **Environment;                  /* environment pointer               */
-  char  *del = NULL;                   /* ptr to old unused memory          */
-  char  *np;
-  size_t i;
-  char   namebufcurr[256];             /* buf for extracted name            */
-
-  Environment = getEnvironment();      /* get the environment               */
-  if(!putflag){                        /* first change in the environment ? */
-    /* copy all entries to dynamic memory                                   */
-    for(;*Environment != NULL;Environment++){/*for all entries in the env   */
-      size = strlen(*Environment)+1;   /* get the size of the string        */
-      Env_Var_String = (char *)malloc(size); /* and alloc space for it      */
-      memcpy(Env_Var_String,*Environment,size);/* copy the string           */
-      putenv(Env_Var_String);          /* and chain it in                   */
-    }
-    putflag = 1;                       /* prevent do it again               */
-    Environment = getEnvironment();    /* reset the environment pointer     */
-  }
-                                       /* calculate the size                */
-  size = strlen(Name->getStringData())+strlen(Value->getStringData())+2;
-  Env_Var_String = (char *)malloc(size); /* get the memory                  */
-                                       /* find the entry in the environ     */
-  for(;*Environment != NULL;Environment++){
-    np = *Environment;
-                                       /* extract the the name              */
-                                       /* from the current env string       */
-    for(i=0;(*np!='=')&&(i<255);np++,i++){
-      memcpy(&(namebufcurr[i]),np,1);  /* copy the character                */
-    }
-    memcpy(&(namebufcurr[i]),"\0",1);      /* copy the terminator           */
-
-    if(!strcmp(Name->getStringData(),namebufcurr))/* have a match ?         */
-      del = *Environment;              /* remember it for deletion          */
-  }
-
-  if (Value != (RexxString *) TheNilObject)
-  {
-    sprintf(Env_Var_String, "%s=%s",Name->getStringData(),Value->getStringData());
-    putenv(Env_Var_String);
-  }
-  if(del)                              /* if there was a old one            */
-    free(del);                         /* free it                           */
-  return 0;                            /* return success                    */
-}
-
-bool SystemInterpreter::valueFunction(
-    RexxString *Name,                  /* variable name                     */
-    RexxObject *NewValue,              /* new assigned value                */
-    RexxString *Selector,              /* variable selector                 */
-    RexxObject *&result)
-{
-  const char * OldValue;               /* old environment value             */
-
-  Selector = Selector->upper();        /* upper case the selector           */
-                                       /* Linux environment variables can   */
-                                       /* be lowercased                     */
-                                       /* and the name too                  */
-  if (!Selector->strCompare(SELECTOR)) /* correct selector?                 */
-  {
-      return false;                    // we can't handle this one
-  }
-                                       /* scan for the variable             */
-  OldValue = getenv(Name->getStringData());
-  if (OldValue != NULL)                /* have a value already?   */
-    result = new_string(OldValue);    /* Yes -  convert to Rexx string     */
-  else
-    result = GlobalNames::NULLSTRING;          /* otherwise, return null            */
-
-  if (NewValue != OREF_NULL)           /* if there's a new value, set it    */
-  {
-    if(NewValue == (RexxString *) TheNilObject)
+    // we only recognize the environemnt selector
+    if (selector->strCaselessCompare(SELECTOR) != 0)
     {
-      SetEnvironmentVariable(Name, (RexxString *) TheNilObject);
+        return false;                    // we can't handle this one
     }
-    else
+
+    // if not there, we return a null string
+    result = GlobalNames::NULLSTRING;
+
+    // see if we have an existing variable first
+    const char *oldValue = getenv(name->getStringData());
+    // either return the existing variable value or a null string.
+    if (oldValue != NULL)
     {
-    SetEnvironmentVariable(Name, stringArgument(NewValue, ARG_TWO));
+        result = new_string(oldValue);
     }
-  }
-  return true;
+
+    // set the variable if we have a new value
+    if (newValue != OREF_NULL)
+    {
+        // .nil is special, it removes the variable
+        if (newValue == (RexxString *)TheNilObject)
+        {
+            unsetenv(name->getStringData());
+        }
+        // we need a string value for the set.
+        else
+        {
+            setenv(name->getStringData(), stringArgument(newValue, ARG_TWO)->getStringData(), true) ;
+        }
+    }
+    return true;
 }
 
 

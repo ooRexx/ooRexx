@@ -1014,10 +1014,6 @@ void RexxObject::processUnknown(RexxString *messageName, RexxObject **arguments,
     {
         reportNomethod(messageName, this);
     }
-
-    // TODO:  We should be able to optimize this for internal objects like directory, integer, and numberstring
-    // to avoid creating the array object
-
     // we need to pass the arguments to the array as real arguments
     Protected<ArrayClass> argumentArray = new_array(count, arguments);
 

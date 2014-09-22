@@ -100,10 +100,10 @@ public:
     static void validateAddressName(RexxString *name );
     static void loadImage(char *&imageBuffer, size_t &imageSize);
     static BufferClass *readProgram(const char *file_name);
+    static int setEnvironmentVariable(RexxString *name, RexxString *value);
 
     static sigset_t oldmask;       // masks used for setting signal handlers
     static sigset_t newmask;
-
 };
 
 #endif

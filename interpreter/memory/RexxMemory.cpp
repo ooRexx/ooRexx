@@ -1563,9 +1563,6 @@ RexxString *MemoryObject::getUpperGlobalName(const char *value)
  */
 void MemoryObject::create()
 {
-    // Class and integer has some special stuff, so get them created first
-    RexxClass::createInstance();
-    RexxInteger::createInstance();
     // Now get our savestack
     memoryObject.setUpMemoryTables(OREF_NULL);
 }

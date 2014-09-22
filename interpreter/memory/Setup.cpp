@@ -204,11 +204,11 @@ void MemoryObject::createImage()
     // perform the initial memory environment setup.  We can create
     // new objects once this is done.
 
-    // NOTE:  this creates both the Integer and Class class objects, so those
-    // don't appear in the list below
-
-    // TODO:  Assess whether that is still really appropriate.
     MemoryObject::create();
+
+    // Class and integer has some special stuff, so get them created first
+    RexxClass::createInstance();
+    RexxInteger::createInstance();
 
     // initialize the base interpreter subsystem
     Interpreter::init();
@@ -1208,9 +1208,6 @@ StartClassDefinition(Integer)
         AddClassMethod("New", RexxString::newRexx, A_COUNT);
 
     CompleteClassMethodDefinitions();
-
-        // TODO:  Add some more frequently used methods to integer and number string
-        // to bypass unknown.  The compareTo method is an obvious one.
 
         AddMethod("+", RexxInteger::plus, 1);
         AddMethod("-", RexxInteger::minus, 1);
