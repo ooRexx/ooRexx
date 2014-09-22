@@ -74,8 +74,9 @@
 #define LINEBUFSIZE   65472    /* Arbitrary but matches current docs */
 
 #define REXXMESSAGEFILE    "rexx.cat"
+
 #ifndef CATD_ERR
-#define CATD_ERR -1
+#define CATD_ERR ((nl_catd)-1)         /* Duplicate for AIX                 */
 #endif
 
 char  line[LINEBUFSIZE];       /* buffer for data to add to queue    */
