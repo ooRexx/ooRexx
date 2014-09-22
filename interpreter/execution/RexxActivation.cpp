@@ -2958,6 +2958,9 @@ uint64_t RexxActivation::getRandomSeed(RexxInteger *seed)
             randomSeed = RANDOMIZE(randomSeed);
         }
     }
+
+    // randomize the seed for generating the next number
+    randomSeed = RANDOMIZE(randomSeed);
     return randomSeed;
 }
 

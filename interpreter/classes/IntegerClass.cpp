@@ -456,6 +456,21 @@ void RexxInteger::processUnknown(RexxString *messageName, RexxObject **arguments
 
 
 /**
+ * Wrapper around the compareTo() method that does string sort
+ * comparisons.
+ *
+ * @param other  The other comparison object
+ *
+ * @return -1, 0, 1 depending on the comparison result.
+ */
+wholenumber_t RexxInteger::compareTo(RexxInternalObject *other )
+{
+    // just send this as a message directly to the string object.
+    return stringValue()->compareTo(other);
+}
+
+
+/**
  * Override for the normal isinstanceof method.  This version
  * allows the IntegerClass to "lie" about being a string.
  *

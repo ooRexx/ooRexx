@@ -580,8 +580,8 @@ bool RexxString::primitiveCaselessIsEqual(RexxObject *otherObj)
 
 
 /**
- * Wrapper around the compareTo() method that validates and
- * extracts integer value.
+ * Wrapper around the compareTo() method for doing sort
+ * comparisons of strings.
  *
  * @param other  The other comparison object
  *

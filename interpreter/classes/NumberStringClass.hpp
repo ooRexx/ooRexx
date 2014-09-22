@@ -199,6 +199,7 @@ class NumberString : public NumberStringBase
 
     virtual bool  isEqual(RexxInternalObject *);
     virtual void processUnknown(RexxString *, RexxObject **, size_t, ProtectedObject &);
+    virtual wholenumber_t compareTo(RexxInternalObject *);
 
     wholenumber_t strictComp(RexxObject *);
     wholenumber_t comp(RexxObject *, size_t fuzz);

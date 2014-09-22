@@ -2966,6 +2966,21 @@ void NumberString::processUnknown(RexxString *messageName, RexxObject **argument
 
 
 /**
+ * Wrapper around the compareTo() method that does string sort
+ * comparisons.
+ *
+ * @param other  The other comparison object
+ *
+ * @return -1, 0, 1 depending on the comparison result.
+ */
+wholenumber_t NumberString::compareTo(RexxInternalObject *other )
+{
+    // just send this as a message directly to the string object.
+    return stringValue()->compareTo(other);
+}
+
+
+/**
  * Override for the normal isinstanceof method.  This version
  * allows the NumberStringClass to "lie" about being a string.
  *
