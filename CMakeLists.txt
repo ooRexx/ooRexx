@@ -268,19 +268,27 @@ check_function_exists(nsleep HAVE_NSLEEP)
 check_include_file(pthread.h HAVE_PTHREAD_H)
 set(CMAKE_REQUIRED_LIBRARIES "pthread;pthread_nonshared")
 check_function_exists(pthread_mutexattr_settype HAVE_PTHREAD_MUTEXATTR_SETTYPE)
+if (NOT DEFINED HAVE_PTHREAD_MUTEXATTR_SETTYPE)
+   check_symbol_exists(pthread_mutexattr_settype "pthread.h" HAVE_PTHREAD_MUTEXATTR_SETTYPE)
+endif ()
 check_c_source_compiles("#include <pthread.h>
                          int main(int arg, char **argv) {
                          int tryme;
                          tryme = PTHREAD_MUTEX_ERRORCHECK;
                          return 0;}"
                         HAVE_PTHREAD_MUTEX_ERRORCHECK)
+if (NOT DEFINED HAVE_PTHREAD_MUTEX_ERRORCHECK)
+   check_symbol_exists(PTHREAD_MUTEX_ERRORCHECK "pthread.h" HAVE_PTHREAD_MUTEX_ERRORCHECK)
+endif ()
 check_c_source_compiles("#include <pthread.h>
                          int main(int arg, char **argv) {
                          int tryme;
                          tryme = PTHREAD_MUTEX_RECURSIVE;
                          return 0;}"
                         HAVE_PTHREAD_MUTEX_RECURSIVE)
-check_symbol_exists(PTHREAD_MUTEX_RECURSIVE_NP "pthread.h" HAVE_PTHREAD_MUTEX_RECURSIVE_NP)
+if (NOT DEFINED HAVE_PTHREAD_MUTEX_RECURSIVE)
+   check_symbol_exists(PTHREAD_MUTEX_RECURSIVE "pthread.h" HAVE_PTHREAD_MUTEX_RECURSIVE)
+endif ()
 check_include_file(pwd.h HAVE_PWD_H)
 check_include_file(sched.h HAVE_SCHED_H)
 check_function_exists(setlocale HAVE_SETLOCALE)
