@@ -3786,7 +3786,7 @@ void RexxActivation::command(RexxString *address, RexxString *commandString)
 
     bool failureCondition = false;    // don't have a failure condition yet
 
-    int returnStatus = RETURN_STATUS_NORMAL;
+    ReturnStatus returnStatus = RETURN_STATUS_NORMAL;
     // did a handler raise a condition?  We need to pull the rc value from the
     // condition object
     if (conditionObj != OREF_NULL)
@@ -3904,8 +3904,7 @@ void RexxActivation::command(RexxString *address, RexxString *commandString)
  *
  * @param status The new status value.
  */
-// TODO:  use enum type here
-void RexxActivation::setReturnStatus(int status)
+void RexxActivation::setReturnStatus(ReturnStatus status)
 {
     settings.returnStatus = status;
     settings.setReturnStatus(true);

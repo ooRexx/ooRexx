@@ -79,19 +79,6 @@ class RexxActivation : public ActivationBase
         RETURNED,
     } ExecutionState;
 
-    // command return status.
-    typedef enum
-    {
-        /**
-         * Guard scope settings.
-         */
-        RETURN_STATUS_NORMAL = 0,
-        RETURN_STATUS_ERROR = 1,
-        RETURN_STATUS_FAILURE = -1
-    }  ReturnStatus;
-
-
-
     /**
      * An enumeration of the different trace prefixes.  The
      * trace prefix table must match these.
@@ -270,7 +257,7 @@ class RexxActivation : public ActivationBase
 
    PackageClass     *getPackage();
    RexxObject       *getLocalEnvironment(RexxString *name);
-   void              setReturnStatus(int status);
+   void              setReturnStatus(ReturnStatus status);
 
    inline void              setCallType(RexxString *type) {settings.calltype = type; }
    inline void              pushBlockInstruction(DoBlock *block) { block->setPrevious(doStack); doStack = block; }

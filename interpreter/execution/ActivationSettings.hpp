@@ -80,6 +80,18 @@ typedef enum
     INTERNAL_LEVEL_CALL = (INTERNALCALL | INTERPRET),
 } ActivationContext;
 
+
+// command return status.
+typedef enum
+{
+    /**
+     * Guard scope settings.
+     */
+    RETURN_STATUS_NORMAL = 0,
+    RETURN_STATUS_ERROR = 1,
+    RETURN_STATUS_FAILURE = -1
+}  ReturnStatus;
+
 /**
  * Main activation settings section created for easy
  * copying between related activations.
@@ -171,7 +183,7 @@ class ActivationSettings
       wholenumber_t traceSkip;             // count of trace events to skip
       bool intermediateTrace;              // very quick test for intermediate trace
       size_t  traceIndent;                 // trace indentation
-      int  returnStatus;                   // command return status
+      ReturnStatus returnStatus;           // command return status
 
       // TODO:  encapsulate the timing stuff in a class.
       int64_t elapsedTime;                 // elapsed time clock
