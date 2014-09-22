@@ -1674,12 +1674,6 @@ void Activity::addToInstance(InterpreterInstance *interpreter)
  */
 void Activity::setupExits()
 {
-
-    // copy all of the system exits
-    for (int i = 0; i < LAST_EXIT; i++)
-    {
-        sysexits[i] = instance->getExitHandler(i + 1);
-    }
     // set the appropriate exit interlocks
     queryTrcHlt();
 }
@@ -2021,20 +2015,17 @@ thread_id_t  Activity::threadIdMethod()
  * Determine if Halt or Trace System exits are set
  * and set a flag to indicate this.
  */
-// TODO:  Why are the exits contained in the activity rather than the instance?
 void Activity::queryTrcHlt()
 {
+    clauseExitUsed = false;
     if (isExitEnabled(RXHLT))
     {
         clauseExitUsed = true;
-        return;
     }
     if (isExitEnabled(RXTRC))
     {
         clauseExitUsed = true;
-        return;
     }
-    clauseExitUsed = false;
 }
 
 
@@ -3167,11 +3158,6 @@ void Activity::run(TrappingDispatcher &target)
  */
 void Activity::inheritSettings(Activity *parent)
 {
-    // copy all of the system exits
-    for (int i = 0; i < LAST_EXIT; i++)
-    {
-        sysexits[i] = parent->sysexits[i];
-    }
     clauseExitUsed = parent->clauseExitUsed;
 }
 

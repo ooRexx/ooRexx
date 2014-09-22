@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                              Activity.hpp  */
+/* REXX Kernel                                                  Activity.hpp  */
 /*                                                                            */
 /* Primitive Activity Class Definitions                                       */
 /*                                                                            */
@@ -55,6 +55,7 @@
 #include "ActivationApiContexts.hpp"
 #include "SysActivity.hpp"
 #include "StringTableClass.hpp"
+#include "InterpreterInstance.hpp"
 
 
 
@@ -294,7 +295,7 @@ class Activity : public RexxInternalObject
 
  protected:
 
-    ExitHandler &getExitHandler(int exitNum) {  return sysexits[exitNum - 1]; }
+    ExitHandler &getExitHandler(int exitNum) {  return instance->getExitHandler(exitNum); }
     inline bool isExitEnabled(int exitNum) { return getExitHandler(exitNum).isEnabled(); }
     inline void disableExit(int exitNum) { getExitHandler(exitNum).disable(); }
 
@@ -343,7 +344,6 @@ class Activity : public RexxInternalObject
     char       *stackBase;              // pointer to base of C stack
     bool        clauseExitUsed;         // halt/trace sys exit not set ==> 1
     uint64_t    randomSeed;             // random number seed
-    ExitHandler sysexits[LAST_EXIT];    // Array to hold system exits
     ProtectedBase *protectedObjects;    // list of stack-based object protectors
     ActivationFrame *activationFrames;  // list of stack-based object protectors
     Activity *nestedActivity;       // used to push down activities in threads with more than one instance
