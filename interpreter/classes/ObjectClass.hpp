@@ -302,7 +302,6 @@ class RexxInternalObject : public RexxVirtualBase
     // number and more bits to get fewer collisions.
     inline  HashCode     identityHash() { return ((uintptr_t)this) ^ UINTPTR_MAX; }
 
-    // TODO:  Try to cleanup the marking of virtual methods in the subclasses
     virtual bool         truthValue(int);
     virtual bool         logicalValue(logical_t &);
     virtual RexxString  *makeString();
@@ -341,9 +340,13 @@ class RexxInternalObject : public RexxVirtualBase
     RexxString  *requiredString(const char *);
     RexxString  *requiredString();
     RexxInteger *requiredInteger(size_t, wholenumber_t);
+    RexxInteger *requiredInteger(const char *, wholenumber_t);
     wholenumber_t requiredNumber(size_t position, wholenumber_t precision = Numerics::ARGUMENT_DIGITS);
+    wholenumber_t requiredNumber(const char *position, wholenumber_t precision = Numerics::ARGUMENT_DIGITS);
     size_t requiredPositive(size_t position, wholenumber_t precision = Numerics::ARGUMENT_DIGITS);
+    size_t requiredPositive(const char *position, wholenumber_t precision = Numerics::ARGUMENT_DIGITS);
     size_t requiredNonNegative(size_t position, wholenumber_t precision = Numerics::ARGUMENT_DIGITS);
+    size_t requiredNonNegative(const char *position, wholenumber_t precision = Numerics::ARGUMENT_DIGITS);
 
     RexxString  *requestString();
     RexxString  *requestStringNoNOSTRING();

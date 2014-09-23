@@ -76,6 +76,19 @@ inline void missingArgument(size_t argumentPosition)
     reportException(Error_Incorrect_method_noarg, argumentPosition);
 }
 
+
+/**
+ * Report an error with a missing argument.
+ *
+ * @param argumentPosition
+ *               The argument position.
+ */
+inline void missingArgument(const char *argumentPosition)
+{
+    reportException(Error_Invalid_argument_noarg, argumentPosition);
+}
+
+
 /**
  * Check for required arguments and raise a missing argument
  * error for the given position.
@@ -84,6 +97,23 @@ inline void missingArgument(size_t argumentPosition)
  * @param position the position of the argument for the error message.
  */
 inline RexxObject *requiredArgument(RexxObject *object, size_t position)
+{
+    if (object == OREF_NULL)
+    {
+        missingArgument(position);
+    }
+    return object;
+}
+
+
+/**
+ * Check for required arguments and raise a missing argument
+ * error for the given position.
+ *
+ * @param object   The reference to check.
+ * @param position the position of the argument for the error message.
+ */
+inline RexxObject *requiredArgument(RexxObject *object, const char *position)
 {
     if (object == OREF_NULL)
     {
@@ -134,14 +164,32 @@ inline RexxString *stringArgument(RexxObject *object, const char *name)
 }
 
 
-// handle an optional string argument where a default argument value is provided.
+/**
+ * handle an optional string argument where a default argument value is provided.
+ *
+ * @param o      The argument object to test.
+ * @param d      The default argument value (can be null)
+ * @param p      The argument position.
+ *
+ * @return The argument value, in string form.
+ */
 inline RexxString *optionalStringArgument(RexxObject *o, RexxString *d, size_t p)
 {
     return (o == OREF_NULL ? d : stringArgument(o, p));
 }
 
 
-// handle an optional string argument where a default argument value is provided.
+
+
+/**
+ * handle an optional string argument where a default argument value is provided.
+ *
+ * @param o      The argument object to test.
+ * @param d      The default argument value (can be null)
+ * @param p      The argument position.
+ *
+ * @return The argument value, in string form.
+ */
 inline RexxString *optionalStringArgument(RexxObject *o, RexxString *d, const char *p)
 {
     return (o == OREF_NULL ? d : stringArgument(o, p));
@@ -162,6 +210,19 @@ size_t lengthArgument(RexxObject *o, size_t p);
 
 
 /**
+ * Parse a length method argument.  this must be a non-negative
+ * whole number.  Raises a number if the argument was omitted or
+ * is not a length numeric value.
+ *
+ * @param o      The object to check.
+ * @param p      The argument position.
+ *
+ * @return The converted numeric value of the object.
+ */
+size_t lengthArgument(RexxObject *o, const char *p);
+
+
+/**
  * Parse a non-negative method argument.  this must be a
  * non-negative whole number.  Raises a number if the argument
  * was omitted or is not a length numeric value.
@@ -172,6 +233,19 @@ size_t lengthArgument(RexxObject *o, size_t p);
  * @return The converted numeric value of the object.
  */
 size_t nonNegativeArgument(RexxObject *o, size_t p);
+
+
+/**
+ * Parse a non-negative method argument.  this must be a
+ * non-negative whole number.  Raises a number if the argument
+ * was omitted or is not a length numeric value.
+ *
+ * @param o      The object to check.
+ * @param p      The argument position.
+ *
+ * @return The converted numeric value of the object.
+ */
+size_t nonNegativeArgument(RexxObject *o, const char *p);
 
 
 /**
@@ -192,6 +266,23 @@ inline size_t optionalLengthArgument(RexxObject *o, size_t d, size_t p)
 
 
 /**
+ * Parse an optional length method argument.  this must be a
+ * non-negative whole number.  Raises a number if the argument
+ * not a length numeric value.
+ *
+ * @param o      The object to check.
+ * @param d      The default value to return if the argument was omitted.
+ * @param p      The argument position.
+ *
+ * @return The converted numeric value of the object.
+ */
+inline size_t optionalLengthArgument(RexxObject *o, size_t d, const char *p)
+{
+    return (o == OREF_NULL ? d : lengthArgument(o, p));
+}
+
+
+/**
  * Parse a position method argument.  this must be a positive
  * whole number.  Raises a number if the argument was omitted or
  * is not a length numeric value.
@@ -202,6 +293,19 @@ inline size_t optionalLengthArgument(RexxObject *o, size_t d, size_t p)
  * @return The converted numeric value of the object.
  */
 size_t positionArgument(RexxObject *o, size_t p);
+
+
+/**
+ * Parse a position method argument.  this must be a positive
+ * whole number.  Raises a number if the argument was omitted or
+ * is not a length numeric value.
+ *
+ * @param o      The object to check.
+ * @param p      The argument position.
+ *
+ * @return The converted numeric value of the object.
+ */
+size_t positionArgument(RexxObject *o, const char *p);
 
 
 /**
@@ -222,6 +326,23 @@ inline size_t optionalPositionArgument(RexxObject *o, size_t d, size_t p)
 
 
 /**
+ * Parse an optional position method argument.  this must be a
+ * positive whole number.  Raises a number if the argument not a
+ * length numeric value.
+ *
+ * @param o      The object to check.
+ * @param d      The default value to return if the argument was omitted.
+ * @param p      The argument position.
+ *
+ * @return The converted numeric value of the object.
+ */
+inline size_t optionalPositionArgument(RexxObject *o, size_t d, const char *p)
+{
+    return (o == OREF_NULL ? d : positionArgument(o, p));
+}
+
+
+/**
  * Parse a pad argument.  This must a string object and
  * only a single character long.
  *
@@ -233,6 +354,18 @@ inline size_t optionalPositionArgument(RexxObject *o, size_t d, size_t p)
  */
 char padArgument(RexxObject *o, size_t p);
 
+
+/**
+ * Parse a pad argument.  This must a string object and
+ * only a single character long.
+ *
+ * @param o      The object argument to check.  Raises an error if this was
+ *               omitted.
+ * @param p      The argument position, for error reporting.
+ *
+ * @return The pad character from the argument string.
+ */
+char padArgument(RexxObject *o, const char *p);
 
 
 /**
@@ -246,6 +379,22 @@ char padArgument(RexxObject *o, size_t p);
  * @return The pad character from the argument string.
  */
 inline char optionalPadArgument(RexxObject *o, char d, size_t p)
+{
+    return (o == OREF_NULL ? d : padArgument(o, p));
+}
+
+
+/**
+ * Parse an optional pad argument.  This must a string object
+ * and only a single character long.
+ *
+ * @param o      The object argument to check.
+ * @param d      The default pad character if the argument was omitted.
+ * @param p      The argument position, for error reporting.
+ *
+ * @return The pad character from the argument string.
+ */
+inline char optionalPadArgument(RexxObject *o, char d, const char *p)
 {
     return (o == OREF_NULL ? d : padArgument(o, p));
 }
@@ -266,6 +415,17 @@ char optionArgument(RexxObject *o, size_t p);
  * Parse an option argument.  This must be a non-zero length string.
  *
  * @param o      The object to check.
+ * @param p      The argument position for error messages.
+ *
+ * @return The first character of the option string.
+ */
+char optionArgument(RexxObject *o, const char *p);
+
+
+/**
+ * Parse an option argument.  This must be a non-zero length string.
+ *
+ * @param o      The object to check.
  * @param validOptions
  *               The list of valid option characters as an ASCII-Z string.
  * @param p      The argument position for error messages.
@@ -273,6 +433,19 @@ char optionArgument(RexxObject *o, size_t p);
  * @return The first character of the option string.
  */
 char optionArgument(RexxObject *o, const char *validOptions, size_t p);
+
+
+/**
+ * Parse an option argument.  This must be a non-zero length string.
+ *
+ * @param o      The object to check.
+ * @param validOptions
+ *               The list of valid option characters as an ASCII-Z string.
+ * @param p      The argument position for error messages.
+ *
+ * @return The first character of the option string.
+ */
+char optionArgument(RexxObject *o, const char *validOptions, const char *p);
 
 
 /**
@@ -296,6 +469,22 @@ inline char optionalOptionArgument(RexxObject *o, char d, size_t p)
  * length string.
  *
  * @param o      The object to check.
+ * @param d      The default option if this was an omitted argument.
+ * @param p      The argument position for error messages.
+ *
+ * @return The first character of the option string.
+ */
+inline char optionalOptionArgument(RexxObject *o, char d, const char *p)
+{
+    return (o == OREF_NULL ? d : optionArgument(o, p));
+}
+
+
+/**
+ * Parse an optional option argument.  This must be a non-zero
+ * length string.
+ *
+ * @param o      The object to check.
  * @param v      The list of valid option characters.
  * @param d      The default option if this was an omitted argument.
  * @param p      The argument position for error messages.
@@ -303,6 +492,23 @@ inline char optionalOptionArgument(RexxObject *o, char d, size_t p)
  * @return The first character of the option string.
  */
 inline char optionalOptionArgument(RexxObject *o, const char *v, char d, size_t p)
+{
+    return (o == OREF_NULL ? d : optionArgument(o, v, p));
+}
+
+
+/**
+ * Parse an optional option argument.  This must be a non-zero
+ * length string.
+ *
+ * @param o      The object to check.
+ * @param v      The list of valid option characters.
+ * @param d      The default option if this was an omitted argument.
+ * @param p      The argument position for error messages.
+ *
+ * @return The first character of the option string.
+ */
+inline char optionalOptionArgument(RexxObject *o, const char *v, char d, const char *p)
 {
     return (o == OREF_NULL ? d : optionArgument(o, v, p));
 }
@@ -324,6 +530,21 @@ inline size_t optionalNonNegative(RexxObject *o, size_t d, size_t p)
 
 
 /**
+ * Handle an optional non-negative numeric option.
+ *
+ * @param o      The object to check.
+ * @param d      The default value to return if the argument was omitted.
+ * @param p      The argument position used for error reporting.
+ *
+ * @return The converted numeric value.
+ */
+inline size_t optionalNonNegative(RexxObject *o, size_t d, const char *p)
+{
+    return o == OREF_NULL ? d : nonNegativeArgument(o, p);
+}
+
+
+/**
  * Handle an optional positive numeric option.
  *
  * @param o      The object to check.
@@ -336,6 +557,22 @@ inline size_t optionalPositive(RexxObject *o, size_t d, size_t p)
 {
     return (o == OREF_NULL ? d : o->requiredPositive(p));
 }
+
+
+/**
+ * Handle an optional positive numeric option.
+ *
+ * @param o      The object to check.
+ * @param d      The default value to return if the argument was omitted.
+ * @param p      The argument position used for error reporting.
+ *
+ * @return The converted numeric value.
+ */
+inline size_t optionalPositive(RexxObject *o, size_t d, const char *p)
+{
+    return (o == OREF_NULL ? d : o->requiredPositive(p));
+}
+
 
 /**
  * REQUEST an ARRAY needed as a method

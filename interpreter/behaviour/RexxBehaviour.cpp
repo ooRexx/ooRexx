@@ -55,25 +55,6 @@
 
 
 /**
- * Allocate storage for a new primitive behaviour.  This
- * does not allocate any actual memory, but returns the
- * pointer to the statically defined primitive behaviour.
- *
- * @param size    The base object size.
- * @param typenum The desired class type number.
- *
- * @return A pointer to the target primitive behaviour.
- */
-// TODO:  This probably should not be done in the NEW, but rather
-// use a placement new operator
-void *RexxBehaviour::operator new(size_t size, size_t typenum)
-{
-    // return a pointer to the static primitive one
-    return (void *)getPrimitiveBehaviour(typenum);
-}
-
-
-/**
  * Construct a statically defined primitive behaviour.
  * Behaviours are created originally in a table of objects that
  * are not allocated from object heap memory.  There is one

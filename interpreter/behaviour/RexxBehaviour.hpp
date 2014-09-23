@@ -53,10 +53,6 @@
 class RexxBehaviour : public RexxInternalObject
 {
  public:
-    void *operator new(size_t, size_t);
-    inline void  operator delete(void *) { }
-
-
     static const uintptr_t INTERNALCLASS = (((uintptr_t)1) << ((sizeof(uintptr_t) * 8) - 1));
 
     RexxBehaviour(ClassTypeCode, PCPPM *);

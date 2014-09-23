@@ -1458,6 +1458,28 @@ RexxInteger *RexxInternalObject::requiredInteger(size_t position, wholenumber_t 
 
 
 /**
+ * Get an integer value in a situation where a value is requied.
+ *
+ * @param position  The argument name for error messages.
+ * @param precision The precision for the conversion.
+ *
+ * @return The converted object value.
+ */
+RexxInteger *RexxInternalObject::requiredInteger(const char *position, wholenumber_t precision)
+{
+    // do the common conversion
+    RexxInteger *result = integerValue(precision);
+
+    // if didn't convert, this is an error
+    if (result == (RexxInteger *)TheNilObject)
+    {
+        reportException(Error_Invalid_argument_whole, position, (RexxObject *)this);
+    }
+    return result;
+}
+
+
+/**
  * Request an object to convert itself into a number value.
  *
  * @param result    The numeric result value.
@@ -1510,6 +1532,28 @@ wholenumber_t RexxInternalObject::requiredNumber(size_t position, wholenumber_t 
 
 
 /**
+ * Request a whole number value from an object in a
+ * situation where a value is required.
+ *
+ * @param position  The position of the argument used for error reporting.
+ * @param precision The conversion precision.
+ *
+ * @return The converted whole number.
+ */
+wholenumber_t RexxInternalObject::requiredNumber(const char *position, wholenumber_t precision)
+{
+    wholenumber_t  result;
+
+    // just convert via the appropriate means and raise the error
+    if (!numberValue(result, precision))
+    {
+        reportException(Error_Invalid_argument_whole, position, (RexxObject *)this);
+    }
+    return result;
+}
+
+
+/**
  * Request a positive whole number value from an object in a
  * situation where a value is required.
  *
@@ -1532,6 +1576,28 @@ size_t RexxInternalObject::requiredPositive(size_t position, wholenumber_t preci
 
 
 /**
+ * Request a positive whole number value from an object in a
+ * situation where a value is required.
+ *
+ * @param position  The position of the argument used for error reporting.
+ * @param precision The conversion precision.
+ *
+ * @return The converted whole number.
+ */
+size_t RexxInternalObject::requiredPositive(const char *position, wholenumber_t precision)
+{
+    size_t result;
+
+    // convert and validate the result
+    if (!unsignedNumberValue(result, precision) || result == 0)
+    {
+        reportException(Error_Invalid_argument_positive, position, (RexxObject *)this);
+    }
+    return result;
+}
+
+
+/**
  * Request a non-negative whole number value from an object in a
  * situation where a value is required.
  *
@@ -1548,6 +1614,28 @@ size_t RexxInternalObject::requiredNonNegative(size_t position, wholenumber_t pr
     if (!unsignedNumberValue(result, precision))
     {
         reportException(Error_Incorrect_method_nonnegative, position, (RexxObject *)this);
+    }
+    return result;
+}
+
+
+/**
+ * Request a non-negative whole number value from an object in a
+ * situation where a value is required.
+ *
+ * @param position  The position of the argument used for error reporting.
+ * @param precision The conversion precision.
+ *
+ * @return The converted whole number.
+ */
+// TODO:  should we have versions of this that take a name?
+size_t RexxInternalObject::requiredNonNegative(const char *position, wholenumber_t precision)
+{
+    size_t result;
+
+    if (!unsignedNumberValue(result, precision))
+    {
+        reportException(Error_Invalid_argument_nonnegative, position, (RexxObject *)this);
     }
     return result;
 }
