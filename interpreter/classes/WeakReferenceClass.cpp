@@ -157,6 +157,26 @@ void WeakReference::flatten(Envelope *envelope)
 
 
 /**
+ * Copy a WeakReference object.
+ *
+ * @return A new weakreference object.
+ */
+RexxInternalObject *WeakReference::copy()
+{
+    // this is potentially a subclass and might have some object variable
+    // so we need to make an actual copy
+    WeakReference *newRef = (WeakReference *)RexxObject::copy();
+
+    // make sure the new version has nulled out list pointers
+    newRef->nextReferenceList = OREF_NULL;
+    // tell the memory manager to track this instance
+    memoryObject.addWeakReference(newRef);
+
+    return newRef;
+}
+
+
+/**
  * unflatten an object
  *
  * @param envelope The owning envelope.

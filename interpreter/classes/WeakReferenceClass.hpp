@@ -65,8 +65,7 @@ public:
     virtual void liveGeneral(MarkReason);
     virtual void flatten(Envelope *);
     virtual RexxInternalObject *unflatten(Envelope *);
-
-    // TODO:  Weak reference might have some copy method issues
+    virtual RexxInternalObject *copy();
 
     RexxInternalObject *value();
     inline RexxInternalObject *get() { return referentObject; }
