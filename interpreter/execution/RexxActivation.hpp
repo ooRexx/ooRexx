@@ -270,7 +270,7 @@ class RexxActivation : public ActivationBase
 
    inline void              setCallType(RexxString *type) {settings.calltype = type; }
    inline void              pushBlockInstruction(DoBlock *block) { block->setPrevious(doStack); doStack = block; }
-   inline void              popBlockInstruction() { DoBlock *temp; temp = doStack; doStack = temp->getPrevious(); temp->setHasNoReferences(); }
+   inline void              popBlockInstruction() { DoBlock *temp; temp = doStack; doStack = temp->getPrevious(); temp->setHasNoReferences(); removeBlockInstruction(); }
    inline DoBlock         * topBlockInstruction() { return doStack; }
    inline void              terminateBlockInstruction(size_t _indent) { popBlockInstruction(); blockNest--; settings.traceIndent = _indent; }
    inline void              terminateBlockInstruction() { settings.traceIndent = doStack->getIndent(); popBlockInstruction(); blockNest--; }

@@ -1046,7 +1046,6 @@ void RexxActivation::iterate(RexxString *name)
         // terminate this block instruction and step to the
         // the next level.
         popBlockInstruction();
-        removeBlockInstruction();
         doblock = topBlockInstruction();
     }
 
@@ -1099,10 +1098,7 @@ void RexxActivation::leaveLoop(RexxString *name)
         // top one is not the one we need...remove this block
         // instruction and try the next one.
 
-        // TODO:  Why do we need both of these?  the pop should handle
-        // that.
         popBlockInstruction();
-        removeBlockInstruction();
         doblock = topBlockInstruction();
     }
 
