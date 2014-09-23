@@ -99,6 +99,8 @@ PackageClass::PackageClass(RexxString *p, ProgramSource *s)
     // NOTE:  For GC purposes, don't do involved processing here that creates lots of objects.
     programName = p;
     source = s;
+    // we always start out at the default language level
+    requiredLanguageLevel = DefaultLanguageLevel;
 }
 
 

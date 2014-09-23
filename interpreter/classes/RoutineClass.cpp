@@ -302,10 +302,20 @@ void RoutineClass::save(PRXSTRING outBuffer)
     // flatten the routine
     Protected<BufferClass> methodBuffer = save();
     // create a full buffer of the data, plus the information header.
-    ProgramMetaData *data = new (methodBuffer) ProgramMetaData(methodBuffer);
+    ProgramMetaData *data = new (methodBuffer) ProgramMetaData(getLanguageLevel(), methodBuffer);
     // we just hand this buffer of data right over...that's all, we're done...
     outBuffer->strptr = (char *)data;
     outBuffer->strlength = data->getDataSize();
+}
+
+/**
+ * Retrieve the language level necessary to interpret this routine.
+ *
+ * @return The required language leve.
+ */
+LanguageLevel RoutineClass::getLanguageLevel()
+{
+    return getPackageObject()->getLanguageLevel();
 }
 
 
@@ -329,7 +339,7 @@ void RoutineClass::save(const char *filename)
     ProtectedObject p2(buffer);
 
     // create an image header
-    ProgramMetaData metaData(buffer->getDataLength());
+    ProgramMetaData metaData(getLanguageLevel(), buffer->getDataLength());
     {
         UnsafeBlock releaser;
 

@@ -39,6 +39,7 @@
 #define ProgramMetaData_Included
 
 #include "SystemInterpreter.hpp"
+#include "LanguageLevel.hpp"
 
 class BufferClass;
 
@@ -48,9 +49,8 @@ public:
     void *operator new (size_t size, BufferClass *buff);
     void operator delete (void *p) { SystemInterpreter::releaseResultMemory(p); }
 
-    ProgramMetaData();
-    ProgramMetaData(BufferClass *);
-    ProgramMetaData(size_t size);
+    ProgramMetaData(LanguageLevel, BufferClass *);
+    ProgramMetaData(LanguageLevel, size_t);
 
     size_t getDataSize();
     size_t getHeaderSize();
@@ -65,7 +65,7 @@ protected:
     enum
     {
         MAGICNUMBER = 11111,           // remains constant from release-to-release
-        METAVERSION = 40               // gets updated when internal form changes
+        METAVERSION = 41               // gets updated when internal form changes
     };
 
 
@@ -74,7 +74,7 @@ protected:
     unsigned short imageVersion;       // version identifier for validity
     unsigned short wordSize;           // size of a word
     unsigned short bigEndian;          // true if this is a big-endian platform
-    char           rexxVersion[40];    // Rexx version string info
+    LanguageLevel requiredLevel;       // required language level for execution
     size_t         imageSize;          // size of the image
     char           imageData[4];       // the copied image data
 };

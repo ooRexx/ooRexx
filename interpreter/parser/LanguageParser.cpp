@@ -590,6 +590,37 @@ void LanguageParser::initializeForParsing()
 
 
 /**
+ * Mark the package that it requires at least the given
+ * language level to execut.
+ *
+ * @param l      The new language level.
+ */
+void LanguageParser::requireLanguageLevel(LanguageLevel l)
+{
+    LanguageLevel oldLevel = package->getLanguageLevel();
+    if (l > oldLevel)
+    {
+        package->setLanguageLevel(l);
+    }
+}
+
+
+/**
+ * Test if this version of the interpreter can handle
+ * executing a program created with a given language level.
+ *
+ * @param l      The target language level.
+ *
+ * @return True if the given level is within the range supported
+ *         by this interpreter version.
+ */
+bool LanguageParser::canExecute(LanguageLevel l)
+{
+    return l >= MinimumLanguageLevel && l <= MaximumLanguageLevel;
+}
+
+
+/**
  * Initialize the global tables used for keeping track of
  * directive information.
  */

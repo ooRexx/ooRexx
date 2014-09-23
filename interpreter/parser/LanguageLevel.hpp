@@ -38,71 +38,31 @@
 /******************************************************************************/
 /* REXX Kernel                                                                */
 /*                                                                            */
-/* Version Identification                                                     */
+/* Languate translator defintions.                                            */
 /*                                                                            */
 /******************************************************************************/
-#include "RexxCore.h"
-#include "StringClass.hpp"
-#include "Interpreter.hpp"
-
-#include <stdio.h>
-
-const char *build_date = __DATE__;  /* date of last build                */
-
-RexxString *Interpreter::versionNumber = OREF_NULL;
+#ifndef Included_LanguageLevel
+#define Included_LanguageLevel
 
 /**
- * Generate a version number string for the interpreter.
- *
- * @return The interpreter version string.
+ * This is a marker of the lanuage level required by
+ * a code package.  These are numeric indicators of the
+ * in the form MMmmrr, where MM is the major language
+ * level, mm is the minor language level and rr is an
+ * additional revision level that can be used when bug
+ * fixes require an incompatibility.  So, for language
+ * level 6.05, this value would be 060500.  A new indicator
+ * needs to be added anytime new classes are added to the
+ * Language parser.  Any program that requires the new
+ * feature should mark the package as requiring the higher
+ * level.
  */
-RexxString *Interpreter::getVersionNumber()
+typedef enum
 {
-    if (versionNumber == OREF_NULL)
-    {
-        char     buffer[100];                /* buffer for building the string    */
-        char     work[20];                   /* working buffer                    */
+    LanguageLevel0605 = 060500,
+    DefaultLanguageLevel = LanguageLevel0605,        // the default language level for translated programs
+    MinimumLanguageLevel = LanguageLevel0605,        // the lowest language level we can interpret
+    MaximumLanguageLevel = LanguageLevel0605         // the highest language level we can interpret
+} LanguageLevel;
 
-        strcpy(work, build_date);            /* copy the build date               */
-        char *month = strtok(work, " ");     /* get the month                     */
-        char *day = strtok(NULL, " ");       /* get the build day                 */
-        char *year = strtok(NULL, " ");      /* and the year                      */
-        if (*day == '0')                     /* day have a leading zero?          */
-        {
-            day++;                             /* step over it                      */
-        }
-                                               /* format the result                 */
-        sprintf(buffer, "REXX-ooRexx_%d.%d.%d(MT)_%s-bit 6.05 %s %s %s", ORX_VER, ORX_REL, ORX_MOD,
-#ifdef __REXX64__
-			"64",
-#else
-			"32",
 #endif
-			day, month, year);
-        versionNumber = new_string(buffer);  /* return as a rexx string           */
-    }
-    return versionNumber;
-}
-
-
-/**
- * Get the interpreter version level as a binary number
- * to be returned in the APIs.
- *
- * @return The binary interpreter version level.
- */
-size_t Interpreter::getInterpreterVersion()
-{
-    return REXX_CURRENT_INTERPRETER_VERSION;
-}
-
-/**
- * Return the current language level implemented by this
- * interpreter version.
- *
- * @return The current defined language level.
- */
-size_t Interpreter::getLanguageLevel()
-{
-    return REXX_CURRENT_LANGUAGE_LEVEL;
-}

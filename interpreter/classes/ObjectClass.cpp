@@ -1627,7 +1627,6 @@ size_t RexxInternalObject::requiredNonNegative(size_t position, wholenumber_t pr
  *
  * @return The converted whole number.
  */
-// TODO:  should we have versions of this that take a name?
 size_t RexxInternalObject::requiredNonNegative(const char *position, wholenumber_t precision)
 {
     size_t result;

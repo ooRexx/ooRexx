@@ -46,6 +46,7 @@
 #include "SecurityManager.hpp"
 #include "PackageSetting.hpp"
 #include "SourceLocation.hpp"
+#include "LanguageParser.hpp"
 
 class ProgramSource;
 class RexxCode;
@@ -141,6 +142,8 @@ public:
     inline const TraceSetting &getTraceSetting() { return packageSettings.getTraceSetting(); }
     inline const PackageSetting &getSettings() { return packageSettings; }
     inline bool  isRexxPackage() { return this == TheRexxPackage; }
+    inline void  setLanguageLevel(LanguageLevel l) { requiredLanguageLevel = l; }
+    inline LanguageLevel getLanguageLevel() { return requiredLanguageLevel; }
 
            RexxString    *getTrace();
            void           detachSource();
@@ -176,7 +179,7 @@ public:
 
 protected:
 
-    size_t requiredLanguageVersion;      // the language version required to run this program
+    LanguageLevel requiredLanguageLevel; // the language version required to run this program
     ProgramSource *source;               // the reader for the program source...different flavors of this
     RexxString *programName;             // name of the source program        */
     RexxString *programDirectory;        // the directory location of the program (used for resolving calls)

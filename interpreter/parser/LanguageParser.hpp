@@ -53,6 +53,7 @@
 #include "Clause.hpp"
 #include "RexxInstruction.hpp"
 #include "DoBlockComponents.hpp"
+#include "LanguageLevel.hpp"
 
 class RexxInstruction;
 class RexxInstructionIf;
@@ -89,6 +90,10 @@ typedef RexxObject *builtin_func(RexxActivation *, size_t, ExpressionStack *);
 // pointer to a builtin function
 typedef builtin_func *pbuiltin;
 
+/**
+ * Main class for parsing Rexx source into an executable
+ * entity.
+ */
 class LanguageParser: public RexxInternalObject
 {
  public:
@@ -219,6 +224,8 @@ class LanguageParser: public RexxInternalObject
     inline bool capturingGuardVariables() { return guardVariables != OREF_NULL; }
            bool isExposed(RexxString *varName);
     void captureGuardVariable(RexxString *varname, RexxVariableBase *retriever);
+    void requireLanguageLevel(LanguageLevel l);
+    static bool canExecute(LanguageLevel l);
 
     // instruction parsing methods
     RexxInstruction *nextInstruction();

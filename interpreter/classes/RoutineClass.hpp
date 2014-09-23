@@ -45,6 +45,7 @@
 #define Included_RoutineClass
 
 #include "BaseExecutable.hpp"
+#include "LanguageLevel.hpp"
 
 class RoutineClass : public BaseExecutable
 {
@@ -74,6 +75,7 @@ public:
     RoutineClass *newRexx(RexxObject **, size_t);
     RoutineClass *newFileRexx(RexxString *);
     RoutineClass *loadExternalRoutine(RexxString *name, RexxString *descriptor);
+    LanguageLevel getLanguageLevel();
 
     // various static classes for reading from a file and restoring potential
     // compiled images.

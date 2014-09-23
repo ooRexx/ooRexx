@@ -42,6 +42,8 @@
 #include "BufferClass.hpp"
 #include "Interpreter.hpp"
 #include "ActivityManager.hpp"
+#include "LanguageParser.hpp"
+
 #include <stdio.h>
 #include <fcntl.h>
 
@@ -68,9 +70,10 @@ void *ProgramMetaData::operator new (size_t size, BufferClass *buff)
 /**
  * Initialize the meta data directly from a buffer.
  *
+ * @param level  The language level required for the code stored in the buffer.
  * @param image  The image buffer.
  */
-ProgramMetaData::ProgramMetaData(BufferClass *image)
+ProgramMetaData::ProgramMetaData(LanguageLevel level, BufferClass *image)
 {
     // add the leading header
     strcpy(fileTag, compiledHeader);
@@ -80,9 +83,8 @@ ProgramMetaData::ProgramMetaData(BufferClass *image)
     // this is the number of bits in a word
     wordSize = Interpreter::getWordSize();
     bigEndian = Interpreter::isBigEndian();
-
-    RexxString *versionNumber = Interpreter::getVersionNumber();
-    strncpy(rexxVersion, versionNumber->getStringData(), sizeof(rexxVersion));
+    // this is the language level required to execute this program
+    requiredLevel = level;
 
     // copy in the image information
     imageSize = image->getDataLength();
@@ -91,11 +93,12 @@ ProgramMetaData::ProgramMetaData(BufferClass *image)
 
 
 /**
- * Initialize program metadata for a specific size image.
+ * Initialize the meta data for a given data size.
  *
- * @param size   The size of the program data.
+ * @param level      The language level required for the saved program.
+ * @param bufferSize The size of the program data.
  */
-ProgramMetaData::ProgramMetaData(size_t size)
+ProgramMetaData::ProgramMetaData(LanguageLevel level, size_t bufferSize)
 {
     // add the leading header
     strcpy(fileTag, compiledHeader);
@@ -105,27 +108,11 @@ ProgramMetaData::ProgramMetaData(size_t size)
     // this is the number of bits in a word
     wordSize = Interpreter::getWordSize();
     bigEndian = Interpreter::isBigEndian();
-
-    RexxString *versionNumber = Interpreter::getVersionNumber();
-    strncpy(rexxVersion, versionNumber->getStringData(), sizeof(rexxVersion));
+    // this is the language level required to execute this program
+    requiredLevel = level;
 
     // copy in the image information
-    imageSize = size;
-}
-
-
-/**
- * Initialized a default metadata descriptor.
- */
-ProgramMetaData::ProgramMetaData()
-{
-    // this is for the purposes of reading in...force everything to zero.
-    magicNumber = 0;
-    imageVersion = 0;
-    // this is the number of bits in a word
-    wordSize = 0;
-    bigEndian = 0;
-    imageSize = 0;
+    imageSize = bufferSize;
 }
 
 
@@ -192,7 +179,7 @@ bool ProgramMetaData::validate(bool &badVersion)
     }
     // check all of the version specifics
     if (magicNumber != MAGICNUMBER || imageVersion != METAVERSION || wordSize != Interpreter::getWordSize() ||
-        (bigEndian != 0) != Interpreter::isBigEndian())
+        (bigEndian != 0) != Interpreter::isBigEndian() || !LanguageParser::canExecute(requiredLevel))
     {
         // this is a version failure, mark it as such
         badVersion = true;
