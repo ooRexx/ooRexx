@@ -70,11 +70,8 @@ void  RexxInstructionSay::execute(RexxActivation *context, ExpressionStack *stac
     // trace if necessary
     context->traceInstruction(this);
 
-    // TODO:  add a sayOutput() method to activation...should not have to know this
-    // is handled by the activity here.
-
     // evaluate the optional expression and write out the line.
-    context->getActivity()->sayOutput(context, evaluateStringExpression(context, stack));
+    context->sayOutput(evaluateStringExpression(context, stack));
 
     // and handle any debug pause.
     context->pauseInstruction();

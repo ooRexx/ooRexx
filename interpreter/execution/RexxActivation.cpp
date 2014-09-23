@@ -4047,6 +4047,17 @@ void RexxActivation::closeStreams()
 
 
 /**
+ * Handle SAY output for a SAY instruction.
+ *
+ * @param line   The line to write out.
+ */
+void RexxActivation::sayOutput(RexxString *line)
+{
+    activity->sayOutput(this, line);
+}
+
+
+/**
  * process unitialized variable overrides
  *
  * @param name   The uninitialized variable name.

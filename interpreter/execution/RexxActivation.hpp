@@ -541,6 +541,8 @@ class RexxActivation : public ActivationBase
 
    inline void setLocalVariableDictionary(VariableDictionary *dict) {settings.localVariables.setDictionary(dict); }
 
+   void sayOutput(RexxString *line);
+
    static const uint64_t RANDOM_FACTOR = 25214903917LL;   // random multiplication factor
    static const uint64_t RANDOM_ADDER = 11LL;
                                        // randomize a seed number
@@ -587,7 +589,6 @@ class RexxActivation : public ActivationBase
     QueueClass          *environmentList;
                                         // queue of trapped conditions
     QueueClass          *conditionQueue;// queue of trapped conditions
-    // TODO:  create a random number encapsulation class
     uint64_t             randomSeed;    // random number seed
     bool                 randomSet;     // random seed has been set
     size_t               blockNest;     // block instruction nesting level

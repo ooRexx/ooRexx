@@ -90,9 +90,8 @@ protected:
     RexxInternalObject *receiver;        // object to receive the message
     MapTable           *dupTable;        // table of duplicates
     IdentityTable      *saveTable;       // table of protected objects created during flattening
-    SmartBuffer *buffer;                 // smart buffer wrapper
-    // TODO:  Need to revisit the rehash stuff.
-    IdentityTable  *rehashTable;         // table to rehash
-    LiveStack  *flattenStack;           // the flattening stack
+    SmartBuffer        *buffer;          // smart buffer wrapper
+    IdentityTable      *rehashTable;     // table to rehash
+    LiveStack          *flattenStack;    // the flattening stack
 };
 #endif

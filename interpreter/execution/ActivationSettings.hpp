@@ -184,7 +184,6 @@ class ActivationSettings
       size_t  traceIndent;                 // trace indentation
       ReturnStatus returnStatus;           // command return status
 
-      // TODO:  encapsulate the timing stuff in a class.
       int64_t elapsedTime;                 // elapsed time clock
       RexxDateTime timeStamp;              // current timestamp
       RexxLocalVariables localVariables;   // the local variables for this activation
