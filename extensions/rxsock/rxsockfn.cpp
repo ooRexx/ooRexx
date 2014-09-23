@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -81,26 +81,18 @@
 #endif
 #endif
 
+#define psock_errno(s) fprintf(stderr, "RxSOCK Error: %s\n", s)
+
 #if defined(WIN32)                     // define errno equivalents for windows
    #define sock_errno() WSAGetLastError()
-   #define psock_errno(s) fprintf(stderr, "RxSOCK Error: %s\n", s)
-#endif
-
-#if defined(OPSYS_AIX) || defined(OPSYS_LINUX)
+#else
    #define sock_errno() errno
-   #define psock_errno(s) printf("\nSocket error %s\n",s)
 #endif
 
 /*------------------------------------------------------------------
  * include for this app
  *------------------------------------------------------------------*/
 #include "rxsock.h"
-
-/*-/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\-*/
-//#if !defined(WIN32)
-//extern int h_errno;               // where is this used?
-//#endif
-/*-\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/-*/
 
 /*------------------------------------------------------------------
  * sock_errno()
