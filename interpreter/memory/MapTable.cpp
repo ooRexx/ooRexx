@@ -129,6 +129,25 @@ void MapTable::put(size_t value, RexxInternalObject *index)
 
 
 /**
+ * Increment the value associated with a key.  If the key does
+ * not exist, it is inserted into the table with a value of 1.
+ *
+ * @param key    The target key.
+ */
+void MapTable::increment(RexxInternalObject *index)
+{
+    // try to insert in the existing hash tables...if this
+    // fails, we're full and need to reallocate.
+    if (!contents->increment(index))
+    {
+        // reallocate and try again
+        reallocateContents();
+        contents->increment(index);
+    }
+}
+
+
+/**
  * Reallocate the hash bucket to a larger version after
  * a failed put() operation.
  */

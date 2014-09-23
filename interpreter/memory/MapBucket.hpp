@@ -80,6 +80,9 @@ class MapBucket : public RexxInternalObject
     bool         hasIndex(RexxInternalObject *key);
     bool         append(size_t value, RexxInternalObject * index, MapLink position);
     void         merge(MapBucket *other);
+    MapLink      locate(RexxInternalObject *key);
+    bool         increment(RexxInternalObject *key);
+    void         decrement(RexxInternalObject *key);
 
     // We never get saved in the image or flattened with other objects, so we can just use the
     // identity hash to generate the index

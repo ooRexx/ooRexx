@@ -204,26 +204,16 @@ size_t MapBucket::remove(RexxInternalObject *index)
 size_t MapBucket::get(RexxInternalObject *index)
 {
     // get the slot position
-    MapLink position = hashIndex(index);
+    MapLink position = locate(index);
 
-    // nothing in that slot, we don't have this
-    if (entries[position].isAvailable())
+    // if not in the table, return zero
+    if (position == NoLink)
     {
         return 0;
     }
 
-    // loop looking for a match
-    do
-    {
-        // got a match, we can return this now.
-        if (entries[position].isIndex(index))
-        {
-            return entries[position].value;
-        }
-        position = entries[position].next;
-    } while (position != NoMore);
-    // no entry found
-    return 0;
+    // found an item, return the value.
+    return entries[position].value;
 }
 
 
@@ -236,27 +226,7 @@ size_t MapBucket::get(RexxInternalObject *index)
  */
 bool MapBucket::hasIndex(RexxInternalObject *index)
 {
-    // get the slot position
-    MapLink position = hashIndex(index);
-
-    // nothing in that slot, we don't have this
-    if (entries[position].isAvailable())
-    {
-        return false;
-    }
-
-    // loop looking for a match
-    do
-    {
-        // got a match, we can return this now.
-        if (entries[position].isIndex(index))
-        {
-            return true;
-        }
-        position = entries[position].next;
-    } while (position != NoMore);
-    // no entry found
-    return false;
+    return locate(index) != NoLink;
 }
 
 
@@ -378,5 +348,96 @@ void MapBucket::merge(MapBucket *other)
         {
             other->put(entries[i].value, entries[i].index);
         }
+    }
+}
+
+
+/**
+ * Locate the slot position for an index.
+ *
+ * @param index The index object.
+ *
+ * @return The position of the item, or NoLink if this is not
+ *         found.
+ */
+MapBucket::MapLink MapBucket::locate(RexxInternalObject *index)
+{
+    // get the slot position
+    MapLink position = hashIndex(index);
+
+    // nothing in that slot, we don't have this
+    if (entries[position].isAvailable())
+    {
+        return NoLink;
+    }
+
+    // loop looking for a match
+    do
+    {
+        // got a match, we can return this now.
+        if (entries[position].isIndex(index))
+        {
+            return position;
+        }
+        position = entries[position].next;
+    } while (position != NoMore);
+    // no entry found
+    return NoLink;
+}
+
+
+/**
+ * Increment the value associated with a key.  If the key does
+ * not exist, it is inserted into the table with a value of 1.
+ *
+ * @param key    The target key.
+ */
+bool MapBucket::increment(RexxInternalObject *key)
+{
+    // locate the item
+    MapLink position = locate(key);
+
+    // bail if not in the table, add with a value of 1
+    if (position == NoLink)
+    {
+        return put(1, key);
+    }
+    // increment the value
+    entries[position].value++;
+    return true;
+}
+
+
+/**
+ * Decrement the value associated with a key.  If the value goes
+ * to zero, the key is removed.
+ *
+ * @param key    The target key.
+ */
+void MapBucket::decrement(RexxInternalObject *key)
+{
+    // locate the item
+    MapLink position = locate(key);
+
+    // bail if
+    if (position == NoLink)
+    {
+        return;
+    }
+
+    // if this is already zero, remove the item
+    if (entries[position].value == 0)
+    {
+        remove(key);
+        return;
+    }
+
+    // decrement the value
+    entries[position].value--;
+
+    // and test again to see if we went to zero
+    if (entries[position].value == 0)
+    {
+        remove(key);
     }
 }

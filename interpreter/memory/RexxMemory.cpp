@@ -1389,42 +1389,13 @@ void MemoryObject::setOref(RexxInternalObject *oldValue, RexxInternalObject *val
         // count for it in our table.
         if (oldValue != OREF_NULL && oldValue->isNewSpace())
         {
-            // get the old reference count, which
-            // *should* be non-zero
-            size_t refcount = old2new->get(oldValue);
-            if (refcount != 0)
-            {
-                // TODO:  We can optimize this with a special method
-
-                // decrement the value.  If the new value
-                // is zero, then we remove the reference object.
-                refcount--;
-                if (refcount == 0)
-                {
-                    old2new->remove(oldValue);
-                }
-                // update with the new count
-                else
-                {
-                    old2new->put(refcount, oldValue);
-                }
-            }
-            else
-            {
-                /* naughty, naughty, someone didn't use SetOref */
-                printf("******** error in memory_setoref, unable to decrement refcount\n");
-                printf("Naughty object reference is at:  %p\n", oldValue);
-                printf("Naughty object reference type is:  %lu\n", (oldValue)->behaviour->getClassType());
-            }
+            // decrement the reference count for this
+            old2new->decrement(oldValue);
         }
         // now we have to do this for the new value.
         if (value != OREF_NULL && value->isNewSpace())
         {
-            // will return 0 if not in there already
-            size_t refCount = old2new->get(value);
-            // increment and put back
-            refCount ++;
-            old2new->put(refCount, value);
+            old2new->increment(value);
         }
     }
 }

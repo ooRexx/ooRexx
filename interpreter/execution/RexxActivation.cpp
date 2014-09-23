@@ -752,8 +752,7 @@ RexxObject * RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxOb
             // like it was a return
             if (debugPause)
             {
-                executionState = RETURNED;
-                next = OREF_NULL;
+                stopExecution(RETURNED);
             }
 
             // we might have caught a condition.  See if we have something to do.
@@ -958,8 +957,7 @@ void RexxActivation::reply(RexxObject *resultObj)
     settings.setReplyIssued(true);
 
     // set the state to terminate the main execution loop
-    executionState = REPLIED;
-    next = OREF_NULL;
+    stopExecution(REPLIED);
     result = resultObj;
 }
 
@@ -978,8 +976,7 @@ void RexxActivation::returnFrom(RexxObject *resultObj)
         reportException(Error_Execution_reply_return);
     }
     // cause this level to terminate terminate the execution loop and shut down
-    executionState = RETURNED;
-    next = OREF_NULL;
+    stopExecution(RETURNED);
     // if this is an interpret, we really need to terminate the parent activation
     if (isInterpret())
     {
@@ -1249,8 +1246,7 @@ RexxObject *RexxActivation::forward(RexxObject  *target, RexxString  *message,
         // poof, we just became invisible
         settings.setForwarded(true);
         // we terminate the execution loop for this activation
-        executionState = RETURNED;
-        next = OREF_NULL;
+        stopExecution(RETURNED);
         // switch off debug for this activation so we don't pause after
         // returning from the forward
         resetDebug();
@@ -1281,9 +1277,7 @@ RexxObject *RexxActivation::forward(RexxObject  *target, RexxString  *message,
 void RexxActivation::exitFrom(RexxObject * resultObj)
 {
     // stop the loop execution
-    // TODO:  Add a method to do these four instructions.
-    executionState = RETURNED;
-    next = OREF_NULL;
+    stopExecution(RETURNED);
     result = resultObj;
     // switch off debug pausing
     resetDebug();
@@ -1767,8 +1761,7 @@ void RexxActivation::signalTo(RexxInstruction *target)
     // activation down and have the parent execute the signal.
     if (isInterpret())
     {
-        executionState = RETURNED;
-        next = OREF_NULL;
+        stopExecution(RETURNED);
         parent->signalTo(target);
     }
     // need to clean up some things in a SIGNAL.  Start with

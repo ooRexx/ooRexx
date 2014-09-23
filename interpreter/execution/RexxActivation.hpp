@@ -340,6 +340,13 @@ class RexxActivation : public ActivationBase
        settings.packageSettings.traceSettings.resetDebug();
        settings.setDebugBypass(true);
    }
+
+   inline void              stopExecution(ExecutionState state)
+   {
+       executionState = state;
+       next = OREF_NULL;
+   }
+
    inline bool              noTracing(RexxObject *value) { return (settings.isTraceSuppressed() || debugPause || value == OREF_NULL || !code->isTraceable()); }
    inline bool              noTracing() { return (settings.isTraceSuppressed() || debugPause || !code->isTraceable()); }
 

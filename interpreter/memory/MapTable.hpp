@@ -66,6 +66,8 @@ class MapTable : public RexxInternalObject
     inline void   empty() { contents->empty(); }
     inline bool   isEmpty() { return contents->isEmpty(); }
            void   reallocateContents();
+           void   increment(RexxInternalObject *key);
+    inline void   decrement(RexxInternalObject *key) { contents->decrement(key); }
 
     MapBucket *contents;     // the backing collection for this
 };
