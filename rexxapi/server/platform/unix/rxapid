@@ -89,7 +89,7 @@
 
 # Check for missing binaries (stale symlinks should not happen)
 # Note: Special treatment of stop for LSB conformance
-RXAPI_BIN=@prefix@/bin/rxapi
+RXAPI_BIN=/usr/bin/rxapi
 test -x $RXAPI_BIN || { echo "$RXAPI_BIN not installed"; 
 	if [ "$1" = "stop" ]; then exit 0;
 	else exit 5; fi; }
@@ -100,7 +100,7 @@ BINFMT_NAME=ooRexx
 BINFMT_MISC=/proc/sys/fs/binfmt_misc
 BINFMT_MAGIC="/**/@REXX"
 BINFMT_MAGIC_HEX="2f2A2a2f4052455858"
-BINFMT_INTERP=@prefix@/bin/rexx
+BINFMT_INTERP=/usr/bin/rexx
 BINFMT_TYPE=M
 BINFMT_OFFSET=
 BINFMT_MASK=
