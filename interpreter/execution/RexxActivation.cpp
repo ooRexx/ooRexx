@@ -2067,9 +2067,6 @@ void RexxActivation::trapUndelay(RexxString * condition)
  */
 bool RexxActivation::trap(RexxString *condition, DirectoryClass *exceptionObject)
 {
-    // TODO:  See if it is possible to check if a condition will be trapped before building
-    // the condition object.
-
     // if we're in the act of processing a FORWARD instruction, then this
     // stack frame doesn't really exist any more.  We need to check the previous
     // stack frame to see if it can handle this.
@@ -2181,6 +2178,80 @@ bool RexxActivation::trap(RexxString *condition, DirectoryClass *exceptionObject
     }
     // not something we can handle.
     return false;
+}
+
+
+/**
+ * Check the activation to see if this is trapping a condition.
+ * This does not process the trap, but merely indicates that
+ * this activation WILL trap the condition.  This is a
+ * preliminary check that allows a condition to be raised
+ * without having to construct a condition object first.  This
+ * can be critical for conditions that are not normally trapped,
+ * like NOSTRING or LOSTDIGITS.
+ *
+ * @param condition The name of the raised condition.
+ * @param exceptionObject
+ *                  The exception object associated with the condition.
+ *
+ * @return true if the condition was trapped and handled, false otherwise.
+ */
+bool RexxActivation::willTrap(RexxString *condition)
+{
+    // if we're in the act of processing a FORWARD instruction, then this
+    // stack frame doesn't really exist any more.  We need to check the previous
+    // stack frame to see if it can handle this.
+    if (settings.isForwarded())
+    {
+        ActivationBase *activation = getPreviousStackFrame();
+        // we can have multiple forwardings in process, so keep drilling until we
+        // find a non-forwarded frame
+        while (activation != OREF_NULL && isOfClass(Activation, activation))
+        {
+            // we've found a non-ghost frame, so have it try to handle this.
+            if (!activation->isForwarded())
+            {
+                return activation->willTrap(condition);
+            }
+            activation = activation->getPreviousStackFrame();
+        }
+        // we are not really here, so we can't handle this
+        return false;
+    }
+
+    // are we in a debug pause?  ignore any condition other than a syntax error.
+    if (debugPause)
+    {
+        if (!condition->strCompare(GlobalNames::SYNTAX))
+        {
+            return false;
+        }
+        return true;
+    }
+
+    // no trap table set yet?  can't handle this
+    if (settings.traps == OREF_NULL)
+    {
+        return false;
+    }
+
+    // see if we have a handler for this condition
+    TrapHandler *trapHandler = (TrapHandler *)settings.traps->get(condition);
+
+    // if we are trapping this specifically, let the caller know.
+    if (trapHandler != OREF_NULL)
+    {
+        return true;
+    }
+
+    // now try for an ANY trap
+    trapHandler = (TrapHandler *)settings.traps->get(GlobalNames::ANY);
+    // if we have a handler, but this can't handle this can condition, return false
+    if (trapHandler != OREF_NULL)
+    {
+        return !trapHandler->canHandle(condition);
+    }
+    // no handler, return false
 }
 
 

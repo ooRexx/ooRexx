@@ -87,13 +87,14 @@ class NativeActivation : public ActivationBase
     virtual RexxObject *dispatch();
     virtual wholenumber_t digits();
     virtual wholenumber_t fuzz();
-    virtual bool   form();
-    virtual void   setDigits(wholenumber_t);
-    virtual void   setFuzz(wholenumber_t);
-    virtual void   setForm(bool);
-    virtual bool   trap(RexxString *, DirectoryClass *);
-    virtual void   termination() { guardOff();}
-    virtual bool   isStackBase();
+    virtual bool form();
+    virtual void setDigits(wholenumber_t);
+    virtual void setFuzz(wholenumber_t);
+    virtual void setForm(bool);
+    virtual bool trap(RexxString *, DirectoryClass *);
+    virtual bool willTrap(RexxString *);
+    virtual void termination() { guardOff();}
+    virtual bool isStackBase();
     virtual RexxActivation *getRexxContext();
     virtual RexxActivation *findRexxContext();
     virtual RexxObject *getReceiver();

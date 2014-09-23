@@ -122,6 +122,7 @@ class RexxActivation : public ActivationBase
    virtual void setFuzz(wholenumber_t);
    virtual void setForm(bool);
    virtual bool trap(RexxString *, DirectoryClass *);
+   virtual bool willTrap(RexxString *);
 
    virtual void setObjNotify(MessageClass *);
    virtual void termination();

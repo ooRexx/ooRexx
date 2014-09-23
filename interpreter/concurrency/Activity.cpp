@@ -541,9 +541,49 @@ wholenumber_t Activity::errorNumber(DirectoryClass *conditionObject)
  */
 bool Activity::raiseCondition(RexxString *condition, RexxObject *rc, RexxObject *description, RexxObject *additional, RexxObject *result)
 {
+    // check the context first to see if this will be trapped.  Creating
+    // the condition object is pretty expensive, so we want to avoid
+    // creating this if we'll just end up throwing it away.
+    if (!checkCondition(condition))
+    {
+        return false;
+    }
+
     // just create a condition object and process the traps.
     DirectoryClass *conditionObj = createConditionObject(condition, rc, description, additional, result);
     return raiseCondition(conditionObj);
+}
+
+
+/**
+ * Test if a condition will be trapped before creating a
+ * condition object for it.
+ *
+ * @param condition
+ *               The name of the condition being raised
+ *
+ * @return true if this will be trapped, false otherwise.
+ */
+bool Activity::checkCondition(RexxString *condition)
+{
+    // unwind the stack frame calling trap until we reach the first real Rexx activation
+    for (ActivationBase *activation = getTopStackFrame() ; !activation->isStackBase(); activation = activation->getPreviousStackFrame())
+    {
+        // see if there is an activation interested in trapping this.
+        if (activation->willTrap(condition))
+        {
+            return true;
+        }
+
+        // for a normal condition, we stop checking at the first Rexx activation.
+        if (isOfClass(Activation, activation))
+        {
+            return false;
+        }
+    }
+
+    // reached the bottom of the stack and nothing handled this
+    return false;
 }
 
 
@@ -569,7 +609,7 @@ bool Activity::raiseCondition(DirectoryClass *conditionObj)
         // see if there is an activation interested in trapping this.
         handled = activation->trap(condition, conditionObj);
         // for a normal condition, we stop checking at the first Rexx activation.
-        if (isOfClass(Activation, activation))
+        if (handled || isOfClass(Activation, activation))
         {
             break;
         }

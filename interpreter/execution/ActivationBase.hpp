@@ -82,6 +82,7 @@ public:
     virtual void setFuzz(wholenumber_t) {;};
     virtual void setForm(bool) {;}
     virtual bool trap(RexxString *, DirectoryClass *) {return false;};
+    virtual bool willTrap(RexxString *) {return false;};
     virtual void setObjNotify(MessageClass *) {;};
     virtual void termination(){;};
     virtual SecurityManager *getSecurityManager() = 0;
