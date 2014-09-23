@@ -91,6 +91,14 @@ class NativeActivation : public ActivationBase
     virtual void   setDigits(wholenumber_t);
     virtual void   setFuzz(wholenumber_t);
     virtual void   setForm(bool);
+    virtual bool   trap(RexxString *, DirectoryClass *);
+    virtual void   termination() { guardOff();}
+    virtual bool   isStackBase();
+    virtual RexxActivation *getRexxContext();
+    virtual RexxActivation *findRexxContext();
+    virtual RexxObject *getReceiver();
+    virtual SecurityManager *getSecurityManager();
+    virtual const NumericSettings *getNumericSettings();
 
     void run(ActivityDispatcher &dispatcher);
     void run(CallbackDispatcher &dispatcher);
@@ -111,7 +119,6 @@ class NativeActivation : public ActivationBase
     void   guardOn();
     void   enableVariablepool();
     void   disableVariablepool();
-    bool   trap(RexxString *, DirectoryClass *);
     void   resetNext();
     bool   fetchNext(RexxString *&name, RexxObject *&value);
     void   raiseCondition(RexxString *condition, RexxString *description, RexxObject *additional, RexxObject *result);
@@ -123,7 +130,6 @@ class NativeActivation : public ActivationBase
     RexxClass *findClass(RexxString *className);
     RexxClass *findCallerClass(RexxString *className);
 
-    inline void   termination() { guardOff();}
 
     void   accessCallerContext();
     inline bool isVariablePoolEnabled()   {return variablePoolEnabled;}
@@ -142,14 +148,8 @@ class NativeActivation : public ActivationBase
     void checkConditions();
     inline RexxObject *getSelf() { return receiver; }
     inline Activity *getActivity() { return activity; }
-    virtual bool isStackBase();
-    virtual RexxActivation *getRexxContext();
     BaseExecutable *getRexxContextExecutable();
     RexxObject *getRexxContextObject();
-    virtual RexxActivation *findRexxContext();
-    virtual const NumericSettings *getNumericSettings();
-    virtual RexxObject *getReceiver();
-    virtual SecurityManager *getSecurityManager();
     PackageClass *getPackageObject();
     inline void setStackBase() { stackBase = true; }
     void reportSignatureError();

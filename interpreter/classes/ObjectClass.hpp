@@ -185,9 +185,9 @@ class RexxVirtualBase
     // unwind and the constructed object just ends up with a virtual base
     // vft.  If the garbage collector sees this, it will crash unless these
     // are defined at this level.
-    virtual void         live(size_t) {;}
-    virtual void         liveGeneral(MarkReason reason) {;}
-    virtual void         flatten(Envelope *) {;}
+    virtual void live(size_t) {;}
+    virtual void liveGeneral(MarkReason reason) {;}
+    virtual void flatten(Envelope *) {;}
     virtual RexxInternalObject *unflatten(Envelope *) { return (RexxInternalObject *)this; };
 };
 
@@ -319,9 +319,9 @@ class RexxInternalObject : public RexxVirtualBase
     virtual bool         doubleValue(double &result);
     virtual NumberString *numberString();
 
-    virtual bool           isEqual(RexxInternalObject *);
-    virtual bool           isInstanceOf(RexxClass *);
-    virtual MethodClass   *instanceMethod(RexxString *);
+    virtual bool         isEqual(RexxInternalObject *);
+    virtual bool         isInstanceOf(RexxClass *);
+    virtual MethodClass *instanceMethod(RexxString *);
     virtual SupplierClass *instanceMethods(RexxClass *);
     virtual wholenumber_t  compareTo(RexxInternalObject *);
 
@@ -415,14 +415,14 @@ class RexxObject : public RexxInternalObject
 
     virtual ~RexxObject(){;};
 
-    virtual RexxObject  *defineInstanceMethod(RexxString *, MethodClass *, RexxClass *);
+            RexxObject  *defineInstanceMethod(RexxString *, MethodClass *, RexxClass *);
     virtual RexxString  *defaultName();
     virtual bool         hasMethod(RexxString *msg);
             RexxObject  *hasMethodRexx(RexxString *);
             bool         hasUninitMethod();
 
     RexxObject *initRexx();
-    void        uninit();
+    virtual void uninit();
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
@@ -433,10 +433,10 @@ class RexxObject : public RexxInternalObject
     virtual RexxString  *stringValue();
     virtual void processUnknown(RexxString *, RexxObject **, size_t, ProtectedObject &);
 
-    bool         isInstanceOf(RexxClass *);
+    virtual bool isInstanceOf(RexxClass *);
+    virtual MethodClass   *instanceMethod(RexxString *);
+    virtual SupplierClass *instanceMethods(RexxClass *);
     RexxObject  *isInstanceOfRexx(RexxClass *);
-    MethodClass   *instanceMethod(RexxString *);
-    SupplierClass *instanceMethods(RexxClass *);
     MethodClass   *instanceMethodRexx(RexxString *);
     SupplierClass *instanceMethodsRexx(RexxClass *);
     RexxString  *objectName();

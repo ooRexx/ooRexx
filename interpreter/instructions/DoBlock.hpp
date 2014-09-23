@@ -50,6 +50,9 @@
 class RexxBlockInstruction;
 class RexxVariableBase;
 
+/**
+ * A container for state of active block instructions (DO LOOP, or SELECT)
+ */
 class DoBlock : public RexxInternalObject
 {
  public:
@@ -60,8 +63,8 @@ class DoBlock : public RexxInternalObject
     DoBlock(RexxBlockInstruction *, size_t);
     inline DoBlock(RESTORETYPE restoreType) { ; };
 
-    void live(size_t);
-    void liveGeneral(MarkReason reason);
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
 
     inline RexxBlockInstruction * getParent() {return this->parent;};
     inline void setPrevious(DoBlock *block) { previous = block; }

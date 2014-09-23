@@ -66,10 +66,10 @@ class RexxStemVariable : public RexxVariableBase
 
     // overrides of RexxInternalObject evaluaton methods
     virtual RexxObject *evaluate(RexxActivation *, ExpressionStack *);
-    RexxObject *getValue(VariableDictionary *);
-    RexxObject *getValue(RexxActivation *);
-    RexxObject *getRealValue(VariableDictionary *);
-    RexxObject *getRealValue(RexxActivation *);
+    virtual RexxObject *getValue(VariableDictionary *);
+    virtual RexxObject *getValue(RexxActivation *);
+    virtual RexxObject *getRealValue(VariableDictionary *);
+    virtual RexxObject *getRealValue(RexxActivation *);
 
     // overrides of RexxVariableBase methods
     virtual bool exists(RexxActivation *);

@@ -72,8 +72,8 @@ public:
     RexxString *getTraceLine();
     ArrayClass  *getArguments();
     PackageClass *getPackageObject();
-    virtual     RexxString  *makeString();
-    virtual     RexxString  *stringValue();
+    virtual RexxString *makeString();
+    virtual RexxString *stringValue();
 
     RexxObject *newRexx(RexxObject **args, size_t argc);
 

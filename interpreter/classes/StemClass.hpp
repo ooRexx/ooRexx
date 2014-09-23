@@ -91,7 +91,7 @@ class StemClass : public RexxObject
     virtual NumberString *numberString();
     virtual RexxInteger *integerValue(wholenumber_t);
     virtual RexxString  *stringValue();
-    ArrayClass   *makeArray();
+    virtual ArrayClass  *makeArray();
     ArrayClass   *allItems();
     ArrayClass   *allIndexes();
     SupplierClass *supplier();

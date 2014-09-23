@@ -46,9 +46,16 @@
 class InterpreterInstance;
 class RexxActivation;
 
+/**
+ * A class type that can be embedded within an InterpreterInstance
+ * object to hold platform-specific state for an instance.
+ */
 class SysInterpreterInstance
 {
 public:
+
+    // this class is embedded within an InterpreterInstance class, so
+    // these are not virtual
     void live(size_t);
     void liveGeneral(MarkReason);
 

@@ -89,6 +89,7 @@ public:
     virtual bool isStackBase() { return false; }
     virtual bool isRexxContext() { return false; }
     virtual RexxObject *getReceiver() { return OREF_NULL; }
+
     inline void setPreviousStackFrame(ActivationBase *p) { previous = p; }
     inline ActivationBase *getPreviousStackFrame() { return previous; }
     inline BaseExecutable *getExecutable() { return executable; }

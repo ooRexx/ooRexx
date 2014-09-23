@@ -63,6 +63,7 @@ class NativeCode : public BaseCode
 
     virtual RexxClass *findClass(RexxString *className);
     virtual BaseCode  *setPackageObject(PackageClass *s);
+
     SecurityManager   *getSecurityManager();
 
 protected:

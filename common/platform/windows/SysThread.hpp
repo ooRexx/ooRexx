@@ -51,6 +51,9 @@
 
 #include "rexx.h"
 
+/**
+ * A wrapper anound a Windows-style thread.
+ */
 class SysThread
 {
 
@@ -85,7 +88,8 @@ public:
     void startup();
     void shutdown();
     void yield();
-    inline uintptr_t threadID() {
+    inline uintptr_t threadID()
+    {
          return (uintptr_t)_threadID;
     }
     bool equals(SysThread &other);

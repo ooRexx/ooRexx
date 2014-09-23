@@ -55,6 +55,9 @@ class StringTable;
 
 typedef RexxPackageEntry * (RexxEntry *PACKAGE_LOADER)();
 
+/**
+ * An internal descriptor for loaded library collections.
+ */
 class LibraryPackage : public RexxInternalObject
 {
 public:
@@ -65,13 +68,14 @@ public:
     LibraryPackage(RexxString *n, RexxPackageEntry *p);
     inline LibraryPackage(RESTORETYPE restoreType) { ; };
 
-    void   live(size_t liveMark);
-    void   liveGeneral(MarkReason reason);
-    bool   load();
-    void   unload();
+    virtual void live(size_t liveMark);
+    virtual void liveGeneral(MarkReason reason);
+
+    bool load();
+    void unload();
     RexxPackageEntry *getPackageTable();
-    void   loadPackage();
-    void   loadRoutines(RexxRoutineEntry *table);
+    void loadPackage();
+    void loadRoutines(RexxRoutineEntry *table);
     RexxMethodEntry *locateMethodEntry(RexxString *name);
     RexxRoutineEntry *locateRoutineEntry(RexxString *name);
     NativeMethod *resolveMethod(RexxString *name);
@@ -97,6 +101,9 @@ protected:
 };
 
 
+/**
+ * A wrapper for dispatching Library load calls.
+ */
 class LibraryLoaderDispatcher : public CallbackDispatcher
 {
 public:
@@ -110,6 +117,9 @@ protected:
 };
 
 
+/**
+ * A wrapper for displatching library unload calls.
+ */
 class LibraryUnloaderDispatcher : public CallbackDispatcher
 {
 public:

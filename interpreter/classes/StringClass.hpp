@@ -323,8 +323,8 @@ class RexxString : public RexxObject
     virtual NumberString *numberString();
     virtual RexxInteger *integerValue(wholenumber_t);
     virtual RexxString  *makeString();
-    virtual ArrayClass   *makeArray();
-    RexxString  *primitiveMakeString();
+    virtual ArrayClass  *makeArray();
+    virtual RexxString  *primitiveMakeString();
     virtual void         copyIntoTail(CompoundVariableTail *buffer);
     virtual RexxString  *stringValue();
     virtual bool  truthValue(int);
@@ -393,11 +393,11 @@ class RexxString : public RexxObject
     RexxObject *format(RexxObject *Integers, RexxObject *Decimals, RexxObject *MathExp, RexxObject *ExpTrigger);
     RexxObject *logicalOperation(RexxObject *, RexxObject *, unsigned int);
     RexxString *extract(size_t offset, size_t sublength) { return newString(getStringData() + offset, sublength); }
-    RexxObject *evaluate(RexxActivation *, ExpressionStack *);
-    RexxObject *getValue(RexxActivation *);
-    RexxObject *getValue(VariableDictionary *);
-    RexxObject *getRealValue(RexxActivation *);
-    RexxObject *getRealValue(VariableDictionary *);
+    virtual RexxObject *evaluate(RexxActivation *, ExpressionStack *);
+    virtual RexxObject *getValue(RexxActivation *);
+    virtual RexxObject *getValue(VariableDictionary *);
+    virtual RexxObject *getRealValue(RexxActivation *);
+    virtual RexxObject *getRealValue(VariableDictionary *);
                                         /* the following methods are in    */
                                         /* OKBSUBS                         */
     RexxString  *center(RexxInteger *, RexxString *);

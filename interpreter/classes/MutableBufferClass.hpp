@@ -87,9 +87,9 @@ class MutableBuffer : public RexxObject
     RexxInteger   *getBufferSize() { return new_integer(bufferLength); }
     RexxObject    *setBufferSize(RexxInteger*);
     ArrayClass    *makeArrayRexx(RexxString *div);
-    ArrayClass    *makeArray();
-    RexxString    *makeString();
-    RexxString    *primitiveMakeString();
+    virtual ArrayClass *makeArray();
+    virtual RexxString *makeString();
+    virtual RexxString *primitiveMakeString();
     RexxInteger   *countStrRexx(RexxString *needle);
     RexxInteger   *caselessCountStrRexx(RexxString *needle);
     MutableBuffer *changeStr(RexxString *needle, RexxString *newNeedle, RexxInteger *countArg);

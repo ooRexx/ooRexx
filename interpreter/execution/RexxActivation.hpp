@@ -123,8 +123,16 @@ class RexxActivation : public ActivationBase
    virtual void setForm(bool);
    virtual bool trap(RexxString *, DirectoryClass *);
 
-   void        setObjNotify(MessageClass *);
-   void        termination();
+   virtual void setObjNotify(MessageClass *);
+   virtual void termination();
+   virtual SecurityManager *getSecurityManager();
+   virtual bool isForwarded() { return settings.isForwarded(); }
+   virtual const NumericSettings *getNumericSettings();
+   virtual RexxActivation  *getRexxContext();
+   virtual RexxActivation  *findRexxContext();
+   virtual RexxObject      *getReceiver();
+   virtual bool             isRexxContext();
+
    void        inheritPackageSettings();
    void        allocateStackFrame();
    void        allocateLocalVariables();
@@ -291,11 +299,6 @@ class RexxActivation : public ActivationBase
 
    inline ExpressionStack * getStack() {return &stack; };
 
-   virtual const NumericSettings *getNumericSettings();
-   virtual RexxActivation  *getRexxContext();
-   virtual RexxActivation  *findRexxContext();
-   virtual RexxObject      *getReceiver();
-   virtual bool             isRexxContext();
 
    inline void              traceIntermediate(RexxObject * v, TracePrefix p) { if (settings.intermediateTrace) traceValue(v, p); };
    inline void              traceArgument(RexxObject * v) { if (settings.intermediateTrace) traceValue(v, TRACE_PREFIX_ARGUMENT); };
@@ -350,10 +353,8 @@ class RexxActivation : public ActivationBase
    inline bool              noTracing(RexxObject *value) { return (settings.isTraceSuppressed() || debugPause || value == OREF_NULL || !code->isTraceable()); }
    inline bool              noTracing() { return (settings.isTraceSuppressed() || debugPause || !code->isTraceable()); }
 
-          SecurityManager  *getSecurityManager();
           SecurityManager  *getEffectiveSecurityManager();
    inline bool              isTopLevel() { return (activationContext&TOP_LEVEL_CALL) != 0; }
-   inline bool              isForwarded() { return settings.isForwarded(); }
    inline bool              isGuarded() { return settings.isGuarded(); }
    inline void              setGuarded() { settings.setGuarded(true); }
 

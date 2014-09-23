@@ -222,11 +222,13 @@ class NumberString : public NumberStringBase
     RexxString *formatRexx(RexxObject *, RexxObject *, RexxObject *, RexxObject *);
     RexxString *formatInternal(wholenumber_t, wholenumber_t, wholenumber_t, wholenumber_t, NumberString *, wholenumber_t, bool);
     RexxObject *operatorNot(RexxObject *);
-    RexxObject *evaluate(RexxActivation *, ExpressionStack *);
-    RexxObject *getValue(RexxActivation *context);
-    RexxObject *getValue(VariableDictionary *dictionary);
-    RexxObject *getRealValue(RexxActivation *);
-    RexxObject *getRealValue(VariableDictionary *);
+    virtual RexxObject *evaluate(RexxActivation *, ExpressionStack *);
+    virtual RexxObject *getValue(RexxActivation *context);
+    virtual RexxObject *getValue(VariableDictionary *dictionary);
+    virtual RexxObject *getRealValue(RexxActivation *);
+    virtual RexxObject *getRealValue(VariableDictionary *);
+    virtual bool isInstanceOf(RexxClass *);
+
     RexxObject *trunc(RexxObject *);
     RexxObject *truncInternal(wholenumber_t);
     RexxObject *floor();
@@ -235,9 +237,8 @@ class NumberString : public NumberStringBase
     RexxObject *ceilingInternal();
     RexxObject *round();
     RexxObject *roundInternal();
-    bool        isInstanceOf(RexxClass *);
-    MethodClass   *instanceMethod(RexxString *);
-    SupplierClass *instanceMethods(RexxClass *);
+    virtual MethodClass *instanceMethod(RexxString *);
+    virtual SupplierClass *instanceMethods(RexxClass *);
     RexxClass  *classObject();
     inline NumberString *checkNumber(wholenumber_t digits)
     {

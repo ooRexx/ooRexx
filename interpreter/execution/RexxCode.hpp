@@ -73,8 +73,13 @@ class RexxCode : public BaseCode
    virtual void liveGeneral(MarkReason reason);
    virtual void flatten(Envelope *);
 
-   ArrayClass      *getSource();
-   RexxObject      *setSecurityManager(RexxObject *);
+   // overrides for BaseCode methods
+   virtual void run(Activity *, MethodClass *, RexxObject *, RexxString *, RexxObject **,  size_t, ProtectedObject &);
+   virtual void call(Activity *, RoutineClass *, RexxString *,  RexxObject **, size_t, RexxString *, RexxString *, ActivationContext, ProtectedObject &);
+   virtual void call(Activity *, RoutineClass *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
+   virtual ArrayClass *getSource();
+   virtual RexxObject *setSecurityManager(RexxObject *);
+
    RexxString      *getProgramName();
 
    inline RexxInstruction *getFirstInstruction() { return start; }
@@ -94,10 +99,6 @@ class RexxCode : public BaseCode
    inline void        mergeRequired(PackageClass *s) { package->mergeRequired(s); }
           RexxCode *interpret(RexxString *source, size_t lineNumber);
 
-   // overrides for BaseCode classes
-   virtual void run(Activity *, MethodClass *, RexxObject *, RexxString *, RexxObject **,  size_t, ProtectedObject &);
-   virtual void call(Activity *, RoutineClass *, RexxString *,  RexxObject **, size_t, RexxString *, RexxString *, ActivationContext, ProtectedObject &);
-   virtual void call(Activity *, RoutineClass *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
 
 protected:
 

@@ -142,7 +142,7 @@ class CompoundVariableTail
    }
 
    RexxString *createCompoundName(RexxString *);
-   RexxString *makeString();
+   virtual RexxString *makeString();
 
    inline void init()
    {

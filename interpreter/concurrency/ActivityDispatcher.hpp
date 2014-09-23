@@ -44,6 +44,9 @@
 class DirectoryClass;
 class NativeActivation;
 
+/**
+ * Base class for dispatching call outs.
+ */
 class ActivityDispatcher
 {
 public:

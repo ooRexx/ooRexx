@@ -62,7 +62,7 @@ typedef enum
 } VariableFrameIndex;
 
 /**
- * Locate variable frame managed by an activation.
+ * Local variable frame managed by an activation.
  */
 class RexxLocalVariables
 {
@@ -79,8 +79,10 @@ class RexxLocalVariables
     RexxLocalVariables(RexxObject **frames, size_t items) { locals = (RexxVariable **)frames; size = items; }
     RexxLocalVariables() { locals = OREF_NULL; size = 0; }
 
+    // NOTE, not virtual because this is not a subclass of RexxInternalObject.
     void live(size_t);
     void liveGeneral(MarkReason reason);
+
     void migrate(Activity *);
 
     /* NOTE:  we add one because the size is actually the index */

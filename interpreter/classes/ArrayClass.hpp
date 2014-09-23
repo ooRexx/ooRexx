@@ -155,9 +155,9 @@ class ArrayClass : public RexxObject
 
     virtual RexxInternalObject *copy();
     virtual ArrayClass *makeArray();
-    virtual RexxString *makeString(RexxString *, RexxString *);
     virtual RexxString *primitiveMakeString();
 
+    RexxString *makeString(RexxString *, RexxString *);
     ArrayClass   *allItems();
     ArrayClass   *allIndexes();
     RexxString   *toString(RexxString *, RexxString *);

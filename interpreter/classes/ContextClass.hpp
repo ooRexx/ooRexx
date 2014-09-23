@@ -50,17 +50,21 @@ class RexxActivation;
 class PackageClass;
 
 
+/**
+ * A class to provide Rexx program access to an active execution context.
+ */
 class RexxContext : public RexxObject
 {
 public:
     void *operator new(size_t);
     inline void  operator delete(void *) { ; }
 
-    void live(size_t);
-    void liveGeneral(MarkReason reason);
 
     RexxContext(RexxActivation *);
     inline RexxContext(RESTORETYPE restoreType) { ; };
+
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
 
     PackageClass *getPackage();
     RexxObject *getDigits();

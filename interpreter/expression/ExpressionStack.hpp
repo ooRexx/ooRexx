@@ -50,6 +50,10 @@
 class ProtectedObject;
 class Activity;
 
+/**
+ * Evaluation stack used for storing expression results during
+ * execution.
+ */
 class ExpressionStack
 {
  public:

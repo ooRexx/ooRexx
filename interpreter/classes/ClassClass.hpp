@@ -113,7 +113,7 @@ class RexxClass : public RexxObject
     ArrayClass  *getSubClasses();
 
     void         setInstanceBehaviour(RexxBehaviour *);
-    RexxString  *defaultName();
+    virtual RexxString  *defaultName();
 
     MethodClass *method(RexxString *);
 

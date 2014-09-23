@@ -71,21 +71,21 @@ class RexxInteger : public RexxObject
     virtual void processUnknown(RexxString *, RexxObject **, size_t, ProtectedObject &);
     virtual wholenumber_t compareTo(RexxInternalObject *);
 
-    NumberString *numberString();
-    RexxInteger *integerValue(wholenumber_t);
-    RexxString  *makeString();
-    void         copyIntoTail(CompoundVariableTail *);
-    bool         hasMethod(RexxString *);
-    RexxString  *primitiveMakeString();
-    RexxString  *stringValue();
-    ArrayClass  *makeArray();
+    virtual NumberString *numberString();
+    virtual RexxInteger *integerValue(wholenumber_t);
+    virtual RexxString  *makeString();
+    virtual void         copyIntoTail(CompoundVariableTail *);
+    virtual bool         hasMethod(RexxString *);
+    virtual RexxString  *primitiveMakeString();
+    virtual RexxString  *stringValue();
+    virtual ArrayClass  *makeArray();
     virtual bool truthValue(int);
     virtual bool logicalValue(logical_t &);
-    bool         isInstanceOf(RexxClass *);
-    MethodClass   *instanceMethod(RexxString *);
-    SupplierClass *instanceMethods(RexxClass *);
+    virtual bool isInstanceOf(RexxClass *);
+    virtual MethodClass *instanceMethod(RexxString *);
+    virtual SupplierClass *instanceMethods(RexxClass *);
 
-    bool        isEqual(RexxInternalObject *);
+    virtual bool  isEqual(RexxInternalObject *);
     wholenumber_t strictComp(RexxObject *);
     wholenumber_t comp(RexxObject *other);
 
@@ -127,11 +127,11 @@ class RexxInteger : public RexxObject
     RexxObject *format(RexxObject *, RexxObject *, RexxObject *, RexxObject *);
     RexxObject *d2c(RexxObject *);
     RexxObject *d2x(RexxObject *);
-    RexxObject *evaluate(RexxActivation *, ExpressionStack *);
-    RexxObject *getValue(RexxActivation *);
-    RexxObject *getValue(VariableDictionary *);
-    RexxObject *getRealValue(RexxActivation *);
-    RexxObject *getRealValue(VariableDictionary *);
+    virtual RexxObject *evaluate(RexxActivation *, ExpressionStack *);
+    virtual RexxObject *getValue(RexxActivation *);
+    virtual RexxObject *getValue(VariableDictionary *);
+    virtual RexxObject *getRealValue(RexxActivation *);
+    virtual RexxObject *getRealValue(VariableDictionary *);
     RexxString *concat(RexxString *);
     RexxString *concatBlank(RexxString *);
     void        setString(RexxString *string);

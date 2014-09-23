@@ -53,6 +53,6 @@ class RexxInstructionNop : public RexxInstruction
     inline RexxInstructionNop() { ; };
     inline RexxInstructionNop(RESTORETYPE restoreType) { ; };
 
-    void execute(RexxActivation *, ExpressionStack *);
+    virtual void execute(RexxActivation *, ExpressionStack *);
 };
 #endif
