@@ -286,6 +286,7 @@ class TraceSetting
     }
 
     RexxString *toString();
+    bool parseTraceSetting(RexxString *value, char &badOption);
 
 
 protected:

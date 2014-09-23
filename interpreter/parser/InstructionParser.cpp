@@ -3254,7 +3254,7 @@ RexxInstruction *LanguageParser::traceNew()
                     debug_skip = 0;
                     char badOption = 0;
                     // go parse the trace setting values
-                    if (!parseTraceSetting(value, settings, badOption))
+                    if (!settings.parseTraceSetting(value, badOption))
                     {
                         syntaxError(Error_Invalid_trace_trace, new_string(&badOption, 1));
                     }
@@ -3278,7 +3278,7 @@ RexxInstruction *LanguageParser::traceNew()
                 debug_skip = 0;
                 char badOption = 0;
                 // parse into
-                if (!parseTraceSetting(value, settings, badOption))
+                if (!settings.parseTraceSetting(value, badOption))
                 {
                     syntaxError(Error_Invalid_trace_trace, new_string(&badOption, 1));
                 }

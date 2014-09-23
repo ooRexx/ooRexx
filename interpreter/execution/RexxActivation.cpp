@@ -875,8 +875,7 @@ void RexxActivation::setTrace(RexxString *setting)
 
     char traceOption = 0;              // a potential bad character
 
-    // TODO:  should this be in TraceSetting?
-    if (!LanguageParser::parseTraceSetting(setting, newSettings, traceOption))
+    if (!newSettings.parseTraceSetting(setting, traceOption))
     {
         reportException(Error_Invalid_trace_trace, new_string(&traceOption, 1));
     }
@@ -2252,6 +2251,7 @@ bool RexxActivation::willTrap(RexxString *condition)
         return !trapHandler->canHandle(condition);
     }
     // no handler, return false
+    return false;
 }
 
 

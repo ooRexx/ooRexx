@@ -856,7 +856,7 @@ void LanguageParser::optionsDirective()
                     TraceSetting settings;
 
                     // validate the setting
-                    if (!parseTraceSetting(value, settings, badOption))
+                    if (!settings.parseTraceSetting(value, badOption))
                     {
                         syntaxError(Error_Invalid_trace_trace, new_string(&badOption, 1));
                     }
