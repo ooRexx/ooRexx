@@ -42,13 +42,13 @@
 /*                                                                            */
 /******************************************************************************/
 #include "RexxCore.h"
+#include "ExpressionList.hpp"
 #include "QueueClass.hpp"
 #include "RexxActivation.hpp"
-#include "ExpressionLogical.hpp"
 
 
 /**
- * Create a new logical list object.
+ * Create a new expression list object.
  *
  * @param size   The size of the class object.
  * @param count  The count of logical expressions.  Used to adjust the
@@ -56,19 +56,19 @@
  *
  * @return A new RexxExpressionLogical object.
  */
-void *RexxExpressionLogical::operator new(size_t size, size_t  count)
+void *RexxExpressionList::operator new(size_t size, size_t  count)
 {
-    return new_object(size + (count - 1) * sizeof(RexxObject *), T_LogicalTerm);
+    return new_object(size + (count - 1) * sizeof(RexxObject *), T_ListTerm);
 }
 
 
 /**
- * Constructor for a RexxExpressionLogical object.
+ * Constructor for a RexxExpressionList object.
  *
  * @param count  The number of expressions in the list.
  * @param list   The accumulated list of expressions.
  */
-RexxExpressionLogical::RexxExpressionLogical(size_t count, QueueClass *list)
+RexxExpressionList::RexxExpressionList(size_t count, QueueClass *list)
 {
     expressionCount = count;
 
@@ -81,7 +81,7 @@ RexxExpressionLogical::RexxExpressionLogical(size_t count, QueueClass *list)
 /**
  * The runtime, non-debug live marking routine.
  */
-void RexxExpressionLogical::live(size_t liveMark)
+void RexxExpressionList::live(size_t liveMark)
 {
     memory_mark_array(expressionCount, expressions);
 }
@@ -91,7 +91,7 @@ void RexxExpressionLogical::live(size_t liveMark)
  * The generalized live marking routine used for non-performance
  * critical marking operations.
  */
-void RexxExpressionLogical::liveGeneral(MarkReason reason)
+void RexxExpressionList::liveGeneral(MarkReason reason)
 {
     memory_mark_general_array(expressionCount, expressions);
 }
@@ -102,9 +102,9 @@ void RexxExpressionLogical::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope were's flattening into.
  */
-void RexxExpressionLogical::flatten(Envelope *envelope)
+void RexxExpressionList::flatten(Envelope *envelope)
 {
-    setUpFlatten(RexxExpressionLogical)
+    setUpFlatten(RexxExpressionList)
 
     flattenArrayRefs(expressionCount, expressions);
 
@@ -119,34 +119,42 @@ void RexxExpressionLogical::flatten(Envelope *envelope)
  *
  * @return The result of the operation, either .true or .false.
  */
-RexxObject *RexxExpressionLogical::evaluate(RexxActivation *context, ExpressionStack *stack)
+RexxObject *RexxExpressionList::evaluate(RexxActivation *context, ExpressionStack *stack)
 {
     // loop through the expression list evaulating and then testing for the
     // logical value
     size_t count = expressionCount;
+
+    // save the top of the stack for popping values off later.
+    size_t stacktop = stack->location();
+
+    // create a result array with a matching size
+    Protected<ArrayClass> result = new_array(expressionCount);
+
     // there are no optional values in the list, so evaluate unconditionally.
     for (size_t i = 0; i < count; i++)
     {
         // evaluate and trace
-        RexxObject *value = expressions[i]->evaluate(context, stack);
-        context->traceResult(value);
-
-        // the comparison methods return either .true or .false, so we
-        // can to a quick test against those.
-        if (value != TheTrueObject)    // most of the time, these will be true so test that first.
+        RexxInternalObject *expr = expressions[i];
+        // if this is a real expression (omitted expressions are permitted)
+        if (expr != OREF_NULL)
         {
-            if (value == TheFalseObject)
-            {
-                return TheFalseObject;
-            }
-            // ok, the either returned a '0' or a '1' that was not the result of returning
-            // .true or .false, or we have a bad value.
-            if (!value->truthValue(Error_Logical_value_logical_list))
-            {
-                return TheFalseObject;    // we terminate on the first false condition
-            }
+            RexxObject *value = expr->evaluate(context, stack);
+            // trace this as an argument value
+            context->traceArgument(value);
+
+            // add this to the created array
+            result->put(value, i + 1);
         }
     }
-    return TheTrueObject;      // all is truth
+
+    // remove the arguments from the stack and push our result
+    stack->setTop(stacktop);
+    stack->push(result);
+
+    // TODO:  Need to reassess how this final result is traced.
+    // trace the array result and return it
+    context->traceResult(result);
+    return result;
 }
 

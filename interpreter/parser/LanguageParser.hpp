@@ -328,6 +328,7 @@ class LanguageParser: public RexxInternalObject
     RexxInternalObject *parenExpression(RexxToken *);
     RexxInternalObject *parseExpression(int);
     RexxInternalObject *parseSubExpression(int);
+    RexxInternalObject *parseFullSubExpression(int);
     size_t      parseArgList(RexxToken *, int);
     ArrayClass  *parseArgArray(RexxToken *, int);
     RexxInternalObject *parseFunction(RexxToken *, RexxToken *);
@@ -346,6 +347,7 @@ class LanguageParser: public RexxInternalObject
     void        pushSubTerm(RexxInternalObject *);
     RexxInternalObject *requiredTerm(RexxToken *token, int errorCode = Error_Invalid_expression_general);
     RexxInternalObject *popTerm();
+    RexxInternalObject *popSubTerm();
     RexxInternalObject *popNTerms(size_t);
 
     // various error processing methods

@@ -134,6 +134,7 @@
 #define TheUnaryOperatorTermBehaviour      (&RexxBehaviour::primitiveBehaviours[T_UnaryOperatorTerm])
 #define TheBinaryOperatorTermBehaviour      (&RexxBehaviour::primitiveBehaviours[T_BinaryOperatorTerm])
 #define TheLogicalTermBehaviour      (&RexxBehaviour::primitiveBehaviours[T_LogicalTerm])
+#define TheListTermBehaviour      (&RexxBehaviour::primitiveBehaviours[T_ListTerm])
 #define TheInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_Instruction])
 #define TheAddressInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_AddressInstruction])
 #define TheAssignmentInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_AssignmentInstruction])

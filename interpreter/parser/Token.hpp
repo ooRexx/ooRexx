@@ -478,7 +478,6 @@ typedef enum
 #define   TERM_BY      0x00000010u     /* terminate on BY keyword           */
 #define   TERM_FOR     0x00000020u     /* terminate on FOR keyword          */
 #define   TERM_WHILE   0x00000040u     /* terminate on WHILE/UNTIL keywords */
-#define   TERM_COMMA   0x00000080u     /* terminate on comma                */
 #define   TERM_WITH    0x00000100u     /* terminate on WITH keyword         */
 #define   TERM_THEN    0x00000200u     /* terminate on THEN keyword         */
 #define   TERM_KEYWORD 0x10000000u     /* perform keyword terminator checks */

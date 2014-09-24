@@ -36,24 +36,28 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                       ExpressionLogical.hpp    */
+/* REXX Kernel                                       ExpressionList.hpp       */
 /*                                                                            */
-/* A logical expression object used for a short-circuited AND conditional.    */
+/* Expression object for generating an array object.                          */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_RexxExpressionLogical
-#define Included_RexxExpressionLogical
+#ifndef Included_RexxExpressionList
+#define Included_RexxExpressionList
 
 class QueueClass;
 
-class RexxExpressionLogical : public RexxInternalObject
+/**
+ * A class to implement Array object creation from a list
+ * of expressions.
+ */
+class RexxExpressionList : public RexxInternalObject
 {
  public:
            void *operator new(size_t, size_t);
     inline void  operator delete(void *) {;}
 
-    RexxExpressionLogical(size_t, QueueClass *);
-    inline RexxExpressionLogical(RESTORETYPE restoreType) { ; };
+    RexxExpressionList(size_t, QueueClass *);
+    inline RexxExpressionList(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);

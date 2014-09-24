@@ -144,6 +144,7 @@ RexxBehaviour RexxBehaviour::primitiveBehaviours[T_Last_Primitive_Class + 1] =
     RexxBehaviour(T_UnaryOperatorTerm, (PCPPM *)RexxObject::operatorMethods),
     RexxBehaviour(T_BinaryOperatorTerm, (PCPPM *)RexxObject::operatorMethods),
     RexxBehaviour(T_LogicalTerm, (PCPPM *)RexxObject::operatorMethods),
+    RexxBehaviour(T_ListTerm, (PCPPM *)RexxObject::operatorMethods),
     RexxBehaviour(T_Instruction, (PCPPM *)RexxObject::operatorMethods),
     RexxBehaviour(T_AddressInstruction, (PCPPM *)RexxObject::operatorMethods),
     RexxBehaviour(T_AssignmentInstruction, (PCPPM *)RexxObject::operatorMethods),

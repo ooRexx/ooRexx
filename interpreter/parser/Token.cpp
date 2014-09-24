@@ -195,6 +195,10 @@ bool RexxToken::isTerminator(int terminators)
         {
             return true;
         }
+        case  TOKEN_COMMA:                   // commas are also always subexpression terminators
+        {
+            return true;
+        }
         case  TOKEN_RIGHT:                   // found a right paren
         {
             if (terminators&TERM_RIGHT)
@@ -206,14 +210,6 @@ bool RexxToken::isTerminator(int terminators)
         case  TOKEN_SQRIGHT:                 // closing square bracket?
         {
             if (terminators&TERM_SQRIGHT)
-            {
-                return true;
-            }
-            break;
-        }
-        case  TOKEN_COMMA:                   // a comma is a terminator in argument subexpressions
-        {
-            if (terminators&TERM_COMMA)
             {
                 return true;
             }

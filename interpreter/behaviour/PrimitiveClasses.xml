@@ -133,6 +133,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="UnaryOperatorTerm" class="RexxUnaryOperator" include="ExpressionOperator.hpp"/>
 <Class id="BinaryOperatorTerm" class="RexxBinaryOperator" include="ExpressionOperator.hpp"/>
 <Class id="LogicalTerm" class="RexxExpressionLogical" include="ExpressionLogical.hpp"/>
+<Class id="ListTerm" class="RexxExpressionList" include="ExpressionList.hpp"/>
 
 <Class id="Instruction" class="RexxInstruction" include="RexxInstruction.hpp"/>
 <Class id="AddressInstruction" class="RexxInstructionAddress" include="AddressInstruction.hpp"/>

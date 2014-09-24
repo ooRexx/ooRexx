@@ -70,6 +70,7 @@
 #include "ExpressionMessage.hpp"
 #include "ExpressionOperator.hpp"
 #include "ExpressionLogical.hpp"
+#include "ExpressionList.hpp"
 #include "RexxInternalApis.h"
 #include "SystemInterpreter.hpp"
 #include "TraceSetting.hpp"
@@ -2213,8 +2214,70 @@ RexxInternalObject *LanguageParser::parseExpression(int terminators)
     // the first token.
     nextReal();
     previousToken();
-    // and go parse this.
-    return parseSubExpression(terminators);
+    // and go parse this.  In this context, commas are allow to create
+    // list format.
+    return parseFullSubExpression(terminators);
+}
+
+
+/**
+ * Perform the parsing of an expression where the expression
+ * can be treated as a comma-separated list of subexpressions.
+ * If we have just a simple single subexpression, the
+ * return value is the parsed subexpression.  If a comma
+ * is found as a terminator, then we turn this expression
+ * into an operator that will create an array object from the
+ * list of expressions.  Omitted expressions are allowed and
+ * no effort is made to remove trailing null expressions.
+ *
+ * @param terminators
+ *               The list of terminators for this expression type.
+ *
+ * @return Either a simple expression, or an expression object for
+ *         creating an array item.
+ */
+RexxInternalObject *LanguageParser::parseFullSubExpression(int terminators)
+{
+    size_t total = 0;                // total is the full count of arguments we attempt to parse.
+    RexxToken *terminatorToken;      // the terminator token that ended a sub expression
+
+    // now loop until we get a terminator.  Note that COMMAs are always a terminator
+    // token now that list expressions are possible.
+    for (;;)
+    {
+        // parse off an argument expression
+        RexxInternalObject *subExpr = parseSubExpression(terminators);
+        // We have two term stacks.  The main term stack is used for expression evaluation.
+        // the subTerm stack is used for processing expression lists like this.
+        // NOTE that we need to use pushSubTerm here so that the required expression stack
+        // calculation comes out right.
+        pushSubTerm(subExpr);
+
+        // now check the total.  Real count will be the last
+        // expression that requires evaluation.
+        total++;
+
+        // the next token will be our terminator.  If this is not
+        // a comma, we have more expressions to parse.
+        terminatorToken = nextToken();
+        if (!terminatorToken->isType(TOKEN_COMMA))
+        {
+            // push this token back and stop parsing
+            previousToken();
+            break;
+        }
+    }
+
+    // if we only saw the single expression, then return that expression
+    // as the result
+    if (total == 1)
+    {
+        return popSubTerm();
+    }
+
+    // we have an array creation list, so create the operator type for
+    // building the array.
+    return new (total) RexxExpressionList(total, subTerms);
 }
 
 
@@ -2223,7 +2286,10 @@ RexxInternalObject *LanguageParser::parseExpression(int terminators)
  * set of terminator tokens is reached.  The terminator token is
  * placed back on the token queue.  This is generally
  * called in the context of parsing different bits of
- * an expression and is frequently called recursively.
+ * an expression and is frequently called recursively.  Note
+ * that this subexpression parse will always terminate on a
+ * comma...the calling context will then determine how that
+ * comma is processed.
  *
  * @param terminators
  *               an int containing flags that indicate what terminators
@@ -2395,15 +2461,6 @@ RexxInternalObject *LanguageParser::parseSubExpression(int terminators )
                 break;
             }
 
-            // found a comma in an expression.  In all contexts where this
-            // is allowed, this should be handled as a subexpression terminator.
-            // In all other cases, this is an error.
-            case TOKEN_COMMA:
-            {
-                syntaxError(Error_Unexpected_comma_comma);
-                break;
-            }
-
             // We've encountered a right paren.  Like the comma, if this is
             // expected, it acts as a terminator.  This is a stray and must
             // be reported.
@@ -2492,6 +2549,7 @@ ArrayClass *LanguageParser::parseArgArray(RexxToken *firstToken, int terminators
     return args;
 }
 
+
 /**
  * Perform the parsing of a list of arguments where each
  * argument is separated by commas.  Each argument expression
@@ -2520,12 +2578,13 @@ size_t LanguageParser::parseArgList(RexxToken *firstToken, int terminators )
     nextReal();
     previousToken();
 
-    // now loop until we get a terminator.  Since we're processing an argument
-    // list here, we add in the COMMA to whatever terminators we've been handed.
+    // now loop until we get a terminator.  COMMAs are always subexpression terminators,
+    // so we don't need to add anything additional to our terminator lists.  We just
+    // interpret them differently in this context.
     for (;;)
     {
         // parse off an argument expression
-        RexxInternalObject *subExpr = parseSubExpression(terminators | TERM_COMMA);
+        RexxInternalObject *subExpr = parseSubExpression(terminators);
         // We have two term stacks.  The main term stack is used for expression evaluation.
         // the subTerm stack is used for processing expression lists like this.
         // NOTE that we need to use pushSubTerm here so that the required expression stack
@@ -3053,8 +3112,9 @@ RexxInternalObject *LanguageParser::parseSubTerm(int terminators)
         case  TOKEN_LEFT:
         {
             // parse off the parenthetical.  This might not return anything if there
-            // are nothing in the parens.  This is an error.
-            RexxInternalObject *term = parseSubExpression(TERM_RIGHT);
+            // is nothing in the parens.  This is an error.  Also, in this context,
+            // we are back in a mode where the array-creation syntax is allowed.
+            RexxInternalObject *term = parseFullSubExpression(TERM_RIGHT);
             if (term == OREF_NULL)
             {
                 syntaxError(Error_Invalid_expression_general, token);
@@ -3185,6 +3245,23 @@ void LanguageParser::pushSubTerm(RexxInternalObject *term )
     // tells us how much stack space we need to allocate at run time.
     currentStack++;
     maxStack = Numerics::maxVal(currentStack, maxStack);
+}
+
+
+/**
+ * Pop a term off of the expression sub term stack.
+ *
+ * @return The popped object.
+ */
+RexxInternalObject *LanguageParser::popSubTerm()
+{
+    // reduce the stack count
+    currentStack--;
+    // pop the object off of the stack and give it some short-term
+    // GC protection.
+    RexxInternalObject *term = subTerms->pop();
+    holdObject(term);
+    return term;
 }
 
 
@@ -3482,12 +3559,12 @@ RexxInternalObject *LanguageParser::parseLogical(int terminators)
     nextReal();
     previousToken();
 
-    // now loop until we get a terminator.  Since we're processing an argument
-    // list here, we add in the COMMA to whatever terminators we've been handed.
+    // now loop until we get a terminator.  Note that commas are always subexpression
+    // terminators, but in this context, we interpret them differently.
     for (;;)
     {
         // parse off an argument expression
-        RexxInternalObject *subExpr = parseSubExpression(terminators | TERM_COMMA);
+        RexxInternalObject *subExpr = parseSubExpression(terminators);
         // all sub expressions are required here.
         if (subExpr == OREF_NULL)
         {
