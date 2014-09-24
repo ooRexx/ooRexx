@@ -170,7 +170,6 @@ void RexxInstructionEnd::execute(RexxActivation *context, ExpressionStack *stack
         // probably a simple unlabeled DO...back off and fall through.
         default:
         {
-            context->unindent();
             context->removeBlockInstruction();
             context->traceInstruction(this);
             break;
