@@ -73,6 +73,7 @@ class MutableBuffer : public RexxObject
     MutableBuffer *appendRexx(RexxObject*);
     MutableBuffer *insert(RexxObject*, RexxObject*, RexxObject*, RexxObject*);
     MutableBuffer *overlay(RexxObject*, RexxObject*, RexxObject*, RexxObject*);
+    MutableBuffer *bracketsEqual(RexxObject *str, RexxObject *pos, RexxObject *len);
     MutableBuffer *replaceAt(RexxObject *str, RexxObject *pos, RexxObject *len, RexxObject *pad);
     MutableBuffer *mydelete(RexxObject*, RexxObject*);
     RexxString    *substr(RexxInteger *startPosition, RexxInteger *len, RexxString *pad);

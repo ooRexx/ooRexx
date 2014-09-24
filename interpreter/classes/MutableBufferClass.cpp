@@ -471,6 +471,28 @@ MutableBuffer *MutableBuffer::overlay(RexxObject *str, RexxObject *pos, RexxObje
  * a new string value.  This is similar overlay, but
  * replacing might cause the characters following the
  * replacement position to be shifted to the left or
+ * right.  This is the "[]=" form.
+ *
+ * @param str    The replacement string.
+ * @param pos    The target position (required).
+ * @param len    The target length (optional).  If not specified, the
+ *               length of the replacement string is used, and this
+ *               is essentially an overlay operation.
+ *
+ * @return The target mutablebuffer object.
+ */
+MutableBuffer *MutableBuffer::bracketsEqual(RexxObject *str, RexxObject *pos, RexxObject *len)
+{
+    // this is just replaceAt with the default pad.
+    return replaceAt(str, pos, len, OREF_NULL);
+}
+
+
+/**
+ * Replace a target substring within a string with
+ * a new string value.  This is similar overlay, but
+ * replacing might cause the characters following the
+ * replacement position to be shifted to the left or
  * right.
  *
  * @param str    The replacement string.

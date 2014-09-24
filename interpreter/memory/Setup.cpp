@@ -364,6 +364,41 @@ void MemoryObject::createImage()
     addToSystem(#name, currentClass); \
 }
 
+// Notes on defining external methods.  The defined methods create a mapping from
+// a Rexx method name to a C++ method that implements a method.  These are created
+// via function pointers that are stored in the CPPCode objects backing the object
+// method.  The following conditions must be met for an method to be used:
+//
+// 1)  The method name must be unique on the class (i.e., no multiple methods with
+// the same name and different signatures.
+// 2)  With the exception of methods define with A_COUNT (see below), all method
+// arguments must be RexxObject types and must have a return value that is also a
+// RexxObject type.  If the method does not have a return value, the method needs
+// to return OREF_NULL.
+// 3)  When the method is defined, it identifies the maximum number of arguments it
+// can be called with.  This needs to match the number of arguments in the C++ method
+// signature.  This dispatcher will sort out omitted arguments and pass OREF_NULL
+// for those.  The target method needs to sort out required vs. optional arguments.
+// 4)  For methods with an open-ended number of arguments, A_COUNT is specified.  These
+// methods must have an signature of "RexxObject *name(RexxObject **args, size_t argCount)"
+// to handing being passed a variable-sized argument list.
+// 5)  The target method can be defined as virtual, but it is called directory using
+// the function pointer and not the object virtual function table.  To get virtual function
+// dynamices, create a stub method to act as a bridge between the Rexx method call and
+// the virtual method call.
+// 6)  These methods are stored in the rexx.img file and they need to reestablish
+// their method pointers at startup time.  This is done via a table in CPPCode that
+// allows a mapping to be created between the function pointer and a numeric index.
+// When you add a new method to the setup below, you also need to update the CPPCode
+// table to include the function pointer.  A build error will result if the table is
+// not updated.
+// 7)  A lot of objects like string or the collection classes are used internally in
+// the interpreter.  These typically have a low-level method that performs a function
+// and a Rexx stub method that does error checking and any needed conversion before
+// calling the lower level method.  These methods by convention have a "Rexx" suffix
+// in the name.
+
+
 
 // CLASS and OBJECT get some special treatment.  The process of building the final behaviour
 // for all of the primitive classes requires information from the CLASS and OBJECT behaviours.
@@ -1151,6 +1186,7 @@ StartClassDefinition(MutableBuffer)
         AddMethod("Insert", MutableBuffer::insert, 4);
         AddMethod("Overlay", MutableBuffer::overlay, 4);
         AddMethod("ReplaceAt", MutableBuffer::replaceAt, 4);
+        AddMethod("[]=", MutableBuffer::bracketsEqual, 3);
         AddMethod("Delete", MutableBuffer::mydelete, 2);
         AddMethod("DelStr", MutableBuffer::mydelete, 2);
         AddMethod("Substr", MutableBuffer::substr, 3);
