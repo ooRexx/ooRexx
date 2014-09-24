@@ -410,6 +410,7 @@ class RexxString : public RexxObject
     RexxString  *right(RexxInteger *, RexxString *);
     RexxString  *strip(RexxString *, RexxString *);
     RexxString  *substr(RexxInteger *, RexxInteger *, RexxString *);
+    RexxString  *brackets(RexxInteger *, RexxInteger *);
     RexxString  *subchar(RexxInteger *);
     RexxString  *delWord(RexxInteger *, RexxInteger *);
     RexxString  *space(RexxInteger *, RexxString *);

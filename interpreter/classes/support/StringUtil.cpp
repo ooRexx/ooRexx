@@ -114,6 +114,41 @@ RexxString *StringUtil::substr(const char *string, size_t stringLength, RexxInte
 
 
 /**
+ * Extract a substring from a data buffer, using the "[]"
+ * semantics
+ *
+ * @param string    The data buffer.
+ * @param stringLength
+ *                  The length of the buffer.
+ * @param _position The position argument for the starting position.
+ * @param _length   The substring length argument.
+ *
+ * @return The extracted substring.
+ */
+RexxString *StringUtil::substr(const char *string, size_t stringLength, RexxInteger *_position,
+    RexxInteger *_length)
+{
+    // position is required
+    size_t position = positionArgument(_position, ARG_ONE) - 1;
+    // The default length is a single character
+    size_t length = optionalLengthArgument(_length, 1, ARG_TWO);
+
+    // if our target length is zero, or this is beyond the bounds of
+    // the result is a null string
+    if (length == 0 || position >= stringLength)
+    {
+        return GlobalNames::NULLSTRING;
+    }
+
+    // need to cap the length to the remainder of the string
+    length = Numerics::minVal(length, stringLength - position);
+
+    // just extract a new string from the data
+    return new_string(string + position, length);
+}
+
+
+/**
  * Locate a string within the designated string buffer.
  *
  * @param stringData The stringData to search within.

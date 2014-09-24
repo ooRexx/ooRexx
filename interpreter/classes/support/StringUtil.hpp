@@ -51,6 +51,7 @@ class StringUtil
 {
 public:
     static RexxString *substr(const char *, size_t, RexxInteger *, RexxInteger *, RexxString *);
+    static RexxString *substr(const char *, size_t, RexxInteger *, RexxInteger *);
     static RexxInteger *posRexx(const char *stringData, size_t length, RexxString *needle, RexxInteger *pstart, RexxInteger *range);
     static RexxObject *containsRexx(const char *stringData, size_t length, RexxString *needle, RexxInteger *pstart, RexxInteger *range);
     static size_t pos(const char *stringData, size_t haystack_length, RexxString *needle, size_t _start, size_t _range);

@@ -679,6 +679,23 @@ RexxString *MutableBuffer::substr(RexxInteger *argposition, RexxInteger *argleng
 
 
 /**
+ * Extract a substring from the the buffer data, using brackets
+ * semantics.
+ *
+ * @param argposition
+ *                  The starting position of the substring.
+ * @param arglength The length to extract.
+ * @param pad       An optional pad character.
+ *
+ * @return The extraced substring, as a string.
+ */
+RexxString *MutableBuffer::brackets(RexxInteger *argposition, RexxInteger *arglength)
+{
+    return StringUtil::substr(getStringData(), getLength(), argposition, arglength);
+}
+
+
+/**
  * Perform a search for a string within the buffer.
  *
  * @param needle The search needle.

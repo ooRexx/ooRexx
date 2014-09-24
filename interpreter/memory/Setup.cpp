@@ -515,6 +515,7 @@ StartClassDefinition(String)
         AddMethod("Right", RexxString::right, 2);
         AddMethod("Strip", RexxString::strip, 2);
         AddMethod("Substr", RexxString::substr, 3);
+        AddMethod("[]", RexxString::brackets, 2);
         AddMethod("SubChar", RexxString::subchar, 1);
         AddMethod("DelWord", RexxString::delWord, 2);
         AddMethod("Space", RexxString::space, 2);
@@ -1153,6 +1154,7 @@ StartClassDefinition(MutableBuffer)
         AddMethod("Delete", MutableBuffer::mydelete, 2);
         AddMethod("DelStr", MutableBuffer::mydelete, 2);
         AddMethod("Substr", MutableBuffer::substr, 3);
+        AddMethod("[]", MutableBuffer::brackets, 2);
         AddMethod("Pos", MutableBuffer::posRexx, 3);
         AddMethod("LastPos", MutableBuffer::lastPos, 3);
         AddMethod("Contains", MutableBuffer::containsRexx, 3);

@@ -76,6 +76,7 @@ class MutableBuffer : public RexxObject
     MutableBuffer *replaceAt(RexxObject *str, RexxObject *pos, RexxObject *len, RexxObject *pad);
     MutableBuffer *mydelete(RexxObject*, RexxObject*);
     RexxString    *substr(RexxInteger *startPosition, RexxInteger *len, RexxString *pad);
+    RexxString    *brackets(RexxInteger *startPosition, RexxInteger *len);
     RexxInteger   *lastPos(RexxString *needle, RexxInteger *_start, RexxInteger *_range);
     RexxInteger   *posRexx(RexxString *needle, RexxInteger *_start, RexxInteger *_range);
     RexxObject    *containsRexx(RexxString *needle, RexxInteger *_start, RexxInteger *_range);

@@ -589,6 +589,23 @@ RexxString *RexxString::substr(RexxInteger *position, RexxInteger *_length, Rexx
 
 
 /**
+ * Extract a substring from a target string, using brackets
+ * syntax.
+ *
+ * @param position The starting position of the extracted string.
+ * @param _length  The length to extract.
+ * @param pad      A padding character for padding out to the length, if necessary.
+ *
+ * @return The extracted string value.
+ */
+RexxString *RexxString::brackets(RexxInteger *position, RexxInteger *_length)
+{
+    // use the common code shared with MutableBuffer
+    return StringUtil::substr(getStringData(), getLength(), position, _length);
+}
+
+
+/**
  * Extract a single character from a string object.
  * Returns a null string if the specified position is
  * beyond the bounds of the string.
