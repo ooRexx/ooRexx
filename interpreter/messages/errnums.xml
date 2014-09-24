@@ -664,6 +664,18 @@ special character (such as a parenthesis).
 <para>String or symbol expected as TRACE value</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>920</term>
+<listitem>
+<para>String or symbol expected as ::RESOURCE directive name</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>921</term>
+<listitem>
+<para>String or symbol expected after ::RESOURCE END keyword</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR20">
@@ -872,6 +884,12 @@ special character (such as a parenthesis).
 <term>913</term>
 <listitem>
 <para>Data must not follow the ::CONSTANT value; found "<emphasis role="italic">data</emphasis>"</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>914</term>
+<listitem>
+<para>Data must not follow the ::RESOURCE directive; found "<emphasis role="italic">data</emphasis>"</para>
 </listitem>
 </varlistentry>
 </variablelist>
@@ -1161,6 +1179,12 @@ special character (such as a parenthesis).
 <term>925</term>
 <listitem>
 <para>Unknown keyword on ::ATTRIBUTE directive; found "<emphasis role="italic">word</emphasis>"</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>926</term>
+<listitem>
+<para>Unknown keyword on ::RESOURCE directive; found "<emphasis role="italic">word</emphasis>"</para>
 </listitem>
 </varlistentry>
 </variablelist>
@@ -3749,6 +3773,18 @@ special character (such as a parenthesis).
 <term>941</term>
 <listitem>
 <para>Method or routine code may not contain directive instructions</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>942</term>
+<listitem>
+<para>Duplicate ::RESOURCE directive instruction</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>943</term>
+<listitem>
+<para>Missing ::RESOURCE end marker "<emphasis role="italic">endmarker</emphasis>" for resource "<emphasis role="italic">resoucename</emphasis>"</para>
 </listitem>
 </varlistentry>
 </variablelist>

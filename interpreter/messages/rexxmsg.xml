@@ -938,6 +938,24 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Symbol_or_string_trace_value</SymbolicName>
         <Text>String or symbol expected as TRACE value</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>19</Code>
+        <Subcode>920</Subcode>
+        <MessageNumber>743</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Symbol_or_string_resource</SymbolicName>
+        <Text>String or symbol expected as ::RESOURCE directive name</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>19</Code>
+        <Subcode>921</Subcode>
+        <MessageNumber>745</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Symbol_or_string_resource_end</SymbolicName>
+        <Text>String or symbol expected after ::RESOURCE END keyword</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>
@@ -1240,6 +1258,15 @@ special character (such as a parenthesis).
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_data_constant_dir</SymbolicName>
         <Text>Data must not follow the ::CONSTANT value; found <q><Sub position="1" name="data"/></q></Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>21</Code>
+        <Subcode>914</Subcode>
+        <MessageNumber>746</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_data_resource_dir</SymbolicName>
+        <Text>Data must not follow the ::RESOURCE directive; found <q><Sub position="1" name="data"/></q></Text>
       </SubMessage>
     </Subcodes>
   </Message>
@@ -1644,6 +1671,15 @@ special character (such as a parenthesis).
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_subkeyword_attribute</SymbolicName>
         <Text>Unknown keyword on ::ATTRIBUTE directive; found <q><Sub position="1" name="word"/></q></Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>25</Code>
+        <Subcode>926</Subcode>
+        <MessageNumber>744</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_subkeyword_resource</SymbolicName>
+        <Text>Unknown keyword on ::RESOURCE directive; found <q><Sub position="1" name="word"/></q></Text>
       </SubMessage>
     </Subcodes>
   </Message>
@@ -5240,6 +5276,24 @@ special character (such as a parenthesis).
         <Severity>Warning</Severity>
         <SymbolicName>Error_Translation_directive_method_routine</SymbolicName>
         <Text>Method or routine code may not contain directive instructions</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>99</Code>
+        <Subcode>942</Subcode>
+        <MessageNumber>747</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Translation_duplicate_resource</SymbolicName>
+        <Text>Duplicate ::RESOURCE directive instruction</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>99</Code>
+        <Subcode>943</Subcode>
+        <MessageNumber>748</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Translation_missing_resource_end</SymbolicName>
+        <Text>Missing ::RESOURCE end marker <q><Sub position="1" name="endmarker"/></q> for resource <q><Sub position="2" name="resoucename"/></q></Text>
       </SubMessage>
     </Subcodes>
   </Message>

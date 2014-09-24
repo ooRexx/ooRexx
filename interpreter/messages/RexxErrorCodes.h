@@ -141,6 +141,8 @@
 #define Error_Symbol_or_string_digits_value                19917
 #define Error_Symbol_or_string_fuzz_value                  19918
 #define Error_Symbol_or_string_trace_value                 19919
+#define Error_Symbol_or_string_resource                    19920
+#define Error_Symbol_or_string_resource_end                19921
 #define Error_Symbol_expected                              20000
 #define Error_Symbol_expected_user_defined                 20900
 #define Error_Symbol_expected_drop                         20901
@@ -174,6 +176,7 @@
 #define Error_Invalid_data_form                            21911
 #define Error_Invalid_data_guard_off                       21912
 #define Error_Invalid_data_constant_dir                    21913
+#define Error_Invalid_data_resource_dir                    21914
 #define Error_Invalid_character_string                     22000
 #define Error_Invalid_character_string_char                22001
 #define Error_Invalid_character_string_DBCS                22901
@@ -217,6 +220,7 @@
 #define Error_Invalid_subkeyword_select                    25923
 #define Error_Invalid_subkeyword_options                   25924
 #define Error_Invalid_subkeyword_attribute                 25925
+#define Error_Invalid_subkeyword_resource                  25926
 #define Error_Invalid_whole_number                         26000
 #define Error_Invalid_whole_number_power                   26008
 #define Error_Invalid_whole_number_repeat                  26002
@@ -601,6 +605,8 @@
 #define Error_Translation_external_routine                 99939
 #define Error_Translation_abstract_attribute               99940
 #define Error_Translation_directive_method_routine         99941
+#define Error_Translation_duplicate_resource               99942
+#define Error_Translation_missing_resource_end             99943
 #define Error_at_line                                      101000
 #define Message_Translations_error                         101001
 #define Message_Translations_running                       101002

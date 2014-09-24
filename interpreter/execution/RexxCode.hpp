@@ -92,6 +92,7 @@ class RexxCode : public BaseCode
    inline RexxString *extract(SourceLocation &l) { return package->extract(l); }
    inline SecurityManager *getSecurityManager() { return package->getSecurityManager(); }
    inline void        install(RexxActivation *activation) { package->install(activation); }
+   inline StringTable *getResources() { return package->getResources(); };
    inline StringTable *getMethods() { return package->getMethods(); };
    inline StringTable *getRoutines() { return package->getRoutines(); };
    inline RoutineClass *findRoutine(RexxString *n) { return package->findRoutine(n); }

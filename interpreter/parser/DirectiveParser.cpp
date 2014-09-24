@@ -126,6 +126,11 @@ void LanguageParser::nextDirective()
             optionsDirective();
             break;
 
+        // create package named resources
+        case DIRECTIVE_RESOURCE:
+            resourceDirective();
+            break;
+
         // an unknown directive
         default:
             syntaxError(Error_Translation_bad_directive);
@@ -1287,8 +1292,8 @@ void LanguageParser::attributeDirective()
  */
 void LanguageParser::constantDirective()
 {
-
     RexxToken *token = nextReal();
+
     if (!token->isSymbolOrLiteral())
     {
         syntaxError(Error_Symbol_or_string_constant, token);
@@ -1338,13 +1343,9 @@ void LanguageParser::constantDirective()
         value = token->value();
     }
 
-    token = nextReal();
-    // No other options on this instruction
-    if (!token->isEndOfClause())
-    {
-        /* report an error                   */
-        syntaxError(Error_Invalid_data_constant_dir, token);
-    }
+    // nothing more permitted after this
+    requiredEndOfClause(Error_Invalid_data_constant_dir);
+
     // this directive does not allow a body
     checkDirective(Error_Translation_constant_body);
 
@@ -1358,6 +1359,102 @@ void LanguageParser::constantDirective()
 
     // create the method pair and quit.
     createConstantGetterMethod(internalname, value);
+}
+
+
+/**
+ * Process a ::RESOURCE directive in a source file.
+ */
+void LanguageParser::resourceDirective()
+{
+    // the first token needs to be a resource name.
+    RexxToken *token = nextReal();
+    if (!token->isSymbolOrLiteral())
+    {
+        syntaxError(Error_Symbol_or_string_resource, token);
+    }
+
+    // get the expressed name and the name we use for the publishing the resource
+    RexxString *name = token->value();
+    RexxString *internalname = commonString(name->upper());
+
+    RexxString *endMarker = GlobalNames::DEFAULT_RESOURCE_END;
+
+    // ok, we can have an END keyword here indicating the end of data marker.
+    token = nextReal();
+
+    // if we have something else here, check for an END marker definition (the only
+    // option currently allowed)
+    if (!token->isEndOfClause())
+    {
+        // the keyword must be a symbol
+        if (!token->isSymbol())
+        {
+            syntaxError(Error_Invalid_subkeyword_resource, token);
+        }
+
+        // the only option currently supported is END
+        if (token->subDirective() != SUBDIRECTIVE_END)
+        {
+            syntaxError(Error_Invalid_subkeyword_resource, token);
+        }
+
+        // this is a required string or symbol value
+        token = nextReal();
+        if (!token->isSymbolOrLiteral())
+        {
+            syntaxError(Error_Symbol_or_string_resource_end, token);
+        }
+
+        // get the new end marker
+        endMarker = token->value();
+
+        // nothing more permitted after this
+        requiredEndOfClause(Error_Invalid_data_resource_dir);
+    }
+
+
+    // check for a duplicate resource name
+    if (resources->hasIndex(internalname))
+    {
+        syntaxError(Error_Translation_duplicate_resource);
+    }
+
+    // ok, we need to scan the lines following this directive for
+    // the marker.
+    Protected<ArrayClass> resource = new_array();
+
+    // step to the next line if we're not already there by virtue
+    // of hitting the end of line when scanning the clause
+    conditionalNextLine();
+
+    // now loop, looking for
+    while (true)
+    {
+        // the end marker is required.  If we hit the end without finding this,
+        // raise an error.  This keeps us from inadvertantly swallowing the rest of
+        // the program
+        if (!moreLines())
+        {
+            syntaxError(Error_Translation_missing_resource_end, endMarker, name);
+        }
+
+        // see if the next line is our marker
+        if (checkMarker(endMarker))
+        {
+            // add this resource to our list
+            resources->put(resource, internalname);
+            // step to the next line to continue parsing...and we're done
+            nextLine();
+            return;
+        }
+
+        // extract this line as a string and add to the resource array
+        resource->append(getStringLine());
+
+        // and step to the next line
+        nextLine();
+    }
 }
 
 

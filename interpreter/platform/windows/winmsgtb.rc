@@ -646,6 +646,12 @@ Error_Program_unreadable    "Failure during initialization"
    Error_Translation_directive_method_routine    "Method or routine code may not contain directive instructions"
    Error_Execution_rexx_package_update    "User additions are not allowed to the REXX package."
    Error_Execution_rexx_defined_class    "User additions are not allowed to the REXX language classes."
+   Error_Symbol_or_string_resource    "String or symbol expected as ::RESOURCE directive name"
+   Error_Invalid_subkeyword_resource    "Unknown keyword on ::RESOURCE directive; found ""&1"""
+   Error_Symbol_or_string_resource_end    "String or symbol expected after ::RESOURCE END keyword"
+   Error_Invalid_data_resource_dir    "Data must not follow the ::RESOURCE directive; found ""&1"""
+   Error_Translation_duplicate_resource    "Duplicate ::RESOURCE directive instruction"
+   Error_Translation_missing_resource_end    "Missing ::RESOURCE end marker ""&1"" for resource ""&2"""
    
 END
 

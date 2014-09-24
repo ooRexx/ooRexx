@@ -131,6 +131,9 @@ class LanguageParser: public RexxInternalObject
     RexxToken  *scanSymbol();
     RexxToken  *scanLiteral();
     void        nextLine();
+    void        conditionalNextLine();
+    bool        checkMarker(RexxString *marker);
+    RexxString *getStringLine();
     void        position(size_t, size_t);
     bool        nextClause();
     RexxToken  *sourceNextToken(RexxToken *);
@@ -304,6 +307,7 @@ class LanguageParser: public RexxInternalObject
     void        attributeDirective();
     void        constantDirective();
     void        optionsDirective();
+    void        resourceDirective();
     void        addInstalledClass(RexxString *name, RexxClass *classObject, bool publicClass);
     void        addInstalledRoutine(RexxString *name, RoutineClass *routineObject, bool publicRoutine);
 
@@ -447,6 +451,7 @@ protected:
     StringTable     *unattachedMethods;  // methods not associated with any class
     StringTable     *routines;           // routines defined by ::routine directives.
     StringTable     *publicRoutines;     // routines defined by ::routine directives.
+    StringTable     *resources;          // resources defined by ::resource directives
     ArrayClass      *requires;           // list of ::requires directories, in order of appearance.
     ArrayClass      *libraries;          // libraries identified on a ::requires directive.
     ArrayClass      *classes;            // list of installed ::class directives.

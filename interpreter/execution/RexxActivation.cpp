@@ -2451,6 +2451,13 @@ RexxObject * RexxActivation::rexxVariable(RexxString * name )
     {
         return settings.parentCode->getMethods();
     }
+
+    // .RESOURCES
+    if (name->strCompare("RESOURCES"))
+    {
+        return settings.parentCode->getResources();
+    }
+
     // .ROUTINES
     else if (name->strCompare("ROUTINES"))
     {

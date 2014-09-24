@@ -132,6 +132,7 @@ public:
     inline StringTable *getImportedRoutines() { install(); return mergedPublicRoutines; }
     inline StringTable *getDefinedMethods() { install(); return unattachedMethods; }
     inline ArrayClass  *getPackages() { install(); return loadedPackages; }
+    inline StringTable *getResources() { install(); return resources; }
     inline void         setDigits(wholenumber_t d) { packageSettings.setDigits(d); }
     inline wholenumber_t getDigits() { return packageSettings.getDigits(); }
     inline void         setForm(bool f) { packageSettings.setForm(f); }
@@ -157,6 +158,7 @@ public:
            StringTable   *getPublicRoutinesRexx();
            StringTable   *getImportedRoutinesRexx();
            StringTable   *getMethodsRexx();
+           StringTable   *getResourcesRexx();
            ArrayClass    *getImportedPackagesRexx();
            PackageClass  *loadPackageRexx(RexxString *name, ArrayClass *s);
            RexxObject    *addPackageRexx(PackageClass *package);
@@ -198,7 +200,7 @@ protected:
     ArrayClass  *libraries;               // packages requiring loading
     ArrayClass  *requires;                // requires directives
     ArrayClass  *classes;                 // classes found on directives
-    StringTable *dataAssets;              // assets defined in the package
+    StringTable *resources;               // assets defined in the package
     StringTable *unattachedMethods;       // methods found on directives
 
     // sections resolved from the install process.

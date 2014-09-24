@@ -57,6 +57,7 @@ KeywordEntry RexxToken::directives[] =
     KeywordEntry("METHOD",      DIRECTIVE_METHOD),
     KeywordEntry("OPTIONS",     DIRECTIVE_OPTIONS),
     KeywordEntry("REQUIRES",    DIRECTIVE_REQUIRES),
+    KeywordEntry("RESOURCE",    DIRECTIVE_RESOURCE),
     KeywordEntry("ROUTINE",     DIRECTIVE_ROUTINE),
 };
 
@@ -347,6 +348,7 @@ KeywordEntry RexxToken::subDirectives[] =
     KeywordEntry("ATTRIBUTE",   SUBDIRECTIVE_ATTRIBUTE),
     KeywordEntry("CLASS",       SUBDIRECTIVE_CLASS),
     KeywordEntry("DIGITS",      SUBDIRECTIVE_DIGITS),
+    KeywordEntry("END",         SUBDIRECTIVE_END),
     KeywordEntry("EXTERNAL",    SUBDIRECTIVE_EXTERNAL),
     KeywordEntry("FORM",        SUBDIRECTIVE_FORM),
     KeywordEntry("FUZZ",        SUBDIRECTIVE_FUZZ),

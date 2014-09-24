@@ -177,7 +177,7 @@ void PackageClass::live(size_t liveMark)
     memory_mark(libraries);
     memory_mark(requires);
     memory_mark(classes);
-    memory_mark(dataAssets);
+    memory_mark(resources);
     memory_mark(loadedPackages);
     memory_mark(unattachedMethods);
     memory_mark(loadedPackages);
@@ -218,7 +218,7 @@ void PackageClass::liveGeneral(MarkReason reason)
     memory_mark_general(libraries);
     memory_mark_general(requires);
     memory_mark_general(classes);
-    memory_mark_general(dataAssets);
+    memory_mark_general(resources);
     memory_mark_general(loadedPackages);
     memory_mark_general(unattachedMethods);
     memory_mark_general(loadedPackages);
@@ -254,7 +254,7 @@ void PackageClass::flatten (Envelope *envelope)
     flattenRef(libraries);
     flattenRef(requires);
     flattenRef(classes);
-    flattenRef(dataAssets);
+    flattenRef(resources);
     flattenRef(loadedPackages);
     flattenRef(unattachedMethods);
     flattenRef(loadedPackages);
@@ -1294,6 +1294,27 @@ StringTable *PackageClass::getMethodsRexx()
     if (methods != OREF_NULL)
     {
         return (StringTable *)methods->copy();
+    }
+    else
+    {
+        return new_string_table();
+    }
+}
+
+
+/**
+ * Get all of the resources defined in this package.
+ *
+ * @return A directory of the defined resources
+ */
+StringTable *PackageClass::getResourcesRexx()
+{
+    // we need to return a copy.  The source might necessarily have any of these,
+    // so we return an empty directory if it's not there.
+    StringTable *resourceDir = getResources();
+    if (resourceDir != OREF_NULL)
+    {
+        return (StringTable *)resourceDir->copy();
     }
     else
     {

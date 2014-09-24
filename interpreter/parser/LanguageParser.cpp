@@ -344,6 +344,7 @@ void LanguageParser::live(size_t liveMark)
     memory_mark(publicRoutines);
     memory_mark(requires);
     memory_mark(libraries);
+    memory_mark(resources);
 }
 
 
@@ -388,6 +389,7 @@ void LanguageParser::liveGeneral(MarkReason reason)
     memory_mark_general(publicRoutines);
     memory_mark_general(requires);
     memory_mark_general(libraries);
+    memory_mark_general(resources);
 }
 
 
@@ -635,6 +637,7 @@ void LanguageParser::initializeForDirectives()
     classes = new_array();
     activeClass = OREF_NULL;
     unattachedMethods = new_string_table();
+    resources = new_string_table();
 }
 
 
@@ -720,6 +723,56 @@ void LanguageParser::nextLine()
     // move to the start of the next line
     position(lineNumber + 1, 0);
 }
+
+
+/**
+ * Advance the current position to the next line, but only if we
+ * are not already positioned at the first character.
+ */
+void LanguageParser::conditionalNextLine()
+{
+    // if scanning of the previous clause terminated at the end of the
+    // line, the position has already been advanced to the next line and
+    // we'll be sitting at the first character
+    if (lineOffset != 0)
+    {
+        nextLine();
+    }
+}
+
+
+/**
+ * Check the current line against the end marker to see
+ * if this is a match.
+ *
+ * @param marker The marker string to check.
+ *
+ * @return true if this line begins with the marker, false otherwise.
+ */
+bool LanguageParser::checkMarker(RexxString *marker)
+{
+    size_t checkLength = marker->getLength();
+    // quick return if this is too short
+    if (checkLength > currentLength)
+    {
+        return false;
+    }
+    // do a strict compare with the beginning of the line.  we only trigger on
+    // the line beginning with the string, anything else is ignored.
+    return memcmp(marker->getStringData(), current, checkLength) == 0;
+}
+
+
+/**
+ * Extract the current line as a string object.
+ *
+ * @return The current line as a string object.
+ */
+RexxString *LanguageParser::getStringLine()
+{
+    return new_string(current, currentLength);
+}
+
 
 /**
  * Move the current scan position to a new source location.
@@ -821,7 +874,6 @@ bool LanguageParser::nextClause()
     // we have a clause
     return true;
 }
-
 
 
 /**
@@ -1465,6 +1517,10 @@ void LanguageParser::resolveDependencies()
     if (!unattachedMethods->isEmpty())
     {
         package->unattachedMethods = unattachedMethods;
+    }
+    if (!resources->isEmpty())
+    {
+        package->resources = resources;
     }
 }
 

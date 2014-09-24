@@ -646,6 +646,12 @@
 #define Error_Translation_directive_method_routine_msg               740
 #define Error_Execution_rexx_package_update_msg                      741
 #define Error_Execution_rexx_defined_class_msg                       742
+#define Error_Symbol_or_string_resource_msg                          743
+#define Error_Invalid_subkeyword_resource_msg                        744
+#define Error_Symbol_or_string_resource_end_msg                      745
+#define Error_Invalid_data_resource_dir_msg                          746
+#define Error_Translation_duplicate_resource_msg                     747
+#define Error_Translation_missing_resource_end_msg                   748
 
 
 #endif
