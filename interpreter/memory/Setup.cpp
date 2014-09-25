@@ -1041,6 +1041,7 @@ StartClassDefinition(Routine)
         AddMethod("Source", BaseExecutable::source, 0);
         AddMethod("Package", BaseExecutable::getPackage, 0);
         AddMethod("Call", RoutineClass::callRexx, A_COUNT);
+        AddMethod("[]", RoutineClass::callRexx, A_COUNT);
         AddMethod("CallWith", RoutineClass::callWithRexx, 1);
 
     CompleteMethodDefinitions();
