@@ -2261,6 +2261,12 @@ bool RexxActivation::willTrap(RexxString *condition)
  */
 RexxObject *RexxActivation::handleNovalueEvent(RexxString *name, RexxObject *defaultValue, RexxVariable *variable)
 {
+    // have we specified via ::options that errors should be raised?
+    if (isNovalueErrorEnabled())
+    {
+        reportException(Error_Execution_unassigned_variable, name);
+    }
+
     RexxObject *value = novalueHandler(name);
     // If the handler returns anything other than .nil, this is a
     // value

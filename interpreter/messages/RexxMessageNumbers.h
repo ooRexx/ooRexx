@@ -654,6 +654,9 @@
 #define Error_Translation_missing_resource_end_msg                   748
 #define Error_Invalid_argument_array_msg                             749
 #define Error_Invalid_argument_array_size_msg                        750
+#define Error_Symbol_or_string_keyword_msg                           751
+#define Error_Invalid_subkeyword_following_msg                       752
+#define Error_Execution_unassigned_variable_msg                      753
 
 
 #endif

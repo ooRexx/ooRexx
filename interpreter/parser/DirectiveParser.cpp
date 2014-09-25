@@ -792,6 +792,7 @@ void LanguageParser::optionsDirective()
                     package->setDigits(digits);
                     break;
                 }
+
                 // ::OPTIONS FORM ENGINEERING/SCIENTIFIC
                 case SUBDIRECTIVE_FORM:
                 {
@@ -867,6 +868,35 @@ void LanguageParser::optionsDirective()
                     }
                     // poke into the package
                     package->setTraceSetting(settings);
+                    break;
+                }
+
+                // ::OPTIONS NOVALUE
+                case SUBDIRECTIVE_NOVALUE:
+                {
+                    token = nextReal();
+                    if (!token->isSymbol())
+                    {
+                        syntaxError(Error_Symbol_or_string_keyword, new_string("NOVALUE"));
+                    }
+
+                    switch (token->subDirective())
+                    {
+                        case SUBDIRECTIVE_ERROR:
+                        {
+                            package->enableNovalueError();
+                            break;
+                        }
+
+                        case SUBDIRECTIVE_CONDITION:
+                        {
+                            package->disableNovalueError();
+                            break;
+                        }
+
+                        default:
+                            syntaxError(Error_Invalid_subkeyword_following, new_string("NOVALUE"), token->value());
+                    }
                     break;
                 }
 

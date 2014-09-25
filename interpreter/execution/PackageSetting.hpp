@@ -46,6 +46,20 @@
 
 #include "TraceSetting.hpp"
 #include "Numerics.hpp"
+#include "FlagSet.hpp"
+
+/**
+ * Flag definitions for various package options that
+ * are used to initialize RexxActivation.  Note, for
+ * saved image compatibility, new flags need to be added
+ * to the end of this enum.
+ */
+typedef enum
+{
+    NovalueError,
+} PackageFlags;
+
+
 
 /**
  * A class for processing different numeric settings
@@ -73,9 +87,13 @@ class PackageSetting
     inline bool   isDebug() { return traceSettings.isDebug(); }
     inline const  TraceSetting &getTraceSetting() const { return traceSettings; }
     inline RexxString *getTrace() { return traceSettings.toString(); }
+    inline bool   isNovalueErrorEnabled() { return packageOptions[NovalueError]; }
+    inline void   enableNovalueError() { packageOptions[NovalueError] = true; }
+    inline void   disableNovalueError() { packageOptions[NovalueError] = false; }
 
     NumericSettings numericSettings;       // the package numeric settings
     TraceSetting    traceSettings;         // the package trace setting
+    FlagSet<PackageFlags> packageOptions;  // additional enabled options
 };
 
 #endif

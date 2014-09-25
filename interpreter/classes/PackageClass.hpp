@@ -145,6 +145,8 @@ public:
     inline bool  isRexxPackage() { return this == TheRexxPackage; }
     inline void  setLanguageLevel(LanguageLevel l) { requiredLanguageLevel = l; }
     inline LanguageLevel getLanguageLevel() { return requiredLanguageLevel; }
+    inline void enableNovalueError() { packageSettings.enableNovalueError(); }
+    inline void disableNovalueError() { packageSettings.disableNovalueError(); }
 
            RexxString    *getTrace();
            void           detachSource();
@@ -213,7 +215,7 @@ protected:
                                           // all public required routines
     StringTable *mergedPublicRoutines;
 
-    bool           installRequired;       // indicates we need to install stuff later
+    bool         installRequired;         // indicates we need to install stuff later
 
     PackageSetting packageSettings;       // the settings we use at run time.
 

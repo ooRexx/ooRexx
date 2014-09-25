@@ -654,6 +654,9 @@ Error_Program_unreadable    "Failure during initialization"
    Error_Translation_missing_resource_end    "Missing ::RESOURCE end marker ""&1"" for resource ""&2"""
    Error_Invalid_argument_array    "&1 argument &2 must be a single-dimensional array; found ""&3"""
    Error_Invalid_argument_array_size    "&1 argument &2 must be an array with exactly &3 items."
+   Error_Symbol_or_string_keyword    "String or symbol expected after &1 keyword"
+   Error_Invalid_subkeyword_following    "Unknown keyword following ""&1""; found ""&2"""
+   Error_Execution_unassigned_variable    "Reference to unassigned variable ""&1""."
    
 END
 

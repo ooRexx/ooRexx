@@ -143,6 +143,7 @@
 #define Error_Symbol_or_string_trace_value                 19919
 #define Error_Symbol_or_string_resource                    19920
 #define Error_Symbol_or_string_resource_end                19921
+#define Error_Symbol_or_string_keyword                     19922
 #define Error_Symbol_expected                              20000
 #define Error_Symbol_expected_user_defined                 20900
 #define Error_Symbol_expected_drop                         20901
@@ -221,6 +222,7 @@
 #define Error_Invalid_subkeyword_options                   25924
 #define Error_Invalid_subkeyword_attribute                 25925
 #define Error_Invalid_subkeyword_resource                  25926
+#define Error_Invalid_subkeyword_following                 25927
 #define Error_Invalid_whole_number                         26000
 #define Error_Invalid_whole_number_power                   26008
 #define Error_Invalid_whole_number_repeat                  26002
@@ -567,6 +569,7 @@
 #define Error_Execution_invalid_thread                     98983
 #define Error_Execution_rexx_package_update                98984
 #define Error_Execution_rexx_defined_class                 98985
+#define Error_Execution_unassigned_variable                98986
 #define Error_Translation                                  99000
 #define Error_Translation_user_defined                     99900
 #define Error_Translation_duplicate_class                  99901

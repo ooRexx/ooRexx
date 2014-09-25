@@ -676,6 +676,12 @@ special character (such as a parenthesis).
 <para>String or symbol expected after ::RESOURCE END keyword</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>922</term>
+<listitem>
+<para>String or symbol expected after <emphasis role="italic">keyword</emphasis> keyword</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR20">
@@ -1185,6 +1191,12 @@ special character (such as a parenthesis).
 <term>926</term>
 <listitem>
 <para>Unknown keyword on ::RESOURCE directive; found "<emphasis role="italic">word</emphasis>"</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>927</term>
+<listitem>
+<para>Unknown keyword following "<emphasis role="italic">keyword</emphasis>"; found "<emphasis role="italic">word</emphasis>"</para>
 </listitem>
 </varlistentry>
 </variablelist>
@@ -3541,6 +3553,12 @@ special character (such as a parenthesis).
 <term>985</term>
 <listitem>
 <para>User additions are not allowed to the REXX language classes.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>986</term>
+<listitem>
+<para>Reference to unassigned variable "<emphasis role="italic">name</emphasis>".</para>
 </listitem>
 </varlistentry>
 </variablelist>
