@@ -70,7 +70,9 @@ class MutableBuffer : public RexxObject
 
     RexxObject *lengthRexx();
 
-    MutableBuffer *appendRexx(RexxObject*);
+    MutableBuffer *appendRexx(RexxObject *);
+    MutableBuffer *setTextRexx(RexxObject *);
+    void           setText(RexxString *);
     MutableBuffer *insert(RexxObject*, RexxObject*, RexxObject*, RexxObject*);
     MutableBuffer *overlay(RexxObject*, RexxObject*, RexxObject*, RexxObject*);
     MutableBuffer *bracketsEqual(RexxObject *str, RexxObject *pos, RexxObject *len);
@@ -123,6 +125,7 @@ class MutableBuffer : public RexxObject
     inline size_t      getLength()     { return dataLength; }
     inline char *      getData()       { return data->getData(); }
            void append(const char *string, size_t l);
+           void append(RexxString *s) { append(s->getStringData(), s->getLength()); };
     inline void copyData(size_t offset, const char *string, size_t l) { data->copyData(offset, string, l); }
     inline void openGap(size_t offset, size_t _size, size_t tailSize) { data->openGap(offset, _size, tailSize); }
     inline void closeGap(size_t offset, size_t _size, size_t tailSize) { data->closeGap(offset, _size, tailSize); }

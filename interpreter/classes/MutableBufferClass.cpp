@@ -331,6 +331,37 @@ MutableBuffer *MutableBuffer::appendRexx(RexxObject *obj)
 
 
 /**
+ * Rexx method for setting a mutable buffer to a given
+ * text value.
+ *
+ * @param obj    The argument object.
+ *
+ * @return Always returns the mutablebuffer instance.
+ */
+MutableBuffer *MutableBuffer::setTextRexx(RexxObject *obj)
+{
+    Protected<RexxString> string = stringArgument(obj, ARG_ONE);
+    setText(string);
+    return this;
+}
+
+
+/**
+ * Primitive level method for setting a mutable buffer to
+ * a given text value.
+ *
+ * @param string The new string value for the buffer.
+ */
+void MutableBuffer::setText(RexxString *string)
+{
+    // set the data length to zero
+    dataLength = 0;
+    // and append the new text to the buffer
+    append(string);
+}
+
+
+/**
  * Append a value to this buffer.
  *
  * @param d      The data to append.

@@ -942,6 +942,7 @@ CPPM(MutableBuffer::containsRexx),
 CPPM(MutableBuffer::caselessContains),
 CPPM(MutableBuffer::containsWord),
 CPPM(MutableBuffer::caselessContainsWord),
+CPPM(MutableBuffer::setText),
 
 CPPM(SupplierClass::available),
 CPPM(SupplierClass::next),
