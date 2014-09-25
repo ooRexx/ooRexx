@@ -92,6 +92,7 @@ ListContents::ListContents(size_t size)
  */
 void ListContents::initializeFreeChain()
 {
+
     // this is an empty bucket
     itemCount = 0;
 
@@ -107,6 +108,61 @@ void ListContents::initializeFreeChain()
     // don't bother double linking the free chain since we
     // only remove from the front.
     entries[totalSize - 1].next = NoMore;
+}
+
+
+/**
+ * We're merging a list contents into this collection after an
+ * expansion.  We need to take care to keep the same index
+ * values for each of the inserted items.  We cleare out all
+ * slot positions, then rebuild the chains using the same
+ * positions as the original.  Once the merge is complete, then
+ * we rescan the table for free entries and rebuild the table.
+ */
+void ListContents::prepareForMerge()
+{
+    // no first or last items.
+    firstItem = NoMore;
+    lastItem = NoMore;
+
+    // this is an empty bucket
+    itemCount = 0;
+
+    // we keep the available items on a chain, so
+    // chain up the items into a free chain
+    freeChain = NoMore;
+
+    // now clear all of the entries out
+    for (ItemLink i = 0; i < totalSize; i++)
+    {
+        clearEntry(i);
+    }
+}
+
+
+/**
+ * We've completed the merge operation.  Now we need to up the
+ * unused slots and build a free chain.
+ */
+void ListContents::completeMerge()
+{
+    // we keep the available items on a chain, so
+    // chain up the items into a free chain
+    freeChain = NoMore;
+
+    // ok, scan from the end of the table to the beginning, so we
+    // build the free chain with the smallest indexes in the front
+    for (ItemLink i = totalSize; i > 0; i--)
+    {
+        ItemLink index = i - 1;
+
+        // if this slot is empty
+        if (isAvailable(index))
+        {
+            // put this back on the free chain
+            returnToFreeChain(index);
+        }
+    }
 }
 
 
@@ -161,7 +217,9 @@ void ListContents::flatten(Envelope *envelope)
 
 /**
  * Merge the list maintained in this contents object into
- * a target one after an expansion has occurred.
+ * a target one after an expansion has occurred.  Note that this
+ * is a little complicated, because we need to maintain the
+ * relationship between items are their current indexes.
  *
  * @param target The target contents.
  */
@@ -170,11 +228,19 @@ void ListContents::mergeInto(ListContents *target)
     // NOTE:  This assumes the target contents item is at least
     // as large as this one.
 
+    // tell the target we're going to do a merge
+    target->prepareForMerge();
+
     // run the chain appending each item on to the target
     for (ItemLink position = firstItem; position != NoMore; position = nextEntry(position))
     {
-        target->append(entryValue(position));
+        // this version of append will use the same index value for the append.
+        target->append(position, entryValue(position));
     }
+
+    // now the target needs to rebuild the free chains from the unused
+    // slots.
+    target->completeMerge();
 }
 
 
@@ -353,6 +419,27 @@ ListContents::ItemLink ListContents::append(RexxInternalObject *value)
     // insert this at the end and return the index.
     insertAtEnd(newItem);
     return newItem;
+}
+
+
+/**
+ * Append an item to the list, using a provided index.  This is
+ * only used during a merge operation.
+ *
+ * @param value  The value to add.
+ *
+ * @return The index position of the new item.
+ */
+void ListContents::append(ItemLink newItem, RexxInternalObject *value)
+{
+    // we need to update this here because we're not allocating directly
+    itemCount++;
+
+    // this is also normally done during slot allocation, set the value now.
+    setValue(newItem, value);
+
+    // insert this at the end and return the index.
+    insertAtEnd(newItem);
 }
 
 

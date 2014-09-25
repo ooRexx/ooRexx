@@ -268,18 +268,26 @@ class RexxActivation : public ActivationBase
    RexxObject       *getLocalEnvironment(RexxString *name);
    void              setReturnStatus(ReturnStatus status);
 
-   inline void              setCallType(RexxString *type) {settings.calltype = type; }
-   inline void              pushBlockInstruction(DoBlock *block) { block->setPrevious(doStack); doStack = block; }
-   inline void              popBlockInstruction() { DoBlock *temp; temp = doStack; doStack = temp->getPrevious(); temp->setHasNoReferences(); removeBlockInstruction(); }
-   inline DoBlock         * topBlockInstruction() { return doStack; }
-   inline void              terminateBlockInstruction(size_t _indent) { popBlockInstruction(); settings.traceIndent = _indent; }
-   inline void              terminateBlockInstruction() { popBlockInstruction(); settings.traceIndent = doStack->getIndent(); }
-   inline void              newBlockInstruction(DoBlock *block) { pushBlockInstruction(block); blockNest++; settings.traceIndent++;}
-   inline void              removeBlockInstruction()
-                            {
-                                blockNest--;
-                                unindent();
-                            };
+   inline void setCallType(RexxString *type) {settings.calltype = type; }
+   inline void pushBlockInstruction(DoBlock *block) { block->setPrevious(doStack); doStack = block; }
+   inline void popBlockInstruction()
+   {
+       removeBlockInstruction();
+       DoBlock *temp = doStack;
+       doStack = temp->getPrevious();
+       settings.traceIndent = temp->getIndent();
+       temp->setHasNoReferences();
+   }
+
+   inline DoBlock *topBlockInstruction() { return doStack; }
+   inline void terminateBlockInstruction(size_t _indent) { popBlockInstruction(); settings.traceIndent = _indent; }
+   inline void terminateBlockInstruction() { popBlockInstruction();  }
+   inline void newBlockInstruction(DoBlock *block) { pushBlockInstruction(block); blockNest++; settings.traceIndent++;}
+   inline void removeBlockInstruction()
+   {
+       blockNest--;
+       unindent();
+   };
    inline void              addBlockInstruction()    { blockNest++; indent(); };
    inline bool              hasActiveBlockInstructions() { return blockNest != 0; }
    inline bool              inMethod()  {return activationContext == METHODCALL; }

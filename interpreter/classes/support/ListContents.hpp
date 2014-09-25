@@ -83,6 +83,8 @@ class ListContents : public RexxInternalObject
     virtual void flatten(Envelope *);
 
     void initializeFreeChain();
+    void prepareForMerge();
+    void completeMerge();
     void mergeInto(ListContents *target);
     ItemLink allocateSlot(RexxInternalObject *value);
 
@@ -95,6 +97,7 @@ class ListContents : public RexxInternalObject
     ItemLink insertAtEnd(RexxInternalObject *value);
     void removeItem(ItemLink item);
     ItemLink append(RexxInternalObject *value);
+    void append(ItemLink index, RexxInternalObject *value);
 
     RexxInternalObject *get(ItemLink index);
     RexxInternalObject *put(RexxInternalObject *value, ItemLink index);
