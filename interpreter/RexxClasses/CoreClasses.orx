@@ -1200,6 +1200,39 @@ nomethod:
   forward message('STABLESORTWITH') -- just use the stable variety
 
 ::CLASS 'MapCollection' MIXINCLASS Collection Public
+/*****************************************/
+/* OF class      method                  */
+/*****************************************/
+::method OF class
+  args = arg(1, 'a')
+  -- get the arguments as an array
+
+  -- create an instance of this class
+  collection = self~new
+
+  -- process each of the arguments.  Omitted arguments
+  -- are not permitted and each argument must be an
+  -- array of exactly two items
+  loop i = 1 to args~last
+     -- no omitted
+     if \args~hasIndex(i) then
+        raise syntax 93.903 array(i)
+     arg = args[i]
+     -- get the argument value.
+     if \arg~isA(.array) then
+        raise syntax 88.923 array(.context~name, i, arg)
+     if \arg~dimension == 1 then
+        raise syntax 88.923 array(.context~name, i, arg)
+     -- this must have just two items
+     if arg~items \= 2 | arg~last \= 2 then
+        raise syntax 88.924 array(.context~name, i, 2)
+
+     -- the index is first, the value is second, the reverse of PUT
+     collection~put(arg[2], arg[1])
+  end
+
+  return collection
+
 
 /*****************************************/
 /* PUTALL        method                  */

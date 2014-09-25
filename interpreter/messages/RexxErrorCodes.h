@@ -429,6 +429,8 @@
 #define Error_Invalid_argument_nostem                      88920
 #define Error_Invalid_argument_double                      88921
 #define Error_Invalid_argument_maxarg                      88922
+#define Error_Invalid_argument_array                       88923
+#define Error_Invalid_argument_array_size                  88924
 #define Error_Variable_expected                            89000
 #define Error_Variable_expected_USE                        89001
 #define Error_Variable_expected_PARSE                      89002

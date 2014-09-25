@@ -652,6 +652,8 @@
 #define Error_Invalid_data_resource_dir_msg                          746
 #define Error_Translation_duplicate_resource_msg                     747
 #define Error_Translation_missing_resource_end_msg                   748
+#define Error_Invalid_argument_array_msg                             749
+#define Error_Invalid_argument_array_size_msg                        750
 
 
 #endif

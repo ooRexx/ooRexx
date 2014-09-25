@@ -652,6 +652,8 @@ Error_Program_unreadable    "Failure during initialization"
    Error_Invalid_data_resource_dir    "Data must not follow the ::RESOURCE directive; found ""&1"""
    Error_Translation_duplicate_resource    "Duplicate ::RESOURCE directive instruction"
    Error_Translation_missing_resource_end    "Missing ::RESOURCE end marker ""&1"" for resource ""&2"""
+   Error_Invalid_argument_array    "&1 argument &2 must be a single-dimensional array; found ""&3"""
+   Error_Invalid_argument_array_size    "&1 argument &2 must be an array with exactly &3 items."
    
 END
 

@@ -2668,6 +2668,20 @@ special character (such as a parenthesis).
 <para>Too many arguments in invocation; <emphasis role="italic">number</emphasis> expected</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>923</term>
+<listitem>
+<para>
+<emphasis role="italic">name</emphasis> argument <emphasis role="italic">argument_number</emphasis> must be a single-dimensional array; found "<emphasis role="italic">value</emphasis>"</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>924</term>
+<listitem>
+<para>
+<emphasis role="italic">name</emphasis> argument <emphasis role="italic">argument_number</emphasis> must be an array with exactly <emphasis role="italic">count</emphasis> items.</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR89">

@@ -3667,6 +3667,24 @@ special character (such as a parenthesis).
           <SymbolicName>Error_Invalid_argument_maxarg</SymbolicName>
           <Text>Too many arguments in invocation; <Sub position="1" name="number"/> expected</Text>
         </SubMessage>
+        <SubMessage>
+          <Code>88</Code>
+          <Subcode>923</Subcode>
+          <MessageNumber>749</MessageNumber>
+          <Component>Rexx</Component>
+          <Severity>Warning</Severity>
+          <SymbolicName>Error_Invalid_argument_array</SymbolicName>
+          <Text><Sub position="1" name="name"/> argument <Sub position="2" name="argument_number"/> must be a single-dimensional array; found <q><Sub position="3" name="value"/></q></Text>
+        </SubMessage>
+        <SubMessage>
+          <Code>88</Code>
+          <Subcode>924</Subcode>
+          <MessageNumber>750</MessageNumber>
+          <Component>Rexx</Component>
+          <Severity>Warning</Severity>
+          <SymbolicName>Error_Invalid_argument_array_size</SymbolicName>
+          <Text><Sub position="1" name="name"/> argument <Sub position="2" name="argument_number"/> must be an array with exactly <Sub position="3" name="count"/> items.</Text>
+        </SubMessage>
     </Subcodes>
   </Message>
   <Message>
