@@ -1688,7 +1688,7 @@ RexxString *RexxObject::objectName()
         }
 
         // send the default name message...
-        sendMessage(GlobalNames::DEFAULTNAME, string_value);
+        string_value = (RexxString *)sendMessage(GlobalNames::DEFAULTNAME);
         // it is possible we got nothing back from this method.  Prevent
         // potential crashes by returning the default default.
         if (string_value.isNull())
