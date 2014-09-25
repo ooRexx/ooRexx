@@ -106,6 +106,8 @@ class NativeActivation : public ActivationBase
     void run(TrappingDispatcher &dispatcher);
     VariableDictionary *methodVariables();
     wholenumber_t signedIntegerValue(RexxObject *o, size_t position, wholenumber_t maxValue, wholenumber_t minValue);
+    wholenumber_t positiveWholeNumberValue(RexxObject *o, size_t position);
+    wholenumber_t nonnegativeWholeNumberValue(RexxObject *o, size_t position);
     stringsize_t unsignedIntegerValue(RexxObject *o, size_t position, stringsize_t maxValue);
     int64_t int64Value(RexxObject *o, size_t position);
     uint64_t unsignedInt64Value(RexxObject *o, size_t position);

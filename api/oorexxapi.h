@@ -74,7 +74,7 @@
 #define REXX_VALUE_int16_t                21
 #define REXX_VALUE_int32_t                22
 #define REXX_VALUE_int64_t                23
-#define REXX_VALUE___int64_t               23
+#define REXX_VALUE___int64_t              23
 #define REXX_VALUE_uint8_t                24
 #define REXX_VALUE_uint16_t               25
 #define REXX_VALUE_uint32_t               26
@@ -91,6 +91,8 @@
 #define REXX_VALUE_POINTERSTRING          35
 #define REXX_VALUE_RexxClassObject        36
 #define REXX_VALUE_RexxMutableBufferObject 37
+#define REXX_VALUE_positive_wholenumber_t 38
+#define REXX_VALUE_nonnegative_wholenumber_t 39
 
 #define REXX_OPTIONAL_ARGUMENT                 0x8000
 
@@ -121,6 +123,8 @@
 #define REXX_VALUE_OPTIONAL_POINTERSTRING         (REXX_OPTIONAL_ARGUMENT | REXX_VALUE_POINTERSTRING)
 #define REXX_VALUE_OPTIONAL_RexxClassObject       (REXX_OPTIONAL_ARGUMENT | REXX_VALUE_RexxClassObject)
 #define REXX_VALUE_OPTIONAL_RexxMutableBufferObject   (REXX_OPTIONAL_ARGUMENT | REXX_VALUE_RexxMutableBufferObject)
+#define REXX_VALUE_OPTIONAL_positive_wholenumber_t   (REXX_OPTIONAL_ARGUMENT | REXX_VALUE_positive_wholenumber_t)
+#define REXX_VALUE_OPTIONAL_nonnegative_wholenumber_t   (REXX_OPTIONAL_ARGUMENT | REXX_VALUE_nonnegative_wholenumber_t)
 
 BEGIN_EXTERN_C()
 
@@ -221,12 +225,14 @@ typedef struct _RexxMethodEntry
 #define REXX_INTERPRETER_4_1_3  0x00040103
 #define REXX_INTERPRETER_4_2_0  0x00040200
 #define REXX_INTERPRETER_4_3_0  0x00040300
-#define REXX_CURRENT_INTERPRETER_VERSION REXX_INTERPRETER_4_3_0
+#define REXX_INTERPRETER_5_0_0  0x00050000
+#define REXX_CURRENT_INTERPRETER_VERSION REXX_INTERPRETER_5_0_0
 #define NO_VERSION_YET NULL
 
 #define REXX_LANGUAGE_6_03 0x00000603
 #define REXX_LANGUAGE_6_04 0x00000604
-#define REXX_CURRENT_LANGUAGE_LEVEL REXX_LANGUAGE_6_04
+#define REXX_LANGUAGE_6_05 0x00000605
+#define REXX_CURRENT_LANGUAGE_LEVEL REXX_LANGUAGE_6_05
 
 #define STANDARD_PACKAGE_HEADER sizeof(RexxPackageEntry), REXX_PACKAGE_API_NO,
 
@@ -303,6 +309,8 @@ typedef struct
         RexxStemObject        value_RexxStemObject;
         POINTER               value_POINTERSTRING;
         RexxMutableBufferObject value_RexxMutableBufferObject;
+        wholenumber_t         value_positive_wholenumber_t;
+        wholenumber_t         value_nonnegative_wholenumber_t;
 
         // following just duplicate the non-optional variations...
         // it was difficult (if not impossible) to get the
@@ -334,6 +342,8 @@ typedef struct
         RexxStemObject        value_OPTIONAL_RexxStemObject;
         POINTER               value_OPTIONAL_POINTERSTRING;
         RexxMutableBufferObject value_OPTIONAL_RexxMutableBufferObject;
+        wholenumber_t         value_OPTIONAL_positive_wholenumber_t;
+        wholenumber_t         value_OPTIONAL_nonnegative_wholenumber_t;
     } value;
 
     uint16_t type;            // type of the value
@@ -421,7 +431,8 @@ typedef struct
 } RexxOption;
 
 
-typedef struct {
+typedef struct
+{
   wholenumber_t code;                // full condition code
   wholenumber_t rc;                  // return code value
   size_t           position;         // line number position
@@ -3658,6 +3669,8 @@ END_EXTERN_C()
 #define ARGUMENT_TYPE_RexxStemObject        RexxStemObject
 #define ARGUMENT_TYPE_POINTERSTRING         POINTER
 #define ARGUMENT_TYPE_RexxMutableBufferObject RexxMutableBufferObject
+#define ARGUMENT_TYPE_positive_wholenumber_t wholenumber_t
+#define ARGUMENT_TYPE_nonnegative_wholenumber_t nonnegative_t
 
 #define ARGUMENT_TYPE_OPTIONAL_RexxObjectPtr         RexxObjectPtr
 #define ARGUMENT_TYPE_OPTIONAL_int                   int
@@ -3686,6 +3699,8 @@ END_EXTERN_C()
 #define ARGUMENT_TYPE_OPTIONAL_POINTERSTRING         POINTER
 #define ARGUMENT_TYPE_OPTIONAL_RexxClassObject       RexxClassObject
 #define ARGUMENT_TYPE_OPTIONAL_RexxMutableBufferObject   RexxMutableBufferObject
+#define ARGUMENT_TYPE_OPTIONAL_positive_wholenumber_t wholenumber_t
+#define ARGUMENT_TYPE_OPTIONAL_nonnegative_wholenumber_t nonnegative_t
 
 #define ARGUMENT_TYPE(t) ((t) & ~REXX_OPTIONAL_ARGUMENT)
 #define IS_OPTIONAL_ARGUMENT(t) (((t) & REXX_OPTIONAL_ARGUMENT) != 0)

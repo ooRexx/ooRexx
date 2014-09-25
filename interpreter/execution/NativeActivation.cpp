@@ -423,6 +423,20 @@ void NativeActivation::processArguments(size_t _argcount, RexxObject **_arglist,
                             break;
                         }
 
+                        // The Rexx whole number one is checked against the human digits limit
+                        case REXX_VALUE_positive_wholenumber_t:
+                        {
+                            descriptors[outputIndex].value.value_wholenumber_t = positiveWholeNumberValue(argument, inputIndex);
+                            break;
+                        }
+
+                        // The Rexx whole number one is checked against the human digits limit
+                        case REXX_VALUE_nonnegative_wholenumber_t:
+                        {
+                            descriptors[outputIndex].value.value_wholenumber_t = nonnegativeWholeNumberValue(argument, inputIndex);
+                            break;
+                        }
+
                         // an unsigned string number value
                         case REXX_VALUE_stringsize_t:
                         {
@@ -587,6 +601,8 @@ void NativeActivation::processArguments(size_t _argcount, RexxObject **_arglist,
                         case REXX_VALUE_RexxObjectPtr:     // no object here
                         case REXX_VALUE_int:               // non-integer value
                         case REXX_VALUE_wholenumber_t:     // non-existent long
+                        case REXX_VALUE_positive_wholenumber_t:     // non-existent long
+                        case REXX_VALUE_nonnegative_wholenumber_t:  // non-existent long
                         case REXX_VALUE_CSTRING:           // missing character string
                         case REXX_VALUE_POINTER:
                         case REXX_VALUE_RexxStringObject:  // no object here
@@ -765,6 +781,8 @@ RexxObject *NativeActivation::valueToObject(ValueDescriptor *value)
             return Numerics::wholenumberToObject((wholenumber_t)value->value.value_size_t);
         }
 
+        case REXX_VALUE_positive_wholenumber_t:
+        case REXX_VALUE_nonnegative_wholenumber_t:
         case REXX_VALUE_wholenumber_t:
         {
             return Numerics::wholenumberToObject((wholenumber_t)value->value.value_wholenumber_t);
@@ -973,13 +991,31 @@ bool NativeActivation::objectToValue(RexxObject *o, ValueDescriptor *value)
             return success;
         }
 
+        // The Rexx whole number one is checked against the human digits limit
+        case REXX_VALUE_positive_wholenumber_t:
+        {
+            wholenumber_t temp = 0;
+            bool success = Numerics::objectToWholeNumber(o, temp, Numerics::MAX_WHOLENUMBER, 1);
+            value->value.value_positive_wholenumber_t = (wholenumber_t)temp;
+            return success;
+        }
+
+        // The Rexx whole number one is checked against the human digits limit
+        case REXX_VALUE_nonnegative_wholenumber_t:
+        {
+            wholenumber_t temp = 0;
+            bool success = Numerics::objectToWholeNumber(o, temp, Numerics::MAX_WHOLENUMBER, 0);
+            value->value.value_wholenumber_t = (wholenumber_t)temp;
+            return success;
+        }
+
         case REXX_VALUE_ssize_t:
         {
             ssize_t temp = 0;
             // NB:  SSIZE_MIN appears to be defined as 0 for some bizarre reason on some platforms,
             // so we'll make things relative to SIZE_MAX.
             bool success = Numerics::objectToSignedInteger(o, temp, SSIZE_MAX, (-SSIZE_MAX) - 1);
-            value->value.value_wholenumber_t = (wholenumber_t)temp;
+            value->value.value_nonnegative_wholenumber_t = (wholenumber_t)temp;
             return success;
         }
 
@@ -1754,6 +1790,48 @@ wholenumber_t NativeActivation::signedIntegerValue(RexxObject *o, size_t positio
     if (!Numerics::objectToSignedInteger(o, temp, maxValue, minValue))
     {
         reportException(Error_Invalid_argument_range, new_array(new_integer(position + 1), Numerics::wholenumberToObject(minValue), Numerics::wholenumberToObject(maxValue), o));
+    }
+    return temp;
+}
+
+
+/**
+ * Convert a value to a positive wholenumber value.
+ *
+ * @param o        The object to convert.
+ * @param position The argument position.
+ *
+ * @return The converted number.
+ */
+wholenumber_t NativeActivation::positiveWholeNumberValue(RexxObject *o, size_t position)
+{
+    ssize_t temp;
+
+    // convert using the whole value range
+    if (!Numerics::objectToSignedInteger(o, temp, Numerics::MAX_WHOLENUMBER, 1))
+    {
+        reportException(Error_Invalid_argument_positive, position, o);
+    }
+    return temp;
+}
+
+
+/**
+ * Convert a value to a nonnegative wholenumber value.
+ *
+ * @param o        The object to convert.
+ * @param position The argument position.
+ *
+ * @return The converted number.
+ */
+wholenumber_t NativeActivation::nonnegativeWholeNumberValue(RexxObject *o, size_t position)
+{
+    ssize_t temp;
+
+    // convert using the whole value range
+    if (!Numerics::objectToSignedInteger(o, temp, Numerics::MAX_WHOLENUMBER, 0))
+    {
+        reportException(Error_Invalid_argument_nonnegative, position, o);
     }
     return temp;
 }
