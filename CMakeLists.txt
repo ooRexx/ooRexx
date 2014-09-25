@@ -931,7 +931,6 @@ if (XALAN_EXECUTABLE)
     generate_message_file(${build_messages_dir}/errnumsrxqueue.xml ${build_messages_dir}/errnumsrxqueue.xsl)
     generate_message_file(${build_messages_dir}/errnumssubcom.xml ${build_messages_dir}/errnumssubcom.xsl)
     generate_message_file(${build_messages_dir}/errnumsrexxc.xml ${build_messages_dir}/errnumsrexxc.xsl)
-    generate_message_file(${build_interpreter_platform_dir}/winmsgtb.rc ${build_interpreter_platform_dir}/WinMessageResource.xsl)
     generate_message_file(${build_interpreter_dir}/platform/windows/winmsgtb.rc ${build_interpreter_dir}/platform/windows/WinMessageResource.xsl)
     generate_message_file(${build_interpreter_dir}/platform/unix/rexx.cat ${build_interpreter_dir}/platform/unix/UnixGencat.xsl)
 
@@ -947,7 +946,8 @@ if (XALAN_EXECUTABLE)
                        ${build_messages_dir}/errnumsrxqueue.xml
                        ${build_messages_dir}/errnumssubcom.xml
                        ${build_messages_dir}/errnumsrexxc.xml
-                       ${build_interpreter_platform_dir}/winmsgtb.rc
+                       ${build_interpreter_dir}/platform/windows/winmsgtb.rc
+                       ${build_interpreter_dir}/platform/unix/rexx.cat
                        ${build_behaviour_dir}/PrimitiveBehaviourNames.h
                        ${build_behaviour_dir}/PrimitiveBehaviours.cpp
                        ${build_behaviour_dir}/VirtualFunctionTable.cpp

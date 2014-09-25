@@ -1,40 +1,41 @@
-$----------------------------------------------------------------------------
-$
-$ Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.
-$ Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.
-$
-$ This program and the accompanying materials are made available under
-$ the terms of the Common Public License v1.0 which accompanies this
-$ distribution. A copy is also available at the following address:
-$ http://www.oorexx.org/license.html
-$
-$ Redistribution and use in source and binary forms, with or
-$ without modification, are permitted provided that the following
-$ conditions are met:
-$
-$ Redistributions of source code must retain the above copyright
-$ notice, this list of conditions and the following disclaimer.
-$ Redistributions in binary form must reproduce the above copyright
-$ notice, this list of conditions and the following disclaimer in
-$ the documentation and/or other materials provided with the distribution.
-$
-$ Neither the name of Rexx Language Association nor the names
-$ of its contributors may be used to endorse or promote products
-$ derived from this software without specific prior written permission.
-$
-$ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-$ "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-$ LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-$ FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-$ OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-$ SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
-$ TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
-$ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
-$ OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-$ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-$ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-$
-$----------------------------------------------------------------------------
+
+$ * -------------------------------------------------------------------------
+$ *
+$ * Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.
+$ * Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.
+$ *
+$ * This program and the accompanying materials are made available under
+$ * the terms of the Common Public License v1.0 which accompanies this
+$ * distribution. A copy is also available at the following address:
+$ * http://www.oorexx.org/license.html
+$ *
+$ * Redistribution and use in source and binary forms, with or
+$ * without modification, are permitted provided that the following
+$ * conditions are met:
+$ *
+$ * Redistributions of source code must retain the above copyright
+$ * notice, this list of conditions and the following disclaimer.
+$ * Redistributions in binary form must reproduce the above copyright
+$ * notice, this list of conditions and the following disclaimer in
+$ * the documentation and/or other materials provided with the distribution.
+$ *
+$ * Neither the name of Rexx Language Association nor the names
+$ * of its contributors may be used to endorse or promote products
+$ * derived from this software without specific prior written permission.
+$ *
+$ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+$ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+$ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+$ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+$ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+$ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+$ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+$ * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+$ * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+$ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+$ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+$ *
+$ * -------------------------------------------------------------------------
 $ ******************************************************************************/
 $ * REXX  Support                                                              */
 $ *                                                                            */
@@ -83,7 +84,7 @@ $ Error_Invalid_character
 13 Invalid character in program
 
 $ Error_Incomplete_do
-14 Incomplete DO/SELECT/IF
+14 Incomplete DO/LOOP/SELECT/IF
 
 $ Error_Invalid_hex
 15 Invalid hexadecimal or binary string
@@ -187,6 +188,9 @@ $ Error_System_service
 $ Error_Interpretation
 49 Interpretation error
 
+$ Error_Invalid_argument
+88 Invalid argument
+
 $ Error_External_name_not_found
 90 External name not found
 
@@ -207,9 +211,6 @@ $ Error_Translation
 
 $ Error_at_line
 100 Error &1 running &2, line &3:
-
-$ Message_Translations
-101 General message text
 
 $ Message_Translations_January
 102 January
@@ -304,6 +305,9 @@ $ Error_RXQUE_syntax
 $ Error_RXQUE_memfail
 132 System error occurred while processing the command
 
+$ Error_REXXC_wrongNrArg_unix
+133 SYNTAX: REXXC InProgramName [OutProgramName] [-s]
+
 $ Error_Program_unreadable_name
 200 Failure during initialization: File "&1" is unreadable
 
@@ -341,13 +345,13 @@ $ Error_Unexpected_when_otherwise
 211 OTHERWISE has no corresponding SELECT
 
 $ Error_Unexpected_end_nodo
-212 END has no corresponding DO or SELECT
+212 END has no corresponding DO, LOOP, or SELECT
 
 $ Error_Unexpected_end_control
-213 Symbol following END ("&1") must either match control variable of DO specification ("&2" on line &3) or be omitted
+213 Symbol following END ("&1") must match block specification name ("&2") on line &3 or be omitted
 
 $ Error_Unexpected_end_nocontrol
-214 END corresponding to DO on line &2 must not have a symbol following it because there is no control variable; found "&1"
+214 END corresponding to block on line &2 must not have a symbol following it because there is no LABEL or control variable; found "&1"
 
 $ Error_Unexpected_end_then
 215 END must not immediately follow THEN
@@ -356,7 +360,7 @@ $ Error_Unexpected_end_else
 216 END must not immediately follow ELSE
 
 $ Error_Unexpected_end_select
-217 END corresponding to SELECT on line &2 must not have a symbol following; found "&1"
+217 Symbol following END ("&1") must match LABEL of SELECT specification ("&2") on line &3 or be omitted
 
 $ Error_Control_stack_full
 218 Insufficient control stack space; cannot continue execution
@@ -380,16 +384,16 @@ $ Error_Incomplete_do_otherwise
 224 OTHERWISE on line &1 requires matching END
 
 $ Error_Invalid_hex_hexblank
-225 Incorrect location of blank in position &1 in hexadecimal string
+225 Incorrect location of whitespace character in position &1 in hexadecimal string
 
 $ Error_Invalid_hex_binblank
-226 Incorrect location of blank in position &1 in binary string
+226 Incorrect location of whitespace character in position &1 in binary string
 
 $ Error_Invalid_hex_invhex
-227 Only 0-9, a-f, A-F, and blank are valid in a hexadecimal string; found "&1"
+227 Only 0-9, a-f, A-F, and whitespace characters are valid in a hexadecimal string; found "&1"
 
 $ Error_Invalid_hex_invbin
-228 Only 0, 1, and blank are valid in a binary string; found "&1"
+228 Only 0, 1, and whitespace characters are valid in a binary string; found "&1"
 
 $ Error_Label_not_found_name
 229 Label "&1" not found
@@ -440,7 +444,7 @@ $ Error_Symbol_or_string_requires
 244 String or symbol expected after ::REQUIRES keyword
 
 $ Error_Symbol_or_string_external
-245 String or symbol expected after EXTERNAL keyword
+245 String expected after EXTERNAL keyword
 
 $ Error_Symbol_or_string_metaclass
 246 String or symbol expected after METACLASS keyword
@@ -599,7 +603,7 @@ $ Error_Invalid_subkeyword_use
 297 USE must be followed by the keyword ARG; found "&1"
 
 $ Error_Invalid_subkeyword_raise
-298 RAISE must be followed by one of the keywords ERROR, FAILURE, HALT, LOSTDIGITS, NOMETHOD, NOSTRING, NOTREADY, NOVALUE, or SYNTAX; found "&1"
+298 RAISE must be followed by one of the keywords ERROR, FAILURE, HALT, LOSTDIGITS, NOMETHOD, NOSTRING, NOTREADY, NOVALUE, SYNTAX, or USER; found "&1"
 
 $ Error_Invalid_subkeyword_raiseoption
 299 Unknown keyword on RAISE instruction; found "&1"
@@ -629,10 +633,10 @@ $ Error_Invalid_whole_number_parse
 307 Positional pattern of PARSE template must be a whole number; found "&1"
 
 $ Error_Invalid_whole_number_digits
-308 NUMERIC DIGITS value must be a positive whole number; found "&1"
+308 DIGITS value must be a positive whole number; found "&1"
 
 $ Error_Invalid_whole_number_fuzz
-309 NUMERIC FUZZ value must be zero or a positive whole number; found "&1"
+309 FUZZ value must be zero or a positive whole number; found "&1"
 
 $ Error_Invalid_whole_number_trace
 310 Number used in TRACE setting must be a whole number; found "&1"
@@ -650,16 +654,16 @@ $ Error_Invalid_do_forever
 314 Incorrect data following FOREVER keyword on the DO loop; found "&1"
 
 $ Error_Invalid_leave_leave
-315 LEAVE is valid only within a repetitive DO loop
+315 LEAVE is valid only within a repetitive loop or labeled block instruction
 
 $ Error_Invalid_leave_iterate
-316 ITERATE is valid only within a repetitive DO loop
+316 ITERATE is valid only within a repetitive loop
 
 $ Error_Invalid_leave_leavevar
-317 Symbol following LEAVE ("&1") must either match the control variable of a current DO loop or be omitted
+317 Symbol following LEAVE ("&1") must either match the label of a current loop or block instruction.
 
 $ Error_Invalid_leave_iteratevar
-318 Symbol following ITERATE ("&1") must either match the control variable of a current DO loop or be omitted
+318 Symbol following ITERATE ("&1") must either match the label of a current loop or be omitted
 
 $ Error_Environment_name_name
 319 Environment name exceeds &1 characters; found "&2"
@@ -848,13 +852,13 @@ $ Error_Incorrect_call_positive
 380 &1 argument &2 must be positive; found "&3"
 
 $ Error_Incorrect_call_toobig
-381 &1 argument &2 must not exceed 999,999,999
+381 &1 argument &2 must not exceed the whole number limit.
 
 $ Error_Incorrect_call_range
 382 &1 argument &2 must be in the range 0-99; found "&3"
 
 $ Error_Incorrect_call_null
-383 &1 argument &2 must not be null
+383 &1 argument &2 must not be a null string
 
 $ Error_Incorrect_call_option
 384 &1 argument &2 must be a single character or null; found "&3"
@@ -893,16 +897,13 @@ $ Error_Incorrect_call_invalid_conversion
 395 &1 conversion to format "&2" is not allowed
 
 $ Error_Incorrect_call_random_range
-396 RANDOM difference between argument 1 ("&1") and argument 2 ("&2") must not exceed 100000
+396 RANDOM difference between argument 1 ("&1") and argument 2 ("&2") must not exceed 999,999,999
 
 $ Error_Incorrect_call_stream_name
 397 &1 argument 1 must be a valid stream name; found "&2"
 
 $ Error_Incorrect_method_stream_type
 398 Positioning of transient streams is not valid
-
-$ Error_incorrect_superclass_name
-399 SEND argument 2 ("&1") contains an incorrect superclass name
 
 $ Error_Incorrect_call_array
 400 &1 argument &2 must be a single-dimensional array; found "&3"
@@ -932,7 +933,7 @@ $ Error_Conversion_control
 409 Value of control variable expression of DO instruction must be numeric; found "&1"
 
 $ Error_Conversion_raise
-410 Value of RAISE SYNTAX expression of DO instruction must be numeric; found "&1"
+410 Value of RAISE instruction SYNTAX expression must be numeric; found "&1"
 
 $ Error_Overflow_overflow
 411 Arithmetic overflow detected at:  "&1&2&3"
@@ -989,10 +990,10 @@ $ Error_External_name_not_found_routine
 428 Unable to find external routine "&1"
 
 $ Error_No_result_object_message
-429 Message "&1" did not return a result object
+429 Message "&1" did not return a result
 
 $ Error_Incorrect_method_minarg
-431 Not enough arguments in method; &1 expected
+431 Not enough arguments for method; &1 expected
 
 $ Error_Incorrect_method_maxarg
 432 Too many arguments in invocation of method; &1 expected
@@ -1031,7 +1032,7 @@ $ Error_Incorrect_method_list
 443 Method argument &1 must be one of &2; found "&3"
 
 $ Error_Incorrect_method_option
-444 Method option must be one of &1; found "&2"
+444 Method option must be one of "&1"; found "&2"
 
 $ Error_Incorrect_method_string
 445 Method argument &1 must have a string value
@@ -1073,16 +1074,16 @@ $ Error_Incorrect_method_d2c
 457 D2C value must be a valid whole number; found "&1"
 
 $ Error_Incorrect_method_hexblank
-458 Incorrect location of blank in position &1 in hexadecimal string
+458 Incorrect location of whitespace character in position &1 in hexadecimal string
 
 $ Error_Incorrect_method_binblank
-459 Incorrect location of blank in position &1 in binary string
+459 Incorrect location of whitespace character in position &1 in binary string
 
 $ Error_Incorrect_method_invhex
-460 Only 0-9, a-f, A-F, and blank are valid in a hexadecimal string; character found "&1"
+460 Only 0-9, a-f, A-F, and whitespace characters are valid in a hexadecimal string; character found "&1"
 
 $ Error_Incorrect_method_invbin
-461 Only 0, 1, and blank are valid in a binary string; character found "&1"
+461 Only 0, 1, and whitespace characters are valid in a binary string; character found "&1"
 
 $ Error_Incorrect_method_x2dbig
 462 X2D result is not a valid whole number with NUMERIC DIGITS &1
@@ -1100,10 +1101,10 @@ $ Error_Incorrect_method_noarray
 466 Method argument &1 must have a single-dimensional array value
 
 $ Error_Incorrect_method_exponent_oversize
-467 Exponent "&1" is too large for &2 spaces
+467 Exponent of "&1" is too large for &2 spaces
 
 $ Error_Incorrect_method_before_oversize
-468 Integer part "&1" is too large for &2 spaces
+468 Integer part of "&1" is too large for &2 spaces
 
 $ Error_Incorrect_method_string_nonumber
 469 &1 method target must be a number; found "&2"
@@ -1124,13 +1125,10 @@ $ Error_Incorrect_method_noclass
 474 Method argument &1 must be of the &2 class
 
 $ Error_Incorrect_method_nomatch
-475 The index and value objects must be the same for PUT to an index-only collection
+475 The value and index objects must be the same for PUT to an index-only collection
 
 $ Error_No_method_name
 476 Object "&1" does not understand message "&2"
-
-$ Error_Execution_nosomobj
-477 SOM object "&1" is no longer available
 
 $ Error_Execution_nodouble
 478 Unable to convert object "&1" to a double-float value
@@ -1159,9 +1157,6 @@ $ Error_Execution_noclass
 $ Error_Execution_cyclic
 486 Cyclic inheritance in program "&1"
 
-$ Error_Execution_noSomclass
-487 SOM class "&1" not found
-
 $ Error_Execution_noarray
 488 Unable to convert object "&1" to a single-dimensional array value
 
@@ -1182,21 +1177,6 @@ $ Error_Execution_propagate
 
 $ Error_Execution_nomethod
 494 Unable to convert object "&1" to a method
-
-$ Error_Execution_SOM_general
-495 Could not retrieve "&1" information for method "&2"
-
-$ Error_Execution_SOM_noMethodDescriptor
-496 No method descriptor information for method "&1" on class "&2"
-
-$ Error_Execution_SOM_unsupportedType
-497 The SOM interface does not currently support parameter type "&1", specified for argument &2
-
-$ Error_Execution_SOM_unsupportedReturnType
-498 The SOM interface does not currently support parameter type "&1", specified for return value
-
-$ Error_Execution_SOM_maxOutArgs
-499 The number of OUT or INOUT type arguments cannot exceed &1
 
 $ Error_Execution_reply
 500 REPLY can be issued only once per method invocation
@@ -1393,62 +1373,17 @@ $ Error_Translation_invalid_attribute
 $ Error_Symbol_or_string_mixinclass
 566 String or symbol expected after MIXINCLASS keyword
 
-$ Error_Execution_dsom_noserver
-567 The DSOM Server for class &1, could not be resolved.
-
-$ Error_Too_many_event_parms
-568 Too many parameters for event "&1"
-
-$ Error_Creating_event
-569 Error creating OSA event "&1"
-
-$ Error_Creating_event_direct_parm
-570 Error creating direct parameter for OSA event "&1"
-
-$ Error_Accessing_aete
-571 Error accessing event information in AETE
-
-$ Error_Launching_app
-572 Error launching application "&1"
-
-$ Error_Invalid_event_additional_parm
-573 Invalid additional parameter "&1" for OSA event "&2"
-
-$ Error_Creating_event_additional_parm
-574 Error creating additional parameter for OSA event "&1"
-
-$ Error_Sending_event
-575 Error sending OSA event "&1"
-
-$ Error_Handling_event_result
-576 Error handling result for OSA event "&1"
-
-$ Error_Converting_event_result_to_rexx_obj
-577 Error converting OSA event result to a REXX object
-
-$ Error_Invalid_event_direct_parm
-578 Invalid direct parameter "&1" for OSA event "&2"
-
-$ Error_Invalid_object_specifier_type
-579 Invalid key form for object specifier
-
 $ Error_Translation_class_external_bad_parameters
 580 Incorrect class external; too many parameters
 
 $ Error_Execution_no_concurrency
 581 Concurrency not supported
 
-$ Error_Invalid_data_type_for_objspec
-582 Invalid parameter type for key form "&1"
-
 $ Error_Translation_class_external_bad_class_name
 583 Incorrect class external; class name missing or invalid
 
 $ Error_Translation_class_external_bad_class_server
 584 Incorrect class external; invalid class server "&1"
-
-$ Error_Execution_class_server_not_installed
-585 &1 class server not installed
 
 $ Error_Incorrect_call_parm_wrong_sep
 586 &1 argument &2 must be a single non-alphanumeric character or the null string; found "&3"
@@ -1463,13 +1398,13 @@ $ Error_OLE_Error
 589 OLE error
 
 $ Error_Unknown_OLE_Error
-590 An unknown OLE error occured (HRESULT=&1).
+590 An unknown OLE error occurred (HRESULT=&1).
 
 $ Error_Variant2Rexx
-591 Cannot convert VARIANT to REXX object: The conversion of the VARIANT type &1 into a REXX object failed.
+591 Cannot convert OLE VARIANT to REXX object: The conversion of the VARIANT type &1 into a REXX object failed.
 
 $ Error_Rexx2Variant
-592 Cannot convert REXX object to VARIANT: The conversion of &1 into a VARIANT failed.
+592 Cannot convert REXX object to OLE VARIANT: The conversion of &1 into a VARIANT failed.
 
 $ Error_Argument_Count_Mismatch
 593 The number of elements provided to the method or property is different from the number of parameters accepted by it.
@@ -1506,6 +1441,417 @@ $ Error_Incorrect_call_read_from_writeonly
 
 $ Error_Incorrect_call_write_to_readonly
 604 Cannot write to a read-only property or typelib element.
+
+$ Error_Incorrect_method_invbase64
+611 Invalid Base 64 encoded string.
+
+$ Error_Unsupported_method
+612 Call to unsupported or unimplemented method
+
+$ Error_Application_error
+613 Application error:  &1
+
+$ Error_Program_unreadable_user_defined
+614 &1
+
+$ Error_Program_interrupted_user_defined
+615 &1
+
+$ Error_System_resources_user_defined
+616 &1
+
+$ Error_Control_stack_user_defined
+617 &1
+
+$ Error_Invalid_character_user_defined
+618 &1
+
+$ Error_Symbol_or_string_user_defined
+619 &1
+
+$ Error_Symbol_expected_user_defined
+620 &1
+
+$ Error_Invalid_data_user_defined
+621 &1
+
+$ Error_Invalid_character_string_user_defined
+622 &1
+
+$ Error_Invalid_data_string_user_defined
+623 &1
+
+$ Error_Invalid_subkeyword_string_user_defined
+624 &1
+
+$ Error_Invalid_whole_number_user_defined
+625 &1
+
+$ Error_Name_too_long_user_defined
+626 &1
+
+$ Error_Invalid_variable_user_defined
+627 &1
+
+$ Error_Expression_user_defined
+628 &1
+
+$ Error_Logical_value_user_defined
+629 &1
+
+$ Error_Invalid_expression_user_defined
+630 &1
+
+$ Error_Unmatched_parenthesis_user_defined
+631 &1
+
+$ Error_Unexpected_comma_user_defined
+632 &1
+
+$ Error_Invalid_template_user_defined
+633 &1
+
+$ Error_Incorrect_call_user_defined
+634 &1
+
+$ Error_Conversion_user_defined
+635 &1
+
+$ Error_Overflow_user_defined
+636 &1
+
+$ Error_Routine_not_found_user_defined
+637 &1
+
+$ Error_Function_no_data_user_defined
+638 &1
+
+$ Error_Variable_reference_user_defined
+639 &1
+
+$ Error_System_service_user_defined
+640 &1
+
+$ Error_Interpretation_user_defined
+641 &1
+
+$ Error_External_name_not_found_user_defined
+642 &1
+
+$ Error_No_result_object_user_defined
+643 &1
+
+$ Error_OLE_Error_user_defined
+644 &1
+
+$ Error_Incorrect_method_user_defined
+645 &1
+
+$ Error_No_method_user_defined
+646 &1
+
+$ Error_Execution_user_defined
+647 &1
+
+$ Error_Translation_user_defined
+648 &1
+
+$ Error_Unmatched_quote_user_defined
+649 &1
+
+$ Error_Invalid_whole_number_method
+650 Result of a method call did not result in a whole number; found "&1"
+
+$ Error_Logical_value_property
+651 Property logical value must be exactly "0", "1", "true", or "false"; found "&1"
+
+$ Error_Variable_expected
+652 Variable or message term expected
+
+$ Error_Variable_expected_USE
+653 The USE instruction requires a comma-separated list of variables or assignment message terms
+
+$ Error_Variable_expected_PARSE
+654 The PARSE was expecting a variable or a message term.
+
+$ Error_Symbol_expected_LABEL
+655 Symbol expected after LABEL keyword
+
+$ Error_Invalid_subkeyword_select
+656 SELECT must be followed by the keyword LABEL; found "&1"
+
+$ Error_Invalid_leave_iterate_name
+657 Symbol following ITERATE ("&1") does not match a repetitive block instruction
+
+$ Error_Unexpected_end_select_nolabel
+658 END corresponding to SELECT on line &2 must not have a symbol following it because there is no LABEL; found "&1"
+
+$ Error_Logical_value_logical_list
+659 Value of logical list expression element must be exactly "0" or "1"; found "&2"
+
+$ Error_Invalid_expression_logical_list
+660 Missing expression in logical expression list
+
+$ Error_Translation_use_strict_ellipsis
+663 The "..." argument marker can only appear at the end of the argument list
+
+$ Error_Invalid_expression_use_strict_default
+664 Missing expression following "=" token of a USE STRICT ARG instruction
+
+$ Error_Incorrect_method_abstract
+665 Method &1 is ABSTRACT and cannot be directly invoked
+
+$ Error_Invalid_whole_number_compareto
+666 Result of a COMPARETO method call did not result in a whole number; found "&1"
+
+$ Error_Invalid_whole_number_compare
+667 Result of a COMPARE method call did not result in a whole number; found "&1"
+
+$ Error_Execution_sparse_array
+668 Missing array element at position &1
+
+$ Error_Incorrect_method_queue_index
+669 Incorrect queue index "&1"
+
+$ Error_Execution_nostem
+670 Stem object default value cannot be another stem object
+
+$ Error_Invalid_argument_user_defined
+671 &1
+
+$ Error_Invalid_argument_noarg
+672 Missing argument; argument &1 is required
+
+$ Error_Invalid_argument_number
+673 Argument &1 must be a number; found "&2"
+
+$ Error_Invalid_argument_whole
+674 Argument &1 must be a whole number; found "&2"
+
+$ Error_Invalid_argument_nonnegative
+675 Argument &1 must be zero or a positive whole number; found "&2"
+
+$ Error_Invalid_argument_positive
+676 Argument &1 must be a positive whole number; found "&2"
+
+$ Error_Invalid_argument_toobig
+677 Argument &1 must not exceed &2; found "&3"
+
+$ Error_Invalid_argument_range
+678 Argument &1 must be in the range &2 to &3; found "&4"
+
+$ Error_Invalid_argument_null
+679 Argument &1 must not be a null string
+
+$ Error_Invalid_argument_string
+680 Argument &1 must have a string value
+
+$ Error_Invalid_argument_pad
+681 Argument &1 is an incorrect pad or character argument; found "&2"
+
+$ Error_Invalid_argument_length
+682 Argument &1 is an incorrect length argument; found "&2"
+
+$ Error_Invalid_argument_position
+683 Argument &1 is an incorrect position argument; found "&2"
+
+$ Error_Invalid_argument_noarray
+684 Argument &1 must have a single-dimensional array value
+
+$ Error_Invalid_argument_noclass
+685 Argument &1 must be of the &2 class
+
+$ Error_Invalid_argument_argType
+686 Argument &1 could not be converted to type &2
+
+$ Error_Invalid_argument_list
+687 Argument &1 must be one of &2; found "&3"
+
+$ Error_Invalid_argument_general
+688 Argument &1 &2
+
+$ Error_Translation_duplicate_attribute
+689 Duplicate ::ATTRIBUTE directive instruction
+
+$ Error_Invalid_argument_format
+690 Argument &1 is not in a valid format; found "&2"
+
+$ Error_Unsupported_new_method
+691 NEW method is not supported for the &1 class
+
+$ Error_Symbol_or_string_attribute
+692 String or symbol expected as ::ATTRIBUTE directive name
+
+$ Error_Symbol_or_string_constant
+693 String or symbol expected as ::CONSTANT directive name
+
+$ Error_Symbol_or_string_constant_value
+694 String or symbol expected as ::CONSTANT value
+
+$ Error_Translation_duplicate_constant
+695 Duplicate ::CONSTANT directive instruction
+
+$ Error_Execution_library_method
+697 Unable to load method "&1" from library "&1"
+
+$ Error_Execution_library_routine
+698 Unable to load routine "&1" from library "&1"
+
+$ Error_Execution_native_routine
+699 Unable to load native routine "&1"
+
+$ Error_Incorrect_call_signature
+700 Invalid native function signature specification
+
+$ Error_Incorrect_method_signature
+701 Invalid native method signature specification
+
+$ Error_Incorrect_call_nostem
+702 Argument &1 must have a stem object or stem name value; found "&2"
+
+$ Error_Incorrect_method_nostem
+703 Method argument &1 must have a stem object value; found "&2"
+
+$ Error_Invalid_argument_pointer
+704 Argument &1 is not in valid pointer format; found "&2"
+
+$ Error_Invalid_argument_nostem
+705 Argument &1 must have a stem object or stem name value; found "&2"
+
+$ Error_Invalid_argument_double
+706 Argument &1 must be a valid double value; found "&2"
+
+$ Error_Invalid_argument_maxarg
+707 Too many arguments in invocation; &1 expected
+
+$ Error_Invalid_data_constant_dir
+708 Data must not follow the ::CONSTANT value; found "&1"
+
+$ Error_Unsupported_copy_method
+709 COPY method is not supported for object &1
+
+$ Error_Execution_context_not_active
+710 Target RexxContext is no longer active
+
+$ Error_Execution_library_version
+711 Library "&1" is not compatible with current interpreter version.
+
+$ Error_Invalid_subkeyword_options
+712 Unknown keyword on ::OPTIONS directive; found "&1"
+
+$ Error_Symbol_or_string_digits_value
+713 String or symbol expected as DIGITS value
+
+$ Error_Symbol_or_string_fuzz_value
+714 String or symbol expected as FUZZ value
+
+$ Error_Symbol_or_string_trace_value
+715 String or symbol expected as TRACE value
+
+$ Error_Execution_invalid_thread
+716 Execution thread does not match API thread context.
+
+$ Error_Invalid_expression_parse
+717 Missing expression following ( of parse template
+
+$ Error_Invalid_expression_call
+718 Missing expression for calculated CALL name
+
+$ Message_Translations_routine_invocation
+719 Routine &1 in package &2
+
+$ Message_Translations_method_invocation
+720 Method &1 with scope "&2" in package &3
+
+$ Error_Incorrect_method_multi_dimension
+721 Method argument &1 cannot have more than a single dimension
+
+$ Message_Translations_compiled_method_invocation
+722        *-* Compiled method &1 with scope "&2"
+
+$ Message_Translations_compiled_routine_invocation
+723        *-* Compiled routine &1
+
+$ Message_Translations_no_source_available
+724 Package "&1" (no source available)
+
+$ Error_Incomplete_do_loop
+725 DO or LOOP instruction on line &1 requires matching END
+
+$ Error_Invalid_subkeyword_attribute
+726 Unknown keyword on ::ATTRIBUTE directive; found "&1"
+
+$ Error_Translation_abstract_method
+727 Abstract methods cannot have a method body
+
+$ Error_Translation_attribute_method
+728 Attribute methods cannot have a method body
+
+$ Error_Translation_external_attribute
+729 External attributes cannot have a method body
+
+$ Error_Translation_external_method
+730 External methods cannot have a method body
+
+$ Error_Translation_body_error
+731 Attribute methods without a SET or GET designation cannot have a method body
+
+$ Error_Translation_constant_body
+732 Constant methods cannot have a method body
+
+$ Error_Translation_external_routine
+733 External routines cannot have a method body
+
+$ Error_Translation_abstract_attribute
+734 Abstract attributes cannot have a method body
+
+$ Message_Translations_internal_code
+735 Interpreter code (no source available)
+
+$ Message_Translations_sourceless_method_invocation
+736 Method &1 with scope "&2" in package "&3" (no source available)
+
+$ Message_Translations_sourceless_routine_invocation
+737 Routine &1 in package "&2" (no source available)
+
+$ Message_Translations_sourceless_program_invocation
+738 Program in "&1" (no source available)
+
+$ Error_Invalid_expression_select_case
+739 Missing expression following CASE keyword of a SELECT instruction
+
+$ Error_Translation_directive_method_routine
+740 Method or routine code may not contain directive instructions
+
+$ Error_Execution_rexx_package_update
+741 User additions are not allowed to the REXX package.
+
+$ Error_Execution_rexx_defined_class
+742 User additions are not allowed to the REXX language classes.
+
+$ Error_Symbol_or_string_resource
+743 String or symbol expected as ::RESOURCE directive name
+
+$ Error_Invalid_subkeyword_resource
+744 Unknown keyword on ::RESOURCE directive; found "&1"
+
+$ Error_Symbol_or_string_resource_end
+745 String or symbol expected after ::RESOURCE END keyword
+
+$ Error_Invalid_data_resource_dir
+746 Data must not follow the ::RESOURCE directive; found "&1"
+
+$ Error_Translation_duplicate_resource
+747 Duplicate ::RESOURCE directive instruction
+
+$ Error_Translation_missing_resource_end
+748 Missing ::RESOURCE end marker "&1" for resource "&2"
+
+$ Error_Invalid_argument_array
+749 &1 argument &2 must be a single-dimensional array; found "&3"
+
+$ Error_Invalid_argument_array_size
+750 &1 argument &2 must be an array with exactly &3 items.
 
 
 $ * -------------------------------------------------------------------------- */
