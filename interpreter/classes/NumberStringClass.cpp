@@ -52,6 +52,7 @@
 
 #include <stdio.h>
 #include <math.h>
+#include <float.h>
 
 // singleton class instance
 RexxClass *NumberString::classInstance = OREF_NULL;
