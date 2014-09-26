@@ -241,7 +241,7 @@ void OverLoop::setup( RexxActivation *context,
     // we use the TO field to store the array, and the for
     // counter is our index position.
     doblock->setTo(array);
-    doblock->setFor(1);
+    doblock->setOverIndex(1);
     // and don't forget the variable (which of course, I DID forget!)
     doblock->setControl(control);
 }

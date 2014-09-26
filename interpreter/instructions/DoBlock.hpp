@@ -74,6 +74,7 @@ class DoBlock : public RexxInternalObject
     inline void setTo(RexxObject * value) {to = value;};
     inline void setBy(RexxObject * value) {by = value;};
     inline void setFor(size_t value) {forCount = value;};
+    inline void setOverIndex(size_t value) {overIndex = value;};
     inline void setCase(RexxObject * value) {to = value;};
     inline void setCompare(TokenSubclass value) { compare = value;};
     inline RexxObject *getCase() { return to; }
@@ -95,6 +96,7 @@ protected:
     RexxVariableBase  *control;          // control variable for controlled loop
     RexxObject        *to;               // final target TO value
     RexxObject        *by;               // control increment value
+    size_t             overIndex;        // index position for a DO OVER
     size_t             forCount;         // number of iterations
     TokenSubclass      compare;          // type of comparison
 };

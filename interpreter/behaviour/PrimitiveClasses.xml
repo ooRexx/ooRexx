@@ -147,6 +147,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="DoOverInstruction" class="RexxInstructionDoOver" include="DoInstruction.hpp"/>
 <Class id="DoOverUntilInstruction" class="RexxInstructionDoOverUntil" include="DoInstruction.hpp"/>
 <Class id="DoOverWhileInstruction" class="RexxInstructionDoOverWhile" include="DoInstruction.hpp"/>
+<Class id="DoOverForInstruction" class="RexxInstructionDoOverFor" include="DoInstruction.hpp"/>
+<Class id="DoOverForUntilInstruction" class="RexxInstructionDoOverForUntil" include="DoInstruction.hpp"/>
+<Class id="DoOverForWhileInstruction" class="RexxInstructionDoOverForWhile" include="DoInstruction.hpp"/>
 <Class id="ControlledDoInstruction" class="RexxInstructionControlledDo" include="DoInstruction.hpp"/>
 <Class id="ControlledDoUntilInstruction" class="RexxInstructionControlledDoUntil" include="DoInstruction.hpp"/>
 <Class id="ControlledDoWhileInstruction" class="RexxInstructionControlledDoWhile" include="DoInstruction.hpp"/>

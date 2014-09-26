@@ -121,14 +121,14 @@ bool DoBlock::checkOver(RexxActivation *context, ExpressionStack *stack)
     // the array was stored in the too field
     ArrayClass *overArray = (ArrayClass *)to;
     // are we past the end of the array?
-    if (overArray->size() < forCount)
+    if (overArray->lastIndex() < overIndex)
     {
         return false;                    // time to get out of here.
     }
 
     // get the next element  from the array. This should be a
     // non-sparse array, but we need to double check anyway.
-    RexxObject *result = (RexxObject *)overArray->get(forCount);
+    RexxObject *result = (RexxObject *)overArray->get(overIndex);
     // use .nil for any empty slots
     if (result == OREF_NULL)
     {
@@ -138,7 +138,7 @@ bool DoBlock::checkOver(RexxActivation *context, ExpressionStack *stack)
     // assign the control variable and trace this result
     control->assign(context, result);
     context->traceResult(result);
-    forCount++;
+    overIndex++;
     return true;
 }
 

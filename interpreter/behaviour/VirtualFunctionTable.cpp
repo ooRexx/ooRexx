@@ -484,6 +484,15 @@ void MemoryObject::buildVirtualFunctionTable()
    objectPtr = ::new (objectLoc) RexxInstructionDoOverWhile(RESTOREIMAGE);
    virtualFunctionTable[T_DoOverWhileInstruction] = getVftPointer(objectLoc);
    
+   objectPtr = ::new (objectLoc) RexxInstructionDoOverFor(RESTOREIMAGE);
+   virtualFunctionTable[T_DoOverForInstruction] = getVftPointer(objectLoc);
+   
+   objectPtr = ::new (objectLoc) RexxInstructionDoOverForUntil(RESTOREIMAGE);
+   virtualFunctionTable[T_DoOverForUntilInstruction] = getVftPointer(objectLoc);
+   
+   objectPtr = ::new (objectLoc) RexxInstructionDoOverForWhile(RESTOREIMAGE);
+   virtualFunctionTable[T_DoOverForWhileInstruction] = getVftPointer(objectLoc);
+   
    objectPtr = ::new (objectLoc) RexxInstructionControlledDo(RESTOREIMAGE);
    virtualFunctionTable[T_ControlledDoInstruction] = getVftPointer(objectLoc);
    

@@ -957,6 +957,9 @@ RexxInstruction *LanguageParser::newControlledLoop(RexxString *label, RexxToken 
                 // get the keyword expression, which is required also
                 control.forCount = requiredExpression(TERM_CONTROL, Error_Invalid_expression_for);
 
+                // protect on the term stack
+                pushSubTerm(control.forCount);
+
                 // record the processing order
                 control.expressions[keyslot++] = EXP_FOR;
                 break;
@@ -1024,8 +1027,9 @@ RexxInstruction *LanguageParser::newControlledLoop(RexxString *label, RexxToken 
  */
 RexxInstruction *LanguageParser::newDoOverLoop(RexxString *label, RexxToken *nameToken)
 {
-    // a contruct to fill in for the instruction.
+    // a construct to fill in for the instruction.
     OverLoop control;
+    ForLoop forLoop;
     WhileUntilLoop conditional;
     // track while/until forms
     InstructionSubKeyword conditionalType = SUBKEY_NONE;
@@ -1040,44 +1044,108 @@ RexxInstruction *LanguageParser::newDoOverLoop(RexxString *label, RexxToken *nam
     // save the control variable retriever
     control.control = addVariable(nameToken);
     // and get the OVER expression, which is required
-    control.target = requiredExpression(TERM_COND, Error_Invalid_expression_over);
+    control.target = requiredExpression(TERM_OVER, Error_Invalid_expression_over);
+    // protect this expression from GC
+    pushSubTerm(control.target);
 
-    // process an additional conditional (NOTE:  Because of the
-    // terminators used for the target expression, the only possibilities
-    // here are end of clause, a WHILE keyword, or an UNTIL keyword)
-    conditional.conditional = parseLoopConditional(conditionalType, 0);
+    // ok, keep looping while we don't have a clause terminator
+    // because the parsing of the initial expression is terminated by either
+    // the end-of-clause or DO/LOOP keyword, we know the next token will by
+    // a symbol if it is not the end.
+    RexxToken *token = nextReal();
+
+    while (!token->isEndOfClause())
+    {
+        // this must be a keyword, so resolve it.
+        switch (token->subKeyword())
+        {
+            case SUBKEY_FOR:
+            {
+                // only one per customer
+                if (forLoop.forCount != OREF_NULL)
+                {
+                    syntaxError(Error_Invalid_do_duplicate, token);
+                }
+                // get the keyword expression, which is required also
+                forLoop.forCount = requiredExpression(TERM_CONTROL, Error_Invalid_expression_for);
+                // protect from GC
+                pushSubTerm(forLoop.forCount);
+                break;
+            }
+
+            case SUBKEY_UNTIL:
+            case SUBKEY_WHILE:
+            {
+                // step back a token and process the conditional
+                previousToken();
+                // this also does not allow anything after the loop conditional
+                conditional.conditional = parseLoopConditional(conditionalType, 0);
+                break;
+            }
+        }
+        token = nextReal();
+    }
 
     // NOTE:  We parse until we hit the end of clause or found an error,
     // so once we get here, there's no need for any end-of-clause checks.
 
-    // we've parsed everything correctly and we have three potential types of
+    // we've parsed everything correctly and we have six potential types of
     // loop now.  1)  A DO OVER loop with no conditional, 2) a DO OVER loop
     // with a WHILE condition and 3) a DO OVER loop with a UNTIL condition.
+    // Each of those forms can also have a FOR modifier.
     // The conditionalType variable tells us which form it is, so we can create
-    // the correct type instruction object.
+    // the correct type instruction object, the forControl will tell us if we have a FOR
+    // expression.
 
     switch (conditionalType)
     {
         // DO OVER with no extra conditional.
         case SUBKEY_NONE:
         {
-            RexxInstruction *newObject = new_instruction(LOOP_OVER, DoOver);
-            ::new ((void *)newObject) RexxInstructionDoOver(label, control);
-            return newObject;
+            if (forLoop.forCount == OREF_NULL)
+            {
+                RexxInstruction *newObject = new_instruction(LOOP_OVER, DoOver);
+                ::new ((void *)newObject) RexxInstructionDoOver(label, control);
+                return newObject;
+            }
+            else
+            {
+                RexxInstruction *newObject = new_instruction(LOOP_OVER_FOR, DoOverFor);
+                ::new ((void *)newObject) RexxInstructionDoOverFor(label, control, forLoop);
+                return newObject;
+            }
         }
         // DO OVER with a WHILE conditional
         case SUBKEY_WHILE:
         {
-            RexxInstruction *newObject = new_instruction(LOOP_OVER_WHILE, DoOverWhile);
-            ::new ((void *)newObject) RexxInstructionDoOverWhile(label, control, conditional);
-            return newObject;
+            if (forLoop.forCount == OREF_NULL)
+            {
+                RexxInstruction *newObject = new_instruction(LOOP_OVER_WHILE, DoOverWhile);
+                ::new ((void *)newObject) RexxInstructionDoOverWhile(label, control, conditional);
+                return newObject;
+            }
+            else
+            {
+                RexxInstruction *newObject = new_instruction(LOOP_OVER_FOR_WHILE, DoOverForWhile);
+                ::new ((void *)newObject) RexxInstructionDoOverForWhile(label, control, forLoop, conditional);
+                return newObject;
+            }
         }
         // DO OVER with an UNTIL conditional.
         case SUBKEY_UNTIL:
         {
-            RexxInstruction *newObject = new_instruction(LOOP_OVER_UNTIL, DoOverUntil);
-            ::new ((void *)newObject) RexxInstructionDoOverUntil(label, control, conditional);
-            return newObject;
+            if (forLoop.forCount == OREF_NULL)
+            {
+                RexxInstruction *newObject = new_instruction(LOOP_OVER_UNTIL, DoOverUntil);
+                ::new ((void *)newObject) RexxInstructionDoOverUntil(label, control, conditional);
+                return newObject;
+            }
+            else
+            {
+                RexxInstruction *newObject = new_instruction(LOOP_OVER_FOR_UNTIL, DoOverForUntil);
+                ::new ((void *)newObject) RexxInstructionDoOverForUntil(label, control, forLoop, conditional);
+                return newObject;
+            }
         }
     }
     return OREF_NULL;    // should never get here.
@@ -1219,6 +1287,9 @@ RexxInstruction *LanguageParser::parseCountLoop(RexxString *label)
     // expression, or get an error for an invalid expression
 
     forCount.forCount = parseExpression(TERM_COND);
+
+    // protect on the term stack
+    pushSubTerm(forCount.forCount);
 
     // process an additional conditional (NOTE:  Because of the
     // terminators used for the target expression, the only possibilities
@@ -3664,6 +3735,9 @@ RexxInternalObject *LanguageParser::parseLoopConditional(InstructionSubKeyword &
                 // as terminators after this.  Since we had the keyword, the
                 // epression is required.
                 conditional = requiredLogicalExpression(TERM_COND, Error_Invalid_expression_while);
+                // protect on the term stack
+                pushSubTerm(conditional);
+
                 // must not be anthing after this
                 requiredEndOfClause(Error_Invalid_do_whileuntil);
                 // and record the type.
@@ -3676,6 +3750,9 @@ RexxInternalObject *LanguageParser::parseLoopConditional(InstructionSubKeyword &
             {
                 // pretty much the same as the WHILE situation
                 conditional = requiredLogicalExpression(TERM_COND, Error_Invalid_expression_until);
+                // protect on the term stack
+                pushSubTerm(conditional);
+
                 // must not be anthing after this
                 requiredEndOfClause(Error_Invalid_do_whileuntil);
                 // and record the type.

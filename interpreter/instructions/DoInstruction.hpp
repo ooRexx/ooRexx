@@ -150,6 +150,31 @@ class RexxInstructionDoOver : public RexxInstructionBaseDo
 
 
 /**
+ * The DO OVER col FOR n instruction.  Takes a snap shot of an
+ * object via makearray method then iterates over the array
+ */
+class RexxInstructionDoOverFor : public RexxInstructionDoOver
+{
+ public:
+    inline RexxInstructionDoOverFor() { ; }
+    inline RexxInstructionDoOverFor(RESTORETYPE restoreType) { ; };
+           RexxInstructionDoOverFor(RexxString *l, OverLoop &o, ForLoop &f);
+
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(Envelope *);
+
+    // Methods needed for loop iteration
+    virtual void setup(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock);
+    virtual bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first);
+
+ protected:
+
+    ForLoop forLoop;          // handles control logic for the FOR portion
+};
+
+
+/**
  * The DO OVER UNTIL cond instruction.  Takes a snap shot of an
  * object via makearray method then iterates over the array
  */
@@ -174,6 +199,31 @@ protected:
 
 
 /**
+ * The DO OVER FOR n UNTIL cond instruction.  Takes a snap shot
+ * of an object via makearray method then iterates over the
+ * array
+ */
+class RexxInstructionDoOverForUntil : public RexxInstructionDoOverFor
+{
+ public:
+    inline RexxInstructionDoOverForUntil() { ; }
+    inline RexxInstructionDoOverForUntil(RESTORETYPE restoreType) { ; };
+           RexxInstructionDoOverForUntil(RexxString *l, OverLoop &o, ForLoop &f, WhileUntilLoop &w);
+
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(Envelope *);
+
+    // Methods needed for loop iteration
+    virtual bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first);
+
+protected:
+
+    WhileUntilLoop whileLoop;   // handles the conditional part
+};
+
+
+/**
  * The DO OVER WHILE cond instruction.  Takes a snap shot of an
  * object via makearray method then iterates over the array
  */
@@ -183,6 +233,23 @@ class RexxInstructionDoOverWhile : public RexxInstructionDoOverUntil
     inline RexxInstructionDoOverWhile() { ; }
     inline RexxInstructionDoOverWhile(RESTORETYPE restoreType) { ; };
            RexxInstructionDoOverWhile(RexxString *l, OverLoop &o, WhileUntilLoop &w);
+
+    // Methods needed for loop iteration
+    virtual bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first);
+};
+
+
+/**
+ * The DO OVER FOR n WHILE cond instruction.  Takes a snap shot
+ * of an object via makearray method then iterates over the
+ * array
+ */
+class RexxInstructionDoOverForWhile : public RexxInstructionDoOverForUntil
+{
+ public:
+    inline RexxInstructionDoOverForWhile() { ; }
+    inline RexxInstructionDoOverForWhile(RESTORETYPE restoreType) { ; };
+           RexxInstructionDoOverForWhile(RexxString *l, OverLoop &o, ForLoop &f, WhileUntilLoop &w);
 
     // Methods needed for loop iteration
     virtual bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first);

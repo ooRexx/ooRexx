@@ -229,6 +229,9 @@ typedef enum
     KEYWORD_LOOP_OVER,
     KEYWORD_LOOP_OVER_UNTIL,
     KEYWORD_LOOP_OVER_WHILE,
+    KEYWORD_LOOP_OVER_FOR,
+    KEYWORD_LOOP_OVER_FOR_UNTIL,
+    KEYWORD_LOOP_OVER_FOR_WHILE,
     KEYWORD_LOOP_CONTROLLED,
     KEYWORD_LOOP_CONTROLLED_UNTIL,
     KEYWORD_LOOP_CONTROLLED_WHILE,
@@ -476,21 +479,23 @@ typedef enum
 /******************************************************************************/
 /* various expression terminator sets                                         */
 /******************************************************************************/
-#define   TERM_EOC     0x00000001u     /* terminate on end of clause        */
-#define   TERM_RIGHT   0x00000002u     /* terminate on left paren           */
-#define   TERM_SQRIGHT 0x00000004u     /* terminate on left square bracket  */
-#define   TERM_TO      0x00000008u     /* terminate on TO keyword           */
-#define   TERM_BY      0x00000010u     /* terminate on BY keyword           */
-#define   TERM_FOR     0x00000020u     /* terminate on FOR keyword          */
-#define   TERM_WHILE   0x00000040u     /* terminate on WHILE/UNTIL keywords */
-#define   TERM_WITH    0x00000100u     /* terminate on WITH keyword         */
-#define   TERM_THEN    0x00000200u     /* terminate on THEN keyword         */
-#define   TERM_KEYWORD 0x10000000u     /* perform keyword terminator checks */
-                                       /* terminate on DO keywords          */
+#define   TERM_EOC     0x00000001u     // terminate on end of clause
+#define   TERM_RIGHT   0x00000002u     // terminate on left paren
+#define   TERM_SQRIGHT 0x00000004u     // terminate on left square bracket
+#define   TERM_TO      0x00000008u     // terminate on TO keyword
+#define   TERM_BY      0x00000010u     // terminate on BY keyword
+#define   TERM_FOR     0x00000020u     // terminate on FOR keyword
+#define   TERM_WHILE   0x00000040u     // terminate on WHILE/UNTIL keywords
+#define   TERM_WITH    0x00000100u     // terminate on WITH keyword
+#define   TERM_THEN    0x00000200u     // terminate on THEN keyword
+#define   TERM_KEYWORD 0x10000000u     // perform keyword terminator checks
+                                       // terminate on controlled DO keywords
 #define   TERM_CONTROL (TERM_KEYWORD | TERM_TO | TERM_BY | TERM_FOR | TERM_WHILE)
-                                       /* terminate on DO conditionals      */
+                                       // terminate on DO conditionals
 #define   TERM_COND    (TERM_KEYWORD | TERM_WHILE)
-
+                                       // termantors for an OVER condition
+#define   TERM_OVER    (TERM_KEYWORD | TERM_FOR | TERM_WHILE)
+                                       // terminate on a THEN keyword
 #define   TERM_IF      (TERM_KEYWORD | TERM_THEN)
 
 

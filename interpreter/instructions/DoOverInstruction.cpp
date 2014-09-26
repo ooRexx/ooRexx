@@ -156,6 +156,121 @@ bool RexxInstructionDoOver::iterate(RexxActivation *context, ExpressionStack *st
 
 
 /**
+ * Initialize a Do Over For block.
+ *
+ * @param l      The optional label.
+ * @param o      The loop control information.
+ * @param f      The loop For control
+ */
+RexxInstructionDoOverFor::RexxInstructionDoOverFor(RexxString *l, OverLoop &o, ForLoop &f)
+{
+    label = l;
+    overLoop = o;
+    forLoop = f;
+}
+
+
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
+void RexxInstructionDoOverFor::live(size_t liveMark)
+{
+    // must be first object marked
+    memory_mark(nextInstruction);
+    memory_mark(end);
+    memory_mark(label);
+
+    // helpers for additional types of loops handle marking here
+    overLoop.live(liveMark);
+    forLoop.live(liveMark);
+}
+
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
+void RexxInstructionDoOverFor::liveGeneral(MarkReason reason)
+{
+    // must be first object marked
+    memory_mark_general(nextInstruction);
+    memory_mark_general(end);
+    memory_mark_general(label);
+
+    // helpers for additional types of loops handle marking here
+    overLoop.liveGeneral(reason);
+    forLoop.liveGeneral(reason);
+}
+
+
+/**
+ * Flatten a source object.
+ *
+ * @param envelope The envelope that will hold the flattened object.
+ */
+void RexxInstructionDoOverFor::flatten(Envelope *envelope)
+{
+    setUpFlatten(RexxInstructionDoOverFor)
+
+    flattenRef(nextInstruction);
+    flattenRef(end);
+    flattenRef(label);
+
+    // flatten is a bit of a pain with embedded objects because
+    // everything depends on having correct pointers to object references in
+    // the copied buffer.  We need to directly reference all of the elements here.
+
+    flattenRef(overLoop.control);
+    flattenRef(overLoop.target);
+    flattenRef(forLoop.forCount);
+
+    cleanUpFlatten
+}
+
+
+/**
+ * Base setup routine for a loop.  This performs any initial
+ * setup instructions for a loop subclass and is called
+ * before the first iteration test is performed.
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ * @param doblock The doblock associated with this loop instance.
+ */
+void RexxInstructionDoOverFor::setup(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock)
+{
+    // perform the DO OVER initialization
+    overLoop.setup(context, stack, doblock);
+    // perform the DO COUNT initialization
+    forLoop.setup(context, stack, doblock, false);
+}
+
+
+/**
+ * Perform a test on whether this loop iteration should
+ * be executed or not.
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ * @param doblock The doblock for this instruction instance.
+ * @param first   True if this is the first iteration, false for
+ *                reExecute iterations.
+ *
+ * @return true if we should execute the loop block, false if
+ *         we should terminate the loop.
+ */
+bool RexxInstructionDoOverFor::iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first)
+{
+    return doblock->checkOver(context, stack) && doblock->checkFor();
+}
+
+
+/**
  * Initialize a Do Over Until block
  *
  * @param l      The loop label.
@@ -292,4 +407,150 @@ RexxInstructionDoOverWhile::RexxInstructionDoOverWhile(RexxString *l, OverLoop &
 bool RexxInstructionDoOverWhile::iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first)
 {
     return doblock->checkOver(context, stack) && whileLoop.checkWhile(context, stack);
+}
+
+
+/**
+ * Initialize a Do Over For Until block
+ *
+ * @param l      The loop label.
+ * @param o      The loop control information.
+ * @param w      The loop conditional information.
+ */
+RexxInstructionDoOverForUntil::RexxInstructionDoOverForUntil(RexxString *l, OverLoop &o, ForLoop &f, WhileUntilLoop &w)
+{
+    label = l;
+    overLoop = o;
+    forLoop = f;
+    whileLoop = w;
+}
+
+
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
+void RexxInstructionDoOverForUntil::live(size_t liveMark)
+{
+    // must be first object marked
+    memory_mark(nextInstruction);
+    memory_mark(end);
+    memory_mark(label);
+
+    // helpers for additional types of loops handle marking here
+    overLoop.live(liveMark);
+    forLoop.live(liveMark);
+    whileLoop.live(liveMark);
+}
+
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
+void RexxInstructionDoOverForUntil::liveGeneral(MarkReason reason)
+{
+    // must be first object marked
+    memory_mark_general(nextInstruction);
+    memory_mark_general(end);
+    memory_mark_general(label);
+
+    // helpers for additional types of loops handle marking here
+    overLoop.liveGeneral(reason);
+    forLoop.liveGeneral(reason);
+    whileLoop.liveGeneral(reason);
+}
+
+
+/**
+ * Flatten a source object.
+ *
+ * @param envelope The envelope that will hold the flattened object.
+ */
+void RexxInstructionDoOverForUntil::flatten(Envelope *envelope)
+{
+    setUpFlatten(RexxInstructionDoOverForUntil)
+
+    flattenRef(nextInstruction);
+    flattenRef(end);
+    flattenRef(label);
+
+    // flatten is a bit of a pain with embedded objects because
+    // everything depends on having correct pointers to object references in
+    // the copied buffer.  We need to directly reference all of the elements here.
+
+    flattenRef(overLoop.control);
+    flattenRef(overLoop.target);
+    flattenRef(forLoop.forCount);
+    flattenRef(whileLoop.conditional);
+
+    cleanUpFlatten
+}
+
+
+/**
+ * Perform a test on whether this loop iteration should
+ * be executed or not.
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ * @param doblock The doblock for this instruction instance.
+ * @param first   True if this is the first iteration, false for
+ *                reExecute iterations.
+ *
+ * @return true if we should execute the loop block, false if
+ *         we should terminate the loop.
+ */
+bool RexxInstructionDoOverForUntil::iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first)
+{
+    // we don't check the UNTIL condition on the first iteration
+    if (first)
+    {
+        return doblock->checkOver(context, stack) && doblock->checkFor();
+    }
+
+    return !whileLoop.checkUntil(context, stack) && doblock->checkFor() && doblock->checkOver(context, stack);
+}
+
+
+/**
+ * Initialize a Do Over For While block
+ *
+ * @param l      The loop label.
+ * @param o      The loop control information.
+ * @param w      The loop conditional information.
+ */
+RexxInstructionDoOverForWhile::RexxInstructionDoOverForWhile(RexxString *l, OverLoop &o, ForLoop &f, WhileUntilLoop &w)
+{
+    label = l;
+    overLoop = o;
+    forLoop = f;
+    whileLoop = w;
+}
+
+
+// NOTE The WHILE variant does not any additional fields, so it can
+// just use the live() methods inherited from the UNTIL version.
+
+
+/**
+ * Perform a test on whether this loop iteration should
+ * be executed or not.
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ * @param doblock The doblock for this instruction instance.
+ * @param first   True if this is the first iteration, false for
+ *                reExecute iterations.
+ *
+ * @return true if we should execute the loop block, false if
+ *         we should terminate the loop.
+ */
+bool RexxInstructionDoOverForWhile::iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first)
+{
+    return doblock->checkOver(context, stack) && doblock->checkFor() && whileLoop.checkWhile(context, stack);
 }

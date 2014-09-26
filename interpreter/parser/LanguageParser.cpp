@@ -1318,6 +1318,9 @@ RexxCode *LanguageParser::translateBlock()
             case KEYWORD_LOOP_OVER:
             case KEYWORD_LOOP_OVER_UNTIL:
             case KEYWORD_LOOP_OVER_WHILE:
+            case KEYWORD_LOOP_OVER_FOR:
+            case KEYWORD_LOOP_OVER_FOR_UNTIL:
+            case KEYWORD_LOOP_OVER_FOR_WHILE:
             case KEYWORD_LOOP_CONTROLLED:
             case KEYWORD_LOOP_CONTROLLED_UNTIL:
             case KEYWORD_LOOP_CONTROLLED_WHILE:
@@ -3552,6 +3555,9 @@ void LanguageParser::blockError(RexxInstruction *instruction)
         case KEYWORD_LOOP_OVER:
         case KEYWORD_LOOP_OVER_UNTIL:
         case KEYWORD_LOOP_OVER_WHILE:
+        case KEYWORD_LOOP_OVER_FOR:
+        case KEYWORD_LOOP_OVER_FOR_UNTIL:
+        case KEYWORD_LOOP_OVER_FOR_WHILE:
         case KEYWORD_LOOP_CONTROLLED:
         case KEYWORD_LOOP_CONTROLLED_UNTIL:
         case KEYWORD_LOOP_CONTROLLED_WHILE:
