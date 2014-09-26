@@ -260,7 +260,8 @@ class LanguageParser: public RexxInternalObject
     RexxInstruction *exposeNew();
     RexxInstruction *forwardNew();
     RexxInstruction *guardNew();
-    RexxInstruction *ifNew(InstructionKeyword type);
+    RexxInstruction *ifNew();
+    RexxInstruction *whenNew();
     RexxInstruction *interpretNew();
     RexxInstruction *labelNew(RexxToken *name, RexxToken *colon);
     RexxInstruction *leaveNew(InstructionKeyword type);
@@ -287,14 +288,15 @@ class LanguageParser: public RexxInternalObject
     RexxInstruction *thenNew(RexxToken *, RexxInstructionIf *);
     RexxInstruction *traceNew();
     RexxInstruction *useNew();
-    RexxInstructionIf *whenCaseNew(RexxInstructionIf *original);
 
     inline void        addReference(RexxInternalObject *reference) { calls->addLast(reference); }
     inline void        pushDo(RexxInstruction *i) { control->push(i); }
-    inline RexxInstruction *popDo() { return (RexxInstruction *)(control->pull()); };
-    inline RexxInstruction *topDo() { return (RexxInstruction *)(control->peek()); };
-    inline InstructionKeyword topDoType() { return ((RexxInstruction *)(control->peek()))->getType(); };
-    inline bool topDoIsType(InstructionKeyword t) { return ((RexxInstruction *)(control->peek()))->isType(t); };
+    inline RexxInstruction *popDo() { return (RexxInstruction *)(control->pull()); }
+    inline RexxInstruction *topDo() { return (RexxInstruction *)(control->peek()); }
+           RexxInstruction *topBlockInstruction();
+    inline InstructionKeyword topDoType() { return ((RexxInstruction *)(control->peek()))->getType(); }
+    inline bool topDoIsType(InstructionKeyword t) { return ((RexxInstruction *)(control->peek()))->isType(t); }
+    inline bool topDoIsType(InstructionKeyword t1, InstructionKeyword t2) { return topDoIsType(t1) || topDoIsType(t2); }
     RexxInstruction *sourceNewObject(size_t size, RexxBehaviour *_behaviour, InstructionKeyword type);
 
     // directive parsing methods
@@ -333,8 +335,9 @@ class LanguageParser: public RexxInternalObject
     RexxInternalObject *parseExpression(int);
     RexxInternalObject *parseSubExpression(int);
     RexxInternalObject *parseFullSubExpression(int);
-    size_t      parseArgList(RexxToken *, int);
+    size_t       parseArgList(RexxToken *, int);
     ArrayClass  *parseArgArray(RexxToken *, int);
+    size_t       parseCaseWhenList(int terminators );
     RexxInternalObject *parseFunction(RexxToken *, RexxToken *);
     RexxInternalObject *parseCollectionMessage(RexxToken *, RexxInternalObject *);
     RexxInternalObject *parseMessage(RexxInternalObject *, bool, int);

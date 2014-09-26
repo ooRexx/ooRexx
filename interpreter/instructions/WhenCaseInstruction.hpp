@@ -36,31 +36,36 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                             IfInstruction.hpp  */
+/* REXX Kernel                                       WhenCaseInstruction.hpp  */
 /*                                                                            */
-/* IF instruction executable class.                                           */
+/* When instruction for a SELECT CASE instruction                             */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_RexxInstructionIf
-#define Included_RexxInstructionIf
+#ifndef Included_RexxInstructionWhenCase
+#define Included_RexxInstructionWhenCase
 
 #include "RexxInstruction.hpp"
 #include "EndIf.hpp"
 
-class RexxInstructionIf : public RexxInstructionSet
+
+/**
+ * A subclass of the IF instruction for the SELECT CASE
+ * instruction.  The base IF instruction is converted
+ * to one of these if it is determined we're add a WHEN to
+ * a SELECT_CASE instruction.
+ */
+class RexxInstructionCaseWhen : public RexxInstructionSet
 {
  public:
-     RexxInstructionIf() { };
-    RexxInstructionIf(RexxInternalObject *, RexxToken *);
-    inline RexxInstructionIf(RESTORETYPE restoreType) { ; };
+    RexxInstructionCaseWhen(size_t, QueueClass *, RexxToken *);
+    inline RexxInstructionCaseWhen(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(Envelope*);
 
     virtual void execute(RexxActivation *, ExpressionStack *);
-    // We consider this a control instruction only if it is an IF.
-    // WHENs are part of SELECT and thus not a top-level control type.
+
     virtual bool isControl() { return isType(KEYWORD_IF) ; }
 
     void setEndInstruction(RexxInstructionEndIf *);
@@ -68,7 +73,8 @@ class RexxInstructionIf : public RexxInstructionSet
 
  protected:
 
-    RexxInternalObject   *condition;     // condition expression to evaluate
     RexxInstructionEndIf *else_location; // else instruction to process
+    size_t  expressionCount;      // the number of expressions in our list
+    RexxInternalObject *expressions[1];   // the list of epxressions to validate
 };
 #endif

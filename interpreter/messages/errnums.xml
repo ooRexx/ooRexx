@@ -1603,6 +1603,12 @@ special character (such as a parenthesis).
 <para>Property logical value must be exactly "0", "1", "true", or "false"; found "<emphasis role="italic">value</emphasis>"</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>905</term>
+<listitem>
+<para>SELECT CASE comparison result must be "0", "1", "true", or "false"; found "<emphasis role="italic">value</emphasis>"</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR35">
@@ -1829,6 +1835,12 @@ special character (such as a parenthesis).
 <term>933</term>
 <listitem>
 <para>Missing expression following CASE keyword of a SELECT instruction</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>934</term>
+<listitem>
+<para>Missing expression in WHEN case expression list</para>
 </listitem>
 </varlistentry>
 </variablelist>

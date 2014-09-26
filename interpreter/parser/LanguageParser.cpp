@@ -1052,8 +1052,8 @@ RexxCode *LanguageParser::translateBlock()
             flushControl(instruction);
         }
         // validate allowed instructions in a SELECT
-        if (topDoIsType(KEYWORD_SELECT) &&
-            (type != KEYWORD_WHEN && type != KEYWORD_OTHERWISE && type != KEYWORD_END ))
+        if (topDoIsType(KEYWORD_SELECT, KEYWORD_SELECT_CASE) &&
+            (type != KEYWORD_WHEN && type != KEYWORD_WHEN_CASE && type != KEYWORD_OTHERWISE && type != KEYWORD_END ))
         {
             syntaxError(Error_When_expected_whenotherwise, topDo());
         }
@@ -1070,23 +1070,11 @@ RexxCode *LanguageParser::translateBlock()
                 // we have TWO varieties of this.  The second requires the
                 // WHEN to be converted to a different type.
                 RexxInstruction *second = topDo();
-                if (second->isType(KEYWORD_SELECT))
+                if (second->isType(KEYWORD_SELECT) || second->isType(KEYWORD_SELECT_CASE))
                 {
                     // let the select know that another WHEN was added
                     ((RexxInstructionSelect *)second)->addWhen((RexxInstructionIf *)instruction);
                 }
-                else if (second->isType(KEYWORD_SELECT_CASE))
-                {
-                    // let the select know that another WHEN was added, but we
-                    // need the special WHEN CASE version.
-                    ((RexxInstructionSelectCase *)second)->addWhen(whenCaseNew((RexxInstructionIf *)instruction));
-                }
-                // mis-placed WHEN instruction
-                else
-                {
-                    syntaxError(Error_Unexpected_when_when);
-                }
-                // just fall into IF logic
             }
 
             // processing of an IF instruction, and also a WHEN (from above)
@@ -1406,6 +1394,34 @@ RexxCode *LanguageParser::translateBlock()
     labels = OREF_NULL;
     // and return the code object.
     return code;
+}
+
+
+/**
+ * Locate the top block instruction in the control stack.  This
+ * involves skipping over any THEN instructions waiting for
+ * resolution.
+ *
+ * @return The top block instruction or OREF_NULL if none are active.
+ */
+RexxInstruction *LanguageParser::topBlockInstruction()
+{
+    // iterate through the control stack until we find a real
+    // control instruction
+    for (size_t i = 1; i <= control->lastIndex(); i++)
+    {
+        RexxInstruction *inst = (RexxInstruction *)control->get(i);
+
+        // handle any then or when terminators
+        if (inst->isType(KEYWORD_ENDTHEN) || inst->isType(KEYWORD_ENDWHEN))
+        {
+            continue;
+        }
+        // we found one
+        return inst;
+    }
+    // no control instruction found
+    return OREF_NULL;
 }
 
 
@@ -2692,6 +2708,69 @@ size_t LanguageParser::parseArgList(RexxToken *firstToken, int terminators )
     }
     // return the count of real argument expressions.
     return realcount;
+}
+
+
+/**
+ * Perform the parsing of a list of expressions for a SELECT
+ * CASE WHEN expression.  This is a list of one or more
+ * expressions separated by commas.  Omitted expressions are not
+ * allowed.  Each argument expression is pushed on to the term
+ * stack in last-to-first order.
+ *
+ * @param firstToken The first token of the expression list, which is
+ *                   really the delimiter that opens the list.
+ * @param terminators
+ *                   The list of terminators for this expression type.
+ *
+ * @return The count of argument expressions we found.
+ */
+size_t LanguageParser::parseCaseWhenList(int terminators )
+{
+    size_t total = 0;                // total is the full count of arguments we attempt to parse.
+
+    // we need to skip ahead to the first real token, then backup one to be
+    // properly positioned for the start.  If this is a CALL instruction, this
+    // will skip the blank between the CALL keyword and the start of the expression,
+    // which counts as a significant blank by the tokenizer.
+    nextReal();
+    previousToken();
+
+    // now loop until we get a terminator.  COMMAs are always subexpression terminators,
+    // so we don't need to add anything additional to our terminator lists.  We just
+    // interpret them differently in this context.
+    for (;;)
+    {
+        // parse off an argument expression
+        RexxInternalObject *subExpr = parseSubExpression(terminators);
+        // all sub expressions are required here.
+        if (subExpr == OREF_NULL)
+        {
+            syntaxError(Error_Invalid_expression_case_when_list);
+        }
+
+        // We have two term stacks.  The main term stack is used for expression evaluation.
+        // the subTerm stack is used for processing expression lists like this.
+        // NOTE that we need to use pushSubTerm here so that the required expression stack
+        // calculation comes out right.
+        pushSubTerm(subExpr);
+
+        // now check the total.
+        total++;
+
+        // the next token will be our terminator.  If this is not
+        // a comma, we have more expressions to parse.
+        RexxToken *terminatorToken = nextToken();
+        if (!terminatorToken->isType(TOKEN_COMMA))
+        {
+            // put the terminator back on
+            previousToken();
+            break;
+        }
+    }
+
+    // return the count of expressions.
+    return total;
 }
 
 

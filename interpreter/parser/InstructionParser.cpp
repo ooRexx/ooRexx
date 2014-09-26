@@ -98,6 +98,7 @@
 #include "EndIf.hpp"
 #include "IfInstruction.hpp"
 #include "ThenInstruction.hpp"
+#include "WhenCaseInstruction.hpp"
 
 #include "DoBlock.hpp"                         /* block type instructions           */
 #include "DoInstruction.hpp"
@@ -347,7 +348,7 @@ RexxInstruction *LanguageParser::nextInstruction()
 
             // IF instruction
             case KEYWORD_IF:
-                return ifNew(KEYWORD_IF);
+                return ifNew();
                 break;
 
             // ITERATE instruction
@@ -419,7 +420,7 @@ RexxInstruction *LanguageParser::nextInstruction()
             case KEYWORD_WHEN:
                 // this parses as if it was an IF, but creates
                 // a different target instruction.
-                return ifNew(KEYWORD_WHEN);
+                return whenNew();
                 break;
 
             // OTEHRWISE in a SELECT
@@ -829,7 +830,7 @@ RexxInstruction *LanguageParser::callNew()
         syntaxError(Error_Symbol_or_string_call);
     }
 
-    // create a new Call instruction.  This only handles the simple calles.
+    // create a new Call instruction.  This only handles the simple calls.
     RexxInstruction *newObject = new_variable_instruction(CALL, Call, sizeof(RexxInstructionCall) + (argCount - 1) * sizeof(RexxObject *));
     ::new ((void *)newObject) RexxInstructionCall(targetName, argCount, subTerms, builtin_index);
 
@@ -1893,10 +1894,10 @@ RexxInstruction *LanguageParser::guardNew()
  *
  * @return A an executable IF instruction object.
  */
-RexxInstruction *LanguageParser::ifNew(InstructionKeyword type)
+RexxInstruction *LanguageParser::ifNew()
 {
     // ok, get a conditional expression
-    RexxInternalObject *_condition = requiredLogicalExpression(TERM_IF, type == KEYWORD_IF ? Error_Invalid_expression_if : Error_Invalid_expression_when);
+    RexxInternalObject *_condition = requiredLogicalExpression(TERM_IF, Error_Invalid_expression_if);
 
     // get to the terminator token for this (likely a THEN, but it could
     // be an EOC.  We use this to update the end location for the instruction since
@@ -1908,9 +1909,73 @@ RexxInstruction *LanguageParser::ifNew(InstructionKeyword type)
 
     RexxInstruction *newObject =  new_instruction(IF, If);
     ::new ((void *)newObject) RexxInstructionIf(_condition, token);
-    // set the IF/WHEN type after construction.
-    newObject->setType(type);
     return newObject;
+}
+
+
+/**
+ * Create a new IF or WHEN instruction object.  These
+ * share the same implementation class, but get wired
+ * together differently.
+ *
+ * @param type   The type of instruction to create.
+ *
+ * @return A an executable IF instruction object.
+ */
+RexxInstruction *LanguageParser::whenNew()
+{
+    // the top of the queue must be a SELECT instruction, but
+    // we have TWO varieties of this.  The two varieties have different
+    // expression parsing rules.
+    RexxInstruction *context = topBlockInstruction();
+    // no block, this is an error
+    if (context == OREF_NULL)
+    {
+        syntaxError(Error_Unexpected_when_when);
+    }
+
+    // parsing of the WHEN depends on the type of SELECT we're currently in.
+    if (context->isType(KEYWORD_SELECT))
+    {
+        // ok, get a conditional expression
+        RexxInternalObject *_condition = requiredLogicalExpression(TERM_IF, Error_Invalid_expression_when);
+
+        // get to the terminator token for this (likely a THEN, but it could
+        // be an EOC.  We use this to update the end location for the instruction since
+        // a THEN on the same line would include the THEN (and potentially the following)
+        // instruction in the instruction location.  This ensures we truncate at
+        // the end of the IF portion.
+        RexxToken *token = nextReal();
+        previousToken();
+        // this is really an IF instruction
+        RexxInstruction *newObject =  new_instruction(WHEN, If);
+        ::new ((void *)newObject) RexxInstructionIf(_condition, token);
+        return newObject;
+    }
+    else if (context->isType(KEYWORD_SELECT_CASE))
+    {
+        // ok, get a conditional expression
+        size_t argCount = parseCaseWhenList(TERM_IF);
+
+        // get to the terminator token for this (likely a THEN, but it could
+        // be an EOC.  We use this to update the end location for the instruction since
+        // a THEN on the same line would include the THEN (and potentially the following)
+        // instruction in the instruction location.  This ensures we truncate at
+        // the end of the IF portion.
+        RexxToken *token = nextReal();
+        previousToken();
+        // this is really an IF instruction
+        RexxInstruction *newObject = new_variable_instruction(WHEN_CASE, CaseWhen, sizeof(RexxInstructionCaseWhen) + (argCount - 1) * sizeof(RexxObject *));
+        ::new ((void *)newObject) RexxInstructionCaseWhen(argCount, subTerms, token);
+        return newObject;
+    }
+    // mis-placed WHEN instruction
+    else
+    {
+        syntaxError(Error_Unexpected_when_when);
+    }
+
+    return OREF_NULL;
 }
 
 
@@ -3255,32 +3320,6 @@ RexxInstruction *LanguageParser::thenNew(RexxToken *token, RexxInstructionIf *pa
     RexxInstruction *newObject = new_instruction(THEN, Then);
     ::new ((void *)newObject) RexxInstructionThen(token, parent);
     return newObject;
-}
-
-
-/**
- * Convert a WHEN instruction into a WHEN CASE instruction
- * for a SELECT WHEN.
- *
- * @param original The original instruction.
- *
- * @return The converted instruction object.
- */
-RexxInstructionIf *LanguageParser::whenCaseNew(RexxInstructionIf *original)
-{
-    // We are going to build on the processing that is done when
-    // instruction object are originally created.  We're just going
-    // to invoke the RexxInstructionCaseWhen constructor over the storage
-    // allocated to the orignal IF instruction.  This will update
-    // the virtual function table pointer of the object to the new class
-    // without modifying any of the instruction data.  Since the
-    // WHEN CASE class does not add or change any fields, this just
-    // switches the class of the object.
-
-    ::new ((void *)original) RexxInstructionCaseWhen();
-    // change the type field and return the original object.
-    original->setType(KEYWORD_SELECT_CASE);
-    return original;
 }
 
 

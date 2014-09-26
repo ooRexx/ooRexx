@@ -167,7 +167,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="ForwardInstruction" class="RexxInstructionForward" include="ForwardInstruction.hpp"/>
 <Class id="GuardInstruction" class="RexxInstructionGuard" include="GuardInstruction.hpp"/>
 <Class id="IfInstruction" class="RexxInstructionIf" include="IfInstruction.hpp"/>
-<Class id="CaseWhenInstruction" class="RexxInstructionCaseWhen" include="IfInstruction.hpp"/>
+<Class id="CaseWhenInstruction" class="RexxInstructionCaseWhen" include="WhenCaseInstruction.hpp"/>
 <Class id="InterpretInstruction" class="RexxInstructionInterpret" include="InterpretInstruction.hpp"/>
 <Class id="LabelInstruction" class="RexxInstructionLabel" include="LabelInstruction.hpp"/>
 <Class id="LeaveInstruction" class="RexxInstructionLeave" include="LeaveInstruction.hpp"/>

@@ -2159,7 +2159,7 @@ special character (such as a parenthesis).
       <SubMessage>
         <Code>34</Code>
         <Subcode>002</Subcode>
-        <MessageNumber>334</MessageNumber>
+        <MessageNumber>756</MessageNumber>
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Logical_value_when</SymbolicName>
@@ -2245,6 +2245,15 @@ special character (such as a parenthesis).
         <Severity>Warning</Severity>
         <SymbolicName>Error_Logical_value_property</SymbolicName>
         <Text>Property logical value must be exactly <q>0</q>, <q>1</q>, <q>true</q>, or <q>false</q>; found <q><Sub position="1" name="value"/></q></Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>34</Code>
+        <Subcode>905</Subcode>
+        <MessageNumber>754</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Logical_value_when_case</SymbolicName>
+        <Text>SELECT CASE comparison result must be <q>0</q>, <q>1</q>, <q>true</q>, or <q>false</q>; found <q><Sub position="1" name="value"/></q></Text>
       </SubMessage>
     </Subcodes>
   </Message>
@@ -2563,6 +2572,15 @@ special character (such as a parenthesis).
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_expression_select_case</SymbolicName>
         <Text>Missing expression following CASE keyword of a SELECT instruction</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>35</Code>
+        <Subcode>934</Subcode>
+        <MessageNumber>755</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_expression_case_when_list</SymbolicName>
+        <Text>Missing expression in WHEN case expression list</Text>
       </SubMessage>
     </Subcodes>
   </Message>

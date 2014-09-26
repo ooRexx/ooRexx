@@ -280,6 +280,7 @@
 #define Rexx_Error_Logical_value_guard                          34902
 #define Rexx_Error_Logical_value_authorization                  34903
 #define Rexx_Error_Logical_value_property                       34904
+#define Rexx_Error_Logical_value_when_case                      34905
 #define Rexx_Error_Invalid_expression                           35000
 #define Rexx_Error_Invalid_expression_general                   35001
 #define Rexx_Error_Invalid_expression_user_defined              35900
@@ -314,6 +315,7 @@
 #define Rexx_Error_Invalid_expression_parse                     35931
 #define Rexx_Error_Invalid_expression_call                      35932
 #define Rexx_Error_Invalid_expression_select_case               35933
+#define Rexx_Error_Invalid_expression_case_when_list            35934
 #define Rexx_Error_Unmatched_parenthesis                        36000
 #define Rexx_Error_Unmatched_parenthesis_user_defined           36900
 #define Rexx_Error_Unmatched_parenthesis_paren                  36901

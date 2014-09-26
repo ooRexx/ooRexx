@@ -273,7 +273,6 @@
 #define Error_Expression_result_trace_msg                            331
 #define Error_Expression_result_raise_msg                            332
 #define Error_Logical_value_if_msg                                   333
-#define Error_Logical_value_when_msg                                 334
 #define Error_Logical_value_while_msg                                335
 #define Error_Logical_value_until_msg                                336
 #define Error_Logical_value_logical_msg                              337
@@ -657,6 +656,9 @@
 #define Error_Symbol_or_string_keyword_msg                           751
 #define Error_Invalid_subkeyword_following_msg                       752
 #define Error_Execution_unassigned_variable_msg                      753
+#define Error_Logical_value_when_case_msg                            754
+#define Error_Invalid_expression_case_when_list_msg                  755
+#define Error_Logical_value_when_msg                                 756
 
 
 #endif

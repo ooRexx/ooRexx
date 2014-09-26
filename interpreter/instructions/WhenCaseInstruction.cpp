@@ -38,32 +38,38 @@
 /******************************************************************************/
 /* REXX Translator                                                            */
 /*                                                                            */
-/* IF instruction executable class                                            */
+/* When instruction for a SELECT CASE                                         */
 /*                                                                            */
 /******************************************************************************/
 #include "RexxCore.h"
 #include "RexxActivation.hpp"
-#include "IfInstruction.hpp"
+#include "WhenCaseInstruction.hpp"
 #include "Token.hpp"
 
 
 /**
- * Construct an IF instructon instance.
+ * Construct a WHEN instructon instance.
  *
  * @param _condition The condition expression to evaluate.
  * @param thenToken  The token for the terminating THEN keyword.
  *                   This is where we mark the end of the
  *                   instruction.
  */
-RexxInstructionIf::RexxInstructionIf(RexxInternalObject *_condition, RexxToken *thenToken)
+RexxInstructionCaseWhen::RexxInstructionCaseWhen(size_t count, QueueClass *list, RexxToken *thenToken)
 {
-    condition = _condition;
+    expressionCount = count;
+
+    // now copy the expressions from the sub term stack
+    // NOTE:  The expressionss are in last-to-first order on the stack.
+    initializeObjectArray(count, expressions, RexxInternalObject, list);
+
     //get the location from the THEN token and use its location to set
     // the end of the instruction.  Note that the THEN is traced on its
     // own, but using the start of the THEN gives a fuller picture of things.
     SourceLocation location = thenToken->getLocation();
     setEnd(location.getLineNumber(), location.getOffset());
 }
+
 
 /**
  * Set the END location for the false branch of an IF
@@ -72,7 +78,7 @@ RexxInstructionIf::RexxInstructionIf(RexxInternalObject *_condition, RexxToken *
  *
  * @param end_target The new end instruction.
  */
-void RexxInstructionIf::setEndInstruction(RexxInstructionEndIf *end_target)
+void RexxInstructionCaseWhen::setEndInstruction(RexxInstructionEndIf *end_target)
 {
     else_location = end_target;
 }
@@ -83,12 +89,12 @@ void RexxInstructionIf::setEndInstruction(RexxInstructionEndIf *end_target)
  *
  * @param liveMark The current live mark.
  */
-void RexxInstructionIf::live(size_t liveMark)
+void RexxInstructionCaseWhen::live(size_t liveMark)
 {
     // must be first object marked.
     memory_mark(nextInstruction);
-    memory_mark(condition);
     memory_mark(else_location);
+    memory_mark_array(expressionCount, expressions);
 }
 
 
@@ -99,12 +105,12 @@ void RexxInstructionIf::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void RexxInstructionIf::liveGeneral(MarkReason reason)
+void RexxInstructionCaseWhen::liveGeneral(MarkReason reason)
 {
     // must be first object marked.
     memory_mark_general(nextInstruction);
-    memory_mark_general(condition);
     memory_mark_general(else_location);
+    memory_mark_general_array(expressionCount, expressions);
 }
 
 
@@ -113,53 +119,58 @@ void RexxInstructionIf::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope that will hold the flattened object.
  */
-void RexxInstructionIf::flatten(Envelope *envelope)
+void RexxInstructionCaseWhen::flatten(Envelope *envelope)
 {
-    setUpFlatten(RexxInstructionIf)
+    setUpFlatten(RexxInstructionCaseWhen)
 
     flattenRef(nextInstruction);
-    flattenRef(condition);
     flattenRef(else_location);
+    flattenArrayRefs(expressionCount, expressions);
 
     cleanUpFlatten
 }
 
 
 /**
- * Execute an IF/WHEN instruction.
+ * Execute a WHEN instruction attached to a SELECT CASE.
  *
  * @param context The current execution context.
  * @param stack   The current evaluation stack.
  */
-void RexxInstructionIf::execute(RexxActivation *context, ExpressionStack *stack)
+void RexxInstructionCaseWhen::execute(RexxActivation *context, ExpressionStack *stack)
 {
     context->traceInstruction(this);
 
-    // evaluate and trace the condition expression.
-    RexxObject *result = condition->evaluate(context, stack);
-    context->traceResult(result);
+    // This should be us.  It really isn't possible to jump into a middle of a select
+    // and get to a WHEN without raising an error.
+    DoBlock *doBlock = context->topBlockInstruction();
+    // get the case expression
+    RexxObject *caseValue = doBlock->getCase();
 
-    // the comparison methods return either .true or .false, so we
-    // can to a quick test against those.
-    if (result == TheFalseObject)
+    for (size_t i = 0; i < expressionCount; i++)
     {
-        // we execute the ELSE branch
-        context->setNext(else_location->nextInstruction);
-    }
+        // and the compare target (which needs tracing, but only as an intermediate
+        RexxObject *compareValue = expressions[i]->evaluate(context, stack);
+        context->traceResult(compareValue);
+        // now perform the compare using the "==" operator method.
+        // NOTE that the case value is the left hand side.
+        RexxObject *result = caseValue->callOperatorMethod(OPERATOR_STRICT_EQUAL, compareValue);
+        context->traceResult(result);
 
-    // if it is not the .true object, we need to perform a fuller
-    // evaluation of the result.
-    else if (result != TheTrueObject)
-    {
-        // evaluate and decide if we take the ELSE branch
-        if (!result->truthValue(Error_Logical_value_if))
+        // Remove the compare object from the stack
+        stack->toss();
+
+        // evaluate and decide if we execute this WHEN...we stop with the first true result
+        if (result->truthValue(Error_Logical_value_when_case))
         {
-            context->setNext(else_location->nextInstruction);
+            // do a pause and return
+            context->pauseInstruction();
+            return;
         }
     }
 
-    // We do nothing for true...we just continue on to the next instruction.
-
+    // we execute the ELSE branch if everything evaluates to false
+    context->setNext(else_location->nextInstruction);
     context->pauseInstruction();
 }
 

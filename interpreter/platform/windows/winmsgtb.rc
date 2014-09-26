@@ -273,7 +273,6 @@ Error_Program_unreadable    "Failure during initialization"
    Error_Expression_result_trace    "Incorrect expression result following VALUE keyword of TRACE instruction"
    Error_Expression_result_raise    "Incorrect expression result following SYNTAX keyword of RAISE instruction"
    Error_Logical_value_if    "Value of expression following IF keyword must be exactly ""0"" or ""1""; found ""&1"""
-   Error_Logical_value_when    "Value of expression following WHEN keyword must be exactly ""0"" or ""1""; found ""&1"""
    Error_Logical_value_while    "Value of expression following WHILE keyword must be exactly ""0"" or ""1""; found ""&1"""
    Error_Logical_value_until    "Value of expression following UNTIL keyword must be exactly ""0"" or ""1""; found ""&1"""
    Error_Logical_value_logical    "Value of expression to the left of the logical operator ""&1"" must be exactly ""0"" or ""1""; found ""&2"""
@@ -657,6 +656,9 @@ Error_Program_unreadable    "Failure during initialization"
    Error_Symbol_or_string_keyword    "String or symbol expected after &1 keyword"
    Error_Invalid_subkeyword_following    "Unknown keyword following ""&1""; found ""&2"""
    Error_Execution_unassigned_variable    "Reference to unassigned variable ""&1""."
+   Error_Logical_value_when_case    "SELECT CASE comparison result must be ""0"", ""1"", ""true"", or ""false""; found ""&1"""
+   Error_Invalid_expression_case_when_list    "Missing expression in WHEN case expression list"
+   Error_Logical_value_when    "Value of expression following WHEN keyword must be exactly ""0"" or ""1""; found ""&1"""
    
 END
 

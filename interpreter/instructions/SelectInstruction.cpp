@@ -49,6 +49,7 @@
 #include "SelectInstruction.hpp"
 #include "EndInstruction.hpp"
 #include "IfInstruction.hpp"
+#include "WhenCaseInstruction.hpp"
 #include "OtherwiseInstruction.hpp"
 #include "DoBlock.hpp"
 
@@ -215,9 +216,18 @@ void RexxInstructionSelect::matchEnd(RexxInstructionEnd *partner, LanguageParser
     while (whenCount--)
     {
         // pull the next item from the queue
-        RexxInstructionIf *when = (RexxInstructionIf *)whenList->pull();
-        // hook up with the partner END instruction
-        when->fixWhen((RexxInstructionEndIf *)partner);
+        RexxInstruction *when = (RexxInstruction *)whenList->pull();
+        if (when->isType(KEYWORD_WHEN))
+        {
+            // hook up with the partner END instruction
+            ((RexxInstructionIf *)when)->fixWhen((RexxInstructionEndIf *)partner);
+        }
+        // this is a select case version
+        else
+        {
+            // hook up with the partner END instruction
+            ((RexxInstructionCaseWhen *)when)->fixWhen((RexxInstructionEndIf *)partner);
+        }
     }
 
     // the when list is empty, we can scrap it now

@@ -645,7 +645,8 @@ set (instructions_sources  ${build_instructions_dir}/AddressInstruction.cpp
             ${build_instructions_dir}/SignalInstruction.cpp
             ${build_instructions_dir}/ThenInstruction.cpp
             ${build_instructions_dir}/TraceInstruction.cpp
-            ${build_instructions_dir}/UseStrictInstruction.cpp)
+            ${build_instructions_dir}/UseStrictInstruction.cpp
+            ${build_instructions_dir}/WhenCaseInstruction.cpp)
 set (parser_sources ${build_parser_dir}/Clause.cpp
             ${build_parser_dir}/KeywordConstants.cpp
             ${build_parser_dir}/DirectiveParser.cpp

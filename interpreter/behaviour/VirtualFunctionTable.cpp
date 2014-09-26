@@ -117,6 +117,7 @@
 #include "ForwardInstruction.hpp"
 #include "GuardInstruction.hpp"
 #include "IfInstruction.hpp"
+#include "WhenCaseInstruction.hpp"
 #include "InterpretInstruction.hpp"
 #include "LabelInstruction.hpp"
 #include "LeaveInstruction.hpp"

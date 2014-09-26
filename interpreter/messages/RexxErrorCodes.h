@@ -280,6 +280,7 @@
 #define Error_Logical_value_guard                          34902
 #define Error_Logical_value_authorization                  34903
 #define Error_Logical_value_property                       34904
+#define Error_Logical_value_when_case                      34905
 #define Error_Invalid_expression                           35000
 #define Error_Invalid_expression_general                   35001
 #define Error_Invalid_expression_user_defined              35900
@@ -314,6 +315,7 @@
 #define Error_Invalid_expression_parse                     35931
 #define Error_Invalid_expression_call                      35932
 #define Error_Invalid_expression_select_case               35933
+#define Error_Invalid_expression_case_when_list            35934
 #define Error_Unmatched_parenthesis                        36000
 #define Error_Unmatched_parenthesis_user_defined           36900
 #define Error_Unmatched_parenthesis_paren                  36901
