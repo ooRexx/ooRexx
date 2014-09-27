@@ -318,14 +318,26 @@ RexxObject *MutableBuffer::lengthRexx()
  *
  * @return returns the same buffer.
  */
-MutableBuffer *MutableBuffer::appendRexx(RexxObject *obj)
+MutableBuffer *MutableBuffer::appendRexx(RexxObject **args, size_t argc)
 {
-    Protected<RexxString> string = stringArgument(obj, ARG_ONE);
-    // make sure we have enough room
-    ensureCapacity(string->getLength());
+    // if the count is zero, this is an error.  process as if we had
+    // gotten a null first argument
+    if (argc == 0)
+    {
+        stringArgument(OREF_NULL, ARG_ONE);
+    }
 
-    copyData(dataLength, string->getStringData(), string->getLength());
-    dataLength += string->getLength();
+    // append each of the arguments
+    for (size_t i = 0; i < argc; i++)
+    {
+        Protected<RexxString> string = stringArgument(args[i], i + 1);
+        // make sure we have enough room
+        ensureCapacity(string->getLength());
+
+        copyData(dataLength, string->getStringData(), string->getLength());
+        dataLength += string->getLength();
+    }
+
     return this;
 }
 

@@ -70,7 +70,7 @@ class MutableBuffer : public RexxObject
 
     RexxObject *lengthRexx();
 
-    MutableBuffer *appendRexx(RexxObject *);
+    MutableBuffer *appendRexx(RexxObject **args, size_t argc);
     MutableBuffer *setTextRexx(RexxObject *);
     void           setText(RexxString *);
     MutableBuffer *insert(RexxObject*, RexxObject*, RexxObject*, RexxObject*);

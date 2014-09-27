@@ -1184,7 +1184,7 @@ RexxString *Activity::messageSubstitution(RexxString *message, ArrayClass  *addi
             }
         }
         // add on the message substitutions
-        newMessage->appendRexx(stringVal);
+        newMessage->append(stringVal);
     }
     // append the remainder of the message to the buffer and convert to a string.
     newMessage->append(messageData + searchOffset, message->getLength() - searchOffset);

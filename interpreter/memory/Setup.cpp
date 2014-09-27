@@ -1184,7 +1184,7 @@ StartClassDefinition(MutableBuffer)
 
     CompleteClassMethodDefinitions();
 
-        AddMethod("Append", MutableBuffer::appendRexx, 1);
+        AddMethod("Append", MutableBuffer::appendRexx, A_COUNT);
         AddMethod("Insert", MutableBuffer::insert, 4);
         AddMethod("Overlay", MutableBuffer::overlay, 4);
         AddMethod("ReplaceAt", MutableBuffer::replaceAt, 4);
