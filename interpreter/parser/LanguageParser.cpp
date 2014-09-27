@@ -1213,7 +1213,7 @@ RexxCode *LanguageParser::translateBlock()
             {
                 // we must have a SELECT at the top of the control stack
                 RexxInstruction *second = topDo();
-                if (!second->isType(KEYWORD_SELECT))
+                if (!second->isType(KEYWORD_SELECT) && !second->isType(KEYWORD_SELECT_CASE))
                 {
                     syntaxError(Error_Unexpected_when_otherwise);
                 }
