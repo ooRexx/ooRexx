@@ -230,7 +230,7 @@ bool TraceSetting::parseTraceSetting(RexxString *value, char &badOption)
         }
         // trace OFF is special...it unconditionally turns off debug, so
         // don't set the debug flag on if we have OFF.
-        else if (isTraceOff())
+        else if (!isTraceOff())
         {
             // this turns on special optimization flags also.
             setDebug();
