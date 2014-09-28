@@ -1494,7 +1494,7 @@ EndClassDefinition(StackFrame);
     addToSystem("COMMONRETRIEVERS", TheCommonRetrievers);
     addToSystem("ENVIRONMENT", TheEnvironment);
 
-    addToSystem("VERSION", Interpreter::getVersionNumber());
+    addToSystem("VERSION", Interpreter::getVersionString());
     // initialize our thread vector for external calls.
     Activity::initializeThreadContext();
 

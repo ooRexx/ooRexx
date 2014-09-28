@@ -101,6 +101,7 @@ public:
     static int   getRoots(char *roots);
     static const char *getSeparator();
     static const char *getPathSeparator();
+    static const char *getLineEnd();
 };
 
 class SysFileIterator

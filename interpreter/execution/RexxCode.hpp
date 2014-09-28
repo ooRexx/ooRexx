@@ -47,7 +47,6 @@
 #include "BaseCode.hpp"
 #include "RexxLocalVariables.hpp"
 #include "PackageClass.hpp"
-#include "ActivationSettings.hpp"
 
 class StringTable;
 class RexxInstruction;

@@ -86,7 +86,7 @@ void BaseCode::run(Activity *activity, MethodClass *method, RexxObject *receiver
  *                  etc.)
  * @param result    The returned result.
  */
-void BaseCode::call(Activity *activity, RoutineClass *routine, RexxString *msgname, RexxObject **arguments, size_t argcount, RexxString *ct, RexxString *env, int context, ProtectedObject &result)
+void BaseCode::call(Activity *activity, RoutineClass *routine, RexxString *msgname, RexxObject **arguments, size_t argcount, RexxString *ct, RexxString *env, ActivationContext context, ProtectedObject &result)
 {
     // the default for this is the simplified call.   This is used by Rexx code to make calls to
     // both Rexx programs and native routines, so the polymorphism simplifies the processing.

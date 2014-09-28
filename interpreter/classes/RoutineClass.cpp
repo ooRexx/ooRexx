@@ -183,7 +183,7 @@ void RoutineClass::call(Activity *activity, RexxString *routineName, RexxObject*
  */
 void RoutineClass::call(Activity *activity, RexxString *routineName,
     RexxObject**argPtr, size_t argcount, RexxString *calltype,
-    RexxString *environment, int context, ProtectedObject &result)
+    RexxString *environment, ActivationContext context, ProtectedObject &result)
 {
     // just forward this to the code object
     code->call(activity, this, routineName, argPtr, argcount, calltype, environment, context, result);

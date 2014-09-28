@@ -45,6 +45,7 @@
 #define Included_BaseCode
 
 #include "RexxCore.h"
+#include "ActivationSettings.hpp"
 
 class ProtectedObject;
 class RoutineClass;
@@ -57,7 +58,7 @@ class BaseCode : public RexxInternalObject
 {
 public:
     virtual void run(Activity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
-    virtual void call(Activity *, RoutineClass *, RexxString *,  RexxObject **, size_t, RexxString *, RexxString *, int, ProtectedObject &);
+    virtual void call(Activity *, RoutineClass *, RexxString *,  RexxObject **, size_t, RexxString *, RexxString *, ActivationContext, ProtectedObject &);
     virtual void call(Activity *, RoutineClass *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
 
     virtual ArrayClass *getSource();

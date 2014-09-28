@@ -47,23 +47,24 @@
 
 #include <stdio.h>
 
-const char *build_date = __DATE__;  /* date of last build                */
-
 RexxString *Interpreter::versionNumber = OREF_NULL;
+
+const char *Interpreter::languageLevel = "6.05";
+
 
 /**
  * Generate a version number string for the interpreter.
  *
  * @return The interpreter version string.
  */
-RexxString *Interpreter::getVersionNumber()
+RexxString *Interpreter::getVersionString()
 {
     if (versionNumber == OREF_NULL)
     {
         char     buffer[100];                /* buffer for building the string    */
         char     work[20];                   /* working buffer                    */
 
-        strcpy(work, build_date);            /* copy the build date               */
+        strcpy(work, __DATE__);              /* copy the build date               */
         char *month = strtok(work, " ");     /* get the month                     */
         char *day = strtok(NULL, " ");       /* get the build day                 */
         char *year = strtok(NULL, " ");      /* and the year                      */
@@ -72,13 +73,13 @@ RexxString *Interpreter::getVersionNumber()
             day++;                             /* step over it                      */
         }
                                                /* format the result                 */
-        sprintf(buffer, "REXX-ooRexx_%d.%d.%d(MT)_%s-bit 6.05 %s %s %s", ORX_VER, ORX_REL, ORX_MOD,
+        sprintf(buffer, "REXX-ooRexx_%d.%d.%d(MT)_%s-bit %s %s %s %s", ORX_VER, ORX_REL, ORX_MOD,
 #ifdef __REXX64__
 			"64",
 #else
 			"32",
 #endif
-			day, month, year);
+			languageLevel, day, month, year);
         versionNumber = new_string(buffer);  /* return as a rexx string           */
     }
     return versionNumber;

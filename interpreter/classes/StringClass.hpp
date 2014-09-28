@@ -89,7 +89,9 @@ class RexxString : public RexxObject
          inline StringBuilder(RexxString *s) : current(s->getWritableData()) {}
 
          inline void append(const char *d, size_t l)  { memcpy(current, d, l); current += l; }
+         inline void append(const char *d)  { size_t l = strlen(d); memcpy(current, d, l); current += l; }
          inline void append(char c) { *current++ = c; }
+         inline void append(RexxString *s) { append(s->getStringData(), s->getLength()); }
          inline void pad(char c, size_t l)  { memset(current, c, l); current += l; }
 
      protected:

@@ -268,6 +268,9 @@ void PackageClass::flatten (Envelope *envelope)
 }
 
 
+// TODO:  This needs a copy() method!
+
+
 /**
  * Extract various bits of the source name to give us directory,
  * extension and file portions to be used for searches for additional

@@ -1037,6 +1037,17 @@ const char *SysFileSystem::getPathSeparator()
 
 
 /**
+ * Return the string used as a line-end separator.
+ *
+ * @return The ASCII-Z version of the line end sequence.
+ */
+const char *SysFileSystem::getLineEnd()
+{
+    return "\n";
+}
+
+
+/**
  * Create a new SysFileIterator instance.
  *
  * @param p      The directory we're iterating over.

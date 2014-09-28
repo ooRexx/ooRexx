@@ -183,7 +183,7 @@ void RexxInstructionParse::execute(RexxActivation *context, ExpressionStack *sta
         // PARSE VERSION
         case SUBKEY_VERSION:
             // get the version string
-            value = Interpreter::getVersionNumber();
+            value = Interpreter::getVersionString();
             stack->push(value);
             break;
 

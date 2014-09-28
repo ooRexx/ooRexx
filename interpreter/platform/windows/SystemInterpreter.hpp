@@ -80,8 +80,7 @@ public:
     static void restoreEnvironment(void *CurrentEnv);
     static RexxString *qualifyFileSystemName(RexxString *name);
     static void getCurrentTime(RexxDateTime *Date );
-    static RexxString *getSystemName();
-    static RexxString *getSourceString(RexxString *callType, RexxString * programName);
+    static const char *getPlatformName();
     static void releaseResultMemory(void *);
     static void *allocateResultMemory(size_t);
     static RexxString *getMessageHeader(wholenumber_t code);

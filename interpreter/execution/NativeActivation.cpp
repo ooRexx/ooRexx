@@ -3015,7 +3015,7 @@ void NativeActivation::variablePoolFetchPrivate(PSHVBLOCK pshvblock)
         // Interpreter VERSION string?
         if (strcmp(variable, "VERSION") == 0)
         {
-            pshvblock->shvret |= copyValue(Interpreter::getVersionNumber(), &pshvblock->shvvalue, &pshvblock->shvvaluelen);
+            pshvblock->shvret |= copyValue(Interpreter::getVersionString(), &pshvblock->shvvalue, &pshvblock->shvvaluelen);
         }
         // the current queue name?
         else if (strcmp(variable, "QUENAME") == 0)

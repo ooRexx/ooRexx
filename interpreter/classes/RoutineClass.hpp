@@ -46,6 +46,7 @@
 
 #include "BaseExecutable.hpp"
 #include "LanguageLevel.hpp"
+#include "ActivationSettings.hpp"
 
 class RoutineClass : public BaseExecutable
 {
@@ -59,7 +60,7 @@ public:
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(Envelope*);
 
-    virtual void call(Activity *,  RexxString *,  RexxObject **, size_t, RexxString *, RexxString *, int, ProtectedObject &);
+    virtual void call(Activity *,  RexxString *,  RexxObject **, size_t, RexxString *, RexxString *, ActivationContext, ProtectedObject &);
     virtual void call(Activity *,  RexxString *,  RexxObject **, size_t, ProtectedObject &);
     virtual void runProgram(Activity *activity, RexxString * calltype, RexxString * environment, RexxObject **arguments, size_t argCount, ProtectedObject &result);
     virtual void runProgram(Activity *activity, RexxObject **arguments, size_t argCount, ProtectedObject &result);

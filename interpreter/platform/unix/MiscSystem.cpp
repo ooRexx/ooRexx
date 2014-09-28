@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -53,7 +53,6 @@
 
 #include "RexxCore.h"
 #include "StringClass.hpp"
-// #include "RexxNativeAPI.h"                      /*  THUTHUREXX native interface*/
 #include "DirectoryClass.hpp"
 #include "Activity.hpp"
 #include "RexxActivation.hpp"
@@ -108,25 +107,13 @@ void SystemInterpreter::validateAddressName(RexxString *name )
 }
 
 
-RexxString * SystemInterpreter::getSourceString(RexxString * callType, RexxString * programName )
-/******************************************************************************/
-/* Function:  Produce a system specific source string                         */
-/******************************************************************************/
+/**
+ * Return the platform name used in Parse Source.
+ *
+ * @return The string name of the platform we're building for.
+ */
+const char *SystemInterpreter::getPlatformName()
 {
-    RexxString * source_string;          /* final source string               */
-    char       * outPtr;
-    source_string = raw_string(1+sizeof(ORX_SYS_STR)+callType->getLength()+programName->getLength());
-    outPtr = source_string->getWritableData();  /* point to result Data.             */
-
-    strcpy(outPtr, ORX_SYS_STR);          /* copy the system name              */
-    outPtr +=sizeof(ORX_SYS_STR) - 1;     /* step past the name                */
-    *outPtr++ = ' ';                     /* put a blank between               */
-                                         /* copy the call type                */
-    memcpy(outPtr, callType->getStringData(), callType->getLength());
-    outPtr += callType->getLength();     /* step over the call type           */
-    *outPtr++ = ' ';                     /* put a blank between               */
-                                         /* copy the system name              */
-    memcpy(outPtr, programName->getStringData(), programName->getLength());
-    return source_string;                /* return the source string          */
+    return ORX_SYS_STR;
 }
 

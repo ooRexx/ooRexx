@@ -4016,7 +4016,30 @@ StringTable *RexxActivation::getLabels()
  */
 RexxString *RexxActivation::sourceString()
 {
-    return SystemInterpreter::getSourceString(settings.calltype, code->getProgramName());
+    // if this is an interpret, have the parent context handle this.
+    if (isInterpret())
+    {
+        return parent->sourceString();
+    }
+
+    // first token is a platform name
+    const char *platform = SystemInterpreter::getPlatformName();
+
+    RexxString *programName = code->getProgramName();
+
+    // get a raw string we can build this into
+    RexxString *sourceString = raw_string(strlen(platform) + settings.calltype->getLength() + programName->getLength() + 2);
+    RexxString::StringBuilder builder(sourceString);
+
+    builder.append(platform);
+    builder.append(' ');
+    builder.append(settings.calltype);
+    builder.append(' ');
+    builder.append(programName);
+
+    return sourceString;
+
+    // build this here.
 }
 
 

@@ -94,7 +94,7 @@ public:
     static InterpreterInstance *createInterpreterInstance(RexxOption *options);
     static inline InterpreterInstance *createInterpreterInstance() { return createInterpreterInstance(NULL); }
     static bool terminateInterpreterInstance(InterpreterInstance *instance);
-    static RexxString *getVersionNumber();
+    static RexxString *getVersionString();
     static void initLocal();
     static size_t getInterpreterVersion();
     static size_t getLanguageLevel();
@@ -136,7 +136,7 @@ public:
     static RexxString *getCurrentQueue();
 
     static RexxObject *localServer;         // local environment initialization server
-
+    static const char *languageLevel;       // the language level of this interpreter
 
 protected:
     static SysMutex  resourceLock;   // use to lock resources accessed outside of kernel global lock

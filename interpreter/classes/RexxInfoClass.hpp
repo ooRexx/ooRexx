@@ -35,78 +35,69 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/*********************************************************************/
-/*                                                                   */
-/*   Function:  Miscellaneous system specific routines               */
-/*                                                                   */
-/*********************************************************************/
-#include "RexxCore.h"
-#include "StringClass.hpp"
-#include <signal.h>
-#include "SystemInterpreter.hpp"
-#include "ActivityManager.hpp"
+/******************************************************************************/
+/* REXX Kernel                                        RexxInfo.hpp            */
+/*                                                                            */
+/* Information about the interpreter implementation                           */
+/*                                                                            */
+/******************************************************************************/
+#ifndef Included_RexxInfo
+#define Included_RexxInfo
+
+#include "ObjectClass.hpp"
+
+class PackageClass;
 
 
 /**
- * Return the platform name used in Parse Source.
- *
- * @return The string name of the platform we're building for.
+ * A class to information about the Rexx interpreter
+ * context.
  */
-const char *SystemInterpreter::getPlatformName()
+class RexxInfo : public RexxObject
 {
-    return "WindowsNT";
-}
+public:
+    void *operator new(size_t);
+    inline void  operator delete(void *) { ; }
 
-/**
- * Exception Filter used by Windows exception handling
- *
- * @param xCode  The exception code.
- *
- * @return We always pass on this.
- */
-int WinExceptionFilter( int xCode )
-{
-    return EXCEPTION_CONTINUE_SEARCH;
-}
+    RexxInfo() { }
+    inline RexxInfo(RESTORETYPE restoreType) { ; };
 
+    void initialize();
 
-// maximum environment name length
-const size_t MAX_ADDRESS_NAME_LENGTH = 250;
+    PackageClass *getPackage();
+    RexxObject *getDigits();
+    RexxObject *getFuzz();
+    RexxObject *getForm();
+    RexxObject *getInternalDigits();
+    RexxObject *getLanguageLevel();
+    RexxObject *getInterpreterVersion();
+    RexxObject *getInterpreterDate();
+    RexxObject *getPlatform();
+    RexxObject *getArchitecture();
+    RexxObject *getFileEndOfLine();
+    RexxObject *getPathSeparator();
+    RexxObject *getDirectorySeparator();
+    RexxObject *getCaseSensitiveFiles();
+    RexxObject *getMajorVersion();
+    RexxObject *getRelease();
+    RexxObject *getRevision();
 
+    RexxObject *copyRexx();
+    RexxObject *newRexx(RexxObject **args, size_t argc);
 
-/**
- * Validate an external address name.
- *
- * @param Name   The name to validate
- */
-void SystemInterpreter::validateAddressName(RexxString *name )
-{
-    // only the length of the name is a disqualifying consideration.
-    if (name->getLength() > MAX_ADDRESS_NAME_LENGTH)
-    {
-        reportException(Error_Environment_name_name, MAX_ADDRESS_NAME_LENGTH, name);
-    }
-}
+    static void createInstance();
+    static RexxClass *classInstance;   // singleton class instance
 
+ protected:
 
-/**
- * This was an undocumented API prior to 4.0, but is known to have been used by
- * some IBM applications. Therefore this was maintained solely for binary
- * compatibility.
- *
- * However, it is now also used to turn off processing Windows messages in a
- * special case situation.  See the SysSemaphore::waitHandle() comments for more
- * info. This is done on a per-thread basis, RexxSetProcessMessages() must be
- * invoked while executing on the proper thread.
- *
- * @return TRUE always.
- */
-BOOL APIENTRY RexxSetProcessMessages(BOOL turnOn)
-{
-    if ( ! turnOn )
-    {
-        SysSemaphore::setNoMessageLoop();
-    }
-    return TRUE;
-}
+    RexxString *endOfLine;             // the end of line string
+    RexxString *directorySeparator;    // the directory separator string
+    RexxString *pathSeparator;         // the path separator string
+    RexxString *interpreterVersion;    // the interpreter version level
+    RexxString *interpreterDate;       // the interpreter build date
+    RexxString *languageLevel;         // the language level string
+    RexxString *platformName;          // the platform string
+};
+
+#endif
 
