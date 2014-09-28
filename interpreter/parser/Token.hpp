@@ -319,6 +319,7 @@ typedef enum
     DIRECTIVE_LIBRARY,
     DIRECTIVE_CONSTANT,
     DIRECTIVE_RESOURCE,
+    DIRECTIVE_PACKAGE,
 } DirectiveKeyword;
 
 

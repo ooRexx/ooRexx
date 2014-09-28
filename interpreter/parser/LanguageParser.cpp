@@ -345,6 +345,7 @@ void LanguageParser::live(size_t liveMark)
     memory_mark(requires);
     memory_mark(libraries);
     memory_mark(resources);
+    memory_mark(packageInfo);
 }
 
 
@@ -390,6 +391,7 @@ void LanguageParser::liveGeneral(MarkReason reason)
     memory_mark_general(requires);
     memory_mark_general(libraries);
     memory_mark_general(resources);
+    memory_mark_general(packageInfo);
 }
 
 
@@ -638,6 +640,7 @@ void LanguageParser::initializeForDirectives()
     activeClass = OREF_NULL;
     unattachedMethods = new_string_table();
     resources = new_string_table();
+    packageInfo = new_string_table();
 }
 
 
@@ -1540,6 +1543,10 @@ void LanguageParser::resolveDependencies()
     if (!resources->isEmpty())
     {
         package->resources = resources;
+    }
+    if (!packageInfo->isEmpty())
+    {
+        package->packageInfo = packageInfo;
     }
 }
 

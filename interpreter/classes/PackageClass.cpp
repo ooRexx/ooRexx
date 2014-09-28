@@ -178,6 +178,7 @@ void PackageClass::live(size_t liveMark)
     memory_mark(requires);
     memory_mark(classes);
     memory_mark(resources);
+    memory_mark(packageInfo);
     memory_mark(loadedPackages);
     memory_mark(unattachedMethods);
     memory_mark(loadedPackages);
@@ -219,6 +220,7 @@ void PackageClass::liveGeneral(MarkReason reason)
     memory_mark_general(requires);
     memory_mark_general(classes);
     memory_mark_general(resources);
+    memory_mark_general(packageInfo);
     memory_mark_general(loadedPackages);
     memory_mark_general(unattachedMethods);
     memory_mark_general(loadedPackages);
@@ -255,6 +257,7 @@ void PackageClass::flatten (Envelope *envelope)
     flattenRef(requires);
     flattenRef(classes);
     flattenRef(resources);
+    flattenRef(packageInfo);
     flattenRef(loadedPackages);
     flattenRef(unattachedMethods);
     flattenRef(loadedPackages);
@@ -268,7 +271,60 @@ void PackageClass::flatten (Envelope *envelope)
 }
 
 
-// TODO:  This needs a copy() method!
+/**
+ * Override for a copy operation on a Package object.
+ *
+ * @return A new package object.
+ */
+RexxInternalObject *PackageClass::copy()
+{
+    // copy the base object
+    Protected<PackageClass> newObj = (PackageClass *)RexxObject::copy();
+    // copy the internal tables so that the copy and original object are not
+    // connected.
+    newObj->deepCopy();
+    return newObj;
+}
+
+
+/**
+ * Perform a deep copy on a Package object.
+ */
+void PackageClass::deepCopy()
+{
+    // copy each of the tables if we have an instance to copy.  We only
+    // need to copy the bits that are not mutable.
+    if (routines != OREF_NULL)
+    {
+        routines = (StringTable *)routines->copy();
+    }
+    if (publicRoutines != OREF_NULL)
+    {
+        publicRoutines = (StringTable *)publicRoutines->copy();
+    }
+    if (loadedPackages != OREF_NULL)
+    {
+        loadedPackages = (ArrayClass *)loadedPackages->copy();
+    }
+    if (installedPublicClasses != OREF_NULL)
+    {
+        installedPublicClasses = (StringTable *)installedPublicClasses->copy();
+    }
+    if (installedClasses != OREF_NULL)
+    {
+        installedClasses = (StringTable *)installedClasses->copy();
+    }
+    if (mergedPublicClasses != OREF_NULL)
+    {
+        mergedPublicClasses = (StringTable *)mergedPublicClasses->copy();
+    }
+    if (mergedPublicRoutines != OREF_NULL)
+    {
+        mergedPublicRoutines = (StringTable *)mergedPublicRoutines->copy();
+    }
+}
+
+
 
 
 /**
@@ -1318,6 +1374,27 @@ StringTable *PackageClass::getResourcesRexx()
     if (resourceDir != OREF_NULL)
     {
         return (StringTable *)resourceDir->copy();
+    }
+    else
+    {
+        return new_string_table();
+    }
+}
+
+
+/**
+ * Get all of the information encoded for this package.
+ *
+ * @return A directory of the defined package annotations
+ */
+StringTable *PackageClass::getInfoRexx()
+{
+    // we need to return a copy.  The source might necessarily have any of these,
+    // so we return an empty directory if it's not there.
+    StringTable *infoDir = getInfo();
+    if (infoDir != OREF_NULL)
+    {
+        return (StringTable *)infoDir->copy();
     }
     else
     {

@@ -1868,6 +1868,15 @@ $ Error_Invalid_expression_case_when_list
 $ Error_Logical_value_when
 756 Value of expression following WHEN keyword must be exactly "0" or "1"; found "&1"
 
+$ Error_Symbol_expected_package_attribute
+757 Symbol expected as ::PACKAGE attribute name; found "&1"
+
+$ Error_Symbol_or_string_package_attribute_bad_value
+758 Symbol or string expected as ::PACKAGE attribute value; found "&1"
+
+$ Error_Symbol_or_string_package_attribute_missing
+759 Symbol or string expected as ::PACKAGE attribute value.
+
 
 $ * -------------------------------------------------------------------------- */
 $ * --            ==================================================        -- */

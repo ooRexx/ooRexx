@@ -659,6 +659,9 @@
 #define Error_Logical_value_when_case_msg                            754
 #define Error_Invalid_expression_case_when_list_msg                  755
 #define Error_Logical_value_when_msg                                 756
+#define Error_Symbol_expected_package_attribute_msg                  757
+#define Error_Symbol_or_string_package_attribute_bad_value_msg       758
+#define Error_Symbol_or_string_package_attribute_missing_msg         759
 
 
 #endif

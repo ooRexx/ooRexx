@@ -965,6 +965,24 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Symbol_or_string_keyword</SymbolicName>
         <Text>String or symbol expected after <Sub position="1" name="keyword"/> keyword</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>19</Code>
+        <Subcode>923</Subcode>
+        <MessageNumber>758</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Symbol_or_string_package_attribute_bad_value</SymbolicName>
+        <Text>Symbol or string expected as ::PACKAGE attribute value; found <q><Sub position="1" name="name"/></q></Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>19</Code>
+        <Subcode>924</Subcode>
+        <MessageNumber>759</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Symbol_or_string_package_attribute_missing</SymbolicName>
+        <Text>Symbol or string expected as ::PACKAGE attribute value.</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>
@@ -1138,6 +1156,15 @@ special character (such as a parenthesis).
         <Severity>Warning</Severity>
         <SymbolicName>Error_Symbol_expected_LABEL</SymbolicName>
         <Text>Symbol expected after LABEL keyword</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>20</Code>
+        <Subcode>919</Subcode>
+        <MessageNumber>757</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Symbol_expected_package_attribute</SymbolicName>
+        <Text>Symbol expected as ::PACKAGE attribute name; found <q><Sub position="1" name="name"/></q></Text>
       </SubMessage>
     </Subcodes>
   </Message>

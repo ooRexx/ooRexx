@@ -70,9 +70,12 @@ public:
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(Envelope*);
 
+    virtual RexxInternalObject *copy();
+
     static void createInstance();
     static RexxClass *classInstance;
 
+    void          deepCopy();
     void          setup();
     void          extractNameInformation();
     bool          reconnect();
@@ -133,6 +136,7 @@ public:
     inline StringTable *getDefinedMethods() { install(); return unattachedMethods; }
     inline ArrayClass  *getPackages() { install(); return loadedPackages; }
     inline StringTable *getResources() { install(); return resources; }
+    inline StringTable *getInfo() { install(); return packageInfo; }
     inline void         setDigits(wholenumber_t d) { packageSettings.setDigits(d); }
     inline wholenumber_t getDigits() { return packageSettings.getDigits(); }
     inline void         setForm(bool f) { packageSettings.setForm(f); }
@@ -161,6 +165,7 @@ public:
            StringTable   *getImportedRoutinesRexx();
            StringTable   *getMethodsRexx();
            StringTable   *getResourcesRexx();
+           StringTable   *getInfoRexx();
            ArrayClass    *getImportedPackagesRexx();
            PackageClass  *loadPackageRexx(RexxString *name, ArrayClass *s);
            RexxObject    *addPackageRexx(PackageClass *package);
@@ -214,6 +219,7 @@ protected:
     StringTable *mergedPublicClasses;     // entire merged set of classes
                                           // all public required routines
     StringTable *mergedPublicRoutines;
+    StringTable *packageInfo;             // information defined on a ::PACKAGE directive
 
     bool         installRequired;         // indicates we need to install stuff later
 

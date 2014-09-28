@@ -682,6 +682,18 @@ special character (such as a parenthesis).
 <para>String or symbol expected after <emphasis role="italic">keyword</emphasis> keyword</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>923</term>
+<listitem>
+<para>Symbol or string expected as ::PACKAGE attribute value; found "<emphasis role="italic">name</emphasis>"</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>924</term>
+<listitem>
+<para>Symbol or string expected as ::PACKAGE attribute value.</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR20">
@@ -800,6 +812,12 @@ special character (such as a parenthesis).
 <term>918</term>
 <listitem>
 <para>Symbol expected after LABEL keyword</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>919</term>
+<listitem>
+<para>Symbol expected as ::PACKAGE attribute name; found "<emphasis role="italic">name</emphasis>"</para>
 </listitem>
 </varlistentry>
 </variablelist>

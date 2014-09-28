@@ -56,6 +56,7 @@ KeywordEntry RexxToken::directives[] =
     KeywordEntry("CONSTANT",    DIRECTIVE_CONSTANT),
     KeywordEntry("METHOD",      DIRECTIVE_METHOD),
     KeywordEntry("OPTIONS",     DIRECTIVE_OPTIONS),
+    KeywordEntry("PACKAGE",     DIRECTIVE_PACKAGE),
     KeywordEntry("REQUIRES",    DIRECTIVE_REQUIRES),
     KeywordEntry("RESOURCE",    DIRECTIVE_RESOURCE),
     KeywordEntry("ROUTINE",     DIRECTIVE_ROUTINE),

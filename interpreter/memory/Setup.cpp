@@ -1072,6 +1072,7 @@ StartClassDefinition(Package)
         AddMethod("ImportedClasses", PackageClass::getImportedClassesRexx, 0);
         AddMethod("DefinedMethods", PackageClass::getMethodsRexx, 0);
         AddMethod("Resources", PackageClass::getResourcesRexx, 0);
+        AddMethod("Info", PackageClass::getInfoRexx, 0);
         AddMethod("Routines", PackageClass::getRoutinesRexx, 0);
         AddMethod("PublicRoutines", PackageClass::getPublicRoutinesRexx, 0);
         AddMethod("ImportedRoutines", PackageClass::getImportedRoutinesRexx, 0);

@@ -308,10 +308,12 @@ class LanguageParser: public RexxInternalObject
     void        classDirective();
     void        attributeDirective();
     void        constantDirective();
+    void        packageDirective();
     void        optionsDirective();
     void        resourceDirective();
     void        addInstalledClass(RexxString *name, RexxClass *classObject, bool publicClass);
     void        addInstalledRoutine(RexxString *name, RoutineClass *routineObject, bool publicRoutine);
+    void        processPackageAnnotation(RexxToken *token);
 
     // methods to support directive parsing
     void        checkDirective(int errorCode);
@@ -455,6 +457,7 @@ protected:
     StringTable     *routines;           // routines defined by ::routine directives.
     StringTable     *publicRoutines;     // routines defined by ::routine directives.
     StringTable     *resources;          // resources defined by ::resource directives
+    StringTable     *packageInfo;        // package annotations from a ::package directive
     ArrayClass      *requires;           // list of ::requires directories, in order of appearance.
     ArrayClass      *libraries;          // libraries identified on a ::requires directive.
     ArrayClass      *classes;            // list of installed ::class directives.

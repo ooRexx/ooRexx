@@ -144,6 +144,8 @@
 #define Rexx_Error_Symbol_or_string_resource                    19920
 #define Rexx_Error_Symbol_or_string_resource_end                19921
 #define Rexx_Error_Symbol_or_string_keyword                     19922
+#define Rexx_Error_Symbol_or_string_package_attribute_bad_value 19923
+#define Rexx_Error_Symbol_or_string_package_attribute_missing   19924
 #define Rexx_Error_Symbol_expected                              20000
 #define Rexx_Error_Symbol_expected_user_defined                 20900
 #define Rexx_Error_Symbol_expected_drop                         20901
@@ -163,6 +165,7 @@
 #define Rexx_Error_Symbol_expected_directive                    20916
 #define Rexx_Error_Symbol_expected_colon                        20917
 #define Rexx_Error_Symbol_expected_LABEL                        20918
+#define Rexx_Error_Symbol_expected_package_attribute            20919
 #define Rexx_Error_Invalid_data                                 21000
 #define Rexx_Error_Invalid_data_user_defined                    21900
 #define Rexx_Error_Invalid_data_nop                             21901

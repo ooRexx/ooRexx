@@ -131,6 +131,11 @@ void LanguageParser::nextDirective()
             resourceDirective();
             break;
 
+        // create package annotations
+        case DIRECTIVE_PACKAGE:
+            packageDirective();
+            break;
+
         // an unknown directive
         default:
             syntaxError(Error_Translation_bad_directive);
@@ -1389,6 +1394,82 @@ void LanguageParser::constantDirective()
 
     // create the method pair and quit.
     createConstantGetterMethod(internalname, value);
+}
+
+
+/**
+ * Process a ::PACKAGE directive in a source file.
+ */
+void LanguageParser::packageDirective()
+{
+    RexxToken *token = nextReal();
+
+    // a ::PACKAGE directive need not specify anything, but if it
+    // does, everything is in the form of "symbol constant" pairs.
+    while (!token->isEndOfClause())
+    {
+        processPackageAnnotation(token);
+        token = nextReal();
+    }
+}
+
+
+/**
+ * Parse off a single name/value pair on a package attribute.
+ *
+ * @param token  The current token, which should be the name of an annotation.
+ */
+void LanguageParser::processPackageAnnotation(RexxToken *token)
+{
+    // the names must be a symbol
+    if (!token->isSymbol())
+    {
+        syntaxError(Error_Symbol_expected_package_attribute, token);
+    }
+
+    // get the expressed name and the name we use for the methods
+    RexxString *name = token->value();
+
+    // we only expect just a single value token here
+    token = nextReal();
+    RexxObject *value;
+
+    // the value omitted?  This is an error
+    if (token->isEndOfClause())
+    {
+        syntaxError(Error_Symbol_or_string_package_attribute_missing);
+    }
+    // not a symbol or literal...we have special checks for signed numbers
+    else if (!token->isSymbolOrLiteral())
+    {
+        // if not a "+" or "-" operator, this is an error
+        if (!token->isOperator() || (!token->isSubtype(OPERATOR_SUBTRACT, OPERATOR_PLUS)))
+        {
+            syntaxError(Error_Symbol_or_string_package_attribute_bad_value, token);
+        }
+        RexxToken *second = nextReal();
+        // this needs to be a constant symbol...we check for
+        // numeric below
+        if (!second->isSymbol() || !second->isSubtype(SYMBOL_CONSTANT))
+        {
+            syntaxError(Error_Symbol_or_string_package_attribute_bad_value, token);
+        }
+        // concat with the sign operator
+        value = token->value()->concat(second->value());
+        // and validate that this a valid number
+        if (value->numberString() == OREF_NULL)
+        {
+            syntaxError(Error_Symbol_or_string_package_attribute_bad_value, value);
+        }
+    }
+    else
+    {
+        // this will be some sort of literal value
+        value = token->value();
+    }
+
+    // add this to the package info list
+    packageInfo->put(value, name);
 }
 
 
