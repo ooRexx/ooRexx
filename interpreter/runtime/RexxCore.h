@@ -141,6 +141,7 @@ extern MemoryObject memoryObject;
 #define TheBufferClass BufferClass::classInstance
 #define TheWeakReferenceClass WeakReference::classInstance
 #define TheStackFrameClass StackFrameClass::classInstance
+#define TheRexxInfoClass RexxInfo::classInstance
 
 // shorthand access to some important objects.
 #define TheEnvironment memoryObject.environment

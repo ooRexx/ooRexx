@@ -47,6 +47,7 @@
 #include "SysFileSystem.hpp"
 #include "MethodArguments.hpp"
 #include "Interpreter.hpp"
+#include "SystemInterpreter.hpp"
 
 RexxClass *RexxInfo::classInstance = OREF_NULL;   // singleton class instance
 
@@ -316,7 +317,7 @@ RexxObject *RexxInfo::getRevision()
  */
 RexxString *RexxInfo::getInterpreterDate()
 {
-    return interpreterDate();
+    return interpreterDate;
 }
 
 

@@ -482,6 +482,7 @@ void AbstractCode::run(Activity *activity, MethodClass *method, RexxObject *rece
 #include "ActivityManager.hpp"
 #include "SetClass.hpp"
 #include "BagClass.hpp"
+#include "RexxInfoClass.hpp"
 
 // start of the exported methods table.  Any method used in Setup.cpp must also
 // be included in this table here so that methods can recover the pointer
@@ -1037,6 +1038,25 @@ CPPM(StackFrameClass::getType),
 CPPM(StackFrameClass::getTarget),
 CPPM(StackFrameClass::getArguments),
 CPPM(StackFrameClass::newRexx),
+
+CPPM(RexxInfo::newRexx),
+CPPM(RexxInfo::copyRexx),
+CPPM(RexxInfo::getPackage),
+CPPM(RexxInfo::getDigits),
+CPPM(RexxInfo::getInternalDigits),
+CPPM(RexxInfo::getForm),
+CPPM(RexxInfo::getFuzz),
+CPPM(RexxInfo::getLanguageLevel),
+CPPM(RexxInfo::getInterpreterVersion),
+CPPM(RexxInfo::getInterpreterDate),
+CPPM(RexxInfo::getPlatform),
+CPPM(RexxInfo::getArchitecture),
+CPPM(RexxInfo::getFileEndOfLine),
+CPPM(RexxInfo::getPathSeparator),
+CPPM(RexxInfo::getCaseSensitiveFiles),
+CPPM(RexxInfo::getMajorVersion),
+CPPM(RexxInfo::getRelease),
+CPPM(RexxInfo::getRevision),
 // This NULL terminator is important to mark the end of the table.
 NULL
 };

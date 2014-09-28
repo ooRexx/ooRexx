@@ -62,6 +62,10 @@ public:
     RexxInfo() { }
     inline RexxInfo(RESTORETYPE restoreType) { ; };
 
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(Envelope *);
+
     void initialize();
 
     PackageClass *getPackage();
@@ -69,14 +73,14 @@ public:
     RexxObject *getFuzz();
     RexxObject *getForm();
     RexxObject *getInternalDigits();
-    RexxObject *getLanguageLevel();
-    RexxObject *getInterpreterVersion();
-    RexxObject *getInterpreterDate();
-    RexxObject *getPlatform();
+    RexxString *getLanguageLevel();
+    RexxString *getInterpreterVersion();
+    RexxString *getInterpreterDate();
+    RexxString *getPlatform();
     RexxObject *getArchitecture();
-    RexxObject *getFileEndOfLine();
-    RexxObject *getPathSeparator();
-    RexxObject *getDirectorySeparator();
+    RexxString *getFileEndOfLine();
+    RexxString *getPathSeparator();
+    RexxString *getDirectorySeparator();
     RexxObject *getCaseSensitiveFiles();
     RexxObject *getMajorVersion();
     RexxObject *getRelease();

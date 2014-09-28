@@ -98,6 +98,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="StackFrame" class="StackFrameClass" include="StackFrameClass.hpp"/>
 <Class id="Set" class="SetClass" include="SetClass.hpp"/>
 <Class id="Bag" class="BagClass" include="BagClass.hpp"/>
+<Class id="RexxInfo" class="RexxInfo" include="RexxInfoClass.hpp"/>
 </Exported>
 <Internal>
 <Class id="NilObject" class="RexxNilObject" include="ObjectClass.hpp"/>

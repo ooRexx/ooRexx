@@ -84,6 +84,7 @@
 #include "PackageClass.hpp"
 #include "ContextClass.hpp"
 #include "StackFrameClass.hpp"
+#include "RexxInfoClass.hpp"
 #include "LanguageParser.hpp"
 #include "SetClass.hpp"
 #include "BagClass.hpp"
@@ -292,6 +293,7 @@ void MemoryObject::createImage()
 
     WeakReference::createInstance();
     StackFrameClass::createInstance();
+    RexxInfo::createInstance();
 
     // build the common retrievers table.  This is needed before we can parse an
     // Rexx code.
@@ -1128,6 +1130,41 @@ EndClassDefinition(RexxContext);
 
 
     /***************************************************************************/
+    /*           RexxInfo                                                      */
+    /***************************************************************************/
+
+StartClassDefinition(RexxInfo)
+
+        AddClassMethod("New", RexxInfo::newRexx, A_COUNT);
+
+    CompleteClassMethodDefinitions();
+
+        AddMethod("Copy", RexxInfo::copyRexx, 0);
+        AddMethod("Package", RexxInfo::getPackage, 0);
+        AddMethod("Digits", RexxInfo::getDigits, 0);
+        AddMethod("InternalDigits", RexxInfo::getInternalDigits, 0);
+        AddMethod("Form", RexxInfo::getForm, 0);
+        AddMethod("Fuzz", RexxInfo::getFuzz, 0);
+        AddMethod("LanguageLevel", RexxInfo::getLanguageLevel, 0);
+        AddMethod("Version", RexxInfo::getInterpreterVersion, 0);
+        AddMethod("Date", RexxInfo::getInterpreterDate, 0);
+        AddMethod("Platform", RexxInfo::getPlatform, 0);
+        AddMethod("Architecture", RexxInfo::getArchitecture, 0);
+        AddMethod("EndOfLine", RexxInfo::getFileEndOfLine, 0);
+        AddMethod("PathSeparator", RexxInfo::getPathSeparator, 0);
+        AddMethod("CaseSensitiveFiles", RexxInfo::getCaseSensitiveFiles, 0);
+        AddMethod("MajorVersion", RexxInfo::getMajorVersion, 0);
+        AddMethod("Release", RexxInfo::getRelease, 0);
+        AddMethod("Revision", RexxInfo::getRevision, 0);
+
+    CompleteMethodDefinitions();
+
+    CompleteClassDefinition(RexxInfo);
+
+EndSpecialClassDefinition(RexxInfo);
+
+
+    /***************************************************************************/
     /*           STEM                                                          */
     /***************************************************************************/
 
@@ -1484,6 +1521,15 @@ EndClassDefinition(StackFrame);
     addToEnvironment("NIL" ,TheNilObject);
     addToEnvironment("FALSE", TheFalseObject);
     addToEnvironment("TRUE", TheTrueObject);
+
+    // create and add a RexxInfo object to the environment
+    RexxInfo *info = new RexxInfo;
+    addToEnvironment("REXXINFO", info);
+    // now create the cached objects in the info object.
+    info->initialize();
+    // and add the ENDOFLINE entry using the RexxInfo value
+    addToEnvironment("ENDOFLINE", info->getFileEndOfLine());
+
 
     // set up the kernel directory
     addToSystem("INTEGER", TheIntegerClass);

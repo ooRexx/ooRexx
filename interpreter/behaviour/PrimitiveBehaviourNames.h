@@ -103,6 +103,8 @@
 #define TheSetClassBehaviour    (&RexxBehaviour::primitiveBehaviours[T_SetClass])
 #define TheBagBehaviour      (&RexxBehaviour::primitiveBehaviours[T_Bag])
 #define TheBagClassBehaviour    (&RexxBehaviour::primitiveBehaviours[T_BagClass])
+#define TheRexxInfoBehaviour      (&RexxBehaviour::primitiveBehaviours[T_RexxInfo])
+#define TheRexxInfoClassBehaviour    (&RexxBehaviour::primitiveBehaviours[T_RexxInfoClass])
 #define TheNilObjectBehaviour      (&RexxBehaviour::primitiveBehaviours[T_NilObject])
 #define TheBehaviourBehaviour      (&RexxBehaviour::primitiveBehaviours[T_Behaviour])
 #define TheMethodDictionaryBehaviour      (&RexxBehaviour::primitiveBehaviours[T_MethodDictionary])

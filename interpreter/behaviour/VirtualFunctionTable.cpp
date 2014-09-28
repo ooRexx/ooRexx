@@ -81,6 +81,7 @@
 #include "StackFrameClass.hpp"
 #include "SetClass.hpp"
 #include "BagClass.hpp"
+#include "RexxInfoClass.hpp"
 #include "RexxBehaviour.hpp"
 #include "MethodDictionary.hpp"
 #include "LibraryPackage.hpp"
@@ -352,6 +353,12 @@ void MemoryObject::buildVirtualFunctionTable()
    
    objectPtr = ::new (objectLoc) RexxClass(RESTOREIMAGE);
    virtualFunctionTable[T_BagClass] = getVftPointer(objectLoc);
+   
+   objectPtr = ::new (objectLoc) RexxInfo(RESTOREIMAGE);
+   virtualFunctionTable[T_RexxInfo] = getVftPointer(objectLoc);
+   
+   objectPtr = ::new (objectLoc) RexxClass(RESTOREIMAGE);
+   virtualFunctionTable[T_RexxInfoClass] = getVftPointer(objectLoc);
    
    objectPtr = ::new (objectLoc) RexxNilObject(RESTOREIMAGE);
    virtualFunctionTable[T_NilObject] = getVftPointer(objectLoc);

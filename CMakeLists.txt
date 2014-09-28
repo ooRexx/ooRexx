@@ -522,6 +522,7 @@ set (classes_sources ${build_classes_dir}/ArrayClass.cpp
             ${build_classes_dir}/PointerClass.cpp
             ${build_classes_dir}/QueueClass.cpp
             ${build_classes_dir}/RelationClass.cpp
+            ${build_classes_dir}/RexxInfoClass.cpp
             ${build_classes_dir}/RoutineClass.cpp
             ${build_classes_dir}/RexxQueueMethods.cpp
             ${build_classes_dir}/SetClass.cpp

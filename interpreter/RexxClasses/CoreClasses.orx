@@ -49,6 +49,7 @@ rexxPackage~addClass('LOCALSERVER', .LocalServer)
 .environment~objectname = "The Environment Directory"
 rexxPackage~objectname = "The REXX Package"
 
+
 -- add all of the public classes to .environment and to the
 -- REXX package
 publicClasses = .context~package~publicClasses
