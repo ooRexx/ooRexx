@@ -768,7 +768,7 @@ RexxToken *LanguageParser::sourceNextToken(RexxToken *previous )
         // hit the end of the file while scanning for the next token?  Return nothing
         if (tokenClass == CLAUSE_EOF)
         {
-            return OREF_NULL;
+            return clause->newToken(TOKEN_EOC, CLAUSEEND_EOF, location);
         }
 
         // we hit the end of line on the clause

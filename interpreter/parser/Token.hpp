@@ -550,6 +550,7 @@ class RexxToken : public RexxInternalObject
     inline bool       isLeftBracket() { return classId == TOKEN_SQLEFT; }
     inline bool       isRightBracket() { return classId == TOKEN_SQRIGHT; }
     inline bool       isEndOfClause() { return classId == TOKEN_EOC; }
+    inline bool       isEndOfFile() { return isEndOfClause() && isSubtype(CLAUSEEND_EOF); }
     inline bool       isBlankSignificant() { return (classId == TOKEN_SYMBOL || classId == TOKEN_LITERAL ||
          classId == TOKEN_RIGHT || classId == TOKEN_SQRIGHT); }
     inline bool       isMessageOperator() { return classId == TOKEN_TILDE || classId == TOKEN_DTILDE || classId == TOKEN_SQLEFT; }

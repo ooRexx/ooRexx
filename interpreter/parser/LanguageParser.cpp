@@ -905,7 +905,7 @@ bool LanguageParser::nextClause()
             token = sourceNextToken(OREF_NULL);
             // OREF_NULL indicates we've hit the end of the source.  Mark us as
             // finished and return
-            if (token == OREF_NULL)
+            if (token->isEndOfFile())
             {
                 flags.set(noClause);
                 return false;
