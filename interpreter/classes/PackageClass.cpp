@@ -59,6 +59,7 @@
 #include "RequiresDirective.hpp"
 #include "ClassDirective.hpp"
 #include "GlobalNames.hpp"
+#include "LanguageParser.hpp"
 
 #include <stdio.h>
 
@@ -146,9 +147,12 @@ PackageClass *PackageClass::newRexx(RexxObject **init_args, size_t argCount)
     }
     else
     {
-        // add this to the instance context
+        // We're just creating a package directly from source.  We always create this
+        // without adding to the loaded packages.
         ArrayClass *sourceArray = arrayArgument(programSource, "source");
-        package = instance->loadRequires(activity, nameString, sourceArray);
+        package = LanguageParser::createPackage(nameString, sourceArray);
+        // make sure the prolog is run
+        package->runProlog(activity);
     }
 
     // handle Rexx class completion
