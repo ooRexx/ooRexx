@@ -199,7 +199,7 @@ void RexxInstructionCall::execute(RexxActivation *context, ExpressionStack *stac
     // an external call...this is handled elsewhere.
     else
     {
-        context->externalCall(targetName, stack->arguments(argumentCount), argumentCount, GlobalNames::ROUTINE, result);
+        context->externalCall(targetName, stack->arguments(argumentCount), argumentCount, GlobalNames::SUBROUTINE, result);
     }
 
     // did we get a result returned?  We need to either set or drop
@@ -353,7 +353,7 @@ void RexxInstructionDynamicCall::execute(RexxActivation *context, ExpressionStac
         // an external call...this is handled elsewhere.
         else
         {
-            context->externalCall(targetName, stack->arguments(argumentCount), argumentCount, GlobalNames::ROUTINE, result);
+            context->externalCall(targetName, stack->arguments(argumentCount), argumentCount, GlobalNames::SUBROUTINE, result);
         }
     }
 
@@ -515,7 +515,7 @@ void RexxInstructionCallOn::trap(RexxActivation *context, DirectoryClass  *condi
     // this is an external call.
     else
     {
-        context->externalCall(targetName, NULL, 0, GlobalNames::ROUTINE, result);
+        context->externalCall(targetName, NULL, 0, GlobalNames::SUBROUTINE, result);
     }
 
     // NOTE:  Any result object is ignored for a CALL ON trap
