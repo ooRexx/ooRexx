@@ -128,7 +128,6 @@ void RequiresDirective::flatten(Envelope *envelope)
  */
 void RequiresDirective::install(RexxActivation *context)
 {
-
     // TODO:  Need to sort out how the label is handled at load time
     context->loadRequires(name, this);
 }

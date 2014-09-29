@@ -58,6 +58,7 @@
 #include "LibraryDirective.hpp"
 #include "RequiresDirective.hpp"
 #include "ClassDirective.hpp"
+#include "GlobalNames.hpp"
 
 #include <stdio.h>
 
@@ -1651,3 +1652,35 @@ RexxObject *PackageClass::traceRexx()
 {
     return getTrace();
 }
+
+
+/**
+ * Install this package, including running of the prolog
+ * portion of the package if required.
+ *
+ * @param activity The activity we're running on
+ */
+void PackageClass::runProlog(Activity *activity)
+{
+    // if the prolog is enabled, run the prolog now
+    if (isPrologEnabled())
+    {
+        ProtectedObject dummy;
+
+        // make sure we add a reference to the circular reference stack
+        activity->addRunningRequires(getProgramName());
+        // if we have initcode, then by definition, the leading section has been created as
+        // a routine.
+        ((RoutineClass *)mainExecutable)->call(activity, getProgramName(), NULL, 0, GlobalNames::REQUIRES, OREF_NULL, EXTERNALCALL, dummy);
+        // No longer installing routine.
+        activity->removeRunningRequires(getProgramName());
+    }
+    // no prolog, but we still need to perform the installation process.
+    else
+    {
+        install();
+    }
+}
+
+
+

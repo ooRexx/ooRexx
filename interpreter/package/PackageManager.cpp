@@ -695,9 +695,9 @@ bool PackageManager::callNativeRoutine(Activity *activity, RexxString *name,
  *
  * @return The package routine (also returned in the result protected object).
  */
-RoutineClass *PackageManager::loadRequires(Activity *activity, RexxString *shortName, RexxString *resolvedName, ProtectedObject &result)
+PackageClass *PackageManager::loadRequires(Activity *activity, RexxString *shortName, RexxString *resolvedName, Protected<PackageClass> &package)
 {
-    result = OREF_NULL;
+    package = (PackageClass *)OREF_NULL;
 
     SecurityManager *manager = activity->getEffectiveSecurityManager();
     RexxObject *securityManager = OREF_NULL;
@@ -715,8 +715,8 @@ RoutineClass *PackageManager::loadRequires(Activity *activity, RexxString *short
     // macro space, it's possible this will be loaded under the simple name.  We'll need to check
     // table again using the fully resolved name afterward.
 
-    RoutineClass *package = checkRequiresCache(shortName, result);
-    if (package != OREF_NULL)
+    package = checkRequiresCache(shortName, package);
+    if (!package.isNull())
     {
         return package;
     }
@@ -729,7 +729,7 @@ RoutineClass *PackageManager::loadRequires(Activity *activity, RexxString *short
     bool checkMacroSpace = RexxQueryMacro(shortName->getStringData(), &macroPosition) == 0;
     if (checkMacroSpace && (macroPosition == RXMACRO_SEARCH_BEFORE))
     {
-        return getMacroSpaceRequires(activity, shortName, result, securityManager);
+        return getMacroSpaceRequires(activity, shortName, package, securityManager);
     }
 
     // it's possible we don't have a file version of this
@@ -745,20 +745,20 @@ RoutineClass *PackageManager::loadRequires(Activity *activity, RexxString *short
 
 
         // now check again using the longer name
-        package = checkRequiresCache(resolvedName, result);
-        if (package != OREF_NULL)
+        package = checkRequiresCache(resolvedName, package);
+        if (!package.isNull())
         {
             return package;
         }
 
         // load the file version of this.
-        return getRequiresFile(activity, resolvedName, securityManager, result);
+        return getRequiresFile(activity, resolvedName, securityManager, package);
     }
 
     // do the macrospace after checks
     if (checkMacroSpace)
     {
-        return getMacroSpaceRequires(activity, shortName, result, securityManager);
+        return getMacroSpaceRequires(activity, shortName, package, securityManager);
     }
 
     // nothing to return
@@ -777,26 +777,22 @@ RoutineClass *PackageManager::loadRequires(Activity *activity, RexxString *short
  *
  * @return The located ::REQUIRES file.
  */
-RoutineClass *PackageManager::getMacroSpaceRequires(Activity *activity, RexxString *name, ProtectedObject &result, RexxObject *securityManager)
+PackageClass *PackageManager::getMacroSpaceRequires(Activity *activity, RexxString *name, Protected<PackageClass> &package, RexxObject *securityManager)
 {
     // make sure we're not stuck in a circular reference
     activity->checkRequires(name);
     // unflatten the method and protect it
     RoutineClass *code = RexxActivation::getMacroCode(name);
-    result = code;
+    package = code->getPackage();
 
     if (securityManager == OREF_NULL)
     {
-        code->setSecurityManager(securityManager);
+        package->setSecurityManager(securityManager);
     }
-    // we place the code in the package table so we have
-    // access to it to run the prologue code in other instances
-    // We also add this before running the prolog in case another
-    // thread tries to load the same thing.
-    WeakReference *ref = new WeakReference(code);
-    loadedRequires->put(ref, name);
 
-    return code;
+    // add this to our cache
+    addToRequiresCache(name, package);
+    return package;
 }
 
 
@@ -807,52 +803,42 @@ RoutineClass *PackageManager::getMacroSpaceRequires(Activity *activity, RexxStri
  * @param name     The fully resolved file name.
  * @param result   The return routine object.
  *
- * @return The return Routine instance.
+ * @return The loaded Package instance.
  */
-RoutineClass *PackageManager::getRequiresFile(Activity *activity, RexxString *name, RexxObject *securityManager, ProtectedObject &result)
+PackageClass *PackageManager::getRequiresFile(Activity *activity, RexxString *name, RexxObject *securityManager, Protected<PackageClass> &package)
 {
     // make sure we're not stuck in a circular reference
     activity->checkRequires(name);
     // try to load this from a previously compiled source file or
     // translate it a new if not.
-    RoutineClass *code = LanguageParser::createProgramFromFile(name);
-    result = code;   // we need to protect this until things are fully resolved.
+    package = LanguageParser::createPackage(name);
 
     if (securityManager == OREF_NULL)
     {
-        code->setSecurityManager(securityManager);
+        package->setSecurityManager(securityManager);
     }
-    return code;
+
+    // cache this instance
+    addToRequiresCache(name, package);
+    return package;
 }
 
 
 /**
  * Loade a requires file from an array source.  NOTE:  This is
- * not cached like the other requires files
+ * not cached like the other requires files, nor is it loaded
+ * from the cache.
  *
  * @param activity The current activity.
- * @param name     The fully resolved file name.
- * @param result   The return routine object.
+ * @param name     The package name
+ * @param result   The returned package object.
  *
- * @return The return Routine instance.
+ * @return The returned package instance.
  */
-RoutineClass *PackageManager::loadRequires(Activity *activity, RexxString *name, ArrayClass *data, ProtectedObject &result)
+PackageClass *PackageManager::loadRequires(Activity *activity, RexxString *name, ArrayClass *data, Protected<PackageClass> &package)
 {
-    // first check this using the specified name.
-    RoutineClass *code = checkRequiresCache(name, result);
-    if (code == OREF_NULL)
-    {
-        code = LanguageParser::createProgram(name, data);
-        result = code;
-
-        // we place the code in the package table so we have
-        // access to it to run the prologue code in other instances
-        // We also add this before running the prolog in case another
-        // thread tries to load the same thing.
-        WeakReference *ref = new WeakReference(code);
-        loadedRequires->put(ref, name);
-    }
-    return code;
+    package = LanguageParser::createPackage(name, data);
+    return package;
 }
 
 
@@ -864,29 +850,24 @@ RoutineClass *PackageManager::loadRequires(Activity *activity, RexxString *name,
  * @param name     The fully resolved file name.
  * @param result   The return routine object.
  *
- * @return The return Routine instance.
+ * @return The returned package instance.
  */
-RoutineClass *PackageManager::loadRequires(Activity *activity, RexxString *name, const char *data, size_t length, ProtectedObject &result)
+PackageClass *PackageManager::loadRequires(Activity *activity, RexxString *name, const char *data, size_t length, Protected<PackageClass> &package)
 {
     // first check this using the specified name.
-    RoutineClass *resolved = checkRequiresCache(name, result);
-    if (resolved != OREF_NULL)
+    package = checkRequiresCache(name, package);
+    if (!package.isNull())
     {
-        return resolved;
+        return package;
     }
 
     Protected<BufferClass> buffer = new_buffer(data, length);
 
-    RoutineClass *code = LanguageParser::createProgram(name, buffer);
-    result = code;
+    package = LanguageParser::createPackage(name, buffer);
 
-    // we place the code in the package table so we have
-    // access to it to run the prologue code in other instances
-    // We also add this before running the prolog in case another
-    // thread tries to load the same thing.
-    WeakReference *ref = new WeakReference(code);
-    loadedRequires->put(ref, name);
-    return code;
+    // cache the package instance
+    addToRequiresCache(name, package);
+    return package;
 }
 
 
@@ -897,7 +878,7 @@ RoutineClass *PackageManager::loadRequires(Activity *activity, RexxString *name,
  *
  * @return The PackageClass instance, if any.
  */
-RoutineClass *PackageManager::checkRequiresCache(RexxString *name, ProtectedObject &result)
+PackageClass *PackageManager::checkRequiresCache(RexxString *name, Protected<PackageClass> &package)
 {
     // first check this using the specified name.  Since we need to perform checks in the
     // macro space, it's possible this will be loaded under the simple name.  We'll need to check
@@ -905,16 +886,32 @@ RoutineClass *PackageManager::checkRequiresCache(RexxString *name, ProtectedObje
     WeakReference *requiresRef = (WeakReference *)loadedRequires->get(name);
     if (requiresRef != OREF_NULL)
     {
-        RoutineClass *resolved = (RoutineClass *)requiresRef->get();
-        if (resolved != OREF_NULL)
+        package = (PackageClass *)requiresRef->get();
+        if (!package.isNull())
         {
-            result = resolved;
-            return resolved;
+            return package;
         }
         // this was garbage collected, remove it from the table
         loadedRequires->remove(name);
     }
     return OREF_NULL;
+}
+
+
+/**
+ * Add a package to the requires cache
+ *
+ * @param name    The name of the package.
+ * @param package The package we're caching
+ */
+void PackageManager::addToRequiresCache(RexxString *name, PackageClass *package)
+{
+    // we place the code in the package table so we have
+    // access to it to run the prologue code in other instances
+    // We also add this before running the prolog in case another
+    // thread tries to load the same thing.
+    WeakReference *ref = new WeakReference(package);
+    loadedRequires->put(ref, name);
 }
 
 

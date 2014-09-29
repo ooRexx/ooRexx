@@ -51,6 +51,7 @@
 class ProgramSource;
 class RexxCode;
 class RoutineClass;
+class Activity;
 
 
 /**
@@ -151,6 +152,9 @@ public:
     inline LanguageLevel getLanguageLevel() { return requiredLanguageLevel; }
     inline void enableNovalueError() { packageSettings.enableNovalueError(); }
     inline void disableNovalueError() { packageSettings.disableNovalueError(); }
+    inline void enableProlog() { packageSettings.enableProlog(); }
+    inline void disableProlog() { packageSettings.disableProlog(); }
+    inline bool isPrologEnabled() { return packageSettings.isPrologEnabled() && initCode != OREF_NULL; }
 
            RexxString    *getTrace();
            void           detachSource();
@@ -185,6 +189,7 @@ public:
            {
                return extractSource();
            }
+           void           runProlog(Activity *);
 
 protected:
 

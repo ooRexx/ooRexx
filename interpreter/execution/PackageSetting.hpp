@@ -57,6 +57,7 @@
 typedef enum
 {
     NovalueError,
+    NoProlog,
 } PackageFlags;
 
 
@@ -90,6 +91,9 @@ class PackageSetting
     inline bool   isNovalueErrorEnabled() { return packageOptions[NovalueError]; }
     inline void   enableNovalueError() { packageOptions[NovalueError] = true; }
     inline void   disableNovalueError() { packageOptions[NovalueError] = false; }
+    inline void   enableProlog() { packageOptions[NoProlog] = false; }
+    inline void   disableProlog() { packageOptions[NoProlog] = true; }
+    inline bool   isPrologEnabled() { return !packageOptions[NoProlog]; }
 
     NumericSettings numericSettings;       // the package numeric settings
     TraceSetting    traceSettings;         // the package trace setting

@@ -415,6 +415,9 @@ class LanguageParser: public RexxInternalObject
     static RoutineClass *processInstore(PRXSTRING instore, RexxString * name);
     static RexxCode *translateInterpret(RexxString *interpretString, StringTable *labels, size_t lineNumber);
     static RoutineClass *createProgramFromFile(RexxString *filename);
+    static PackageClass *createPackage(RexxString *filename);
+    static PackageClass *createPackage(RexxString *name, ArrayClass *source);
+    static PackageClass *createPackage(RexxString *name, BufferClass *source);
 
     // the table of builtin function stubs.
     static pbuiltin builtinTable[];

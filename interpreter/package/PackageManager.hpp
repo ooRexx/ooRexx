@@ -46,10 +46,10 @@
 
 #include "RexxCore.h"
 #include "LibraryPackage.hpp"
+#include "ProtectedObject.hpp"
 
 class BaseCode;
 class RoutineClass;
-class ProtectedObject;
 class ArrayClass;
 class Activity;
 class NativeMethod;
@@ -90,15 +90,16 @@ public:
     static bool        callNativeRoutine(Activity *activity, RexxString *name,
         RexxObject **arguments, size_t argcount, ProtectedObject &result);
 
-    static RoutineClass *loadRequires(Activity *activity, RexxString *shortName, RexxString *resolvedName, ProtectedObject &result);
-    static RoutineClass *getMacroSpaceRequires(Activity *activity, RexxString *name, ProtectedObject &result, RexxObject *securityManager);
-    static RoutineClass *getRequiresFile(Activity *activity, RexxString *name, RexxObject *securityManager, ProtectedObject &result);
-    static RoutineClass *loadRequires(Activity *activity, RexxString *name, ArrayClass *data, ProtectedObject &result);
-    static RoutineClass *loadRequires(Activity *activity, RexxString *name, const char *data, size_t length, ProtectedObject &result);
+    static PackageClass *loadRequires(Activity *activity, RexxString *shortName, RexxString *resolvedName, Protected<PackageClass> &package);
+    static PackageClass *getMacroSpaceRequires(Activity *activity, RexxString *name, Protected<PackageClass> &package, RexxObject *securityManager);
+    static PackageClass *getRequiresFile(Activity *activity, RexxString *name, RexxObject *securityManager, Protected<PackageClass> &result);
+    static PackageClass *loadRequires(Activity *activity, RexxString *name, ArrayClass *data, Protected<PackageClass> &result);
+    static PackageClass *loadRequires(Activity *activity, RexxString *name, const char *data, size_t length, Protected<PackageClass> &result);
 
 protected:
 
-    static RoutineClass *checkRequiresCache(RexxString *name, ProtectedObject &result);
+    static PackageClass *checkRequiresCache(RexxString *name, Protected<PackageClass> &package);
+    static void addToRequiresCache(RexxString *name, PackageClass *package);
 
     enum
     {

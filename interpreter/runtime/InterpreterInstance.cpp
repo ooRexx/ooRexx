@@ -858,25 +858,6 @@ void InterpreterInstance::addRequiresFile(RexxString *shortName, RexxString *ful
 
 
 /**
- * Do the initial run of a ::REQUIRES file.
- *
- * @param activity The current activity.
- * @param name     The name of the requires file.
- * @param code     The routine instance to run.
- */
-void InterpreterInstance::runRequires(Activity *activity, RexxString *name, RoutineClass *code)
-{
-    ProtectedObject dummy;
-
-    // make sure we reference the circular reference stack
-    activity->addRunningRequires(name);
-    code->call(activity, name, NULL, 0, dummy);
-    // No longer installing routine.
-    activity->removeRunningRequires(name);
-}
-
-
-/**
  * Load a ::requires file into this interpreter instance.
  *
  * @param activity  The current activity we're loading on.,
@@ -909,23 +890,21 @@ PackageClass *InterpreterInstance::loadRequires(Activity *activity, RexxString *
     }
 
     // add the package manager to load this
-    ProtectedObject p;
-    RoutineClass *requiresFile = PackageManager::loadRequires(activity, shortName, fullName, p);
+    Protected<PackageClass> p;
+    package = PackageManager::loadRequires(activity, shortName, fullName, p);
     // couldn't load this?  report the error
-    if (requiresFile == OREF_NULL)
+    if (package.isNull())
     {
         reportException(Error_Routine_not_found_requires, shortName);
     }
 
-    package = requiresFile->getPackage();
     // make sure we lock this package until we finish running the requires.
     GuardLock lock(activity, package, ThePackageClass);
     // add this to the instance cache too, under both the long
     // name and the fullName (if it was resolved)
     addRequiresFile(shortName, fullName, package);
     // for any requires file loaded to this instance, we run the prolog within the instance.
-    runRequires(activity, fullName != OREF_NULL ? fullName : shortName, requiresFile);
-
+    package->runProlog(activity);
     return package;
 }
 
@@ -949,15 +928,14 @@ PackageClass *InterpreterInstance::loadRequires(Activity *activity, RexxString *
     }
 
     // add the package manager to load this
-    ProtectedObject p;
-    RoutineClass *requiresFile = PackageManager::loadRequires(activity, shortName, source, p);
+    Protected<PackageClass> p;
+    package = PackageManager::loadRequires(activity, shortName, source, p);
     // any load failure is an error
-    if (requiresFile == OREF_NULL)
+    if (package == OREF_NULL)
     {
         reportException(Error_Routine_not_found_requires, shortName);
     }
 
-    package = requiresFile->getPackage();
     // make sure we lock this package until we finish running the requires.
     GuardLock lock(activity, package, ThePackageClass);
     // add this to the instance cache too, under both the long
@@ -965,7 +943,7 @@ PackageClass *InterpreterInstance::loadRequires(Activity *activity, RexxString *
     addRequiresFile(shortName, OREF_NULL, package);
 
     // for any requires file loaded to this instance, we run the prolog within the instance.
-    runRequires(activity, shortName, requiresFile);
+    package->runProlog(activity);
 
     return package;
 }
@@ -991,15 +969,14 @@ PackageClass *InterpreterInstance::loadRequires(Activity *activity, RexxString *
     }
 
     // add the package manager to load this
-    ProtectedObject p;
-    RoutineClass *requiresFile = PackageManager::loadRequires(activity, shortName, data, length, p);
+    Protected<PackageClass> p;
+    package = PackageManager::loadRequires(activity, shortName, data, length, p);
 
-    if (requiresFile == OREF_NULL)
+    if (package == OREF_NULL)
     {
         reportException(Error_Routine_not_found_requires, shortName);
     }
 
-    package = requiresFile->getPackage();
     // make sure we lock this package until we finish running the requires.
     GuardLock lock(activity, package, ThePackageClass);
     // add this to the instance cache too, under both the long
@@ -1007,7 +984,7 @@ PackageClass *InterpreterInstance::loadRequires(Activity *activity, RexxString *
     addRequiresFile(shortName, OREF_NULL, package);
 
     // for any requires file loaded to this instance, we run the prolog within the instance.
-    runRequires(activity, shortName, requiresFile);
+    package->runProlog(activity);
 
     return package;
 }

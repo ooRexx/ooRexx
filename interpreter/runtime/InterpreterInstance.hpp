@@ -117,7 +117,6 @@ public:
     PackageClass *loadRequires(Activity *activity, RexxString *shortName, ArrayClass *source);
     PackageClass *loadRequires(Activity *activity, RexxString *shortName, RexxString *fullName);
     PackageClass *loadRequires(Activity *activity, RexxString *shortName, const char *data, size_t length);
-    void          runRequires(Activity *activity, RexxString *name, RoutineClass *code);
     void          addRequiresFile(RexxString *shortName, RexxString *fullName, PackageClass *package);
     inline void   setupProgram(RexxActivation *activation)
     {

@@ -256,6 +256,83 @@ RoutineClass *LanguageParser::createProgram(RexxString *name)
 
 
 /**
+ * Retrieve a routine object from a file.  This will first attempt
+ * to restore a previously translated image, then will try to
+ * translate the source if that fails.
+ *
+ * @param filename The target file name.
+ *
+ * @return A resulting Routine object, if possible.
+ */
+RoutineClass *LanguageParser::createProgramFromFile(RexxString *filename)
+{
+    // load the file into a buffer
+    BufferClass *program_buffer = SystemInterpreter::readProgram(filename->getStringData());
+    // if this failed, report an error now.
+    if (program_buffer == OREF_NULL)
+    {
+        reportException(Error_Program_unreadable_name, filename);
+    }
+
+    // try to restore a flattened program first
+    RoutineClass *routine = RoutineClass::restore(filename, program_buffer);
+    if (routine != OREF_NULL)
+    {
+        return routine;
+    }
+
+    // process this from the source
+    return createProgram(filename, program_buffer);
+}
+
+
+/**
+ * Retrieve a package object from a file.  This will first
+ * attempt to restore a previously translated image, then will
+ * try to translate the source if that fails.
+ *
+ * @param filename The target file name.
+ *
+ * @return A resulting Routine object, if possible.
+ */
+PackageClass *LanguageParser::createPackage(RexxString *name, ArrayClass *source)
+{
+    // we just load this as a program object and return the associated package
+    return createProgram(name, source)->getPackage();
+}
+
+
+/**
+ * Retrieve a package object from a file.  This will first
+ * attempt to restore a previously translated image, then will
+ * try to translate the source if that fails.
+ *
+ * @param filename The target file name.
+ *
+ * @return A resulting Routine object, if possible.
+ */
+PackageClass *LanguageParser::createPackage(RexxString *name, BufferClass *source)
+{
+    // we just load this as a program object and return the associated package
+    return createProgram(name, source)->getPackage();
+}
+
+
+/**
+ * Create a package object from an array source.
+ *
+ * @param filename The package name
+ *
+ * @return A resulting Package object, if possible.
+ */
+PackageClass *LanguageParser::createPackage(RexxString *filename)
+{
+    // we just load this as a program object and return the associated package
+    return createProgramFromFile(filename)->getPackage();
+}
+
+
+/**
  * Translate a single string value for an interpret
  * instruction.
  *
@@ -557,9 +634,12 @@ void LanguageParser::initializeForParsing()
 {
     // create a package object that we'll be filling in.
     package = new PackageClass(name, source);
+    package->setup();
 
     // have the source object do any required initialization
     source->setup();
+    // the package has setup to perform as well
+    package->setup();
 
     // get the count of lines
     lineCount = source->getLineCount();
@@ -3825,35 +3905,4 @@ RoutineClass *LanguageParser::restoreFromMacroSpace(RexxString *name)
     // release the buffer memory
     SystemInterpreter::releaseResultMemory(buffer.strptr);
     return routine;
-}
-
-
-/**
- * Retrieve a routine object from a file.  This will first attempt
- * to restore a previously translated image, then will try to
- * translate the source if that fails.
- *
- * @param filename The target file name.
- *
- * @return A resulting Routine object, if possible.
- */
-RoutineClass *LanguageParser::createProgramFromFile(RexxString *filename)
-{
-    // load the file into a buffer
-    BufferClass *program_buffer = SystemInterpreter::readProgram(filename->getStringData());
-    // if this failed, report an error now.
-    if (program_buffer == OREF_NULL)
-    {
-        reportException(Error_Program_unreadable_name, filename);
-    }
-
-    // try to restore a flattened program first
-    RoutineClass *routine = RoutineClass::restore(filename, program_buffer);
-    if (routine != OREF_NULL)
-    {
-        return routine;
-    }
-
-    // process this from the source
-    return createProgram(filename, program_buffer);
 }

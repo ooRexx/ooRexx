@@ -905,6 +905,22 @@ void LanguageParser::optionsDirective()
                     break;
                 }
 
+                // ::OPTIONS NOPROLOG
+                case SUBDIRECTIVE_NOPROLOG:
+                {
+                    // this option is just the keyword...flip off the prolog in the package
+                    package->disableProlog();
+                    break;
+                }
+
+                // ::OPTIONS PROLOG
+                case SUBDIRECTIVE_PROLOG:
+                {
+                    // this option is just the keyword...flip on the prolog in the package
+                    package->enableProlog();
+                    break;
+                }
+
                 // invalid keyword
                 default:
                     syntaxError(Error_Invalid_subkeyword_options, token);
