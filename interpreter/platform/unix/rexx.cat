@@ -1797,7 +1797,7 @@ $ Error_Translation_constant_body
 732 Constant methods cannot have a method body
 
 $ Error_Translation_external_routine
-733 External routines cannot have a method body
+733 External routines cannot have a code body
 
 $ Error_Translation_abstract_attribute
 734 Abstract attributes cannot have a method body
@@ -1876,6 +1876,9 @@ $ Error_Symbol_or_string_package_attribute_bad_value
 
 $ Error_Symbol_or_string_package_attribute_missing
 759 Symbol or string expected as ::PACKAGE attribute value.
+
+$ Error_Symbol_or_string_directive_option
+760 String expected after &1 &2 keyword
 
 
 $ * -------------------------------------------------------------------------- */

@@ -694,6 +694,12 @@ special character (such as a parenthesis).
 <para>Symbol or string expected as ::PACKAGE attribute value.</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>925</term>
+<listitem>
+<para>String expected after <emphasis role="italic">directive</emphasis> <emphasis role="italic">keyword</emphasis> keyword</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR20">
@@ -3822,7 +3828,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>939</term>
 <listitem>
-<para>External routines cannot have a method body</para>
+<para>External routines cannot have a code body</para>
 </listitem>
 </varlistentry>
 <varlistentry>

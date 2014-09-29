@@ -1768,7 +1768,7 @@ void LanguageParser::routineDirective()
                 // this is a compound string descriptor, so it must be a literal
                 if (!token->isLiteral())
                 {
-                    syntaxError(Error_Symbol_or_string_requires, token);
+                    syntaxError(Error_Symbol_or_string_directive_option, new_string("::ROUTINE"), new_string("EXTERNAL"));
                 }
 
                 externalname = token->value();

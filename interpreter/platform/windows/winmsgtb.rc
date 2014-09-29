@@ -635,7 +635,7 @@ Error_Program_unreadable    "Failure during initialization"
    Error_Translation_external_method    "External methods cannot have a method body"
    Error_Translation_body_error    "Attribute methods without a SET or GET designation cannot have a method body"
    Error_Translation_constant_body    "Constant methods cannot have a method body"
-   Error_Translation_external_routine    "External routines cannot have a method body"
+   Error_Translation_external_routine    "External routines cannot have a code body"
    Error_Translation_abstract_attribute    "Abstract attributes cannot have a method body"
    Message_Translations_internal_code    "Interpreter code (no source available)"
    Message_Translations_sourceless_method_invocation    "Method &1 with scope ""&2"" in package ""&3"" (no source available)"
@@ -662,6 +662,7 @@ Error_Program_unreadable    "Failure during initialization"
    Error_Symbol_expected_package_attribute    "Symbol expected as ::PACKAGE attribute name; found ""&1"""
    Error_Symbol_or_string_package_attribute_bad_value    "Symbol or string expected as ::PACKAGE attribute value; found ""&1"""
    Error_Symbol_or_string_package_attribute_missing    "Symbol or string expected as ::PACKAGE attribute value."
+   Error_Symbol_or_string_directive_option    "String expected after &1 &2 keyword"
    
 END
 

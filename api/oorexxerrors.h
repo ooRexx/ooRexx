@@ -146,6 +146,7 @@
 #define Rexx_Error_Symbol_or_string_keyword                     19922
 #define Rexx_Error_Symbol_or_string_package_attribute_bad_value 19923
 #define Rexx_Error_Symbol_or_string_package_attribute_missing   19924
+#define Rexx_Error_Symbol_or_string_directive_option            19925
 #define Rexx_Error_Symbol_expected                              20000
 #define Rexx_Error_Symbol_expected_user_defined                 20900
 #define Rexx_Error_Symbol_expected_drop                         20901

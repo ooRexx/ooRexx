@@ -983,6 +983,15 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Symbol_or_string_package_attribute_missing</SymbolicName>
         <Text>Symbol or string expected as ::PACKAGE attribute value.</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>19</Code>
+        <Subcode>925</Subcode>
+        <MessageNumber>760</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Symbol_or_string_directive_option</SymbolicName>
+        <Text>String expected after <Sub position="1" name="directive"/> <Sub position="2" name="keyword"/> keyword</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>
@@ -5347,7 +5356,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Translation_external_routine</SymbolicName>
-        <Text>External routines cannot have a method body</Text>
+        <Text>External routines cannot have a code body</Text>
       </SubMessage>
       <SubMessage>
         <Code>99</Code>
