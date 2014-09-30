@@ -55,7 +55,7 @@
 #define OREF_NULL NULL
 
 // platform customizations
-#include "RexxPlatformDefinitions.h"
+#include "PlatformDefinitions.h"       // include platform definitions first
 
 // Object Reference Assignment
 // OrefSet handles reference assignment for situations where an

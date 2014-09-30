@@ -43,6 +43,10 @@
 #include <deque>
 #include "GlobalNames.hpp"
 
+// the error code definitions are need for any code that
+// issues error messages, so place these here.
+#include "RexxErrorCodes.h"
+
 class IdentityTable;
 class LiveStack;
 class RexxCode;

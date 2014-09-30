@@ -38,7 +38,7 @@
 /******************************************************************************/
 /* REXX Kernel                                                                */
 /*                                                                            */
-/* Languate translator defintions.                                            */
+/* Language translator defintions.                                            */
 /*                                                                            */
 /******************************************************************************/
 #ifndef Included_LanguageParser
@@ -54,6 +54,7 @@
 #include "RexxInstruction.hpp"
 #include "DoBlockComponents.hpp"
 #include "LanguageLevel.hpp"
+#include "RexxErrorCodes.h"
 
 class RexxInstruction;
 class RexxInstructionIf;
