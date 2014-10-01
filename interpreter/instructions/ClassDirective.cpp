@@ -48,6 +48,7 @@
 #include "ListClass.hpp"
 #include "RexxActivation.hpp"
 #include "MethodClass.hpp"
+#include "ExpressionClassResolver.hpp"
 
 
 /**
@@ -159,10 +160,10 @@ RexxClass *ClassDirective::install(PackageClass *package, RexxActivation *activa
     {
         // resolve the class.. This must be locatable in the
         // context of the package.
-        metaclass = package->findClass(metaclassName);
+        metaclass = metaclassName->lookup(package);
         if (metaclass == OREF_NULL)
         {
-            reportException(Error_Execution_nometaclass, metaclassName);
+            reportException(Error_Execution_nometaclass, metaclassName->getName());
         }
     }
 
@@ -170,10 +171,10 @@ RexxClass *ClassDirective::install(PackageClass *package, RexxActivation *activa
     if (subclassName != OREF_NULL)
     {
         // resolve the explicit subclass
-        subclass = package->findClass(subclassName);
+        subclass = subclassName->lookup(package);
         if (subclass == OREF_NULL)
         {
-            reportException(Error_Execution_noclass, subclassName);
+            reportException(Error_Execution_noclass, subclassName->getName());
         }
     }
 
@@ -205,11 +206,11 @@ RexxClass *ClassDirective::install(PackageClass *package, RexxActivation *activa
         {
             // get the next mixin class name and resolve...again, this
             // is required.
-            RexxString *inheritsName = (RexxString *)inheritsClasses->get(i);
-            RexxClass *mixin = package->findClass(inheritsName);
+            ClassResolver *inheritsResolver = (ClassResolver *)inheritsClasses->get(i);
+            RexxClass *mixin = inheritsResolver->lookup(package);
             if (mixin == OREF_NULL)
             {
-                reportException(Error_Execution_noclass, inheritsName);
+                reportException(Error_Execution_noclass, inheritsResolver->getName());
             }
 
             // inherit from the mixin
@@ -236,12 +237,14 @@ RexxClass *ClassDirective::install(PackageClass *package, RexxActivation *activa
  * @param classDirectives
  *               The global local classes list.
  */
-void ClassDirective::checkDependency(RexxString *name, StringTable *classDirectives)
+void ClassDirective::checkDependency(ClassResolver *classReference, StringTable *classDirectives)
 {
-    if (name != OREF_NULL)
+    if (classReference != OREF_NULL && !classReference->isQualified())
     {
+        RexxString *name = classReference->getName();
+
         // if this is in install?
-        if (classDirectives->entry(name) != OREF_NULL)
+        if (classDirectives->hasIndex(name))
         {
             if (dependencies == OREF_NULL)
             {
@@ -275,7 +278,7 @@ void ClassDirective::addDependencies(StringTable *classDirectives)
 
         for (size_t i = 1; i <= count; i++)
         {
-            RexxString *inheritsName = (RexxString *)inheritsClasses->get(i);
+            ClassResolver *inheritsName = (ClassResolver *)inheritsClasses->get(i);
             checkDependency(inheritsName, classDirectives);
         }
     }
@@ -319,7 +322,7 @@ void ClassDirective::removeDependency(RexxString *name)
  *
  * @param name   The name of the inherited class.
  */
-void ClassDirective::addInherits(RexxString *name)
+void ClassDirective::addInherits(ClassResolver *name)
 {
     if (inheritsClasses == OREF_NULL)
     {

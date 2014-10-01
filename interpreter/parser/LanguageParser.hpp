@@ -71,6 +71,7 @@ class ProgramSource;
 class RexxVariableBase;
 class RexxStemVariable;
 class TraceSetting;
+class ClassResolver;
 
 
 // handy defines for simplifying creation of instruction types.
@@ -142,7 +143,7 @@ class LanguageParser: public RexxInternalObject
     CharacterClass locateToken(unsigned int &, bool);
     RexxString *packHexLiteral(size_t, size_t);
     RexxString *packBinaryLiteral(size_t, size_t);
-    RexxToken  *getToken(int term, int error = 0);
+    RexxToken  *getToken(int term, RexxErrorCodes error = Error_None);
     inline unsigned int getChar() { return (unsigned char)(current[lineOffset]); }
     inline unsigned int getChar(size_t o) { return (unsigned char)(current[o]); }
     inline unsigned int nextChar() { return (unsigned char)(current[lineOffset++]); }
@@ -192,7 +193,7 @@ class LanguageParser: public RexxInternalObject
     inline bool clauseAvailable() { return !flags.test(noClause); }
     inline RexxToken  *nextToken() { return clause->next(); }
     inline RexxToken  *nextReal() { return clause->nextRealToken(); }
-    inline void        requiredEndOfClause(int error)
+    inline void        requiredEndOfClause(RexxErrorCodes error)
     {
         RexxToken *token = nextReal();
         if (!token->isEndOfClause())
@@ -205,7 +206,7 @@ class LanguageParser: public RexxInternalObject
         previousToken();
     }
 
-    inline RexxInternalObject *requiredLogicalExpression(int terminators, int error)
+    inline RexxInternalObject *requiredLogicalExpression(int terminators, RexxErrorCodes error)
     {
         RexxInternalObject *conditional = parseLogical(terminators);
         if (conditional == OREF_NULL)
@@ -215,7 +216,7 @@ class LanguageParser: public RexxInternalObject
         return conditional;
     }
 
-    inline RexxInternalObject *requiredExpression(int terminators, int error)
+    inline RexxInternalObject *requiredExpression(int terminators, RexxErrorCodes error)
     {
         RexxInternalObject *expression = parseExpression(terminators);
         if (expression == OREF_NULL)
@@ -315,9 +316,10 @@ class LanguageParser: public RexxInternalObject
     void        addInstalledClass(RexxString *name, RexxClass *classObject, bool publicClass);
     void        addInstalledRoutine(RexxString *name, RoutineClass *routineObject, bool publicRoutine);
     void        processPackageAnnotation(RexxToken *token);
+    ClassResolver *parseClassReference(RexxErrorCodes error);
 
     // methods to support directive parsing
-    void        checkDirective(int errorCode);
+    void        checkDirective(RexxErrorCodes errorCode);
     bool        hasBody();
     void        decodeExternalMethod(RexxString *methodName, RexxString *externalSpec, RexxString *&library, RexxString *&procedure);
     MethodClass *createNativeMethod(RexxString *name, RexxString *library, RexxString *procedure);
@@ -326,7 +328,7 @@ class LanguageParser: public RexxInternalObject
     void        createAttributeSetterMethod(RexxString *name, RexxVariableBase *retriever, bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod);
     void        createConstantGetterMethod(RexxString *name, RexxObject *value);
     void        createAbstractMethod(RexxString *name, bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod);
-    void        checkDuplicateMethod(RexxString *name, bool classMethod, int errorMsg);
+    void        checkDuplicateMethod(RexxString *name, bool classMethod, RexxErrorCodes errorMsg);
     void        addMethod(RexxString *name, MethodClass *method, bool classMethod);
     bool        isDuplicateClass(RexxString *name);
     bool        isDuplicateRoutine(RexxString *name);
@@ -348,37 +350,37 @@ class LanguageParser: public RexxInternalObject
     RexxInternalObject *parseVariableOrMessageTerm();
     RexxInternalObject *parseMessageSubterm(int);
     RexxInternalObject *parseSubTerm(int);
-    RexxInternalObject *parseLoopConditional(InstructionSubKeyword &, int);
+    RexxInternalObject *parseLoopConditional(InstructionSubKeyword &, RexxErrorCodes);
     RexxInternalObject *parseLogical(int terminators);
     inline void        pushOperator(RexxToken *operatorToken) { operators->push(operatorToken); };
     inline RexxToken  *popOperator() { return (RexxToken *)(operators->pull()); };
     inline RexxToken  *topOperator() { return (RexxToken *)(operators->peek()); };
     void        pushTerm(RexxInternalObject *);
     void        pushSubTerm(RexxInternalObject *);
-    RexxInternalObject *requiredTerm(RexxToken *token, int errorCode = Error_Invalid_expression_general);
+    RexxInternalObject *requiredTerm(RexxToken *token, RexxErrorCodes errorCode = Error_Invalid_expression_general);
     RexxInternalObject *popTerm();
     RexxInternalObject *popSubTerm();
     RexxInternalObject *popNTerms(size_t);
 
     // various error processing methods
-    void        error(int);
-    void        error(int, RexxObject *);
-    void        error(int, RexxObject *, RexxObject *);
-    void        error(int, RexxObject *, RexxObject *, RexxObject *);
-    void        error(int errorcode, const SourceLocation &location, ArrayClass *subs);
-    void        errorLine(int, RexxInstruction *);
-    void        errorPosition(int, RexxToken *);
-    void        errorToken(int, RexxToken *);
+    void        error(RexxErrorCodes);
+    void        error(RexxErrorCodes, RexxObject *);
+    void        error(RexxErrorCodes, RexxObject *, RexxObject *);
+    void        error(RexxErrorCodes, RexxObject *, RexxObject *, RexxObject *);
+    void        error(RexxErrorCodes errorcode, const SourceLocation &location, ArrayClass *subs);
+    void        errorLine(RexxErrorCodes, RexxInstruction *);
+    void        errorPosition(RexxErrorCodes, RexxToken *);
+    void        errorToken(RexxErrorCodes, RexxToken *);
     void        blockError(RexxInstruction *);
 
-    inline void syntaxError(int errorcode, RexxInstruction *i) { errorLine(errorcode, i); }
+    inline void syntaxError(RexxErrorCodes errorcode, RexxInstruction *i) { errorLine(errorcode, i); }
     inline void blockSyntaxError(RexxInstruction *i) { blockError(i); }
-    inline void syntaxErrorAt(int errorcode, RexxToken *token) { errorPosition(errorcode, token); }
-    inline void syntaxError(int errorcode, RexxObject *a1) { error(errorcode, a1); }
-    inline void syntaxError(int errorcode, RexxObject *a1, RexxObject *a2) { error(errorcode, a1, a2); }
-    inline void syntaxError(int errorcode, RexxObject *a1, RexxObject *a2, RexxObject *a3) { error(errorcode, a1, a2, a3); }
-    inline void syntaxError(int errorcode, RexxToken *token) { errorToken(errorcode, token); }
-    inline void syntaxError(int errorcode) { error(errorcode); }
+    inline void syntaxErrorAt(RexxErrorCodes errorcode, RexxToken *token) { errorPosition(errorcode, token); }
+    inline void syntaxError(RexxErrorCodes errorcode, RexxObject *a1) { error(errorcode, a1); }
+    inline void syntaxError(RexxErrorCodes errorcode, RexxObject *a1, RexxObject *a2) { error(errorcode, a1, a2); }
+    inline void syntaxError(RexxErrorCodes errorcode, RexxObject *a1, RexxObject *a2, RexxObject *a3) { error(errorcode, a1, a2, a3); }
+    inline void syntaxError(RexxErrorCodes errorcode, RexxToken *token) { errorToken(errorcode, token); }
+    inline void syntaxError(RexxErrorCodes errorcode) { error(errorcode); }
 
 
     // other useful static scanning routines

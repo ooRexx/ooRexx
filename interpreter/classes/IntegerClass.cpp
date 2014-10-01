@@ -386,7 +386,7 @@ void RexxInteger::setString(RexxString *string )
  *
  * @return either true or false, based on the validation.
  */
-bool RexxInteger::truthValue(int errorcode)
+bool RexxInteger::truthValue(RexxErrorCodes errorcode)
 {
     if (value == 0)
     {

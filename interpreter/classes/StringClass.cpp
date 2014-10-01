@@ -1276,7 +1276,7 @@ RexxString *RexxString::concatBlank(RexxObject *otherObj)
  *
  * @return The true or false value of valid strings.
  */
-bool RexxString::truthValue(int errorCode)
+bool RexxString::truthValue(RexxErrorCodes errorCode)
 {
     // get a real string value
     RexxString *testString = baseString();

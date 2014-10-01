@@ -1740,7 +1740,7 @@ void RexxEntry RaiseException0(RexxThreadContext *c, size_t n)
     ApiContext context(c);
     try
     {
-        reportException((wholenumber_t)n);
+        reportException((RexxErrorCodes)n);
     }
     catch (NativeActivation *)
     {
@@ -1752,7 +1752,7 @@ void RexxEntry RaiseException1(RexxThreadContext *c, size_t n, RexxObjectPtr o1)
     ApiContext context(c);
     try
     {
-        reportException((wholenumber_t)n, (RexxObject *)o1);
+        reportException((RexxErrorCodes)n, (RexxObject *)o1);
     }
     catch (NativeActivation *)
     {
@@ -1764,7 +1764,7 @@ void RexxEntry RaiseException2(RexxThreadContext *c, size_t n, RexxObjectPtr o1,
     ApiContext context(c);
     try
     {
-        reportException((wholenumber_t)n, (RexxObject *)o1, (RexxObject *)o2);
+        reportException((RexxErrorCodes)n, (RexxObject *)o1, (RexxObject *)o2);
     }
     catch (NativeActivation *)
     {
@@ -1776,7 +1776,7 @@ void RexxEntry APIRaiseException(RexxThreadContext *c, size_t n, RexxArrayObject
     ApiContext context(c);
     try
     {
-        reportException((wholenumber_t)n, (ArrayClass *)a);
+        reportException((RexxErrorCodes)n, (ArrayClass *)a);
     }
     catch (NativeActivation *)
     {

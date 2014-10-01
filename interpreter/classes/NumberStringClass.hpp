@@ -194,7 +194,7 @@ class NumberString : public NumberStringBase
     virtual bool         hasMethod(RexxString *);
     virtual RexxString  *primitiveMakeString();
     virtual RexxString  *stringValue();
-    virtual bool         truthValue(int);
+    virtual bool         truthValue(RexxErrorCodes);
     virtual bool logicalValue(logical_t &);
 
     virtual bool  isEqual(RexxInternalObject *);

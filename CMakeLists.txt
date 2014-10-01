@@ -579,6 +579,7 @@ set (concurrency_sources ${build_concurrency_dir}/ActivityDispatcher.cpp
             ${build_concurrency_dir}/TranslateDispatcher.cpp)
 set (expression_sources ${build_expression_dir}/BuiltinFunctions.cpp
             ${build_expression_dir}/CommonExternalFunctions.cpp
+            ${build_expression_dir}/ExpressionClassResolver.cpp
             ${build_expression_dir}/ExpressionCompoundVariable.cpp
             ${build_expression_dir}/ExpressionDotVariable.cpp
             ${build_expression_dir}/ExpressionFunction.cpp

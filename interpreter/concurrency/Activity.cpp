@@ -670,7 +670,7 @@ DirectoryClass *Activity::createConditionObject(RexxString *condition, RexxObjec
  *
  * @param errcode
  */
-void Activity::reportAnException(wholenumber_t errcode)
+void Activity::reportAnException(RexxErrorCodes errcode)
 {
     raiseException(errcode, OREF_NULL, OREF_NULL, OREF_NULL);
 }
@@ -684,7 +684,7 @@ void Activity::reportAnException(wholenumber_t errcode)
  * @param substitution1
  *                The substitution value.
  */
-void Activity::reportAnException(wholenumber_t errcode, RexxObject *substitution1 )
+void Activity::reportAnException(RexxErrorCodes errcode, RexxObject *substitution1 )
 {
     raiseException(errcode, OREF_NULL, new_array(substitution1), OREF_NULL);
 }
@@ -699,7 +699,7 @@ void Activity::reportAnException(wholenumber_t errcode, RexxObject *substitution
  * @param substitution2
  *                Another substitution value.
  */
-void Activity::reportAnException(wholenumber_t errcode, RexxObject *substitution1, RexxObject *substitution2 )
+void Activity::reportAnException(RexxErrorCodes errcode, RexxObject *substitution1, RexxObject *substitution2 )
 {
     raiseException(errcode, OREF_NULL, new_array(substitution1, substitution2), OREF_NULL);
 }
@@ -715,7 +715,7 @@ void Activity::reportAnException(wholenumber_t errcode, RexxObject *substitution
  * @param substitution2
  *                Another substitution value.
  */
-void Activity::reportAnException(wholenumber_t errcode, RexxObject *substitution1, RexxObject *substitution2, RexxObject *substitution3)
+void Activity::reportAnException(RexxErrorCodes errcode, RexxObject *substitution1, RexxObject *substitution2, RexxObject *substitution3)
 {
   raiseException(errcode, OREF_NULL, new_array(substitution1, substitution2, substitution3), OREF_NULL);
 }
@@ -730,7 +730,7 @@ void Activity::reportAnException(wholenumber_t errcode, RexxObject *substitution
  * @param substitution2
  *                Another substitution value.
  */
-void Activity::reportAnException(wholenumber_t errcode, RexxObject *substitution1, RexxObject *substitution2,
+void Activity::reportAnException(RexxErrorCodes errcode, RexxObject *substitution1, RexxObject *substitution2,
     RexxObject *substitution3, RexxObject *substitution4 )
 {
     raiseException(errcode, OREF_NULL, new_array(substitution1, substitution2, substitution3, substitution4), OREF_NULL);
@@ -746,12 +746,12 @@ void Activity::reportAnException(wholenumber_t errcode, RexxObject *substitution
  * @param substitution2
  *                Another substitution value.
  */
-void Activity::reportAnException(wholenumber_t errcode, const char *substitution1, RexxObject *substitution2,
+void Activity::reportAnException(RexxErrorCodes errcode, const char *substitution1, RexxObject *substitution2,
     const char *substitution3, RexxObject *substitution4)
 {
     raiseException(errcode, OREF_NULL, new_array(new_string(substitution1), substitution2, new_string(substitution3), substitution4), OREF_NULL);
 }
-void Activity::reportAnException(wholenumber_t errcode, const char *string)
+void Activity::reportAnException(RexxErrorCodes errcode, const char *string)
 {
     reportAnException(errcode, new_string(string));
 }
@@ -764,61 +764,61 @@ void Activity::reportAnException(wholenumber_t errcode, const char *string)
  * @param errcode The error code.
  * @param string  The substitution value.
  */
-void Activity::reportAnException(wholenumber_t errcode, const char *string1, const char *string2)
+void Activity::reportAnException(RexxErrorCodes errcode, const char *string1, const char *string2)
 {
     reportAnException(errcode, new_string(string1), new_string(string2));
 }
 
 
-void Activity::reportAnException(wholenumber_t errcode, const char *string, wholenumber_t  integer )
+void Activity::reportAnException(RexxErrorCodes errcode, const char *string, wholenumber_t  integer )
 {
 
     reportAnException(errcode, new_string(string), new_integer(integer));
 }
 
 
-void Activity::reportAnException(wholenumber_t errcode, const char *string, wholenumber_t integer, RexxObject   *obj)
+void Activity::reportAnException(RexxErrorCodes errcode, const char *string, wholenumber_t integer, RexxObject   *obj)
 {
     reportAnException(errcode, new_string(string), new_integer(integer), obj);
 }
 
 
-void Activity::reportAnException(wholenumber_t errcode, const char *string, RexxObject *obj, wholenumber_t integer)
+void Activity::reportAnException(RexxErrorCodes errcode, const char *string, RexxObject *obj, wholenumber_t integer)
 {
     reportAnException(errcode, new_string(string), obj, new_integer(integer));
 }
 
 
-void Activity::reportAnException(wholenumber_t errcode, RexxObject *obj, wholenumber_t integer)
+void Activity::reportAnException(RexxErrorCodes errcode, RexxObject *obj, wholenumber_t integer)
 {
     reportAnException(errcode, obj, new_integer(integer));
 }
 
 
-void Activity::reportAnException(wholenumber_t errcode, RexxObject *obj, const char *string)
+void Activity::reportAnException(RexxErrorCodes errcode, RexxObject *obj, const char *string)
 {
     reportAnException(errcode, obj, new_string(string));
 }
 
 
-void Activity::reportAnException(wholenumber_t errcode, const char *string, RexxObject *obj)
+void Activity::reportAnException(RexxErrorCodes errcode, const char *string, RexxObject *obj)
 {
     reportAnException(errcode, new_string(string), obj);
 }
 
 
-void Activity::reportAnException(wholenumber_t errcode, wholenumber_t  integer)
+void Activity::reportAnException(RexxErrorCodes errcode, wholenumber_t  integer)
 {
     reportAnException(errcode, new_integer(integer));
 }
 
-void Activity::reportAnException(wholenumber_t errcode, wholenumber_t  integer, wholenumber_t  integer2)
+void Activity::reportAnException(RexxErrorCodes errcode, wholenumber_t  integer, wholenumber_t  integer2)
 {
     reportAnException(errcode, new_integer(integer), new_integer(integer2));
 }
 
 
-void Activity::reportAnException(wholenumber_t errcode, wholenumber_t  a1, RexxObject *a2)
+void Activity::reportAnException(RexxErrorCodes errcode, wholenumber_t  a1, RexxObject *a2)
 {
     reportAnException(errcode, new_integer(a1), a2);
 }
@@ -833,7 +833,7 @@ void Activity::reportAnException(wholenumber_t errcode, wholenumber_t  a1, RexxO
  * @param additional The message substitution parameters.
  * @param result     The message result.
  */
-void Activity::raiseException(wholenumber_t  errcode, RexxString *description, ArrayClass *additional, RexxObject *result)
+void Activity::raiseException(RexxErrorCodes errcode, RexxString *description, ArrayClass *additional, RexxObject *result)
 {
     // during error processing, we need to request the string value of message
     // substitution objects.  It is possible that the string process will also
@@ -900,7 +900,7 @@ void Activity::raiseException(wholenumber_t  errcode, RexxString *description, A
  *
  * @return The created exception dictionary.
  */
-DirectoryClass *Activity::createExceptionObject(wholenumber_t  errcode,
+DirectoryClass *Activity::createExceptionObject(RexxErrorCodes errcode,
     RexxString *description, ArrayClass *additional, RexxObject *result)
 {
     // build an exception object for the SYNTAX error

@@ -946,6 +946,38 @@ RexxClass *PackageClass::findClass(RexxString *className)
 
 
 /**
+ * Resolve a class from this source file context, with a
+ * potential namespace.
+ *
+ * @param namespaceName
+ *                  The potential namespace qualifier.
+ * @param className The target name of the class.
+ *
+ * @return The resolved class object.
+ */
+RexxClass *PackageClass::findClass(RexxString *namespaceName, RexxString *className)
+{
+    // all of the lookups use uppercase names
+    RexxString *internalName = className->upper();
+    // if no namespace has been specified, use the normal search order
+    if (namespaceName == OREF_NULL)
+    {
+        return findClass(className);
+    }
+
+    // now check for the target namespace
+    PackageClass *namespacePackage = findNamespace(namespaceName);
+    if (namespacePackage == OREF_NULL)
+    {
+        return OREF_NULL;
+    }
+
+    // this only checks for public classes in the target namespace package
+    return namespacePackage->findPublicClass(className);
+}
+
+
+/**
  * Perform a non-contextual install of a package.  This
  * processes the install without calling any leading code
  * section.

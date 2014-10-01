@@ -79,7 +79,7 @@ class RexxInteger : public RexxObject
     virtual RexxString  *primitiveMakeString();
     virtual RexxString  *stringValue();
     virtual ArrayClass  *makeArray();
-    virtual bool truthValue(int);
+    virtual bool truthValue(RexxErrorCodes);
     virtual bool logicalValue(logical_t &);
     virtual bool isInstanceOf(RexxClass *);
     virtual MethodClass *instanceMethod(RexxString *);

@@ -140,102 +140,102 @@ inline void reportCondition(RexxString *condition, RexxObject *description) { Ac
 inline void reportNovalue(RexxString *description) { reportCondition(GlobalNames::NOVALUE, description); }
 inline void reportNostring(RexxString *description) { reportCondition(GlobalNames::NOSTRING, description); }
 
-inline void reportException(wholenumber_t error)
+inline void reportException(RexxErrorCodes error)
 {
     ActivityManager::currentActivity->reportAnException(error);
 }
 
-inline void reportException(wholenumber_t error, ArrayClass *args)
+inline void reportException(RexxErrorCodes error, ArrayClass *args)
 {
     ActivityManager::currentActivity->raiseException(error, OREF_NULL, args, OREF_NULL);
 }
 
-inline void reportException(wholenumber_t error, RexxObject *a1)
+inline void reportException(RexxErrorCodes error, RexxObject *a1)
 {
     ActivityManager::currentActivity->reportAnException(error, a1);
 }
 
-inline void reportException(wholenumber_t error, wholenumber_t a1)
+inline void reportException(RexxErrorCodes error, wholenumber_t a1)
 {
     ActivityManager::currentActivity->reportAnException(error, a1);
 }
 
-inline void reportException(wholenumber_t error, wholenumber_t a1, wholenumber_t a2)
+inline void reportException(RexxErrorCodes error, wholenumber_t a1, wholenumber_t a2)
 {
     ActivityManager::currentActivity->reportAnException(error, a1, a2);
 }
 
-inline void reportException(wholenumber_t error, wholenumber_t a1, RexxObject *a2)
+inline void reportException(RexxErrorCodes error, wholenumber_t a1, RexxObject *a2)
 {
     ActivityManager::currentActivity->reportAnException(error, a1, a2);
 }
 
-inline void reportException(wholenumber_t error, RexxObject *a1, wholenumber_t a2)
+inline void reportException(RexxErrorCodes error, RexxObject *a1, wholenumber_t a2)
 {
     ActivityManager::currentActivity->reportAnException(error, a1, a2);
 }
 
-inline void reportException(wholenumber_t error, const char *a1, RexxObject *a2)
+inline void reportException(RexxErrorCodes error, const char *a1, RexxObject *a2)
 {
     ActivityManager::currentActivity->reportAnException(error, a1, a2);
 }
 
-inline void reportException(wholenumber_t error, RexxObject *a1, const char *a2)
+inline void reportException(RexxErrorCodes error, RexxObject *a1, const char *a2)
 {
     ActivityManager::currentActivity->reportAnException(error, a1, a2);
 }
 
-inline void reportException(wholenumber_t error, const char *a1)
+inline void reportException(RexxErrorCodes error, const char *a1)
 {
     ActivityManager::currentActivity->reportAnException(error, a1);
 }
 
-inline void reportException(wholenumber_t error, const char *a1, const char *a2)
+inline void reportException(RexxErrorCodes error, const char *a1, const char *a2)
 {
     ActivityManager::currentActivity->reportAnException(error, a1, a2);
 }
 
-inline void reportException(wholenumber_t error, const char *a1, wholenumber_t a2)
+inline void reportException(RexxErrorCodes error, const char *a1, wholenumber_t a2)
 {
     ActivityManager::currentActivity->reportAnException(error, a1, a2);
 }
 
-inline void reportException(wholenumber_t error, const char *a1, wholenumber_t a2, RexxObject *a3)
+inline void reportException(RexxErrorCodes error, const char *a1, wholenumber_t a2, RexxObject *a3)
 {
     ActivityManager::currentActivity->reportAnException(error, a1, a2, a3);
 }
 
-inline void reportException(wholenumber_t error, const char *a1, RexxObject *a2, wholenumber_t a3)
+inline void reportException(RexxErrorCodes error, const char *a1, RexxObject *a2, wholenumber_t a3)
 {
     ActivityManager::currentActivity->reportAnException(error, a1, a2, a3);
 }
 
-inline void reportException(wholenumber_t error, RexxObject *a1, RexxObject *a2)
+inline void reportException(RexxErrorCodes error, RexxObject *a1, RexxObject *a2)
 {
     ActivityManager::currentActivity->reportAnException(error, a1, a2);
 }
 
-inline void reportException(wholenumber_t error, RexxObject *a1, RexxObject *a2, RexxObject *a3)
+inline void reportException(RexxErrorCodes error, RexxObject *a1, RexxObject *a2, RexxObject *a3)
 {
     ActivityManager::currentActivity->reportAnException(error, a1, a2, a3);
 }
 
-inline void reportException(wholenumber_t error, RexxObject *a1, RexxObject *a2, RexxObject *a3, RexxObject *a4)
+inline void reportException(RexxErrorCodes error, RexxObject *a1, RexxObject *a2, RexxObject *a3, RexxObject *a4)
 {
     ActivityManager::currentActivity->reportAnException(error, a1, a2, a3, a4);
 }
 
-inline void reportException(wholenumber_t error, const char *a1, RexxObject *a2, const char *a3, RexxObject *a4)
+inline void reportException(RexxErrorCodes error, const char *a1, RexxObject *a2, const char *a3, RexxObject *a4)
 {
     ActivityManager::currentActivity->reportAnException(error, a1, a2, a3, a4);
 }
 
-inline void reportException(wholenumber_t error, const char *a1, RexxObject *a2, RexxObject *a3, RexxObject *a4)
+inline void reportException(RexxErrorCodes error, const char *a1, RexxObject *a2, RexxObject *a3, RexxObject *a4)
 {
     ActivityManager::currentActivity->reportAnException(error, new_string(a1), a2, a3, a4);
 }
 
-inline void reportException(wholenumber_t error, const char *a1, RexxObject *a2, RexxObject *a3)
+inline void reportException(RexxErrorCodes error, const char *a1, RexxObject *a2, RexxObject *a3)
 {
     ActivityManager::currentActivity->reportAnException(error, new_string(a1), a2, a3);
 }

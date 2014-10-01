@@ -56,6 +56,7 @@
 #include "SysActivity.hpp"
 #include "StringTableClass.hpp"
 #include "InterpreterInstance.hpp"
+#include "RexxErrorCodes.h"
 
 
 
@@ -118,26 +119,26 @@ class Activity : public RexxInternalObject
     bool        raiseCondition(DirectoryClass *);
     bool        checkCondition(RexxString *condition);
     DirectoryClass *createConditionObject(RexxString *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
-    void        raiseException(wholenumber_t, RexxString *, ArrayClass *, RexxObject *);
-    DirectoryClass *createExceptionObject(wholenumber_t, RexxString *, ArrayClass *, RexxObject *);
+    void        raiseException(RexxErrorCodes, RexxString *, ArrayClass *, RexxObject *);
+    DirectoryClass *createExceptionObject(RexxErrorCodes, RexxString *, ArrayClass *, RexxObject *);
     void        generateProgramInformation(DirectoryClass *exObj);
-    void        reportAnException(wholenumber_t, const char *);
-    void        reportAnException(wholenumber_t, const char *, const char *);
-    void        reportAnException(wholenumber_t, RexxObject *, const char *);
-    void        reportAnException(wholenumber_t, RexxObject *, wholenumber_t);
-    void        reportAnException(wholenumber_t, const char *, RexxObject *);
-    void        reportAnException(wholenumber_t, const char *, wholenumber_t);
-    void        reportAnException(wholenumber_t, const char *, wholenumber_t, RexxObject *);
-    void        reportAnException(wholenumber_t, const char *, RexxObject *, wholenumber_t);
-    void        reportAnException(wholenumber_t, wholenumber_t);
-    void        reportAnException(wholenumber_t, wholenumber_t, wholenumber_t);
-    void        reportAnException(wholenumber_t, wholenumber_t, RexxObject *);
-    void        reportAnException(wholenumber_t);
-    void        reportAnException(wholenumber_t, RexxObject *);
-    void        reportAnException(wholenumber_t, RexxObject *, RexxObject *);
-    void        reportAnException(wholenumber_t, RexxObject *, RexxObject *, RexxObject *);
-    void        reportAnException(wholenumber_t, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
-    void        reportAnException(wholenumber_t, const char *, RexxObject *, const char *, RexxObject *);
+    void        reportAnException(RexxErrorCodes, const char *);
+    void        reportAnException(RexxErrorCodes, const char *, const char *);
+    void        reportAnException(RexxErrorCodes, RexxObject *, const char *);
+    void        reportAnException(RexxErrorCodes, RexxObject *, wholenumber_t);
+    void        reportAnException(RexxErrorCodes, const char *, RexxObject *);
+    void        reportAnException(RexxErrorCodes, const char *, wholenumber_t);
+    void        reportAnException(RexxErrorCodes, const char *, wholenumber_t, RexxObject *);
+    void        reportAnException(RexxErrorCodes, const char *, RexxObject *, wholenumber_t);
+    void        reportAnException(RexxErrorCodes, wholenumber_t);
+    void        reportAnException(RexxErrorCodes, wholenumber_t, wholenumber_t);
+    void        reportAnException(RexxErrorCodes, wholenumber_t, RexxObject *);
+    void        reportAnException(RexxErrorCodes);
+    void        reportAnException(RexxErrorCodes, RexxObject *);
+    void        reportAnException(RexxErrorCodes, RexxObject *, RexxObject *);
+    void        reportAnException(RexxErrorCodes, RexxObject *, RexxObject *, RexxObject *);
+    void        reportAnException(RexxErrorCodes, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
+    void        reportAnException(RexxErrorCodes, const char *, RexxObject *, const char *, RexxObject *);
     void        reraiseException(DirectoryClass *);
     void        raisePropagate(DirectoryClass *);
     void        display(DirectoryClass *);

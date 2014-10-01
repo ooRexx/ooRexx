@@ -664,6 +664,9 @@
 #define Error_Symbol_or_string_package_attribute_missing_msg         759
 #define Error_Symbol_or_string_directive_option_msg                  760
 #define Error_Symbol_expected_namespace_msg                          761
+#define Error_Execution_no_namespace_msg                             761
+#define Error_Symbol_expected_namespace_class_msg                    762
+#define Error_Execution_no_namespace_class_msg                       762
 
 
 #endif

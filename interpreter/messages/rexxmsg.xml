@@ -1184,6 +1184,15 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Symbol_expected_namespace</SymbolicName>
         <Text>Symbol expected after NAMESPACE keyword</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>20</Code>
+        <Subcode>921</Subcode>
+        <MessageNumber>762</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Symbol_expected_namespace_class</SymbolicName>
+        <Text>Symbol expected as a class name of qualified class name.</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>
@@ -5021,6 +5030,24 @@ special character (such as a parenthesis).
         <Severity>Warning</Severity>
         <SymbolicName>Error_Execution_unassigned_variable</SymbolicName>
         <Text>Reference to unassigned variable <q><Sub position="1" name="name"/></q>.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>98</Code>
+        <Subcode>987</Subcode>
+        <MessageNumber>761</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Execution_no_namespace</SymbolicName>
+        <Text>Namespace <q><Sub position="1" name="namespace"/></q> not found in package <q><Sub position="2" name="package"/></q></Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>98</Code>
+        <Subcode>988</Subcode>
+        <MessageNumber>762</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Execution_no_namespace_class</SymbolicName>
+        <Text>Class <q><Sub position="1" name="className"/></q> not found in namespace <q><Sub position="2" name="namespace"/></q></Text>
       </SubMessage>
     </Subcodes>
   </Message>

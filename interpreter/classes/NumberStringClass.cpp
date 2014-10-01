@@ -1176,7 +1176,7 @@ bool NumberString::unsignedInt64Value(uint64_t *result, wholenumber_t numDigits)
  *
  * @return true or false if this is a valid logical.
  */
-bool  NumberString::truthValue(int errorcode)
+bool  NumberString::truthValue(RexxErrorCodes errorcode)
 {
     // a zero value is easy
     if (isZero())

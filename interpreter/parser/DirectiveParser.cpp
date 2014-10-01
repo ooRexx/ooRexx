@@ -150,7 +150,7 @@ void LanguageParser::nextDirective()
  *
  * @param errorCode The error code to issue if this condition was violated.
  */
-void LanguageParser::checkDirective(int errorCode)
+void LanguageParser::checkDirective(RexxErrorCodes errorCode)
 {
     // save the clause location so we can reset for errors
     SourceLocation location = clauseLocation;
@@ -269,6 +269,59 @@ void LanguageParser::addClassDirective(RexxString *name, ClassDirective *directi
 
 
 /**
+ * Parse a class reference for a ::CLASS directive.  This
+ * could be a subclass, mixinclass, metaclass, or inherits
+ * class name.
+ *
+ * @param error  The error to raise for nothing there.
+ *
+ * @return A ClassResolver to look up the class reference.
+ */
+ClassResolver *LanguageParser::parseClassReference(RexxErrorCodes error)
+{
+    // this is a required string or symbol value
+    RexxToken *token = nextReal();
+    if (!token->isSymbolOrLiteral())
+    {
+        syntaxError(error, token);
+    }
+
+    // the class specification can be a literal, a symbol, or a
+    // symbol:symbol namespace specification.  If this is a string,
+    // we're done
+    if (token->isLiteral())
+    {
+        return new ClassResolver(OREF_NULL, commonString(token->upperValue()));
+    }
+    else
+    {
+        // this is a symbol form.  Get the name, which might be either
+        // a namespace name or the class name.  We need to parse a little
+        // further to determine.
+        RexxString *name = token->value();
+        token = nextReal();
+
+        // if this is not a colon, put it back and return the single
+        // name form of resolver
+        if (!token->isType(TOKEN_COLON))
+        {
+            previousToken();
+            return new ClassResolver(OREF_NULL, name);
+        }
+
+        // ok, this should be of the form symbol:symbol.
+        token = nextReal();
+        if (!token->isSymbol())
+        {
+            syntaxError(Error_Symbol_expected_namespace_class);
+        }
+        // this is a qualified class reference
+        return new ClassResolver(name, token->value());
+    }
+}
+
+
+/**
  * Process a ::CLASS directive for a source file.
  */
 void LanguageParser::classDirective()
@@ -307,7 +360,7 @@ void LanguageParser::classDirective()
         token = nextReal();
         if (token->isEndOfClause())
         {
-            break;                       /* get out of here                   */
+            break;
         }
         // all options are symbols
         else if (!token->isSymbol())
@@ -322,20 +375,14 @@ void LanguageParser::classDirective()
             {
                 // ::CLASS name METACLASS metaclass
                 case SUBDIRECTIVE_METACLASS:
-                    // can't be a duplicate
+                    // can't be a duplicate keyword
                     if (activeClass->getMetaClass() != OREF_NULL)
                     {
                         syntaxError(Error_Invalid_subkeyword_class, token);
                     }
 
-                    // this is a required string or symbol value
-                    token = nextReal();
-                    if (!token->isSymbolOrLiteral())
-                    {
-                        syntaxError(Error_Symbol_or_string_metaclass, token);
-                    }
-                    // set the meta class...use the upper case name
-                    activeClass->setMetaClass(commonString(token->upperValue()));
+                    // parse off the class name and set in the directive
+                    activeClass->setMetaClass(parseClassReference(Error_Symbol_or_string_metaclass));
                     break;
 
                 // ::CLASS name PUBLIC
@@ -369,14 +416,8 @@ void LanguageParser::classDirective()
                         syntaxError(Error_Invalid_subkeyword_class, token);
                     }
 
-                    // the subclass must be a symbol or string
-                    token = nextReal();
-                    if (!token->isSymbolOrLiteral())
-                    {
-                        syntaxError(Error_Symbol_or_string_subclass);
-                    }
-                    // set the subclass
-                    activeClass->setSubClass(commonString(token->upperValue()));
+                    // parse off the class name and set in the directive
+                    activeClass->setSubClass(parseClassReference(Error_Symbol_or_string_subclass));
                     break;
 
                 // ::CLASS name MIXINCLASS mclass
@@ -387,14 +428,9 @@ void LanguageParser::classDirective()
                     {
                         syntaxError(Error_Invalid_subkeyword_class, token);
                     }
-                    token = nextReal();
-                    if (!token->isSymbolOrLiteral())
-                    {
-                        syntaxError(Error_Symbol_or_string_mixinclass);
-                    }
 
-                    // set the subclass information      */
-                    activeClass->setMixinClass(commonString(token->upperValue()));
+                    // parse off the class name and set in the directive
+                    activeClass->setMixinClass(parseClassReference(Error_Symbol_or_string_mixinclass));
                     break;
 
                 // ::CLASS name INHERIT classes
@@ -408,13 +444,10 @@ void LanguageParser::classDirective()
 
                     while (!token->isEndOfClause())
                     {
-                        // must be a symbol or string        */
-                        if (!token->isSymbolOrLiteral())
-                        {
-                            syntaxError(Error_Symbol_or_string_inherit, token);
-                        }
-                        // add to the inherit list
-                        activeClass->addInherits(commonString(token->upperValue()));
+                        // backup for the parsing
+                        previousToken();
+
+                        activeClass->addInherits(parseClassReference(Error_Symbol_or_string_inherit));
                         token = nextReal();
                     }
                     // step back a token for final completion checks
@@ -440,7 +473,7 @@ void LanguageParser::classDirective()
  * @param errorMsg
  *               The error code to use if there is a duplicate.
  */
-void LanguageParser::checkDuplicateMethod(RexxString *name, bool classMethod, int errorMsg)
+void LanguageParser::checkDuplicateMethod(RexxString *name, bool classMethod, RexxErrorCodes errorMsg)
 {
     // no previous ::CLASS directive?
     if (activeClass == OREF_NULL)

@@ -521,7 +521,7 @@ bool RexxInternalObject::logicalValue(logical_t &result)
  *
  * @return The logical value of the object.
  */
-bool RexxInternalObject::truthValue(int errorCode)
+bool RexxInternalObject::truthValue(RexxErrorCodes errorCode)
 {
     // process the string value for this and get the truth value for that.  This will
     // be an error for internal objects...which should never happen, really.

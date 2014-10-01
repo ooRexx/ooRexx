@@ -832,6 +832,12 @@ special character (such as a parenthesis).
 <para>Symbol expected after NAMESPACE keyword</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>921</term>
+<listitem>
+<para>Symbol expected as a class name of qualified class name.</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR21">
@@ -3601,6 +3607,18 @@ special character (such as a parenthesis).
 <term>986</term>
 <listitem>
 <para>Reference to unassigned variable "<emphasis role="italic">name</emphasis>".</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>987</term>
+<listitem>
+<para>Namespace "<emphasis role="italic">namespace</emphasis>" not found in package "<emphasis role="italic">package</emphasis>"</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>988</term>
+<listitem>
+<para>Class "<emphasis role="italic">className</emphasis>" not found in namespace "<emphasis role="italic">namespace</emphasis>"</para>
 </listitem>
 </varlistentry>
 </variablelist>

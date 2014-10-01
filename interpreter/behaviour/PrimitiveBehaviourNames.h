@@ -203,6 +203,7 @@
 #define TheBufferProgramSourceBehaviour      (&RexxBehaviour::primitiveBehaviours[T_BufferProgramSource])
 #define TheFileProgramSourceBehaviour      (&RexxBehaviour::primitiveBehaviours[T_FileProgramSource])
 #define TheNumberArrayBehaviour      (&RexxBehaviour::primitiveBehaviours[T_NumberArray])
+#define TheClassResolverBehaviour      (&RexxBehaviour::primitiveBehaviours[T_ClassResolver])
 #define TheMemoryBehaviour      (&RexxBehaviour::primitiveBehaviours[T_Memory])
 #define TheInternalStackBehaviour      (&RexxBehaviour::primitiveBehaviours[T_InternalStack])
 #define TheLiveStackBehaviour      (&RexxBehaviour::primitiveBehaviours[T_LiveStack])

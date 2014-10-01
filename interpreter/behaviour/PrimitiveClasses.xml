@@ -204,6 +204,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="BufferProgramSource" class="BufferProgramSource" include="ProgramSource.hpp"/>
 <Class id="FileProgramSource" class="FileProgramSource" include="ProgramSource.hpp"/>
 <Class id="NumberArray" class="NumberArray" include="NumberArray.hpp"/>
+<Class id="ClassResolver" class="ClassResolver" include="ExpressionClassResolver.hpp"/>
 </Internal>
 <Transient>
 <Class id="Memory" class="MemoryObject" include="RexxMemory.hpp" objectvirtual="true"/>

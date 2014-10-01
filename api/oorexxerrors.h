@@ -168,6 +168,7 @@
 #define Rexx_Error_Symbol_expected_LABEL                        20918
 #define Rexx_Error_Symbol_expected_package_attribute            20919
 #define Rexx_Error_Symbol_expected_namespace                    20920
+#define Rexx_Error_Symbol_expected_namespace_class              20921
 #define Rexx_Error_Invalid_data                                 21000
 #define Rexx_Error_Invalid_data_user_defined                    21900
 #define Rexx_Error_Invalid_data_nop                             21901
@@ -577,6 +578,8 @@
 #define Rexx_Error_Execution_rexx_package_update                98984
 #define Rexx_Error_Execution_rexx_defined_class                 98985
 #define Rexx_Error_Execution_unassigned_variable                98986
+#define Rexx_Error_Execution_no_namespace                       98987
+#define Rexx_Error_Execution_no_namespace_class                 98988
 #define Rexx_Error_Translation                                  99000
 #define Rexx_Error_Translation_user_defined                     99900
 #define Rexx_Error_Translation_duplicate_class                  99901

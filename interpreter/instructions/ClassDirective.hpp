@@ -45,8 +45,8 @@
 #define Included_ClassDirective
 
 #include "RexxDirective.hpp"
+#include "ExpressionClassResolver.hpp"
 
-class DirectoryClass;
 class RexxClass;
 
 /**
@@ -71,17 +71,17 @@ class ClassDirective : public RexxDirective
     RexxClass *install(PackageClass *package, RexxActivation *activation);
 
     void addDependencies(StringTable *class_directives);
-    void checkDependency(RexxString *name, StringTable *class_directives);
+    void checkDependency(ClassResolver *classReference, StringTable *class_directives);
     bool dependenciesResolved();
     void removeDependency(RexxString *name);
 
-    inline RexxString *getMetaClass() { return metaclassName; }
-    inline void setMetaClass(RexxString *m) { setField(metaclassName, m); }
-    inline RexxString *getSubClass() { return subclassName; }
-    inline void setSubClass(RexxString *m) { setField(subclassName, m); }
-    inline void setMixinClass(RexxString *m) { setField(subclassName, m); mixinClass = true; }
+    inline ClassResolver *getMetaClass() { return metaclassName; }
+    inline void setMetaClass(ClassResolver *m) { setField(metaclassName, m); }
+    inline ClassResolver *getSubClass() { return subclassName; }
+    inline void setSubClass(ClassResolver *m) { setField(subclassName, m); }
+    inline void setMixinClass(ClassResolver *m) { setField(subclassName, m); mixinClass = true; }
     inline void setPublic() { publicClass = true; }
-    void addInherits(RexxString *name);
+    void addInherits(ClassResolver *name);
     void addMethod(RexxString *name, MethodClass *method, bool classMethod);
     void addConstantMethod(RexxString *name, MethodClass *method);
     bool checkDuplicateMethod(RexxString *name, bool classMethod);
@@ -94,8 +94,8 @@ protected:
 
     RexxString  *publicName;         // the published name of the class
     RexxString  *idName;             // the internal ID name
-    RexxString  *metaclassName;      // name of the class meta class
-    RexxString  *subclassName;       // the class used for the subclassing operation.
+    ClassResolver *metaclassName;    // name of the class meta class
+    ClassResolver *subclassName;     // the class used for the subclassing operation.
     ArrayClass  *inheritsClasses;    // the names of inherited classes
     StringTable *instanceMethods;    // the methods attached to this class
     StringTable *classMethods;       // the set of class methods

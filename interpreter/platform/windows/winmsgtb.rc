@@ -664,6 +664,9 @@ Error_Program_unreadable    "Failure during initialization"
    Error_Symbol_or_string_package_attribute_missing    "Symbol or string expected as ::PACKAGE attribute value."
    Error_Symbol_or_string_directive_option    "String expected after &1 &2 keyword"
    Error_Symbol_expected_namespace    "Symbol expected after NAMESPACE keyword"
+   Error_Execution_no_namespace    "Namespace ""&1"" not found in package ""&2"""
+   Error_Symbol_expected_namespace_class    "Symbol expected as a class name of qualified class name."
+   Error_Execution_no_namespace_class    "Class ""&1"" not found in namespace ""&2"""
    
 END
 

@@ -2937,7 +2937,7 @@ RexxInternalObject *LanguageParser::parseCollectionMessage(RexxToken *token, Rex
  *
  * @return The parsed off token.
  */
-RexxToken  *LanguageParser::getToken(int terminators, int errorcode)
+RexxToken  *LanguageParser::getToken(int terminators, RexxErrorCodes errorcode)
 {
     // get the next token and perform the terminator checks.  If we were
     // terminated, issue an error message if requested.
@@ -3500,7 +3500,7 @@ RexxInternalObject *LanguageParser::popSubTerm()
  *
  * @return The object popped off of the stack.
  */
-RexxInternalObject *LanguageParser::requiredTerm(RexxToken *token, int errorCode)
+RexxInternalObject *LanguageParser::requiredTerm(RexxToken *token, RexxErrorCodes errorCode)
 {
     // we track the size count when we push/pop
     currentStack--;
@@ -3589,7 +3589,7 @@ ArrayClass  *LanguageParser::words(RexxString *string)
  *
  * @param errorcode The error message to raise.
  */
-void LanguageParser::error(int errorcode)
+void LanguageParser::error(RexxErrorCodes errorcode)
 {
     ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, OREF_NULL, OREF_NULL);
 }
@@ -3603,7 +3603,7 @@ void LanguageParser::error(int errorcode)
  * @param location  The location of the instruction in error.
  * @param subs      The message substitutions.
  */
-void LanguageParser::error(int errorcode, const SourceLocation &location, ArrayClass *subs)
+void LanguageParser::error(RexxErrorCodes errorcode, const SourceLocation &location, ArrayClass *subs)
 {
     // set the error location.  This location is picked up from the
     // parse context stack frame we set up before we started
@@ -3621,7 +3621,7 @@ void LanguageParser::error(int errorcode, const SourceLocation &location, ArrayC
  *                  The instruction used to obtain the line number for the
  *                  message.
  */
-void LanguageParser::errorLine(int errorcode, RexxInstruction *instruction)
+void LanguageParser::errorLine(RexxErrorCodes errorcode, RexxInstruction *instruction)
 {
     ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(new_integer(instruction->getLineNumber())), OREF_NULL);
 }
@@ -3634,7 +3634,7 @@ void LanguageParser::errorLine(int errorcode, RexxInstruction *instruction)
  * @param errorcode The error to issue.
  * @param token     The source token for the location.
  */
-void LanguageParser::errorPosition(int errorcode, RexxToken *token )
+void LanguageParser::errorPosition(RexxErrorCodes errorcode, RexxToken *token )
 {
     SourceLocation tokenLocation = token->getLocation();
 
@@ -3649,7 +3649,7 @@ void LanguageParser::errorPosition(int errorcode, RexxToken *token )
  * @param errorcode The error code to issue.
  * @param token     The token used for the substitution information.
  */
-void LanguageParser::errorToken(int errorcode, RexxToken *token )
+void LanguageParser::errorToken(RexxErrorCodes errorcode, RexxToken *token )
 {
     ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(token->displayValue()), OREF_NULL);
 }
@@ -3661,7 +3661,7 @@ void LanguageParser::errorToken(int errorcode, RexxToken *token )
  * @param errorcode The error to issue.
  * @param value     The substitution value.
  */
-void LanguageParser::error(int errorcode, RexxObject *value )
+void LanguageParser::error(RexxErrorCodes errorcode, RexxObject *value )
 {
     ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(value), OREF_NULL);
 }
@@ -3674,7 +3674,7 @@ void LanguageParser::error(int errorcode, RexxObject *value )
  * @param value1    The first substitution object.
  * @param value2    The second substitution objec.t
  */
-void LanguageParser::error(int errorcode, RexxObject *value1, RexxObject *value2 )
+void LanguageParser::error(RexxErrorCodes errorcode, RexxObject *value1, RexxObject *value2 )
 {
     ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(value1, value2), OREF_NULL);
 }
@@ -3688,7 +3688,7 @@ void LanguageParser::error(int errorcode, RexxObject *value1, RexxObject *value2
  * @param value2    The second substitution objec.t
  * @param value3    The third substitution objec.t
  */
-void LanguageParser::error(int errorcode, RexxObject *value1, RexxObject *value2, RexxObject *value3 )
+void LanguageParser::error(RexxErrorCodes errorcode, RexxObject *value1, RexxObject *value2, RexxObject *value3 )
 {
     ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(value1, value2, value3), OREF_NULL);
 }

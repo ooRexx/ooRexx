@@ -1567,7 +1567,7 @@ void RexxActivation::raise(RexxString *condition, RexxObject *rc, RexxString *de
         else
         {
             // raise the error now at this level.
-            ActivityManager::currentActivity->raiseException(((RexxInteger *)rc)->getValue(), description, (ArrayClass *)additional, resultObj);
+            ActivityManager::currentActivity->raiseException((RexxErrorCodes)((RexxInteger *)rc)->getValue(), description, (ArrayClass *)additional, resultObj);
         }
     }
     else
@@ -3132,6 +3132,7 @@ static const char * trace_prefix_table[] =
   ">A>",                               // TRACE_PREFIX_ARGUMENT
   ">=>",                               // TRACE_PREFIX_ASSIGNMENT
   ">I>",                               // TRACE_PREFIX_INVOCATION
+  ">N>",                               // TRACE_PREFIX_NAMESPACE
 };
 
 // size of a line number

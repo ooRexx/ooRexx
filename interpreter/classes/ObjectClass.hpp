@@ -47,6 +47,7 @@
 #include <new>
 #include <string.h>
 #include "Numerics.hpp"
+#include "RexxErrorCodes.h"
 
 class RexxInternalObject;
 class RexxObject;
@@ -302,7 +303,7 @@ class RexxInternalObject : public RexxVirtualBase
     // number and more bits to get fewer collisions.
     inline  HashCode     identityHash() { return ((uintptr_t)this) ^ UINTPTR_MAX; }
 
-    virtual bool         truthValue(int);
+    virtual bool         truthValue(RexxErrorCodes);
     virtual bool         logicalValue(logical_t &);
     virtual RexxString  *makeString();
     virtual RexxString  *defaultName();

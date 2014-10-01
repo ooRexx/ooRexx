@@ -1883,6 +1883,15 @@ $ Error_Symbol_or_string_directive_option
 $ Error_Symbol_expected_namespace
 761 Symbol expected after NAMESPACE keyword
 
+$ Error_Execution_no_namespace
+761 Namespace "&1" not found in package "&2"
+
+$ Error_Symbol_expected_namespace_class
+762 Symbol expected as a class name of qualified class name.
+
+$ Error_Execution_no_namespace_class
+762 Class "&1" not found in namespace "&2"
+
 
 $ * -------------------------------------------------------------------------- */
 $ * --            ==================================================        -- */

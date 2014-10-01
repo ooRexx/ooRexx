@@ -972,7 +972,7 @@ RexxInstruction *LanguageParser::newControlledLoop(RexxString *label, RexxToken 
                 // step back a token and process the conditional
                 previousToken();
                 // this also does not allow anything after the loop conditional
-                conditional.conditional = parseLoopConditional(conditionalType, 0);
+                conditional.conditional = parseLoopConditional(conditionalType, Error_None);
                 break;
             }
         }
@@ -1080,7 +1080,7 @@ RexxInstruction *LanguageParser::newDoOverLoop(RexxString *label, RexxToken *nam
                 // step back a token and process the conditional
                 previousToken();
                 // this also does not allow anything after the loop conditional
-                conditional.conditional = parseLoopConditional(conditionalType, 0);
+                conditional.conditional = parseLoopConditional(conditionalType, Error_None);
                 break;
             }
         }
@@ -1295,7 +1295,7 @@ RexxInstruction *LanguageParser::parseCountLoop(RexxString *label)
     // process an additional conditional (NOTE:  Because of the
     // terminators used for the target expression, the only possibilities
     // here are end of clause, a WHILE keyword, or an UNTIL keyword)
-    conditional.conditional = parseLoopConditional(conditionalType, 0);
+    conditional.conditional = parseLoopConditional(conditionalType, Error_None);
 
     // NOTE:  We parse until we hit the end of clause or found an error,
     // so once we get here, there's no need for any end-of-clause checks.
@@ -1459,7 +1459,7 @@ RexxInstruction *LanguageParser::createLoop(bool isLoop)
 
                     // step back one token and process the conditional
                     previousToken();
-                    conditional.conditional = parseLoopConditional(conditionalType, 0);
+                    conditional.conditional = parseLoopConditional(conditionalType, Error_None);
                     // We know this is WHILE already, so we can create this directly
                     return newLoopWhile(label, conditional);
                 }
@@ -1474,7 +1474,7 @@ RexxInstruction *LanguageParser::createLoop(bool isLoop)
 
                     // step back one token and process the conditional
                     previousToken();
-                    conditional.conditional = parseLoopConditional(conditionalType, 0);
+                    conditional.conditional = parseLoopConditional(conditionalType, Error_None);
                     // We know this is UNTIL already, so we can create this directly
                     return newLoopUntil(label, conditional);
                 }
@@ -3744,7 +3744,7 @@ size_t LanguageParser::processVariableList(InstructionKeyword type )
  *
  * @return A parsed out expression object.
  */
-RexxInternalObject *LanguageParser::parseLoopConditional(InstructionSubKeyword &conditionType, int error_message )
+RexxInternalObject *LanguageParser::parseLoopConditional(InstructionSubKeyword &conditionType, RexxErrorCodes error_message )
 {
     RexxInternalObject *conditional = OREF_NULL;
 

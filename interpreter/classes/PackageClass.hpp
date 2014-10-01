@@ -95,6 +95,7 @@ public:
     RoutineClass *findPublicRoutine(RexxString *);
     PackageClass *findNamespace(RexxString *);
     RexxClass    *findClass(RexxString *);
+    RexxClass    *findClass(RexxString *, RexxString *);
     RexxClass    *findInstalledClass(RexxString *name);
     RexxClass    *findPublicClass(RexxString *name);
     RexxString   *resolveProgramName(Activity *activity, RexxString *name);

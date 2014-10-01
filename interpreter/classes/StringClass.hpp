@@ -329,7 +329,7 @@ class RexxString : public RexxObject
     virtual RexxString  *primitiveMakeString();
     virtual void         copyIntoTail(CompoundVariableTail *buffer);
     virtual RexxString  *stringValue();
-    virtual bool  truthValue(int);
+    virtual bool  truthValue(RexxErrorCodes);
     virtual bool logicalValue(logical_t &);
 
     // comparison methods

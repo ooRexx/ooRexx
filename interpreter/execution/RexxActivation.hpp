@@ -101,6 +101,7 @@ class RexxActivation : public ActivationBase
         TRACE_PREFIX_ARGUMENT ,
         TRACE_PREFIX_ASSIGNMENT,
         TRACE_PREFIX_INVOCATION,
+        TRACE_PREFIX_NAMESPACE,
     } TracePrefix;
 
    void *operator new(size_t);
@@ -330,6 +331,8 @@ class RexxActivation : public ActivationBase
        { if (settings.intermediateTrace) { traceOperatorValue(TRACE_PREFIX_PREFIX, n, v); } };
    inline void              traceAssignment(RexxString *n, RexxObject *v)
        { if (settings.intermediateTrace) { traceTaggedValue(TRACE_PREFIX_ASSIGNMENT, NULL, false, n, ASSIGNMENT_MARKER, v); } };
+   inline void              traceClassResolution(RexxString *n, RexxString *c, RexxObject *v)
+       { if (settings.intermediateTrace) { traceTaggedValue(TRACE_PREFIX_NAMESPACE, NULL, false, n->concatWith(c, ':'), VALUE_MARKER, v); } };
    inline void              traceCompoundName(RexxString *stemVar, RexxInternalObject **tails, size_t tailCount, CompoundVariableTail &tail) { if (settings.intermediateTrace) traceCompoundValue(TRACE_PREFIX_COMPOUND, stemVar, tails, tailCount, VALUE_MARKER, tail.createCompoundName(stemVar)); };
    inline void              traceCompoundName(RexxString *stemVar, RexxInternalObject **tails, size_t tailCount, RexxString *tail) { if (settings.intermediateTrace) traceCompoundValue(TRACE_PREFIX_COMPOUND, stemVar, tails, tailCount, VALUE_MARKER, stemVar->concat(tail)); };
    inline void              traceCompound(RexxString *stemVar, RexxInternalObject **tails, size_t tailCount, RexxObject *value) { if (settings.intermediateTrace) traceCompoundValue(TRACE_PREFIX_VARIABLE, stemVar, tails, tailCount, VALUE_MARKER, value); };

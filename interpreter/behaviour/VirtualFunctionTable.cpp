@@ -146,6 +146,7 @@
 #include "ParseTrigger.hpp"
 #include "ProgramSource.hpp"
 #include "NumberArray.hpp"
+#include "ExpressionClassResolver.hpp"
 #include "RexxMemory.hpp"
 #include "InternalStack.hpp"
 #include "MemoryStack.hpp"
@@ -653,6 +654,9 @@ void MemoryObject::buildVirtualFunctionTable()
    
    objectPtr = ::new (objectLoc) NumberArray(RESTOREIMAGE);
    virtualFunctionTable[T_NumberArray] = getVftPointer(objectLoc);
+   
+   objectPtr = ::new (objectLoc) ClassResolver(RESTOREIMAGE);
+   virtualFunctionTable[T_ClassResolver] = getVftPointer(objectLoc);
    
    objectPtr = ::new (objectLoc) RexxObject(RESTOREIMAGE);
    virtualFunctionTable[T_Memory] = getVftPointer(objectLoc);
