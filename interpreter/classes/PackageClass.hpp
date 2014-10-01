@@ -93,6 +93,7 @@ public:
     RoutineClass *findRoutine(RexxString *);
     RoutineClass *findLocalRoutine(RexxString *);
     RoutineClass *findPublicRoutine(RexxString *);
+    PackageClass *findNamespace(RexxString *);
     RexxClass    *findClass(RexxString *);
     RexxClass    *findInstalledClass(RexxString *name);
     RexxClass    *findPublicClass(RexxString *name);
@@ -137,6 +138,7 @@ public:
     inline StringTable *getDefinedMethods() { install(); return unattachedMethods; }
     inline ArrayClass  *getPackages() { install(); return loadedPackages; }
     inline StringTable *getResources() { install(); return resources; }
+    inline StringTable *getNamespaces() { install(); return namespaces; }
     inline StringTable *getInfo() { install(); return packageInfo; }
     inline void         setDigits(wholenumber_t d) { packageSettings.setDigits(d); }
     inline wholenumber_t getDigits() { return packageSettings.getDigits(); }
@@ -169,16 +171,19 @@ public:
            StringTable   *getImportedRoutinesRexx();
            StringTable   *getMethodsRexx();
            StringTable   *getResourcesRexx();
+           StringTable   *getNamespacesRexx();
            StringTable   *getInfoRexx();
+           PackageClass  *getNamespaceRexx();
            ArrayClass    *getImportedPackagesRexx();
            PackageClass  *loadPackageRexx(RexxString *name, ArrayClass *s);
-           RexxObject    *addPackageRexx(PackageClass *package);
+           RexxObject    *addPackageRexx(PackageClass *package, RexxString *namespaceName);
            RexxObject    *addRoutineRexx(RexxString *name, RoutineClass *routine);
            RexxObject    *addPublicRoutineRexx(RexxString *name, RoutineClass *routine);
            RexxObject    *addClassRexx(RexxString *name, RexxClass *clazz);
            RexxObject    *addPublicClassRexx(RexxString *name, RexxClass *clazz);
-           RexxClass     *findClassRexx(RexxString *name);
-           RoutineClass  *findRoutineRexx(RexxString *name);
+           RexxObject    *findClassRexx(RexxString *name);
+           RexxObject    *findRoutineRexx(RexxString *name);
+           RexxObject    *findNamespaceRexx(RexxString *name);
            RexxObject    *setSecurityManagerRexx(RexxObject *manager);
            RexxObject    *loadLibraryRexx(RexxString *name);
            RexxObject    *digitsRexx();
@@ -190,6 +195,7 @@ public:
                return extractSource();
            }
            void           runProlog(Activity *);
+           void addNamespace(RexxString *name, PackageClass *package);
 
 protected:
 
@@ -214,6 +220,7 @@ protected:
     ArrayClass  *classes;                 // classes found on directives
     StringTable *resources;               // assets defined in the package
     StringTable *unattachedMethods;       // methods found on directives
+    StringTable *namespaces;              // named packages
 
     // sections resolved from the install process.
 

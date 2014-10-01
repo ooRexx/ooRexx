@@ -1932,7 +1932,7 @@ void LanguageParser::routineDirective()
 void LanguageParser::requiresDirective()
 {
     bool isLibrary = false;
-    RexxString *label = OREF_NULL;
+    RexxString *namespaceName = OREF_NULL;
 
     // the required entity name is a string or symbol
     RexxToken *token = nextReal();
@@ -1959,10 +1959,10 @@ void LanguageParser::requiresDirective()
         switch (token->subDirective())
         {
             // we have a label on the requires
-            case SUBDIRECTIVE_LABEL:
+            case SUBDIRECTIVE_NAMESPACE:
             {
                 // can only have one of these and cannot have this with the LIBRARY option
-                if (isLibrary || label != OREF_NULL)
+                if (isLibrary || namespaceName != OREF_NULL)
                 {
                     syntaxError(Error_Invalid_subkeyword_requires, token);
                 }
@@ -1970,11 +1970,11 @@ void LanguageParser::requiresDirective()
                 token = nextReal();
                 if (!token->isSymbol())
                 {
-                    syntaxError(Error_Symbol_expected_LABEL);
+                    syntaxError(Error_Symbol_expected_namespace);
                 }
                 // NOTE:  since this is a symbol, the label will be an
                 // uppercase name.
-                label = token->value();
+                namespaceName = token->value();
                 break;
             }
 
@@ -1985,7 +1985,7 @@ void LanguageParser::requiresDirective()
                 // the LABEL keyword is not allowed on a LIBRARY requires.
                 // this might have some meaning eventually for resolving
                 // external routines, but for now, this is a restriction.
-                if (isLibrary || label != OREF_NULL)
+                if (isLibrary || namespaceName != OREF_NULL)
                 {
                     syntaxError(Error_Invalid_subkeyword_requires, token);
                 }
@@ -2006,7 +2006,7 @@ void LanguageParser::requiresDirective()
     }
     else
     {
-        requires->append(new RequiresDirective(name, label, clause));
+        requires->append(new RequiresDirective(name, namespaceName, clause));
     }
 }
 

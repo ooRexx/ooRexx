@@ -77,6 +77,7 @@
 #include "LanguageParser.hpp"
 #include "TrapHandler.hpp"
 #include "MethodArguments.hpp"
+#include "RequiresDirective.hpp"
 
 
 // max instructions without a yield
@@ -2806,20 +2807,17 @@ RexxObject *RexxActivation::resolveDotVariable(RexxString *name)
 
 
 /**
- * Load a ::REQUIRES directive when the source file is first
- * invoked.
+ * Does not actually load a package for a requires, but sets the
+ * requires instruction as the current instruction for error
+ * reporting.
  *
- * @param target The name of the ::REQUIRES
  * @param instruction
  *               The directive instruction being processed.
  */
-PackageClass *RexxActivation::loadRequires(RexxString *target, RexxInstruction *instruction)
+void RexxActivation::loadRequires(RequiresDirective *instruction)
 {
     // this will cause the correct location to be used for error reporting
     current = instruction;
-
-    // the loading/merging is done by the package
-    return getPackageObject()->loadRequires(activity, target);
 }
 
 

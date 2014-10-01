@@ -1072,15 +1072,17 @@ StartClassDefinition(Package)
         AddMethod("ImportedClasses", PackageClass::getImportedClassesRexx, 0);
         AddMethod("DefinedMethods", PackageClass::getMethodsRexx, 0);
         AddMethod("Resources", PackageClass::getResourcesRexx, 0);
+        AddMethod("Namespaces", PackageClass::getNamespacesRexx, 0);
         AddMethod("Info", PackageClass::getInfoRexx, 0);
         AddMethod("Routines", PackageClass::getRoutinesRexx, 0);
         AddMethod("PublicRoutines", PackageClass::getPublicRoutinesRexx, 0);
         AddMethod("ImportedRoutines", PackageClass::getImportedRoutinesRexx, 0);
         AddMethod("ImportedPackages", PackageClass::getImportedPackagesRexx, 0);
         AddMethod("LoadPackage", PackageClass::loadPackageRexx, 2);
-        AddMethod("AddPackage", PackageClass::addPackageRexx, 1);
+        AddMethod("AddPackage", PackageClass::addPackageRexx, 2);
         AddMethod("FindClass", PackageClass::findClassRexx, 1);
         AddMethod("FindRoutine", PackageClass::findRoutineRexx, 1);
+        AddMethod("FindNamespace", PackageClass::findNamespaceRexx, 1);
         AddMethod("AddRoutine", PackageClass::addRoutineRexx, 2);
         AddMethod("AddPublicRoutine", PackageClass::addPublicRoutineRexx, 2);
         AddMethod("AddClass", PackageClass::addClassRexx, 2);

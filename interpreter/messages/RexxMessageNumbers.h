@@ -663,6 +663,7 @@
 #define Error_Symbol_or_string_package_attribute_bad_value_msg       758
 #define Error_Symbol_or_string_package_attribute_missing_msg         759
 #define Error_Symbol_or_string_directive_option_msg                  760
+#define Error_Symbol_expected_namespace_msg                          761
 
 
 #endif

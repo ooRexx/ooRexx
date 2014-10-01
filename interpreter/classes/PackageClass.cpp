@@ -665,6 +665,44 @@ void PackageClass::mergeRequired(PackageClass *mergeSource)
 
 
 /**
+ * Resolve a directly defined routine object in this or a parent
+ * context.
+ *
+ * @param name   The name we're searching for (all uppercase).
+ *
+ * @return A resolved routine object, if found.
+ */
+PackageClass *PackageClass::findNamespace(RexxString *name)
+{
+    // if this a request for the global rexx package?
+    if (name->strCompare(GlobalNames::REXX))
+    {
+        return TheRexxPackage;
+    }
+
+    // if we have one locally, then return it.
+    if (namespaces != OREF_NULL)
+    {
+        PackageClass *result = (PackageClass *)(namespaces->get(name));
+        if (result != OREF_NULL)
+        {
+            return result;
+        }
+    }
+
+    // we might have a chained context.  We check this after any locally
+    // defined ones in this source.
+    if (parentPackage != OREF_NULL)
+    {
+        return parentPackage->findNamespace(name);
+    }
+
+    // nope, no got one
+    return OREF_NULL;
+}
+
+
+/**
  * Resolve a directly defined class object in this or a parent
  * context.
  *
@@ -967,7 +1005,7 @@ void PackageClass::processInstall(RexxActivation *activation)
             // we end up back in our own context while processing this, and the merge
             // of the information happens then.
             RequiresDirective *_requires = (RequiresDirective *)requires->get(i);
-            _requires->install(activation);
+            _requires->install(this, activation);
         }
     }
 
@@ -1388,6 +1426,27 @@ StringTable *PackageClass::getResourcesRexx()
 
 
 /**
+ * Get all of the namespaces defined in this package.
+ *
+ * @return A directory of the defined namespaces
+ */
+StringTable *PackageClass::getNamespacesRexx()
+{
+    // we need to return a copy.  The source might necessarily have any of these,
+    // so we return an empty directory if it's not there.
+    StringTable *namespaceDir = getNamespaces();
+    if (namespaceDir != OREF_NULL)
+    {
+        return (StringTable *)namespaceDir->copy();
+    }
+    else
+    {
+        return new_string_table();
+    }
+}
+
+
+/**
  * Get all of the information encoded for this package.
  *
  * @return A directory of the defined package annotations
@@ -1462,12 +1521,17 @@ PackageClass *PackageClass::loadPackageRexx(RexxString *name, ArrayClass *s)
  *
  * @return The loaded package object.
  */
-RexxObject *PackageClass::addPackageRexx(PackageClass *package)
+RexxObject *PackageClass::addPackageRexx(PackageClass *package, RexxString *namespaceName)
 {
     classArgument(package, ThePackageClass, "package");
+    namespaceName = optionalStringArgument(namespaceName, OREF_NULL, "namespace");
     // unable to add to the external packages
     checkRexxPackage();
     addPackage(package);
+    if (namespaceName != OREF_NULL)
+    {
+        addNamespace(namespaceName, package);
+    }
     return this;
 }
 
@@ -1551,15 +1615,24 @@ RexxObject *PackageClass::addPublicClassRexx(RexxString *name, RexxClass *clazz)
  *
  * @return The resolved class object.
  */
-RexxClass *PackageClass::findClassRexx(RexxString *name)
+RexxObject *PackageClass::findClassRexx(RexxString *name)
 {
     name = stringArgument(name, "name");
-    RexxClass *cls = findClass(name);
-    if (cls == OREF_NULL)
-    {
-        return (RexxClass *)TheNilObject;
-    }
-    return cls;
+    return resultOrNil(findClass(name));
+}
+
+
+/**
+ * Resolve a namespace in the context of a package.
+ *
+ * @param name   The required class name.
+ *
+ * @return The resolved class object.
+ */
+RexxObject *PackageClass::findNamespaceRexx(RexxString *name)
+{
+    name = stringArgument(name, "name");
+    return resultOrNil(findNamespace(name));
 }
 
 
@@ -1570,11 +1643,10 @@ RexxClass *PackageClass::findClassRexx(RexxString *name)
  *
  * @return The resolved routine object.
  */
-RoutineClass *PackageClass::findRoutineRexx(RexxString *name)
+RexxObject *PackageClass::findRoutineRexx(RexxString *name)
 {
     name = stringArgument(name, "name");
-    RoutineClass *routine = findRoutine(name);
-    return (RoutineClass *)resultOrNil(routine);
+    return resultOrNil(findRoutine(name));
 }
 
 
@@ -1687,4 +1759,19 @@ void PackageClass::runProlog(Activity *activity)
 }
 
 
-
+/**
+ * add a namespace to this package.
+ *
+ * @param name    The name of the namespace.
+ * @param package The namespace package.
+ */
+void PackageClass::addNamespace(RexxString *name, PackageClass *package)
+{
+    // if first namespace added, create the table
+    if (namespaces == OREF_NULL)
+    {
+        setField(namespaces, new_string_table());
+    }
+    // add the namespace name
+    namespaces->put(package, name);
+}

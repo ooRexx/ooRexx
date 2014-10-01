@@ -293,7 +293,7 @@ RexxObjectPtr controlNotSupportedException(RexxMethodContext *c, RexxObjectPtr r
                                            RexxStringObject controlName)
 {
     TCHAR buf[256];
-    _snprintf(buf, sizeof(buf), "Argument %d (resource ID %d) the %s control in the %s dialog is not supported by ooDialog",
+    _snprintf(buf, sizeof(buf), "Argument %d (resource ID %s) the %s control in the %s dialog is not supported by ooDialog",
               pos, c->ObjectToStringValue(rxID), c->ObjectToStringValue(controlName), c->ObjectToStringValue(rxDlg));
     c->RaiseException1(Rexx_Error_Incorrect_method_user_defined, c->String(buf));
     return NULLOBJECT;

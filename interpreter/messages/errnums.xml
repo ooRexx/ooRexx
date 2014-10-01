@@ -826,6 +826,12 @@ special character (such as a parenthesis).
 <para>Symbol expected as ::PACKAGE attribute name; found "<emphasis role="italic">name</emphasis>"</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>920</term>
+<listitem>
+<para>Symbol expected after NAMESPACE keyword</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR21">

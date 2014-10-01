@@ -167,6 +167,7 @@
 #define Error_Symbol_expected_colon                        20917
 #define Error_Symbol_expected_LABEL                        20918
 #define Error_Symbol_expected_package_attribute            20919
+#define Error_Symbol_expected_namespace                    20920
 #define Error_Invalid_data                                 21000
 #define Error_Invalid_data_user_defined                    21900
 #define Error_Invalid_data_nop                             21901

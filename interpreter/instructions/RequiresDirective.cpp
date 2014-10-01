@@ -71,7 +71,7 @@ void *RequiresDirective::operator new(size_t size)
 RequiresDirective::RequiresDirective(RexxString *n, RexxString *l, RexxClause *clause) : RexxDirective(clause, KEYWORD_REQUIRES)
 {
     name = n;
-    label = l;
+    namespaceName = l;
 }
 
 /**
@@ -84,7 +84,7 @@ void RequiresDirective::live(size_t liveMark)
     // must be first one marked (though normally null)
     memory_mark(nextInstruction);
     memory_mark(name);
-    memory_mark(label);
+    memory_mark(namespaceName);
 }
 
 
@@ -98,7 +98,7 @@ void RequiresDirective::liveGeneral(MarkReason reason)
     // must be first one marked (though normally null)
     memory_mark_general(nextInstruction);
     memory_mark_general(name);
-    memory_mark_general(label);
+    memory_mark_general(namespaceName);
 }
 
 
@@ -113,7 +113,7 @@ void RequiresDirective::flatten(Envelope *envelope)
 
     flattenRef(nextInstruction);
     flattenRef(name);
-    flattenRef(label);
+    flattenRef(namespaceName);
 
     cleanUpFlatten
 }
@@ -124,10 +124,19 @@ void RequiresDirective::flatten(Envelope *envelope)
  * will resolve the directive and merge all of the public information
  * from the resolved file into this program context.
  *
- * @param activation The activation we're running under for the install.
+ * @param package The package we're attached to.
+ * @param context The current activation context for the install.
  */
-void RequiresDirective::install(RexxActivation *context)
+void RequiresDirective::install(PackageClass *package, RexxActivation *context)
 {
-    // TODO:  Need to sort out how the label is handled at load time
-    context->loadRequires(name, this);
+    // make this the current instruction in the context for error reporting
+    context->loadRequires(this);
+
+    // the loading/merging is done by the package
+    PackageClass *newPackage = package->loadRequires(context->getActivity(), name);
+    // was this loaded with a namespace name?  Then add this to the package namespaces
+    if (namespaceName != OREF_NULL)
+    {
+        package->addNamespace(namespaceName, newPackage);
+    }
 }

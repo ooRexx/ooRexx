@@ -60,12 +60,12 @@ class RequiresDirective : public RexxDirective
     virtual void flatten(Envelope *);
 
     inline RexxString *getName() { return name; }
-    void install(RexxActivation *context);
+    void install(PackageClass *package, RexxActivation *context);
 
 protected:
 
-    RexxString *name;     // the name of the directive
-    RexxString *label;    // tagged package label used for lookups
+    RexxString *name;           // the name of the directive
+    RexxString *namespaceName;  // tagged package label used for lookups
 };
 
 #endif

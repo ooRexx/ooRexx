@@ -1175,6 +1175,15 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Symbol_expected_package_attribute</SymbolicName>
         <Text>Symbol expected as ::PACKAGE attribute name; found <q><Sub position="1" name="name"/></q></Text>
       </SubMessage>
+      <SubMessage>
+        <Code>20</Code>
+        <Subcode>920</Subcode>
+        <MessageNumber>761</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Symbol_expected_namespace</SymbolicName>
+        <Text>Symbol expected after NAMESPACE keyword</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>

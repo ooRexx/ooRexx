@@ -663,6 +663,7 @@ Error_Program_unreadable    "Failure during initialization"
    Error_Symbol_or_string_package_attribute_bad_value    "Symbol or string expected as ::PACKAGE attribute value; found ""&1"""
    Error_Symbol_or_string_package_attribute_missing    "Symbol or string expected as ::PACKAGE attribute value."
    Error_Symbol_or_string_directive_option    "String expected after &1 &2 keyword"
+   Error_Symbol_expected_namespace    "Symbol expected after NAMESPACE keyword"
    
 END
 

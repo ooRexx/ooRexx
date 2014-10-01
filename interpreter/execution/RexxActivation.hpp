@@ -62,6 +62,7 @@ class ProtectedObject;
 class SupplierClass;
 class PackageClass;
 class StackFrameClass;
+class RequiresDirective;
 
 
 /**
@@ -237,7 +238,7 @@ class RexxActivation : public ActivationBase
    void              propagateExit(RexxObject *);
    void              setDefaultAddress(RexxString *);
    bool              internalMethod();
-   PackageClass    * loadRequires(RexxString *, RexxInstruction *);
+   void              loadRequires(RequiresDirective *);
    void              loadLibrary(RexxString *target, RexxInstruction *instruction);
    RexxObject      * rexxVariable(RexxString *);
    void              pushEnvironment(RexxObject *);
