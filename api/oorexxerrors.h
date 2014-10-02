@@ -169,6 +169,8 @@
 #define Rexx_Error_Symbol_expected_package_attribute                      20919
 #define Rexx_Error_Symbol_expected_namespace                              20920
 #define Rexx_Error_Symbol_expected_namespace_class                        20921
+#define Rexx_Error_Symbol_expected_qualified_call                         20922
+#define Rexx_Error_Symbol_expected_qualified_symbol                       20923
 #define Rexx_Error_Invalid_data                                           21000
 #define Rexx_Error_Invalid_data_user_defined                              21900
 #define Rexx_Error_Invalid_data_nop                                       21901
@@ -623,6 +625,7 @@
 #define Rexx_Error_Translation_directive_method_routine                   99941
 #define Rexx_Error_Translation_duplicate_resource                         99942
 #define Rexx_Error_Translation_missing_resource_end                       99943
+#define Rexx_Error_Translation_reserved_namespace                         99944
 
 
 #endif

@@ -651,6 +651,7 @@
 #define Error_Invalid_data_resource_dir_msg                          746
 #define Error_Translation_duplicate_resource_msg                     747
 #define Error_Translation_missing_resource_end_msg                   748
+#define Error_Translation_reserved_namespace_msg                     748
 #define Error_Invalid_argument_array_msg                             749
 #define Error_Invalid_argument_array_size_msg                        750
 #define Error_Symbol_or_string_keyword_msg                           751
@@ -668,6 +669,8 @@
 #define Error_Symbol_expected_namespace_class_msg                    762
 #define Error_Execution_no_namespace_class_msg                       762
 #define Error_Routine_not_found_namespace_msg                        763
+#define Error_Symbol_expected_qualified_call_msg                     764
+#define Error_Symbol_expected_qualified_symbol_msg                   765
 
 
 #endif

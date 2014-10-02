@@ -2008,6 +2008,13 @@ void LanguageParser::requiresDirective()
                 // NOTE:  since this is a symbol, the label will be an
                 // uppercase name.
                 namespaceName = token->value();
+
+                // REXX is a reserved namespace name.
+                if (namespaceName->strCompare(GlobalNames::REXX))
+                {
+                    syntaxError(Error_Translation_reserved_namespace);
+                }
+
                 break;
             }
 

@@ -838,6 +838,18 @@ special character (such as a parenthesis).
 <para>Symbol expected as a class name of qualified class name.</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>922</term>
+<listitem>
+<para>Symbol expected as a routine name of qualified CALL instruction.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>923</term>
+<listitem>
+<para>Symbol expected as a name of namespace-qualified symbol.</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR21">
@@ -3883,6 +3895,12 @@ special character (such as a parenthesis).
 <term>943</term>
 <listitem>
 <para>Missing ::RESOURCE end marker "<emphasis role="italic">endmarker</emphasis>" for resource "<emphasis role="italic">resoucename</emphasis>"</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>944</term>
+<listitem>
+<para>The REXX name is reserved for the language-provided namespace.</para>
 </listitem>
 </varlistentry>
 </variablelist>

@@ -242,6 +242,7 @@ class LanguageParser: public RexxInternalObject
     RexxInstruction *assignmentOpNew(RexxToken *, RexxToken *);
     RexxInstruction *callOnNew(InstructionSubKeyword type);
     RexxInstruction *dynamicCallNew(RexxToken *token);
+    RexxInstruction *qualifiedCallNew(RexxToken *token);
     RexxInstruction *callNew();
     RexxInstruction *commandNew();
     RexxInstruction *doNew();
@@ -344,6 +345,7 @@ class LanguageParser: public RexxInternalObject
     ArrayClass  *parseArgArray(RexxToken *, int);
     size_t       parseCaseWhenList(int terminators );
     RexxInternalObject *parseFunction(RexxToken *, RexxToken *);
+    RexxInternalObject *parseQualifiedSymbol(RexxString *namespaceName);
     RexxInternalObject *parseCollectionMessage(RexxToken *, RexxInternalObject *);
     RexxInternalObject *parseMessage(RexxInternalObject *, bool, int);
     RexxInternalObject *parseMessageTerm();

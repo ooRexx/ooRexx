@@ -1193,6 +1193,24 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Symbol_expected_namespace_class</SymbolicName>
         <Text>Symbol expected as a class name of qualified class name.</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>20</Code>
+        <Subcode>922</Subcode>
+        <MessageNumber>764</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Symbol_expected_qualified_call</SymbolicName>
+        <Text>Symbol expected as a routine name of qualified CALL instruction.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>20</Code>
+        <Subcode>923</Subcode>
+        <MessageNumber>765</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Symbol_expected_qualified_symbol</SymbolicName>
+        <Text>Symbol expected as a name of namespace-qualified symbol.</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>
@@ -5438,6 +5456,15 @@ special character (such as a parenthesis).
         <Severity>Warning</Severity>
         <SymbolicName>Error_Translation_missing_resource_end</SymbolicName>
         <Text>Missing ::RESOURCE end marker <q><Sub position="1" name="endmarker"/></q> for resource <q><Sub position="2" name="resoucename"/></q></Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>99</Code>
+        <Subcode>944</Subcode>
+        <MessageNumber>748</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Translation_reserved_namespace</SymbolicName>
+        <Text>The REXX name is reserved for the language-provided namespace.</Text>
       </SubMessage>
     </Subcodes>
   </Message>

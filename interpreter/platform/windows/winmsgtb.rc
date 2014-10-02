@@ -650,6 +650,7 @@ BEGIN
    21914    "Data must not follow the ::RESOURCE directive; found ""&1"""
    99942    "Duplicate ::RESOURCE directive instruction"
    99943    "Missing ::RESOURCE end marker ""&1"" for resource ""&2"""
+   99944    "The REXX name is reserved for the language-provided namespace."
    88923    "&1 argument &2 must be a single-dimensional array; found ""&3"""
    88924    "&1 argument &2 must be an array with exactly &3 items."
    19922    "String or symbol expected after &1 keyword"
@@ -667,6 +668,8 @@ BEGIN
    20921    "Symbol expected as a class name of qualified class name."
    98988    "Class ""&1"" not found in namespace ""&2"""
    43902    "Routine ""&1"" not found in namespace ""&2"""
+   20922    "Symbol expected as a routine name of qualified CALL instruction."
+   20923    "Symbol expected as a name of namespace-qualified symbol."
    
 END
 

@@ -74,6 +74,8 @@
 #include "RexxInternalApis.h"
 #include "SystemInterpreter.hpp"
 #include "TraceSetting.hpp"
+#include "ExpressionQualifiedFunction.hpp"
+#include "ExpressionClassResolver.hpp"
 
 
 /**
@@ -2896,6 +2898,52 @@ RexxInternalObject *LanguageParser::parseFunction(RexxToken *token, RexxToken *n
 
 
 /**
+ * Parse off a qualified symbol.  This can either be a class
+ * lookup or a qualified function call.
+ * the call.
+ *
+ * @param n
+ *
+ * @return An expression object that can process this qualified lookup
+ *         type.
+ */
+RexxInternalObject *LanguageParser::parseQualifiedSymbol(RexxString *namespaceName)
+{
+    RexxToken *token = nextToken();
+
+    if (!token->isSymbol())
+    {
+        syntaxError(Error_Symbol_expected_qualified_symbol);
+    }
+
+    // get the qualified name
+    RexxString *qualifiedName = token->value();
+
+    // step to the next immediate token.  If this is left paren, then
+    // this is a qualified function call
+    token = nextToken();
+    if (token->isLeftParen())
+    {
+        // parse off the argument list, leaving the arguments in the subterm stack.
+        // NOTE:  Because we have a closed () construct delimiting the function arguments,
+        // we can ignore any terminators specified from the parent context.
+        size_t argCount = parseArgList(token, (TERM_RIGHT));
+
+        // create a function item.  This will also pull the argument items from the
+        // subterm stack
+        return new (argCount) QualifiedFunction(namespaceName, qualifiedName, argCount, subTerms);
+    }
+    // this is a qualified class lookup
+    else
+    {
+        // need to push the following token back...it is something else.
+        previousToken();
+        return new ClassResolver(namespaceName, qualifiedName);
+    }
+}
+
+
+/**
  * Parse a collection message expression term.  This is
  * if the form term[args], and follows much the same
  * parsing rules as function calls.
@@ -3353,9 +3401,35 @@ RexxInternalObject *LanguageParser::parseSubTerm(int terminators)
             return term;
         }
 
-        // literal or symbol.  These are generally pretty simple, but
-        // we also have to account for function calls.
+        // a symbol.  These are generally pretty simple, but
+        // we also have to account for function calls or qualified lookups
         case  TOKEN_SYMBOL:
+        {
+            // need to check if the next token is an open paren.  That turns
+            // the symbol or literal token into a function invocation.
+            RexxToken *second = nextToken();
+            if (second->isLeftParen())
+            {
+                return parseFunction(second, token);
+            }
+            // either a qualified symbol lookup or a potential
+            // qualified function.
+            else if (second->isType(TOKEN_COLON))
+            {
+                return parseQualifiedSymbol(token->value());
+            }
+            else
+            {
+                // simple text token type...push the next token back
+                // and go resolve how the token is handled.
+                previousToken();
+                return addText(token);
+            }
+            break;
+        }
+
+        // a literal.  These are generally pretty simple, but
+        // we also have to account for function calls.
         case  TOKEN_LITERAL:
         {
             // need to check if the next token is an open paren.  That turns

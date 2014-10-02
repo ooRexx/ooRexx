@@ -761,6 +761,42 @@ RexxInstruction *LanguageParser::dynamicCallNew(RexxToken *token)
 
 
 /**
+ * Process a call of the form CALL namespace:name, which is
+ * restricted to public routines in the named namespace.
+ *
+ * @param token  The first token of the expression (with the opening paren of the name expression.)
+ *
+ * @return A new object for executing this call.
+ */
+RexxInstruction *LanguageParser::qualifiedCallNew(RexxToken *token)
+{
+    RexxString *namespaceName = token->value();
+
+    // the colon has already been pulled off...so the next token
+    // needs to be a symbol
+
+    token = nextToken();
+    if (!token->isSymbol())
+    {
+       syntaxError(Error_Symbol_expected_qualified_call, token);
+    }
+
+    RexxString *routineName = token->value();
+
+    // process the argument list
+    size_t argCount = parseArgList(OREF_NULL, TERM_EOC);
+
+    // create a new instruction object
+    RexxInstruction *newObject = new_variable_instruction(CALL_QUALIFIED, QualifiedCall, sizeof(RexxInstructionQualifiedCall) + (argCount - 1) * sizeof(RexxObject *));
+    ::new ((void *)newObject) RexxInstructionQualifiedCall(namespaceName, routineName, argCount, subTerms);
+
+    // NOTE:  The call target has no reliance on the labels because it is always an external
+    // call.  This does not need a resolve step.
+    return newObject;
+}
+
+
+/**
  * Finish parsing of a CALL instruction.  There are 3 distinct
  * forms of the Call instruction, with a different execution
  * object for each form.
@@ -770,7 +806,8 @@ RexxInstruction *LanguageParser::dynamicCallNew(RexxToken *token)
 RexxInstruction *LanguageParser::callNew()
 {
     BuiltinCode builtin_index;
-    RexxString *targetName;
+    RexxString *targetName = OREF_NULL;
+    RexxString *namespaceName = OREF_NULL;
     size_t argCount = 0;
     bool noInternal = false;
 
@@ -787,6 +824,17 @@ RexxInstruction *LanguageParser::callNew()
     // processed into a separate instruction type.
     else if (token->isSymbol())
     {
+        // we could have a namespace-qualified name here.
+        RexxToken *next = nextToken();
+        if (next->isType(TOKEN_COLON))
+        {
+            return qualifiedCallNew(token);
+        }
+
+        // back up one token and try the others
+        previousToken();
+
+
         // check for a matching subkeyword.  On ON or OFF are of significance
         // here.
         InstructionSubKeyword keyword = token->subKeyword();

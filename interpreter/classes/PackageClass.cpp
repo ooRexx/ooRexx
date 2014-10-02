@@ -208,6 +208,11 @@ void PackageClass::liveGeneral(MarkReason reason)
     if (reason == PREPARINGIMAGE)
     {
         detachSource();
+        // for the REXX package (the only one that should be in
+        // the saved image), the merged directories and the main ones are
+        // the same.
+        mergedPublicRoutines = publicRoutines;
+        mergedPublicClasses = installedPublicClasses;
     }
 
     memory_mark_general(source);

@@ -1844,6 +1844,9 @@ $ Error_Translation_duplicate_resource
 $ Error_Translation_missing_resource_end
 748 Missing ::RESOURCE end marker "&1" for resource "&2"
 
+$ Error_Translation_reserved_namespace
+748 The REXX name is reserved for the language-provided namespace.
+
 $ Error_Invalid_argument_array
 749 &1 argument &2 must be a single-dimensional array; found "&3"
 
@@ -1894,6 +1897,12 @@ $ Error_Execution_no_namespace_class
 
 $ Error_Routine_not_found_namespace
 763 Routine "&1" not found in namespace "&2"
+
+$ Error_Symbol_expected_qualified_call
+764 Symbol expected as a routine name of qualified CALL instruction.
+
+$ Error_Symbol_expected_qualified_symbol
+765 Symbol expected as a name of namespace-qualified symbol.
 
 
 $ * -------------------------------------------------------------------------- */
