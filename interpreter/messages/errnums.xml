@@ -2434,6 +2434,12 @@ special character (such as a parenthesis).
 <para>Could not find routine "<emphasis role="italic">routine</emphasis>" for ::REQUIRES</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>902</term>
+<listitem>
+<para>Routine "<emphasis role="italic">routineName</emphasis>" not found in namespace "<emphasis role="italic">namespace</emphasis>"</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR44">

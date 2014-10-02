@@ -51,6 +51,7 @@
 #include "CallInstruction.hpp"
 #include "ProtectedObject.hpp"
 #include "MethodArguments.hpp"
+#include "RoutineClass.hpp"
 
 
 /**
@@ -160,28 +161,8 @@ void RexxInstructionCall::execute(RexxActivation *context, ExpressionStack *stac
     ActivityManager::currentActivity->checkStackSpace();
     context->traceInstruction(this);
 
-    // before we do anything, we need to evaluate all of the arguments.
-    for (size_t i = 0; i < argumentCount; i++)
-    {
-        // arguments can be omitted, so don't try to evaluate any of
-        // those.
-        if (arguments[i] != OREF_NULL)
-        {
-            // evaluate what ever this argument expression is.  The
-            // argument value is also pushed on to the evaluation stack
-            RexxObject *argResult = arguments[i]->evaluate(context, stack);
-
-            // trace if the settings require it.
-            context->traceArgument(argResult);
-        }
-        else
-        {
-            // push an empty value on to the stack and trace this as a null string
-            // value.
-            stack->push(OREF_NULL);
-            context->traceArgument(GlobalNames::NULLSTRING);
-        }
-    }
+    // evaluate the arguments first
+    RexxInstruction::evaluateArguments(context, stack, arguments, argumentCount);
 
     ProtectedObject   result;            // returned result
 
@@ -301,29 +282,8 @@ void RexxInstructionDynamicCall::execute(RexxActivation *context, ExpressionStac
     Protected<RexxString> targetName = evaluatedTarget->requestString();
     context->traceResult(targetName);
 
-
-    // before we do anything, we need to evaluate all of the arguments.
-    for (size_t i = 0; i < argumentCount; i++)
-    {
-        // arguments can be omitted, so don't try to evaluate any of
-        // those.
-        if (arguments[i] != OREF_NULL)
-        {
-            // evaluate what ever this argument expression is.  The
-            // argument value is also pushed on to the evaluation stack
-            RexxObject *argResult = arguments[i]->evaluate(context, stack);
-
-            // trace if the settings require it.
-            context->traceArgument(argResult);
-        }
-        else
-        {
-            // push an empty value on to the stack and trace this as a null string
-            // value.
-            stack->push(OREF_NULL);
-            context->traceArgument(GlobalNames::NULLSTRING);
-        }
-    }
+    // evaluate the arguments first
+    RexxInstruction::evaluateArguments(context, stack, arguments, argumentCount);
 
     // see if we can find an internal label target
     RexxInstruction *targetInstruction = OREF_NULL;
@@ -356,6 +316,131 @@ void RexxInstructionDynamicCall::execute(RexxActivation *context, ExpressionStac
             context->externalCall(targetName, stack->arguments(argumentCount), argumentCount, GlobalNames::SUBROUTINE, result);
         }
     }
+
+    // did we get a result returned?  We need to either set or drop
+    // the result variable and potentially trace this.
+    if (!result.isNull())
+    {
+        context->setLocalVariable(GlobalNames::RESULT, VARIABLE_RESULT, result);
+        context->traceResult(result);
+    }
+    else
+    {
+        context->dropLocalVariable(GlobalNames::RESULT, VARIABLE_RESULT);
+    }
+    // and finally the debug pause.
+    context->pauseInstruction();
+}
+
+
+/**
+ * Construct a Call instruction object.
+ *
+ * @param n        The target namespace
+ * @param r        the name of the routine.
+ * @param argCount The count of arguments.
+ * @param argList  A queue of the arguments (stored in reverse evaluation order)
+ */
+RexxInstructionQualifiedCall::RexxInstructionQualifiedCall(RexxString *n, RexxString *r,
+    size_t argCount, QueueClass *argList)
+{
+    namespaceName = n;
+    routineName = r;
+
+    argumentCount = argCount;
+    // now copy any arguments from the sub term stack
+    // NOTE:  The arguments are in last-to-first order on the stack.
+    initializeObjectArray(argCount, arguments, RexxObject, argList);
+}
+
+
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
+void RexxInstructionQualifiedCall::live(size_t liveMark)
+{
+    memory_mark(nextInstruction);  // must be first one marked
+    memory_mark(namespaceName);
+    memory_mark(routineName);
+    memory_mark_array(argumentCount, arguments);
+}
+
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
+void RexxInstructionQualifiedCall::liveGeneral(MarkReason reason)
+{
+    // must be first one marked
+    memory_mark_general(nextInstruction);
+    memory_mark_general(namespaceName);
+    memory_mark_general(routineName);
+    memory_mark_general_array(argumentCount, arguments);
+}
+
+
+/**
+ * Flatten a source object.
+ *
+ * @param envelope The envelope that will hold the flattened object.
+ */
+void RexxInstructionQualifiedCall::flatten(Envelope *envelope)
+{
+    setUpFlatten(RexxInstructionQualifiedCall)
+
+    flattenRef(nextInstruction);
+    flattenRef(namespaceName);
+    flattenRef(routineName);
+    flattenArrayRefs(argumentCount, arguments);
+
+    cleanUpFlatten
+}
+
+
+/**
+ * Execute a call to a dynamic call target.
+ *
+ * @param context The current program execution context.
+ * @param stack   The current context evaluation stack.
+ */
+void RexxInstructionQualifiedCall::execute(RexxActivation *context, ExpressionStack *stack)
+{
+    // perform a stack space check here.
+    ActivityManager::currentActivity->checkStackSpace();
+    context->traceInstruction(this);
+
+    // evaluate the arguments first
+    RexxInstruction::evaluateArguments(context, stack, arguments, argumentCount);
+
+    ProtectedObject   result;            // returned result
+
+    // get the current package from the context
+    PackageClass *package = context->getPackage();
+
+    // we must be able to find the named namespace
+    PackageClass *namespacePackage = package->findNamespace(namespaceName);
+    if (namespacePackage == OREF_NULL)
+    {
+        reportException(Error_Execution_no_namespace, namespaceName, package->getProgramName());
+    }
+
+    // we only look for public routines in the namespaces
+    RoutineClass *resolvedRoutine = namespacePackage->findPublicRoutine(routineName);
+    // we give a specific error for this one
+    if (resolvedRoutine == OREF_NULL)
+    {
+        reportException(Error_Routine_not_found, routineName, namespaceName);
+    }
+
+    // call the resolved function
+    resolvedRoutine->call(context->getActivity(), routineName, stack->arguments(argumentCount), argumentCount, GlobalNames::SUBROUTINE, OREF_NULL, EXTERNALCALL, result);
+
 
     // did we get a result returned?  We need to either set or drop
     // the result variable and potentially trace this.

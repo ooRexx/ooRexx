@@ -148,6 +148,31 @@ protected:
 
 
 /**
+ * A call instruction that resolves the target from a qualified
+ * namespace
+ */
+class RexxInstructionQualifiedCall : public RexxInstruction
+{
+ public:
+    RexxInstructionQualifiedCall(RexxString *, RexxString *, size_t, QueueClass *);
+    inline RexxInstructionQualifiedCall(RESTORETYPE restoreType) { ; };
+
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(Envelope*);
+
+    virtual void execute(RexxActivation *, ExpressionStack *);
+
+protected:
+
+    RexxString *namespaceName;           // the namespace qualifier for the call
+    RexxString *routineName;             // the name of the routine
+    size_t      argumentCount;           // number of arguments
+    RexxInternalObject  *arguments[1];   // argument list
+};
+
+
+/**
  * An instruction object to handle the basics of the
  * CALL ON/OFF instruction.
  */

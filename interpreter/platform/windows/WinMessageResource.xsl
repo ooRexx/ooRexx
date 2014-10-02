@@ -49,7 +49,6 @@
 /*             -- Message resource file for ooRexx interpreter                */
 /******************************************************************************/
 
-#include "RexxErrorCodes.h"
 STRINGTABLE
 BEGIN
 
@@ -63,7 +62,7 @@ BEGIN
 </xsl:text>
    <xsl:for-each select="Message | Message/Subcodes/SubMessage">
        <xsl:sort select="MessageNumber" data-type="number"/>
-<xsl:value-of select="SymbolicName"/><xsl:text>    </xsl:text>&quot;<xsl:apply-templates select="Text"/>&quot;
+<xsl:value-of select="Code"/> <xsl:value-of select="Subcode"/><xsl:text>    </xsl:text>&quot;<xsl:apply-templates select="Text"/>&quot;
    </xsl:for-each>
 <xsl:text>
 END

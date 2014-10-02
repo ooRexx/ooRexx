@@ -667,6 +667,7 @@
 #define Error_Execution_no_namespace_msg                             761
 #define Error_Symbol_expected_namespace_class_msg                    762
 #define Error_Execution_no_namespace_class_msg                       762
+#define Error_Routine_not_found_namespace_msg                        763
 
 
 #endif

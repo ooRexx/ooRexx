@@ -44,13 +44,12 @@
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "QueueClass.hpp"
-#include "DirectoryClass.hpp"
 #include "RexxActivation.hpp"
 #include "RexxInstruction.hpp"
-#include "ExpressionFunction.hpp"
-#include "Token.hpp"
+#include "ExpressionQualifiedFunction.hpp"
 #include "Activity.hpp"
 #include "ProtectedObject.hpp"
+#include "RoutineClass.hpp"
 
 
 /**
@@ -61,34 +60,32 @@
  *
  * @return The storage for creating a function object.
  */
-void *RexxExpressionFunction::operator new(size_t size, size_t argCount)
+void *QualifiedFunction::operator new(size_t size, size_t argCount)
 {
     if (argCount == 0)
     {
         // allocate with singleton item chopped off
-        return new_object(size - sizeof(RexxObject *), T_FunctionCallTerm);
+        return new_object(size - sizeof(RexxObject *), T_QualifiedFunction);
     }
     else
     {
         // allocate with the space needed for the arguments
-        return new_object(size + (argCount - 1) * sizeof(RexxObject *), T_FunctionCallTerm);
+        return new_object(size + (argCount - 1) * sizeof(RexxObject *), T_QualifiedFunction);
     }
 }
 
 /**
  * Construct a function call expression object.
  *
- * @param function_name
- *                   The name of the function.
- * @param argCount   The argument count.
- * @param arglist    The source arguments.
- * @param index      A potential builtin function index.
+ * @param n        The namespace qualifier
+ * @param f        The function name.
+ * @param argCount The argument count.
+ * @param argList
  */
-RexxExpressionFunction::RexxExpressionFunction(RexxString *function_name,
-    size_t argCount, QueueClass *argList, BuiltinCode index)
+QualifiedFunction::QualifiedFunction(RexxString *n, RexxString *f, size_t argCount, QueueClass *argList)
 {
-    functionName = function_name;
-    builtinIndex = index;
+    namespaceName = n;
+    functionName = f;
     argumentCount = argCount;
 
     // now copy any arguments from the sub term stack
@@ -102,9 +99,9 @@ RexxExpressionFunction::RexxExpressionFunction(RexxString *function_name,
  *
  * @param liveMark The current live mark.
  */
-void RexxExpressionFunction::live(size_t liveMark)
+void QualifiedFunction::live(size_t liveMark)
 {
-    memory_mark(target);
+    memory_mark(namespaceName);
     memory_mark(functionName);
     memory_mark_array(argumentCount, arguments);
 }
@@ -117,9 +114,9 @@ void RexxExpressionFunction::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void RexxExpressionFunction::liveGeneral(MarkReason reason)
+void QualifiedFunction::liveGeneral(MarkReason reason)
 {
-    memory_mark_general(target);
+    memory_mark_general(namespaceName);
     memory_mark_general(functionName);
     memory_mark_general_array(argumentCount, arguments);
 }
@@ -130,37 +127,15 @@ void RexxExpressionFunction::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope that will hold the flattened object.
  */
-void RexxExpressionFunction::flatten(Envelope *envelope)
+void QualifiedFunction::flatten(Envelope *envelope)
 {
-    setUpFlatten(RexxExpressionFunction)
+    setUpFlatten(QualifiedFunction)
 
-    flattenRef(target);
+    flattenRef(namespaceName);
     flattenRef(functionName);
     flattenArrayRefs(argumentCount, arguments);
 
     cleanUpFlatten
-}
-
-
-/**
- * Delayed resolution of function calls.
- *
- * @param labels The table of label instructions in the current code block.
- */
-void RexxExpressionFunction::resolve(StringTable *labels)
-{
-    // Note, if we are not allowed to have internal calls, we never get added to the
-    // resolution list.  If we get a resolve call, then we need to check for this.
-    // if there is a labels table, see if we can find a label object from the context.
-    if (labels != OREF_NULL)
-    {
-        // see if there is a matching label.  If we get something,
-        // we're finished.
-        target = (RexxInstruction *)labels->get((RexxString *)functionName);
-    }
-
-    // really nothing else required here.  If we did not resolve a label location, then
-    // the next step depends on whether we have a valid builtin index or not.
 }
 
 
@@ -172,7 +147,7 @@ void RexxExpressionFunction::resolve(StringTable *labels)
  *
  * @return The function return value.
  */
-RexxObject *RexxExpressionFunction::evaluate(RexxActivation *context, ExpressionStack *stack )
+RexxObject *QualifiedFunction::evaluate(RexxActivation *context, ExpressionStack *stack)
 {
     // save the top of the stack for popping values off later.
     size_t stacktop = stack->location();
@@ -182,20 +157,26 @@ RexxObject *RexxExpressionFunction::evaluate(RexxActivation *context, Expression
 
     ProtectedObject   result;            // returned result
 
-    // if we resolved to an internal label, call that now
-    if (target != OREF_NULL)
+    // get the current package from the context
+    PackageClass *package = context->getPackage();
+
+    // we must be able to find the named namespace
+    PackageClass *namespacePackage = package->findNamespace(namespaceName);
+    if (namespacePackage == OREF_NULL)
     {
-        context->internalCall(functionName, target, stack->arguments(argumentCount), argumentCount, result);
+        reportException(Error_Execution_no_namespace, namespaceName, package->getProgramName());
     }
-    // if this was resolved to a builtin, call directly
-    else if (builtinIndex != NO_BUILTIN)
+
+    // we only look for public routines in the namespaces
+    RoutineClass *resolvedRoutine = namespacePackage->findPublicRoutine(functionName);
+    // we give a specific error for this one
+    if (resolvedRoutine == OREF_NULL)
     {
-        result = (*(LanguageParser::builtinTable[builtinIndex]))(context, argumentCount, stack);
+        reportException(Error_Routine_not_found, functionName, namespaceName);
     }
-    else
-    {
-        context->externalCall(functionName, stack->arguments(argumentCount), argumentCount, GlobalNames::FUNCTION, result);
-    }
+
+    // call the resolved function
+    resolvedRoutine->call(context->getActivity(), functionName, stack->arguments(argumentCount), argumentCount, GlobalNames::FUNCTION, OREF_NULL, EXTERNALCALL, result);
 
     // functions must have a return result
     if (result.isNull())

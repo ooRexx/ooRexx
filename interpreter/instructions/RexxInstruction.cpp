@@ -133,6 +133,38 @@ void RexxInstruction::flatten(Envelope *envelope)
 
 
 /**
+ * Common method for evaluating arrays of arguments for
+ * the different instruction or expression types that
+ * use arguments (CALL, message, functions, etc.)
+ *
+ * @param context  The current execution context.
+ * @param stack    The current evaluation stack
+ * @param argArray The pointer to the array of argument expressions.
+ * @param argCount The number of argument expressions.
+ */
+void RexxInstruction::evaluateArguments(RexxActivation *context, ExpressionStack *stack, RexxInternalObject **argArray, size_t argCount)
+{
+    // evaluate all of the arguments
+    for (size_t i = 0; i < argCount; i++)
+    {
+        // real argument expression
+        if (argArray[i] != OREF_NULL)
+        {
+            // evaluate the expression (and the argument is left on the stack)
+            RexxObject *result = argArray[i]->evaluate(context, stack);
+            context->traceArgument(result);
+        }
+        // omitted argument.  Push a null value and trace as a null string
+        else
+        {
+            stack->push(OREF_NULL);
+            context->traceArgument(GlobalNames::NULLSTRING);
+        }
+    }
+}
+
+
+/**
  * Perform garbage collection on a live object.  Note, many
  * subclasses of RexxInstructionExpression do not need to
  * provide their own marking methods unless they have additional
@@ -234,3 +266,5 @@ RexxString *RexxInstructionExpression::evaluateStringExpression(RexxActivation *
         return GlobalNames::NULLSTRING;
     }
 }
+
+

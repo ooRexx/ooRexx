@@ -3356,6 +3356,15 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Routine_not_found_user_defined</SymbolicName>
         <Text><Sub position="1" name="message"/></Text>
       </SubMessage>
+      <SubMessage>
+        <Code>43</Code>
+        <Subcode>902</Subcode>
+        <MessageNumber>763</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Routine_not_found_namespace</SymbolicName>
+        <Text>Routine <q><Sub position="1" name="routineName"/></q> not found in namespace <q><Sub position="2" name="namespace"/></q></Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>

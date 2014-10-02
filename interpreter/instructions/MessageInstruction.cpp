@@ -176,25 +176,8 @@ void RexxInstructionMessage::execute(RexxActivation *context, ExpressionStack *s
         stack->toss();
     }
 
-    // loop through the argument list evaluating the arguments
-    for (size_t i = 0; i < argumentCount; i++)
-    {
-        // is this a realy argument?  evaluate and trace if needed
-        if (arguments[i] != OREF_NULL)
-        {
-            // NOTE: this leaves the argument on the evaluation stack
-            // We'll build up the entire list there.
-            RexxObject *result = arguments[i]->evaluate(context, stack);
-            context->traceArgument(result);
-        }
-        // omitted argument...push a null value on to the stack and trace
-        // as a null string.
-        else
-        {
-            stack->push(OREF_NULL);
-            context->traceArgument(GlobalNames::NULLSTRING);
-        }
-    }
+    // evaluate the arguments first
+    RexxInstruction::evaluateArguments(context, stack, arguments, argumentCount);
 
     ProtectedObject result;
     // issue the send with or without a superclass override

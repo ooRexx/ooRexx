@@ -1892,6 +1892,9 @@ $ Error_Symbol_expected_namespace_class
 $ Error_Execution_no_namespace_class
 762 Class "&1" not found in namespace "&2"
 
+$ Error_Routine_not_found_namespace
+763 Routine "&1" not found in namespace "&2"
+
 
 $ * -------------------------------------------------------------------------- */
 $ * --            ==================================================        -- */

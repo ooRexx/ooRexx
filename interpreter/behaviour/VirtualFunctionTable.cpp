@@ -147,6 +147,7 @@
 #include "ProgramSource.hpp"
 #include "NumberArray.hpp"
 #include "ExpressionClassResolver.hpp"
+#include "ExpressionQualifiedFunction.hpp"
 #include "RexxMemory.hpp"
 #include "InternalStack.hpp"
 #include "MemoryStack.hpp"
@@ -472,6 +473,9 @@ void MemoryObject::buildVirtualFunctionTable()
    objectPtr = ::new (objectLoc) RexxInstructionDynamicCall(RESTOREIMAGE);
    virtualFunctionTable[T_DynamicCallInstruction] = getVftPointer(objectLoc);
    
+   objectPtr = ::new (objectLoc) RexxInstructionQualifiedCall(RESTOREIMAGE);
+   virtualFunctionTable[T_QualifiedCallInstruction] = getVftPointer(objectLoc);
+   
    objectPtr = ::new (objectLoc) RexxInstructionCallOn(RESTOREIMAGE);
    virtualFunctionTable[T_CallOnInstruction] = getVftPointer(objectLoc);
    
@@ -657,6 +661,9 @@ void MemoryObject::buildVirtualFunctionTable()
    
    objectPtr = ::new (objectLoc) ClassResolver(RESTOREIMAGE);
    virtualFunctionTable[T_ClassResolver] = getVftPointer(objectLoc);
+   
+   objectPtr = ::new (objectLoc) QualifiedFunction(RESTOREIMAGE);
+   virtualFunctionTable[T_QualifiedFunction] = getVftPointer(objectLoc);
    
    objectPtr = ::new (objectLoc) RexxObject(RESTOREIMAGE);
    virtualFunctionTable[T_Memory] = getVftPointer(objectLoc);

@@ -585,6 +585,7 @@ set (expression_sources ${build_expression_dir}/BuiltinFunctions.cpp
             ${build_expression_dir}/ExpressionFunction.cpp
             ${build_expression_dir}/ExpressionMessage.cpp
             ${build_expression_dir}/ExpressionOperator.cpp
+            ${build_expression_dir}/ExpressionQualifiedFunction.cpp
             ${build_expression_dir}/ExpressionStack.cpp
             ${build_expression_dir}/ExpressionStem.cpp
             ${build_expression_dir}/ExpressionVariable.cpp

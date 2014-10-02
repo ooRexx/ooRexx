@@ -178,23 +178,8 @@ RexxObject *RexxExpressionMessage::evaluate(RexxActivation *context, ExpressionS
         stack->toss();
     }
 
-    // handle all of the arguments
-    for (size_t i = 0; i < argumentCount; i++)
-    {
-        // if we have a real argument, evaluate and trace.  The
-        // argument value is left on the stack.
-        if (arguments[i] != OREF_NULL)
-        {
-            RexxObject *resultArg = arguments[i]->evaluate(context, stack);
-            context->traceArgument(resultArg);
-        }
-        // non-existent argument, push a null value and trace as a null string.
-        else
-        {
-            stack->push(OREF_NULL);
-            context->traceArgument(GlobalNames::NULLSTRING);
-        }
-    }
+    // evaluate the arguments first
+    RexxInstruction::evaluateArguments(context, stack, arguments, argumentCount);
 
     ProtectedObject result;
 

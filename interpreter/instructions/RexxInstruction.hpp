@@ -93,6 +93,7 @@ class RexxInstruction : public RexxInternalObject
     inline      InstructionKeyword getType()     { return instructionType;  };
     inline      bool        isType(InstructionKeyword type)  { return instructionType == type; }
     inline      size_t      getLineNumber()      { return instructionLocation.getLineNumber(); }
+    static      void evaluateArguments(RexxActivation *context, ExpressionStack *stack, RexxInternalObject **argArray, size_t argCount);
 
     InstructionKeyword  instructionType;    // name of the instruction
     SourceLocation    instructionLocation;  // location of the instruction in its source
