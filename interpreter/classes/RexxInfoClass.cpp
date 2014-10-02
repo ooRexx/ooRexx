@@ -116,6 +116,7 @@ void RexxInfo::live(size_t liveMark)
     memory_mark(pathSeparator);
     memory_mark(directorySeparator);
     memory_mark(interpreterVersion);
+    memory_mark(interpreterName);
     memory_mark(languageLevel);
     memory_mark(interpreterDate);
     memory_mark(platformName);
@@ -135,6 +136,7 @@ void RexxInfo::liveGeneral(MarkReason reason)
     memory_mark_general(pathSeparator);
     memory_mark_general(directorySeparator);
     memory_mark_general(interpreterVersion);
+    memory_mark_general(interpreterName);
     memory_mark_general(languageLevel);
     memory_mark_general(interpreterDate);
     memory_mark_general(platformName);
@@ -154,6 +156,7 @@ void RexxInfo::flatten (Envelope *envelope)
     flattenRef(pathSeparator);
     flattenRef(directorySeparator);
     flattenRef(interpreterVersion);
+    flattenRef(interpreterName);
     flattenRef(languageLevel);
     flattenRef(interpreterDate);
     flattenRef(platformName);
@@ -195,6 +198,7 @@ void RexxInfo::initialize()
     directorySeparator = new_string(SysFileSystem::getSeparator());
     pathSeparator = new_string(SysFileSystem::getPathSeparator());
     platformName = new_string(SystemInterpreter::getPlatformName());
+    interpreterName = Interpreter::getVersionString();
 }
 
 
@@ -274,6 +278,18 @@ RexxString *RexxInfo::getLanguageLevel()
 RexxString *RexxInfo::getInterpreterVersion()
 {
     return interpreterVersion;
+}
+
+
+/**
+ * Retrieve the full interpreter version string
+ *
+ * @return The fully encoded interpreter identifier string from
+ *         PARSE VERSION.
+ */
+RexxString *RexxInfo::getInterpreterName()
+{
+    return interpreterName;
 }
 
 

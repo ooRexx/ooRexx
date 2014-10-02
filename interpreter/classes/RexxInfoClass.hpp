@@ -74,6 +74,7 @@ public:
     RexxObject *getForm();
     RexxObject *getInternalDigits();
     RexxString *getLanguageLevel();
+    RexxString *getInterpreterName();
     RexxString *getInterpreterVersion();
     RexxString *getInterpreterDate();
     RexxString *getPlatform();
@@ -97,6 +98,7 @@ public:
     RexxString *endOfLine;             // the end of line string
     RexxString *directorySeparator;    // the directory separator string
     RexxString *pathSeparator;         // the path separator string
+    RexxString *interpreterName;       // full interpreter version string
     RexxString *interpreterVersion;    // the interpreter version level
     RexxString *interpreterDate;       // the interpreter build date
     RexxString *languageLevel;         // the language level string

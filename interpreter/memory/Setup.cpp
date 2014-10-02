@@ -1150,6 +1150,7 @@ StartClassDefinition(RexxInfo)
         AddMethod("Fuzz", RexxInfo::getFuzz, 0);
         AddMethod("LanguageLevel", RexxInfo::getLanguageLevel, 0);
         AddMethod("Version", RexxInfo::getInterpreterVersion, 0);
+        AddMethod("Name", RexxInfo::getInterpreterName, 0);
         AddMethod("Date", RexxInfo::getInterpreterDate, 0);
         AddMethod("Platform", RexxInfo::getPlatform, 0);
         AddMethod("Architecture", RexxInfo::getArchitecture, 0);
