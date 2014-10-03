@@ -1277,7 +1277,6 @@ void HashContents::mergePut(RexxInternalObject *item, RexxInternalObject *index)
         }
 
         // continue running the chain to the end of the list.
-        position = entries[position].next;
         previous = position;
         position = entries[position].next;
     } while (position != NoMore);

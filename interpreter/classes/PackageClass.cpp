@@ -610,20 +610,8 @@ void PackageClass::inheritPackageContext(PackageClass *parent)
  */
 void PackageClass::mergeRequired(PackageClass *mergeSource)
 {
-    // has the source already merged in some public routines?  pull those in first,
-    // so that the direct set will override
-    if (mergeSource->mergedPublicRoutines != OREF_NULL)
-    {
-        // first merged attempt?  Create our directory
-        if (mergedPublicRoutines == OREF_NULL)
-        {
-            setField(mergedPublicRoutines, new_string_table());
-        }
-        // merge these together
-        mergeSource->mergedPublicRoutines->putAll(mergedPublicRoutines);
-    }
-
-    // now process the direct set
+    // handle the directly defined public ones first, followed by any merged from
+    // other sources.  This will maintain the proper search order.
     if (mergeSource->publicRoutines != OREF_NULL)
     {
         // first merge attempt?  Create our directory...Note that the source
@@ -634,11 +622,36 @@ void PackageClass::mergeRequired(PackageClass *mergeSource)
         }
 
         // merge these together
-        mergeSource->publicRoutines->putAll(mergedPublicRoutines);
+        mergeSource->publicRoutines->merge(mergedPublicRoutines);
+    }
+
+    // now add in the ones pulled in from other ::requires.  These will not
+    // override any routines already in the merged set.
+    if (mergeSource->mergedPublicRoutines != OREF_NULL)
+    {
+        // first merged attempt?  Create our directory
+        if (mergedPublicRoutines == OREF_NULL)
+        {
+            setField(mergedPublicRoutines, new_string_table());
+        }
+        // merge these together.  This is a special operation that will only
+        // add new entries to the list, leaving existing ones unchanged.
+        mergeSource->mergedPublicRoutines->merge(mergedPublicRoutines);
     }
 
 
     // now do the same process for any of the class contexts
+    if (mergeSource->installedPublicClasses != OREF_NULL)
+    {
+        if (mergedPublicClasses == OREF_NULL)
+        {
+            setField(mergedPublicClasses, new_string_table());
+        }
+        // merge these together
+        mergeSource->installedPublicClasses->merge(mergedPublicClasses);
+    }
+
+    // the merged ones follow again
     if (mergeSource->mergedPublicClasses != OREF_NULL)
     {
         if (mergedPublicClasses == OREF_NULL)
@@ -647,19 +660,7 @@ void PackageClass::mergeRequired(PackageClass *mergeSource)
         }
 
         // merge these together
-        mergeSource->mergedPublicClasses->putAll(mergedPublicClasses);
-    }
-
-    // the installed ones are processed second as they will overwrite the imported one, which
-    // is the behaviour we want
-    if (mergeSource->installedPublicClasses != OREF_NULL)
-    {
-        if (mergedPublicClasses == OREF_NULL)
-        {
-            setField(mergedPublicClasses, new_string_table());
-        }
-        // merge these together
-        mergeSource->installedPublicClasses->putAll(mergedPublicClasses);
+        mergeSource->mergedPublicClasses->merge(mergedPublicClasses);
     }
 }
 
@@ -742,21 +743,20 @@ RoutineClass *PackageClass::findLocalRoutine(RexxString *name)
  */
 RoutineClass *PackageClass::findPublicRoutine(RexxString *name)
 {
-    // if we have one locally, then return it.
-    if (mergedPublicRoutines != OREF_NULL)
+    // Public routines we directly define are checked first, before any from other sources
+    if (publicRoutines != OREF_NULL)
     {
-        RoutineClass *result = (RoutineClass *)(mergedPublicRoutines->get(name));
+        RoutineClass *result = (RoutineClass *)publicRoutines->get(name);
         if (result != OREF_NULL)
         {
             return result;
         }
     }
 
-    // we might have defined public routines, but no merged table if we don't have
-    // additional ::requires (common).  Make sure we process them as well.
-    if (publicRoutines != OREF_NULL)
+    // now checks the ones we got from other sources
+    if (mergedPublicRoutines != OREF_NULL)
     {
-        RoutineClass *result = (RoutineClass *)(publicRoutines->get(name));
+        RoutineClass *result = (RoutineClass *)mergedPublicRoutines->get(name);
         if (result != OREF_NULL)
         {
             return result;
@@ -771,6 +771,7 @@ RoutineClass *PackageClass::findPublicRoutine(RexxString *name)
     {
         return parentPackage->findPublicRoutine(name);
     }
+
     // nope, no got one
     return OREF_NULL;
 }
@@ -861,22 +862,22 @@ RexxClass *PackageClass::findInstalledClass(RexxString *name)
  */
 RexxClass *PackageClass::findPublicClass(RexxString *name)
 {
-    // if we have one locally, then return it.
-    if (mergedPublicClasses != OREF_NULL)
+    // Our installed ones are checked first, before any that we might have pulled
+    // in from other sources.
+    if (installedPublicClasses != OREF_NULL)
     {
-        // try for a local one first
-        RexxClass *result = (RexxClass *)(mergedPublicClasses->get(name));
+        RexxClass *result = (RexxClass *)(installedPublicClasses->get(name));
         if (result != OREF_NULL)
         {
             return result;
         }
     }
 
-    // we might have defined public classes, but no merged table if we don't have
-    // additional ::requires (common).  Make sure we process them as well.
-    if (installedPublicClasses != OREF_NULL)
+    // now check ones from required packages
+    if (mergedPublicClasses != OREF_NULL)
     {
-        RexxClass *result = (RexxClass *)(installedPublicClasses->get(name));
+        // try for a local one first
+        RexxClass *result = (RexxClass *)(mergedPublicClasses->get(name));
         if (result != OREF_NULL)
         {
             return result;
@@ -889,8 +890,25 @@ RexxClass *PackageClass::findPublicClass(RexxString *name)
     // a parent context, this will be the only thing here.
     if (parentPackage != OREF_NULL)
     {
-        return parentPackage->findPublicClass(name);
+        RexxClass *result = parentPackage->findPublicClass(name);
+        if (result != OREF_NULL)
+        {
+            return result;
+        }
     }
+
+    // make sure we don't recurse if this is the Rexx package.
+    if (!isRexxPackage())
+    {
+        // now try for a system-defined class.
+        RexxClass *result = TheRexxPackage->findPublicClass(name);
+        // return if we got one
+        if (result != OREF_NULL)
+        {
+            return result;
+        }
+    }
+
     // nope, no got one
     return OREF_NULL;
 }
@@ -926,7 +944,8 @@ RexxClass *PackageClass::findClass(RexxString *className)
     if (!isRexxPackage())
     {
         // now try for a system-defined class.
-        classObject = TheRexxPackage->findClass(internalName);
+        // NOTE:  We only search public classes in the REXX package.
+        classObject = TheRexxPackage->findPublicClass(internalName);
         // return if we got one
         if (classObject != OREF_NULL)
         {
