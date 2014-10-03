@@ -172,7 +172,7 @@ RexxObject *QualifiedFunction::evaluate(RexxActivation *context, ExpressionStack
     // we give a specific error for this one
     if (resolvedRoutine == OREF_NULL)
     {
-        reportException(Error_Routine_not_found, functionName, namespaceName);
+        reportException(Error_Routine_not_found_namespace, functionName, namespaceName);
     }
 
     // call the resolved function

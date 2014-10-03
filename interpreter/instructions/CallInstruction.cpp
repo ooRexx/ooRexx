@@ -435,7 +435,7 @@ void RexxInstructionQualifiedCall::execute(RexxActivation *context, ExpressionSt
     // we give a specific error for this one
     if (resolvedRoutine == OREF_NULL)
     {
-        reportException(Error_Routine_not_found, routineName, namespaceName);
+        reportException(Error_Routine_not_found_namespace, routineName, namespaceName);
     }
 
     // call the resolved function

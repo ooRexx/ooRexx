@@ -208,11 +208,6 @@ void PackageClass::liveGeneral(MarkReason reason)
     if (reason == PREPARINGIMAGE)
     {
         detachSource();
-        // for the REXX package (the only one that should be in
-        // the saved image), the merged directories and the main ones are
-        // the same.
-        mergedPublicRoutines = publicRoutines;
-        mergedPublicClasses = installedPublicClasses;
     }
 
     memory_mark_general(source);
@@ -757,6 +752,17 @@ RoutineClass *PackageClass::findPublicRoutine(RexxString *name)
         }
     }
 
+    // we might have defined public routines, but no merged table if we don't have
+    // additional ::requires (common).  Make sure we process them as well.
+    if (publicRoutines != OREF_NULL)
+    {
+        RoutineClass *result = (RoutineClass *)(publicRoutines->get(name));
+        if (result != OREF_NULL)
+        {
+            return result;
+        }
+    }
+
     // we might have a chained context, so check it also
     // The inherited context comes after any directly included
     // context.  In for methods or routines that are created from
@@ -858,8 +864,19 @@ RexxClass *PackageClass::findPublicClass(RexxString *name)
     // if we have one locally, then return it.
     if (mergedPublicClasses != OREF_NULL)
     {
-        /* try for a local one first         */
+        // try for a local one first
         RexxClass *result = (RexxClass *)(mergedPublicClasses->get(name));
+        if (result != OREF_NULL)
+        {
+            return result;
+        }
+    }
+
+    // we might have defined public classes, but no merged table if we don't have
+    // additional ::requires (common).  Make sure we process them as well.
+    if (installedPublicClasses != OREF_NULL)
+    {
+        RexxClass *result = (RexxClass *)(installedPublicClasses->get(name));
         if (result != OREF_NULL)
         {
             return result;
