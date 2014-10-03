@@ -3363,7 +3363,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Routine_not_found_requires</SymbolicName>
-        <Text>Could not find routine <q><Sub position="1" name="routine"/></q> for ::REQUIRES</Text>
+        <Text>Could not find file <q><Sub position="1" name="file"/></q> for ::REQUIRES</Text>
       </SubMessage>
       <SubMessage>
         <Code>43</Code>

@@ -353,7 +353,7 @@ BEGIN
    42902    "Arithmetic underflow; exponent (""&1"") exceeds &2 digits"
    42903    "Arithmetic underflow; zero raised to a negative power"
    43001    "Could not find routine ""&1"""
-   43901    "Could not find routine ""&1"" for ::REQUIRES"
+   43901    "Could not find file ""&1"" for ::REQUIRES"
    44001    "No data returned from function ""&1"""
    45001    "Data expected on RETURN instruction because routine ""&1"" was called as a function"
    46001    "Extra token (""&1"") found in variable reference list; "")"" expected"

@@ -402,12 +402,12 @@ RexxObject *RexxClass::defineMethods(StringTable *newMethods)
     // build the behaviour.
     instanceMethodDictionary->addMethods(newMethods, this);
 
-    // see if we have an uninit method defined
-    checkUninit();
-
     // now update the instance behaviour from the superclass list
     instanceBehaviour->setMethodDictionary(OREF_NULL);
     createInstanceBehaviour(instanceBehaviour);
+
+    // see if we have an uninit method defined now that this is done
+    checkUninit();
     return OREF_NULL;
 }
 
@@ -889,6 +889,9 @@ void RexxClass::updateInstanceSubClasses()
     instanceBehaviour->clearMethodDictionary();
     createInstanceBehaviour(instanceBehaviour);
 
+    // see if we have an uninit method defined now that this is done
+    checkUninit();
+
     // tell all of our subclasses to do this same step
     Protected<ArrayClass> subClassList = getSubClasses();
     for (size_t index = 1; index <= subClassList->size(); index++)
@@ -1257,6 +1260,10 @@ RexxObject *RexxClass::enhanced(RexxObject **args, size_t argCount)
     // recreate the instance behaviour
     dummy_subclass->instanceBehaviour->setMethodDictionary(OREF_NULL);
     dummy_subclass->createInstanceBehaviour(dummy_subclass->instanceBehaviour);
+
+    // see if we have an uninit method defined now that this is done
+    dummy_subclass->checkUninit();
+
     ProtectedObject r;
     // now create an instance of the enhanced subclass
     dummy_subclass->sendMessage(GlobalNames::NEW, args + 1, argCount - 1, r);

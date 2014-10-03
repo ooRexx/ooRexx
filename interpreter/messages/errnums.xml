@@ -2443,7 +2443,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>901</term>
 <listitem>
-<para>Could not find routine "<emphasis role="italic">routine</emphasis>" for ::REQUIRES</para>
+<para>Could not find file "<emphasis role="italic">file</emphasis>" for ::REQUIRES</para>
 </listitem>
 </varlistentry>
 <varlistentry>

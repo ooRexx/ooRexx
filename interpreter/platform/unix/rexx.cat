@@ -954,7 +954,7 @@ $ Error_Routine_not_found_name
 417 Could not find routine "&1"
 
 $ Error_Routine_not_found_requires
-418 Could not find routine "&1" for ::REQUIRES
+418 Could not find file "&1" for ::REQUIRES
 
 $ Error_Function_no_data_function
 419 No data returned from function "&1"
