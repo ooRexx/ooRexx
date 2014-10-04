@@ -677,13 +677,13 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>923</term>
 <listitem>
-<para>Symbol or string expected as ::PACKAGE attribute value; found "<emphasis role="italic">name</emphasis>".</para>
+<para>Symbol or string expected as ::ANNOTATE attribute value; found "<emphasis role="italic">name</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>924</term>
 <listitem>
-<para>Symbol or string expected as ::PACKAGE attribute value.</para>
+<para>Symbol or string expected as ::ANNOTATE attribute value.</para>
 </listitem>
 </varlistentry>
 <varlistentry>

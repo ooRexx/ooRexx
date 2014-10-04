@@ -51,7 +51,7 @@
 // language directive table
 KeywordEntry RexxToken::directives[] =
 {
-    KeywordEntry("ANNOTATION",  DIRECTIVE_ANNOTATION),
+    KeywordEntry("ANNOTATE",    DIRECTIVE_ANNOTATE),
     KeywordEntry("ATTRIBUTE",   DIRECTIVE_ATTRIBUTE),
     KeywordEntry("CLASS",       DIRECTIVE_CLASS),
     KeywordEntry("CONSTANT",    DIRECTIVE_CONSTANT),

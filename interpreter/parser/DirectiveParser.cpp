@@ -132,8 +132,8 @@ void LanguageParser::nextDirective()
             break;
 
         // create package annotations
-        case DIRECTIVE_ANNOTATION:
-            annotationDirective();
+        case DIRECTIVE_ANNOTATE:
+            annotateDirective();
             break;
 
         // an unknown directive
@@ -1556,9 +1556,9 @@ void LanguageParser::constantDirective()
 
 
 /**
- * Process an ::ANNOTATION directive in a source file.
+ * Process an ::ANNOTATE directive in a source file.
  */
-void LanguageParser::annotationDirective()
+void LanguageParser::annotateDirective()
 {
     RexxToken *token = nextReal();
 
@@ -1590,7 +1590,7 @@ void LanguageParser::annotationDirective()
             // this must be a literal string
             if (!token->isSymbolOrLiteral())
             {
-                syntaxError(Error_Symbol_or_string_directive_option, new_string("::ANNOTATION"), new_string("CLASS"));
+                syntaxError(Error_Symbol_or_string_directive_option, new_string("::ANNOTATE"), new_string("CLASS"));
             }
 
             // get the target class name
@@ -1612,15 +1612,15 @@ void LanguageParser::annotationDirective()
         // annotating a previously defined routine.
         case SUBDIRECTIVE_ROUTINE:
         {
-            // we need a class name on this token
+            // we need a routine name on this token
             token = nextReal();
             // this must be a literal string
             if (!token->isSymbolOrLiteral())
             {
-                syntaxError(Error_Symbol_or_string_directive_option, new_string("::ANNOTATION"), new_string("ROUTINE"));
+                syntaxError(Error_Symbol_or_string_directive_option, new_string("::ANNOTATE"), new_string("ROUTINE"));
             }
 
-            // get the target class name
+            // get the target name
             RexxString *name = commonString(token->upperValue());
             RoutineClass *routine = findRoutine(name);
 
@@ -1639,15 +1639,15 @@ void LanguageParser::annotationDirective()
         // annotating a previously defined method.
         case SUBDIRECTIVE_METHOD:
         {
-            // we need a class name on this token
+            // we need a method name on this token
             token = nextReal();
             // this must be a literal string
             if (!token->isSymbolOrLiteral())
             {
-                syntaxError(Error_Symbol_or_string_directive_option, new_string("::ANNOTATION"), new_string("METHOD"));
+                syntaxError(Error_Symbol_or_string_directive_option, new_string("::ANNOTATE"), new_string("METHOD"));
             }
 
-            // get the target class name
+            // get the target method
             RexxString *name = commonString(token->upperValue());
             MethodClass *method = findMethod(name);
 
@@ -1666,30 +1666,20 @@ void LanguageParser::annotationDirective()
         // annotating previously defined attribute method(s).
         case SUBDIRECTIVE_ATTRIBUTE:
         {
-            // we need a class name on this token
+            // we need a attribute name on this token
             token = nextReal();
             // this must be a literal string
             if (!token->isSymbolOrLiteral())
             {
-                syntaxError(Error_Symbol_or_string_directive_option, new_string("::ANNOTATION"), new_string("METHOD"));
+                syntaxError(Error_Symbol_or_string_directive_option, new_string("::ANNOTATE"), new_string("ATTRIBUTE"));
             }
 
-            // get the target class name
-            RexxString *name = commonString(token->upperValue());
-            MethodClass *method = findMethod(name);
+            // get the target attribute name
+            RexxString *attributeName = commonString(token->upperValue());
 
-            // if the directive does not exist (or has not yet been defined)
-            // raise the error now.
-            if (method == OREF_NULL)
-            {
-                syntaxError(Error_Translation_missing_annotation_target, new_string("method"), name);
-            }
-
-            processAttributeAnnotations(name);
-
-            // get this directly from the directive.  Note, annotations are accumulative.
-            annotations = method->getAnnotations();
-            break;
+            // process the annotations and return directly from here.
+            processAttributeAnnotations(attributeName);
+            return;
         }
 
 
@@ -1701,7 +1691,7 @@ void LanguageParser::annotationDirective()
             // this must be a literal string
             if (!token->isSymbolOrLiteral())
             {
-                syntaxError(Error_Symbol_or_string_directive_option, new_string("::ANNOTATION"), new_string("METHOD"));
+                syntaxError(Error_Symbol_or_string_directive_option, new_string("::ANNOTATR"), new_string("CONSTANT"));
             }
 
             // get the target class name
@@ -1722,6 +1712,8 @@ void LanguageParser::annotationDirective()
             }
 
             // get this directly from the directive.  Note, annotations are accumulative.
+            // for constant methods, we create a single method and attach it to both the
+            // instance and class method dictionaries, so we only need to update the one method.
             annotations = method->getAnnotations();
             break;
         }
@@ -1760,7 +1752,7 @@ void LanguageParser::annotationDirective()
 void LanguageParser::processAttributeAnnotations(RexxString *getterName)
 {
     // we need both a setter and getter method, set getter the setter name
-    RexxString *setterName = commonString(name->concatWithCstring("="));
+    RexxString *setterName = commonString(getterName->concatWithCstring("="));
 
     // we check first for instance methods.  Any methods we find
     // must have been created using ::ATTRIBUTE or ::METHOD ATTRIBUTE.
@@ -1816,13 +1808,13 @@ void LanguageParser::processAttributeAnnotations(RexxString *getterName)
     }
 
     // now merge these annotations into the methods that exist
-    if (getterMethod == OREF_NULL)
+    if (getterMethod != OREF_NULL)
     {
         annotations->putAll(getterMethod->getAnnotations());
     }
 
     // now merge these annotations into the methods that exist
-    if (setterMethod == OREF_NULL)
+    if (setterMethod != OREF_NULL)
     {
         annotations->putAll(setterMethod->getAnnotations());
     }
@@ -2112,7 +2104,7 @@ void LanguageParser::createConstantGetterMethod(RexxString *name, RexxObject *va
     MethodClass *method = new MethodClass(name, code);
     method->setUnguarded();
     // mark as a constant method
-    method->setAttribute();
+    method->setConstant();
     if (activeClass == OREF_NULL)
     {
         addMethod(name, method, false);

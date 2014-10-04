@@ -972,7 +972,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Symbol_or_string_package_attribute_bad_value</SymbolicName>
-        <Text>Symbol or string expected as ::PACKAGE attribute value; found <q><Sub position="1" name="name"/></q>.</Text>
+        <Text>Symbol or string expected as ::ANNOTATE attribute value; found <q><Sub position="1" name="name"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>19</Code>
@@ -981,7 +981,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Symbol_or_string_package_attribute_missing</SymbolicName>
-        <Text>Symbol or string expected as ::PACKAGE attribute value.</Text>
+        <Text>Symbol or string expected as ::ANNOTATE attribute value.</Text>
       </SubMessage>
       <SubMessage>
         <Code>19</Code>

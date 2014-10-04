@@ -1875,10 +1875,10 @@ $ Error_Symbol_expected_annotation_attribute
 757 Symbol expected as ::ANNOTATION attribute name; found "&1".
 
 $ Error_Symbol_or_string_package_attribute_bad_value
-758 Symbol or string expected as ::PACKAGE attribute value; found "&1".
+758 Symbol or string expected as ::ANNOTATE attribute value; found "&1".
 
 $ Error_Symbol_or_string_package_attribute_missing
-759 Symbol or string expected as ::PACKAGE attribute value.
+759 Symbol or string expected as ::ANNOTATE attribute value.
 
 $ Error_Symbol_or_string_directive_option
 760 String expected after &1 &2 keyword.

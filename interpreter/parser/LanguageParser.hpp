@@ -311,7 +311,7 @@ class LanguageParser: public RexxInternalObject
     void        classDirective();
     void        attributeDirective();
     void        constantDirective();
-    void        annotationDirective();
+    void        annotateDirective();
     void        optionsDirective();
     void        resourceDirective();
     void        addInstalledClass(RexxString *name, RexxClass *classObject, bool publicClass);
