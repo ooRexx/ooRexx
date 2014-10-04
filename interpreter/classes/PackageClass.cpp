@@ -1696,6 +1696,20 @@ RexxObject *PackageClass::findClassRexx(RexxString *name)
 
 
 /**
+ * Resolve a public class in the context of a package.
+ *
+ * @param name   The required class name.
+ *
+ * @return The resolved class object.
+ */
+RexxObject *PackageClass::findPublicClassRexx(RexxString *name)
+{
+    name = stringArgument(name, "name");
+    return resultOrNil(findPublicClass(name));
+}
+
+
+/**
  * Resolve a namespace in the context of a package.
  *
  * @param name   The required class name.
@@ -1717,6 +1731,20 @@ RexxObject *PackageClass::findNamespaceRexx(RexxString *name)
  * @return The resolved routine object.
  */
 RexxObject *PackageClass::findRoutineRexx(RexxString *name)
+{
+    name = stringArgument(name, "name");
+    return resultOrNil(findRoutine(name));
+}
+
+
+/**
+ * Resolve a public routine in the context of a package.
+ *
+ * @param name   The required routine name.
+ *
+ * @return The resolved routine object.
+ */
+RexxObject *PackageClass::findPublicRoutineRexx(RexxString *name)
 {
     name = stringArgument(name, "name");
     return resultOrNil(findRoutine(name));

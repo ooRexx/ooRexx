@@ -105,6 +105,7 @@ class RexxClass : public RexxObject
     void mergeClassMethodDictionary(RexxBehaviour *targetBehaviour);
 
     RexxObject  *queryMixinClass();
+    RexxObject  *isMetaClassRexx();
     RexxString  *getId();
     RexxClass   *getBaseClass();
     RexxClass   *getMetaClass();

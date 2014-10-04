@@ -437,6 +437,7 @@ StartClassDefinition(Class);
         AddMethod("Methods", RexxClass::methods, 1);
         AddMethod("MixinClass", RexxClass::mixinClassRexx, 3);
         AddMethod("QueryMixinClass", RexxClass::queryMixinClass, 0);
+        AddMethod("IsMetaClass", RexxClass::isMetaClassRexx, 0);
         AddMethod("Subclass", RexxClass::subclassRexx, 3);
         AddProtectedMethod("Subclasses", RexxClass::getSubClasses, 0);
         AddProtectedMethod("Superclasses", RexxClass::getSuperClasses, 0);
@@ -1082,6 +1083,8 @@ StartClassDefinition(Package)
         AddMethod("AddPackage", PackageClass::addPackageRexx, 2);
         AddMethod("FindClass", PackageClass::findClassRexx, 1);
         AddMethod("FindRoutine", PackageClass::findRoutineRexx, 1);
+        AddMethod("FindPublicClass", PackageClass::findPublicClassRexx, 1);
+        AddMethod("FindPublicRoutine", PackageClass::findPublicRoutineRexx, 1);
         AddMethod("FindNamespace", PackageClass::findNamespaceRexx, 1);
         AddMethod("AddRoutine", PackageClass::addRoutineRexx, 2);
         AddMethod("AddPublicRoutine", PackageClass::addPublicRoutineRexx, 2);

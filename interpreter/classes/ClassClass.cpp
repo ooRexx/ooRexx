@@ -280,6 +280,17 @@ RexxObject *RexxClass::queryMixinClass()
 
 
 /**
+ * Test if a class can be used as a metaclass
+ *
+ * @return True if this is a metaclass, False if not.
+ */
+RexxObject *RexxClass::isMetaClassRexx()
+{
+    return booleanObject(isMetaClass());
+}
+
+
+/**
  * Retrieve the String ID for a class object.
  *
  * @return The string ID.

@@ -184,6 +184,8 @@ public:
            RexxObject    *addPublicClassRexx(RexxString *name, RexxClass *clazz);
            RexxObject    *findClassRexx(RexxString *name);
            RexxObject    *findRoutineRexx(RexxString *name);
+           RexxObject    *findPublicClassRexx(RexxString *name);
+           RexxObject    *findPublicRoutineRexx(RexxString *name);
            RexxObject    *findNamespaceRexx(RexxString *name);
            RexxObject    *setSecurityManagerRexx(RexxObject *manager);
            RexxObject    *loadLibraryRexx(RexxString *name);
