@@ -293,6 +293,17 @@ RexxObject *RexxClass::isMetaClassRexx()
 
 
 /**
+ * Test if this class is marked as abstract
+ *
+ * @return True if this is abstract, false if not
+ */
+RexxObject *RexxClass::isAbstractRexx()
+{
+    return booleanObject(isAbstract());
+}
+
+
+/**
  * Retrieve the read/write annotation table for a class object.
  *
  * @return The class annotations.  This might be an empty string table.
@@ -1607,6 +1618,31 @@ PackageClass *RexxClass::getPackage()
 }
 
 
+// all of the new methods need to check if they are marked as
+// abstract as a subclass...this centralizes the check.
+void RexxClass::checkAbstract()
+{
+    if (isAbstract())
+    {
+        reportException(Error_Execution_abstract_class, id);
+    }
+}
+
+
+/**
+ * Mark a class as abstract, if this is allowed for this
+ * type of class.
+ */
+void RexxClass::makeAbstract()
+{
+    if (isMetaClass())
+    {
+        reportException(Error_Execution_abstract_metaclass, id);
+    }
+    setAbstract();
+}
+
+
 /**
  * Create a new class for a rexx class
  * A copy of this class object is made
@@ -1630,10 +1666,14 @@ RexxClass  *RexxClass::newRexx(RexxObject **args, size_t argCount)
     // first argument is the class id...make sure it is a string value
     RexxString *class_id = (RexxString *)args[0];
     class_id = stringArgument(class_id, ARG_ONE);
+
     // get a copy of this class object
     Protected<RexxClass> new_class = (RexxClass *)clone();
 
     new_class->id = class_id;
+
+    // no new class objects start out as abstract.
+    new_class->clearAbstract();
 
     // make this into an instance of the
     // meta class
@@ -1720,6 +1760,9 @@ void RexxClass::createInstance()
  */
 void RexxClass::completeNewObject(RexxObject *obj, RexxObject **initArgs, size_t argCount)
 {
+    // this is a good common place to perform the abstract checks
+    checkAbstract();
+
     // set the behaviour (this might be a subclass, so don't assume the
     // one from the base class is correct).
     obj->setBehaviour(getInstanceBehaviour());

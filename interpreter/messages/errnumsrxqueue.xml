@@ -50,11 +50,11 @@
 <para>The command attempted to access a nonexistent queue.</para>
 </section>
 <section id="ERR131">
-<title>Error 131 - The syntax of the command is incorrect</title>
+<title>Error 131 - The syntax of the command is incorrect.</title>
 <para> </para>
 </section>
 <section id="ERR132">
-<title>Error 132 - System error occurred while processing the command</title>
+<title>Error 132 - System error occurred while processing the command.</title>
 <para> </para>
 </section>
 </section>

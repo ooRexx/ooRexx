@@ -481,6 +481,18 @@ void LanguageParser::classDirective()
                     previousToken();
                     break;
 
+                // ::CLASS name ABSTRACT
+                case SUBDIRECTIVE_ABSTRACT:
+                    // already been specified?  this is an error
+                    if (activeClass->isAbstract())
+                    {
+                        syntaxError(Error_Invalid_subkeyword_class, token);
+                    }
+
+                    // mark this as abstract
+                    activeClass->setAbstract();
+                    break;
+
                 // invalid keyword
                 default:
                     syntaxError(Error_Invalid_subkeyword_class, token);

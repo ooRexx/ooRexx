@@ -46,6 +46,7 @@
 
 #include "RexxDirective.hpp"
 #include "ExpressionClassResolver.hpp"
+#include "FlagSet.hpp"
 
 class RexxClass;
 class MethodClass;
@@ -68,6 +69,14 @@ class ClassDirective : public RexxDirective
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(Envelope *);
 
+    typedef enum
+    {
+       PUBLIC,                  // class has public scope
+       MIXIN,                   // this is a mixin class
+       ABSTRACT,                // this is an abstract class
+    } ClassProperties;
+
+
     inline RexxString *getName() { return publicName; }
     RexxClass *install(PackageClass *package, RexxActivation *activation);
 
@@ -81,8 +90,12 @@ class ClassDirective : public RexxDirective
     inline void setMetaClass(ClassResolver *m) { setField(metaclassName, m); }
     inline ClassResolver *getSubClass() { return subclassName; }
     inline void setSubClass(ClassResolver *m) { setField(subclassName, m); }
-    inline void setMixinClass(ClassResolver *m) { setField(subclassName, m); mixinClass = true; }
-    inline void setPublic() { publicClass = true; }
+    inline void setMixinClass(ClassResolver *m) { setField(subclassName, m); classFlags[MIXIN] = true; }
+    inline void setPublic() { classFlags[PUBLIC] = true; }
+    inline void setAbstract() { classFlags[ABSTRACT] = true; }
+    inline bool isPublic() { return classFlags[PUBLIC]; }
+    inline bool isMixinClass() { return classFlags[MIXIN]; }
+    inline bool isAbstract() { return classFlags[ABSTRACT]; }
     void addInherits(ClassResolver *name);
     void addMethod(RexxString *name, MethodClass *method, bool classMethod);
     void addConstantMethod(RexxString *name, MethodClass *method);
@@ -104,10 +117,9 @@ protected:
     ArrayClass  *inheritsClasses;    // the names of inherited classes
     StringTable *instanceMethods;    // the methods attached to this class
     StringTable *classMethods;       // the set of class methods
-    bool         publicClass;        // this is a public class
-    bool         mixinClass;         // this is a mixin class
     StringTable *annotations;        // any attached annotations
     StringTable  *dependencies;      // in-package dependencies
+    FlagSet<ClassProperties, 32> classFlags; // class attributes
 };
 
 #endif

@@ -1,7 +1,7 @@
 <section id="errorlist">
 <title>Error List</title>
 <section id="ERR3">
-<title>Error 3 - Failure during initialization</title>
+<title>Error 3 - Failure during initialization.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -11,33 +11,32 @@
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>Failure during initialization: File "<emphasis role="italic">filename</emphasis>" is unreadable</para>
+<para>Failure during initialization: File "<emphasis role="italic">filename</emphasis>" is unreadable.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>900</term>
 <listitem>
 <para>
-<emphasis role="italic">message</emphasis>
-</para>
+<emphasis role="italic">message</emphasis>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>901</term>
 <listitem>
-<para>Failure during initialization: Program "<emphasis role="italic">program</emphasis>" was not found</para>
+<para>Failure during initialization: Program "<emphasis role="italic">program</emphasis>" was not found.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>902</term>
 <listitem>
-<para>Error writing output file "<emphasis role="italic">file</emphasis>"</para>
+<para>Error writing output file "<emphasis role="italic">file</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>903</term>
 <listitem>
-<para>Program "<emphasis role="italic">program_name</emphasis>" cannot be run by this version of the REXX interpreter</para>
+<para>Program "<emphasis role="italic">program_name</emphasis>" cannot be run by this version of the REXX interpreter.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -49,7 +48,7 @@
 </variablelist>
 </section>
 <section id="ERR4">
-<title>Error 4 - Program interrupted</title>
+<title>Error 4 - Program interrupted.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -59,21 +58,20 @@
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>Program interrupted with <emphasis role="italic">condition</emphasis> condition</para>
+<para>Program interrupted with <emphasis role="italic">condition</emphasis> condition.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>900</term>
 <listitem>
 <para>
-<emphasis role="italic">message</emphasis>
-</para>
+<emphasis role="italic">message</emphasis>.</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR5">
-<title>Error 5 - System resources exhausted</title>
+<title>Error 5 - System resources exhausted.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -84,14 +82,13 @@
 <term>900</term>
 <listitem>
 <para>
-<emphasis role="italic">message</emphasis>
-</para>
+<emphasis role="italic">message</emphasis>.</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR6">
-<title>Error 6 - Unmatched "/*" or quote</title>
+<title>Error 6 - Unmatched "/*" or quote.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -110,34 +107,32 @@
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>Unmatched comment delimiter ("/*") on line <emphasis role="italic">line_number</emphasis>
-</para>
+<para>Unmatched comment delimiter ("/*") on line <emphasis role="italic">line_number</emphasis>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>002</term>
 <listitem>
-<para>Unmatched single quote (')</para>
+<para>Unmatched single quote (').</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>003</term>
 <listitem>
-<para>Unmatched double quote (")</para>
+<para>Unmatched double quote (").</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>900</term>
 <listitem>
 <para>
-<emphasis role="italic">message</emphasis>
-</para>
+<emphasis role="italic">message</emphasis>.</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR7">
-<title>Error 7 - WHEN or OTHERWISE expected</title>
+<title>Error 7 - WHEN or OTHERWISE expected.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -163,25 +158,25 @@ end
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>SELECT on line <emphasis role="italic">line_number</emphasis> requires WHEN</para>
+<para>SELECT on line <emphasis role="italic">line_number</emphasis> requires WHEN.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>002</term>
 <listitem>
-<para>SELECT on line <emphasis role="italic">line_number</emphasis> requires WHEN, OTHERWISE, or END</para>
+<para>SELECT on line <emphasis role="italic">line_number</emphasis> requires WHEN, OTHERWISE, or END.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>003</term>
 <listitem>
-<para>All WHEN expressions of SELECT are false; OTHERWISE expected</para>
+<para>All WHEN expressions of SELECT are false; OTHERWISE expected.</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR8">
-<title>Error 8 - Unexpected THEN or ELSE</title>
+<title>Error 8 - Unexpected THEN or ELSE.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -204,19 +199,19 @@ Say NOT EQUALS
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>THEN has no corresponding IF or WHEN clause</para>
+<para>THEN has no corresponding IF or WHEN clause.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>002</term>
 <listitem>
-<para>ELSE has no corresponding THEN clause</para>
+<para>ELSE has no corresponding THEN clause.</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR9">
-<title>Error 9 - Unexpected WHEN or OTHERWISE</title>
+<title>Error 9 - Unexpected WHEN or OTHERWISE.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -226,19 +221,19 @@ Say NOT EQUALS
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>WHEN has no corresponding SELECT</para>
+<para>WHEN has no corresponding SELECT.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>002</term>
 <listitem>
-<para>OTHERWISE has no corresponding SELECT</para>
+<para>OTHERWISE has no corresponding SELECT.</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR10">
-<title>Error 10 - Unexpected or unmatched END</title>
+<title>Error 10 - Unexpected or unmatched END.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -249,49 +244,49 @@ Say NOT EQUALS
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>END has no corresponding DO, LOOP, or SELECT</para>
+<para>END has no corresponding DO, LOOP, or SELECT.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>002</term>
 <listitem>
-<para>Symbol following END ("<emphasis role="italic">symbol</emphasis>") must match block specification name ("<emphasis role="italic">control_variable</emphasis>") on line <emphasis role="italic">line_number</emphasis> or be omitted</para>
+<para>Symbol following END ("<emphasis role="italic">symbol</emphasis>") must match block specification name ("<emphasis role="italic">control_variable</emphasis>") on line <emphasis role="italic">line_number</emphasis> or be omitted.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>003</term>
 <listitem>
-<para>END corresponding to block on line <emphasis role="italic">symbol</emphasis> must not have a symbol following it because there is no LABEL or control variable; found "<emphasis role="italic">line_number</emphasis>"</para>
+<para>END corresponding to block on line <emphasis role="italic">symbol</emphasis> must not have a symbol following it because there is no LABEL or control variable; found "<emphasis role="italic">line_number</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>004</term>
 <listitem>
-<para>Symbol following END ("<emphasis role="italic">symbol</emphasis>") must match LABEL of SELECT specification ("<emphasis role="italic">control_variable</emphasis>") on line <emphasis role="italic">line_number</emphasis> or be omitted</para>
+<para>Symbol following END ("<emphasis role="italic">symbol</emphasis>") must match LABEL of SELECT specification ("<emphasis role="italic">control_variable</emphasis>") on line <emphasis role="italic">line_number</emphasis> or be omitted.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>005</term>
 <listitem>
-<para>END must not immediately follow THEN</para>
+<para>END must not immediately follow THEN.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>006</term>
 <listitem>
-<para>END must not immediately follow ELSE</para>
+<para>END must not immediately follow ELSE.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>007</term>
 <listitem>
-<para>END corresponding to SELECT on line <emphasis role="italic">symbol</emphasis> must not have a symbol following it because there is no LABEL; found "<emphasis role="italic">line_number</emphasis>"</para>
+<para>END corresponding to SELECT on line <emphasis role="italic">symbol</emphasis> must not have a symbol following it because there is no LABEL; found "<emphasis role="italic">line_number</emphasis>".</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR11">
-<title>Error 11 - Control stack full</title>
+<title>Error 11 - Control stack full.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -308,21 +303,20 @@ Say NOT EQUALS
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>Insufficient control stack space; cannot continue execution</para>
+<para>Insufficient control stack space; cannot continue execution.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>900</term>
 <listitem>
 <para>
-<emphasis role="italic">message</emphasis>
-</para>
+<emphasis role="italic">message</emphasis>.</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR13">
-<title>Error 13 - Invalid character in program</title>
+<title>Error 13 - Invalid character in program.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -332,21 +326,20 @@ Say NOT EQUALS
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>Incorrect character in program "<emphasis role="italic">character</emphasis>" ('<emphasis role="italic">hex_character</emphasis>'X)</para>
+<para>Incorrect character in program "<emphasis role="italic">character</emphasis>" ('<emphasis role="italic">hex_character</emphasis>'X).</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>900</term>
 <listitem>
 <para>
-<emphasis role="italic">message</emphasis>
-</para>
+<emphasis role="italic">message</emphasis>.</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR14">
-<title>Error 14 - Incomplete DO/LOOP/SELECT/IF</title>
+<title>Error 14 - Incomplete DO/LOOP/SELECT/IF.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -356,43 +349,43 @@ Say NOT EQUALS
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>DO instruction on line <emphasis role="italic">line_number</emphasis> requires matching END</para>
+<para>DO instruction on line <emphasis role="italic">line_number</emphasis> requires matching END.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>002</term>
 <listitem>
-<para>SELECT instruction on line <emphasis role="italic">line_number</emphasis> requires matching END</para>
+<para>SELECT instruction on line <emphasis role="italic">line_number</emphasis> requires matching END.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>003</term>
 <listitem>
-<para>THEN on line <emphasis role="italic">line_number</emphasis> must be followed by an instruction</para>
+<para>THEN on line <emphasis role="italic">line_number</emphasis> must be followed by an instruction.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>004</term>
 <listitem>
-<para>ELSE on line <emphasis role="italic">line_number</emphasis> must be followed by an instruction</para>
+<para>ELSE on line <emphasis role="italic">line_number</emphasis> must be followed by an instruction.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>005</term>
 <listitem>
-<para>DO or LOOP instruction on line <emphasis role="italic">line_number</emphasis> requires matching END</para>
+<para>DO or LOOP instruction on line <emphasis role="italic">line_number</emphasis> requires matching END.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>901</term>
 <listitem>
-<para>OTHERWISE on line <emphasis role="italic">line_number</emphasis> requires matching END</para>
+<para>OTHERWISE on line <emphasis role="italic">line_number</emphasis> requires matching END.</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR15">
-<title>Error 15 - Invalid hexadecimal or binary string</title>
+<title>Error 15 - Invalid hexadecimal or binary string.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -418,31 +411,31 @@ Say NOT EQUALS
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>Incorrect location of whitespace character in position <emphasis role="italic">position</emphasis> in hexadecimal string</para>
+<para>Incorrect location of whitespace character in position <emphasis role="italic">position</emphasis> in hexadecimal string.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>002</term>
 <listitem>
-<para>Incorrect location of whitespace character in position <emphasis role="italic">position</emphasis> in binary string</para>
+<para>Incorrect location of whitespace character in position <emphasis role="italic">position</emphasis> in binary string.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>003</term>
 <listitem>
-<para>Only 0-9, a-f, A-F, and whitespace characters are valid in a hexadecimal string; found "<emphasis role="italic">character</emphasis>"</para>
+<para>Only 0-9, a-f, A-F, and whitespace characters are valid in a hexadecimal string; found "<emphasis role="italic">character</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>004</term>
 <listitem>
-<para>Only 0, 1, and whitespace characters are valid in a binary string; found "<emphasis role="italic">character</emphasis>"</para>
+<para>Only 0, 1, and whitespace characters are valid in a binary string; found "<emphasis role="italic">character</emphasis>".</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR16">
-<title>Error 16 - Label not found</title>
+<title>Error 16 - Label not found.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -452,13 +445,13 @@ Say NOT EQUALS
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>Label "<emphasis role="italic">label_name</emphasis>" not found</para>
+<para>Label "<emphasis role="italic">label_name</emphasis>" not found.</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR17">
-<title>Error 17 - Unexpected PROCEDURE</title>
+<title>Error 17 - Unexpected PROCEDURE.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -468,19 +461,19 @@ Say NOT EQUALS
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>PROCEDURE is valid only when it is the first instruction executed after an internal CALL or function invocation</para>
+<para>PROCEDURE is valid only when it is the first instruction executed after an internal CALL or function invocation.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>901</term>
 <listitem>
-<para>INTERPRET data must not contain PROCEDURE</para>
+<para>INTERPRET data must not contain PROCEDURE.</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR18">
-<title>Error 18 - THEN expected</title>
+<title>Error 18 - THEN expected.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -490,19 +483,19 @@ Say NOT EQUALS
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>IF instruction on line <emphasis role="italic">line_number</emphasis> requires matching THEN clause</para>
+<para>IF instruction on line <emphasis role="italic">line_number</emphasis> requires matching THEN clause.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>002</term>
 <listitem>
-<para>WHEN instruction on line <emphasis role="italic">line_number</emphasis> requires matching THEN clause</para>
+<para>WHEN instruction on line <emphasis role="italic">line_number</emphasis> requires matching THEN clause.</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR19">
-<title>Error 19 - String or symbol expected</title>
+<title>Error 19 - String or symbol expected.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -515,177 +508,176 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>String or symbol expected after ADDRESS keyword</para>
+<para>String or symbol expected after ADDRESS keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>002</term>
 <listitem>
-<para>String or symbol expected after CALL keyword</para>
+<para>String or symbol expected after CALL keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>003</term>
 <listitem>
-<para>String or symbol expected after NAME keyword</para>
+<para>String or symbol expected after NAME keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>004</term>
 <listitem>
-<para>String or symbol expected after SIGNAL keyword</para>
+<para>String or symbol expected after SIGNAL keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>006</term>
 <listitem>
-<para>String or symbol expected after TRACE keyword</para>
+<para>String or symbol expected after TRACE keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>007</term>
 <listitem>
-<para>String or symbol expected after PARSE keyword</para>
+<para>String or symbol expected after PARSE keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>900</term>
 <listitem>
 <para>
-<emphasis role="italic">message</emphasis>
-</para>
+<emphasis role="italic">message</emphasis>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>901</term>
 <listitem>
-<para>String or symbol expected after ::CLASS keyword</para>
+<para>String or symbol expected after ::CLASS keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>902</term>
 <listitem>
-<para>String or symbol expected after ::METHOD keyword</para>
+<para>String or symbol expected after ::METHOD keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>903</term>
 <listitem>
-<para>String or symbol expected after ::ROUTINE keyword</para>
+<para>String or symbol expected after ::ROUTINE keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>904</term>
 <listitem>
-<para>String or symbol expected after ::REQUIRES keyword</para>
+<para>String or symbol expected after ::REQUIRES keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>905</term>
 <listitem>
-<para>String expected after EXTERNAL keyword</para>
+<para>String expected after EXTERNAL keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>906</term>
 <listitem>
-<para>String or symbol expected after METACLASS keyword</para>
+<para>String or symbol expected after METACLASS keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>907</term>
 <listitem>
-<para>String or symbol expected after SUBCLASS keyword</para>
+<para>String or symbol expected after SUBCLASS keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>908</term>
 <listitem>
-<para>String or symbol expected after INHERIT keyword</para>
+<para>String or symbol expected after INHERIT keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>909</term>
 <listitem>
-<para>String or symbol expected after tilde (~)</para>
+<para>String or symbol expected after tilde (~).</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>911</term>
 <listitem>
-<para>String or symbol expected after superclass colon (:)</para>
+<para>String or symbol expected after superclass colon (:).</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>912</term>
 <listitem>
-<para>String or symbol expected after STREAM keyword</para>
+<para>String or symbol expected after STREAM keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>913</term>
 <listitem>
-<para>String or symbol expected after MIXINCLASS keyword</para>
+<para>String or symbol expected after MIXINCLASS keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>914</term>
 <listitem>
-<para>String or symbol expected as ::ATTRIBUTE directive name</para>
+<para>String or symbol expected as ::ATTRIBUTE directive name.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>915</term>
 <listitem>
-<para>String or symbol expected as ::CONSTANT directive name</para>
+<para>String or symbol expected as ::CONSTANT directive name.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>916</term>
 <listitem>
-<para>String or symbol expected as ::CONSTANT value</para>
+<para>String or symbol expected as ::CONSTANT value.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>917</term>
 <listitem>
-<para>String or symbol expected as DIGITS value</para>
+<para>String or symbol expected as DIGITS value.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>918</term>
 <listitem>
-<para>String or symbol expected as FUZZ value</para>
+<para>String or symbol expected as FUZZ value.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>919</term>
 <listitem>
-<para>String or symbol expected as TRACE value</para>
+<para>String or symbol expected as TRACE value.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>920</term>
 <listitem>
-<para>String or symbol expected as ::RESOURCE directive name</para>
+<para>String or symbol expected as ::RESOURCE directive name.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>921</term>
 <listitem>
-<para>String or symbol expected after ::RESOURCE END keyword</para>
+<para>String or symbol expected after ::RESOURCE END keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>922</term>
 <listitem>
-<para>String or symbol expected after <emphasis role="italic">keyword</emphasis> keyword</para>
+<para>String or symbol expected after <emphasis role="italic">keyword</emphasis> keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>923</term>
 <listitem>
-<para>Symbol or string expected as ::PACKAGE attribute value; found "<emphasis role="italic">name</emphasis>"</para>
+<para>Symbol or string expected as ::PACKAGE attribute value; found "<emphasis role="italic">name</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -697,13 +689,13 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>925</term>
 <listitem>
-<para>String expected after <emphasis role="italic">directive</emphasis> <emphasis role="italic">keyword</emphasis> keyword</para>
+<para>String expected after <emphasis role="italic">directive</emphasis> <emphasis role="italic">keyword</emphasis> keyword.</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR20">
-<title>Error 20 - Symbol expected</title>
+<title>Error 20 - Symbol expected.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -714,122 +706,121 @@ special character (such as a parenthesis).
 <term>900</term>
 <listitem>
 <para>
-<emphasis role="italic">message</emphasis>
-</para>
+<emphasis role="italic">message</emphasis>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>901</term>
 <listitem>
-<para>Symbol expected after DROP keyword</para>
+<para>Symbol expected after DROP keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>902</term>
 <listitem>
-<para>Symbol expected after EXPOSE keyword</para>
+<para>Symbol expected after EXPOSE keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>903</term>
 <listitem>
-<para>Symbol expected after PARSE keyword</para>
+<para>Symbol expected after PARSE keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>904</term>
 <listitem>
-<para>Symbol expected after PARSE VAR</para>
+<para>Symbol expected after PARSE VAR.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>905</term>
 <listitem>
-<para>NUMERIC must be followed by one of the keywords DIGITS, FORM, or FUZZ; found "<emphasis role="italic">symbol</emphasis>"</para>
+<para>NUMERIC must be followed by one of the keywords DIGITS, FORM, or FUZZ; found "<emphasis role="italic">symbol</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>906</term>
 <listitem>
-<para>Symbol expected after "(" of a variable reference</para>
+<para>Symbol expected after "(" of a variable reference.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>907</term>
 <listitem>
-<para>Symbol expected after LEAVE keyword</para>
+<para>Symbol expected after LEAVE keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>908</term>
 <listitem>
-<para>Symbol expected after ITERATE keyword</para>
+<para>Symbol expected after ITERATE keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>909</term>
 <listitem>
-<para>Symbol expected after END keyword</para>
+<para>Symbol expected after END keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>911</term>
 <listitem>
-<para>Symbol expected after ON keyword</para>
+<para>Symbol expected after ON keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>912</term>
 <listitem>
-<para>Symbol expected after OFF keyword</para>
+<para>Symbol expected after OFF keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>913</term>
 <listitem>
-<para>Symbol expected after USE ARG</para>
+<para>Symbol expected after USE ARG.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>914</term>
 <listitem>
-<para>Symbol expected after RAISE keyword</para>
+<para>Symbol expected after RAISE keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>915</term>
 <listitem>
-<para>Symbol expected after USER keyword</para>
+<para>Symbol expected after USER keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>916</term>
 <listitem>
-<para>Symbol expected after ::</para>
+<para>Symbol expected after ::.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>917</term>
 <listitem>
-<para>Symbol expected after superclass colon (:)</para>
+<para>Symbol expected after superclass colon (:).</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>918</term>
 <listitem>
-<para>Symbol expected after LABEL keyword</para>
+<para>Symbol expected after LABEL keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>919</term>
 <listitem>
-<para>Symbol expected as ::ANNOTATION attribute name; found "<emphasis role="italic">name</emphasis>"</para>
+<para>Symbol expected as ::ANNOTATION attribute name; found "<emphasis role="italic">name</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>920</term>
 <listitem>
-<para>Symbol expected after NAMESPACE keyword</para>
+<para>Symbol expected after NAMESPACE keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -859,7 +850,7 @@ special character (such as a parenthesis).
 </variablelist>
 </section>
 <section id="ERR21">
-<title>Error 21 - Invalid data on end of clause</title>
+<title>Error 21 - Invalid data on end of clause.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -870,92 +861,91 @@ special character (such as a parenthesis).
 <term>900</term>
 <listitem>
 <para>
-<emphasis role="italic">message</emphasis>
-</para>
+<emphasis role="italic">message</emphasis>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>901</term>
 <listitem>
-<para>Data must not follow the NOP keyword; found "<emphasis role="italic">data</emphasis>"</para>
+<para>Data must not follow the NOP keyword; found "<emphasis role="italic">data</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>902</term>
 <listitem>
-<para>Data must not follow the SELECT keyword; found "<emphasis role="italic">data</emphasis>"</para>
+<para>Data must not follow the SELECT keyword; found "<emphasis role="italic">data</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>903</term>
 <listitem>
-<para>Data must not follow the NAME keyword; found "<emphasis role="italic">data</emphasis>"</para>
+<para>Data must not follow the NAME keyword; found "<emphasis role="italic">data</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>904</term>
 <listitem>
-<para>Data must not follow the condition name; found "<emphasis role="italic">data</emphasis>"</para>
+<para>Data must not follow the condition name; found "<emphasis role="italic">data</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>905</term>
 <listitem>
-<para>Data must not follow the SIGNAL label name; found "<emphasis role="italic">data</emphasis>"</para>
+<para>Data must not follow the SIGNAL label name; found "<emphasis role="italic">data</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>906</term>
 <listitem>
-<para>Data must not follow the TRACE setting; found "<emphasis role="italic">data</emphasis>"</para>
+<para>Data must not follow the TRACE setting; found "<emphasis role="italic">data</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>907</term>
 <listitem>
-<para>Data must not follow the LEAVE control variable name; found "<emphasis role="italic">data</emphasis>"</para>
+<para>Data must not follow the LEAVE control variable name; found "<emphasis role="italic">data</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>908</term>
 <listitem>
-<para>Data must not follow the ITERATE control variable name; found "<emphasis role="italic">data</emphasis>"</para>
+<para>Data must not follow the ITERATE control variable name; found "<emphasis role="italic">data</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>909</term>
 <listitem>
-<para>Data must not follow the END control variable name; found "<emphasis role="italic">data</emphasis>"</para>
+<para>Data must not follow the END control variable name; found "<emphasis role="italic">data</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>911</term>
 <listitem>
-<para>Data must not follow the NUMERIC FORM specification; found "<emphasis role="italic">data</emphasis>"</para>
+<para>Data must not follow the NUMERIC FORM specification; found "<emphasis role="italic">data</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>912</term>
 <listitem>
-<para>Data must not follow the GUARD OFF specification; found "<emphasis role="italic">data</emphasis>"</para>
+<para>Data must not follow the GUARD OFF specification; found "<emphasis role="italic">data</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>913</term>
 <listitem>
-<para>Data must not follow the ::CONSTANT value; found "<emphasis role="italic">data</emphasis>"</para>
+<para>Data must not follow the ::CONSTANT value; found "<emphasis role="italic">data</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>914</term>
 <listitem>
-<para>Data must not follow the ::RESOURCE directive; found "<emphasis role="italic">data</emphasis>"</para>
+<para>Data must not follow the ::RESOURCE directive; found "<emphasis role="italic">data</emphasis>".</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR22">
-<title>Error 22 - Invalid character string</title>
+<title>Error 22 - Invalid character string.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -965,27 +955,26 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>Incorrect character string "<emphasis role="italic">character_string</emphasis>" ('<emphasis role="italic">hex_string</emphasis>'X)</para>
+<para>Incorrect character string "<emphasis role="italic">character_string</emphasis>" ('<emphasis role="italic">hex_string</emphasis>'X).</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>900</term>
 <listitem>
 <para>
-<emphasis role="italic">message</emphasis>
-</para>
+<emphasis role="italic">message</emphasis>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>901</term>
 <listitem>
-<para>Incorrect double-byte character</para>
+<para>Incorrect double-byte character.</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR23">
-<title>Error 23 - Invalid data string</title>
+<title>Error 23 - Invalid data string.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -995,21 +984,20 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>Incorrect data string "<emphasis role="italic">string</emphasis>" ('<emphasis role="italic">hex_string</emphasis>'X)</para>
+<para>Incorrect data string "<emphasis role="italic">string</emphasis>" ('<emphasis role="italic">hex_string</emphasis>'X).</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>900</term>
 <listitem>
 <para>
-<emphasis role="italic">message</emphasis>
-</para>
+<emphasis role="italic">message</emphasis>.</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR24">
-<title>Error 24 - Invalid TRACE request</title>
+<title>Error 24 - Invalid TRACE request.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -1028,19 +1016,19 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>TRACE request letter must be one of "ACEFILNOR"; found  "<emphasis role="italic">value</emphasis>"</para>
+<para>TRACE request letter must be one of "ACEFILNOR"; found  "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>901</term>
 <listitem>
-<para>Numeric TRACE requests are valid only from interactive debugging</para>
+<para>Numeric TRACE requests are valid only from interactive debugging.</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR25">
-<title>Error 25 - Invalid subkeyword found</title>
+<title>Error 25 - Invalid subkeyword found.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -1050,219 +1038,218 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>CALL ON must be followed by one of the keywords ERROR, FAILURE, HALT, NOTREADY, USER, or ANY; found "<emphasis role="italic">word</emphasis>"</para>
+<para>CALL ON must be followed by one of the keywords ERROR, FAILURE, HALT, NOTREADY, USER, or ANY; found "<emphasis role="italic">word</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>002</term>
 <listitem>
-<para>CALL OFF must be followed by one of the keywords ERROR, FAILURE, HALT, NOTREADY, USER, or ANY; found "<emphasis role="italic">word</emphasis>"</para>
+<para>CALL OFF must be followed by one of the keywords ERROR, FAILURE, HALT, NOTREADY, USER, or ANY; found "<emphasis role="italic">word</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>003</term>
 <listitem>
-<para>SIGNAL ON must be followed by one of the keywords ERROR, FAILURE, HALT, LOSTDIGITS, NOTREADY, NOMETHOD, NOSTRING, NOVALUE, SYNTAX, USER, or ANY; found "<emphasis role="italic">word</emphasis>"</para>
+<para>SIGNAL ON must be followed by one of the keywords ERROR, FAILURE, HALT, LOSTDIGITS, NOTREADY, NOMETHOD, NOSTRING, NOVALUE, SYNTAX, USER, or ANY; found "<emphasis role="italic">word</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>004</term>
 <listitem>
-<para>SIGNAL OFF must be followed by one of the keywords ERROR, FAILURE, HALT, LOSTDIGITS, NOTREADY, NOMETHOD, NOSTRING, NOVALUE, SYNTAX, USER, or ANY; found "<emphasis role="italic">word</emphasis>"</para>
+<para>SIGNAL OFF must be followed by one of the keywords ERROR, FAILURE, HALT, LOSTDIGITS, NOTREADY, NOMETHOD, NOSTRING, NOVALUE, SYNTAX, USER, or ANY; found "<emphasis role="italic">word</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>011</term>
 <listitem>
-<para>NUMERIC FORM must be followed by one of the keywords SCIENTIFIC or ENGINEERING; found "<emphasis role="italic">word</emphasis>"</para>
+<para>NUMERIC FORM must be followed by one of the keywords SCIENTIFIC or ENGINEERING; found "<emphasis role="italic">word</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>012</term>
 <listitem>
-<para>PARSE must be followed by one of the keywords ARG, LINEIN, PULL, SOURCE, VALUE, VAR, or VERSION; found "<emphasis role="italic">word</emphasis>"</para>
+<para>PARSE must be followed by one of the keywords ARG, LINEIN, PULL, SOURCE, VALUE, VAR, or VERSION; found "<emphasis role="italic">word</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>015</term>
 <listitem>
-<para>NUMERIC must be followed by one of the keywords DIGITS, FORM, or FUZZ; found "<emphasis role="italic">word</emphasis>"</para>
+<para>NUMERIC must be followed by one of the keywords DIGITS, FORM, or FUZZ; found "<emphasis role="italic">word</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>017</term>
 <listitem>
-<para>PROCEDURE must be followed by the keyword EXPOSE or nothing; found "<emphasis role="italic">word</emphasis>"</para>
+<para>PROCEDURE must be followed by the keyword EXPOSE or nothing; found "<emphasis role="italic">word</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>900</term>
 <listitem>
 <para>
-<emphasis role="italic">message</emphasis>
-</para>
+<emphasis role="italic">message</emphasis>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>901</term>
 <listitem>
-<para>Unknown keyword on ::CLASS directive; found "<emphasis role="italic">word</emphasis>"</para>
+<para>Unknown keyword on ::CLASS directive; found "<emphasis role="italic">word</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>902</term>
 <listitem>
-<para>Unknown keyword on ::METHOD directive; found "<emphasis role="italic">word</emphasis>"</para>
+<para>Unknown keyword on ::METHOD directive; found "<emphasis role="italic">word</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>903</term>
 <listitem>
-<para>Unknown keyword on ::ROUTINE directive; found "<emphasis role="italic">word</emphasis>"</para>
+<para>Unknown keyword on ::ROUTINE directive; found "<emphasis role="italic">word</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>904</term>
 <listitem>
-<para>Unknown keyword on ::REQUIRES directive; found "<emphasis role="italic">word</emphasis>"</para>
+<para>Unknown keyword on ::REQUIRES directive; found "<emphasis role="italic">word</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>905</term>
 <listitem>
-<para>USE must be followed by the keyword ARG; found "<emphasis role="italic">word</emphasis>"</para>
+<para>USE must be followed by the keyword ARG; found "<emphasis role="italic">word</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>906</term>
 <listitem>
-<para>RAISE must be followed by one of the keywords ERROR, FAILURE, HALT, LOSTDIGITS, NOMETHOD, NOSTRING, NOTREADY, NOVALUE, SYNTAX, or USER; found "<emphasis role="italic">word</emphasis>"</para>
+<para>RAISE must be followed by one of the keywords ERROR, FAILURE, HALT, LOSTDIGITS, NOMETHOD, NOSTRING, NOTREADY, NOVALUE, SYNTAX, or USER; found "<emphasis role="italic">word</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>907</term>
 <listitem>
-<para>Unknown keyword on RAISE instruction; found "<emphasis role="italic">word</emphasis>"</para>
+<para>Unknown keyword on RAISE instruction; found "<emphasis role="italic">word</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>908</term>
 <listitem>
-<para>Duplicate DESCRIPTION keyword found</para>
+<para>Duplicate DESCRIPTION keyword found.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>909</term>
 <listitem>
-<para>Duplicate ADDITIONAL or ARRAY keyword found</para>
+<para>Duplicate ADDITIONAL or ARRAY keyword found.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>911</term>
 <listitem>
-<para>Duplicate RETURN or EXIT keyword found</para>
+<para>Duplicate RETURN or EXIT keyword found.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>912</term>
 <listitem>
-<para>GUARD ON or GUARD OFF must be followed by the keyword WHEN; found "<emphasis role="italic">word</emphasis>"</para>
+<para>GUARD ON or GUARD OFF must be followed by the keyword WHEN; found "<emphasis role="italic">word</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>913</term>
 <listitem>
-<para>GUARD must be followed by the keyword ON or OFF; found "<emphasis role="italic">word</emphasis>"</para>
+<para>GUARD must be followed by the keyword ON or OFF; found "<emphasis role="italic">word</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>914</term>
 <listitem>
-<para>CALL ON condition must be followed by the keyword NAME; found "<emphasis role="italic">word</emphasis>"</para>
+<para>CALL ON condition must be followed by the keyword NAME; found "<emphasis role="italic">word</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>915</term>
 <listitem>
-<para>SIGNAL ON condition must be followed by the keyword NAME; found "<emphasis role="italic">word</emphasis>"</para>
+<para>SIGNAL ON condition must be followed by the keyword NAME; found "<emphasis role="italic">word</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>916</term>
 <listitem>
-<para>Unknown keyword on FORWARD instruction; found "<emphasis role="italic">keyword</emphasis>"</para>
+<para>Unknown keyword on FORWARD instruction; found "<emphasis role="italic">keyword</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>917</term>
 <listitem>
-<para>Duplicate TO keyword found</para>
+<para>Duplicate TO keyword found.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>918</term>
 <listitem>
-<para>Duplicate ARGUMENTS or ARRAY keyword found</para>
+<para>Duplicate ARGUMENTS or ARRAY keyword found.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>919</term>
 <listitem>
-<para>Duplicate RETURN or CONTINUE keyword found</para>
+<para>Duplicate RETURN or CONTINUE keyword found.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>921</term>
 <listitem>
-<para>Duplicate CLASS keyword found</para>
+<para>Duplicate CLASS keyword found.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>922</term>
 <listitem>
-<para>Duplicate MESSAGE keyword found</para>
+<para>Duplicate MESSAGE keyword found.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>923</term>
 <listitem>
-<para>SELECT must be followed by the keyword LABEL; found "<emphasis role="italic">word</emphasis>"</para>
+<para>SELECT must be followed by the keyword LABEL; found "<emphasis role="italic">word</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>924</term>
 <listitem>
-<para>Unknown keyword on ::OPTIONS directive; found "<emphasis role="italic">word</emphasis>"</para>
+<para>Unknown keyword on ::OPTIONS directive; found "<emphasis role="italic">word</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>925</term>
 <listitem>
-<para>Unknown keyword on ::ATTRIBUTE directive; found "<emphasis role="italic">word</emphasis>"</para>
+<para>Unknown keyword on ::ATTRIBUTE directive; found "<emphasis role="italic">word</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>926</term>
 <listitem>
-<para>Unknown keyword on ::RESOURCE directive; found "<emphasis role="italic">word</emphasis>"</para>
+<para>Unknown keyword on ::RESOURCE directive; found "<emphasis role="italic">word</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>927</term>
 <listitem>
-<para>Unknown keyword following "<emphasis role="italic">keyword</emphasis>"; found "<emphasis role="italic">word</emphasis>"</para>
+<para>Unknown keyword following "<emphasis role="italic">keyword</emphasis>"; found "<emphasis role="italic">word</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>928</term>
 <listitem>
-<para>Unknown keyword on ::ANNOTATION directive; found "<emphasis role="italic">word</emphasis>"</para>
+<para>Unknown keyword on ::ANNOTATION directive; found "<emphasis role="italic">word</emphasis>".</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR26">
-<title>Error 26 - Invalid whole number</title>
+<title>Error 26 - Invalid whole number.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -1291,87 +1278,86 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>002</term>
 <listitem>
-<para>Value of repetition count expression in DO instruction must be zero or a positive whole number; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Value of repetition count expression in DO instruction must be zero or a positive whole number; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>003</term>
 <listitem>
-<para>Value of FOR expression in DO instruction must be zero or a positive whole number; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Value of FOR expression in DO instruction must be zero or a positive whole number; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>004</term>
 <listitem>
-<para>Positional pattern of PARSE template must be a whole number; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Positional pattern of PARSE template must be a whole number; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>005</term>
 <listitem>
-<para>DIGITS value must be a positive whole number; found "<emphasis role="italic">value</emphasis>"</para>
+<para>DIGITS value must be a positive whole number; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>006</term>
 <listitem>
-<para>FUZZ value must be zero or a positive whole number; found "<emphasis role="italic">value</emphasis>"</para>
+<para>FUZZ value must be zero or a positive whole number; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>007</term>
 <listitem>
-<para>Number used in TRACE setting must be a whole number; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Number used in TRACE setting must be a whole number; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>008</term>
 <listitem>
-<para>Operand to the right of the power operator (**) must be a whole number; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Operand to the right of the power operator (**) must be a whole number; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>011</term>
 <listitem>
-<para>Result of % operation did not result in a whole number</para>
+<para>Result of % operation did not result in a whole number.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>012</term>
 <listitem>
-<para>Result of // operation did not result in a whole number</para>
+<para>Result of // operation did not result in a whole number.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>900</term>
 <listitem>
 <para>
-<emphasis role="italic">message</emphasis>
-</para>
+<emphasis role="italic">message</emphasis>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>901</term>
 <listitem>
-<para>Result of a method call did not result in a whole number; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Result of a method call did not result in a whole number; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>902</term>
 <listitem>
-<para>Result of a COMPARETO method call did not result in a whole number; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Result of a COMPARETO method call did not result in a whole number; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>903</term>
 <listitem>
-<para>Result of a COMPARE method call did not result in a whole number; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Result of a COMPARE method call did not result in a whole number; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR27">
-<title>Error 27 - Invalid DO syntax</title>
+<title>Error 27 - Invalid DO syntax.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -1381,25 +1367,25 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>WHILE and UNTIL keywords cannot be used on the same DO loop</para>
+<para>WHILE and UNTIL keywords cannot be used on the same DO loop.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>901</term>
 <listitem>
-<para>Incorrect data following FOREVER keyword on the DO loop; found "<emphasis role="italic">data</emphasis>"</para>
+<para>Incorrect data following FOREVER keyword on the DO loop; found "<emphasis role="italic">data</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>902</term>
 <listitem>
-<para>DO keyword <emphasis role="italic">keyword</emphasis> can be specified only once</para>
+<para>DO keyword <emphasis role="italic">keyword</emphasis> can be specified only once.</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR28">
-<title>Error 28 - Invalid LEAVE or ITERATE</title>
+<title>Error 28 - Invalid LEAVE or ITERATE.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -1409,13 +1395,13 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>LEAVE is valid only within a repetitive loop or labeled block instruction</para>
+<para>LEAVE is valid only within a repetitive loop or labeled block instruction.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>002</term>
 <listitem>
-<para>ITERATE is valid only within a repetitive loop</para>
+<para>ITERATE is valid only within a repetitive loop.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -1427,19 +1413,19 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>004</term>
 <listitem>
-<para>Symbol following ITERATE ("<emphasis role="italic">symbol</emphasis>") must either match the label of a current loop or be omitted</para>
+<para>Symbol following ITERATE ("<emphasis role="italic">symbol</emphasis>") must either match the label of a current loop or be omitted.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>005</term>
 <listitem>
-<para>Symbol following ITERATE ("<emphasis role="italic">symbol</emphasis>") does not match a repetitive block instruction</para>
+<para>Symbol following ITERATE ("<emphasis role="italic">symbol</emphasis>") does not match a repetitive block instruction.</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR29">
-<title>Error 29 - Environment name too long</title>
+<title>Error 29 - Environment name too long.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -1449,13 +1435,13 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>Environment name exceeds <emphasis role="italic">limit</emphasis> characters; found "<emphasis role="italic">environment_name</emphasis>"</para>
+<para>Environment name exceeds <emphasis role="italic">limit</emphasis> characters; found "<emphasis role="italic">environment_name</emphasis>".</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR30">
-<title>Error 30 - Name or string too long</title>
+<title>Error 30 - Name or string too long.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -1465,39 +1451,38 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>Name exceeds 250 characters:  "<emphasis role="italic">name</emphasis>"</para>
+<para>Name exceeds 250 characters:  "<emphasis role="italic">name</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>002</term>
 <listitem>
-<para>Literal string exceeds 250 characters:  "<emphasis role="italic">string</emphasis>"</para>
+<para>Literal string exceeds 250 characters:  "<emphasis role="italic">string</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>900</term>
 <listitem>
 <para>
-<emphasis role="italic">message</emphasis>
-</para>
+<emphasis role="italic">message</emphasis>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>901</term>
 <listitem>
-<para>Hexadecimal literal string exceeds 250 characters "<emphasis role="italic">string</emphasis>"</para>
+<para>Hexadecimal literal string exceeds 250 characters "<emphasis role="italic">string</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>902</term>
 <listitem>
-<para>Binary literal string exceeds 250 characters "<emphasis role="italic">string</emphasis>"</para>
+<para>Binary literal string exceeds 250 characters "<emphasis role="italic">string</emphasis>".</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR31">
-<title>Error 31 - Name starts with number or "."</title>
+<title>Error 31 - Name starts with number or ".".</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -1507,33 +1492,32 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>A value cannot be assigned to a number; found "<emphasis role="italic">number</emphasis>"</para>
+<para>A value cannot be assigned to a number; found "<emphasis role="italic">number</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>002</term>
 <listitem>
-<para>Variable symbol must not start with a number; found "<emphasis role="italic">symbol</emphasis>"</para>
+<para>Variable symbol must not start with a number; found "<emphasis role="italic">symbol</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>003</term>
 <listitem>
-<para>Variable symbol must not start with a "."; found "<emphasis role="italic">symbol</emphasis>"</para>
+<para>Variable symbol must not start with a "."; found "<emphasis role="italic">symbol</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>900</term>
 <listitem>
 <para>
-<emphasis role="italic">message</emphasis>
-</para>
+<emphasis role="italic">message</emphasis>.</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR33">
-<title>Error 33 - Invalid expression result</title>
+<title>Error 33 - Invalid expression result.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -1543,52 +1527,50 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>Value of NUMERIC DIGITS ("<emphasis role="italic">value</emphasis>") must exceed value of NUMERIC FUZZ ("<emphasis role="italic">value</emphasis>")</para>
+<para>Value of NUMERIC DIGITS ("<emphasis role="italic">value</emphasis>") must exceed value of NUMERIC FUZZ ("<emphasis role="italic">value</emphasis>").</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>002</term>
 <listitem>
-<para>Value of NUMERIC DIGITS ("<emphasis role="italic">value</emphasis>") must not exceed <emphasis role="italic">value</emphasis>
-</para>
+<para>Value of NUMERIC DIGITS ("<emphasis role="italic">value</emphasis>") must not exceed <emphasis role="italic">value</emphasis>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>900</term>
 <listitem>
 <para>
-<emphasis role="italic">message</emphasis>
-</para>
+<emphasis role="italic">message</emphasis>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>901</term>
 <listitem>
-<para>Incorrect expression result following VALUE keyword of ADDRESS instruction</para>
+<para>Incorrect expression result following VALUE keyword of ADDRESS instruction.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>902</term>
 <listitem>
-<para>Incorrect expression result following VALUE keyword of SIGNAL instruction</para>
+<para>Incorrect expression result following VALUE keyword of SIGNAL instruction.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>903</term>
 <listitem>
-<para>Incorrect expression result following VALUE keyword of TRACE instruction</para>
+<para>Incorrect expression result following VALUE keyword of TRACE instruction.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>904</term>
 <listitem>
-<para>Incorrect expression result following SYNTAX keyword of RAISE instruction</para>
+<para>Incorrect expression result following SYNTAX keyword of RAISE instruction.</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR34">
-<title>Error 34 - Logical value not 0 or 1</title>
+<title>Error 34 - Logical value not 0 or 1.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -1598,81 +1580,80 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>Value of expression following IF keyword must be exactly "0" or "1"; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Value of expression following IF keyword must be exactly "0" or "1"; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>002</term>
 <listitem>
-<para>Value of expression following WHEN keyword must be exactly "0" or "1"; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Value of expression following WHEN keyword must be exactly "0" or "1"; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>003</term>
 <listitem>
-<para>Value of expression following WHILE keyword must be exactly "0" or "1"; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Value of expression following WHILE keyword must be exactly "0" or "1"; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>004</term>
 <listitem>
-<para>Value of expression following UNTIL keyword must be exactly "0" or "1"; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Value of expression following UNTIL keyword must be exactly "0" or "1"; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>005</term>
 <listitem>
-<para>Value of expression to the left of the logical operator "<emphasis role="italic">operator</emphasis>" must be exactly "0" or "1"; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Value of expression to the left of the logical operator "<emphasis role="italic">operator</emphasis>" must be exactly "0" or "1"; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>006</term>
 <listitem>
-<para>Value of logical list expression element must be exactly "0" or "1"; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Value of logical list expression element must be exactly "0" or "1"; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>900</term>
 <listitem>
 <para>
-<emphasis role="italic">message</emphasis>
-</para>
+<emphasis role="italic">message</emphasis>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>901</term>
 <listitem>
-<para>Logical value must be exactly "0" or "1"; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Logical value must be exactly "0" or "1"; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>902</term>
 <listitem>
-<para>Value of expression following GUARD keyword must be exactly "0" or "1"; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Value of expression following GUARD keyword must be exactly "0" or "1"; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>903</term>
 <listitem>
-<para>Authorization return value must be exactly "0" or "1"; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Authorization return value must be exactly "0" or "1"; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>904</term>
 <listitem>
-<para>Property logical value must be exactly "0", "1", "true", or "false"; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Property logical value must be exactly "0", "1", "true", or "false"; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>905</term>
 <listitem>
-<para>SELECT CASE comparison result must be "0", "1", "true", or "false"; found "<emphasis role="italic">value</emphasis>"</para>
+<para>SELECT CASE comparison result must be "0", "1", "true", or "false"; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR35">
-<title>Error 35 - Invalid expression</title>
+<title>Error 35 - Invalid expression.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -1700,213 +1681,212 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>Incorrect expression detected at "<emphasis role="italic">token</emphasis>"</para>
+<para>Incorrect expression detected at "<emphasis role="italic">token</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>900</term>
 <listitem>
 <para>
-<emphasis role="italic">message</emphasis>
-</para>
+<emphasis role="italic">message</emphasis>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>901</term>
 <listitem>
-<para>Prefix operator "<emphasis role="italic">operator</emphasis>" is not followed by an expression term</para>
+<para>Prefix operator "<emphasis role="italic">operator</emphasis>" is not followed by an expression term.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>902</term>
 <listitem>
-<para>Missing conditional expression following IF keyword</para>
+<para>Missing conditional expression following IF keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>903</term>
 <listitem>
-<para>Missing conditional expression following WHEN keyword</para>
+<para>Missing conditional expression following WHEN keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>904</term>
 <listitem>
-<para>Missing initial expression for DO control variable</para>
+<para>Missing initial expression for DO control variable.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>905</term>
 <listitem>
-<para>Missing expression following BY keyword</para>
+<para>Missing expression following BY keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>906</term>
 <listitem>
-<para>Missing expression following TO keyword</para>
+<para>Missing expression following TO keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>907</term>
 <listitem>
-<para>Missing expression following FOR keyword</para>
+<para>Missing expression following FOR keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>908</term>
 <listitem>
-<para>Missing expression following WHILE keyword</para>
+<para>Missing expression following WHILE keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>909</term>
 <listitem>
-<para>Missing expression following UNTIL keyword</para>
+<para>Missing expression following UNTIL keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>911</term>
 <listitem>
-<para>Missing expression following OVER keyword</para>
+<para>Missing expression following OVER keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>912</term>
 <listitem>
-<para>Missing expression following INTERPRET keyword</para>
+<para>Missing expression following INTERPRET keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>913</term>
 <listitem>
-<para>Missing expression following OPTIONS keyword</para>
+<para>Missing expression following OPTIONS keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>914</term>
 <listitem>
-<para>Missing expression following VALUE keyword of an ADDRESS instruction</para>
+<para>Missing expression following VALUE keyword of an ADDRESS instruction.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>915</term>
 <listitem>
-<para>Missing expression following VALUE keyword of a SIGNAL instruction</para>
+<para>Missing expression following VALUE keyword of a SIGNAL instruction.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>916</term>
 <listitem>
-<para>Missing expression following VALUE keyword of a TRACE instruction</para>
+<para>Missing expression following VALUE keyword of a TRACE instruction.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>917</term>
 <listitem>
-<para>Missing expression following VALUE keyword of a NUMERIC FORM instruction</para>
+<para>Missing expression following VALUE keyword of a NUMERIC FORM instruction.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>918</term>
 <listitem>
-<para>Missing expression following assignment instruction</para>
+<para>Missing expression following assignment instruction.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>919</term>
 <listitem>
-<para>Operator "<emphasis role="italic">operator</emphasis>" is not followed by an expression term</para>
+<para>Operator "<emphasis role="italic">operator</emphasis>" is not followed by an expression term.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>921</term>
 <listitem>
-<para>Missing expression following GUARD keyword</para>
+<para>Missing expression following GUARD keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>922</term>
 <listitem>
-<para>Missing expression following DESCRIPTION keyword of a RAISE instruction</para>
+<para>Missing expression following DESCRIPTION keyword of a RAISE instruction.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>923</term>
 <listitem>
-<para>Missing expression following ADDITIONAL keyword of a RAISE instruction</para>
+<para>Missing expression following ADDITIONAL keyword of a RAISE instruction.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>924</term>
 <listitem>
-<para>Missing "(" on expression list of the ARRAY keyword</para>
+<para>Missing "(" on expression list of the ARRAY keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>925</term>
 <listitem>
-<para>Missing expression following TO keyword of a FORWARD instruction</para>
+<para>Missing expression following TO keyword of a FORWARD instruction.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>926</term>
 <listitem>
-<para>Missing expression following ARGUMENTS keyword of a FORWARD instruction</para>
+<para>Missing expression following ARGUMENTS keyword of a FORWARD instruction.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>927</term>
 <listitem>
-<para>Missing expression following MESSAGE keyword of a FORWARD instruction</para>
+<para>Missing expression following MESSAGE keyword of a FORWARD instruction.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>928</term>
 <listitem>
-<para>Missing expression following CLASS keyword of a FORWARD instruction</para>
+<para>Missing expression following CLASS keyword of a FORWARD instruction.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>929</term>
 <listitem>
-<para>Missing expression in logical expression list</para>
+<para>Missing expression in logical expression list.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>930</term>
 <listitem>
-<para>Missing expression following "=" token of a USE STRICT ARG instruction</para>
+<para>Missing expression following "=" token of a USE STRICT ARG instruction.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>931</term>
 <listitem>
-<para>Missing expression following ( of parse template</para>
+<para>Missing expression following ( of parse template.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>932</term>
 <listitem>
-<para>Missing expression for calculated CALL name</para>
+<para>Missing expression for calculated CALL name.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>933</term>
 <listitem>
-<para>Missing expression following CASE keyword of a SELECT instruction</para>
+<para>Missing expression following CASE keyword of a SELECT instruction.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>934</term>
 <listitem>
-<para>Missing expression in WHEN case expression list</para>
+<para>Missing expression in WHEN case expression list.</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR36">
-<title>Error 36 - Unmatched "(" or "[" in expression</title>
+<title>Error 36 - Unmatched "(" or "[" in expression.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -1917,26 +1897,25 @@ special character (such as a parenthesis).
 <term>900</term>
 <listitem>
 <para>
-<emphasis role="italic">message</emphasis>
-</para>
+<emphasis role="italic">message</emphasis>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>901</term>
 <listitem>
-<para>Left parenthesis "(" in position <emphasis role="italic">position</emphasis> on line <emphasis role="italic">line_number</emphasis> requires a corresponding right parenthesis ")"</para>
+<para>Left parenthesis "(" in position <emphasis role="italic">position</emphasis> on line <emphasis role="italic">line_number</emphasis> requires a corresponding right parenthesis ")".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>902</term>
 <listitem>
-<para>Square bracket "[" in position <emphasis role="italic">position</emphasis> on line <emphasis role="italic">line_number</emphasis> requires a corresponding right square bracket "]"</para>
+<para>Square bracket "[" in position <emphasis role="italic">position</emphasis> on line <emphasis role="italic">line_number</emphasis> requires a corresponding right square bracket "]".</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR37">
-<title>Error 37 - Unexpected ",", ")", or "]"</title>
+<title>Error 37 - Unexpected ",", ")", or "]".</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -1953,33 +1932,32 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>Unexpected ","</para>
+<para>Unexpected ",".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>002</term>
 <listitem>
-<para>Unmatched ")" in expression</para>
+<para>Unmatched ")" in expression.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>900</term>
 <listitem>
 <para>
-<emphasis role="italic">message</emphasis>
-</para>
+<emphasis role="italic">message</emphasis>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>901</term>
 <listitem>
-<para>Unexpected "]"</para>
+<para>Unexpected "]".</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR38">
-<title>Error 38 - Invalid template or pattern</title>
+<title>Error 38 - Invalid template or pattern.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -1989,46 +1967,45 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>Incorrect PARSE template detected at "<emphasis role="italic">column_position</emphasis>"</para>
+<para>Incorrect PARSE template detected at "<emphasis role="italic">column_position</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>002</term>
 <listitem>
-<para>Incorrect PARSE position detected at "<emphasis role="italic">column_position</emphasis>"</para>
+<para>Incorrect PARSE position detected at "<emphasis role="italic">column_position</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>003</term>
 <listitem>
-<para>PARSE VALUE instruction requires WITH keyword</para>
+<para>PARSE VALUE instruction requires WITH keyword.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>900</term>
 <listitem>
 <para>
-<emphasis role="italic">message</emphasis>
-</para>
+<emphasis role="italic">message</emphasis>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>901</term>
 <listitem>
-<para>Missing PARSE relative position</para>
+<para>Missing PARSE relative position.</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR39">
-<title>Error 39 - Evaluation stack overflow</title>
+<title>Error 39 - Evaluation stack overflow.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
 <para>The expression is too complex to be evaluated by the language processor.</para>
 </section>
 <section id="ERR40">
-<title>Error 40 - Incorrect call to routine</title>
+<title>Error 40 - Incorrect call to routine.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -2050,171 +2027,167 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>External routine "<emphasis role="italic">routine</emphasis>" failed</para>
+<para>External routine "<emphasis role="italic">routine</emphasis>" failed.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>003</term>
 <listitem>
-<para>Not enough arguments in invocation of <emphasis role="italic">routine</emphasis>; minimum expected is <emphasis role="italic">number</emphasis>
-</para>
+<para>Not enough arguments in invocation of <emphasis role="italic">routine</emphasis>; minimum expected is <emphasis role="italic">number</emphasis>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>004</term>
 <listitem>
-<para>Too many arguments in invocation of <emphasis role="italic">routine</emphasis>; maximum expected is <emphasis role="italic">number</emphasis>
-</para>
+<para>Too many arguments in invocation of <emphasis role="italic">routine</emphasis>; maximum expected is <emphasis role="italic">number</emphasis>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>005</term>
 <listitem>
-<para>Missing argument in invocation of <emphasis role="italic">routine</emphasis>; argument <emphasis role="italic">argument_number</emphasis> is required</para>
+<para>Missing argument in invocation of <emphasis role="italic">routine</emphasis>; argument <emphasis role="italic">argument_number</emphasis> is required.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>011</term>
 <listitem>
 <para>
-<emphasis role="italic">function_name</emphasis> argument <emphasis role="italic">argument_number</emphasis> must be a number; found "<emphasis role="italic">value</emphasis>"</para>
+<emphasis role="italic">function_name</emphasis> argument <emphasis role="italic">argument_number</emphasis> must be a number; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>012</term>
 <listitem>
 <para>
-<emphasis role="italic">function_name</emphasis> argument <emphasis role="italic">argument_number</emphasis> must be a whole number; found "<emphasis role="italic">value</emphasis>"</para>
+<emphasis role="italic">function_name</emphasis> argument <emphasis role="italic">argument_number</emphasis> must be a whole number; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>013</term>
 <listitem>
 <para>
-<emphasis role="italic">function_name</emphasis> argument <emphasis role="italic">argument_number</emphasis> must be zero or positive; found "<emphasis role="italic">value</emphasis>"</para>
+<emphasis role="italic">function_name</emphasis> argument <emphasis role="italic">argument_number</emphasis> must be zero or positive; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>014</term>
 <listitem>
 <para>
-<emphasis role="italic">function_name</emphasis> argument <emphasis role="italic">argument_number</emphasis> must be positive; found "<emphasis role="italic">value</emphasis>"</para>
+<emphasis role="italic">function_name</emphasis> argument <emphasis role="italic">argument_number</emphasis> must be positive; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>019</term>
 <listitem>
 <para>
-<emphasis role="italic">function_name</emphasis> argument 2, "<emphasis role="italic">value</emphasis>", is not in the format described by argument 3, "<emphasis role="italic">value</emphasis>"</para>
+<emphasis role="italic">function_name</emphasis> argument 2, "<emphasis role="italic">value</emphasis>", is not in the format described by argument 3, "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>021</term>
 <listitem>
 <para>
-<emphasis role="italic">function_name</emphasis> argument <emphasis role="italic">argument_number</emphasis> must not be a null string</para>
+<emphasis role="italic">function_name</emphasis> argument <emphasis role="italic">argument_number</emphasis> must not be a null string.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>022</term>
 <listitem>
 <para>
-<emphasis role="italic">function_name</emphasis> argument <emphasis role="italic">argument_number</emphasis> must be a single character or null; found "<emphasis role="italic">value</emphasis>"</para>
+<emphasis role="italic">function_name</emphasis> argument <emphasis role="italic">argument_number</emphasis> must be a single character or null; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>023</term>
 <listitem>
 <para>
-<emphasis role="italic">function_name</emphasis> argument <emphasis role="italic">argument_number</emphasis> must be a single character; found "<emphasis role="italic">value</emphasis>"</para>
+<emphasis role="italic">function_name</emphasis> argument <emphasis role="italic">argument_number</emphasis> must be a single character; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>024</term>
 <listitem>
 <para>
-<emphasis role="italic">function_name</emphasis> argument <emphasis role="italic">argument_number</emphasis> must be a binary string; found "<emphasis role="italic">value</emphasis>"</para>
+<emphasis role="italic">function_name</emphasis> argument <emphasis role="italic">argument_number</emphasis> must be a binary string; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>025</term>
 <listitem>
 <para>
-<emphasis role="italic">function_name</emphasis> argument <emphasis role="italic">argument_number</emphasis> must be a hexadecimal string; found "<emphasis role="italic">value</emphasis>"</para>
+<emphasis role="italic">function_name</emphasis> argument <emphasis role="italic">argument_number</emphasis> must be a hexadecimal string; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>026</term>
 <listitem>
 <para>
-<emphasis role="italic">function_name</emphasis> argument <emphasis role="italic">argument_number</emphasis> must be a valid symbol; found "<emphasis role="italic">value</emphasis>"</para>
+<emphasis role="italic">function_name</emphasis> argument <emphasis role="italic">argument_number</emphasis> must be a valid symbol; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>027</term>
 <listitem>
 <para>
-<emphasis role="italic">function_name</emphasis> argument 1 must be a valid stream name; found "<emphasis role="italic">value</emphasis>"</para>
+<emphasis role="italic">function_name</emphasis> argument 1 must be a valid stream name; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>029</term>
 <listitem>
 <para>
-<emphasis role="italic">function_name</emphasis> conversion to format "<emphasis role="italic">value</emphasis>" is not allowed</para>
+<emphasis role="italic">function_name</emphasis> conversion to format "<emphasis role="italic">value</emphasis>" is not allowed.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>032</term>
 <listitem>
-<para>RANDOM difference between argument 1 ("<emphasis role="italic">value</emphasis>") and argument 2 ("<emphasis role="italic">value</emphasis>") must not exceed 999,999,999</para>
+<para>RANDOM difference between argument 1 ("<emphasis role="italic">value</emphasis>") and argument 2 ("<emphasis role="italic">value</emphasis>") must not exceed 999,999,999.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>033</term>
 <listitem>
-<para>RANDOM argument 1 ("<emphasis role="italic">argument</emphasis>") must be less than or equal to argument 2 ("<emphasis role="italic">argument</emphasis>")</para>
+<para>RANDOM argument 1 ("<emphasis role="italic">argument</emphasis>") must be less than or equal to argument 2 ("<emphasis role="italic">argument</emphasis>").</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>034</term>
 <listitem>
-<para>SOURCELINE argument 1 ("<emphasis role="italic">argument</emphasis>") must be less than or equal to the number of lines in the program (<emphasis role="italic">argument</emphasis>)</para>
+<para>SOURCELINE argument 1 ("<emphasis role="italic">argument</emphasis>") must be less than or equal to the number of lines in the program (<emphasis role="italic">argument</emphasis>).</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>035</term>
 <listitem>
-<para>X2D argument 1 cannot be expressed as a whole number; found "<emphasis role="italic">value</emphasis>"</para>
+<para>X2D argument 1 cannot be expressed as a whole number; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>043</term>
 <listitem>
 <para>
-<emphasis role="italic">function_name</emphasis> argument <emphasis role="italic">number</emphasis> must be a single non-alphanumeric character or the null string; found "<emphasis role="italic">value</emphasis>"</para>
+<emphasis role="italic">function_name</emphasis> argument <emphasis role="italic">number</emphasis> must be a single non-alphanumeric character or the null string; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>044</term>
 <listitem>
 <para>
-<emphasis role="italic">function_name</emphasis> argument <emphasis role="italic">number</emphasis>, "<emphasis role="italic">value</emphasis>", is a format incompatible with the separator specified in argument <emphasis role="italic">number</emphasis>
-</para>
+<emphasis role="italic">function_name</emphasis> argument <emphasis role="italic">number</emphasis>, "<emphasis role="italic">value</emphasis>", is a format incompatible with the separator specified in argument <emphasis role="italic">number</emphasis>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>900</term>
 <listitem>
 <para>
-<emphasis role="italic">message</emphasis>
-</para>
+<emphasis role="italic">message</emphasis>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>901</term>
 <listitem>
-<para>Result returned by <emphasis role="italic">routine</emphasis> is longer than <emphasis role="italic">length</emphasis>:  "<emphasis role="italic">value</emphasis>"</para>
+<para>Result returned by <emphasis role="italic">routine</emphasis> is longer than <emphasis role="italic">length</emphasis>:  "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -2228,47 +2201,47 @@ special character (such as a parenthesis).
 <term>903</term>
 <listitem>
 <para>
-<emphasis role="italic">function_name</emphasis> argument <emphasis role="italic">argument_number</emphasis> must be in the range 0-99; found "<emphasis role="italic">value</emphasis>"</para>
+<emphasis role="italic">function_name</emphasis> argument <emphasis role="italic">argument_number</emphasis> must be in the range 0-99; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>904</term>
 <listitem>
 <para>
-<emphasis role="italic">function_name</emphasis> argument <emphasis role="italic">argument_number</emphasis> must be one of <emphasis role="italic">values</emphasis>; found "<emphasis role="italic">value</emphasis>"</para>
+<emphasis role="italic">function_name</emphasis> argument <emphasis role="italic">argument_number</emphasis> must be one of <emphasis role="italic">values</emphasis>; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>905</term>
 <listitem>
-<para>TRACE setting letter must be one of "ACEFILNOR"; found "<emphasis role="italic">value</emphasis>"</para>
+<para>TRACE setting letter must be one of "ACEFILNOR"; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>912</term>
 <listitem>
 <para>
-<emphasis role="italic">function_name</emphasis> argument <emphasis role="italic">argument_number</emphasis> must be a single-dimensional array; found "<emphasis role="italic">value</emphasis>"</para>
+<emphasis role="italic">function_name</emphasis> argument <emphasis role="italic">argument_number</emphasis> must be a single-dimensional array; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>913</term>
 <listitem>
 <para>
-<emphasis role="italic">function_name</emphasis> argument <emphasis role="italic">argument_number</emphasis> must have a string value; found "<emphasis role="italic">value</emphasis>"</para>
+<emphasis role="italic">function_name</emphasis> argument <emphasis role="italic">argument_number</emphasis> must have a string value; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>914</term>
 <listitem>
-<para>Unknown VALUE function variable environment selector; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Unknown VALUE function variable environment selector; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>915</term>
 <listitem>
 <para>
-<emphasis role="italic">function_name</emphasis> cannot be used with QUEUE:</para>
+<emphasis role="italic">function_name</emphasis> cannot be used with QUEUE:.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -2286,19 +2259,19 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>918</term>
 <listitem>
-<para>Invalid native function signature specification</para>
+<para>Invalid native function signature specification.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>919</term>
 <listitem>
-<para>Argument <emphasis role="italic">argument</emphasis> must have a stem object or stem name value; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Argument <emphasis role="italic">argument</emphasis> must have a stem object or stem name value; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR41">
-<title>Error 41 - Bad arithmetic conversion</title>
+<title>Error 41 - Bad arithmetic conversion.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -2309,57 +2282,56 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>Nonnumeric value ("<emphasis role="italic">value</emphasis>") used in arithmetic operation</para>
+<para>Nonnumeric value ("<emphasis role="italic">value</emphasis>") used in arithmetic operation.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>003</term>
 <listitem>
-<para>Nonnumeric value ("<emphasis role="italic">value</emphasis>") used with prefix operator</para>
+<para>Nonnumeric value ("<emphasis role="italic">value</emphasis>") used with prefix operator.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>004</term>
 <listitem>
-<para>Value of TO expression of DO instruction must be numeric; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Value of TO expression of DO instruction must be numeric; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>005</term>
 <listitem>
-<para>Value of BY expression of DO instruction must be numeric; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Value of BY expression of DO instruction must be numeric; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>006</term>
 <listitem>
-<para>Value of control variable expression of DO instruction must be numeric; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Value of control variable expression of DO instruction must be numeric; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>007</term>
 <listitem>
-<para>Exponent exceeds <emphasis role="italic">number</emphasis> digits; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Exponent exceeds <emphasis role="italic">number</emphasis> digits; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>900</term>
 <listitem>
 <para>
-<emphasis role="italic">message</emphasis>
-</para>
+<emphasis role="italic">message</emphasis>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>901</term>
 <listitem>
-<para>Value of RAISE instruction SYNTAX expression must be numeric; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Value of RAISE instruction SYNTAX expression must be numeric; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR42">
-<title>Error 42 - Arithmetic overflow/underflow</title>
+<title>Error 42 - Arithmetic overflow/underflow.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -2372,7 +2344,7 @@ special character (such as a parenthesis).
 <listitem>
 <para>Arithmetic overflow detected at:  "<emphasis role="italic">value</emphasis>
 <emphasis role="italic">operator</emphasis>
-<emphasis role="italic">value</emphasis>"</para>
+<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -2380,45 +2352,44 @@ special character (such as a parenthesis).
 <listitem>
 <para>Arithmetic underflow detected at:  "<emphasis role="italic">value</emphasis>
 <emphasis role="italic">operator</emphasis>
-<emphasis role="italic">value</emphasis>"</para>
+<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>003</term>
 <listitem>
-<para>Arithmetic overflow; divisor must not be zero</para>
+<para>Arithmetic overflow; divisor must not be zero.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>900</term>
 <listitem>
 <para>
-<emphasis role="italic">message</emphasis>
-</para>
+<emphasis role="italic">message</emphasis>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>901</term>
 <listitem>
-<para>Arithmetic overflow; exponent ("<emphasis role="italic">exponent</emphasis>") exceeds <emphasis role="italic">number</emphasis> digits</para>
+<para>Arithmetic overflow; exponent ("<emphasis role="italic">exponent</emphasis>") exceeds <emphasis role="italic">number</emphasis> digits.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>902</term>
 <listitem>
-<para>Arithmetic underflow; exponent ("<emphasis role="italic">exponent</emphasis>") exceeds <emphasis role="italic">number</emphasis> digits</para>
+<para>Arithmetic underflow; exponent ("<emphasis role="italic">exponent</emphasis>") exceeds <emphasis role="italic">number</emphasis> digits.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>903</term>
 <listitem>
-<para>Arithmetic underflow; zero raised to a negative power</para>
+<para>Arithmetic underflow; zero raised to a negative power.</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR43">
-<title>Error 43 - Routine not found</title>
+<title>Error 43 - Routine not found.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -2441,33 +2412,32 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>Could not find routine "<emphasis role="italic">routine</emphasis>"</para>
+<para>Could not find routine "<emphasis role="italic">routine</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>900</term>
 <listitem>
 <para>
-<emphasis role="italic">message</emphasis>
-</para>
+<emphasis role="italic">message</emphasis>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>901</term>
 <listitem>
-<para>Could not find file "<emphasis role="italic">file</emphasis>" for ::REQUIRES</para>
+<para>Could not find file "<emphasis role="italic">file</emphasis>" for ::REQUIRES.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>902</term>
 <listitem>
-<para>Routine "<emphasis role="italic">routineName</emphasis>" not found in namespace "<emphasis role="italic">namespace</emphasis>"</para>
+<para>Routine "<emphasis role="italic">routineName</emphasis>" not found in namespace "<emphasis role="italic">namespace</emphasis>".</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR44">
-<title>Error 44 - Function or message did not return data</title>
+<title>Error 44 - Function or message did not return data.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -2478,21 +2448,20 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>No data returned from function "<emphasis role="italic">function</emphasis>"</para>
+<para>No data returned from function "<emphasis role="italic">function</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>900</term>
 <listitem>
 <para>
-<emphasis role="italic">message</emphasis>
-</para>
+<emphasis role="italic">message</emphasis>.</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR45">
-<title>Error 45 - No data specified on function RETURN</title>
+<title>Error 45 - No data specified on function RETURN.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -2502,13 +2471,13 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>Data expected on RETURN instruction because routine "<emphasis role="italic">routine</emphasis>" was called as a function</para>
+<para>Data expected on RETURN instruction because routine "<emphasis role="italic">routine</emphasis>" was called as a function.</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR46">
-<title>Error 46 - Invalid variable reference</title>
+<title>Error 46 - Invalid variable reference.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -2518,33 +2487,32 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>Extra token ("<emphasis role="italic">token</emphasis>") found in variable reference list; ")" expected</para>
+<para>Extra token ("<emphasis role="italic">token</emphasis>") found in variable reference list; ")" expected.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>900</term>
 <listitem>
 <para>
-<emphasis role="italic">message</emphasis>
-</para>
+<emphasis role="italic">message</emphasis>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>901</term>
 <listitem>
-<para>Missing ")" in variable reference</para>
+<para>Missing ")" in variable reference.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>902</term>
 <listitem>
-<para>Extra token ("<emphasis role="italic">token</emphasis>") found in USE ARG variable reference; "," or end of instruction expected</para>
+<para>Extra token ("<emphasis role="italic">token</emphasis>") found in USE ARG variable reference; "," or end of instruction expected.</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR47">
-<title>Error 47 - Unexpected label</title>
+<title>Error 47 - Unexpected label.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -2554,13 +2522,13 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>INTERPRET data must not contain labels; found "<emphasis role="italic">label</emphasis>"</para>
+<para>INTERPRET data must not contain labels; found "<emphasis role="italic">label</emphasis>".</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR48">
-<title>Error 48 - Failure in system service</title>
+<title>Error 48 - Failure in system service.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -2570,22 +2538,20 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>Failure in system service: <emphasis role="italic">service</emphasis>
-</para>
+<para>Failure in system service: <emphasis role="italic">service</emphasis>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>900</term>
 <listitem>
 <para>
-<emphasis role="italic">message</emphasis>
-</para>
+<emphasis role="italic">message</emphasis>.</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR49">
-<title>Error 49 - Interpretation error</title>
+<title>Error 49 - Interpretation error.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -2595,21 +2561,20 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>Interpretation error: unexpected failure initializing the interpreter</para>
+<para>Interpretation error: unexpected failure initializing the interpreter.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>900</term>
 <listitem>
 <para>
-<emphasis role="italic">message</emphasis>
-</para>
+<emphasis role="italic">message</emphasis>.</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR88">
-<title>Error 88 - Invalid argument</title>
+<title>Error 88 - Invalid argument.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -2620,149 +2585,146 @@ special character (such as a parenthesis).
 <term>900</term>
 <listitem>
 <para>
-<emphasis role="italic">message</emphasis>
-</para>
+<emphasis role="italic">message</emphasis>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>901</term>
 <listitem>
-<para>Missing argument; argument <emphasis role="italic">argument</emphasis> is required</para>
+<para>Missing argument; argument <emphasis role="italic">argument</emphasis> is required.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>902</term>
 <listitem>
-<para>Argument <emphasis role="italic">argument</emphasis> must be a number; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Argument <emphasis role="italic">argument</emphasis> must be a number; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>903</term>
 <listitem>
-<para>Argument <emphasis role="italic">argument</emphasis> must be a whole number; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Argument <emphasis role="italic">argument</emphasis> must be a whole number; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>904</term>
 <listitem>
-<para>Argument <emphasis role="italic">argument</emphasis> must be zero or a positive whole number; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Argument <emphasis role="italic">argument</emphasis> must be zero or a positive whole number; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>905</term>
 <listitem>
-<para>Argument <emphasis role="italic">argument</emphasis> must be a positive whole number; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Argument <emphasis role="italic">argument</emphasis> must be a positive whole number; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>906</term>
 <listitem>
-<para>Argument <emphasis role="italic">argument</emphasis> must not exceed <emphasis role="italic">limit</emphasis>; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Argument <emphasis role="italic">argument</emphasis> must not exceed <emphasis role="italic">limit</emphasis>; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>907</term>
 <listitem>
-<para>Argument <emphasis role="italic">argument</emphasis> must be in the range <emphasis role="italic">min</emphasis> to <emphasis role="italic">max</emphasis>; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Argument <emphasis role="italic">argument</emphasis> must be in the range <emphasis role="italic">min</emphasis> to <emphasis role="italic">max</emphasis>; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>908</term>
 <listitem>
-<para>Argument <emphasis role="italic">argument</emphasis> must not be a null string</para>
+<para>Argument <emphasis role="italic">argument</emphasis> must not be a null string.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>909</term>
 <listitem>
-<para>Argument <emphasis role="italic">argument</emphasis> must have a string value</para>
+<para>Argument <emphasis role="italic">argument</emphasis> must have a string value.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>910</term>
 <listitem>
-<para>Argument <emphasis role="italic">argument</emphasis> is an incorrect pad or character argument; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Argument <emphasis role="italic">argument</emphasis> is an incorrect pad or character argument; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>911</term>
 <listitem>
-<para>Argument <emphasis role="italic">argument</emphasis> is an incorrect length argument; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Argument <emphasis role="italic">argument</emphasis> is an incorrect length argument; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>912</term>
 <listitem>
-<para>Argument <emphasis role="italic">argument</emphasis> is an incorrect position argument; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Argument <emphasis role="italic">argument</emphasis> is an incorrect position argument; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>913</term>
 <listitem>
-<para>Argument <emphasis role="italic">argument</emphasis> must have a single-dimensional array value</para>
+<para>Argument <emphasis role="italic">argument</emphasis> must have a single-dimensional array value.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>914</term>
 <listitem>
-<para>Argument <emphasis role="italic">argument</emphasis> must be of the <emphasis role="italic">class</emphasis> class</para>
+<para>Argument <emphasis role="italic">argument</emphasis> must be of the <emphasis role="italic">class</emphasis> class.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>915</term>
 <listitem>
-<para>Argument <emphasis role="italic">argument</emphasis> could not be converted to type <emphasis role="italic">type</emphasis>
-</para>
+<para>Argument <emphasis role="italic">argument</emphasis> could not be converted to type <emphasis role="italic">type</emphasis>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>916</term>
 <listitem>
-<para>Argument <emphasis role="italic">argument</emphasis> must be one of <emphasis role="italic">values</emphasis>; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Argument <emphasis role="italic">argument</emphasis> must be one of <emphasis role="italic">values</emphasis>; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>917</term>
 <listitem>
-<para>Argument <emphasis role="italic">argument</emphasis> <emphasis role="italic">reason</emphasis>
-</para>
+<para>Argument <emphasis role="italic">argument</emphasis> <emphasis role="italic">reason</emphasis>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>918</term>
 <listitem>
-<para>Argument <emphasis role="italic">argument</emphasis> is not in a valid format; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Argument <emphasis role="italic">argument</emphasis> is not in a valid format; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>919</term>
 <listitem>
-<para>Argument <emphasis role="italic">argument</emphasis> is not in valid pointer format; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Argument <emphasis role="italic">argument</emphasis> is not in valid pointer format; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>920</term>
 <listitem>
-<para>Argument <emphasis role="italic">argument</emphasis> must have a stem object or stem name value; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Argument <emphasis role="italic">argument</emphasis> must have a stem object or stem name value; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>921</term>
 <listitem>
-<para>Argument <emphasis role="italic">argument</emphasis> must be a valid double value; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Argument <emphasis role="italic">argument</emphasis> must be a valid double value; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>922</term>
 <listitem>
-<para>Too many arguments in invocation; <emphasis role="italic">number</emphasis> expected</para>
+<para>Too many arguments in invocation; <emphasis role="italic">number</emphasis> expected.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>923</term>
 <listitem>
 <para>
-<emphasis role="italic">name</emphasis> argument <emphasis role="italic">argument_number</emphasis> must be a single-dimensional array; found "<emphasis role="italic">value</emphasis>"</para>
+<emphasis role="italic">name</emphasis> argument <emphasis role="italic">argument_number</emphasis> must be a single-dimensional array; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -2775,7 +2737,7 @@ special character (such as a parenthesis).
 </variablelist>
 </section>
 <section id="ERR89">
-<title>Error 89 - Variable or message term expected</title>
+<title>Error 89 - Variable or message term expected.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -2785,7 +2747,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>The USE instruction requires a comma-separated list of variables or assignment message terms</para>
+<para>The USE instruction requires a comma-separated list of variables or assignment message terms.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -2797,7 +2759,7 @@ special character (such as a parenthesis).
 </variablelist>
 </section>
 <section id="ERR90">
-<title>Error 90 - External name not found</title>
+<title>Error 90 - External name not found.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -2808,32 +2770,31 @@ special character (such as a parenthesis).
 <term>900</term>
 <listitem>
 <para>
-<emphasis role="italic">message</emphasis>
-</para>
+<emphasis role="italic">message</emphasis>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>997</term>
 <listitem>
-<para>Unable to find external class "<emphasis role="italic">class</emphasis>"</para>
+<para>Unable to find external class "<emphasis role="italic">class</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>998</term>
 <listitem>
-<para>Unable to find external method "<emphasis role="italic">method</emphasis>"</para>
+<para>Unable to find external method "<emphasis role="italic">method</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>999</term>
 <listitem>
-<para>Unable to find external routine "<emphasis role="italic">routine</emphasis>"</para>
+<para>Unable to find external routine "<emphasis role="italic">routine</emphasis>".</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR91">
-<title>Error 91 - No result object</title>
+<title>Error 91 - No result object.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -2844,28 +2805,26 @@ special character (such as a parenthesis).
 <term>900</term>
 <listitem>
 <para>
-<emphasis role="italic">message</emphasis>
-</para>
+<emphasis role="italic">message</emphasis>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>999</term>
 <listitem>
-<para>Message "<emphasis role="italic">message</emphasis>" did not return a result</para>
+<para>Message "<emphasis role="italic">message</emphasis>" did not return a result.</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR92">
-<title>Error 92 - OLE error</title>
+<title>Error 92 - OLE error.</title>
 <para>The associated subcodes are: </para>
 <variablelist>
 <varlistentry>
 <term>900</term>
 <listitem>
 <para>
-<emphasis role="italic">message</emphasis>
-</para>
+<emphasis role="italic">message</emphasis>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -2901,8 +2860,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>906</term>
 <listitem>
-<para>OLE exception: <emphasis role="italic">exc_name</emphasis>
-</para>
+<para>OLE exception: <emphasis role="italic">exc_name</emphasis>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -2944,7 +2902,7 @@ special character (such as a parenthesis).
 </variablelist>
 </section>
 <section id="ERR93">
-<title>Error 93 - Incorrect call to method</title>
+<title>Error 93 - Incorrect call to method.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -2955,336 +2913,332 @@ special character (such as a parenthesis).
 <term>900</term>
 <listitem>
 <para>
-<emphasis role="italic">message</emphasis>
-</para>
+<emphasis role="italic">message</emphasis>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>901</term>
 <listitem>
-<para>Not enough arguments for method; <emphasis role="italic">number</emphasis> expected</para>
+<para>Not enough arguments for method; <emphasis role="italic">number</emphasis> expected.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>902</term>
 <listitem>
-<para>Too many arguments in invocation of method; <emphasis role="italic">number</emphasis> expected</para>
+<para>Too many arguments in invocation of method; <emphasis role="italic">number</emphasis> expected.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>903</term>
 <listitem>
-<para>Missing argument in method; argument <emphasis role="italic">argument</emphasis> is required</para>
+<para>Missing argument in method; argument <emphasis role="italic">argument</emphasis> is required.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>904</term>
 <listitem>
-<para>Method argument <emphasis role="italic">argument</emphasis> must be a number; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Method argument <emphasis role="italic">argument</emphasis> must be a number; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>905</term>
 <listitem>
-<para>Method argument <emphasis role="italic">argument</emphasis> must be a whole number; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Method argument <emphasis role="italic">argument</emphasis> must be a whole number; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>906</term>
 <listitem>
-<para>Method argument <emphasis role="italic">argument</emphasis> must be zero or a positive whole number; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Method argument <emphasis role="italic">argument</emphasis> must be zero or a positive whole number; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>907</term>
 <listitem>
-<para>Method argument <emphasis role="italic">argument</emphasis> must be a positive whole number; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Method argument <emphasis role="italic">argument</emphasis> must be a positive whole number; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>908</term>
 <listitem>
-<para>Method argument <emphasis role="italic">argument</emphasis> must not exceed <emphasis role="italic">limit</emphasis>; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Method argument <emphasis role="italic">argument</emphasis> must not exceed <emphasis role="italic">limit</emphasis>; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>909</term>
 <listitem>
-<para>Method argument <emphasis role="italic">argument</emphasis> must be in the range 0-99; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Method argument <emphasis role="italic">argument</emphasis> must be in the range 0-99; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>911</term>
 <listitem>
-<para>Method argument <emphasis role="italic">argument</emphasis> must not be null</para>
+<para>Method argument <emphasis role="italic">argument</emphasis> must not be null.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>912</term>
 <listitem>
-<para>Method argument <emphasis role="italic">argument</emphasis> must be a hexadecimal string; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Method argument <emphasis role="italic">argument</emphasis> must be a hexadecimal string; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>913</term>
 <listitem>
-<para>Method argument <emphasis role="italic">argument</emphasis> must be a valid symbol; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Method argument <emphasis role="italic">argument</emphasis> must be a valid symbol; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>914</term>
 <listitem>
-<para>Method argument <emphasis role="italic">argument</emphasis> must be one of <emphasis role="italic">arguments</emphasis>; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Method argument <emphasis role="italic">argument</emphasis> must be one of <emphasis role="italic">arguments</emphasis>; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>915</term>
 <listitem>
-<para>Method option must be one of "<emphasis role="italic">arguments</emphasis>"; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Method option must be one of "<emphasis role="italic">arguments</emphasis>"; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>916</term>
 <listitem>
-<para>Method argument <emphasis role="italic">argument</emphasis> must have a string value</para>
+<para>Method argument <emphasis role="italic">argument</emphasis> must have a string value.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>917</term>
 <listitem>
-<para>Method <emphasis role="italic">method</emphasis> does not exist</para>
+<para>Method <emphasis role="italic">method</emphasis> does not exist.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>918</term>
 <listitem>
-<para>Incorrect list index "<emphasis role="italic">index</emphasis>"</para>
+<para>Incorrect list index "<emphasis role="italic">index</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>919</term>
 <listitem>
-<para>Incorrect array position "<emphasis role="italic">position</emphasis>"</para>
+<para>Incorrect array position "<emphasis role="italic">position</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>921</term>
 <listitem>
-<para>Argument missing on binary operator</para>
+<para>Argument missing on binary operator.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>922</term>
 <listitem>
-<para>Incorrect pad or character argument specified; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Incorrect pad or character argument specified; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>923</term>
 <listitem>
-<para>Incorrect length argument specified; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Incorrect length argument specified; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>924</term>
 <listitem>
-<para>Incorrect position argument specified; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Incorrect position argument specified; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>925</term>
 <listitem>
-<para>Not enough subscripts for array; <emphasis role="italic">number</emphasis> expected</para>
+<para>Not enough subscripts for array; <emphasis role="italic">number</emphasis> expected.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>926</term>
 <listitem>
-<para>Too many subscripts for array; <emphasis role="italic">number</emphasis> expected</para>
+<para>Too many subscripts for array; <emphasis role="italic">number</emphasis> expected.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>927</term>
 <listitem>
-<para>Length must be specified to convert a negative value</para>
+<para>Length must be specified to convert a negative value.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>928</term>
 <listitem>
-<para>D2X value must be a valid whole number; found "<emphasis role="italic">value</emphasis>"</para>
+<para>D2X value must be a valid whole number; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>929</term>
 <listitem>
-<para>D2C value must be a valid whole number; found "<emphasis role="italic">value</emphasis>"</para>
+<para>D2C value must be a valid whole number; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>931</term>
 <listitem>
-<para>Incorrect location of whitespace character in position <emphasis role="italic">position</emphasis> in hexadecimal string</para>
+<para>Incorrect location of whitespace character in position <emphasis role="italic">position</emphasis> in hexadecimal string.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>932</term>
 <listitem>
-<para>Incorrect location of whitespace character in position <emphasis role="italic">position</emphasis> in binary string</para>
+<para>Incorrect location of whitespace character in position <emphasis role="italic">position</emphasis> in binary string.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>933</term>
 <listitem>
-<para>Only 0-9, a-f, A-F, and whitespace characters are valid in a hexadecimal string; character found "<emphasis role="italic">character</emphasis>"</para>
+<para>Only 0-9, a-f, A-F, and whitespace characters are valid in a hexadecimal string; character found "<emphasis role="italic">character</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>934</term>
 <listitem>
-<para>Only 0, 1, and whitespace characters are valid in a binary string; character found "<emphasis role="italic">character</emphasis>"</para>
+<para>Only 0, 1, and whitespace characters are valid in a binary string; character found "<emphasis role="italic">character</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>935</term>
 <listitem>
-<para>X2D result is not a valid whole number with NUMERIC DIGITS <emphasis role="italic">digits</emphasis>
-</para>
+<para>X2D result is not a valid whole number with NUMERIC DIGITS <emphasis role="italic">digits</emphasis>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>936</term>
 <listitem>
-<para>C2D result is not a valid whole number with NUMERIC DIGITS <emphasis role="italic">digits</emphasis>
-</para>
+<para>C2D result is not a valid whole number with NUMERIC DIGITS <emphasis role="italic">digits</emphasis>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>937</term>
 <listitem>
-<para>No more supplier items available</para>
+<para>No more supplier items available.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>938</term>
 <listitem>
-<para>Method argument <emphasis role="italic">argument</emphasis> must have a string value</para>
+<para>Method argument <emphasis role="italic">argument</emphasis> must have a string value.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>939</term>
 <listitem>
-<para>Method argument <emphasis role="italic">argument</emphasis> must have a single-dimensional array value</para>
+<para>Method argument <emphasis role="italic">argument</emphasis> must have a single-dimensional array value.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>941</term>
 <listitem>
-<para>Exponent of "<emphasis role="italic">exponent</emphasis>" is too large for <emphasis role="italic">number</emphasis> spaces</para>
+<para>Exponent of "<emphasis role="italic">exponent</emphasis>" is too large for <emphasis role="italic">number</emphasis> spaces.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>942</term>
 <listitem>
-<para>Integer part of "<emphasis role="italic">integer</emphasis>" is too large for <emphasis role="italic">number</emphasis> spaces</para>
+<para>Integer part of "<emphasis role="italic">integer</emphasis>" is too large for <emphasis role="italic">number</emphasis> spaces.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>943</term>
 <listitem>
 <para>
-<emphasis role="italic">method</emphasis> method target must be a number; found "<emphasis role="italic">value</emphasis>"</para>
+<emphasis role="italic">method</emphasis> method target must be a number; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>944</term>
 <listitem>
-<para>Method argument <emphasis role="italic">argument</emphasis> must be a message object</para>
+<para>Method argument <emphasis role="italic">argument</emphasis> must be a message object.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>945</term>
 <listitem>
-<para>Missing argument in message array; argument <emphasis role="italic">argument</emphasis> is required</para>
+<para>Missing argument in message array; argument <emphasis role="italic">argument</emphasis> is required.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>946</term>
 <listitem>
-<para>A message array must be a single-dimensional array with 2 elements</para>
+<para>A message array must be a single-dimensional array with 2 elements.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>947</term>
 <listitem>
-<para>Method SECTION can be used only on single-dimensional arrays</para>
+<para>Method SECTION can be used only on single-dimensional arrays.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>948</term>
 <listitem>
-<para>Method argument <emphasis role="italic">argument</emphasis> must be of the <emphasis role="italic">class</emphasis> class</para>
+<para>Method argument <emphasis role="italic">argument</emphasis> must be of the <emphasis role="italic">class</emphasis> class.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>949</term>
 <listitem>
-<para>The value and index objects must be the same for PUT to an index-only collection</para>
+<para>The value and index objects must be the same for PUT to an index-only collection.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>951</term>
 <listitem>
-<para>Incorrect alarm time; found "<emphasis role="italic">time</emphasis>"</para>
+<para>Incorrect alarm time; found "<emphasis role="italic">time</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>952</term>
 <listitem>
-<para>Method argument <emphasis role="italic">argument</emphasis> is an array and does not contain all string values</para>
+<para>Method argument <emphasis role="italic">argument</emphasis> is an array and does not contain all string values.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>953</term>
 <listitem>
-<para>Method argument <emphasis role="italic">argument</emphasis> could not be converted to type <emphasis role="italic">type</emphasis>
-</para>
+<para>Method argument <emphasis role="italic">argument</emphasis> could not be converted to type <emphasis role="italic">type</emphasis>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>954</term>
 <listitem>
-<para>Method "<emphasis role="italic">method</emphasis>" can be used only on a single-dimensional array</para>
+<para>Method "<emphasis role="italic">method</emphasis>" can be used only on a single-dimensional array.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>956</term>
 <listitem>
-<para>Element <emphasis role="italic">element</emphasis> of the array must be a string</para>
+<para>Element <emphasis role="italic">element</emphasis> of the array must be a string.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>957</term>
 <listitem>
-<para>Element <emphasis role="italic">element</emphasis> of the array must be a subclass of the target object</para>
+<para>Element <emphasis role="italic">element</emphasis> of the array must be a subclass of the target object.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>958</term>
 <listitem>
-<para>Positioning of transient streams is not valid</para>
+<para>Positioning of transient streams is not valid.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>959</term>
 <listitem>
-<para>An array cannot contain more than 99,999,999 elements</para>
+<para>An array cannot contain more than 99,999,999 elements.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>961</term>
 <listitem>
-<para>Method argument <emphasis role="italic">argument</emphasis> must have a string value or an array value</para>
+<para>Method argument <emphasis role="italic">argument</emphasis> must have a string value or an array value.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -3296,63 +3250,61 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>963</term>
 <listitem>
-<para>Call to unsupported or unimplemented method</para>
+<para>Call to unsupported or unimplemented method.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>964</term>
 <listitem>
-<para>Application error:  <emphasis role="italic">message</emphasis>
-</para>
+<para>Application error:  <emphasis role="italic">message</emphasis>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>965</term>
 <listitem>
-<para>Method <emphasis role="italic">name</emphasis> is ABSTRACT and cannot be directly invoked</para>
+<para>Method <emphasis role="italic">name</emphasis> is ABSTRACT and cannot be directly invoked.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>966</term>
 <listitem>
-<para>Incorrect queue index "<emphasis role="italic">index</emphasis>"</para>
+<para>Incorrect queue index "<emphasis role="italic">index</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>967</term>
 <listitem>
-<para>NEW method is not supported for the <emphasis role="italic">name</emphasis> class</para>
+<para>NEW method is not supported for the <emphasis role="italic">name</emphasis> class.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>968</term>
 <listitem>
-<para>Invalid native method signature specification</para>
+<para>Invalid native method signature specification.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>969</term>
 <listitem>
-<para>Method argument <emphasis role="italic">argument</emphasis> must have a stem object value; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Method argument <emphasis role="italic">argument</emphasis> must have a stem object value; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>970</term>
 <listitem>
-<para>COPY method is not supported for object <emphasis role="italic">object</emphasis>
-</para>
+<para>COPY method is not supported for object <emphasis role="italic">object</emphasis>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>971</term>
 <listitem>
-<para>Method argument <emphasis role="italic">argument</emphasis> cannot have more than a single dimension</para>
+<para>Method argument <emphasis role="italic">argument</emphasis> cannot have more than a single dimension.</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR97">
-<title>Error 97 - Object method not found</title>
+<title>Error 97 - Object method not found.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -3362,21 +3314,20 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>Object "<emphasis role="italic">object</emphasis>" does not understand message "<emphasis role="italic">message</emphasis>"</para>
+<para>Object "<emphasis role="italic">object</emphasis>" does not understand message "<emphasis role="italic">message</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>900</term>
 <listitem>
 <para>
-<emphasis role="italic">message</emphasis>
-</para>
+<emphasis role="italic">message</emphasis>.</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR98">
-<title>Error 98 - Execution error</title>
+<title>Error 98 - Execution error.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -3387,226 +3338,223 @@ special character (such as a parenthesis).
 <term>900</term>
 <listitem>
 <para>
-<emphasis role="italic">message</emphasis>
-</para>
+<emphasis role="italic">message</emphasis>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>902</term>
 <listitem>
-<para>Unable to convert object "<emphasis role="italic">object</emphasis>" to a double-float value</para>
+<para>Unable to convert object "<emphasis role="italic">object</emphasis>" to a double-float value.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>903</term>
 <listitem>
-<para>Unable to load library "<emphasis role="italic">name</emphasis>"</para>
+<para>Unable to load library "<emphasis role="italic">name</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>904</term>
 <listitem>
-<para>Abnormal termination occurred</para>
+<para>Abnormal termination occurred.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>905</term>
 <listitem>
-<para>Deadlock detected on a guarded method</para>
+<para>Deadlock detected on a guarded method.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>906</term>
 <listitem>
-<para>Incorrect object reference detected</para>
+<para>Incorrect object reference detected.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>907</term>
 <listitem>
-<para>Object of type "<emphasis role="italic">type</emphasis>" was required</para>
+<para>Object of type "<emphasis role="italic">type</emphasis>" was required.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>908</term>
 <listitem>
-<para>Metaclass "<emphasis role="italic">metaclass</emphasis>" not found</para>
+<para>Metaclass "<emphasis role="italic">metaclass</emphasis>" not found.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>909</term>
 <listitem>
-<para>Class "<emphasis role="italic">class</emphasis>" not found</para>
+<para>Class "<emphasis role="italic">class</emphasis>" not found.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>911</term>
 <listitem>
-<para>Cyclic inheritance in program "<emphasis role="italic">program</emphasis>"</para>
+<para>Cyclic inheritance in program "<emphasis role="italic">program</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>913</term>
 <listitem>
-<para>Unable to convert object "<emphasis role="italic">object</emphasis>" to a single-dimensional array value</para>
+<para>Unable to convert object "<emphasis role="italic">object</emphasis>" to a single-dimensional array value.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>914</term>
 <listitem>
-<para>Unable to convert object "<emphasis role="italic">object</emphasis>" to a string value</para>
+<para>Unable to convert object "<emphasis role="italic">object</emphasis>" to a string value.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>915</term>
 <listitem>
-<para>A message object cannot be sent more than one SEND or START message</para>
+<para>A message object cannot be sent more than one SEND or START message.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>916</term>
 <listitem>
-<para>Message object "<emphasis role="italic">object</emphasis>" received an error from message "<emphasis role="italic">message</emphasis>"</para>
+<para>Message object "<emphasis role="italic">object</emphasis>" received an error from message "<emphasis role="italic">message</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>917</term>
 <listitem>
-<para>Incorrect condition object received for RAISE OBJECT; found "<emphasis role="italic">value</emphasis>"</para>
+<para>Incorrect condition object received for RAISE OBJECT; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>918</term>
 <listitem>
-<para>No active condition available for PROPAGATE</para>
+<para>No active condition available for PROPAGATE.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>919</term>
 <listitem>
-<para>Unable to convert object "<emphasis role="italic">object</emphasis>" to a method</para>
+<para>Unable to convert object "<emphasis role="italic">object</emphasis>" to a method.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>935</term>
 <listitem>
-<para>REPLY can be issued only once per method invocation</para>
+<para>REPLY can be issued only once per method invocation.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>936</term>
 <listitem>
-<para>RETURN cannot return a value after a REPLY</para>
+<para>RETURN cannot return a value after a REPLY.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>937</term>
 <listitem>
-<para>EXIT cannot return a value after a REPLY</para>
+<para>EXIT cannot return a value after a REPLY.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>938</term>
 <listitem>
-<para>Message search overrides can be used only from methods of the target object</para>
+<para>Message search overrides can be used only from methods of the target object.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>939</term>
 <listitem>
-<para>Additional information for SYNTAX errors must be a single-dimensional array of values</para>
+<para>Additional information for SYNTAX errors must be a single-dimensional array of values.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>941</term>
 <listitem>
-<para>Unknown error number specified on RAISE SYNTAX; found "<emphasis role="italic">number</emphasis>"</para>
+<para>Unknown error number specified on RAISE SYNTAX; found "<emphasis role="italic">number</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>942</term>
 <listitem>
-<para>Class "<emphasis role="italic">class</emphasis>" must be a MIXINCLASS for INHERIT</para>
+<para>Class "<emphasis role="italic">class</emphasis>" must be a MIXINCLASS for INHERIT.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>943</term>
 <listitem>
-<para>Class "<emphasis role="italic">class</emphasis>" is not a subclass of "<emphasis role="italic">class</emphasis>" base class "<emphasis role="italic">class</emphasis>"</para>
+<para>Class "<emphasis role="italic">class</emphasis>" is not a subclass of "<emphasis role="italic">class</emphasis>" base class "<emphasis role="italic">class</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>944</term>
 <listitem>
-<para>Class "<emphasis role="italic">class</emphasis>" cannot inherit from itself, a superclass, or a subclass ("<emphasis role="italic">class</emphasis>")</para>
+<para>Class "<emphasis role="italic">class</emphasis>" cannot inherit from itself, a superclass, or a subclass ("<emphasis role="italic">class</emphasis>").</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>945</term>
 <listitem>
-<para>Class "<emphasis role="italic">class</emphasis>" has not inherited class "<emphasis role="italic">class</emphasis>"</para>
+<para>Class "<emphasis role="italic">class</emphasis>" has not inherited class "<emphasis role="italic">class</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>946</term>
 <listitem>
-<para>FORWARD arguments must be a single-dimensional array of values</para>
+<para>FORWARD arguments must be a single-dimensional array of values.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>947</term>
 <listitem>
-<para>FORWARD can only be issued in an object method invocation</para>
+<para>FORWARD can only be issued in an object method invocation.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>948</term>
 <listitem>
-<para>Authorization failure:  <emphasis role="italic">value</emphasis>
-</para>
+<para>Authorization failure:  <emphasis role="italic">value</emphasis>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>951</term>
 <listitem>
-<para>Concurrency not supported</para>
+<para>Concurrency not supported.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>975</term>
 <listitem>
-<para>Missing array element at position <emphasis role="italic">position</emphasis>
-</para>
+<para>Missing array element at position <emphasis role="italic">position</emphasis>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>976</term>
 <listitem>
-<para>Stem object default value cannot be another stem object</para>
+<para>Stem object default value cannot be another stem object.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>978</term>
 <listitem>
-<para>Unable to load method "<emphasis role="italic">name</emphasis>" from library "<emphasis role="italic">library</emphasis>"</para>
+<para>Unable to load method "<emphasis role="italic">name</emphasis>" from library "<emphasis role="italic">library</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>979</term>
 <listitem>
-<para>Unable to load routine "<emphasis role="italic">name</emphasis>" from library "<emphasis role="italic">library</emphasis>"</para>
+<para>Unable to load routine "<emphasis role="italic">name</emphasis>" from library "<emphasis role="italic">library</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>980</term>
 <listitem>
-<para>Unable to load native routine "<emphasis role="italic">name</emphasis>"</para>
+<para>Unable to load native routine "<emphasis role="italic">name</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>981</term>
 <listitem>
-<para>Target RexxContext is no longer active</para>
+<para>Target RexxContext is no longer active.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -3636,25 +3584,37 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>986</term>
 <listitem>
-<para>Reference to unassigned variable "<emphasis role="italic">name</emphasis>".</para>
+<para>Reference to unassigned variable "<emphasis role="italic">name</emphasis>.".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>987</term>
 <listitem>
-<para>Namespace "<emphasis role="italic">namespace</emphasis>" not found in package "<emphasis role="italic">package</emphasis>"</para>
+<para>Namespace "<emphasis role="italic">namespace</emphasis>" not found in package "<emphasis role="italic">package</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>988</term>
 <listitem>
-<para>Class "<emphasis role="italic">className</emphasis>" not found in namespace "<emphasis role="italic">namespace</emphasis>"</para>
+<para>Class "<emphasis role="italic">className</emphasis>" not found in namespace "<emphasis role="italic">namespace</emphasis>".</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>989</term>
+<listitem>
+<para>Class <emphasis role="italic">name</emphasis> is ABSTRACT and cannot be directly created.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>990</term>
+<listitem>
+<para>Class <emphasis role="italic">name</emphasis> is a metaclass and cannot be made ABSTRACT.</para>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section id="ERR99">
-<title>Error 99 - Translation error</title>
+<title>Error 99 - Translation error.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
@@ -3665,248 +3625,247 @@ special character (such as a parenthesis).
 <term>900</term>
 <listitem>
 <para>
-<emphasis role="italic">message</emphasis>
-</para>
+<emphasis role="italic">message</emphasis>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>901</term>
 <listitem>
-<para>Duplicate ::CLASS directive instruction</para>
+<para>Duplicate ::CLASS directive instruction.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>902</term>
 <listitem>
-<para>Duplicate ::METHOD directive instruction</para>
+<para>Duplicate ::METHOD directive instruction.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>903</term>
 <listitem>
-<para>Duplicate ::ROUTINE directive instruction</para>
+<para>Duplicate ::ROUTINE directive instruction.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>904</term>
 <listitem>
-<para>Duplicate ::REQUIRES directive instruction</para>
+<para>Duplicate ::REQUIRES directive instruction.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>905</term>
 <listitem>
-<para>CLASS keyword on ::METHOD directive requires a matching ::CLASS directive</para>
+<para>CLASS keyword on ::METHOD directive requires a matching ::CLASS directive.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>907</term>
 <listitem>
-<para>EXPOSE must be the first instruction executed after a method invocation</para>
+<para>EXPOSE must be the first instruction executed after a method invocation.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>908</term>
 <listitem>
-<para>INTERPRET data must not contain EXPOSE</para>
+<para>INTERPRET data must not contain EXPOSE.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>909</term>
 <listitem>
-<para>GUARD must be the first instruction executed after EXPOSE or USE</para>
+<para>GUARD must be the first instruction executed after EXPOSE or USE.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>911</term>
 <listitem>
-<para>GUARD can only be issued in an object method invocation</para>
+<para>GUARD can only be issued in an object method invocation.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>912</term>
 <listitem>
-<para>INTERPRET data must not contain GUARD</para>
+<para>INTERPRET data must not contain GUARD.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>913</term>
 <listitem>
-<para>GUARD instruction did not include references to exposed variables</para>
+<para>GUARD instruction did not include references to exposed variables.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>914</term>
 <listitem>
-<para>INTERPRET data must not contain directive instructions</para>
+<para>INTERPRET data must not contain directive instructions.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>915</term>
 <listitem>
-<para>INTERPRET data must not contain USE</para>
+<para>INTERPRET data must not contain USE.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>916</term>
 <listitem>
-<para>Unrecognized directive instruction</para>
+<para>Unrecognized directive instruction.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>917</term>
 <listitem>
-<para>Incorrect external directive name "<emphasis role="italic">method</emphasis>"</para>
+<para>Incorrect external directive name "<emphasis role="italic">method</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>918</term>
 <listitem>
-<para>USE ARG requires a "," between variable names; found "<emphasis role="italic">token</emphasis>"</para>
+<para>USE ARG requires a "," between variable names; found "<emphasis role="italic">token</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>919</term>
 <listitem>
-<para>REPLY can only be issued in an object method invocation</para>
+<para>REPLY can only be issued in an object method invocation.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>921</term>
 <listitem>
-<para>Incorrect program line in method source array</para>
+<para>Incorrect program line in method source array.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>922</term>
 <listitem>
-<para>::REQUIRES directives must appear before other directive instructions</para>
+<para>::REQUIRES directives must appear before other directive instructions.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>923</term>
 <listitem>
-<para>INTERPRET data must not contain FORWARD</para>
+<para>INTERPRET data must not contain FORWARD.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>924</term>
 <listitem>
-<para>INTERPRET data must not contain REPLY</para>
+<para>INTERPRET data must not contain REPLY.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>925</term>
 <listitem>
-<para>An ATTRIBUTE method name must be a valid variable name; found "<emphasis role="italic">name</emphasis>"</para>
+<para>An ATTRIBUTE method name must be a valid variable name; found "<emphasis role="italic">name</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>926</term>
 <listitem>
-<para>Incorrect class external; too many parameters</para>
+<para>Incorrect class external; too many parameters.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>927</term>
 <listitem>
-<para>"<emphasis role="italic">classname</emphasis>" is not a valid metaclass</para>
+<para>"<emphasis role="italic">classname</emphasis>" is not a valid metaclass.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>928</term>
 <listitem>
-<para>Incorrect class external; class name missing or invalid</para>
+<para>Incorrect class external; class name missing or invalid.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>929</term>
 <listitem>
-<para>Incorrect class external; invalid class server "<emphasis role="italic">servername</emphasis>"</para>
+<para>Incorrect class external; invalid class server "<emphasis role="italic">servername</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>930</term>
 <listitem>
-<para>The "..." argument marker can only appear at the end of the argument list</para>
+<para>The "..." argument marker can only appear at the end of the argument list.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>931</term>
 <listitem>
-<para>Duplicate ::ATTRIBUTE directive instruction</para>
+<para>Duplicate ::ATTRIBUTE directive instruction.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>932</term>
 <listitem>
-<para>Duplicate ::CONSTANT directive instruction</para>
+<para>Duplicate ::CONSTANT directive instruction.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>933</term>
 <listitem>
-<para>Abstract methods cannot have a method body</para>
+<para>Abstract methods cannot have a method body.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>934</term>
 <listitem>
-<para>Attribute methods cannot have a method body</para>
+<para>Attribute methods cannot have a method body.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>935</term>
 <listitem>
-<para>External attributes cannot have a method body</para>
+<para>External attributes cannot have a method body.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>936</term>
 <listitem>
-<para>External methods cannot have a method body</para>
+<para>External methods cannot have a method body.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>937</term>
 <listitem>
-<para>Attribute methods without a SET or GET designation cannot have a method body</para>
+<para>Attribute methods without a SET or GET designation cannot have a method body.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>938</term>
 <listitem>
-<para>Constant methods cannot have a method body</para>
+<para>Constant methods cannot have a method body.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>939</term>
 <listitem>
-<para>External routines cannot have a code body</para>
+<para>External routines cannot have a code body.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>940</term>
 <listitem>
-<para>Abstract attributes cannot have a method body</para>
+<para>Abstract attributes cannot have a method body.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>941</term>
 <listitem>
-<para>Method or routine code may not contain directive instructions</para>
+<para>Method or routine code may not contain directive instructions.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>942</term>
 <listitem>
-<para>Duplicate ::RESOURCE directive instruction</para>
+<para>Duplicate ::RESOURCE directive instruction.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>943</term>
 <listitem>
-<para>Missing ::RESOURCE end marker "<emphasis role="italic">endmarker</emphasis>" for resource "<emphasis role="italic">resoucename</emphasis>"</para>
+<para>Missing ::RESOURCE end marker "<emphasis role="italic">endmarker</emphasis>" for resource "<emphasis role="italic">resoucename</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>

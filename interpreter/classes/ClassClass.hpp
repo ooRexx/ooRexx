@@ -106,6 +106,7 @@ class RexxClass : public RexxObject
 
     RexxObject  *queryMixinClass();
     RexxObject  *isMetaClassRexx();
+    RexxObject  *isAbstractRexx();
     RexxString  *getId();
     RexxClass   *getBaseClass();
     RexxClass   *getMetaClass();
@@ -142,6 +143,7 @@ class RexxClass : public RexxObject
     inline bool         isRexxDefined() { return classFlags[REXX_DEFINED]; }
     inline bool         isMixinClass()  { return classFlags[MIXIN]; }
     inline bool         isMetaClass() { return classFlags[META_CLASS]; }
+    inline bool         isAbstract() { return classFlags[ABSTRACT]; }
     inline bool         hasUninitDefined()   { return classFlags[HAS_UNINIT]; }
     inline void         setHasUninitDefined()   { classFlags.set(HAS_UNINIT); }
     inline void         clearHasUninitDefined()   { classFlags.reset(HAS_UNINIT); }
@@ -154,9 +156,13 @@ class RexxClass : public RexxObject
     inline void         setNonPrimitive() { classFlags.reset(PRIMITIVE_CLASS); }
     inline RexxBehaviour *getInstanceBehaviour() {return instanceBehaviour;}
     inline void         setMetaClass() { classFlags.set(META_CLASS); }
+    inline void         setAbstract() { classFlags.set(ABSTRACT); }
+    inline void         clearAbstract() { classFlags.reset(ABSTRACT); }
            void         addSubClass(RexxClass *);
            void         removeSubclass(RexxClass *c);
            void         checkUninit();
+           void         checkAbstract();
+           void         makeAbstract();
 
     static void processNewArgs(RexxObject **, size_t, RexxObject **&, size_t &, size_t, RexxObject *&, RexxObject **);
 
@@ -173,7 +179,8 @@ class RexxClass : public RexxObject
         HAS_UNINIT,                       // this class has an uninit method
         META_CLASS,                       // this class is a meta class
         PRIMITIVE_CLASS,                  // this is a primitive class
-        PARENT_HAS_UNINIT,
+        PARENT_HAS_UNINIT,                // the class parent has an uninit method
+        ABSTRACT,                         // the class is abstract
     } ClassFlag;
 
                                        // Subclassable and subclassed

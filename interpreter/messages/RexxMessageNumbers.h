@@ -674,6 +674,8 @@
 #define Error_Symbol_expected_annotation_type_msg                    766
 #define Error_Translation_missing_annotation_target_msg              767
 #define Error_Invalid_subkeyword_annotation_msg                      768
+#define Error_Execution_abstract_class_msg                           769
+#define Error_Execution_abstract_metaclass_msg                       770
 
 
 #endif

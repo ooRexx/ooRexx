@@ -26,15 +26,15 @@ returns the negated ooRexx error code. In addition, RexxC issues the following e
 <para> </para>
 </section>
 <section id="ERR129">
-<title>Error 129 - SYNTAX: REXXC InProgramName [OutProgramName] [/S]</title>
+<title>Error 129 - SYNTAX: REXXC InProgramName [OutProgramName] [/S].</title>
 <para> </para>
 </section>
 <section id="ERR130">
-<title>Error 130 - Without OutProgramName REXXC only performs a syntax check</title>
+<title>Error 130 - Without OutProgramName REXXC only performs a syntax check.</title>
 <para> </para>
 </section>
 <section id="ERR133">
-<title>Error 133 - SYNTAX: REXXC InProgramName [OutProgramName] [-s]</title>
+<title>Error 133 - SYNTAX: REXXC InProgramName [OutProgramName] [-s].</title>
 <para> </para>
 </section>
 </section>

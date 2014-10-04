@@ -438,6 +438,7 @@ StartClassDefinition(Class);
         AddMethod("MixinClass", RexxClass::mixinClassRexx, 3);
         AddMethod("QueryMixinClass", RexxClass::queryMixinClass, 0);
         AddMethod("IsMetaClass", RexxClass::isMetaClassRexx, 0);
+        AddMethod("IsAbstract", RexxClass::isAbstractRexx, 0);
         AddMethod("Subclass", RexxClass::subclassRexx, 3);
         AddProtectedMethod("Subclasses", RexxClass::getSubClasses, 0);
         AddProtectedMethod("Superclasses", RexxClass::getSuperClasses, 0);

@@ -183,7 +183,7 @@ RexxClass *ClassDirective::install(PackageClass *package, RexxActivation *activa
     // create the class object using the appropriate mechanism
 
     // creating a mixing
-    if (mixinClass)
+    if (isMixinClass())
     {
         classObject = subclass->mixinClass(package, idName, metaclass, classMethods);
     }
@@ -194,7 +194,7 @@ RexxClass *ClassDirective::install(PackageClass *package, RexxActivation *activa
     }
     // add the class to the directory, which also protects it from GC for the
     // subsequent steps
-    package->addInstalledClass(publicName, classObject, publicClass);
+    package->addInstalledClass(publicName, classObject, isPublic());
 
     // using multiple inheritance?  Process each one in turn.
     if (inheritsClasses != OREF_NULL)
@@ -228,6 +228,12 @@ RexxClass *ClassDirective::install(PackageClass *package, RexxActivation *activa
     if (annotations != OREF_NULL)
     {
         classObject->setAnnotations(annotations);
+    }
+
+    // if we had the abstract keyword specified, mark the class as abstract.
+    if (isAbstract())
+    {
+        classObject->makeAbstract();
     }
 
     // the source needs this at the end so it call call the activate methods
