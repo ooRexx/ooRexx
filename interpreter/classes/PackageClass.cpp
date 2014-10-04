@@ -1704,7 +1704,7 @@ RexxObject *PackageClass::findClassRexx(RexxString *name)
  */
 RexxObject *PackageClass::findPublicClassRexx(RexxString *name)
 {
-    name = stringArgument(name, "name");
+    name = stringArgument(name, "name")->upper();
     return resultOrNil(findPublicClass(name));
 }
 
@@ -1718,7 +1718,7 @@ RexxObject *PackageClass::findPublicClassRexx(RexxString *name)
  */
 RexxObject *PackageClass::findNamespaceRexx(RexxString *name)
 {
-    name = stringArgument(name, "name");
+    name = stringArgument(name, "name")->upper();
     return resultOrNil(findNamespace(name));
 }
 
@@ -1732,7 +1732,7 @@ RexxObject *PackageClass::findNamespaceRexx(RexxString *name)
  */
 RexxObject *PackageClass::findRoutineRexx(RexxString *name)
 {
-    name = stringArgument(name, "name");
+    name = stringArgument(name, "name")->upper();
     return resultOrNil(findRoutine(name));
 }
 
