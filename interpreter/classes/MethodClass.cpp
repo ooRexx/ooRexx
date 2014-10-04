@@ -113,6 +113,7 @@ void MethodClass::live(size_t liveMark)
     memory_mark(code);
     memory_mark(executableName);
     memory_mark(objectVariables);
+    memory_mark(annotations);
 }
 
 
@@ -129,6 +130,7 @@ void MethodClass::liveGeneral(MarkReason reason)
     memory_mark_general(code);
     memory_mark_general(executableName);
     memory_mark_general(objectVariables);
+    memory_mark_general(annotations);
 }
 
 
@@ -145,6 +147,7 @@ void MethodClass::flatten(Envelope *envelope)
      flattenRef(code);
      flattenRef(executableName);
      flattenRef(objectVariables);
+     flattenRef(annotations);
 
     cleanUpFlatten
 }

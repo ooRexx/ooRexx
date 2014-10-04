@@ -823,7 +823,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>919</term>
 <listitem>
-<para>Symbol expected as ::PACKAGE attribute name; found "<emphasis role="italic">name</emphasis>"</para>
+<para>Symbol expected as ::ANNOTATION attribute name; found "<emphasis role="italic">name</emphasis>"</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -848,6 +848,12 @@ special character (such as a parenthesis).
 <term>923</term>
 <listitem>
 <para>Symbol expected as a name of namespace-qualified symbol.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>924</term>
+<listitem>
+<para>Symbol expected for the ::ANNOTATION type.</para>
 </listitem>
 </varlistentry>
 </variablelist>
@@ -1245,6 +1251,12 @@ special character (such as a parenthesis).
 <term>927</term>
 <listitem>
 <para>Unknown keyword following "<emphasis role="italic">keyword</emphasis>"; found "<emphasis role="italic">word</emphasis>"</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>928</term>
+<listitem>
+<para>Unknown keyword on ::ANNOTATION directive; found "<emphasis role="italic">word</emphasis>"</para>
 </listitem>
 </varlistentry>
 </variablelist>
@@ -3901,6 +3913,12 @@ special character (such as a parenthesis).
 <term>944</term>
 <listitem>
 <para>The REXX name is reserved for the language-provided namespace.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>945</term>
+<listitem>
+<para>::ANNOTATION target <emphasis role="italic">type</emphasis> "<emphasis role="italic">name</emphasis>" not found.</para>
 </listitem>
 </varlistentry>
 </variablelist>

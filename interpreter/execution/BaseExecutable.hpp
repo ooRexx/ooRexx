@@ -47,6 +47,8 @@
 #include "BaseCode.hpp"
 #include "ProtectedObject.hpp"
 
+class StringTable;
+
 /**
  * Base class for all executable objects.  Executable
  * objects and Methods and Routines.
@@ -64,6 +66,11 @@ public:
     BaseExecutable *setPackageObject(PackageClass *s);
     RexxString *getName() { return executableName; }
     void detachSource();
+
+    StringTable *getAnnotations();
+    RexxString  *getAnnotation(RexxString *name);
+    RexxObject  *getAnnotationRexx(RexxObject *name);
+
     static ArrayClass *processExecutableSource(RexxObject *source, RexxObject *position);
     static void processNewExecutableArgs(RexxObject **&init_args, size_t &argCount, RexxString *&name,
         Protected<ArrayClass> &sourceArray, PackageClass *&sourceContext);
@@ -72,6 +79,7 @@ protected:
 
     RexxString *executableName;         // the created name of this routine
     BaseCode   *code;                   // the backing code object
+    StringTable *annotations;           // attached annotations
 };
 
 

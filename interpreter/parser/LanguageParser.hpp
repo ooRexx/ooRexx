@@ -311,12 +311,13 @@ class LanguageParser: public RexxInternalObject
     void        classDirective();
     void        attributeDirective();
     void        constantDirective();
-    void        packageDirective();
+    void        annotationDirective();
     void        optionsDirective();
     void        resourceDirective();
     void        addInstalledClass(RexxString *name, RexxClass *classObject, bool publicClass);
     void        addInstalledRoutine(RexxString *name, RoutineClass *routineObject, bool publicRoutine);
-    void        processPackageAnnotation(RexxToken *token);
+    void        processAnnotation(RexxToken *token, StringTable *table);
+    void        processAttributeAnnotations(RexxString *getterName);
     ClassResolver *parseClassReference(RexxErrorCodes error);
 
     // methods to support directive parsing
@@ -334,6 +335,11 @@ class LanguageParser: public RexxInternalObject
     bool        isDuplicateClass(RexxString *name);
     bool        isDuplicateRoutine(RexxString *name);
     void        addClassDirective(RexxString *name, ClassDirective *directive);
+    ClassDirective *findClassDirective(RexxString *name);
+    RoutineClass *findRoutine(RexxString *name);
+    MethodClass *findMethod(RexxString *name);
+    MethodClass *findClassMethod(RexxString *name);
+    MethodClass *findInstanceMethod(RexxString *name);
 
     // expression parsing methods
     RexxInternalObject *parseConstantExpression();
@@ -465,7 +471,6 @@ protected:
     StringTable     *routines;           // routines defined by ::routine directives.
     StringTable     *publicRoutines;     // routines defined by ::routine directives.
     StringTable     *resources;          // resources defined by ::resource directives
-    StringTable     *packageInfo;        // package annotations from a ::package directive
     ArrayClass      *requires;           // list of ::requires directories, in order of appearance.
     ArrayClass      *libraries;          // libraries identified on a ::requires directive.
     ArrayClass      *classes;            // list of installed ::class directives.

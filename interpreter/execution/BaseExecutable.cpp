@@ -46,6 +46,7 @@
 #include "PackageClass.hpp"
 #include "MethodArguments.hpp"
 #include "RexxActivation.hpp"
+#include "StringTableClass.hpp"
 
 /**
  * Resolve a class in the context of an executable.
@@ -274,3 +275,49 @@ void BaseExecutable::processNewExecutableArgs(RexxObject **&init_args, size_t &a
 }
 
 
+/**
+ * Retrieve the annotations table for an executable object.
+ *
+ * @return The executable annotations.
+ */
+StringTable *BaseExecutable::getAnnotations()
+{
+    // this is a user-modifiable table.  If we have no
+    // table created, then add one to this package.
+    if (annotations == OREF_NULL)
+    {
+        setField(annotations, new_string_table());
+    }
+
+    return annotations;
+}
+
+
+/**
+ * The Rexx stub for the get annotation method
+ *
+ * @param name   The name of the target annotation.
+ *
+ * @return The annotation value, or .nil if it does not exist.
+ */
+RexxObject *BaseExecutable::getAnnotationRexx(RexxObject *name)
+{
+    return resultOrNil(getAnnotation(stringArgument(name, "name")));
+}
+
+
+/**
+ * Get a specific named annotation.
+ *
+ * @param name   The annotation name
+ *
+ * @return The annotation value, or OREF_NULL if it doesn't exist.
+ */
+RexxString *BaseExecutable::getAnnotation(RexxString *name)
+{
+    if (annotations == OREF_NULL)
+    {
+        return OREF_NULL;
+    }
+    return (RexxString *)annotations->entry(name);
+}

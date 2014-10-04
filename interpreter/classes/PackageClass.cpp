@@ -183,7 +183,7 @@ void PackageClass::live(size_t liveMark)
     memory_mark(requires);
     memory_mark(classes);
     memory_mark(resources);
-    memory_mark(packageInfo);
+    memory_mark(annotations);
     memory_mark(loadedPackages);
     memory_mark(unattachedMethods);
     memory_mark(loadedPackages);
@@ -225,7 +225,7 @@ void PackageClass::liveGeneral(MarkReason reason)
     memory_mark_general(requires);
     memory_mark_general(classes);
     memory_mark_general(resources);
-    memory_mark_general(packageInfo);
+    memory_mark_general(annotations);
     memory_mark_general(loadedPackages);
     memory_mark_general(unattachedMethods);
     memory_mark_general(loadedPackages);
@@ -262,7 +262,7 @@ void PackageClass::flatten (Envelope *envelope)
     flattenRef(requires);
     flattenRef(classes);
     flattenRef(resources);
-    flattenRef(packageInfo);
+    flattenRef(annotations);
     flattenRef(loadedPackages);
     flattenRef(unattachedMethods);
     flattenRef(loadedPackages);
@@ -1524,19 +1524,49 @@ StringTable *PackageClass::getNamespacesRexx()
  *
  * @return A directory of the defined package annotations
  */
-StringTable *PackageClass::getInfoRexx()
+StringTable *PackageClass::getAnnotations()
 {
-    // we need to return a copy.  The source might necessarily have any of these,
-    // so we return an empty directory if it's not there.
-    StringTable *infoDir = getInfo();
-    if (infoDir != OREF_NULL)
+    // make sure all installations have been performed
+    install();
+
+    // this is a user-modifiable table.  If we have no
+    // table created, then add one to this package.
+    if (annotations == OREF_NULL)
     {
-        return (StringTable *)infoDir->copy();
+        setField(annotations, new_string_table());
     }
-    else
+
+    return annotations;
+}
+
+
+/**
+ * Get a specific named annotation.
+ *
+ * @param name   The annotation name
+ *
+ * @return The annotation value, or OREF_NULL if it doesn't exist.
+ */
+RexxString *PackageClass::getAnnotation(RexxString *name)
+{
+    if (annotations == OREF_NULL)
     {
-        return new_string_table();
+        return OREF_NULL;
     }
+    return (RexxString *)annotations->entry(name);
+}
+
+
+/**
+ * The Rexx stub for the get annotation method
+ *
+ * @param name   The name of the target annotation.
+ *
+ * @return The annotation value, or .nil if it does not exist.
+ */
+RexxObject *PackageClass::getAnnotationRexx(RexxObject *name)
+{
+    return resultOrNil(getAnnotation(stringArgument(name, "name")));
 }
 
 

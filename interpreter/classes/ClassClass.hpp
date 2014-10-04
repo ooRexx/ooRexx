@@ -131,9 +131,13 @@ class RexxClass : public RexxObject
     bool        isCompatibleWith(RexxClass *other);
     RexxObject *isSubclassOf(RexxClass *other);
     RexxString *defaultNameRexx();
+    RexxObject *getAnnotationRexx(RexxObject *name);
     void        setPackage(PackageClass *s);
     PackageClass *getPackage();
     void        completeNewObject(RexxObject *obj, RexxObject **initArgs = OREF_NULL, size_t argCount = 0);
+    StringTable *getAnnotations();
+    RexxString *getAnnotation(RexxString *name);
+    void        setAnnotations(StringTable *annotations);
 
     inline bool         isRexxDefined() { return classFlags[REXX_DEFINED]; }
     inline bool         isMixinClass()  { return classFlags[MIXIN]; }
@@ -191,5 +195,6 @@ class RexxClass : public RexxObject
 
     ListClass     *subClasses;         // our list of weak referenced subclasses
     PackageClass  *package;            // source we're defined in (if any)
+    StringTable   *annotations;        // annotations attached to the class (if any)
 };
 #endif

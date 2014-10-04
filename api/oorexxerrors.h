@@ -166,11 +166,12 @@
 #define Rexx_Error_Symbol_expected_directive                              20916
 #define Rexx_Error_Symbol_expected_colon                                  20917
 #define Rexx_Error_Symbol_expected_LABEL                                  20918
-#define Rexx_Error_Symbol_expected_package_attribute                      20919
+#define Rexx_Error_Symbol_expected_annotation_attribute                   20919
 #define Rexx_Error_Symbol_expected_namespace                              20920
 #define Rexx_Error_Symbol_expected_namespace_class                        20921
 #define Rexx_Error_Symbol_expected_qualified_call                         20922
 #define Rexx_Error_Symbol_expected_qualified_symbol                       20923
+#define Rexx_Error_Symbol_expected_annotation_type                        20924
 #define Rexx_Error_Invalid_data                                           21000
 #define Rexx_Error_Invalid_data_user_defined                              21900
 #define Rexx_Error_Invalid_data_nop                                       21901
@@ -231,6 +232,7 @@
 #define Rexx_Error_Invalid_subkeyword_attribute                           25925
 #define Rexx_Error_Invalid_subkeyword_resource                            25926
 #define Rexx_Error_Invalid_subkeyword_following                           25927
+#define Rexx_Error_Invalid_subkeyword_annotation                          25928
 #define Rexx_Error_Invalid_whole_number                                   26000
 #define Rexx_Error_Invalid_whole_number_power                             26008
 #define Rexx_Error_Invalid_whole_number_repeat                            26002
@@ -626,6 +628,7 @@
 #define Rexx_Error_Translation_duplicate_resource                         99942
 #define Rexx_Error_Translation_missing_resource_end                       99943
 #define Rexx_Error_Translation_reserved_namespace                         99944
+#define Rexx_Error_Translation_missing_annotation_target                  99945
 
 
 #endif

@@ -659,7 +659,7 @@ BEGIN
    34905    "SELECT CASE comparison result must be ""0"", ""1"", ""true"", or ""false""; found ""&1"""
    35934    "Missing expression in WHEN case expression list"
    34002    "Value of expression following WHEN keyword must be exactly ""0"" or ""1""; found ""&1"""
-   20919    "Symbol expected as ::PACKAGE attribute name; found ""&1"""
+   20919    "Symbol expected as ::ANNOTATION attribute name; found ""&1"""
    19923    "Symbol or string expected as ::PACKAGE attribute value; found ""&1"""
    19924    "Symbol or string expected as ::PACKAGE attribute value."
    19925    "String expected after &1 &2 keyword"
@@ -670,6 +670,9 @@ BEGIN
    43902    "Routine ""&1"" not found in namespace ""&2"""
    20922    "Symbol expected as a routine name of qualified CALL instruction."
    20923    "Symbol expected as a name of namespace-qualified symbol."
+   20924    "Symbol expected for the ::ANNOTATION type."
+   99945    "::ANNOTATION target &1 ""&2"" not found."
+   25928    "Unknown keyword on ::ANNOTATION directive; found ""&1"""
    
 END
 

@@ -660,7 +660,7 @@
 #define Error_Logical_value_when_case_msg                            754
 #define Error_Invalid_expression_case_when_list_msg                  755
 #define Error_Logical_value_when_msg                                 756
-#define Error_Symbol_expected_package_attribute_msg                  757
+#define Error_Symbol_expected_annotation_attribute_msg               757
 #define Error_Symbol_or_string_package_attribute_bad_value_msg       758
 #define Error_Symbol_or_string_package_attribute_missing_msg         759
 #define Error_Symbol_or_string_directive_option_msg                  760
@@ -671,6 +671,9 @@
 #define Error_Routine_not_found_namespace_msg                        763
 #define Error_Symbol_expected_qualified_call_msg                     764
 #define Error_Symbol_expected_qualified_symbol_msg                   765
+#define Error_Symbol_expected_annotation_type_msg                    766
+#define Error_Translation_missing_annotation_target_msg              767
+#define Error_Invalid_subkeyword_annotation_msg                      768
 
 
 #endif

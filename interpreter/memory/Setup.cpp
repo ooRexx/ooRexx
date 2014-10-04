@@ -461,6 +461,8 @@ StartClassDefinition(Class);
         AddMethod("HashCode", RexxClass::hashCode, 0);
     // this is a NOP by default, so we'll just use the object init method as a fill in.
         AddMethod("Activate", RexxObject::initRexx, 0);
+        AddMethod("Annotations", RexxClass::getAnnotations, 0);
+        AddMethod("Annotation", RexxClass::getAnnotationRexx, 1);
 
     CompleteMethodDefinitions();
 
@@ -1020,6 +1022,8 @@ StartClassDefinition(Method)
         AddProtectedMethod("SetSecurityManager", MethodClass::setSecurityManager, 1);
         AddMethod("Source", BaseExecutable::source, 0);
         AddMethod("Package", BaseExecutable::getPackage, 0);
+        AddMethod("Annotations", BaseExecutable::getAnnotations, 0);
+        AddMethod("Annotation", BaseExecutable::getAnnotationRexx, 1);
 
     CompleteMethodDefinitions();
 
@@ -1046,6 +1050,8 @@ StartClassDefinition(Routine)
         AddMethod("Call", RoutineClass::callRexx, A_COUNT);
         AddMethod("[]", RoutineClass::callRexx, A_COUNT);
         AddMethod("CallWith", RoutineClass::callWithRexx, 1);
+        AddMethod("Annotations", BaseExecutable::getAnnotations, 0);
+        AddMethod("Annotation", BaseExecutable::getAnnotationRexx, 1);
 
     CompleteMethodDefinitions();
 
@@ -1074,7 +1080,8 @@ StartClassDefinition(Package)
         AddMethod("DefinedMethods", PackageClass::getMethodsRexx, 0);
         AddMethod("Resources", PackageClass::getResourcesRexx, 0);
         AddMethod("Namespaces", PackageClass::getNamespacesRexx, 0);
-        AddMethod("Info", PackageClass::getInfoRexx, 0);
+        AddMethod("Annotations", PackageClass::getAnnotations, 0);
+        AddMethod("Annotation", PackageClass::getAnnotationRexx, 1);
         AddMethod("Routines", PackageClass::getRoutinesRexx, 0);
         AddMethod("PublicRoutines", PackageClass::getPublicRoutinesRexx, 0);
         AddMethod("ImportedRoutines", PackageClass::getImportedRoutinesRexx, 0);

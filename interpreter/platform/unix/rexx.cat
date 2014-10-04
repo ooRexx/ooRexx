@@ -1871,8 +1871,8 @@ $ Error_Invalid_expression_case_when_list
 $ Error_Logical_value_when
 756 Value of expression following WHEN keyword must be exactly "0" or "1"; found "&1"
 
-$ Error_Symbol_expected_package_attribute
-757 Symbol expected as ::PACKAGE attribute name; found "&1"
+$ Error_Symbol_expected_annotation_attribute
+757 Symbol expected as ::ANNOTATION attribute name; found "&1"
 
 $ Error_Symbol_or_string_package_attribute_bad_value
 758 Symbol or string expected as ::PACKAGE attribute value; found "&1"
@@ -1903,6 +1903,15 @@ $ Error_Symbol_expected_qualified_call
 
 $ Error_Symbol_expected_qualified_symbol
 765 Symbol expected as a name of namespace-qualified symbol.
+
+$ Error_Symbol_expected_annotation_type
+766 Symbol expected for the ::ANNOTATION type.
+
+$ Error_Translation_missing_annotation_target
+767 ::ANNOTATION target &1 "&2" not found.
+
+$ Error_Invalid_subkeyword_annotation
+768 Unknown keyword on ::ANNOTATION directive; found "&1"
 
 
 $ * -------------------------------------------------------------------------- */

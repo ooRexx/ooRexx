@@ -48,6 +48,7 @@
 #include "ExpressionClassResolver.hpp"
 
 class RexxClass;
+class MethodClass;
 
 /**
  * A class representing a directive instruction inside
@@ -74,6 +75,7 @@ class ClassDirective : public RexxDirective
     void checkDependency(ClassResolver *classReference, StringTable *class_directives);
     bool dependenciesResolved();
     void removeDependency(RexxString *name);
+    StringTable *getAnnotations();
 
     inline ClassResolver *getMetaClass() { return metaclassName; }
     inline void setMetaClass(ClassResolver *m) { setField(metaclassName, m); }
@@ -85,6 +87,9 @@ class ClassDirective : public RexxDirective
     void addMethod(RexxString *name, MethodClass *method, bool classMethod);
     void addConstantMethod(RexxString *name, MethodClass *method);
     bool checkDuplicateMethod(RexxString *name, bool classMethod);
+    MethodClass *findMethod(RexxString *name);
+    MethodClass *findClassMethod(RexxString *name);
+    MethodClass *findInstanceMethod(RexxString *name);
 
 
 protected:
@@ -101,6 +106,7 @@ protected:
     StringTable *classMethods;       // the set of class methods
     bool         publicClass;        // this is a public class
     bool         mixinClass;         // this is a mixin class
+    StringTable *annotations;        // any attached annotations
     StringTable  *dependencies;      // in-package dependencies
 };
 

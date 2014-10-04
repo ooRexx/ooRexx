@@ -1172,8 +1172,8 @@ special character (such as a parenthesis).
         <MessageNumber>757</MessageNumber>
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
-        <SymbolicName>Error_Symbol_expected_package_attribute</SymbolicName>
-        <Text>Symbol expected as ::PACKAGE attribute name; found <q><Sub position="1" name="name"/></q></Text>
+        <SymbolicName>Error_Symbol_expected_annotation_attribute</SymbolicName>
+        <Text>Symbol expected as ::ANNOTATION attribute name; found <q><Sub position="1" name="name"/></q></Text>
       </SubMessage>
       <SubMessage>
         <Code>20</Code>
@@ -1210,6 +1210,15 @@ special character (such as a parenthesis).
         <Severity>Warning</Severity>
         <SymbolicName>Error_Symbol_expected_qualified_symbol</SymbolicName>
         <Text>Symbol expected as a name of namespace-qualified symbol.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>20</Code>
+        <Subcode>924</Subcode>
+        <MessageNumber>766</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Symbol_expected_annotation_type</SymbolicName>
+        <Text>Symbol expected for the ::ANNOTATION type.</Text>
       </SubMessage>
     </Subcodes>
   </Message>
@@ -1770,6 +1779,15 @@ special character (such as a parenthesis).
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_subkeyword_following</SymbolicName>
         <Text>Unknown keyword following <q><Sub position="1" name="keyword"/></q>; found <q><Sub position="2" name="word"/></q></Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>25</Code>
+        <Subcode>928</Subcode>
+        <MessageNumber>768</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_subkeyword_annotation</SymbolicName>
+        <Text>Unknown keyword on ::ANNOTATION directive; found <q><Sub position="1" name="word"/></q></Text>
       </SubMessage>
     </Subcodes>
   </Message>
@@ -5465,6 +5483,15 @@ special character (such as a parenthesis).
         <Severity>Warning</Severity>
         <SymbolicName>Error_Translation_reserved_namespace</SymbolicName>
         <Text>The REXX name is reserved for the language-provided namespace.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>99</Code>
+        <Subcode>945</Subcode>
+        <MessageNumber>767</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Translation_missing_annotation_target</SymbolicName>
+        <Text>::ANNOTATION target <Sub position="1" name="type"/> <q><Sub position="2" name="name"/></q> not found.</Text>
       </SubMessage>
     </Subcodes>
   </Message>

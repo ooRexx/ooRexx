@@ -120,6 +120,7 @@ void RexxClass::live(size_t liveMark)
     memory_mark(superClasses);
     memory_mark(subClasses);
     memory_mark(package);
+    memory_mark(annotations);
 }
 
 
@@ -152,6 +153,7 @@ void RexxClass::liveGeneral(MarkReason reason)
     memory_mark_general(superClasses);
     memory_mark_general(subClasses);
     memory_mark_general(package);
+    memory_mark_general(annotations);
 }
 
 
@@ -287,6 +289,66 @@ RexxObject *RexxClass::queryMixinClass()
 RexxObject *RexxClass::isMetaClassRexx()
 {
     return booleanObject(isMetaClass());
+}
+
+
+/**
+ * Retrieve the read/write annotation table for a class object.
+ *
+ * @return The class annotations.  This might be an empty string table.
+ */
+StringTable *RexxClass::getAnnotations()
+{
+    // this is a user-modifiable table.  If we have no
+    // table created, then add one to this package.
+    if (annotations == OREF_NULL)
+    {
+        setField(annotations, new_string_table());
+    }
+
+    return annotations;
+}
+
+
+/**
+ * Set the annotations on an installed class object.
+ *
+ * @param a      The annotations table (used by the ClassDirective object)
+ */
+void RexxClass::setAnnotations(StringTable *a)
+{
+    // just set the table
+    setField(annotations, a);
+}
+
+
+/**
+ * Get a specific named annotation.
+ *
+ * @param name   The annotation name
+ *
+ * @return The annotation value, or OREF_NULL if it doesn't exist.
+ */
+RexxString *RexxClass::getAnnotation(RexxString *name)
+{
+    if (annotations == OREF_NULL)
+    {
+        return OREF_NULL;
+    }
+    return (RexxString *)annotations->entry(name);
+}
+
+
+/**
+ * The Rexx stub for the get annotation method
+ *
+ * @param name   The name of the target annotation.
+ *
+ * @return The annotation value, or .nil if it does not exist.
+ */
+RexxObject *RexxClass::getAnnotationRexx(RexxObject *name)
+{
+    return resultOrNil(getAnnotation(stringArgument(name, "name")));
 }
 
 

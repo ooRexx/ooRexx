@@ -66,7 +66,7 @@ class MethodClass : public BaseExecutable
     void *operator new(size_t);
 
     MethodClass(RexxString *name, BaseCode *_code);
-    inline MethodClass(RESTORETYPE restoreType) { ; };
+    inline MethodClass(RESTORETYPE restoreType) { ; }
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
@@ -86,17 +86,21 @@ class MethodClass : public BaseExecutable
     RexxObject  *isPrivateRexx();
     RexxObject  *isProtectedRexx();
 
-    inline bool  isGuarded()      {return !methodFlags[UNGUARDED_FLAG]; };
-    inline bool  isPrivate()      {return methodFlags[PRIVATE_FLAG];}
-    inline bool  isProtected()    {return methodFlags[PROTECTED_FLAG];}
-    inline bool  isSpecial()      {return methodFlags.any(PROTECTED_FLAG, PRIVATE_FLAG);}
+    inline bool  isGuarded()      { return !methodFlags[UNGUARDED_FLAG]; }
+    inline bool  isPrivate()      { return methodFlags[PRIVATE_FLAG]; }
+    inline bool  isProtected()    { return methodFlags[PROTECTED_FLAG]; }
+    inline bool  isSpecial()      { return methodFlags.any(PROTECTED_FLAG, PRIVATE_FLAG); }
+    inline bool  isConstant()     { return methodFlags[CONSTANT_METHOD]; }
+    inline bool  isAttribute()    { return methodFlags[ATTRIBUTE_METHOD]; }
 
-    inline void  setUnguarded()    {methodFlags.set(UNGUARDED_FLAG);};
-    inline void  setGuarded()      {methodFlags.reset(UNGUARDED_FLAG);};
-    inline void  setPrivate()      {methodFlags.set(PRIVATE_FLAG); };
-    inline void  setProtected()    {methodFlags.set(PROTECTED_FLAG); };
-    inline void  setUnprotected()  {methodFlags.reset(PROTECTED_FLAG); };
-    inline void  setPublic()       {methodFlags.reset(PRIVATE_FLAG); };
+    inline void  setUnguarded()    { methodFlags.set(UNGUARDED_FLAG); }
+    inline void  setGuarded()      { methodFlags.reset(UNGUARDED_FLAG); }
+    inline void  setPrivate()      { methodFlags.set(PRIVATE_FLAG); }
+    inline void  setProtected()    { methodFlags.set(PROTECTED_FLAG); }
+    inline void  setUnprotected()  { methodFlags.reset(PROTECTED_FLAG); }
+    inline void  setPublic()       { methodFlags.reset(PRIVATE_FLAG); }
+    inline void  setConstant()     { methodFlags.set(CONSTANT_METHOD); }
+    inline void  setAttribute()    { methodFlags.set(ATTRIBUTE_METHOD); }
            void  setAttributes(bool _private, bool _protected, bool _guarded);
     inline RexxClass *getScope() { return scope; }
     inline bool  isScope(RexxClass *s) {return scope == s;}
@@ -118,6 +122,8 @@ class MethodClass : public BaseExecutable
         PRIVATE_FLAG,                    // private method
         UNGUARDED_FLAG,                  // Method can run with GUARD OFF
         PROTECTED_FLAG,                  // method is protected
+        ATTRIBUTE_METHOD,                // defined as an attribute method
+        CONSTANT_METHOD,                 // defined as a constant method
     } MethodFlags;
 
     FlagSet<MethodFlags, 32>  methodFlags;  // method status flags

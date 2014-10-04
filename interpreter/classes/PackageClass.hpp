@@ -140,7 +140,8 @@ public:
     inline ArrayClass  *getPackages() { install(); return loadedPackages; }
     inline StringTable *getResources() { install(); return resources; }
     inline StringTable *getNamespaces() { install(); return namespaces; }
-    inline StringTable *getInfo() { install(); return packageInfo; }
+           StringTable *getAnnotations();
+           RexxString  *getAnnotation(RexxString *name);
     inline void         setDigits(wholenumber_t d) { packageSettings.setDigits(d); }
     inline wholenumber_t getDigits() { return packageSettings.getDigits(); }
     inline void         setForm(bool f) { packageSettings.setForm(f); }
@@ -173,9 +174,9 @@ public:
            StringTable   *getMethodsRexx();
            StringTable   *getResourcesRexx();
            StringTable   *getNamespacesRexx();
-           StringTable   *getInfoRexx();
            PackageClass  *getNamespaceRexx();
            ArrayClass    *getImportedPackagesRexx();
+           RexxObject    *getAnnotationRexx(RexxObject *name);
            PackageClass  *loadPackageRexx(RexxString *name, ArrayClass *s);
            RexxObject    *addPackageRexx(PackageClass *package, RexxString *namespaceName);
            RexxObject    *addRoutineRexx(RexxString *name, RoutineClass *routine);
@@ -234,7 +235,7 @@ protected:
     StringTable *mergedPublicClasses;     // entire merged set of classes
                                           // all public required routines
     StringTable *mergedPublicRoutines;
-    StringTable *packageInfo;             // information defined on a ::PACKAGE directive
+    StringTable *annotations;             // information defined on a ::PACKAGE directive
 
     bool         installRequired;         // indicates we need to install stuff later
 

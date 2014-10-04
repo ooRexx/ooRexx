@@ -224,6 +224,12 @@ RexxClass *ClassDirective::install(PackageClass *package, RexxActivation *activa
         classObject->defineMethods(instanceMethods);
     }
 
+    // set the annotations if we have any
+    if (annotations != OREF_NULL)
+    {
+        classObject->setAnnotations(annotations);
+    }
+
     // the source needs this at the end so it call call the activate methods
     return classObject;
 }
@@ -385,6 +391,52 @@ bool ClassDirective::checkDuplicateMethod(RexxString *name, bool classMethod)
 
 
 /**
+ * Locate a method defined on this class, checking first for
+ * instance methods, then for class methods.
+ *
+ * @param name   The method name.
+ *
+ * @return The located method, or OREF_NULL if not found.
+ */
+MethodClass *ClassDirective::findMethod(RexxString *name)
+{
+    MethodClass *method = (MethodClass *)getInstanceMethods()->entry(name);
+    if (method == OREF_NULL)
+    {
+        method = (MethodClass *)getClassMethods()->entry(name);
+    }
+
+    return method;
+}
+
+
+/**
+ * Locate an instance method defined on this class.
+ *
+ * @param name   The method name.
+ *
+ * @return The located method, or OREF_NULL if not found.
+ */
+MethodClass *ClassDirective::findInstanceMethod(RexxString *name)
+{
+    return (MethodClass *)getInstanceMethods()->entry(name);
+}
+
+
+/**
+ * Locate a class method defined on this class
+ *
+ * @param name   The method name.
+ *
+ * @return The located method, or OREF_NULL if not found.
+ */
+MethodClass *ClassDirective::findClassMethod(RexxString *name)
+{
+    return (MethodClass *)getClassMethods()->entry(name);
+}
+
+
+/**
  * Add a method to a class definition.
  *
  * @param name   The name to add.
@@ -416,4 +468,23 @@ void ClassDirective::addConstantMethod(RexxString *name, MethodClass *method)
     // this gets added as both a class and instance method
     addMethod(name, method, false);
     addMethod(name, method, true);
+}
+
+
+/**
+ * get the annotations from a ClassDirective.  Used during
+ * the creation phase.
+ *
+ * @return The annotation StringTable.
+ */
+StringTable *ClassDirective::getAnnotations()
+{
+    // this is a user-modifiable table.  If we have no
+    // table created, then add one to this package.
+    if (annotations == OREF_NULL)
+    {
+        setField(annotations, new_string_table());
+    }
+
+    return annotations;
 }
