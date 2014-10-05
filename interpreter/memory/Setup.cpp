@@ -1019,6 +1019,9 @@ StartClassDefinition(Method)
         AddMethod("IsGuarded", MethodClass::isGuardedRexx, 0);
         AddMethod("IsPrivate", MethodClass::isPrivateRexx, 0);
         AddMethod("IsProtected", MethodClass::isProtectedRexx, 0);
+        AddMethod("IsAbstract", MethodClass::isAbstractRexx, 0);
+        AddMethod("IsConstant", MethodClass::isConstantRexx, 0);
+        AddMethod("IsAttribute", MethodClass::isAttributeRexx, 0);
         AddProtectedMethod("SetProtected", MethodClass::setProtectedRexx, 0);
         AddProtectedMethod("SetSecurityManager", MethodClass::setSecurityManager, 1);
         AddMethod("Source", BaseExecutable::source, 0);

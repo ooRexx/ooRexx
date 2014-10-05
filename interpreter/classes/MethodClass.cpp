@@ -303,6 +303,43 @@ RexxObject *MethodClass::isProtectedRexx( )
 
 
 /**
+ * Indicate if this is an abstract method
+ *
+ * @return .true if the method is abstract.  .false otherwise.
+ */
+RexxObject *MethodClass::isAbstractRexx( )
+{
+    return booleanObject(isAbstract());
+}
+
+
+/**
+ * Indicate if this method was defined as an attribute method
+ * (using ::attribute or ::method attribute)
+ *
+ * @return .true if the method is defined as an attribute.
+ *         .false otherwise.
+ */
+RexxObject *MethodClass::isAttributeRexx( )
+{
+    return booleanObject(isAttribute());
+}
+
+
+/**
+ * Indicate if this method was defined as a constant method
+ * (using ::constant)
+ *
+ * @return .true if the method is defined as an attribute.
+ *         .false otherwise.
+ */
+RexxObject *MethodClass::isConstantRexx( )
+{
+    return booleanObject(isConstant());
+}
+
+
+/**
  * Set the entire set of method attributes with one call.  Used
  * during source compilation.
  *

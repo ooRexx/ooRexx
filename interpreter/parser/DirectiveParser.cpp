@@ -2097,6 +2097,8 @@ void LanguageParser::createAbstractMethod(RexxString *name,
     _method->setAttributes(privateMethod, protectedMethod, guardedMethod);
     // mark with the attribute state
     _method->setAttribute(isAttribute);
+    // and also mark as abstract
+    _method->setAbstract();
     // add this to the target
     addMethod(name, _method, classMethod);
 }

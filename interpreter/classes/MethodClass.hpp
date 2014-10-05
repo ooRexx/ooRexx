@@ -85,6 +85,9 @@ class MethodClass : public BaseExecutable
     RexxObject  *isGuardedRexx();
     RexxObject  *isPrivateRexx();
     RexxObject  *isProtectedRexx();
+    RexxObject  *isAbstractRexx();
+    RexxObject  *isConstantRexx();
+    RexxObject  *isAttributeRexx();
 
     inline bool  isGuarded()      { return !methodFlags[UNGUARDED_FLAG]; }
     inline bool  isPrivate()      { return methodFlags[PRIVATE_FLAG]; }
@@ -101,6 +104,7 @@ class MethodClass : public BaseExecutable
     inline void  setPublic()       { methodFlags.reset(PRIVATE_FLAG); }
     inline void  setConstant()     { methodFlags.set(CONSTANT_METHOD); }
     inline void  setAttribute()    { methodFlags.set(ATTRIBUTE_METHOD); }
+    inline void  setAbstract()     { methodFlags.set(ABSTRACT_METHOD); }
     inline void  setAttribute(bool v)    { methodFlags[ATTRIBUTE_METHOD] = v; }
            void  setAttributes(bool _private, bool _protected, bool _guarded);
     inline RexxClass *getScope() { return scope; }
@@ -125,6 +129,7 @@ class MethodClass : public BaseExecutable
         PROTECTED_FLAG,                  // method is protected
         ATTRIBUTE_METHOD,                // defined as an attribute method
         CONSTANT_METHOD,                 // defined as a constant method
+        ABSTRACT_METHOD,                 // defined as an abstract method
     } MethodFlags;
 
     FlagSet<MethodFlags, 32>  methodFlags;  // method status flags
