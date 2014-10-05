@@ -172,6 +172,7 @@
 #define Rexx_Error_Symbol_expected_qualified_call                         20922
 #define Rexx_Error_Symbol_expected_qualified_symbol                       20923
 #define Rexx_Error_Symbol_expected_annotation_type                        20924
+#define Rexx_Error_Symbol_expected_form                                   20925
 #define Rexx_Error_Invalid_data                                           21000
 #define Rexx_Error_Invalid_data_user_defined                              21900
 #define Rexx_Error_Invalid_data_nop                                       21901

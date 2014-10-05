@@ -948,7 +948,7 @@ void LanguageParser::optionsDirective()
                     token = nextReal();
                     if (!token->isSymbol())
                     {
-                        syntaxError(Error_Invalid_subkeyword_form, token);
+                        syntaxError(Error_Symbol_expected_form, token);
                     }
 
                     switch (token->subKeyword())

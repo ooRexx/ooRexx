@@ -1220,6 +1220,15 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Symbol_expected_annotation_type</SymbolicName>
         <Text>Symbol expected for the ::ANNOTATION type.</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>20</Code>
+        <Subcode>925</Subcode>
+        <MessageNumber>771</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Symbol_expected_form</SymbolicName>
+        <Text>Symbol expected after the FORM keyword.</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>

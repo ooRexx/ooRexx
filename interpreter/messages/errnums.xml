@@ -847,6 +847,12 @@ special character (such as a parenthesis).
 <para>Symbol expected for the ::ANNOTATION type.</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>925</term>
+<listitem>
+<para>Symbol expected after the FORM keyword.</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR21">

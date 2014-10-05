@@ -676,6 +676,7 @@
 #define Error_Invalid_subkeyword_annotation_msg                      768
 #define Error_Execution_abstract_class_msg                           769
 #define Error_Execution_abstract_metaclass_msg                       770
+#define Error_Symbol_expected_form_msg                               771
 
 
 #endif

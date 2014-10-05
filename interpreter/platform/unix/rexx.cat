@@ -1919,6 +1919,9 @@ $ Error_Execution_abstract_class
 $ Error_Execution_abstract_metaclass
 770 Class &1 is a metaclass and cannot be made ABSTRACT.
 
+$ Error_Symbol_expected_form
+771 Symbol expected after the FORM keyword.
+
 
 $ * -------------------------------------------------------------------------- */
 $ * --            ==================================================        -- */
