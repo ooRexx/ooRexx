@@ -1494,13 +1494,13 @@ RexxInstruction *LanguageParser::topBlockInstruction()
     {
         RexxInstruction *inst = (RexxInstruction *)control->get(i);
 
-        // handle any then or when terminators
-        if (inst->isType(KEYWORD_ENDTHEN) || inst->isType(KEYWORD_ENDWHEN))
+        // We can have various THEN or ELSE or terminators for those
+        // instructions on the stack.  Keep drilling until we find a block
+        // instruction type
+        if (inst->isBlock())
         {
-            continue;
+            return inst;
         }
-        // we found one
-        return inst;
     }
     // no control instruction found
     return OREF_NULL;
