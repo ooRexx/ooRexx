@@ -228,13 +228,13 @@ RoutineClass *LanguageParser::createProgram(RexxString *name, BufferClass *sourc
  *
  * @return An executable method object.
  */
-RoutineClass *LanguageParser::createProgram(RexxString *name, ArrayClass *source)
+RoutineClass *LanguageParser::createProgram(RexxString *name, ArrayClass *source, PackageClass *sourceContext)
 {
     // create the appropriate array source, then the parser, then generate the
     // code.
     ProgramSource *programSource = new ArrayProgramSource(source);
     Protected<LanguageParser> parser = new LanguageParser(name, programSource);
-    return parser->generateProgram();
+    return parser->generateProgram(sourceContext);
 }
 
 
@@ -297,10 +297,10 @@ RoutineClass *LanguageParser::createProgramFromFile(RexxString *filename)
  *
  * @return A resulting Routine object, if possible.
  */
-PackageClass *LanguageParser::createPackage(RexxString *name, ArrayClass *source)
+PackageClass *LanguageParser::createPackage(RexxString *name, ArrayClass *source, PackageClass *sourceContext)
 {
     // we just load this as a program object and return the associated package
-    return createProgram(name, source)->getPackage();
+    return createProgram(name, source, sourceContext)->getPackage();
 }
 
 
@@ -547,7 +547,7 @@ RoutineClass *LanguageParser::generateRoutine(PackageClass *sourceContext)
  *         block of the source.  This will not have an installs
  *         performed at this time.
  */
-RoutineClass *LanguageParser::generateProgram()
+RoutineClass *LanguageParser::generateProgram(PackageClass *sourceContext)
 {
     // initialize, and compile all of the source.
     compileSource();
@@ -558,6 +558,10 @@ RoutineClass *LanguageParser::generateProgram()
     // time something on this is called.  We do not do any installation
     // at this time.
     package->initCode = mainSection;
+    // if we have a source context, then we need to inherit this
+    // context before doing the install so that anything from the parent
+    // context is visible during the install processing.
+    package->inheritPackageContext(sourceContext);
     // return the main executable.
     return (RoutineClass *)package->mainExecutable;
 }
@@ -596,7 +600,7 @@ RexxCode *LanguageParser::translateInterpret(StringTable *contextLabels)
  *
  * @return A package object representing the package.
  */
-PackageClass *LanguageParser::generatePackage()
+PackageClass *LanguageParser::generatePackage(PackageClass *sourceContext)
 {
     // initialize, and compile all of the source.
     compileSource();
@@ -606,6 +610,10 @@ PackageClass *LanguageParser::generatePackage()
     // The main section is also set into the package init code to be
     // run as part of package loading.
     package->initCode = mainSection;
+    // if we have a source context, then we need to inherit this
+    // context before doing the install so that anything from the parent
+    // context is visible during the install processing.
+    package->inheritPackageContext(sourceContext);
     // return the package.
     return package;
 }

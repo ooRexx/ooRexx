@@ -145,12 +145,39 @@ PackageClass *PackageClass::newRexx(RexxObject **init_args, size_t argCount)
         ProtectedObject n(resolvedName);
         package = instance->loadRequires(activity, nameString, resolvedName);
     }
+    // we're creating an in-memory package.  We allow a parent context object to be specified
+    // so that the package has access to artifacts of the parent.
     else
     {
+        // default parent context is none
+        PackageClass *sourceContext = OREF_NULL;
+
+        if (initCount != 0)
+        {
+            RexxObject *option;
+            // parse off an additional argument
+            RexxClass::processNewArgs(init_args, argCount, init_args, argCount, 1, option, NULL);
+            // if there are more than 3 options passed, it is possible this one was omitted
+            if (option != OREF_NULL)
+            {
+                if (isOfClass(Method, option) || isOfClass(Routine, option))
+                {
+                    sourceContext = ((BaseExecutable *)option)->getPackage();
+                }
+                else if (isOfClass(Package, option))
+                {
+                    sourceContext = (PackageClass *)option;
+                }
+                else
+                {
+                    reportException(Error_Incorrect_method_argType, IntegerThree, "Method, Routine, or Package object");
+                }
+            }
+        }
         // We're just creating a package directly from source.  We always create this
         // without adding to the loaded packages.
         ArrayClass *sourceArray = arrayArgument(programSource, "source");
-        package = LanguageParser::createPackage(nameString, sourceArray);
+        package = LanguageParser::createPackage(nameString, sourceArray, sourceContext);
         // make sure the prolog is run
         package->runProlog(activity);
     }

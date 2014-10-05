@@ -117,10 +117,10 @@ class LanguageParser: public RexxInternalObject
     void        flushControl(RexxInstruction *);
     RexxCode   *translateBlock();
     RexxCode   *translateInterpret(StringTable *contextLabels);
-    RoutineClass *generateProgram();
+    RoutineClass *generateProgram(PackageClass *sourceContext = OREF_NULL);
     RoutineClass *generateRoutine(PackageClass *sourceContext = OREF_NULL);
     MethodClass *generateMethod(PackageClass *sourceContext = OREF_NULL);
-    PackageClass *generatePackage();
+    PackageClass *generatePackage(PackageClass *sourceContext = OREF_NULL);
 
     PackageClass *getPackage() { return package; }
 
@@ -420,14 +420,14 @@ class LanguageParser: public RexxInternalObject
     static RoutineClass *createRoutine(RexxString *name, BufferClass *source);
     static RoutineClass *createRoutine(RexxString *name);
     static RoutineClass *createProgram(RexxString *name, BufferClass *source);
-    static RoutineClass *createProgram(RexxString *name, ArrayClass *source);
+    static RoutineClass *createProgram(RexxString *name, ArrayClass *source, PackageClass *sourceContext);
     static RoutineClass *createProgram(RexxString *name);
     static RoutineClass *restoreFromMacroSpace(RexxString *name);
     static RoutineClass *processInstore(PRXSTRING instore, RexxString * name);
     static RexxCode *translateInterpret(RexxString *interpretString, StringTable *labels, size_t lineNumber);
     static RoutineClass *createProgramFromFile(RexxString *filename);
     static PackageClass *createPackage(RexxString *filename);
-    static PackageClass *createPackage(RexxString *name, ArrayClass *source);
+    static PackageClass *createPackage(RexxString *name, ArrayClass *source, PackageClass *sourceContext = OREF_NULL);
     static PackageClass *createPackage(RexxString *name, BufferClass *source);
 
     // the table of builtin function stubs.
