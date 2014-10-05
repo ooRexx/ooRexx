@@ -327,6 +327,10 @@ void PackageClass::deepCopy()
     {
         mergedPublicRoutines = (StringTable *)mergedPublicRoutines->copy();
     }
+    if (annotations != OREF_NULL)
+    {
+        annotations = (StringTable *)annotations->copy();
+    }
 }
 
 

@@ -48,6 +48,26 @@
 #include "RexxActivation.hpp"
 #include "StringTableClass.hpp"
 
+
+/**
+ * Override of the copy function for executable subclasses.  This
+ * makes sure that the annotations are copied in the new version.
+ *
+ * @return The new object copy.
+ */
+RexxInternalObject *BaseExecutable::copy()
+{
+    // make a copy of the base object
+    BaseExecutable *newObj = (BaseExecutable *)RexxObject::copy();
+    // and copy the contents as well
+    if (annotations != OREF_NULL)
+    {
+        newObj->annotations = (StringTable *)annotations->copy();
+    }
+    return newObj;
+}
+
+
 /**
  * Resolve a class in the context of an executable.
  *
