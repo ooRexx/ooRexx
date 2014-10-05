@@ -1881,7 +1881,7 @@ $ Error_Symbol_or_string_package_attribute_missing
 759 Symbol or string expected as ::ANNOTATE attribute value.
 
 $ Error_Symbol_or_string_directive_option
-760 String expected after &1 &2 keyword.
+760 Symbol or string expected after &1 &2 keyword.
 
 $ Error_Symbol_expected_namespace
 761 Symbol expected after NAMESPACE keyword.

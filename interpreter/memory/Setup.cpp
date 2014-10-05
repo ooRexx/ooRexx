@@ -426,7 +426,7 @@ StartClassDefinition(Class);
         // these two are special and will be removed at the end of
         // the image build
         AddProtectedMethod("DefineClassMethod", RexxClass::defineClassMethod, 2);
-        AddProtectedMethod("InheritInstanceMethods", RexxClass::inheritInstanceMethods, 1)
+        AddProtectedMethod("InheritInstanceMethods", RexxClass::inheritInstanceMethodsRexx, 1)
 
         AddProtectedMethod("Delete", RexxClass::deleteMethod, 1);
         AddMethod("Enhanced", RexxClass::enhanced, A_COUNT);

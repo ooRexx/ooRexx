@@ -662,7 +662,7 @@ BEGIN
    20919    "Symbol expected as ::ANNOTATION attribute name; found ""&1""."
    19923    "Symbol or string expected as ::ANNOTATE attribute value; found ""&1""."
    19924    "Symbol or string expected as ::ANNOTATE attribute value."
-   19925    "String expected after &1 &2 keyword."
+   19925    "Symbol or string expected after &1 &2 keyword."
    20920    "Symbol expected after NAMESPACE keyword."
    98987    "Namespace ""&1"" not found in package ""&2""."
    20921    "Symbol expected as a class name of qualified class name."

@@ -689,7 +689,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>925</term>
 <listitem>
-<para>String expected after <emphasis role="italic">directive</emphasis> <emphasis role="italic">keyword</emphasis> keyword.</para>
+<para>Symbol or string expected after <emphasis role="italic">directive</emphasis> <emphasis role="italic">keyword</emphasis> keyword.</para>
 </listitem>
 </varlistentry>
 </variablelist>

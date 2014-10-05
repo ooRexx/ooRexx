@@ -520,7 +520,7 @@ RexxObject *RexxClass::defineMethods(StringTable *newMethods)
  *
  * @param newMethods The new methods to add.
  */
-RexxObject *RexxClass::inheritInstanceMethods(RexxClass *source)
+void RexxClass::inheritInstanceMethods(RexxClass *source)
 {
     MethodDictionary *sourceMethods = source->instanceMethodDictionary;
 
@@ -537,6 +537,32 @@ RexxObject *RexxClass::inheritInstanceMethods(RexxClass *source)
         // build the behaviour
         instanceMethodDictionary->addMethod(methodName, method);
     }
+
+    // now update the instance behaviour from our superclasses and
+    // merge in the new methods.
+    instanceBehaviour->setMethodDictionary(OREF_NULL);
+    createInstanceBehaviour(instanceBehaviour);
+
+    // see if we have an uninit method defined now that this is done
+    checkUninit();
+}
+
+
+/**
+ * Inherit the instance methods from another class definition.
+ * This is not an true inherit operation where the class is part
+ * of the hierarchy.  This directly grabs the instance methods
+ * defined directly by the other class and merges them into the
+ * class method dictionary.  This is a special method that is
+ * only done during the initial image build.
+ *
+ * @param newMethods The new methods to add.
+ */
+RexxObject *RexxClass::inheritInstanceMethodsRexx(RexxClass *source)
+{
+    // add the methods to the instance method dictionary
+    inheritInstanceMethods(source);
+
     return OREF_NULL;
 }
 

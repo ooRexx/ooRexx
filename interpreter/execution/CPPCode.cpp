@@ -521,7 +521,7 @@ CPPM(RexxObject::concatBlank),
 
 CPPM(RexxObject::newRexx),
 
-CPPM(RexxClass::inheritInstanceMethods),
+CPPM(RexxClass::inheritInstanceMethodsRexx),
 CPPM(RexxClass::defaultNameRexx),
 CPPM(RexxClass::queryMixinClass),
 CPPM(RexxClass::isMetaClassRexx),

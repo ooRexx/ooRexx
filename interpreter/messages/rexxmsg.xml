@@ -990,7 +990,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Symbol_or_string_directive_option</SymbolicName>
-        <Text>String expected after <Sub position="1" name="directive"/> <Sub position="2" name="keyword"/> keyword.</Text>
+        <Text>Symbol or string expected after <Sub position="1" name="directive"/> <Sub position="2" name="keyword"/> keyword.</Text>
       </SubMessage>
     </Subcodes>
   </Message>
