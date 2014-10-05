@@ -113,6 +113,7 @@ class RexxClass : public RexxObject
     RexxClass   *getSuperClass();
     ArrayClass  *getSuperClasses();
     ArrayClass  *getSubClasses();
+    RexxObject  *copyRexx();
 
     void         setInstanceBehaviour(RexxBehaviour *);
     virtual RexxString  *defaultName();

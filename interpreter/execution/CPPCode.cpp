@@ -552,6 +552,7 @@ CPPM(RexxClass::isSubclassOf),
 CPPM(RexxClass::getPackage),
 CPPM(RexxClass::getAnnotations),
 CPPM(RexxClass::getAnnotationRexx),
+CPPM(RexxClass::copyRexx),
 
 CPPM(RexxClass::newRexx),
 

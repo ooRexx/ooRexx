@@ -448,6 +448,7 @@ StartClassDefinition(Class);
         AddMethod("IsSubclassOf", RexxClass::isSubclassOf, 1);
         AddMethod("DefaultName", RexxClass::defaultNameRexx, 0);
         AddMethod("Package", RexxClass::getPackage, 0);
+        AddMethod("Copy", RexxClass::copyRexx, 0);
 
     // operator methods
         AddMethod("=", RexxClass::equal, 1);

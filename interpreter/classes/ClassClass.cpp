@@ -158,6 +158,20 @@ void RexxClass::liveGeneral(MarkReason reason)
 
 
 /**
+ * An override for the copy method to keep Class objects from
+ * being copied.
+ *
+ * @return Never returns.
+ */
+RexxObject *RexxClass::copyRexx()
+{
+    // we do not allow these to be allocated from Rexx code...
+    reportException(Error_Unsupported_copy_method, this);
+    return TheNilObject;
+}
+
+
+/**
  * Make a proxy object from a class.
  *
  * @param envelope The envelope we're flattening into.

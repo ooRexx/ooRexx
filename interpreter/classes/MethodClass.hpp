@@ -95,6 +95,7 @@ class MethodClass : public BaseExecutable
     inline bool  isSpecial()      { return methodFlags.any(PROTECTED_FLAG, PRIVATE_FLAG); }
     inline bool  isConstant()     { return methodFlags[CONSTANT_METHOD]; }
     inline bool  isAttribute()    { return methodFlags[ATTRIBUTE_METHOD]; }
+    inline bool  isAbstract()     { return methodFlags[ABSTRACT_METHOD]; }
 
     inline void  setUnguarded()    { methodFlags.set(UNGUARDED_FLAG); }
     inline void  setGuarded()      { methodFlags.reset(UNGUARDED_FLAG); }
