@@ -855,6 +855,8 @@ void LanguageParser::methodDirective()
         // this uses a special code block
         BaseCode *code = new AbstractCode();
         _method = new MethodClass(name, code);
+        // make sure the method is marked abstract
+        _method->setAbstract();
     }
     // regular Rexx code method?
     else if (externalname == OREF_NULL)
