@@ -101,6 +101,7 @@ class MethodClass : public BaseExecutable
     inline void  setPublic()       { methodFlags.reset(PRIVATE_FLAG); }
     inline void  setConstant()     { methodFlags.set(CONSTANT_METHOD); }
     inline void  setAttribute()    { methodFlags.set(ATTRIBUTE_METHOD); }
+    inline void  setAttribute(bool v)    { methodFlags[ATTRIBUTE_METHOD] = v; }
            void  setAttributes(bool _private, bool _protected, bool _guarded);
     inline RexxClass *getScope() { return scope; }
     inline bool  isScope(RexxClass *s) {return scope == s;}

@@ -1362,9 +1362,9 @@ void LanguageParser::attributeDirective()
             {
                 // create the method pair and quit.
                 createAbstractMethod(internalname, isClass, accessFlag == PRIVATE_SCOPE,
-                    protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
+                    protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD, true);
                 createAbstractMethod(setterName, isClass, accessFlag == PRIVATE_SCOPE,
-                    protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
+                    protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD, true);
             }
             else
             {
@@ -1397,6 +1397,8 @@ void LanguageParser::attributeDirective()
                 // now create both getter and setting methods from the information.
                 MethodClass *_method = createNativeMethod(internalname, library, procedure);
                 _method->setAttributes(accessFlag == PRIVATE_SCOPE, protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
+                // mark this as an attribute method
+                _method->setAttribute();
                 // add to the compilation
                 addMethod(internalname, _method, isClass);
             }
@@ -1407,7 +1409,7 @@ void LanguageParser::attributeDirective()
                 checkDirective(Error_Translation_abstract_attribute);
                 // create the method pair and quit.
                 createAbstractMethod(internalname, isClass, accessFlag == PRIVATE_SCOPE,
-                    protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
+                    protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD, true);
             }
             // either written in ooRexx or is automatically generated.
             else
@@ -1416,7 +1418,7 @@ void LanguageParser::attributeDirective()
                 if (hasBody())
                 {
                     createMethod(internalname, isClass, accessFlag == PRIVATE_SCOPE,
-                        protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
+                        protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD, true);
                 }
                 else
                 {
@@ -1449,6 +1451,8 @@ void LanguageParser::attributeDirective()
                 // now create both getter and setting methods from the information.
                 MethodClass *_method = createNativeMethod(setterName, library, procedure);
                 _method->setAttributes(accessFlag == PRIVATE_SCOPE, protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
+                // mark this as an attribute method
+                _method->setAttribute();
                 // add to the compilation
                 addMethod(setterName, _method, isClass);
             }
@@ -1459,14 +1463,14 @@ void LanguageParser::attributeDirective()
                 checkDirective(Error_Translation_abstract_attribute);
                 // create the method pair and quit.
                 createAbstractMethod(setterName, isClass, accessFlag == PRIVATE_SCOPE,
-                    protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
+                    protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD, true);
             }
             else
             {
                 if (hasBody())        // just the getter method
                 {
                     createMethod(setterName, isClass, accessFlag == PRIVATE_SCOPE,
-                        protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
+                        protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD, true);
                 }
                 else
                 {
@@ -1790,7 +1794,7 @@ void LanguageParser::processAttributeAnnotations(RexxString *getterName)
     // annotations to process.
     if (getterMethod == OREF_NULL && setterMethod == OREF_NULL)
     {
-        syntaxError(Error_Translation_missing_annotation_target, new_string("attribute"), name);
+        syntaxError(Error_Translation_missing_annotation_target, new_string("attribute"), getterName);
     }
 
     // parse this one, then merge into each of the methods
@@ -1980,18 +1984,19 @@ void LanguageParser::resourceDirective()
 /**
  * Create a Rexx method body.
  *
- * @param name   The name of the attribute.
+ * @param name      The name of the attribute.
  * @param classMethod
- *               Indicates whether we are creating a class or instance method.
+ *                  Indicates whether we are creating a class or instance method.
  * @param privateMethod
- *               The method's private attribute.
+ *                  The method's private attribute.
  * @param protectedMethod
- *               The method's protected attribute.
+ *                  The method's protected attribute.
  * @param guardedMethod
- *               The method's guarded attribute.
+ *                  The method's guarded attribute.
+ * @param isAttribute Indicates if this is an attribute method.
  */
 void LanguageParser::createMethod(RexxString *name, bool classMethod,
-    bool privateMethod, bool protectedMethod, bool guardedMethod)
+    bool privateMethod, bool protectedMethod, bool guardedMethod, bool isAttribute)
 {
     // NOTE:  It is necessary to translate the block and protect the code
     // before allocating the MethodClass object.  The new operator allocates the
@@ -2005,6 +2010,8 @@ void LanguageParser::createMethod(RexxString *name, bool classMethod,
     // convert into a method object
     MethodClass *_method = new MethodClass(name, code);
     _method->setAttributes(privateMethod, protectedMethod, guardedMethod);
+    // mark with the attribute state
+    _method->setAttribute(isAttribute);
     // go add the method to the accumulator
     addMethod(name, _method, classMethod);
 }
@@ -2070,22 +2077,26 @@ void LanguageParser::createAttributeSetterMethod(RexxString *name, RexxVariableB
  *
  * @param name   The name of the method.
  * @param classMethod
- *                  Indicates we're adding a class or instance method.
+ *               Indicates we're adding a class or instance method.
  * @param privateMethod
  *               The method's private attribute.
  * @param protectedMethod
  *               The method's protected attribute.
  * @param guardedMethod
  *               The method's guarded attribute.
+ * @param isAttribute
+ *               The method attribute status.
  */
 void LanguageParser::createAbstractMethod(RexxString *name,
-    bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod)
+    bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod, bool isAttribute)
 {
     // create the kernel method for the accessor
     // this uses a special code block
     BaseCode *code = new AbstractCode();
     MethodClass * _method = new MethodClass(name, code);
     _method->setAttributes(privateMethod, protectedMethod, guardedMethod);
+    // mark with the attribute state
+    _method->setAttribute(isAttribute);
     // add this to the target
     addMethod(name, _method, classMethod);
 }

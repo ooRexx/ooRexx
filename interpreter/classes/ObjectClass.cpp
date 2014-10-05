@@ -318,7 +318,7 @@ MethodClass *RexxObject::instanceMethod(RexxString *method_name)
     // the name must be a string...and we use it in upper case
     method_name = stringArgument(method_name, ARG_ONE)->upper();
     // retrieve the method from the dictionary
-    MethodClass *method_object = (MethodClass *)behaviour->getMethodDictionary()->methodLookup(method_name);
+    MethodClass *method_object = behaviour->methodLookup(method_name);
     return (MethodClass *)resultOrNil(method_object);
 }
 
