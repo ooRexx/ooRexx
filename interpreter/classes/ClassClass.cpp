@@ -1685,6 +1685,8 @@ RexxClass  *RexxClass::newRexx(RexxObject **args, size_t argCount)
     Protected<RexxClass> new_class = (RexxClass *)clone();
 
     new_class->id = class_id;
+    // the new class does not inherit annotations
+    new_class->annotations = OREF_NULL;
 
     // no new class objects start out as abstract.
     new_class->clearAbstract();
