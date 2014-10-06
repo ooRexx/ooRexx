@@ -1254,6 +1254,13 @@ if (WIN32)
    add_executable(oodialog_exe WIN32 ${build_extensions_oodialog_dir}/oodWinMain.cpp
                                      ${build_extensions_oodialog_dir}/oodShared.cpp
                                      ${build_extensions_oodialog_dir}/ooDialogWinMain.rc)
+# We need to override the PDB output file name for oodialog.exe so it doesn't overwrite
+# the file for oodialog.dll, which essentially makes oodialog undebuggable on Windows
+# we want to append, which is a little bit of a pain.
+   get_property(link_flags TARGET oodialog_exe PROPERTY LINK_FLAGS_DEBUG)
+   set(link_flags "${link_flags} /PDB:bin\\ooDialog_exe.pdb")
+   set_target_properties(oodialog_exe PROPERTIES LINK_FLAGS_DEBUG ${link_flags})
+
    set_property(TARGET oodialog_exe
           PROPERTY COMPILE_DEFINITIONS
           OOD_VER=${OOD_MAJOR}
@@ -1279,6 +1286,13 @@ if (WIN32)
    add_executable(oodialog_com ${build_extensions_oodialog_dir}/oodMain.cpp
                                ${build_extensions_oodialog_dir}/oodShared.cpp
                                ${build_extensions_oodialog_dir}/ooDialogMain.rc)
+# We need to override the PDB output file name for oodialog.com so it doesn't overwrite
+# the file for oodialog.dll, which essentially makes oodialog undebuggable on Windows
+# we want to append, which is a little bit of a pain.
+   get_property(link_flags TARGET oodialog_com PROPERTY LINK_FLAGS_DEBUG)
+   set(link_flags "${link_flags} /PDB:bin\\ooDialog_com.pdb")
+   set_target_properties(oodialog_com PROPERTIES LINK_FLAGS_DEBUG ${link_flags})
+
    set_property(TARGET oodialog_com
           PROPERTY COMPILE_DEFINITIONS
           OOD_VER=${OOD_MAJOR}
