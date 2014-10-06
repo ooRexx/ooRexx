@@ -6323,7 +6323,7 @@ RexxRoutine6(int, SysStemCopy, RexxStemObject, fromStem, RexxStemObject, toStem,
                 // return this as a failure
                 return -1;
             }
-            context->SetStemArrayElement(toStem, index + fromCount, value);
+            context->SetStemArrayElement(toStem, index + count, value);
         }
 
 
