@@ -5691,7 +5691,7 @@ special character (such as a parenthesis).
         <Component>Translation</Component>
         <Severity>Info</Severity>
         <SymbolicName>Message_Translations_routine_invocation</SymbolicName>
-        <Text>Routine <Sub position="1" name="routine"/> in package <Sub position="2" name="package"/>.</Text>
+        <Text>Routine <q><Sub position="1" name="routine"/></q> in package <q><Sub position="2" name="package"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>101</Code>
@@ -5700,7 +5700,7 @@ special character (such as a parenthesis).
         <Component>Translation</Component>
         <Severity>Info</Severity>
         <SymbolicName>Message_Translations_method_invocation</SymbolicName>
-        <Text>Method <Sub position="1" name="method"/> with scope <q><Sub position="2" name="class"/></q> in package <Sub position="3" name="package"/>.</Text>
+        <Text>Method <q><Sub position="1" name="method"/></q> with scope <q><Sub position="2" name="class"/></q> in package <q><Sub position="3" name="package"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>101</Code>
@@ -5709,7 +5709,7 @@ special character (such as a parenthesis).
         <Component>Translation</Component>
         <Severity>Info</Severity>
         <SymbolicName>Message_Translations_compiled_method_invocation</SymbolicName>
-        <Text>       *-* Compiled method <Sub position="1" name="method"/> with scope <q><Sub position="2" name="class"/></q>.</Text>
+        <Text>       *-* Compiled method <q><Sub position="1" name="method"/></q> with scope <q><Sub position="2" name="class"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>101</Code>
@@ -5718,7 +5718,7 @@ special character (such as a parenthesis).
         <Component>Translation</Component>
         <Severity>Info</Severity>
         <SymbolicName>Message_Translations_compiled_routine_invocation</SymbolicName>
-        <Text>       *-* Compiled routine <Sub position="1" name="routine"/>.</Text>
+        <Text>       *-* Compiled routine <q><Sub position="1" name="routine"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>101</Code>

@@ -1755,19 +1755,19 @@ $ Error_Invalid_expression_call
 718 Missing expression for calculated CALL name.
 
 $ Message_Translations_routine_invocation
-719 Routine &1 in package &2.
+719 Routine "&1" in package "&2".
 
 $ Message_Translations_method_invocation
-720 Method &1 with scope "&2" in package &3.
+720 Method "&1" with scope "&2" in package "&3".
 
 $ Error_Incorrect_method_multi_dimension
 721 Method argument &1 cannot have more than a single dimension.
 
 $ Message_Translations_compiled_method_invocation
-722        *-* Compiled method &1 with scope "&2".
+722        *-* Compiled method "&1" with scope "&2".
 
 $ Message_Translations_compiled_routine_invocation
-723        *-* Compiled routine &1.
+723        *-* Compiled routine "&1".
 
 $ Message_Translations_no_source_available
 724 Package "&1" (no source available).
