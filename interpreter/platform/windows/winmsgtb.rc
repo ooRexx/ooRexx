@@ -655,7 +655,7 @@ BEGIN
    88924    "&1 argument &2 must be an array with exactly &3 items."
    19922    "String or symbol expected after &1 keyword."
    25927    "Unknown keyword following ""&1""; found ""&2""."
-   98986    "Reference to unassigned variable ""&1.""."
+   98986    "Reference to unassigned variable ""&1""."
    34905    "SELECT CASE comparison result must be ""0"", ""1"", ""true"", or ""false""; found ""&1""."
    35934    "Missing expression in WHEN case expression list."
    34002    "Value of expression following WHEN keyword must be exactly ""0"" or ""1""; found ""&1""."

@@ -3590,7 +3590,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>986</term>
 <listitem>
-<para>Reference to unassigned variable "<emphasis role="italic">name</emphasis>.".</para>
+<para>Reference to unassigned variable "<emphasis role="italic">name</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
