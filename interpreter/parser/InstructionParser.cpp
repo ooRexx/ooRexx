@@ -1902,7 +1902,7 @@ RexxInstruction *LanguageParser::guardNew()
                 expression = requiredExpression(TERM_EOC, Error_Invalid_expression_guard);
 
                 // get the guard expression variable list
-                ArrayClass *variable_list = getGuard();
+                variable_list = getGuard();
                 variable_count = variable_list->size();
 
                 // if using GUARD WHEN, we will never wake up if there are
