@@ -2597,49 +2597,49 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>901</term>
 <listitem>
-<para>Missing argument; argument <emphasis role="italic">argument</emphasis> is required.</para>
+<para>Missing argument; the <emphasis role="italic">argument</emphasis> argument is required.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>902</term>
 <listitem>
-<para>Argument <emphasis role="italic">argument</emphasis> must be a number; found "<emphasis role="italic">value</emphasis>".</para>
+<para>The <emphasis role="italic">argument</emphasis> argument must be a number; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>903</term>
 <listitem>
-<para>Argument <emphasis role="italic">argument</emphasis> must be a whole number; found "<emphasis role="italic">value</emphasis>".</para>
+<para>The <emphasis role="italic">argument</emphasis> argument must be a whole number; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>904</term>
 <listitem>
-<para>Argument <emphasis role="italic">argument</emphasis> must be zero or a positive whole number; found "<emphasis role="italic">value</emphasis>".</para>
+<para>The <emphasis role="italic">argument</emphasis> argument must be zero or a positive whole number; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>905</term>
 <listitem>
-<para>Argument <emphasis role="italic">argument</emphasis> must be a positive whole number; found "<emphasis role="italic">value</emphasis>".</para>
+<para>The <emphasis role="italic">argument</emphasis> argument must be a positive whole number; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>906</term>
 <listitem>
-<para>Argument <emphasis role="italic">argument</emphasis> must not exceed <emphasis role="italic">limit</emphasis>; found "<emphasis role="italic">value</emphasis>".</para>
+<para>The <emphasis role="italic">argument</emphasis> argument must not exceed <emphasis role="italic">limit</emphasis>; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>907</term>
 <listitem>
-<para>Argument <emphasis role="italic">argument</emphasis> must be in the range <emphasis role="italic">min</emphasis> to <emphasis role="italic">max</emphasis>; found "<emphasis role="italic">value</emphasis>".</para>
+<para>The <emphasis role="italic">argument</emphasis> argument must be in the range <emphasis role="italic">min</emphasis> to <emphasis role="italic">max</emphasis>; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>908</term>
 <listitem>
-<para>Argument <emphasis role="italic">argument</emphasis> must not be a null string.</para>
+<para>The <emphasis role="italic">argument</emphasis> argument must not be a null string.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -2657,19 +2657,19 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>911</term>
 <listitem>
-<para>Argument <emphasis role="italic">argument</emphasis> is an incorrect length argument; found "<emphasis role="italic">value</emphasis>".</para>
+<para>Argument <emphasis role="italic">argument</emphasis> is an incorrect length; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>912</term>
 <listitem>
-<para>Argument <emphasis role="italic">argument</emphasis> is an incorrect position argument; found "<emphasis role="italic">value</emphasis>".</para>
+<para>Argument <emphasis role="italic">argument</emphasis> is an incorrect position; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>913</term>
 <listitem>
-<para>Argument <emphasis role="italic">argument</emphasis> must have a single-dimensional array value.</para>
+<para>Argument <emphasis role="italic">argument</emphasis> must be a single-dimensional array.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -2681,7 +2681,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>915</term>
 <listitem>
-<para>Argument <emphasis role="italic">argument</emphasis> could not be converted to type <emphasis role="italic">type</emphasis>.</para>
+<para>Argument <emphasis role="italic">argument</emphasis> could not be converted to a <emphasis role="italic">type</emphasis> type.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -2711,7 +2711,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>920</term>
 <listitem>
-<para>Argument <emphasis role="italic">argument</emphasis> must have a stem object or stem name value; found "<emphasis role="italic">value</emphasis>".</para>
+<para>Argument <emphasis role="italic">argument</emphasis> must be a stem object or stem name; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>

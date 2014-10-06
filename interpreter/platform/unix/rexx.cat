@@ -1617,28 +1617,28 @@ $ Error_Invalid_argument_user_defined
 671 &1.
 
 $ Error_Invalid_argument_noarg
-672 Missing argument; argument &1 is required.
+672 Missing argument; the &1 argument is required.
 
 $ Error_Invalid_argument_number
-673 Argument &1 must be a number; found "&2".
+673 The &1 argument must be a number; found "&2".
 
 $ Error_Invalid_argument_whole
-674 Argument &1 must be a whole number; found "&2".
+674 The &1 argument must be a whole number; found "&2".
 
 $ Error_Invalid_argument_nonnegative
-675 Argument &1 must be zero or a positive whole number; found "&2".
+675 The &1 argument must be zero or a positive whole number; found "&2".
 
 $ Error_Invalid_argument_positive
-676 Argument &1 must be a positive whole number; found "&2".
+676 The &1 argument must be a positive whole number; found "&2".
 
 $ Error_Invalid_argument_toobig
-677 Argument &1 must not exceed &2; found "&3".
+677 The &1 argument must not exceed &2; found "&3".
 
 $ Error_Invalid_argument_range
-678 Argument &1 must be in the range &2 to &3; found "&4".
+678 The &1 argument must be in the range &2 to &3; found "&4".
 
 $ Error_Invalid_argument_null
-679 Argument &1 must not be a null string.
+679 The &1 argument must not be a null string.
 
 $ Error_Invalid_argument_string
 680 Argument &1 must have a string value.
@@ -1647,19 +1647,19 @@ $ Error_Invalid_argument_pad
 681 Argument &1 is an incorrect pad or character argument; found "&2".
 
 $ Error_Invalid_argument_length
-682 Argument &1 is an incorrect length argument; found "&2".
+682 Argument &1 is an incorrect length; found "&2".
 
 $ Error_Invalid_argument_position
-683 Argument &1 is an incorrect position argument; found "&2".
+683 Argument &1 is an incorrect position; found "&2".
 
 $ Error_Invalid_argument_noarray
-684 Argument &1 must have a single-dimensional array value.
+684 Argument &1 must be a single-dimensional array.
 
 $ Error_Invalid_argument_noclass
 685 Argument &1 must be of the &2 class.
 
 $ Error_Invalid_argument_argType
-686 Argument &1 could not be converted to type &2.
+686 Argument &1 could not be converted to a &2 type.
 
 $ Error_Invalid_argument_list
 687 Argument &1 must be one of &2; found "&3".
@@ -1713,7 +1713,7 @@ $ Error_Invalid_argument_pointer
 704 Argument &1 is not in valid pointer format; found "&2".
 
 $ Error_Invalid_argument_nostem
-705 Argument &1 must have a stem object or stem name value; found "&2".
+705 Argument &1 must be a stem object or stem name; found "&2".
 
 $ Error_Invalid_argument_double
 706 Argument &1 must be a valid double value; found "&2".

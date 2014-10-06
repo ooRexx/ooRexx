@@ -551,12 +551,12 @@ MutableBuffer *MutableBuffer::bracketsEqual(RexxObject *str, RexxObject *pos, Re
  */
 MutableBuffer *MutableBuffer::replaceAt(RexxObject *str, RexxObject *pos, RexxObject *len, RexxObject *pad)
 {
-    RexxString *string = stringArgument(str, ARG_ONE);
-    size_t begin = positionArgument(pos, ARG_TWO) - 1;
+    RexxString *string = stringArgument(str, "new");
+    size_t begin = positionArgument(pos, "position") - 1;
     size_t newLength = string->getLength();
-    size_t replaceLength = optionalLengthArgument(len, newLength, ARG_THREE);
+    size_t replaceLength = optionalLengthArgument(len, newLength, "length");
 
-    char padChar = optionalPadArgument(pad, ' ', ARG_FOUR);
+    char padChar = optionalPadArgument(pad, ' ', "pad");
     size_t finalLength;
 
     // if replaceLength extends beyond the end of the string
