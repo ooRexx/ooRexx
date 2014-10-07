@@ -2651,19 +2651,19 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>910</term>
 <listitem>
-<para>Argument <emphasis role="italic">argument</emphasis> is an incorrect pad or character argument; found "<emphasis role="italic">value</emphasis>".</para>
+<para>Argument <emphasis role="italic">argument</emphasis> is an invalid pad or character argument; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>911</term>
 <listitem>
-<para>Argument <emphasis role="italic">argument</emphasis> is an incorrect length; found "<emphasis role="italic">value</emphasis>".</para>
+<para>Argument <emphasis role="italic">argument</emphasis> is an invalid length value; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>912</term>
 <listitem>
-<para>Argument <emphasis role="italic">argument</emphasis> is an incorrect position; found "<emphasis role="italic">value</emphasis>".</para>
+<para>Argument <emphasis role="italic">argument</emphasis> is an invalid position value; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -2675,7 +2675,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>914</term>
 <listitem>
-<para>Argument <emphasis role="italic">argument</emphasis> must be of the <emphasis role="italic">class</emphasis> class.</para>
+<para>Argument <emphasis role="italic">argument</emphasis> must be an instance of the <emphasis role="italic">class</emphasis> class.</para>
 </listitem>
 </varlistentry>
 <varlistentry>

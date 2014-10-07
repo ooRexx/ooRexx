@@ -1644,19 +1644,19 @@ $ Error_Invalid_argument_string
 680 Argument &1 must have a string value.
 
 $ Error_Invalid_argument_pad
-681 Argument &1 is an incorrect pad or character argument; found "&2".
+681 Argument &1 is an invalid pad or character argument; found "&2".
 
 $ Error_Invalid_argument_length
-682 Argument &1 is an incorrect length; found "&2".
+682 Argument &1 is an invalid length value; found "&2".
 
 $ Error_Invalid_argument_position
-683 Argument &1 is an incorrect position; found "&2".
+683 Argument &1 is an invalid position value; found "&2".
 
 $ Error_Invalid_argument_noarray
 684 Argument &1 must be a single-dimensional array.
 
 $ Error_Invalid_argument_noclass
-685 Argument &1 must be of the &2 class.
+685 Argument &1 must be an instance of the &2 class.
 
 $ Error_Invalid_argument_argType
 686 Argument &1 could not be converted to a &2 type.

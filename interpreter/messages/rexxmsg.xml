@@ -3701,7 +3701,7 @@ special character (such as a parenthesis).
           <Component>Rexx</Component>
           <Severity>Warning</Severity>
           <SymbolicName>Error_Invalid_argument_pad</SymbolicName>
-          <Text>Argument <Sub position="1" name="argument"/> is an incorrect pad or character argument; found <q><Sub position="2" name="value"/></q>.</Text>
+          <Text>Argument <Sub position="1" name="argument"/> is an invalid pad or character argument; found <q><Sub position="2" name="value"/></q>.</Text>
         </SubMessage>
         <SubMessage>
           <Code>88</Code>
@@ -3710,7 +3710,7 @@ special character (such as a parenthesis).
           <Component>Rexx</Component>
           <Severity>Warning</Severity>
           <SymbolicName>Error_Invalid_argument_length</SymbolicName>
-          <Text>Argument <Sub position="1" name="argument"/> is an incorrect length; found <q><Sub position="2" name="value"/></q>.</Text>
+          <Text>Argument <Sub position="1" name="argument"/> is an invalid length value; found <q><Sub position="2" name="value"/></q>.</Text>
         </SubMessage>
         <SubMessage>
           <Code>88</Code>
@@ -3719,7 +3719,7 @@ special character (such as a parenthesis).
           <Component>Rexx</Component>
           <Severity>Warning</Severity>
           <SymbolicName>Error_Invalid_argument_position</SymbolicName>
-          <Text>Argument <Sub position="1" name="argument"/> is an incorrect position; found <q><Sub position="2" name="value"/></q>.</Text>
+          <Text>Argument <Sub position="1" name="argument"/> is an invalid position value; found <q><Sub position="2" name="value"/></q>.</Text>
         </SubMessage>
         <SubMessage>
           <Code>88</Code>
@@ -3737,7 +3737,7 @@ special character (such as a parenthesis).
           <Component>Rexx</Component>
           <Severity>Warning</Severity>
           <SymbolicName>Error_Invalid_argument_noclass</SymbolicName>
-          <Text>Argument <Sub position="1" name="argument"/> must be of the <Sub position="2" name="class"/> class.</Text>
+          <Text>Argument <Sub position="1" name="argument"/> must be an instance of the <Sub position="2" name="class"/> class.</Text>
         </SubMessage>
         <SubMessage>
           <Code>88</Code>

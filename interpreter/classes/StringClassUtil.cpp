@@ -93,7 +93,7 @@ size_t lengthArgument(RexxObject *argument, const char *position )
     // converted using the ARGUMENT_DIGITS value
     if (!argument->unsignedNumberValue(value, Numerics::ARGUMENT_DIGITS))
     {
-        reportException(Error_Invalid_argument_length, argument);
+        reportException(Error_Invalid_argument_length, position, argument);
     }
     return value;
 }
@@ -187,7 +187,7 @@ size_t positionArgument(RexxObject *argument, const char *position )
 
     if (!argument->unsignedNumberValue(value, Numerics::ARGUMENT_DIGITS) || value == 0)
     {
-        reportException(Error_Invalid_argument_position, argument);
+        reportException(Error_Invalid_argument_position, position, argument);
     }
     return value;
 }
