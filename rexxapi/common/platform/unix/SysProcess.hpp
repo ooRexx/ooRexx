@@ -57,9 +57,9 @@ class SysProcess
 {
 public:
    static void getUserID(char *buffer);
-   static inline pid_t getPid()
+   static inline int getPid()
    {
-       return getpid();
+       return (int)getpid();
    }
 };
 #endif

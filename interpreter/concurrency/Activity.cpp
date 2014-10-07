@@ -74,8 +74,10 @@
 #include "GlobalProtectedObject.hpp"
 #include "MethodArguments.hpp"
 #include "MutableBufferClass.hpp"
+#include "SysProcess.hpp"
 
 #include <stdio.h>
+#include <time.h>
 
 // we use lots of global names here.
 using namespace GlobalNames;
@@ -394,6 +396,12 @@ void Activity::generateRandomNumberSeed()
     // we use our own random number generator, but it's perfectly
     // to use the C library one to generate a random initial seed.
     randomSeed = 0;
+    // rand uses a static seed, so we have to set a
+    // reasonably random starting seed.  Using both the time and
+    // clock makes things a little more random, and the process
+    // id and thread id lessens the chance that we get a repeat.
+    srand((int)time(NULL) + (int)clock() + SysProcess::getPid() + (int)currentThread.getThreadID());
+
     // the random number implementations vary on how large the
     // values are, but the are guaranteed to be at least 16-bit
     // quanties.  We'll compose the inital seed by shifting and xoring
