@@ -224,7 +224,7 @@ void Activity::runThread()
         restoreActivationLevel(activityLevel);
 
         // this is a good place for checking if there are pending uninit objects.
-        memoryObject.runUninits();
+        memoryObject.checkUninitQueue();
 
         // cast off any items related to our initial dispatch.
         dispatchMessage = OREF_NULL;
@@ -275,7 +275,7 @@ void Activity::exitCurrentThread()
     // if we're inactive, try to run any pending uninits
     if (isInactive())
     {
-        memoryObject.runUninits();
+        memoryObject.checkUninitQueue();
     }
     // this activity owned the kernel semaphore before entering here...release it
     // now.
@@ -3141,7 +3141,7 @@ void Activity::run(ActivityDispatcher &target)
     // make sure we get restored to the same base activation level.
     restoreActivationLevel(activityLevel);
     // give uninit objects a chance to run
-    memoryObject.runUninits();
+    memoryObject.checkUninitQueue();
     // unwind to the same stack depth as the start, removing all new entries
     unwindToDepth(startDepth);
     // if a condition occurred, make sure we inject this into the API-level

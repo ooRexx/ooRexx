@@ -132,6 +132,8 @@ public:
     inline void setPrimitive() { flags &= ~IsNonPrimitive; }
     inline bool isNonPrimitive() { return (flags & IsNonPrimitive) != 0; }
     inline bool isPrimitive() { return (flags & IsNonPrimitive) == 0; }
+    inline void setReadyForUninit() { flags |= UninitPending; }
+    inline bool isReadyForUninit() { return (flags & UninitPending) != 0; }
     inline void initHeader(size_t l, size_t mark)
     {
         objectSize = l;
@@ -154,6 +156,7 @@ protected:
         IsNonPrimitive   =  0x0010,    // use for flattened objects to indicated behaviour status
         NoRefBit         =  0x0020,    // location of No References Bit.
         OldSpaceBit      =  0x0040,    // location of the OldSpace bit
+        UninitPending    =  0x0080,    // we have an uninit operation pending
     };
 
     size_t    objectSize;              // allocated size of the object
@@ -261,6 +264,8 @@ class RexxInternalObject : public RexxVirtualBase
     inline void   setObjectLive(size_t markword)  { header.setObjectMark(markword); }
     inline void   setHasReferences() { header.setHasReferences(); }
     inline void   setHasNoReferences() { header.setHasNoReferences(); }
+    inline void   setReadyForUninit() { header.setReadyForUninit(); }
+    inline bool   isReadyForUninit() { return header.isReadyForUninit(); }
     inline bool   hasReferences() { return header.hasReferences(); }
     inline bool   hasNoReferences() { return header.hasNoReferences(); }
     inline void   setPrimitive() { header.setPrimitive(); }

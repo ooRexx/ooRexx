@@ -1275,6 +1275,8 @@ void NativeActivation::run(MethodClass *_method, NativeMethod *_code, RexxObject
 
     // set the return value and get outta here
     resultObj = result;
+    // good place to check for uninits
+    memoryObject.checkUninitQueue();
 
     activity->popStackFrame(this); // pop this from the activity
     setHasNoReferences();          // mark this as not having references in case we get marked

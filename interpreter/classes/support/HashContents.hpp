@@ -112,6 +112,7 @@ public:
         inline RexxInternalObject *index() { return contents->entryIndex(position); }
         inline void replace(RexxInternalObject *v) { contents->setValue(position, v); }
         inline void next() { contents->iterateNext(position, nextBucket); }
+        inline void removeAndAdvance() { contents->iterateNextAndRemove(position, nextBucket); }
 
 	private:
         // constructor for an index iterator
@@ -299,6 +300,9 @@ public:
         return totalSize - itemCount > count;
     }
 
+    // test if a position is a bucket anchor position.
+    inline bool isBucketPosition(ItemLink position) { return position < bucketSize; }
+
     /**
      * Return the total current capacity.
      *
@@ -335,6 +339,7 @@ public:
     bool locateItem(RexxInternalObject *item, ItemLink &position, ItemLink &previous);
     void nextMatch(RexxInternalObject *index, ItemLink &position);
     void iterateNext(ItemLink &position, ItemLink &nextBucket);
+    void iterateNextAndRemove(ItemLink &position, ItemLink &nextBucket);
     void iterateNextReverse(ItemLink &position, ItemLink &nextBucket);
     void locateNextBucketEnd(ItemLink &position, ItemLink &currentBucket);
     void locatePreviousEntry(ItemLink &position, ItemLink currentBucket);

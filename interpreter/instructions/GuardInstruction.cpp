@@ -68,7 +68,7 @@ RexxInstructionGuard::RexxInstructionGuard(RexxInternalObject *_expression,
     // list.
     if (variable_list != OREF_NULL)
     {
-        variableCount = variable_list->size();
+        variableCount = variable_list->items();
         /* loop through the variable list    */
         for (size_t i = 0; i < variableCount; i++)
         {

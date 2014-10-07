@@ -187,9 +187,8 @@ void MemoryObject::initialize(bool restoringImage)
 
     // get the initial uninit table
     uninitTable = new_identity_table();
-    // and our list of objects that have gone out of scope and
-    // are waiting to have the uninit run
-    pendingUninits = new_queue(100);
+    // this is our size of uninit objects awaiting processing.
+    pendingUninits = 0;
 
     // is this image creation?  This will build and save the image, then
     // terminate
@@ -274,17 +273,11 @@ void MemoryObject::checkUninit()
         // was this object not marked by the last sweep operation?
         if (uninitObject != OREF_NULL && uninitObject->isObjectDead(markWord))
         {
-            // copy this to the pending table.
-            pendingUninits->append(uninitObject);
+            // mark this as ready for uninit
+            uninitObject->setReadyForUninit();
+            // up the pending uninit count
+            pendingUninits++;
         }
-    }
-
-    // this is a little bit of a pain. but we have no means if
-    // safely deleting items from a table while we're using an iterator.
-    // so iterate over the pending table and remove those entries from the other table.
-    for (size_t i = 1; i <= pendingUninits->items(); i++)
-    {
-        uninitTable->remove(pendingUninits->get(i));
     }
 }
 
@@ -335,23 +328,37 @@ void  MemoryObject::runUninits()
         return;
     }
 
-    // turn on the recursion flag
+    // ok, turn on the interlock
     processingUninits = true;
 
     // get the current activity for running the uninits
     Activity *activity = ActivityManager::currentActivity;
 
-    // process until the queue is empty
-    while (!pendingUninits->isEmpty())
+    // scan the uninit table looking for objects that are elegable for collection.
+    for (HashContents::TableIterator iterator = uninitTable->iterator(); iterator.isAvailable();)
     {
-        // take the front item from the queue
-        RexxInternalObject *zombieObject = pendingUninits->pull();
-        // run this method with appropriate error trapping
-        UninitDispatcher dispatcher(zombieObject);
-        activity->run(dispatcher);
+        RexxInternalObject *uninitObject = iterator.value();
+
+        // was this object already marked for running the uninit?  run it now
+        if (uninitObject != OREF_NULL && uninitObject->isReadyForUninit())
+        {
+            // we remove this item here and advance the iterator.
+            iterator.removeAndAdvance();
+            // remove the pending item count
+            pendingUninits--;
+            // run this method with appropriate error trapping
+            UninitDispatcher dispatcher(uninitObject);
+            activity->run(dispatcher);
+        }
+        // not processing that item, so just step the iterator
+        else
+        {
+            iterator.next();
+        }
     }
-    // make sure we remove the recursion protection
-    processingUninits = false;
+
+    // turn off the interlock
+    processingUninits = false; ;
 }
 
 
@@ -401,7 +408,6 @@ void MemoryObject::markObjects()
     // make the uninit table and the pending uninits queue to keep those
     // objects from getting reclaimed.
     markObjectsMain(uninitTable);
-    markObjectsMain(pendingUninits);
 
     // if we had to expand the live stack previously, we allocated a temporary
     // one from malloc() storage rather than the object heap.  We need to

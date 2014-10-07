@@ -156,7 +156,7 @@ class MemoryObject : public RexxInternalObject
     void        runUninits();
     void        removeUninitObject(RexxInternalObject *obj);
     void        addUninitObject(RexxInternalObject *obj);
-    inline void checkUninitQueue() { if (!pendingUninits->isEmpty()) runUninits(); }
+    inline void checkUninitQueue() { if (pendingUninits > 0) runUninits(); }
     RexxInternalObject *unflattenObjectBuffer(BufferClass *sourceBuffer, char *startPointer, size_t dataLength);
     void        unflattenProxyObjects(Envelope *envelope, RexxInternalObject *firstObject, RexxInternalObject *endObject);
 
@@ -289,8 +289,8 @@ private:
 
     MapTable         *old2new;           // the table for tracking old2new references.
     IdentityTable    *uninitTable;       // the table of objects with uninit methods
-    QueueClass       *pendingUninits;    // objects waiting to have uninits run
-    bool              processingUninits; // true when we are processing the uninit table
+    size_t            pendingUninits;    // count of objects in the uninit queue
+    bool              processingUninits; // this is set when we are processing the uninit table
     WeakReference    *weakReferenceList; // list of active weak references
 
     MemorySegmentPool *firstPool;        // First segmentPool block.

@@ -515,6 +515,59 @@ void HashContents::iterateNext(ItemLink &position, ItemLink &nextBucket)
 
 
 /**
+ * Safely remove an item from the table and advance the
+ * iterator position to the next location.
+ *
+ * @param position   The current position.
+ * @param nextBucket The nextBucket we advance to.
+ */
+void HashContents::iterateNextAndRemove(ItemLink &position, ItemLink &nextBucket)
+{
+    // a remove operation is special if the we're at the head of the chain,
+    // since a remove operation will move another item.  into the slot, if
+    // there is one.
+    if (isBucketPosition(position))
+    {
+        // if this is the only item in this bucket, we can just
+        // advance normally, then remove the item.
+        if (nextEntry(position) == NoMore)
+        {
+            // save this for the deletion
+            ItemLink current = position;
+            iterateNext(position, nextBucket);
+            // perform the removal now that we've moved
+            removeChainLink(current, NoLink);
+        }
+        // we're at the head of the chain and we need to remove this
+        // item.  This will move the next item into the bucket slot, which
+        // means if we just remove the item, our position information will already
+        // be correct.
+        else
+        {
+            removeChainLink(position, NoLink);
+        }
+    }
+    // we're past the bucket position in the chain.  To delete this,
+    // we need to know the previous item.  However, if we advance to the
+    // next position first, that information will still be correct after deletion.
+    else
+    {
+        // save the bucket chain anchor and current position for the removal.
+        ItemLink current = position;
+        ItemLink currentBucket = nextBucket - 1;
+        // we need this also
+        ItemLink previous = position;
+        // advance to the next position.
+        iterateNext(position, nextBucket);
+        // now find the previous entry so we can remove the item
+        locatePreviousEntry(previous, currentBucket);
+        // do the removal.
+        removeChainLink(current, previous);
+    }
+}
+
+
+/**
  * Iterate to the next occupied entry of the list in reverse
  * bucket order.
  *
