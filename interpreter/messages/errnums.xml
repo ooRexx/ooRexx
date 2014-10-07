@@ -3307,6 +3307,12 @@ special character (such as a parenthesis).
 <para>Method argument <emphasis role="italic">argument</emphasis> cannot have more than a single dimension.</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>972</term>
+<listitem>
+<para>A message name argument must be a string or an array with 2 elements; found "<emphasis role="italic">value</emphasis>".</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR97">

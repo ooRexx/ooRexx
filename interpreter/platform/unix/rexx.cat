@@ -1922,6 +1922,9 @@ $ Error_Execution_abstract_metaclass
 $ Error_Symbol_expected_form
 771 Symbol expected after the FORM keyword.
 
+$ Error_Incorrect_method_message_name
+772 A message name argument must be a string or an array with 2 elements; found "&1".
+
 
 $ * -------------------------------------------------------------------------- */
 $ * --            ==================================================        -- */

@@ -1918,7 +1918,7 @@ RexxObject *RexxObject::sendWith(RexxObject *message, ArrayClass *arguments)
     RexxClass *startScope;
     // decode and validate the message input
     decodeMessageName(this, message, messageName, startScope);
-    arguments = arrayArgument(arguments, ARG_TWO);
+    arguments = arrayArgument(arguments, "message arguments");
 
     ProtectedObject r;
     if (startScope == OREF_NULL)
@@ -1950,7 +1950,7 @@ RexxObject *RexxObject::send(RexxObject **arguments, size_t argCount)
     // we must have a message name argument
     if (argCount < 1 )
     {
-        missingArgument(ARG_ONE);
+        missingArgument("message name");
     }
 
     RexxString *messageName;
@@ -1984,7 +1984,7 @@ RexxObject *RexxObject::send(RexxObject **arguments, size_t argCount)
 MessageClass *RexxObject::startWith(RexxObject *message, ArrayClass *arguments)
 {
     // the message is required
-    requiredArgument(message, ARG_ONE);
+    requiredArgument(message, "message name");
     // this is required and must be an array
     arguments = arrayArgument(arguments, ARG_TWO);
     // the rest is handled by code common to startWith();
@@ -2057,19 +2057,26 @@ void RexxObject::decodeMessageName(RexxObject *target, RexxObject *message, Rexx
     // clear the starting scope
     startScope = OREF_NULL;
 
+    requiredArgument(message, "message name");
+
     // if 1st arg is a string, we can do this quickly
     if (!isString(message))
     {
-        // this must be an array
-        ArrayClass *messageArray = arrayArgument(message, ARG_ONE);
+        // get the array form and verify we got a single-dimension array back.
+        ArrayClass *messageArray = message->requestArray();
+        if (messageArray == TheNilObject)
+        {
+            reportException(Error_Incorrect_method_message_name, message);
+        }
 
         // must be single dimension with two elements
         if (messageArray->isMultiDimensional() || messageArray->messageArgCount() != 2)
         {
             reportException(Error_Incorrect_method_message);
         }
+
         // get the message as a string in uppercase.
-        messageName = stringArgument((RexxObject *)messageArray->get(1), ARG_ONE)->upper();
+        messageName = stringArgument((RexxObject *)messageArray->get(1), "message name")->upper();
         startScope = (RexxClass *)messageArray->get(2);
         classArgument(startScope, TheClassClass, "SCOPE");
 

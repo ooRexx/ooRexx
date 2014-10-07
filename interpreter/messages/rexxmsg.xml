@@ -4665,6 +4665,15 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Incorrect_method_multi_dimension</SymbolicName>
         <Text>Method argument <Sub position="1" name="argument"/> cannot have more than a single dimension.</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>93</Code>
+        <Subcode>972</Subcode>
+        <MessageNumber>772</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Incorrect_method_message_name</SymbolicName>
+        <Text>A message name argument must be a string or an array with 2 elements; found <q><Sub position="1" name="value"/></q>.</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>

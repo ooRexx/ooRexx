@@ -676,6 +676,7 @@ BEGIN
    98989    "Class &1 is ABSTRACT and cannot be directly created."
    98990    "Class &1 is a metaclass and cannot be made ABSTRACT."
    20925    "Symbol expected after the FORM keyword."
+   93972    "A message name argument must be a string or an array with 2 elements; found ""&1""."
    
 END
 
