@@ -1935,5 +1935,5 @@ void PackageClass::addNamespace(RexxString *name, PackageClass *package)
         setField(namespaces, new_string_table());
     }
     // add the namespace name
-    namespaces->put(package, name);
+    namespaces->put(package, name->upper());
 }

@@ -4285,7 +4285,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Incorrect_method_length</SymbolicName>
-        <Text>Incorrect length argument specified; found <q><Sub position="1" name="value"/></q>.</Text>
+        <Text>Invalid length argument specified; found <q><Sub position="1" name="value"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>93</Code>
@@ -4294,7 +4294,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Incorrect_method_position</SymbolicName>
-        <Text>Incorrect position argument specified; found <q><Sub position="1" name="value"/></q>.</Text>
+        <Text>Invalid position argument specified; found <q><Sub position="1" name="value"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>93</Code>

@@ -1050,10 +1050,10 @@ $ Error_Incorrect_method_pad
 450 Incorrect pad or character argument specified; found "&1".
 
 $ Error_Incorrect_method_length
-451 Incorrect length argument specified; found "&1".
+451 Invalid length argument specified; found "&1".
 
 $ Error_Incorrect_method_position
-452 Incorrect position argument specified; found "&1".
+452 Invalid position argument specified; found "&1".
 
 $ Error_Incorrect_method_minsub
 453 Not enough subscripts for array; &1 expected.
