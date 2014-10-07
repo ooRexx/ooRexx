@@ -183,6 +183,9 @@
 /* Define to 1 if you have the <usersec.h> header file. */
 #cmakedefine HAVE_USERSEC_H
 
+/* Define to 1 if you have the <ncurses.h> header file. */
+#cmakedefine HAVE_NCURSES_H
+
 /* Define to 1 if you have the `vprintf' function. */
 #cmakedefine HAVE_VPRINTF
 
