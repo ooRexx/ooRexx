@@ -272,7 +272,7 @@ void MemoryObject::checkUninit()
         RexxInternalObject *uninitObject = iterator.value();
 
         // was this object not marked by the last sweep operation?
-        if (uninitObject->isObjectDead(markWord))
+        if (uninitObject != OREF_NULL && uninitObject->isObjectDead(markWord))
         {
             // copy this to the pending table.
             pendingUninits->append(uninitObject);
