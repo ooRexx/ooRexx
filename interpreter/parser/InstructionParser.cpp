@@ -1851,7 +1851,7 @@ RexxInstruction *LanguageParser::guardNew()
     }
 
     RexxInternalObject *expression = OREF_NULL;
-    ArrayClass *variable_list = OREF_NULL;
+    Protected<ArrayClass> variable_list;
     size_t variable_count = 0;
 
 
@@ -1903,11 +1903,11 @@ RexxInstruction *LanguageParser::guardNew()
 
                 // get the guard expression variable list
                 variable_list = getGuard();
-                variable_count = variable_list->size();
+                variable_count = variable_list->items();
 
                 // if using GUARD WHEN, we will never wake up if there are
                 // not at least one object variable accessed.
-                if (variable_count = 0)
+                if (variable_count == 0)
                 {
                     syntaxError(Error_Translation_guard_expose);
                 }
@@ -1926,8 +1926,18 @@ RexxInstruction *LanguageParser::guardNew()
         syntaxError(Error_Invalid_subkeyword_guard_on, token);
     }
 
-    RexxInstruction *newObject = new_variable_instruction(GUARD, Guard,
-        sizeof(RexxInstructionGuard) + (variable_count - 1) * sizeof(RexxObject *));
+    RexxInstruction *newObject;
+    // if we have when expression variables, create an appropriate size instruction
+    if (variable_count != 0)
+    {
+        newObject = new_variable_instruction(GUARD, Guard,
+            sizeof(RexxInstructionGuard) + (variable_count - 1) * sizeof(RexxObject *));
+    }
+    // just use the base size.
+    else
+    {
+       newObject = new_instruction(GUARD, Guard);
+    }
     ::new ((void *)newObject) RexxInstructionGuard(expression, variable_list, guardOn);
     return newObject;
 }
