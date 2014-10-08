@@ -99,7 +99,7 @@ set (ORX_CURRENT ${ORX_MAJOR})
 # Each public release of ooRexx should increment this number by one except
 # when the ORX_MINOR goes back to zero. If that is the case then this entry
 # should also be set to zero.
-set (ORX_REVISION 7)
+set (ORX_REVISION 0)
 # For ooRexx, this number should ALWAYS be zero. This will force the linker to
 # utilize all previous releases for linking.
 set (ORX_AGE 0)
