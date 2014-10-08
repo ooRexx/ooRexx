@@ -1637,10 +1637,10 @@ if (WIN32 AND DOC_SOURCE_DIR)
    install(PROGRAMS ${SAMPLES_SOURCE}/windows/misc/fileDrop.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/misc)
 
    # ole samples
-   install(DIRECTORY ${SAMPLES_SOURCE}/windows/ole COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+   install(DIRECTORY ${SAMPLES_SOURCE}/windows/ole COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR} PATTERN ".svn" EXCLUDE)
 
    # oodialog samples
-   install(DIRECTORY ${SAMPLES_SOURCE}/windows/oodialog COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+   install(DIRECTORY ${SAMPLES_SOURCE}/windows/oodialog COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR} PATTERN ".svn" EXCLUDE)
    install(FILES ${build_extensions_oodialog_dir}/oodialog.ico COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/oodialog)
 
    # sample shortcuts
