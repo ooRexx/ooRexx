@@ -82,6 +82,12 @@ class VariableDictionary : public RexxInternalObject
                  return false;
              }
 
+             // if we're supposed to return a stem value yet, something is available.
+             if (returnStemValue)
+             {
+                 return true;
+             }
+
              if (currentStem != OREF_NULL && stemIterator.isAvailable())
              {
                  return true;
@@ -91,27 +97,8 @@ class VariableDictionary : public RexxInternalObject
              return dictionaryIterator.isAvailable();
          }
 
-         inline RexxObject *value()
-         {
-             if (currentStem != OREF_NULL)
-             {
-                 return stemIterator.value();
-             }
-
-             return ((RexxVariable *)dictionaryIterator.value())->getVariableValue();
-         }
-
-         inline RexxString *name()
-         {
-             if (currentStem != OREF_NULL)
-             {
-                 // need to construct this name from the stem variable name and the tail
-                 return (RexxString *)stemIterator.name((RexxString *)dictionaryIterator.index());
-             }
-
-             return (RexxString *)dictionaryIterator.index();
-         }
-
+         RexxObject *value();
+         RexxString *name();
          void next();
 
          // explicitly terminate an iterator
@@ -129,17 +116,13 @@ class VariableDictionary : public RexxInternalObject
 
      private:
          // constructor for an index iterator
-         VariableIterator(VariableDictionary *d)
-         {
-             dictionary = d;
-             dictionaryIterator = dictionary->contents->iterator();
-             currentStem = OREF_NULL;
-         }
+         VariableIterator(VariableDictionary *d);
 
          VariableDictionary *dictionary;
          HashContents::TableIterator dictionaryIterator;
          StemClass *currentStem;
          CompoundVariableTable::TableIterator stemIterator;
+         bool returnStemValue;
      };
 
 

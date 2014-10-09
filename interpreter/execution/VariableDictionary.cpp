@@ -980,11 +980,50 @@ VariableDictionary::VariableIterator VariableDictionary::iterator()
 
 
 /**
+ * constructor for an index iterator
+ *
+ * @param d      The dictionary we're created from.
+ */
+VariableDictionary::VariableIterator::VariableIterator(VariableDictionary *d)
+{
+    dictionary = d;
+    dictionaryIterator = dictionary->contents->iterator();
+    currentStem = OREF_NULL;
+    returnStemValue = false;
+    // now we're set up, but it is possible that the
+    // first item in the dictionary is a stem.  We need to
+    // check this here so we're set up properly to
+    // treat it as such
+    if (dictionaryIterator.isAvailable())
+    {
+        // if we've hit a stem variable, switch the iterator to
+        // the stem version.
+        RexxVariable *variable = (RexxVariable *)dictionaryIterator.value();
+        if (variable->isStem())
+        {
+            currentStem = (StemClass *)variable->getVariableValue();
+            stemIterator = currentStem->iterator();
+            // if the stem has an explicitly signed value, return it first
+            returnStemValue = currentStem->hasValue();
+        }
+    }
+}
+
+
+/**
  * Step to the next position while iterating through a
  * variable dictionary.
  */
-inline void VariableDictionary::VariableIterator::next()
+void VariableDictionary::VariableIterator::next()
 {
+    // if if our last entry was a stem with a value, turn off the flag
+    // and leave everything else as is.
+    if (returnStemValue)
+    {
+        returnStemValue = false;
+        return;
+    }
+
     if (currentStem != OREF_NULL)
     {
         // step and then check if we have anything left.  If not, we need to
@@ -1004,13 +1043,59 @@ inline void VariableDictionary::VariableIterator::next()
     if (dictionaryIterator.isAvailable())
     {
         // if we've hit a stem variable, switch the iterator to
-        // the stem version.  We don't return the STEM variable in the
-        // iteration, thankfully.
-        RexxVariable *variable = (RexxVariable *)value();
+        // the stem version.
+        RexxVariable *variable = (RexxVariable *)dictionaryIterator.value();
         if (variable->isStem())
         {
             currentStem = (StemClass *)variable->getVariableValue();
             stemIterator = currentStem->iterator();
+            // if the stem has an explicitly signed value, return it first
+            returnStemValue = currentStem->hasValue();
         }
     }
+}
+
+
+/**
+ * Retrieve the value of the current variable.
+ *
+ * @return Return the name of the current variable.
+ */
+RexxObject *VariableDictionary::VariableIterator::value()
+{
+    // if we have a stem with an explicit value, return it now
+    if (returnStemValue)
+    {
+        return currentStem->getValue();
+    }
+
+    if (currentStem != OREF_NULL)
+    {
+        return stemIterator.value();
+    }
+
+    return ((RexxVariable *)dictionaryIterator.value())->getVariableValue();
+}
+
+
+/**
+ * Return the name of the current variable.
+ *
+ * @return The variable name.
+ */
+RexxString *VariableDictionary::VariableIterator::name()
+{
+    // if we have a stem with an explicit value, return its name
+    if (returnStemValue)
+    {
+        return currentStem->getName();
+    }
+
+    if (currentStem != OREF_NULL)
+    {
+        // need to construct this name from the stem variable name and the tail
+        return (RexxString *)stemIterator.name((RexxString *)dictionaryIterator.index());
+    }
+
+    return (RexxString *)dictionaryIterator.index();
 }

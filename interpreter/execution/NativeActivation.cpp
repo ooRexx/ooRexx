@@ -2351,6 +2351,12 @@ bool NativeActivation::fetchNext(RexxString *&name, RexxObject *&value)
         RexxActivation *activation = activity->getCurrentRexxFrame();
         iterator = activation->getLocalVariables()->iterator();
     }
+    // we have an active iterator, and we left it at the previous position
+    // at the end of the last request.  Advance it now.
+    else
+    {
+        iterator.next();
+    }
 
     // nothing available?  clear this iterator so the next fetch request will
     // start a new iteration and return a failure

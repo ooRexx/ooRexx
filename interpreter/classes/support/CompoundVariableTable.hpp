@@ -89,7 +89,7 @@ class CompoundVariableTable
                RexxString *name();
                RexxString *name(RexxString *stemName);
                void replace(RexxObject *v);
-        inline void next() { contents->next(current); }
+        inline void next() { current = contents->next(current); }
 
     private:
         // constructor for an index iterator

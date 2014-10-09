@@ -140,9 +140,11 @@ class StemClass : public RexxObject
 
     inline bool compoundVariableExists(CompoundVariableTail &resolved_tail) { return realCompoundVariableValue(resolved_tail) != OREF_NULL; }
     inline RexxString *getName() { return stemName; }
+    inline RexxObject *getValue() { return value; }
     inline CompoundTableElement *first() { return tails.first(); }
            RexxString *createCompoundName(CompoundVariableTail &tailPart);
     inline void init() { tails.init(this); }
+    inline bool hasValue() { return !dropped; }
 
     void setElement(const char *tail, RexxObject *value);
     void setElement(size_t tail, RexxObject *value);
