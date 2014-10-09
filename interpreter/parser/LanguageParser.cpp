@@ -1103,7 +1103,7 @@ RexxCode *LanguageParser::translateBlock()
             }
             // In theory, at this point we should be at the first instruction.
             // if not, we have an unclosed block instruction, which is an error
-            if (topDoIsType(KEYWORD_FIRST))
+            if (!topDoIsType(KEYWORD_FIRST))
             {
                 blockSyntaxError(topDo());
             }
