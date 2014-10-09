@@ -60,6 +60,7 @@
 #include "HashCollection.hpp"
 #include "DirectoryClass.hpp"
 #include "GlobalNames.hpp"
+#include "CompoundTableElement.hpp"
 
 
 /**
@@ -1029,29 +1030,45 @@ void VariableDictionary::VariableIterator::next()
         // step and then check if we have anything left.  If not, we need to
         // revert to normal iteration mode
         stemIterator.next();
-        if (stemIterator.isAvailable())
+        while (stemIterator.isAvailable())
         {
-            return;
+            // if this is a non-dropped variable, we're at a good point.  Otherwise
+            // skip over this in the iteration
+            CompoundTableElement *variable = stemIterator.variable();
+            if (!variable->isDropped())
+            {
+                return;
+            }
+
+            stemIterator.next();
         }
         // switch back to the main collection
         currentStem = OREF_NULL;
     }
+
     // this is a little more complicated.  We need to step
     // to the next variable and determine if this is a stem variable so
     // we can switch iteration modes.
     dictionaryIterator.next();
-    if (dictionaryIterator.isAvailable())
+    while (dictionaryIterator.isAvailable())
     {
         // if we've hit a stem variable, switch the iterator to
         // the stem version.
         RexxVariable *variable = (RexxVariable *)dictionaryIterator.value();
-        if (variable->isStem())
+        // we only process variables with a value, so skip over dropped ones
+        if (!variable->isDropped())
         {
-            currentStem = (StemClass *)variable->getVariableValue();
-            stemIterator = currentStem->iterator();
-            // if the stem has an explicitly signed value, return it first
-            returnStemValue = currentStem->hasValue();
+            if (variable->isStem())
+            {
+                currentStem = (StemClass *)variable->getVariableValue();
+                stemIterator = currentStem->iterator();
+                // if the stem has an explicitly signed value, return it first
+                returnStemValue = currentStem->hasValue();
+            }
+            return;
         }
+        // hit a dropped variable, try again.
+        dictionaryIterator.next();
     }
 }
 

@@ -80,6 +80,7 @@ class RexxVariable : public RexxInternalObject
     inline RexxObject *getResolvedValue() { return variableValue != OREF_NULL ? variableValue : variableName; };
     inline RexxString *getName() { return variableName; }
     inline void setName(RexxString *name) { setField(variableName, name); }
+    inline bool isDropped() { return variableValue == OREF_NULL; }
 
     // NOTE:  this is only called for local variables, which will never be in oldspace,
     // so setField is not needed.

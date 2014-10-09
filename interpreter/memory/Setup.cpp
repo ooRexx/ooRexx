@@ -1171,6 +1171,7 @@ StartClassDefinition(RexxInfo)
         AddMethod("Architecture", RexxInfo::getArchitecture, 0);
         AddMethod("EndOfLine", RexxInfo::getFileEndOfLine, 0);
         AddMethod("PathSeparator", RexxInfo::getPathSeparator, 0);
+        AddMethod("DirectorySeparator", RexxInfo::getDirectorySeparator, 0);
         AddMethod("CaseSensitiveFiles", RexxInfo::getCaseSensitiveFiles, 0);
         AddMethod("MajorVersion", RexxInfo::getMajorVersion, 0);
         AddMethod("Release", RexxInfo::getRelease, 0);
