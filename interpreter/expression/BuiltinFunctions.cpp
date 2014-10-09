@@ -2600,27 +2600,31 @@ BUILTIN(RXQUEUE)
     RexxString *option = required_string(RXQUEUE, option);
     RexxString *queueName = optional_string(RXQUEUE, name);
 
-    // all of the options here manipulate stdque, so get this upfront.
-    RexxObject *queue = context->getLocalEnvironment(STDQUE);
-
     switch (toupper(option->getChar(0)))
     {
         // 'G'et the current queue name
         case 'G':
+        {
             // the queue name is not allowed with the 'G'et option
             if (queueName != OREF_NULL)
             {
                 reportException(Error_Incorrect_call_maxarg, "RXQUEUE", IntegerTwo);
             }
+            RexxObject *queue = context->getLocalEnvironment(STDQUE);
             return queue->sendMessage(GlobalNames::GET);
+        }
 
         // 'C'reate a named queue
         case 'C':
+        {
+            // we need the RexxQueue class for this
+            RexxClass *rexxQueue = TheRexxPackage->findClass(REXXQUEUE);
+
             // if no queue name specified, we allow a name to be
             // created for us
             if (queueName == OREF_NULL)
             {
-                return queue->sendMessage(new_string("CREATE"));
+                return rexxQueue->sendMessage(new_string("CREATE"));
             }
             else
             {
@@ -2629,11 +2633,13 @@ BUILTIN(RXQUEUE)
                 {
                     reportException(Error_Incorrect_call_symbol, new_string("RXQUEUE"), IntegerTwo, queueName);
                 }
-                return queue->sendMessage(new_string("CREATE"), queueName);
+                return rexxQueue->sendMessage(new_string("CREATE"), queueName);
             }
+        }
 
         // 'S'et a new queue name
         case 'S':
+        {
             // give the exit a pass at this
             context->getActivity()->callQueueNameExit(context, queueName);
             // this must be a valid symbol
@@ -2641,34 +2647,48 @@ BUILTIN(RXQUEUE)
             {
                 reportException(Error_Incorrect_call_symbol, new_string("RXQUEUE"), IntegerTwo, queueName);
             }
+            RexxObject *queue = context->getLocalEnvironment(STDQUE);
             return queue->sendMessage(new_string("SET"), queueName);
+        }
 
         // 'O'pen a new queue name...creates if needed
         case 'O':
+        {
+            // we need the RexxQueue class for this
+            RexxClass *rexxQueue = TheRexxPackage->findClass(REXXQUEUE);
             // this must be a valid symbol
             if (queueName->isSymbol() == STRING_BAD_VARIABLE)
             {
                 reportException(Error_Incorrect_call_symbol, new_string("RXQUEUE"), IntegerTwo, queueName);
             }
-            return queue->sendMessage(new_string("OPEN"), queueName);
+            return rexxQueue->sendMessage(new_string("OPEN"), queueName);
+        }
 
         // 'E'xists
         case 'E':
+        {
+            // we need the RexxQueue class for this
+            RexxClass *rexxQueue = TheRexxPackage->findClass(REXXQUEUE);
             // this must be a valid symbol
             if (queueName->isSymbol() == STRING_BAD_VARIABLE)
             {
                 reportException(Error_Incorrect_call_symbol, new_string("RXQUEUE"), IntegerTwo, queueName);
             }
-            return queue->sendMessage(new_string("EXISTS"), queueName);
+            return rexxQueue->sendMessage(new_string("EXISTS"), queueName);
+        }
 
         // 'D'elete
         case 'D':
+        {
+            // we need the RexxQueue class for this
+            RexxClass *rexxQueue = TheRexxPackage->findClass(REXXQUEUE);
             // this must be a valid symbol
             if (queueName->isSymbol() == STRING_BAD_VARIABLE)
             {
                 reportException(Error_Incorrect_call_symbol, new_string("RXQUEUE"), IntegerTwo, queueName);
             }
-            return queue->sendMessage(new_string("DELETE"), queueName);
+            return rexxQueue->sendMessage(new_string("DELETE"), queueName);
+        }
 
         default:
             reportException(Error_Incorrect_call_list, "RXQUEUE", IntegerOne, "CDEGOS", option);
