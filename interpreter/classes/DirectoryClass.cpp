@@ -479,7 +479,7 @@ RexxInternalObject *DirectoryClass::removeItem(RexxInternalObject *target)
  */
 RexxInternalObject *DirectoryClass::setMethodRexx(RexxString *entryname, MethodClass *methodobj)
 {
-    entryname = stringArgument(entryname, ARG_ONE)->upper();
+    entryname = stringArgument(entryname, "index")->upper();
     if (methodobj != OREF_NULL)
     {
         // make sure we have a method object for this.  The scope is .nil to indicate object scope.
@@ -536,7 +536,7 @@ RexxInternalObject *DirectoryClass::setMethodRexx(RexxString *entryname, MethodC
 RexxInternalObject *DirectoryClass::unsetMethodRexx(RexxString *entryname)
 {
     // the entry name is always upper case
-    entryname = stringArgument(entryname, ARG_ONE)->upper();
+    entryname = stringArgument(entryname, "index")->upper();
 
     // if unknown, remove this from the special place.
     if (entryname->strCompare(GlobalNames::UNKNOWN))

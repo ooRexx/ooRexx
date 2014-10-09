@@ -66,8 +66,8 @@ class HashCollection : public RexxObject
     virtual ArrayClass *makeArray();
 
     virtual HashContents *allocateContents(size_t bucketSize, size_t capacity) = 0;
-    virtual void validateIndex(RexxObject *&index, size_t position);
-    virtual void validateValueIndex(RexxObject *&value, RexxObject *&index, size_t position);
+    virtual void validateIndex(RexxObject *&index);
+    virtual void validateValueIndex(RexxObject *&value, RexxObject *&index);
     virtual bool requiresRehash() { return true; }
 
     void initialize(size_t capacity = DefaultTableSize);
@@ -180,7 +180,7 @@ public:
     inline  StringHashCollection() { ; }
 
     virtual HashContents *allocateContents(size_t bucketSize, size_t capacity);
-    virtual void validateIndex(RexxObject *&index, size_t position);
+    virtual void validateIndex(RexxObject *&index);
     // string collections don't require a rehash
     virtual bool requiresRehash() { return false; }
 
@@ -213,7 +213,7 @@ public:
             IndexOnlyHashCollection(size_t capacity) : EqualityHashCollection(capacity) { }
     inline  IndexOnlyHashCollection() { ; }
 
-    virtual void validateValueIndex(RexxObject *&value, RexxObject *&index, size_t position);
+    virtual void validateValueIndex(RexxObject *&value, RexxObject *&index);
     virtual bool hasItem(RexxInternalObject *);
     virtual RexxInternalObject *getIndex(RexxInternalObject * value);
     virtual void put(RexxInternalObject *v) { HashCollection::put(v, v); }
