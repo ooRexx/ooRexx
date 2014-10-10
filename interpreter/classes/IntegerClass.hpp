@@ -115,6 +115,7 @@ class RexxInteger : public RexxObject
     RexxObject *andOp(RexxObject *);
     RexxObject *orOp(RexxObject *);
     RexxObject *xorOp(RexxObject *);
+    RexxObject *choiceRexx(RexxObject *, RexxObject *);
 
     RexxObject *abs();
     RexxObject *sign();

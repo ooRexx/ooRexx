@@ -386,6 +386,7 @@ class RexxString : public RexxObject
     RexxObject *andOp(RexxObject *);
     RexxObject *orOp(RexxObject *);
     RexxObject *xorOp(RexxObject *);
+    RexxObject *choiceRexx(RexxObject *trueResult, RexxObject *falseResult);
     RexxObject *Max(RexxObject **args, size_t argCount);
     RexxObject *Min(RexxObject **args, size_t argCount);
     RexxObject *trunc(RexxInteger *decimals);

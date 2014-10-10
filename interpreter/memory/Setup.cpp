@@ -641,6 +641,7 @@ StartClassDefinition(String)
         AddMethod("&", RexxString::andOp, 1);
         AddMethod("|", RexxString::orOp, 1);
         AddMethod("&&", RexxString::xorOp, 1);
+        AddMethod("?", RexxString::choiceRexx, 2);
         AddMethod("MakeArray", RexxString::makeArrayRexx, 1);
         AddMethod("Lower", RexxString::lowerRexx, 2);
         AddMethod("Upper", RexxString::upperRexx, 2);
@@ -1321,6 +1322,7 @@ StartClassDefinition(Integer)
         AddMethod("&", RexxInteger::andOp, 1);
         AddMethod("|", RexxInteger::orOp, 1);
         AddMethod("&&", RexxInteger::xorOp, 1);
+        AddMethod("?", RexxInteger::choiceRexx, 2);
         AddMethod("D2C", RexxInteger::d2c, 1);
         AddMethod("D2X", RexxInteger::d2x, 1);
         AddMethod("Abs", RexxInteger::abs, 0);

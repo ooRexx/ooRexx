@@ -1126,6 +1126,27 @@ RexxObject *RexxInteger::xorOp(RexxObject *other)
 
 
 /**
+ * Implement an expression choice method.  The target object
+ * is evaluated as a logical value, and if it evaluates to true,
+ * returns the first argument as a result.  If it evaluates to
+ * false, it returns the second argument.
+ *
+ * @param trueResult The value to return for a true result.
+ * @param falseResult
+ *                   The falue to return for a false result
+ *
+ * @return Either the true value or the false value based on the value of the target object.
+ */
+RexxObject *RexxInteger::choiceRexx(RexxObject *trueResult, RexxObject *falseResult)
+{
+    requiredArgument(trueResult, "true value");
+    requiredArgument(falseResult, "false value");
+
+    return truthValue(Error_Logical_value_method) ? trueResult : falseResult;
+}
+
+
+/**
  * Take the absolute value of an integer object
  *
  * @return The abs() result.
