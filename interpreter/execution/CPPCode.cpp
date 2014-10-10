@@ -689,6 +689,7 @@ CPPM(MethodClass::isProtectedRexx),
 CPPM(MethodClass::isAbstractRexx),
 CPPM(MethodClass::isConstantRexx),
 CPPM(MethodClass::isAttributeRexx),
+CPPM(MethodClass::getScopeRexx),
 
 CPPM(MethodClass::newFileRexx),
 CPPM(MethodClass::newRexx),

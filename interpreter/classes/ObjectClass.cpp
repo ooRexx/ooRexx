@@ -285,7 +285,8 @@ bool RexxObject::isInstanceOf(RexxClass *other)
  */
 RexxObject *RexxObject::isInstanceOfRexx(RexxClass *other)
 {
-    requiredArgument(other, ARG_ONE);
+    // verify we have a valid class object to check
+    classArgument(other, TheClassClass, "class");
     return booleanObject(isInstanceOf(other));
 }
 

@@ -109,6 +109,7 @@ class MethodClass : public BaseExecutable
     inline void  setAttribute(bool v)    { methodFlags[ATTRIBUTE_METHOD] = v; }
            void  setAttributes(bool _private, bool _protected, bool _guarded);
     inline RexxClass *getScope() { return scope; }
+           RexxObject *getScopeRexx();
     inline bool  isScope(RexxClass *s) {return scope == s;}
 
     inline BaseCode  *getCode()     { return code; }

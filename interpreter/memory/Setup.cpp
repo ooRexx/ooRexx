@@ -1033,6 +1033,7 @@ StartClassDefinition(Method)
         AddMethod("Package", BaseExecutable::getPackage, 0);
         AddMethod("Annotations", BaseExecutable::getAnnotations, 0);
         AddMethod("Annotation", BaseExecutable::getAnnotationRexx, 1);
+        AddMethod("Scope", MethodClass::getScopeRexx, 0);
 
     CompleteMethodDefinitions();
 

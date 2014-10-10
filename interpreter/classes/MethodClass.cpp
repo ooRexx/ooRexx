@@ -340,6 +340,18 @@ RexxObject *MethodClass::isConstantRexx( )
 
 
 /**
+ * Returns the defining class scope for a method.  Returns .nil
+ * for any method not defined by a class scope.
+ *
+ * @return The scope class or .nil.
+ */
+RexxObject *MethodClass::getScopeRexx()
+{
+    return resultOrNil(getScope());
+}
+
+
+/**
  * Set the entire set of method attributes with one call.  Used
  * during source compilation.
  *
