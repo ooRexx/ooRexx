@@ -469,7 +469,7 @@ BEGIN
    93954    "Method ""&1"" can be used only on a single-dimensional array."
    93952    "Method argument &1 is an array and does not contain all string values."
    93956    "Element &1 of the array must be a string."
-   93957    "Element &1 of the array must be a subclass of the target object."
+   93957    "Target object ""&1"" is not a subclass of the message override scope (&2)."
    27902    "DO keyword &1 can be specified only once."
    93959    "An array cannot contain more than 99,999,999 elements."
    3902    "Error writing output file ""&1""."

@@ -4564,7 +4564,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Incorrect_method_array_noclass</SymbolicName>
-        <Text>Element <Sub position="1" name="element"/> of the array must be a subclass of the target object.</Text>
+        <Text>Target object <q><Sub position="1" name="object"/></q> is not a subclass of the message override scope (<Sub position="2" name="scope"/>).</Text>
       </SubMessage>
       <SubMessage>
         <Code>93</Code>

@@ -1302,7 +1302,7 @@ $ Error_Incorrect_method_array_nostring
 543 Element &1 of the array must be a string.
 
 $ Error_Incorrect_method_array_noclass
-544 Element &1 of the array must be a subclass of the target object.
+544 Target object "&1" is not a subclass of the message override scope (&2).
 
 $ Error_Invalid_do_duplicate
 545 DO keyword &1 can be specified only once.

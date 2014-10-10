@@ -3226,7 +3226,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>957</term>
 <listitem>
-<para>Element <emphasis role="italic">element</emphasis> of the array must be a subclass of the target object.</para>
+<para>Target object "<emphasis role="italic">object</emphasis>" is not a subclass of the message override scope (<emphasis role="italic">scope</emphasis>).</para>
 </listitem>
 </varlistentry>
 <varlistentry>

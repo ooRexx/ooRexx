@@ -300,15 +300,8 @@ RexxObject *MessageClass::send(RexxObject *_receiver)
         setField(receiver, _receiver);
     }
 
-    // validate the starting scope if we've been given one
-    if (startscope != OREF_NULL)
-    {
-        if (!receiver->behaviour->hasScope((RexxClass *)startscope))
-        {
-            reportException(Error_Incorrect_method_array_noclass, IntegerTwo);
-        }
-    }
-
+    // validate that the scope override is valid
+    receiver->validateScopeOverride(startscope);
 
     // ok, now tell the stack frame we're running under that
     // we want to be notified any errors here.
@@ -325,7 +318,7 @@ RexxObject *MessageClass::send(RexxObject *_receiver)
     {
         receiver->messageSend(message, (RexxObject **)args->data(), args->size(), startscope, result);
     }
-    else                                 /* no over ride                      */
+    else
     {
         receiver->messageSend(message, (RexxObject **)args->data(), args->size(), result);
     }
@@ -363,6 +356,9 @@ RexxObject *MessageClass::start(RexxObject *_receiver)
     {
         setField(receiver, _receiver);
     }
+
+    // validate that the scope override is valid
+    receiver->validateScopeOverride(startscope);
 
     // spawn a new activity off of the old activity
     Activity *oldActivity = ActivityManager::currentActivity;
@@ -539,7 +535,7 @@ RexxObject *MessageClass::newRexx(RexxObject **msgArgs, size_t argCount)
     // any methods on this object from this method.
     RexxClass *classThis = (RexxClass *)this;
 
-    size_t num_args = argCount;          /* get number of args passed         */
+    size_t num_args = argCount;
 
     // the first two arguments are required
     if (num_args < 2 )
@@ -549,9 +545,9 @@ RexxObject *MessageClass::newRexx(RexxObject **msgArgs, size_t argCount)
 
     // The receiver and the message name are required
     RexxObject *_target   = msgArgs[0];
-    requiredArgument(_target, ARG_ONE);
+    requiredArgument(_target, "message target");
     RexxObject *_message  = msgArgs[1];
-    requiredArgument(_message, ARG_TWO);
+    requiredArgument(_message, "message name");
     RexxString *msgName;
     RexxClass *_startScope;
     // decode the message argument into name and scope
@@ -562,55 +558,38 @@ RexxObject *MessageClass::newRexx(RexxObject **msgArgs, size_t argCount)
     // are there arguments to be sent with the message?
     if (num_args > 2 )
     {
-        /* get 3rd arg only concerned w/ 1st */
+        // get 3rd arg only concerned w/ 1st
         RexxString *optionString = (RexxString *)msgArgs[2];
-        /*  Did we really get an option      */
-        /*passed?                            */
+        // if we did not really get an argument, the argments are an empty array
         if (optionString == OREF_NULL)
         {
-            /* nope, use null array as argument  */
-            argPtr = (ArrayClass *)TheNullArray->copy();
+            argPtr = new_array();
         }
+        // we have an option specifying how the arguments are passed
         else
         {
-            /* Convert it into a string.         */
-            optionString = stringArgument(optionString, ARG_THREE);
-            /*  char and make it lower case      */
-            char option = tolower(optionString->getChar(0));
-            if (option == 'a')               /* args passed as an array?          */
+            char option = optionArgument(optionString, ARG_THREE);
+            // arguments passed as an array
+            if (option == 'A')
             {
-                /* are there less than 4 required    */
-                /*args?                              */
-                if (num_args < 4)              /* this is an error                  */
+                // this must be here, and there can only be one additional argument
+                if (num_args < 4)
                 {
                     reportException(Error_Incorrect_method_minarg, IntegerFour);
                 }
-
-                /* are there more than 4 required    */
-                /*args?                              */
-                if (num_args > 4)              /* this is an error                  */
+                if (num_args > 4)
                 {
                     reportException(Error_Incorrect_method_maxarg, IntegerFour);
                 }
 
-                /* get the array of arguments        */
-                argPtr = (ArrayClass *)msgArgs[3];
-                if (argPtr == OREF_NULL)       /* no array given?                   */
-                {
-                    /* this is an error                  */
-                    reportException(Error_Incorrect_method_noarg, IntegerFour);
-                }
-                /* force to array form               */
-                argPtr = argPtr->requestArray(); ;
-                /* not an array?                     */
-                if (argPtr == TheNilObject || argPtr->isMultiDimensional())
-                {
-                    reportException(Error_Incorrect_method_noarray, msgArgs[3]);
-                }
+                // get this directly and this is required to be an array
+                argPtr = arrayArgument(msgArgs[3], "message arguments");
             }
-            else if (option == 'i' )         /* specified as individual?          */
+            // specified as individual arguments, so we just build an array
+            // directly from that.  There need not be anything following the
+            // option
+            else if (option == 'I' )
             {
-                /* yes, build array of all arguments */
                 argPtr = new_array(argCount - 3, msgArgs + 3);
             }
             else
@@ -619,19 +598,19 @@ RexxObject *MessageClass::newRexx(RexxObject **msgArgs, size_t argCount)
             }
         }
     }
+    // no args, we use an empty array
     else
     {
-        /* no args, use a null array.        */
-        argPtr = (ArrayClass *)TheNullArray->copy();
+        argPtr = new_array();
     }
-    /* all args are parcelled out, go    */
-    /*create the new message object...   */
+
+    // we're all ready to create this now
     MessageClass *newMessage = new MessageClass(_target, msgName, _startScope, argPtr);
     ProtectedObject p(newMessage);
 
     // handle Rexx class completion
     classThis->completeNewObject(newMessage);
 
-    return newMessage;                   /* return the new message            */
+    return newMessage;
 }
 

@@ -484,6 +484,7 @@ class RexxObject : public RexxInternalObject
     RexxObject  *sendMessage(RexxString *, RexxObject *, RexxObject *, RexxObject *);
     RexxObject  *sendMessage(RexxString *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
     RexxObject  *sendMessage(RexxString *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
+    void         validateScopeOverride(RexxClass *scope);
 
                                       // Following are internal OREXX methods
     RexxObject  *defineInstanceMethods(DirectoryClass *);

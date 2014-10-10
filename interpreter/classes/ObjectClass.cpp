@@ -940,6 +940,7 @@ void RexxObject::messageSend(RexxString *msgname, RexxObject **arguments, size_t
 {
     // perform a stack space check
     ActivityManager::currentActivity->checkStackSpace();
+
     // do the lookup using the starting scope
     MethodClass *method_save = superMethod(msgname, startscope);
 
@@ -1904,6 +1905,23 @@ RexxObject *RexxObject::requestRexx(RexxString *className)
 
 
 /**
+ * Validate a scope override on a message send.
+ *
+ * @param scope  The scope we're checking.
+ */
+void RexxObject::validateScopeOverride(RexxClass *scope)
+{
+    if (scope != OREF_NULL)
+    {
+        if (!isInstanceOf(scope))
+        {
+            reportException(Error_Incorrect_method_array_noclass, this, scope);
+        }
+    }
+}
+
+
+/**
  * Do a dynamic invocation of an object method.
  *
  * @param message   The target message.  This can be either a string message
@@ -1918,8 +1936,8 @@ RexxObject *RexxObject::sendWith(RexxObject *message, ArrayClass *arguments)
     RexxClass *startScope;
     // decode and validate the message input
     decodeMessageName(this, message, messageName, startScope);
-    arguments = arrayArgument(arguments, "message arguments");
 
+    arguments = arrayArgument(arguments, "message arguments");
     ProtectedObject r;
     if (startScope == OREF_NULL)
     {
@@ -1927,6 +1945,8 @@ RexxObject *RexxObject::sendWith(RexxObject *message, ArrayClass *arguments)
     }
     else
     {
+        // validate that the scope override is valid
+        validateScopeOverride(startScope);
         messageSend(messageName, arguments->messageArgs(), arguments->messageArgCount(), startScope, r);
     }
     return (RexxObject *)r;
@@ -1965,6 +1985,8 @@ RexxObject *RexxObject::send(RexxObject **arguments, size_t argCount)
     }
     else
     {
+        // validate that the scope override is valid
+        validateScopeOverride(startScope);
         messageSend(messageName, arguments + 1, argCount - 1, startScope, r);
     }
     return (RexxObject *)r;
@@ -2004,14 +2026,16 @@ MessageClass *RexxObject::startWith(RexxObject *message, ArrayClass *arguments)
  */
 MessageClass *RexxObject::start(RexxObject **arguments, size_t argCount)
 {
-    if (argCount < 1 )                   /* no arguments?                     */
+    // we must have a message name argument
+    if (argCount < 1 )
     {
-        missingArgument(ARG_ONE);         /* Yes, this is an error.            */
+        missingArgument("message name");
     }
+
     /* Get the message name.             */
     RexxObject *message = arguments[0];  /* get the message .                 */
                                          /* Did we receive a message name     */
-    requiredArgument(message, ARG_ONE);
+    requiredArgument(message, "message name");
     // the rest is handled by code common to startWith();
     return startCommon(message, arguments + 1, argCount - 1);
 }
@@ -2033,6 +2057,10 @@ MessageClass *RexxObject::startCommon(RexxObject *message, RexxObject **argument
     RexxClass *startScope;
     // decode and validate the message input
     decodeMessageName(this, message, messageName, startScope);
+
+    // validate the starting scope now, if specified.  We'll validate this in this
+    // thread first.
+    validateScopeOverride(startScope);
 
     // creeate the new message object and start it.
     Protected<MessageClass> newMessage = new MessageClass(this, messageName, startScope, new_array(argCount, arguments));
