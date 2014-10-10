@@ -541,6 +541,8 @@ StartClassDefinition(String)
     CompleteClassMethodDefinitions();
 
         AddMethod("", RexxString::concatRexx, 1);
+        // this is a synonym
+        AddMethod("Append", RexxString::concatRexx, 1);
         AddMethod(" ", RexxString::concatBlank, 1);
         AddMethod("||", RexxString::concatRexx, 1);
         AddMethod("Length", RexxString::lengthRexx, 0);
