@@ -460,6 +460,20 @@ RexxObject *MessageClass::hasError()
 
 
 /**
+ * Check to see if a message has a result available.  Returns
+ * false if the message has not completed yet.
+ *
+ * @return True if the message has completed with a returned
+ *         result, false if it is still running or has
+ *         completed without returning a result.
+ */
+RexxObject *MessageClass::hasResult()
+{
+    return booleanObject(resultObject != OREF_NULL);
+}
+
+
+/**
  * Return any error condition information associated with the
  * message.  This method will not block until completion, and
  * will return .nil if the message is still running.

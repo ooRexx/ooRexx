@@ -504,9 +504,9 @@ StartClassDefinition(Object);
         AddMethod("ObjectName=", RexxObject::objectNameEquals, 1);
         AddMethod("Request", RexxObject::requestRexx, 1);
         AddMethod("Start", RexxObject::start, A_COUNT);
-        AddMethod("STARTWITH", RexxObject::startWith, 2);
-        AddMethod("SEND", RexxObject::send, A_COUNT);
-        AddMethod("SENDWITH", RexxObject::sendWith, 2);
+        AddMethod("StartWith", RexxObject::startWith, 2);
+        AddMethod("Send", RexxObject::send, A_COUNT);
+        AddMethod("SendWith", RexxObject::sendWith, 2);
         AddMethod("String", RexxObject::stringRexx, 0);
         AddMethod("IsInstanceOf", RexxObject::isInstanceOfRexx, 1);
         AddMethod("IsA", RexxObject::isInstanceOfRexx, 1);
@@ -986,6 +986,7 @@ StartClassDefinition(Message)
 
         AddMethod("Completed", MessageClass::completed, 0);
         AddMethod("HasError", MessageClass::hasError, 0);
+        AddMethod("HasResult", MessageClass::hasResult, 0);
         AddMethod("Notify", MessageClass::notify, 1);
         AddMethod("Result", MessageClass::result, 0);
         AddMethod("Target", MessageClass::messageTarget, 0);

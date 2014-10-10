@@ -86,6 +86,7 @@ class MessageClass : public RexxObject
     RexxString   *messageName();
     ArrayClass   *arguments();
     RexxObject   *hasError();
+    RexxObject   *hasResult();
     RexxObject   *errorCondition();
     RexxObject   *newRexx(RexxObject **, size_t);
     Activity     *getActivity() { return startActivity; }
