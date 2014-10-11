@@ -354,7 +354,17 @@ RexxReturnCode LocalRegistrationManager::resolveCallback(RegistrationType type, 
  */
 RexxReturnCode LocalRegistrationManager::processServiceException(ServiceException *e)
 {
-    return RXAPI_MEMFAIL;
+    switch (e->getErrorCode())
+    {
+        case CALLBACK_NOT_FOUND:
+            return RXSUBCOM_NOTREG;
+
+        case DROP_NOT_AUTHORIZED:
+            return RXSUBCOM_NOCANDROP;
+
+        default:
+            return RXAPI_MEMFAIL;
+    }
 }
 
 
@@ -368,5 +378,15 @@ RexxReturnCode LocalRegistrationManager::processServiceException(ServiceExceptio
  */
 RexxReturnCode LocalRegistrationManager::mapReturnResult(ServiceMessage &m)
 {
-    return RXSUBCOM_OK;
+    switch (m.result)
+    {
+        case CALLBACK_NOT_FOUND:
+            return RXSUBCOM_NOTREG;
+
+        case DROP_NOT_AUTHORIZED:
+            return RXSUBCOM_NOCANDROP;
+
+        default:
+            return RXSUBCOM_OK;
+    }
 }

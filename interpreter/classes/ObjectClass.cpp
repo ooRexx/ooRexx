@@ -2168,12 +2168,10 @@ RexxObject *RexxObject::run(RexxObject **arguments, size_t argCount)
     // if we have arguments, decode how we are supposed to handle method arguments.
     if (argCount > 1)
     {
-        // get the 1st one, its the option
-        RexxString *option = (RexxString *)arguments[1];
         // this is now required
-        option = stringArgument(option, ARG_TWO);
+        char optionChar = optionArgument(arguments[1], "AI", "argument style");
         /* process the different options     */
-        switch (toupper(option->getChar(0)))
+        switch (optionChar)
         {
             // arguments are in an array.
             case 'A':
@@ -2181,14 +2179,14 @@ RexxObject *RexxObject::run(RexxObject **arguments, size_t argCount)
                     // we must have just one additional argument if this is an array
                     if (argCount < 3)
                     {
-                        missingArgument(ARG_THREE);
+                        missingArgument("argument array");
                     }
                     if (argCount > 3)
                     {
                         reportException(Error_Incorrect_method_maxarg, IntegerThree);
                     }
                     // get the argument array and make sure we have a good array
-                    ArrayClass *arglist = arrayArgument(arguments[2], ARG_THREE);
+                    ArrayClass *arglist = arrayArgument(arguments[2], "argument array");
                     // get the array specifics to pass along
                     argumentPtr = arglist->messageArgs();
                     argcount = arglist->messageArgCount();
@@ -2201,17 +2199,12 @@ RexxObject *RexxObject::run(RexxObject **arguments, size_t argCount)
                 argumentPtr = arguments + 2;
                 argcount = argCount - 2;
                 break;
-
-            // bad option
-            default:
-                reportException(Error_Incorrect_method_option, "AI", option);
-                break;
         }
     }
     ProtectedObject result;
     // run the method and return the result
     methobj->run(ActivityManager::currentActivity, this, GlobalNames::NONE, argumentPtr, argcount, result);
-    return (RexxObject *)result;
+    return result;
 }
 
 
