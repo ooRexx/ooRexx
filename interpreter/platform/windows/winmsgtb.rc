@@ -464,7 +464,7 @@ BEGIN
    98945    "Class ""&1"" has not inherited class ""&2""."
    99921    "Incorrect program line in method source array."
    99922    "::REQUIRES directives must appear before other directive instructions."
-   93961    "Method argument &1 must have a string value or an array value."
+   93961    "The &1 argument must be a string or array object."
    93953    "Method argument &1 could not be converted to type &2."
    93954    "Method ""&1"" can be used only on a single-dimensional array."
    93952    "Method argument &1 is an array and does not contain all string values."

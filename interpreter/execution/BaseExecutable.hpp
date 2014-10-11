@@ -73,7 +73,7 @@ public:
     RexxString  *getAnnotation(RexxString *name);
     RexxObject  *getAnnotationRexx(RexxObject *name);
 
-    static ArrayClass *processExecutableSource(RexxObject *source, RexxObject *position);
+    static ArrayClass *processExecutableSource(RexxObject *source, const char *position);
     static void processNewExecutableArgs(RexxObject **&init_args, size_t &argCount, RexxString *&name,
         Protected<ArrayClass> &sourceArray, PackageClass *&sourceContext);
 

@@ -4519,7 +4519,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Incorrect_method_no_method</SymbolicName>
-        <Text>Method argument <Sub position="1" name="argument"/> must have a string value or an array value.</Text>
+        <Text>The <Sub position="1" name="argument"/> argument must be a string or array object.</Text>
       </SubMessage>
       <SubMessage>
         <Code>93</Code>

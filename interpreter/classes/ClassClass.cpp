@@ -793,7 +793,7 @@ RexxObject *RexxClass::defineMethod(RexxString *method_name, RexxObject *methodS
     // the name is required and must be a string.  We always
     // use the uppercase name for updating the method table,
     // but use the original name if we have to create a new method object.
-    method_name = stringArgument(method_name, ARG_ONE);
+    method_name = stringArgument(method_name, "method name");
     Protected<RexxString> dictionaryName = method_name->upper();
 
     Protected<MethodClass> methodObject;
@@ -810,7 +810,7 @@ RexxObject *RexxClass::defineMethod(RexxString *method_name, RexxObject *methodS
     // one already.  .nil is a special case (same as an omitted argument)
     else if (TheNilObject != methodSource)
     {
-        methodObject = MethodClass::newMethodObject(method_name, methodSource, this, IntegerTwo);
+        methodObject = MethodClass::newMethodObject(method_name, methodSource, this, "method");
     }
     // if we have a real method object, then the scope has already been set
     // and alse check if this is an uninit method, which is a special case.
@@ -1191,7 +1191,7 @@ MethodDictionary *RexxClass::createMethodDictionary(RexxObject *sourceCollection
         if (newMethod != (MethodClass *)TheNilObject)
         {
             // if this isn't a method object already, try to create one
-            newMethod = MethodClass::newMethodObject(method_name, newMethod, this, IntegerOne);
+            newMethod = MethodClass::newMethodObject(method_name, newMethod, this, "method source");
             newMethod->setScope(scope);
         }
         // now add the method to the target dictionary

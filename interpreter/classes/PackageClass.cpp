@@ -60,6 +60,7 @@
 #include "ClassDirective.hpp"
 #include "GlobalNames.hpp"
 #include "LanguageParser.hpp"
+#include "BaseExecutable.hpp"
 
 #include <stdio.h>
 
@@ -174,9 +175,12 @@ PackageClass *PackageClass::newRexx(RexxObject **init_args, size_t argCount)
                 }
             }
         }
-        // We're just creating a package directly from source.  We always create this
-        // without adding to the loaded packages.
-        ArrayClass *sourceArray = arrayArgument(programSource, "source");
+
+
+        // validate, and potentially transform, the method source object.
+        ArrayClass *sourceArray = BaseExecutable::processExecutableSource(programSource, "source");
+
+        // and create the package
         package = LanguageParser::createPackage(nameString, sourceArray, sourceContext);
         // make sure the prolog is run
         package->runProlog(activity);

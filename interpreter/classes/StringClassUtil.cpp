@@ -294,7 +294,7 @@ char optionArgument(RexxObject *argument, const char *validOptions, size_t posit
     // if not one of the valid options (null string is not valid), raise the error
     if (parameter->isNullString() || strchr(validOptions, option) == NULL)
     {
-        reportException(Error_Incorrect_method_option, validOptions, option);
+        reportException(Error_Incorrect_method_option, validOptions, parameter);
     }
     return option;
 }
@@ -321,7 +321,40 @@ char optionArgument(RexxObject *argument, const char *validOptions, const char *
     // if not one of the valid options (null string is not valid), raise the error
     if (parameter->isNullString() || strchr(validOptions, option) == NULL)
     {
-        reportException(Error_Incorrect_method_option, validOptions, option);
+        reportException(Error_Incorrect_method_option, validOptions, parameter);
     }
     return option;
+}
+
+
+/**
+ * Validate that an array is non-space up to the last item
+ * and contains nothing but string values.
+ *
+ * @param argArray The argument array.
+ * @param position The argument name for error reporting.
+ */
+void stringArrayArgument(ArrayClass *argArray, const char *position)
+{
+    for (size_t counter = 1; counter <= argArray->lastIndex(); counter++)
+    {
+        RexxString *sourceString = (RexxString *)argArray->get(counter);
+        // we must have something here
+        if (sourceString == OREF_NULL)
+        {
+            reportException(Error_Incorrect_method_nostring_inarray, position);
+        }
+        // and it must be convertable to a string value
+        sourceString = sourceString->makeString();
+        // if this did not convert, this is an error
+        if (sourceString == (RexxString *)TheNilObject)
+        {
+            reportException(Error_Incorrect_method_nostring_inarray, position);
+        }
+        else
+        {
+            // replace the original item in the array
+            argArray->put(sourceString, counter);
+        }
+    }
 }

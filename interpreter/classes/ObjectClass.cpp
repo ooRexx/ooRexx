@@ -1846,7 +1846,7 @@ RexxObject *RexxObject::setMethod(RexxString *msgname, MethodClass *methobj, Rex
     else
     {
         // make one from a string or array, setting the scope to .nil
-        methobj = MethodClass::newMethodObject(msgname, (RexxObject *)methobj, (RexxClass *)TheNilObject, IntegerTwo);
+        methobj = MethodClass::newMethodObject(msgname, (RexxObject *)methobj, (RexxClass *)TheNilObject, "method");
     }
     // define the new method
     defineInstanceMethod(msgname, methobj, targetScope);
@@ -2159,11 +2159,17 @@ RexxObject *RexxObject::run(RexxObject **arguments, size_t argCount)
     RexxObject **argumentPtr = NULL;
     size_t argcount = 0;
 
+    // must have at least a first argument
+    if (argCount == 0)
+    {
+        missingArgument("method");
+    }
+
     // get the method object
     Protected<MethodClass> methobj = (MethodClass *)arguments[0];
-    requiredArgument(methobj, ARG_ONE);
+    requiredArgument(methobj, "method");
     // make sure we have a method object, including creating one from source if necessary
-    methobj = MethodClass::newMethodObject(GlobalNames::RUN, (RexxObject *)methobj, (RexxClass *)TheNilObject, IntegerOne);
+    methobj = MethodClass::newMethodObject(GlobalNames::RUN, (RexxObject *)methobj, (RexxClass *)TheNilObject, "method");
 
     // if we have arguments, decode how we are supposed to handle method arguments.
     if (argCount > 1)
@@ -2203,7 +2209,7 @@ RexxObject *RexxObject::run(RexxObject **arguments, size_t argCount)
     }
     ProtectedObject result;
     // run the method and return the result
-    methobj->run(ActivityManager::currentActivity, this, GlobalNames::NONE, argumentPtr, argcount, result);
+    methobj->run(ActivityManager::currentActivity, this, GlobalNames::UNNAMED_METHOD, argumentPtr, argcount, result);
     return result;
 }
 

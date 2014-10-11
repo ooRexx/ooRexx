@@ -1287,7 +1287,7 @@ $ Error_Translation_requires
 538 ::REQUIRES directives must appear before other directive instructions.
 
 $ Error_Incorrect_method_no_method
-539 Method argument &1 must have a string value or an array value.
+539 The &1 argument must be a string or array object.
 
 $ Error_Incorrect_method_argType
 540 Method argument &1 could not be converted to type &2.

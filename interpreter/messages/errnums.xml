@@ -3244,7 +3244,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>961</term>
 <listitem>
-<para>Method argument <emphasis role="italic">argument</emphasis> must have a string value or an array value.</para>
+<para>The <emphasis role="italic">argument</emphasis> argument must be a string or array object.</para>
 </listitem>
 </varlistentry>
 <varlistentry>

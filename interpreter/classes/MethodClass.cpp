@@ -389,7 +389,7 @@ void MethodClass::setAttributes(bool _private, bool _protected, bool _guarded)
  *
  * @return The constructed method object.
  */
-MethodClass *MethodClass::newMethodObject(RexxString *pgmname, RexxObject *source, RexxClass *scope, RexxObject *position)
+MethodClass *MethodClass::newMethodObject(RexxString *pgmname, RexxObject *source, RexxClass *scope, const char *position)
 {
     // this is used in contexts where an existing method object is allowed...perform this
     // check here and just return the original object if it is already a method.
@@ -397,6 +397,7 @@ MethodClass *MethodClass::newMethodObject(RexxString *pgmname, RexxObject *sourc
     {
         return ((MethodClass *)source)->newScope(scope);
     }
+
     // validate, and potentially transform, the method source object.
     ArrayClass *newSourceArray = processExecutableSource(source, position);
 

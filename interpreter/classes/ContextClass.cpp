@@ -46,6 +46,7 @@
 #include "RexxActivation.hpp"
 #include "SupplierClass.hpp"
 #include "DirectoryClass.hpp"
+#include "MethodArguments.hpp"
 
 RexxClass *RexxContext::classInstance = OREF_NULL;   // singleton class instance
 
@@ -286,7 +287,7 @@ RexxObject *RexxContext::getRS()
 RexxObject *RexxContext::getName()
 {
     checkValid();
-    return activation->getCallname();
+    return resultOrNil(activation->getCallname());
 }
 
 /**

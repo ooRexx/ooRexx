@@ -155,7 +155,7 @@ void BaseExecutable::detachSource()
  *
  * @return An array of the source lines.
  */
-ArrayClass *BaseExecutable::processExecutableSource(RexxObject *source, RexxObject *position)
+ArrayClass *BaseExecutable::processExecutableSource(RexxObject *source, const char *position)
 {
     Protected<ArrayClass> sourceArray;
 
@@ -181,29 +181,10 @@ ArrayClass *BaseExecutable::processExecutableSource(RexxObject *source, RexxObje
             // wrap an array around the value
             sourceArray = new_array(sourceString);
         }
-        // have an array of strings (hopefully)
         else
         {
-            // must be single dimension
-            if (!sourceArray->isSingleDimensional())
-            {
-                reportException(Error_Incorrect_method_noarray, position);
-            }
-
-            for (size_t counter = 1; counter <= sourceArray->size(); counter++)
-            {
-                RexxString *sourceString = sourceArray ->get(counter)->makeString();
-                // if this did not convert, this is an error
-                if (sourceString == (RexxString *)TheNilObject)
-                {
-                    reportException(Error_Incorrect_method_nostring_inarray, position);
-                }
-                else
-                {
-                    // replace the original item in the array
-                    sourceArray->put(sourceString, counter);
-                }
-            }
+            // validate the array contents are correct.
+            stringArrayArgument(sourceArray, position);
         }
     }
     return sourceArray;
@@ -238,12 +219,12 @@ void BaseExecutable::processNewExecutableArgs(RexxObject **&init_args, size_t &a
     // do the initial parse of the new arguments.
     RexxClass::processNewArgs(init_args, argCount, init_args, argCount, 2, pgmname, (RexxObject **)&source);
     // get the method name as a string
-    name = stringArgument(pgmname, ARG_ONE);
+    name = stringArgument(pgmname, "name");
     // make sure there is something for the second arg.
-    requiredArgument(source, ARG_TWO);
+    requiredArgument(source, "Rexx source code");
 
     // figure out the source section.
-    sourceArray = processExecutableSource(source, IntegerTwo);
+    sourceArray = processExecutableSource(source, "Rexx source code");
 
     // now process an optional sourcecontext argument
     sourceContext = OREF_NULL;

@@ -449,6 +449,16 @@ char optionArgument(RexxObject *o, const char *validOptions, const char *p);
 
 
 /**
+ * Validate that an array is non-space up to the last item
+ * and contains nothing but string values.
+ *
+ * @param argArray The argument array.
+ * @param position The argument name for error reporting.
+ */
+void stringArrayArgument(ArrayClass *argArray, const char *position);
+
+
+/**
  * Parse an optional option argument.  This must be a non-zero
  * length string.
  *

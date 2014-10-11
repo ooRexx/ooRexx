@@ -483,7 +483,7 @@ RexxInternalObject *DirectoryClass::setMethodRexx(RexxString *entryname, MethodC
     if (methodobj != OREF_NULL)
     {
         // make sure we have a method object for this.  The scope is .nil to indicate object scope.
-        methodobj = MethodClass::newMethodObject(entryname, methodobj, (RexxClass *)TheNilObject, IntegerTwo);
+        methodobj = MethodClass::newMethodObject(entryname, methodobj, (RexxClass *)TheNilObject, "method");
 
         // the unknown method?  We keep that in a special place
         if (entryname->strCompare(GlobalNames::UNKNOWN))

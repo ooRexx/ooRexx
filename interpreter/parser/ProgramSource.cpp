@@ -576,7 +576,7 @@ void ArrayProgramSource::setup()
     }
 
     // set the line count to the number of items
-    lineCount = array->items();
+    lineCount = array->lastIndex();
 
     // fake things out by the interpret adjustment amount
     lineCount += interpretAdjust;
