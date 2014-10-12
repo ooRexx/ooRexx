@@ -232,7 +232,7 @@ ArrayClass *RelationClass::allIndexRexx(RexxObject *value)
 ArrayClass *RelationClass::allAt(RexxObject *index)
 {
     requiredArgument(index, ARG_ONE);
-    return contents->allIndex(index);
+    return contents->getAll(index);
 }
 
 

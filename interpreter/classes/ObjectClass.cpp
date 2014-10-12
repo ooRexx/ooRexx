@@ -1855,10 +1855,22 @@ RexxClass *RexxObject::classObject()
 RexxObject *RexxObject::setMethod(RexxString *msgname, MethodClass *methobj, RexxString *option)
 {
     // get the message name as a string
-    msgname = stringArgument(msgname, ARG_ONE)->upper();
+    msgname = stringArgument(msgname, "method name")->upper();
 
     // by default, the added scope is .nil, which is the object scope.
     RexxClass *targetScope = (RexxClass *)TheNilObject;
+
+    // if not passed a method, we're hiding methods of this name, so use .nil for
+    // the method object.
+    if (methobj == OREF_NULL)
+    {
+        methobj = (MethodClass *)TheNilObject;
+    }
+    else
+    {
+        // make one from a string or array, setting the scope to .nil
+        methobj = MethodClass::newMethodObject(msgname, (RexxObject *)methobj, (RexxClass *)TheNilObject, "method");
+    }
 
     // By default, we add this method using the floating scope, which is a
     // non-specific scope shared by all set methods.  This can also be defined
@@ -1866,7 +1878,7 @@ RexxObject *RexxObject::setMethod(RexxString *msgname, MethodClass *methobj, Rex
     // uses the
     if (option != OREF_NULL)
     {
-        option = stringArgument(option, ARG_THREE);
+        option = stringArgument(option, "scope option");
 
         // OBJECT scope means we attach this as a method of the defining class (top-level
         // of the hierarchy.
@@ -1881,18 +1893,6 @@ RexxObject *RexxObject::setMethod(RexxString *msgname, MethodClass *methobj, Rex
         {
             reportException(Error_Incorrect_call_list, "SETMETHOD", IntegerThree, "\"FLOAT\", \"OBJECT\"", option);
         }
-    }
-
-    // if not passed a method, we're hiding methods of this name, so use .nil for
-    // the method object.
-    if (methobj == OREF_NULL)
-    {
-        methobj = (MethodClass *)TheNilObject;
-    }
-    else
-    {
-        // make one from a string or array, setting the scope to .nil
-        methobj = MethodClass::newMethodObject(msgname, (RexxObject *)methobj, (RexxClass *)TheNilObject, "method");
     }
 
     // define the new method

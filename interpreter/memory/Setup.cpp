@@ -900,6 +900,7 @@ StartClassDefinition(Relation)
         AddMethod("Items", RelationClass::itemsRexx, 1);
         AddMethod("HasItem", RelationClass::hasItemRexx, 2);
         AddMethod("AllIndex", RelationClass::allIndexRexx, 1);
+        AddMethod("AllAt", RelationClass::allAt, 1);
         AddMethod("RemoveAll", RelationClass::removeAll, 1);
         AddMethod("UniqueIndexes", RelationClass::uniqueIndexes, 0);
 
