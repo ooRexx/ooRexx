@@ -1925,6 +1925,9 @@ $ Error_Symbol_expected_form
 $ Error_Incorrect_method_message_name
 772 A message name argument must be a string or an array with 2 elements; found "&1".
 
+$ Error_Execution_private_access
+773 Method &1 may only be invoked from a method of the same object or one of its classes.
+
 
 $ * -------------------------------------------------------------------------- */
 $ * --            ==================================================        -- */

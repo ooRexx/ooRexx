@@ -602,7 +602,7 @@ void RexxObject::copyObjectVariables(RexxObject *newObj)
  */
 MethodClass *RexxObject::checkPrivate(MethodClass *method )
 {
-    // get the calling activaiton context
+    // get the calling activation context
     ActivationBase *activation = ActivityManager::currentActivity->getTopStackFrame();
     if (activation != OREF_NULL)
     {
@@ -637,6 +637,52 @@ MethodClass *RexxObject::checkPrivate(MethodClass *method )
     }
     // can't touch this...
     return OREF_NULL;
+}
+
+
+/**
+ * Check that methods like RUN, SETMETHOD, and UNSETMETHOD are
+ * issued from a method on the same object instance.
+ *
+ * @return An executable method, or OREF_NULL if this cannot be called.
+ */
+void RexxObject::checkRestrictedMethod(const char *methodName)
+{
+    // get the calling activation context
+    ActivationBase *activation = ActivityManager::currentActivity->getTopStackFrame();
+    if (activation != OREF_NULL)
+    {
+        // Unlike private methods, this is only allowed from the instance, or from
+        // the class.  Because RUN, SETMETHOD, and UNSETMETHOD are defined by Object,
+        // this essentially means the only restrictions on these private methods under
+        // the new rules is that it must be called from another method.  Seriously
+        // NOT the intent of making private methods interact a little more.  Therefore,
+        // we add an additional check for any private methods defined by .object
+        RexxObject *sender = activation->getReceiver();
+        if (sender == this)
+        {
+            return;
+        }
+
+        // no sender means this is a routine or program context.  Definitely not allowed.
+        if (sender == OREF_NULL)
+        {
+            reportException(Error_Execution_private_access, methodName);
+        }
+
+        // if the sender is a class object, check the class for compatibility with the
+        // method scope
+        if (isOfClassType(Class, sender))
+        {
+            // if this class is part of the object's hierarchy, this is also permitted
+            if (isInstanceOf((RexxClass *)sender))
+            {
+                return;
+            }
+        }
+        // we have this issued from an invalid context.
+        reportException(Error_Execution_private_access, methodName);
+    }
 }
 
 
@@ -1848,6 +1894,7 @@ RexxObject *RexxObject::setMethod(RexxString *msgname, MethodClass *methobj, Rex
         // make one from a string or array, setting the scope to .nil
         methobj = MethodClass::newMethodObject(msgname, (RexxObject *)methobj, (RexxClass *)TheNilObject, "method");
     }
+
     // define the new method
     defineInstanceMethod(msgname, methobj, targetScope);
     return OREF_NULL;
@@ -1864,6 +1911,10 @@ RexxObject *RexxObject::setMethod(RexxString *msgname, MethodClass *methobj, Rex
 RexxObject  *RexxObject::unsetMethod(RexxString *msgname)
 {
     msgname = stringArgument(msgname, ARG_ONE)->upper();
+
+    // this has restrictions on how it can be used, check this context is valid.
+    checkRestrictedMethod("UNSETMETHOD");
+
     // the behaviour does the heavy lifting here.
     behaviour->deleteMethod(msgname);
     return OREF_NULL;
@@ -2207,6 +2258,10 @@ RexxObject *RexxObject::run(RexxObject **arguments, size_t argCount)
                 break;
         }
     }
+
+    // this has restrictions on how it can be used, check this context is valid.
+    checkRestrictedMethod("RUN");
+
     ProtectedObject result;
     // run the method and return the result
     methobj->run(ActivityManager::currentActivity, this, GlobalNames::UNNAMED_METHOD, argumentPtr, argcount, result);

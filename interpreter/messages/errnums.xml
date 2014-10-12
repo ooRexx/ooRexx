@@ -3623,6 +3623,12 @@ special character (such as a parenthesis).
 <para>Class <emphasis role="italic">name</emphasis> is a metaclass and cannot be made ABSTRACT.</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>991</term>
+<listitem>
+<para>Method <emphasis role="italic">name</emphasis> may only be invoked from a method of the same object or one of its classes.</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR99">

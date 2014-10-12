@@ -464,7 +464,8 @@ class RexxObject : public RexxInternalObject
 
     void         messageSend(RexxString *, RexxObject **, size_t, ProtectedObject &);
     void         messageSend(RexxString *, RexxObject **, size_t, RexxClass *, ProtectedObject &);
-    MethodClass  *checkPrivate(MethodClass *);
+    MethodClass *checkPrivate(MethodClass *);
+    void         checkRestrictedMethod(const char *methodName);
     void         processProtectedMethod(RexxString *, MethodClass *, RexxObject **, size_t, ProtectedObject &);
     void         sendMessage(RexxString *, ArrayClass *, ProtectedObject &);
     inline void  sendMessage(RexxString *message, ProtectedObject &result) { this->messageSend(message, OREF_NULL, 0, result); };

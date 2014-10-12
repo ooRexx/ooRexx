@@ -5130,6 +5130,15 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Execution_abstract_metaclass</SymbolicName>
         <Text>Class <Sub position="1" name="name"/> is a metaclass and cannot be made ABSTRACT.</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>98</Code>
+        <Subcode>991</Subcode>
+        <MessageNumber>773</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Execution_private_access</SymbolicName>
+        <Text>Method <Sub position="1" name="name"/> may only be invoked from a method of the same object or one of its classes.</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>

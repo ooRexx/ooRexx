@@ -589,6 +589,7 @@
 #define Rexx_Error_Execution_no_namespace_class                           98988
 #define Rexx_Error_Execution_abstract_class                               98989
 #define Rexx_Error_Execution_abstract_metaclass                           98990
+#define Rexx_Error_Execution_private_access                               98991
 #define Rexx_Error_Translation                                            99000
 #define Rexx_Error_Translation_user_defined                               99900
 #define Rexx_Error_Translation_duplicate_class                            99901
