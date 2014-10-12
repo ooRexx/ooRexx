@@ -559,14 +559,44 @@ ArrayClass *StringUtil::makearray(const char *start, size_t length, RexxString *
         return array;
     }
 
-    // create an array of strings to return.
-    Protected<ArrayClass> strings = new_array();
+    // we need to get a count of the strings that will be in the result.
+    // this saves a lot of overhead that can result from continually expanding
+    // the size of the result array
+
+    size_t count = 0;
+
+    // this is our current scan pointer
+    const char *scan = start;
+
     // this is the end of the string
     const char *stringEnd = start + length;
 
     // this is where we stop scanning
     const char *end = start + length - sepSize + 1;
 
+    while (scan < end)
+    {
+        // search for the next separator, if not found, we're done
+        const char *tmp = locateSeparator(scan, end, sepData, sepSize);
+        if (tmp == NULL)
+        {
+            break;
+        }
+
+        count++;
+        // step to the next scan position
+        scan = tmp + sepSize;
+    }
+    // we might have a tail piece here
+    if (scan < stringEnd)
+    {
+        count++;
+    }
+
+
+    // create an array of strings to return, then repeat the scan
+    Protected<ArrayClass> strings = new_array(count);
+    // scan the string again, but this time, do the chop
     while (start < end)
     {
         // search for the next separator, if not found, we're done
