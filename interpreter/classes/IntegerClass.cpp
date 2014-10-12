@@ -648,7 +648,7 @@ RexxObject *RexxInteger::multiply(RexxInteger *other)
         int64_t tempValue = tempThis * tempOther;
 
         //.if still in a valid range, return a new integer value for this.
-        if (Numerics::isValid64Bit(tempValue))
+        if (Numerics::isValid64Bit(tempValue, number_digits()))
         {
             return new_integer((wholenumber_t)tempValue);
         }

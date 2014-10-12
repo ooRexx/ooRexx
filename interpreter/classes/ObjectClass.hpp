@@ -425,6 +425,7 @@ class RexxObject : public RexxInternalObject
     virtual ~RexxObject(){;};
 
             RexxObject  *defineInstanceMethod(RexxString *, MethodClass *, RexxClass *);
+            RexxObject  *deleteInstanceMethod(RexxString *msgname);
     virtual RexxString  *defaultName();
     virtual bool         hasMethod(RexxString *msg);
             RexxObject  *hasMethodRexx(RexxString *);
@@ -461,6 +462,7 @@ class RexxObject : public RexxInternalObject
     MessageClass *startCommon(RexxObject *message, RexxObject **arguments, size_t argCount);
     static void decodeMessageName(RexxObject *target, RexxObject *message, RexxString *&messageName, RexxClass *&startScope);
     RexxObject  *run(RexxObject **, size_t);
+    void         checkUninit();
 
     void         messageSend(RexxString *, RexxObject **, size_t, ProtectedObject &);
     void         messageSend(RexxString *, RexxObject **, size_t, RexxClass *, ProtectedObject &);

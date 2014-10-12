@@ -1910,13 +1910,13 @@ RexxObject *RexxObject::setMethod(RexxString *msgname, MethodClass *methobj, Rex
  */
 RexxObject  *RexxObject::unsetMethod(RexxString *msgname)
 {
-    msgname = stringArgument(msgname, ARG_ONE)->upper();
+    msgname = stringArgument(msgname, "method name")->upper();
 
     // this has restrictions on how it can be used, check this context is valid.
     checkRestrictedMethod("UNSETMETHOD");
 
-    // the behaviour does the heavy lifting here.
-    behaviour->deleteMethod(msgname);
+    // go remove the instance method
+    deleteInstanceMethod(msgname);
     return OREF_NULL;
 }
 
@@ -2308,7 +2308,7 @@ RexxObject *RexxObject::defineInstanceMethods(DirectoryClass *methods)
 
 /**
  * Add a method to an object's behaviour.  Used internally
- * during image build.
+ * during image build and for the Object setMethod() method.
  *
  * @param msgname The method name.
  * @param methobj The target method object.
@@ -2318,8 +2318,6 @@ RexxObject *RexxObject::defineInstanceMethods(DirectoryClass *methods)
  */
 RexxObject *RexxObject::defineInstanceMethod(RexxString *msgname, MethodClass *methobj, RexxClass *scope)
 {
-    // get the method name in uppercase.
-    msgname = msgname->upper();
     if (methobj != TheNilObject)
     {
         // set a new scope on this of the target (either .nil, or the object class)
@@ -2331,12 +2329,34 @@ RexxObject *RexxObject::defineInstanceMethod(RexxString *msgname, MethodClass *m
     // may have been sharing the mvd.
     setField(behaviour, (RexxBehaviour *)behaviour->copy());
     // add this to the behaviour
-    behaviour->defineMethod(msgname, methobj);
+    behaviour->addInstanceMethod(msgname, methobj);
+
     // adding an UNINIT method to obj?
-    if (methobj != TheNilObject && msgname->strCompare(GlobalNames::UNINIT))
-    {
-        hasUninit();
-    }
+    checkUninit();
+    return OREF_NULL;
+}
+
+
+/**
+ * Remove a method to an object's instance behaviour with
+ * unsetMethod.
+ *
+ * @param msgname The method name.
+ * @param methobj The target method object.
+ * @param scope   The scope the new method is defined with.
+ *
+ * @return Returns nothing.
+ */
+RexxObject *RexxObject::deleteInstanceMethod(RexxString *msgname)
+{
+    // copy primitive behaviour object and define the method, a copy is made to
+    // ensure that we don't update the behaviour of any other object, since they
+    // may have been sharing the mvd.
+    setField(behaviour, (RexxBehaviour *)behaviour->copy());
+    // add this to the behaviour
+    behaviour->removeInstanceMethod(msgname);
+    // we might have removed an uninit method, so check the status
+    checkUninit();
     return OREF_NULL;
 }
 
@@ -2582,6 +2602,24 @@ void RexxObject::uninit()
 bool RexxObject::hasUninitMethod()
 {
     return hasMethod(GlobalNames::UNINIT);
+}
+
+
+/**
+ * Check to see if an object has an uninit method after
+ * a change to the instance methods.
+ */
+void RexxObject::checkUninit()
+{
+    if (hasMethod(GlobalNames::UNINIT))
+    {
+        hasUninit();
+    }
+    // this might be in the uninit table, remove it now.
+    else
+    {
+        removedUninit();
+    }
 }
 
 
