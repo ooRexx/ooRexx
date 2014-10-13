@@ -1897,6 +1897,19 @@ RexxObject *PackageClass::traceRexx()
 
 
 /**
+ * Return the main executable for a package.  Returns .nil if
+ * the package was created as a new method or a new routine.
+ *
+ * @return The main section of the package or .nil if there is
+ *         no main section
+ */
+RexxObject *PackageClass::getMainRexx()
+{
+    return resultOrNil(getMain());
+}
+
+
+/**
  * Install this package, including running of the prolog
  * portion of the package if required.
  *

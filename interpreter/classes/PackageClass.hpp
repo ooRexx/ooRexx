@@ -159,6 +159,7 @@ public:
     inline void enableProlog() { packageSettings.enableProlog(); }
     inline void disableProlog() { packageSettings.disableProlog(); }
     inline bool isPrologEnabled() { return packageSettings.isPrologEnabled() && initCode != OREF_NULL; }
+    inline RoutineClass *getMain() { return (RoutineClass *)mainExecutable; }
 
            RexxString    *getTrace();
            void           detachSource();
@@ -194,10 +195,8 @@ public:
            RexxObject    *fuzzRexx();
            RexxObject    *formRexx();
            RexxObject    *traceRexx();
-           ArrayClass    *getSourceRexx()
-           {
-               return extractSource();
-           }
+           ArrayClass    *getSourceRexx() { return extractSource(); }
+           RexxObject    *getMainRexx();
            void           runProlog(Activity *);
            void addNamespace(RexxString *name, PackageClass *package);
 
