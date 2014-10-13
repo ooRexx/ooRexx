@@ -72,6 +72,7 @@ class RexxBehaviour : public RexxInternalObject
     void         addInstanceMethod(RexxString *, MethodClass *);
     void         removeInstanceMethod(RexxString *);
     void         hideMethod(const char *name);
+    void         removeMethod(const char *name);
     void         replaceMethod(RexxString *methodName, MethodClass *method);
     void         inheritInstanceMethods(RexxBehaviour *source);
     void         setMethodDictionaryScope(RexxClass *scope);

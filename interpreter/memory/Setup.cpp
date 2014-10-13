@@ -330,6 +330,7 @@ void MemoryObject::createImage()
 #define AddClassProtectedMethod(name, entryPoint, args) defineProtectedMethod(name, currentClassBehaviour, CPPM(entryPoint), args, #entryPoint);
 #define AddClassPrivateMethod(name, entryPoint, args) definePrivateMethod(name, currentClassBehaviour, CPPM(entryPoint), args, #entryPoint);
 #define HideClassMethod(name) currentClassBehaviour->hideMethod(name);
+#define RemoveClassMethod(name) currentClassBehaviour->removeMethod(name);
 
 // inherit class method definitions from a previously created class
 #define InheritClassMethods(source) currentClassBehaviour->inheritInstanceMethods(The##source##ClassBehaviour);
@@ -339,6 +340,7 @@ void MemoryObject::createImage()
 #define AddProtectedMethod(name, entryPoint, args) defineProtectedMethod(name, currentInstanceBehaviour, CPPM(entryPoint), args, #entryPoint);
 #define AddPrivateMethod(name, entryPoint, args) definePrivateMethod(name, currentInstanceBehaviour, CPPM(entryPoint), args, #entryPoint);
 #define HideMethod(name) currentInstanceBehaviour->hideMethod(name);
+#define RemoveMethod(name) currentInstanceBehaviour->removeMethod(name);
 
 // inherit instance method definitions from a previously created class
 #define InheritInstanceMethods(source) currentInstanceBehaviour->inheritInstanceMethods(The##source##Behaviour);
@@ -745,6 +747,11 @@ StartClassDefinition(Queue);
         // the queue size is always the number of items, so remap that call
         // to the array items method.
         AddMethod("Size", ArrayClass::itemsRexx, 0);
+
+        // remove some inherited array methods that make no sense for queues
+        RemoveMethod("Dimension");
+        RemoveMethod("Dimensions");
+        RemoveMethod("Fill");
 
     CompleteMethodDefinitions();
 

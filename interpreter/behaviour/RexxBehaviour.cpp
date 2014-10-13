@@ -287,6 +287,24 @@ void RexxBehaviour::hideMethod(const char *name)
 
 
 /**
+ * Remove an object entirely from a method dictionary.
+ *
+ * @param name   The target name.
+ */
+void RexxBehaviour::removeMethod(const char *name)
+{
+    // nothing to remove if we don't have a dictionary yet.
+    if (methodDictionary != OREF_NULL)
+    {
+        // we're doing this during an image build, so make sure we use the interned string name.
+        RexxString *n = memoryObject.getUpperGlobalName(name);
+        methodDictionary->removeMethod(n);
+    }
+
+}
+
+
+/**
  * Add a method to the method dictionary during image setup.
  * This occurs while we are constructing the instance behaviours
  * of the different classes.  If we've inherited a set of
