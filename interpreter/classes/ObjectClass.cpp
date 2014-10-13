@@ -1895,6 +1895,9 @@ RexxObject *RexxObject::setMethod(RexxString *msgname, MethodClass *methobj, Rex
         }
     }
 
+    // this has restrictions on how it can be used, check this context is valid.
+    checkRestrictedMethod("SETMETHOD");
+
     // define the new method
     defineInstanceMethod(msgname, methobj, targetScope);
     return OREF_NULL;
