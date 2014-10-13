@@ -642,13 +642,6 @@ void RexxClass::buildFinalClassBehaviour()
     instanceBehaviour->addScope(this);
     // now we do the same thing with the class behaviour
     classMethodDictionary = getBehaviourDictionary();
-    // The merge of the mdict's is order specific. By processing OBJECT
-    // first then CLASS and then the rest of the subclassable classes
-    // the mdict's will be set up correctly.
-    // In this way merging the CLASS behaviour will only be the CLASS
-    // instance methods when OBJECT is processed, but will be CLASS's
-    // and OBJECT's after CLASS is processed
-    behaviour->merge(TheClassBehaviour);
     // now add the scope levels to this class behaviour
     // If this isn't OBJECT put OBJECT in first
     if (this != TheObjectClass)
@@ -664,6 +657,10 @@ void RexxClass::buildFinalClassBehaviour()
         // so all the classes will inherit
         classMethodDictionary = getBehaviourDictionary();
     }
+    // The merge of the mdict's is order specific. By processing OBJECT
+    // first then CLASS and then the rest of the subclassable classes
+    // the mdict's will be set up correctly.
+    behaviour->merge(TheClassBehaviour);
     // if this isn't CLASS put CLASS in next
     if (this != TheClassClass)
     {
