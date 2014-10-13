@@ -1749,7 +1749,8 @@ RexxToken *LanguageParser::scanLiteral()
         {
             // get a string to hold the final length, minus the number
             // of doubled quotes.
-            value = raw_string(length - doubleQuotes);
+            length -= doubleQuotes;
+            value = raw_string(length);
             // copy over the value, accounting for the doubled quotes
             for (size_t i = 0, j = start; i < length; i++, j++)
             {
