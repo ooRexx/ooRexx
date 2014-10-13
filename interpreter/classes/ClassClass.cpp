@@ -1611,7 +1611,8 @@ bool RexxClass::isCompatibleWith(RexxClass *other)
  */
 RexxObject *RexxClass::isSubclassOf(RexxClass *other)
 {
-    requiredArgument(other, ARG_ONE);            // must have the other argument
+    // verify we have a valid class object to check
+    classArgument(other, TheClassClass, "class");
     return booleanObject(isCompatibleWith(other));
 }
 

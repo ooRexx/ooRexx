@@ -1905,7 +1905,8 @@ RexxObject *PackageClass::traceRexx()
  */
 RexxObject *PackageClass::getMainRexx()
 {
-    return resultOrNil(getMain());
+    //. the main executable is valid if there is init code.
+    return resultOrNil(initCode == OREF_NULL ? TheNilObject : getMain());
 }
 
 

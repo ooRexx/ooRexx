@@ -1121,6 +1121,7 @@ StartClassDefinition(Package)
         AddMethod("Form", PackageClass::formRexx, 0);
         AddMethod("Fuzz", PackageClass::fuzzRexx, 0);
         AddMethod("Trace", PackageClass::traceRexx, 0);
+        AddMethod("Prolog", PackageClass::getMainRexx, 0);
 
     CompleteMethodDefinitions();
 
