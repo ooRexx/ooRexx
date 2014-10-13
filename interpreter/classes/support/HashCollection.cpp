@@ -236,7 +236,7 @@ RexxInternalObject *HashCollection::unflatten(Envelope *envelope)
 RexxInternalObject *HashCollection::copy()
 {
     // make a copy of the base object
-    HashCollection *newObj = (HashCollection *)RexxObject::copy();
+    Protected<HashCollection> newObj = (HashCollection *)RexxObject::copy();
     // and copy the contents as well
     newObj->contents = (HashContents *)contents->copy();
     return newObj;

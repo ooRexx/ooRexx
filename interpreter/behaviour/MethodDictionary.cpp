@@ -98,6 +98,7 @@ void MethodDictionary::live(size_t liveMark)
     memory_mark(scopeList);
     memory_mark(scopeOrders);
     memory_mark(objectVariables);
+    memory_mark(instanceMethods);
 }
 
 
@@ -112,6 +113,7 @@ void MethodDictionary::liveGeneral(MarkReason reason)
     memory_mark_general(scopeList);
     memory_mark_general(scopeOrders);
     memory_mark_general(objectVariables);
+    memory_mark_general(instanceMethods);
 }
 
 
@@ -128,6 +130,7 @@ void MethodDictionary::flatten(Envelope *envelope)
     flattenRef(scopeList);
     flattenRef(scopeOrders);
     flattenRef(objectVariables);
+    flattenRef(instanceMethods);
 
     cleanUpFlatten
 }
@@ -142,7 +145,7 @@ void MethodDictionary::flatten(Envelope *envelope)
 RexxInternalObject *MethodDictionary::copy()
 {
     // make a copy of the base object
-    MethodDictionary *newObj = (MethodDictionary *)RexxObject::copy();
+    Protected<MethodDictionary>newObj = (MethodDictionary *)RexxObject::copy();
     // and copy the contents as well
     newObj->contents = (HashContents *)contents->copy();
     newObj->scopeList = (ArrayClass *)scopeList->copy();
