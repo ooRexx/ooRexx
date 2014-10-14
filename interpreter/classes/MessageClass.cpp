@@ -207,6 +207,44 @@ RexxObject *MessageClass::notify(RexxObject *notificationTarget)
 
 
 /**
+ * Wait until message completion, either because the message has
+ * completed execution or because it terminated with an error.
+ *
+ * @return Always return nothing.
+ */
+RexxObject *MessageClass::wait()
+{
+    // we've not completed execution yet, so wait
+    if (!isComplete())
+    {
+        // we can wait, even if the message has not been triggered
+        // yet.  The message object keeps the list of waiting activities
+        // and will wake them up when it finally is triggered and runs.
+
+        // make sure we're not about to create a deadlock situation.
+        if (startActivity != OREF_NULL)
+        {
+            startActivity->checkDeadLock(ActivityManager::currentActivity);
+        }
+
+        // we might be the first one to wait, so create the activities
+        // list if we are
+        if (waitingActivities == OREF_NULL)
+        {
+            setField(waitingActivities, new_array());
+        }
+        // add our activity to the list
+        waitingActivities->append(ActivityManager::currentActivity);
+        // and wait for the wake up call.
+        ActivityManager::currentActivity->waitReserve(this);
+    }
+
+    // always return no result value
+    return OREF_NULL;
+}
+
+
+/**
  * Return the message result object.  This will wait if
  * the message has not completed.
  *
@@ -214,6 +252,9 @@ RexxObject *MessageClass::notify(RexxObject *notificationTarget)
  */
 RexxObject *MessageClass::result()
 {
+    // go wait, if necessary
+    wait();
+
     // did running this message cause an error?  If so, we raise the same error
     // condition here.
     if (raiseError())
@@ -222,39 +263,10 @@ RexxObject *MessageClass::result()
     }
     else
     {
-        // ok, no result ready yet, so we'll have to wait
-        if (!resultReturned())
-        {
-            // make sure we're not about to create a deadlock situation.
-            if (startActivity != OREF_NULL)
-            {
-                startActivity->checkDeadLock(ActivityManager::currentActivity);
-            }
-
-            // we might be the first one to wait, so create the activities
-            // list if we are
-            if (waitingActivities == OREF_NULL)
-            {
-                setField(waitingActivities, new_array());
-            }
-            // add our activity to the list
-            waitingActivities->append(ActivityManager::currentActivity);
-            // and wait for the wake up call.
-            ActivityManager::currentActivity->waitReserve(this);
-            // the message has now completed, but this could now be an error.
-            if (raiseError())
-            {
-                // make sure the error is recored and we've raised the error,
-                // then raise the condition on this thread.
-                setErrorReported();
-                ActivityManager::currentActivity->reraiseException(this->condition);
-            }
-        }
+        // since this is requested via a method that will give an error if used
+        // in an expression, return .nil if there is no return value.
+        return resultOrNil(resultObject);
     }
-
-    // since this is requested via a method that will give an error if used
-    // in an expression, return .nil if there is no return value.
-    return resultOrNil(resultObject);
 }
 
 
@@ -333,7 +345,7 @@ RexxObject *MessageClass::start(RexxObject *_receiver)
 {
     // We can only send this once, so if it has already been used
     // or is dispatched for sending, this is an error.
-    if (msgSent() || startPending())
+    if (isActivated())
     {
         reportException(Error_Execution_message_reuse);
     }
@@ -560,7 +572,7 @@ RexxObject *MessageClass::newRexx(RexxObject **msgArgs, size_t argCount)
     // decode the message argument into name and scope
     RexxObject::decodeMessageName(_target, _message, msgName, _startScope);
 
-    ArrayClass *argPtr;
+    ArrayClass *argPtr = OREF_NULL;
 
     // are there arguments to be sent with the message?
     if (num_args > 2 )
