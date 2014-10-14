@@ -80,6 +80,7 @@ class MessageClass : public RexxObject
     RexxObject   *result();
     RexxObject   *wait();
     RexxObject   *send();
+    RexxObject   *dispatch();
     RexxObject   *start();
     MessageClass *reply();
     RexxObject   *startRexx(RexxObject **, size_t);

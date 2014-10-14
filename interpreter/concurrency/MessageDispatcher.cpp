@@ -50,8 +50,8 @@
  */
 void MessageDispatcher::run()
 {
-    // must invoke the message object
-    message->sendMessage(GlobalNames::SEND);
+    // must invoke the message object via the back door.
+    message->dispatch();
 }
 
 

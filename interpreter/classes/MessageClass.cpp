@@ -407,7 +407,18 @@ RexxObject *MessageClass::send()
 
     // validate that the scope override is valid
     receiver->validateScopeOverride(startscope);
+    // go dispatch the message
+    return dispatch();
+}
 
+
+/**
+ * Dispatch the message object via a send()
+ *
+ * @return The result object.
+ */
+RexxObject *MessageClass::dispatch()
+{
     // we need the current activity to handle this
     Activity *myActivity = ActivityManager::currentActivity;
 
@@ -416,7 +427,7 @@ RexxObject *MessageClass::send()
     myActivity->getTopStackFrame()->setObjNotify(this);
 
     // mark what activity we're running this under for
-    // deadlock detection                */
+    // deadlock detection
     setField(startActivity, myActivity);
 
     // get a protected object for the result
