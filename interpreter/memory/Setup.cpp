@@ -1006,8 +1006,10 @@ StartClassDefinition(Message)
         AddMethod("ErrorCondition", MessageClass::errorCondition, 0);
         AddMethod("Send", MessageClass::sendRexx, A_COUNT);
         AddMethod("Start", MessageClass::startRexx, A_COUNT);
+        AddMethod("Reply", MessageClass::replyRexx, A_COUNT);
         AddMethod("SendWith", MessageClass::sendWithRexx, A_COUNT);
         AddMethod("StartWith", MessageClass::startWithRexx, A_COUNT);
+        AddMethod("ReplyWith", MessageClass::replyWithRexx, A_COUNT);
         AddMethod("MessageCompleted", MessageClass::messageCompleted, 1);
         AddMethod("Wait", MessageClass::wait, 0);
         AddMethod("Halt", MessageClass::halt, 1);

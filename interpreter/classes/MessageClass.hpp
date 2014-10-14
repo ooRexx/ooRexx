@@ -63,7 +63,6 @@ class MessageClass : public RexxObject
         flagErrorReported,
         flagAllNotified,
         flagStartPending,
-        flagMsgSent,
         flagMsgActivated,
     } MessageFlag;
 
@@ -81,8 +80,11 @@ class MessageClass : public RexxObject
     RexxObject   *wait();
     RexxObject   *send();
     RexxObject   *start();
+    MessageClass *reply();
     RexxObject   *startRexx(RexxObject **, size_t);
     RexxObject   *startWithRexx(RexxObject *, ArrayClass *);
+    RexxObject   *replyRexx(RexxObject **, size_t);
+    RexxObject   *replyWithRexx(RexxObject *, ArrayClass *);
     RexxObject   *sendRexx(RexxObject **, size_t);
     RexxObject   *sendWithRexx(RexxObject *, ArrayClass *);
     RexxObject   *completed();
@@ -106,13 +108,11 @@ class MessageClass : public RexxObject
     inline bool errorReported()  { return dataFlags[flagErrorReported]; }
     inline bool allNotified()    { return dataFlags[flagAllNotified]; }
     inline bool startPending()   { return dataFlags[flagStartPending]; }
-    inline bool msgSent()        { return dataFlags[flagMsgSent]; }
     inline void setResultReturned() { dataFlags.set(flagResultReturned); }
     inline void setRaiseError()     { dataFlags.set(flagRaiseError); }
     inline void setErrorReported()  { dataFlags.set(flagErrorReported); }
     inline void setAllNotified()    { dataFlags.set(flagAllNotified); }
     inline void setStartPending()   { setMsgActivated(); dataFlags.set(flagStartPending); }
-    inline void setMsgSent()        { setMsgActivated(); dataFlags.set(flagMsgSent); }
     inline void setMsgActivated()   { dataFlags.set(flagMsgActivated); }
 
     static void createInstance();

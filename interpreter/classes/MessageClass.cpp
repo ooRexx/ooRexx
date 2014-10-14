@@ -337,8 +337,8 @@ RexxObject *MessageClass::sendWithRexx(RexxObject *newReceiver, ArrayClass *argu
  */
 RexxObject *MessageClass::send()
 {
-    // only one send per customer...
-    if (msgSent())
+    // Once start has been called, this can no longer be reused.
+    if (isActivated())
     {
         reportException(Error_Execution_message_reuse);
     }
@@ -351,9 +351,6 @@ RexxObject *MessageClass::send()
     {
         reportException(Error_Execution_message_reuse);
     }
-
-    // we're sending this synchronously, so mark this as used
-    setMsgSent();
 
     // validate that the scope override is valid
     receiver->validateScopeOverride(startscope);
@@ -479,6 +476,101 @@ RexxObject *MessageClass::start()
     newActivity->run(this);
     // we have no return value.
     return OREF_NULL;
+}
+
+
+/**
+ * Do a dynamic invocation of an object method.
+ *
+ * @param arguments The variable arguments passed to the method.  The first
+ *                  argument is a required message target, which can be either
+ *                  a string method name or an array containing a name/scope
+ *                  pair.  The remainder of the arguments are the message
+ *                  arguments.
+ * @param argCount
+ *
+ * @return The method result.
+ */
+RexxObject *MessageClass::replyRexx(RexxObject **arguments, size_t argCount)
+{
+    // we must have a message name argument
+    if (argCount != 0)
+    {
+        // if we've been given a new receiver, then use that
+        if (arguments[0] != OREF_NULL)
+        {
+            setField(receiver, arguments[0]);
+        }
+    }
+
+    // given arguments with the message?  This replaces any arguments
+    // we were created with.
+    if (argCount > 1)
+    {
+        setField(args, new_array(argCount - 1, arguments + 1));
+    }
+
+    // now go perform the send
+    return reply();
+}
+
+
+/**
+ * Do a dynamic invocation of an object method.
+ *
+ * @param receiver  An optional receiver target
+ * @param arguments An array of arguments to used with the message invocation.
+ *
+ * @return The method result.
+ */
+RexxObject *MessageClass::replyWithRexx(RexxObject *newReceiver, ArrayClass *arguments)
+{
+    // if we've been given a new receiver, then use that
+    if (newReceiver != OREF_NULL)
+    {
+        setField(receiver, newReceiver);
+    }
+
+    // with sendWith, the arguments are required
+    arguments = arrayArgument(arguments, "message arguments");
+    setField(args, arguments);
+
+    // now go perform the send
+    return reply();
+}
+
+
+/**
+ * Execute this message asynchronously by spawning a
+ * new thread and dispatching this message on the new thread.
+ *
+ * @param _receiver The optional receiver object.
+ *
+ * @return returns nothing as a instruction message send.
+ */
+MessageClass *MessageClass::reply()
+{
+    // We can only send this once, so if it has already been used
+    // or is dispatched for sending, this is an error.
+    if (isActivated())
+    {
+        reportException(Error_Execution_message_reuse);
+    }
+
+    // validate that the scope override is valid
+    receiver->validateScopeOverride(startscope);
+
+    // if we have a start scopy, the message name is a composite object.  Object
+    // takes care of the details of creating a new message object and running the method.
+    if (startscope != OREF_NULL)
+    {
+        Protected<ArrayClass> msg = new_array(message, startscope);
+        return receiver->startWith(msg, args);
+    }
+    else
+    {
+        return receiver->startWith(message, args);
+    }
 }
 
 
