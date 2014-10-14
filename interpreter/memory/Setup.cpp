@@ -1010,7 +1010,7 @@ StartClassDefinition(Message)
         AddMethod("SendWith", MessageClass::sendWithRexx, 2);
         AddMethod("StartWith", MessageClass::startWithRexx, 2);
         AddMethod("ReplyWith", MessageClass::replyWithRexx, 2);
-        AddMethod("MessageCompleted", MessageClass::messageCompleted, 1);
+        AddMethod("MessageComplete", MessageClass::messageCompleted, 1);
         AddMethod("Wait", MessageClass::wait, 0);
         AddMethod("Halt", MessageClass::halt, 1);
 

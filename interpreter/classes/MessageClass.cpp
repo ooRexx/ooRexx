@@ -210,22 +210,19 @@ RexxObject *MessageClass::notify(RexxObject *notificationTarget)
 {
     classArgument(notificationTarget, TheRexxPackage->findClass(GlobalNames::MessageNotification), "notification target");
 
-    // got a real message object...now determine if we add this to the
-    // pending list or send an immediate notification.
+    // get a new array if this is the first one added.
+    if (interestedParties == OREF_NULL)
+    {
+        interestedParties = new_array();
+    }
+    // we always add this because we can reuse the message object.
+    interestedParties->append(notificationTarget);
+
+    // now if we've already notified everything, send the notification now.
     if (allNotified())
     {
         // send the message now
         notificationTarget->sendMessage(GlobalNames::MessageComplete, this);
-    }
-    else
-    {
-        // get a new array if this is the first one added.
-        if (interestedParties == OREF_NULL)
-        {
-            interestedParties = new_array();
-        }
-        // to be notified later
-        interestedParties->append(notificationTarget);
     }
     return OREF_NULL;
 }
@@ -665,9 +662,6 @@ void MessageClass::sendNotification()
             RexxObject *waitingMessage = (RexxObject *)interestedParties->get(i);
             waitingMessage->sendMessage(GlobalNames::MessageComplete, this);
         }
-        // clear the list so that we don't anchor those messages needlessly
-        interestedParties = OREF_NULL;
-
     }
 
     // indicate we've notified everybody
