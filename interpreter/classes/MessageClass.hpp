@@ -79,8 +79,12 @@ class MessageClass : public RexxObject
     RexxObject   *notify(RexxObject *);
     RexxObject   *result();
     RexxObject   *wait();
-    RexxObject   *send(RexxObject *);
-    RexxObject   *start(RexxObject *);
+    RexxObject   *send();
+    RexxObject   *start();
+    RexxObject   *startRexx(RexxObject **, size_t);
+    RexxObject   *startWithRexx(RexxObject *, ArrayClass *);
+    RexxObject   *sendRexx(RexxObject **, size_t);
+    RexxObject   *sendWithRexx(RexxObject *, ArrayClass *);
     RexxObject   *completed();
     void          sendNotification();
     void          error(DirectoryClass *);

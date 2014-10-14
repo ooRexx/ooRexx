@@ -2119,7 +2119,7 @@ MessageClass *RexxObject::startCommon(RexxObject *message, RexxObject **argument
 
     // creeate the new message object and start it.
     Protected<MessageClass> newMessage = new MessageClass(this, messageName, startScope, new_array(argCount, arguments));
-    newMessage->start(OREF_NULL);
+    newMessage->start();
     // the message object is our return value.
     return newMessage;
 }

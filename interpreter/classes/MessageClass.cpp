@@ -268,13 +268,74 @@ RexxObject *MessageClass::result()
 
 
 /**
+ * Do a dynamic invocation of an object method.
+ *
+ * @param arguments The variable arguments passed to the method.  The first
+ *                  argument is a required message target, which can be either
+ *                  a string method name or an array containing a name/scope
+ *                  pair.  The remainder of the arguments are the message
+ *                  arguments.
+ * @param argCount
+ *
+ * @return The method result.
+ */
+RexxObject *MessageClass::sendRexx(RexxObject **arguments, size_t argCount)
+{
+    // we must have a message name argument
+    if (argCount != 0)
+    {
+        // if we've been given a new receiver, then use that
+        if (arguments[0] != OREF_NULL)
+        {
+            setField(receiver, arguments[0]);
+        }
+    }
+
+    // given arguments with the message?  This replaces any arguments
+    // we were created with.
+    if (argCount > 1)
+    {
+        setField(args, new_array(argCount - 1, arguments + 1));
+    }
+
+    // now go perform the send
+    return send();
+}
+
+
+/**
+ * Do a dynamic invocation of an object method.
+ *
+ * @param receiver  An optional receiver target
+ * @param arguments An array of arguments to used with the message invocation.
+ *
+ * @return The method result.
+ */
+RexxObject *MessageClass::sendWithRexx(RexxObject *newReceiver, ArrayClass *arguments)
+{
+    // if we've been given a new receiver, then use that
+    if (newReceiver != OREF_NULL)
+    {
+        setField(receiver, newReceiver);
+    }
+
+    // with sendWith, the arguments are required
+    arguments = arrayArgument(arguments, "message arguments");
+    setField(args, arguments);
+
+    // now go perform the send
+    return send();
+}
+
+
+/**
  * Send a message to the target receiver object (optional).
  *
  * @param _receiver The optional receiver object.
  *
  * @return Returns the message result.
  */
-RexxObject *MessageClass::send(RexxObject *_receiver)
+RexxObject *MessageClass::send()
 {
     // only one send per customer...
     if (msgSent())
@@ -293,12 +354,6 @@ RexxObject *MessageClass::send(RexxObject *_receiver)
 
     // we're sending this synchronously, so mark this as used
     setMsgSent();
-
-    // if we've been given a new receiver, then use that
-    if (_receiver != OREF_NULL)
-    {
-        setField(receiver, _receiver);
-    }
 
     // validate that the scope override is valid
     receiver->validateScopeOverride(startscope);
@@ -331,6 +386,67 @@ RexxObject *MessageClass::send(RexxObject *_receiver)
 
 
 /**
+ * Do a dynamic invocation of an object method.
+ *
+ * @param arguments The variable arguments passed to the method.  The first
+ *                  argument is a required message target, which can be either
+ *                  a string method name or an array containing a name/scope
+ *                  pair.  The remainder of the arguments are the message
+ *                  arguments.
+ * @param argCount
+ *
+ * @return The method result.
+ */
+RexxObject *MessageClass::startRexx(RexxObject **arguments, size_t argCount)
+{
+    // we must have a message name argument
+    if (argCount != 0)
+    {
+        // if we've been given a new receiver, then use that
+        if (arguments[0] != OREF_NULL)
+        {
+            setField(receiver, arguments[0]);
+        }
+    }
+
+    // given arguments with the message?  This replaces any arguments
+    // we were created with.
+    if (argCount > 1)
+    {
+        setField(args, new_array(argCount - 1, arguments + 1));
+    }
+
+    // now go perform the send
+    return start();
+}
+
+
+/**
+ * Do a dynamic invocation of an object method.
+ *
+ * @param receiver  An optional receiver target
+ * @param arguments An array of arguments to used with the message invocation.
+ *
+ * @return The method result.
+ */
+RexxObject *MessageClass::startWithRexx(RexxObject *newReceiver, ArrayClass *arguments)
+{
+    // if we've been given a new receiver, then use that
+    if (newReceiver != OREF_NULL)
+    {
+        setField(receiver, newReceiver);
+    }
+
+    // with sendWith, the arguments are required
+    arguments = arrayArgument(arguments, "message arguments");
+    setField(args, arguments);
+
+    // now go perform the send
+    return start();
+}
+
+
+/**
  * Execute this message asynchronously by spawning a
  * new thread and dispatching this message on the new thread.
  *
@@ -338,7 +454,7 @@ RexxObject *MessageClass::send(RexxObject *_receiver)
  *
  * @return returns nothing as a instruction message send.
  */
-RexxObject *MessageClass::start(RexxObject *_receiver)
+RexxObject *MessageClass::start()
 {
     // We can only send this once, so if it has already been used
     // or is dispatched for sending, this is an error.
@@ -350,12 +466,6 @@ RexxObject *MessageClass::start(RexxObject *_receiver)
     // ok, mark this as pending dispatch so that it can't be
     // started a second time.
     setStartPending();
-
-    // if we have a new receiver, replace the creation one.
-    if (_receiver != OREF_NULL)
-    {
-        setField(receiver, _receiver);
-    }
 
     // validate that the scope override is valid
     receiver->validateScopeOverride(startscope);
@@ -425,7 +535,7 @@ void MessageClass::sendNotification()
 RexxObject *MessageClass::messageCompleted(RexxObject *messageSource)
 {
     // just trigger the message send and return
-    send(OREF_NULL);
+    send();
     return OREF_NULL;
 }
 
