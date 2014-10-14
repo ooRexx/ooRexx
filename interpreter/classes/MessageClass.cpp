@@ -175,6 +175,31 @@ void MessageClass::flatten(Envelope *envelope)
 
 
 /**
+ * Copy a message object.
+ *
+ * @return A new copy of the object, with internal state set to a clean state.
+ */
+RexxInternalObject *MessageClass::copy()
+{
+    // do the base copy
+    MessageClass *newMessage = (MessageClass *)RexxObject::copy();
+    // reset the completion state
+    newMessage->clearCompletion();
+    // clear any multithreading state
+    newMessage->clearStartPending();
+    newMessage->startActivity = OREF_NULL;
+    newMessage->waitingActivities = OREF_NULL;
+
+    // we inherit the interested parties list, but it needs to be a copy
+    if (interestedParties != OREF_NULL)
+    {
+        newMessage->interestedParties = (ArrayClass *)interestedParties->copy();
+    }
+    return newMessage;
+}
+
+
+/**
  * Add a message object to the completion notification list.
  *
  * @param _message The message object wishing to be notified.
@@ -329,13 +354,9 @@ RexxObject *MessageClass::sendWithRexx(RexxObject *newReceiver, ArrayClass *argu
 
 
 /**
- * Send a message to the target receiver object (optional).
- *
- * @param _receiver The optional receiver object.
- *
- * @return Returns the message result.
+ * Verify we're not reusing a message object incorrectly.
  */
-RexxObject *MessageClass::send()
+void MessageClass::checkReuse()
 {
     // Once start has been called, this can no longer be reused.
     if (isActivated())
@@ -351,12 +372,47 @@ RexxObject *MessageClass::send()
     {
         reportException(Error_Execution_message_reuse);
     }
+}
+
+
+/**
+ * Clear all of the state related to message completion.
+ */
+void MessageClass::clearCompletion()
+{
+    dataFlags.reset(flagResultReturned);
+    dataFlags.reset(flagRaiseError);
+    dataFlags.reset(flagErrorReported);
+    dataFlags.reset(flagAllNotified);
+    // clear execution-related fields
+    clearField(resultObject);
+    clearField(condition);
+}
+
+
+/**
+ * Send a message to the target receiver object (optional).
+ *
+ * @param _receiver The optional receiver object.
+ *
+ * @return Returns the message result.
+ */
+RexxObject *MessageClass::send()
+{
+    // make sure we're not trying to reuse a message object after a start operation
+    checkReuse();
+
+    // clear all of the error/result flags before sending
+    clearCompletion();
 
     // validate that the scope override is valid
     receiver->validateScopeOverride(startscope);
 
+    // we need the current activity to handle this
+    Activity *myActivity = ActivityManager::currentActivity;
+
     // ok, now tell the stack frame we're running under that
-    // we want to be notified any errors here.
+    // we want to be notified of any errors here.
     myActivity->getTopStackFrame()->setObjNotify(this);
 
     // mark what activity we're running this under for
@@ -453,12 +509,11 @@ RexxObject *MessageClass::startWithRexx(RexxObject *newReceiver, ArrayClass *arg
  */
 RexxObject *MessageClass::start()
 {
-    // We can only send this once, so if it has already been used
-    // or is dispatched for sending, this is an error.
-    if (isActivated())
-    {
-        reportException(Error_Execution_message_reuse);
-    }
+    // make sure we're not trying to reuse a message object after a start operation
+    checkReuse();
+
+    // clear all of the error/result flags before sending
+    clearCompletion();
 
     // ok, mark this as pending dispatch so that it can't be
     // started a second time.
@@ -550,27 +605,21 @@ RexxObject *MessageClass::replyWithRexx(RexxObject *newReceiver, ArrayClass *arg
  */
 MessageClass *MessageClass::reply()
 {
-    // We can only send this once, so if it has already been used
-    // or is dispatched for sending, this is an error.
-    if (isActivated())
-    {
-        reportException(Error_Execution_message_reuse);
-    }
+    // make sure we're not trying to reuse a message object after a start operation
+    checkReuse();
+
+    // clear all of the error/result flags before sending
+    clearCompletion();
 
     // validate that the scope override is valid
     receiver->validateScopeOverride(startscope);
 
-    // if we have a start scopy, the message name is a composite object.  Object
-    // takes care of the details of creating a new message object and running the method.
-    if (startscope != OREF_NULL)
-    {
-        Protected<ArrayClass> msg = new_array(message, startscope);
-        return receiver->startWith(msg, args);
-    }
-    else
-    {
-        return receiver->startWith(message, args);
-    }
+    // make a copy of this object to return as an execution tracker.  This is the
+    // one that gets started.
+    Protected<MessageClass> newMessage = (MessageClass *)copy();
+    // start it running and return
+    newMessage->start();
+    return newMessage;
 }
 
 

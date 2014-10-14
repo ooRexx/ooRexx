@@ -74,6 +74,7 @@ class MessageClass : public RexxObject
     virtual void  live(size_t);
     virtual void  liveGeneral(MarkReason reason);
     virtual void  flatten(Envelope *);
+    virtual RexxInternalObject *copy();
 
     RexxObject   *notify(RexxObject *);
     RexxObject   *result();
@@ -112,8 +113,11 @@ class MessageClass : public RexxObject
     inline void setRaiseError()     { dataFlags.set(flagRaiseError); }
     inline void setErrorReported()  { dataFlags.set(flagErrorReported); }
     inline void setAllNotified()    { dataFlags.set(flagAllNotified); }
+    inline void clearStartPending() { dataFlags.reset(flagMsgActivated); dataFlags.reset(flagStartPending); }
     inline void setStartPending()   { setMsgActivated(); dataFlags.set(flagStartPending); }
     inline void setMsgActivated()   { dataFlags.set(flagMsgActivated); }
+    void clearCompletion();
+    void checkReuse();
 
     static void createInstance();
     static RexxClass *classInstance;
@@ -131,8 +135,6 @@ class MessageClass : public RexxObject
     Activity      *startActivity;         // Activity created to run msg
     ArrayClass    *waitingActivities;     // waiting activities list
     FlagSet <MessageFlag, 32> dataFlags;  // flags to control processing
-    SysSemaphore  waitResultSem;          // Semophore used to wait on result
-    size_t NumWaiting;                    // activities waiting on result
 };
 
 #endif
