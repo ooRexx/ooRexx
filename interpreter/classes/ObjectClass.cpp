@@ -1977,6 +1977,39 @@ void RexxObject::validateScopeOverride(RexxClass *scope)
 
 
 /**
+ * Validate that this is an appropriate context for invoking
+ * a superclass override.
+ *
+ * @param target The invocation target object.
+ */
+void RexxObject::validateOverrideContext(RexxObject *target, RexxClass *scope)
+{
+    // no scope override, so this is good
+    if (scope == OREF_NULL)
+    {
+        return;
+    }
+
+    // validate the message creator now
+    ActivationBase *activation = ActivityManager::currentActivity->getTopStackFrame();
+    // have an activation?
+    if (activation != OREF_NULL)
+    {
+        // get the receiving object
+        RexxObject *sender = activation->getReceiver();
+        if (sender != target)
+        {
+            reportException(Error_Execution_super);
+        }
+    }
+    else
+    {
+        reportException(Error_Execution_super);
+    }
+}
+
+
+/**
  * Do a dynamic invocation of an object method.
  *
  * @param message   The target message.  This can be either a string message
@@ -2002,6 +2035,7 @@ RexxObject *RexxObject::sendWith(RexxObject *message, ArrayClass *arguments)
     {
         // validate that the scope override is valid
         validateScopeOverride(startScope);
+        validateOverrideContext(this, startScope);
         messageSend(messageName, arguments->messageArgs(), arguments->messageArgCount(), startScope, r);
     }
     return (RexxObject *)r;
@@ -2042,6 +2076,7 @@ RexxObject *RexxObject::send(RexxObject **arguments, size_t argCount)
     {
         // validate that the scope override is valid
         validateScopeOverride(startScope);
+        validateOverrideContext(this, startScope);
         messageSend(messageName, arguments + 1, argCount - 1, startScope, r);
     }
     return (RexxObject *)r;
@@ -2116,6 +2151,7 @@ MessageClass *RexxObject::startCommon(RexxObject *message, RexxObject **argument
     // validate the starting scope now, if specified.  We'll validate this in this
     // thread first.
     validateScopeOverride(startScope);
+    validateOverrideContext(this, startScope);
 
     // creeate the new message object and start it.
     Protected<MessageClass> newMessage = new MessageClass(this, messageName, startScope, new_array(argCount, arguments));
@@ -2163,22 +2199,8 @@ void RexxObject::decodeMessageName(RexxObject *target, RexxObject *message, Rexx
         startScope = (RexxClass *)messageArray->get(2);
         classArgument(startScope, TheClassClass, "SCOPE");
 
-        // validate the message creator now
-        ActivationBase *activation = ActivityManager::currentActivity->getTopStackFrame();
-        // have an activation?
-        if (activation != OREF_NULL)
-        {
-            // get the receiving object
-            RexxObject *sender = activation->getReceiver();
-            if (sender != target)
-            {
-                reportException(Error_Execution_super);
-            }
-        }
-        else
-        {
-            reportException(Error_Execution_super);
-        }
+        // we only break this up into the component parts here.  The calling context
+        // takes care of validating whether this is a valid call.
     }
     else
     {
