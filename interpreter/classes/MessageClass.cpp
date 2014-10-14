@@ -261,12 +261,9 @@ RexxObject *MessageClass::result()
     {
         ActivityManager::currentActivity->reraiseException(condition);
     }
-    else
-    {
-        // since this is requested via a method that will give an error if used
-        // in an expression, return .nil if there is no return value.
-        return resultOrNil(resultObject);
-    }
+    // since this is requested via a method that will give an error if used
+    // in an expression, return .nil if there is no return value.
+    return resultOrNil(resultObject);
 }
 
 
@@ -535,6 +532,20 @@ RexxString *MessageClass::messageName()
 ArrayClass *MessageClass::arguments()
 {
     return (ArrayClass *)args->copy();
+}
+
+
+RexxObject *MessageClass::halt(RexxString *description)
+{
+    description = optionalStringArgument(description, OREF_NULL, "description");
+
+    // not started?  can't halt
+    if (startActivity == OREF_NULL)
+    {
+        return TheFalseObject;
+    }
+    // try to halt...the activity tells us if this was successful.
+    return booleanObject(startActivity->halt(description));
 }
 
 

@@ -1008,6 +1008,7 @@ StartClassDefinition(Message)
         AddMethod("Start", MessageClass::start, 1);
         AddMethod("MessageCompleted", MessageClass::messageCompleted, 1);
         AddMethod("Wait", MessageClass::wait, 0);
+        AddMethod("Halt", MessageClass::halt, 1);
 
     CompleteMethodDefinitions();
 

@@ -93,6 +93,7 @@ class MessageClass : public RexxObject
     RexxObject   *newRexx(RexxObject **, size_t);
     Activity     *getActivity() { return startActivity; }
     RexxObject   *messageCompleted(RexxObject *messageSource);
+    RexxObject   *halt(RexxString *description);
 
     inline bool isActivated()    { return dataFlags[flagMsgActivated]; }
     inline bool isComplete()     { return resultReturned() || raiseError(); }
