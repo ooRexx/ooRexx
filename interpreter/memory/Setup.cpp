@@ -1006,6 +1006,7 @@ StartClassDefinition(Message)
         AddMethod("ErrorCondition", MessageClass::errorCondition, 0);
         AddMethod("Send", MessageClass::send, 1);
         AddMethod("Start", MessageClass::start, 1);
+        AddMethod("MessageCompleted", MessageClass::messageCompleted, 1);
 
     CompleteMethodDefinitions();
 

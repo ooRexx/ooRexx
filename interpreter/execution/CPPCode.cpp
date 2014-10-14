@@ -670,6 +670,7 @@ CPPM(MessageClass::errorCondition),
 CPPM(MessageClass::messageTarget),
 CPPM(MessageClass::messageName),
 CPPM(MessageClass::arguments),
+CPPM(MessageClass::messageCompleted),
 
 CPPM(MessageClass::newRexx),
 

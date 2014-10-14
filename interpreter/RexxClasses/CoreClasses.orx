@@ -107,6 +107,9 @@ end
 .set~inherit(.SetCollection)
 .bag~inherit(.SetCollection)
 
+-- Message implements an additional interface
+.message~inherit(.MessageNotification)
+
 
 call 'StreamClasses.orx' rexxPackage
 
@@ -705,6 +708,10 @@ nomethod:
 
   nomethod:                              -- unknown method sent
     raise syntax 93.948 array(1, "Collection")
+
+-- Notification interface for the .Message class
+::CLASS 'MessageNotification' MIXINCLASS Object Public
+::METHOD messageComplete ABSTRACT
 
 
 -- tagging classes for Collection class types

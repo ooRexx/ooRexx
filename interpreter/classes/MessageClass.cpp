@@ -181,25 +181,16 @@ void MessageClass::flatten(Envelope *envelope)
  *
  * @return Instruction message type that returns nothing.
  */
-RexxObject *MessageClass::notify(MessageClass *_message)
+RexxObject *MessageClass::notify(RexxObject *notificationTarget)
 {
-    // this is a required argument
-    if ( message == OREF_NULL)
-    {
-        reportException(Error_Incorrect_method_noarg, IntegerOne);
-    }
-    // this must also be a real message object
-    else if (!isOfClass(Message, _message))
-    {
-        reportException(Error_Incorrect_method_nomessage, _message);
-    }
+    classArgument(notificationTarget, TheRexxPackage->findClass(GlobalNames::MessageNotification), "notification target");
 
     // got a real message object...now determine if we add this to the
     // pending list or send an immediate notification.
     if (allNotified())
     {
-        // an immediate notification
-        _message->send(OREF_NULL);
+        // send the message now
+        notificationTarget->sendMessage(GlobalNames::MessageComplete, this);
     }
     else
     {
@@ -209,7 +200,7 @@ RexxObject *MessageClass::notify(MessageClass *_message)
             interestedParties = new_array();
         }
         // to be notified later
-        interestedParties->append(_message);
+        interestedParties->append(notificationTarget);
     }
     return OREF_NULL;
 }
@@ -396,13 +387,12 @@ void MessageClass::sendNotification()
     // now see if we have any interested parties to notify.
     if (interestedParties != OREF_NULL)
     {
-        size_t count = interestedParties->items();
+        size_t count = interestedParties->lastIndex();
         for (size_t i = 1; i <= count; i++)
         {
             // get each message and give them a poke.
-            MessageClass *waitingMessage = (MessageClass *)interestedParties->get(i);
-            // trigger the message object in a cascade
-            waitingMessage->send(OREF_NULL);
+            RexxObject *waitingMessage = (RexxObject *)interestedParties->get(i);
+            waitingMessage->sendMessage(GlobalNames::MessageComplete, this);
         }
         // clear the list so that we don't anchor those messages needlessly
         interestedParties = OREF_NULL;
@@ -411,6 +401,23 @@ void MessageClass::sendNotification()
 
     // indicate we've notified everybody
     setAllNotified();
+}
+
+
+/**
+ * Field a message completion message notification.  This
+ * triggers the message object to fire.
+ *
+ * @param messageSource
+ *               The source of the notification message (ignored for message objects).
+ *
+ * @return always returns OREF_NULL
+ */
+RexxObject *MessageClass::messageCompleted(RexxObject *messageSource)
+{
+    // just trigger the message send and return
+    send(OREF_NULL);
+    return OREF_NULL;
 }
 
 
@@ -559,47 +566,35 @@ RexxObject *MessageClass::newRexx(RexxObject **msgArgs, size_t argCount)
     if (num_args > 2 )
     {
         // get 3rd arg only concerned w/ 1st
-        RexxString *optionString = (RexxString *)msgArgs[2];
-        // if we did not really get an argument, the argments are an empty array
-        if (optionString == OREF_NULL)
+        // this is now required
+        char option = optionArgument(msgArgs[2], "AI", "argument style");
+        // arguments passed as an array
+        if (option == 'A')
         {
-            argPtr = new_array();
-        }
-        // we have an option specifying how the arguments are passed
-        else
-        {
-            char option = optionArgument(optionString, ARG_THREE);
-            // arguments passed as an array
-            if (option == 'A')
+            // this must be here, and there can only be one additional argument
+            if (num_args < 4)
             {
-                // this must be here, and there can only be one additional argument
-                if (num_args < 4)
-                {
-                    reportException(Error_Incorrect_method_minarg, IntegerFour);
-                }
-                if (num_args > 4)
-                {
-                    reportException(Error_Incorrect_method_maxarg, IntegerFour);
-                }
+                reportException(Error_Incorrect_method_minarg, IntegerFour);
+            }
+            if (num_args > 4)
+            {
+                reportException(Error_Incorrect_method_maxarg, IntegerFour);
+            }
 
-                // get this directly and this is required to be an array
-                argPtr = arrayArgument(msgArgs[3], "message arguments");
-            }
-            // specified as individual arguments, so we just build an array
-            // directly from that.  There need not be anything following the
-            // option
-            else if (option == 'I' )
-            {
-                argPtr = new_array(argCount - 3, msgArgs + 3);
-            }
-            else
-            {
-                reportException(Error_Incorrect_method_option, "AI", msgArgs[2]);
-            }
+            // get this directly and this is required to be an array
+            argPtr = arrayArgument(msgArgs[3], "message arguments");
+        }
+        // specified as individual arguments, so we just build an array
+        // directly from that.  There need not be anything following the
+        // option
+        else if (option == 'I' )
+        {
+            argPtr = new_array(argCount - 3, msgArgs + 3);
         }
     }
-    // no args, we use an empty array
-    else
+
+    // if no arguments provided, default to a null array
+    if (argPtr == OREF_NULL)
     {
         argPtr = new_array();
     }

@@ -75,7 +75,7 @@ class MessageClass : public RexxObject
     virtual void  liveGeneral(MarkReason reason);
     virtual void  flatten(Envelope *);
 
-    RexxObject   *notify(MessageClass *);
+    RexxObject   *notify(RexxObject *);
     RexxObject   *result();
     RexxObject   *send(RexxObject *);
     RexxObject   *start(RexxObject *);
@@ -90,6 +90,7 @@ class MessageClass : public RexxObject
     RexxObject   *errorCondition();
     RexxObject   *newRexx(RexxObject **, size_t);
     Activity     *getActivity() { return startActivity; }
+    RexxObject   *messageCompleted(RexxObject *messageSource);
 
     inline bool resultReturned() { return dataFlags[flagResultReturned]; }
     inline bool raiseError()     { return dataFlags[flagRaiseError]; }
