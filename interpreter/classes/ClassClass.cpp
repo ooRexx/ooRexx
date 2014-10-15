@@ -1547,8 +1547,9 @@ RexxClass  *RexxClass::subclass(PackageClass *package, RexxString *class_id,
     addSubClass(new_class);
     // we need to look for an uninit method and record if we have it
     new_class->checkUninit();
+    ProtectedObject result;
     // drive the new class INIT method
-    new_class->sendMessage(GlobalNames::INIT);
+    new_class->sendMessage(GlobalNames::INIT, result);
 
     // If the parent class has an uninit defined, the new child class must have one, too
     if (hasUninitDefined() || parentHasUninitDefined())
@@ -1761,8 +1762,9 @@ RexxClass  *RexxClass::newRexx(RexxObject **args, size_t argCount)
         new_class->setHasUninitDefined();
     }
 
+    ProtectedObject result;
     // send the new class the INIT method
-    new_class->sendMessage(GlobalNames::INIT, args + 1, argCount - 1);
+    new_class->sendMessage(GlobalNames::INIT, args + 1, argCount - 1, result);
     return new_class;
 }
 
@@ -1812,8 +1814,10 @@ void RexxClass::completeNewObject(RexxObject *obj, RexxObject **initArgs, size_t
     {
         obj->requiresUninit();
     }
+
+    ProtectedObject result;
     // now send an INIT message to complete initialization.
-    obj->sendMessage(GlobalNames::INIT, initArgs, argCount);
+    obj->sendMessage(GlobalNames::INIT, initArgs, argCount, result);
 }
 
 

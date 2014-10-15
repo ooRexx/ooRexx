@@ -161,8 +161,7 @@ RexxObjectPtr RexxEntry SendMessageArray(RexxThreadContext *c, RexxObjectPtr o, 
     {
         RexxString *message = new_upper_string(m);
         ProtectedObject p(message);
-
-        return context.ret(((RexxObject *)o)->sendMessage(message, (ArrayClass *)a));
+        return context.ret(((RexxObject *)o)->sendMessage(message, (ArrayClass *)a, p));
     }
     catch (NativeActivation *)
     {
@@ -178,7 +177,7 @@ RexxObjectPtr RexxEntry SendMessage0(RexxThreadContext *c, RexxObjectPtr o, CSTR
     {
         RexxString *message = new_upper_string(m);
         ProtectedObject p(message);
-        return context.ret(((RexxObject *)o)->sendMessage(message));
+        return context.ret(((RexxObject *)o)->sendMessage(message, p));
     }
     catch (NativeActivation *)
     {
@@ -194,7 +193,7 @@ RexxObjectPtr RexxEntry SendMessage1(RexxThreadContext *c, RexxObjectPtr o, CSTR
     {
         RexxString *message = new_upper_string(m);
         ProtectedObject p(message);
-        return context.ret(((RexxObject *)o)->sendMessage(message, (RexxObject *)a1));
+        return context.ret(((RexxObject *)o)->sendMessage(message, (RexxObject *)a1, p));
     }
     catch (NativeActivation *)
     {
@@ -209,7 +208,7 @@ RexxObjectPtr RexxEntry SendMessage2(RexxThreadContext *c, RexxObjectPtr o, CSTR
     {
         RexxString *message = new_upper_string(m);
         ProtectedObject p(message);
-        return context.ret(((RexxObject *)o)->sendMessage(message, (RexxObject *)a1, (RexxObject *)a2));
+        return context.ret(((RexxObject *)o)->sendMessage(message, (RexxObject *)a1, (RexxObject *)a2, p));
     }
     catch (NativeActivation *)
     {

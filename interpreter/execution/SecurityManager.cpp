@@ -150,8 +150,9 @@ RexxObject *SecurityManager::checkEnvironmentAccess(RexxString *index)
  */
 bool SecurityManager::callSecurityManager(RexxString *methodName, DirectoryClass *arguments)
 {
+    ProtectedObject result;
     // invoke the manager
-    RexxObject *resultObj = manager->sendMessage(methodName, arguments);
+    RexxObject *resultObj = manager->sendMessage(methodName, arguments, result);
     // a result is required
     if (resultObj == OREF_NULL)
     {

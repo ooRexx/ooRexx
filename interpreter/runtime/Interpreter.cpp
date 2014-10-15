@@ -581,8 +581,9 @@ RexxString *Interpreter::getCurrentQueue()
     {
         return GlobalNames::SESSION;     // the session queue is the default
     }
+    ProtectedObject result;
     // get the current name from the queue object.
-    return(RexxString *)queue->sendMessage(GlobalNames::GET);
+    return(RexxString *)queue->sendMessage(GlobalNames::GET, result);
 }
 
 

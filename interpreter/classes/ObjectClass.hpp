@@ -471,29 +471,21 @@ class RexxObject : public RexxInternalObject
     RexxObject  *run(RexxObject **, size_t);
     void         checkUninit();
 
-    void         messageSend(RexxString *, RexxObject **, size_t, ProtectedObject &);
-    void         messageSend(RexxString *, RexxObject **, size_t, RexxClass *, ProtectedObject &);
+    RexxObject  *messageSend(RexxString *, RexxObject **, size_t, ProtectedObject &);
+    RexxObject  *messageSend(RexxString *, RexxObject **, size_t, RexxClass *, ProtectedObject &);
     MethodClass *checkPrivate(MethodClass *);
     void         checkRestrictedMethod(const char *methodName);
     void         processProtectedMethod(RexxString *, MethodClass *, RexxObject **, size_t, ProtectedObject &);
-    void         sendMessage(RexxString *, ArrayClass *, ProtectedObject &);
-    inline void  sendMessage(RexxString *message, ProtectedObject &result) { this->messageSend(message, OREF_NULL, 0, result); };
-    inline void  sendMessage(RexxString *message, RexxObject **args, size_t argCount, ProtectedObject &result) { this->messageSend(message, args, argCount, result); };
-    inline void  sendMessage(RexxString *message, RexxObject *argument1, ProtectedObject &result)
-        { this->messageSend(message, &argument1, 1, result); }
-    void         sendMessage(RexxString *, RexxObject *, RexxObject *, ProtectedObject &);
-    void         sendMessage(RexxString *, RexxObject *, RexxObject *, RexxObject *, ProtectedObject &);
-    void         sendMessage(RexxString *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, ProtectedObject &);
-    void         sendMessage(RexxString *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, ProtectedObject&);
+    RexxObject  *sendMessage(RexxString *, ArrayClass *, ProtectedObject &);
+    inline RexxObject *sendMessage(RexxString *message, ProtectedObject &result) { return messageSend(message, OREF_NULL, 0, result); };
+    inline RexxObject *sendMessage(RexxString *message, RexxObject **args, size_t argCount, ProtectedObject &result) { return messageSend(message, args, argCount, result); };
+    inline RexxObject *sendMessage(RexxString *message, RexxObject *argument1, ProtectedObject &result)
+        { return messageSend(message, &argument1, 1, result); }
+    RexxObject  *sendMessage(RexxString *, RexxObject *, RexxObject *, ProtectedObject &);
+    RexxObject  *sendMessage(RexxString *, RexxObject *, RexxObject *, RexxObject *, ProtectedObject &);
+    RexxObject  *sendMessage(RexxString *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, ProtectedObject &);
+    RexxObject  *sendMessage(RexxString *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, ProtectedObject&);
 
-    RexxObject  *sendMessage(RexxString *, ArrayClass *);
-    RexxObject  *sendMessage(RexxString *message);
-    RexxObject  *sendMessage(RexxString *message, RexxObject **args, size_t argCount);
-    RexxObject  *sendMessage(RexxString *message, RexxObject *argument1);
-    RexxObject  *sendMessage(RexxString *, RexxObject *, RexxObject *);
-    RexxObject  *sendMessage(RexxString *, RexxObject *, RexxObject *, RexxObject *);
-    RexxObject  *sendMessage(RexxString *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
-    RexxObject  *sendMessage(RexxString *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
     void         validateScopeOverride(RexxClass *scope);
     void         validateOverrideContext(RexxObject *target, RexxClass *scope);
 

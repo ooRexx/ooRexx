@@ -696,151 +696,14 @@ void RexxObject::checkRestrictedMethod(const char *methodName)
 /**
  * Send a message to an object.
  *
- * @param message The name of the message.
- * @param args    The message arguments.
- *
- * @return The message result.
- */
-RexxObject *RexxObject::sendMessage(RexxString *message, ArrayClass *args)
-{
-    ProtectedObject r;
-    sendMessage(message, args, r);
-    return r;
-}
-
-
-/**
- * Another method signature for sending a message.
- *
- * @param message The message name.
- *
- * @return The message result.
- */
-RexxObject *RexxObject::sendMessage(RexxString *message)
-{
-    ProtectedObject r;
-    sendMessage(message, r);
-    return r;
-}
-
-
-/**
- * Another convenience method for sending a message.
- *
- * @param message  The message name.
- * @param args     Pointer to a variable size argument list.
- * @param argCount The cound of arguments.
- *
- * @return The message result.
- */
-RexxObject *RexxObject::sendMessage(RexxString *message, RexxObject **args, size_t argCount)
-{
-    ProtectedObject r;
-    sendMessage(message, args, argCount, r);
-    return r;
-}
-
-
-/**
- * Set a message with a single argument.
- *
- * @param message   The message name.
- * @param argument1 The message argument.
- *
- * @return The message result.
- */
-RexxObject *RexxObject::sendMessage(RexxString *message, RexxObject *argument1)
-{
-    ProtectedObject r;
-    sendMessage(message, argument1, r);
-    return r;
-}
-
-
-/**
- * Send a message with two arguments.
- *
- * @param message   The message name.
- * @param argument1 The first argument.
- * @param argument2 The second argument.
- *
- * @return The message result.
- */
-RexxObject *RexxObject::sendMessage(RexxString *message, RexxObject *argument1, RexxObject *argument2)
-{
-    ProtectedObject r;
-    sendMessage(message, argument1, argument2, r);
-    return r;
-}
-
-
-/**
- * Send a message with three arguments.
- *
- * @param message   The message name.
- * @param argument1 The first argument.
- * @param argument2 The second argument.
- * @param argument3 The third argument.
- *
- * @return The message result.
- */
-RexxObject *RexxObject::sendMessage(RexxString *message, RexxObject *argument1, RexxObject *argument2, RexxObject *argument3)
-{
-    ProtectedObject r;
-    sendMessage(message, argument1, argument2, argument3, r);
-    return r;
-}
-
-
-/**
- * Send a message with four arguments.
- *
- * @param message   The message name.
- * @param argument1 The first argument.
- * @param argument2 The second argument.
- * @param argument3 The third argument.
- * @param argument4 The fourth argument.
- *
- * @return The message result.
- */
-RexxObject *RexxObject::sendMessage(RexxString *message, RexxObject *argument1, RexxObject *argument2, RexxObject *argument3, RexxObject *argument4)
-{
-    ProtectedObject r;
-    sendMessage(message, argument1, argument2, argument3, argument4, r);
-    return r;
-}
-
-
-/**
- * Send a message with five arguments.
- *
- * @param message   The message name.
- * @param argument1 The first argument.
- * @param argument2 The second argument.
- * @param argument3 The third argument.
- * @param argument4 The fifth argument.
- *
- * @return The message result.
- */
-RexxObject *RexxObject::sendMessage(RexxString *message, RexxObject *argument1, RexxObject *argument2, RexxObject *argument3, RexxObject *argument4, RexxObject *argument5)
-{
-    ProtectedObject r;
-    sendMessage(message, argument1, argument2, argument3, argument4, argument5, r);
-    return r;
-}
-
-
-/**
- * Send a message to an object.
- *
  * @param message   The message name.
  * @param arguments An array of the arguments.
  * @param result    A ProtectedObject used for returning a result and
  *                  protecting it from garbage collection.
  */
-void RexxObject::sendMessage(RexxString *message, ArrayClass  *arguments, ProtectedObject &result)
+RexxObject *RexxObject::sendMessage(RexxString *message, ArrayClass  *arguments, ProtectedObject &result)
 {
-    messageSend(message, arguments->messageArgs(), arguments->messageArgCount(), result);
+    return messageSend(message, arguments->messageArgs(), arguments->messageArgCount(), result);
 }
 
 
@@ -852,7 +715,7 @@ void RexxObject::sendMessage(RexxString *message, ArrayClass  *arguments, Protec
  * @param argument2 The second argument.
  * @param result    A protected object for returning a result.
  */
-void RexxObject::sendMessage(RexxString *message, RexxObject *argument1, RexxObject *argument2, ProtectedObject &result)
+RexxObject *RexxObject::sendMessage(RexxString *message, RexxObject *argument1, RexxObject *argument2, ProtectedObject &result)
 {
     // copy the objects in to an array so they can be passed as a group.
     RexxObject *arguments[2];
@@ -860,7 +723,7 @@ void RexxObject::sendMessage(RexxString *message, RexxObject *argument1, RexxObj
     arguments[0] = argument1;
     arguments[1] = argument2;
 
-    messageSend(message, arguments, 2, result);
+    return messageSend(message, arguments, 2, result);
 }
 
 
@@ -873,7 +736,7 @@ void RexxObject::sendMessage(RexxString *message, RexxObject *argument1, RexxObj
  * @param argument3 The third argument.
  * @param result    A protected object for returning a result.
  */
-void RexxObject::sendMessage(RexxString *message, RexxObject *argument1, RexxObject *argument2, RexxObject *argument3, ProtectedObject &result)
+RexxObject *RexxObject::sendMessage(RexxString *message, RexxObject *argument1, RexxObject *argument2, RexxObject *argument3, ProtectedObject &result)
 {
     RexxObject *arguments[3];
 
@@ -881,7 +744,7 @@ void RexxObject::sendMessage(RexxString *message, RexxObject *argument1, RexxObj
     arguments[1] = argument2;
     arguments[2] = argument3;
 
-    messageSend(message, arguments, 3, result);
+    return messageSend(message, arguments, 3, result);
 }
 
 
@@ -895,7 +758,7 @@ void RexxObject::sendMessage(RexxString *message, RexxObject *argument1, RexxObj
  * @param argument4 The fourth argument.
  * @param result    A protected object for returning a result.
  */
-void RexxObject::sendMessage(RexxString *message, RexxObject *argument1, RexxObject *argument2,
+RexxObject *RexxObject::sendMessage(RexxString *message, RexxObject *argument1, RexxObject *argument2,
     RexxObject *argument3, RexxObject *argument4, ProtectedObject &result)
 {
     RexxObject *arguments[4];
@@ -905,7 +768,7 @@ void RexxObject::sendMessage(RexxString *message, RexxObject *argument1, RexxObj
     arguments[2] = argument3;
     arguments[3] = argument4;
 
-    messageSend(message, arguments, 4, result);
+    return messageSend(message, arguments, 4, result);
 }
 
 
@@ -920,7 +783,7 @@ void RexxObject::sendMessage(RexxString *message, RexxObject *argument1, RexxObj
  * @param argument5 The fifth argument.
  * @param result    A protected object for returning a result.
  */
-void RexxObject::sendMessage(RexxString *message, RexxObject *argument1, RexxObject *argument2, RexxObject *argument3,
+RexxObject *RexxObject::sendMessage(RexxString *message, RexxObject *argument1, RexxObject *argument2, RexxObject *argument3,
     RexxObject *argument4, RexxObject *argument5, ProtectedObject &result)
 {
     RexxObject *arguments[5];
@@ -931,7 +794,7 @@ void RexxObject::sendMessage(RexxString *message, RexxObject *argument1, RexxObj
     arguments[3] = argument4;
     arguments[4] = argument5;
 
-    messageSend(message, arguments, 5, result);
+    return messageSend(message, arguments, 5, result);
 }
 
 
@@ -943,7 +806,7 @@ void RexxObject::sendMessage(RexxString *message, RexxObject *argument1, RexxObj
  * @param count     The count of arguments.
  * @param result    A protected object for returning the message result.
  */
-void RexxObject::messageSend(RexxString *msgname, RexxObject **arguments, size_t  count, ProtectedObject &result)
+RexxObject *RexxObject::messageSend(RexxString *msgname, RexxObject **arguments, size_t  count, ProtectedObject &result)
 {
     // check for a control stack condition
     ActivityManager::currentActivity->checkStackSpace();
@@ -963,7 +826,7 @@ void RexxObject::messageSend(RexxString *msgname, RexxObject **arguments, size_t
         if (method_save != OREF_NULL && method_save->isProtected())
         {
             processProtectedMethod(msgname, method_save, arguments, count, result);
-            return;
+            return result;
         }
     }
 
@@ -977,6 +840,7 @@ void RexxObject::messageSend(RexxString *msgname, RexxObject **arguments, size_t
         // not found, so check for an unknown method
         processUnknown(msgname, arguments, count, result);
     }
+    return result;
 }
 
 
@@ -989,7 +853,7 @@ void RexxObject::messageSend(RexxString *msgname, RexxObject **arguments, size_t
  * @param startscope The starting scope.
  * @param result     A protected object for returning the result.
  */
-void RexxObject::messageSend(RexxString *msgname, RexxObject **arguments, size_t count,
+RexxObject *RexxObject::messageSend(RexxString *msgname, RexxObject **arguments, size_t count,
     RexxClass *startscope, ProtectedObject &result)
 {
     // perform a stack space check
@@ -1008,7 +872,7 @@ void RexxObject::messageSend(RexxString *msgname, RexxObject **arguments, size_t
         else
         {
             processProtectedMethod(msgname, method_save, arguments, count, result);
-            return;
+            return result;
         }
     }
     // invoke the method if we have one, call unknown otherwise
@@ -1020,6 +884,7 @@ void RexxObject::messageSend(RexxString *msgname, RexxObject **arguments, size_t
     {
         processUnknown(msgname, arguments, count, result);
     }
+    return result;
 }
 
 
@@ -1216,7 +1081,8 @@ RexxString *RexxInternalObject::stringValue()
  */
 RexxString *RexxObject::stringValue()
 {
-    return (RexxString *)sendMessage(GlobalNames::OBJECTNAME);
+    ProtectedObject result;
+    return (RexxString *)sendMessage(GlobalNames::OBJECTNAME, result);
 }
 
 
@@ -1246,7 +1112,8 @@ RexxString *RexxInternalObject::makeString()
     // some sort of subclass, so we need to issue the actual REQUEST method.
     else
     {
-        return (RexxString *)resultOrNil(((RexxObject *)this)->sendMessage(GlobalNames::REQUEST, GlobalNames::STRING));
+        ProtectedObject result;
+        return (RexxString *)resultOrNil(((RexxObject *)this)->sendMessage(GlobalNames::REQUEST, GlobalNames::STRING, result));
     }
 }
 
@@ -1278,7 +1145,8 @@ ArrayClass *RexxInternalObject::makeArray()
     }
     else
     {
-        return (ArrayClass *)resultOrNil(((RexxObject *)this)->sendMessage(GlobalNames::REQUEST, GlobalNames::ARRAY));
+        ProtectedObject result;
+        return (ArrayClass *)resultOrNil(((RexxObject *)this)->sendMessage(GlobalNames::REQUEST, GlobalNames::ARRAY, result));
     }
 }
 
@@ -1406,7 +1274,8 @@ RexxString *RexxInternalObject::requiredString()
     {
         // do via a message send with some no return value protection to keep us from
         // crashing.
-        RexxObject *string_value = resultOrNil(((RexxObject *)this)->sendMessage(GlobalNames::REQUEST, GlobalNames::STRING));
+        ProtectedObject result;
+        RexxObject *string_value = resultOrNil(((RexxObject *)this)->sendMessage(GlobalNames::REQUEST, GlobalNames::STRING, result));
         if (string_value != TheNilObject)
         {
             // The returned value might be an Integer or NumberString value.  We need to
@@ -1717,7 +1586,8 @@ ArrayClass *RexxInternalObject::requestArray()
     // for subclasses, this needs to go through the REQUEST method.
     else
     {
-        return(ArrayClass *)resultOrNil(((RexxObject *)this)->sendMessage(GlobalNames::REQUEST, GlobalNames::ARRAY));
+        ProtectedObject result;
+        return(ArrayClass *)resultOrNil(((RexxObject *)this)->sendMessage(GlobalNames::REQUEST, GlobalNames::ARRAY, result));
     }
 }
 
@@ -1742,8 +1612,9 @@ RexxString *RexxObject::objectName()
             return defaultName();
         }
 
+        ProtectedObject result;
         // send the default name message...
-        string_value = (RexxString *)sendMessage(GlobalNames::DEFAULTNAME);
+        string_value = (RexxString *)sendMessage(GlobalNames::DEFAULTNAME, result);
         // it is possible we got nothing back from this method.  Prevent
         // potential crashes by returning the default default.
         if (string_value.isNull())
@@ -1956,8 +1827,9 @@ RexxObject *RexxObject::requestRexx(RexxString *className)
     // have this method?
     if (method != OREF_NULL)
     {
+        ProtectedObject result;
         // go invoke the method and return the result
-        return resultOrNil(sendMessage(make_method));
+        return resultOrNil(sendMessage(make_method, result));
     }
     else
     {
@@ -2625,7 +2497,8 @@ void RexxObject::uninit()
 {
     if (hasMethod(GlobalNames::UNINIT))
     {
-        sendMessage(GlobalNames::UNINIT);
+        ProtectedObject result;
+        sendMessage(GlobalNames::UNINIT, result);
     }
 }
 

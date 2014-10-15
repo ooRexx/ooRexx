@@ -255,7 +255,8 @@ RexxObject *StemClass::unknownRexx(RexxString *message, ArrayClass *arguments)
     message = stringArgument(message, ARG_ONE);
     arguments = arrayArgument(arguments, ARG_TWO);
 
-    return value->sendMessage(message, arguments);
+    ProtectedObject result;
+    return value->sendMessage(message, arguments, result);
 }
 
 

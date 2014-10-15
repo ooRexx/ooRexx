@@ -1691,7 +1691,8 @@ RexxObject *RexxActivation::resolveStream(RexxString *name, bool input, Protecte
             // create an instance of the stream class and create a new
             // instance
             RexxClass *streamClass = TheRexxPackage->findClass(GlobalNames::STREAM);
-            stream = streamClass->sendMessage(GlobalNames::NEW, name);
+            ProtectedObject result;
+            stream = streamClass->sendMessage(GlobalNames::NEW, name, result);
 
             // if we're requested to add this to the table, add it in and return the indicator.
             if (added != NULL)
@@ -4134,7 +4135,8 @@ void RexxActivation::closeStreams()
             // send each of the streams in the table a CLOSE message.
             for (HashContents::TableIterator iterator = streams->iterator(); iterator.isAvailable(); iterator.next())
             {
-                ((RexxObject *)iterator.value())->sendMessage(GlobalNames::CLOSE);
+                ProtectedObject result;
+                ((RexxObject *)iterator.value())->sendMessage(GlobalNames::CLOSE, result);
             }
         }
     }
@@ -4165,7 +4167,8 @@ RexxObject *RexxActivation::novalueHandler(RexxString *name)
     RexxObject *novalue_handler = getLocalEnvironment(GlobalNames::NOVALUE);
     if (novalue_handler != OREF_NULL)
     {
-        return resultOrNil(novalue_handler->sendMessage(GlobalNames::NOVALUE, name));
+        ProtectedObject result;
+        return resultOrNil(novalue_handler->sendMessage(GlobalNames::NOVALUE, name, result));
     }
     return TheNilObject;
 }

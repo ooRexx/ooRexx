@@ -74,13 +74,7 @@ class ProtectedObject : public ProtectedBase
     inline ProtectedObject(Activity *a) : protectedObject(OREF_NULL), ProtectedBase(a) { }
     inline ProtectedObject(RexxInternalObject *o) : protectedObject(o), ProtectedBase() { }
     inline ProtectedObject(RexxInternalObject *o, Activity *a) : protectedObject(o), ProtectedBase(a) { }
-    inline ~ProtectedObject()
-    {
-        if (protectedObject != OREF_NULL)
-        {
-            holdObject(protectedObject);
-        }
-    }
+    inline ~ProtectedObject() { }
 
     virtual void mark(size_t liveMark) { memory_mark(protectedObject); }
     virtual void markGeneral(int reason) { memory_mark_general(protectedObject); }
@@ -192,14 +186,7 @@ public:
     inline Protected(objType *o) : protectedObject(o), ProtectedBase() { }
     inline Protected(objType *o, Activity *a) : protectedObject(o), ProtectedBase(a) { }
 
-    inline ~Protected()
-    {
-        // give the protected object some hold protection.
-        if (protectedObject != OREF_NULL)
-        {
-            holdObject(protectedObject);
-        }
-    }
+    inline ~Protected() { }
 
     virtual void mark(size_t liveMark) { memory_mark(protectedObject); }
     virtual void markGeneral(int reason) { memory_mark_general(protectedObject); }

@@ -213,8 +213,9 @@ RexxClass *ClassDirective::install(PackageClass *package, RexxActivation *activa
                 reportException(Error_Execution_noclass, inheritsResolver->getName());
             }
 
+            ProtectedObject result;
             // inherit from the mixin
-            classObject->sendMessage(GlobalNames::INHERIT, mixin);
+            classObject->sendMessage(GlobalNames::INHERIT, mixin, result);
         }
     }
 

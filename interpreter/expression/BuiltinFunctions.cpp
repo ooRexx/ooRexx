@@ -1970,8 +1970,9 @@ BUILTIN(LINEIN)
         if (context->getActivity()->callPullExit(context, result))
         {
             RexxObject *stream = context->getLocalEnvironment(STDQUE);
+            ProtectedObject result;
             // we do this using a LINEIN method
-            return stream->sendMessage(LINEIN);
+            return stream->sendMessage(LINEIN, result);
         }
         return result;
     }
@@ -1981,21 +1982,22 @@ BUILTIN(LINEIN)
         Protected<RexxString> fullname;
         // get a stream for this name
         RexxObject *stream = context->resolveStream(name, true, fullname, &added);
+        ProtectedObject result;
         switch (argcount)
         {
             // process based on the arguments
             // NAME only
             case 0:
             case 1:
-                return stream->sendMessage(LINEIN);
+                return stream->sendMessage(LINEIN, result);
                 break;
             // start position specified
             case 2:
-                return stream->sendMessage(LINEIN, line);
+                return stream->sendMessage(LINEIN, line, result);
                 break;
             // start and count specified
             case 3:
-                return stream->sendMessage(LINEIN, line, count);
+                return stream->sendMessage(LINEIN, line, count, result);
                 break;
         }
     }
@@ -2027,17 +2029,18 @@ BUILTIN(CHARIN)
     bool added = false;
     Protected<RexxString> fullname;
     RexxObject *stream = context->resolveStream(name, true, fullname, &added);
+    ProtectedObject result;
     switch (argcount)
     {
         case 0:
         case 1:
-            return stream->sendMessage(CHARIN);
+            return stream->sendMessage(CHARIN, result);
             break;
         case 2:
-            return stream->sendMessage(CHARIN, position);
+            return stream->sendMessage(CHARIN, position, result);
             break;
         case 3:
-            return stream->sendMessage(CHARIN, position, count);
+            return stream->sendMessage(CHARIN, position, count, result);
             break;
     }
     return GlobalNames::NULLSTRING;
@@ -2068,7 +2071,8 @@ BUILTIN(LINEOUT)
             if (string != OREF_NULL)
             {
                 RexxObject *stream = context->getLocalEnvironment(STDQUE);
-                return stream->sendMessage(QUEUE, string);
+                ProtectedObject result;
+                return stream->sendMessage(QUEUE, string, result);
             }
             else
             {
@@ -2082,17 +2086,18 @@ BUILTIN(LINEOUT)
         Protected<RexxString> fullName;
         // resolve the stream name and send the message based on the arguments
         RexxObject *stream = context->resolveStream(name, false, fullName, &added);
+        ProtectedObject result;
         switch (argcount)
         {
             case 0:
             case 1:
-                return stream->sendMessage(LINEOUT);
+                return stream->sendMessage(LINEOUT, result);
                 break;
             case 2:
-                return stream->sendMessage(LINEOUT, string);
+                return stream->sendMessage(LINEOUT, string, result);
                 break;
             case 3:
-                return stream->sendMessage(LINEOUT, string, line);
+                return stream->sendMessage(LINEOUT, string, line, result);
                 break;
         }
     }
@@ -2124,17 +2129,18 @@ BUILTIN(CHAROUT)
     Protected<RexxString> fullname;
     // resolve the stream name
     RexxObject *stream = context->resolveStream(name, false, fullname, &added);
+    ProtectedObject result;
     switch (argcount)
     {
         case 0:
         case 1:
-            return stream->sendMessage(CHAROUT);
+            return stream->sendMessage(CHAROUT, result);
             break;
         case 2:
-            return stream->sendMessage(CHAROUT, string);
+            return stream->sendMessage(CHAROUT, string, result);
             break;
         case 3:
-            return stream->sendMessage(CHAROUT, string, position);
+            return stream->sendMessage(CHAROUT, string, position, result);
             break;
     }
     return GlobalNames::NULLSTRING;
@@ -2153,6 +2159,7 @@ BUILTIN(LINES)
     RexxString *name = optional_string(LINES, name); /* get the string name               */
     RexxString *option = optional_string(LINES, option);
     RexxObject *result;
+    ProtectedObject resultObj;
     int opt = 'N';
 
     if (option != OREF_NULL)
@@ -2169,7 +2176,7 @@ BUILTIN(LINES)
     if (check_queue(name))
     {
         RexxObject *stream = context->getLocalEnvironment(STDQUE);
-        result = stream->sendMessage(QUEUED);
+        result = stream->sendMessage(QUEUED, resultObj);
     }
     else
     {
@@ -2177,8 +2184,7 @@ BUILTIN(LINES)
         Protected<RexxString> fullname;
         // resolve the stream
         RexxObject *stream = context->resolveStream(name, true, fullname, &added);
-        // and send the lines message with the option.
-        result = stream->sendMessage(LINES, option);
+        result = stream->sendMessage(LINES, option, resultObj);
     }
 
 
@@ -2219,7 +2225,8 @@ BUILTIN(CHARS)
     bool added;
     Protected<RexxString> fullname;
     RexxObject *stream = context->resolveStream(name, true, fullname, &added);
-    return stream->sendMessage(CHARS);
+    ProtectedObject result;
+    return stream->sendMessage(CHARS, result);
 }
 
 
@@ -2275,7 +2282,8 @@ BUILTIN(STREAM)
                 Protected<RexxString> fullname;
                 // get the stream object and get the state
                 RexxObject *stream = context->resolveStream(name, true, fullname, NULL);
-                return stream->sendMessage(STATE);
+                ProtectedObject result;
+                return stream->sendMessage(STATE, result);
                 break;
             }
 
@@ -2290,7 +2298,8 @@ BUILTIN(STREAM)
 
                 Protected<RexxString> fullname;
                 RexxObject *stream = context->resolveStream(name, true, fullname, NULL);
-                return stream->sendMessage(DESCRIPTION);
+                ProtectedObject result;
+                return stream->sendMessage(DESCRIPTION, result);
                 break;
             }
 
@@ -2317,7 +2326,8 @@ BUILTIN(STREAM)
                     Protected<RexxString> fullname;
                     bool added;
                     RexxObject *stream = context->resolveStream(name, true, fullname, &added);
-                    RexxString *result = (RexxString *)stream->sendMessage(COMMAND, command);
+                    ProtectedObject resultObj;
+                    RexxString *result = (RexxString *)stream->sendMessage(COMMAND, command, resultObj);
                     // if open failed, remove the stream object from stream table again
                     if (!result->strCompare("READY:"))
                     {
@@ -2331,7 +2341,8 @@ BUILTIN(STREAM)
                     bool added;
                     Protected<RexxString> fullname;
                     RexxObject *stream = context->resolveStream(name, true, fullname, &added);
-                    RexxString *result = (RexxString *)stream->sendMessage(COMMAND, command);
+                    ProtectedObject resultObj;
+                    RexxString *result = (RexxString *)stream->sendMessage(COMMAND, command, resultObj);
                     // remove this from the table after the close
                     context->getStreams()->remove(fullname);
                     return result;
@@ -2344,7 +2355,8 @@ BUILTIN(STREAM)
                     Protected<RexxString> fullname;
                     RexxObject *stream = context->resolveStream(name, true, fullname, &added);
                     // this is a real operation, so pass along to the stream object
-                    RexxString *result = (RexxString *)stream->sendMessage(COMMAND, command);
+                    ProtectedObject resultObj;
+                    RexxString *result = (RexxString *)stream->sendMessage(COMMAND, command, resultObj);
                     return result;
                 }
                 // all other commands just pass to the resolved stream object
@@ -2352,7 +2364,8 @@ BUILTIN(STREAM)
                 {
                     Protected<RexxString> fullname;
                     RexxObject *stream = context->resolveStream(name, true, fullname, NULL);
-                    return stream->sendMessage(COMMAND, command);
+                    ProtectedObject result;
+                    return stream->sendMessage(COMMAND, command, result);
                 }
                 break;
             }
@@ -2377,7 +2390,8 @@ BUILTIN(QUEUED)
     if (context->getActivity()->callQueueSizeExit(context, queuesize))
     {
         RexxObject *queue = context->getLocalEnvironment(STDQUE);
-        return queue->sendMessage(QUEUED);
+        ProtectedObject result;
+        return queue->sendMessage(QUEUED, result);
     }
     else
     {
@@ -2599,6 +2613,7 @@ BUILTIN(RXQUEUE)
 
     RexxString *option = required_string(RXQUEUE, option);
     RexxString *queueName = optional_string(RXQUEUE, name);
+    ProtectedObject result;
 
     switch (toupper(option->getChar(0)))
     {
@@ -2611,7 +2626,7 @@ BUILTIN(RXQUEUE)
                 reportException(Error_Incorrect_call_maxarg, "RXQUEUE", IntegerTwo);
             }
             RexxObject *queue = context->getLocalEnvironment(STDQUE);
-            return queue->sendMessage(GlobalNames::GET);
+            return queue->sendMessage(GlobalNames::GET, result);
         }
 
         // 'C'reate a named queue
@@ -2624,7 +2639,7 @@ BUILTIN(RXQUEUE)
             // created for us
             if (queueName == OREF_NULL)
             {
-                return rexxQueue->sendMessage(new_string("CREATE"));
+                return rexxQueue->sendMessage(new_string("CREATE"), result);
             }
             else
             {
@@ -2633,7 +2648,7 @@ BUILTIN(RXQUEUE)
                 {
                     reportException(Error_Incorrect_call_symbol, new_string("RXQUEUE"), IntegerTwo, queueName);
                 }
-                return rexxQueue->sendMessage(new_string("CREATE"), queueName);
+                return rexxQueue->sendMessage(new_string("CREATE"), queueName, result);
             }
         }
 
@@ -2648,7 +2663,7 @@ BUILTIN(RXQUEUE)
                 reportException(Error_Incorrect_call_symbol, new_string("RXQUEUE"), IntegerTwo, queueName);
             }
             RexxObject *queue = context->getLocalEnvironment(STDQUE);
-            return queue->sendMessage(new_string("SET"), queueName);
+            return queue->sendMessage(new_string("SET"), queueName, result);
         }
 
         // 'O'pen a new queue name...creates if needed
@@ -2661,7 +2676,7 @@ BUILTIN(RXQUEUE)
             {
                 reportException(Error_Incorrect_call_symbol, new_string("RXQUEUE"), IntegerTwo, queueName);
             }
-            return rexxQueue->sendMessage(new_string("OPEN"), queueName);
+            return rexxQueue->sendMessage(new_string("OPEN"), queueName, result);
         }
 
         // 'E'xists
@@ -2674,7 +2689,7 @@ BUILTIN(RXQUEUE)
             {
                 reportException(Error_Incorrect_call_symbol, new_string("RXQUEUE"), IntegerTwo, queueName);
             }
-            return rexxQueue->sendMessage(new_string("EXISTS"), queueName);
+            return rexxQueue->sendMessage(new_string("EXISTS"), queueName, result);
         }
 
         // 'D'elete
@@ -2687,7 +2702,7 @@ BUILTIN(RXQUEUE)
             {
                 reportException(Error_Incorrect_call_symbol, new_string("RXQUEUE"), IntegerTwo, queueName);
             }
-            return rexxQueue->sendMessage(new_string("DELETE"), queueName);
+            return rexxQueue->sendMessage(new_string("DELETE"), queueName, result);
         }
 
         default:

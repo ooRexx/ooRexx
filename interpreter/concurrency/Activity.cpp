@@ -2905,7 +2905,8 @@ void  Activity::traceOutput(RexxActivation *activation, RexxString *line)
 
         if (stream != OREF_NULL && stream != TheNilObject)
         {
-            stream->sendMessage(LINEOUT, line);
+            ProtectedObject result;
+            stream->sendMessage(LINEOUT, line, result);
         }
         // could not find the target, but don't lose the data!
         else
@@ -2929,7 +2930,8 @@ void Activity::sayOutput(RexxActivation *activation, RexxString *line)
         RexxObject *stream = getLocalEnvironment(OUTPUT);
         if (stream != OREF_NULL && stream != TheNilObject)
         {
-            stream->sendMessage(SAY, line);
+            ProtectedObject result;
+            stream->sendMessage(SAY, line, result);
         }
         else
         {
@@ -2956,7 +2958,8 @@ RexxString *Activity::traceInput(RexxActivation *activation)
         RexxObject *stream = getLocalEnvironment(DEBUGINPUT);
         if (stream != OREF_NULL)
         {
-            value = (RexxString *)stream->sendMessage(LINEIN);
+            ProtectedObject result;
+            value = (RexxString *)stream->sendMessage(LINEIN, result);
             // use a null string of we get .nil back.
             if (value == (RexxString *)TheNilObject)
             {
@@ -2991,7 +2994,8 @@ RexxString *Activity::pullInput(RexxActivation *activation)
         // read from the rexx queue first
         if (stream != OREF_NULL)
         {
-            value = (RexxString *)stream->sendMessage(PULL);
+            ProtectedObject result;
+            value = (RexxString *)stream->sendMessage(PULL, result);
             // if we don't get anything from the queue, try again from linein
             if (value == (RexxString *)TheNilObject)
             {
@@ -3036,8 +3040,9 @@ RexxString *Activity::lineIn(RexxActivation *activation)
         RexxObject *stream = getLocalEnvironment(GlobalNames::INPUT);
         if (stream != OREF_NULL)
         {
+            ProtectedObject result;
             // read using the LINEIN method
-            value = (RexxString *)stream->sendMessage(LINEIN);
+            value = (RexxString *)stream->sendMessage(LINEIN, result);
             if (value == (RexxString *)TheNilObject)
             {
                 value = GlobalNames::NULLSTRING;
@@ -3067,13 +3072,14 @@ void Activity::queue(RexxActivation *activation, RexxString *line, QueueOrder or
         RexxObject *targetQueue = getLocalEnvironment(STDQUE);
         if (targetQueue != OREF_NULL)
         {
+            ProtectedObject result;
             if (order == QUEUE_LIFO)
             {
-                targetQueue->sendMessage(PUSH, line);
+                targetQueue->sendMessage(PUSH, line, result);
             }
             else
             {
-                targetQueue->sendMessage(QUEUE, line);
+                targetQueue->sendMessage(QUEUE, line, result);
             }
         }
     }

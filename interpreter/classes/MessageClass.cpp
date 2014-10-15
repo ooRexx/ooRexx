@@ -221,8 +221,9 @@ RexxObject *MessageClass::notify(RexxObject *notificationTarget)
     // now if we've already notified everything, send the notification now.
     if (allNotified())
     {
+        ProtectedObject result;
         // send the message now
-        notificationTarget->sendMessage(GlobalNames::MessageComplete, this);
+        notificationTarget->sendMessage(GlobalNames::MessageComplete, this, result);
     }
     return OREF_NULL;
 }
@@ -663,7 +664,8 @@ void MessageClass::sendNotification()
         {
             // get each message and give them a poke.
             RexxObject *waitingMessage = (RexxObject *)interestedParties->get(i);
-            waitingMessage->sendMessage(GlobalNames::MessageComplete, this);
+            ProtectedObject result;
+            waitingMessage->sendMessage(GlobalNames::MessageComplete, this, result);
         }
     }
 

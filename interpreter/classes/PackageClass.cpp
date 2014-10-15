@@ -1141,7 +1141,8 @@ void PackageClass::processInstall(RexxActivation *activation)
         for (size_t i = 1; i <= count; i++)
         {
             RexxClass *clz = (RexxClass *)createdClasses->get(i);
-            clz->sendMessage(GlobalNames::ACTIVATE);
+            ProtectedObject result;
+            clz->sendMessage(GlobalNames::ACTIVATE, result);
         }
     }
 }
