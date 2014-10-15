@@ -44,7 +44,11 @@
 #endif
 
 #include <oorexxapi.h>
+#ifdef HAVE_NCURSES_H
 #include <ncurses.h>
+#else
+#include <curses.h>
+#endif
 
 
 /*----------------------------------------------------------------------------*/
