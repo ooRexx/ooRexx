@@ -571,6 +571,13 @@ RexxInternalObject *RexxObject::copy()
         // need to copy the behaviour
         newObj->setBehaviour((RexxBehaviour *)newObj->behaviour->copy());
     }
+
+    // if the source object has an uninit method, then so does the copy.  Make
+    // sure it is added to the table.
+    if (hasUninit())
+    {
+        newObj->requiresUninit();
+    }
     return newObj;
 }
 
@@ -2213,8 +2220,10 @@ void RexxObject::decodeMessageName(RexxObject *target, RexxObject *message, Rexx
 /**
  * Tag an object as having an UNINIT method
  */
-void RexxInternalObject::hasUninit()
+void RexxInternalObject::requiresUninit()
 {
+    // mark this object as having an uninit method
+    setHasUninit();
     memoryObject.addUninitObject(this);
 }
 
@@ -2402,6 +2411,8 @@ size_t RexxInternalObject::getObjectTypeNumber()
  */
 void RexxInternalObject::removedUninit()
 {
+    // mark this object as not having an uninit method
+    clearHasUninit();
     memoryObject.removeUninitObject(this);
 }
 
@@ -2638,7 +2649,7 @@ void RexxObject::checkUninit()
 {
     if (hasMethod(GlobalNames::UNINIT))
     {
-        hasUninit();
+        requiresUninit();
     }
     // this might be in the uninit table, remove it now.
     else

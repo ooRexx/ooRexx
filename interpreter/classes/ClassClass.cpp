@@ -1806,11 +1806,11 @@ void RexxClass::completeNewObject(RexxObject *obj, RexxObject **initArgs, size_t
     // set the behaviour (this might be a subclass, so don't assume the
     // one from the base class is correct).
     obj->setBehaviour(getInstanceBehaviour());
-    // a subclass might defined an uninit method, so we need to
+    // a subclass might define an uninit method, so we need to
     // check that also.
     if (hasUninitDefined())
     {
-        obj->hasUninit();
+        obj->requiresUninit();
     }
     // now send an INIT message to complete initialization.
     obj->sendMessage(GlobalNames::INIT, initArgs, argCount);

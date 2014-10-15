@@ -134,6 +134,9 @@ public:
     inline bool isPrimitive() { return (flags & IsNonPrimitive) == 0; }
     inline void setReadyForUninit() { flags |= UninitPending; }
     inline bool isReadyForUninit() { return (flags & UninitPending) != 0; }
+    inline bool hasUninit() { return (flags & HasUninit) != 0; }
+    inline void setHasUninit() { flags |= HasUninit; }
+    inline void clearHasUninit() { flags &= ~HasUninit; }
     inline void initHeader(size_t l, size_t mark)
     {
         objectSize = l;
@@ -157,6 +160,7 @@ protected:
         NoRefBit         =  0x0020,    // location of No References Bit.
         OldSpaceBit      =  0x0040,    // location of the OldSpace bit
         UninitPending    =  0x0080,    // we have an uninit operation pending
+        HasUninit        =  0x0100,    // this object has an uninit method
     };
 
     size_t    objectSize;              // allocated size of the object
@@ -266,6 +270,9 @@ class RexxInternalObject : public RexxVirtualBase
     inline void   setHasNoReferences() { header.setHasNoReferences(); }
     inline void   setReadyForUninit() { header.setReadyForUninit(); }
     inline bool   isReadyForUninit() { return header.isReadyForUninit(); }
+    inline bool   hasUninit() { return header.hasUninit(); }
+    inline void   setHasUninit() { header.setHasUninit(); }
+    inline void   clearHasUninit() { header.clearHasUninit(); }
     inline bool   hasReferences() { return header.hasReferences(); }
     inline bool   hasNoReferences() { return header.hasNoReferences(); }
     inline void   setPrimitive() { header.setPrimitive(); }
@@ -338,7 +345,7 @@ class RexxInternalObject : public RexxVirtualBase
         return (this == other) || this->isEqual(other);
     }
 
-    void         hasUninit();
+    void         requiresUninit();
     void         removedUninit();
     RexxInternalObject  *clone();
 
