@@ -1010,7 +1010,10 @@ StartClassDefinition(Message)
         AddMethod("SendWith", MessageClass::sendWithRexx, 2);
         AddMethod("StartWith", MessageClass::startWithRexx, 2);
         AddMethod("ReplyWith", MessageClass::replyWithRexx, 2);
+        // these are both just for triggering a send event for event
+        // completions.  The map to the same method
         AddMethod("MessageComplete", MessageClass::messageCompleted, 1);
+        AddMethod("AlarmTriggered", MessageClass::messageCompleted, 1);
         AddMethod("Wait", MessageClass::wait, 0);
         AddMethod("Halt", MessageClass::halt, 1);
 

@@ -107,8 +107,9 @@ end
 .set~inherit(.SetCollection)
 .bag~inherit(.SetCollection)
 
--- Message implements an additional interface
+-- Message implements two additional interfaces
 .message~inherit(.MessageNotification)
+.message~inherit(.AlarmNotification)
 
 
 call 'StreamClasses.orx' rexxPackage
@@ -712,6 +713,14 @@ nomethod:
 -- Notification interface for the .Message class
 ::CLASS 'MessageNotification' MIXINCLASS Object Public
 ::METHOD messageComplete ABSTRACT
+
+-- Notification interface for the .Alarm class
+::CLASS 'AlarmNotification' MIXINCLASS Object Public
+-- we signal both triggering and cancellation
+::METHOD alarmTriggered ABSTRACT
+-- we'll make this one a NOP...it does not really need to be implemented.
+::METHOD alarmStopped
+  return
 
 
 -- tagging classes for Collection class types
@@ -1454,18 +1463,18 @@ return left~caselessCompareTo(right, start, length)
  /* Output Nothing                                                         */
  /**************************************************************************/
 
- expose timer canceled msgobj timerStarted eventSemHandle;
+ expose timer canceled msgobj attachment timerStarted eventSemHandle
  timer = 0                             /* set up initial flag states        */
  eventSemHandle = 0
  timerStarted = 0
  canceled = .false
 
- use strict arg atime, msgobj          /* get the arguments                 */
+ use strict arg atime, msgobj, attachment = .nil
 
-                                       /* not a message object?             */
- if (msgobj~request('MESSAGE') = .nil) then
+ -- this must be an object that implements the alarm notification interface
+ if \msgobj~isA(.AlarmNotification) then
                                        /* have an error                     */
-   raise syntax 93.948 array (2,'MESSAGE')
+   raise syntax 88.914 array ("target", .AlarmNotification~id)
 
  current = .DateTime~new               -- get a current time value
 
@@ -1524,7 +1533,7 @@ return left~caselessCompareTo(right, start, length)
 
  if canceled = 0 then do               /* is the timer canceled?            */
    SIGNAL ON syntax NAME exception     /* enable syntax traps               */
-   msgobj~send                         /* run the message                   */
+   msgobj~alarmTriggered(self)         /* run the message                   */
  end
  exit
 
@@ -1535,6 +1544,9 @@ return left~caselessCompareTo(right, start, length)
  exception:                            /* define exception handler          */
  syntax:
    raise propagate                     /* just propagate the error          */
+
+-- read-only access to the attachment object.
+::attribute attachment GET
 
 ::METHOD !startTimer PRIVATE unguarded EXTERNAL 'LIBRARY REXX alarm_startTimer'
 
@@ -1549,7 +1561,7 @@ return left~caselessCompareTo(right, start, length)
  /**************************************************************************/
 
 ::METHOD cancel unguarded
- expose canceled eventSemHandle timerStarted
+ expose canceled eventSemHandle timerStarted msgObj
 
  use strict arg
 
@@ -1560,6 +1572,8 @@ return left~caselessCompareTo(right, start, length)
                                           /* cancel the timer.                 */
       canceled = 1
       self~!stopTimer(eventSemHandle)
+      -- notify the alarm target
+      msgObj~alarmStopped(self)
    end
  return
 

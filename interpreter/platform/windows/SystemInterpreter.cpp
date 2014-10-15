@@ -61,6 +61,11 @@ class InterpreterInstance;
 
 HINSTANCE SystemInterpreter::moduleHandle = 0;      // handle to the interpeter DLL
 
+/**
+ * Handle system-specific once-per-process startup tasks.
+ *
+ * @param mod    The module handle.
+ */
 void SystemInterpreter::processStartup(HINSTANCE mod)
 {
     moduleHandle = mod;
@@ -71,6 +76,9 @@ void SystemInterpreter::processStartup(HINSTANCE mod)
 }
 
 
+/**
+ * Handle once-per-process shutdown tasks.
+ */
 void SystemInterpreter::processShutdown()
 {
     stopTimeSlice();              // shutdown the timer thread
@@ -79,21 +87,41 @@ void SystemInterpreter::processShutdown()
 }
 
 
+/**
+ * Handle any platform-specific tasks associated with starting
+ * an interpreter instance.
+ */
 void SystemInterpreter::startInterpreter()
 {
 }
 
 
+/**
+ * Handle any platform-specific tasks associated with
+ * terminating an interpreter instance.
+ */
 void SystemInterpreter::terminateInterpreter()
 {
 }
 
 
-
+/**
+ * Perform any additional garbage collection marking that might
+ * be required for platform-specific interpreter instance objects.
+ *
+ * @param liveMark
+ */
 void SystemInterpreter::live(size_t liveMark)
 {
 }
 
+
+/**
+ * Perform any additional garbage collection marking that might
+ * be required for platform-specific interpreter instance objects.
+ *
+ * @param liveMark
+ */
 void SystemInterpreter::liveGeneral(MarkReason reason)
 {
 }
