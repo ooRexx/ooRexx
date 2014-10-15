@@ -52,7 +52,7 @@
 #include <CommCtrl.h>
 #include "oorexxapi.h"
 
-#define NR_BUFFER               15
+#define NR_BUFFER               20
 #define DATA_BUFFER           8192
 #define MAXCHILDDIALOGS         20
 #define MAXDIALOGS              20

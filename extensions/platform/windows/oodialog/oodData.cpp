@@ -501,7 +501,7 @@ static bool getListViewData(HWND hW, char * ldat, INT item)
 static bool setListViewData(HWND hW, const char * ldat, INT item)
 {
    INT i, j;
-   CHAR buffer[NR_BUFFER];
+   CHAR buffer[NR_BUFFER + 1];
    HWND iW = GetDlgItem(hW, item);
 
    const char *p = ldat;
