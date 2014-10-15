@@ -378,7 +378,7 @@ set (build_extensions_csvstream_dir ${build_extensions_dir}/csvStream)
 set (build_extensions_rxmath_dir ${build_extensions_dir}/rxmath)
 set (build_extensions_rxregexp_dir ${build_extensions_dir}/rxregexp)
 set (build_extensions_rxsock_dir ${build_extensions_dir}/rxsock)
-set (build_extensions_orxncurses_dir ${build_extensions_dir}/platform/unix/orxncurses)
+set (build_extensions_orxncurses_dir ${build_extensions_dir}/orxncurses)
 set (build_extensions_hostemu_dir ${build_extensions_dir}/hostemu)
 set (build_extensions_hostemu_platform_dir ${build_extensions_hostemu_dir}/${ORX_PLATFORM_DIR})
 set (build_utilities_dir utilities)
@@ -1160,12 +1160,12 @@ endif ()
 #################### liborxncurses.so ################
 if (NOT WIN32)
 # Sources for liborxncurses.so
-add_library(orxncurses SHARED ${build_extensions_platform_dir}/orxncurses/orxncurses.cpp)
+add_library(orxncurses SHARED ${build_extensions_dir}/orxncurses/orxncurses.cpp)
 # Include file definition
 target_include_directories(orxncurses PUBLIC
              ${build_api_dir}
              ${build_api_platform_dir}
-             ${extensions_unix_dir}/orxncurses)
+             ${build_extensions_dir}/orxncurses)
 # Extra link library definitions
 target_link_libraries(orxncurses rexx rexxapi ncurses)
 set_target_properties(orxncurses PROPERTIES VERSION ${ORX_VERSION})
