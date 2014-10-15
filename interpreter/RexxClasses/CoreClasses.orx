@@ -717,9 +717,9 @@ nomethod:
 -- Notification interface for the .Alarm class
 ::CLASS 'AlarmNotification' MIXINCLASS Object Public
 -- we signal both triggering and cancellation
-::METHOD alarmTriggered ABSTRACT
+::METHOD triggered ABSTRACT
 -- we'll make this one a NOP...it does not really need to be implemented.
-::METHOD alarmStopped
+::METHOD cancel
   return
 
 
@@ -1533,7 +1533,7 @@ return left~caselessCompareTo(right, start, length)
 
  if canceled = 0 then do               /* is the timer canceled?            */
    SIGNAL ON syntax NAME exception     /* enable syntax traps               */
-   msgobj~alarmTriggered(self)         /* run the message                   */
+   msgobj~triggered(self)              /* run the message                   */
  end
  exit
 
@@ -1562,7 +1562,6 @@ return left~caselessCompareTo(right, start, length)
 
 ::METHOD cancel unguarded
  expose canceled eventSemHandle timerStarted msgObj
-
  use strict arg
 
  guard on  when timerStarted              /* Wait until timer is actually set  */
@@ -1573,7 +1572,7 @@ return left~caselessCompareTo(right, start, length)
       canceled = 1
       self~!stopTimer(eventSemHandle)
       -- notify the alarm target
-      msgObj~alarmStopped(self)
+      msgObj~cancel(self)
    end
  return
 

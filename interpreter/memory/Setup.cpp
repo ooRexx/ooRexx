@@ -1013,7 +1013,7 @@ StartClassDefinition(Message)
         // these are both just for triggering a send event for event
         // completions.  The map to the same method
         AddMethod("MessageComplete", MessageClass::messageCompleted, 1);
-        AddMethod("AlarmTriggered", MessageClass::messageCompleted, 1);
+        AddMethod("Triggered", MessageClass::messageCompleted, 1);
         AddMethod("Wait", MessageClass::wait, 0);
         AddMethod("Halt", MessageClass::halt, 1);
 
