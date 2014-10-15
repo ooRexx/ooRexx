@@ -1463,7 +1463,7 @@ return left~caselessCompareTo(right, start, length)
  /* Output Nothing                                                         */
  /**************************************************************************/
 
- expose timer canceled msgobj attachment timerStarted eventSemHandle
+ expose timer canceled msgobj attachment timerStarted eventSemHandle scheduledTime
  timer = 0                             /* set up initial flag states        */
  eventSemHandle = 0
  timerStarted = 0
@@ -1482,13 +1482,16 @@ return left~caselessCompareTo(right, start, length)
 
  if atime~isA(.DateTime) then do
      timespan = atime - current        -- get the interval
+     scheduledTime = atime             -- save the scheduled time
  end
  else if atime~isA(.TimeSpan) then do  -- already in timespan form?
      timespan = atime                  -- we can use this directly
+     scheduledTime = current + atime   -- and get the future time
  end
  else if datatype(atime, 'W') then do  /* just a delta specification?       */
    -- convert seconds into a timespan
    timespan = .timespan~fromSeconds(atime)
+   scheduledTime = current + timespan
  end
  else do
    parse var atime intime ' ' indate   /* split into a date and time        */
@@ -1497,6 +1500,7 @@ return left~caselessCompareTo(right, start, length)
    if indate \= "" then do
        target = .DateTime~fromNormalDate(indate) + .timespan~fromNormalTime(intime)
        timespan = target - current
+       scheduledTime = target
    end
    else do
        -- ok, we need to figure out the next location in the future
@@ -1507,16 +1511,15 @@ return left~caselessCompareTo(right, start, length)
        end
        -- and calculate the interval
        timespan = target - current
+       scheduledTime = target
    end
-
-
  end
 
  if timespan~sign < 0 then do
     raise syntax 93.951 array (atime~string)
  end
 
- -- break this into days an remainder
+ -- break this into days and remainder
  numdays = timespan~days
  alarmtime = timespan~totalMicroseconds - .TimeSpan~fromDays(numdays)~totalMicroseconds
 
@@ -1532,8 +1535,8 @@ return left~caselessCompareTo(right, start, length)
  guard on                              /* get exclusive use of object       */
 
  if canceled = 0 then do               /* is the timer canceled?            */
-   SIGNAL ON syntax NAME exception     /* enable syntax traps               */
-   msgobj~triggered(self)              /* run the message                   */
+   -- run the message, but any errors propagate through
+   msgobj~triggered(self)
  end
  exit
 
@@ -1546,7 +1549,9 @@ return left~caselessCompareTo(right, start, length)
    raise propagate                     /* just propagate the error          */
 
 -- read-only access to the attachment object.
-::attribute attachment GET
+::attribute attachment GET UNGUARDED
+-- and also to the scheduled time
+::attribute scheduledTime GET UNGUARDED
 
 ::METHOD !startTimer PRIVATE unguarded EXTERNAL 'LIBRARY REXX alarm_startTimer'
 
