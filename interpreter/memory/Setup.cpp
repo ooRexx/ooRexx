@@ -425,6 +425,7 @@ StartClassDefinition(Class);
     // now the normal instance methods for a CLASS object.
         AddProtectedMethod("BaseClass", RexxClass::getBaseClass, 0);
         AddProtectedMethod("Define", RexxClass::defineMethod, 2);
+        AddProtectedMethod("DefineMethods", RexxClass::defineMethodsRexx, 1);
         // these two are special and will be removed at the end of
         // the image build
         AddProtectedMethod("DefineClassMethod", RexxClass::defineClassMethod, 2);

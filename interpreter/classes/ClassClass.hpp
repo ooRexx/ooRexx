@@ -84,6 +84,7 @@ class RexxClass : public RexxObject
     void        buildFinalClassBehaviour(RexxClass *superClass);
     void        mergeSuperClassScopes(RexxBehaviour *target_instance_behaviour);
     RexxObject *defineMethod(RexxString *, RexxObject *);
+    RexxObject *defineMethodsRexx(RexxObject * methods);
     RexxObject *deleteMethod(RexxString *);
     RexxObject *defineClassMethod(RexxString *method_name, MethodClass *newMethod);
     void        removeClassMethod(RexxString *method_name);

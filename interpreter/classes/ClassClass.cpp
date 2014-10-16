@@ -511,6 +511,42 @@ RexxObject *RexxClass::defineMethods(StringTable *newMethods)
 
 
 /**
+ * Add a full table of methods to a class definition.
+ *
+ * @param newMethods The new methods to add.
+ */
+RexxObject *RexxClass::defineMethodsRexx(RexxObject *newMethods)
+{
+    // Rexx defined classes are not allowed to be update.  We report this as
+    // a NOMETHOD problem, as if the define method did not even exist.
+    if ( isRexxDefined())
+    {
+        reportException(Error_Execution_rexx_defined_class);
+    }
+
+    requiredArgument(newMethods, "methods");
+    // create a method dictionary and merge this into the method dictionary
+    Protected<MethodDictionary> enhancing_methods = createMethodDictionary(newMethods, this);
+
+    // make a copy of the instance behaviour so any previous objects
+    // aren't enhanced
+    setField(instanceBehaviour, (RexxBehaviour *)instanceBehaviour->copy());
+
+    // add these to the instance method dictionary we use to
+    // build the behaviour.
+    instanceMethodDictionary->merge(enhancing_methods);
+
+    // any subclasses that we have need to redo their instance behaviour
+    // this also updates our own behaviour table
+    updateInstanceSubClasses();
+
+    // see if we have an uninit method defined now that this is done
+    checkUninit();
+    return OREF_NULL;
+}
+
+
+/**
  * Inherit the instance methods from another class definition.
  * This is not an true inherit operation where the class is part
  * of the hierarchy.  This directly grabs the instance methods
