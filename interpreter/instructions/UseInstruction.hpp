@@ -36,13 +36,13 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                       UseStrictInstruction.hpp */
+/* REXX Kernel                                       UseInstruction.hpp       */
 /*                                                                            */
-/* Primitive USE STRICT instruction Class Definitions                         */
+/* Primitive USE instruction Class Definitions                                */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_RexxInstructionUseStrict
-#define Included_RexxInstructionUseStrict
+#ifndef Included_RexxInstructionUse
+#define Included_RexxInstructionUse
 
 #include "RexxInstruction.hpp"
 
@@ -54,11 +54,11 @@ public:
 };
 
 
-class RexxInstructionUseStrict : public RexxInstruction
+class RexxInstructionUse : public RexxInstruction
 {
  public:
-    RexxInstructionUseStrict(size_t, bool, bool, QueueClass *, QueueClass *);
-    inline RexxInstructionUseStrict(RESTORETYPE restoreType) { ; };
+    RexxInstructionUse(size_t, bool, bool, QueueClass *, QueueClass *);
+    inline RexxInstructionUse(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);

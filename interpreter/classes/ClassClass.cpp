@@ -1532,8 +1532,7 @@ RexxClass  *RexxClass::subclass(PackageClass *package, RexxString *class_id,
 
     ProtectedObject p;
     // now get an instance of the meta class
-    meta_class->sendMessage(GlobalNames::NEW, class_id, p);
-    RexxClass *new_class = (RexxClass *)(RexxObject *)p;
+    RexxClass *new_class = (RexxClass *)meta_class->sendMessage(GlobalNames::NEW, class_id, p);
 
     // hook this up with the source as early as possible.
     new_class->setPackage(package);

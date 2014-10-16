@@ -45,7 +45,7 @@
 #include "ArrayClass.hpp"
 #include "QueueClass.hpp"
 #include "RexxActivation.hpp"
-#include "UseStrictInstruction.hpp"
+#include "UseInstruction.hpp"
 #include "ExpressionBaseVariable.hpp"
 
 
@@ -61,7 +61,7 @@
  *                 The list of variable objects.
  * @param defaults The list of defaults to apply to arguments.
  */
-RexxInstructionUseStrict::RexxInstructionUseStrict(size_t count, bool strict, bool extraAllowed, QueueClass *variable_list, QueueClass *defaults)
+RexxInstructionUse::RexxInstructionUse(size_t count, bool strict, bool extraAllowed, QueueClass *variable_list, QueueClass *defaults)
 {
     // set the variable count and the option flag
     variableCount = count;
@@ -96,7 +96,7 @@ RexxInstructionUseStrict::RexxInstructionUseStrict(size_t count, bool strict, bo
  *
  * @param liveMark The current live mark.
  */
-void RexxInstructionUseStrict::live(size_t liveMark)
+void RexxInstructionUse::live(size_t liveMark)
 {
     // must be first object marked
     memory_mark(nextInstruction);
@@ -116,7 +116,7 @@ void RexxInstructionUseStrict::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void RexxInstructionUseStrict::liveGeneral(MarkReason reason)
+void RexxInstructionUse::liveGeneral(MarkReason reason)
 {
     // must be first object marked
     memory_mark_general(nextInstruction);
@@ -133,9 +133,9 @@ void RexxInstructionUseStrict::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope that will hold the flattened object.
  */
-void RexxInstructionUseStrict::flatten(Envelope *envelope)
+void RexxInstructionUse::flatten(Envelope *envelope)
 {
-    setUpFlatten(RexxInstructionUseStrict)
+    setUpFlatten(RexxInstructionUse)
 
     flattenRef(nextInstruction);
     for (size_t i = 0; i < variableCount; i++)
@@ -153,7 +153,7 @@ void RexxInstructionUseStrict::flatten(Envelope *envelope)
  * @param context The current execution context.
  * @param stack   The current evaluation stack.
  */
-void RexxInstructionUseStrict::execute(RexxActivation *context, ExpressionStack *stack)
+void RexxInstructionUse::execute(RexxActivation *context, ExpressionStack *stack)
 {
     // trace if necessary
     context->traceInstruction(this);
@@ -261,7 +261,7 @@ void RexxInstructionUseStrict::execute(RexxActivation *context, ExpressionStack 
  * @return The argument corresponding to the position.  Returns OREF_NULL
  *         if the argument doesn't exist.
  */
-RexxObject *RexxInstructionUseStrict::getArgument(RexxObject **arglist, size_t count, size_t target)
+RexxObject *RexxInstructionUse::getArgument(RexxObject **arglist, size_t count, size_t target)
 {
     // is this beyond what we've been provided with?
     if (target + 1 > count)

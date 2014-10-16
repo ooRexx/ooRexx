@@ -138,7 +138,7 @@
 #include "SignalInstruction.hpp"
 #include "ThenInstruction.hpp"
 #include "TraceInstruction.hpp"
-#include "UseStrictInstruction.hpp"
+#include "UseInstruction.hpp"
 #include "ClassDirective.hpp"
 #include "LibraryDirective.hpp"
 #include "RequiresDirective.hpp"
@@ -626,7 +626,7 @@ void MemoryObject::buildVirtualFunctionTable()
    objectPtr = ::new (objectLoc) RexxInstructionTrace(RESTOREIMAGE);
    virtualFunctionTable[T_TraceInstruction] = getVftPointer(objectLoc);
    
-   objectPtr = ::new (objectLoc) RexxInstructionUseStrict(RESTOREIMAGE);
+   objectPtr = ::new (objectLoc) RexxInstructionUse(RESTOREIMAGE);
    virtualFunctionTable[T_UseInstruction] = getVftPointer(objectLoc);
    
    objectPtr = ::new (objectLoc) ClassDirective(RESTOREIMAGE);

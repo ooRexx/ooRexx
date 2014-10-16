@@ -85,7 +85,7 @@
 #include "QueueInstruction.hpp"
 #include "RaiseInstruction.hpp"
 #include "TraceInstruction.hpp"
-#include "UseStrictInstruction.hpp"
+#include "UseInstruction.hpp"
 
 #include "CallInstruction.hpp"                 /* call/signal instructions          */
 #include "SignalInstruction.hpp"
@@ -499,6 +499,55 @@ RexxInstruction *LanguageParser::sourceNewObject(size_t size, RexxBehaviour *_be
 
 
 /**
+ * Create a "raw" executable instruction object of variable
+ * size.  Allocation/creation of instruction objects are handled
+ * a little differently, and goes in stages: 1) Have RexxMemory
+ * allocate a Rexx object of the appropriate size.  2) Set the
+ * object behaviour to be the table for the target instruction.
+ * 3) Call the in-memory new() method on this object using the
+ * RexxInstruction() constructor.  This does base initialization
+ * of the object as an instruction object.  This version is
+ * returned to the caller, with this instruction anchored in the
+ * parser object to protect it from garbage collection, which is
+ * handy if its constructor needs to allocate any additional
+ * objects.<p>
+ * Step 4) happens once the caller receives this object
+ * instance.  It agains calls the new() in-memory allocator for
+ * the final instruction class.  The constructor fills in any
+ * instruction specific information, as well as changing the
+ * object virtual function table to the final version.  The
+ * information we set up here will remain untouched.
+ *
+ * @param size       The base size of the object type.
+ * @param count      The count of extra items to add to the object instance.
+ * @param itemSize   The size of the extra items to add.
+ * @param _behaviour The Rexx object behaviour.
+ * @param type       The type identifiers for the instruction
+ *                   (see RexxToken InstructionKeyword enum).
+ *
+ * @return A newly created instruction object with basic instruction initialization.
+ */
+RexxInstruction *LanguageParser::sourceNewObject(size_t size, size_t count, size_t itemSize,
+    RexxBehaviour *_behaviour, InstructionKeyword type )
+{
+    // for variable size instructions, there is always an extra field at the end of the object
+    // for the first slot allocation.  If the count is zero, then we subtract the item size from
+    // the base size.  Otherwise, we add count - 1 extra items to the allocation.
+    if (count == 0)
+    {
+        size -= itemSize;
+    }
+    else
+    {
+        size += (count - 1) * itemSize;
+    }
+
+    // go allocate the actual object.
+    return sourceNewObject(size, _behaviour, type);
+}
+
+
+/**
  * Parse an ADDRESS instruction and create an executable instruction object.
  *
  * @return An instruction object that can perform this function.
@@ -751,7 +800,7 @@ RexxInstruction *LanguageParser::dynamicCallNew(RexxToken *token)
     size_t argCount = parseArgList(OREF_NULL, TERM_EOC);
 
     // create a new instruction object
-    RexxInstruction *newObject = new_variable_instruction(CALL_VALUE, DynamicCall, sizeof(RexxInstructionDynamicCall) + (argCount - 1) * sizeof(RexxObject *));
+    RexxInstruction *newObject = new_variable_instruction(CALL_VALUE, DynamicCall, argCount, RexxObject *);
     ::new ((void *)newObject) RexxInstructionDynamicCall(targetName, argCount, subTerms);
 
     // NOTE:  The name of the call cannot be determined until run time, so we don't
@@ -787,7 +836,7 @@ RexxInstruction *LanguageParser::qualifiedCallNew(RexxToken *token)
     size_t argCount = parseArgList(OREF_NULL, TERM_EOC);
 
     // create a new instruction object
-    RexxInstruction *newObject = new_variable_instruction(CALL_QUALIFIED, QualifiedCall, sizeof(RexxInstructionQualifiedCall) + (argCount - 1) * sizeof(RexxObject *));
+    RexxInstruction *newObject = new_variable_instruction(CALL_QUALIFIED, QualifiedCall, argCount, RexxObject *);
     ::new ((void *)newObject) RexxInstructionQualifiedCall(namespaceName, routineName, argCount, subTerms);
 
     // NOTE:  The call target has no reliance on the labels because it is always an external
@@ -879,7 +928,7 @@ RexxInstruction *LanguageParser::callNew()
     }
 
     // create a new Call instruction.  This only handles the simple calls.
-    RexxInstruction *newObject = new_variable_instruction(CALL, Call, sizeof(RexxInstructionCall) + (argCount - 1) * sizeof(RexxObject *));
+    RexxInstruction *newObject = new_variable_instruction(CALL, Call, argCount, RexxObject *);
     ::new ((void *)newObject) RexxInstructionCall(targetName, argCount, subTerms, builtin_index);
 
     // add to our references list, but only if this is a form where
@@ -1561,7 +1610,7 @@ RexxInstruction *LanguageParser::dropNew()
     // in the subterms stack.
     size_t variableCount = processVariableList(KEYWORD_DROP);
 
-    RexxInstruction *newObject = new_variable_instruction(DROP, Drop, sizeof(RexxInstructionDrop) + (variableCount - 1) * sizeof(RexxObject *));
+    RexxInstruction *newObject = new_variable_instruction(DROP, Drop, variableCount, RexxObject *);
     // this initializes from the sub term stack.
     ::new ((void *)newObject) RexxInstructionDrop(variableCount, subTerms);
     return newObject;
@@ -1680,7 +1729,7 @@ RexxInstruction *LanguageParser::exposeNew()
     // The variables are placed in the subTerms stack
     size_t variableCount = processVariableList(KEYWORD_EXPOSE);
 
-    RexxInstruction *newObject = new_variable_instruction(EXPOSE, Expose, sizeof(RexxInstructionExpose) + (variableCount - 1) * sizeof(RexxObject *));
+    RexxInstruction *newObject = new_variable_instruction(EXPOSE, Expose, variableCount, RexxObject *);
     ::new ((void *)newObject) RexxInstructionExpose(variableCount, subTerms);
     return newObject;
 }
@@ -1926,18 +1975,7 @@ RexxInstruction *LanguageParser::guardNew()
         syntaxError(Error_Invalid_subkeyword_guard_on, token);
     }
 
-    RexxInstruction *newObject;
-    // if we have when expression variables, create an appropriate size instruction
-    if (variable_count != 0)
-    {
-        newObject = new_variable_instruction(GUARD, Guard,
-            sizeof(RexxInstructionGuard) + (variable_count - 1) * sizeof(RexxObject *));
-    }
-    // just use the base size.
-    else
-    {
-       newObject = new_instruction(GUARD, Guard);
-    }
+    RexxInstruction *newObject = new_variable_instruction(GUARD, Guard, variable_count, RexxVariableBase *);
     ::new ((void *)newObject) RexxInstructionGuard(expression, variable_list, guardOn);
     return newObject;
 }
@@ -1956,6 +1994,8 @@ RexxInstruction *LanguageParser::ifNew()
 {
     // ok, get a conditional expression
     RexxInternalObject *_condition = requiredLogicalExpression(TERM_IF, Error_Invalid_expression_if);
+    // protect on the term stack
+    pushSubTerm(_condition);
 
     // get to the terminator token for this (likely a THEN, but it could
     // be an EOC.  We use this to update the end location for the instruction since
@@ -1997,6 +2037,8 @@ RexxInstruction *LanguageParser::whenNew()
     {
         // ok, get a conditional expression
         RexxInternalObject *_condition = requiredLogicalExpression(TERM_IF, Error_Invalid_expression_when);
+        // protect on the term stack
+        pushSubTerm(_condition);
 
         // get to the terminator token for this (likely a THEN, but it could
         // be an EOC.  We use this to update the end location for the instruction since
@@ -2023,7 +2065,7 @@ RexxInstruction *LanguageParser::whenNew()
         RexxToken *token = nextReal();
         previousToken();
         // this is really an IF instruction
-        RexxInstruction *newObject = new_variable_instruction(WHEN_CASE, CaseWhen, sizeof(RexxInstructionCaseWhen) + (argCount - 1) * sizeof(RexxObject *));
+        RexxInstruction *newObject = new_variable_instruction(WHEN_CASE, CaseWhen, argCount, RexxObject *);
         ::new ((void *)newObject) RexxInstructionCaseWhen(argCount, subTerms, token);
         return newObject;
     }
@@ -2125,7 +2167,7 @@ RexxInstruction *LanguageParser::messageNew(RexxExpressionMessage *msg)
 {
     ProtectedObject p(msg);
     // just allocate and initialize the object.
-    RexxInstruction *newObject = new_variable_instruction(MESSAGE, Message, sizeof(RexxInstructionMessage) + (msg->argumentCount - 1) * sizeof(RexxObject *));
+    RexxInstruction *newObject = new_variable_instruction(MESSAGE, Message, msg->argumentCount, RexxObject *);
     ::new ((void *)newObject) RexxInstructionMessage(msg);
     return newObject;
 }
@@ -2143,7 +2185,7 @@ RexxInstruction *LanguageParser::doubleMessageNew(RexxExpressionMessage *msg)
 {
     ProtectedObject p(msg);
     // just allocate and initialize the object.
-    RexxInstruction *newObject = new_variable_instruction(MESSAGE_DOUBLE, Message, sizeof(RexxInstructionMessage) + (msg->argumentCount - 1) * sizeof(RexxObject *));
+    RexxInstruction *newObject = new_variable_instruction(MESSAGE_DOUBLE, Message, msg->argumentCount, RexxObject *);
     ::new ((void *)newObject) RexxInstructionMessage(msg);
     return newObject;
 }
@@ -2162,8 +2204,8 @@ RexxInstruction *LanguageParser::messageAssignmentNew(RexxExpressionMessage *msg
     ProtectedObject p(msg);               // protect this
     msg->makeAssignment(this);            // convert into an assignment message
 
-    // allocate a new object.  NB:  a message instruction gets an extra argument, so we don't subtract one.
-    RexxInstruction *newObject = new_variable_instruction(MESSAGE, Message, sizeof(RexxInstructionMessage) + (msg->argumentCount) * sizeof(RexxObject *));
+    // allocate a new object.  NB:  a message instruction gets an extra argument, so we add one
+    RexxInstruction *newObject = new_variable_instruction(MESSAGE, Message, msg->argumentCount + 1, RexxObject *);
     ::new ((void *)newObject) RexxInstructionMessage(msg, expr);
     return newObject;
 }
@@ -2196,8 +2238,8 @@ RexxInstruction *LanguageParser::messageAssignmentOpNew(RexxExpressionMessage *m
     // now add a binary operator to this expression tree using the message copy.
     expr = new RexxBinaryOperator(operation->subtype(), retriever, expr);
 
-    // allocate a new object.  NB:  a message instruction gets an extra argument, so we don't subtract one.
-    RexxInstruction *newObject = new_variable_instruction(MESSAGE, Message, sizeof(RexxInstructionMessage) + (msg->argumentCount) * sizeof(RexxObject *));
+    // allocate a new object.  NB:  a message instruction gets an extra argument, so we add one
+    RexxInstruction *newObject = new_variable_instruction(MESSAGE, Message, msg->argumentCount + 1, RexxObject *);
     ::new ((void *)newObject) RexxInstructionMessage(msg, expr);
     return newObject;
 }
@@ -2699,7 +2741,7 @@ RexxInstruction *LanguageParser::parseNew(InstructionSubKeyword argPull)
     }
 
     // and finally create the instruction from the accumulated information.
-    RexxInstruction *newObject = new_variable_instruction(PARSE, Parse, sizeof(RexxInstructionParse) + (templateCount - 1) * sizeof(RexxObject *));
+    RexxInstruction *newObject = new_variable_instruction(PARSE, Parse, templateCount, RexxObject *);
     ::new ((void *)newObject) RexxInstructionParse(sourceExpression, stringSource, parseFlags, templateCount, parse_template);
     return newObject;
 }
@@ -2727,7 +2769,7 @@ RexxInstruction *LanguageParser::procedureNew()
         variableCount = processVariableList(KEYWORD_PROCEDURE);
     }
 
-    RexxInstruction *newObject = new_variable_instruction(PROCEDURE, Procedure, sizeof(RexxInstructionProcedure) + (variableCount - 1) * sizeof(RexxObject *));
+    RexxInstruction *newObject = new_variable_instruction(PROCEDURE, Procedure, variableCount, RexxObject *);
     ::new ((void *)newObject) RexxInstructionProcedure(variableCount, subTerms);
     return newObject;
 }
@@ -2997,7 +3039,7 @@ RexxInstruction *LanguageParser::raiseNew()
         size_t arrayCount = arrayItems->size();
         // we pass this as the additional...the flag tells us which to use
         additional = arrayItems;
-        newObject = new_variable_instruction(RAISE, Raise, sizeof(RexxInstructionRaise) + (arrayCount - 1) * sizeof(RexxObject *));
+        newObject = new_variable_instruction(RAISE, Raise, arrayCount, RexxObject *);
     }
     // fixed instruction size
     else
@@ -3650,8 +3692,8 @@ RexxInstruction *LanguageParser::useNew()
         }
     }
 
-    RexxInstruction *newObject = new_variable_instruction(USE, Use, sizeof(RexxInstructionUseStrict) + (variableCount == 0 ? 0 : (variableCount - 1)) * sizeof(UseVariable));
-    ::new ((void *)newObject) RexxInstructionUseStrict(variableCount, strictChecking, allowOptionals, variable_list, defaults_list);
+    RexxInstruction *newObject = new_variable_instruction(USE, Use, variableCount, UseVariable);
+    ::new ((void *)newObject) RexxInstructionUse(variableCount, strictChecking, allowOptionals, variable_list, defaults_list);
 
     return newObject;
 }

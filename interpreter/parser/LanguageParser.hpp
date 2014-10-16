@@ -76,7 +76,7 @@ class ClassResolver;
 
 // handy defines for simplifying creation of instruction types.
 #define new_instruction(name, type) sourceNewObject(sizeof(RexxInstruction##type), The##type##InstructionBehaviour, KEYWORD_##name)
-#define new_variable_instruction(name, type, size) sourceNewObject(size, The##type##InstructionBehaviour, KEYWORD_##name)
+#define new_variable_instruction(name, type, count, itemType) sourceNewObject(sizeof(RexxInstruction##type), count, sizeof(itemType), The##type##InstructionBehaviour, KEYWORD_##name)
 
 // context flag values.
 typedef enum
@@ -301,6 +301,7 @@ class LanguageParser: public RexxInternalObject
     inline bool topDoIsType(InstructionKeyword t) { return ((RexxInstruction *)(control->peek()))->isType(t); }
     inline bool topDoIsType(InstructionKeyword t1, InstructionKeyword t2) { return topDoIsType(t1) || topDoIsType(t2); }
     RexxInstruction *sourceNewObject(size_t size, RexxBehaviour *_behaviour, InstructionKeyword type);
+    RexxInstruction *sourceNewObject(size_t size, size_t count, size_t itemSize, RexxBehaviour *_behaviour, InstructionKeyword type);
 
     // directive parsing methods
     void        nextDirective();

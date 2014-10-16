@@ -844,7 +844,7 @@ void ArrayClass::openGap(size_t index, size_t elements)
     else
     {
         // make sure we have space for the additional elements
-        ensureSpace(size() + elements);
+        ensureSpace(lastItem + elements);
 
         // the last element to move.
         char *_end = (char *)slotAddress(lastItem + 1);
@@ -897,7 +897,7 @@ void ArrayClass::closeGap(size_t index, size_t elements)
     // explicitly null out the slots of the gap we're closing to
     // ensure that any oldspace tracking issues are resolved.
     // use the clear method to ensure the item count is getting updated
-    // appropriate.
+    // appropriately.
     for (size_t i = index; i < index + elements; i++)
     {
         clearArrayItem(i);

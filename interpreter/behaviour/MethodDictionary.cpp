@@ -68,6 +68,7 @@ void *MethodDictionary::operator new (size_t size)
  */
 MethodDictionary::MethodDictionary(size_t capacity) : StringHashCollection(capacity)
 {
+    ProtectedObject p(this);
     // Method dictionaries don't get created until we're defining/adding
     //. methods to a class.  We can assume that once created, we'll need most of the
     // items (except maybe the instance methods).
