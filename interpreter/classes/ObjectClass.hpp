@@ -137,6 +137,9 @@ public:
     inline bool hasUninit() { return (flags & HasUninit) != 0; }
     inline void setHasUninit() { flags |= HasUninit; }
     inline void clearHasUninit() { flags &= ~HasUninit; }
+    inline bool isDeadObject() { return (flags & DeadObject) != 0; }
+    inline void setDeadObject() { flags |= DeadObject; }
+    inline void clearDeadObject() { flags &= ~DeadObject; }
     inline void initHeader(size_t l, size_t mark)
     {
         objectSize = l;
@@ -161,6 +164,7 @@ protected:
         OldSpaceBit      =  0x0040,    // location of the OldSpace bit
         UninitPending    =  0x0080,    // we have an uninit operation pending
         HasUninit        =  0x0100,    // this object has an uninit method
+        DeadObject       =  0x0200,    // this is a dead object
     };
 
     size_t    objectSize;              // allocated size of the object

@@ -64,8 +64,10 @@ class DeadObject
 
  public:
     inline void addEyeCatcher(const char *string) { memcpy(VFT, string, 4); }
-    inline DeadObject(size_t objectSize) {
+    inline DeadObject(size_t objectSize)
+    {
         header.setObjectSize(objectSize);
+        header.setDeadObject();
         addEyeCatcher("DEAD");
     }
 
@@ -75,6 +77,7 @@ class DeadObject
   {
       addEyeCatcher("HEAD");
       header.setObjectSize(0);
+      header.setDeadObject();
       /* Chain this deadobject to itself. */
       next = this;
       previous = this;
@@ -83,29 +86,33 @@ class DeadObject
   inline void setObjectSize(size_t newSize) { header.setObjectSize(newSize); }
   inline size_t getObjectSize() {  return header.getObjectSize(); };
 
-  inline void insertAfter(DeadObject *newDead) {
+  inline void insertAfter(DeadObject *newDead)
+  {
       newDead->next     = this->next;
       newDead->previous = this;
-      this->next->previous = newDead;
-      this->next           = newDead;
-  };
+      next->previous = newDead;
+      next           = newDead;
+  }
 
-  inline void insertBefore(DeadObject *newDead) {
+  inline void insertBefore(DeadObject *newDead)
+  {
       newDead->next        = this;
       newDead->previous    = this->previous;
-      this->previous->next = newDead;
-      this->previous       = newDead;
-  };
+      previous->next = newDead;
+      previous       = newDead;
+  }
 
-  inline void remove() {
-      this->next->previous = this->previous;
-      this->previous->next = this->next;
+  inline void remove()
+  {
+      next->previous = this->previous;
+      previous->next = this->next;
   }
 
   inline bool isReal() { return header.getObjectSize() != 0; }
   inline bool isHeader() { return header.getObjectSize() == 0; }
 
-  inline void reset() {
+  inline void reset()
+  {
       /* Chain this deadobject to itself, removing all of the */
       /* elements from the chain */
       next = this;
@@ -132,12 +139,14 @@ class DeadObjectPool
   public:
     inline DeadObjectPool() { init("Generic DeadChain"); }
 
-    inline DeadObjectPool(const char * poolID) : anchor() {
+    inline DeadObjectPool(const char * poolID) : anchor()
+    {
         init(poolID);
     }
 
-    inline void init(const char * poolID) {
-        this->id = poolID;
+    inline void init(const char * poolID)
+    {
+        id = poolID;
 #ifdef MEMPROFILE                      /* doing memory profiling            */
         allocationCount = 0;
         allocationReclaim = 0;
@@ -155,11 +164,9 @@ class DeadObjectPool
     inline bool  isEmpty() { return anchor.next->isReal(); }
     inline void  emptySingle() { anchor.next = NULL; }
     inline bool  isEmptySingle() { return anchor.next == NULL; }
-    inline
-           void  checkObjectGrain(DeadObject *obj);
-    inline void  add(DeadObject *obj) {
-//      checkObjectOverlap(obj);
-//      checkObjectGrain(obj);
+    inline void  checkObjectGrain(DeadObject *obj);
+    inline void  add(DeadObject *obj)
+    {
         anchor.insertAfter(obj);
     }
     void addSortedBySize(DeadObject *obj);
@@ -177,7 +184,8 @@ class DeadObjectPool
         DeadObject *newObject = anchor.next;
         /* The next item could just be a pointer back to the anchor. */
         /* If it is not, we have a real block to return. */
-        if (newObject->isReal()) {
+        if (newObject->isReal())
+        {
             /* we need to remove the object from the chain before */
             /* returning it. */
             newObject->remove();
@@ -258,9 +266,8 @@ class DeadObjectPool
     DeadObject *findBestFit(size_t length);
     DeadObject *findSmallestFit(size_t minSize);
 
-    inline void  addSingle(DeadObject *obj) {
-//      checkObjectOverlap(obj);
-//      checkObjectGrain(obj);
+    inline void  addSingle(DeadObject *obj)
+    {
         obj->next = anchor.next;
         anchor.next = obj;
     }
