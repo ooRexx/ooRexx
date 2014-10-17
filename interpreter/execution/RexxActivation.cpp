@@ -2684,24 +2684,19 @@ bool RexxActivation::callExternalRexx(RexxString *target, RexxObject **arguments
     size_t argcount, RexxString *calltype, ProtectedObject  &resultObj)
 {
     // Get full name including path
-    RexxString *filename = resolveProgramName(target);
-    if (filename != OREF_NULL)
+    Protected<RexxString> filename = resolveProgramName(target);
+    if (!filename.isNull())
     {
-        // protect the file name on stack
-        stack.push(filename);
         // try for a saved program or translate a anew
 
-        RoutineClass *routine = LanguageParser::createProgramFromFile(filename);
-        // remove the protected name
-        stack.pop();
+        Protected<RoutineClass> routine = LanguageParser::createProgramFromFile(filename);
         // do we have something?  return not found
-        if (routine == OREF_NULL)
+        if (routine.isNull())
         {
             return false;
         }
         else
         {
-            ProtectedObject p(routine);
             // run as a call
             routine->call(activity, target, arguments, argcount, calltype, settings.currentAddress, EXTERNALCALL, resultObj);
             // merge all of the public info

@@ -269,7 +269,7 @@ RoutineClass *LanguageParser::createProgram(RexxString *name)
 RoutineClass *LanguageParser::createProgramFromFile(RexxString *filename)
 {
     // load the file into a buffer
-    BufferClass *program_buffer = SystemInterpreter::readProgram(filename->getStringData());
+    Protected<BufferClass> program_buffer = SystemInterpreter::readProgram(filename->getStringData());
     // if this failed, report an error now.
     if (program_buffer == OREF_NULL)
     {
