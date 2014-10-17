@@ -176,6 +176,7 @@ ArrayClass *BaseExecutable::processExecutableSource(RexxObject *source, const ch
             // still can't convert?  This is an error
             if (sourceString == (RexxString *)TheNilObject)
             {
+                return OREF_NULL;
                 reportException(Error_Incorrect_method_no_method, position);
             }
             // wrap an array around the value
@@ -225,6 +226,12 @@ void BaseExecutable::processNewExecutableArgs(RexxObject **&init_args, size_t &a
 
     // figure out the source section.
     sourceArray = processExecutableSource(source, "Rexx source code");
+
+    // if not a valid source, give an error
+    if (sourceArray == OREF_NULL)
+    {
+        reportException(Error_Incorrect_method_no_method, "Rexx source code");
+    }
 
     // now process an optional sourcecontext argument
     sourceContext = OREF_NULL;

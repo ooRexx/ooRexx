@@ -4674,6 +4674,15 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Incorrect_method_message_name</SymbolicName>
         <Text>A message name argument must be a string or an array with 2 elements; found <q><Sub position="1" name="value"/></q>.</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>93</Code>
+        <Subcode>974</Subcode>
+        <MessageNumber>539</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Incorrect_method_no_method_type</SymbolicName>
+        <Text>The <Sub position="1" name="argument"/> argument must be a string, array, or method object.</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>

@@ -1289,6 +1289,9 @@ $ Error_Translation_requires
 $ Error_Incorrect_method_no_method
 539 The &1 argument must be a string or array object.
 
+$ Error_Incorrect_method_no_method_type
+539 The &1 argument must be a string, array, or method object.
+
 $ Error_Incorrect_method_argType
 540 Method argument &1 could not be converted to type &2.
 

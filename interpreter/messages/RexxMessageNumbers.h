@@ -466,6 +466,7 @@
 #define Error_Translation_invalid_line_msg                           537
 #define Error_Translation_requires_msg                               538
 #define Error_Incorrect_method_no_method_msg                         539
+#define Error_Incorrect_method_no_method_type_msg                    539
 #define Error_Incorrect_method_argType_msg                           540
 #define Error_Incorrect_method_array_dimension_msg                   541
 #define Error_Incorrect_method_nostring_inarray_msg                  542

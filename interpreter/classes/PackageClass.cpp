@@ -180,6 +180,12 @@ PackageClass *PackageClass::newRexx(RexxObject **init_args, size_t argCount)
         // validate, and potentially transform, the method source object.
         ArrayClass *sourceArray = BaseExecutable::processExecutableSource(programSource, "source");
 
+        // if not a valid source, give an error
+        if (sourceArray == OREF_NULL)
+        {
+            reportException(Error_Incorrect_method_no_method, "source");
+        }
+
         // and create the package
         package = LanguageParser::createPackage(nameString, sourceArray, sourceContext);
         // make sure the prolog is run

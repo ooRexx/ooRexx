@@ -401,6 +401,12 @@ MethodClass *MethodClass::newMethodObject(RexxString *pgmname, RexxObject *sourc
     // validate, and potentially transform, the method source object.
     ArrayClass *newSourceArray = processExecutableSource(source, position);
 
+    // if not a valid source, give an error
+    if (newSourceArray == OREF_NULL)
+    {
+        reportException(Error_Incorrect_method_no_method_type, position);
+    }
+
     // this method is called when methods are added to class, object, directory, etc.
     // we want to inherit from the current execution source context if we can.
 
