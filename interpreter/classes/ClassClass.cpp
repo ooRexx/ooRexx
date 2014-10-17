@@ -929,7 +929,7 @@ RexxObject *RexxClass::deleteMethod(RexxString  *method_name)
     }
 
     // the method name must be a string, and we use the uppercase version...always!
-    method_name = stringArgument(method_name, ARG_ONE)->upper();
+    method_name = stringArgument(method_name, "method name")->upper();
     // we work on a copy of the instance behaviour so that this changed
     // does not suddenly show up in existing instances of this class.
     setField(instanceBehaviour, (RexxBehaviour *)instanceBehaviour->copy());
@@ -955,7 +955,7 @@ RexxObject *RexxClass::deleteMethod(RexxString  *method_name)
 MethodClass *RexxClass::method(RexxString  *method_name)
 {
     // make sure we have a proper name
-    method_name = stringArgument(method_name, ARG_ONE)->upper();
+    method_name = stringArgument(method_name, "method name")->upper();
     // we keep the instance methods defined at this level in a separate
     // method dictionary that is used to build the behaviour.  We can retrieve
     // the method directly from there.
@@ -1254,7 +1254,7 @@ RexxObject *RexxClass::inherit(RexxClass *mixin_class, RexxClass  *position)
     }
 
     // the mixin class is required
-    requiredArgument(mixin_class, ARG_ONE);
+    requiredArgument(mixin_class, "mixin class");
 
     // this must be a class object and must be marked as a mixin
     if (!mixin_class->isInstanceOf(TheClassClass) || !mixin_class->isMixinClass())
@@ -1346,7 +1346,7 @@ RexxObject *RexxClass::uninherit(RexxClass  *mixin_class)
     }
 
     // the target class is required
-    requiredArgument(mixin_class, ARG_ONE);
+    requiredArgument(mixin_class, "mixin class");
 
     // this class must be a superclass of this class, but not the
     // immeidate superclass.
@@ -1402,7 +1402,7 @@ RexxObject *RexxClass::enhanced(RexxObject **args, size_t argCount)
 
     // ok, get the table argument and make sure we really got something.
     RexxObject *enhanced_methods = args[0];
-    requiredArgument(enhanced_methods, ARG_ONE);
+    requiredArgument(enhanced_methods, "methods");
 
     // create a dummy subclass of the receiver class
     Protected<RexxClass> dummy_subclass = subclass(OREF_NULL, new_string("Enhanced Subclass"), OREF_NULL, OREF_NULL);
@@ -1738,7 +1738,7 @@ RexxClass  *RexxClass::newRexx(RexxObject **args, size_t argCount)
 
     // first argument is the class id...make sure it is a string value
     RexxString *class_id = (RexxString *)args[0];
-    class_id = stringArgument(class_id, ARG_ONE);
+    class_id = stringArgument(class_id, "class id");
 
     // get a copy of this class object
     Protected<RexxClass> new_class = (RexxClass *)clone();
