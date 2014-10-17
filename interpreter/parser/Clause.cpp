@@ -67,6 +67,8 @@ void *RexxClause::operator new(size_t size)
  */
 RexxClause::RexxClause()
 {
+    // make sure we are protected while we are creating this.
+    ProtectedObject p(this);
     // allocate an entire array of tokens for use.  We reuse these
     tokens = new_array(INITIAL_SIZE);
     for (size_t i = 0; i < INITIAL_SIZE; i++)

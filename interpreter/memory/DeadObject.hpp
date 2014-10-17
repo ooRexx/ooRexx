@@ -63,7 +63,12 @@ class DeadObject
  friend class DeadObjectPool;
 
  public:
-    inline void addEyeCatcher(const char *string) { memcpy(VFT, string, 4); }
+    inline void addEyeCatcher(const char *string)
+    {
+#ifdef _DEBUG
+        memcpy(VFT, string, 4);
+#endif
+    }
     inline DeadObject(size_t objectSize)
     {
         header.setObjectSize(objectSize);
