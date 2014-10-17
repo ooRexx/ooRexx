@@ -532,9 +532,8 @@ RexxObject *RexxClass::defineMethodsRexx(RexxObject *newMethods)
     // aren't enhanced
     setField(instanceBehaviour, (RexxBehaviour *)instanceBehaviour->copy());
 
-    // add these to the instance method dictionary we use to
-    // build the behaviour.
-    instanceMethodDictionary->merge(enhancing_methods);
+    // replace all of the methods in the method dictionary
+    instanceMethodDictionary->replaceMethods(enhancing_methods, this);
 
     // any subclasses that we have need to redo their instance behaviour
     // this also updates our own behaviour table
