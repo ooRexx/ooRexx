@@ -142,6 +142,7 @@ public:
     inline StringTable *getNamespaces() { install(); return namespaces; }
            StringTable *getAnnotations();
            RexxString  *getAnnotation(RexxString *name);
+           ArrayClass  *getResource(RexxString *name);
     inline void         setDigits(wholenumber_t d) { packageSettings.setDigits(d); }
     inline wholenumber_t getDigits() { return packageSettings.getDigits(); }
     inline void         setForm(bool f) { packageSettings.setForm(f); }
@@ -178,6 +179,7 @@ public:
            PackageClass  *getNamespaceRexx();
            ArrayClass    *getImportedPackagesRexx();
            RexxObject    *getAnnotationRexx(RexxObject *name);
+           RexxObject    *getResourceRexx(RexxObject *name);
            PackageClass  *loadPackageRexx(RexxString *name, ArrayClass *s);
            RexxObject    *addPackageRexx(PackageClass *package, RexxString *namespaceName);
            RexxObject    *addRoutineRexx(RexxString *name, RoutineClass *routine);

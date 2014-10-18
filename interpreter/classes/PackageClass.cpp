@@ -1541,6 +1541,39 @@ StringTable *PackageClass::getResourcesRexx()
 
 
 /**
+ * Get a specific named resource
+ *
+ * @param name   The resource name
+ *
+ * @return The resource array, or OREF_NULL if it doesn't exist.
+ */
+ArrayClass *PackageClass::getResource(RexxString *name)
+{
+    // we need to return a copy.  The source might necessarily have any of these,
+    // so we return an empty directory if it's not there.
+    StringTable *resourceDir = getResources();
+    if (resourceDir == OREF_NULL)
+    {
+        return OREF_NULL;
+    }
+    return (ArrayClass *)resourceDir->entry(name);
+}
+
+
+/**
+ * The Rexx stub for the get resource method
+ *
+ * @param name   The name of the target resource.
+ *
+ * @return The resource value, or .nil if it does not exist.
+ */
+RexxObject *PackageClass::getResourceRexx(RexxObject *name)
+{
+    return resultOrNil(getResource(stringArgument(name, "name")));
+}
+
+
+/**
  * Get all of the namespaces defined in this package.
  *
  * @return A directory of the defined namespaces

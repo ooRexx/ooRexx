@@ -1108,6 +1108,7 @@ StartClassDefinition(Package)
         AddMethod("ImportedClasses", PackageClass::getImportedClassesRexx, 0);
         AddMethod("DefinedMethods", PackageClass::getMethodsRexx, 0);
         AddMethod("Resources", PackageClass::getResourcesRexx, 0);
+        AddMethod("Resource", PackageClass::getResourceRexx, 1);
         AddMethod("Namespaces", PackageClass::getNamespacesRexx, 0);
         AddMethod("Annotations", PackageClass::getAnnotations, 0);
         AddMethod("Annotation", PackageClass::getAnnotationRexx, 1);
