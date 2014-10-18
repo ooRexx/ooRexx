@@ -1348,6 +1348,12 @@ RexxObject *RexxClass::uninherit(RexxClass  *mixin_class)
     // the target class is required
     requiredArgument(mixin_class, "mixin class");
 
+    // this must be a class object and must be marked as a mixin
+    if (!mixin_class->isInstanceOf(TheClassClass) || !mixin_class->isMixinClass())
+    {
+        reportException(Error_Execution_mixinclass, mixin_class);
+    }
+
     // this class must be a superclass of this class, but not the
     // immeidate superclass.
     size_t instance_index = superClasses->indexOf(mixin_class);
@@ -1554,7 +1560,7 @@ RexxClass  *RexxClass::subclass(PackageClass *package, RexxString *class_id,
 
     // if we have enhancing methods, create an instance method dictionary using the
     // new class as the scope.
-    if (enhancing_methods != OREF_NULL && enhancing_methods != TheNilObject)
+    if (enhancing_methods != OREF_NULL)
     {
         // create a method dictionary and merge this into the class method dictionary
         Protected<MethodDictionary> enhancing_class_methods = new_class->createMethodDictionary(enhancing_methods, new_class);
