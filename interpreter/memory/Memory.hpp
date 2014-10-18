@@ -71,6 +71,10 @@ public:
     // is more than we need, but we don't want this extending frequently
     static const size_t DefaultOld2NewSize = 512;
 
+    // The default size for the global references table.  This should generally
+    // be pretty small.
+    static const size_t DefaultGlobalReferenceSize = 64;
+
     // The minimum allocation unit for an object, which must be large
     // enought for a pair of pointer values
     static const size_t ObjectGrain = sizeof(void *) * 2;

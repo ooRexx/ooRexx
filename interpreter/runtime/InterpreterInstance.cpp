@@ -92,7 +92,6 @@ void InterpreterInstance::live(size_t liveMark)
 {
     memory_mark(rootActivity);
     memory_mark(allActivities);
-    memory_mark(globalReferences);
     memory_mark(defaultEnvironment);
     memory_mark(searchPath);
     memory_mark(searchExtensions);
@@ -114,7 +113,6 @@ void InterpreterInstance::liveGeneral(MarkReason reason)
 {
     memory_mark_general(rootActivity);
     memory_mark_general(allActivities);
-    memory_mark_general(globalReferences);
     memory_mark_general(defaultEnvironment);
     memory_mark_general(searchPath);
     memory_mark_general(searchExtensions);
@@ -142,7 +140,6 @@ void InterpreterInstance::initialize(Activity *activity, RexxOption *options)
     requiresFiles = new_string_table();   // our list of loaded requires packages
     // this gets added to the entire active list.
     allActivities->append(activity);
-    globalReferences = new_identity_table();
     // create a default wrapper for this security manager
     securityManager = new SecurityManager(OREF_NULL);
     // set the default system address environment (can be overridden by options)
@@ -493,8 +490,6 @@ bool InterpreterInstance::terminate()
     // This activity is currently the current activity.  We're going to run the
     // uninits on this one, so reactivate it until we're done running
     enterOnCurrentThread();
-    // release any global references we've been holding.
-    globalReferences->empty();
     // before we update of the data structures, make sure we process any
     // pending uninit activity.
     memoryObject.collectAndUninit(Interpreter::lastInstance());
@@ -525,7 +520,7 @@ void InterpreterInstance::addGlobalReference(RexxObject *o)
 {
     if (o != OREF_NULL)
     {
-        globalReferences->put(o, o);
+        memoryObject.addGlobalReference(o);
     }
 }
 
@@ -538,7 +533,7 @@ void InterpreterInstance::removeGlobalReference(RexxObject *o)
 {
     if (o != OREF_NULL)
     {
-        globalReferences->remove(o);
+        memoryObject.addGlobalReference(o);
     }
 }
 

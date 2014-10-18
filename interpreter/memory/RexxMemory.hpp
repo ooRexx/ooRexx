@@ -207,6 +207,8 @@ class MemoryObject : public RexxInternalObject
     inline StringTable *getGlobalStrings() { return globalStrings; }
     void        addWeakReference(WeakReference *ref);
     void        checkWeakReferences();
+    void        addGlobalReference(RexxInternalObject *obj);
+    void        removeGlobalReference(RexxInternalObject *obj);
 
     void restore();
     void buildVirtualFunctionTable();
@@ -310,6 +312,7 @@ private:
 
     char *restoredImage;                 // our restored image.
     StringTable   *globalStrings;        // table of global strings
+    MapTable      *globalReferences;     // table of global references tagged by API code.
 };
 
 

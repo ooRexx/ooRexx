@@ -134,7 +134,6 @@ protected:
     Activity            *rootActivity;       // the initial activity
     SecurityManager     *securityManager;    // the security manager for our instance
     QueueClass          *allActivities;      // all activities associated with this instance
-    IdentityTable       *globalReferences;   // our global reference table
     RexxString          *defaultEnvironment; // the default address environment
     RexxString          *searchPath;         // additional Rexx search path
     ArrayClass          *searchExtensions;   // extensions to search on for external calls

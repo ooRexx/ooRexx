@@ -122,7 +122,8 @@ MemoryObject::MemoryObject()
 
     // OR'ed into object headers to mark during gc
     markWord = 1;
-    saveStack = NULL;
+    saveStack = OREF_NULL;
+    globalReferences = OREF_NULL;
 
     // we always start out with an empty list.  WeakReferences that are in the
     // saved image will (MUST) never be set to a new value, so it's not necessary
@@ -187,6 +188,10 @@ void MemoryObject::initialize(bool restoringImage)
 
     // get the initial uninit table
     uninitTable = new_identity_table();
+
+    // and our global references table
+    globalReferences = new MapTable(Memory::DefaultGlobalReferenceSize);
+
     // this is our size of uninit objects awaiting processing.
     pendingUninits = 0;
 
@@ -681,6 +686,7 @@ void MemoryObject::live(size_t liveMark)
     memory_mark(commonRetrievers);
     memory_mark(system);
     memory_mark(rexxPackage);
+    memory_mark(globalReferences);
 
     // now call the various subsystem managers to mark their references
     Interpreter::live(liveMark);
@@ -713,6 +719,7 @@ void MemoryObject::liveGeneral(MarkReason reason)
     memory_mark_general(commonRetrievers);
     memory_mark_general(system);
     memory_mark_general(rexxPackage);
+    memory_mark_general(globalReferences);
 
     // now call the various subsystem managers to mark their references
     Interpreter::liveGeneral(reason);
@@ -1405,6 +1412,37 @@ void MemoryObject::setOref(RexxInternalObject *oldValue, RexxInternalObject *val
         }
     }
 }
+
+
+/**
+ * Add a global object reference to an object.  The references
+ * are counted, so it takes a like number of remove calls
+ * to remove the object from the table.
+ *
+ * @param obj    The object to create a global reference lock on.
+ */
+void MemoryObject::addGlobalReference(RexxInternalObject *obj)
+{
+    // increment the count, which will add to the table if this is
+    // the first time.
+    globalReferences->increment(obj);
+}
+
+
+/**
+ * Remove a global object reference to an object.  The
+ * references are counted, so it takes a like number of remove
+ * calls to remove the object from the table.
+ *
+ * @param obj    The object to remove global reference lock.
+ */
+void MemoryObject::removeGlobalReference(RexxInternalObject *obj)
+{
+    // increment the count, which will remove this from the table if the count
+    // goes to zero.
+    globalReferences->decrement(obj);
+}
+
 
 /**
  * Dump the image statistics
