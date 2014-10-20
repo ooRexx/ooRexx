@@ -3994,6 +3994,18 @@ RexxString *RexxActivation::getProgramName()
 
 
 /**
+ * Handy method for displaying the current program name in the
+ * debugger.
+ *
+ * @return The string name of the program source.
+ */
+const char *RexxActivation::displayProgramName()
+{
+    return code->getProgramName()->getStringData();
+}
+
+
+/**
  * Return the directory of labels for this block of code.
  *
  * @return The string table of labels (returns null if there are no labels in this code section)

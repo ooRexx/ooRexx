@@ -250,6 +250,7 @@ class RexxActivation : public ActivationBase
    VariableDictionary *getObjectVariables();
    StringTable     * getLabels();
    RexxString      * getProgramName();
+   const char      * displayProgramName();
    RexxObject      * popControl();
    void              pushControl(RexxObject *);
    void              closeStreams();
