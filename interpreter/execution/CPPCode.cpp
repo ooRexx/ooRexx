@@ -745,6 +745,7 @@ CPPM(PackageClass::formRexx),
 CPPM(PackageClass::fuzzRexx),
 CPPM(PackageClass::traceRexx),
 CPPM(PackageClass::getMainRexx),
+CPPM(PackageClass::findProgramRexx),
 
 CPPM(PackageClass::newRexx),
 

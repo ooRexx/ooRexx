@@ -199,6 +199,7 @@ public:
            RexxObject    *traceRexx();
            ArrayClass    *getSourceRexx() { return extractSource(); }
            RexxObject    *getMainRexx();
+           RexxObject    *findProgramRexx(RexxObject *name);
            void           runProlog(Activity *);
            void addNamespace(RexxString *name, PackageClass *package);
 

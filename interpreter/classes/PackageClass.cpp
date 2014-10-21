@@ -862,6 +862,41 @@ RexxString *PackageClass::resolveProgramName(Activity *activity, RexxString *nam
 
 
 /**
+ * Locate a program using the target package context.
+ *
+ * @param name   The target name.
+ *
+ * @return The fully resolved filename, or .nil if no file was found.
+ */
+RexxObject *PackageClass::findProgramRexx(RexxObject *name)
+{
+    RexxString *target = stringArgument(name, "name");
+
+    Activity *activity = ActivityManager::currentActivity;
+    // we need the instance this is associated with
+    InterpreterInstance *instance = activity->getInstance();
+
+    // get a fully resolved name for this....we might locate this under either name, but the
+    // fully resolved name is generated from this source file context.
+    RexxString *programName = instance->resolveProgramName(target, programDirectory, programExtension);
+    if (programName != OREF_NULL)
+    {
+        return programName;
+    }
+
+    // we might have a chained context.  Try to resolve in the parent
+    // if we could not find this directly
+    if (parentPackage != OREF_NULL)
+    {
+        return parentPackage->findProgramRexx(target);
+    }
+
+    // nothing found
+    return TheNilObject;
+}
+
+
+/**
  * Resolve a directly defined class object in this or a parent
  * context.
  *

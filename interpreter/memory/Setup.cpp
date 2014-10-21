@@ -1134,6 +1134,7 @@ StartClassDefinition(Package)
         AddMethod("Fuzz", PackageClass::fuzzRexx, 0);
         AddMethod("Trace", PackageClass::traceRexx, 0);
         AddMethod("Prolog", PackageClass::getMainRexx, 0);
+        AddMethod("FindProgram", PackageClass::findProgramRexx, 1);
 
     CompleteMethodDefinitions();
 
