@@ -805,7 +805,7 @@ void LanguageParser::methodDirective()
 
                     token = nextReal();
                     // delegate name must be a symbol
-                    if (!token->isLiteral())
+                    if (!token->isSymbol())
                     {
                         syntaxError(Error_Symbol_expected_delegate, token);
                     }
@@ -844,11 +844,12 @@ void LanguageParser::methodDirective()
             checkDuplicateMethod(setterName, isClass, Error_Translation_duplicate_method);
             // create the method pair and quit.
             createDelegateMethod(setterName, retriever, isClass, accessFlag == PRIVATE_SCOPE,
-                protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
+                protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD, true);
         }
         // create the method pair and quit.
         createDelegateMethod(internalname, retriever, isClass, accessFlag == PRIVATE_SCOPE,
-            protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
+            protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD, isAttribute);
+        return;
     }
     // is this an attribute method?
     else if (isAttribute)
@@ -1367,12 +1368,12 @@ void LanguageParser::attributeDirective()
                     // no dup on external and abstract is mutually exclusive
                     if (externalname != OREF_NULL || delegateName != OREF_NULL || isAbstract)
                     {
-                        syntaxError(Error_Invalid_subkeyword_method, token);
+                        syntaxError(Error_Invalid_subkeyword_attribute, token);
                     }
 
                     token = nextReal();
                     // delegate name must be a symbol
-                    if (!token->isLiteral())
+                    if (!token->isSymbol())
                     {
                         syntaxError(Error_Symbol_expected_delegate, token);
                     }
@@ -1415,11 +1416,15 @@ void LanguageParser::attributeDirective()
                 // now create both getter and setting methods from the information.
                 MethodClass *_method = createNativeMethod(internalname, library, procedure->concatToCstring("GET"));
                 _method->setAttributes(accessFlag == PRIVATE_SCOPE, protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
+                // mark this as an attribute method
+                _method->setAttribute();
                 // add to the compilation
                 addMethod(internalname, _method, isClass);
 
                 _method = createNativeMethod(setterName, library, procedure->concatToCstring("SET"));
                 _method->setAttributes(accessFlag == PRIVATE_SCOPE, protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
+                // mark this as an attribute method
+                _method->setAttribute();
                 // add to the compilation
                 addMethod(setterName, _method, isClass);
             }
@@ -1435,12 +1440,14 @@ void LanguageParser::attributeDirective()
             // delegating these to another object
             else if (delegateName != OREF_NULL)
             {
+                // the retriever is the delegate name, not the attribute name
+                retriever = getRetriever(delegateName);
                 // create the method pair and quit.
                 createDelegateMethod(internalname, retriever, isClass, accessFlag == PRIVATE_SCOPE,
-                    protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
+                    protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD, true);
                 // create the method pair and quit.
                 createDelegateMethod(setterName, retriever, isClass, accessFlag == PRIVATE_SCOPE,
-                    protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
+                    protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD, true);
             }
             else
             {
@@ -1490,9 +1497,15 @@ void LanguageParser::attributeDirective()
             // delegating these to another object
             else if (delegateName != OREF_NULL)
             {
+                // the retriever is the delegate name, not the attribute name
+                retriever = getRetriever(delegateName);
+
+                // no code can follow delegate methods
+                checkDirective(Error_Translation_delegate_attribute);
+
                 // create the method pair and quit.
                 createDelegateMethod(internalname, retriever, isClass, accessFlag == PRIVATE_SCOPE,
-                    protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
+                    protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD, true);
             }
             // either written in ooRexx or is automatically generated.
             else
@@ -1551,9 +1564,15 @@ void LanguageParser::attributeDirective()
             // delegating these to another object
             else if (delegateName != OREF_NULL)
             {
+                // the retriever is the delegate name, not the attribute name
+                retriever = getRetriever(delegateName);
+
+                // no code can follow delegate methods
+                checkDirective(Error_Translation_delegate_attribute);
+
                 // create the method pair and quit.
                 createDelegateMethod(setterName, retriever, isClass, accessFlag == PRIVATE_SCOPE,
-                    protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
+                    protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD, true);
             }
             else
             {
@@ -2139,7 +2158,7 @@ void LanguageParser::createAttributeGetterMethod(RexxString *name, RexxVariableB
  * Create a DELEGATE method.
  *
  * @param name      The name of the method.
- * @param retriever
+ * @param retriever The retriever for the target variable.
  * @param classMethod
  *                  Indicates we're adding a class or instance method.
  * @param privateMethod
@@ -2148,14 +2167,18 @@ void LanguageParser::createAttributeGetterMethod(RexxString *name, RexxVariableB
  *                  The method's protected attribute.
  * @param guardedMethod
  *                  The method's guarded attribute.
+ * @param isAttribute
+ *                  Indicates whether this is an attribute method.
  */
 void LanguageParser::createDelegateMethod(RexxString *name, RexxVariableBase *retriever,
-    bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod)
+    bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod, bool isAttribute)
 {
     // create the kernel method for the accessor
     BaseCode *code = new DelegateCode(retriever);
     MethodClass *_method = new MethodClass(name, code);
     _method->setAttributes(privateMethod, protectedMethod, guardedMethod);
+    // mark with the attribute state
+    _method->setAttribute(isAttribute);
     addMethod(name, _method, classMethod);
 }
 

@@ -3916,6 +3916,12 @@ special character (such as a parenthesis).
 <para>Delegate methods cannot have a method body.</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>947</term>
+<listitem>
+<para>Delegate attributes cannot have a method body.</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 </section>

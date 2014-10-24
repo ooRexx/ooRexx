@@ -329,7 +329,7 @@ class LanguageParser: public RexxInternalObject
     void        createMethod(RexxString *name, bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod, bool isAttribute);
     void        createAttributeGetterMethod(RexxString *name, RexxVariableBase *retriever, bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod);
     void        createAttributeSetterMethod(RexxString *name, RexxVariableBase *retriever, bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod);
-    void        createDelegateMethod(RexxString *name, RexxVariableBase *retriever, bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod);
+    void        createDelegateMethod(RexxString *name, RexxVariableBase *retriever, bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod, bool isAttribute);
     void        createConstantGetterMethod(RexxString *name, RexxObject *value);
     void        createAbstractMethod(RexxString *name, bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod, bool isAttribute);
     void        checkDuplicateMethod(RexxString *name, bool classMethod, RexxErrorCodes errorMsg);

@@ -637,6 +637,7 @@
 #define Rexx_Error_Translation_reserved_namespace                         99944
 #define Rexx_Error_Translation_missing_annotation_target                  99945
 #define Rexx_Error_Translation_delegate_method                            99946
+#define Rexx_Error_Translation_delegate_attribute                         99947
 
 
 #endif

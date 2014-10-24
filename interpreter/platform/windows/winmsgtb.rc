@@ -681,6 +681,7 @@ BEGIN
    98991    "Method &1 may only be invoked from a method of the same object or one of its classes."
    99946    "Delegate methods cannot have a method body."
    20926    "Symbol expected after the DELEGATE keyword."
+   99947    "Delegate attributes cannot have a method body."
    
 END
 

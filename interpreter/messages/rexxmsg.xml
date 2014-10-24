@@ -5565,6 +5565,15 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Translation_delegate_method</SymbolicName>
         <Text>Delegate methods cannot have a method body.</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>99</Code>
+        <Subcode>947</Subcode>
+        <MessageNumber>776</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Translation_delegate_attribute</SymbolicName>
+        <Text>Delegate attributes cannot have a method body.</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>

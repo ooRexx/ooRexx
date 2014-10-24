@@ -682,6 +682,7 @@
 #define Error_Execution_private_access_msg                           773
 #define Error_Translation_delegate_method_msg                        774
 #define Error_Symbol_expected_delegate_msg                           775
+#define Error_Translation_delegate_attribute_msg                     776
 
 
 #endif

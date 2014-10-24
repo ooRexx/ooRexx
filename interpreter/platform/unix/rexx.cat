@@ -1937,6 +1937,9 @@ $ Error_Translation_delegate_method
 $ Error_Symbol_expected_delegate
 775 Symbol expected after the DELEGATE keyword.
 
+$ Error_Translation_delegate_attribute
+776 Delegate attributes cannot have a method body.
+
 
 $ * -------------------------------------------------------------------------- */
 $ * --            ==================================================        -- */
