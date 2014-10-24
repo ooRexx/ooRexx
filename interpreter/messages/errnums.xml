@@ -853,6 +853,12 @@ special character (such as a parenthesis).
 <para>Symbol expected after the FORM keyword.</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>926</term>
+<listitem>
+<para>Symbol expected after the DELEGATE keyword.</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR21">
@@ -3902,6 +3908,12 @@ special character (such as a parenthesis).
 <term>945</term>
 <listitem>
 <para>::ANNOTATION target <emphasis role="italic">type</emphasis> "<emphasis role="italic">name</emphasis>" not found.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>946</term>
+<listitem>
+<para>Delegate methods cannot have a method body.</para>
 </listitem>
 </varlistentry>
 </variablelist>

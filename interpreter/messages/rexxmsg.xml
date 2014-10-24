@@ -1229,6 +1229,15 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Symbol_expected_form</SymbolicName>
         <Text>Symbol expected after the FORM keyword.</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>20</Code>
+        <Subcode>926</Subcode>
+        <MessageNumber>775</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Symbol_expected_delegate</SymbolicName>
+        <Text>Symbol expected after the DELEGATE keyword.</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>
@@ -5546,6 +5555,15 @@ special character (such as a parenthesis).
         <Severity>Warning</Severity>
         <SymbolicName>Error_Translation_missing_annotation_target</SymbolicName>
         <Text>::ANNOTATION target <Sub position="1" name="type"/> <q><Sub position="2" name="name"/></q> not found.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>99</Code>
+        <Subcode>946</Subcode>
+        <MessageNumber>774</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Translation_delegate_method</SymbolicName>
+        <Text>Delegate methods cannot have a method body.</Text>
       </SubMessage>
     </Subcodes>
   </Message>

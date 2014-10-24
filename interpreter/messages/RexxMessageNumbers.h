@@ -680,6 +680,8 @@
 #define Error_Symbol_expected_form_msg                               771
 #define Error_Incorrect_method_message_name_msg                      772
 #define Error_Execution_private_access_msg                           773
+#define Error_Translation_delegate_method_msg                        774
+#define Error_Symbol_expected_delegate_msg                           775
 
 
 #endif

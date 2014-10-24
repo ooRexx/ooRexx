@@ -118,6 +118,7 @@
 #define TheAttributeSetterCodeBehaviour      (&RexxBehaviour::primitiveBehaviours[T_AttributeSetterCode])
 #define TheConstantGetterCodeBehaviour      (&RexxBehaviour::primitiveBehaviours[T_ConstantGetterCode])
 #define TheAbstractCodeBehaviour      (&RexxBehaviour::primitiveBehaviours[T_AbstractCode])
+#define TheDelegateCodeBehaviour      (&RexxBehaviour::primitiveBehaviours[T_DelegateCode])
 #define TheSmartBufferBehaviour      (&RexxBehaviour::primitiveBehaviours[T_SmartBuffer])
 #define TheIdentityHashContentsBehaviour      (&RexxBehaviour::primitiveBehaviours[T_IdentityHashContents])
 #define TheEqualityHashContentsBehaviour      (&RexxBehaviour::primitiveBehaviours[T_EqualityHashContents])

@@ -445,6 +445,94 @@ void AbstractCode::run(Activity *activity, MethodClass *method, RexxObject *rece
 }
 
 
+/**
+ * Allocate a new attribute getter code object.
+ *
+ * @param size   the allocation size.
+ *
+ * @return A pointer to the newly allocated object.
+ */
+void *DelegateCode::operator new(size_t size)
+{
+    return new_object(size, T_DelegateCode);
+}
+
+
+/**
+ * Normal garbage collection live marking
+ *
+ * @param liveMark The current live mark.
+ */
+void DelegateCode::live(size_t liveMark)
+{
+    memory_mark(attribute);
+}
+
+
+/**
+ * Generalized object marking.
+ *
+ * @param reason The reason for this live marking operation.
+ */
+void DelegateCode::liveGeneral(MarkReason reason)
+{
+    memory_mark_general(attribute);
+}
+
+
+/**
+ * Flatten the table contents as part of a saved program.
+ *
+ * @param envelope The envelope we're flattening into.
+ */
+void DelegateCode::flatten(Envelope *envelope)
+{
+    setUpFlatten(DelegateCode)
+
+    flattenRef(attribute);
+
+    cleanUpFlatten
+}
+
+
+/**
+ * Execute a Delegate method forward operation.
+ *
+ * @param activity The current activity.
+ * @param method   The method we're invoking.
+ * @param receiver The receiver object.
+ * @param messageName
+ *                 The name of the message used to invoke the method.
+ * @param argPtr   The pointer to the arguments.
+ * @param count    The argument count.
+ * @param result   The returned result.
+ */
+void DelegateCode::run(Activity *activity, MethodClass *method, RexxObject *receiver, RexxString *messageName,
+    RexxObject **argPtr, size_t count, ProtectedObject &result)
+{
+    // get the variable pool and get
+    VariableDictionary *objectVariables = receiver->getObjectVariables(method->getScope());
+    RexxObject *target;
+
+    // if this is a guarded method, we grab the guard only long enough to
+    // get the target variable.  The message send is sent without holding the lock
+    if (method->isGuarded())
+    {
+        objectVariables->reserve(activity);
+        target = attribute->getValue(receiver->getObjectVariables(method->getScope()));
+        // and ensure we release this afterwards
+        objectVariables->release(activity);
+    }
+    else
+    {
+        target = attribute->getValue(receiver->getObjectVariables(method->getScope()));
+    }
+
+    // and finally, send the message to the resolved target
+    target->sendMessage(messageName, argPtr, count, result);
+}
+
+
 #include "RexxCore.h"
 #include "TableClass.hpp"
 #include "RexxMemory.hpp"

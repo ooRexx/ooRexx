@@ -350,6 +350,7 @@ KeywordEntry RexxToken::subDirectives[] =
     KeywordEntry("CLASS",       SUBDIRECTIVE_CLASS),
     KeywordEntry("CONDITION",   SUBDIRECTIVE_CONDITION),
     KeywordEntry("CONSTANT",    SUBDIRECTIVE_CONSTANT),
+    KeywordEntry("DELEGATE",    SUBDIRECTIVE_DELEGATE),
     KeywordEntry("DIGITS",      SUBDIRECTIVE_DIGITS),
     KeywordEntry("END",         SUBDIRECTIVE_END),
     KeywordEntry("ERROR",       SUBDIRECTIVE_ERROR),

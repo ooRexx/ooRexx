@@ -114,6 +114,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="AttributeSetterCode" class="AttributeSetterCode" include="CPPCode.hpp"/>
 <Class id="ConstantGetterCode" class="ConstantGetterCode" include="CPPCode.hpp"/>
 <Class id="AbstractCode" class="AbstractCode" include="CPPCode.hpp"/>
+<Class id="DelegateCode" class="DelegateCode" include="CPPCode.hpp"/>
 
 <Class id="SmartBuffer" class="SmartBuffer" include="SmartBuffer.hpp"/>
 <Class id="IdentityHashContents" class="IdentityHashContents" include="HashContents.hpp"/>

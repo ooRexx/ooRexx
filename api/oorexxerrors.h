@@ -173,6 +173,7 @@
 #define Rexx_Error_Symbol_expected_qualified_symbol                       20923
 #define Rexx_Error_Symbol_expected_annotation_type                        20924
 #define Rexx_Error_Symbol_expected_form                                   20925
+#define Rexx_Error_Symbol_expected_delegate                               20926
 #define Rexx_Error_Invalid_data                                           21000
 #define Rexx_Error_Invalid_data_user_defined                              21900
 #define Rexx_Error_Invalid_data_nop                                       21901
@@ -635,6 +636,7 @@
 #define Rexx_Error_Translation_missing_resource_end                       99943
 #define Rexx_Error_Translation_reserved_namespace                         99944
 #define Rexx_Error_Translation_missing_annotation_target                  99945
+#define Rexx_Error_Translation_delegate_method                            99946
 
 
 #endif

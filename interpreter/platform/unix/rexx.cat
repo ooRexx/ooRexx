@@ -1931,6 +1931,12 @@ $ Error_Incorrect_method_message_name
 $ Error_Execution_private_access
 773 Method &1 may only be invoked from a method of the same object or one of its classes.
 
+$ Error_Translation_delegate_method
+774 Delegate methods cannot have a method body.
+
+$ Error_Symbol_expected_delegate
+775 Symbol expected after the DELEGATE keyword.
+
 
 $ * -------------------------------------------------------------------------- */
 $ * --            ==================================================        -- */

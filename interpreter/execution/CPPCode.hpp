@@ -153,4 +153,27 @@ public:
     virtual void run(Activity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
 };
 
+
+/**
+ * Class for a delegate method
+ */
+class DelegateCode : public BaseCode
+{
+public:
+    void *operator new(size_t);
+    inline void operator delete(void *) { }
+
+    inline DelegateCode(RexxVariableBase *a) { attribute = a; }
+    inline DelegateCode(RESTORETYPE restoreType) { ; };
+
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
+    virtual void flatten(Envelope*);
+
+    virtual void run(Activity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
+
+protected:
+    RexxVariableBase *attribute;      // method attribute info
+};
+
 #endif

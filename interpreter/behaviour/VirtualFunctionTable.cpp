@@ -401,6 +401,9 @@ void MemoryObject::buildVirtualFunctionTable()
    objectPtr = ::new (objectLoc) AbstractCode(RESTOREIMAGE);
    virtualFunctionTable[T_AbstractCode] = getVftPointer(objectLoc);
    
+   objectPtr = ::new (objectLoc) DelegateCode(RESTOREIMAGE);
+   virtualFunctionTable[T_DelegateCode] = getVftPointer(objectLoc);
+   
    objectPtr = ::new (objectLoc) SmartBuffer(RESTOREIMAGE);
    virtualFunctionTable[T_SmartBuffer] = getVftPointer(objectLoc);
    
