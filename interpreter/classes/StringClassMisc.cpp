@@ -779,10 +779,11 @@ RexxInteger *RexxString::verify(RexxString *ref, RexxString *option, RexxInteger
 RexxObject *RexxString::match(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_)
 {
     size_t _start = positionArgument(start_, ARG_ONE);
-    // the start position must be within the string bounds
+    // the start position must be within the string bounds for any match
+    // to be performed.
     if (_start > getLength())
     {
-        reportException(Error_Incorrect_method_position, start_);
+        return TheFalseObject;
     }
     other = stringArgument(other, ARG_TWO);
 
@@ -822,10 +823,11 @@ RexxObject *RexxString::match(RexxInteger *start_, RexxString *other, RexxIntege
 RexxObject *RexxString::caselessMatch(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_)
 {
     size_t _start = positionArgument(start_, ARG_ONE);
-    // the start position must be within the string bounds
+    // the start position must be within the string bounds for any match
+    // to be performed.
     if (_start > getLength())
     {
-        reportException(Error_Incorrect_method_position, start_);
+        return TheFalseObject;
     }
     other = stringArgument(other, ARG_TWO);
 
@@ -914,10 +916,11 @@ bool RexxString::primitiveCaselessMatch(size_t _start, RexxString *other, size_t
 RexxObject *RexxString::matchChar(RexxInteger *position_, RexxString *matchSet)
 {
     size_t position = positionArgument(position_, ARG_ONE);
-    // the start position must be within the string bounds
+    // the start position must be within the string bounds for any match
+    // to be performed.
     if (position > getLength())
     {
-        reportException(Error_Incorrect_method_position, position);
+        return TheFalseObject;
     }
     matchSet = stringArgument(matchSet, ARG_TWO);
 
@@ -950,10 +953,11 @@ RexxObject *RexxString::matchChar(RexxInteger *position_, RexxString *matchSet)
 RexxObject *RexxString::caselessMatchChar(RexxInteger *position_, RexxString *matchSet)
 {
     size_t position = positionArgument(position_, ARG_ONE);
-    // the start position must be within the string bounds
+    // the start position must be within the string bounds for any match
+    // to be performed.
     if (position > getLength())
     {
-        reportException(Error_Incorrect_method_position, position);
+        return TheFalseObject;
     }
     matchSet = stringArgument(matchSet, ARG_TWO);
 
