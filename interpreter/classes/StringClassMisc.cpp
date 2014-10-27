@@ -850,6 +850,76 @@ RexxObject *RexxString::caselessMatch(RexxInteger *start_, RexxString *other, Re
 
 
 /**
+ * Test if a string starts with another string
+ *
+ * @param other  The other compare string.
+ *
+ * @return True if the string starts with the other, false otherwise.
+ */
+RexxObject *RexxString::startsWithRexx(RexxString *other)
+{
+    other = stringArgument(other, "match");
+    return booleanObject(primitiveMatch(1, other, 1, other->getLength()));
+}
+
+
+/**
+ * Test if a string starts with another string
+ *
+ * @param other  The other compare string.
+ *
+ * @return True if the string starts with the other, false otherwise.
+ */
+RexxObject *RexxString::caselessStartsWithRexx(RexxString *other)
+{
+    other = stringArgument(other, "match");
+    return booleanObject(primitiveCaselessMatch(1, other, 1, other->getLength()));
+}
+
+
+/**
+ * Test if a string ends with another string
+ *
+ * @param other  The other compare string.
+ *
+ * @return True if the string starts with the other, false otherwise.
+ */
+RexxObject *RexxString::endsWithRexx(RexxString *other)
+{
+    other = stringArgument(other, "match");
+
+    // we need to check this here, because the calculated offset might be wrong
+    if (other->getLength() > getLength())
+    {
+        return TheFalseObject;
+    }
+
+    return booleanObject(primitiveMatch(getLength() - other->getLength() + 1, other, 1, other->getLength()));
+}
+
+
+/**
+ * Test if a string ends with another string
+ *
+ * @param other  The other compare string.
+ *
+ * @return True if the string starts with the other, false otherwise.
+ */
+RexxObject *RexxString::caselessEndsWithRexx(RexxString *other)
+{
+    other = stringArgument(other, "match");
+
+    // we need to check this here, because the calculated offset might be wrong
+    if (other->getLength() > getLength())
+    {
+        return TheFalseObject;
+    }
+
+    return booleanObject(primitiveCaselessMatch(getLength() - other->getLength() + 1, other, 1, other->getLength()));
+}
+
+
+/**
  * Perform a compare of regions of two string objects.  Returns
  * true if the two regions match, returns false for mismatches.
  *

@@ -656,6 +656,10 @@ StartClassDefinition(String)
         AddMethod("CaselessEquals", RexxString::caselessEquals, 1);
         AddMethod("CompareTo", RexxString::compareToRexx, 3);
         AddMethod("CaselessCompareTo", RexxString::caselessCompareToRexx, 3);
+        AddMethod("StartsWith", RexxString::startsWithRexx, 1);
+        AddMethod("EndsWith", RexxString::endsWithRexx, 1);
+        AddMethod("CaselessStartsWith", RexxString::caselessStartsWithRexx, 1);
+        AddMethod("CaselessEndsWith", RexxString::caselessEndsWithRexx, 1);
 
     CompleteMethodDefinitions();
 
@@ -1315,6 +1319,10 @@ StartClassDefinition(MutableBuffer)
         AddMethod("WordPos", MutableBuffer::wordPos, 2);
         AddMethod("CaselessWordPos", MutableBuffer::caselessWordPos, 2);
         AddMethod("DelWord", MutableBuffer::delWord, 2);
+        AddMethod("StartsWith", MutableBuffer::startsWithRexx, 1);
+        AddMethod("EndsWith", MutableBuffer::endsWithRexx, 1);
+        AddMethod("CaselessStartsWith", MutableBuffer::caselessStartsWithRexx, 1);
+        AddMethod("CaselessEndsWith", MutableBuffer::caselessEndsWithRexx, 1);
 
     CompleteMethodDefinitions();
 

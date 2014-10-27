@@ -103,6 +103,10 @@ class MutableBuffer : public RexxObject
     MutableBuffer *translate(RexxString *tableo, RexxString *tablei, RexxString *pad, RexxInteger *, RexxInteger *);
     RexxObject  *match(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_);
     RexxObject  *caselessMatch(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_);
+    RexxObject  *startsWithRexx(RexxString *other);
+    RexxObject  *endsWithRexx(RexxString *other);
+    RexxObject  *caselessStartsWithRexx(RexxString *other);
+    RexxObject  *caselessEndsWithRexx(RexxString *other);
     bool primitiveMatch(size_t start, RexxString *other, size_t offset, size_t len);
     bool primitiveCaselessMatch(size_t start, RexxString *other, size_t offset, size_t len);
     RexxObject  *matchChar(RexxInteger *position_, RexxString *matchSet);
