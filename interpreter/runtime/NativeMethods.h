@@ -46,6 +46,9 @@
 // it does not have standard #ifndef multiple include protections.
    INTERNAL_METHOD(alarm_startTimer)
    INTERNAL_METHOD(alarm_stopTimer)
+   INTERNAL_METHOD(ticker_createTimer)
+   INTERNAL_METHOD(ticker_waitTimer)
+   INTERNAL_METHOD(ticker_stopTimer)
    INTERNAL_METHOD(stream_init)
    INTERNAL_METHOD(stream_chars)
    INTERNAL_METHOD(stream_lines)

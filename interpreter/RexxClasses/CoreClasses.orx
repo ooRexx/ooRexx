@@ -1593,6 +1593,100 @@ return left~caselessCompareTo(right, start, length)
 ::METHOD !stopTimer PRIVATE unguarded EXTERNAL 'LIBRARY REXX alarm_stopTimer'
 
 
+/* ******************************** */
+/*    T I C K E R      C L A S S    */
+/* ******************************** */
+ /**************************************************************************/
+ /* The Ticker class provides timer that will trigger an event over an     */
+ /* interval.                                                              */
+ /**************************************************************************/
+
+::CLASS 'Ticker' SUBCLASS object Public
+
+-- initialize a ticker object
+::METHOD init
+ expose timer canceled target attachment timerStarted eventSemHandle interval
+ timer = 0
+ eventSemHandle = 0
+ timerStarted = 0
+ canceled = .false
+ use strict arg interval, target, attachment = .nil
+
+ -- this must be an object that implements the alarm notification interface
+ if \msgobj~isA(.AlarmNotification) then
+   raise syntax 88.914 array ("target", .AlarmNotification~id)
+
+ numeric digits 18                     -- we'll be doing math with large numbers potentially
+ if interval~isA(.TimeSpan) then nop   -- already in timespan form?  everything is set up
+ -- just a seconds specification convert to a timespace
+ else if datatype(interval, 'W') then do
+   interval = .timespan~fromSeconds(interval)
+ end
+ -- this is an invalid time
+ else raise syntax 93.951 array (atime)
+
+ if interval~sign < 0 then do
+    raise syntax 93.951 array (interval)
+ end
+
+ -- break this into days and remainder
+ numdays = interval~days
+ alarmtime = interval~totalMicroseconds - .TimeSpan~fromDays(numdays)~totalMicroseconds
+
+ -- the remainder needs to be in milliseconds
+ alarmtime %= 1000
+
+ self~!create_timer
+
+ -- release the guard lock and go concurrent
+ guard off
+ reply
+
+ -- keep pinging until this is canceled
+ loop while \canceled
+    -- wait the interval
+    self~!waitTimer(eventSemHandle, numdays, alarmtime)
+    -- get exclusive access again
+    guard on
+    -- if not canceled, poke the target object
+    if \canceled then do
+      -- run the message, but any errors propagate through
+      target~triggered(self)
+    end
+ end
+ -- indicate this is cleared
+ eventSemHandle = 0;
+ exit
+
+-- read-only access to the attachment object.
+::attribute attachment GET UNGUARDED
+-- and also to the scheduled time
+::attribute interval GET UNGUARDED
+::attribute canceled GET UNGUARDED
+::method cancelled UNGUARDED
+  expose canceled
+  return cancelled
+
+::METHOD !createTimer PRIVATE unguarded EXTERNAL 'LIBRARY REXX ticker_createTimer'
+::METHOD !waitTimer PRIVATE unguarded EXTERNAL 'LIBRARY REXX ticker_waitTimer'
+::METHOD !stopTimer PRIVATE unguarded EXTERNAL 'LIBRARY REXX ticker_stopTimer'
+
+-- cancel a ticker
+::METHOD cancel unguarded
+ expose canceled eventSemHandle timerStarted target
+ use strict arg
+
+ -- wait until the timer is actually set
+ guard on when timerStarted
+
+ -- indicate we're canceled and stop the timer
+ canceled = .true
+ self~!stopTimer(eventSemHandle)
+ -- notify the alarm target
+ target~cancel(self)
+
+
+
 
 /*
    name:    CircularQueue.rex

@@ -318,3 +318,124 @@ RexxMethod1(int, alarm_stopTimer, POINTER, eventSemHandle)
     return 0;
 }
 
+
+/**
+ * starts a timer and waits for it to expire.
+ * An event semaphore is created that can be
+ * used to cancel the timer.
+ *
+ * numdays - number of whole days until timer should expire.
+ * alarmtime - fractional portion (less than a
+ *             day) until timer should expire, expressed in
+ *             milliseconds.
+ */
+RexxMethod3(int, ticker_waitTimer, POINTER, eventSemHandle, wholenumber_t, numdays, wholenumber_t, alarmtime)
+{
+    bool fState = false;                 /* Initial state of semaphore        */
+    unsigned int msecInADay = 86400000;  /* number of milliseconds in a day   */
+    UINT_PTR TimerHandle = 0;            /* Timer handle                      */
+    HANDLE SemHandle = (HANDLE)eventSemHandle;
+
+    if ( numdays > 0 )
+    {
+        /** Alarm is for some day in the future, start a timer that wakes up
+         *  once a day.
+         */
+        TimerHandle = SetTimer(NULL, 0, msecInADay, NULL);
+        if ( TimerHandle == 0 )
+        {
+            /* Couldn't create a timer, raise an exception. */
+            CloseHandle(SemHandle);
+            context->RaiseException0(Rexx_Error_System_service);
+            return 0;
+        }
+
+        while ( numdays > 0 )
+        {
+            /* Wait for the WM_TIMER message or for the alarm to be canceled. */
+            waitTimerOrEvent(SemHandle);
+
+            /* Check if the alarm is canceled. */
+            RexxObjectPtr cancelObj = context->GetObjectVariable("CANCELED");
+
+            if (cancelObj == context->True())
+            {
+                /* Alarm is canceled, delete timer, close semaphore, return. */
+                KillTimer(NULL, TimerHandle);
+                CloseHandle(SemHandle);
+                return 0;
+            }
+            numdays--;
+        }
+        /* Done with the daily timer, delete it. */
+        KillTimer(NULL, TimerHandle);
+    }
+
+    if ( alarmtime > 0 )
+    {
+        /* Start a timer for the fractional portion of the alarm. */
+        TimerHandle = SetTimer(NULL, 0, (UINT)alarmtime, NULL);
+        if ( !TimerHandle )
+        {
+            /* Couldn't create a timer, raise an exception. */
+            CloseHandle(SemHandle);
+            context->RaiseException0(Rexx_Error_System_service);
+            return 0;
+        }
+
+        /* Wait for the WM_TIMER message or for the alarm to be canceled. */
+        waitTimerOrEvent(SemHandle);
+        /* Check if the alarm is canceled. */
+        RexxObjectPtr cancelObj = context->GetObjectVariable("CANCELED");
+
+        if (cancelObj == context->True())
+        {
+            /* Alarm is canceled, delete timer, close semaphore, return. */
+            KillTimer(NULL, TimerHandle);
+            CloseHandle(SemHandle);
+            return 0;
+        }
+    }
+
+    return 0;
+}
+
+
+/**
+ * set up for running a timer.
+ */
+RexxMethod0(int, ticker_createTimer)
+{
+    // create an event semaphore that we use to wait and also for canceling the alarm
+    HANDLE SemHandle = CreateEvent(NULL, TRUE, false, NULL);
+    if ( !SemHandle )
+    {
+        context->RaiseException0(Rexx_Error_System_service);
+        return 0;
+    }
+
+    // store this in state variables
+    context->SetObjectVariable("EVENTSEMHANDLE", context->NewPointer(SemHandle));
+    context->SetObjectVariable("TIMERSTARTED", context->True());
+
+    return 0;
+}
+
+
+/**
+ * stops an asynchronous timer.
+ *
+ * eventSemHandle - handle to event semaphore
+ *                  used to signal the timer should be canceled.
+ */
+RexxMethod1(int, ticker_stopTimer, POINTER, eventSemHandle)
+{
+    /* Post the event semaphore to signal the alarm should be canceled. */
+    if ( ! SetEvent((HANDLE)eventSemHandle) )
+    {
+        /* Raise an error if the semaphore could not be posted. */
+        context->RaiseException0(Rexx_Error_System_service);
+    }
+    return 0;
+}
+

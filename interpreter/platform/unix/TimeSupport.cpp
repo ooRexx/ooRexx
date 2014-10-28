@@ -84,6 +84,7 @@ void SystemInterpreter::getCurrentTime(RexxDateTime *Date )
     Date->timeZoneOffset = ((int64_t)(tv.tv_sec - mktime(GMTDate))) * 1000000UL;
 }
 
+
 /*********************************************************************/
 /*                                                                   */
 /*   Subroutine Name:   alarm_starTimer                              */
@@ -96,9 +97,7 @@ void SystemInterpreter::getCurrentTime(RexxDateTime *Date )
 /*                       semaphore is posted                         */
 /*********************************************************************/
 
-RexxMethod2(int, alarm_startTimer,
-                     wholenumber_t, numdays,
-                     wholenumber_t, alarmtime)
+RexxMethod2(int, alarm_startTimer, wholenumber_t, numdays, wholenumber_t, alarmtime)
 {
     SysSemaphore sem(true);              /* Event-semaphore                   */
     int  msecInADay = 86400000;          /* number of milliseconds in a day   */
@@ -134,6 +133,7 @@ RexxMethod2(int, alarm_startTimer,
     return 0;
 }
 
+
 /*********************************************************************/
 /*                                                                   */
 /*   Subroutine Name:   alarm_stopTimer                              */
@@ -150,6 +150,67 @@ RexxMethod1(int, alarm_stopTimer, POINTER, eventSemHandle)
 {
     SysSemaphore *sev = (SysSemaphore *)eventSemHandle;    /* event semaphore handle            */
     sev->post();                         /* Post the event semaphore          */
+    return 0;
+}
+
+
+/**
+ * Create the initial timer semaphore.
+ */
+RexxMethod0(int, ticker_createTimer)
+{
+    SysSemaphore *sem = new SysSemaphore(true);
+
+    // set this as state variables
+    context->SetObjectVariable("EVENTSEMHANDLE", context->NewPointer(sem));
+    context->SetObjectVariable("TIMERSTARTED", context->True());
+}
+
+
+// wait for the ticer timer to trigger
+RexxMethod3(int, ticker_waitTimer, POINTER, eventSemHandle, wholenumber_t, numdays, wholenumber_t, alarmtime)
+{
+    SysSemaphore *sem = (SysSemaphore *)eventSemHandle;
+
+    int  msecInADay = 86400000;          /* number of milliseconds in a day   */
+
+    while (numdays > 0)
+    {                /* is it some future day?            */
+        // use the semaphore to wait for an entire day.
+        // if this returns true, then this was not a timeout, which
+        // probably means this was cancelled.
+        if (sem->wait(msecInADay))
+        {
+            /* Check if the alarm is canceled. */
+            RexxObjectPtr cancelObj = context->GetObjectVariable("CANCELED");
+
+            if (cancelObj == context->True())
+            {
+                // delete the semaphore
+                delete sem;
+                return 0;
+            }
+            else
+            {
+                // just reset the semaphore
+                sem->reset();
+            }
+        }
+        numdays--;                         /* Decrement number of days          */
+    }
+
+    // now we can just wait for the alarm time to expire
+    sem->wait(alarmtime);
+    return 0;
+}
+
+
+// stop the ticker timer
+RexxMethod1(int, ticker_stopTimer, POINTER, eventSemHandle)
+{
+    // just post the event semaphore
+    SysSemaphore *sem = (SysSemaphore *)eventSemHandle;
+    sem->post();
     return 0;
 }
 
