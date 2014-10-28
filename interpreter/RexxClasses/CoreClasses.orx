@@ -1468,6 +1468,7 @@ return left~caselessCompareTo(right, start, length)
  eventSemHandle = 0
  timerStarted = 0
  canceled = .false
+ triggered = .false
 
  use strict arg atime, msgobj, attachment = .nil
 
@@ -1534,7 +1535,8 @@ return left~caselessCompareTo(right, start, length)
                                        /*  That the timer has expired.      */
  guard on                              /* get exclusive use of object       */
 
- if canceled = 0 then do               /* is the timer canceled?            */
+ if \canceled then do                  /* is the timer canceled?            */
+   triggered = .true
    -- run the message, but any errors propagate through
    msgobj~triggered(self)
  end
@@ -1552,6 +1554,13 @@ return left~caselessCompareTo(right, start, length)
 ::attribute attachment GET UNGUARDED
 -- and also to the scheduled time
 ::attribute scheduledTime GET UNGUARDED
+::attribute canceled GET UNGUARDED
+::method cancelled UNGUARDED
+  expose canceled
+  return cancelled
+
+::attribute triggered GET
+
 
 ::METHOD !startTimer PRIVATE unguarded EXTERNAL 'LIBRARY REXX alarm_startTimer'
 
@@ -1574,7 +1583,7 @@ return left~caselessCompareTo(right, start, length)
  if eventSemHandle \= 0 then
    do
                                           /* cancel the timer.                 */
-      canceled = 1
+      canceled = .true
       self~!stopTimer(eventSemHandle)
       -- notify the alarm target
       msgObj~cancel(self)
