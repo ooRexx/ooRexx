@@ -1557,7 +1557,7 @@ return left~caselessCompareTo(right, start, length)
 ::attribute canceled GET UNGUARDED
 ::method cancelled UNGUARDED
   expose canceled
-  return cancelled
+  return canceled
 
 ::attribute triggered GET
 
