@@ -1665,7 +1665,7 @@ return left~caselessCompareTo(right, start, length)
 ::attribute canceled GET UNGUARDED
 ::method cancelled UNGUARDED
   expose canceled
-  return cancelled
+  return canceled
 
 ::METHOD !createTimer PRIVATE unguarded EXTERNAL 'LIBRARY REXX ticker_createTimer'
 ::METHOD !waitTimer PRIVATE unguarded EXTERNAL 'LIBRARY REXX ticker_waitTimer'
