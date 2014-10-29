@@ -1528,7 +1528,7 @@ endif ()
 
 
 # direct output into a samples subdir
-add_subdirectory (samples samples)
+add_subdirectory (testbinaries)
 
 
 #################### NSIS Package Targets ##########################

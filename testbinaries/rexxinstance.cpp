@@ -201,5 +201,5 @@ int main (int argc, char **argv)
         RexxAddQueue("TESTQUEUE", &result, RXQUEUE_LIFO);
 
     }
-    return instanceInfo.rc;   // return the error indicator
+    return (int)instanceInfo.rc;   // return the error indicator
 }

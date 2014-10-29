@@ -151,7 +151,7 @@ size_t REXXENTRY TestSubcomHandler(const char *Name, long Argc, CONSTRXSTRING Ar
         }
     }
     else if (*Argv[0].strptr == 'E') {
-        retc = RexxRegisterSubcomExe(Argv[1].strptr, MyTestSubcomHandler,
+        retc = RexxRegisterSubcomExe(Argv[1].strptr, (REXXPFN)MyTestSubcomHandler,
                                      (char*)malloc(8));
         if (retc != 0) {
             sprintf(Retstr->strptr, "%d", -2);

@@ -71,7 +71,7 @@ RexxMethod1(RexxObjectPtr,              // Return type
     RexxReturnCode rc = RexxCreateQueue(newQueueName, sizeof(newQueueName),
                                         qname, &flag);
     context->SetObjectVariable("RETC", context->Int32ToObject(rc));
-    context->SetObjectVariable("FLAG", context->Int32ToObject(flag));
+    context->SetObjectVariable("FLAG", context->StringSizeToObject(flag));
     return context->NewStringFromAsciiz(newQueueName);
 }
 
@@ -83,7 +83,7 @@ RexxMethod1(int,                        // Return type
 
     RexxReturnCode rc = RexxOpenQueue(qname, &flag);
     context->SetObjectVariable("RETC", context->Int32ToObject(rc));
-    context->SetObjectVariable("FLAG", context->Int32ToObject(flag));
+    context->SetObjectVariable("FLAG", context->StringSizeToObject(flag));
     return rc;
 }
 
@@ -113,7 +113,7 @@ RexxMethod1(int,                        // Return type
 
     RexxReturnCode rc = RexxQueryQueue(qname, &count);
     context->SetObjectVariable("RETC", context->Int32ToObject(rc));
-    context->SetObjectVariable("FLAG", context->Int32ToObject(count));
+    context->SetObjectVariable("FLAG", context->StringSizeToObject(count));
     return rc;
 }
 
@@ -302,7 +302,7 @@ RexxRoutine1(int,                       // Return type
     return retc;
 }
 
-RexxRoutine0(int,                       // Return type
+RexxRoutine0(size_t,                    // Return type
             TestFNVariablePool)         // Function name
 {
     RexxReturnCode retc = 0;
@@ -360,10 +360,10 @@ RexxMethod2(int,                        // Return type
             RexxArrayObject, names,     // Array of macro names
             CSTRING, filename)          // Macro file name
 {
-    int argc = context->ArrayItems(names);
+    size_t argc = context->ArrayItems(names);
     const char **cnames = (const char **)calloc(argc, sizeof(const char *));
 
-    for (int i = 1; i <= argc; i++) {
+    for (size_t i = 1; i <= argc; i++) {
         cnames[i - 1] = context->ObjectToStringValue(context->ArrayAt(names, i));
     }
 
@@ -377,10 +377,10 @@ RexxMethod2(int,                        // Return type
             RexxArrayObject, names,     // Array of macro names
             CSTRING, filename)          // Macro file name
 {
-    int argc = context->ArrayItems(names);
+    size_t argc = context->ArrayItems(names);
     const char **cnames = (const char **)calloc(argc, sizeof(const char *));
 
-    for (int i = 1; i <= argc; i++) {
+    for (size_t i = 1; i <= argc; i++) {
         cnames[i - 1] = context->ObjectToStringValue(context->ArrayAt(names, i));
     }
 
