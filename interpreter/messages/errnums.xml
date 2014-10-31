@@ -859,6 +859,12 @@ special character (such as a parenthesis).
 <para>Symbol expected after the DELEGATE keyword.</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>927</term>
+<listitem>
+<para>Symbol expected after USE LOCAL.</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR21">
@@ -3920,6 +3926,12 @@ special character (such as a parenthesis).
 <term>947</term>
 <listitem>
 <para>Delegate attributes cannot have a method body.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>948</term>
+<listitem>
+<para>USE LOCAL cannot process compound variables; found "<emphasis role="italic">variable</emphasis>".</para>
 </listitem>
 </varlistentry>
 </variablelist>

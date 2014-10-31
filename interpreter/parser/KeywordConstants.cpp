@@ -124,6 +124,7 @@ KeywordEntry RexxToken::subKeywords[] =
     KeywordEntry("FORM",        SUBKEY_FORM),
     KeywordEntry("FUZZ",        SUBKEY_FUZZ),
     KeywordEntry("LABEL",       SUBKEY_LABEL),
+    KeywordEntry("LOCAL",       SUBKEY_LOCAL),
     KeywordEntry("MESSAGE",     SUBKEY_MESSAGE),
     KeywordEntry("NAME",        SUBKEY_NAME),
     KeywordEntry("OFF",         SUBKEY_OFF),

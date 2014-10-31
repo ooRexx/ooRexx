@@ -247,7 +247,7 @@ typedef enum
     KEYWORD_CLASS,
     KEYWORD_LIBRARY,
     KEYWORD_REQUIRES,
-
+    KEYWORD_USE_LOCAL,
 } InstructionKeyword;
 
 // instruction subkeyword types
@@ -266,6 +266,7 @@ typedef enum
     SUBKEY_FORM,
     SUBKEY_FUZZ,
     SUBKEY_LINEIN,
+    SUBKEY_LOCAL,
     SUBKEY_LOWER,
     SUBKEY_CASELESS,
     SUBKEY_NAME,

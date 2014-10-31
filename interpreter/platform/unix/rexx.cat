@@ -1940,6 +1940,12 @@ $ Error_Symbol_expected_delegate
 $ Error_Translation_delegate_attribute
 776 Delegate attributes cannot have a method body.
 
+$ Error_Symbol_expected_use_local
+777 Symbol expected after USE LOCAL.
+
+$ Error_Translation_use_local_compound
+778 USE LOCAL cannot process compound variables; found "&1".
+
 
 $ * -------------------------------------------------------------------------- */
 $ * --            ==================================================        -- */

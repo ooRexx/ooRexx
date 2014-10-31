@@ -195,6 +195,7 @@
 #define TheThenInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_ThenInstruction])
 #define TheTraceInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_TraceInstruction])
 #define TheUseInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_UseInstruction])
+#define TheUseLocalInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_UseLocalInstruction])
 #define TheClassDirectiveBehaviour      (&RexxBehaviour::primitiveBehaviours[T_ClassDirective])
 #define TheLibraryDirectiveBehaviour      (&RexxBehaviour::primitiveBehaviours[T_LibraryDirective])
 #define TheRequiresDirectiveBehaviour      (&RexxBehaviour::primitiveBehaviours[T_RequiresDirective])

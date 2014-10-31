@@ -194,6 +194,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="ThenInstruction" class="RexxInstructionThen" include="ThenInstruction.hpp"/>
 <Class id="TraceInstruction" class="RexxInstructionTrace" include="TraceInstruction.hpp"/>
 <Class id="UseInstruction" class="RexxInstructionUse" include="UseInstruction.hpp"/>
+<Class id="UseLocalInstruction" class="RexxInstructionUseLocal" include="UseLocalInstruction.hpp"/>
 
 <Class id="ClassDirective" class="ClassDirective" include="ClassDirective.hpp"/>
 <Class id="LibraryDirective" class="LibraryDirective" include="LibraryDirective.hpp"/>

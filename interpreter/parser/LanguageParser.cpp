@@ -410,6 +410,7 @@ void LanguageParser::live(size_t liveMark)
     memory_mark(strings);
     memory_mark(guardVariables);
     memory_mark(exposedVariables);
+    memory_mark(localVariables);
     memory_mark(control);
     memory_mark(terms);
     memory_mark(subTerms);
@@ -455,6 +456,7 @@ void LanguageParser::liveGeneral(MarkReason reason)
     memory_mark_general(strings);
     memory_mark_general(guardVariables);
     memory_mark_general(exposedVariables);
+    memory_mark_general(localVariables);
     memory_mark_general(control);
     memory_mark_general(terms);
     memory_mark_general(subTerms);
@@ -1040,8 +1042,9 @@ RexxCode *LanguageParser::translateBlock()
 
     // until we need guard variables, we don't need the table
     guardVariables = OREF_NULL;
-    // and we need a new set of exposed variables for each code section
-    exposedVariables = new_string_table();
+    // and we reset the exposed/local variables for each code section
+    exposedVariables = OREF_NULL;
+    localVariables = OREF_NULL;
 
     // clear the stack accounting fields
     maxStack = 0;
@@ -1715,8 +1718,21 @@ void LanguageParser::flushControl(RexxInstruction *instruction)
  */
 bool LanguageParser::isExposed(RexxString *varName)
 {
-    return exposedVariables != OREF_NULL && exposedVariables->hasIndex(varName);
+    // if we had an explicit EXPOSE instruction, check if this was listed
+    if (exposedVariables != OREF_NULL)
+    {
+        return exposedVariables->hasIndex(varName);
+    }
+    // had a USE ARG instruction specified?  Variable is exposed
+
+    else if (localVariables != OREF_NULL)
+    {
+        return !localVariables->hasIndex(varName);
+    }
+    // neither situation, not an exposed variable
+    return false;
 }
+
 
 /**
  * Perform a variable capture operation if we're
@@ -1937,8 +1953,41 @@ RexxCompoundVariable *LanguageParser::addCompound(RexxString *name)
  */
 void LanguageParser::expose(RexxString *name )
 {
-
+    // create the table on the first expose
+    if (exposedVariables == OREF_NULL)
+    {
+        exposedVariables = new_string_table();
+    }
     exposedVariables->put(name, name);
+}
+
+
+/**
+ * We have a USE LOCAL specified, so turn on the auto expose.
+ */
+void LanguageParser::autoExpose()
+{
+    localVariables = new_string_table();
+    // add the special local variables to the list
+    localVariables->put(GlobalNames::SUPER, GlobalNames::SUPER);
+    localVariables->put(GlobalNames::SELF, GlobalNames::SELF);
+    localVariables->put(GlobalNames::RC, GlobalNames::RC);
+    localVariables->put(GlobalNames::RESULT, GlobalNames::RESULT);
+    localVariables->put(GlobalNames::SIGL, GlobalNames::SIGL);
+
+}
+
+
+/**
+ * Add a variable name to the list of explicitly declared to be
+ * local.
+ *
+ * @param name   The name of the variable.
+ */
+void LanguageParser::localVariable(RexxString *name )
+{
+
+    localVariables->put(name, name);
 }
 
 

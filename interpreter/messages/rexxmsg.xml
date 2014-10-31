@@ -1238,6 +1238,15 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Symbol_expected_delegate</SymbolicName>
         <Text>Symbol expected after the DELEGATE keyword.</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>20</Code>
+        <Subcode>927</Subcode>
+        <MessageNumber>777</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Symbol_expected_use_local</SymbolicName>
+        <Text>Symbol expected after USE LOCAL.</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>
@@ -5573,6 +5582,15 @@ special character (such as a parenthesis).
         <Severity>Warning</Severity>
         <SymbolicName>Error_Translation_delegate_attribute</SymbolicName>
         <Text>Delegate attributes cannot have a method body.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>99</Code>
+        <Subcode>948</Subcode>
+        <MessageNumber>778</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Translation_use_local_compound</SymbolicName>
+        <Text>USE LOCAL cannot process compound variables; found <q><Sub position="1" name="variable"/></q>.</Text>
       </SubMessage>
     </Subcodes>
   </Message>

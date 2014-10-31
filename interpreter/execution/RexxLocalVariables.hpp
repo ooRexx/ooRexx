@@ -88,7 +88,7 @@ class RexxLocalVariables
     /* NOTE:  we add one because the size is actually the index */
     /* number of the last variable in the cache.   The zero-th */
     /* element is used to trigger cache lookup failures. */
-    inline void init(RexxActivation *creator, size_t poolSize) { owner = creator; size = poolSize + 1; dictionary = OREF_NULL; flags.reset(); }
+    inline void init(RexxActivation *creator, size_t poolSize) { owner = creator; size = poolSize + 1; dictionary = OREF_NULL; objectVariables = OREF_NULL; flags.reset(); }
     inline void setFrame(RexxInternalObject **frame)
     {
         locals = (RexxVariable **)frame;
@@ -136,6 +136,7 @@ class RexxLocalVariables
     }
 
     void updateVariable(RexxVariable*);
+    void setAutoExpose(VariableDictionary *ov);
 
     inline RexxVariable *get(size_t index) { return locals[index]; }
     inline RexxVariable *find(RexxString *name, size_t index)
@@ -155,6 +156,7 @@ class RexxLocalVariables
     inline void       setNested()  { flags.set(NESTED_INTERNAL); }
     inline void       clearNested()  { flags.reset(NESTED_INTERNAL); }
     inline bool       isNested() { return flags[NESTED_INTERNAL]; }
+    inline bool       autoExpose() { return objectVariables != OREF_NULL; }
 
     inline void       procedure(RexxActivation *activation) { owner = activation; dictionary = OREF_NULL;  clearNested(); }
     inline void       setDictionary(VariableDictionary *dict) { dictionary = dict; }
@@ -168,6 +170,7 @@ class RexxLocalVariables
     size_t size;                         // size of the expstack
     RexxActivation *owner;               // the owning activation
     RexxVariable **locals;               // the frame of local variables
-    VariableDictionary *dictionary;  // dictionary used for dynamic lookups
+    VariableDictionary *dictionary;      // dictionary used for dynamic lookups
+    VariableDictionary *objectVariables; // dictionary used for automatic expose operations
 };
 #endif

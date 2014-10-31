@@ -139,6 +139,7 @@
 #include "ThenInstruction.hpp"
 #include "TraceInstruction.hpp"
 #include "UseInstruction.hpp"
+#include "UseLocalInstruction.hpp"
 #include "ClassDirective.hpp"
 #include "LibraryDirective.hpp"
 #include "RequiresDirective.hpp"
@@ -631,6 +632,9 @@ void MemoryObject::buildVirtualFunctionTable()
    
    objectPtr = ::new (objectLoc) RexxInstructionUse(RESTOREIMAGE);
    virtualFunctionTable[T_UseInstruction] = getVftPointer(objectLoc);
+   
+   objectPtr = ::new (objectLoc) RexxInstructionUseLocal(RESTOREIMAGE);
+   virtualFunctionTable[T_UseLocalInstruction] = getVftPointer(objectLoc);
    
    objectPtr = ::new (objectLoc) ClassDirective(RESTOREIMAGE);
    virtualFunctionTable[T_ClassDirective] = getVftPointer(objectLoc);

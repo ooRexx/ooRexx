@@ -86,6 +86,7 @@
 #include "RaiseInstruction.hpp"
 #include "TraceInstruction.hpp"
 #include "UseInstruction.hpp"
+#include "UseLocalInstruction.hpp"
 
 #include "CallInstruction.hpp"                 /* call/signal instructions          */
 #include "SignalInstruction.hpp"
@@ -1731,6 +1732,81 @@ RexxInstruction *LanguageParser::exposeNew()
 
     RexxInstruction *newObject = new_variable_instruction(EXPOSE, Expose, variableCount, RexxObject *);
     ::new ((void *)newObject) RexxInstructionExpose(variableCount, subTerms);
+    return newObject;
+}
+
+
+/**
+ * Parse and create a new USE LOCAL instruction
+ *
+ * @return The configured instruction instance.
+ */
+RexxInstruction *LanguageParser::useLocalNew()
+{
+    // not valid in an interpret
+    if (isInterpret())
+    {
+        syntaxError(Error_Translation_expose_interpret);
+    }
+
+    // validate the placement at the beginning of the code block...
+    // the rules are the same as with EXPOSE.
+    isExposeValid();
+
+    // switch on auto expose tracking
+    autoExpose();
+
+    // process the variable list and create an instruction from this.
+    // There are enough differences from EXPOSE/DROP/PROCEDURE that it is
+    // easier doing this here.
+    size_t variableCount = 0;
+
+    // the next real token is the start of the list (after the
+    // space following the keyword instruction.
+    RexxToken *token = nextReal();
+
+    // while not at the end of the clause, process a list of variables.  Note
+    // that the variable list is optional.
+    while (!token->isEndOfClause())
+    {
+        // generally, these are symbols, but not all symbols are variables.
+        if (token->isSymbol())
+        {
+            // non-variable symbol?
+            if (token->isSubtype(SYMBOL_CONSTANT))
+            {
+                syntaxError(Error_Invalid_variable_number, token);
+            }
+            // the dummy period
+            else if (token->isSubtype(SYMBOL_DUMMY))
+            {
+                syntaxError(Error_Invalid_variable_period, token);
+            }
+            // we only allow simple variables or stems to be declared local
+            else if (token->isSubtype(SYMBOL_COMPOUND))
+            {
+                syntaxError(Error_Translation_use_local_compound, token);
+            }
+
+            // ok, get a retriever for the variable and push it on the stack.
+            pushSubTerm(addVariable(token));
+            // the GUARD instruction also needs to understand about locals,
+            // so record this as an explicit local
+            localVariable(token->value());
+            // update our return value.
+            variableCount++;
+        }
+        // something unrecognized...we need to issue the message for the instruction.
+        else
+        {
+            syntaxError(Error_Symbol_expected_use_local);
+        }
+        // and see if we have more variables
+        token = nextReal();
+    }
+
+    RexxInstruction *newObject = new_variable_instruction(USE_LOCAL, UseLocal, variableCount, RexxObject *);
+    ::new ((void *)newObject) RexxInstructionUseLocal(variableCount, subTerms);
     return newObject;
 }
 
@@ -3561,6 +3637,7 @@ RexxInstruction *LanguageParser::traceNew()
     return newObject;
 }
 
+
 /**
  * Parse a USE STRICT ARG instruction.
  *
@@ -3574,6 +3651,12 @@ RexxInstruction *LanguageParser::useNew()
     // syntax rules
     RexxToken *token = nextReal();
     InstructionSubKeyword subkeyword = token->subKeyword();
+
+    // check for USE LOCAL first. we really just handle the USE ARG in here
+    if (subkeyword == SUBKEY_LOCAL)
+    {
+        return useLocalNew();
+    }
 
     if (subkeyword == SUBKEY_STRICT)
     {

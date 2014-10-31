@@ -173,6 +173,8 @@ class LanguageParser: public RexxInternalObject
     RexxStemVariable  *addStem(RexxString *);
     RexxCompoundVariable *addCompound(RexxString *);
     void        expose(RexxString *);
+    void        localVariable(RexxString *);
+    void        autoExpose();
     RexxString *commonString(RexxString *);
     RexxInternalObject *addText(RexxToken *);
     RexxVariableBase *addVariable(RexxToken *);
@@ -291,6 +293,7 @@ class LanguageParser: public RexxInternalObject
     RexxInstruction *thenNew(RexxToken *, RexxInstructionIf *);
     RexxInstruction *traceNew();
     RexxInstruction *useNew();
+    RexxInstruction *useLocalNew();
 
     inline void        addReference(RexxInternalObject *reference) { calls->addLast(reference); }
     inline void        pushDo(RexxInstruction *i) { control->push(i); }
@@ -486,6 +489,7 @@ protected:
     StringTable     *labels;             // root of associated label list
     IdentityTable   *guardVariables;     // exposed variables in guard list
     StringTable     *exposedVariables;   // root of exposed variables list
+    StringTable     *localVariables;     // list of explicitly specified local variables
     ArrayClass      *calls;              // root of call list
 
     size_t           currentStack;       // current expression stack depth

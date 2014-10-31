@@ -683,6 +683,8 @@
 #define Error_Translation_delegate_method_msg                        774
 #define Error_Symbol_expected_delegate_msg                           775
 #define Error_Translation_delegate_attribute_msg                     776
+#define Error_Symbol_expected_use_local_msg                          777
+#define Error_Translation_use_local_compound_msg                     778
 
 
 #endif

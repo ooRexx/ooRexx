@@ -174,6 +174,7 @@
 #define Rexx_Error_Symbol_expected_annotation_type                        20924
 #define Rexx_Error_Symbol_expected_form                                   20925
 #define Rexx_Error_Symbol_expected_delegate                               20926
+#define Rexx_Error_Symbol_expected_use_local                              20927
 #define Rexx_Error_Invalid_data                                           21000
 #define Rexx_Error_Invalid_data_user_defined                              21900
 #define Rexx_Error_Invalid_data_nop                                       21901
@@ -638,6 +639,7 @@
 #define Rexx_Error_Translation_missing_annotation_target                  99945
 #define Rexx_Error_Translation_delegate_method                            99946
 #define Rexx_Error_Translation_delegate_attribute                         99947
+#define Rexx_Error_Translation_use_local_compound                         99948
 
 
 #endif

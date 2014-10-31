@@ -36,21 +36,21 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                          ExposeInstruction.hpp */
+/* REXX Kernel                                        UseLocalInstruction.hpp */
 /*                                                                            */
-/* EXPOSE instruction Class Definitions                                       */
+/* USE LOCAL instruction                                                      */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_RexxInstructionExpose
-#define Included_RexxInstructionExpose
+#ifndef Included_RexxInstructionUseLocal
+#define Included_RexxInstructionUseLocal
 
 #include "RexxInstruction.hpp"
 
-class RexxInstructionExpose : public RexxInstruction
+class RexxInstructionUseLocal : public RexxInstruction
 {
  public:
-    RexxInstructionExpose(size_t, QueueClass *);
-    inline RexxInstructionExpose(RESTORETYPE restoreType) { ; };
+    RexxInstructionUseLocal(size_t, QueueClass *);
+    inline RexxInstructionUseLocal(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
@@ -60,7 +60,8 @@ class RexxInstructionExpose : public RexxInstruction
 
 protected:
 
-    size_t            variableCount;     // number of variables to expose
-    RexxVariableBase *variables[1];      // list of variables for EXPOSE
+    size_t            variableCount;     // number of variables to force as locals
+    RexxVariableBase *variables[1];      // list of variables for to force as locals
 };
 #endif
+

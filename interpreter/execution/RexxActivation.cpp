@@ -1187,6 +1187,35 @@ void RexxActivation::expose(RexxVariableBase **variables, size_t count)
 
 
 /**
+ * Turn on autoexpose as the result of a USE LOCAL instruction.
+ *
+ * @param variables The list of variables to declose as local
+ *                  variables.
+ * @param count     The variable count.
+ */
+void RexxActivation::autoExpose(RexxVariableBase **variables, size_t count)
+{
+    // we just request the value for each of these variables now, which will
+    // force them to be created as local variables.
+    for (size_t i = 0; i < count; i++)
+    {
+        variables[i]->getRealValue(this);
+    }
+
+    // now explicitly make RC, RESULT, SIGL, SELF, and SUPER local
+    getLocalVariable(GlobalNames::SELF, VARIABLE_SELF);
+    getLocalVariable(GlobalNames::SUPER, VARIABLE_SUPER);
+    getLocalVariable(GlobalNames::RC, VARIABLE_RC);
+    getLocalVariable(GlobalNames::SIGL, VARIABLE_SIGL);
+    getLocalVariable(GlobalNames::RESULT, VARIABLE_RESULT);
+
+    // now switch modes with the local variables so that every new variable
+    // is created as an object variable.
+    settings.localVariables.setAutoExpose(getObjectVariables());
+}
+
+
+/**
  * Process a forward instruction.
  *
  * @param target     The target object.

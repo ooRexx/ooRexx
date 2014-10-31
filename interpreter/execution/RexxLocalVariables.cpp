@@ -172,6 +172,21 @@ RexxVariable *RexxLocalVariables::findVariable(RexxString *name, size_t index)
 }
 
 
+
+/**
+ * Enable auto exposing of variables.  This will switch lookup of
+ * variables on the first reference to perform an implicit
+ * expose operation.
+ *
+ * @param ov     The object variables from the current scope used
+ *               for the expose operation.
+ */
+void RexxLocalVariables::setAutoExpose(VariableDictionary *ov)
+{
+    objectVariables = ov;
+}
+
+
 /**
  * Create a local variable object of the given name and store
  * it at the given location.
@@ -210,29 +225,85 @@ RexxVariable *RexxLocalVariables::lookupVariable(RexxString *name, size_t index)
             createDictionary();
         }
 
-        // retrieve this from the variable dictionary now, which will create
-        // the item we need.
-        return dictionary->getVariable(name);
+        // if we're not auto exposing, just lookup the variable which will also
+        // create it.
+        if (!autoExpose())
+        {
+            // retrieve this from the variable dictionary now, which will create
+            // the item we need.
+            return dictionary->getVariable(name);
+        }
+        else
+        {
+            // this might have been previously created.  check the dictionary
+            // first, then create if necessary
+            RexxVariable *variable = dictionary->resolveVariable(name);
+            if (variable != OREF_NULL)
+            {
+                return variable;
+            }
+
+            // get the variable from the object variable dictionary
+            // and add it to the local dictionary.
+            variable = objectVariables->getVariable(name);
+            dictionary->addVariable(name, variable);
+            return variable;
+        }
     }
     else
     {
-        RexxVariable *variable;
-        // if we've had to create a dictionary for this because of
-        // prior dynamic access, then we need to retrieve the
-        // variable from the dictionary.
-        if (dictionary != OREF_NULL)
+        // normal local variable lookup, just create the local variable
+        // and return it.
+        if (!autoExpose())
         {
-            variable = dictionary->getVariable(name);
+            RexxVariable *variable;
+            // if we've had to create a dictionary for this because of
+            // prior dynamic access, then we need to retrieve the
+            // variable from the dictionary.
+            if (dictionary != OREF_NULL)
+            {
+                variable = dictionary->getVariable(name);
+            }
+            // we've already had a cache miss, so we're creating a variable.
+            else
+            {
+                variable = owner->newLocalVariable(name);
+            }
+            // fill in the cache slot for the next lookup and return
+            // the new variable.
+            locals[index] = variable;
+            return variable;
         }
-        // we've already had a cache miss, so we're creating a variable.
         else
         {
-            variable = owner->newLocalVariable(name);
+            // if we've had to create a dictionary for this because of
+            // prior dynamic access, then we need to retrieve the
+            // variable from the dictionary.
+            if (dictionary != OREF_NULL)
+            {
+                // this might have been previously created.  check the dictionary
+                // first, then create if necessary
+                RexxVariable *variable = dictionary->resolveVariable(name);
+                if (variable != OREF_NULL)
+                {
+                    return variable;
+                }
+            }
+
+            // get the variable from the object variable dictionary
+            RexxVariable *variable = objectVariables->getVariable(name);
+            // if we've had to create a dictionary for this because of
+            // prior dynamic access, then we need to retrieve the
+            // variable from the dictionary.
+            if (dictionary != OREF_NULL)
+            {
+                dictionary->addVariable(name, variable);
+            }
+            // fill in the cache slot for the next lookup and return
+            // the new variable.
+            locals[index] = variable;
+            return variable;
         }
-        // fill in the cache slot for the next lookup and return
-        // the new variable.
-        locals[index] = variable;
-        return variable;
     }
 }
 
@@ -276,37 +347,90 @@ RexxVariable *RexxLocalVariables::lookupStemVariable(RexxString *name, size_t in
             createDictionary();
         }
 
-        // have the dictionary create this for us
-        return dictionary->getStemVariable(name);
-    }
-    else
-    {
-        // if we've had to create a dictionary for this because of
-        // prior dynamic access, then we need to retrieve the
-        // variable from the dictionary.
-
-        RexxVariable *variable;
-        if (dictionary != OREF_NULL)
+        // if we're not auto exposing, just lookup the variable which will also
+        // create it.
+        if (!autoExpose())
         {
-            // create from the dictionary and add this to the cache at
-            // the target location.
-            variable = dictionary->getStemVariable(name);
-            locals[index] = variable;
+            // retrieve this from the variable dictionary now, which will create
+            // the item we need.
+
+            // have the dictionary create this for us
+            return dictionary->getStemVariable(name);
         }
         else
         {
-            // create a new variable from the local context and
-            // add it to the cache.
-            variable = owner->newLocalVariable(name);
-            locals[index] = variable;
+            // this might have been previously created.  check the dictionary
+            // first, then create if necessary
+            RexxVariable *variable = dictionary->resolveVariable(name);
+            if (variable != OREF_NULL)
+            {
+                return variable;
+            }
 
-            // stem variables are initialized as soon as they
-            // are created, using a stem object with the same name.
-            StemClass *stemtable = new StemClass(name);
-            variable->set(stemtable);
+            // get the variable from the object variable dictionary
+            // and add it to the local dictionary.
+            variable = objectVariables->getStemVariable(name);
+            dictionary->addVariable(name, variable);
+            return variable;
         }
-        // and return the new variable
-        return variable;
+    }
+    else
+    {
+        if (!autoExpose())
+        {
+            // if we've had to create a dictionary for this because of
+            // prior dynamic access, then we need to retrieve the
+            // variable from the dictionary.
+
+            RexxVariable *variable;
+            if (dictionary != OREF_NULL)
+            {
+                // create from the dictionary and add this to the cache at
+                // the target location.
+                variable = dictionary->getStemVariable(name);
+                locals[index] = variable;
+            }
+            else
+            {
+                // create a new variable from the local context and
+                // add it to the cache.
+                variable = owner->newLocalVariable(name);
+                locals[index] = variable;
+
+                // stem variables are initialized as soon as they
+                // are created, using a stem object with the same name.
+                StemClass *stemtable = new StemClass(name);
+                variable->set(stemtable);
+            }
+            // and return the new variable
+            return variable;
+        }
+        else
+        {
+            // if we've had to create a dictionary for this because of
+            // prior dynamic access, then we need to retrieve the
+            // variable from the dictionary.
+            if (dictionary != OREF_NULL)
+            {
+                // this might have been previously created.  check the dictionary
+                // first, then create if necessary
+                RexxVariable *variable = dictionary->resolveVariable(name);
+                if (variable != OREF_NULL)
+                {
+                    return variable;
+                }
+            }
+            // get the variable from the object variable dictionary
+            RexxVariable *variable = objectVariables->getStemVariable(name);
+            if (dictionary != OREF_NULL)
+            {
+                dictionary->addVariable(name, variable);
+            }
+            // fill in the cache slot for the next lookup and return
+            // the new variable.
+            locals[index] = variable;
+            return variable;
+        }
     }
 }
 
