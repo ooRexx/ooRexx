@@ -684,6 +684,9 @@ BEGIN
    99947    "Delegate attributes cannot have a method body."
    20927    "Symbol expected after USE LOCAL."
    99948    "USE LOCAL cannot process compound variables; found ""&1""."
+   20928    "Symbol expected as an indirect variable name; found ""&1""."
+   98992    "The EXPOSE instruction may only be used from method invocations."
+   98993    "The USE LOCAL instruction may only be used from method invocations."
    
 END
 

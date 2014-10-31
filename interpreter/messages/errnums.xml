@@ -865,6 +865,12 @@ special character (such as a parenthesis).
 <para>Symbol expected after USE LOCAL.</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>928</term>
+<listitem>
+<para>Symbol expected as an indirect variable name; found "<emphasis role="italic">token</emphasis>".</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR21">
@@ -3645,6 +3651,18 @@ special character (such as a parenthesis).
 <term>991</term>
 <listitem>
 <para>Method <emphasis role="italic">name</emphasis> may only be invoked from a method of the same object or one of its classes.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>992</term>
+<listitem>
+<para>The EXPOSE instruction may only be used from method invocations.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>993</term>
+<listitem>
+<para>The USE LOCAL instruction may only be used from method invocations.</para>
 </listitem>
 </varlistentry>
 </variablelist>

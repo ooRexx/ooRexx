@@ -121,7 +121,7 @@ void RexxInstructionExpose::execute(RexxActivation *context, ExpressionStack *st
     // not allowed in a method context.
     if (!context->inMethod())
     {
-        reportException(Error_Translation_expose);
+        reportException(Error_Execution_expose_method);
     }
 
     // the context processeses these

@@ -1777,8 +1777,8 @@ RexxInstruction *LanguageParser::useLocalNew()
             {
                 syntaxError(Error_Invalid_variable_number, token);
             }
-            // the dummy period
-            else if (token->isSubtype(SYMBOL_DUMMY))
+            // the dummy period and other dot symbols
+            else if (token->isSubtype(SYMBOL_DUMMY, SYMBOL_DOTSYMBOL))
             {
                 syntaxError(Error_Invalid_variable_period, token);
             }
@@ -3834,7 +3834,7 @@ size_t LanguageParser::processVariableList(InstructionKeyword type )
                 syntaxError(Error_Invalid_variable_number, token);
             }
             // the dummy period
-            else if (token->isSubtype(SYMBOL_DUMMY))
+            else if (token->isSubtype(SYMBOL_DUMMY, SYMBOL_DOTSYMBOL))
             {
                 syntaxError(Error_Invalid_variable_period, token);
             }

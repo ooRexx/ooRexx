@@ -1247,6 +1247,15 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Symbol_expected_use_local</SymbolicName>
         <Text>Symbol expected after USE LOCAL.</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>20</Code>
+        <Subcode>928</Subcode>
+        <MessageNumber>779</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Symbol_expected_indirect</SymbolicName>
+        <Text>Symbol expected as an indirect variable name; found <q><Sub position="1" name="token"/></q>.</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>
@@ -5165,6 +5174,24 @@ special character (such as a parenthesis).
         <Severity>Warning</Severity>
         <SymbolicName>Error_Execution_private_access</SymbolicName>
         <Text>Method <Sub position="1" name="name"/> may only be invoked from a method of the same object or one of its classes.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>98</Code>
+        <Subcode>992</Subcode>
+        <MessageNumber>780</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Execution_expose_method</SymbolicName>
+        <Text>The EXPOSE instruction may only be used from method invocations.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>98</Code>
+        <Subcode>993</Subcode>
+        <MessageNumber>781</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Execution_use_local_method</SymbolicName>
+        <Text>The USE LOCAL instruction may only be used from method invocations.</Text>
       </SubMessage>
     </Subcodes>
   </Message>

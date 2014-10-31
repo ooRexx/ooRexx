@@ -175,6 +175,7 @@
 #define Rexx_Error_Symbol_expected_form                                   20925
 #define Rexx_Error_Symbol_expected_delegate                               20926
 #define Rexx_Error_Symbol_expected_use_local                              20927
+#define Rexx_Error_Symbol_expected_indirect                               20928
 #define Rexx_Error_Invalid_data                                           21000
 #define Rexx_Error_Invalid_data_user_defined                              21900
 #define Rexx_Error_Invalid_data_nop                                       21901
@@ -593,6 +594,8 @@
 #define Rexx_Error_Execution_abstract_class                               98989
 #define Rexx_Error_Execution_abstract_metaclass                           98990
 #define Rexx_Error_Execution_private_access                               98991
+#define Rexx_Error_Execution_expose_method                                98992
+#define Rexx_Error_Execution_use_local_method                             98993
 #define Rexx_Error_Translation                                            99000
 #define Rexx_Error_Translation_user_defined                               99900
 #define Rexx_Error_Translation_duplicate_class                            99901

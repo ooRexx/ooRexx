@@ -151,7 +151,6 @@ ArrayClass *RexxVariableReference::list(RexxActivation *context)
         // or a digit
         else if (character >= '0' && character <= '9')
         {
-            /* constant symbol                   */
             reportException(Error_Invalid_variable_number, variable_name);
         }
         // now convert into a variable reference
@@ -159,7 +158,7 @@ ArrayClass *RexxVariableReference::list(RexxActivation *context)
         // if it did not convert (invalid characters, for example), report this
         if (retriever == OREF_NULL)
         {
-            reportException(Error_Symbol_expected_expose);
+            reportException(Error_Symbol_expected_indirect, variable_name);
         }
         // replace the name with the retriever
         list->put(retriever, i);
