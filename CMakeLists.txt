@@ -1529,6 +1529,9 @@ endif ()
 
 
 # direct output into a samples subdir
+add_subdirectory (samples)
+
+# build the binaries used for API tests.
 add_subdirectory (testbinaries)
 
 
@@ -1592,8 +1595,6 @@ if (WIN32 AND DOC_SOURCE_DIR)
    install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexxapi.pdb COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR}
        CONFIGURATIONS Debug RelWithDebInfo)
    install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexxc.pdb COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR}
-       CONFIGURATIONS Debug RelWithDebInfo)
-   install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexxexit.pdb COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR}
        CONFIGURATIONS Debug RelWithDebInfo)
    install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexxhide.pdb COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR}
        CONFIGURATIONS Debug RelWithDebInfo)
