@@ -548,7 +548,7 @@ return position
 
   -- the last name element should not end with a separator, to remove it
   -- if one is there
-  do while buffer~length > 1 & buffer~match(buffer~length, self~separator)
+  do while buffer~length > 1, buffer~match(buffer~length, self~separator)
       buffer~delstr(buffer~length, 1)
   end
 
