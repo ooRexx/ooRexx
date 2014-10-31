@@ -1474,6 +1474,11 @@ RexxStringObject StreamInfo::charin(bool _setPosition, int64_t position, size_t 
     // is frequently used to read in entire files at one shot, this can be a
     // fairly significant savings.
     RexxBufferStringObject result = context->NewBufferString(read_length);
+    // make sure we can allocate this, otherwise we'll crash
+    if (context->CheckCondition())
+    {
+        return NULL;
+    }
     char *buffer = (char *)context->BufferStringData(result);
 
     // do the actual read
