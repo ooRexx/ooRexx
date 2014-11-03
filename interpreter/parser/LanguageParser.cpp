@@ -1402,6 +1402,12 @@ RexxCode *LanguageParser::translateBlock()
             case KEYWORD_LOOP_OVER_FOR:
             case KEYWORD_LOOP_OVER_FOR_UNTIL:
             case KEYWORD_LOOP_OVER_FOR_WHILE:
+            case KEYWORD_LOOP_WITH:
+            case KEYWORD_LOOP_WITH_UNTIL:
+            case KEYWORD_LOOP_WITH_WHILE:
+            case KEYWORD_LOOP_WITH_FOR:
+            case KEYWORD_LOOP_WITH_FOR_UNTIL:
+            case KEYWORD_LOOP_WITH_FOR_WHILE:
             case KEYWORD_LOOP_CONTROLLED:
             case KEYWORD_LOOP_CONTROLLED_UNTIL:
             case KEYWORD_LOOP_CONTROLLED_WHILE:
