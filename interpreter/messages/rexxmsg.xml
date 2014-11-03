@@ -1256,6 +1256,15 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Symbol_expected_indirect</SymbolicName>
         <Text>Symbol expected as an indirect variable name; found <q><Sub position="1" name="token"/></q>.</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>20</Code>
+        <Subcode>929</Subcode>
+        <MessageNumber>784</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Symbol_expected_after_keyword</SymbolicName>
+        <Text>Symbol expected after <Sub position="1" name="keyword"/> keyword.</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>
@@ -1972,8 +1981,8 @@ special character (such as a parenthesis).
     <Component>Rexx</Component>
     <Severity>Warning</Severity>
     <SymbolicName>Error_Invalid_do</SymbolicName>
-    <Text>Invalid DO syntax.</Text>
-    <Explanation><para>A syntax error was found in the DO instruction.  You probably used BY, TO, FOR, WHILE, or UNTIL twice, used a WHILE and an UNTIL, or used BY, TO, or FOR when there is no control variable specified.</para></Explanation>
+    <Text>Invalid DO or LOOP syntax.</Text>
+    <Explanation><para>A syntax error was found in a DO or LOOP instruction.  You probably used BY, TO, FOR, WHILE, or UNTIL twice, used a WHILE and an UNTIL, or used BY, TO, or FOR when there is no control variable specified.</para></Explanation>
     <Subcodes>
       <SubMessage>
         <Code>27</Code>
@@ -1982,7 +1991,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_do_whileuntil</SymbolicName>
-        <Text>WHILE and UNTIL keywords cannot be used on the same DO loop.</Text>
+        <Text>WHILE and UNTIL keywords cannot be used on the same loop.</Text>
       </SubMessage>
       <SubMessage>
         <Code>27</Code>
@@ -1991,7 +2000,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_do_forever</SymbolicName>
-        <Text>Incorrect data following FOREVER keyword on the DO loop; found <q><Sub position="1" name="data"/></q>.</Text>
+        <Text>Incorrect data following FOREVER keyword on the loop; found <q><Sub position="1" name="data"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>27</Code>
@@ -2000,7 +2009,25 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_do_duplicate</SymbolicName>
-        <Text>DO keyword <Sub position="1" name="keyword"/> can be specified only once.</Text>
+        <Text>DO or LOOP keyword <Sub position="1" name="keyword"/> can be specified only once.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>27</Code>
+        <Subcode>903</Subcode>
+        <MessageNumber>784</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_do_with_no_control</SymbolicName>
+        <Text>No INDEX or ITEM control variable specified on a WITH loop.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>27</Code>
+        <Subcode>904</Subcode>
+        <MessageNumber>786</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_do_with_no_over</SymbolicName>
+        <Text>OVER keyword expected for a WITH loop.</Text>
       </SubMessage>
     </Subcodes>
   </Message>
@@ -2380,6 +2407,15 @@ special character (such as a parenthesis).
         <Severity>Warning</Severity>
         <SymbolicName>Error_Logical_value_when_case</SymbolicName>
         <Text>SELECT CASE comparison result must be <q>0</q>, <q>1</q>, <q>true</q>, or <q>false</q>; found <q><Sub position="1" name="value"/></q>.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>34</Code>
+        <Subcode>906</Subcode>
+        <MessageNumber>782</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Logical_value_supplier</SymbolicName>
+        <Text>Suppplier AVAILABLE method did not return exactly <q>0</q> or <q>1</q>; found <q><Sub position="1" name="value"/></q>.</Text>
       </SubMessage>
     </Subcodes>
   </Message>
@@ -5192,6 +5228,15 @@ special character (such as a parenthesis).
         <Severity>Warning</Severity>
         <SymbolicName>Error_Execution_use_local_method</SymbolicName>
         <Text>The USE LOCAL instruction may only be used from method invocations.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>98</Code>
+        <Subcode>994</Subcode>
+        <MessageNumber>783</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Execution_no_supplier</SymbolicName>
+        <Text>Unable to convert object <q><Sub position="1" name="object"/></q> to a supplier object.</Text>
       </SubMessage>
     </Subcodes>
   </Message>

@@ -123,7 +123,7 @@ $ Error_Invalid_whole_number
 26 Invalid whole number.
 
 $ Error_Invalid_do
-27 Invalid DO syntax.
+27 Invalid DO or LOOP syntax.
 
 $ Error_Invalid_leave
 28 Invalid LEAVE or ITERATE.
@@ -648,10 +648,10 @@ $ Error_Invalid_whole_number_rem
 312 Result of // operation did not result in a whole number.
 
 $ Error_Invalid_do_whileuntil
-313 WHILE and UNTIL keywords cannot be used on the same DO loop.
+313 WHILE and UNTIL keywords cannot be used on the same loop.
 
 $ Error_Invalid_do_forever
-314 Incorrect data following FOREVER keyword on the DO loop; found "&1".
+314 Incorrect data following FOREVER keyword on the loop; found "&1".
 
 $ Error_Invalid_leave_leave
 315 LEAVE is valid only within a repetitive loop or labeled block instruction.
@@ -1308,7 +1308,7 @@ $ Error_Incorrect_method_array_noclass
 544 Target object "&1" is not a subclass of the message override scope (&2).
 
 $ Error_Invalid_do_duplicate
-545 DO keyword &1 can be specified only once.
+545 DO or LOOP keyword &1 can be specified only once.
 
 $ Error_Incorrect_method_array_too_big
 546 An array cannot contain more than 99,999,999 elements.
@@ -1954,6 +1954,21 @@ $ Error_Execution_expose_method
 
 $ Error_Execution_use_local_method
 781 The USE LOCAL instruction may only be used from method invocations.
+
+$ Error_Logical_value_supplier
+782 Suppplier AVAILABLE method did not return exactly "0" or "1"; found "&1".
+
+$ Error_Execution_no_supplier
+783 Unable to convert object "&1" to a supplier object.
+
+$ Error_Symbol_expected_after_keyword
+784 Symbol expected after &1 keyword.
+
+$ Error_Invalid_do_with_no_control
+784 No INDEX or ITEM control variable specified on a WITH loop.
+
+$ Error_Invalid_do_with_no_over
+786 OVER keyword expected for a WITH loop.
 
 
 $ * -------------------------------------------------------------------------- */

@@ -1212,7 +1212,7 @@ MethodDictionary *RexxClass::createMethodDictionary(RexxObject *sourceCollection
     SupplierClass *supplier = (SupplierClass *)(RexxObject *)p2;
     for (; supplier->available() == TheTrueObject; supplier->next())
     {
-        MethodClass *newMethod = (MethodClass *)supplier->value();
+        MethodClass *newMethod = (MethodClass *)supplier->item();
         Protected<RexxString> method_name = supplier->index()->requestString();;
         // we add the methods to the table in uppercase, but create method objects using
         // the original name.

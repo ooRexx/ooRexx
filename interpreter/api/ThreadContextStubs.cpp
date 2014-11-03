@@ -1539,7 +1539,7 @@ RexxObjectPtr RexxEntry SupplierItem(RexxThreadContext *c, RexxSupplierObject o)
     ApiContext context(c);
     try
     {
-        return context.ret(((SupplierClass *)o)->value());
+        return context.ret(((SupplierClass *)o)->item());
     }
     catch (NativeActivation *)
     {

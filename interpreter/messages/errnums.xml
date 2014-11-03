@@ -871,6 +871,12 @@ special character (such as a parenthesis).
 <para>Symbol expected as an indirect variable name; found "<emphasis role="italic">token</emphasis>".</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>929</term>
+<listitem>
+<para>Symbol expected after <emphasis role="italic">keyword</emphasis> keyword.</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR21">
@@ -1381,29 +1387,41 @@ special character (such as a parenthesis).
 </variablelist>
 </section>
 <section id="ERR27">
-<title>Error 27 - Invalid DO syntax.</title>
+<title>Error 27 - Invalid DO or LOOP syntax.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
-<para>A syntax error was found in the DO instruction.  You probably used BY, TO, FOR, WHILE, or UNTIL twice, used a WHILE and an UNTIL, or used BY, TO, or FOR when there is no control variable specified.</para>
+<para>A syntax error was found in a DO or LOOP instruction.  You probably used BY, TO, FOR, WHILE, or UNTIL twice, used a WHILE and an UNTIL, or used BY, TO, or FOR when there is no control variable specified.</para>
 <para>The associated subcodes are: </para>
 <variablelist>
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>WHILE and UNTIL keywords cannot be used on the same DO loop.</para>
+<para>WHILE and UNTIL keywords cannot be used on the same loop.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>901</term>
 <listitem>
-<para>Incorrect data following FOREVER keyword on the DO loop; found "<emphasis role="italic">data</emphasis>".</para>
+<para>Incorrect data following FOREVER keyword on the loop; found "<emphasis role="italic">data</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>902</term>
 <listitem>
-<para>DO keyword <emphasis role="italic">keyword</emphasis> can be specified only once.</para>
+<para>DO or LOOP keyword <emphasis role="italic">keyword</emphasis> can be specified only once.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>903</term>
+<listitem>
+<para>No INDEX or ITEM control variable specified on a WITH loop.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>904</term>
+<listitem>
+<para>OVER keyword expected for a WITH loop.</para>
 </listitem>
 </varlistentry>
 </variablelist>
@@ -1672,6 +1690,12 @@ special character (such as a parenthesis).
 <term>905</term>
 <listitem>
 <para>SELECT CASE comparison result must be "0", "1", "true", or "false"; found "<emphasis role="italic">value</emphasis>".</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>906</term>
+<listitem>
+<para>Suppplier AVAILABLE method did not return exactly "0" or "1"; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 </variablelist>
@@ -3663,6 +3687,12 @@ special character (such as a parenthesis).
 <term>993</term>
 <listitem>
 <para>The USE LOCAL instruction may only be used from method invocations.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>994</term>
+<listitem>
+<para>Unable to convert object "<emphasis role="italic">object</emphasis>" to a supplier object.</para>
 </listitem>
 </varlistentry>
 </variablelist>

@@ -1470,7 +1470,7 @@ StartClassDefinition(Supplier)
         AddMethod("Available", SupplierClass::available, 0);
         AddMethod("Index", SupplierClass::index, 0);
         AddMethod("Next", SupplierClass::next, 0);
-        AddMethod("Item", SupplierClass::value, 0);
+        AddMethod("Item", SupplierClass::item, 0);
         AddMethod("Init", SupplierClass::initRexx, 2);
 
     CompleteMethodDefinitions();

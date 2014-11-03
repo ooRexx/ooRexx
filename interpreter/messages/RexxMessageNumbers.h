@@ -688,6 +688,11 @@
 #define Error_Symbol_expected_indirect_msg                           779
 #define Error_Execution_expose_method_msg                            780
 #define Error_Execution_use_local_method_msg                         781
+#define Error_Logical_value_supplier_msg                             782
+#define Error_Execution_no_supplier_msg                              783
+#define Error_Symbol_expected_after_keyword_msg                      784
+#define Error_Invalid_do_with_no_control_msg                         784
+#define Error_Invalid_do_with_no_over_msg                            786
 
 
 #endif

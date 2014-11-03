@@ -46,6 +46,7 @@
 #include "DoBlock.hpp"
 #include "RexxActivation.hpp"
 #include "MethodArguments.hpp"
+#include "SupplierClass.hpp"
 
 /**
  * Set up for execution of a FOR loop.
@@ -201,7 +202,6 @@ void ControlledLoop::setup( RexxActivation *context,
 }
 
 
-
 /**
  * Set up for execution of a DO OVER loop.
  *
@@ -311,3 +311,89 @@ bool WhileUntilLoop::checkUntil(RexxActivation *context, ExpressionStack *stack 
     // validation on this
     return result->truthValue(Error_Logical_value_until);
 }
+
+
+/**
+ * Set up for execution of a DO WITH loop.
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ * @param doblock The context doblock useds to store loop state data.
+ */
+void WithLoop::setup( RexxActivation *context,
+     ExpressionStack *stack, DoBlock *doblock)
+{
+    // evaluate the supplier provider
+    RexxObject* result = supplierSource->evaluate(context, stack);
+
+    context->traceResult(result);
+    // Now send this expression result the supplier message
+    // to get a supplier instance.
+    ProtectedObject p;
+
+    SupplierClass *supplier = (SupplierClass *)result->sendMessage(GlobalNames::SUPPLIER, p);
+
+    if (supplier == OREF_NULL || !isOfClassType(Supplier, supplier))
+    {
+        reportException(Error_Execution_no_supplier, result);
+    }
+
+    // Store this instance in the doblock
+    doblock->setSupplier(supplier);
+}
+
+
+/**
+ * Handle the loop iteration for a WITH loop.
+ *
+ * @param context The current execution context.
+ * @param stack   The evaluation stack.
+ * @param doblock The do block context.
+ * @param first   The first iteration indicator.
+ *
+ * @return true if the loop should iterate, false otherwise.
+ */
+bool WithLoop::checkIteration(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first)
+{
+    // get the supplier object from the doblock
+    SupplierClass *supplier = (SupplierClass *)doblock->getSupplier();
+
+    // make sure we step to next one on each iteration...this is
+    // why the loop variation exists!
+    if (!first)
+    {
+        supplier->loopNext();
+    }
+
+    // have we reached the end?  Then stop the loop
+    if (!supplier->loopAvailable())
+    {
+        return false;
+    }
+
+    // we must have one of the variable items, but need not have both.
+    if (indexVar != OREF_NULL)
+    {
+        RexxObject *index = supplier->loopIndex();
+        // the control variable gets set immediately, and we trace this
+        // increment result
+        indexVar->set(context, index);
+        context->traceResult(index);
+    }
+
+    // we must have one of the variable items, but need not have both.
+    if (itemVar != OREF_NULL)
+    {
+        RexxObject *item = supplier->loopItem();
+        // the control variable gets set immediately, and we trace this
+        // increment result
+        itemVar->set(context, item);
+        context->traceResult(item);
+    }
+
+    // this is a good iteration
+    return true;
+}
+
+
+

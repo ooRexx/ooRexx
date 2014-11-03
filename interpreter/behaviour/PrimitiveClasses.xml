@@ -195,6 +195,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="TraceInstruction" class="RexxInstructionTrace" include="TraceInstruction.hpp"/>
 <Class id="UseInstruction" class="RexxInstructionUse" include="UseInstruction.hpp"/>
 <Class id="UseLocalInstruction" class="RexxInstructionUseLocal" include="UseLocalInstruction.hpp"/>
+<Class id="DoWithInstruction" class="RexxInstructionDoWith" include="DoInstruction.hpp"/>
+<Class id="DoWithUntilInstruction" class="RexxInstructionDoWithUntil" include="DoInstruction.hpp"/>
+<Class id="DoWithWhileInstruction" class="RexxInstructionDoWithWhile" include="DoInstruction.hpp"/>
+<Class id="DoWithForInstruction" class="RexxInstructionDoWithFor" include="DoInstruction.hpp"/>
+<Class id="DoWithForUntilInstruction" class="RexxInstructionDoWithForUntil" include="DoInstruction.hpp"/>
+<Class id="DoWithForWhileInstruction" class="RexxInstructionDoWithForWhile" include="DoInstruction.hpp"/>
 
 <Class id="ClassDirective" class="ClassDirective" include="ClassDirective.hpp"/>
 <Class id="LibraryDirective" class="LibraryDirective" include="LibraryDirective.hpp"/>

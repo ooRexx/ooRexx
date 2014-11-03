@@ -178,6 +178,7 @@ class LanguageParser: public RexxInternalObject
     RexxString *commonString(RexxString *);
     RexxInternalObject *addText(RexxToken *);
     RexxVariableBase *addVariable(RexxToken *);
+    RexxVariableBase *requiredVariable(RexxToken *, const char *);
     void        addClause(RexxInstruction *);
     void        addLabel(RexxInstruction *, RexxString *);
     RexxInstruction *findLabel(RexxString *);
@@ -250,6 +251,7 @@ class LanguageParser: public RexxInternalObject
     RexxInstruction *doNew();
     RexxInstruction *newControlledLoop(RexxString *label, RexxToken *nameToken);
     RexxInstruction *newDoOverLoop(RexxString *label, RexxToken *nameToken);
+    RexxInstruction *newDoWithLoop(RexxString *label);
     RexxInstruction *newSimpleDo(RexxString *label);
     RexxInstruction *newLoopForever(RexxString *label);
     RexxInstruction *newLoopWhile(RexxString *label, WhileUntilLoop &conditional);

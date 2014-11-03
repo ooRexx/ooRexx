@@ -2037,6 +2037,30 @@ RexxVariableBase *LanguageParser::addVariable(RexxToken *token)
     return (RexxVariableBase *)addText(token);
 }
 
+
+/**
+ * Handle adding a variable to a program.  This verifies that
+ * the token is a valid variable, then creates a retriever that
+ * can be used in an expression to obtain the variable value.
+ *
+ * @param token  The token holding the variable name.
+ *
+ * @return A retriever object that can be used as an expression
+ *         term.
+ */
+RexxVariableBase *LanguageParser::requiredVariable(RexxToken *token, const char *keyword)
+{
+    // first verify that this is a symbol
+    if (!token->isSymbol())
+    {
+        syntaxError(Error_Symbol_expected_after_keyword, new_string(keyword));
+    }
+
+    // now process the variable
+    return addVariable(token);
+}
+
+
 // generate a retriever for a specific token type.  Note that we
 // keep two caches of retrievers here.  There are tokens that true
 // literals (strings, dot-variables, etc) and variable text tokens.  The

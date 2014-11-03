@@ -183,5 +183,38 @@ public:
 };
 
 
+/**
+ * An embedded object that can process WITH iteration loops.
+ */
+class WithLoop
+{
+public:
+    inline WithLoop() : indexVar(OREF_NULL), itemVar(OREF_NULL), supplierSource(OREF_NULL) { }
+
+    // helper memory marking methods for embedding classes to call.
+    inline void live(size_t liveMark)
+    {
+        memory_mark(indexVar);
+        memory_mark(itemVar);
+        memory_mark(supplierSource);
+    }
+
+    inline void liveGeneral(MarkReason reason)
+    {
+        memory_mark_general(indexVar);
+        memory_mark_general(itemVar);
+        memory_mark_general(supplierSource);
+    }
+
+    void setup(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock);
+    bool checkIteration(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first);
+
+    RexxVariableBase *indexVar;     // variable assigned to supplier indexes
+    RexxVariableBase *itemVar;      // variable assigned to supplier items
+                                    // expression to evaluate for a supplier instance.
+    RexxInternalObject *supplierSource;
+};
+
+
 #endif
 

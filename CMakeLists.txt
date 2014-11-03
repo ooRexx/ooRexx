@@ -607,6 +607,7 @@ set (instructions_sources  ${build_instructions_dir}/AddressInstruction.cpp
             ${build_instructions_dir}/ControlledDoInstruction.cpp
             ${build_instructions_dir}/DoForeverInstruction.cpp
             ${build_instructions_dir}/DoOverInstruction.cpp
+            ${build_instructions_dir}/DoWithInstruction.cpp
             ${build_instructions_dir}/DoWhileInstruction.cpp
             ${build_instructions_dir}/DropInstruction.cpp
             ${build_instructions_dir}/ElseInstruction.cpp

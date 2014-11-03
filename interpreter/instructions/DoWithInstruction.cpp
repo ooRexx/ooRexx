@@ -38,7 +38,7 @@
 /******************************************************************************/
 /* REXX Translator                                                            */
 /*                                                                            */
-/* All DO/LOOP over instruction variants                                      */
+/* All DO/LOOP WITH instruction variants                                      */
 /*                                                                            */
 /******************************************************************************/
 #include "RexxCore.h"
@@ -53,10 +53,10 @@
  * @param l      The optional label.
  * @param o      The loop control information.
  */
-RexxInstructionDoOver::RexxInstructionDoOver(RexxString *l, OverLoop &o)
+RexxInstructionDoWith::RexxInstructionDoWith(RexxString *l, WithLoop &o)
 {
     label = l;
-    overLoop = o;
+    withLoop = o;
 }
 
 
@@ -65,7 +65,7 @@ RexxInstructionDoOver::RexxInstructionDoOver(RexxString *l, OverLoop &o)
  *
  * @param liveMark The current live mark.
  */
-void RexxInstructionDoOver::live(size_t liveMark)
+void RexxInstructionDoWith::live(size_t liveMark)
 {
     // must be first object marked
     memory_mark(nextInstruction);
@@ -73,7 +73,7 @@ void RexxInstructionDoOver::live(size_t liveMark)
     memory_mark(label);
 
     // helpers for additional types of loops handle marking here
-    overLoop.live(liveMark);
+    withLoop.live(liveMark);
 }
 
 
@@ -84,7 +84,7 @@ void RexxInstructionDoOver::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void RexxInstructionDoOver::liveGeneral(MarkReason reason)
+void RexxInstructionDoWith::liveGeneral(MarkReason reason)
 {
     // must be first object marked
     memory_mark_general(nextInstruction);
@@ -92,7 +92,7 @@ void RexxInstructionDoOver::liveGeneral(MarkReason reason)
     memory_mark_general(label);
 
     // helpers for additional types of loops handle marking here
-    overLoop.liveGeneral(reason);
+    withLoop.liveGeneral(reason);
 }
 
 
@@ -101,9 +101,9 @@ void RexxInstructionDoOver::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope that will hold the flattened object.
  */
-void RexxInstructionDoOver::flatten(Envelope *envelope)
+void RexxInstructionDoWith::flatten(Envelope *envelope)
 {
-    setUpFlatten(RexxInstructionDoOver)
+    setUpFlatten(RexxInstructionDoWith)
 
     flattenRef(nextInstruction);
     flattenRef(end);
@@ -113,8 +113,9 @@ void RexxInstructionDoOver::flatten(Envelope *envelope)
     // everything depends on having correct pointers to object references in
     // the copied buffer.  We need to directly reference all of the elements here.
 
-    flattenRef(overLoop.control);
-    flattenRef(overLoop.target);
+    flattenRef(withLoop.itemVar);
+    flattenRef(withLoop.indexVar);
+    flattenRef(withLoop.supplierSource);
 
     cleanUpFlatten
 }
@@ -129,10 +130,10 @@ void RexxInstructionDoOver::flatten(Envelope *envelope)
  * @param stack   The current evaluation stack.
  * @param doblock The doblock associated with this loop instance.
  */
-void RexxInstructionDoOver::setup(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock)
+void RexxInstructionDoWith::setup(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock)
 {
     // perform the DO OVER initialization
-    overLoop.setup(context, stack, doblock);
+    withLoop.setup(context, stack, doblock);
 }
 
 
@@ -149,9 +150,9 @@ void RexxInstructionDoOver::setup(RexxActivation *context, ExpressionStack *stac
  * @return true if we should execute the loop block, false if
  *         we should terminate the loop.
  */
-bool RexxInstructionDoOver::iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first)
+bool RexxInstructionDoWith::iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first)
 {
-    return doblock->checkOver(context, stack);
+    return withLoop.checkIteration(context, stack, doblock, first);
 }
 
 
@@ -162,10 +163,10 @@ bool RexxInstructionDoOver::iterate(RexxActivation *context, ExpressionStack *st
  * @param o      The loop control information.
  * @param f      The loop For control
  */
-RexxInstructionDoOverFor::RexxInstructionDoOverFor(RexxString *l, OverLoop &o, ForLoop &f)
+RexxInstructionDoWithFor::RexxInstructionDoWithFor(RexxString *l, WithLoop &o, ForLoop &f)
 {
     label = l;
-    overLoop = o;
+    withLoop = o;
     forLoop = f;
 }
 
@@ -175,7 +176,7 @@ RexxInstructionDoOverFor::RexxInstructionDoOverFor(RexxString *l, OverLoop &o, F
  *
  * @param liveMark The current live mark.
  */
-void RexxInstructionDoOverFor::live(size_t liveMark)
+void RexxInstructionDoWithFor::live(size_t liveMark)
 {
     // must be first object marked
     memory_mark(nextInstruction);
@@ -183,7 +184,7 @@ void RexxInstructionDoOverFor::live(size_t liveMark)
     memory_mark(label);
 
     // helpers for additional types of loops handle marking here
-    overLoop.live(liveMark);
+    withLoop.live(liveMark);
     forLoop.live(liveMark);
 }
 
@@ -195,7 +196,7 @@ void RexxInstructionDoOverFor::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void RexxInstructionDoOverFor::liveGeneral(MarkReason reason)
+void RexxInstructionDoWithFor::liveGeneral(MarkReason reason)
 {
     // must be first object marked
     memory_mark_general(nextInstruction);
@@ -203,7 +204,7 @@ void RexxInstructionDoOverFor::liveGeneral(MarkReason reason)
     memory_mark_general(label);
 
     // helpers for additional types of loops handle marking here
-    overLoop.liveGeneral(reason);
+    withLoop.liveGeneral(reason);
     forLoop.liveGeneral(reason);
 }
 
@@ -213,9 +214,9 @@ void RexxInstructionDoOverFor::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope that will hold the flattened object.
  */
-void RexxInstructionDoOverFor::flatten(Envelope *envelope)
+void RexxInstructionDoWithFor::flatten(Envelope *envelope)
 {
-    setUpFlatten(RexxInstructionDoOverFor)
+    setUpFlatten(RexxInstructionDoWithFor)
 
     flattenRef(nextInstruction);
     flattenRef(end);
@@ -225,8 +226,9 @@ void RexxInstructionDoOverFor::flatten(Envelope *envelope)
     // everything depends on having correct pointers to object references in
     // the copied buffer.  We need to directly reference all of the elements here.
 
-    flattenRef(overLoop.control);
-    flattenRef(overLoop.target);
+    flattenRef(withLoop.itemVar);
+    flattenRef(withLoop.indexVar);
+    flattenRef(withLoop.supplierSource);
     flattenRef(forLoop.forCount);
 
     cleanUpFlatten
@@ -242,10 +244,10 @@ void RexxInstructionDoOverFor::flatten(Envelope *envelope)
  * @param stack   The current evaluation stack.
  * @param doblock The doblock associated with this loop instance.
  */
-void RexxInstructionDoOverFor::setup(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock)
+void RexxInstructionDoWithFor::setup(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock)
 {
     // perform the DO OVER initialization
-    overLoop.setup(context, stack, doblock);
+    withLoop.setup(context, stack, doblock);
     // perform the DO COUNT initialization
     forLoop.setup(context, stack, doblock, false);
 }
@@ -264,9 +266,9 @@ void RexxInstructionDoOverFor::setup(RexxActivation *context, ExpressionStack *s
  * @return true if we should execute the loop block, false if
  *         we should terminate the loop.
  */
-bool RexxInstructionDoOverFor::iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first)
+bool RexxInstructionDoWithFor::iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first)
 {
-    return doblock->checkOver(context, stack) && doblock->checkFor();
+    return withLoop.checkIteration(context, stack, doblock, first) && doblock->checkFor();
 }
 
 
@@ -277,10 +279,10 @@ bool RexxInstructionDoOverFor::iterate(RexxActivation *context, ExpressionStack 
  * @param o      The loop control information.
  * @param w      The loop conditional information.
  */
-RexxInstructionDoOverUntil::RexxInstructionDoOverUntil(RexxString *l, OverLoop &o, WhileUntilLoop &w)
+RexxInstructionDoWithUntil::RexxInstructionDoWithUntil(RexxString *l, WithLoop &o, WhileUntilLoop &w)
 {
     label = l;
-    overLoop = o;
+    withLoop = o;
     whileLoop = w;
 }
 
@@ -290,7 +292,7 @@ RexxInstructionDoOverUntil::RexxInstructionDoOverUntil(RexxString *l, OverLoop &
  *
  * @param liveMark The current live mark.
  */
-void RexxInstructionDoOverUntil::live(size_t liveMark)
+void RexxInstructionDoWithUntil::live(size_t liveMark)
 {
     // must be first object marked
     memory_mark(nextInstruction);
@@ -298,7 +300,7 @@ void RexxInstructionDoOverUntil::live(size_t liveMark)
     memory_mark(label);
 
     // helpers for additional types of loops handle marking here
-    overLoop.live(liveMark);
+    withLoop.live(liveMark);
     whileLoop.live(liveMark);
 }
 
@@ -310,7 +312,7 @@ void RexxInstructionDoOverUntil::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void RexxInstructionDoOverUntil::liveGeneral(MarkReason reason)
+void RexxInstructionDoWithUntil::liveGeneral(MarkReason reason)
 {
     // must be first object marked
     memory_mark_general(nextInstruction);
@@ -318,7 +320,7 @@ void RexxInstructionDoOverUntil::liveGeneral(MarkReason reason)
     memory_mark_general(label);
 
     // helpers for additional types of loops handle marking here
-    overLoop.liveGeneral(reason);
+    withLoop.liveGeneral(reason);
     whileLoop.liveGeneral(reason);
 }
 
@@ -328,9 +330,9 @@ void RexxInstructionDoOverUntil::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope that will hold the flattened object.
  */
-void RexxInstructionDoOverUntil::flatten(Envelope *envelope)
+void RexxInstructionDoWithUntil::flatten(Envelope *envelope)
 {
-    setUpFlatten(RexxInstructionDoOverUntil)
+    setUpFlatten(RexxInstructionDoWithUntil)
 
     flattenRef(nextInstruction);
     flattenRef(end);
@@ -340,8 +342,9 @@ void RexxInstructionDoOverUntil::flatten(Envelope *envelope)
     // everything depends on having correct pointers to object references in
     // the copied buffer.  We need to directly reference all of the elements here.
 
-    flattenRef(overLoop.control);
-    flattenRef(overLoop.target);
+    flattenRef(withLoop.itemVar);
+    flattenRef(withLoop.indexVar);
+    flattenRef(withLoop.supplierSource);
     flattenRef(whileLoop.conditional);
 
     cleanUpFlatten
@@ -361,15 +364,15 @@ void RexxInstructionDoOverUntil::flatten(Envelope *envelope)
  * @return true if we should execute the loop block, false if
  *         we should terminate the loop.
  */
-bool RexxInstructionDoOverUntil::iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first)
+bool RexxInstructionDoWithUntil::iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first)
 {
     // we don't check the UNTIL condition on the first iteration
     if (first)
     {
-        return doblock->checkOver(context, stack);
+        return withLoop.checkIteration(context, stack, doblock, first);
     }
 
-    return !whileLoop.checkUntil(context, stack) && doblock->checkOver(context, stack);
+    return !whileLoop.checkUntil(context, stack) && withLoop.checkIteration(context, stack, doblock, first);
 }
 
 
@@ -380,10 +383,10 @@ bool RexxInstructionDoOverUntil::iterate(RexxActivation *context, ExpressionStac
  * @param o      The loop control information.
  * @param w      The loop conditional information.
  */
-RexxInstructionDoOverWhile::RexxInstructionDoOverWhile(RexxString *l, OverLoop &o, WhileUntilLoop &w)
+RexxInstructionDoWithWhile::RexxInstructionDoWithWhile(RexxString *l, WithLoop &o, WhileUntilLoop &w)
 {
     label = l;
-    overLoop = o;
+    withLoop = o;
     whileLoop = w;
 }
 
@@ -404,9 +407,9 @@ RexxInstructionDoOverWhile::RexxInstructionDoOverWhile(RexxString *l, OverLoop &
  * @return true if we should execute the loop block, false if
  *         we should terminate the loop.
  */
-bool RexxInstructionDoOverWhile::iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first)
+bool RexxInstructionDoWithWhile::iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first)
 {
-    return doblock->checkOver(context, stack) && whileLoop.checkWhile(context, stack);
+    return withLoop.checkIteration(context, stack, doblock, first) && whileLoop.checkWhile(context, stack);
 }
 
 
@@ -417,10 +420,10 @@ bool RexxInstructionDoOverWhile::iterate(RexxActivation *context, ExpressionStac
  * @param o      The loop control information.
  * @param w      The loop conditional information.
  */
-RexxInstructionDoOverForUntil::RexxInstructionDoOverForUntil(RexxString *l, OverLoop &o, ForLoop &f, WhileUntilLoop &w)
+RexxInstructionDoWithForUntil::RexxInstructionDoWithForUntil(RexxString *l, WithLoop &o, ForLoop &f, WhileUntilLoop &w)
 {
     label = l;
-    overLoop = o;
+    withLoop = o;
     forLoop = f;
     whileLoop = w;
 }
@@ -431,7 +434,7 @@ RexxInstructionDoOverForUntil::RexxInstructionDoOverForUntil(RexxString *l, Over
  *
  * @param liveMark The current live mark.
  */
-void RexxInstructionDoOverForUntil::live(size_t liveMark)
+void RexxInstructionDoWithForUntil::live(size_t liveMark)
 {
     // must be first object marked
     memory_mark(nextInstruction);
@@ -439,7 +442,7 @@ void RexxInstructionDoOverForUntil::live(size_t liveMark)
     memory_mark(label);
 
     // helpers for additional types of loops handle marking here
-    overLoop.live(liveMark);
+    withLoop.live(liveMark);
     forLoop.live(liveMark);
     whileLoop.live(liveMark);
 }
@@ -452,7 +455,7 @@ void RexxInstructionDoOverForUntil::live(size_t liveMark)
  *
  * @param reason The reason for the marking call.
  */
-void RexxInstructionDoOverForUntil::liveGeneral(MarkReason reason)
+void RexxInstructionDoWithForUntil::liveGeneral(MarkReason reason)
 {
     // must be first object marked
     memory_mark_general(nextInstruction);
@@ -460,7 +463,7 @@ void RexxInstructionDoOverForUntil::liveGeneral(MarkReason reason)
     memory_mark_general(label);
 
     // helpers for additional types of loops handle marking here
-    overLoop.liveGeneral(reason);
+    withLoop.liveGeneral(reason);
     forLoop.liveGeneral(reason);
     whileLoop.liveGeneral(reason);
 }
@@ -471,9 +474,9 @@ void RexxInstructionDoOverForUntil::liveGeneral(MarkReason reason)
  *
  * @param envelope The envelope that will hold the flattened object.
  */
-void RexxInstructionDoOverForUntil::flatten(Envelope *envelope)
+void RexxInstructionDoWithForUntil::flatten(Envelope *envelope)
 {
-    setUpFlatten(RexxInstructionDoOverForUntil)
+    setUpFlatten(RexxInstructionDoWithForUntil)
 
     flattenRef(nextInstruction);
     flattenRef(end);
@@ -483,8 +486,9 @@ void RexxInstructionDoOverForUntil::flatten(Envelope *envelope)
     // everything depends on having correct pointers to object references in
     // the copied buffer.  We need to directly reference all of the elements here.
 
-    flattenRef(overLoop.control);
-    flattenRef(overLoop.target);
+    flattenRef(withLoop.itemVar);
+    flattenRef(withLoop.indexVar);
+    flattenRef(withLoop.supplierSource);
     flattenRef(forLoop.forCount);
     flattenRef(whileLoop.conditional);
 
@@ -505,15 +509,15 @@ void RexxInstructionDoOverForUntil::flatten(Envelope *envelope)
  * @return true if we should execute the loop block, false if
  *         we should terminate the loop.
  */
-bool RexxInstructionDoOverForUntil::iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first)
+bool RexxInstructionDoWithForUntil::iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first)
 {
     // we don't check the UNTIL condition on the first iteration
     if (first)
     {
-        return doblock->checkOver(context, stack) && doblock->checkFor();
+        return withLoop.checkIteration(context, stack, doblock, first) && doblock->checkFor();
     }
 
-    return !whileLoop.checkUntil(context, stack) && doblock->checkOver(context, stack) && doblock->checkFor();
+    return !whileLoop.checkUntil(context, stack) && withLoop.checkIteration(context, stack, doblock, first) && doblock->checkFor();
 }
 
 
@@ -524,10 +528,10 @@ bool RexxInstructionDoOverForUntil::iterate(RexxActivation *context, ExpressionS
  * @param o      The loop control information.
  * @param w      The loop conditional information.
  */
-RexxInstructionDoOverForWhile::RexxInstructionDoOverForWhile(RexxString *l, OverLoop &o, ForLoop &f, WhileUntilLoop &w)
+RexxInstructionDoWithForWhile::RexxInstructionDoWithForWhile(RexxString *l, WithLoop &o, ForLoop &f, WhileUntilLoop &w)
 {
     label = l;
-    overLoop = o;
+    withLoop = o;
     forLoop = f;
     whileLoop = w;
 }
@@ -550,7 +554,7 @@ RexxInstructionDoOverForWhile::RexxInstructionDoOverForWhile(RexxString *l, Over
  * @return true if we should execute the loop block, false if
  *         we should terminate the loop.
  */
-bool RexxInstructionDoOverForWhile::iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first)
+bool RexxInstructionDoWithForWhile::iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first)
 {
-    return doblock->checkOver(context, stack) && doblock->checkFor() && whileLoop.checkWhile(context, stack);
+    return withLoop.checkIteration(context, stack, doblock, first) && doblock->checkFor() && whileLoop.checkWhile(context, stack);
 }

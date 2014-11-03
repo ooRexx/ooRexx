@@ -63,14 +63,19 @@ class SupplierClass : public RexxObject
     virtual void flatten(Envelope *);
 
     bool         isAvailable();
+    bool         loopAvailable();
     RexxObject  *available();
     RexxObject  *next();
-    RexxInternalObject *value();
+    void         loopNext();
+
+    RexxInternalObject *item();
     RexxInternalObject *index();
+    RexxObject  *loopItem();
+    RexxObject  *loopIndex();
     RexxObject  *initRexx(ArrayClass *values, ArrayClass *indexes);
     RexxObject  *newRexx(RexxObject **, size_t);
     ArrayClass  *getIndexes() { return indexes; }
-    ArrayClass  *getValues() { return values; }
+    ArrayClass  *getItems() { return items; }
     void         append(ArrayClass *, ArrayClass *);
     void         append(SupplierClass *);
 
@@ -79,11 +84,11 @@ class SupplierClass : public RexxObject
 
  protected:
 
-    ArrayClass  *values;                 // array of values
+    ArrayClass  *items;                  // array of values
     ArrayClass  *indexes;                // array of indexes
     size_t position;                     // current array position
 };
 
-inline SupplierClass *new_supplier(ArrayClass *values, ArrayClass *indexes) { return new SupplierClass(values, indexes); }
+inline SupplierClass *new_supplier(ArrayClass *items, ArrayClass *indexes) { return new SupplierClass(items, indexes); }
 
 #endif

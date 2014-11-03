@@ -1252,6 +1252,200 @@ RexxInstruction *LanguageParser::newDoOverLoop(RexxString *label, RexxToken *nam
 
 
 /**
+ * Parse and create the variants of a DO WITH loop instruction.
+ * This can also include a WHILE or UNTIL modifier (but not
+ * both).
+ *
+ * @param label     Any label obtained from the LABEL keyword.
+ *
+ * @return A contructed instruction object of the appropriate type.
+ */
+RexxInstruction *LanguageParser::newDoWithLoop(RexxString *label)
+{
+    // a construct to fill in for the instruction.
+    WithLoop withLoop;
+    ForLoop forLoop;
+    WhileUntilLoop conditional;
+    // track while/until forms
+    InstructionSubKeyword conditionalType = SUBKEY_NONE;
+
+    // we have already parsed over the WITH keyword, so we're looing
+    // for the INDEX, ITEM, and OVER keywords now.  OVER must be after
+    // INDEX and ITEM, which can be in any order (and only one is needed).
+
+    // get the next real token.
+    RexxToken *token = nextReal();
+
+    // these all options are marked by symbols, so keep looping while we have one
+    while (token->isSymbol())
+    {
+        // this must be a keyword, so resolve it.
+        switch (token->subKeyword())
+        {
+            // an index variable
+            case SUBKEY_INDEX:
+            {
+                if (withLoop.indexVar != OREF_NULL)
+                {
+                    syntaxError(Error_Invalid_do_duplicate, token);
+                }
+
+                // this must be a variable token
+                token = nextReal();
+
+                // save the loopWith variable retriever
+                withLoop.indexVar = requiredVariable(token, "INDEX");
+                // get the next token and continue
+                token = nextReal();
+                continue;
+            }
+
+            // an item variable
+            case SUBKEY_ITEM:
+            {
+                if (withLoop.itemVar != OREF_NULL)
+                {
+                    syntaxError(Error_Invalid_do_duplicate, token);
+                }
+
+                // this must be a variable token
+                token = nextReal();
+
+                // save the loopWith variable retriever
+                withLoop.itemVar = requiredVariable(token, "ITEM");
+                // get the next token and continue
+                token = nextReal();
+                continue;
+            }
+        }
+
+        // found a keyword that is not INDEX or ITEM, break out of the loop
+        break;
+    }
+
+    // we must have at least one of these loop loopWith variables
+    if (withLoop.itemVar == OREF_NULL && withLoop.indexVar == OREF_NULL)
+    {
+        syntaxError(Error_Invalid_do_with_no_control);
+    }
+
+    // the next token needs to be an OVER keyword.
+    if (!token->isSymbol() || token->subKeyword() != SUBKEY_OVER)
+    {
+        syntaxError(Error_Invalid_do_with_no_over);
+    }
+
+    // and get the OVER expression, which is required
+    withLoop.supplierSource = requiredExpression(TERM_OVER, Error_Invalid_expression_over);
+
+    // protect this expression from GC
+    pushSubTerm(withLoop.supplierSource);
+
+    // ok, keep looping while we don't have a clause terminator
+    // because the parsing of the initial expression is terminated by either
+    // the end-of-clause or DO/LOOP keyword, we know the next token will by
+    // a symbol if it is not the end.
+    token = nextReal();
+
+    while (!token->isEndOfClause())
+    {
+        // this must be a keyword, so resolve it.
+        switch (token->subKeyword())
+        {
+            case SUBKEY_FOR:
+            {
+                // only one per customer
+                if (forLoop.forCount != OREF_NULL)
+                {
+                    syntaxError(Error_Invalid_do_duplicate, token);
+                }
+                // get the keyword expression, which is required also
+                forLoop.forCount = requiredExpression(TERM_CONTROL, Error_Invalid_expression_for);
+                // protect from GC
+                pushSubTerm(forLoop.forCount);
+                break;
+            }
+
+            case SUBKEY_UNTIL:
+            case SUBKEY_WHILE:
+            {
+                // step back a token and process the conditional
+                previousToken();
+                // this also does not allow anything after the loop conditional
+                conditional.conditional = parseLoopConditional(conditionalType, Error_None);
+                break;
+            }
+        }
+        token = nextReal();
+    }
+
+    // NOTE:  We parse until we hit the end of clause or found an error,
+    // so once we get here, there's no need for any end-of-clause checks.
+
+    // we've parsed everything correctly and we have six potential types of
+    // loop now.  1)  A DO OVER loop with no conditional, 2) a DO OVER loop
+    // with a WHILE condition and 3) a DO OVER loop with a UNTIL condition.
+    // Each of those forms can also have a FOR modifier.
+    // The conditionalType variable tells us which form it is, so we can create
+    // the correct type instruction object, the forControl will tell us if we have a FOR
+    // expression.
+
+    switch (conditionalType)
+    {
+        // DO OVER with no extra conditional.
+        case SUBKEY_NONE:
+        {
+            if (forLoop.forCount == OREF_NULL)
+            {
+                RexxInstruction *newObject = new_instruction(LOOP_WITH, DoWith);
+                ::new ((void *)newObject) RexxInstructionDoWith(label, withLoop);
+                return newObject;
+            }
+            else
+            {
+                RexxInstruction *newObject = new_instruction(LOOP_WITH_FOR, DoWithFor);
+                ::new ((void *)newObject) RexxInstructionDoWithFor(label, withLoop, forLoop);
+                return newObject;
+            }
+        }
+        // DO OVER with a WHILE conditional
+        case SUBKEY_WHILE:
+        {
+            if (forLoop.forCount == OREF_NULL)
+            {
+                RexxInstruction *newObject = new_instruction(LOOP_WITH_WHILE, DoWithWhile);
+                ::new ((void *)newObject) RexxInstructionDoWithWhile(label, withLoop, conditional);
+                return newObject;
+            }
+            else
+            {
+                RexxInstruction *newObject = new_instruction(LOOP_WITH_FOR_WHILE, DoWithForWhile);
+                ::new ((void *)newObject) RexxInstructionDoWithForWhile(label, withLoop, forLoop, conditional);
+                return newObject;
+            }
+        }
+        // DO OVER with an UNTIL conditional.
+        case SUBKEY_UNTIL:
+        {
+            if (forLoop.forCount == OREF_NULL)
+            {
+                RexxInstruction *newObject = new_instruction(LOOP_WITH_UNTIL, DoWithUntil);
+                ::new ((void *)newObject) RexxInstructionDoWithUntil(label, withLoop, conditional);
+                return newObject;
+            }
+            else
+            {
+                RexxInstruction *newObject = new_instruction(LOOP_WITH_FOR_UNTIL, DoWithForUntil);
+                ::new ((void *)newObject) RexxInstructionDoWithForUntil(label, withLoop, forLoop, conditional);
+                return newObject;
+            }
+        }
+    }
+    return OREF_NULL;    // should never get here.
+}
+
+
+/**
  * Create an instance of a simple DO block.
  *
  * @param label  The optional block label.
@@ -1541,6 +1735,11 @@ RexxInstruction *LanguageParser::createLoop(bool isLoop)
             // now check the other keyword varieties.
             switch (token->subKeyword())
             {
+                // WITH INDEX var ITEM var OVER expr....with a potention WHILE or UNTIL modifier
+                case SUBKEY_WITH:
+                {
+                    return newDoWithLoop(label);
+                }
                 // FOREVER...this can have either a WHILE or UNTIL modifier.
                 case SUBKEY_FOREVER:         // DO FOREVER
                 {

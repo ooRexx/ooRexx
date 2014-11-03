@@ -79,12 +79,12 @@ void *SupplierClass::operator new(size_t size)
 /**
  * Constructor for a supplier.
  *
- * @param _values  The array of values.
+ * @param _items   The array of items.
  * @param _indexes The array of indexes
  */
-SupplierClass::SupplierClass(ArrayClass  *_values, ArrayClass  *_indexes )
+SupplierClass::SupplierClass(ArrayClass  *_items, ArrayClass  *_indexes )
 {
-    values = _values;
+    items = _items;
     indexes = _indexes;
     position = 1;
 }
@@ -95,14 +95,14 @@ SupplierClass::SupplierClass(ArrayClass  *_values, ArrayClass  *_indexes )
  */
 SupplierClass::SupplierClass()
 {
-    values = OREF_NULL;
+    items = OREF_NULL;
     indexes = OREF_NULL;
 }
 
 
 void SupplierClass::live(size_t liveMark)
 {
-    memory_mark(values);
+    memory_mark(items);
     memory_mark(indexes);
     memory_mark(objectVariables);
 }
@@ -110,7 +110,7 @@ void SupplierClass::live(size_t liveMark)
 
 void SupplierClass::liveGeneral(MarkReason reason)
 {
-    memory_mark_general(values);
+    memory_mark_general(items);
     memory_mark_general(indexes);
     memory_mark_general(objectVariables);
 }
@@ -119,7 +119,7 @@ void SupplierClass::flatten(Envelope *envelope)
 {
    setUpFlatten(SupplierClass)
 
-   flattenRef(values);
+   flattenRef(items);
    flattenRef(indexes);
    flattenRef(objectVariables);
 
@@ -140,6 +140,27 @@ RexxObject *SupplierClass::available()
 
 
 /**
+ * Test if a new value is available for a supplier in a loop.
+ *
+ * @return true if an item is available, false otherwise.
+ */
+bool SupplierClass::loopAvailable()
+{
+    // if this is not a subclass, use the base method.
+    if (isBaseClass())
+    {
+        return isAvailable();
+    }
+    // use the message form for supplier subclasses
+    else
+    {
+        ProtectedObject p;
+        return sendMessage(GlobalNames::AVAILABLE, p)->truthValue(Error_Logical_value_supplier);
+    }
+}
+
+
+/**
  * Test if the supplier has a next item available.
  *
  * @return True if there are still objects to supply, false otherwise.
@@ -147,7 +168,7 @@ RexxObject *SupplierClass::available()
 bool SupplierClass::isAvailable()
 {
     // test if we have an available next item
-    return (position <= values->size());
+    return (position <= items->size());
 }
 
 
@@ -159,7 +180,7 @@ bool SupplierClass::isAvailable()
 RexxObject  *SupplierClass::next()
 {
     // it is an error to ask for next after we've hit the end.
-    if (position > values->size())
+    if (position > items->size())
     {
         reportException(Error_Incorrect_method_supplier);
     }
@@ -170,20 +191,58 @@ RexxObject  *SupplierClass::next()
 
 
 /**
+ * Special method to optimize supplier access for loops.
+ */
+void SupplierClass::loopNext()
+{
+    // if this is not a subclass, use the base method.
+    if (isBaseClass())
+    {
+        next();
+    }
+    // use the message form for supplier subclasses
+    else
+    {
+        ProtectedObject p;
+        sendMessage(GlobalNames::NEXT, p);
+    }
+}
+
+
+/**
  * Retrieve the value portion of the pair.
  *
  * @return The associated value.
  */
-RexxInternalObject *SupplierClass::value()
+RexxInternalObject *SupplierClass::item()
 {
     // already gone past the end the end is an error
-    if (position > values->size())
+    if (position > items->size())
     {
         reportException(Error_Incorrect_method_supplier);
     }
 
     // get the value, but make sure we at least return .nil
-    return resultOrNil(values->get(position));
+    return resultOrNil(items->get(position));
+}
+
+
+/**
+ * Special method to optimize supplier access for loops.
+ */
+RexxObject *SupplierClass::loopItem()
+{
+    // if this is not a subclass, use the base method.
+    if (isBaseClass())
+    {
+        return (RexxObject *)item();
+    }
+    // use the message form for supplier subclasses
+    else
+    {
+        ProtectedObject p;
+        return sendMessage(GlobalNames::ITEM, p);
+    }
 }
 
 
@@ -195,7 +254,7 @@ RexxInternalObject *SupplierClass::value()
 RexxInternalObject *SupplierClass::index()
 {
     // past the end if an error
-    if (position > values->size())
+    if (position > items->size())
     {
         reportException(Error_Incorrect_method_supplier);
     }
@@ -220,6 +279,25 @@ RexxInternalObject *SupplierClass::index()
 
 
 /**
+ * Special method to optimize supplier access for loops.
+ */
+RexxObject *SupplierClass::loopIndex()
+{
+    // if this is not a subclass, use the base method.
+    if (isBaseClass())
+    {
+        return (RexxObject *)index();
+    }
+    // use the message form for supplier subclasses
+    else
+    {
+        ProtectedObject p;
+        return sendMessage(GlobalNames::INDEX, p);
+    }
+}
+
+
+/**
  * Supplier initializer for suppliers created via
  * .supplier~new(values, indexes).
  *
@@ -228,14 +306,14 @@ RexxInternalObject *SupplierClass::index()
  *
  * @return Nothing
  */
-RexxObject *SupplierClass::initRexx(ArrayClass *_values, ArrayClass *_indexes)
+RexxObject *SupplierClass::initRexx(ArrayClass *_items, ArrayClass *_indexes)
 {
-    ArrayClass *new_values = arrayArgument(_values, ARG_ONE);           // both values are required
+    ArrayClass *new_items = arrayArgument(_items, ARG_ONE);           // both values are required
     ArrayClass *new_indexes = arrayArgument(_indexes, ARG_TWO);
 
     // technically, we could probably directly assign these since this really is a constructor,
     // but it doesn't hurt to use these here.
-    setField(values, new_values);
+    setField(items, new_items);
     setField(indexes, new_indexes);
     position = 1;
     return OREF_NULL;
@@ -248,9 +326,9 @@ RexxObject *SupplierClass::initRexx(ArrayClass *_values, ArrayClass *_indexes)
  * @param _values  The additional values to append.
  * @param _indexes The additional indexes to append.
  */
-void SupplierClass::append(ArrayClass  *_values, ArrayClass  *_indexes )
+void SupplierClass::append(ArrayClass  *_items, ArrayClass  *_indexes )
 {
-    values->appendAll(_values);
+    items->appendAll(_items);
     indexes->appendAll(_indexes);
 }
 
@@ -262,7 +340,7 @@ void SupplierClass::append(ArrayClass  *_values, ArrayClass  *_indexes )
  */
 void SupplierClass::append(SupplierClass *s)
 {
-    append(s->getValues(), s->getIndexes());
+    append(s->getItems(), s->getIndexes());
 }
 
 

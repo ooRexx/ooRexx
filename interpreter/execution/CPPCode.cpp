@@ -1074,7 +1074,7 @@ CPPM(MutableBuffer::caselessEndsWithRexx),
 
 CPPM(SupplierClass::available),
 CPPM(SupplierClass::next),
-CPPM(SupplierClass::value),
+CPPM(SupplierClass::item),
 CPPM(SupplierClass::index),
 CPPM(SupplierClass::initRexx),
 

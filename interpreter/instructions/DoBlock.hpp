@@ -76,8 +76,10 @@ class DoBlock : public RexxInternalObject
     inline void setFor(size_t value) {forCount = value;};
     inline void setOverIndex(size_t value) {overIndex = value;};
     inline void setCase(RexxObject * value) {to = value;};
+    inline void setSupplier(RexxObject * value) {to = value;};
     inline void setCompare(TokenSubclass value) { compare = value;};
     inline RexxObject *getCase() { return to; }
+    inline RexxObject *getSupplier() { return to; }
     inline size_t getIndent() { return indent; };
     inline bool checkFor() { return (forCount--) > 0; };
            bool checkControl(RexxActivation *context, ExpressionStack *stack, bool increment);

@@ -176,6 +176,7 @@
 #define Rexx_Error_Symbol_expected_delegate                               20926
 #define Rexx_Error_Symbol_expected_use_local                              20927
 #define Rexx_Error_Symbol_expected_indirect                               20928
+#define Rexx_Error_Symbol_expected_after_keyword                          20929
 #define Rexx_Error_Invalid_data                                           21000
 #define Rexx_Error_Invalid_data_user_defined                              21900
 #define Rexx_Error_Invalid_data_nop                                       21901
@@ -255,6 +256,8 @@
 #define Rexx_Error_Invalid_do_whileuntil                                  27001
 #define Rexx_Error_Invalid_do_forever                                     27901
 #define Rexx_Error_Invalid_do_duplicate                                   27902
+#define Rexx_Error_Invalid_do_with_no_control                             27903
+#define Rexx_Error_Invalid_do_with_no_over                                27904
 #define Rexx_Error_Invalid_leave                                          28000
 #define Rexx_Error_Invalid_leave_leave                                    28001
 #define Rexx_Error_Invalid_leave_iterate                                  28002
@@ -295,6 +298,7 @@
 #define Rexx_Error_Logical_value_authorization                            34903
 #define Rexx_Error_Logical_value_property                                 34904
 #define Rexx_Error_Logical_value_when_case                                34905
+#define Rexx_Error_Logical_value_supplier                                 34906
 #define Rexx_Error_Invalid_expression                                     35000
 #define Rexx_Error_Invalid_expression_general                             35001
 #define Rexx_Error_Invalid_expression_user_defined                        35900
@@ -596,6 +600,7 @@
 #define Rexx_Error_Execution_private_access                               98991
 #define Rexx_Error_Execution_expose_method                                98992
 #define Rexx_Error_Execution_use_local_method                             98993
+#define Rexx_Error_Execution_no_supplier                                  98994
 #define Rexx_Error_Translation                                            99000
 #define Rexx_Error_Translation_user_defined                               99900
 #define Rexx_Error_Translation_duplicate_class                            99901

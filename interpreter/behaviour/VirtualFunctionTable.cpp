@@ -636,6 +636,24 @@ void MemoryObject::buildVirtualFunctionTable()
    objectPtr = ::new (objectLoc) RexxInstructionUseLocal(RESTOREIMAGE);
    virtualFunctionTable[T_UseLocalInstruction] = getVftPointer(objectLoc);
    
+   objectPtr = ::new (objectLoc) RexxInstructionDoWith(RESTOREIMAGE);
+   virtualFunctionTable[T_DoWithInstruction] = getVftPointer(objectLoc);
+   
+   objectPtr = ::new (objectLoc) RexxInstructionDoWithUntil(RESTOREIMAGE);
+   virtualFunctionTable[T_DoWithUntilInstruction] = getVftPointer(objectLoc);
+   
+   objectPtr = ::new (objectLoc) RexxInstructionDoWithWhile(RESTOREIMAGE);
+   virtualFunctionTable[T_DoWithWhileInstruction] = getVftPointer(objectLoc);
+   
+   objectPtr = ::new (objectLoc) RexxInstructionDoWithFor(RESTOREIMAGE);
+   virtualFunctionTable[T_DoWithForInstruction] = getVftPointer(objectLoc);
+   
+   objectPtr = ::new (objectLoc) RexxInstructionDoWithForUntil(RESTOREIMAGE);
+   virtualFunctionTable[T_DoWithForUntilInstruction] = getVftPointer(objectLoc);
+   
+   objectPtr = ::new (objectLoc) RexxInstructionDoWithForWhile(RESTOREIMAGE);
+   virtualFunctionTable[T_DoWithForWhileInstruction] = getVftPointer(objectLoc);
+   
    objectPtr = ::new (objectLoc) ClassDirective(RESTOREIMAGE);
    virtualFunctionTable[T_ClassDirective] = getVftPointer(objectLoc);
    
