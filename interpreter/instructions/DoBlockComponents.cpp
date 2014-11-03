@@ -47,6 +47,7 @@
 #include "RexxActivation.hpp"
 #include "MethodArguments.hpp"
 #include "SupplierClass.hpp"
+#include "NumberStringClass.hpp"
 
 /**
  * Set up for execution of a FOR loop.
@@ -82,8 +83,13 @@ void ForLoop::setup(RexxActivation *context,
     }
     else
     {
-        // first get the string version and force numeric rounding rules.
-        RexxString *strResult = result->requestString();
+        // first get the string version and and request a string version
+        NumberString *strResult = result->requestString()->numberString();
+        // non-numeric value, this is an error
+        if (strResult == OREF_NULL)
+        {
+            reportException(forKeyword ? Error_Invalid_whole_number_for : Error_Invalid_whole_number_repeat, result);
+        }
         // force rounding
         RexxObject *rounded = strResult->callOperatorMethod(OPERATOR_PLUS, OREF_NULL);
         context->traceResult(rounded);

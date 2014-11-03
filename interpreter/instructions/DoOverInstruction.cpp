@@ -247,7 +247,7 @@ void RexxInstructionDoOverFor::setup(RexxActivation *context, ExpressionStack *s
     // perform the DO OVER initialization
     overLoop.setup(context, stack, doblock);
     // perform the DO COUNT initialization
-    forLoop.setup(context, stack, doblock, false);
+    forLoop.setup(context, stack, doblock, true);
 }
 
 
