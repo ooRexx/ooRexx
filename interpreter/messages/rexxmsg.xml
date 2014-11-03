@@ -1991,7 +1991,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_do_whileuntil</SymbolicName>
-        <Text>WHILE and UNTIL keywords cannot be used on the same loop.</Text>
+        <Text>Only one WHILE or UNTIL condition can be used on the same loop.</Text>
       </SubMessage>
       <SubMessage>
         <Code>27</Code>

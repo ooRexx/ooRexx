@@ -648,7 +648,7 @@ $ Error_Invalid_whole_number_rem
 312 Result of // operation did not result in a whole number.
 
 $ Error_Invalid_do_whileuntil
-313 WHILE and UNTIL keywords cannot be used on the same loop.
+313 Only one WHILE or UNTIL condition can be used on the same loop.
 
 $ Error_Invalid_do_forever
 314 Incorrect data following FOREVER keyword on the loop; found "&1".

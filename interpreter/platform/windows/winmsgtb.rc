@@ -251,7 +251,7 @@ BEGIN
    26007    "Number used in TRACE setting must be a whole number; found ""&1""."
    26011    "Result of % operation did not result in a whole number."
    26012    "Result of // operation did not result in a whole number."
-   27001    "WHILE and UNTIL keywords cannot be used on the same loop."
+   27001    "Only one WHILE or UNTIL condition can be used on the same loop."
    27901    "Incorrect data following FOREVER keyword on the loop; found ""&1""."
    28001    "LEAVE is valid only within a repetitive loop or labeled block instruction."
    28002    "ITERATE is valid only within a repetitive loop."

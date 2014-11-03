@@ -1397,7 +1397,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>WHILE and UNTIL keywords cannot be used on the same loop.</para>
+<para>Only one WHILE or UNTIL condition can be used on the same loop.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
