@@ -624,10 +624,10 @@ $ Error_Invalid_whole_number_power
 304 Operand to the right of the power operator (**) must be a whole number; found "&1".
 
 $ Error_Invalid_whole_number_repeat
-305 Value of repetition count expression in DO instruction must be zero or a positive whole number; found "&1".
+305 Value of repetition count expression in DO or LOOP instruction must be zero or a positive whole number; found "&1".
 
 $ Error_Invalid_whole_number_for
-306 Value of FOR expression in DO instruction must be zero or a positive whole number; found "&1".
+306 Value of FOR expression in DO or LOOP instruction must be zero or a positive whole number; found "&1".
 
 $ Error_Invalid_whole_number_parse
 307 Positional pattern of PARSE template must be a whole number; found "&1".
@@ -738,7 +738,7 @@ $ Error_Invalid_expression_when
 343 Missing conditional expression following WHEN keyword.
 
 $ Error_Invalid_expression_control
-344 Missing initial expression for DO control variable.
+344 Missing initial expression for DO or LOOP control variable.
 
 $ Error_Invalid_expression_by
 345 Missing expression following BY keyword.
@@ -921,13 +921,13 @@ $ Error_Conversion_exponent
 406 Exponent exceeds &1 digits; found "&2".
 
 $ Error_Conversion_to
-407 Value of TO expression of DO instruction must be numeric; found "&1".
+407 Value of TO expression of DO or LOOP instruction must be numeric; found "&1".
 
 $ Error_Conversion_by
-408 Value of BY expression of DO instruction must be numeric; found "&1".
+408 Value of BY expression of DO or LOOP instruction must be numeric; found "&1".
 
 $ Error_Conversion_control
-409 Value of control variable expression of DO instruction must be numeric; found "&1".
+409 Value of control variable expression of DO or LOOP instruction must be numeric; found "&1".
 
 $ Error_Conversion_raise
 410 Value of RAISE instruction SYNTAX expression must be numeric; found "&1".

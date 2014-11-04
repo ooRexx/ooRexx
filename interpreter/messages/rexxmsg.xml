@@ -1849,7 +1849,7 @@ special character (such as a parenthesis).
     <itemizedlist>
     <listitem><para>The positional patterns in parsing templates (including variable positional patterns)</para></listitem>
     <listitem><para>The operand to the right of the power operator</para></listitem>
-    <listitem><para>The values of exprr and exprf in the DO instruction</para></listitem>
+    <listitem><para>The values of exprr and exprf in the DO and LOOP instructions</para></listitem>
     <listitem><para>The values given for DIGITS or FUZZ in the NUMERIC instruction</para></listitem>
     <listitem><para>The number used in the option of the TRACE setting This error is also raised if the value is not permitted (for example, a negative repetition count in a DO instruction), or the division performed during an integer divide or remainder operation does not result in a whole number.</para></listitem>
     </itemizedlist>
@@ -1871,7 +1871,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_whole_number_repeat</SymbolicName>
-        <Text>Value of repetition count expression in DO instruction must be zero or a positive whole number; found <q><Sub position="1" name="value"/></q>.</Text>
+        <Text>Value of repetition count expression in DO or LOOP instruction must be zero or a positive whole number; found <q><Sub position="1" name="value"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>26</Code>
@@ -1880,7 +1880,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_whole_number_for</SymbolicName>
-        <Text>Value of FOR expression in DO instruction must be zero or a positive whole number; found <q><Sub position="1" name="value"/></q>.</Text>
+        <Text>Value of FOR expression in DO or LOOP instruction must be zero or a positive whole number; found <q><Sub position="1" name="value"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>26</Code>
@@ -2039,7 +2039,7 @@ special character (such as a parenthesis).
     <Severity>Warning</Severity>
     <SymbolicName>Error_Invalid_leave</SymbolicName>
     <Text>Invalid LEAVE or ITERATE.</Text>
-    <Explanation><para>A LEAVE or ITERATE instruction was found at an incorrect position.  Either no loop was active, or the name specified on the instruction did not match the control variable of any active loop. Note that internal routine calls and the INTERPRET instruction protect DO loops by making them inactive. Therefore, for example, a LEAVE instruction in a subroutine cannot affect a DO loop in the calling routine. You probably tried to use the SIGNAL instruction to transfer control within or into a loop. Because a SIGNAL instruction ends all active loops, any ITERATE or LEAVE instruction causes this message.</para></Explanation>
+    <Explanation><para>A LEAVE or ITERATE instruction was found at an incorrect position.  Either no loop was active, or the name specified on the instruction did not match the control variable of any active loop. Note that internal routine calls and the INTERPRET instruction protect loops by making them inactive. Therefore, for example, a LEAVE instruction in a subroutine cannot affect a DO loop in the calling routine. You probably tried to use the SIGNAL instruction to transfer control within or into a loop. Because a SIGNAL instruction ends all active loops, any ITERATE or LEAVE instruction causes this message.</para></Explanation>
     <Subcodes>
       <SubMessage>
         <Code>28</Code>
@@ -2298,7 +2298,7 @@ special character (such as a parenthesis).
     <Severity>Warning</Severity>
     <SymbolicName>Error_Logical_value</SymbolicName>
     <Text>Logical value not 0 or 1.</Text>
-    <Explanation><para>An expression was found in an IF, WHEN, DO WHILE, or DO UNTIL phrase that did not result in a 0 or 1. Any value operated on by a logical operator must result in a 0 or 1. For example, the phrase If result then exit rc fails if result has a value other than 0 or 1.</para></Explanation>
+    <Explanation><para>An expression was found in an IF, WHEN, WHILE, or UNTIL phrase that did not result in a 0 or 1. Any value operated on by a logical operator must result in a 0 or 1. For example, the phrase If result then exit rc fails if result has a value other than 0 or 1.</para></Explanation>
     <Subcodes>
       <SubMessage>
         <Code>34</Code>
@@ -2490,7 +2490,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_expression_control</SymbolicName>
-        <Text>Missing initial expression for DO control variable.</Text>
+        <Text>Missing initial expression for DO or LOOP control variable.</Text>
       </SubMessage>
       <SubMessage>
         <Code>35</Code>
@@ -3304,7 +3304,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Conversion_to</SymbolicName>
-        <Text>Value of TO expression of DO instruction must be numeric; found <q><Sub position="1" name="value"/></q>.</Text>
+        <Text>Value of TO expression of DO or LOOP instruction must be numeric; found <q><Sub position="1" name="value"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>41</Code>
@@ -3313,7 +3313,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Conversion_by</SymbolicName>
-        <Text>Value of BY expression of DO instruction must be numeric; found <q><Sub position="1" name="value"/></q>.</Text>
+        <Text>Value of BY expression of DO or LOOP instruction must be numeric; found <q><Sub position="1" name="value"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>41</Code>
@@ -3322,7 +3322,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Conversion_control</SymbolicName>
-        <Text>Value of control variable expression of DO instruction must be numeric; found <q><Sub position="1" name="value"/></q>.</Text>
+        <Text>Value of control variable expression of DO or LOOP instruction must be numeric; found <q><Sub position="1" name="value"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>41</Code>
@@ -3353,7 +3353,7 @@ special character (such as a parenthesis).
     <SymbolicName>Error_Overflow</SymbolicName>
     <Text>Arithmetic overflow/underflow.</Text>
     <Explanation><para>The result of an arithmetic operation requires an exponent that is greater than the platform limit of nine digits.</para>
-    <para>This error can occur during the evaluation of an expression (often as a result of trying to divide a number by 0) or while stepping a DO loop control variable.</para></Explanation>
+    <para>This error can occur during the evaluation of an expression (often as a result of trying to divide a number by 0) or while stepping a loop control variable.</para></Explanation>
     <Subcodes>
       <SubMessage>
         <Code>42</Code>

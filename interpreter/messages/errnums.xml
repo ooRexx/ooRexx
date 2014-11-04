@@ -1293,7 +1293,7 @@ special character (such as a parenthesis).
 <para>The operand to the right of the power operator</para>
 </listitem>
     <listitem>
-<para>The values of exprr and exprf in the DO instruction</para>
+<para>The values of exprr and exprf in the DO and LOOP instructions</para>
 </listitem>
     <listitem>
 <para>The values given for DIGITS or FUZZ in the NUMERIC instruction</para>
@@ -1308,13 +1308,13 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>002</term>
 <listitem>
-<para>Value of repetition count expression in DO instruction must be zero or a positive whole number; found "<emphasis role="italic">value</emphasis>".</para>
+<para>Value of repetition count expression in DO or LOOP instruction must be zero or a positive whole number; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>003</term>
 <listitem>
-<para>Value of FOR expression in DO instruction must be zero or a positive whole number; found "<emphasis role="italic">value</emphasis>".</para>
+<para>Value of FOR expression in DO or LOOP instruction must be zero or a positive whole number; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -1431,7 +1431,7 @@ special character (such as a parenthesis).
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
-<para>A LEAVE or ITERATE instruction was found at an incorrect position.  Either no loop was active, or the name specified on the instruction did not match the control variable of any active loop. Note that internal routine calls and the INTERPRET instruction protect DO loops by making them inactive. Therefore, for example, a LEAVE instruction in a subroutine cannot affect a DO loop in the calling routine. You probably tried to use the SIGNAL instruction to transfer control within or into a loop. Because a SIGNAL instruction ends all active loops, any ITERATE or LEAVE instruction causes this message.</para>
+<para>A LEAVE or ITERATE instruction was found at an incorrect position.  Either no loop was active, or the name specified on the instruction did not match the control variable of any active loop. Note that internal routine calls and the INTERPRET instruction protect loops by making them inactive. Therefore, for example, a LEAVE instruction in a subroutine cannot affect a DO loop in the calling routine. You probably tried to use the SIGNAL instruction to transfer control within or into a loop. Because a SIGNAL instruction ends all active loops, any ITERATE or LEAVE instruction causes this message.</para>
 <para>The associated subcodes are: </para>
 <variablelist>
 <varlistentry>
@@ -1616,7 +1616,7 @@ special character (such as a parenthesis).
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
-<para>An expression was found in an IF, WHEN, DO WHILE, or DO UNTIL phrase that did not result in a 0 or 1. Any value operated on by a logical operator must result in a 0 or 1. For example, the phrase If result then exit rc fails if result has a value other than 0 or 1.</para>
+<para>An expression was found in an IF, WHEN, WHILE, or UNTIL phrase that did not result in a 0 or 1. Any value operated on by a logical operator must result in a 0 or 1. For example, the phrase If result then exit rc fails if result has a value other than 0 or 1.</para>
 <para>The associated subcodes are: </para>
 <variablelist>
 <varlistentry>
@@ -1760,7 +1760,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>904</term>
 <listitem>
-<para>Missing initial expression for DO control variable.</para>
+<para>Missing initial expression for DO or LOOP control variable.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -2342,19 +2342,19 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>004</term>
 <listitem>
-<para>Value of TO expression of DO instruction must be numeric; found "<emphasis role="italic">value</emphasis>".</para>
+<para>Value of TO expression of DO or LOOP instruction must be numeric; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>005</term>
 <listitem>
-<para>Value of BY expression of DO instruction must be numeric; found "<emphasis role="italic">value</emphasis>".</para>
+<para>Value of BY expression of DO or LOOP instruction must be numeric; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>006</term>
 <listitem>
-<para>Value of control variable expression of DO instruction must be numeric; found "<emphasis role="italic">value</emphasis>".</para>
+<para>Value of control variable expression of DO or LOOP instruction must be numeric; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -2384,7 +2384,7 @@ special character (such as a parenthesis).
 <emphasis role="bold">Explanation:</emphasis>
 </para>
 <para>The result of an arithmetic operation requires an exponent that is greater than the platform limit of nine digits.</para>
-<para>This error can occur during the evaluation of an expression (often as a result of trying to divide a number by 0) or while stepping a DO loop control variable.</para>
+<para>This error can occur during the evaluation of an expression (often as a result of trying to divide a number by 0) or while stepping a loop control variable.</para>
 <para>The associated subcodes are: </para>
 <variablelist>
 <varlistentry>
