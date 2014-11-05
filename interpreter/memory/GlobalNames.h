@@ -162,7 +162,8 @@
   GLOBAL_NAME(RESULT, "RESULT")
   GLOBAL_NAME(STDQUE, "STDQUE")
   GLOBAL_NAME(REXXQUEUE, "REXXQUEUE")
-  GLOBAL_NAME(REXXUTIL, "REXXUTIL")
+  // this is a library name and needs to be lower case to match on linux.
+  GLOBAL_NAME(REXXUTIL, "rexxutil")
   GLOBAL_NAME(ROUTINE, "ROUTINE")
   GLOBAL_NAME(RUN, "RUN")
   GLOBAL_NAME(SAY, "SAY")
