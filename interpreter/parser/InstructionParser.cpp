@@ -1674,6 +1674,13 @@ RexxInstruction *LanguageParser::createLoop(bool isLoop)
                 // This is a controlled loop, we're all positioned to process this.
                 return newControlledLoop(label, token);
             }
+            // similar to assignment instructions, any equal sign triggers this to
+            // be a controlled form, even if the the "=" is part of a larger instruction
+            // such as "==".  We give this as an expression error.
+            else if (name->isSubtype(OPERATOR_STRICT_EQUAL))
+            {
+                syntaxError(Error_Invalid_expression_general, name);
+            }
             else
             {
                 // this is either an end-of-clause or something not a symbol.  This is an error.
