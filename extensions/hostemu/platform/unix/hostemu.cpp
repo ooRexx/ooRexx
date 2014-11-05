@@ -895,7 +895,7 @@ static void hostemu_unloader(RexxThreadContext *context) {
 RexxPackageEntry hostemu_package_entry = {
     STANDARD_PACKAGE_HEADER
     REXX_INTERPRETER_4_0_0,              // anything after 4.0.0 will work
-    "HostEmu",                           // name of the package
+    "hostemu",                           // name of the package
     "1.0.0",                             // package information
     hostemu_loader,                      // load function
     hostemu_unloader,                    // unload function

@@ -199,7 +199,7 @@ RexxPackageEntry rxregexp_package_entry =
 {
     STANDARD_PACKAGE_HEADER
     REXX_INTERPRETER_4_0_0,              // anything after 4.0.0 will work
-    "RXREGEXP",                          // name of the package
+    "rxregexp",                          // name of the package
     "4.0",                               // package information
     NULL,                                // no load/unload functions
     NULL,

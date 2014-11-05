@@ -4346,7 +4346,7 @@ RexxMethodEntry orxcur_methods[] = {
 RexxPackageEntry orxcur_package_entry = {
     STANDARD_PACKAGE_HEADER
     REXX_INTERPRETER_4_0_0,              // anything after 4.0.0 will work
-    "OrxNcurses",                        // name of the package
+    "orxncurses",                        // name of the package
     VERSTRING(VMAJOR,VMINOR,VREL),       // package information
     NULL,                                // no load functions
     NULL,                                // no unload functions
