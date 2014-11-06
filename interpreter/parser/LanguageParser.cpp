@@ -345,13 +345,13 @@ PackageClass *LanguageParser::createPackage(RexxString *filename)
  *
  * @return The interpreted code.
  */
-RexxCode *LanguageParser::translateInterpret(RexxString *interpretString, StringTable *labels, size_t lineNumber)
+RexxCode *LanguageParser::translateInterpret(RexxString *interpretString, PackageClass *sourceContext, StringTable *labels, size_t lineNumber)
 {
     // create the appropriate array source, then the parser, then generate the
     // code.
     ProgramSource *programSource = new ArrayProgramSource(new_array(interpretString), lineNumber);
     Protected<LanguageParser> parser = new LanguageParser(GlobalNames::NULLSTRING, programSource);
-    return parser->translateInterpret(labels);
+    return parser->translateInterpret(sourceContext, labels);
 }
 
 
@@ -578,7 +578,7 @@ RoutineClass *LanguageParser::generateProgram(PackageClass *sourceContext)
  * @return A RexxCode object resulting from the compilation of
  *         this interpret line.
  */
-RexxCode *LanguageParser::translateInterpret(StringTable *contextLabels)
+RexxCode *LanguageParser::translateInterpret(PackageClass *sourceContext, StringTable *contextLabels)
 {
     // to translate this, we use the labels from the parent context.
     labels = contextLabels;
@@ -586,6 +586,11 @@ RexxCode *LanguageParser::translateInterpret(StringTable *contextLabels)
     setInterpret();
     // initialize, and compile all of the source.
     compileSource();
+
+    // if we have a source context, then we need to inherit this
+    // context before doing the install so that anything from the parent
+    // context is visible during the install processing.
+    package->inheritPackageContext(sourceContext);
 
     //. the package ends up with neither a init section or a main executable.
     // we just return the main code section

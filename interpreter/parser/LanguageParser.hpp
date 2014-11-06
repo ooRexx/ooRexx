@@ -116,7 +116,7 @@ class LanguageParser: public RexxInternalObject
     void        resolveDependencies();
     void        flushControl(RexxInstruction *);
     RexxCode   *translateBlock();
-    RexxCode   *translateInterpret(StringTable *contextLabels);
+    RexxCode   *translateInterpret(PackageClass *sourceContext, StringTable *contextLabels);
     RoutineClass *generateProgram(PackageClass *sourceContext = OREF_NULL);
     RoutineClass *generateRoutine(PackageClass *sourceContext = OREF_NULL);
     MethodClass *generateMethod(PackageClass *sourceContext = OREF_NULL);
@@ -431,7 +431,7 @@ class LanguageParser: public RexxInternalObject
     static RoutineClass *createProgram(RexxString *name);
     static RoutineClass *restoreFromMacroSpace(RexxString *name);
     static RoutineClass *processInstore(PRXSTRING instore, RexxString * name);
-    static RexxCode *translateInterpret(RexxString *interpretString, StringTable *labels, size_t lineNumber);
+    static RexxCode *translateInterpret(RexxString *interpretString, PackageClass *sourceContext, StringTable *labels, size_t lineNumber);
     static RoutineClass *createProgramFromFile(RexxString *filename);
     static PackageClass *createPackage(RexxString *filename);
     static PackageClass *createPackage(RexxString *name, ArrayClass *source, PackageClass *sourceContext = OREF_NULL);

@@ -262,5 +262,5 @@ RexxObject *RexxCode::setSecurityManager(RexxObject *manager)
  */
 RexxCode *RexxCode::interpret(RexxString *source, size_t lineNumber)
 {
-    return LanguageParser::translateInterpret(source, labels, lineNumber);
+    return LanguageParser::translateInterpret(source, package, labels, lineNumber);
 }

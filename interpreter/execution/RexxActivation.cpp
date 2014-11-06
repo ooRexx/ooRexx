@@ -2712,6 +2712,14 @@ RexxObject *RexxActivation::externalCall(RexxString *target, RexxObject **argume
 bool RexxActivation::callExternalRexx(RexxString *target, RexxObject **arguments,
     size_t argcount, RexxString *calltype, ProtectedObject  &resultObj)
 {
+    // the interpreted package is created in memory and doesn't have the original program
+    // name source information.  Forward this to the parent for processing if it is an
+    // interpreted external call
+    if (isInterpret())
+    {
+        return parent->callExternalRexx(target, arguments, argcount, calltype, resultObj);
+    }
+
     // Get full name including path
     Protected<RexxString> filename = resolveProgramName(target);
     if (!filename.isNull())
