@@ -231,7 +231,7 @@ char padArgument(RexxObject *argument, const char *position)
     // pad characters must be a single character long
     if (parameter->getLength() != 1)
     {
-        reportException(Error_Invalid_argument_pad, argument);
+        reportException(Error_Invalid_argument_pad, new_string(position), argument);
     }
     return parameter->getChar(0);
 }
