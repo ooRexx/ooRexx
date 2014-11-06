@@ -927,6 +927,7 @@ if (XALAN_EXECUTABLE)
 
     generate_message_file(${build_messages_dir}/RexxErrorCodes.h ${build_messages_dir}/RexxErrorCodes.xsl)
     generate_message_file(${build_messages_dir}/RexxMessageNumbers.h ${build_messages_dir}/RexxMessageNumbers.xsl)
+    generate_message_file(${build_messages_dir}/RexxMessageTable.h ${build_messages_dir}/RexxMessageTable.xsl)
     generate_message_file(${build_api_dir}/oorexxerrors.h ${build_messages_dir}/ApiErrorCodes.xsl)
     generate_message_file(${build_messages_dir}/errnums.xml ${build_messages_dir}/errnums.xsl)
     generate_message_file(${build_messages_dir}/errnumsrxqueue.xml ${build_messages_dir}/errnumsrxqueue.xsl)
@@ -942,6 +943,7 @@ if (XALAN_EXECUTABLE)
 
     set (REXXMSG_FILES ${build_messages_dir}/RexxErrorCodes.h
                        ${build_messages_dir}/RexxMessageNumbers.h
+                       ${build_messages_dir}/RexxMessageTable.h
                        ${build_api_dir}/oorexxerrors.h
                        ${build_messages_dir}/errnums.xml
                        ${build_messages_dir}/errnumsrxqueue.xml
