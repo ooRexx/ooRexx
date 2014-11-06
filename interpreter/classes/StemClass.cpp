@@ -783,7 +783,7 @@ RexxObject *StemClass::evaluateCompoundVariableValue(RexxActivation *context, Re
             // the tail_name is the fully resolved variable, used for NOVALUE reporting.
             // the defaultValue is the value that's returned as the expression result,
             // which is derived from the stem object.
-            RexxObject *defaultValue = resolved_tail.createCompoundName(stemVariableName);
+            RexxObject *defaultValue = resolved_tail.createCompoundName(stemName);
             // take care of any novalue situations
             return handleNovalue(context, tail_name, defaultValue, variable);
         }
@@ -800,7 +800,7 @@ RexxObject *StemClass::evaluateCompoundVariableValue(RexxActivation *context, Re
             // the tail_name is the fully resolved variable, used for NOVALUE reporting.
             // the defaultValue is the value that's returned as the expression result,
             // which is derived from the stem object.
-            RexxObject *defaultValue = resolved_tail.createCompoundName(stemVariableName);
+            RexxObject *defaultValue = resolved_tail.createCompoundName(stemName);
             // take care of any novalue situations
             return handleNovalue(context, tail_name, defaultValue, variable);
         }
