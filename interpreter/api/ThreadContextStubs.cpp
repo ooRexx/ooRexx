@@ -410,7 +410,7 @@ RexxDirectoryObject RexxEntry GetPackageRoutines(RexxThreadContext *c, RexxPacka
     ApiContext context(c);
     try
     {
-        return (RexxDirectoryObject)context.ret(((PackageClass *)m)->getRoutines());
+        return (RexxDirectoryObject)context.ret(((PackageClass *)m)->getRoutinesRexx());
     }
     catch (NativeActivation *)
     {
@@ -424,7 +424,7 @@ RexxDirectoryObject RexxEntry GetPackagePublicRoutines(RexxThreadContext *c, Rex
     ApiContext context(c);
     try
     {
-        return (RexxDirectoryObject)context.ret(((PackageClass *)m)->getPublicRoutines());
+        return (RexxDirectoryObject)context.ret(((PackageClass *)m)->getPublicRoutinesRexx());
     }
     catch (NativeActivation *)
     {
