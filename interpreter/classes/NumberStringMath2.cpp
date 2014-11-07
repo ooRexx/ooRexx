@@ -327,9 +327,9 @@ char *NumberString::subtractDivisor(const char *divisor, wholenumber_t divisorLe
 NumberString *NumberString::Division(NumberString *other, ArithmeticOperator divOP)
 {
     // buffers for intermediate results (just the numeric data)
-    char accumBuffer[sizeof(NumberStringBase)];
-    char saveLeftBuffer[sizeof(NumberStringBase)];
-    char saveRightBuffer[sizeof(NumberStringBase)];
+    NumberStringBase accumBuffer;
+    NumberStringBase saveLeftBuffer;
+    NumberStringBase saveRightBuffer;
 
     // static sized buffers for typical calculation sizes.
     char leftBufFast[FAST_BUFFER];
@@ -356,9 +356,9 @@ NumberString *NumberString::Division(NumberString *other, ArithmeticOperator div
     }
 
     // set of pointers for our temporary values
-    NumberStringBase *accum = (NumberStringBase *)accumBuffer;
-    NumberStringBase *saveLeft = (NumberStringBase *)saveLeftBuffer;
-    NumberStringBase *saveRight = (NumberStringBase *)saveRightBuffer;
+    NumberStringBase *accum = &accumBuffer;
+    NumberStringBase *saveLeft = &saveLeftBuffer;
+    NumberStringBase *saveRight = &saveRightBuffer;
     wholenumber_t digits = number_digits();
 
     // either of these values might require rounding before starting the
@@ -420,8 +420,8 @@ NumberString *NumberString::Division(NumberString *other, ArithmeticOperator div
     char *resultPtr = output;
 
     // copy the numberstring information as well
-    memcpy((void *)saveRight, (void *)right, sizeof(NumberStringBase));
-    memcpy((void *)saveLeft, (void *)left, sizeof(NumberStringBase));
+    *saveRight = *right;
+    *saveLeft = *left;
 
     char *saveLeftPtr = NULL;
     char *saveRightPtr = NULL;
@@ -857,9 +857,8 @@ NumberString *NumberString::power(RexxObject *powerObj)
     }
 
     // we create a dummy numberstring object and initialize it from the target number
-    char accumNumber[sizeof(NumberStringBase)];
-    NumberStringBase *accumObj = (NumberStringBase *)accumNumber;
-    memcpy((void *)accumObj, (void *)left, sizeof(NumberStringBase));
+    NumberStringBase accumNumber = *left;
+    NumberStringBase *accumObj = &accumNumber;
 
     // Find out how many digits are in power value, needed for actual
     //  precision value to be used in the computation.
@@ -1047,11 +1046,11 @@ char *NumberString::dividePower(const char *accumPtr, NumberStringBase *accum, c
     wholenumber_t totalDigits = ((digits + 1) * 2) + 1;
 
     // set up temporary buffers for the calculations
-    char  leftBuffer[sizeof(NumberStringBase)];
+    NumberStringBase leftBuffer;
     char *leftPtr = new_buffer(totalDigits * 2)->getData();
     char *result = leftPtr + totalDigits;
 
-    NumberStringBase *left = (NumberStringBase *)leftBuffer;
+    NumberStringBase *left = &leftBuffer;
 
     // length of left starts same as the accumulator
     left->digitsCount = accum->digitsCount;

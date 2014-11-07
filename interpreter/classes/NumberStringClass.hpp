@@ -67,6 +67,9 @@ public:
 
 
     inline NumberStringBase() { ; }
+    // special constructor for temporary working copies
+    inline NumberStringBase(bool opt) : stringObject(OREF_NULL), numberSign(0),
+        createdDigits(0), numberExponent(0), digitsCount(0) { }
 
     void   mathRound(char *);
     char  *stripLeadingZeros(char *);
