@@ -278,7 +278,16 @@ NumberString *NumberString::maxMin(RexxObject **args, size_t argCount, Arithmeti
 
             // if we had the desired comparison trigger,
             // we have a new min or max object.  Swap it
-            if (compobj->comp(maxminobj, saveFuzz) == compResult)
+            // (NOTE, comp does not necessarily return 1 or -1 because of
+            // platform differences with memcmp.  This funny comparison ensures
+            // we get the correct result
+            wholenumber_t rc = compobj->comp(maxminobj, saveFuzz);
+
+            if (rc < 0 && compResult < 0)
+            {
+                maxminobj = compobj;
+            }
+            else if (rc > 0 && compResult > 0)
             {
                 maxminobj = compobj;
             }
