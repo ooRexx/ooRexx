@@ -876,7 +876,7 @@ const char *SysFileSystem::getPathSeparator()
  */
 const char *SysFileSystem::getLineEnd()
 {
-    return "\n\r";
+    return "\r\n";
 }
 
 

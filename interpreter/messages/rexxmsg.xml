@@ -5682,7 +5682,7 @@ special character (such as a parenthesis).
         <Component>Translation</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Message_Translations_error</SymbolicName>
-        <Text>Error.</Text>
+        <Text>Error</Text>
       </SubMessage>
       <SubMessage>
         <Code>101</Code>
@@ -5691,7 +5691,7 @@ special character (such as a parenthesis).
         <Component>Translation</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Message_Translations_running</SymbolicName>
-        <Text>running.</Text>
+        <Text>running</Text>
       </SubMessage>
       <SubMessage>
         <Code>101</Code>
@@ -5700,7 +5700,7 @@ special character (such as a parenthesis).
         <Component>Translation</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Message_Translations_line</SymbolicName>
-        <Text>line.</Text>
+        <Text>line</Text>
       </SubMessage>
       <SubMessage>
         <Code>101</Code>
@@ -5709,7 +5709,7 @@ special character (such as a parenthesis).
         <Component>Translation</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Message_Translations_debug_error</SymbolicName>
-        <Text>+++ Interactive trace.  Error.</Text>
+        <Text>+++ Interactive trace.  Error</Text>
       </SubMessage>
       <SubMessage>
         <Code>101</Code>
@@ -5718,7 +5718,7 @@ special character (such as a parenthesis).
         <Component>Translation</Component>
         <Severity>Info</Severity>
         <SymbolicName>Message_Translations_debug_prompt</SymbolicName>
-        <Text>+++ Interactive trace. <q>Trace Off</q> to end debug, ENTER to Continue. +++.</Text>
+        <Text>+++ Interactive trace. <q>Trace Off</q> to end debug, ENTER to Continue. +++</Text>
       </SubMessage>
       <SubMessage>
         <Code>101</Code>
@@ -5727,7 +5727,7 @@ special character (such as a parenthesis).
         <Component>Translation</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Message_Translations_January</SymbolicName>
-        <Text>January.</Text>
+        <Text>January</Text>
       </SubMessage>
       <SubMessage>
         <Code>101</Code>
@@ -5736,7 +5736,7 @@ special character (such as a parenthesis).
         <Component>Translation</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Message_Translations_February</SymbolicName>
-        <Text>February.</Text>
+        <Text>February</Text>
       </SubMessage>
       <SubMessage>
         <Code>101</Code>
@@ -5745,7 +5745,7 @@ special character (such as a parenthesis).
         <Component>Translation</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Message_Translations_March</SymbolicName>
-        <Text>March.</Text>
+        <Text>March</Text>
       </SubMessage>
       <SubMessage>
         <Code>101</Code>
@@ -5754,7 +5754,7 @@ special character (such as a parenthesis).
         <Component>Translation</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Message_Translations_April</SymbolicName>
-        <Text>April.</Text>
+        <Text>April</Text>
       </SubMessage>
       <SubMessage>
         <Code>101</Code>
@@ -5763,7 +5763,7 @@ special character (such as a parenthesis).
         <Component>Translation</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Message_Translations_May</SymbolicName>
-        <Text>May.</Text>
+        <Text>May</Text>
       </SubMessage>
       <SubMessage>
         <Code>101</Code>
@@ -5772,7 +5772,7 @@ special character (such as a parenthesis).
         <Component>Translation</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Message_Translations_June</SymbolicName>
-        <Text>June.</Text>
+        <Text>June</Text>
       </SubMessage>
       <SubMessage>
         <Code>101</Code>
@@ -5781,7 +5781,7 @@ special character (such as a parenthesis).
         <Component>Translation</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Message_Translations_July</SymbolicName>
-        <Text>July.</Text>
+        <Text>July</Text>
       </SubMessage>
       <SubMessage>
         <Code>101</Code>
@@ -5790,7 +5790,7 @@ special character (such as a parenthesis).
         <Component>Translation</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Message_Translations_August</SymbolicName>
-        <Text>August.</Text>
+        <Text>August</Text>
       </SubMessage>
       <SubMessage>
         <Code>101</Code>
@@ -5799,7 +5799,7 @@ special character (such as a parenthesis).
         <Component>Translation</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Message_Translations_September</SymbolicName>
-        <Text>September.</Text>
+        <Text>September</Text>
       </SubMessage>
       <SubMessage>
         <Code>101</Code>
@@ -5808,7 +5808,7 @@ special character (such as a parenthesis).
         <Component>Translation</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Message_Translations_October</SymbolicName>
-        <Text>October.</Text>
+        <Text>October</Text>
       </SubMessage>
       <SubMessage>
         <Code>101</Code>
@@ -5817,7 +5817,7 @@ special character (such as a parenthesis).
         <Component>Translation</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Message_Translations_November</SymbolicName>
-        <Text>November.</Text>
+        <Text>November</Text>
       </SubMessage>
       <SubMessage>
         <Code>101</Code>
@@ -5826,7 +5826,7 @@ special character (such as a parenthesis).
         <Component>Translation</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Message_Translations_December</SymbolicName>
-        <Text>December.</Text>
+        <Text>December</Text>
       </SubMessage>
       <SubMessage>
         <Code>101</Code>

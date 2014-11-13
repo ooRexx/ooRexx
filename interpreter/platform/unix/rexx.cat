@@ -213,43 +213,43 @@ $ Error_at_line
 100 Error &1 running &2, line &3:.
 
 $ Message_Translations_January
-102 January.
+102 January
 
 $ Message_Translations_February
-103 February.
+103 February
 
 $ Message_Translations_March
-104 March.
+104 March
 
 $ Message_Translations_April
-105 April.
+105 April
 
 $ Message_Translations_May
-106 May.
+106 May
 
 $ Message_Translations_June
-107 June.
+107 June
 
 $ Message_Translations_July
-108 July.
+108 July
 
 $ Message_Translations_August
-109 August.
+109 August
 
 $ Message_Translations_September
-110 September.
+110 September
 
 $ Message_Translations_October
-111 October.
+111 October
 
 $ Message_Translations_November
-112 November.
+112 November
 
 $ Message_Translations_December
-113 December.
+113 December
 
 $ Message_Translations_debug_prompt
-114 +++ Interactive trace. "Trace Off" to end debug, ENTER to Continue. +++.
+114 +++ Interactive trace. "Trace Off" to end debug, ENTER to Continue. +++
 
 $ Error_RXSUBC_general
 115 The RXSUBCOM parameters are incorrect.
@@ -285,7 +285,7 @@ $ Error_RXSUBC_query
 125 The RXSUBCOM parameter QUERY is incorrect.
 
 $ Message_Translations_debug_error
-126 +++ Interactive trace.  Error.
+126 +++ Interactive trace.  Error
 
 $ Error_REXXC_cmd_parm_incorrect
 127 The REXXC command parameters are incorrect.
@@ -1248,13 +1248,13 @@ $ Error_Translation_reply
 523 REPLY can only be issued in an object method invocation.
 
 $ Message_Translations_error
-524 Error.
+524 Error
 
 $ Message_Translations_running
-525 running.
+525 running
 
 $ Message_Translations_line
-526 line.
+526 line
 
 $ Error_Interpretation_initialization
 529 Interpretation error: unexpected failure initializing the interpreter.
