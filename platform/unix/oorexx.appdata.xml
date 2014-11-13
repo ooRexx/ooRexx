@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2014 Rexx Language Association, Inc. All rights reserved. http://www/rexxla.org/ -->
+<component type="desktop">
+ <id>ooRexx.desktop</id>
+ <metadata_license>CPL-1.0</metadata_license>
+ <project_license>CPL-1.0</project_license>
+ <name>Open Object Rexx (ooRexx)</name>
+ <summary>Object oriented Rexx interpreter</summary>
+ <description>
+  <p>
+   Open Object Rexx is an object-oriented scripting language. The language
+   is designed for both beginners and experienced Rexx programmers. It is
+   easy to learn and use, and provides an excellent vehicle to enter the
+   world of object-oriented programming without much effort.
+  </p>
+  <p>
+   It extends the procedural way of Rexx programming with object-oriented
+   features that allow you to gradually change your programming style as
+   you learn more about objects.
+  </p>
+  <p>
+   For more information on ooRexx, visit http://www.oorexx.org/
+  </p>
+ </description>
+ <url type="homepage">http://www.oorexx.org/</url>
+ <updatecontact>w.david.ashley@gmail.com</updatecontact>
+ <project_group>Rexx Language Association</project_group>
+</component>
