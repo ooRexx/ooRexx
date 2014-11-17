@@ -1537,7 +1537,7 @@ bool MutableBuffer::primitiveMatch(size_t _start, RexxString *other, size_t offs
     offset--;
 
     // if the match is not possible in the target string, just return false now.
-    if ((_start + len) > getLength())
+    if ((_start + len) > getLength() || len == 0)
     {
         return false;
     }
@@ -1564,7 +1564,7 @@ bool MutableBuffer::primitiveCaselessMatch(size_t _start, RexxString *other, siz
     offset--;
 
     // if the match is not possible in the target string, just return false now.
-    if ((_start + len) > getLength())
+    if ((_start + len) > getLength() || len == 0)
     {
         return false;
     }
