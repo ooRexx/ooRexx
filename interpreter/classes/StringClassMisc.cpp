@@ -789,7 +789,7 @@ RexxObject *RexxString::match(RexxInteger *start_, RexxString *other, RexxIntege
 
     size_t offset = optionalPositionArgument(offset_, 1, ARG_THREE);
 
-    if (offset > other->getLength())
+    if (offset_ != OREF_NULL && offset > other->getLength())
     {
         reportException(Error_Incorrect_method_position, offset);
     }
@@ -833,7 +833,7 @@ RexxObject *RexxString::caselessMatch(RexxInteger *start_, RexxString *other, Re
 
     size_t offset = optionalPositionArgument(offset_, 1, ARG_THREE);
 
-    if (offset > other->getLength())
+    if (offset_ != OREF_NULL && offset > other->getLength())
     {
         reportException(Error_Incorrect_method_position, offset);
     }
