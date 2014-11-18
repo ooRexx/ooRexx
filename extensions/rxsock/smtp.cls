@@ -349,7 +349,7 @@ return retc
 /*----------------------------------------------------------------------------*/
 
 ::method Logoff
-expose responce strmsock
+expose strmsock
 use strict arg
 /* log the user off */
 retc = strmsock~lineout('QUIT')
