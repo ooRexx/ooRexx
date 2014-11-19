@@ -1503,7 +1503,7 @@ if (NOT WIN32)
               DEPENDS ${image_class_files} ${platform_rexx_img_depends}
               WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
    add_custom_target(rexx_cat ALL DEPENDS rexx.cat)
-   install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexx.cat DESTINATION ${catdir} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+   install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexx.cat DESTINATION ${catdir} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE)
 
    macro (add_manpage name cat)
       add_custom_command(OUTPUT ${name}.${cat}.gz
