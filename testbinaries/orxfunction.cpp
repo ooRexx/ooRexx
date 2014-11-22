@@ -242,6 +242,13 @@ RexxRoutine1(wholenumber_t,             // Return type
     return arg1;
 }
 
+RexxRoutine1(positive_wholenumber_t,             // Return type
+            TestPositiveWholeNumberArg,         // Function routine name
+            positive_wholenumber_t, arg1)       // Argument
+{
+    return arg1;
+}
+
 RexxRoutine1(stringsize_t,              // Return type
             TestStringSizeArg,          // Function routine name
             stringsize_t, arg1)         // Argument
@@ -508,6 +515,7 @@ RexxRoutineEntry orxtest_funcs[] = {
     REXX_TYPED_ROUTINE(TestIntPtrArg,         TestIntPtrArg),
     REXX_TYPED_ROUTINE(TestUintPtrArg,        TestUintPtrArg),
     REXX_TYPED_ROUTINE(TestWholeNumberArg,    TestWholeNumberArg),
+    REXX_TYPED_ROUTINE(TestPositiveWholeNumberArg,    TestPositiveWholeNumberArg),
     REXX_TYPED_ROUTINE(TestStringSizeArg,     TestStringSizeArg),
     REXX_TYPED_ROUTINE(TestSizeArg,           TestSizeArg),
     REXX_TYPED_ROUTINE(TestSSizeArg,          TestSSizeArg),

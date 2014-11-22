@@ -1457,6 +1457,20 @@ RexxMethod1(wholenumber_t,             // Return type
     return arg1;
 }
 
+RexxMethod1(positive_wholenumber_t,             // Return type
+            TestOptionalPositiveWholeNumberArg,// Function routine name
+            OPTIONAL_positive_wholenumber_t, arg1)       // Argument
+{
+    if (argumentOmitted(1))
+    {
+        if (arg1 != 0)
+        {
+            context->RaiseException1(Rexx_Error_Invalid_argument_user_defined, context->NewStringFromAsciiz("Conversion error"));
+        }
+    }
+    return arg1;
+}
+
 RexxMethod1(stringsize_t,              // Return type
             TestOptionalStringSizeArg,          // Function routine name
             OPTIONAL_stringsize_t, arg1)        // Argument
@@ -2101,8 +2115,12 @@ RexxMethod1(RexxStringObject, TestGetMutableBufferValue, RexxMutableBufferObject
     return context->NewString(buffer, l);
 }
 
-
-
+RexxMethod1(positive_wholenumber_t,     // Return type
+            TestPositiveWholeNumberArg, // Function routine name
+            positive_wholenumber_t, arg1) // Argument
+{
+    return arg1;
+}
 
 RexxMethodEntry orxtest_methods[] = {
     REXX_METHOD(TestIsBuffer,          TestIsBuffer),
@@ -2134,6 +2152,7 @@ RexxMethodEntry orxtest_methods[] = {
     REXX_METHOD(TestUintPtrArg,        TestUintPtrArg),
     REXX_METHOD(TestWholeNumberArg,    TestWholeNumberArg),
     REXX_METHOD(TestStringSizeArg,     TestStringSizeArg),
+    REXX_METHOD(TestPositiveWholeNumberArg,     TestPositiveWholeNumberArg),
     REXX_METHOD(TestSizeArg,           TestSizeArg),
     REXX_METHOD(TestSSizeArg,          TestSSizeArg),
     REXX_METHOD(TestLogicalArg,        TestLogicalArg),
@@ -2204,6 +2223,7 @@ RexxMethodEntry orxtest_methods[] = {
     REXX_METHOD(TestOptionalIntPtrArg,         TestOptionalIntPtrArg),
     REXX_METHOD(TestOptionalUintPtrArg,        TestOptionalUintPtrArg),
     REXX_METHOD(TestOptionalWholeNumberArg,    TestOptionalWholeNumberArg),
+    REXX_METHOD(TestOptionalPositiveWholeNumberArg,    TestOptionalPositiveWholeNumberArg),
     REXX_METHOD(TestOptionalStringSizeArg,     TestOptionalStringSizeArg),
     REXX_METHOD(TestOptionalSizeArg,           TestOptionalSizeArg),
     REXX_METHOD(TestOptionalSSizeArg,          TestOptionalSSizeArg),
