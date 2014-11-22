@@ -96,7 +96,7 @@ target_include_directories(orxinvocation PUBLIC
 # Extra link library definitions
 target_link_libraries(orxinvocation orxexits rexx rexxapi)
 
-add_library(rexxinstance
+add_executable(rexxinstance
    ${PROJECT_SOURCE_DIR}/rexxinstance.cpp)
 # Include file definition
 target_include_directories(rexxinstance PUBLIC
