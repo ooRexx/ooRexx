@@ -79,10 +79,10 @@
 
 #if defined(WIN32)                     // define errno equivalents for windows
    #define sock_errno() WSAGetLastError()
-   #define psock_errno(s) fprintf(stderr, "\norxsock6 Error: %s\n", s)
+   #define psock_errno(s) fprintf(stderr, "\nrxsock6 Error: %s\n", s)
 #else
    #define sock_errno() errno
-   #define psock_errno(s) printf("\norxsock6 error %s\n",s)
+   #define psock_errno(s) printf("\nrxsock6 error %s\n",s)
 #endif
 
 
@@ -1384,7 +1384,7 @@ RexxMethod2(int,                       // Return type
 
 
 // now build the actual entry list
-RexxMethodEntry orxsock6_methods[] =
+RexxMethodEntry rxsock6_methods[] =
 {
     REXX_METHOD(orxSocket6, orxSocket6),
     REXX_METHOD(orxAccept6, orxAccept6),
@@ -1410,18 +1410,18 @@ RexxMethodEntry orxsock6_methods[] =
 };
 
 
-RexxPackageEntry orxsock6_package_entry =
+RexxPackageEntry rxsock6_package_entry =
 {
     STANDARD_PACKAGE_HEADER
     REXX_INTERPRETER_4_0_0,              // anything after 4.0.0 will work
-    "ORXSOCK6",                          // name of the package
+    "RXSOCK6",                           // name of the package
     "4.0",                               // package information
     NULL,                                // no load/unload functions
     NULL,
     NULL,                                // no functions in this package
-    orxsock6_methods                     // the exported methods
+    rxsock6_methods                      // the exported methods
 };
 
 // package loading stub.
-OOREXX_GET_PACKAGE(orxsock6);
+OOREXX_GET_PACKAGE(rxsock6);
 

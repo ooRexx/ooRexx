@@ -1095,6 +1095,24 @@ install(TARGETS rxsock RUNTIME COMPONENT Core DESTINATION ${INSTALL_LIB_DIR}
                        LIBRARY DESTINATION ${INSTALL_LIB_DIR} COMPONENT Core)
 set_target_properties(rxsock PROPERTIES VERSION ${ORX_VERSION})
 
+#################### librxsock6.so ################
+if (NOT WIN32)
+# additional source files required by specific platforms
+if (WIN32)
+   set (platform_rxsock_sources
+            ${build_platform_dir}/rxsock.def
+            ${build_platform_dir}/verinfo.rc)
+endif ()
+
+# Sources for librxsock.so
+add_library(rxsock6 SHARED ${build_extensions_rxsock_dir}/orxsock6.cpp)
+# Extra link library definitions
+target_link_libraries(rxsock6 rexx rexxapi ${platform_rxsock_libs})
+install(TARGETS rxsock6 RUNTIME COMPONENT Core DESTINATION ${INSTALL_LIB_DIR}
+                       LIBRARY DESTINATION ${INSTALL_LIB_DIR} COMPONENT Core)
+set_target_properties(rxsock6 PROPERTIES VERSION ${ORX_VERSION})
+endif ()
+
 #################### librxregexp.so ################
 # additional source files required by specific platforms
 if (WIN32)
@@ -1421,9 +1439,12 @@ copy_build_file(rxregexp.cls ${build_extensions_rxregexp_dir})
 copy_build_file(rxftp.cls ${build_extensions_rxftp_dir})
 copy_build_file(csvStream.cls ${build_extensions_csvstream_dir})
 copy_build_file(socket.cls ${build_extensions_rxsock_dir})
+copy_build_file(socket6.cls ${build_extensions_rxsock_dir})
 copy_build_file(streamsocket.cls ${build_extensions_rxsock_dir})
+copy_build_file(streamsocket6.cls ${build_extensions_rxsock_dir})
 copy_build_file(mime.cls ${build_extensions_rxsock_dir})
 copy_build_file(smtp.cls ${build_extensions_rxsock_dir})
+copy_build_file(smtp6.cls ${build_extensions_rxsock_dir})
 copy_build_file(ncurses.cls ${build_extensions_orxncurses_dir})
 copy_build_file(rexxtry.rex ${build_samples_dir})
 add_custom_target(class_files ALL DEPENDS
