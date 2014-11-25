@@ -1096,7 +1096,7 @@ install(TARGETS rxsock RUNTIME COMPONENT Core DESTINATION ${INSTALL_LIB_DIR}
 set_target_properties(rxsock PROPERTIES VERSION ${ORX_VERSION})
 
 #################### librxsock6.so ################
-#if (NOT WIN32)
+if (NOT WIN32)
 # additional source files required by specific platforms
 if (WIN32)
    set (platform_rxsock_sources
@@ -1111,7 +1111,7 @@ target_link_libraries(rxsock6 rexx rexxapi ${platform_rxsock_libs})
 install(TARGETS rxsock6 RUNTIME COMPONENT Core DESTINATION ${INSTALL_LIB_DIR}
                        LIBRARY DESTINATION ${INSTALL_LIB_DIR} COMPONENT Core)
 set_target_properties(rxsock6 PROPERTIES VERSION ${ORX_VERSION})
-#endif ()
+endif ()
 
 #################### librxregexp.so ################
 # additional source files required by specific platforms

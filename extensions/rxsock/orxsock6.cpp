@@ -75,20 +75,18 @@
     #if defined( HAVE_SYS_FILIO_H )
         #include <sys/filio.h>
     #endif
-#endif
-
-#if defined(WIN32)                     // define errno equivalents for windows
-   #define sock_errno() WSAGetLastError()
-   #define psock_errno(s) fprintf(stderr, "\nrxsock6 Error: %s\n", s)
-#else
    #define sock_errno() errno
    #define psock_errno(s) printf("\nrxsock6 error %s\n",s)
+#else
+   #include <winsock2.h>
+   #include <ws2tcpip.h>
+   #ifndef IPPROTO_IPV6
+      // For IPv6
+      #include <tpipv6.h>
+   #endif   #define sock_errno() WSAGetLastError()
+   #define psock_errno(s) fprintf(stderr, "\nrxsock6 Error: %s\n", s)
 #endif
 
-
-#if defined(WIN32)
-    #pragma comment(lib, "Ws2_32.lib")
-#endif
 
 
 /*----------------------------------------------------------------------------*/
