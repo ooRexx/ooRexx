@@ -40,7 +40,7 @@
 /*----------------------------------------------------------------------------*/
 
 
-::requires "orxsock6" LIBRARY
+::requires "rxsock6" LIBRARY
 
 
 /*----------------------------------------------------------------------------*/
@@ -242,7 +242,7 @@ return
 /*         protocol - socket protocol, usually zero                           */
 /*----------------------------------------------------------------------------*/
 
-::method priviate_init private external "LIBRARY orxsock6 orxSocket6"
+::method priviate_init private external "LIBRARY rxsock6 orxSocket6"
 
 /*----------------------------------------------------------------------------*/
 /* Method: accept                                                             */
@@ -251,7 +251,7 @@ return
 /*         inetaddr - Inetaddr instance uninitialized (optional)              */
 /*----------------------------------------------------------------------------*/
 
-::method accept unguarded external "LIBRARY orxsock6 orxAccept6"
+::method accept unguarded external "LIBRARY rxsock6 orxAccept6"
 
 /*----------------------------------------------------------------------------*/
 /* Method: bind                                                              */
@@ -259,7 +259,7 @@ return
 /* Arguments:                                                                 */
 /*----------------------------------------------------------------------------*/
 
-::method bind external "LIBRARY orxsock6 orxBind6"
+::method bind external "LIBRARY rxsock6 orxBind6"
 
 /*----------------------------------------------------------------------------*/
 /* Method: close                                                              */
@@ -267,7 +267,7 @@ return
 /* Arguments: none                                                            */
 /*----------------------------------------------------------------------------*/
 
-::method close external "LIBRARY orxsock6 orxClose6"
+::method close external "LIBRARY rxsock6 orxClose6"
 
 /*----------------------------------------------------------------------------*/
 /* Method: connect                                                            */
@@ -276,7 +276,7 @@ return
 /*         inetaddr - Inetaddr instance initialized with the address          */
 /*----------------------------------------------------------------------------*/
 
-::method connect external "LIBRARY orxsock6 orxConnect6"
+::method connect external "LIBRARY rxsock6 orxConnect6"
 
 /*----------------------------------------------------------------------------*/
 /* Method: convert_protocol_family                                            */
@@ -483,7 +483,7 @@ return err
 /*         errcode - error code                                               */
 /*----------------------------------------------------------------------------*/
 
-::method gai_strerror class external "LIBRARY orxsock6 orxGetStrerror6"
+::method gai_strerror class external "LIBRARY rxsock6 orxGetStrerror6"
 
 /*----------------------------------------------------------------------------*/
 /* Method: getAddrInfo                                                        */
@@ -495,7 +495,7 @@ return err
 /*         rea      - Rexx array variable (empty)                             */
 /*----------------------------------------------------------------------------*/
 
-::method getaddrinfo class external "LIBRARY orxsock6 orxGetAddrinfo6"
+::method getaddrinfo class external "LIBRARY rxsock6 orxGetAddrinfo6"
 
 /*----------------------------------------------------------------------------*/
 /* Method: getHostName                                                        */
@@ -503,7 +503,7 @@ return err
 /* Arguments:                                                                 */
 /*----------------------------------------------------------------------------*/
 
-::method gethostname class external "LIBRARY orxsock6 orxGetHostName6"
+::method gethostname class external "LIBRARY rxsock6 orxGetHostName6"
 
 /*----------------------------------------------------------------------------*/
 /* Method: getPeerName                                                        */
@@ -512,7 +512,7 @@ return err
 /*         inetaddr - Inetaddr instance                                       */
 /*----------------------------------------------------------------------------*/
 
-::method getpeername external "LIBRARY orxsock6 orxGetPeerName6"
+::method getpeername external "LIBRARY rxsock6 orxGetPeerName6"
 
 /*----------------------------------------------------------------------------*/
 /* Method: getProtoByName                                                     */
@@ -521,7 +521,7 @@ return err
 /*         proto - protocol name                                              */
 /*----------------------------------------------------------------------------*/
 
-::method getprotocolbyname class external "LIBRARY orxsock6 orxGetProtocolByName6"
+::method getprotocolbyname class external "LIBRARY rxsock6 orxGetProtocolByName6"
 
 /*----------------------------------------------------------------------------*/
 /* Method: getProtoByNumber                                                   */
@@ -530,7 +530,7 @@ return err
 /*         proto - protocol number                                            */
 /*----------------------------------------------------------------------------*/
 
-::method getprotocolbynumber class external "LIBRARY orxsock6 orxGetProtocolByNumber6"
+::method getprotocolbynumber class external "LIBRARY rxsock6 orxGetProtocolByNumber6"
 
 /*----------------------------------------------------------------------------*/
 /* Method: getSockName                                                        */
@@ -539,7 +539,7 @@ return err
 /*         inetaddr - Inetaddr instance                                       */
 /*----------------------------------------------------------------------------*/
 
-::method getsockname external "LIBRARY orxsock6 orxGetSockName6"
+::method getsockname external "LIBRARY rxsock6 orxGetSockName6"
 
 /*----------------------------------------------------------------------------*/
 /* Method: getsockopt                                                         */
@@ -548,7 +548,7 @@ return err
 /*         option - socket option                                             */
 /*----------------------------------------------------------------------------*/
 
-::method getsockopt external "LIBRARY orxsock6 orxGetSockOpt6"
+::method getsockopt external "LIBRARY rxsock6 orxGetSockOpt6"
 
 /*----------------------------------------------------------------------------*/
 /* Method: listen                                                             */
@@ -557,7 +557,7 @@ return err
 /*         backlog - the backlog to use for pending connection requests       */
 /*----------------------------------------------------------------------------*/
 
-::method listen external "LIBRARY orxsock6 orxListen6"
+::method listen external "LIBRARY rxsock6 orxListen6"
 
 /*----------------------------------------------------------------------------*/
 /* Method: recv                                                               */
@@ -566,7 +566,7 @@ return err
 /*         len - the maximum amount of data to recieve in bytes               */
 /*----------------------------------------------------------------------------*/
 
-::method recv external "LIBRARY orxsock6 orxRecv6"
+::method recv external "LIBRARY rxsock6 orxRecv6"
 
 /*----------------------------------------------------------------------------*/
 /* Method: recvFrom                                                           */
@@ -576,7 +576,7 @@ return err
 /*         inetaddress - initialized InetAddress instance                     */
 /*----------------------------------------------------------------------------*/
 
-::method recvfrom external "LIBRARY orxsock6 orxRecvFrom6"
+::method recvfrom external "LIBRARY rxsock6 orxRecvFrom6"
 
 /*----------------------------------------------------------------------------*/
 /* Method: select                                                             */
@@ -589,7 +589,7 @@ return err
 /*         timeout  - timeout in milliseconds                                 */
 /*----------------------------------------------------------------------------*/
 
-::method select external "LIBRARY orxsock6 orxSelect6"
+::method select external "LIBRARY rxsock6 orxSelect6"
 
 /*----------------------------------------------------------------------------*/
 /* Method: send                                                               */
@@ -599,7 +599,7 @@ return err
 /*         flags - (optional) flags, default is zero                          */
 /*----------------------------------------------------------------------------*/
 
-::method send external "LIBRARY orxsock6 orxSend6"
+::method send external "LIBRARY rxsock6 orxSend6"
 
 /*----------------------------------------------------------------------------*/
 /* Method: sentTo                                                             */
@@ -609,7 +609,7 @@ return err
 /*         inetaddress - initialized InetAddress instance                     */
 /*----------------------------------------------------------------------------*/
 
-::method sendto external "LIBRARY orxsock6 orxSendTo6"
+::method sendto external "LIBRARY rxsock6 orxSendTo6"
 
 /*----------------------------------------------------------------------------*/
 /* Method: setsockopt                                                         */
@@ -619,7 +619,7 @@ return err
 /*         val   - value for the option                                       */
 /*----------------------------------------------------------------------------*/
 
-::method setsockopt external "LIBRARY orxsock6 orxSetSockOpt6"
+::method setsockopt external "LIBRARY rxsock6 orxSetSockOpt6"
 
 /*----------------------------------------------------------------------------*/
 /* Method: string                                                             */
