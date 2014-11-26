@@ -768,7 +768,9 @@ RexxMethod1(RexxObjectPtr,             // Return type
         case SO_OOBINLINE:
         case SO_NO_CHECK:
         case SO_PRIORITY:
+#ifdef SO_BSDCOMPAT
         case SO_BSDCOMPAT:
+#endif
         case SO_REUSEPORT:
         case SO_RCVLOWAT:
         case SO_SNDLOWAT:
@@ -793,8 +795,12 @@ RexxMethod1(RexxObjectPtr,             // Return type
         case SO_PEEK_OFF:
         case SO_NOFCS:
         case SO_LOCK_FILTER:
+#ifdef SO_SELECT_ERR_QUEUE
         case SO_SELECT_ERR_QUEUE:
+#endif
+#ifdef SO_BUSY_POLL
         case SO_BUSY_POLL:
+#endif
         case SO_PASSCRED:
         {
             // boolean/int options
@@ -1291,7 +1297,9 @@ RexxMethod2(int,                       // Return type
         case SO_OOBINLINE:
         case SO_NO_CHECK:
         case SO_PRIORITY:
+#ifdef SO_BSDCOMPAT
         case SO_BSDCOMPAT:
+#endif
         case SO_REUSEPORT:
         case SO_RCVLOWAT:
         case SO_SNDLOWAT:
@@ -1316,8 +1324,12 @@ RexxMethod2(int,                       // Return type
         case SO_PEEK_OFF:
         case SO_NOFCS:
         case SO_LOCK_FILTER:
+#ifdef SO_SELECT_ERR_QUEUE
         case SO_SELECT_ERR_QUEUE:
+#endif
+#ifdef SO_BUSY_POLL
         case SO_BUSY_POLL:
+#endif
         case SO_PASSCRED:     
         {
             // boolean/int options
