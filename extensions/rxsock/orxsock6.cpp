@@ -48,10 +48,6 @@
 #include <setjmp.h>
 
 /*------------------------------------------------------------------
- * rexx includes
- *------------------------------------------------------------------*/
-# include "oorexxapi.h"
-/*------------------------------------------------------------------
  * tcp/ip includes
  *------------------------------------------------------------------*/
 #include <sys/types.h>
@@ -80,12 +76,14 @@
 #else
    #include <winsock2.h>
    #include <ws2tcpip.h>
-   #ifndef IPPROTO_IPV6
-      // For IPv6
-      #include <tpipv6.h>
-   #endif   #define sock_errno() WSAGetLastError()
+   #define sock_errno() WSAGetLastError()
    #define psock_errno(s) fprintf(stderr, "\nrxsock6 Error: %s\n", s)
 #endif
+
+/*------------------------------------------------------------------
+ * rexx includes
+ *------------------------------------------------------------------*/
+# include "oorexxapi.h"
 
 
 
