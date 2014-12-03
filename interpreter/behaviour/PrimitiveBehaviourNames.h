@@ -214,6 +214,8 @@
 #define TheNumberArrayBehaviour      (&RexxBehaviour::primitiveBehaviours[T_NumberArray])
 #define TheClassResolverBehaviour      (&RexxBehaviour::primitiveBehaviours[T_ClassResolver])
 #define TheQualifiedFunctionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_QualifiedFunction])
+#define ThePointerBucketBehaviour      (&RexxBehaviour::primitiveBehaviours[T_PointerBucket])
+#define ThePointerTableBehaviour      (&RexxBehaviour::primitiveBehaviours[T_PointerTable])
 #define TheMemoryBehaviour      (&RexxBehaviour::primitiveBehaviours[T_Memory])
 #define TheInternalStackBehaviour      (&RexxBehaviour::primitiveBehaviours[T_InternalStack])
 #define TheLiveStackBehaviour      (&RexxBehaviour::primitiveBehaviours[T_LiveStack])

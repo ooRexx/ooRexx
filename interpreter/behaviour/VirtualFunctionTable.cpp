@@ -149,6 +149,8 @@
 #include "NumberArray.hpp"
 #include "ExpressionClassResolver.hpp"
 #include "ExpressionQualifiedFunction.hpp"
+#include "PointerBucket.hpp"
+#include "PointerTable.hpp"
 #include "RexxMemory.hpp"
 #include "InternalStack.hpp"
 #include "MemoryStack.hpp"
@@ -689,6 +691,12 @@ void MemoryObject::buildVirtualFunctionTable()
    
    objectPtr = ::new (objectLoc) QualifiedFunction(RESTOREIMAGE);
    virtualFunctionTable[T_QualifiedFunction] = getVftPointer(objectLoc);
+   
+   objectPtr = ::new (objectLoc) PointerBucket(RESTOREIMAGE);
+   virtualFunctionTable[T_PointerBucket] = getVftPointer(objectLoc);
+   
+   objectPtr = ::new (objectLoc) PointerTable(RESTOREIMAGE);
+   virtualFunctionTable[T_PointerTable] = getVftPointer(objectLoc);
    
    objectPtr = ::new (objectLoc) RexxObject(RESTOREIMAGE);
    virtualFunctionTable[T_Memory] = getVftPointer(objectLoc);

@@ -36,126 +36,40 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* A collection that maps objects to integer values.  Used for internal       */
-/* memory management.                                                         */
+/* Defintions for a MapTable, which is used by memory management to map       */
+/* object instances to integer values.  Used mostly for old-to-new tables     */
+/* and flattening offset tables.                                              */
 /*                                                                            */
 /******************************************************************************/
+#ifndef Included_PointerTable
+#define Included_PointerTable
 
-#include "RexxCore.h"
-#include "MapTable.hpp"
+#include "PointerBucket.hpp"
 
-
-/**
- * Allocate a new MapTable item.
- *
- * @param size    The base object size.
- *
- * @return The storage for creating a MapBucket.
- */
-void *MapTable::operator new(size_t size)
+class PointerTable : public RexxInternalObject
 {
-   return new_object(size, T_MapTable);
-}
+ public:
+           void *operator new(size_t base);
+    inline void  operator delete(void *) {;}
 
+    PointerTable(size_t entries = DefaultPointerTableSize);
+    inline PointerTable(RESTORETYPE restoreType) { ; };
 
-/**
- * Initialize a MapTable object.
- *
- * @param entries The number of entries.
- */
-MapTable::MapTable(size_t entries)
-{
-    // get a new bucket of the correct size
-    contents = new (entries) MapBucket(entries);
-}
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
 
+    virtual RexxInternalObject *copy();
 
-/**
- * Normal garbage collection live marking
- *
- * @param liveMark The current live mark.
- */
-void MapTable::live(size_t liveMark)
-{
-    memory_mark(contents);
-}
+    inline RexxInternalObject *get(void *key) { return contents->get(key); }
+           void   put(RexxInternalObject *value, void *key);
+    inline RexxInternalObject *remove(void *key) { return contents->remove(key); };
+    inline void   empty() { contents->empty(); }
+    inline bool   isEmpty() { return contents->isEmpty(); }
+           void   reallocateContents();
 
+    static const size_t DefaultPointerTableSize = 10;
 
-/**
- * Generalized object marking.
- *
- * @param reason The reason for this live marking operation.
- */
-void MapTable::liveGeneral(MarkReason reason)
-{
-    memory_mark_general(contents);
-}
+    PointerBucket *contents;     // the backing collection for this
+};
+#endif
 
-
-/**
- * Copy a map table.
- *
- * @return The new maptable object.
- */
-RexxInternalObject *MapTable::copy()
-{
-    // copy this object first
-    MapTable *newObj = (MapTable *)RexxInternalObject::copy();
-    newObj->contents = (MapBucket *)contents->copy();
-    return newObj;
-}
-
-
-/**
- * Place an item into a hash collection using a key.
- *
- * @param value The inserted value.
- * @param index The insertion key.
- *
- * @return The retrieved object.  Returns OREF_NULL if the object
- *         was not found.
- */
-void MapTable::put(size_t value, RexxInternalObject *index)
-{
-    // try to insert in the existing hash tables...if this
-    // fails, we're full and need to reallocate.
-    if (!contents->put(value, index))
-    {
-        // reallocate and try again
-        reallocateContents();
-        contents->put(value, index);
-    }
-}
-
-
-/**
- * Increment the value associated with a key.  If the key does
- * not exist, it is inserted into the table with a value of 1.
- *
- * @param key    The target key.
- */
-void MapTable::increment(RexxInternalObject *index)
-{
-    // try to insert in the existing hash tables...if this
-    // fails, we're full and need to reallocate.
-    if (!contents->increment(index))
-    {
-        // reallocate and try again
-        reallocateContents();
-        contents->increment(index);
-    }
-}
-
-
-/**
- * Reallocate the hash bucket to a larger version after
- * a failed put() operation.
- */
-void MapTable::reallocateContents()
-{
-    // create a new bucket and merge the old bucket into it, then replace the contents
-    // with the new ones.
-    MapBucket *newContents = new (contents->totalSize * 2) MapBucket(contents->totalSize * 2);
-    contents->merge(newContents);
-    contents = newContents;
-}

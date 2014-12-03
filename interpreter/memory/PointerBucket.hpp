@@ -36,126 +36,87 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* A collection that maps objects to integer values.  Used for internal       */
-/* memory management.                                                         */
+/*                                                                            */
+/* Mapping table for pointer index to an object value.  Used for the object   */
+/* memory allocation tables.                                                  */
 /*                                                                            */
 /******************************************************************************/
+#ifndef Included_PointerBucket
+#define Included_PointerBucket
 
-#include "RexxCore.h"
-#include "MapTable.hpp"
-
-
-/**
- * Allocate a new MapTable item.
- *
- * @param size    The base object size.
- *
- * @return The storage for creating a MapBucket.
- */
-void *MapTable::operator new(size_t size)
-{
-   return new_object(size, T_MapTable);
-}
+#include "ObjectClass.hpp"
 
 
 /**
- * Initialize a MapTable object.
- *
- * @param entries The number of entries.
+ * A mapping class for mapping pointer values to an associated
+ * object instance.
  */
-MapTable::MapTable(size_t entries)
+class PointerBucket : public RexxInternalObject
 {
-    // get a new bucket of the correct size
-    contents = new (entries) MapBucket(entries);
-}
+ friend class PointerTable;
+ public:
+    typedef size_t MapLink;                  // a link to another map item
 
+           void *operator new(size_t base, size_t entries);
+    inline void  operator delete(void *) {;}
 
-/**
- * Normal garbage collection live marking
- *
- * @param liveMark The current live mark.
- */
-void MapTable::live(size_t liveMark)
-{
-    memory_mark(contents);
-}
+    PointerBucket(size_t entries);
+    inline PointerBucket(RESTORETYPE restoreType) { ; };
 
+    virtual void live(size_t);
+    virtual void liveGeneral(MarkReason reason);
 
-/**
- * Generalized object marking.
- *
- * @param reason The reason for this live marking operation.
- */
-void MapTable::liveGeneral(MarkReason reason)
-{
-    memory_mark_general(contents);
-}
+    void         empty();
+    bool         isEmpty() { return itemCount == 0; }
+    bool         isFull()  { return itemCount >= totalSize; }
+    size_t       items() { return itemCount; };
 
+    RexxInternalObject *remove(void *key);
+    RexxInternalObject *get(void *key);
+    bool         put(RexxInternalObject *value, void *key);
+    bool         hasIndex(void *key);
+    void         merge(PointerBucket *other);
+    MapLink      locate(void *key);
+    bool         append(RexxInternalObject *value, void *index, MapLink position);
 
-/**
- * Copy a map table.
- *
- * @return The new maptable object.
- */
-RexxInternalObject *MapTable::copy()
-{
-    // copy this object first
-    MapTable *newObj = (MapTable *)RexxInternalObject::copy();
-    newObj->contents = (MapBucket *)contents->copy();
-    return newObj;
-}
+    // We never get saved in the image or flattened with other objects, so we can just use the
+    // identity hash to generate the index
+    inline MapLink hashIndex(void *index) { return (MapLink)(((uintptr_t)index) % bucketSize); }
 
+    // link terminator
+    static const MapLink NoMore = 0;
+    // indicates not linked
+    static const MapLink NoLink = ~((MapLink)0);
 
-/**
- * Place an item into a hash collection using a key.
- *
- * @param value The inserted value.
- * @param index The insertion key.
- *
- * @return The retrieved object.  Returns OREF_NULL if the object
- *         was not found.
- */
-void MapTable::put(size_t value, RexxInternalObject *index)
-{
-    // try to insert in the existing hash tables...if this
-    // fails, we're full and need to reallocate.
-    if (!contents->put(value, index))
-    {
-        // reallocate and try again
-        reallocateContents();
-        contents->put(value, index);
-    }
-}
+protected:
 
+   class MapEntry
+   {
+   public:
+       void *index;                 // the value we index from
+       RexxInternalObject *value;   // the stored value
+       MapLink next;                // next item in overflow bucket
 
-/**
- * Increment the value associated with a key.  If the key does
- * not exist, it is inserted into the table with a value of 1.
- *
- * @param key    The target key.
- */
-void MapTable::increment(RexxInternalObject *index)
-{
-    // try to insert in the existing hash tables...if this
-    // fails, we're full and need to reallocate.
-    if (!contents->increment(index))
-    {
-        // reallocate and try again
-        reallocateContents();
-        contents->increment(index);
-    }
-}
+       inline bool isAvailable() { return index == NULL; }
+       inline bool isIndex(void *i) { return i == index; }
+       inline void clear() { set(NULL, OREF_NULL); next = NoMore; }
+       inline void copyElement(MapEntry &other)
+       {
+           value = other.value;
+           index = other.index;
+           next = other.next;
+       }
+       // NOTE:  This is a transient object, no setField() used.
+       inline void set(void *i, RexxInternalObject *v) { index = i; value = v; }
+       inline void setValue(RexxInternalObject *v) { value = v; }
+   };
 
+    size_t   bucketSize;                // size of the hash table
+    size_t   totalSize;                 // total size of the table, including the overflow area
+    size_t   itemCount;                 // total number of items in the table
+    MapLink  freeItem;                  // first free element
+    MapEntry entries[1];                // hash table entries
+};
 
-/**
- * Reallocate the hash bucket to a larger version after
- * a failed put() operation.
- */
-void MapTable::reallocateContents()
-{
-    // create a new bucket and merge the old bucket into it, then replace the contents
-    // with the new ones.
-    MapBucket *newContents = new (contents->totalSize * 2) MapBucket(contents->totalSize * 2);
-    contents->merge(newContents);
-    contents = newContents;
-}
+#endif
+

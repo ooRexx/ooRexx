@@ -626,7 +626,8 @@ typedef struct
 
 
 #define METHOD_INTERFACE_VERSION_4_0_0 100
-#define METHOD_INTERFACE_VERSION 101
+#define METHOD_INTERFACE_VERSION_4_2_0 101
+#define METHOD_INTERFACE_VERSION 102
 
 typedef struct
 {
@@ -634,7 +635,7 @@ typedef struct
 
     RexxArrayObject  (RexxEntry *GetArguments)(RexxMethodContext *);
     RexxObjectPtr    (RexxEntry *GetArgument)(RexxMethodContext *, size_t);
-    CSTRING    (RexxEntry *GetMessageName)(RexxMethodContext *);
+    CSTRING          (RexxEntry *GetMessageName)(RexxMethodContext *);
     RexxMethodObject (RexxEntry *GetMethod)(RexxMethodContext *);
     RexxObjectPtr    (RexxEntry *GetSelf)(RexxMethodContext *);
     RexxClassObject  (RexxEntry *GetSuper)(RexxMethodContext *);
@@ -647,6 +648,9 @@ typedef struct
     void             (RexxEntry *SetGuardOff)(RexxMethodContext *);
     RexxClassObject  (RexxEntry *FindContextClass)(RexxMethodContext *, CSTRING);
     POINTER          (RexxEntry *GetCSelf)(RexxMethodContext *);
+    POINTER          (RexxEntry *AllocateObjectMemory)(RexxMethodContext *, size_t);
+    void             (RexxEntry *FreeObjectMemory)(RexxMethodContext *, POINTER);
+    POINTER          (RexxEntry *ReallocateObjectMemory)(RexxMethodContext *, POINTER, size_t);
 } MethodContextInterface;
 
 #define CALL_INTERFACE_VERSION 100
@@ -2159,6 +2163,18 @@ struct RexxMethodContext_
     RexxClassObject FindContextClass(CSTRING n)
     {
         return functions->FindContextClass(this, n);
+    }
+    POINTER AllocateObjectMemory(size_t s)
+    {
+        return functions->AllocateObjectMemory(this, s);
+    }
+    void FreeObjectMemory(POINTER p)
+    {
+        return functions->FreeObjectMemory(this, p);
+    }
+    POINTER ReallocateObjectMemory(POINTER p, size_t s)
+    {
+        return functions->ReallocateObjectMemory(this, p, s);
     }
 #endif
 };

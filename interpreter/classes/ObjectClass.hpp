@@ -65,6 +65,7 @@ class ProtectedObject;
 class SecurityManager;
 class BaseExecutable;
 class Activity;
+class PointerTable;
 
 
 typedef size_t HashCode;               // a hash code value
@@ -528,6 +529,10 @@ class RexxObject : public RexxInternalObject
     RexxObject  *copyRexx();
     void *getCSelf();
     void *getCSelf(RexxClass *scope);
+    void *allocateObjectMemory(size_t size);
+    void  freeObjectMemory(void *data);
+    void *reallocateObjectMemory(void *data, size_t newSize);
+    PointerTable *getMemoryTable();
 
     RexxObject *callOperatorMethod(size_t methodOffset, RexxObject *argument);
 

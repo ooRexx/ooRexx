@@ -245,6 +245,48 @@ RexxClassObject RexxEntry FindContextClass(RexxMethodContext *c, CSTRING n)
     return NULLOBJECT;
 }
 
+
+POINTER RexxEntry AllocateObjectMemory(RexxMethodContext *c, size_t l)
+{
+    ApiContext context(c);
+    try
+    {
+        return context.context->allocateObjectMemory(l);
+    }
+    catch (NativeActivation *)
+    {
+        return NULL;
+    }
+}
+
+
+POINTER RexxEntry ReallocateObjectMemory(RexxMethodContext *c, POINTER p, size_t l)
+{
+    ApiContext context(c);
+    try
+    {
+        return context.context->reallocateObjectMemory(p, l);
+    }
+    catch (NativeActivation *)
+    {
+        return NULL;
+    }
+}
+
+
+void RexxEntry FreeObjectMemory(RexxMethodContext *c, POINTER p)
+{
+    ApiContext context(c);
+    try
+    {
+        return context.context->freeObjectMemory(p);
+    }
+    catch (NativeActivation *)
+    {
+    }
+}
+
+
 END_EXTERN_C()
 
 
@@ -266,6 +308,9 @@ MethodContextInterface Activity::methodContextFunctions =
     SetGuardOff,
     FindContextClass,
     GetCSelf,
+    AllocateObjectMemory,
+    FreeObjectMemory,
+    ReallocateObjectMemory,
 };
 
 

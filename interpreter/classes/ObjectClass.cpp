@@ -58,6 +58,7 @@
 #include "PointerClass.hpp"
 #include "MethodArguments.hpp"
 #include "MethodDictionary.hpp"
+#include "PointerTable.hpp"
 
 
 // singleton class instance
@@ -2836,8 +2837,105 @@ void *RexxObject::getCSelf(RexxClass *scope)
         // step to the next scope
         scope = superScope(scope);
     }
-    return NULL;                     /* no object available               */
+    return NULL;                     // no object available
 }
+
+
+/**
+ * Obtain the special object memory table, creating one if
+ * this is the first request.
+ *
+ * @return The memory table associated with this object.
+ */
+PointerTable *RexxObject::getMemoryTable()
+{
+    // this is always stored in the object class scope, using
+    // a nullstring as a special name.
+    PointerTable *table = (PointerTable *)getObjectVariable(GlobalNames::NULLSTRING, TheObjectClass);
+    // if not found, we create a new one and set the variable
+    if (table == OREF_NULL)
+    {
+        table = new PointerTable();
+        setObjectVariable(GlobalNames::OBJECTNAME, (RexxObject *)table, TheObjectClass);
+    }
+
+    return table;
+}
+
+
+/**
+ * Allocate some memory associated with this object.
+ *
+ * @param size   The required memory size.
+ *
+ * @return A pointer to the allocated memory.
+ */
+void *RexxObject::allocateObjectMemory(size_t size)
+{
+    PointerTable *memoryTable = getMemoryTable();
+    BufferClass *buffer = new_buffer(size);
+    void *dataPointer = buffer->getData();
+    memoryTable->put(buffer, dataPointer);
+    return dataPointer;
+}
+
+
+/**
+ * Free a buffer of objet-allocated memory.
+ *
+ * @param pointer The buffer pointer to release.
+ */
+void RexxObject::freeObjectMemory(void *pointer)
+{
+    // just remove the pointer from the table so that the buffer can
+    // be garbage collected.
+    PointerTable *memoryTable = getMemoryTable();
+    memoryTable->remove(pointer);
+}
+
+
+/**
+ * Reallocate a buffer of object memory, copying the
+ * data into the new buffer.
+ *
+ * @param pointer The pointer for the existing memory.
+ * @param newSize The new data size.
+ *
+ * @return The new data pointer.
+ */
+void *RexxObject::reallocateObjectMemory(void *pointer, size_t newSize)
+{
+    // get our table and access the old buffer object so we know what size
+    // this was allocated to.
+    PointerTable *memoryTable = getMemoryTable();
+    BufferClass *oldBuffer = (BufferClass *)memoryTable->get(pointer);
+
+    // if we don't find this in the table, this is an invalid
+    // reallocate call.
+    if (oldBuffer == OREF_NULL)
+    {
+        return NULL;
+    }
+
+    // we need the old size so we can copy the data to the new buffer
+    size_t oldSize = oldBuffer->getBufferSize();
+
+    // this is a nop if the size is not larger than the existing allocation.
+    if (newSize <= oldSize)
+    {
+        return pointer;
+    }
+
+    // allocate a new object and copy the data over
+    void * newPointer = allocateObjectMemory(newSize);
+    memcpy(newPointer, pointer, Numerics::minVal(oldSize, newSize));
+
+    // remove the old pointer from the table
+    memoryTable->remove(pointer);
+    return newPointer;
+}
+
+
 
 /**
  * Call a method in the indexed object operator table.

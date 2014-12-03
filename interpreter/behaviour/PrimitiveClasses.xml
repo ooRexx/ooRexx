@@ -215,6 +215,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="NumberArray" class="NumberArray" include="NumberArray.hpp"/>
 <Class id="ClassResolver" class="ClassResolver" include="ExpressionClassResolver.hpp"/>
 <Class id="QualifiedFunction" class="QualifiedFunction" include="ExpressionQualifiedFunction.hpp"/>
+<Class id="PointerBucket" class="PointerBucket" include="PointerBucket.hpp"/>
+<Class id="PointerTable" class="PointerTable" include="PointerTable.hpp"/>
 </Internal>
 <Transient>
 <Class id="Memory" class="MemoryObject" include="RexxMemory.hpp" objectvirtual="true"/>

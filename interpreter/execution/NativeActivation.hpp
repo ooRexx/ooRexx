@@ -185,6 +185,9 @@ class NativeActivation : public ActivationBase
     void enableConditionTraps() { trapErrors = true; }
     void disableConditionTraps() { trapErrors = false; }
     StackFrameClass *createStackFrame();
+    void *allocateObjectMemory(size_t size);
+    void  freeObjectMemory(void *data);
+    void *reallocateObjectMemory(void *data, size_t newSize);
 
     inline bool isMethod() { return activationType == METHOD_ACTIVATION; }
 

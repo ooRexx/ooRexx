@@ -2696,8 +2696,9 @@ RexxObject *NativeActivation::getObjectVariable(const char *name)
     return retriever->getRealValue(methodVariables());
 }
 
+
 /**
- * The an object variable to a new value.
+ * Set an object variable to a new value.
  *
  * @param name   The name of the variable.
  * @param value  The new variable value.
@@ -2719,6 +2720,7 @@ void NativeActivation::setObjectVariable(const char *name, RexxObject *value)
     // do the assignment
     retriever->set(methodVariables(), value);
 }
+
 
 /**
  * Drop an object variable in the current method scope.
@@ -3329,6 +3331,44 @@ StackFrameClass *NativeActivation::createStackFrame()
         p = message;
         return new StackFrameClass(StackFrameClass::FRAME_METHOD, getMessageName(), (BaseExecutable *)getExecutableObject(), receiver, getArguments(), message, SIZE_MAX);
     }
+}
+
+
+/**
+ * Allocate memory in the current object context.
+ *
+ * @param size   The requested memory size.
+ *
+ * @return The newly allocated data buffer.
+ */
+void *NativeActivation::allocateObjectMemory(size_t size)
+{
+    return receiver->allocateObjectMemory(size);
+}
+
+
+/**
+ * Rellocate memory in the current object context.
+ *
+ * @param pointer The data buffer to reallocate
+ * @param size    The requested memory size.
+ *
+ * @return The new data pointer.
+ */
+void *NativeActivation::reallocateObjectMemory(void *pointer, size_t size)
+{
+    return receiver->reallocateObjectMemory(pointer, size);
+}
+
+
+/**
+ * Free previously allocated object memory.
+ *
+ * @param pointer The memory to release.
+ */
+void NativeActivation::freeObjectMemory(void *pointer)
+{
+    return receiver->freeObjectMemory(pointer);
 }
 
 

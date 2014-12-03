@@ -543,6 +543,8 @@ set (memory_sources ${build_memory_dir}/DeadObject.cpp
             ${build_memory_dir}/MemoryStack.cpp
             ${build_memory_dir}/MemoryStats.cpp
             ${build_memory_dir}/NumberArray.cpp
+            ${build_memory_dir}/PointerBucket.cpp
+            ${build_memory_dir}/PointerTable.cpp
             ${build_memory_dir}/ProtectedObject.cpp
             ${build_memory_dir}/Envelope.cpp
             ${build_memory_dir}/InternalStack.cpp

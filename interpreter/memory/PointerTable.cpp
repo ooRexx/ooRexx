@@ -36,37 +36,37 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* A collection that maps objects to integer values.  Used for internal       */
+/* A collection that maps pointers to object values.  Used for internal       */
 /* memory management.                                                         */
 /*                                                                            */
 /******************************************************************************/
 
 #include "RexxCore.h"
-#include "MapTable.hpp"
+#include "PointerTable.hpp"
 
 
 /**
- * Allocate a new MapTable item.
+ * Allocate a new PointerTable item.
  *
  * @param size    The base object size.
  *
  * @return The storage for creating a MapBucket.
  */
-void *MapTable::operator new(size_t size)
+void *PointerTable::operator new(size_t size)
 {
-   return new_object(size, T_MapTable);
+   return new_object(size, T_PointerTable);
 }
 
 
 /**
- * Initialize a MapTable object.
+ * Initialize a PointerTable object.
  *
  * @param entries The number of entries.
  */
-MapTable::MapTable(size_t entries)
+PointerTable::PointerTable(size_t entries)
 {
     // get a new bucket of the correct size
-    contents = new (entries) MapBucket(entries);
+    contents = new (entries) PointerBucket(entries);
 }
 
 
@@ -75,7 +75,7 @@ MapTable::MapTable(size_t entries)
  *
  * @param liveMark The current live mark.
  */
-void MapTable::live(size_t liveMark)
+void PointerTable::live(size_t liveMark)
 {
     memory_mark(contents);
 }
@@ -86,7 +86,7 @@ void MapTable::live(size_t liveMark)
  *
  * @param reason The reason for this live marking operation.
  */
-void MapTable::liveGeneral(MarkReason reason)
+void PointerTable::liveGeneral(MarkReason reason)
 {
     memory_mark_general(contents);
 }
@@ -95,13 +95,13 @@ void MapTable::liveGeneral(MarkReason reason)
 /**
  * Copy a map table.
  *
- * @return The new maptable object.
+ * @return The new PointerTable object.
  */
-RexxInternalObject *MapTable::copy()
+RexxInternalObject *PointerTable::copy()
 {
     // copy this object first
-    MapTable *newObj = (MapTable *)RexxInternalObject::copy();
-    newObj->contents = (MapBucket *)contents->copy();
+    PointerTable *newObj = (PointerTable *)RexxInternalObject::copy();
+    newObj->contents = (PointerBucket *)contents->copy();
     return newObj;
 }
 
@@ -115,7 +115,7 @@ RexxInternalObject *MapTable::copy()
  * @return The retrieved object.  Returns OREF_NULL if the object
  *         was not found.
  */
-void MapTable::put(size_t value, RexxInternalObject *index)
+void PointerTable::put(RexxInternalObject *value, void *index)
 {
     // try to insert in the existing hash tables...if this
     // fails, we're full and need to reallocate.
@@ -129,33 +129,14 @@ void MapTable::put(size_t value, RexxInternalObject *index)
 
 
 /**
- * Increment the value associated with a key.  If the key does
- * not exist, it is inserted into the table with a value of 1.
- *
- * @param key    The target key.
- */
-void MapTable::increment(RexxInternalObject *index)
-{
-    // try to insert in the existing hash tables...if this
-    // fails, we're full and need to reallocate.
-    if (!contents->increment(index))
-    {
-        // reallocate and try again
-        reallocateContents();
-        contents->increment(index);
-    }
-}
-
-
-/**
  * Reallocate the hash bucket to a larger version after
  * a failed put() operation.
  */
-void MapTable::reallocateContents()
+void PointerTable::reallocateContents()
 {
     // create a new bucket and merge the old bucket into it, then replace the contents
     // with the new ones.
-    MapBucket *newContents = new (contents->totalSize * 2) MapBucket(contents->totalSize * 2);
+    PointerBucket *newContents = new (contents->totalSize * 2) PointerBucket(contents->totalSize * 2);
     contents->merge(newContents);
     contents = newContents;
 }
