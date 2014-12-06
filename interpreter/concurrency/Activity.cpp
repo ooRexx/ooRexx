@@ -400,7 +400,7 @@ void Activity::generateRandomNumberSeed()
     // reasonably random starting seed.  Using both the time and
     // clock makes things a little more random, and the process
     // id and thread id lessens the chance that we get a repeat.
-    srand((int)time(NULL) + (int)clock() + SysProcess::getPid() + (int)currentThread.getThreadID());
+    srand((int)time(NULL) + (int)clock() + SysProcess::getPid() + (intptr_t)currentThread.getThreadID());
 
     // the random number implementations vary on how large the
     // values are, but the are guaranteed to be at least 16-bit

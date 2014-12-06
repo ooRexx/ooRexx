@@ -533,7 +533,7 @@ class RexxToken : public RexxInternalObject
 
     inline void setStart(size_t l, size_t o) { tokenLocation.setStart(l, o); }
     inline void setEnd(size_t l, size_t o) { tokenLocation.setEnd(l, o); }
-    inline size_t getLineNumber() { tokenLocation.getLineNumber(); }
+    inline size_t getLineNumber() { return tokenLocation.getLineNumber(); }
 
     inline bool       isType(TokenClass t) { return classId == t; }
     inline bool       isType(TokenClass t1, TokenClass t2) { return classId == t1 || classId == t2; }
