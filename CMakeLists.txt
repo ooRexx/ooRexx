@@ -41,6 +41,9 @@
 #/*----------------------------------------------------------------------------*/
 cmake_minimum_required (VERSION 2.8)
 cmake_policy(SET CMP0010 OLD)
+if(POLICY CMPoo42)
+  cmake_policy(SET CMP0042 NEW)
+endif()
 include(CheckIncludeFile)
 include(CheckLibraryExists)
 include(CheckFunctionExists)
