@@ -254,7 +254,7 @@ MemorySegment *MemorySegmentPool::newLargeSegment(size_t minSize)
     /* enough space for request          */
     if (uncommitted >= segmentSize)
     {
-        nextLargeAlloc = nextLargeAlloc - segmentSize; // already calloc'd on AIX, just move pointer
+        nextLargeAlloc = nextLargeAlloc - segmentSize; // already calloc'd, just move pointer
 
         /* Create new segment.               */
         MemorySegment *newSeg = new (nextLargeAlloc) MemorySegment (segmentSize);

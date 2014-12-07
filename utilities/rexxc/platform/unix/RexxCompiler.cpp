@@ -36,11 +36,11 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  rexxc.c       */
+/* REXX Kernel                                                                */
 /*                                                                            */
 /* Translates a program and saves it in an output file                        */
 /*                                                                            */
-/* Common code for AIX and LINUX                                              */
+/* Common code for unix-based systems                                         */
 /*                                                                            */
 /******************************************************************************/
 #ifdef HAVE_CONFIG_H

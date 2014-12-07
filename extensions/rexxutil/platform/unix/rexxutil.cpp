@@ -36,13 +36,12 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX AIX/LINUX Support                                                     */
+/* REXX unix support                                                          */
 /*                                                                            */
-/* AIX/Linux system utility functions                                         */
+/* unix-based system utility functions                                        */
 /*                                                                            */
 /******************************************************************************/
 /**********************************************************************
-*   rexxutil.c                                                        *
 *                                                                     *
 *   This program extends the REXX language by providing many          *
 *   REXX external functions.                                          *
@@ -80,8 +79,8 @@
 *                              known to REXX so REXX programs may     *
 *                              call them.                             *
 *       SysMkDir            -- Creates a directory                    *
-*       SysVersion          -- Returns the AIX  Version number        *
-*       SysLinVer           -- Returns the OS/2 Version number        *
+*       SysVersion          -- Returns the system  Version number     *
+*       SysLinVer           -- Returns the Linux Version number       *
 *       SysRmDir            -- Removes a directory                    *
 *       SysSearchPath       -- Searches throught a specified path     *
 *                              for a file.                            *

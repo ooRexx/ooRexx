@@ -39,8 +39,8 @@
 /* REXX for UNIX                                    APIDefinitions.h */
 /*********************************************************************/
 
-#ifndef AIXAPI_H_INCLUDED
-#define AIXAPI_H_INCLUDED
+#ifndef UNIXAPI_H_INCLUDED
+#define UNIXAPI_H_INCLUDED
 
 #include "rexx.h"
 /***    Structure of Rexx API registration block (APIBLOCK) */

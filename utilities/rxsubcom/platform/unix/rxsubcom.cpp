@@ -37,9 +37,7 @@
 /*----------------------------------------------------------------------------*/
 /*********************************************************************/
 /*                                                                   */
-/*     Program Name:   AIXRXCMD.C                                    */
-/*                                                                   */
-/* Descriptive Name:   AIX/Linux Command Line Program for Subcommand */
+/* Descriptive Name:   unix Command Line Program for Subcommand      */
 /*                     Interface.                                    */
 /*                                                                   */
 /*********************************************************************/
@@ -67,7 +65,7 @@
                                        /* Macro for argv[1] compares */
 #define CASE(x) if(!strcasecmp(x,argv[1]))
 
-#ifdef LINUX                   /*  AIX already defined               */
+#ifdef LINUX                           /*  AIX already defined               */
 #define SECOND_PARAMETER 1             /* different sign. Lin-AIX    */
 #else
 #define SECOND_PARAMETER 0             /* 0 for no  NL_CAT_LOCALE    */

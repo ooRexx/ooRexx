@@ -36,20 +36,10 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX UNIX  Support                                            aixcmd.c     */
+/* REXX UNIX  Support                                                         */
 /*                                                                            */
-/* AIX specific command processing routines                                   */
+/* unix specific command processing routines                                  */
 /*                                                                            */
-/******************************************************************************/
-/******************************************************************************/
-/*  aixcmd.c - C methods for handling calls to system exits and subcommand    */
-/*             handlers.                                                      */
-/*                                                                            */
-/*  C methods:                                                                */
-/*    SysCommand     - Method to invoke a subcommand handler                  */
-/*                                                                            */
-/*  Internal routines:                                                        */
-/*    sys_command - Run a command through system command processor.           */
 /******************************************************************************/
 
 #include <string.h>

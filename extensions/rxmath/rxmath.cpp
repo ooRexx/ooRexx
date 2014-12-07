@@ -36,14 +36,13 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX mathematical function support                             rxmath.c    */
+/* REXX mathematical function support                                         */
 /*                                                                            */
-/* AIX  mathematical utility function package                                 */
+/* mathematical utility function package                                      */
 /*                                                                            */
 /******************************************************************************/
 
 /**********************************************************************
-*   RXMATH.C                                                          *
 *                                                                     *
 *   This program extends the REXX language by providing many          *
 *   external mathematical functions                                   *

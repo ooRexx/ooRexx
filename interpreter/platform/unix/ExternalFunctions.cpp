@@ -36,9 +36,9 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX AIX Support                                            aixextf.c      */
+/* REXX unix Support                                                          */
 /*                                                                            */
-/* AIX specific external function lookup and AIX built-in functions.          */
+/* unix specific external function lookup and unix built-in functions.        */
 /*                                                                            */
 /******************************************************************************/
 
