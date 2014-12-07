@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2024-2024 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2014-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -43,10 +43,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <memory.h>
 #include <ctype.h>
 #include <setjmp.h>
-
 /*------------------------------------------------------------------
  * tcp/ip includes
  *------------------------------------------------------------------*/
@@ -73,11 +72,21 @@
     #endif
    #define sock_errno() errno
    #define psock_errno(s) printf("\nrxsock6 error %s\n",s)
+   #define ORXSOCKET int
+   #define INVALID_SOCKET -1  //defined in Windows
+   #define closesocket close
+   #define SOCKOPTION int
 #else
+   #include <malloc.h>
    #include <winsock2.h>
    #include <ws2tcpip.h>
-   #define sock_errno() WSAGetLastError()
    #define psock_errno(s) fprintf(stderr, "\nrxsock6 Error: %s\n", s)
+   #define ORXSOCKET uintptr_t
+   #define sock_errno WSAGetLastError
+   #define HOST_NAME_MAX 256
+   #define inet_ntop InetNtop
+   #define inet_pton InetPton
+   #define SOCKOPTION char
 #endif
 
 /*------------------------------------------------------------------
@@ -85,6 +94,35 @@
  *------------------------------------------------------------------*/
 # include "oorexxapi.h"
 
+
+
+// a helper routine for transformations
+ORXSOCKET getSocket(RexxMethodContext* context)
+{
+    uintptr_t temp;
+    // get the socket file descriptor
+    RexxObjectPtr rxsockfd = context->GetObjectVariable("socketfd");
+    context->Uintptr(rxsockfd, &temp);
+    return (ORXSOCKET)temp;
+}
+
+
+// Another helper routine.
+RexxObjectPtr socketToObject(RexxMethodContext* context, ORXSOCKET socket)
+{
+#ifdef WIN32
+    return context->UintPtr((uintptr_t)socket);
+#else
+    return context->Int32((int)socket);
+#endif
+}
+
+
+// RKM:  Common routine for setting the error condition
+void setErrno(RexxMethodContext* context, bool hasError)
+{
+    context->SetObjectVariable("errno", context->Int32(hasError ? sock_errno() : 0));
+}
 
 
 /*----------------------------------------------------------------------------*/
@@ -96,13 +134,16 @@
 /*         protocol - socket protocol, usually zero                           */
 /*----------------------------------------------------------------------------*/
 
-RexxMethod3(int,                       // Return type
+// RKM:  You shouldn't need different signatures here.  A uintptr_t can hold
+// an int value just fine.
+RexxMethod3(RexxObjectPtr,                 // Return type
             orxSocket6,                // Object_method name
             int, domain,               // protocol family
             int, type,                 // socket type
             int, protocol)             // protocol
 {
-    int socketfd, zero = 0;
+    ORXSOCKET socketfd;
+    int zero = 0;
 
 #ifdef WIN32
     WORD wVersionRequested;
@@ -112,9 +153,9 @@ RexxMethod3(int,                       // Return type
 #endif
     // perform function and return
     socketfd = socket(domain, type, protocol);
-    if (socketfd == -1)
+    if (socketfd == INVALID_SOCKET)
     {
-        context->SetObjectVariable("retc", context->Int32(socketfd));
+        context->SetObjectVariable("retc", context->Int32(-1));
         context->SetObjectVariable("errno", context->Int32(sock_errno()));
     }
     else
@@ -122,11 +163,12 @@ RexxMethod3(int,                       // Return type
         context->SetObjectVariable("retc", context->Int32(0));
         context->SetObjectVariable("errno", context->Int32(0));
     }
+
 #if defined(WIN32)
     // Windows sockets are not dual-stack by default, so force it to be dual-stack
-    setsockopt(socketfd, SOL_SOCKET, IPV6_V6ONLY, &zero, sizeof(zero));
+    setsockopt(socketfd, SOL_SOCKET, IPV6_V6ONLY, (char *)&zero, sizeof(zero));
 #endif
-    return socketfd;
+    return socketToObject(context, socketfd);
 }
 
 
@@ -141,32 +183,30 @@ RexxMethod1(RexxObjectPtr,             // Return type
             orxAccept6,                // Object_method name
             OPTIONAL_RexxObjectPtr, inetaddr) // INetaddr instance
 {
-    RexxObjectPtr rxsockfd, newrxsockfd;
+    RexxObjectPtr newrxsockfd;
     RexxClassObject classinst;
-    int socketfd;
+    ORXSOCKET socketfd, retc;
     struct sockaddr_storage myaddr;
     struct sockaddr_in * myaddr4 = (struct sockaddr_in *)&myaddr;
     struct sockaddr_in6 * myaddr6 = (struct sockaddr_in6 *)&myaddr;
     socklen_t len = sizeof(struct sockaddr_storage);
-    int retc;
     char str[INET6_ADDRSTRLEN];
 
-    // get the socket file descriptor
-    rxsockfd = context->GetObjectVariable("socketfd");
-    context->Int32(rxsockfd, &socketfd);
+    socketfd = getSocket(context);
     memset(&myaddr, 0, sizeof(struct sockaddr_storage));
     // perform function and return
     retc = accept(socketfd, (struct sockaddr *)&myaddr, &len);
-    context->SetObjectVariable("retc", context->Int32(retc));
-    if (retc == -1)
+
+    context->SetObjectVariable("retc", socketToObject(context, retc));
+
+    // RKM: use common routine for setting the errno value
+    setErrno(context, retc == INVALID_SOCKET);
+
+    if (retc == INVALID_SOCKET)
     {
-        context->SetObjectVariable("errno", context->Int32(sock_errno()));
-        return context->Int32(retc);
+        return socketToObject(context, retc);
     }
-    else
-    {
-        context->SetObjectVariable("errno", context->Int32(0));
-    }
+
     if (inetaddr != NULLOBJECT)
     {
         if (!context->IsOfType(inetaddr, "InetAddress"))
@@ -184,6 +224,9 @@ RexxMethod1(RexxObjectPtr,             // Return type
                                   context->UnsignedInt64((uint64_t)myaddr4->sin_family));
             context->SendMessage1(inetaddr, "port=",
                                   context->UnsignedInt64((uint64_t)myaddr4->sin_port));
+
+            // RKM:  This used a lot and the only difference is the routine name.
+            // create a macro for the name.
             inet_ntop(AF_INET, myaddr4, str, INET6_ADDRSTRLEN);
         }
         else
@@ -197,7 +240,7 @@ RexxMethod1(RexxObjectPtr,             // Return type
         context->SendMessage1(inetaddr, "address=", context->String(str));
     }
     classinst = context->FindClass("Socket");
-    newrxsockfd = context->SendMessage1(classinst, "new", context->Int32(retc));
+    newrxsockfd = context->SendMessage1(classinst, "new", socketToObject(context, retc));
     return newrxsockfd;
 }
 
@@ -213,8 +256,7 @@ RexxMethod1(int,                       // Return type
             orxBind6,                  // Object_method name
             RexxObjectPtr, inetaddr)   // Inetaddr instance
 {
-    RexxObjectPtr rxsockfd;
-    int socketfd;
+    ORXSOCKET socketfd;
     struct sockaddr_storage myaddr;
     struct sockaddr_in * myaddr4 = (struct sockaddr_in *)&myaddr;
     struct sockaddr_in6 * myaddr6 = (struct sockaddr_in6 *)&myaddr;
@@ -223,11 +265,12 @@ RexxMethod1(int,                       // Return type
     RexxObjectPtr obj;
     uint32_t tmp;
 
-    // get the socket file descriptor
-    rxsockfd = context->GetObjectVariable("socketfd");
-    context->Int32(rxsockfd, &socketfd);
+    socketfd = getSocket(context);
+
     // perform function and return
     memset(&myaddr, 0, sizeof(struct sockaddr_storage));
+
+    // RKM:  This is done a lot...got place for a helper function.
     if (!context->IsOfType(inetaddr, "InetAddress"))
     {
         RexxArrayObject arrobj;
@@ -245,6 +288,8 @@ RexxMethod1(int,                       // Return type
         context->UnsignedInt32(obj, &tmp);
         myaddr4->sin_port = (uint16_t) tmp;
         obj = context->SendMessage0(inetaddr, "address");
+
+        // another helper macro opportunity
         inet_pton(myaddr4->sin_family, context->CString(obj), str);
         len = sizeof(struct sockaddr_in);
     }
@@ -260,14 +305,8 @@ RexxMethod1(int,                       // Return type
     }
     int retc = bind(socketfd, (struct sockaddr *)&myaddr, len);
     context->SetObjectVariable("retc", context->Int32(retc));
-    if (retc == -1)
-    {
-        context->SetObjectVariable("errno", context->Int32(sock_errno()));
-    }
-    else
-    {
-        context->SetObjectVariable("errno", context->Int32(0));
-    }
+
+    setErrno(context, retc == -1);
     return retc;
 }
 
@@ -277,32 +316,27 @@ RexxMethod1(int,                       // Return type
 /* Arguments: none                                                            */
 /*----------------------------------------------------------------------------*/
 
-RexxMethod0(int,                       // Return type
+// RKM:  use uintptr every where
+RexxMethod0(uintptr_t,                 // Return type
             orxClose6)                 // Object_method name
 {
-    RexxObjectPtr rxsockfd;
-    int socketfd, retc;
+    ORXSOCKET socketfd, retc;
 
-    // get the socket file descriptor
-    rxsockfd = context->GetObjectVariable("socketfd");
-    context->Int32(rxsockfd, &socketfd);
+    socketfd = getSocket(context);
     // perform function and return
     retc = shutdown(socketfd, 2);
-#if defined(WIN32)
-    retc = closesocket(sock);
-#else
-    retc = close(socketfd);
-#endif
-    context->SetObjectVariable("retc", context->Int32(retc));
-    if (retc == -1)
-    {
-        context->SetObjectVariable("errno", context->Int32(sock_errno()));
-    }
-    else
-    {
-        context->SetObjectVariable("errno", context->Int32(0));
-    }
-    return retc;
+    // RKM:  Don't much mind the conditional here because it is only used in one place.
+    // however, a #define for the Linux case to map closesocket to close would
+    // simplify this in the inline code.  Probably worth doing, since it appears
+    // using the conditional here might have introduced a bug.
+    retc = closesocket(socketfd);
+    // RKM:  Shouldn't this variable also be set for the Linux case?
+    context->SetObjectVariable("retc", context->Uintptr(retc));
+
+    setErrno(context, retc == -1);
+
+    // RKM:  Need a cast here.
+    return (uintptr_t)retc;
 }
 
 
@@ -317,19 +351,16 @@ RexxMethod1(int,                       // Return type
             orxConnect6,               // Object_method name
             RexxObjectPtr, inetaddr)   // Inetaddr instance
 {
-    RexxObjectPtr rxsockfd;
-    int socketfd;
+    ORXSOCKET socketfd;
     struct sockaddr_storage myaddr;
     struct sockaddr_in * myaddr4 = (struct sockaddr_in *)&myaddr;
     struct sockaddr_in6 * myaddr6 = (struct sockaddr_in6 *)&myaddr;
-    char str[INET6_ADDRSTRLEN];
     socklen_t len = sizeof(myaddr);
     RexxObjectPtr obj;
     uint32_t tmp;
 
-    // get the socket file descriptor
-    rxsockfd = context->GetObjectVariable("socketfd");
-    context->Int32(rxsockfd, &socketfd);
+    socketfd = getSocket(context);
+
     // perform function and return
     memset(&myaddr, 0, sizeof(struct sockaddr_storage));
     if (!context->IsOfType(inetaddr, "InetAddress"))
@@ -340,6 +371,9 @@ RexxMethod1(int,                       // Return type
         context->RaiseException(88900, arrobj);
         return -1;
     }
+
+
+    // RKM:  This is also done a lot...make a single helper function
     obj = context->SendMessage0(inetaddr, "family");
     context->UnsignedInt32(obj, &tmp);
     if (tmp == AF_INET)
@@ -361,15 +395,12 @@ RexxMethod1(int,                       // Return type
         inet_pton(AF_INET6, context->CString(obj), &myaddr6->sin6_addr.s6_addr);
     }
     int retc = connect(socketfd, (struct sockaddr *)&myaddr, len);
+
+    // RKM:  Setting the error stuff is done a lot.  Make a helper here too.
+
     context->SetObjectVariable("retc", context->Int32(retc));
-    if (retc == -1)
-    {
-        context->SetObjectVariable("errno", context->Int32(sock_errno()));
-    }
-    else
-    {
-        context->SetObjectVariable("errno", context->Int32(0));
-    }
+
+    setErrno(context, retc == -1);
     return retc;
 }
 
@@ -438,14 +469,8 @@ RexxMethod4(int,                       // Return type
     //perform function
     retc = getaddrinfo(snodename, sservname, &shints, &rrea);
     context->SetObjectVariable("retc", context->Int32(retc));
-    if (retc == -1)
-    {
-        context->SetObjectVariable("errno", context->Int32(sock_errno()));
-    }
-    else
-    {
-        context->SetObjectVariable("errno", context->Int32(0));
-    }
+    setErrno(context, retc == -1);
+
     if (retc != 0 || rrea == NULL)
     {
         return retc;
@@ -480,12 +505,12 @@ RexxMethod4(int,                       // Return type
                                   context->UnsignedInt32((uint32_t)rrea->ai_addr->sa_family));
             if (utmp == AF_INET)
             {
-                rrea->ai_addr->sa_family = AF_INET; 
+                rrea->ai_addr->sa_family = AF_INET;
                 inet_ntop(AF_INET, rrea->ai_addr->sa_data, str, INET6_ADDRSTRLEN);
             }
             else
             {
-                rrea->ai_addr->sa_family = AF_INET6; 
+                rrea->ai_addr->sa_family = AF_INET6;
                 inet_ntop(AF_INET6, rrea->ai_addr->sa_data, str, INET6_ADDRSTRLEN);
             }
             context->SendMessage1(obj, "sa_addr=", context->String(str));
@@ -535,14 +560,11 @@ RexxMethod0(RexxObjectPtr,             // Return type
     // perform function and return
     int retc = gethostname(host, sizeof(host));
     context->SetObjectVariable("retc", context->Int32(retc));
-    if (retc == -1)
-    {
-        context->SetObjectVariable("errno", context->Int32(sock_errno()));
-    }
-    else
-    {
-        context->SetObjectVariable("errno", context->Int32(0));
-    }
+
+    setErrno(context, retc == -1);
+
+    // RKM:  Suspect the host needs to be initialized to a null string.  This will
+    // return garbage if there is an error.
     return context->String(host);
 }
 
@@ -558,8 +580,7 @@ RexxMethod1(int,                       // Return type
             orxGetPeerName6,           // Object_method name
             RexxObjectPtr, inetaddr)   // Inetaddr instance
 {
-    RexxObjectPtr rxsockfd;
-    int socketfd;
+    ORXSOCKET socketfd;
     struct sockaddr_storage myaddr;
     struct sockaddr_in * myaddr4 = (struct sockaddr_in *)&myaddr;
     struct sockaddr_in6 * myaddr6 = (struct sockaddr_in6 *)&myaddr;
@@ -568,8 +589,8 @@ RexxMethod1(int,                       // Return type
     int retc;
 
     // get the socket file descriptor
-    rxsockfd = context->GetObjectVariable("socketfd");
-    context->Int32(rxsockfd, &socketfd);
+    socketfd = getSocket(context);
+
     // perform function and return
     memset(&myaddr, 0, sizeof(struct sockaddr_storage));
     if (!context->IsOfType(inetaddr, "InetAddress"))
@@ -582,15 +603,13 @@ RexxMethod1(int,                       // Return type
     }
     retc = getpeername(socketfd, (struct sockaddr *)&myaddr, &len);
     context->SetObjectVariable("retc", context->Int32(retc));
+    setErrno(context, retc == -1);
+
     if (retc == -1)
     {
-        context->SetObjectVariable("errno", context->Int32(sock_errno()));
         return retc;
     }
-    else
-    {
-        context->SetObjectVariable("errno", context->Int32(0));
-    }
+
     if (myaddr.ss_family == AF_INET)
     {
         context->SendMessage1(inetaddr, "family=",
@@ -621,7 +640,7 @@ RexxMethod1(int,                       // Return type
 
 RexxMethod1(int,                       // Return type
             orxGetProtocolByName6,     // Object_method name
-            RexxStringObject, proto)   // Protocol name    
+            RexxStringObject, proto)   // Protocol name
 {
     CSTRING protoname = context->StringData(proto);
     struct protoent *ent;
@@ -649,7 +668,7 @@ RexxMethod1(int,                       // Return type
 
 RexxMethod1(RexxStringObject,          // Return type
             orxGetProtocolByNumber6,   // Object_method name
-            int, proto)                // Protocol number    
+            int, proto)                // Protocol number
 {
     struct protoent *ent;
 
@@ -676,8 +695,7 @@ RexxMethod1(int,                       // Return type
             orxGetSockName6,           // Object_method name
             RexxObjectPtr, inetaddr)   // Inetaddr instance
 {
-    RexxObjectPtr rxsockfd;
-    int socketfd;
+    ORXSOCKET socketfd;
     struct sockaddr_storage myaddr;
     struct sockaddr_in * myaddr4 = (struct sockaddr_in *)&myaddr;
     struct sockaddr_in6 * myaddr6 = (struct sockaddr_in6 *)&myaddr;
@@ -686,8 +704,8 @@ RexxMethod1(int,                       // Return type
     int retc;
 
     // get the socket file descriptor
-    rxsockfd = context->GetObjectVariable("socketfd");
-    context->Int32(rxsockfd, &socketfd);
+    socketfd = getSocket(context);
+
     // perform function and return
     memset(&myaddr, 0, sizeof(struct sockaddr_storage));
     if (!context->IsOfType(inetaddr, "InetAddress"))
@@ -700,15 +718,13 @@ RexxMethod1(int,                       // Return type
     }
     retc = getsockname(socketfd, (struct sockaddr *)&myaddr, &len);
     context->SetObjectVariable("retc", context->Int32(retc));
+    setErrno(context, retc == -1);
+
     if (retc == -1)
     {
-        context->SetObjectVariable("errno", context->Int32(sock_errno()));
         return retc;
     }
-    else
-    {
-        context->SetObjectVariable("errno", context->Int32(0));
-    }
+
     if (myaddr.ss_family == AF_INET)
     {
         context->SendMessage1(inetaddr, "family=",
@@ -741,14 +757,13 @@ RexxMethod1(RexxObjectPtr,             // Return type
             orxGetSockOpt6,            // Object_method name
             int, option)               // socket option
 {
-    RexxObjectPtr rxsockfd;
-    int socketfd, sockval_int, retc;
-    char sockval_str[512];
+    ORXSOCKET socketfd;
+    int sockval_int, retc;
     socklen_t len;
 
     // get the socket file descriptor
-    rxsockfd = context->GetObjectVariable("socketfd");
-    context->Int32(rxsockfd, &socketfd);
+    socketfd = getSocket(context);
+
     // perform function and return
     switch (option)
     {
@@ -760,60 +775,106 @@ RexxMethod1(RexxObjectPtr,             // Return type
         case SO_BROADCAST:
         case SO_SNDBUF:
         case SO_RCVBUF:
+#ifdef SO_SNDBUFFORCE
         case SO_SNDBUFFORCE:
+#endif
+#ifdef SO_RCVBUFFORCE
         case SO_RCVBUFFORCE:
+#endif
         case SO_KEEPALIVE:
         case SO_OOBINLINE:
+#ifdef SO_NO_CHECK
         case SO_NO_CHECK:
+#endif
+#ifdef SO_PRIORITY
         case SO_PRIORITY:
+#endif
 #ifdef SO_BSDCOMPAT
         case SO_BSDCOMPAT:
 #endif
+#ifdef SO_REUSEPORT
         case SO_REUSEPORT:
+#endif
         case SO_RCVLOWAT:
         case SO_SNDLOWAT:
         case SO_RCVTIMEO:
         case SO_SNDTIMEO:
+#ifdef SO_SECURITY_AUTHENTICATION
         case SO_SECURITY_AUTHENTICATION:
+#endif
+#ifdef SO_SECURITY_ENCRYPTION_TRANSPORT
         case SO_SECURITY_ENCRYPTION_TRANSPORT:
+#endif
+#ifdef SO_SECURITY_ENCRYPTION_NETWORK
         case SO_SECURITY_ENCRYPTION_NETWORK:
+#endif
+#ifdef SO_ATTACH_FILTER
         case SO_ATTACH_FILTER:
+#endif
+#ifdef SO_DETACH_FILTER
         case SO_DETACH_FILTER:
+#endif
+#ifdef SO_TIMESTAMP
         case SO_TIMESTAMP:
+#endif
         case SO_ACCEPTCONN:
+#ifdef SO_PEERSEC
         case SO_PEERSEC:
+#endif
+#ifdef SO_PASSSEC
         case SO_PASSSEC:
+#endif
+#ifdef SO_TIMESTAMPNS
         case SO_TIMESTAMPNS:
+#endif
+#ifdef SO_MARK
         case SO_MARK:
+#endif
+#ifdef SO_TIMESTAMPING
         case SO_TIMESTAMPING:
+#endif
+#ifdef SO_PROTOCOL
         case SO_PROTOCOL:
+#endif
+#ifdef SO_DOMAIN
         case SO_DOMAIN:
+#endif
+#ifdef SO_RXQ_OVFL
         case SO_RXQ_OVFL:
+#endif
+#ifdef SO_RXQ_WIFI_STATUS
         case SO_WIFI_STATUS:
+#endif
+#ifdef SO_PEEK_OFF
         case SO_PEEK_OFF:
+#endif
+#ifdef SO_NOFCS
         case SO_NOFCS:
+#endif
+#ifdef SO_LOCK_FILTER
         case SO_LOCK_FILTER:
+#endif
 #ifdef SO_SELECT_ERR_QUEUE
         case SO_SELECT_ERR_QUEUE:
 #endif
 #ifdef SO_BUSY_POLL
         case SO_BUSY_POLL:
 #endif
+#ifdef SO_PASSCRED
         case SO_PASSCRED:
+#endif
         {
             // boolean/int options
             len = (int) sizeof(int);
-            retc = getsockopt(socketfd, SOL_SOCKET, option, &sockval_int, &len);
+
+// RKM:  I suspect this one is ok to leave too...you could probably hide the differences
+// with a macro if needed.
+            retc = getsockopt(socketfd, SOL_SOCKET, option, (SOCKOPTION *)&sockval_int, &len);
             context->SetObjectVariable("retc", context->Int32(retc));
+            setErrno(context, retc == -1);
+
+            // RKM: Fixed a bug here...should be "==" not "="
             if (retc == -1)
-            {
-                context->SetObjectVariable("errno", context->Int32(sock_errno()));
-            }
-            else
-            {
-                context->SetObjectVariable("errno", context->Int32(0));
-            }
-            if (retc = -1)
             {
                 return context->Int64((int64_t)retc);
             }
@@ -823,17 +884,12 @@ RexxMethod1(RexxObjectPtr,             // Return type
         {
             struct linger so_linger;
             len = (int) sizeof(so_linger);
-            retc = getsockopt(socketfd, SOL_SOCKET, option, &so_linger, &len);
+            retc = getsockopt(socketfd, SOL_SOCKET, option, (SOCKOPTION *)&so_linger, &len);
             context->SetObjectVariable("retc", context->Int32(retc));
-            if (retc == -1)
-            {
-                context->SetObjectVariable("errno", context->Int32(sock_errno()));
-            }
-            else
-            {
-                context->SetObjectVariable("errno", context->Int32(0));
-            }
-            if (retc = 0)
+            setErrno(context, retc == -1);
+
+            // RKM:  Another comparison bug
+            if (retc == 0)
             {
                 RexxClassObject l_class= context->FindClass("Linger");
                 RexxObjectPtr l_obj = context->SendMessage0(l_class, "new");
@@ -842,23 +898,24 @@ RexxMethod1(RexxObjectPtr,             // Return type
             }
             return context->Int64((int64_t)retc);
         }
+#ifdef SO_BINDTODEVICE
         case SO_BINDTODEVICE:
         {
+            char sockval_str[512];
             len = sizeof(sockval_str);
             retc = getsockopt(socketfd, SOL_SOCKET, option, &sockval_str, &len);
             context->SetObjectVariable("retc", context->Int32(retc));
-            if (retc == -1)
-            {
-                context->SetObjectVariable("errno", context->Int32(sock_errno()));
-            }
-            else
-            {
-                context->SetObjectVariable("errno", context->Int32(0));
-            }
+            setErrno(context, retc == -1);
+
             return context->String(sockval_str, len);
         }
+#endif
+#ifdef SO_PEERNAME
         case SO_PEERNAME:    // there is a better way to do this
+#endif
+#ifdef SO_PEERCRED
         case SO_PEERCRED:    // we do not support credentials
+#endif
         default:
             context->SetObjectVariable("retc", context->Int32(-1));
             context->SetObjectVariable("errno", context->Int32(22));
@@ -874,27 +931,21 @@ RexxMethod1(RexxObjectPtr,             // Return type
 /*         backlog - number of possible waiting clients.                      */
 /*----------------------------------------------------------------------------*/
 
-RexxMethod1(int,                       // Return type
+// RKM:  Just use uintptr_t always
+RexxMethod1(uintptr_t,                 // Return type
             orxListen6,                // Object_method name
             int, backlog)              // backlog
 {
-    RexxObjectPtr rxsockfd;
-    int socketfd, retc;
+    ORXSOCKET socketfd, retc;
 
     // get the socket file descriptor
-    rxsockfd = context->GetObjectVariable("socketfd");
-    context->Int32(rxsockfd, &socketfd);
+    socketfd = getSocket(context);
+
     // perform function and return
     retc = listen(socketfd, backlog);
-    context->SetObjectVariable("retc", context->Int32(retc));
-    if (retc == -1)
-    {
-        context->SetObjectVariable("errno", context->Int32(sock_errno()));
-    }
-    else
-    {
-        context->SetObjectVariable("errno", context->Int32(0));
-    }
+    context->SetObjectVariable("retc", socketToObject(context, retc));
+
+    setErrno(context, retc == INVALID_SOCKET);
     return retc;
 }
 
@@ -910,30 +961,39 @@ RexxMethod1(RexxObjectPtr,             // Return type
             orxRecv6,                  // Object_method name
             size_t, len)               // number of bytes to be read
 {
-    RexxObjectPtr rxsockfd;
-    int socketfd;
-    char cblock[len];
+    ORXSOCKET socketfd;
+
+    // RKM:  Can probably fixed just by defining alloca() to _malloca() on Windows.
+    // However, I don't think this is a good idea.  If reading a lot of data from the
+    // socket, there's a good chance this will fail, particularly if not running on the
+    // main thread.  Also, I think this is completely wrong, since this will only allocate
+    // Consider using a BufferString for this.
+
+    RexxBufferStringObject buffer = context->NewBufferString(len);
+    char *cblock = (char *)context->BufferStringData(buffer);
     ssize_t lenread;
 
     // get the socket file descriptor
-    rxsockfd = context->GetObjectVariable("socketfd");
-    context->Int32(rxsockfd, &socketfd);
+    socketfd = getSocket(context);
+
     // perform function and return
-    lenread = recv(socketfd, cblock, len, 0);
-    context->SetObjectVariable("retc", context->Int32(lenread));
+    // RKM:  The cast to (int) could be a problem in 64-bit.  Is that correct?
+    lenread = recv(socketfd, cblock, (int)len, 0);
+    // RKM:  This could potentially truncate in 64-bit, so changed the conversion function
+    context->SetObjectVariable("retc", context->Int64((int64_t)lenread));
+    setErrno(context, lenread == -1);
+
+    // RKM:  Not sure this is an appropriate return value for errors...null string
+    // or maybe .nil might be a better return.  The data read might actually be
+    // the string "-1"
     if (lenread == -1)
     {
-        context->SetObjectVariable("errno", context->Int32(sock_errno()));
+        return context->Nil();
     }
-    else
-    {
-        context->SetObjectVariable("errno", context->Int32(0));
-    }
-    if (lenread == -1)
-    {
-        return (RexxObjectPtr)context->String("-1");
-    }
-    return (RexxObjectPtr)context->String(cblock, lenread);
+
+    // set to the actual read length and return
+    context->FinishBufferString(buffer, lenread);
+    return buffer;
 }
 
 
@@ -947,13 +1007,15 @@ RexxMethod1(RexxObjectPtr,             // Return type
 
 RexxMethod2(RexxObjectPtr,             // Return type
             orxRecvFrom6,              // Object_method name
-            size_t, len,               // number of bytes to be read
+            int, len,                  // number of bytes to be read
             RexxObjectPtr, inetaddr)   // Inetaddr instance
 {
-    RexxObjectPtr rxsockfd, obj;
-    int socketfd;
-    char cblock[len];
+    RexxObjectPtr obj;
+    ORXSOCKET socketfd;
+    RexxBufferStringObject buffer = context->NewBufferString(len);
+    char *cblock = (char *)context->BufferStringData(buffer);
     ssize_t lenread;
+
     struct sockaddr_storage myaddr;
     struct sockaddr_in * myaddr4 = (struct sockaddr_in *)&myaddr;
     struct sockaddr_in6 * myaddr6 = (struct sockaddr_in6 *)&myaddr;
@@ -962,8 +1024,8 @@ RexxMethod2(RexxObjectPtr,             // Return type
     uint32_t tmp;
 
     // get the socket file descriptor
-    rxsockfd = context->GetObjectVariable("socketfd");
-    context->Int32(rxsockfd, &socketfd);
+    socketfd = getSocket(context);
+
     // perform function and return
     memset(&myaddr, 0, sizeof(struct sockaddr_storage));
     if (!context->IsOfType(inetaddr, "InetAddress"))
@@ -994,19 +1056,22 @@ RexxMethod2(RexxObjectPtr,             // Return type
         obj = context->SendMessage0(inetaddr, "address");
         inet_pton(myaddr6->sin6_family, context->CString(obj), str);
     }
+
     lenread = recvfrom(socketfd, cblock, len, 0, (struct sockaddr *)&myaddr, &slen);
-    context->SetObjectVariable("retc", context->Int32(lenread));
+    context->SetObjectVariable("retc", context->Int64((int64_t)lenread));
+    setErrno(context, lenread == -1);
+
     if (lenread == -1)
     {
-        context->SetObjectVariable("errno", context->Int32(sock_errno()));
+        return context->Nil();
     }
-    else
-    {
-        context->SetObjectVariable("errno", context->Int32(0));
-    }
-    return (RexxObjectPtr)context->String(cblock, (size_t)lenread);
+
+    // set to the actual read length and return
+    context->FinishBufferString(buffer, lenread);
+    return buffer;
 }
 
+#if !defined(WIN32)
 /*----------------------------------------------------------------------------*/
 /* Method: select                                                             */
 /* Description: find out if file operations are available.                    */
@@ -1026,7 +1091,9 @@ RexxMethod4(int,                       // Return type
             int, timeout)              // timeout in milliseconds
 {
     RexxObjectPtr rxsockfd1, rxsockfd2;
-    int i, items, socketfd, retc, maxsocketfd = 0;
+    int i, retc;
+    size_t items;
+    int socketfd, maxsocketfd = 0;
     fd_set *pread_set = NULL, *pwrite_set = NULL, *pexcp_set = NULL;
     struct timeval sel_timeout;
 
@@ -1147,6 +1214,7 @@ RexxMethod4(int,                       // Return type
     // return
     return retc;
 }
+#endif
 
 
 /*----------------------------------------------------------------------------*/
@@ -1160,25 +1228,18 @@ RexxMethod1(int,                       // Return type
             orxSend6,                  // Object_method name
             RexxStringObject, block)   // bytes to be written
 {
-    RexxObjectPtr rxsockfd;
-    int socketfd;
+    ORXSOCKET socketfd;
     CSTRING cblock;
 
     // get the socket file descriptor
-    rxsockfd = context->GetObjectVariable("socketfd");
-    context->Int32(rxsockfd, &socketfd);
+    socketfd = getSocket(context);
+
     // perform function and return
     cblock = context->CString(block);
-    int retc = send(socketfd, cblock, context->StringLength(block), 0);
+    int retc = send(socketfd, cblock, (int)context->StringLength(block), 0);
     context->SetObjectVariable("retc", context->Int32(retc));
-    if (retc == -1)
-    {
-        context->SetObjectVariable("errno", context->Int32(sock_errno()));
-    }
-    else
-    {
-        context->SetObjectVariable("errno", context->Int32(0));
-    }
+    setErrno(context, retc == -1);
+
     return retc;
 }
 
@@ -1193,11 +1254,11 @@ RexxMethod1(int,                       // Return type
 
 RexxMethod2(int,                       // Return type
             orxSendTo6,                // Object_method name
-            RexxObjectPtr, data,       // data to be sent              
+            RexxObjectPtr, data,       // data to be sent
             RexxObjectPtr, inetaddr)   // Inetaddr instance
 {
-    RexxObjectPtr rxsockfd, obj;
-    int socketfd;
+    RexxObjectPtr obj;
+    ORXSOCKET socketfd;
     ssize_t lenwritten;
     struct sockaddr_storage myaddr;
     struct sockaddr_in * myaddr4 = (struct sockaddr_in *)&myaddr;
@@ -1206,11 +1267,11 @@ RexxMethod2(int,                       // Return type
     socklen_t slen = sizeof(myaddr);
     uint32_t tmp;
     CSTRING strdata;
-    size_t len;
+    int len;
 
     // get the socket file descriptor
-    rxsockfd = context->GetObjectVariable("socketfd");
-    context->Int32(rxsockfd, &socketfd);
+    socketfd = getSocket(context);
+
     // perform function and return
     if (!context->IsOfType(inetaddr, "InetAddress"))
     {
@@ -1241,18 +1302,11 @@ RexxMethod2(int,                       // Return type
         inet_pton(myaddr6->sin6_family, context->CString(obj), str);
     }
     strdata = context->CString(data);
-    len = (size_t) context->StringLength((RexxStringObject)data);
+    len = (int) context->StringLength((RexxStringObject)data);
     lenwritten = sendto(socketfd, str, len, 0, (struct sockaddr *)&myaddr, slen);
-    context->SetObjectVariable("retc", context->Int32(lenwritten));
-    if (lenwritten == -1)
-    {
-        context->SetObjectVariable("errno", context->Int32(sock_errno()));
-    }
-    else
-    {
-        context->SetObjectVariable("errno", context->Int32(0));
-    }
-    context->SetObjectVariable("errno", context->WholeNumber(0));
+    context->SetObjectVariable("retc", context->Int32((int32_t)lenwritten));
+
+    setErrno(context, lenwritten == -1);
     return (int)lenwritten;
 }
 
@@ -1270,14 +1324,14 @@ RexxMethod2(int,                       // Return type
             int, option,               // socket option
             RexxObjectPtr, val)        // socket option value
 {
-    RexxObjectPtr rxsockfd;
-    int socketfd, sockval_int;
+    ORXSOCKET socketfd;
+    int sockval_int;
     socklen_t len;
     int retc;
 
     // get the socket file descriptor
-    rxsockfd = context->GetObjectVariable("socketfd");
-    context->Int32(rxsockfd, &socketfd);
+    socketfd = getSocket(context);
+
     // perform function and return
     switch (option)
     {
@@ -1289,100 +1343,143 @@ RexxMethod2(int,                       // Return type
         case SO_BROADCAST:
         case SO_SNDBUF:
         case SO_RCVBUF:
+#ifdef SO_SNDBUFFORCE
         case SO_SNDBUFFORCE:
+#endif
+#ifdef SO_RCVBUFFORCE
         case SO_RCVBUFFORCE:
+#endif
         case SO_KEEPALIVE:
         case SO_OOBINLINE:
+#ifdef SO_NO_CHECK
         case SO_NO_CHECK:
+#endif
+#ifdef SO_PRIORITY
         case SO_PRIORITY:
+#endif
 #ifdef SO_BSDCOMPAT
         case SO_BSDCOMPAT:
 #endif
+#ifdef SO_REUSEPORT
         case SO_REUSEPORT:
+#endif
         case SO_RCVLOWAT:
         case SO_SNDLOWAT:
         case SO_RCVTIMEO:
         case SO_SNDTIMEO:
+#ifdef SO_SECURITY_AUTHENTICATION
         case SO_SECURITY_AUTHENTICATION:
+#endif
+#ifdef SO_SECURITY_ENCRYPTION_TRANSPORT
         case SO_SECURITY_ENCRYPTION_TRANSPORT:
+#endif
+#ifdef SO_SECURITY_ENCRYPTION_NETWORK
         case SO_SECURITY_ENCRYPTION_NETWORK:
+#endif
+#ifdef SO_ATTACH_FILTER
         case SO_ATTACH_FILTER:
+#endif
+#ifdef SO_DETACH_FILTER
         case SO_DETACH_FILTER:
+#endif
+#ifdef SO_TIMESTAMP
         case SO_TIMESTAMP:
+#endif
         case SO_ACCEPTCONN:
+#ifdef SO_PEERSEC
         case SO_PEERSEC:
+#endif
+#ifdef SO_PASSSEC
         case SO_PASSSEC:
+#endif
+#ifdef SO_TIMESTAMPNS
         case SO_TIMESTAMPNS:
+#endif
+#ifdef SO_MARK
         case SO_MARK:
+#endif
+#ifdef SO_TIMESTAMPING
         case SO_TIMESTAMPING:
+#endif
+#ifdef SO_PROTOCOL
         case SO_PROTOCOL:
+#endif
+#ifdef SO_DOMAIN
         case SO_DOMAIN:
+#endif
+#ifdef SO_RXQ_OVFL
         case SO_RXQ_OVFL:
+#endif
+#ifdef SO_RXQ_WIFI_STATUS
         case SO_WIFI_STATUS:
+#endif
+#ifdef SO_PEEK_OFF
         case SO_PEEK_OFF:
+#endif
+#ifdef SO_NOFCS
         case SO_NOFCS:
+#endif
+#ifdef SO_LOCK_FILTER
         case SO_LOCK_FILTER:
+#endif
 #ifdef SO_SELECT_ERR_QUEUE
         case SO_SELECT_ERR_QUEUE:
 #endif
 #ifdef SO_BUSY_POLL
         case SO_BUSY_POLL:
 #endif
-        case SO_PASSCRED:     
+#ifdef SO_PASSCRED
+        case SO_PASSCRED:
+#endif
         {
             // boolean/int options
             context->Int32(val, &sockval_int);
             len = sizeof(int);
-            retc = setsockopt(socketfd, SOL_SOCKET, option, &sockval_int, len);
+            retc = setsockopt(socketfd, SOL_SOCKET, option, (SOCKOPTION *)&sockval_int, len);
             context->SetObjectVariable("retc", context->Int32(retc));
-            if (retc == -1)
-            {
-                context->SetObjectVariable("errno", context->Int32(sock_errno()));
-            }
-            else
-            {
-                context->SetObjectVariable("errno", context->Int32(0));
-            }
+
+            setErrno(context, retc == -1);
             return retc;
         }
         case SO_LINGER:
         {
             struct linger so_linger;
             RexxObjectPtr obj = context->SendMessage0(val, "l_onoff");
-            context->Int32(obj, &so_linger.l_onoff);
+
+            // RKM:  Using a temp variable eliminates the conditionals here.
+            int32_t temp;
+            context->Int32(obj, &temp);
+            so_linger.l_onoff = temp;
+
+            // RKM:  Something doesn't look right here...both values are setting
+            // l_onoff value.
             obj = context->SendMessage0(val, "l_linger");
-            context->Int32(obj, &so_linger.l_linger);
+            context->Int32(obj, &temp);
+            so_linger.l_onoff = temp;
             len = sizeof(so_linger);
-            retc = setsockopt(socketfd, SOL_SOCKET, option, &so_linger, len);
+            retc = setsockopt(socketfd, SOL_SOCKET, option, (SOCKOPTION *)&so_linger, len);
             context->SetObjectVariable("retc", context->Int32(retc));
-            if (retc == -1)
-            {
-                context->SetObjectVariable("errno", context->Int32(sock_errno()));
-            }
-            else
-            {
-                context->SetObjectVariable("errno", context->Int32(0));
-            }
+
+            setErrno(context, retc == -1);
             return retc;
         }
+#ifdef SO_PASSCRED
         case SO_BINDTODEVICE:
         {
             CSTRING strval = context->CString(val);
             len = strlen(strval);
             retc = setsockopt(socketfd, SOL_SOCKET, option, strval, len);
             context->SetObjectVariable("retc", context->Int32(retc));
-            if (retc == -1)
-            {
-                context->SetObjectVariable("errno", context->Int32(sock_errno()));
-            }
-            else
-            {
-                context->SetObjectVariable("errno", context->Int32(0));
-            }
+            setErrno(context, retc == -1);
             return retc;
         }
+#endif
+#ifdef SO_PEERNAME
         case SO_PEERNAME:    // there is a better way to do this
+#endif
+#ifdef SO_PEERCRED
         case SO_PEERCRED:    // we do not support credentials
+#endif
         default:
             context->SetObjectVariable("retc", context->Int32(-1));
             context->SetObjectVariable("errno", context->Int32(22));
@@ -1410,7 +1507,9 @@ RexxMethodEntry rxsock6_methods[] =
     REXX_METHOD(orxListen6, orxListen6),
     REXX_METHOD(orxRecv6, orxRecv6),
     REXX_METHOD(orxRecvFrom6, orxRecvFrom6),
+#if !defined(WIN32)
     REXX_METHOD(orxSelect6, orxSelect6),
+#endif
     REXX_METHOD(orxSend6, orxSend6),
     REXX_METHOD(orxSendTo6, orxSendTo6),
     REXX_METHOD(orxSetSockOpt6, orxSetSockOpt6),
