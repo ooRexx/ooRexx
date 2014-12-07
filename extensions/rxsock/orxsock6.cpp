@@ -114,7 +114,7 @@ ORXSOCKET getSocket(RexxMethodContext* context)
 RexxObjectPtr socketToObject(RexxMethodContext* context, ORXSOCKET socket)
 {
 #ifdef WIN32
-    return context->UintPtr((uintptr_t)socket);
+    return context->UintptrToObject(socket);
 #else
     return context->Int32((int)socket);
 #endif
