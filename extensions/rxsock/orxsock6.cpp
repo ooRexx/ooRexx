@@ -83,10 +83,13 @@
    #define psock_errno(s) fprintf(stderr, "\nrxsock6 Error: %s\n", s)
    #define ORXSOCKET uintptr_t
    #define sock_errno WSAGetLastError
-   #define HOST_NAME_MAX 256
    #define inet_ntop InetNtop
    #define inet_pton InetPton
    #define SOCKOPTION char
+#endif
+
+#if !defined(HOST_NAME_MAX)
+   #define HOST_NAME_MAX 255
 #endif
 
 /*------------------------------------------------------------------
