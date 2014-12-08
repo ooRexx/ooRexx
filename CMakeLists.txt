@@ -1106,16 +1106,15 @@ if (WIN32)
    set (platform_rxsock_sources
             ${build_platform_dir}/rxsock6.def
             ${build_platform_dir}/verinfo.rc)
+   # Extra link library definitions
+   target_link_libraries(rxsock6 rexx rexxapi ${platform_rxsock_libs} ws2_32)
+else ()
+   # Extra link library definitions
+   target_link_libraries(rxsock6 rexx rexxapi ${platform_rxsock_libs})
 endif ()
 
 # Sources for librxsock.so
 add_library(rxsock6 SHARED ${build_extensions_rxsock_dir}/orxsock6.cpp)
-# Extra link library definitions
-if (WIN32)
-target_link_libraries(rxsock6 rexx rexxapi ${platform_rxsock_libs} ws2_32)
-else ()
-target_link_libraries(rxsock6 rexx rexxapi ${platform_rxsock_libs})
-endif ()
 install(TARGETS rxsock6 RUNTIME COMPONENT Core DESTINATION ${INSTALL_LIB_DIR}
                        LIBRARY DESTINATION ${INSTALL_LIB_DIR} COMPONENT Core)
 set_target_properties(rxsock6 PROPERTIES VERSION ${ORX_VERSION})
