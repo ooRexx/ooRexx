@@ -127,7 +127,7 @@ void setErrno(RexxMethodContext* context, bool hasError)
 
 
 // Common routine
-const char *local_inet_ntop(int af, const void *src, char *dst, socklen_t size)
+const char *local_inet_ntop(int af, void *src, char *dst, socklen_t size)
 {
 #ifdef WIN32
      return InetNtop(af, src, dst, size);
