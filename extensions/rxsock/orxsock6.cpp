@@ -83,8 +83,6 @@
    #define psock_errno(s) fprintf(stderr, "\nrxsock6 Error: %s\n", s)
    #define ORXSOCKET uintptr_t
    #define sock_errno WSAGetLastError
-   #define inet_ntop InetNtop
-   #define inet_pton InetPton
    #define SOCKOPTION char
 #endif
 
@@ -142,9 +140,9 @@ const char *local_inet_ntop(int af, const void *src, char *dst, socklen_t size)
 int local_inet_pton(int af, const char *src, void *dst)
 {
 #ifdef WIN32
-    InetPpton(af, src, dst);
+    return InetPton(af, src, dst);
 #else
-    inet_pton(af, src, dst);
+    return inet_pton(af, src, dst);
 #endif
 }
 
