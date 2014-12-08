@@ -99,7 +99,7 @@
 
 
 
-// a helper routine for transformations
+// Common routine
 ORXSOCKET getSocket(RexxMethodContext* context)
 {
     uintptr_t temp;
@@ -110,7 +110,7 @@ ORXSOCKET getSocket(RexxMethodContext* context)
 }
 
 
-// Another helper routine.
+// Common routine
 RexxObjectPtr socketToObject(RexxMethodContext* context, ORXSOCKET socket)
 {
 #ifdef WIN32
@@ -121,10 +121,31 @@ RexxObjectPtr socketToObject(RexxMethodContext* context, ORXSOCKET socket)
 }
 
 
-// RKM:  Common routine for setting the error condition
+// Common routine for setting the error condition
 void setErrno(RexxMethodContext* context, bool hasError)
 {
     context->SetObjectVariable("errno", context->Int32(hasError ? sock_errno() : 0));
+}
+
+
+// Common routine
+const char *local_inet_ntop(int af, const void *src, char *dst, socklen_t size)
+{
+#ifdef WIN32
+     return InetNtop(af, src, dst, size);
+#else
+     return inet_ntop(af, src, dst, size);
+#endif
+}
+
+
+int local_inet_pton(int af, const char *src, void *dst)
+{
+#ifdef WIN32
+    InetPpton(af, src, dst);
+#else
+    inet_pton(af, src, dst);
+#endif
 }
 
 
@@ -230,7 +251,7 @@ RexxMethod1(RexxObjectPtr,             // Return type
 
             // RKM:  This used a lot and the only difference is the routine name.
             // create a macro for the name.
-            inet_ntop(AF_INET, myaddr4, str, INET6_ADDRSTRLEN);
+            local_inet_ntop(AF_INET, myaddr4, str, INET6_ADDRSTRLEN);
         }
         else
         {
@@ -238,7 +259,7 @@ RexxMethod1(RexxObjectPtr,             // Return type
                                   context->UnsignedInt64((uint64_t)myaddr6->sin6_family));
             context->SendMessage1(inetaddr, "port=",
                                   context->UnsignedInt64((uint64_t)myaddr6->sin6_port));
-            inet_ntop(AF_INET6, myaddr4, str, INET6_ADDRSTRLEN);
+            local_inet_ntop(AF_INET6, myaddr4, str, INET6_ADDRSTRLEN);
         }
         context->SendMessage1(inetaddr, "address=", context->String(str));
     }
@@ -293,7 +314,7 @@ RexxMethod1(int,                       // Return type
         obj = context->SendMessage0(inetaddr, "address");
 
         // another helper macro opportunity
-        inet_pton(myaddr4->sin_family, context->CString(obj), str);
+        local_inet_pton(myaddr4->sin_family, context->CString(obj), str);
         len = sizeof(struct sockaddr_in);
     }
     else
@@ -303,7 +324,7 @@ RexxMethod1(int,                       // Return type
         context->UnsignedInt32(obj, &tmp);
         myaddr6->sin6_port = (uint16_t) tmp;
         obj = context->SendMessage0(inetaddr, "address");
-        inet_pton(myaddr6->sin6_family, context->CString(obj), str);
+        local_inet_pton(myaddr6->sin6_family, context->CString(obj), str);
         len = sizeof(struct sockaddr_in6);
     }
     int retc = bind(socketfd, (struct sockaddr *)&myaddr, len);
@@ -386,7 +407,7 @@ RexxMethod1(int,                       // Return type
         context->UnsignedInt32(obj, &tmp);
         myaddr4->sin_port = (uint16_t) tmp;
         obj = context->SendMessage0(inetaddr, "address");
-        inet_pton(AF_INET, context->CString(obj), &myaddr4->sin_addr.s_addr);
+        local_inet_pton(AF_INET, context->CString(obj), &myaddr4->sin_addr.s_addr);
     }
     else
     {
@@ -395,7 +416,7 @@ RexxMethod1(int,                       // Return type
         context->UnsignedInt32(obj, &tmp);
         myaddr6->sin6_port = (uint16_t) tmp;
         obj = context->SendMessage0(inetaddr, "address");
-        inet_pton(AF_INET6, context->CString(obj), &myaddr6->sin6_addr.s6_addr);
+        local_inet_pton(AF_INET6, context->CString(obj), &myaddr6->sin6_addr.s6_addr);
     }
     int retc = connect(socketfd, (struct sockaddr *)&myaddr, len);
 
@@ -458,14 +479,14 @@ RexxMethod4(int,                       // Return type
     {
         myaddr4->sin_family = (uint16_t) utmp;
         obj = context->SendMessage0(hints, "sa_addr");
-        inet_pton(AF_INET, context->CString(obj), &myaddr4 ->sin_addr.s_addr);
+        local_inet_pton(AF_INET, context->CString(obj), &myaddr4 ->sin_addr.s_addr);
         shints.ai_addrlen = sizeof(struct sockaddr_in);
     }
     else
     {
         myaddr6->sin6_family = (uint16_t) tmp;
         obj = context->SendMessage0(hints, "sa_addr");
-        inet_pton(AF_INET6, context->CString(obj), &myaddr6 ->sin6_addr.s6_addr);
+        local_inet_pton(AF_INET6, context->CString(obj), &myaddr6 ->sin6_addr.s6_addr);
         shints.ai_addrlen = sizeof(struct sockaddr_in6);
     }
     shints.ai_addr = (struct sockaddr *) &myaddr;
@@ -509,12 +530,12 @@ RexxMethod4(int,                       // Return type
             if (utmp == AF_INET)
             {
                 rrea->ai_addr->sa_family = AF_INET;
-                inet_ntop(AF_INET, rrea->ai_addr->sa_data, str, INET6_ADDRSTRLEN);
+                local_inet_ntop(AF_INET, rrea->ai_addr->sa_data, str, INET6_ADDRSTRLEN);
             }
             else
             {
                 rrea->ai_addr->sa_family = AF_INET6;
-                inet_ntop(AF_INET6, rrea->ai_addr->sa_data, str, INET6_ADDRSTRLEN);
+                local_inet_ntop(AF_INET6, rrea->ai_addr->sa_data, str, INET6_ADDRSTRLEN);
             }
             context->SendMessage1(obj, "sa_addr=", context->String(str));
         }
@@ -619,7 +640,7 @@ RexxMethod1(int,                       // Return type
                               context->UnsignedInt64((uint64_t)myaddr4->sin_family));
         context->SendMessage1(inetaddr, "port=",
                               context->UnsignedInt64((uint64_t)myaddr4->sin_port));
-        inet_ntop(AF_INET, myaddr4, str, INET6_ADDRSTRLEN);
+        local_inet_ntop(AF_INET, myaddr4, str, INET6_ADDRSTRLEN);
     }
     else
     {
@@ -627,7 +648,7 @@ RexxMethod1(int,                       // Return type
                               context->UnsignedInt64((uint64_t)myaddr6->sin6_family));
         context->SendMessage1(inetaddr, "port=",
                               context->UnsignedInt64((uint64_t)myaddr6->sin6_port));
-        inet_ntop(AF_INET6, myaddr4, str, INET6_ADDRSTRLEN);
+        local_inet_ntop(AF_INET6, myaddr4, str, INET6_ADDRSTRLEN);
     }
     context->SendMessage1(inetaddr, "address=", context->String(str));
     return retc;
@@ -734,7 +755,7 @@ RexxMethod1(int,                       // Return type
                               context->UnsignedInt64((uint64_t)myaddr4->sin_family));
         context->SendMessage1(inetaddr, "port=",
                               context->UnsignedInt64((uint64_t)myaddr4->sin_port));
-        inet_ntop(AF_INET, myaddr4, str, INET6_ADDRSTRLEN);
+        local_inet_ntop(AF_INET, myaddr4, str, INET6_ADDRSTRLEN);
     }
     else
     {
@@ -742,7 +763,7 @@ RexxMethod1(int,                       // Return type
                               context->UnsignedInt64((uint64_t)myaddr6->sin6_family));
         context->SendMessage1(inetaddr, "port=",
                               context->UnsignedInt64((uint64_t)myaddr6->sin6_port));
-        inet_ntop(AF_INET6, myaddr4, str, INET6_ADDRSTRLEN);
+        local_inet_ntop(AF_INET6, myaddr4, str, INET6_ADDRSTRLEN);
     }
     context->SendMessage1(inetaddr, "address=", context->String(str));
     return retc;
@@ -1048,7 +1069,7 @@ RexxMethod2(RexxObjectPtr,             // Return type
         context->UnsignedInt32(obj, &tmp);
         myaddr4->sin_port = (uint16_t) tmp;
         obj = context->SendMessage0(inetaddr, "address");
-        inet_pton(myaddr4->sin_family, context->CString(obj), str);
+        local_inet_pton(myaddr4->sin_family, context->CString(obj), str);
     }
     else
     {
@@ -1057,7 +1078,7 @@ RexxMethod2(RexxObjectPtr,             // Return type
         context->UnsignedInt32(obj, &tmp);
         myaddr6->sin6_port = (uint16_t) tmp;
         obj = context->SendMessage0(inetaddr, "address");
-        inet_pton(myaddr6->sin6_family, context->CString(obj), str);
+        local_inet_pton(myaddr6->sin6_family, context->CString(obj), str);
     }
 
     lenread = recvfrom(socketfd, cblock, len, 0, (struct sockaddr *)&myaddr, &slen);
@@ -1293,7 +1314,7 @@ RexxMethod2(int,                       // Return type
         context->UnsignedInt32(obj, &tmp);
         myaddr4->sin_port = (uint16_t) tmp;
         obj = context->SendMessage0(inetaddr, "address");
-        inet_pton(myaddr4->sin_family, context->CString(obj), str);
+        local_inet_pton(myaddr4->sin_family, context->CString(obj), str);
     }
     else
     {
@@ -1302,7 +1323,7 @@ RexxMethod2(int,                       // Return type
         context->UnsignedInt32(obj, &tmp);
         myaddr6->sin6_port = (uint16_t) tmp;
         obj = context->SendMessage0(inetaddr, "address");
-        inet_pton(myaddr6->sin6_family, context->CString(obj), str);
+        local_inet_pton(myaddr6->sin6_family, context->CString(obj), str);
     }
     strdata = context->CString(data);
     len = (int) context->StringLength((RexxStringObject)data);
