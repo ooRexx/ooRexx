@@ -376,12 +376,12 @@ return .false
 ::method debugsay private unguarded
 /* any value other than .false activates debug messages */
 if self~debug <> .false then do
-	say arg(1)
-	if self~tracelog <> .nil then do
-		if self~exttraceflg = .true then
-   		self~traceline("D" arg(1))
-		end
-	end
+    say arg(1)
+    if self~tracelog <> .nil then do
+        if self~exttraceflg = .true then
+        self~traceline("D" arg(1))
+        end
+    end
 return
 
 
@@ -930,9 +930,9 @@ return self~recvresponse(exretc)
 use arg line
 
 if self~exttraceflg = .true then
-	self~tracelog~lineout(Time() line)
+    self~tracelog~lineout(Time() line)
 else
-	self~tracelog~lineout(line)
+    self~tracelog~lineout(line)
 self~tracelog~flush()
 
 return
@@ -1930,35 +1930,35 @@ if arg() < 1 then raise syntax 93.901 array (1)
 
 select
    when arg() = 1 then do
-	   use arg fname
-  	 mode = 'R'
-   	 end
+       use arg fname
+     mode = 'R'
+     end
    when arg() = 2 then do
-   	 use arg fname, mode
-   	 mode = mode~substr(1, 1)~translate()
-   	 if mode = 'R' then nop
-   	 else raise syntax 93.914 array (2, 'R', mode)
-   	 end
+     use arg fname, mode
+     mode = mode~substr(1, 1)~translate()
+     if mode = 'R' then nop
+     else raise syntax 93.914 array (2, 'R', mode)
+     end
    when arg() = 3 then do
-   	 use arg fname, mode, sharemode=''
-   	 mode = mode~substr(1, 1)~translate()
-   	 if mode = 'R' then nop
-   	 else raise syntax 93.914 array (2, 'R', mode)
-   	 sharemode = sharemode~substr(1, 1)~translate()
-   	 if sharemode = 'S' then nop
-   	 else raise syntax 93.914 array (3, 'S', sharemode)
+     use arg fname, mode, sharemode=''
+     mode = mode~substr(1, 1)~translate()
+     if mode = 'R' then nop
+     else raise syntax 93.914 array (2, 'R', mode)
+     sharemode = sharemode~substr(1, 1)~translate()
+     if sharemode = 'S' then nop
+     else raise syntax 93.914 array (3, 'S', sharemode)
      end
    when arg() = 4 then do
-   	 use arg fname, mode, sharemode='', logmode
-   	 mode = mode~substr(1, 1)~translate()
-   	 if mode = 'R' then nop
-   	 else raise syntax 93.914 array (2, 'R', mode)
-   	 sharemode = sharemode~substr(1, 1)~translate()
-   	 if sharemode = 'S' | sharemode = '' then nop
-   	 else raise syntax 93.914 array (3, 'S', sharemode)
-   	 log = logmode~substr(1, 1)~translate()
-   	 if logmode = 'E' then self~exttraceflg = .true
-   	 else raise syntax 93.914 array (4, 'E', logmode)
+     use arg fname, mode, sharemode='', logmode
+     mode = mode~substr(1, 1)~translate()
+     if mode = 'R' then nop
+     else raise syntax 93.914 array (2, 'R', mode)
+     sharemode = sharemode~substr(1, 1)~translate()
+     if sharemode = 'S' | sharemode = '' then nop
+     else raise syntax 93.914 array (3, 'S', sharemode)
+     log = logmode~substr(1, 1)~translate()
+     if logmode = 'E' then self~exttraceflg = .true
+     else raise syntax 93.914 array (4, 'E', logmode)
      end
    otherwise nop
    end
@@ -1967,20 +1967,20 @@ select
 if mode = '' then mode = 'R'
 self~tracelog = .stream~new(fname)
 if mode = 'R' then do
-	 if sharemode = 'S' then do
-   	 retc = self~tracelog~open('write replace shareread')
+     if sharemode = 'S' then do
+     retc = self~tracelog~open('write replace shareread')
      end
    else do
-   	 retc = self~tracelog~open('write replace')
+     retc = self~tracelog~open('write replace')
      end
    end
 else do
-	 if sharemode = 'S' then do
+     if sharemode = 'S' then do
      retc = self~tracelog~open('write append shareread')
-		 end
-	 else do
+         end
+     else do
      retc = self~tracelog~open('write append')
-   	 end
+     end
    end
 if retc <> 'READY:' then do
    self~debugsay('Error: cannot open trace file' fname'.')
@@ -2026,3 +2026,16 @@ if arg() > 0 then raise syntax 93.902 array (0)
 
 self~ftperrno = ''
 return self~version()
+
+
+/*----------------------------------------------------------------------------*/
+/* Method: annotatelog                                                        */
+/* Description: Write trace string                                            */
+/*----------------------------------------------------------------------------*/
+
+::method annotatelog
+use arg line
+
+self~traceline(line)
+return
+
