@@ -2033,7 +2033,7 @@ return self~version()
 /* Description: Write trace string                                            */
 /*----------------------------------------------------------------------------*/
 
-::method annotatelog
+::method FtpAnnotateLog
 use arg line
 
 self~traceline(line)
