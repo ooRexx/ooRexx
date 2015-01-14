@@ -1877,6 +1877,7 @@ if (BUILD_RPM)
    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/platform/unix/rpm_post.in ${CMAKE_CURRENT_SOURCE_DIR}/platform/unix/rpm_post)
    set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/platform/unix/rpm_post)
    set(CPACK_RPM_PRE_UNINSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/platform/unix/rpm_preun)
+   set(CPACK_RPM_PACKAGE_REQUIRES "csh")
    if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "s390x")
       set(orx_install_arch "s390x")
    elseif (${INSTALL_LIB_DIR} STREQUAL ${CMAKE_INSTALL_PREFIX}/lib64)
@@ -1936,6 +1937,7 @@ if (BUILD_DEB)
    set(CPACK_DEBIAN_PACKAGE_MAINTAINER "David Ashley <wdashley@sourceforge.net>")
    set(CPACK_PACKAGING_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/platform/unix/debian/cmake/postinst.in ${CMAKE_CURRENT_SOURCE_DIR}/platform/unix/debian/cmake/postinst)
+   set(CPACK_DEBIAN_PACKAGE_DEPENDS "csh")
    # we need to copy these files so we can change the permissions
    file(COPY ${CMAKE_SOURCE_DIR}/platform/unix/debian/cmake/postinst
            DESTINATION ${CMAKE_BINARY_DIR}
@@ -1965,25 +1967,32 @@ if (BUILD_DEB)
    set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "Open Object Rexx is an object-oriented scripting language.")
 endif ()
 
-if (BUILD_DMG)
-   set(CPACK_PACKAGE_EXECUTABLES "ooRexx.app")
-   # Copy the ooRexx pixmap
-   INSTALL (FILES ${ORX_PLATFORM_DIR}/oorexx.png DESTINATION ${ORX_PIXMAPS_DIR})
-   set(CPACK_GENERATOR DRAGNDROP)
+if (BUILD_PKG)
+   set(CPACK_GENERATOR PKG)
+   #set (CPACK_PREFLIGHT_SCRIPT xxx)
+   #set (CPACK_POSTFLIGHT_SCRIPT xxx)
+   #set (CPACK_OSX_PACKAGE_VERSION "10.10")
+   #set (CPACK_BUNDLE_PLIST xxx)
+   #set (CPACK_BUNDLE_STARTUP_COMMABD xxx)
+
    if (DEFINED PROD)
       set(CPACK_PACKAGE_RELEASE 1)
    else ()
       set(CPACK_PACKAGE_RELEASE ${ORX_BLD_LVL})
    endif ()
-   set(CPACK_PACKAGE_CONTACT "wdashley@sourceforge.net")
-   set(CPACK_PACKAGING_INSTALL_PREXIX "${CMAKE_INSTALL_PREFIX}")
    set(orx_install_arch "x86_64")
    if (DEFINED OS_DIST)
       set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${orx_install_arch}.${OS_DIST}")
    else ()
       set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${orx_install_arch}")
    endif ()
-   set(CPACK_RPM_PACKAGE_DESCRIPTION_SUMMARY
+   #set (CPACK_BUNDLE_NAME ${CPACK_PACKAGE_FILE_NAME})
+
+   set (CPACK_PACKAGE_ICON ${ORX_PLATFORM_DIR}/oorexx.png)
+   #set (CPACK_BUNDLE_ICON ${CPACK_PACKAGE_ICON})
+
+   set(CPACK_PACKAGE_CONTACT "wdashley@sourceforge.net")
+   set(CPACK_PACKAGE_DESCRIPTION_SUMMARY
 "Open Object Rexx is an object-oriented scripting language. The language
 is designed for both beginners and experienced Rexx programmers. It is
 easy to learn and use, and provides an excellent vehicle to enter the
