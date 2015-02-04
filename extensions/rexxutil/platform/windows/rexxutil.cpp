@@ -5898,7 +5898,7 @@ RexxRoutine3(int, SysSetFileDateTime, CSTRING, name, OPTIONAL_CSTRING, newdate, 
 *            other - date and time as YYYY-MM-DD HH:MM:SS                *
 *************************************************************************/
 
-RexxRoutine2(RexxObjectPtr, SysGetFileDateTime, CSTRING, name, CSTRING, selector)
+RexxRoutine2(RexxObjectPtr, SysGetFileDateTime, CSTRING, name, OPTIONAL_CSTRING, selector)
 {
     FILETIME  sFileTime;
     FILETIME  sLocalFileTime;
