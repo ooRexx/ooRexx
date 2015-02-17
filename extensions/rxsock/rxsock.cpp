@@ -557,23 +557,18 @@ void setErrno(RexxCallContext *context)
  *------------------------------------------------------------------*/
 void setH_Errno(RexxCallContext *context)
 {
-    char szBuff[20];
+    char szBuff[10];
     const char *pszErrno = szBuff;
-    int   theErrno;
+    int   theErrno = 0;
 
-    theErrno = 1541;
+    // The code that was here previous to version 5.0 was completely bogus.
+    // There used to be calls to the herrno and hstrerrno functions here but
+    // those functions have been obsolete for a long time. 
+    //
+    // To correct the bug of always setting the h_errno Rexx variable to 1514
+    // unconditionally (thus always returning an error) we will now set it to zero.
 
-    switch (theErrno)
-    {
-        case HOST_NOT_FOUND  : pszErrno = "HOST_NOT_FOUND";       break;
-        case TRY_AGAIN       : pszErrno = "TRY_AGAIN";            break;
-        case NO_RECOVERY     : pszErrno = "NO_RECOVERY";          break;
-        case NO_ADDRESS      : pszErrno = "NO_ADDRESS";           break;
-
-        default:
-            sprintf(szBuff,"%d",theErrno);
-    }
-
+    sprintf(szBuff,"%d",theErrno);
     context->SetContextVariable("h_errno", context->String(pszErrno));
 }
 
