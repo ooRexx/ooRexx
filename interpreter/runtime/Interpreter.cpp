@@ -146,8 +146,10 @@ void Interpreter::processShutdown()
  */
 void Interpreter::startInterpreter(InterpreterStartupMode mode)
 {
+    printf("Interpreter::startInterpreter\n");
     ResourceSection lock;
 
+    printf("isActive()? %d\n", isActive());
     // has everything been shutdown?
     if (!isActive())
     {
@@ -280,6 +282,7 @@ int Interpreter::createInstance(RexxInstance *&instance, RexxThreadContext *&thr
 {
     try
     {
+        printf("Interpreter::createInstance\n");
         // create the instance
         InterpreterInstance *newInstance = createInterpreterInstance(options);
         instance = newInstance->getInstanceContext();
@@ -313,6 +316,7 @@ int Interpreter::createInstance(RexxInstance *&instance, RexxThreadContext *&thr
  */
 InterpreterInstance *Interpreter::createInterpreterInstance(RexxOption *options)
 {
+    printf("Interpreter::createInterpreterInstance\n");
     // We need to ensure that the interpreter is initialized before we create an
     // interpreter instance.  There are some nasty recursion problems that can result,
     // so this needs to be done carefully and the initialization needs to be protected by

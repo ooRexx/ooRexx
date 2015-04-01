@@ -61,6 +61,7 @@ void SysThread::attachThread()
 
 void SysThread::setPriority(int priority)
 {
+#if !defined(BARRELFISH)
     int schedpolicy;
     struct sched_param schedparam;
 
@@ -69,6 +70,7 @@ void SysThread::setPriority(int priority)
     /* Medium_priority(=100) is used for every new thread */
     schedparam.sched_priority = priority;
     pthread_setschedparam(_threadID, schedpolicy, &schedparam);
+#endif
 }
 
 
@@ -87,11 +89,13 @@ char *SysThread::getStackBase()
 
 void SysThread::terminate()
 {
+#if !defined(BARRELFISH)
     if (!attached && _threadID != 0)
     {
         pthread_detach(_threadID);
         _threadID = 0;
     }
+#endif
 }
 
 
@@ -109,7 +113,9 @@ void SysThread::shutdown()
 
 void SysThread::yield()
 {
+#if !defined(BARRELFISH)
     sched_yield();
+#endif
 }
 
 
@@ -135,6 +141,7 @@ void SysThread::createThread()
 
     // Create an attr block for Thread.
     pthread_attr_init(&newThreadAttr);
+#if !defined(BARRELFISH)
 #if defined(LINUX) ||  defined(OPSYS_SUN) || defined(AIX)
     /* scheduling on two threads controlled by the result method of the */
     /* message object do not work properly without an enhanced priority */
@@ -175,9 +182,9 @@ void SysThread::createThread()
 
     pthread_attr_setschedparam(&newThreadAttr, &schedparam);
 #endif
-
     // Set the stack size.
     pthread_attr_setstacksize(&newThreadAttr, THREAD_STACK_SIZE);
+#endif
 
     // Now create the thread
     int rc = pthread_create(&_threadID, &newThreadAttr, call_thread_function, (void *)this);
@@ -186,7 +193,9 @@ void SysThread::createThread()
         _threadID = 0;
         fprintf(stderr," *** ERROR: At SysThread(), createThread - RC = %d !\n", rc);
     }
+#if !defined(BARRELFISH)
     pthread_attr_destroy(&newThreadAttr);
+#endif
     attached = false;           // we own this thread
     return;
 }

@@ -164,6 +164,7 @@ RexxMethod0(int, ticker_createTimer)
     // set this as state variables
     context->SetObjectVariable("EVENTSEMHANDLE", context->NewPointer(sem));
     context->SetObjectVariable("TIMERSTARTED", context->True());
+    return 0;
 }
 
 

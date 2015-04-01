@@ -82,8 +82,9 @@ void Run (bool asService)
         apiServer.initServer();               // start up the server
         apiServer.listenForConnections();     // go into the message loop
     }
-    catch (ServiceException *)
+    catch (ServiceException *e)
     {
+        printf("ServiceException: %s\n", e->getMessage());
     }
     apiServer.terminateServer();     // shut everything down
 }
@@ -122,7 +123,7 @@ void Stop(int signo)
 static bool morph2daemon()
 {
     char pid_buf[256];
-
+#if !defined(BARRELFISH)
     if (run_as_daemon == false) {
         return true; // go ahead and run in the foreground
     }
@@ -165,7 +166,7 @@ static bool morph2daemon()
 	for(int i = 0; i < 1024; i++) {
 		close(i);
 	}
-
+#endif
 	return true;
 }
 
@@ -184,6 +185,8 @@ int main(int argc, char *argv[])
     int pfile, len;
     pid_t pid = 0;
     struct sigaction sa;
+
+#if !defined(BARRELFISH)
     // Get the command line args
     if (argc > 1) {
         printf("Error: Invalid command line option(s).\n");
@@ -219,7 +222,7 @@ int main(int argc, char *argv[])
     snprintf(pid_buf, sizeof(pid_buf), "%d\n", (int)getpid());
     write(pfile, pid_buf, strlen(pid_buf));
     close(pfile);
-
+#endif
     // make ourselves a daemon
     // - if this is AIX we check if the rxapi daemon was sarted via SRC
     //   - if the daemon was started via SRC we do not morph - the SRC handles this

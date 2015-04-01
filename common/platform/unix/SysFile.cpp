@@ -67,6 +67,13 @@
 # define open64 open
 #endif
 
+#if defined(BARRELFISH)
+    #define fstat64 fstat
+    #define lseek64 lseek
+    #define open64 open
+    #define stat64 stat
+#endif
+
 #include "SysFile.hpp"
 
 // This is all the static stuff

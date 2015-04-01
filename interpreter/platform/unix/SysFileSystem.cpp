@@ -62,6 +62,14 @@
 #include "Utilities.hpp"
 #include "ActivityManager.hpp"
 
+#if defined(BARRELFISH)
+    #define fstat64 fstat
+    #define lseek64 lseek
+    #define open64 open
+    #define stat64 stat
+#endif
+
+
 const char SysFileSystem::EOF_Marker = 0x1A;
 const char *SysFileSystem::EOL_Marker = "\n";
 const char SysFileSystem::PathDelimiter = '/';

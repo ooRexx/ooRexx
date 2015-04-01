@@ -44,6 +44,9 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <vfs/vfs.h>
+
+
 #include "oorexxapi.h"
 
 #if defined(AIX)
@@ -55,6 +58,7 @@
 #endif
 
 int main (int argc, char **argv) {
+    vfs_init();
     int   i;                             /* loop counter                      */
     int   rc = 0;                        /* actually running program RC       */
     const char *program_name = NULL;     /* name to run                       */

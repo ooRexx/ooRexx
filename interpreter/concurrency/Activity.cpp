@@ -923,7 +923,7 @@ DirectoryClass *Activity::createExceptionObject(RexxErrorCodes errcode,
     char work[32];
 
     // get a version of the error code formatted in "dot" format.
-    sprintf(work,"%ld.%1ld", errcode/1000, errcode - primary);
+    sprintf(work,"%d.%1ld", errcode/1000, errcode - primary);
     RexxString *code = new_string(work);
     exobj->put(code, CODE);
 

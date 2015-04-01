@@ -87,7 +87,9 @@ public:
     // the following os a NOP on unix platforms
     static inline void yield()
     {
+#if !defined(BARRELFISH)
         sched_yield();
+#endif
     }
 
 protected:

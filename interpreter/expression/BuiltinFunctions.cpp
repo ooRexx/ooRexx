@@ -1685,7 +1685,7 @@ BUILTIN(VALUE)
     fix_args(VALUE);
 
     RexxString *variable = required_string(VALUE, name);
-    RexxObject *newvalue = optional_argument(VALUE, newValue);
+    RexxObject *newvalue = optional_argument_rx(VALUE, newValue);
     RexxString *selector = optional_string(VALUE, selector);
 
 

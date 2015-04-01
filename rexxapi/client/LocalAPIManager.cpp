@@ -174,6 +174,7 @@ void LocalAPIManager::shutdownConnections()
  */
 void LocalAPIManager::initProcess()
 {
+    printf("LocalAPIManager::initProcess\n");
     // we don't need a restart since we're just starting up
     restartRequired = false;
 

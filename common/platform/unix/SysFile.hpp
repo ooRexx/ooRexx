@@ -47,7 +47,7 @@
 
 #include "rexxapitypes.h"
 #include <fcntl.h>
-#if defined(__OpenBSD__)
+#if defined(__OpenBSD__) || defined(LINUX) || defined(BARRELFISH)
 #include <sys/stat.h>
 #endif
 

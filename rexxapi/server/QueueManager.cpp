@@ -604,8 +604,8 @@ void ServerQueueManager::createUniqueQueue(ServiceMessage &message)
         sprintf(tagstring, "%p", (void *)tag);
 
         // message parameter1 is the session identifier.
-        sprintf(message.nameArg, "S%sQ%s", (void *)(session[1] == 'x' ? session + 2 : session),
-            (void *)(tagstring[1] == 'x' ? tagstring + 2 : tagstring));
+        sprintf(message.nameArg, "S%sQ%s", (char *)(session[1] == 'x' ? session + 2 : session),
+            (char *)(tagstring[1] == 'x' ? tagstring + 2 : tagstring));
         if (namedQueues.locate(message.nameArg) == 0)
         {
             // set the name

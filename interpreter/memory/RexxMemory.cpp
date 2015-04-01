@@ -143,6 +143,7 @@ MemoryObject::MemoryObject()
  */
 void MemoryObject::initialize(bool restoringImage)
 {
+    printf("%s:%s:%d \n", __FILE__, __FUNCTION__, __LINE__);
     // create the initial memory pool and initialize everything.
     firstPool = MemorySegmentPool::createPool();
     currentPool = firstPool;
@@ -1113,6 +1114,7 @@ RexxInternalObject *MemoryObject::holdObject(RexxInternalObject *obj)
  */
 void MemoryObject::saveImage()
 {
+    printf("%s:%s:%d \n", __FILE__, __FUNCTION__, __LINE__);
     MemoryStats _imageStats;
 
     imageStats = &_imageStats;     // set the pointer to the current collector
