@@ -47,7 +47,6 @@
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <unistd.h>
 
 
 void SysLocalAPIManager::startServerProcess()
@@ -57,6 +56,7 @@ void SysLocalAPIManager::startServerProcess()
 	if (signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
 		return;
 	}
+
 	pid_t pid = fork();
 	if (pid < 0) {
         throw new ServiceException(API_FAILURE, "Unable to start API server");
@@ -66,7 +66,7 @@ void SysLocalAPIManager::startServerProcess()
 		return;
 	}
     // if we get here we are the child process
-    
+
     // become the session leader
 	setsid();
 

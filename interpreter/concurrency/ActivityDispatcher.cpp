@@ -114,7 +114,6 @@ void ActivityDispatcher::invoke(RexxOption *options)
  */
 void ActivityDispatcher::invoke(PRXSYSEXIT exits, const char *env)
 {
-    printf("ActivityDispatcher::invoke\n");
     // this creates a new instance to run under, with an active activity
     InstanceBlock instance(exits, env);
 

@@ -60,9 +60,6 @@
 #include <sys/types.h>
 #include <pwd.h>
 #include <limits.h>
-#if defined(BARRELFISH)
-    #include <process.h>
-#endif
 
 #define CMDBUFSIZE 1024                     /* Max size of executable cmd     */
 #define MAX_COMMAND_ARGS 400
@@ -681,7 +678,7 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStrin
         }
     }
 
-#if !defined(BARRELFISH)
+
     /****************************************************************************/
     /* Invoke the system command handler to execute the command                 */
     /****************************************************************************/
@@ -775,7 +772,6 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStrin
         // non-zero is an error condition
         context->RaiseCondition("ERROR", context->String(cmd), NULL, context->WholeNumberToObject(errCode));
     }
-#endif
     return context->False();      // zero return code
 }
 

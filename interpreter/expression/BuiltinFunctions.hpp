@@ -70,7 +70,7 @@
 #define optional_big_integer(x,n) ((argcount >= x##_##n) ? stack->optionalBigIntegerArg(argcount - x##_##n, argcount, #x) : OREF_NULL)
 
 // tests for optional arguments
-#define optional_argument_rx(x,n) ((argcount >= x##_##n) ? (RexxObject *)stack->peek(argcount - x##_##n) : OREF_NULL )
+#define optional_argument(x,n) ((argcount >= x##_##n) ? (RexxObject *)stack->peek(argcount - x##_##n) : OREF_NULL )
 #define arg_exists(x,n) ((argcount >= x##_##n) ? false : stack->peek(argcount - x##_##n) != OREF_NULL )
 #define arg_omitted(x,n) ((argcount < x##_##n) ? true : stack->peek(argcount - x##_##n) == OREF_NULL )
 

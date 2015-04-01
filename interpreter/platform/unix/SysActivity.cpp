@@ -50,7 +50,6 @@
 
 #include "RexxCore.h"
 #include "SysActivity.hpp"
-#include <sched.h>
 
 
 /**
@@ -88,7 +87,6 @@ void SysActivity::create(Activity *activity, size_t stackSize)
                                // Create an attr block for Thread.
     rc = pthread_attr_init(&newThreadAttr);
                                // Set the stack size.
-#if !defined(BARRELFISH)
  #if defined(LINUX) || defined(OPSYS_SUN) || defined(AIX)
 
  /* scheduling on two threads controlled by the result method of the message object */
@@ -107,10 +105,9 @@ void SysActivity::create(Activity *activity, size_t stackSize)
     rc = pthread_attr_setschedpolicy(&newThreadAttr, SCHED_RR);
  #endif
     rc = pthread_attr_setschedparam(&newThreadAttr, &schedparam);
- 
+
  #endif
     rc = pthread_attr_setstacksize(&newThreadAttr, stackSize);
-#endif
                                                // Now create the thread
     rc = pthread_create(&threadId, &newThreadAttr, threadFnc, (void *)activity);
                                // Bumop thread count by one. Threadid
@@ -118,9 +115,7 @@ void SysActivity::create(Activity *activity, size_t stackSize)
     {
         reportException(Error_System_service_service, "ERROR CREATING THREAD");
     }
-#if !defined(BARRELFISH)
     rc = pthread_attr_destroy(&newThreadAttr);
-#endif
 }
 
 
@@ -170,4 +165,3 @@ char *SysActivity::getStackBase(size_t stackSize)
     size_t temp;
     return (char *)&temp - stackSize;
 }
-

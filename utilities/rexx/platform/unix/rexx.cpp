@@ -94,7 +94,7 @@ int main (int argc, char **argv) {
 
                 case 'v': case 'V':      /* display version string            */
                     ptr = RexxGetVersionInformation();
-                    fprintf(stdout, "%s", ptr);
+                    fprintf(stdout, ptr);
                     fprintf(stdout, "\n");
                     RexxFreeMemory(ptr);
                     return 0;
@@ -123,7 +123,6 @@ int main (int argc, char **argv) {
         fprintf(stderr,"or        \"rexx -v\".\n");
         return -1;
     }
-    printf("rexx program_name=%s\n", program_name);
 
     argCount = (argCount==0) ? 0 : 1;    /* is there an argument ?            */
                                          /* make an argument                  */

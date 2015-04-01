@@ -48,9 +48,7 @@
 #endif
 
 #include <pthread.h>
-#if !defined(BARRELFISH)
-    #include <memory.h>
-#endif
+#include <memory.h>
 #include <stdio.h>
 #ifdef AIX
     #include <sys/sched.h>
@@ -178,22 +176,18 @@ void SysSemaphore::wait()
     int schedpolicy, i_prio;
     struct sched_param schedparam;
 
-#if !defined(BARRELFISH)
     pthread_getschedparam(pthread_self(), &schedpolicy, &schedparam);
     i_prio = schedparam.sched_priority;
     schedparam.sched_priority = 100;
     pthread_setschedparam(pthread_self(),SCHED_OTHER, &schedparam);
-#endif
     rc = pthread_mutex_lock(&(this->semMutex));      // Lock access to semaphore
     if (this->postedCount == 0)                      // Has it been posted?
     {
         rc = pthread_cond_wait(&(this->semCond), &(this->semMutex)); // Nope, then wait on it.
     }
     pthread_mutex_unlock(&(this->semMutex));    // Release mutex lock
-#if !defined(BARRELFISH)
     schedparam.sched_priority = i_prio;
     pthread_setschedparam(pthread_self(),SCHED_OTHER, &schedparam);
-#endif
 }
 
 bool SysSemaphore::wait(uint32_t t)           // takes a timeout in msecs

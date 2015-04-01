@@ -51,7 +51,6 @@ LocalAPIContext::LocalAPIContext(ServerManager t)
 
 LocalAPIManager *LocalAPIContext::getAPIManager()
 {
-    printf("LocalAPIContext::getAPIManager\n");
     localManager = LocalAPIManager::getInstance();
     contextInitialized = true;
     return localManager;

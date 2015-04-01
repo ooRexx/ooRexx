@@ -248,7 +248,7 @@ NormalSegmentSet::NormalSegmentSet(MemoryObject *mem) :
     {  /* there are only                    */
         /* DeadPools subpools! (<, not <=)   */
         char buffer[100];
-        sprintf(buffer, "Normal allocation subpool %d for blocks of size %zu", i, deadPoolToLength(i));
+        sprintf(buffer, "Normal allocation subpool %d for blocks of size %d", i, deadPoolToLength(i));
         subpools[i].setID(buffer);
         /* make sure these are properly set up as single size */
         /* keepers */

@@ -72,7 +72,6 @@ public:
         errCode = c;
         //NOTE:  this does not get released, so it MUST be a literal string
         message = m;
-        printf("ServiceException errCode=%d message=%s\n", errCode, message);
     }
 
     ~ServiceException() { }
