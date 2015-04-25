@@ -1,9 +1,8 @@
 <!--
 This file contains all of the class definitions for ooRexx classes that are allocated
-and managed via the garbage collector. When this file is updated, run the genclass build script
-(e.g. platform/windows/genclass.bat) which will update the various header files
-used for class definitions as well as generate the C++ source files that compile to class
-tables. The fields have the following meanings:
+and managed via the garbage collector. When this file is updated, cmake will update the
+various header files used for class definitions as well as generate the C++ source files
+that compile to class tables. The fields have the following meanings:
 
 Exported - These are classes that can be accessed and manipulated by ooRexx programmers
 (String, Array, etc.)
