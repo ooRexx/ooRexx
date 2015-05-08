@@ -1172,7 +1172,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Symbol_expected_annotation_attribute</SymbolicName>
-        <Text>Symbol expected as ::ANNOTATION attribute name; found <q><Sub position="1" name="name"/></q>.</Text>
+        <Text>Symbol expected as ::ANNOTATE attribute name; found <q><Sub position="1" name="name"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>20</Code>

@@ -1804,7 +1804,7 @@ void LanguageParser::annotateDirective()
             // this must be a literal string
             if (!token->isSymbolOrLiteral())
             {
-                syntaxError(Error_Symbol_or_string_directive_option, new_string("::ANNOTATR"), new_string("CONSTANT"));
+                syntaxError(Error_Symbol_or_string_directive_option, new_string("::ANNOTATE"), new_string("CONSTANT"));
             }
 
             // get the target class name
@@ -1842,7 +1842,7 @@ void LanguageParser::annotateDirective()
     // now start on the attribute tokens
     token = nextReal();
 
-    // an ::ANNOTATION directive need not specify anything, but if it
+    // an ::ANNOTATE directive need not specify anything, but if it
     // does, everything is in the form of "symbol constant" pairs.
     while (!token->isEndOfClause())
     {
@@ -1912,7 +1912,7 @@ void LanguageParser::processAttributeAnnotations(RexxString *getterName)
     // now start on the attribute tokens
     RexxToken *token = nextReal();
 
-    // an ::ANNOTATION directive need not specify anything, but if it
+    // an ::ANNOTATE directive need not specify anything, but if it
     // does, everything is in the form of "symbol constant" pairs.
     while (!token->isEndOfClause())
     {
