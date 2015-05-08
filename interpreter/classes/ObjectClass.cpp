@@ -1770,7 +1770,7 @@ RexxObject *RexxObject::setMethod(RexxString *msgname, MethodClass *methobj, Rex
         // the .nil scope.
         else if (Utilities::strCaselessCompare("FLOAT",option->getStringData()) != 0)
         {
-            reportException(Error_Invalid_argument_list, "SETMETHOD", IntegerThree, "\"FLOAT\" or \"OBJECT\"", option);
+            reportException(Error_Invalid_argument_list, IntegerThree, "\"FLOAT\" or \"OBJECT\"", option);
         }
     }
 
