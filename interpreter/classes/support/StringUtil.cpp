@@ -1156,7 +1156,7 @@ RexxObject *StringUtil::dataType(RexxString *string, char option )
             return booleanObject(!(len != 1 || (*scanp != '1' && *scanp != '0')));
 
         default  :
-            reportException(Error_Incorrect_method_option, "ABCDLMNOSUVWX9", new_string(option));
+            reportException(Error_Incorrect_method_option, "ABLMNOSUVWX9", new_string(option));
     }
     return TheFalseObject;
 }
