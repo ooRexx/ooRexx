@@ -1613,7 +1613,7 @@ return left~caselessCompareTo(right, start, length)
  use strict arg interval, target, attachment = .nil
 
  -- this must be an object that implements the alarm notification interface
- if \msgobj~isA(.AlarmNotification) then
+ if \target~isA(.AlarmNotification) then
    raise syntax 88.914 array ("target", .AlarmNotification~id)
 
  numeric digits 18                     -- we'll be doing math with large numbers potentially
@@ -1636,7 +1636,7 @@ return left~caselessCompareTo(right, start, length)
  -- the remainder needs to be in milliseconds
  alarmtime %= 1000
 
- self~!create_timer
+ self~!createTimer
 
  -- release the guard lock and go concurrent
  guard off
