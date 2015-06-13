@@ -1463,7 +1463,7 @@ return left~caselessCompareTo(right, start, length)
  /* Output Nothing                                                         */
  /**************************************************************************/
 
- expose timer canceled msgobj attachment timerStarted eventSemHandle scheduledTime
+ expose timer canceled msgobj attachment timerStarted eventSemHandle scheduledTime triggered
  timer = 0                             /* set up initial flag states        */
  eventSemHandle = 0
  timerStarted = 0
@@ -1557,6 +1557,7 @@ return left~caselessCompareTo(right, start, length)
 ::attribute canceled GET UNGUARDED
 ::method cancelled UNGUARDED
   expose canceled
+  use strict arg
   return canceled
 
 ::attribute triggered GET
