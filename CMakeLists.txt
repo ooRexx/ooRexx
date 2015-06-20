@@ -772,6 +772,10 @@ if (WIN32)
    get_property(link_flags TARGET rexx_exe PROPERTY LINK_FLAGS_DEBUG)
    set(link_flags "${link_flags} /PDB:bin\\orexx.pdb")
    set_target_properties(rexx_exe PROPERTIES LINK_FLAGS_DEBUG ${link_flags})
+
+   get_property(link_flags TARGET rexx_exe PROPERTY LINK_FLAGS_RELWITHDEBINFO)
+   set(link_flags "${link_flags} /PDB:bin\\orexx.pdb")
+   set_target_properties(rexx_exe PROPERTIES LINK_FLAGS_RELWITHDEBINFO ${link_flags})
 endif ()
 
 # Include file definition
@@ -1307,6 +1311,10 @@ if (WIN32)
    set(link_flags "${link_flags} /PDB:bin\\ooDialog_exe.pdb")
    set_target_properties(oodialog_exe PROPERTIES LINK_FLAGS_DEBUG ${link_flags})
 
+   get_property(link_flags TARGET oodialog_exe PROPERTY LINK_FLAGS_RELWITHDEBINFO)
+   set(link_flags "${link_flags} /PDB:bin\\ooDialog_exe.pdb")
+   set_target_properties(oodialog_exe PROPERTIES LINK_FLAGS_RELWITHDEBINFO ${link_flags})
+
    set_property(TARGET oodialog_exe
           PROPERTY COMPILE_DEFINITIONS
           OOD_VER=${OOD_MAJOR}
@@ -1338,6 +1346,10 @@ if (WIN32)
    get_property(link_flags TARGET oodialog_com PROPERTY LINK_FLAGS_DEBUG)
    set(link_flags "${link_flags} /PDB:bin\\ooDialog_com.pdb")
    set_target_properties(oodialog_com PROPERTIES LINK_FLAGS_DEBUG ${link_flags})
+
+   get_property(link_flags TARGET oodialog_com PROPERTY LINK_FLAGS_RELWITHDEBINFO)
+   set(link_flags "${link_flags} /PDB:bin\\ooDialog_com.pdb")
+   set_target_properties(oodialog_com PROPERTIES LINK_FLAGS_RELWITHDEBINFO ${link_flags})
 
    set_property(TARGET oodialog_com
           PROPERTY COMPILE_DEFINITIONS
@@ -1615,6 +1627,10 @@ if (WIN32 AND DOC_SOURCE_DIR)
    install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/hostemu.pdb COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR}
        CONFIGURATIONS Debug RelWithDebInfo)
    install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/oodialog.pdb COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR}
+       CONFIGURATIONS Debug RelWithDebInfo)
+   install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/oodialog_com.pdb COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR}
+       CONFIGURATIONS Debug RelWithDebInfo)
+   install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/oodialog_exe.pdb COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR}
        CONFIGURATIONS Debug RelWithDebInfo)
    install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/orexx.pdb COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR}
        CONFIGURATIONS Debug RelWithDebInfo)
