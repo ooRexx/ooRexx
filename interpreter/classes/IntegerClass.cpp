@@ -645,9 +645,19 @@ RexxObject *RexxInteger::multiply(RexxInteger *other)
         int64_t tempThis = (int64_t)value;
         int64_t tempOther = (int64_t)other->value;
 
+        //.We are doing this multiplication assuming we have values that cannot produce
+        // an overflow/underflow.  If either operand it too large, then we need to
+        // do this the slow way.
+        if (!Numerics::isValid32Bit(tempThis) || !Numerics::isValid32Bit(tempOther))
+        {
+            return integer_forward(multiply, other);
+        }
+
         int64_t tempValue = tempThis * tempOther;
 
-        //.if still in a valid range, return a new integer value for this.
+        // we have a good multiplication that will not overflow or underflow, but
+        // we can only return an integer object as a result if the result
+        //.is still in a valid range.
         if (Numerics::isValid64Bit(tempValue, number_digits()))
         {
             return new_integer((wholenumber_t)tempValue);

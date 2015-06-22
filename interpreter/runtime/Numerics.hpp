@@ -173,7 +173,7 @@ public:
     // this has a different name because when compiling for 64-bit, wholenumber_t and int64_t are the same and
     // the compiler complains.  The first is for validating a whole number value, the second is for validating an
     // explicit 64-bit value.
-    static inline bool isValid64Bit(int64_t v) { return v <= MAX_WHOLENUMBER && v >= MIN_WHOLENUMBER; }
+    static inline bool isValid32Bit(int64_t v) { return v <= INT32_MAX && v >= INT32_MIN; }
     static inline bool isValid(wholenumber_t v, wholenumber_t digits)  { return abs(v) < validMaxWhole[minVal(digits, ARGUMENT_DIGITS) - 1]; }
     static inline bool isValid64Bit(int64_t v, wholenumber_t digits)  { digits = minVal(digits, ARGUMENT_DIGITS); return v < (int64_t)validMaxWhole[digits - 1] && v > -(int64_t)validMaxWhole[digits - 1]; }
 
