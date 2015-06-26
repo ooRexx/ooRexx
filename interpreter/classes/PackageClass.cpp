@@ -157,7 +157,7 @@ PackageClass *PackageClass::newRexx(RexxObject **init_args, size_t argCount)
         {
             RexxObject *option;
             // parse off an additional argument
-            RexxClass::processNewArgs(init_args, argCount, init_args, argCount, 1, option, NULL);
+            RexxClass::processNewArgs(init_args, initCount, init_args, initCount, 1, option, NULL);
             // if there are more than 3 options passed, it is possible this one was omitted
             if (option != OREF_NULL)
             {
