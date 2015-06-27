@@ -660,7 +660,7 @@ BEGIN
    34905    "SELECT CASE comparison result must be ""0"", ""1"", ""true"", or ""false""; found ""&1""."
    35934    "Missing expression in WHEN case expression list."
    34002    "Value of expression following WHEN keyword must be exactly ""0"" or ""1""; found ""&1""."
-   20919    "Symbol expected as ::ANNOTATION attribute name; found ""&1""."
+   20919    "Symbol expected as ::ANNOTATE attribute name; found ""&1""."
    19923    "Symbol or string expected as ::ANNOTATE attribute value; found ""&1""."
    19924    "Symbol or string expected as ::ANNOTATE attribute value."
    19925    "Symbol or string expected after &1 &2 keyword."

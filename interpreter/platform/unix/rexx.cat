@@ -1875,7 +1875,7 @@ $ Error_Logical_value_when
 756 Value of expression following WHEN keyword must be exactly "0" or "1"; found "&1".
 
 $ Error_Symbol_expected_annotation_attribute
-757 Symbol expected as ::ANNOTATION attribute name; found "&1".
+757 Symbol expected as ::ANNOTATE attribute name; found "&1".
 
 $ Error_Symbol_or_string_package_attribute_bad_value
 758 Symbol or string expected as ::ANNOTATE attribute value; found "&1".

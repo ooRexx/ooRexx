@@ -214,10 +214,9 @@ void MethodDictionary::replaceMethod(RexxString *methodName, MethodClass *method
 
 /**
  * Overlay a collection of methods on top of this dictionary.
- * At this time, we're just adding the entries to the table.
- * These will be updated with correct scopes later.
  *
  * @param source The source method dictionary.
+ * @param scope  The scope the copied methods will have in the target dictionary.
  */
 void MethodDictionary::replaceMethods(MethodDictionary *source, RexxClass *scope)
 {
@@ -231,6 +230,42 @@ void MethodDictionary::replaceMethods(MethodDictionary *source, RexxClass *scope
         RexxString *name = (RexxString *)iterator.index();
         if (isMethod(method))
         {
+            method = method->newScope(scope);
+        }
+        replaceMethod(name, method);
+    }
+}
+
+
+/**
+ * Overlay a collection of methods on top of this dictionary.
+ *
+ * @param source The source method dictionary.
+ * @param filterScope
+ *               The filtering scope for the inherit operations.  Only methods
+ *               defined at the filtering scope will be copied to the target
+ *               method dictionary.
+ *
+ * @param scope  The scope that will be assigned to the copied methods.
+ */
+void MethodDictionary::replaceMethods(MethodDictionary *source, RexxClass *filterScope, RexxClass *scope)
+{
+    // use an iterator to traverse the table
+    HashContents::TableIterator iterator = source->iterator();
+
+    for (; iterator.isAvailable(); iterator.next())
+    {
+        // copy these methods over any of our own.
+        MethodClass *method = (MethodClass *)iterator.value();
+        RexxString *name = (RexxString *)iterator.index();
+        if (isMethod(method))
+        {
+            // we're working off of a merged method dictionary, so only take the
+            // ones from target scope
+            if (method->getScope() != filterScope)
+            {
+                continue;
+            }
             method = method->newScope(scope);
         }
         replaceMethod(name, method);

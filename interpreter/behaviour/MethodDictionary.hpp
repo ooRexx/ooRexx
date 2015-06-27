@@ -70,6 +70,7 @@ class MethodDictionary: public StringHashCollection
     void addMethod(RexxString *methodName, MethodClass *method);
     void replaceMethod(RexxString *methodName, MethodClass *method);
     void replaceMethods(MethodDictionary *source, RexxClass *scope);
+    void replaceMethods(MethodDictionary *source, RexxClass *filterScope, RexxClass *scope);
     void replaceMethods(StringTable *source, RexxClass *scope);
     void addMethods(StringTable *source, RexxClass *scope);
     bool removeMethod(RexxString *methodName);

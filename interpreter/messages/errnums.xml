@@ -814,7 +814,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>919</term>
 <listitem>
-<para>Symbol expected as ::ANNOTATION attribute name; found "<emphasis role="italic">name</emphasis>".</para>
+<para>Symbol expected as ::ANNOTATE attribute name; found "<emphasis role="italic">name</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
