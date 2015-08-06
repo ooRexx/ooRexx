@@ -57,7 +57,7 @@ typedef UINT_PTR  uintptr_t;
  * inttypes.h.  In this case define HAVE_STDINT_H.  Otherwise use our own
  * defintions of the same types
 */
-#if defined (NATIVE_INTYPES)
+#if defined (NATIVE_INTTYPES)
 #include <inttypes.h>
 #elif defined(HAVE_STDINT_H)
 #include <stdint.h>
