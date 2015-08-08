@@ -41,6 +41,10 @@
 #include "windows.h"
 #include "limits.h"
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 typedef SSIZE_T   ssize_t;
 typedef INT_PTR   intptr_t;
 typedef UINT_PTR  uintptr_t;
@@ -51,13 +55,13 @@ typedef UINT_PTR  uintptr_t;
 #endif
 
 /* If the platform and compiler supports the C9X 'proposed' standard for
- * integer types, and has inttypes.h, then use it by defining NATIVE_INTTYPES.
+ * integer types, and has inttypes.h, then use it by defining HAVE_INTTYPES_H.
  *
  * Visual C++ since 2010 has stdint.h, but by 2013 still does not have
  * inttypes.h.  In this case define HAVE_STDINT_H.  Otherwise use our own
  * defintions of the same types
 */
-#if defined (NATIVE_INTTYPES)
+#if defined (HAVE_INTTYPES_H)
 #include <inttypes.h>
 #elif defined(HAVE_STDINT_H)
 #include <stdint.h>
