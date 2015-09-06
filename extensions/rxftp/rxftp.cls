@@ -1928,60 +1928,35 @@ self~response = .array~new()
 if arg() > 4 then raise syntax 93.902 array (4)
 if arg() < 1 then raise syntax 93.901 array (1)
 
-select
-   when arg() = 1 then do
-       use arg fname
-     mode = 'R'
-     end
-   when arg() = 2 then do
-     use arg fname, mode
-     mode = mode~substr(1, 1)~translate()
-     if mode = 'R' then nop
-     else raise syntax 93.914 array (2, 'R', mode)
-     end
-   when arg() = 3 then do
-     use arg fname, mode, sharemode=''
-     mode = mode~substr(1, 1)~translate()
-     if mode = 'R' then nop
-     else raise syntax 93.914 array (2, 'R', mode)
-     sharemode = sharemode~substr(1, 1)~translate()
-     if sharemode = 'S' then nop
-     else raise syntax 93.914 array (3, 'S', sharemode)
-     end
-   when arg() = 4 then do
-     use arg fname, mode, sharemode='', logmode
-     mode = mode~substr(1, 1)~translate()
-     if mode = 'R' then nop
-     else raise syntax 93.914 array (2, 'R', mode)
-     sharemode = sharemode~substr(1, 1)~translate()
-     if sharemode = 'S' | sharemode = '' then nop
-     else raise syntax 93.914 array (3, 'S', sharemode)
-     log = logmode~substr(1, 1)~translate()
-     if logmode = 'E' then self~exttraceflg = .true
-     else raise syntax 93.914 array (4, 'E', logmode)
-     end
-   otherwise nop
-   end
+fname = arg(1)
+
+if arg(2,'e')
+then do
+   if 'replace'~caselessAbbrev(arg(2))
+   then mode = 'replace'
+   else raise syntax 93.914 array (2, 'R', arg(2))
+end /* DO */
+else mode = 'append'
+
+if arg(3,'e')
+then do
+   if 'shareread'~caselessAbbrev(arg(3))
+   then sharemode = 'shareread'
+   else raise syntax 93.914 array (3, 'S', arg(3))
+end /* DO */
+else sharemode = ''
+
+if arg(4,'e')
+then do
+   if arg(4)~left(1)~upper = 'E'
+   then self~exttraceflg = .true
+   else raise syntax 93.914 array (4, 'E', logmode)
+end /* DO */
 
 /* open the trace file */
-if mode = '' then mode = 'R'
 self~tracelog = .stream~new(fname)
-if mode = 'R' then do
-     if sharemode = 'S' then do
-     retc = self~tracelog~open('write replace shareread')
-     end
-   else do
-     retc = self~tracelog~open('write replace')
-     end
-   end
-else do
-     if sharemode = 'S' then do
-     retc = self~tracelog~open('write append shareread')
-         end
-     else do
-     retc = self~tracelog~open('write append')
-     end
-   end
+retc = self~tracelog~open('write' mode sharemode)
+
 if retc <> 'READY:' then do
    self~debugsay('Error: cannot open trace file' fname'.')
    self~ftperrno = 'FTPCOMMAND'
