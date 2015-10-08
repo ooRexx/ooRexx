@@ -129,12 +129,16 @@ exit
 --/ Additional S T R I N G methods /
 --/============================================================================/
 ::METHOD string_cls_nl
+ use strict arg
  return "0a"x
 ::METHOD string_cls_cr
+ use strict arg
  return "0d"x
 ::METHOD string_cls_tab
+ use strict arg
  return "09"x
 ::METHOD string_cls_null
+ use strict arg
  return "00"x
 
 -- Start of classes that exist only to add collections of methods to
@@ -720,6 +724,7 @@ nomethod:
 ::METHOD triggered ABSTRACT
 -- we'll make this one a NOP...it does not really need to be implemented.
 ::METHOD cancel
+  use strict arg    -- enforces no arguments
   return
 
 
@@ -2128,7 +2133,7 @@ Output:
 
 -- override for the makestring method
 ::method makestring
-  return self~string
+  forward to (self~string)
 
 ::method string               -- create a string representation, using the optional delimiter
   expose size
@@ -2694,38 +2699,45 @@ nomethod:
 -- return the year value of the datetime.
 ::METHOD year
   expose timestamp
+  use strict arg    -- enforces no arguments
   return date('Standard', timestamp, 'Full')~substr(1, 4)
 
 -- return the month value of the datetime
 ::METHOD month
   expose timestamp
+  use strict arg    -- enforces no arguments
   -- NB make sure the leading zeros are stripped
   return date('Standard', timestamp, 'Full')~substr(5, 2) + 0
 
 -- return the day value of the datetime
 ::METHOD day
   expose timestamp
+  use strict arg    -- enforces no arguments
   -- NB make sure the leading zeros are stripped
   return date('Standard', timestamp, 'Full')~substr(7, 2) + 0
 
 -- return the hours value of the datetime
 ::METHOD hours
   expose timestamp
+  use strict arg    -- enforces no arguments
   return time('Hours', timestamp, 'Full')
 
 -- return the minutes value of the datetime
 ::METHOD minutes
   expose timestamp
+  use strict arg    -- enforces no arguments
   return time('Minutes', timestamp, 'Full') // 60
 
 -- return the seconds value of the datetime
 ::METHOD seconds
   expose timestamp
+  use strict arg    -- enforces no arguments
   return time('Seconds', timestamp, 'Full') // 60
 
 -- return the microseconds value of the datetime
 ::METHOD microseconds
   expose timestamp
+  use strict arg    -- enforces no arguments
 
   parse value time('Long', timestamp, 'Full')  with '.' microseconds
   return microseconds + 0
@@ -2733,16 +2745,19 @@ nomethod:
 -- return the number of minutes since 00:00:00.000000
 ::METHOD dayMinutes
   expose timestamp
+  use strict arg    -- enforces no arguments
   return time('Minutes', timestamp, 'Full')
 
 -- return the number of seconds since 00:00:00.000000
 ::METHOD daySeconds
   expose timestamp
+  use strict arg    -- enforces no arguments
   return time('Seconds', timestamp, 'Full')
 
 -- return the number of microseconds since 00:00:00.000000
 ::METHOD dayMicroseconds
   expose timestamp
+  use strict arg    -- enforces no arguments
   numeric digits 18
 
   return self~daySeconds * 1000000 + self~microseconds
@@ -2750,6 +2765,7 @@ nomethod:
 -- hashcode override for MapCollection interaction.
 ::METHOD hashCode
   expose timestamp
+  use strict arg    -- enforces no arguments
   return timestamp~hashcode
 
 -- perform subtraction between two datetime objects or a datetime
@@ -3058,11 +3074,13 @@ nomethod:
 -- Return the full date timestamp value for this date.
 ::METHOD fullDate
   expose timestamp
+  use strict arg    -- enforces no arguments
   return timestamp
 
 -- return the UTC timestamp in fulldate format
 ::METHOD utcDate
   expose utcTimeStamp
+  use strict arg    -- enforces no arguments
   return utcTimeStamp
 
 ::METHOD toTimeZone
@@ -3099,6 +3117,7 @@ nomethod:
 -- return the time zone offset, as a TimeSpan object
 ::METHOD offset
   expose offset
+  use strict arg    -- enforces no arguments
   return .TimeSpan~new(offset)
 
 -- Return the Unix Ticks value for this timestamp.
@@ -3162,6 +3181,7 @@ nomethod:
 -- Returns a string form for this date time.  The string value
 -- is the ISO date.
 ::METHOD string      -- return a formatted string value
+  use strict arg    -- enforces no arguments
   return self~isoDate
 
 
@@ -3315,11 +3335,13 @@ nomethod:
 -- return a timespan instance as a positive value
 ::METHOD duration
   expose timestamp
+  use strict arg    -- enforces no arguments
   return self~class~new(abs(timestamp))
 
 -- return the number of whole days in the timespan
 ::METHOD days
   expose timestamp
+  use strict arg    -- enforces no arguments
   numeric digits 18
   return abs(timestamp) % (24 * 3600 * 1000000)
 
@@ -3327,6 +3349,7 @@ nomethod:
 -- return the hours component of the timespan
 ::METHOD hours
   expose timestamp
+  use strict arg    -- enforces no arguments
 
   numeric digits 18
   -- subtract out the higher components
@@ -3338,6 +3361,7 @@ nomethod:
 -- return the minutes component of the timespan
 ::METHOD minutes
   expose timestamp
+  use strict arg    -- enforces no arguments
 
   numeric digits 18
   -- subtract out the higher components
@@ -3349,6 +3373,7 @@ nomethod:
 -- return the seconds component of the timespan
 ::METHOD seconds
   expose timestamp
+  use strict arg    -- enforces no arguments
 
   numeric digits 18
   -- subtract out the higher components
@@ -3359,6 +3384,7 @@ nomethod:
 -- return the microseconds component of the timespan
 ::METHOD microseconds
   expose timestamp
+  use strict arg    -- enforces no arguments
 
   numeric digits 18
   -- subtract out the higher components
@@ -3370,6 +3396,7 @@ nomethod:
 -- return the timespan as a number of days (including fractional days)
 ::METHOD totalDays
   expose timestamp
+  use strict arg    -- enforces no arguments
   numeric digits 18
   return timestamp / (24 * 3600 * 1000000)
 
@@ -3377,6 +3404,7 @@ nomethod:
 -- return the timespan as a number of hours (including fractional hours)
 ::METHOD totalHours
   expose timestamp
+  use strict arg    -- enforces no arguments
 
   numeric digits 18
   return timestamp / (3600 * 1000000)
@@ -3385,6 +3413,7 @@ nomethod:
 -- return the timespan as a number of minutes (including fractional minutes)
 ::METHOD totalMinutes
   expose timestamp
+  use strict arg    -- enforces no arguments
 
   numeric digits 18
   return timestamp / (60 * 1000000)
@@ -3393,6 +3422,7 @@ nomethod:
 -- return the timespan as a number of seconds (including fractional seconds)
 ::METHOD totalSeconds
   expose timestamp
+  use strict arg    -- enforces no arguments
 
   numeric digits 18
   return timestamp / (1000000)
@@ -3401,11 +3431,13 @@ nomethod:
 -- return the timespan as a number of microseconds
 ::METHOD totalMicroseconds
   expose timestamp
+  use strict arg    -- enforces no arguments
   return timestamp
 
 -- hashcode override for MapCollection interaction.
 ::METHOD hashCode
   expose timestamp
+  use strict arg    -- enforces no arguments
   return timestamp~hashcode
 
 -- perform timespan subtraction.  If this is a prefix "-",

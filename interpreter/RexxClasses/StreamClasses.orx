@@ -148,6 +148,7 @@ notready:
 
 ::METHOD string                        /* string method                     */
   expose stream_name                   /* get the stream name               */
+  use strict arg
   return stream_name                   /* use it as the string value        */
 
 ::METHOD  init                         /* standard init method              */
@@ -351,7 +352,8 @@ notready:                              /* standard notready handler         */
   raise propagate return (self~description)
 
 ::METHOD say UNGUARDED                 /* the SAY method                    */
-  return self~lineout(arg(1))          /* write the target line out         */
+  use strict arg line
+  return self~lineout(line)            /* write the target line out         */
 
 ::METHOD supplier                      /* create a supplier object          */
 use strict arg
@@ -442,11 +444,13 @@ return position
 
 ::METHOD get unguarded                 /* get the queue name                */
   expose named_queue                   /* just expose and return            */
+  use strict arg
   return named_queue
 
 ::METHOD set                           /* set a new queue                   */
   expose named_queue                   /* get the old queue name            */
-  arg new_queue                        /* the new queue name                */
+  use strict arg new_queue             /* the new queue name                */
+  new_queue = new_queue~upper
   old_queue = named_queue              /* save the old name                 */
   named_queue = new_queue              /* set the new current name          */
   self~objectname = new_queue          /* and also set as an object name    */
@@ -466,6 +470,7 @@ return position
   forward message 'QUEUE'
 
 ::METHOD makearray
+  use strict arg
   qItems = self~queued
   arr = .array~new(qItems)
   do i = 1 to qItems
@@ -643,6 +648,7 @@ return position
   return self~qualifiedPath
 
 ::METHOD absoluteFile
+  use strict arg
   return self~class~new(self~qualifiedPath)
 
 -- return the name portion of the file.  This is everything after the
@@ -662,6 +668,7 @@ return position
 
 -- extract the parent directory portion of this file
 ::METHOD parent
+  use strict arg
   path = self~qualifiedPath
 
   sep = path~lastPos(self~separator)
@@ -760,6 +767,7 @@ return position
 -- makes just the directory represented by the top-level name.  Does not
 -- create any parent directories
 ::METHOD makeDir
+  use strict arg
   return self~makeDirImpl(self~qualifiedPath)
 
 -- create the entire directory hierarchy represented by this file
