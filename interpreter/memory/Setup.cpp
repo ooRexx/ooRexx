@@ -1651,10 +1651,8 @@ EndClassDefinition(StackFrame);
 
     }
 
-    // disable the special class methods we only use during the image build phase.
-    // this removes this from all of the subclasses as well
-    TheClassClass->removeClassMethod(new_string("DEFINECLASSMETHOD"));
-    TheClassClass->removeClassMethod(new_string("INHERITINSTANCEMETHODS"));
+    // remove the special setup methods we created for the image build.
+    TheClassClass->removeSetupMethods();
 
     // now save the image
     memoryObject.saveImage();

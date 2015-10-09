@@ -88,6 +88,7 @@ class RexxClass : public RexxObject
     RexxObject *deleteMethod(RexxString *);
     RexxObject *defineClassMethod(RexxString *method_name, MethodClass *newMethod);
     void        removeClassMethod(RexxString *method_name);
+    void        removeSetupMethods();
     RexxObject *defineMethods(StringTable *);
     void        inheritInstanceMethods(RexxClass *);
     RexxObject *inheritInstanceMethodsRexx(RexxClass *);

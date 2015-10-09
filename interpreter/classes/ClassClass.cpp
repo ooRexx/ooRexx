@@ -902,6 +902,7 @@ void RexxClass::removeClassMethod(RexxString *method_name)
 {
     // remove from our behaviour
     behaviour->deleteMethod(method_name);
+    instanceBehaviour->deleteMethod(method_name);
 
     // propagate to all subclasses
     ArrayClass *subclass_list = getSubClasses();
@@ -909,6 +910,31 @@ void RexxClass::removeClassMethod(RexxString *method_name)
     {
         ((RexxClass *)subclass_list->get(i))->removeClassMethod(method_name);
     }
+}
+
+
+/**
+ * Remove the special class methods that are defined just for
+ * image building.
+ */
+void RexxClass::removeSetupMethods()
+{
+    RexxString *defineClassMethodName = new_string("DEFINECLASSMETHOD");
+    RexxString *inheritInstanceMethodsName = new_string("INHERITINSTANCEMETHODS");
+
+    // remove from the base class behaviour first
+    behaviour->deleteMethod(defineClassMethodName);
+    instanceBehaviour->deleteMethod(defineClassMethodName);
+    instanceMethodDictionary->removeMethod(defineClassMethodName);
+
+    behaviour->deleteMethod(inheritInstanceMethodsName);
+    instanceBehaviour->deleteMethod(inheritInstanceMethodsName);
+    instanceMethodDictionary->removeMethod(inheritInstanceMethodsName);
+
+    // now we need to remove this from all class objects in the image.  We start with
+    // object and move all the way up the hierarchy for both methods
+    TheObjectClass->removeClassMethod(defineClassMethodName);
+    TheObjectClass->removeClassMethod(inheritInstanceMethodsName);
 }
 
 
