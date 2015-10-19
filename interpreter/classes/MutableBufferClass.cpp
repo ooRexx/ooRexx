@@ -1390,16 +1390,17 @@ RexxObject *MutableBuffer::match(RexxInteger *start_, RexxString *other, RexxInt
 
     size_t offset = optionalPositionArgument(offset_, 1, ARG_THREE);
 
+    // other offset/positional problems are also always a false result
     if (offset_ != OREF_NULL && offset > other->getLength())
     {
-        reportException(Error_Incorrect_method_position, offset);
+        return TheFalseObject;
     }
 
     size_t len = optionalLengthArgument(len_, other->getLength() - offset + 1, ARG_FOUR);
 
     if ((offset + len - 1) > other->getLength())
     {
-        reportException(Error_Incorrect_method_length, len);
+        return TheFalseObject;
     }
 
     return booleanObject(primitiveMatch(_start, other, offset, len));
@@ -1436,14 +1437,14 @@ RexxObject *MutableBuffer::caselessMatch(RexxInteger *start_, RexxString *other,
 
     if (offset_ != OREF_NULL && offset > other->getLength())
     {
-        reportException(Error_Incorrect_method_position, offset);
+        return TheFalseObject;
     }
 
     size_t len = optionalLengthArgument(len_, other->getLength() - offset + 1, ARG_FOUR);
 
     if ((offset + len - 1) > other->getLength())
     {
-        reportException(Error_Incorrect_method_length, len);
+        return TheFalseObject;
     }
 
     return booleanObject(primitiveCaselessMatch(_start, other, offset, len));
