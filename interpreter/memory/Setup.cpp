@@ -1292,7 +1292,7 @@ StartClassDefinition(MutableBuffer)
         AddMethod("SubChar", MutableBuffer::subchar, 1);
         AddMethod("GetBufferSize", MutableBuffer::getBufferSize, 0);
         AddMethod("SetBufferSize", MutableBuffer::setBufferSize, 1);
-        AddMethod("SetText", MutableBuffer::setText, 1);
+        AddMethod("SetText", MutableBuffer::setTextRexx, 1);
 
         AddMethod("Length", MutableBuffer::lengthRexx, 0);
         AddMethod("MakeArray", MutableBuffer::makeArrayRexx, 1);

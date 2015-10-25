@@ -369,7 +369,7 @@ void MutableBuffer::setText(RexxString *string)
     // set the data length to zero
     dataLength = 0;
     // and append the new text to the buffer
-    append(string);
+    append(string->getStringData(), string->getLength());
 }
 
 
