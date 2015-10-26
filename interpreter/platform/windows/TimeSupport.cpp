@@ -395,6 +395,7 @@ RexxMethod3(int, ticker_waitTimer, POINTER, eventSemHandle, wholenumber_t, numda
             CloseHandle(SemHandle);
             return 0;
         }
+        KillTimer(NULL, TimerHandle);
     }
 
     return 0;
