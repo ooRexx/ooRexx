@@ -1494,7 +1494,7 @@ return left~caselessCompareTo(right, start, length)
      timespan = atime                  -- we can use this directly
      scheduledTime = current + atime   -- and get the future time
  end
- else if datatype(atime, 'W') then do  /* just a delta specification?       */
+ else if datatype(atime, 'N') then do  /* just a delta specification?       */
    -- convert seconds into a timespan
    timespan = .timespan~fromSeconds(atime)
    scheduledTime = current + timespan
@@ -1625,7 +1625,7 @@ return left~caselessCompareTo(right, start, length)
  numeric digits 18                     -- we'll be doing math with large numbers potentially
  if interval~isA(.TimeSpan) then nop   -- already in timespan form?  everything is set up
  -- just a seconds specification convert to a timespace
- else if datatype(interval, 'W') then do
+ else if datatype(interval, 'N') then do
    interval = .timespan~fromSeconds(interval)
  end
  -- this is an invalid time
