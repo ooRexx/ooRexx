@@ -724,7 +724,6 @@ nomethod:
 ::METHOD triggered ABSTRACT
 -- we'll make this one a NOP...it does not really need to be implemented.
 ::METHOD cancel
-  use strict arg    -- enforces no arguments
   return
 
 

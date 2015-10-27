@@ -352,8 +352,8 @@ notready:                              /* standard notready handler         */
   raise propagate return (self~description)
 
 ::METHOD say UNGUARDED                 /* the SAY method                    */
-  use strict arg line
-  return self~lineout(line)            /* write the target line out         */
+  use strict arg line = ""             /* enforce zero or one argument      */
+  forward message 'LINEOUT'            /* write the target line out         */
 
 ::METHOD supplier                      /* create a supplier object          */
 use strict arg
@@ -459,6 +459,7 @@ return position
 -- delete the named queue when finished
 ::method delete
   expose named_queue
+  use strict arg                       /* enforce no argument               */
   if named_queue \= 'SESSION' then do
       self~class~delete(named_queue)
   end
