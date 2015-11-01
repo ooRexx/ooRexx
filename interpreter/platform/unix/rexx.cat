@@ -1161,7 +1161,7 @@ $ Error_Execution_nostring
 489 Unable to convert object "&1" to a string value.
 
 $ Error_Execution_message_reuse
-490 A message object cannot be sent more than one SEND or START message.
+490 A message object that was sent a START message cannot be sent another START, SEND, or REPLY message.
 
 $ Error_Execution_message_error
 491 Message object "&1" received an error from message "&2".

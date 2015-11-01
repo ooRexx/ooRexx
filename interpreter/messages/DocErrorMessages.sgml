@@ -3332,7 +3332,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>915</term>
 <listitem>
-<para>A message object cannot be sent more than one SEND or START message</para>
+<para>A message object that was sent a START message cannot be sent another START, SEND, or REPLY message</para>
 </listitem>
 </varlistentry>
 <varlistentry>

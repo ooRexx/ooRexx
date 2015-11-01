@@ -422,7 +422,7 @@ BEGIN
    98911    "Cyclic inheritance in program ""&1""."
    98913    "Unable to convert object ""&1"" to a single-dimensional array value."
    98914    "Unable to convert object ""&1"" to a string value."
-   98915    "A message object cannot be sent more than one SEND or START message."
+   98915    "A message object that was sent a START message cannot be sent another START, SEND, or REPLY message."
    98916    "Message object ""&1"" received an error from message ""&2""."
    98917    "Incorrect condition object received for RAISE OBJECT; found ""&1""."
    98918    "No active condition available for PROPAGATE."

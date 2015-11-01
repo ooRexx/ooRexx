@@ -2623,7 +2623,7 @@ BUILTIN(RXQUEUE)
             // the queue name is not allowed with the 'G'et option
             if (queueName != OREF_NULL)
             {
-                reportException(Error_Incorrect_call_maxarg, "RXQUEUE", IntegerTwo);
+                reportException(Error_Incorrect_call_maxarg, "RXQUEUE", IntegerOne);
             }
             RexxObject *queue = context->getLocalEnvironment(STDQUE);
             return queue->sendMessage(GlobalNames::GET, result);
@@ -2655,6 +2655,11 @@ BUILTIN(RXQUEUE)
         // 'S'et a new queue name
         case 'S':
         {
+            // queueName is required 
+            if (queueName == OREF_NULL)
+            {
+                reportException(Error_Incorrect_call_minarg, "RXQUEUE", IntegerTwo);
+            }
             // give the exit a pass at this
             context->getActivity()->callQueueNameExit(context, queueName);
             // this must be a valid symbol
@@ -2669,6 +2674,11 @@ BUILTIN(RXQUEUE)
         // 'O'pen a new queue name...creates if needed
         case 'O':
         {
+            // queueName is required 
+            if (queueName == OREF_NULL)
+            {
+                reportException(Error_Incorrect_call_minarg, "RXQUEUE", IntegerTwo);
+            }
             // we need the RexxQueue class for this
             RexxClass *rexxQueue = TheRexxPackage->findClass(REXXQUEUE);
             // this must be a valid symbol
@@ -2682,6 +2692,11 @@ BUILTIN(RXQUEUE)
         // 'E'xists
         case 'E':
         {
+            // queueName is required 
+            if (queueName == OREF_NULL)
+            {
+                reportException(Error_Incorrect_call_minarg, "RXQUEUE", IntegerTwo);
+            }
             // we need the RexxQueue class for this
             RexxClass *rexxQueue = TheRexxPackage->findClass(REXXQUEUE);
             // this must be a valid symbol
@@ -2695,6 +2710,11 @@ BUILTIN(RXQUEUE)
         // 'D'elete
         case 'D':
         {
+            // queueName is required 
+            if (queueName == OREF_NULL)
+            {
+                reportException(Error_Incorrect_call_minarg, "RXQUEUE", IntegerTwo);
+            }
             // we need the RexxQueue class for this
             RexxClass *rexxQueue = TheRexxPackage->findClass(REXXQUEUE);
             // this must be a valid symbol
