@@ -502,7 +502,7 @@ MethodClass *MethodClass::loadExternalMethod(RexxString *name, RexxString *descr
     ArrayClass *_words = StringUtil::words(descriptor->getStringData(), descriptor->getLength());
     ProtectedObject p(_words);
     // "LIBRARY libbar [foo]"
-    if (((RexxString *)(_words->get(1)))->strCompare("LIBRARY"))
+    if (_words->size() > 0 && ((RexxString *)(_words->get(1)))->strCompare("LIBRARY"))
     {
         RexxString *library = OREF_NULL;
         // the default entry point name is the internal name
