@@ -808,6 +808,7 @@ size_t ArrayClass::insert(RexxInternalObject *value, size_t index)
  */
 RexxInternalObject *ArrayClass::deleteRexx(RexxObject *index)
 {
+    requiredArgument(index, ARG_ONE);
     checkMultiDimensional("DELETE");
 
     size_t position;                     // array position

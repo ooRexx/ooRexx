@@ -563,7 +563,7 @@ RoutineClass *RoutineClass::loadExternalRoutine(RexxString *name, RexxString *de
     // convert external into words
     Protected<ArrayClass> words = StringUtil::words(descriptor->getStringData(), descriptor->getLength());
     // "LIBRARY libbar [foo]"
-    if (((RexxString *)(words->get(1)))->strCompare("LIBRARY"))
+    if (words->size() > 0 && ((RexxString *)(words->get(1)))->strCompare("LIBRARY"))
     {
         RexxString *library = OREF_NULL;
         // the default entry point name is the internal name
