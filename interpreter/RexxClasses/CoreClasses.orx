@@ -1930,9 +1930,6 @@ Output:
   end
   return storage              -- return instance
 
-::METHOD readObject CLASS
-    use strict arg handler
-    return self~new(handler~readNumber)
 
 ::method init                 -- create an instance, memorizes the size
   expose size
@@ -1945,11 +1942,6 @@ Output:
   self~init:super
   return
 
-::METHOD writeObject
-    expose size
-    use strict arg handler
-    handler~writeNumber(size)
-    forward class (super)
 
 ::METHOD size                 -- return size
   expose size
