@@ -692,7 +692,7 @@ ArrayClass *HashCollection::uniqueIndexes()
 RexxObject *HashCollection::emptyRexx()
 {
     contents->empty();
-    return OREF_NULL;
+    return this;          // return receiving Array
 }
 
 

@@ -1034,7 +1034,7 @@ size_t StemClass::items()
 RexxObject *StemClass::empty()
 {
     tails.clear();      // just clear the tails.
-    return OREF_NULL;
+    return this;        // return receiving Array
 }
 
 

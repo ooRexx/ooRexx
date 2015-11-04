@@ -783,7 +783,7 @@ ArrayClass *ListClass::allItems()
 RexxObject *ListClass::emptyRexx()
 {
     empty();
-    return OREF_NULL;
+    return this;          // return receiving Array
 }
 
 

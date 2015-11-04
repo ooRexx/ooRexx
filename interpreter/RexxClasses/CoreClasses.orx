@@ -523,7 +523,7 @@ nomethod:                              -- unknown method sent
       self~put(values[i])
   end
 
-  return                                 -- no return value
+  return self                            -- return receiving set
 
   nomethod:                              -- unknown method sent
     raise syntax 93.948 array(1, "Collection")
@@ -705,11 +705,11 @@ nomethod:
   count = values~items
 
   do i = 1 to count
-      -- just put each item into the set
+      -- just put each item into the bag
       self~put(values[i])
   end
 
-  return                                 -- no return value
+  return self                            -- return receiving bag
 
   nomethod:                              -- unknown method sent
     raise syntax 93.948 array(1, "Collection")
@@ -1021,7 +1021,7 @@ nomethod:
   do item over other~allItems            /* loop over the other collection    */
     self~append(item)                    -- appending the item
   end
-  return
+  return self
 
 nomethod:
       -- an unknown method is an argument problem.  report it as such.
@@ -1268,7 +1268,7 @@ nomethod:
     self~put(supplier~item, supplier~index)   -- putting the item using the same index
     supplier~next
   end
-  return
+  return self
 
 nomethod:
       -- an unknown method is an argument problem.  report it as such.

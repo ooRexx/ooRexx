@@ -611,7 +611,7 @@ RexxObject *ArrayClass::fillRexx(RexxObject *value)
     // perform the fill
     fill(value);
 
-    return OREF_NULL;     // no real return value
+    return this;          // return receiving Array
 }
 
 
@@ -662,7 +662,7 @@ RexxObject *ArrayClass::empty()
     lastItem = 0;
     // no items either
     itemCount = 0;
-    return OREF_NULL;     // no real return value
+    return this;          // return receiving Array
 }
 
 
