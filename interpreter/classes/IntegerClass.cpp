@@ -810,15 +810,34 @@ wholenumber_t RexxInteger::strictComp(RexxObject *other)
     // though ostensibly a low level call, this is used from the
     // comparison operators, so the argument checking is done here.
     requiredArgument(other, ARG_ONE);
+    // this must always be done using the string version, since values of
+    // different decimal lengths need to use string rules.  Thus
+    // 12<<2 is true because string rules are used
+    return stringValue()->strictComp((RexxString *)other);
+}
+
+
+/**
+ * Compare the two values, testing just for strict equality
+ *
+ * @param other  The other object for the comparison.
+ *
+ * @return The comparison result.
+ */
+bool RexxInteger::strictEquality(RexxObject *other)
+{
+    // though ostensibly a low level call, this is used from the
+    // comparison operators, so the argument checking is done here.
+    requiredArgument(other, ARG_ONE);
     // if two integers, this is easy to do.
     if (isInteger(other))
     {
-        return value - ((RexxInteger *)other)->value;
+        return value == ((RexxInteger *)other)->value;
     }
     // string comparison
     else
     {
-        return stringValue()->strictComp((RexxString *)other);
+        return (stringValue()->strictComp((RexxString *)other)) == 0;
     }
 }
 
@@ -875,7 +894,7 @@ RexxObject *RexxInteger::strictEqual(RexxObject *other)
     {
         return TheFalseObject;
     }
-    return booleanObject(strictComp(other) == 0);
+    return booleanObject(strictEquality(other));
 }
 
 
@@ -885,7 +904,7 @@ RexxObject *RexxInteger::strictNotEqual(RexxObject *other)
     {
         return TheTrueObject;
     }
-    return booleanObject(strictComp(other) != 0);
+    return booleanObject(!strictEquality(other));
 }
 
 

@@ -87,6 +87,7 @@ class RexxInteger : public RexxObject
 
     virtual bool  isEqual(RexxInternalObject *);
     wholenumber_t strictComp(RexxObject *);
+    bool          strictEquality(RexxObject *);
     wholenumber_t comp(RexxObject *other);
 
     RexxObject  *equal(RexxObject *);
