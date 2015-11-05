@@ -2430,9 +2430,9 @@ nomethod:
   return self~new(9999, 12, 31, 23, 59, 59, 999999, 0)
 
 -- return a DateTime object for today's date, and a time
--- of 00:00:0).000000
+-- of 00:00:00.000000
 ::METHOD today class
-  use strict arg, offset=(time('O')/60000000)
+  use strict arg offset=(time('O')/60000000)
   -- just grab the date in standard format and convert
   return self~fromStandardDate(date('s'),, offset)
 
