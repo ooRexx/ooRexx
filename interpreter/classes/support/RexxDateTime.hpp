@@ -138,6 +138,7 @@ public:
     void setDate(wholenumber_t newYear, wholenumber_t newDay);
     void setDay(wholenumber_t basedays);
     bool parseNormalDate(const char *date, const char *sep);
+    bool parseISODate(const char *date, const char *sep);
     bool parseStandardDate(const char *date, const char *sep);
     bool parseEuropeanDate(const char *date, const char *sep, wholenumber_t currentYear);
     bool parseUsaDate(const char *date, const char *sep, wholenumber_t currentYear);
@@ -157,6 +158,7 @@ public:
     void formatMonthName(char *buffer);
     void formatNormalDate(char *buffer, const char *sep);
     void formatOrderedDate(char *buffer, const char *sep);
+    void formatISODate(char *buffer, const char *sep);
     void formatStandardDate(char *buffer, const char *sep);
     void formatUsaDate(char *buffer, const char *sep);
     void formatWeekDay(char *buffer);

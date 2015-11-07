@@ -543,6 +543,21 @@ bool RexxDateTime::parseNormalDate(const char *date, const char *sep)
 
 
 /**
+ * Parse a date in 'I'SO 8601 format into the timestamp.
+ *
+ * @param date   The string version of the date.
+ * @param sep    The field separator character used in the date.  This argument
+ *               can be NULL, which means use the default separator.
+ *
+ * @return true if the date parses correctly, false for any parsing errors.
+ */
+bool RexxDateTime::parseISODate(const char *date, const char *sep)
+{
+    return parseDateTimeFormat(date, "YYYY/mm/dd", sep == NULL ? "-" : sep, 0);
+}
+
+
+/**
  * Parse a date in 'S'tandard format into the timestamp.
  *
  * @param date   The string version of the date.
@@ -1235,6 +1250,22 @@ void RexxDateTime::formatOrderedDate(char *buffer, const char *sep)
     // make sure we have a valid delimiter
     sep = sep == NULL ? "/" : sep;
     sprintf(buffer, "%02d%s%02d%s%02d", year % 100, sep, month, sep, day);
+}
+
+
+/**
+ * Format a date in 'I'SO 8601 format.
+ *
+ * @param buffer The target buffer for the output.
+ * @param sep    The separator character used for the fields.  This value can
+ *               be NULL, in which case the default is used.  The string value
+ *               can also be a null string ("").
+ */
+void RexxDateTime::formatISODate(char *buffer, const char *sep)
+{
+    // make sure we have a valid delimiter
+    sep = sep == NULL ? "-" : sep;
+    sprintf(buffer, "%04d%s%02d%s%02d", year, sep, month, sep, day);
 }
 
 
