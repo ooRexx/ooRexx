@@ -844,7 +844,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>924</term>
 <listitem>
-<para>Symbol expected for the ::ANNOTATION type.</para>
+<para>Symbol expected for the ::ANNOTATE type.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -1153,7 +1153,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>906</term>
 <listitem>
-<para>RAISE must be followed by one of the keywords ERROR, FAILURE, HALT, LOSTDIGITS, NOMETHOD, NOSTRING, NOTREADY, NOVALUE, SYNTAX, or USER; found "<emphasis role="italic">word</emphasis>".</para>
+<para>RAISE must be followed by one of the keywords ERROR, FAILURE, HALT, LOSTDIGITS, NOMETHOD, NOSTRING, NOTREADY, NOVALUE, PROPAGATE, SYNTAX, or USER; found "<emphasis role="italic">word</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -1273,7 +1273,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>928</term>
 <listitem>
-<para>Unknown keyword on ::ANNOTATION directive; found "<emphasis role="italic">word</emphasis>".</para>
+<para>Unknown keyword on ::ANNOTATE directive; found "<emphasis role="italic">word</emphasis>".</para>
 </listitem>
 </varlistentry>
 </variablelist>
@@ -3961,7 +3961,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>945</term>
 <listitem>
-<para>::ANNOTATION target <emphasis role="italic">type</emphasis> "<emphasis role="italic">name</emphasis>" not found.</para>
+<para>::ANNOTATE target <emphasis role="italic">type</emphasis> "<emphasis role="italic">name</emphasis>" not found.</para>
 </listitem>
 </varlistentry>
 <varlistentry>

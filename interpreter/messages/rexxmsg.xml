@@ -33,7 +33,7 @@ substitutions to be reordered in message translations.
 Explanation - An explanation of the error condition for documentation.  All major error codes must
 have explanation text for the documentation.  For the subcodes, it is optional.
 
-UserAction - user action text for the documentation.  There should text for the major code, this is
+UserAction - user action text for the documentation.  There should be text for the major code, this is
 optional for the subcodes.
 -->
 
@@ -1217,7 +1217,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Symbol_expected_annotation_type</SymbolicName>
-        <Text>Symbol expected for the ::ANNOTATION type.</Text>
+        <Text>Symbol expected for the ::ANNOTATE type.</Text>
       </SubMessage>
       <SubMessage>
         <Code>20</Code>
@@ -1669,7 +1669,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_subkeyword_raise</SymbolicName>
-        <Text>RAISE must be followed by one of the keywords ERROR, FAILURE, HALT, LOSTDIGITS, NOMETHOD, NOSTRING, NOTREADY, NOVALUE, SYNTAX, or USER; found <q><Sub position="1" name="word"/></q>.</Text>
+        <Text>RAISE must be followed by one of the keywords ERROR, FAILURE, HALT, LOSTDIGITS, NOMETHOD, NOSTRING, NOTREADY, NOVALUE, PROPAGATE, SYNTAX, or USER; found <q><Sub position="1" name="word"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>25</Code>
@@ -1831,7 +1831,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_subkeyword_annotation</SymbolicName>
-        <Text>Unknown keyword on ::ANNOTATION directive; found <q><Sub position="1" name="word"/></q>.</Text>
+        <Text>Unknown keyword on ::ANNOTATE directive; found <q><Sub position="1" name="word"/></q>.</Text>
       </SubMessage>
     </Subcodes>
   </Message>
@@ -5634,7 +5634,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Translation_missing_annotation_target</SymbolicName>
-        <Text>::ANNOTATION target <Sub position="1" name="type"/> <q><Sub position="2" name="name"/></q> not found.</Text>
+        <Text>::ANNOTATE target <Sub position="1" name="type"/> <q><Sub position="2" name="name"/></q> not found.</Text>
       </SubMessage>
       <SubMessage>
         <Code>99</Code>

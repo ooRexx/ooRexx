@@ -603,7 +603,7 @@ $ Error_Invalid_subkeyword_use
 297 USE must be followed by the keyword ARG; found "&1".
 
 $ Error_Invalid_subkeyword_raise
-298 RAISE must be followed by one of the keywords ERROR, FAILURE, HALT, LOSTDIGITS, NOMETHOD, NOSTRING, NOTREADY, NOVALUE, SYNTAX, or USER; found "&1".
+298 RAISE must be followed by one of the keywords ERROR, FAILURE, HALT, LOSTDIGITS, NOMETHOD, NOSTRING, NOTREADY, NOVALUE, PROPAGATE, SYNTAX, or USER; found "&1".
 
 $ Error_Invalid_subkeyword_raiseoption
 299 Unknown keyword on RAISE instruction; found "&1".
@@ -1908,13 +1908,13 @@ $ Error_Symbol_expected_qualified_symbol
 765 Symbol expected as a name of namespace-qualified symbol.
 
 $ Error_Symbol_expected_annotation_type
-766 Symbol expected for the ::ANNOTATION type.
+766 Symbol expected for the ::ANNOTATE type.
 
 $ Error_Translation_missing_annotation_target
-767 ::ANNOTATION target &1 "&2" not found.
+767 ::ANNOTATE target &1 "&2" not found.
 
 $ Error_Invalid_subkeyword_annotation
-768 Unknown keyword on ::ANNOTATION directive; found "&1".
+768 Unknown keyword on ::ANNOTATE directive; found "&1".
 
 $ Error_Execution_abstract_class
 769 Class &1 is ABSTRACT and cannot be directly created.
