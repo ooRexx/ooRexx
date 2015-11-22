@@ -2275,7 +2275,7 @@ bool RexxActivation::willTrap(RexxString *condition)
     // if we have a handler, but this can't handle this can condition, return false
     if (trapHandler != OREF_NULL)
     {
-        return !trapHandler->canHandle(condition);
+        return trapHandler->canHandle(condition);
     }
     // no handler, return false
     return false;
