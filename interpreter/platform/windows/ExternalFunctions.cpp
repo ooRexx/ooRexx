@@ -137,7 +137,16 @@ RexxRoutine1(RexxStringObject, sysDirectory, OPTIONAL_CSTRING, dir)
     {
         if ((strlen(dir) == 2) && (dir[1] == ':'))
         {
-            rc = _chdrive(toupper( dir[0] ) - 'A' + 1);
+            int drive = toupper( dir[0] ) - 'A' + 1;
+            // avoid MSVC _chdir() debug assertion failure "Invalid Drive Index"
+            if (drive < 1 || drive > 26)
+            {
+              rc = -1;
+            }
+            else
+            {
+              rc = _chdrive(drive);
+            }
         }
         else
         {
