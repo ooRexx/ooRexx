@@ -361,6 +361,7 @@ RexxString *NumberString::stringValue()
         return stringObj;
     }
 
+
     // we likely have some sort of decimals or exponent value.  This is
     // a slightly more complicated formatting job.
 
@@ -743,7 +744,7 @@ bool  NumberString::createUnsignedValue(const char *thisnum, size_t intlength, i
 {
     // if the exponent multiplier would cause an overflow, there's no point in doing
     // anything here
-    if (exponent > Numerics::ARGUMENT_DIGITS)
+    if (exponent + intlength > Numerics::ARGUMENT_DIGITS)
     {
         return false;
     }
@@ -778,20 +779,11 @@ bool  NumberString::createUnsignedValue(const char *thisnum, size_t intlength, i
     }
 
     // have an exponent to process?
-    if (exponent > 0)
+    for (wholenumber_t exp = 1; exp <= exponent; exp++ )
     {
-        // get this as a multipler value
-        size_t exponentMultiplier = 1;
-        while (exponent > 0)
-        {
-            exponentMultiplier *= 10;
-            exponent--;
-        }
-        // get this as a multipler value
-        size_t newNumber = intNumber * exponentMultiplier;
+        size_t newNumber = intNumber * 10;
 
-        // did this wrap?  This is a safe test, since we capped
-        // the maximum exponent size we can multiply by.
+        // did this wrap?
         if (newNumber < intNumber)
         {
             return false;
@@ -827,7 +819,7 @@ bool  NumberString::createUnsignedInt64Value(const char *thisnum, size_t intleng
 {
     // if the exponent multiplier would cause an overflow, there's no point in doing
     // anything here
-    if (exponent > Numerics::DIGITS64)
+    if (exponent + intlength > Numerics::DIGITS64)
     {
         return false;
     }
@@ -862,21 +854,11 @@ bool  NumberString::createUnsignedInt64Value(const char *thisnum, size_t intleng
     }
 
     // have an exponent to process?
-    if (exponent > 0)
+    for (wholenumber_t exp = 1; exp <= exponent; exp++ )
     {
-        // get this as a multipler value
-        uint64_t exponentMultiplier = 1;
-        while (exponent > 0)
-        {
-            exponentMultiplier *= 10;
-            exponent--;
-        }
+        uint64_t newNumber = intNumber * 10;
 
-
-        uint64_t newNumber = intNumber * exponentMultiplier;
-
-        // did this wrap?  This is a safe test, since we capped
-        // the maximum exponent size we can multiply by.
+        // did this wrap?
         if (newNumber < intNumber)
         {
             return false;

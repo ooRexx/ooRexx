@@ -3665,7 +3665,7 @@ nomethod:
 -- Validates the argument is a number and is in range.  This gives the
 -- 907 message for all error conditions to be most specific.
 ::METHOD validateNumberRange class
-  use strict arg name, number, min, max
+  use strict arg name, number, min, max, digits=(digits())
   numeric digits digits
   -- validate the numeric part first
   if \number~dataType('Number') then do
