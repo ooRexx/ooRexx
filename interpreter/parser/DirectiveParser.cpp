@@ -617,6 +617,8 @@ MethodClass *LanguageParser::findClassMethod(RexxString *name)
  */
 void LanguageParser::addMethod(RexxString *name, MethodClass *method, bool classMethod)
 {
+    // make sure this is attached to the source object for context information
+    method->setPackageObject(package);
     // if no active class yet, these are unattached methods.
     if (activeClass == OREF_NULL)
     {
@@ -2262,6 +2264,8 @@ void LanguageParser::createConstantGetterMethod(RexxString *name, RexxObject *va
     }
     else
     {
+        // connect this to the source package before adding to the class.
+        method->setPackageObject(package);
         activeClass->addConstantMethod(name, method);
     }
 }
@@ -2454,7 +2458,7 @@ void LanguageParser::routineDirective()
         else
         {
             // NOTE:  It is necessary to translate the block and protect the code
-            // before allocating the MethodClass object.  The new operator allocates the
+            // before allocating the RoutineClass object.  The new operator allocates the
             // the object first, then evaluates the constructor arguments after the allocation.
             // Since the translateBlock() call will allocate a lot of new objects before returning,
             // there's a high probability that the method object can get garbage collected before
@@ -2462,6 +2466,8 @@ void LanguageParser::routineDirective()
             RexxCode *code = translateBlock();
             ProtectedObject p(code);
             RoutineClass *routine = new RoutineClass(name, code);
+            // make sure this is attached to the source object for context information
+            routine->setPackageObject(package);
             // add to the routine directory
             routines->setEntry(name, routine);
             // if this is a public routine, add to the public directory as well.

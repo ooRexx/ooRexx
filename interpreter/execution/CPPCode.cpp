@@ -108,6 +108,8 @@ void CPPCode::liveGeneral(MarkReason reason)
     {
         cppEntry = exportedMethods[methodIndex];
     }
+
+    memory_mark_general(package);
 }
 
 
