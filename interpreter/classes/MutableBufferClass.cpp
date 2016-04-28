@@ -628,7 +628,7 @@ MutableBuffer *MutableBuffer::replaceAt(RexxObject *str, RexxObject *pos, RexxOb
  */
 MutableBuffer *MutableBuffer::mydelete(RexxObject *_start, RexxObject *len)
 {
-    size_t begin = positionArgument(_start, ARG_ONE) - 1;
+    size_t begin = optionalPositionArgument(_start, 1, ARG_ONE) - 1;
     size_t range = optionalLengthArgument(len, data->getDataLength() - begin, ARG_TWO);
 
     // is the begin point actually within the string?
