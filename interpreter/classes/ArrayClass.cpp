@@ -2462,6 +2462,13 @@ void ArrayClass::extendMulti(RexxObject **index, size_t indexCount, size_t argPo
  */
 RexxInternalObject *ArrayClass::deleteItem(size_t index)
 {
+    // if this index is out of the allowed range,
+    // just return OREF_NULL;
+    if (!isInbounds(index))
+    {
+        return OREF_NULL;
+    }
+
     RexxInternalObject *result = get(index);   // save the return value
     closeGap(index, 1);          // close up the gap for the deleted item
                                  // return .nil if there's nothing at that position
