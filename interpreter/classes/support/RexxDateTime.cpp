@@ -1017,7 +1017,7 @@ bool  RexxDateTime::parseDateTimeFormat(const char *date, const char *format, co
                         numberLength = 2;
                     }
                     // parse out the number version
-                    if (!getNumber(inputscan, numberLength, &hours, MAXHOURS))
+                    if (!getNumber(inputscan, numberLength, &hours, MAXCIVILHOURS))
                     {
                         return false;
                     }
