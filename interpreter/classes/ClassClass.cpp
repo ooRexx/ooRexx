@@ -1206,9 +1206,19 @@ void RexxClass::mergeBehaviour(RexxBehaviour *target_instance_behaviour)
  */
 void RexxClass::checkUninit()
 {
+    // we have to things we need to do here.  First we check to see if there is an UNINIT
+    // instance method defined, and if there is, we mark the class as creating instances
+    // that need an UNINIT run so that they will get added to the special table at creation time.
     if (instanceBehaviour->methodLookup(GlobalNames::UNINIT) != OREF_NULL)
     {
         setHasUninitDefined();
+    }
+
+    // if the class object has an UNINIT method defined, make sure we
+    // add this to the table of classes to be processed.
+    if (hasUninitMethod())
+    {
+        requiresUninit();
     }
 }
 
