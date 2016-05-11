@@ -1700,7 +1700,7 @@ size_t RexxEntry SysFileSearch(const char *name, size_t numargs, CONSTRXSTRING a
     num++;
 
     ptr = mystrstr(line, target, len, args[0].strlength, sensitive);
-    if (ptr != '\0') {
+    if (ptr) {
       if (linenums) {
         sprintf(ldp.ibuf, "%d ", (int)num);
         len2 = strlen(ldp.ibuf);
