@@ -1018,13 +1018,13 @@ bool SysFile::getSize(const char *name, int64_t &size)
 }
 
 /**
- * Retrieve the size of the stream.  If the stream is open,
- * it returns the stream size.  Zero is returned if this
+ * Retrieve the time stamp of the stream.  If the stream is open,
+ * it returns the stream time stamp.  The null string is returned if this
  * stream is not a regular file.
  *
- * @param size   The returned size value.
+ * @param time   The returned time stamp, e. g. Wed Jan 02 02:03:55 1980\n\0
  *
- * @return True if the size was retrievable, false otherwise.
+ * @return True if the time stamp was retrievable, false otherwise.
  */
 bool SysFile::getTimeStamp(const char *&time)
 {
@@ -1032,40 +1032,40 @@ bool SysFile::getTimeStamp(const char *&time)
     // are we open?
     if (fileHandle >= 0)
     {
-        // have a handle, use fstat() to get the info
-        struct _stati64 fileInfo;
-        if (_fstati64(fileHandle, &fileInfo) == 0)
-        {
-            // regular file?  return the defined size
-            if ((fileInfo.st_mode & _S_IFREG) != 0)
-            {
-                time = ctime(&fileInfo.st_mtime);
-            }
-        }
+        // our existing 'fileHandle' doesn't seem to help; we still use 'filename'
+        return getTimeStamp(filename, time);
     }
     return false;
 }
 
 /**
- * Retrieve the size of a file from the file name.  If the
- * name is a device, it zero is returned.
+ * Retrieve the time stamp of a file from the file name.  If the
+ * name is a device, the null string is returned.
  *
- * @param size   The returned size value.
+ * @param name   file path and name
+ * @param time   The returned time stamp, e. g. Wed Jan 02 02:03:55 1980\n\0
  *
- * @return True if the size was retrievable, false otherwise.
+ * @return True if the time stamp was retrievable, false otherwise.
  */
 bool SysFile::getTimeStamp(const char *name, const char *&time)
 {
     time = "";     // default return value
     // the handle is not active, use the name
-    struct _stati64 fileInfo;
-    if (_stati64(name, &fileInfo) == 0)
+    FILETIME lastWriteGetTime, lastWriteTime;
+    HANDLE h = CreateFile(name, FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE,
+        NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+    if (h != INVALID_HANDLE_VALUE &&
+        GetFileTime(h, NULL, NULL, &lastWriteGetTime) &&
+        FileTimeToLocalFileTime(&lastWriteGetTime, &lastWriteTime))
     {
-        // regular file?  return the defined size
-        if ((fileInfo.st_mode & (_S_IFREG | _S_IFDIR)) != 0)
-        {
-            time = ctime(&fileInfo.st_mtime);
-        }
+        time_t mtime;
+        ULARGE_INTEGER ull;
+        ull.LowPart = lastWriteTime.dwLowDateTime;
+        ull.HighPart = lastWriteTime.dwHighDateTime;
+        mtime = ull.QuadPart / 10000000ULL - 11644473600ULL;
+
+        time = asctime(gmtime(&mtime));
+
         return true;
     }
     return false;

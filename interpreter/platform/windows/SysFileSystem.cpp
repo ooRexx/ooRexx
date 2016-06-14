@@ -667,15 +667,16 @@ bool SysFileSystem::exists(const char *name)
  */
 int64_t SysFileSystem::getLastModifiedDate(const char *name)
 {
-    HANDLE newHandle = CreateFile(name, FILE_READ_ATTRIBUTES, FILE_SHARE_READ,
+    HANDLE newHandle = CreateFile(name, FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE,
         NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
     if (newHandle == INVALID_HANDLE_VALUE)
     {
         return -1;
     }
 
-    FILETIME lastWriteTime;
-    if (!GetFileTime(newHandle, NULL, NULL, &lastWriteTime))
+    FILETIME lastWriteGetTime, lastWriteTime;
+    if (!(GetFileTime(newHandle, NULL, NULL, &lastWriteGetTime) &&
+          FileTimeToLocalFileTime(&lastWriteGetTime, &lastWriteTime)))
     {
         CloseHandle(newHandle);
         return -1;
@@ -765,7 +766,7 @@ bool SysFileSystem::isHidden(const char *name)
  */
 bool SysFileSystem::setLastModifiedDate(const char *name, int64_t time)
 {
-    FILETIME fileTime;
+    FILETIME fileTime, localFileTime;
 
     /**
      * Open the path ensuring GENERIC_WRITE and FILE_FLAG_BACKUP_SEMANTICS if it's a directory.
@@ -783,7 +784,9 @@ bool SysFileSystem::setLastModifiedDate(const char *name, int64_t time)
         flags = FILE_FLAG_BACKUP_SEMANTICS;
     }
 
-    HANDLE hFile = CreateFile (name, GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE,
+    // MSDN SetFileTime function: "The handle must have been created using
+    // the CreateFile function with the FILE_WRITE_ATTRIBUTES"
+    HANDLE hFile = CreateFile (name, FILE_WRITE_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE,
        NULL, OPEN_EXISTING, flags, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
     {
@@ -793,11 +796,15 @@ bool SysFileSystem::setLastModifiedDate(const char *name, int64_t time)
     // convert back to a file time
     int64_t temp = (time * (int64_t)10000000) + 116444736000000000;
 
-    fileTime.dwHighDateTime = (DWORD)(temp >> 32);
-    fileTime.dwLowDateTime = (DWORD)temp;
-    result = SetFileTime (hFile, (LPFILETIME)NULL, (LPFILETIME)NULL, &fileTime);
-    CloseHandle(hFile);
-    return result != 0;
+    localFileTime.dwHighDateTime = (DWORD)(temp >> 32);
+    localFileTime.dwLowDateTime = (DWORD)temp;
+    if (LocalFileTimeToFileTime(&localFileTime, &fileTime) &&
+        SetFileTime(hFile, NULL, NULL, &fileTime))
+    {
+        CloseHandle(hFile);
+        return true;
+    }
+    return false;
 }
 
 

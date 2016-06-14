@@ -5445,7 +5445,7 @@ RexxRoutine2(RexxObjectPtr, SysGetFileDateTime, CSTRING, name, OPTIONAL_CSTRING,
     }
 
     /* open file for read to query time */
-    HANDLE setFile = CreateFile(name, GENERIC_READ,
+    HANDLE setFile = CreateFile(name, FILE_READ_ATTRIBUTES,
                                 FILE_SHARE_READ | FILE_SHARE_WRITE,
                                 NULL, OPEN_EXISTING, FILE_FLAG_WRITE_THROUGH |
                                 FILE_FLAG_BACKUP_SEMANTICS, NULL);

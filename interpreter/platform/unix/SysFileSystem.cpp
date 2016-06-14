@@ -850,24 +850,70 @@ bool SysFileSystem::exists(const char *name)
 }
 
 
+/*
+  getLastModifiedDate / setLastModifiedDate helper function
+
+  loosely based on http://stackoverflow.com/questions/283166/easy-way-to-convert-a-struct-tm-expressed-in-utc-to-time-t-type
+  returns local timezone offset from UTC *including* DST offest in seconds
+*/
+int get_utc_offset(time_t time)
+{
+  struct tm gmt, local; 
+  int one_day = 24*60*60;
+  int offset;
+
+  // there seems to be no easy way to find the local timezone offset from UTC,
+  // including the DST offset, for a specific UTC time
+  // to calculate the UTC/DST offset we subtract the localtime() timestamp from
+  // the gmtime() timestamp
+  // NOTE: how this does/should work during the (typically) one-hour
+  //       DST transition period, remains to be investigated
+
+  gmtime_r(&time, &gmt);               // use re-entrant gmtime() version
+  localtime_r(&time, &local);          // use re-entrant localtime() version
+
+  // if both local and UTC timestamps fall on the same day, this is the UTC/DST offset
+  offset = ((local.tm_hour - gmt.tm_hour) * 60
+          + (local.tm_min - gmt.tm_min)) * 60 +
+          + local.tm_sec - gmt.tm_sec; 
+
+  // if either local year or local day_in_year is less than its UTC counterpart,
+  // we're dealing with a negative UTC/DST offset which extends into the prior day
+  // we'll have to subtract a full day from 'offset' to compensate
+  if ((local.tm_year < gmt.tm_year) || (local.tm_yday < gmt.tm_yday))
+  {
+    offset -= one_day;
+  }
+
+  // similar to above, if we're dealing with a positive UTC/DST offset extending
+  // into the next day, we'll have to add a full day to 'offset' to compensate
+  if ((local.tm_year > gmt.tm_year) || (local.tm_yday > gmt.tm_yday))
+  {
+    offset += one_day;
+  }
+
+  return offset;
+}
+
+
 /**
  * Get the last modified file date as a file time value.
  *
  * @param name   The target name.
  *
  * @return the file time value for the modified date, or -1 for any
- *         errors.  The time is returned in ticks units
+ *         errors.  The time is returned in ticks units (and as such,
+ *         it doesn't include the st_mtim.tv_usec microseconds part)
  */
 int64_t SysFileSystem::getLastModifiedDate(const char *name)
 {
     struct stat64 st;
-    tzset ();
 
     if (stat64(name, &st))
     {
         return -1;
     }
-    return (int64_t)st.st_mtime;
+    return (int64_t)st.st_mtime + get_utc_offset(st.st_mtime);
 }
 
 
@@ -962,7 +1008,7 @@ bool SysFileSystem::setLastModifiedDate(const char *name, int64_t time)
     }
 
     timebuf.actime = statbuf.st_atime;
-    timebuf.modtime = (time_t)time;
+    timebuf.modtime = (time_t)time - get_utc_offset(time);
     return utime(name, &timebuf) == 0;
 }
 
