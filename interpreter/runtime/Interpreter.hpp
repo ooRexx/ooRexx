@@ -119,7 +119,7 @@ public:
     static inline bool isBigEndian()
     {
         static  const  int mfcone=1;                 // constant 1
-        static  const  char *mfctop=(char *)&mfcone; // -> top byte
+        static  const  char *mfctop=(const char *)&mfcone; // -> top byte
         #define LITEND *mfctop             // named flag; 1=little-endian
 
         return LITEND == 0;
