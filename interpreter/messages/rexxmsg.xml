@@ -4635,7 +4635,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Incorrect_method_array_too_big</SymbolicName>
-        <Text>An array cannot contain more than 99,999,999 elements.</Text>
+        <Text>An array cannot contain more than <Sub position="1" name="size"/> elements.</Text>
       </SubMessage>
       <SubMessage>
         <Code>93</Code>

@@ -3280,7 +3280,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>959</term>
 <listitem>
-<para>An array cannot contain more than 99,999,999 elements.</para>
+<para>An array cannot contain more than <emphasis role="italic">size</emphasis> elements.</para>
 </listitem>
 </varlistentry>
 <varlistentry>

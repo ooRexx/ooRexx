@@ -59,8 +59,8 @@ class ArrayClass : public RexxObject
         RaiseBoundsInvalid = 0x00000001,
         RaiseBoundsTooMany = 0x00000002,
         ExtendUpper        = 0x00000004,
-        IndexAccess        = RaiseBoundsInvalid | RaiseBoundsTooMany,
-        IndexUpdate        = IndexAccess | ExtendUpper,
+        IndexAccess        = RaiseBoundsTooMany,
+        IndexUpdate        = IndexAccess | RaiseBoundsInvalid | ExtendUpper,
     } IndexFlags;
 
 

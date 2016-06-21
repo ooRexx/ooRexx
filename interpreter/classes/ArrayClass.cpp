@@ -175,7 +175,7 @@ size_t ArrayClass::validateSize(RexxObject *size, size_t position)
 
     if (totalSize >= MaxFixedArraySize)
     {
-        reportException(Error_Incorrect_method_array_too_big);
+        reportException(Error_Incorrect_method_array_too_big, MaxFixedArraySize - 1);
     }
     return totalSize;
 }
@@ -209,7 +209,7 @@ ArrayClass *ArrayClass::createMultidimensional(RexxObject **dims, size_t count, 
         // wrap situation.
         if (currentSize != 0 && ((MaxFixedArraySize / currentSize) < totalSize))
         {
-            reportException(Error_Incorrect_method_array_too_big);
+            reportException(Error_Incorrect_method_array_too_big, MaxFixedArraySize - 1);
         }
         // keep running total size and put integer object into current position
         totalSize *= currentSize;
@@ -222,7 +222,7 @@ ArrayClass *ArrayClass::createMultidimensional(RexxObject **dims, size_t count, 
     // a final sanity check for out of bounds
     if (totalSize >= MaxFixedArraySize)
     {
-        reportException(Error_Incorrect_method_array_too_big);
+        reportException(Error_Incorrect_method_array_too_big, MaxFixedArraySize - 1);
     }
 
     // create a new array item
@@ -751,7 +751,7 @@ RexxObject *ArrayClass::insertRexx(RexxObject *value, RexxObject *index)
     else
     {
         // validate the index and expand if necessary.
-        validateIndex(index, ARG_TWO, IndexAccess, position);
+        validateIndex(index, ARG_TWO, IndexUpdate, position);
         // check that the position is good for this collection type.
         // For arrays, all valid indexes are good.  For Queues,
         // only indexes within the current occupied range are good.
@@ -1255,9 +1255,9 @@ bool ArrayClass::validateSingleDimensionIndex(RexxObject **index, size_t indexCo
         if (!isInbounds(position))
         {
             // could be WAAAAAAY out of bounds.
-            if (position >= MaxFixedArraySize)
+            if ((boundsError & RaiseBoundsInvalid) && position >= MaxFixedArraySize)
             {
-                reportException(Error_Incorrect_method_array_too_big);
+                reportException(Error_Incorrect_method_array_too_big, MaxFixedArraySize - 1);
             }
             // if we're doing a put operation, we need to extend the upper bounds
             // to include
@@ -2033,7 +2033,7 @@ void ArrayClass::extend(size_t toSize)
 
     if (toSize >= MaxFixedArraySize)
     {
-        reportException(Error_Incorrect_method_array_too_big);
+        reportException(Error_Incorrect_method_array_too_big, MaxFixedArraySize - 1);
     }
 
     // add some extra...tack on half of our existing size, but once we start
