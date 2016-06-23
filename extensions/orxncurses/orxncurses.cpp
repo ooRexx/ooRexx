@@ -50,7 +50,6 @@
 #include <curses.h>
 #endif
 
-
 /*----------------------------------------------------------------------------*/
 /* Global variables                                                           */
 /*----------------------------------------------------------------------------*/
@@ -65,7 +64,6 @@
 bool onebased = true;
 #define ADDONE(x)        (onebased ? x + 1 : x)
 #define SUBTRACTONE(x)   (onebased ? x - 1 : x)
-
 
 /*============================================================================*/
 /* Private Functions                                                          */
@@ -3733,9 +3731,8 @@ RexxMethod1(int,                       // Return type
             OrxCurTabsize,             // Object_method name
             OPTIONAL_int, sz)
 {
-    
     if (argumentExists(1)) {
-        TABSIZE = sz;
+        set_tabsize(sz);
     }
     return TABSIZE;
 }
