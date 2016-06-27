@@ -249,7 +249,7 @@ $ Message_Translations_December
 113 December
 
 $ Message_Translations_debug_prompt
-114 +++ Interactive trace. "Trace Off" to end debug, ENTER to Continue. +++
+114 +++ Interactive trace. "Trace Off" to end debug, ENTER to continue. +++
 
 $ Error_RXSUBC_general
 115 The RXSUBCOM parameters are incorrect.
@@ -1256,6 +1256,9 @@ $ Message_Translations_running
 $ Message_Translations_line
 526 line
 
+$ Error_Incorrect_method_no_method
+528 The &1 argument must be a string or array object.
+
 $ Error_Interpretation_initialization
 529 Interpretation error: unexpected failure initializing the interpreter.
 
@@ -1285,9 +1288,6 @@ $ Error_Translation_invalid_line
 
 $ Error_Translation_requires
 538 ::REQUIRES directives must appear before other directive instructions.
-
-$ Error_Incorrect_method_no_method
-539 The &1 argument must be a string or array object.
 
 $ Error_Incorrect_method_no_method_type
 539 The &1 argument must be a string, array, or method object.
@@ -1592,6 +1592,12 @@ $ Error_Logical_value_logical_list
 $ Error_Invalid_expression_logical_list
 660 Missing expression in logical expression list.
 
+$ Error_Symbol_expected_namespace_class
+661 Symbol expected as a class name of qualified class name.
+
+$ Error_Symbol_expected_namespace
+662 Symbol expected after NAMESPACE keyword.
+
 $ Error_Translation_use_strict_ellipsis
 663 The "..." argument marker can only appear at the end of the argument list.
 
@@ -1690,6 +1696,9 @@ $ Error_Symbol_or_string_constant_value
 
 $ Error_Translation_duplicate_constant
 695 Duplicate ::CONSTANT directive instruction.
+
+$ Error_Translation_missing_resource_end
+696 Missing ::RESOURCE end marker "&1" for resource "&2".
 
 $ Error_Execution_library_method
 697 Unable to load method "&1" from library "&1".
@@ -1844,9 +1853,6 @@ $ Error_Invalid_data_resource_dir
 $ Error_Translation_duplicate_resource
 747 Duplicate ::RESOURCE directive instruction.
 
-$ Error_Translation_missing_resource_end
-748 Missing ::RESOURCE end marker "&1" for resource "&2".
-
 $ Error_Translation_reserved_namespace
 748 The REXX name is reserved for the language-provided namespace.
 
@@ -1886,14 +1892,8 @@ $ Error_Symbol_or_string_package_attribute_missing
 $ Error_Symbol_or_string_directive_option
 760 Symbol or string expected after &1 &2 keyword.
 
-$ Error_Symbol_expected_namespace
-761 Symbol expected after NAMESPACE keyword.
-
 $ Error_Execution_no_namespace
 761 Namespace "&1" not found in package "&2".
-
-$ Error_Symbol_expected_namespace_class
-762 Symbol expected as a class name of qualified class name.
 
 $ Error_Execution_no_namespace_class
 762 Class "&1" not found in namespace "&2".
@@ -1965,7 +1965,7 @@ $ Error_Symbol_expected_after_keyword
 784 Symbol expected after &1 keyword.
 
 $ Error_Invalid_do_with_no_control
-784 No INDEX or ITEM control variable specified on a WITH loop.
+785 No INDEX or ITEM control variable specified on a WITH loop.
 
 $ Error_Invalid_do_with_no_over
 786 OVER keyword expected for a WITH loop.

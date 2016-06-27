@@ -1177,7 +1177,7 @@ special character (such as a parenthesis).
       <SubMessage>
         <Code>20</Code>
         <Subcode>920</Subcode>
-        <MessageNumber>761</MessageNumber>
+        <MessageNumber>662</MessageNumber>
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Symbol_expected_namespace</SymbolicName>
@@ -1186,7 +1186,7 @@ special character (such as a parenthesis).
       <SubMessage>
         <Code>20</Code>
         <Subcode>921</Subcode>
-        <MessageNumber>762</MessageNumber>
+        <MessageNumber>661</MessageNumber>
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Symbol_expected_namespace_class</SymbolicName>
@@ -2013,7 +2013,7 @@ special character (such as a parenthesis).
       <SubMessage>
         <Code>27</Code>
         <Subcode>903</Subcode>
-        <MessageNumber>784</MessageNumber>
+        <MessageNumber>785</MessageNumber>
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_do_with_no_control</SymbolicName>
@@ -4577,7 +4577,7 @@ special character (such as a parenthesis).
       <SubMessage>
         <Code>93</Code>
         <Subcode>961</Subcode>
-        <MessageNumber>539</MessageNumber>
+        <MessageNumber>528</MessageNumber>
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Incorrect_method_no_method</SymbolicName>
@@ -5612,7 +5612,7 @@ special character (such as a parenthesis).
       <SubMessage>
         <Code>99</Code>
         <Subcode>943</Subcode>
-        <MessageNumber>748</MessageNumber>
+        <MessageNumber>696</MessageNumber>
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Translation_missing_resource_end</SymbolicName>
@@ -5717,7 +5717,7 @@ special character (such as a parenthesis).
         <Component>Translation</Component>
         <Severity>Info</Severity>
         <SymbolicName>Message_Translations_debug_prompt</SymbolicName>
-        <Text>+++ Interactive trace. <q>Trace Off</q> to end debug, ENTER to Continue. +++</Text>
+        <Text>+++ Interactive trace. <q>Trace Off</q> to end debug, ENTER to continue. +++</Text>
       </SubMessage>
       <SubMessage>
         <Code>101</Code>

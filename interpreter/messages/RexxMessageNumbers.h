@@ -455,6 +455,7 @@
 #define Message_Translations_error_msg                               524
 #define Message_Translations_running_msg                             525
 #define Message_Translations_line_msg                                526
+#define Error_Incorrect_method_no_method_msg                         528
 #define Error_Interpretation_initialization_msg                      529
 #define Error_Invalid_subkeyword_guard_msg                           530
 #define Error_Incorrect_method_time_msg                              531
@@ -465,7 +466,6 @@
 #define Error_Execution_uninherit_msg                                536
 #define Error_Translation_invalid_line_msg                           537
 #define Error_Translation_requires_msg                               538
-#define Error_Incorrect_method_no_method_msg                         539
 #define Error_Incorrect_method_no_method_type_msg                    539
 #define Error_Incorrect_method_argType_msg                           540
 #define Error_Incorrect_method_array_dimension_msg                   541
@@ -567,6 +567,8 @@
 #define Error_Unexpected_end_select_nolabel_msg                      658
 #define Error_Logical_value_logical_list_msg                         659
 #define Error_Invalid_expression_logical_list_msg                    660
+#define Error_Symbol_expected_namespace_class_msg                    661
+#define Error_Symbol_expected_namespace_msg                          662
 #define Error_Translation_use_strict_ellipsis_msg                    663
 #define Error_Invalid_expression_use_strict_default_msg              664
 #define Error_Incorrect_method_abstract_msg                          665
@@ -600,6 +602,7 @@
 #define Error_Symbol_or_string_constant_msg                          693
 #define Error_Symbol_or_string_constant_value_msg                    694
 #define Error_Translation_duplicate_constant_msg                     695
+#define Error_Translation_missing_resource_end_msg                   696
 #define Error_Execution_library_method_msg                           697
 #define Error_Execution_library_routine_msg                          698
 #define Error_Execution_native_routine_msg                           699
@@ -651,7 +654,6 @@
 #define Error_Symbol_or_string_resource_end_msg                      745
 #define Error_Invalid_data_resource_dir_msg                          746
 #define Error_Translation_duplicate_resource_msg                     747
-#define Error_Translation_missing_resource_end_msg                   748
 #define Error_Translation_reserved_namespace_msg                     748
 #define Error_Invalid_argument_array_msg                             749
 #define Error_Invalid_argument_array_size_msg                        750
@@ -665,9 +667,7 @@
 #define Error_Symbol_or_string_package_attribute_bad_value_msg       758
 #define Error_Symbol_or_string_package_attribute_missing_msg         759
 #define Error_Symbol_or_string_directive_option_msg                  760
-#define Error_Symbol_expected_namespace_msg                          761
 #define Error_Execution_no_namespace_msg                             761
-#define Error_Symbol_expected_namespace_class_msg                    762
 #define Error_Execution_no_namespace_class_msg                       762
 #define Error_Routine_not_found_namespace_msg                        763
 #define Error_Symbol_expected_qualified_call_msg                     764
@@ -691,7 +691,7 @@
 #define Error_Logical_value_supplier_msg                             782
 #define Error_Execution_no_supplier_msg                              783
 #define Error_Symbol_expected_after_keyword_msg                      784
-#define Error_Invalid_do_with_no_control_msg                         784
+#define Error_Invalid_do_with_no_control_msg                         785
 #define Error_Invalid_do_with_no_over_msg                            786
 
 
