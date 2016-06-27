@@ -948,7 +948,7 @@ if (XALAN_EXECUTABLE)
     generate_message_file(${build_messages_dir}/errnumssubcom.xml ${build_messages_dir}/errnumssubcom.xsl)
     generate_message_file(${build_messages_dir}/errnumsrexxc.xml ${build_messages_dir}/errnumsrexxc.xsl)
     generate_message_file(${build_interpreter_dir}/platform/windows/winmsgtb.rc ${build_interpreter_dir}/platform/windows/WinMessageResource.xsl)
-    generate_message_file(${build_interpreter_dir}/platform/unix/rexx.cat ${build_interpreter_dir}/platform/unix/UnixGencat.xsl)
+    generate_message_file(${build_interpreter_dir}/platform/unix/gencat.inp ${build_interpreter_dir}/platform/unix/UnixGencat.xsl)
 
     generate_class_header(PrimitiveBehaviourNames.h PrimitiveBehaviourNames.xsl)
     generate_class_header(PrimitiveBehaviours.cpp PrimitiveBehaviours.xsl)
@@ -964,7 +964,7 @@ if (XALAN_EXECUTABLE)
                        ${build_messages_dir}/errnumssubcom.xml
                        ${build_messages_dir}/errnumsrexxc.xml
                        ${build_interpreter_dir}/platform/windows/winmsgtb.rc
-                       ${build_interpreter_dir}/platform/unix/rexx.cat
+                       ${build_interpreter_dir}/platform/unix/gencat.inp
                        ${build_behaviour_dir}/PrimitiveBehaviourNames.h
                        ${build_behaviour_dir}/PrimitiveBehaviours.cpp
                        ${build_behaviour_dir}/VirtualFunctionTable.cpp
@@ -1543,7 +1543,7 @@ install(PROGRAMS ${SAMPLES_SOURCE}/usetree.rex COMPONENT Samples DESTINATION ${I
 
 if (NOT WIN32)
    add_custom_command(OUTPUT rexx.cat
-              COMMAND gencat rexx.cat ${CMAKE_CURRENT_SOURCE_DIR}/${build_messages_dir}/gencat.inp
+              COMMAND gencat rexx.cat ${CMAKE_CURRENT_SOURCE_DIR}/${build_interpreter_dir}/platform/unix/gencat.inp
               DEPENDS ${image_class_files} ${platform_rexx_img_depends}
               WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
    add_custom_target(rexx_cat ALL DEPENDS rexx.cat)
