@@ -1,6 +1,5 @@
 [Unit]
 Description=ooRexx rxapi service
-After=syslog.target
 After=network.target
 
 [Service]
