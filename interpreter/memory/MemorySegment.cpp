@@ -51,6 +51,16 @@ const double NormalSegmentSet::NormalMemoryExpansionThreshold = .30;
 // The point where we consider releasing segments
 const double NormalSegmentSet::NormalMemoryContractionThreshold = .70;
 
+const size_t MemorySegmentSet::MinimumSegmentSize = (MemorySegment::SegmentSize/2);
+// amount of usable space in a minimum sized segment
+const size_t MemorySegmentSet::MinimumSegmentDeadSpace = (MinimumSegmentSize - MemorySegment::MemorySegmentOverhead);
+// default size for a larger segment allocation
+const size_t MemorySegmentSet::LargeSegmentSize = (MemorySegment::SegmentSize * 4);;
+// allocation available in a default segment
+const size_t MemorySegmentSet::SegmentDeadSpace = (MemorySegment::SegmentSize - MemorySegment::MemorySegmentOverhead);
+// space available in a larger allocation.
+const size_t MemorySegmentSet::LargeSegmentDeadSpace = (LargeSegmentSize - MemorySegment::MemorySegmentOverhead);
+const size_t NormalSegmentSet::InitialNormalSegmentSpace = ((LargeSegmentSize * 8) - MemorySegment::MemorySegmentOverhead);
 
 /**
  * Dump information about an individual segment

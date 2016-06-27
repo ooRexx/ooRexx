@@ -91,7 +91,9 @@ const wholenumber_t Numerics::validMaxWhole[] = {10,
 const NumericSettings Numerics::defaultSettings;
 const NumericSettings *Numerics::settings = &Numerics::defaultSettings;
 
-
+const bool Numerics::FORM_SCIENTIFIC = false;
+const bool Numerics::FORM_ENGINEERING = true;
+const bool Numerics::DEFAULT_FORM = FORM_SCIENTIFIC;
 
 /**
  * Initialize a NumericSettings object.

@@ -713,13 +713,13 @@ class RexxString : public RexxObject
     static const char ch_TAB   = '\t';
 
     // Define char data used in in number string parsing
-    static const char ch_MINUS  = '-';
-    static const char ch_PLUS   = '+';
-    static const char ch_PERIOD = '.';
-    static const char ch_ZERO   = '0';
-    static const char ch_ONE    = '1';
-    static const char ch_FIVE   = '5';
-    static const char ch_NINE   = '9';
+    static const char ch_MINUS;
+    static const char ch_PLUS;
+    static const char ch_PERIOD;
+    static const char ch_ZERO;
+    static const char ch_ONE;
+    static const char ch_FIVE;
+    static const char ch_NINE;
 
     // character validation sets for the datatype function
     static const char *HEX_CHAR_STR;
@@ -800,4 +800,6 @@ inline RexxString *new_upper_string(const char *string)
 {
     return new_upper_string(string, strlen(string));
 }
+
+
 #endif

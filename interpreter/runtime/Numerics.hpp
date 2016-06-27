@@ -107,11 +107,11 @@ public:
 
     // max numeric digits value for explicit 64-bit conversions
     static const wholenumber_t DIGITS64 = 20;
-    static const bool FORM_SCIENTIFIC = false;
-    static const bool FORM_ENGINEERING = true;
+    static const bool FORM_SCIENTIFIC;
+    static const bool FORM_ENGINEERING;
 
     static const wholenumber_t DEFAULT_FUZZ = 0;
-    static const bool DEFAULT_FORM = FORM_SCIENTIFIC;
+    static const bool DEFAULT_FORM;
 
     static const wholenumber_t validMaxWhole[];      // table of maximum values per digits setting
 

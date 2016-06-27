@@ -286,15 +286,15 @@ class MemorySegmentSet
       virtual DeadObject *donateObject(size_t allocationLength);
       virtual MemorySegment *donateSegment(size_t allocationLength);
 
-      static const size_t MinimumSegmentSize = (MemorySegment::SegmentSize/2);
+      static const size_t MinimumSegmentSize;
       // amount of usable space in a minimum sized segment
-      static const size_t MinimumSegmentDeadSpace = (MinimumSegmentSize - MemorySegment::MemorySegmentOverhead);
+      static const size_t MinimumSegmentDeadSpace;
       // default size for a larger segment allocation
-      static const size_t LargeSegmentSize = (MemorySegment::SegmentSize * 4);;
+      static const size_t LargeSegmentSize;
       // allocation available in a default segment
-      static const size_t SegmentDeadSpace = (MemorySegment::SegmentSize - MemorySegment::MemorySegmentOverhead);
+      static const size_t SegmentDeadSpace;
       // space available in a larger allocation.
-      static const size_t LargeSegmentDeadSpace = (LargeSegmentSize - MemorySegment::MemorySegmentOverhead);
+      static const size_t LargeSegmentDeadSpace;
 
   protected:
 
@@ -505,7 +505,7 @@ class NormalSegmentSet : public MemorySegmentSet
     // allocation request for the recovery segment
     static const size_t RecoverSegmentSize = ((MemorySegment::SegmentSize/2) - MemorySegment::MemorySegmentOverhead);
     // initial allocation size for normal space.
-    static const size_t InitialNormalSegmentSpace = ((LargeSegmentSize * 8) - MemorySegment::MemorySegmentOverhead);
+    static const size_t InitialNormalSegmentSpace;
 
     // map an object length to an allocation deadpool.  NOTE:  this
     // assumes the length has already been rounded to ObjectGrain!

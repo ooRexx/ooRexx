@@ -68,6 +68,14 @@ const char *RexxString::MIXED_ALPHA  = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMN
 const char *RexxString::UPPER_ALPHA  = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const char *RexxString::DIGITS_BASE64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
+const char RexxString::ch_PLUS='+';
+const char RexxString::ch_MINUS='-';
+const char RexxString::ch_PERIOD='.';
+const char RexxString::ch_ZERO='0';
+const char RexxString::ch_ONE='1';
+const char RexxString::ch_FIVE='5';
+const char RexxString::ch_NINE='9';
+
 /**
  * Create initial class object at bootstrap time.
  */
