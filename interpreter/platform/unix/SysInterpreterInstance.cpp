@@ -127,6 +127,14 @@ SysSearchPath::SysSearchPath(const char *parentDir, const char *extensionPath)
     size_t parentSize = parentDir == NULL ? 0 : strlen(parentDir);
     size_t extensionSize = extensionPath == NULL ? 0 : strlen(extensionPath);
 
+#ifdef ORX_REXXPATH
+    if (!rexxPath)
+    {
+       rexxPath = ORX_REXXPATH;
+       rexxPathSize = strlen(rexxPath);
+    }
+#endif
+
 
     // enough room for separators and a terminating null
     path = (char *)SystemInterpreter::allocateResultMemory(sysPathSize + rexxPathSize + parentSize + extensionSize + 16);

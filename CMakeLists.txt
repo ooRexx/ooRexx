@@ -54,7 +54,6 @@ set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 set (CMAKE_PDB_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 
-
 #/*----------------------------------------------------------------------------*/
 #/* Project settings                                                           */
 #/*----------------------------------------------------------------------------*/
@@ -125,6 +124,14 @@ endif ()
 include_directories(BEFORE api api/${ORX_PLATFORM_DIR})
 
 
+# Rexx search path
+set (CMAKE_REXXPATH ${CMAKE_CURRENT_BINARY_DIR}/bin)
+if (ORX_REXXPATH) 
+    message(STATUS "Setting REXX search path to ${ORX_REXXPATH}")
+    set (CMAKE_REXXPATH ${ORX_REXXPATH})
+endif()
+
+
 # Common install variables
    SET(CPACK_PACKAGE_VERSION_MAJOR ${ORX_MAJOR})
    SET(CPACK_PACKAGE_VERSION_MINOR ${ORX_MINOR})
@@ -193,8 +200,8 @@ else ()
    set (CMAKE_INSTALL_PREFIX /usr)
    set (catdir ${CMAKE_INSTALL_PREFIX}/bin)
    set (INSTALL_EXECUTABLE_DIR ${CMAKE_INSTALL_PREFIX}/bin)
-   set (INSTALL_CLS_DIR ${CMAKE_INSTALL_PREFIX}/bin)
-   set (INSTALL_REX_DIR ${CMAKE_INSTALL_PREFIX}/bin)
+   set (INSTALL_CLS_DIR ${CMAKE_REXXPATH})
+   set (INSTALL_REX_DIR ${CMAKE_REXXPATH})
    set (INSTALL_INCLUDE_DIR ${CMAKE_INSTALL_PREFIX}/include)
    set (INSTALL_SAMPLES_DIR ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
    find_path(INSTALL_LIB_DIR libc.so PATHS ${CMAKE_INSTALL_PREFIX}/lib ${CMAKE_INSTALL_PREFIX}/lib64)
@@ -212,6 +219,7 @@ if (WIN32)
             /DORX_SYS_STR="${CMAKE_SYSTEM_NAME}"
             /DORX_CATDIR="${catdir}"
             /DORX_SHARED_LIBRARY_EXT="${CMAKE_SHARED_LIBRARY_SUFFIX}"
+            /DORX_REXXPATH="${CMAKE_REXXPATH}"
             /D_CRT_SECURE_NO_DEPRECATE
             /D_CRT_SECURE_NO_WARNINGS
             /D_CRT_NONSTDC_NO_DEPRECATE
@@ -232,6 +240,7 @@ else ()
             -DORX_SYS_STR="${CMAKE_SYSTEM_NAME}"
             -DORX_CATDIR="${catdir}" -D_GNU_SOURCE
             -DORX_SHARED_LIBRARY_EXT="${CMAKE_SHARED_LIBRARY_SUFFIX}"
+            -DORX_REXXPATH="${CMAKE_REXXPATH}"
             -D${ORX_SYS_STR} -DOPSYS_${ORX_SYS_STR} -DHAVE_CONFIG_H)
     set (ORX_SYSLIB_DL dl)
     set (ORX_SYSLIB_PTHREAD pthread)
