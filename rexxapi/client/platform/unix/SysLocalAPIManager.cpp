@@ -52,6 +52,7 @@
 void SysLocalAPIManager::startServerProcess()
 {
     char apiExeName[] = "rxapi";
+    char *apiExeArg[] = { "rxapi", NULL }; 
 
 	if (signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
 		return;
@@ -78,7 +79,7 @@ void SysLocalAPIManager::startServerProcess()
 	}
 
     // now start rxapi
-    if (execvp(apiExeName, NULL) == -1) {
+    if (execvp(apiExeName, apiExeArg) == -1) {
         throw new ServiceException(API_FAILURE, "Unable to start API server");
     }
 
