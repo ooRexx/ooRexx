@@ -192,17 +192,21 @@ void SysSemaphore::wait()
 
 bool SysSemaphore::wait(uint32_t t)           // takes a timeout in msecs
 {
-    struct timespec timestruct;
-    time_t *Tpnt = NULL;
+    struct timespec ts;
 
     int result = 0;
-    timestruct.tv_nsec = 0;
-    timestruct.tv_sec = t/1000+time(Tpnt);    // convert to secs and abstime
-    pthread_mutex_lock(&(this->semMutex));    // Lock access to semaphore
-    if (!this->postedCount)                   // Has it been posted?
+    clock_gettime(CLOCK_REALTIME, &ts);       // get current time
+    ts.tv_nsec += (t % 1000) * 1000000;       // add fractions of seconds
+    if (ts.tv_nsec > 1000000000)              // did nanonseconds overflow?
     {
-                                              // wait with timeout
-        result = pthread_cond_timedwait(&(this->semCond),&(this->semMutex),&timestruct);
+        ts.tv_nsec -= 1000000000;             // correct nenosecond overflow ..
+        ts.tv_sec += 1;                       // .. by adding a second
+    }
+    ts.tv_sec += t / 1000;                    // add requested seconds
+    pthread_mutex_lock(&(this->semMutex));    // Lock access to semaphore
+    while (result == 0 && !this->postedCount) // Has it been posted? Spurious wakeups may occur
+    {                                         // wait with timeout 
+        result = pthread_cond_timedwait(&(this->semCond),&(this->semMutex),&ts);
     }
     pthread_mutex_unlock(&(this->semMutex));    // Release mutex lock
     // a false return means this timed out
