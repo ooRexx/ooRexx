@@ -174,7 +174,7 @@ class MemorySegment : public MemorySegmentHeader
    static const size_t LargeBlockThreshold = Memory::VeryLargeAllocationUnit;
    // Minimum size segment we'll allow
 
-   char segmentStart[8];                   /* start of the object data      */
+   char segmentStart[sizeof(DeadObject)];  /* start of the object data      */
 };
 
 
