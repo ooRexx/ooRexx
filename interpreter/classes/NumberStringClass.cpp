@@ -910,7 +910,7 @@ bool NumberString::checkIntegerDigits(wholenumber_t numDigits, wholenumber_t &le
 
         // now check to see if the first excluded digit will cause rounding
         // if it does, we need to worry about a carry value when converting
-        if (*(numberDigits + digitsCount) >= 5)
+        if (*(numberDigits + numDigits) >= 5)
         {
             carry = true;
         }
