@@ -3726,10 +3726,10 @@ END_EXTERN_C()
 #define argumentOmitted(i) (!argumentExists(i))
 
 
-#define __type(t)   ARGUMENT_TYPE_##t
+#define __rytpe(t)   ARGUMENT_TYPE_##t
 #define __arg(p, t) arguments[p].value.value_##t
 #define __ret(t, v) arguments[0].value.value_##t = (v); return NULL;
-#define __adcl(t, n) __type(t) n
+#define __adcl(t, n) __rytpe(t) n
 #define __tdcl(t)    REXX_VALUE_##t
 
 #define __methodstub(name) uint16_t * RexxEntry name (RexxMethodContext *context, ValueDescriptor *arguments)
@@ -3758,7 +3758,7 @@ END_EXTERN_C()
 
 #define RexxMethod0(returnType, name) \
 /* forward reference definition for method */ \
-__type(returnType) name##_impl (RexxMethodContext * context);  \
+__rytpe(returnType) name##_impl (RexxMethodContext * context);  \
                                \
 /* method signature definition */ \
 static uint16_t name##_types[] = {__tdcl(returnType), REXX_ARGUMENT_TERMINATOR};    \
@@ -3775,13 +3775,13 @@ __methodstub(name) \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__type(returnType) name##_impl(RexxMethodContext *context)
+__rytpe(returnType) name##_impl(RexxMethodContext *context)
 
 
 // method with one argument
 #define RexxMethod1(returnType ,name, t1, n1) \
 /* forward reference definition for method */ \
-__type(returnType) name##_impl (RexxMethodContext * context, __adcl(t1, n1));  \
+__rytpe(returnType) name##_impl (RexxMethodContext * context, __adcl(t1, n1));  \
                                \
 /* method signature definition */ \
 static uint16_t name##_types[] = {__tdcl(returnType), __tdcl(t1), REXX_ARGUMENT_TERMINATOR};    \
@@ -3798,13 +3798,13 @@ __methodstub(name) \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__type(returnType) name##_impl(RexxMethodContext *context, __adcl(t1, n1))
+__rytpe(returnType) name##_impl(RexxMethodContext *context, __adcl(t1, n1))
 
 
 // method with two arguments
 #define RexxMethod2(returnType ,name, t1, n1, t2, n2) \
 /* forward reference definition for method */ \
-__type(returnType) name##_impl (RexxMethodContext * context, __adcl(t1, n1), __adcl(t2, n2));  \
+__rytpe(returnType) name##_impl (RexxMethodContext * context, __adcl(t1, n1), __adcl(t2, n2));  \
                                \
 /* method signature definition */ \
 static uint16_t name##_types[] = {__tdcl(returnType), __tdcl(t1), __tdcl(t2), REXX_ARGUMENT_TERMINATOR};    \
@@ -3821,13 +3821,13 @@ __methodstub(name) \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__type(returnType) name##_impl(RexxMethodContext *context, __adcl(t1, n1), __adcl(t2, n2))
+__rytpe(returnType) name##_impl(RexxMethodContext *context, __adcl(t1, n1), __adcl(t2, n2))
 
 
 // method with three arguments
 #define RexxMethod3(returnType ,name, t1, n1, t2, n2, t3, n3) \
 /* forward reference definition for method */ \
-__type(returnType) name##_impl (RexxMethodContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3));  \
+__rytpe(returnType) name##_impl (RexxMethodContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3));  \
                                \
 /* method signature definition */ \
 static uint16_t name##_types[] = {__tdcl(returnType), __tdcl(t1), __tdcl(t2), __tdcl(t3), REXX_ARGUMENT_TERMINATOR};    \
@@ -3844,13 +3844,13 @@ __methodstub(name) \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__type(returnType) name##_impl(RexxMethodContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3))
+__rytpe(returnType) name##_impl(RexxMethodContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3))
 
 
 // method with four arguments
 #define RexxMethod4(returnType ,name, t1, n1, t2, n2, t3, n3, t4, n4) \
 /* forward reference definition for method */ \
-__type(returnType) name##_impl (RexxMethodContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4));  \
+__rytpe(returnType) name##_impl (RexxMethodContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4));  \
                                \
 /* method signature definition */ \
 static uint16_t name##_types[] = {__tdcl(returnType), __tdcl(t1), __tdcl(t2), __tdcl(t3), __tdcl(t4), REXX_ARGUMENT_TERMINATOR};    \
@@ -3867,13 +3867,13 @@ __methodstub(name) \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__type(returnType) name##_impl(RexxMethodContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4))
+__rytpe(returnType) name##_impl(RexxMethodContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4))
 
 
 // method with five arguments
 #define RexxMethod5(returnType ,name, t1, n1, t2, n2, t3, n3, t4, n4, t5, n5) \
 /* forward reference definition for method */ \
-__type(returnType) name##_impl (RexxMethodContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5));  \
+__rytpe(returnType) name##_impl (RexxMethodContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5));  \
                                \
 /* method signature definition */ \
 static uint16_t name##_types[] = {__tdcl(returnType), __tdcl(t1), __tdcl(t2), __tdcl(t3), __tdcl(t4), __tdcl(t5), REXX_ARGUMENT_TERMINATOR};    \
@@ -3890,13 +3890,13 @@ __methodstub(name) \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__type(returnType) name##_impl(RexxMethodContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5))
+__rytpe(returnType) name##_impl(RexxMethodContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5))
 
 
 // method with six arguments
 #define RexxMethod6(returnType, name, t1, n1, t2, n2, t3, n3, t4, n4, t5, n5, t6, n6) \
 /* forward reference definition for method */ \
-__type(returnType) name##_impl (RexxMethodContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6));  \
+__rytpe(returnType) name##_impl (RexxMethodContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6));  \
                                \
 /* method signature definition */ \
 static uint16_t name##_types[] = {__tdcl(returnType), __tdcl(t1), __tdcl(t2), __tdcl(t3), __tdcl(t4), __tdcl(t5), __tdcl(t6), REXX_ARGUMENT_TERMINATOR};    \
@@ -3913,13 +3913,13 @@ __methodstub(name) \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__type(returnType) name##_impl(RexxMethodContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6))
+__rytpe(returnType) name##_impl(RexxMethodContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6))
 
 
 // method with seven arguments
 #define RexxMethod7(returnType, name, t1, n1, t2, n2, t3, n3, t4, n4, t5, n5, t6, n6, t7, n7) \
 /* forward reference definition for method */ \
-__type(returnType) name##_impl (RexxMethodContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7));  \
+__rytpe(returnType) name##_impl (RexxMethodContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7));  \
                                \
 /* method signature definition */ \
 static uint16_t name##_types[] = {__tdcl(returnType), __tdcl(t1), __tdcl(t2), __tdcl(t3), __tdcl(t4), __tdcl(t5), __tdcl(t6), __tdcl(t7), REXX_ARGUMENT_TERMINATOR};    \
@@ -3936,13 +3936,13 @@ __methodstub(name) \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__type(returnType) name##_impl(RexxMethodContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7))
+__rytpe(returnType) name##_impl(RexxMethodContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7))
 
 
 // method with eight arguments
 #define RexxMethod8(returnType, name, t1, n1, t2, n2, t3, n3, t4, n4, t5, n5, t6, n6, t7, n7, t8, n8) \
 /* forward reference definition for method */ \
-__type(returnType) name##_impl (RexxMethodContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7), __adcl(t8, n8));  \
+__rytpe(returnType) name##_impl (RexxMethodContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7), __adcl(t8, n8));  \
                                \
 /* method signature definition */ \
 static uint16_t name##_types[] = {__tdcl(returnType), __tdcl(t1), __tdcl(t2), __tdcl(t3), __tdcl(t4), __tdcl(t5), __tdcl(t6), __tdcl(t7), __tdcl(t8), REXX_ARGUMENT_TERMINATOR};    \
@@ -3959,13 +3959,13 @@ __methodstub(name) \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__type(returnType) name##_impl(RexxMethodContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7), __adcl(t8, n8))
+__rytpe(returnType) name##_impl(RexxMethodContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7), __adcl(t8, n8))
 
 
 // method with nine arguments
 #define RexxMethod9(returnType, name, t1, n1, t2, n2, t3, n3, t4, n4, t5, n5, t6, n6, t7, n7, t8, n8, t9, n9) \
 /* forward reference definition for method */ \
-__type(returnType) name##_impl (RexxMethodContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7), __adcl(t8, n8), __adcl(t9, n9));  \
+__rytpe(returnType) name##_impl (RexxMethodContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7), __adcl(t8, n8), __adcl(t9, n9));  \
                                \
 /* method signature definition */ \
 static uint16_t name##_types[] = {__tdcl(returnType), __tdcl(t1), __tdcl(t2), __tdcl(t3), __tdcl(t4), __tdcl(t5), __tdcl(t6), __tdcl(t7), __tdcl(t8), __tdcl(t9), REXX_ARGUMENT_TERMINATOR};    \
@@ -3982,13 +3982,13 @@ __methodstub(name) \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__type(returnType) name##_impl(RexxMethodContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7), __adcl(t8, n8), __adcl(t9, n9))
+__rytpe(returnType) name##_impl(RexxMethodContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7), __adcl(t8, n8), __adcl(t9, n9))
 
 
 // method with 10 arguments
 #define RexxMethod10(returnType, name, t1, n1, t2, n2, t3, n3, t4, n4, t5, n5, t6, n6, t7, n7, t8, n8, t9, n9, t10, n10) \
 /* forward reference definition for method */ \
-__type(returnType) name##_impl (RexxMethodContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7), __adcl(t8, n8), __adcl(t9, n9), __adcl(t10, n10));  \
+__rytpe(returnType) name##_impl (RexxMethodContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7), __adcl(t8, n8), __adcl(t9, n9), __adcl(t10, n10));  \
                                \
 /* method signature definition */ \
 static uint16_t name##_types[] = {__tdcl(returnType), __tdcl(t1), __tdcl(t2), __tdcl(t3), __tdcl(t4), __tdcl(t5), __tdcl(t6), __tdcl(t7), __tdcl(t8), __tdcl(t9), __tdcl(t10), REXX_ARGUMENT_TERMINATOR};    \
@@ -4005,7 +4005,7 @@ __methodstub(name) \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__type(returnType) name##_impl(RexxMethodContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7), __adcl(t8, n8), __adcl(t9, n9), __adcl(t10, n10))
+__rytpe(returnType) name##_impl(RexxMethodContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7), __adcl(t8, n8), __adcl(t9, n9), __adcl(t10, n10))
 
 
 #define __functionstub(name) uint16_t * RexxEntry name(RexxCallContext *context, ValueDescriptor *arguments)
@@ -4022,7 +4022,7 @@ __type(returnType) name##_impl(RexxMethodContext *context, __adcl(t1, n1), __adc
 
 #define RexxRoutine0(returnType, name) \
 /* forward reference definition for method */ \
-__type(returnType) name##_impl (RexxCallContext * context);  \
+__rytpe(returnType) name##_impl (RexxCallContext * context);  \
                                \
 /* method signature definition */ \
 static uint16_t name##_types[] = {__tdcl(returnType), REXX_ARGUMENT_TERMINATOR};    \
@@ -4039,13 +4039,13 @@ __functionstub(name) \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__type(returnType) name##_impl(RexxCallContext *context)
+__rytpe(returnType) name##_impl(RexxCallContext *context)
 
 
 // method with one argument
 #define RexxRoutine1(returnType ,name, t1, n1) \
 /* forward reference definition for method */ \
-__type(returnType) name##_impl (RexxCallContext * context, __adcl(t1, n1));  \
+__rytpe(returnType) name##_impl (RexxCallContext * context, __adcl(t1, n1));  \
                                \
 /* method signature definition */ \
 static uint16_t name##_types[] = {__tdcl(returnType), __tdcl(t1), REXX_ARGUMENT_TERMINATOR};    \
@@ -4062,13 +4062,13 @@ __functionstub(name) \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__type(returnType) name##_impl(RexxCallContext *context, __adcl(t1, n1))
+__rytpe(returnType) name##_impl(RexxCallContext *context, __adcl(t1, n1))
 
 
 // method with two arguments
 #define RexxRoutine2(returnType ,name, t1, n1, t2, n2) \
 /* forward reference definition for method */ \
-__type(returnType) name##_impl (RexxCallContext * context, __adcl(t1, n1), __adcl(t2, n2));  \
+__rytpe(returnType) name##_impl (RexxCallContext * context, __adcl(t1, n1), __adcl(t2, n2));  \
                                \
 /* method signature definition */ \
 static uint16_t name##_types[] = {__tdcl(returnType), __tdcl(t1), __tdcl(t2), REXX_ARGUMENT_TERMINATOR };    \
@@ -4085,13 +4085,13 @@ __functionstub(name) \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__type(returnType) name##_impl(RexxCallContext *context, __adcl(t1, n1), __adcl(t2, n2))
+__rytpe(returnType) name##_impl(RexxCallContext *context, __adcl(t1, n1), __adcl(t2, n2))
 
 
 // method with three arguments
 #define RexxRoutine3(returnType ,name, t1, n1, t2, n2, t3, n3) \
 /* forward reference definition for method */ \
-__type(returnType) name##_impl (RexxCallContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3));  \
+__rytpe(returnType) name##_impl (RexxCallContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3));  \
                                \
 /* method signature definition */ \
 static uint16_t name##_types[] = {__tdcl(returnType), __tdcl(t1), __tdcl(t2), __tdcl(t3), REXX_ARGUMENT_TERMINATOR};    \
@@ -4108,13 +4108,13 @@ __functionstub(name) \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__type(returnType) name##_impl(RexxCallContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3))
+__rytpe(returnType) name##_impl(RexxCallContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3))
 
 
 // method with four arguments
 #define RexxRoutine4(returnType ,name, t1, n1, t2, n2, t3, n3, t4, n4) \
 /* forward reference definition for method */ \
-__type(returnType) name##_impl (RexxCallContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4));  \
+__rytpe(returnType) name##_impl (RexxCallContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4));  \
                                \
 /* method signature definition */ \
 static uint16_t name##_types[] = {__tdcl(returnType), __tdcl(t1), __tdcl(t2), __tdcl(t3), __tdcl(t4), REXX_ARGUMENT_TERMINATOR};    \
@@ -4131,13 +4131,13 @@ __functionstub(name) \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__type(returnType) name##_impl(RexxCallContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4))
+__rytpe(returnType) name##_impl(RexxCallContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4))
 
 
 // method with five arguments
 #define RexxRoutine5(returnType ,name, t1, n1, t2, n2, t3, n3, t4, n4, t5, n5) \
 /* forward reference definition for method */ \
-__type(returnType) name##_impl (RexxCallContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5));  \
+__rytpe(returnType) name##_impl (RexxCallContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5));  \
                                \
 /* method signature definition */ \
 static uint16_t name##_types[] = {__tdcl(returnType), __tdcl(t1), __tdcl(t2), __tdcl(t3), __tdcl(t4), __tdcl(t5), REXX_ARGUMENT_TERMINATOR};    \
@@ -4154,13 +4154,13 @@ __functionstub(name) \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__type(returnType) name##_impl(RexxCallContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5))
+__rytpe(returnType) name##_impl(RexxCallContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5))
 
 
 // method with six arguments
 #define RexxRoutine6(returnType, name, t1, n1, t2, n2, t3, n3, t4, n4, t5, n5, t6, n6) \
 /* forward reference definition for method */ \
-__type(returnType) name##_impl (RexxCallContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6));  \
+__rytpe(returnType) name##_impl (RexxCallContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6));  \
                                \
 /* method signature definition */ \
 static uint16_t name##_types[] = {__tdcl(returnType), __tdcl(t1), __tdcl(t2), __tdcl(t3), __tdcl(t4), __tdcl(t5), __tdcl(t6), REXX_ARGUMENT_TERMINATOR};    \
@@ -4177,12 +4177,12 @@ __functionstub(name) \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__type(returnType) name##_impl(RexxCallContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6))
+__rytpe(returnType) name##_impl(RexxCallContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6))
 
 // method with seven arguments
 #define RexxRoutine7(returnType, name, t1, n1, t2, n2, t3, n3, t4, n4, t5, n5, t6, n6, t7, n7) \
 /* forward reference definition for method */ \
-__type(returnType) name##_impl (RexxCallContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7)); \
+__rytpe(returnType) name##_impl (RexxCallContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7)); \
                                \
 /* method signature definition */ \
 static uint16_t name##_types[] = {__tdcl(returnType), __tdcl(t1), __tdcl(t2), __tdcl(t3), __tdcl(t4), __tdcl(t5), __tdcl(t6), __tdcl(t7), REXX_ARGUMENT_TERMINATOR};    \
@@ -4199,13 +4199,13 @@ __functionstub(name) \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__type(returnType) name##_impl(RexxCallContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7))
+__rytpe(returnType) name##_impl(RexxCallContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7))
 
 
 // function with eight arguments
 #define RexxRoutine8(returnType, name, t1, n1, t2, n2, t3, n3, t4, n4, t5, n5, t6, n6, t7, n7, t8, n8) \
 /* forward reference definition for method */ \
-__type(returnType) name##_impl (RexxCallContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7), __adcl(t8, n8));  \
+__rytpe(returnType) name##_impl (RexxCallContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7), __adcl(t8, n8));  \
                                \
 /* method signature definition */ \
 static uint16_t name##_types[] = {__tdcl(returnType), __tdcl(t1), __tdcl(t2), __tdcl(t3), __tdcl(t4), __tdcl(t5), __tdcl(t6), __tdcl(t7), __tdcl(t8), REXX_ARGUMENT_TERMINATOR};    \
@@ -4222,13 +4222,13 @@ __functionstub(name) \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__type(returnType) name##_impl(RexxCallContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7), __adcl(t8, n8))
+__rytpe(returnType) name##_impl(RexxCallContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7), __adcl(t8, n8))
 
 
 // function with nine arguments
 #define RexxRoutine9(returnType, name, t1, n1, t2, n2, t3, n3, t4, n4, t5, n5, t6, n6, t7, n7, t8, n8, t9, n9) \
 /* forward reference definition for method */ \
-__type(returnType) name##_impl (RexxCallContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7), __adcl(t8, n8), __adcl(t9, n9));  \
+__rytpe(returnType) name##_impl (RexxCallContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7), __adcl(t8, n8), __adcl(t9, n9));  \
                                \
 /* method signature definition */ \
 static uint16_t name##_types[] = {__tdcl(returnType), __tdcl(t1), __tdcl(t2), __tdcl(t3), __tdcl(t4), __tdcl(t5), __tdcl(t6), __tdcl(t7), __tdcl(t8), __tdcl(t9), REXX_ARGUMENT_TERMINATOR};    \
@@ -4245,13 +4245,13 @@ __functionstub(name) \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__type(returnType) name##_impl(RexxCallContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7), __adcl(t8, n8), __adcl(t9, n9))
+__rytpe(returnType) name##_impl(RexxCallContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7), __adcl(t8, n8), __adcl(t9, n9))
 
 
 // function with ten arguments
 #define RexxRoutine10(returnType, name, t1, n1, t2, n2, t3, n3, t4, n4, t5, n5, t6, n6, t7, n7, t8, n8, t9, n9, t10, n10) \
 /* forward reference definition for method */ \
-__type(returnType) name##_impl (RexxCallContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7), __adcl(t8, n8), __adcl(t9, n9), __adcl(t10, n10));  \
+__rytpe(returnType) name##_impl (RexxCallContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7), __adcl(t8, n8), __adcl(t9, n9), __adcl(t10, n10));  \
                                \
 /* method signature definition */ \
 static uint16_t name##_types[] = {__tdcl(returnType), __tdcl(t1), __tdcl(t2), __tdcl(t3), __tdcl(t4), __tdcl(t5), __tdcl(t6), __tdcl(t7), __tdcl(t8), __tdcl(t9), __tdcl(t10), REXX_ARGUMENT_TERMINATOR};    \
@@ -4268,7 +4268,7 @@ __functionstub(name) \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__type(returnType) name##_impl(RexxCallContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7), __adcl(t8, n8), __adcl(t9, n9), __adcl(t10, n10))
+__rytpe(returnType) name##_impl(RexxCallContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7), __adcl(t8, n8), __adcl(t9, n9), __adcl(t10, n10))
 
 /******************************************************************************/
 /* Types (used in macro expansions and function prototypes)                   */
