@@ -2329,8 +2329,8 @@ public:
     }
 
     inline bool atEnd() { return current >= end; }
-    inline unsigned int getChar() { return (unsigned char)*current;}
-    inline unsigned int nextChar() { return (unsigned char)*current++; }
+    inline char getChar() { return *current;}
+    inline char nextChar() { return *current++; }
     inline void stepPosition() { current++; }
     inline bool moreChars() { return current < end; }
 
@@ -2366,6 +2366,7 @@ public:
         // digit.
         scannedDigits = 0;
         haveNonZero = false;
+        invalidExponent = false;
     }
 
     void addDigit(char d)
@@ -2424,7 +2425,19 @@ public:
 
     void addExponentDigit(char d)
     {
-        exponent = (exponent * 10) + (d - RexxString::ch_ZERO);
+        wholenumber_t new_exponent = (exponent * 10) + (d - RexxString::ch_ZERO);
+        // now we need to check for an exponent that is too large or one that
+        // caused an overflow
+        if (new_exponent > Numerics::MAX_EXPONENT || new_exponent < exponent)
+        {
+            // set this to an invalid exponent so we can flag this as invalid later
+            invalidExponent = true;
+        }
+        else
+        {
+            // this is a good value (so far)
+            exponent = new_exponent;
+        }
     }
 
     bool finish()
@@ -2443,15 +2456,27 @@ public:
             number->setZero();
             return true;
         }
+
+        // if the exponent was larger than 9-nines, this is invalid
+        if (invalidExponent)
+        {
+            return false;
+        }
+
         // set the count of digits in the number
         number->digitsCount = current - number->numberDigits;
         // get the final exponent value
         number->numberExponent = (exponent * exponentSign) - decimals;
         // a couple of final exponent checks
+        // since the number of decimals enters into the exponent, we need to
+        // verify that the calculated exponent did not cause an underflow
         if (Numerics::abs(number->numberExponent) > Numerics::MAX_EXPONENT)
         {
             return false;
         }
+
+        // we can also go the other way, where the number of digits can cause the exponent
+        // to overflow if expressed in scientific notation.
         if ((number->numberExponent + number->digitsCount - 1) > Numerics::MAX_EXPONENT)
         {
             return false;
@@ -2468,6 +2493,7 @@ protected:
     wholenumber_t decimals;             // the decimal shift on the exponent
     wholenumber_t scannedDigits;        // indicate we've seen digits
     bool haveNonZero;                   // we've seen a non-zero digit
+    bool invalidExponent;               // the exponent is larger than 9-nines
 };
 
 
@@ -2492,7 +2518,7 @@ bool NumberString::parseNumber(const char *number, size_t length)
     NumberStringBuilder builder(this);
 
     // get the current character to start this off
-    unsigned int inch = scanner.getChar();
+    char inch = scanner.getChar();
     // ok, loop through the token until we've consumed it all.
     for (;;)
     {
