@@ -50,9 +50,9 @@
 #include <pthread.h>
 #include <memory.h>
 #include <stdio.h>
+#include <time.h>
 #ifdef AIX
     #include <sys/sched.h>
-    #include <time.h>
 #endif
 
 #if defined(OPSYS_SUN)
