@@ -50,28 +50,13 @@
 #include <pthread.h>
 #include <memory.h>
 #include <stdio.h>
-#include <time.h>
 #ifdef AIX
     #include <sys/sched.h>
+    #include <time.h>
 #endif
 
 #if defined(OPSYS_SUN)
     #include <sched.h>
-#endif
-
-
-#ifdef __MACH__
-#define CLOCK_REALTIME 1
-#include <sys/time.h>
-//clock_gettime is not implemented on OSX
-int clock_gettime(int /*clk_id*/, struct timespec* t) {
-    struct timeval now;
-    int rv = gettimeofday(&now, NULL);
-    if (rv) return rv;
-    t->tv_sec  = now.tv_sec;
-    t->tv_nsec = now.tv_usec * 1000;
-    return 0;
-}
 #endif
 
 #include <errno.h>
@@ -207,17 +192,20 @@ void SysSemaphore::wait()
 
 bool SysSemaphore::wait(uint32_t t)           // takes a timeout in msecs
 {
+    struct timeval  tv;
     struct timespec ts;
 
     int result = 0;
-    clock_gettime(CLOCK_REALTIME, &ts);       // get current time
-    ts.tv_nsec += (t % 1000) * 1000000;       // add fractions of seconds
-    if (ts.tv_nsec > 1000000000)              // did nanonseconds overflow?
+    gettimeofday(&tv, NULL);                  // get current time
+    tv.tv_nsec += (t % 1000) * 1000;          // add fractions of seconds
+    if (tv.tv_usec > 1000000)                 // did microseconds overflow?
     {
-        ts.tv_nsec -= 1000000000;             // correct nenosecond overflow ..
-        ts.tv_sec += 1;                       // .. by adding a second
+        tv.tv_usec -= 1000000;                // correct microsecond overflow ..
+        tv.tv_sec += 1;                       // .. by adding a second
     }
-    ts.tv_sec += t / 1000;                    // add requested seconds
+    tv.tv_sec += t / 1000;                    // add requested seconds
+    ts.tv_sec = tv.tv_sec;                    // copy timeval to timespec; seconds ..
+    ts.tv_nsec = tv.tv_usec * 1000;           // .. and microsecs to nanosecs
     pthread_mutex_lock(&(this->semMutex));    // Lock access to semaphore
     while (result == 0 && !this->postedCount) // Has it been posted? Spurious wakeups may occur
     {                                         // wait with timeout 
