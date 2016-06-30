@@ -50,6 +50,7 @@
 #include <pthread.h>
 #include <memory.h>
 #include <stdio.h>
+#include <sys/time.h>
 #ifdef AIX
     #include <sys/sched.h>
     #include <time.h>
@@ -197,7 +198,7 @@ bool SysSemaphore::wait(uint32_t t)           // takes a timeout in msecs
 
     int result = 0;
     gettimeofday(&tv, NULL);                  // get current time
-    tv.tv_nsec += (t % 1000) * 1000;          // add fractions of seconds
+    tv.tv_usec += (t % 1000) * 1000;          // add fractions of seconds
     if (tv.tv_usec > 1000000)                 // did microseconds overflow?
     {
         tv.tv_usec -= 1000000;                // correct microsecond overflow ..
