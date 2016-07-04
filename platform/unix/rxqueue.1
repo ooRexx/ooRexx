@@ -1,10 +1,9 @@
-.TH RXQUEUE 1 "July 2014" "Version 4.3.0"
+.TH RXQUEUE 1 "July 2016" "Version 5.0.0"
 .SH NAME
 \fBrxqueue\fP \- Open Object Rexx Queue Filter
 .SH SYNTAX
 .B rxqueue
-.RI [queuename]
-.RI [/FIFO|/LIFO/CLEAR]
+.RI [ queuename "] [/FIFO | /LIFO | /CLEAR]"
 .SH DESCRIPTION
 This program operates as a filter, placing the output of an operating system command onto an
 Open Object Rexx queue.
@@ -14,8 +13,7 @@ The name of the queue to act upon is determined in the following order:
 
 .TP
 1.
-.B queuename
-specified on the command line
+.IR queuename " specified on the command line"
 .TP
 2.
 The name of the queue specified by the environment variable

@@ -1,34 +1,36 @@
-.TH REXX 1 "July 2014" "Version 4.3.0"
+.TH REXX 1 "July 2016" "Version 5.0.0"
 .SH NAME
 \fBrexx\fP \- Open Object Rexx Interpreter
 .SH SYNTAX
+.BI "rexx " filename
+.RI [ arguments ]
+.PP
 .B rexx
-.RI [-v]
-.RI [filename
-.RI |
-.RI -e
-.RI statements]
-.RI [arguments]
+.RI "-e " "program_string " [ arguments ]
+.PP
+.BR "rexx " -v
 .SH DESCRIPTION
-.I Open Object Rexx
-is an object-oriented scripting language based on and
+.RI "Executes an " "Open Object Rexx " "(ooRexx) script"
+.RI "with the given " "filename " "or from " program_string .  
+.PP
+ooRexx is an object-oriented scripting language based on and
 compatible with Rexx that fully supports object-oriented
 concepts. It provides open interfaces to many system
 functions such as TCP/IP sockets, FTP for communications,
 and C for programming.
 You should report bugs at
-http://sourceforge.net/tracker/?group_id=119701&atid=684730
+https://sourceforge.net/p/oorexx/bugs/
 .PP
 For further information, read the README and the other
 documentation files included in the Open Object Rexx distribution.
 
 .SH OPTIONS
 .TP
-.B -v
-display the build date of the product.
-.TP
 .B -e
-Rexx program statements. These should be contained within double quotes.
+Rexx program string; should be contained within double quotes.
+.TP
+.B -v
+displays ooRexx version, build date, and addressing mode.
 
 .SH "SEE ALSO"
 .BR rexxc (1)
