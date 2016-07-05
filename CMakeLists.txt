@@ -53,7 +53,6 @@ set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 set (CMAKE_PDB_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
-
 #/*----------------------------------------------------------------------------*/
 #/* Project settings                                                           */
 #/*----------------------------------------------------------------------------*/
@@ -196,20 +195,27 @@ if (WIN32)
      set(NSIS_COMPONENT_SHORTCUTS_Docs "${NSIS_COMPONENT_SHORTCUTS_Docs}\n!insertmacro ConfigureDocShortCut \"${name}\" \"${file}\"")
    ENDMACRO ()
 
-else ()
-   set (CMAKE_INSTALL_PREFIX /usr)
+ else ()
+   if (APPLE )
+     set (CMAKE_INSTALL_PREFIX ~/Applications/ooRexx${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL})
+     set (INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/bin)
+     set (CMAKE_INSTALL_RPATH @executable_path)
+   else ()
+     set (CMAKE_INSTALL_PREFIX /usr)
+        find_path(INSTALL_LIB_DIR libc.so PATHS ${CMAKE_INSTALL_PREFIX}/lib ${CMAKE_INSTALL_PREFIX}/lib64)
+   # at least on Ubuntu above doesn't seem to work; use fallback:
+   if (${INSTALL_LIB_DIR} STREQUAL "INSTALL_LIB_DIR-NOTFOUND")
+      set (INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/lib)
+   endif ()
+
+
+   endif ()
    set (catdir ${CMAKE_INSTALL_PREFIX}/bin)
    set (INSTALL_EXECUTABLE_DIR ${CMAKE_INSTALL_PREFIX}/bin)
    set (INSTALL_CLS_DIR ${CMAKE_REXXPATH})
    set (INSTALL_REX_DIR ${CMAKE_REXXPATH})
    set (INSTALL_INCLUDE_DIR ${CMAKE_INSTALL_PREFIX}/include)
    set (INSTALL_SAMPLES_DIR ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
-   find_path(INSTALL_LIB_DIR libc.so PATHS ${CMAKE_INSTALL_PREFIX}/lib ${CMAKE_INSTALL_PREFIX}/lib64)
-   # at least on Ubuntu above doesn't seem to work; use fallback:
-   if (${INSTALL_LIB_DIR} STREQUAL "INSTALL_LIB_DIR-NOTFOUND")
-      set (INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/lib)
-   endif ()
-
    set (INSTALL_MAN_DIR ${CMAKE_INSTALL_PREFIX}/share/man)
 endif ()
 # Set compiler and linker flags common to all build environments
