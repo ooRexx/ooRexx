@@ -1019,7 +1019,7 @@ RexxRoutine3(RexxObjectPtr,
              CSTRING, proto,
              CSTRING, ichar)
 {
-    if (strlen(name) == 0 || strlen(proto) == 0 || strlen(ichar) != 1) {
+    if (strlen(name) == 0 || strlen(proto) == 0) {
         context->RaiseException1(40001, (RexxObjectPtr) context->NewStringFromAsciiz("SysGetservbyname"));
         return (RexxObjectPtr)context->NewStringFromAsciiz("\0");
     }
@@ -1031,7 +1031,7 @@ RexxRoutine3(RexxObjectPtr,
         return (RexxObjectPtr)context->NewStringFromAsciiz(se->s_name);
     }
     else if (*ichar == 'P' || *ichar == 'p') {
-        return (RexxObjectPtr)context->WholeNumberToObject((wholenumber_t)se->s_port);
+        return (RexxObjectPtr)context->WholeNumberToObject((wholenumber_t)ntohs(se->s_port));
     }
     else if (*ichar == 'A' || *ichar == 'a') {
         RexxArrayObject arr = context->NewArray(1);
@@ -1066,11 +1066,11 @@ RexxRoutine3(RexxObjectPtr,
              CSTRING, proto,
              CSTRING, ichar)
 {
-    if (port == 0 || strlen(proto) == 0 || strlen(ichar) != 1) {
+    if (port <= 0 || port >= 65535 || strlen(proto) == 0) {
         context->RaiseException1(40001, (RexxObjectPtr) context->NewStringFromAsciiz("SysGetservbyport"));
         return (RexxObjectPtr)context->NewStringFromAsciiz("\0");
     }
-    struct servent *se = getservbyport(port, proto);
+    struct servent *se = getservbyport(htons(port), proto);
     if (se == NULL) {
         return (RexxObjectPtr)context->NewStringFromAsciiz("\0");
     }
@@ -1078,7 +1078,7 @@ RexxRoutine3(RexxObjectPtr,
         return (RexxObjectPtr)context->NewStringFromAsciiz(se->s_name);
     }
     else if (*ichar == 'P' || *ichar == 'p') {
-        return (RexxObjectPtr)context->WholeNumberToObject((wholenumber_t)se->s_port);
+        return (RexxObjectPtr)context->WholeNumberToObject((wholenumber_t)ntohs(se->s_port));
     }
     else if (*ichar == 'A' || *ichar == 'a') {
         RexxArrayObject arr = context->NewArray(1);
