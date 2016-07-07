@@ -1622,13 +1622,13 @@ RexxRoutine2(RexxObjectPtr,
  *
  * @return        0 or -1.
  */
-RexxRoutine2(int,
-             SysMkdir,
-             CSTRING, dir,
-             int, mode)
-{
-    return mkdir(dir, mode);
-}
+// RexxRoutine2(int,
+//              SysMkdir,
+//              CSTRING, dir,
+//              int, mode)
+// {
+//     return mkdir(dir, mode);
+// }
 
 
 /**
@@ -1769,7 +1769,7 @@ RexxRoutineEntry orxnixclib_routines[] = {
     REXX_TYPED_ROUTINE(SysGeterrno, SysGeterrno),
     REXX_TYPED_ROUTINE(SysGeterrnomsg, SysGeterrnomsg),
     REXX_TYPED_ROUTINE(SysCrypt, SysCrypt),
-    REXX_TYPED_ROUTINE(SysMkdir, SysMkdir),
+    /*    REXX_TYPED_ROUTINE(SysMkdir, SysMkdir), */
     REXX_TYPED_ROUTINE(SysRmdir, SysRmdir),
     REXX_TYPED_ROUTINE(SysGetdirlist, SysGetdirlist),
     REXX_TYPED_ROUTINE(SysGettzname1, SysGettzname1),
