@@ -1404,9 +1404,10 @@ size_t RexxEntry SysMkDir(const char *name, size_t numargs, CONSTRXSTRING args[]
   size_t  rc;                           /* Ret code of func           */
   const char *  path;                   /* given path                 */
   char *  dir_buf = NULL;               /* full directory path        */
+  int mode;                             // permission (optional)
 
-  if (numargs != 1)
-                                       /* If no args, then its an    */
+  if (numargs < 1 | numargs > 2)
+                                       /* If not 1 or 2 args, its an */
                                        /* incorrect call             */
     return INVALID_ROUTINE;
   path = args[0].strptr;               /* directory to make          */
@@ -1419,8 +1420,11 @@ size_t RexxEntry SysMkDir(const char *name, size_t numargs, CONSTRXSTRING args[]
   /* we do not restrict permission, this is done by root in the file */
   /* /etc/security/user. We allow anything. System restricts         */
   /* according to the user settings --> smitty/user                  */
-//rc = mkdir(path, S_IRWXU|S_IRGRP|S_IXGRP|S_IROTH|S_IXOTH);
-  rc = mkdir(path, S_IRWXU | S_IRWXG | S_IRWXO);
+  if (numargs < 2 | !string2int(args[1].strptr, &mode))
+  {
+    mode = S_IRWXU | S_IRWXG | S_IRWXO;
+  }
+  rc = mkdir(path, mode);
   if(!rc){                             /* if worked well             */
     sprintf(retstr->strptr, "%d", (int)rc); /* result is return code      */
     retstr->strlength = strlen(retstr->strptr);
