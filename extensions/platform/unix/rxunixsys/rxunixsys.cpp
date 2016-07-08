@@ -603,7 +603,7 @@ RexxRoutine2(RexxObjectPtr,
              CSTRING, user,
              CSTRING, ichar)
 {
-    if (strlen(user) == 0 || strlen(ichar) != 1) {
+    if (strlen(user) == 0 || strlen(ichar) == 0) {
         context->RaiseException1(40001, (RexxObjectPtr) context->NewStringFromAsciiz("SysGetpwnam"));
         return (RexxObjectPtr)context->NewStringFromAsciiz("\0");
     }
@@ -653,7 +653,7 @@ RexxRoutine2(RexxObjectPtr,
              int, uid,
              CSTRING, ichar)
 {
-    if (strlen(ichar) != 1) {
+    if (strlen(ichar) == 0) {
         context->RaiseException1(40001, (RexxObjectPtr) context->NewStringFromAsciiz("SysGetpwuid"));
         return (RexxObjectPtr)context->NewStringFromAsciiz("\0");
     }
@@ -703,7 +703,7 @@ RexxRoutine2(RexxObjectPtr,
              CSTRING, grpname,
              CSTRING, ichar)
 {
-    if (strlen(grpname) == 0 || strlen(ichar) != 1) {
+    if (strlen(grpname) == 0 || strlen(ichar) == 0) {
         context->RaiseException1(40001, (RexxObjectPtr) context->NewStringFromAsciiz("SysGetgrnam"));
         return (RexxObjectPtr)context->NewStringFromAsciiz("\0");
     }
@@ -747,7 +747,7 @@ RexxRoutine2(RexxObjectPtr,
              int, gid,
              CSTRING, ichar)
 {
-    if (strlen(ichar) != 1) {
+    if (strlen(ichar) == 0) {
         context->RaiseException1(40001, (RexxObjectPtr) context->NewStringFromAsciiz("SysGetgrgid"));
         return (RexxObjectPtr)context->NewStringFromAsciiz("\0");
     }
@@ -795,7 +795,7 @@ RexxRoutine2(RexxObjectPtr,
     struct stat64 mystat;
     char buf[32];  // used for both the file times and the permissions
 
-    if (strlen(fname) == 0 || strlen(ichar) != 1) {
+    if (strlen(fname) == 0 || strlen(ichar) == 0) {
         context->RaiseException1(40001, (RexxObjectPtr) context->NewStringFromAsciiz("SysStat"));
         return (RexxObjectPtr)context->NewStringFromAsciiz("\0");
     }
