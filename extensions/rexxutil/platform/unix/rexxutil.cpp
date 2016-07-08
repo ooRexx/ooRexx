@@ -1406,7 +1406,7 @@ size_t RexxEntry SysMkDir(const char *name, size_t numargs, CONSTRXSTRING args[]
   char *  dir_buf = NULL;               /* full directory path        */
   int mode;                             // permission (optional)
 
-  if (numargs < 1 | numargs > 2)
+  if (numargs < 1 || numargs > 2)
                                        /* If not 1 or 2 args, its an */
                                        /* incorrect call             */
     return INVALID_ROUTINE;
@@ -1420,7 +1420,7 @@ size_t RexxEntry SysMkDir(const char *name, size_t numargs, CONSTRXSTRING args[]
   /* we do not restrict permission, this is done by root in the file */
   /* /etc/security/user. We allow anything. System restricts         */
   /* according to the user settings --> smitty/user                  */
-  if (numargs < 2 | !string2int(args[1].strptr, &mode))
+  if (numargs < 2 || !string2int(args[1].strptr, &mode))
   {
     mode = S_IRWXU | S_IRWXG | S_IRWXO;
   }
