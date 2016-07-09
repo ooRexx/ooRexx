@@ -143,7 +143,10 @@ RexxMethod1(int,                        // Return type
 
     RexxReturnCode rc = RexxPullFromQueue(qname, &data, &timestamp, 0);
     context->SetObjectVariable("RETC", context->Int32ToObject(rc));
-    context->SetObjectVariable("FLAG", context->NewStringFromAsciiz(data.strptr));
+    if (rc == RXQUEUE_OK)
+    {
+        context->SetObjectVariable("FLAG", context->NewStringFromAsciiz(data.strptr));
+    }
     return rc;
 }
 
