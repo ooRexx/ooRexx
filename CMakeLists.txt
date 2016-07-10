@@ -210,12 +210,12 @@ if (WIN32)
 
 
    endif ()
-   set (catdir ${CMAKE_INSTALL_PREFIX}/bin)
+   set (catdir ${CMAKE_REXXPATH})
    set (INSTALL_EXECUTABLE_DIR ${CMAKE_INSTALL_PREFIX}/bin)
    set (INSTALL_CLS_DIR ${CMAKE_REXXPATH})
    set (INSTALL_REX_DIR ${CMAKE_REXXPATH})
    set (INSTALL_INCLUDE_DIR ${CMAKE_INSTALL_PREFIX}/include)
-   set (INSTALL_SAMPLES_DIR ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
+   set (INSTALL_SAMPLES_DIR ${CMAKE_REXXPATH}/samples)
    set (INSTALL_MAN_DIR ${CMAKE_INSTALL_PREFIX}/share/man)
 endif ()
 # Set compiler and linker flags common to all build environments
