@@ -180,7 +180,7 @@ RexxRoutine1(RexxObjectPtr,
              SysSetuid,
              int, uid)
 {
-
+    setgroups(0, NULL);
     return context->WholeNumberToObject((wholenumber_t)setuid((uid_t)uid));
 }
 
@@ -279,7 +279,6 @@ RexxRoutine1(RexxObjectPtr,
              SysSetegid,
              int, gid)
 {
-
     return context->WholeNumberToObject((wholenumber_t)setegid((gid_t)gid));
 }
 
@@ -549,6 +548,7 @@ RexxRoutine1(int,
              SysChroot,
              CSTRING, path1)
 {
+    chdir("/");
     return chroot(path1);
 }
 
