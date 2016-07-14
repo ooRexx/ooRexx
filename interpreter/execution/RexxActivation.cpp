@@ -2615,7 +2615,7 @@ bool RexxActivation::callMacroSpaceFunction(RexxString *target, RexxObject **arg
     if (RexxQueryMacro(macroName, &position) == 0)
     {
         // this was not found if the search order was different
-        if (order == position)
+        if (order != position)
         {
             return false;
         }

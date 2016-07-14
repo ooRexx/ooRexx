@@ -1188,6 +1188,7 @@ size_t RexxEntry SysCls(const char *name, size_t numargs, CONSTRXSTRING args[], 
   return VALID_ROUTINE;                /* no error on call           */
 }
 
+
 /*************************************************************************
 * Function:  SysAddRexxMacro                                             *
 *                                                                        *
@@ -1200,157 +1201,32 @@ size_t RexxEntry SysCls(const char *name, size_t numargs, CONSTRXSTRING args[], 
 * Return:    return code from RexxAddMacro                               *
 *************************************************************************/
 
-size_t RexxEntry SysAddRexxMacro(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine3(int, SysAddRexxMacro, CSTRING, name, CSTRING, file, OPTIONAL_CSTRING, option)
 {
-  RexxReturnCode      rc;                      /* creation return code       */
-  size_t       position;                /* added position             */
+    size_t position;         /* added position             */
 
-  if (numargs < 2 || numargs > 3 ||    /* wrong number?              */
-      !RXVALIDSTRING(args[0]) ||       /* first is omitted           */
-      !RXVALIDSTRING(args[1]))         /* second is omitted          */
-    return INVALID_ROUTINE;            /* raise error condition      */
+    position = RXMACRO_SEARCH_BEFORE;    /* set default search position*/
+    if (option != NULL)                  /* have an option?            */
+    {
+        switch (*option)
+        {
+            case 'B':     // 'B'efore
+            case 'b':
+                position = RXMACRO_SEARCH_BEFORE;
+                break;
 
-  position = RXMACRO_SEARCH_BEFORE;    /* set default search position*/
-  if (numargs == 3) {                  /* have an option?            */
-    if (RXZEROLENSTRING(args[2]))      /* null string?               */
-      return INVALID_ROUTINE;          /* this is an error           */
-                                       /* 'B'efore?                  */
-    else if (toupper(args[2].strptr[0]) == 'B')
-      position = RXMACRO_SEARCH_BEFORE;/* place before               */
-                                       /* 'A'fter?                   */
-    else if (toupper(args[2].strptr[0]) == 'A')
-      position = RXMACRO_SEARCH_AFTER; /* place after                */
-    else                               /* parm given was bad         */
-      return INVALID_ROUTINE;          /* raise an error             */
-  }
-                                       /* try to add the macro       */
-  rc = RexxAddMacro(args[0].strptr, args[1].strptr, position);
-  sprintf(retstr->strptr, "%d", rc);   /* format the return code     */
-  retstr->strlength = strlen(retstr->strptr);
-  return VALID_ROUTINE;                /* good completion            */
-}
+            case 'A':     // 'A'fter
+            case 'a':
+                position = RXMACRO_SEARCH_AFTER;
+                break;
 
-
-/*************************************************************************
-* Function:  SysDropRexxMacro                                            *
-*                                                                        *
-* Syntax:    result = SysDropRexxMacro(name)                             *
-*                                                                        *
-* Params:    name   - name of the macro space function                   *
-*                                                                        *
-* Return:    return code from RexxDropMacro                              *
-*************************************************************************/
-
-size_t RexxEntry SysDropRexxMacro(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
-{
-  RexxReturnCode      rc;                      /* creation return code       */
-
-  if (numargs != 1)                    /* wrong number?              */
-    return INVALID_ROUTINE;            /* raise error condition      */
-
-  rc = RexxDropMacro(args[0].strptr);  /* try to drop the macro      */
-  sprintf(retstr->strptr, "%d", rc);   /* format the return code     */
-  retstr->strlength = strlen(retstr->strptr);
-  return VALID_ROUTINE;                /* good completion            */
-}
-
-/*************************************************************************
-* Function:  SysClearRexxMacroSpace                                      *
-*                                                                        *
-* Syntax:    result = SysClearRexxMacroSpace()                           *
-*                                                                        *
-* Params:    none                                                        *
-*                                                                        *
-* Return:    return code from RexxClearMacroSpace()                      *
-*************************************************************************/
-
-size_t RexxEntry SysClearRexxMacroSpace(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
-{
-  RexxReturnCode      rc;                      /* creation return code       */
-
-  if (numargs)                         /* wrong number?              */
-    return INVALID_ROUTINE;            /* raise error condition      */
-  rc = RexxClearMacroSpace();          /* clear the macro space      */
-  sprintf(retstr->strptr, "%d", rc);   /* format the return code     */
-  retstr->strlength = strlen(retstr->strptr);
-  return VALID_ROUTINE;                /* good completion            */
-}
-
-
-/*************************************************************************
-* Function:  SysSaveRexxMacroSpace                                       *
-*                                                                        *
-* Syntax:    result = SysSaveRexxMacroSpace(file)                        *
-*                                                                        *
-* Params:    file   - name of the saved macro space file                 *
-*                                                                        *
-* Return:    return code from RexxSaveMacroSpace()                       *
-*************************************************************************/
-size_t RexxEntry SysSaveRexxMacroSpace(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
-{
-  RexxReturnCode      rc;                      /* creation return code       */
-
-  if (numargs != 1)                    /* wrong number?              */
-    return INVALID_ROUTINE;            /* raise error condition      */
-                                       /* clear the macro space      */
-  rc = RexxSaveMacroSpace(0, NULL, args[0].strptr);
-  sprintf(retstr->strptr, "%d", rc);   /* format the return code     */
-  retstr->strlength = strlen(retstr->strptr);
-  return VALID_ROUTINE;                /* good completion            */
-}
-
-/*************************************************************************
-* Function:  SysLoadRexxMacroSpace                                       *
-*                                                                        *
-* Syntax:    result = SysLoadRexxMacroSpace(file)                        *
-*                                                                        *
-* Params:    file   - name of the saved macro space file                 *
-
-*                                                                        *
-* Return:    return code from RexxLoadMacroSpace()                       *
-*************************************************************************/
-
-size_t RexxEntry SysLoadRexxMacroSpace(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
-{
-  RexxReturnCode      rc;                      /* creation return code       */
-
-  if (numargs != 1)                    /* wrong number?              */
-    return INVALID_ROUTINE;            /* raise error condition      */
-                                       /* clear the macro space      */
-  rc = RexxLoadMacroSpace(0, NULL, args[0].strptr);
-  sprintf(retstr->strptr, "%d", rc);   /* format the return code     */
-  retstr->strlength = strlen(retstr->strptr);
-  return VALID_ROUTINE;                /* good completion            */
-}
-
-
-/*************************************************************************
-* Function:  SysQueryRexxMacro                                           *
-*                                                                        *
-* Syntax:    result = SysQueryRexxMacro(name)                            *
-*                                                                        *
-* Params:    name   - name of the macro space function                   *
-*                                                                        *
-* Return:    position of the macro ('B' or 'A'), returns null for errors.*
-*************************************************************************/
-size_t RexxEntry SysQueryRexxMacro(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
-{
-  unsigned short position;             /* returned position          */
-
-  if (numargs != 1)                    /* wrong number?              */
-    return INVALID_ROUTINE;            /* raise error condition      */
-                                       /* query the macro position   */
-  if (RexxQueryMacro(args[0].strptr, &position))
-    retstr->strlength = 0;             /* return a null string       */
-  else {
-                                       /* before?                    */
-    if (position == RXMACRO_SEARCH_BEFORE)
-      retstr->strptr[0] = 'B';         /* return a 'B'               */
-    else
-      retstr->strptr[0] = 'A';         /* must be 'A'fter            */
-    retstr->strlength = 1;             /* returning one character    */
-  }
-  return VALID_ROUTINE;                /* good completion            */
+            default:
+                context->InvalidRoutine();
+                return 0;
+        }
+    }
+    /* try to add the macro       */
+    return(int)RexxAddMacro(name, file, position);
 }
 
 /*************************************************************************
@@ -1363,28 +1239,117 @@ size_t RexxEntry SysQueryRexxMacro(const char *name, size_t numargs, CONSTRXSTRI
 *                                                                        *
 * Return:    return code from RexxReorderMacro                           *
 *************************************************************************/
-size_t RexxEntry SysReorderRexxMacro(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
-{
-  RexxReturnCode      rc;                      /* creation return code       */
-  size_t       position;                /* added position             */
 
-  if (numargs != 2 ||                  /* wrong number?              */
-      !RXVALIDSTRING(args[0]) ||       /* first is omitted           */
-      RXZEROLENSTRING(args[1]))        /* null string?               */
-    return INVALID_ROUTINE;            /* raise error condition      */
-                                       /* 'B'efore?                  */
-  if (toupper(args[1].strptr[0]) == 'B')
-    position = RXMACRO_SEARCH_BEFORE;  /* place before               */
-                                       /* 'A'fter?                   */
-  else if (toupper(args[1].strptr[0]) == 'A')
-    position = RXMACRO_SEARCH_AFTER;   /* place after                */
-  else                                 /* parm given was bad         */
-    return INVALID_ROUTINE;            /* raise an error             */
-                                       /* try to add the macro       */
-  rc = RexxReorderMacro(args[0].strptr, position);
-  sprintf(retstr->strptr, "%d", rc);   /* format the return code     */
-  retstr->strlength = strlen(retstr->strptr);
-  return VALID_ROUTINE;                /* good completion            */
+RexxRoutine2(int, SysReorderRexxMacro, CSTRING, name, CSTRING, option)
+{
+    size_t position;        /* added position             */
+
+    switch (*option)
+    {
+        case 'B':     // 'B'efore
+        case 'b':
+            position = RXMACRO_SEARCH_BEFORE;
+            break;
+
+        case 'A':     // 'A'fter
+        case 'a':
+            position = RXMACRO_SEARCH_AFTER;
+            break;
+
+        default:
+            context->InvalidRoutine();
+            return 0;
+    }
+    return(int)RexxReorderMacro(name, position);
+}
+
+/*************************************************************************
+* Function:  SysDropRexxMacro                                            *
+*                                                                        *
+* Syntax:    result = SysDropRexxMacro(name)                             *
+*                                                                        *
+* Params:    name   - name of the macro space function                   *
+*                                                                        *
+* Return:    return code from RexxDropMacro                              *
+*************************************************************************/
+
+RexxRoutine1(int, SysDropRexxMacro, CSTRING, name)
+{
+   return (int)RexxDropMacro(name);
+}
+
+/*************************************************************************
+* Function:  SysQueryRexxMacro                                           *
+*                                                                        *
+* Syntax:    result = SysQueryRexxMacro(name)                            *
+*                                                                        *
+* Params:    name   - name of the macro space function                   *
+*                                                                        *
+* Return:    position of the macro ('B' or 'A'), returns null for errors.*
+*************************************************************************/
+
+RexxRoutine1(CSTRING, SysQueryRexxMacro, CSTRING, name)
+{
+    unsigned short position;         /* returned position          */
+
+    if (RexxQueryMacro(name, &position) != 0)
+    {
+        return "";
+    }
+    // before?
+    if (position == RXMACRO_SEARCH_BEFORE)
+    {
+        return "B";
+    }
+    else
+    {
+        return "A";                    /* must be 'A'fter            */
+    }
+}
+
+/*************************************************************************
+* Function:  SysClearRexxMacroSpace                                      *
+*                                                                        *
+* Syntax:    result = SysClearRexxMacroSpace()                           *
+*                                                                        *
+* Params:    none                                                        *
+*                                                                        *
+* Return:    return code from RexxClearMacroSpace()                      *
+*************************************************************************/
+
+RexxRoutine0(int, SysClearRexxMacroSpace)
+{
+    return (int)RexxClearMacroSpace();          /* clear the macro space      */
+}
+
+/*************************************************************************
+* Function:  SysSaveRexxMacroSpace                                       *
+*                                                                        *
+* Syntax:    result = SysSaveRexxMacroSpace(file)                        *
+*                                                                        *
+* Params:    file   - name of the saved macro space file                 *
+*                                                                        *
+* Return:    return code from RexxSaveMacroSpace()                       *
+*************************************************************************/
+
+RexxRoutine1(int, SysSaveRexxMacroSpace, CSTRING, file)
+{
+    return (int)RexxSaveMacroSpace(0, NULL, file);
+}
+
+/*************************************************************************
+* Function:  SysLoadRexxMacroSpace                                       *
+*                                                                        *
+* Syntax:    result = SysLoadRexxMacroSpace(file)                        *
+*                                                                        *
+* Params:    file   - name of the saved macro space file                 *
+*                                                                        *
+* Return:    return code from RexxLoadMacroSpace()                       *
+*************************************************************************/
+
+RexxRoutine1(int, SysLoadRexxMacroSpace, CSTRING, file)
+{
+    return (int)RexxLoadMacroSpace(0, NULL, file);
 }
 
 
@@ -5817,13 +5782,13 @@ RexxRoutineEntry rexxutil_routines[] =
     REXX_TYPED_ROUTINE(SysPostEventSem,        SysPostEventSem),
     REXX_TYPED_ROUTINE(SysWaitEventSem,        SysWaitEventSem),
     REXX_CLASSIC_ROUTINE(SysSetPriority,         SysSetPriority),
-    REXX_CLASSIC_ROUTINE(SysAddRexxMacro,        SysAddRexxMacro),
-    REXX_CLASSIC_ROUTINE(SysDropRexxMacro,       SysDropRexxMacro),
-    REXX_CLASSIC_ROUTINE(SysReorderRexxMacro,    SysReorderRexxMacro),
-    REXX_CLASSIC_ROUTINE(SysQueryRexxMacro,      SysQueryRexxMacro),
-    REXX_CLASSIC_ROUTINE(SysClearRexxMacroSpace, SysClearRexxMacroSpace),
-    REXX_CLASSIC_ROUTINE(SysLoadRexxMacroSpace,  SysLoadRexxMacroSpace),
-    REXX_CLASSIC_ROUTINE(SysSaveRexxMacroSpace,  SysSaveRexxMacroSpace),
+    REXX_TYPED_ROUTINE(SysAddRexxMacro,        SysAddRexxMacro),
+    REXX_TYPED_ROUTINE(SysDropRexxMacro,       SysDropRexxMacro),
+    REXX_TYPED_ROUTINE(SysReorderRexxMacro,    SysReorderRexxMacro),
+    REXX_TYPED_ROUTINE(SysQueryRexxMacro,      SysQueryRexxMacro),
+    REXX_TYPED_ROUTINE(SysClearRexxMacroSpace, SysClearRexxMacroSpace),
+    REXX_TYPED_ROUTINE(SysLoadRexxMacroSpace,  SysLoadRexxMacroSpace),
+    REXX_TYPED_ROUTINE(SysSaveRexxMacroSpace,  SysSaveRexxMacroSpace),
 #ifdef AIX_DISABLED
     REXX_CLASSIC_ROUTINE(SysAddFuncPkg,          SysAddFuncPkg),
     REXX_CLASSIC_ROUTINE(SysAddCmdPkg,           SysAddCmdPkg),

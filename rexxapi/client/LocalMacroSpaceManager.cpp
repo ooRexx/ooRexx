@@ -108,7 +108,7 @@ size_t MacroSpaceFile::openForLoading()
     descriptorBase = sizeof(header);     // now mark the position of the descriptors
                                          // and the calculated start position of the
                                          // image data.
-    imageBase = sizeof(MacroSpaceDescriptor) * header.count;
+    imageBase = descriptorBase + sizeof(MacroSpaceDescriptor) * header.count;
 
     return header.count;                 // we have a size, return it.
 }

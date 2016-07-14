@@ -208,7 +208,8 @@ void ServerMacroSpaceManager::queryMacro(ServiceMessage &message)
     // already exists?
     if (item != NULL)
     {
-        message.setResult((ServiceReturn)item->searchPosition);
+        message.parameter1 = item->searchPosition;
+        message.setResult(item->searchPosition == RXMACRO_SEARCH_BEFORE ? POSTORDER_MACRO : PREORDER_MACRO);
     }
     else
     {
