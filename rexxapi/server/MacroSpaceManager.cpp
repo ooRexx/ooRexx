@@ -209,7 +209,7 @@ void ServerMacroSpaceManager::queryMacro(ServiceMessage &message)
     if (item != NULL)
     {
         message.parameter1 = item->searchPosition;
-        message.setResult(item->searchPosition == RXMACRO_SEARCH_BEFORE ? POSTORDER_MACRO : PREORDER_MACRO);
+        message.setResult(item->searchPosition == RXMACRO_SEARCH_BEFORE ? PREORDER_MACRO : POSTORDER_MACRO);
     }
     else
     {
