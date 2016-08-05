@@ -3769,44 +3769,30 @@ nomethod:
 
 
 -- compare two instances
--- == and \== don't raise an error if these
--- are not of the same type, they will apply object
--- comparison rules for that.
 ::METHOD "=="
   use strict arg other
-
-  if \other~isa(self~class) then do
-      return .false
-  end
-
-  return self~compareTo(other) == 0
-
+  return self~compareTo(other) = 0
 
 -- compare two instances
 ::METHOD "\=="
   use strict arg other
-
-  if \other~isa(self~class) then do
-      return .true
-  end
-
-  return self~compareTo(other) \== 0
+  return self~compareTo(other) \= 0
 
 ::METHOD "="
-  -- this is equivalent of "=="
-  forward message("==")
+  use strict arg other
+  return self~compareTo(other) = 0
 
 ::METHOD "\="
-  -- this is equivalent of "\=="
-  forward message("\==")
+  use strict arg other
+  return self~compareTo(other) \= 0
 
 ::METHOD "<>"
-  -- this is equivalent of "\=="
-  forward message("\==")
+  -- this is equivalent of "\="
+  forward message("\=")
 
 ::METHOD "><"
-  -- this is equivalent of "\=="
-  forward message("\==")
+  -- this is equivalent of "\="
+  forward message("\=")
 
 ::METHOD "<"
   use strict arg other
