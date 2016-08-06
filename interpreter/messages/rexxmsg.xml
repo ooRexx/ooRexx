@@ -1850,7 +1850,8 @@ special character (such as a parenthesis).
     <listitem><para>The operand to the right of the power operator</para></listitem>
     <listitem><para>The values of exprr and exprf in the DO and LOOP instructions</para></listitem>
     <listitem><para>The values given for DIGITS or FUZZ in the NUMERIC instruction</para></listitem>
-    <listitem><para>The number used in the option of the TRACE setting This error is also raised if the value is not permitted (for example, a negative repetition count in a DO instruction), or the division performed during an integer divide or remainder operation does not result in a whole number.</para></listitem>
+    <listitem><para>The number used in the option of the TRACE setting</para></listitem>
+    <listitem><para>This error is also raised if the value is not permitted (for example, a negative repetition count in a DO instruction), or the division performed during an integer divide or remainder operation does not result in a whole number.</para></listitem>
     </itemizedlist>
     </para></Explanation>
     <Subcodes>
@@ -2297,7 +2298,7 @@ special character (such as a parenthesis).
     <Severity>Warning</Severity>
     <SymbolicName>Error_Logical_value</SymbolicName>
     <Text>Logical value not 0 or 1.</Text>
-    <Explanation><para>An expression was found in an IF, WHEN, WHILE, or UNTIL phrase that did not result in a 0 or 1. Any value operated on by a logical operator must result in a 0 or 1. For example, the phrase If result then exit rc fails if result has a value other than 0 or 1.</para></Explanation>
+    <Explanation><para>An expression was found in an IF, WHEN, WHILE, or UNTIL phrase that did not result in a 0 or 1. Any value operated on by a logical operator must result in a 0 or 1. For example, the phrase <q>If result then exit rc</q> fails if result has a value other than 0 or 1.</para></Explanation>
     <Subcodes>
       <SubMessage>
         <Code>34</Code>
@@ -2414,7 +2415,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Logical_value_supplier</SymbolicName>
-        <Text>Suppplier AVAILABLE method did not return exactly <q>0</q> or <q>1</q>; found <q><Sub position="1" name="value"/></q>.</Text>
+        <Text>Supplier AVAILABLE method did not return exactly <q>0</q> or <q>1</q>; found <q><Sub position="1" name="value"/></q>.</Text>
       </SubMessage>
     </Subcodes>
   </Message>
@@ -2714,7 +2715,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_expression_parse</SymbolicName>
-        <Text>Missing expression following ( of parse template.</Text>
+        <Text>Missing expression following <q>(</q> of parse template.</Text>
       </SubMessage>
       <SubMessage>
         <Code>35</Code>
@@ -4644,7 +4645,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Incorrect_method_invbase64</SymbolicName>
-        <Text>Invalid Base 64 encoded string.</Text>
+        <Text>Invalid Base64 encoded string.</Text>
       </SubMessage>
       <SubMessage>
         <Code>93</Code>
@@ -4744,6 +4745,15 @@ special character (such as a parenthesis).
         <Severity>Warning</Severity>
         <SymbolicName>Error_Incorrect_method_no_method_type</SymbolicName>
         <Text>The <Sub position="1" name="argument"/> argument must be a string, array, or method object.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>93</Code>
+        <Subcode>973</Subcode>
+        <MessageNumber>527</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Incorrect_method_nil_not_orderable</SymbolicName>
+        <Text>ORDERABLE comparison method <q><Sub position="1" name="method"/></q> argument cannot be .nil.</Text>
       </SubMessage>
     </Subcodes>
   </Message>
@@ -5616,7 +5626,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Translation_missing_resource_end</SymbolicName>
-        <Text>Missing ::RESOURCE end marker <q><Sub position="1" name="endmarker"/></q> for resource <q><Sub position="2" name="resoucename"/></q>.</Text>
+        <Text>Missing ::RESOURCE end marker <q><Sub position="1" name="endmarker"/></q> for resource <q><Sub position="2" name="resourcename"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>99</Code>

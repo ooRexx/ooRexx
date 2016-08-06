@@ -501,7 +501,7 @@ return position
   use strict arg path, dir = .nil
   qualifiedPath = .nil
 
-  if dir == .nil then do
+  if .nil == dir then do
       -- if we don't have a path, then we can't do a lazy
       -- qualification because the current directory might
       -- change.  We need to process everything
@@ -590,7 +590,7 @@ return position
 ::METHOD qualifiedPath PRIVATE
   expose path qualifiedPath
 
-  if qualifiedPath == .nil then do
+  if .nil == qualifiedPath then do
       qualifiedPath = self~qualifyImpl(path)
   end
 
@@ -685,7 +685,7 @@ return position
 ::METHOD parentFile
   use strict arg
   parent = self~parent
-  if parent == .nil then
+  if .nil == parent then
       return .nil
 
   return self~class~new(parent)
@@ -752,7 +752,7 @@ return position
   use strict arg
 
   names = self~list
-  if names == .nil then
+  if .nil == names then
       return .nil
 
   files = .array~new(names~items)
@@ -784,7 +784,7 @@ return position
 
   -- we might be at the top level already
   parent = self~parentFile
-  if parent == .nil then
+  if .nil == parent then
       return .false
   -- try to create the parent directories first
   if \parent~makeDirs then

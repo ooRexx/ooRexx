@@ -551,6 +551,7 @@ ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
       MINOR(Error_Incorrect_method_multi_dimension)
       MINOR(Error_Incorrect_method_message_name)
       MINOR(Error_Incorrect_method_no_method_type)
+      MINOR(Error_Incorrect_method_nil_not_orderable)
   MAJOR(Error_No_method)
       MINOR(Error_No_method_name)
       MINOR(Error_No_method_user_defined)

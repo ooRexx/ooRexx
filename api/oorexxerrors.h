@@ -547,6 +547,7 @@
 #define Rexx_Error_Incorrect_method_multi_dimension                       93971
 #define Rexx_Error_Incorrect_method_message_name                          93972
 #define Rexx_Error_Incorrect_method_no_method_type                        93974
+#define Rexx_Error_Incorrect_method_nil_not_orderable                     93973
 #define Rexx_Error_No_method                                              97000
 #define Rexx_Error_No_method_name                                         97001
 #define Rexx_Error_No_method_user_defined                                 97900

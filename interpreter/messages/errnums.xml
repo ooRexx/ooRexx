@@ -1299,7 +1299,10 @@ special character (such as a parenthesis).
 <para>The values given for DIGITS or FUZZ in the NUMERIC instruction</para>
 </listitem>
     <listitem>
-<para>The number used in the option of the TRACE setting This error is also raised if the value is not permitted (for example, a negative repetition count in a DO instruction), or the division performed during an integer divide or remainder operation does not result in a whole number.</para>
+<para>The number used in the option of the TRACE setting</para>
+</listitem>
+    <listitem>
+<para>This error is also raised if the value is not permitted (for example, a negative repetition count in a DO instruction), or the division performed during an integer divide or remainder operation does not result in a whole number.</para>
 </listitem>
     </itemizedlist>
     </para>
@@ -1616,7 +1619,7 @@ special character (such as a parenthesis).
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
-<para>An expression was found in an IF, WHEN, WHILE, or UNTIL phrase that did not result in a 0 or 1. Any value operated on by a logical operator must result in a 0 or 1. For example, the phrase If result then exit rc fails if result has a value other than 0 or 1.</para>
+<para>An expression was found in an IF, WHEN, WHILE, or UNTIL phrase that did not result in a 0 or 1. Any value operated on by a logical operator must result in a 0 or 1. For example, the phrase <q>If result then exit rc</q> fails if result has a value other than 0 or 1.</para>
 <para>The associated subcodes are: </para>
 <variablelist>
 <varlistentry>
@@ -1695,7 +1698,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>906</term>
 <listitem>
-<para>Suppplier AVAILABLE method did not return exactly "0" or "1"; found "<emphasis role="italic">value</emphasis>".</para>
+<para>Supplier AVAILABLE method did not return exactly "0" or "1"; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 </variablelist>
@@ -1910,7 +1913,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>931</term>
 <listitem>
-<para>Missing expression following ( of parse template.</para>
+<para>Missing expression following "(" of parse template.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -3292,7 +3295,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>962</term>
 <listitem>
-<para>Invalid Base 64 encoded string.</para>
+<para>Invalid Base64 encoded string.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -3353,6 +3356,12 @@ special character (such as a parenthesis).
 <term>972</term>
 <listitem>
 <para>A message name argument must be a string or an array with 2 elements; found "<emphasis role="italic">value</emphasis>".</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>973</term>
+<listitem>
+<para>ORDERABLE comparison method "<emphasis role="italic">method</emphasis>" argument cannot be .nil.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -3949,7 +3958,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>943</term>
 <listitem>
-<para>Missing ::RESOURCE end marker "<emphasis role="italic">endmarker</emphasis>" for resource "<emphasis role="italic">resoucename</emphasis>".</para>
+<para>Missing ::RESOURCE end marker "<emphasis role="italic">endmarker</emphasis>" for resource "<emphasis role="italic">resourcename</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>

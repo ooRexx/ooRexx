@@ -1256,6 +1256,9 @@ $ Message_Translations_running
 $ Message_Translations_line
 526 line
 
+$ Error_Incorrect_method_nil_not_orderable
+527 ORDERABLE comparison method "&1" argument cannot be .nil.
+
 $ Error_Incorrect_method_no_method
 528 The &1 argument must be a string or array object.
 
@@ -1443,7 +1446,7 @@ $ Error_Incorrect_call_write_to_readonly
 604 Cannot write to a read-only property or typelib element.
 
 $ Error_Incorrect_method_invbase64
-611 Invalid Base 64 encoded string.
+611 Invalid Base64 encoded string.
 
 $ Error_Unsupported_method
 612 Call to unsupported or unimplemented method.
@@ -1761,7 +1764,7 @@ $ Error_Execution_invalid_thread
 716 Execution thread does not match API thread context.
 
 $ Error_Invalid_expression_parse
-717 Missing expression following ( of parse template.
+717 Missing expression following "(" of parse template.
 
 $ Error_Invalid_expression_call
 718 Missing expression for calculated CALL name.
@@ -1956,7 +1959,7 @@ $ Error_Execution_use_local_method
 781 The USE LOCAL instruction may only be used from method invocations.
 
 $ Error_Logical_value_supplier
-782 Suppplier AVAILABLE method did not return exactly "0" or "1"; found "&1".
+782 Supplier AVAILABLE method did not return exactly "0" or "1"; found "&1".
 
 $ Error_Execution_no_supplier
 783 Unable to convert object "&1" to a supplier object.

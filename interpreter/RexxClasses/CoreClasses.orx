@@ -3767,23 +3767,40 @@ nomethod:
 -- perform an ordered comparison of two objects
 ::METHOD compareTo ABSTRACT
 
+-- we generally expect any comparison arguments to be 'orderable'
+-- there's one exception, though: .nil
+-- we want to be able to compare an object inheriting from ORDERABLE
+-- equal or 'not equal' to .nil
+-- but we can't let compareTo() handle this, as it can only return -1, 0, 1
+-- and it doesn't know the operator it was called from
+-- so we handle the special case of 'other' = .nil here
 
--- compare two instances
 ::METHOD "=="
   use strict arg other
+  -- special case .nil comparison: this instance can never be equal to .nil
+  if .nil == other then
+    return 0
   return self~compareTo(other) = 0
 
--- compare two instances
 ::METHOD "\=="
   use strict arg other
+  -- special case .nil comparison: this instance is always 'not equal' to .nil
+  if .nil == other then
+    return 1
   return self~compareTo(other) \= 0
 
 ::METHOD "="
   use strict arg other
+  -- special case .nil comparison: this instance can never be equal to .nil
+  if .nil == other then
+    return 0
   return self~compareTo(other) = 0
 
 ::METHOD "\="
   use strict arg other
+  -- special case .nil comparison: this instance is always 'not equal' to .nil
+  if .nil == other then
+    return 1
   return self~compareTo(other) \= 0
 
 ::METHOD "<>"
@@ -3796,48 +3813,73 @@ nomethod:
 
 ::METHOD "<"
   use strict arg other
+  -- for this operator a .nil comparison is invalid
+  if .nil == other then
+    raise syntax 93.973 array(1, "<")   -- ORDERABLE comparison method "<" argument cannot be .nil
   return self~compareTo(other) < 0
 
 ::METHOD "<="
   use strict arg other
+  -- for this operator a .nil comparison is invalid
+  if .nil == other then
+    raise syntax 93.973 array(1, "<=")  -- ORDERABLE comparison method "<=" argument cannot be .nil
   return self~compareTo(other) <= 0
 
 ::METHOD "\>"
-  use strict arg other
-  return self~compareTo(other) <= 0
+  -- this is equivalent of "<="
+  forward message("<=")
 
 ::METHOD "<<"
   use strict arg other
+  -- for this operator a .nil comparison is invalid
+  if .nil == other then
+    raise syntax 93.973 array(1, "<<")  -- ORDERABLE comparison method "<<" argument cannot be .nil
   return self~compareTo(other) < 0
 
 ::METHOD "<<="
   use strict arg other
+  -- for this operator a .nil comparison is invalid
+  if .nil == other then
+    raise syntax 93.973 array(1, "<<=") -- ORDERABLE comparison method "<<=" argument cannot be .nil
   return self~compareTo(other) <= 0
 
 ::METHOD "\>>"
-  use strict arg other
-  return self~compareTo(other) <= 0
+  -- this is equivalent of "<<="
+  forward message("<<=")
 
 ::METHOD ">"
   use strict arg other
+  -- for this operator a .nil comparison is invalid
+  if .nil == other then
+    raise syntax 93.973 array(1, ">")   -- ORDERABLE comparison method ">" argument cannot be .nil
   return self~compareTo(other) > 0
 
 ::METHOD ">="
   use strict arg other
+  -- for this operator a .nil comparison is invalid
+  if .nil == other then
+    raise syntax 93.973 array(1, ">=")  -- ORDERABLE comparison method ">=" argument cannot be .nil
   return self~compareTo(other) >= 0
 
 ::METHOD "\<"
-  use strict arg other
-  return self~compareTo(other) >= 0
+  -- this is equivalent of ">="
+  forward message(">=")
 
 ::METHOD ">>"
   use strict arg other
+  -- for this operator a .nil comparison is invalid
+  if .nil == other then
+    raise syntax 93.973 array(1, ">>")  -- ORDERABLE comparison method ">>" argument cannot be .nil
   return self~compareTo(other) > 0
 
 ::METHOD ">>="
   use strict arg other
+  -- for this operator a .nil comparison is invalid
+  if .nil == other then
+    raise syntax 93.973 array(1, ">>=") -- ORDERABLE comparison method ">>=" argument cannot be .nil
   return self~compareTo(other) >= 0
 
 ::METHOD "\<<"
-  use strict arg other
-  return self~compareTo(other) >= 0
+  -- this is equivalent of ">>="
+  forward message(">>=")
+

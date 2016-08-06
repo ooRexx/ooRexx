@@ -455,6 +455,7 @@
 #define Message_Translations_error_msg                               524
 #define Message_Translations_running_msg                             525
 #define Message_Translations_line_msg                                526
+#define Error_Incorrect_method_nil_not_orderable_msg                 527
 #define Error_Incorrect_method_no_method_msg                         528
 #define Error_Interpretation_initialization_msg                      529
 #define Error_Invalid_subkeyword_guard_msg                           530
