@@ -1,14 +1,14 @@
                              Open Object Rexx
 
                               Release Notes
-                              Version 4.3.0
+                              Version 5.0.0
 
-  Copyright 2005-2014 Rexx Language Association.  All rights reserved.
-                               July 2014
+  Copyright 2005-2016 Rexx Language Association.  All rights reserved.
+                               August 2016
 
 Note
 ====
-ooRexx 4.3.0 is a ...
+ooRexx 5.0.0 is both an enhancement-release and a bug fixes--release.
 
 Fixed bugs and implemented feature requests opened through the SourceForge
 Tracker for the ooRexx project are listed in the CHANGES document.
@@ -16,10 +16,11 @@ Tracker for the ooRexx project are listed in the CHANGES document.
 File List
 =========
 
+
 Linux rpm and deb packages contain the distribution name, version of the
 system they were built on, and an indicator of the bitness of the interpreter.
-For instance, ooRexx-4.3.0-10643.opensuse1330.x86_64.rpm was built on
-OpenSuSE 13.30 and is a 64 bit interpreter.
+For instance, ooRexx-5.0.0-0.x86_64.ubuntu1604.deb was built on
+Ubuntu 16.04 and is a 64 bit interpreter.
 
 All package names contain an indication if the package is built as a 32-bit
 or 64-bit binary.  Usually this indicator is x86_32 or x86_64.  For a 32-bit
@@ -32,12 +33,9 @@ to get one of the developers to build a package for your system by opening
 up a support request in the tracker system.  Note that developer resources
 are constrained and this is neither a commitment nor a promise.
 
-_Readme.pdf
+Readme.pdf
 Installation help and other relevant notes that should be read prior to
 installation.
-
-_Readme.html
-The same text as _Readme.pdf in HTML format.
 
 INSTALL
 Additional installation help in a text format.
@@ -49,14 +47,14 @@ ReadMe.txt
 A copy of this file because SourceForge will display the contents of a
 readme file in the file download section.
 
-ooRexx-4.3.0.*
+ooRexx-5.0.0.*
 The installation packages for various operating systems.
 
-ooRexx-4.3.0-source.tar.gz
+ooRexx-5.0.0-source.tar.gz
 The source code for this version of ooRexx, suitable for building on an
 unix-like system.  Includes the configure script.
 
-ooRexx-4.3.0-source.zip
+ooRexx-5.0.0-source.zip
 The source code for this version of ooRexx, suitable for building and
 packaging on a Windows system.  Includes the PDF documentation files which
 are required for the packaging step.
@@ -69,7 +67,7 @@ Prior to Installation:
 ----------------------
 
 For installation help and other relevant notes, prior to installation,
-please read the "_ReadMe.pdf" PDF file which is placed with the downloadable
+please read the "ReadMe.pdf" PDF file which is placed with the downloadable
 files for this release on SourceForge.
 
 Important: An "upgrade" type of installation is neither tested nor supported
@@ -110,10 +108,10 @@ Depending on resources, the ooRexx team may be able to build a specific
 package for that distribution.
 
 
-Changes in ooRexx 4.3.0
+Changes in ooRexx 5.0.0
 =======================
 
-For the ooRexx 4.3.0 release, changes have been relatively well documented
+For the ooRexx 5.0.0 release, changes have been relatively well documented
 through the Tracker feature of the ooRexx project on SourceForge.  The
 ticket number and the ticket title of each change is recorded in the CHANGES
 document.  If more information is desired, look up the tracker item on
@@ -135,17 +133,17 @@ To search for a single ticket number, in any of the trackers, enter
 ticket_num:Number in the search field of the tracker.  For instance to
 search for ticket number 200, enter: ticket_num:200
 
-Changes in ooRexx 4.3.0 for Windows Only:
+Changes in ooRexx 5.0.0 for Windows Only:
 -----------------------------------------
 
-The version of ooDialog distributed in ooRexx 4.2.0 is ooDialog 4.X.X.
+The version of ooDialog distributed in ooRexx 5.0.0 is ooDialog 4.2.3.
 
 Beginning with ooDialog version 4.2.0, released August 2012, both the
 ooDialog version number and the installation of ooDialog itself have been
 decoupled from the ooRexx interpreter.
 
-Any version of ooDialog from version 4.0.0 to version 4.X.X can be installed
-into an ooRexx 4.3.0 installation.  The ooDialog version installed completely
+Any version of ooDialog from version 4.0.0 to version 4.2.3 can be installed
+into an ooRexx 5.0.0 installation.  The ooDialog version installed completely
 replaces whatever version of ooDialog is currently installed.
 
 ooDialog versions can be downloaded from SourceForge at:
@@ -154,15 +152,15 @@ https://sourceforge.net/projects/oorexx/files/ooDialog/
 
 ooDialog version 4.2.0 was completely rewritten from the original IBM
 implementation to take advantage of the powerful new native APIs provided by
-ooRexx 4.0.0.  ooDialog 4.X.X is far more powerful, has many more features,
+ooRexx 4.0.0.  ooDialog 4.2.3 is far more powerful, has many more features,
 and is more capable than the orignal ooDialog.
 
 While every effort has been made to ensure that ooDialog 4.2.0 and later is
 entirely backwards compatible with the original IBM implementation, there
 are a few reports of some small number of existing ooDialog programs that
-have problems under ooDialog 4.X.X.
+have problems under ooDialog 4.2.3.
 
-It is the intention of the development team that ooDialog 4.X.X is backwards
+It is the intention of the development team that ooDialog 4.2.3 is backwards
 compatible with previous versions of ooDialog.  If an ooDialog programmer or
 user discovers a case where this is not so, he or she should open up a bug
 report on SourceForge, or at the very least discuss the problem on the
