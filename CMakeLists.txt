@@ -227,7 +227,7 @@ if (WIN32)
             /DORX_BLD=${ORX_BLD_LVL}
             /DORX_VER_STR=${ORX_VER_STR}
             /DOOREXX_COPY_YEAR="${ORX_COPY_YEAR}"
-            /DORX_SYS_STR="${CMAKE_SYSTEM_NAME}"
+            /DORX_SYS_STR="${ORX_SYS_STR}"
             /DORX_CATDIR="${catdir}"
             /DORX_SHARED_LIBRARY_EXT="${CMAKE_SHARED_LIBRARY_SUFFIX}"
             /DORX_REXXPATH="${CMAKE_REXXPATH}"
@@ -248,7 +248,7 @@ if (WIN32)
 else ()
    add_definitions(-DORX_VER=${ORX_MAJOR} -DORX_REL=${ORX_MINOR} -DORX_MOD=${ORX_MOD_LVL} -DORX_FIX=0
             -DOOREXX_COPY_YEAR="${ORX_COPY_YEAR}"
-            -DORX_SYS_STR="${CMAKE_SYSTEM_NAME}"
+            -DORX_SYS_STR="${ORX_SYS_STR}"
             -DORX_CATDIR="${catdir}" -D_GNU_SOURCE
             -DORX_SHARED_LIBRARY_EXT="${CMAKE_SHARED_LIBRARY_SUFFIX}"
             -DORX_REXXPATH="${CMAKE_REXXPATH}"
