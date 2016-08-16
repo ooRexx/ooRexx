@@ -3473,6 +3473,7 @@ size_t RexxEntry SysGetErrortext(const char *name, size_t numargs, CONSTRXSTRING
 {
     DWORD  errnum;
     char  *errmsg;
+    int length;
 
     if (numargs != 1)
     {
@@ -3488,7 +3489,21 @@ size_t RexxEntry SysGetErrortext(const char *name, size_t numargs, CONSTRXSTRING
     }
     else
     {                               /* succeeded                  */
-        if (strlen(errmsg)>=retstr->strlength)
+        length = strlen(errmsg);
+
+        // FormatMessage returns strings with trailing CrLf, which we want removed
+        if (length >= 1 && errmsg[length - 1] == 0x0a)
+        {
+          errmsg[length - 1] = 0x00;
+          length--;
+        }
+        if (length >= 1 && errmsg[length - 1] == 0x0d)
+        {
+          errmsg[length - 1] = 0x00;
+          length--;
+        }
+
+        if (length >= retstr->strlength)
         {
             retstr->strptr = (PCH)GlobalAlloc(GMEM_ZEROINIT | GMEM_FIXED, strlen(errmsg+1));
         }
