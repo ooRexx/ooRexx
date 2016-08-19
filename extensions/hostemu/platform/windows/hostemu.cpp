@@ -63,7 +63,7 @@ EXECIO_OPTIONS ExecIO_Options;
 long           lCmdPtr;
 unsigned long  ulNumSym;
 char *         pszSymbol[SYMTABLESIZE];
-char           szInline[1000];
+char           szInline[100000];
 long           lStmtType;
 
 
@@ -282,6 +282,9 @@ RexxReturnCode RexxEntry GrxHost(PCONSTRXSTRING command,
    /* initialize the global variables */
    memset(&ExecIO_Options, '\0', sizeof(EXECIO_OPTIONS));
    ExecIO_Options.lStartRcd = 1;
+   ExecIO_Options.fFinis = false;
+   ExecIO_Options.lDirection = 0;
+
    prxCmd = command;
    lCmdPtr = 0;
    ulNumSym = 0;
@@ -290,7 +293,9 @@ RexxReturnCode RexxEntry GrxHost(PCONSTRXSTRING command,
    /* parse the command */
    if (!yyparse ()) {
       #ifdef HOSTEMU_DEBUG
-      printf("HOSTEMU: Parse complete.\n");
+      printf("HOSTEMU: Parse complete, lStartRcd=%d, lRcdCnt=%d, lDirection=%d, fRW=%d, fFinis=%d\n",
+       ExecIO_Options.lStartRcd, ExecIO_Options.lRcdCnt, ExecIO_Options.lDirection,
+       ExecIO_Options.fRW, ExecIO_Options.fFinis);
       #endif
       if (lStmtType == HI_STMT) {
          RexxSetHalt(GetCurrentProcessId(), GetCurrentThreadId());
@@ -311,7 +316,7 @@ RexxReturnCode RexxEntry GrxHost(PCONSTRXSTRING command,
             /* it is a new file, so open it and add to the list */
             pll = (PLL)malloc(sizeof (LL));
             if (pll == NULL) {
-               rc = 20;
+               rc = ERR_EXECIO_NO_STORAGE;
                *flags = RXSUBCOM_FAILURE;
                goto return_point;
                }
@@ -332,7 +337,7 @@ RexxReturnCode RexxEntry GrxHost(PCONSTRXSTRING command,
             if (pll -> pFile == NULL) {
                /* nothing could be opened so return an error */
                free(pll);
-               rc = 20;
+               rc = ERR_EXECIO_BAD_PLIST; // Bad PLIST
                *flags = RXSUBCOM_FAILURE;
                goto return_point;
                }
@@ -352,7 +357,9 @@ RexxReturnCode RexxEntry GrxHost(PCONSTRXSTRING command,
          else {
             /* DISKR */
             /* is this a stem or queue operation? */
-            if (strlen(ExecIO_Options.aStem)) {
+            // also send any STEM. name SKIP request to Read_To_Queue()
+            // as Read_To_Stem() won't handle SKIP
+            if (strlen(ExecIO_Options.aStem) && (ExecIO_Options.lDirection != 2)) {
                rc = ExecIO_Read_To_Stem(pll);
                }
             else {
@@ -365,18 +372,21 @@ RexxReturnCode RexxEntry GrxHost(PCONSTRXSTRING command,
             Delete_LL(pll);
             }
          /* if the return code is 20 then set the failure flag */
-         if (rc == 20) {
+         if (rc == ERR_EXECIO_BAD_PLIST) {
             *flags = RXSUBCOM_FAILURE;
             }
          }
       else { /* bad statement type */
-         *flags = RXSUBCOM_ERROR;
-         rc = 20;
+         // should never happen, as parsing is restricted to the four known commands
+         *flags = RXSUBCOM_FAILURE;
+         rc = ERR_EXECIO_BAD_PLIST; // Bad PLIST
          }
       }
    else { /* parse failed */
+      // we don't know whether parse failed due to an invalid command (which would be a failure)
+      // or due to e. g. a misformed EXECIO command (which would be an error)
       *flags = RXSUBCOM_ERROR;
-      rc = 20;
+      rc = ERR_EXECIO_BAD_PLIST; // Bad PLIST
       }
 
    return_point:
@@ -431,7 +441,7 @@ static unsigned long ExecIO_Write_From_Stem (
       return 0;
    Stem = (char *)malloc(strlen(ExecIO_Options.aStem) + 33);
    if (Stem == NULL) {
-      return 20;
+      return ERR_EXECIO_NO_STORAGE; // Insufficient free storage to load EXECIO
       }
    strcpy(Stem, ExecIO_Options.aStem);
    Index = Stem + strlen(Stem);
@@ -439,12 +449,18 @@ static unsigned long ExecIO_Write_From_Stem (
       /* process an "*" record count */
       // get the number of elements
       sprintf(Index, "%u", 0);
-      FetchRexxVar(Stem, &rxVal);
+      if (FetchRexxVar(Stem, &rxVal))
+      {
+        return ERR_EXECIO_VAR_INVALID; // Variable name supplied on STEM or VAR option was not valid
+      }
       elements = atoi(rxVal.strptr);
       RexxFreeMemory(rxVal.strptr);
       while (ExecIO_Options.lStartRcd <= elements) {
          sprintf(Index, "%d", ExecIO_Options.lStartRcd);
-         FetchRexxVar(Stem, &rxVal);
+         if (FetchRexxVar(Stem, &rxVal))
+         {
+           return ERR_EXECIO_VAR_INVALID; // Variable name supplied on STEM or VAR option was not valid
+         }
          fputs(rxVal.strptr, pll -> pFile);
          fputs("\n", pll -> pFile);
          RexxFreeMemory(rxVal.strptr);
@@ -455,7 +471,10 @@ static unsigned long ExecIO_Write_From_Stem (
       /* process a specific record count */
       while (ExecIO_Options.lStartRcd <= ExecIO_Options.lRcdCnt) {
          sprintf(Index, "%u", ExecIO_Options.lStartRcd);
-         FetchRexxVar(Stem, &rxVal);
+         if (FetchRexxVar(Stem, &rxVal))
+         {
+           return ERR_EXECIO_VAR_INVALID; // Variable name supplied on STEM or VAR option was not valid
+         }
          fputs(rxVal.strptr, pll -> pFile);
          fputs("\n", pll -> pFile);
          RexxFreeMemory(rxVal.strptr);
@@ -572,25 +591,35 @@ static unsigned long ExecIO_Read_To_Stem (
    char *   Stem;                /* Stem variable name                */
    char *   Index;               /* Stem index value (string)         */
    unsigned long ulRc = 0;       /* Return code                       */
+   int i;
 
    /* process request */
-   if (ExecIO_Options.lRcdCnt == 0) {
-      return 0;
-      }
    Stem = (char *)malloc(strlen(ExecIO_Options.aStem) + 33);
    if (Stem == NULL) {
-      return 20;
+      return ERR_EXECIO_NO_STORAGE; // Insufficient free storage to load EXECIO
       }
+
+   // skip until we reach line number 'StartRcd' 
+   for (i = 1; i < ExecIO_Options.lStartRcd; i++)
+   {
+     fgets(szInline, sizeof(szInline), pll -> pFile);
+   }
+
    strcpy(Stem, ExecIO_Options.aStem);
    Index = Stem + strlen(Stem);
+   i = 0;
+
    if (ExecIO_Options.lRcdCnt == -1) {
       /* process an "*" record count */
       while (fgets(szInline, sizeof (szInline), pll -> pFile)) {
          if (*(szInline + strlen(szInline) - 1) == '\n')
             *(szInline + strlen(szInline) - 1) = '\0';
-         sprintf(Index, "%u", ExecIO_Options.lStartRcd);
-         SetRexxVar(Stem, szInline, strlen(szInline));
-         ExecIO_Options.lStartRcd++;
+         i++;
+         sprintf(Index, "%u", i);
+         if (SetRexxVar(Stem, szInline, strlen(szInline)))
+         {
+           return ERR_EXECIO_VAR_INVALID; // Variable name supplied on STEM or VAR option was not valid
+         }
          }
       }
    else {
@@ -600,21 +629,26 @@ static unsigned long ExecIO_Read_To_Stem (
             if (*(szInline + strlen(szInline) - 1) == '\n') {
                *(szInline + strlen(szInline) - 1) = '\0';
                }
-            sprintf(Index, "%u", ExecIO_Options.lStartRcd);
-            SetRexxVar(Stem, szInline, strlen(szInline));
-            ExecIO_Options.lStartRcd++;
+            i++;
+            sprintf(Index, "%u", i);
+            if (SetRexxVar(Stem, szInline, strlen(szInline)))
+            {
+              return ERR_EXECIO_VAR_INVALID; // Variable name supplied on STEM or VAR option was not valid
+            }
             }
          else {
-            ulRc = 2;
+            ulRc = ERR_EXECIO_EOF; // EOF before specified number of lines were read
             break;
             }
          ExecIO_Options.lRcdCnt--;
          }
       }
-   ExecIO_Options.lStartRcd--;
-   sprintf(szInline, "%u", ExecIO_Options.lStartRcd);
+   sprintf(szInline, "%u", i);
    sprintf(Index, "%u", 0);
-   SetRexxVar(Stem, szInline, strlen (szInline));
+   if (SetRexxVar(Stem, szInline, strlen(szInline)))
+   {
+     return ERR_EXECIO_VAR_INVALID; // Variable name supplied on STEM or VAR option was not valid
+   }
    free(Stem);
 
    /* return with successful return code */
@@ -643,11 +677,16 @@ static unsigned long ExecIO_Read_To_Queue (
    {
 
    /* Local function variables */
+   int i;
 
    /* process request */
-   if (ExecIO_Options.lRcdCnt == 0) {
-      return 0;
-      }
+
+   // skip until we reach line number 'StartRcd' 
+   for (i = 1; i < ExecIO_Options.lStartRcd; i++)
+   {
+     fgets(szInline, sizeof(szInline), pll -> pFile);
+   }
+
    if (ExecIO_Options.lRcdCnt == -1) {
       /* process an "*" record count */
       while (fgets (szInline, sizeof (szInline), pll -> pFile)) {
@@ -671,7 +710,7 @@ static unsigned long ExecIO_Read_To_Queue (
                }
             }
          else {
-            return 2;
+            return ERR_EXECIO_EOF; // EOF before specified number of lines were read
             }
          ExecIO_Options.lRcdCnt--;
          }

@@ -65,6 +65,29 @@ RexxReturnCode RexxEntry GrxHost(PCONSTRXSTRING command,
 // Use the following to get debug messages to stdout
 // #define HOSTEMU_DEBUG
 
+/* https://www.ibm.com/support/knowledgecenter/SSB27U_6.2.0/com.ibm.zvm.v620.dmsb4/excio.htm
+0       Finished correctly
+1       Truncated
+2       EOF before specified number of lines were read
+3       Count ran out without successful pattern match
+24      Bad PLIST
+31      Error caused a rollback of a shared file(s)
+41      Insufficient free storage to load EXECIO
+55      APPC/VM communication error
+70      SFS sharing conflict
+76      SFS authorization error
+99      Insufficient virtual storage for file pool repository
+1nn     100 + return code from I/O operation (if nonzero)
+2008    Variable name supplied on STEM or VAR option was not valid
+nnnn    2000 + return code from EXECCOMM command (if nonzero)
+x1nnn   1000 + return code from CP command (if nonzero), where x is 0, 1, 2, or 3
+1xnnnn  100000 + return code from CP command (if nonzero), where x is 0, 1, 2, or 3 
+*/
+#define ERR_EXECIO_EOF 2
+#define ERR_EXECIO_BAD_PLIST 24
+#define ERR_EXECIO_NO_STORAGE 41
+#define ERR_EXECIO_VAR_INVALID 2008
+
 #define SYMTABLESIZE 15
 #define EXECIO_STMT  0
 #define HI_STMT      1

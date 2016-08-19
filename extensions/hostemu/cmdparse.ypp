@@ -95,31 +95,24 @@ bool isnumeric (
 stmt : EXECIO CONSTANT disk_clause
       {
       lStmtType = EXECIO_STMT;
-      ExecIO_Options.lStartRcd = 1;
       /* if constant is not a numeric string we have an error */
       if (isnumeric ($2))
+      {
          ExecIO_Options.lRcdCnt = atoi ($2);
+      }
       else
+      {
          return 1;
+      }
       }
    | EXECIO '*' disk_clause
       {
       lStmtType = EXECIO_STMT;
-      ExecIO_Options.lStartRcd = 1;
       ExecIO_Options.lRcdCnt = -1;
       }
-   | HI
-      {
-      lStmtType = HI_STMT;
-      }
-   | TE
-      {
-      lStmtType = TE_STMT;
-      }
-   | TS
-      {
-      lStmtType = TS_STMT;
-      }
+   | HI                      { lStmtType = HI_STMT; }
+   | TE                      { lStmtType = TE_STMT; }
+   | TS                      { lStmtType = TS_STMT; }
    ;
 
 disk_clause: DISKW CONSTANT diskw_option
@@ -138,75 +131,73 @@ disk_clause: DISKW CONSTANT diskw_option
       strcpy (ExecIO_Options.aFilename, $2);
       /* if constant is not a numeric string we have an error */
       if (isnumeric ($3))
+      {
          ExecIO_Options.lStartRcd = atoi ($3);
+      }
       else
+      {
          return 1;
       }
+      }
    ;
 
-diskr_option : '(' diskr_options
-   |
+diskr_option :
+       /* empty */
+   |  '(' diskr_options
+   |  '(' diskr_options ')'
    ;
 
-diskr_options : FINIS
-      {
-      ExecIO_Options.fFinis = true;
-      }
-   |  FINIS FIFO
-      {
-      ExecIO_Options.fFinis = false;
-      }
-   |  FINIS LIFO
-      {
-      ExecIO_Options.fFinis = true;
-      ExecIO_Options.lDirection = 1;
-      }
-   |  FINIS SKIP
-      {
-      ExecIO_Options.fFinis = true;
-      ExecIO_Options.lDirection = 2;
-      }
-   |  STEM CONSTANT
-      {
-      strcpy (ExecIO_Options.aStem, $2);
-      }
-   |  STEM CONSTANT FINIS
-      {
-      strcpy (ExecIO_Options.aStem, $2);
-      ExecIO_Options.fFinis = true;
-      }
-   |  FINIS STEM CONSTANT
-      {
-      strcpy (ExecIO_Options.aStem, $3);
-      ExecIO_Options.fFinis = true;
-      }
-   |
+diskw_option :
+       /* empty */
+   |  '(' diskw_options
+   |  '(' diskw_options ')'
    ;
 
-diskw_option : '(' diskw_options
-   |
+diskr_options :
+      /* empty */
+   |  finis 
+   |  data  
+   |  skip 
+   |  finis data  
+   |  finis skip  
+   |  data  finis 
+   |  data  skip  
+   |  skip  data 
+   |  skip  finis 
+   |  finis data  skip 
+   |  finis skip  data 
+   |  data  finis skip 
+   |  data  skip  finis 
+   |  skip  data  finis 
+   |  skip  finis data 
    ;
 
-diskw_options : FINIS
-      {
-      ExecIO_Options.fFinis = true;
-      }
-   |  STEM CONSTANT
-      {
-      strcpy (ExecIO_Options.aStem, $2);
-      }
-   |  STEM CONSTANT FINIS
-      {
-      strcpy (ExecIO_Options.aStem, $2);
-      ExecIO_Options.fFinis = true;
-      }
-   |  FINIS STEM CONSTANT
-      {
-      strcpy (ExecIO_Options.aStem, $3);
-      ExecIO_Options.fFinis = true;
-      }
-   |
+diskw_options :
+      /* empty */
+   |  finis 
+   |  stem  
+   |  finis stem  
+   |  stem  finis 
    ;
+
+finis :
+      FINIS                  { ExecIO_Options.fFinis = true;  }
+   ;
+
+skip :
+      SKIP                   { ExecIO_Options.lDirection = 2; }
+   ;
+
+stem :
+      STEM CONSTANT          { strcpy (ExecIO_Options.aStem, $2); }
+   ;
+
+data :
+      FIFO
+   |  LIFO                   { ExecIO_Options.lDirection = 1; }
+   |  stem
+   ;
+
 %%
 
 
@@ -221,7 +212,7 @@ int yylex (
    {
 
    /* local function variables */
-   int tktype, idx = 0;
+   int idx = 0;
    static char token [1024];
 
    while (*(prxCmd -> strptr + lCmdPtr) == ' ' ||
@@ -300,7 +291,7 @@ void yyerror (
    char * token)                 /* token string                      */
    {
 
-   fprintf (stderr, "Token \"%s\"\n", token);
+   fprintf (stderr, "hostemu: bad PLIST, token \"%s\"\n", token);
    return;
    }
 
@@ -378,7 +369,9 @@ bool isnumeric (
 
    for (i = 0; i < strlen (token); i++)
       if (!isdigit(*(token + i)))
+      {
          return false;
+      }
    return true;
    }
 
