@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2009-2010 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2009-2016 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -615,7 +615,7 @@ static unsigned long ExecIO_Read_To_Stem (
          if (*(szInline + strlen(szInline) - 1) == '\n')
             *(szInline + strlen(szInline) - 1) = '\0';
          i++;
-         sprintf(Index, "%u", i);
+         sprintf(Index, "%d", i);
          if (SetRexxVar(Stem, szInline, strlen(szInline)))
          {
            return ERR_EXECIO_VAR_INVALID; // Variable name supplied on STEM or VAR option was not valid
@@ -630,7 +630,7 @@ static unsigned long ExecIO_Read_To_Stem (
                *(szInline + strlen(szInline) - 1) = '\0';
                }
             i++;
-            sprintf(Index, "%u", i);
+            sprintf(Index, "%d", i);
             if (SetRexxVar(Stem, szInline, strlen(szInline)))
             {
               return ERR_EXECIO_VAR_INVALID; // Variable name supplied on STEM or VAR option was not valid
@@ -643,8 +643,8 @@ static unsigned long ExecIO_Read_To_Stem (
          ExecIO_Options.lRcdCnt--;
          }
       }
-   sprintf(szInline, "%u", i);
-   sprintf(Index, "%u", 0);
+   sprintf(szInline, "%d", i);
+   sprintf(Index, "%d", 0);
    if (SetRexxVar(Stem, szInline, strlen(szInline)))
    {
      return ERR_EXECIO_VAR_INVALID; // Variable name supplied on STEM or VAR option was not valid
@@ -940,7 +940,7 @@ RexxPackageEntry hostemu_package_entry = {
     STANDARD_PACKAGE_HEADER
     REXX_INTERPRETER_4_0_0,              // anything after 4.0.0 will work
     "HostEmu",                           // name of the package
-    "1.0.0",                             // package information
+    "1.0.1",                             // package information
     hostemu_loader,                      // load function
     hostemu_unloader,                    // unload function
     NULL,                                // the exported routines
