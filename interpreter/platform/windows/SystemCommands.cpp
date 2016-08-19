@@ -144,7 +144,7 @@ char *unquote(const char *s)
 bool sys_process_cd(RexxExitContext *context, const char *command, const char * cmd, RexxObjectPtr &res)
 {
     const char * st;
-    int rc;
+    int rc, error;
     res = NULLOBJECT;
 
     st = &cmd[3];
@@ -159,7 +159,19 @@ bool sys_process_cd(RexxExitContext *context, const char *command, const char * 
 
     if ((strlen(st) == 2) && (st[1] == ':'))
     {
-        rc = _chdrive(toupper( *st ) - 'A' + 1);
+        int drive = toupper( *st ) - 'A' + 1;
+        if (drive < 1 || drive > 26)
+        {
+          // an out-of-range drive will make _chdrive() MSVC run-time library fail
+          rc = -1;
+          error = 15; // The system cannot find the drive specified.
+        }
+        else
+        {
+          rc = _chdrive(drive);
+          error = GetLastError();
+        }
+
     }
     else
     {
@@ -169,11 +181,12 @@ bool sys_process_cd(RexxExitContext *context, const char *command, const char * 
             return false;
         }
         rc = _chdir(unquoted);
+        error = GetLastError();
         free(unquoted);
     }
     if (rc != 0)
     {
-        context->RaiseCondition("ERROR", context->String(command), NULLOBJECT, context->WholeNumberToObject(GetLastError()));
+        context->RaiseCondition("ERROR", context->String(command), NULLOBJECT, context->WholeNumberToObject(error));
     }
     else
     {
@@ -414,10 +427,23 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStrin
             {   // Check if the command is to change drive
                 if ((tmp[1] == ':') && ((tmp[2] == ' ') || (!tmp[2])))
                 {
-                    int code = _chdrive(toupper( tmp[0] ) - 'A' + 1);
-                    if (code != 0)
+                    int rc, error;
+
+                    int drive = toupper( tmp[0] ) - 'A' + 1;
+                    if (drive < 1 || drive > 26)
                     {
-                        context->RaiseCondition("ERROR", command, NULLOBJECT, context->WholeNumberToObject(code));
+                      // an out-of-range drive will make _chdrive() MSVC run-time library fail
+                      rc = -1;
+                      error = 15; // The system cannot find the drive specified.
+                    }
+                    else
+                    {
+                      rc = _chdrive(drive);
+                      error = GetLastError();
+                    }
+                    if (rc != 0)
+                    {
+                        context->RaiseCondition("ERROR", command, NULLOBJECT, context->WholeNumberToObject(error));
                         return NULLOBJECT;
                     }
                     else
