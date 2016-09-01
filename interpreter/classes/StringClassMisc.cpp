@@ -454,7 +454,13 @@ RexxString *RexxString::changeStr(RexxString *needle, RexxString *newNeedle, Rex
     newNeedle = stringArgument(newNeedle, ARG_TWO);
 
     // we'll only change up to a specified count.  If not there, we do everything.
-    size_t count = optionalPositive(countArg, Numerics::MAX_WHOLENUMBER, ARG_THREE);
+    size_t count = optionalNonNegative(countArg, Numerics::MAX_WHOLENUMBER, ARG_THREE);
+    // if no change is requested, return the original string.
+    if (count == 0)
+    {
+        return this;
+    }
+
     // The change count is bounded by the number of matches
     count = Numerics::minVal(count, StringUtil::countStr(getStringData(), getLength(), needle));
 
@@ -513,7 +519,13 @@ RexxString *RexxString::caselessChangeStr(RexxString *needle, RexxString *newNee
     newNeedle = stringArgument(newNeedle, ARG_TWO);
 
     // we'll only change up to a specified count.  If not there, we do everything.
-    size_t count = optionalPositive(countArg, Numerics::MAX_WHOLENUMBER, ARG_THREE);
+    size_t count = optionalNonNegative(countArg, Numerics::MAX_WHOLENUMBER, ARG_THREE);
+    // if no change is requested, return the original string.
+    if (count == 0)
+    {
+        return this;
+    }
+
     // The change count is bounded by the number of matches
     count = Numerics::minVal(count, StringUtil::caselessCountStr(getStringData(), getLength(), needle));
 

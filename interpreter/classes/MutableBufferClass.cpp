@@ -944,7 +944,13 @@ MutableBuffer *MutableBuffer::changeStr(RexxString *needle, RexxString *newNeedl
     newNeedle = stringArgument(newNeedle, ARG_TWO);
 
     // we'll only change up to a specified count.  If not there, we do everything.
-    size_t count = optionalPositive(countArg, Numerics::MAX_WHOLENUMBER, ARG_THREE);
+    size_t count = optionalNonNegative(countArg, Numerics::MAX_WHOLENUMBER, ARG_THREE);
+    // if no change is requested, return the original string.
+    if (count == 0)
+    {
+        return this;
+    }
+
     // find the number of matches in the string
     size_t matches = StringUtil::countStr(getStringData(), getLength(), needle);
     // the matches are bounded by the count
@@ -1083,7 +1089,13 @@ MutableBuffer *MutableBuffer::caselessChangeStr(RexxString *needle, RexxString *
     newNeedle = stringArgument(newNeedle, ARG_TWO);
 
     // we'll only change up to a specified count.  If not there, we do everything.
-    size_t count = optionalPositive(countArg, Numerics::MAX_WHOLENUMBER, ARG_THREE);
+    size_t count = optionalNonNegative(countArg, Numerics::MAX_WHOLENUMBER, ARG_THREE);
+    // if no change is requested, return the original string.
+    if (count == 0)
+    {
+        return this;
+    }
+
     // find the number of matches in the string
     size_t matches = StringUtil::caselessCountStr(getStringData(), getLength(), needle);
 
