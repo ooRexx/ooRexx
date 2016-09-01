@@ -3413,7 +3413,7 @@ RexxInstruction *LanguageParser::selectNew()
         if (!token->isSymbol())
         {
             // not a LABEL keyword, this is bad
-            syntaxError(Error_Invalid_data_select, token);
+            syntaxError(Error_Invalid_subkeyword_select, token); // SELECT must be followed by the keyword LABEL or CASE
         }
 
         // potentially a label.  At this point, not being the label keyword is
@@ -3439,7 +3439,7 @@ RexxInstruction *LanguageParser::selectNew()
             // potentially a CASE option.  Anything else is an error here
             if (token->subKeyword() != SUBKEY_CASE)
             {
-                syntaxError(Error_Invalid_data_select, token);
+                syntaxError(Error_Invalid_subkeyword_select, token); // SELECT must be followed by the keyword LABEL or CASE
             }
 
             // eat the rest of the expression for the CASE, which is
@@ -3452,7 +3452,7 @@ RexxInstruction *LanguageParser::selectNew()
         // this must be the end token here.
         if (!token->isEndOfClause())
         {
-            syntaxError(Error_Invalid_data_select, token);
+            syntaxError(Error_Invalid_subkeyword_select, token); // SELECT must be followed by the keyword LABEL or CASE
         }
     }
 

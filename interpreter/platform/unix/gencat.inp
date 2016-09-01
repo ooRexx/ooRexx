@@ -600,7 +600,7 @@ $ Error_Invalid_subkeyword_parse
 296 PARSE must be followed by one of the keywords ARG, LINEIN, PULL, SOURCE, VALUE, VAR, or VERSION; found "&1".
 
 $ Error_Invalid_subkeyword_use
-297 USE must be followed by the keyword ARG; found "&1".
+297 USE must be followed by the keyword ARG or LOCAL; found "&1".
 
 $ Error_Invalid_subkeyword_raise
 298 RAISE must be followed by one of the keywords ERROR, FAILURE, HALT, LOSTDIGITS, NOMETHOD, NOSTRING, NOTREADY, NOVALUE, PROPAGATE, SYNTAX, or USER; found "&1".
@@ -1581,7 +1581,7 @@ $ Error_Symbol_expected_LABEL
 655 Symbol expected after LABEL keyword.
 
 $ Error_Invalid_subkeyword_select
-656 SELECT must be followed by the keyword LABEL; found "&1".
+656 SELECT must be followed by the keyword LABEL or CASE; found "&1".
 
 $ Error_Invalid_leave_iterate_name
 657 Symbol following ITERATE ("&1") does not match a repetitive block instruction.

@@ -1660,7 +1660,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_subkeyword_use</SymbolicName>
-        <Text>USE must be followed by the keyword ARG; found <q><Sub position="1" name="word"/></q>.</Text>
+        <Text>USE must be followed by the keyword ARG or LOCAL; found <q><Sub position="1" name="word"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>25</Code>
@@ -1786,7 +1786,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_subkeyword_select</SymbolicName>
-        <Text>SELECT must be followed by the keyword LABEL; found <q><Sub position="1" name="word"/></q>.</Text>
+        <Text>SELECT must be followed by the keyword LABEL or CASE; found <q><Sub position="1" name="word"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>25</Code>

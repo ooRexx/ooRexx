@@ -1147,7 +1147,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>905</term>
 <listitem>
-<para>USE must be followed by the keyword ARG; found "<emphasis role="italic">word</emphasis>".</para>
+<para>USE must be followed by the keyword ARG or LOCAL; found "<emphasis role="italic">word</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -1243,7 +1243,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>923</term>
 <listitem>
-<para>SELECT must be followed by the keyword LABEL; found "<emphasis role="italic">word</emphasis>".</para>
+<para>SELECT must be followed by the keyword LABEL or CASE; found "<emphasis role="italic">word</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
