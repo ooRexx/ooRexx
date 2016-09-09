@@ -53,4 +53,5 @@ Syntax:
 
 ::METHOD POSITION
   expose !POS
+  use strict arg -- no args allowed
   return !POS

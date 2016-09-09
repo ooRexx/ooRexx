@@ -74,7 +74,7 @@ class automaton {
     // insert a state into the automaton
     void setState(int, int, int, int);
     // insert a set into the list of sets
-    int insertSet(char*);
+    int insertSet(char*, int);
     // helper function for set building
     int checkRange(char*, int, char);
 

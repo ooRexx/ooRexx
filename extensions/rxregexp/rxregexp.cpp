@@ -47,6 +47,11 @@
 #include "oorexxapi.h"
 #include <string.h>
 
+// strcasecmp is called _stricmp by MSVC  
+#ifdef WIN32
+  #define strcasecmp _stricmp
+#endif
+
 RexxMethod2(int, RegExp_Init, OPTIONAL_CSTRING, expression, OPTIONAL_CSTRING, matchtype)
 {
     int         iResult = 0;
@@ -55,11 +60,19 @@ RexxMethod2(int, RegExp_Init, OPTIONAL_CSTRING, expression, OPTIONAL_CSTRING, ma
     // optional matchtype given?
     if (matchtype != NULL)
     {
-        if (strcmp(matchtype, "MINIMAL") == 0)
+        if (strcasecmp(matchtype, "MINIMAL") == 0)
         {
             pAutomaton->setMinimal(true);
         }
-    }
+        else if (strcasecmp(matchtype, "MAXIMAL") == 0)
+        {
+            pAutomaton->setMinimal(false);
+        }
+        else
+        {
+            context->RaiseException0(Rexx_Error_Incorrect_method);
+        }
+}
 
     // optional expression given?
     if (expression != NULL)
@@ -100,13 +113,21 @@ RexxMethod3(int,                            // Return type
     // optional matchtype given?
     if (matchtype != NULL)
     {
-        if ( strcmp(matchtype, "MINIMAL") == 0)
+        if ( strcasecmp(matchtype, "MINIMAL") == 0)
         {
             pAutomaton->setMinimal(true); // set minimal matching
         }
-        else if (strcmp(matchtype, "CURRENT") != 0)
+        else if (strcasecmp(matchtype, "MAXIMAL") == 0)
         {
             pAutomaton->setMinimal(false); // set maximal matching
+        }
+        else if (strcasecmp(matchtype, "CURRENT") == 0)
+        {
+            ; // keep current matching
+        }
+        else
+        {
+            context->RaiseException0(Rexx_Error_Incorrect_method);
         }
     }
     int i = pAutomaton->parse( expression);
@@ -133,15 +154,14 @@ RexxMethod2(int,                          // Return type
     automaton  *pAutomaton = (automaton *)self;
     bool        fOldState;
     const char *pszString;
-    size_t      strlength;
+    int         strlength;
     int         i;
 
     pszString = context->StringData(string);
-    strlength = context->StringLength(string);
+    strlength = (int)context->StringLength(string);
     int matchPosition = 0;
 
-    /* only check when input > 0 */
-    if (strlength > 0)
+//  if (strlength > 0) // allow null string
     {
         fOldState = pAutomaton->getMinimal();
 
@@ -149,10 +169,10 @@ RexxMethod2(int,                          // Return type
         pAutomaton->setMinimal(true);
         do
         {
-            i = pAutomaton->match(pszString, (int)strlength);
+            i = pAutomaton->match(pszString, strlength);
             strlength--;
             pszString++;
-        } while (i == 0 && strlength != 0);
+        } while (i == 0 && strlength >= 0);
         // can we match at all?
         if (i != 0)
         {
@@ -163,9 +183,9 @@ RexxMethod2(int,                          // Return type
                 pAutomaton->setMinimal(false);
                 pszString--; // correct starting pos
                 strlength++; // correct starting len
-                while (strlength != 0)
+                while (strlength >= 0)
                 {
-                    if (pAutomaton->match(pszString, (int)strlength) != 0)
+                    if (pAutomaton->match(pszString, strlength) != 0)
                     {
                         break;
                     }

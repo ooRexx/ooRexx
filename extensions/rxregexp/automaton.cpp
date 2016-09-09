@@ -457,7 +457,7 @@ int automaton::set()
 {
   int i=0;
   int transition = SET;
-  int length = 256;                 // pre-allocation length is 256 bytes
+  int length = 257;                 // pre-allocation length is 257 bytes
                                     // if more are need, reallocation is used
   const char *ptr = regexp+currentPos;
   char *range = (char*) malloc(sizeof(char)*length);
@@ -598,7 +598,6 @@ int automaton::set()
       }
     }
   }
-  range[i]=0x00;  // null-terminate string
 
   // empty sets are not allowed
   if (i == 0) throw E_ILLEGAL_SET;
@@ -606,7 +605,7 @@ int automaton::set()
 
   // set SET transition (bits 16 to 27 contain the set number)
   // that is created by insertSet
-  setState(freeState, transition | (insertSet(range)<<16), freeState+1, freeState+1);
+  setState(freeState, transition | (insertSet(range, i)<<16), freeState+1, freeState+1);
   i = freeState;
   freeState++;
 
@@ -667,21 +666,19 @@ int automaton::checkRange(char *range, int length, char c)
 /* secondary because parsing takes place only once and usually */
 /* there are only a few set definitions at all.                */
 /***************************************************************/
-int automaton::insertSet(char *range)
+int automaton::insertSet(char *range, int rangeSize)
 {
-  unsigned int i;
-
   setSize++;
   // enlarge setArray
   setArray = (int**) realloc(setArray,setSize*sizeof(int*));
   // get memory for set array
-  setArray[setSize-1] = (int*) malloc((strlen(range)+1)*sizeof(int));
+  setArray[setSize-1] = (int*) malloc((rangeSize+1)*sizeof(int));
 
   // fill in elements
-  for ( i=0; i<strlen(range); i++)
+  for ( int i=0; i<rangeSize; i++)
     setArray[setSize-1][i+1] = (int) range[i];
 
-  setArray[setSize-1][0] = i;  // set length
+  setArray[setSize-1][0] = rangeSize;  // set length
   return setSize-1;
 }
 
