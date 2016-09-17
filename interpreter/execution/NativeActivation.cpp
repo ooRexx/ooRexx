@@ -1252,6 +1252,22 @@ void NativeActivation::run(MethodClass *_method, NativeMethod *_code, RexxObject
     catch (NativeActivation *)
     {
     }
+    // there is a subtle interaction between native and rexx activations when
+    // native calls make calls to APIs that in turn invoke Rexx code.  When conditions
+    // occur and the stack is being unwound, the ApiContext destructors will release
+    // the kernel access, which can leave us with no active Activity. Bad things happen
+    // when that occurs. We'll grab the exception when it goes past and make sure
+    // things remain consistent.
+    catch (RexxActivation *r)
+    {
+        // if we're not the current kernel holder when things return, make sure we
+        // get the lock before we continue
+        if (ActivityManager::currentActivity != activity)
+        {
+            activity->requestAccess();
+        }
+        throw r;
+    }
 
     // if we're not the current kernel holder when things return, make sure we
     // get the lock before we continue
