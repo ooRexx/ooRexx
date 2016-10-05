@@ -1821,17 +1821,16 @@ RexxString  *ArrayClass::primitiveMakeString()
     return toString(OREF_NULL, OREF_NULL);
 }
 
+
 /**
- * Convert an array into a string item
+ * Handle a REQUEST('STRING') request for a REXX string object
  *
- * @param format    The optional format ('C' or 'L')
- * @param separator The separator between elements for the 'L' format.
- *
- * @return A single string value for the array.
+ * @return A string value for the array.
  */
-RexxString *ArrayClass::makeString(RexxString *format, RexxString *separator)
+RexxString  *ArrayClass::makeString()
 {
-    return toString(format, separator);
+    // forward to the real makestring method
+    return toString(OREF_NULL, OREF_NULL);
 }
 
 

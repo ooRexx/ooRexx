@@ -678,7 +678,6 @@ CPPM(ArrayClass::deleteRexx),
 CPPM(ArrayClass::fillRexx),
 
 CPPM(ArrayClass::newRexx),
-CPPM(ArrayClass::makeString),
 CPPM(ArrayClass::ofRexx),
 
 CPPM(RexxInteger::plus),
@@ -1073,6 +1072,7 @@ CPPM(MutableBuffer::startsWithRexx),
 CPPM(MutableBuffer::endsWithRexx),
 CPPM(MutableBuffer::caselessStartsWithRexx),
 CPPM(MutableBuffer::caselessEndsWithRexx),
+CPPM(MutableBuffer::makeString),
 
 CPPM(SupplierClass::available),
 CPPM(SupplierClass::next),

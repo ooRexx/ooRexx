@@ -699,7 +699,7 @@ StartClassDefinition(Array);
         AddMethod("Next", ArrayClass::nextRexx, A_COUNT);
         AddMethod("Previous", ArrayClass::previousRexx, A_COUNT);
         AddMethod("Append", ArrayClass::appendRexx, 1);
-        AddMethod("MakeString", ArrayClass::makeString, 2);
+        AddMethod("MakeString", ArrayClass::toString, 2);
         AddMethod("ToString", ArrayClass::toString, 2);
         AddMethod("AllIndexes", ArrayClass::allIndexes, 0);
         AddMethod("AllItems", ArrayClass::allItems, 0);
@@ -1323,6 +1323,7 @@ StartClassDefinition(MutableBuffer)
         AddMethod("EndsWith", MutableBuffer::endsWithRexx, 1);
         AddMethod("CaselessStartsWith", MutableBuffer::caselessStartsWithRexx, 1);
         AddMethod("CaselessEndsWith", MutableBuffer::caselessEndsWithRexx, 1);
+        AddMethod("makeString", MutableBuffer::makeStringRexx, 0);
 
     CompleteMethodDefinitions();
 
