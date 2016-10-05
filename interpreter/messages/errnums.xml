@@ -1619,7 +1619,7 @@ special character (such as a parenthesis).
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
-<para>An expression was found in an IF, WHEN, WHILE, or UNTIL phrase that did not result in a 0 or 1. Any value operated on by a logical operator must result in a 0 or 1. For example, the phrase <q>If result then exit rc</q> fails if result has a value other than 0 or 1.</para>
+<para>An expression was found in an IF, WHEN, WHILE, or UNTIL phrase that did not result in a 0 or 1. Any value operated on by a logical operator must result in a 0 or 1. For example, the phrase "If result then exit rc" fails if result has a value other than 0 or 1.</para>
 <para>The associated subcodes are: </para>
 <variablelist>
 <varlistentry>
