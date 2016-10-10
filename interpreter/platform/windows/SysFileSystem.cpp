@@ -135,39 +135,33 @@ void SysFileSystem::qualifyStreamName(const char *unqualifiedName, char *qualifi
         return;
     }
 
-    // If the name is too long, set it to the empty string, otherwise copy the
-    // name to the full area
-    size_t len = strlen(unqualifiedName);
-    if ( len >= bufferSize)
+    // get the fully expanded name
+    errorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
+    // similar to the Unix behaviour, we return the current directory
+    // if 'unqualifiedName' is the null string
+    DWORD rc = GetFullPathName((unqualifiedName[0] == '\0') ? "." : unqualifiedName,
+                               (DWORD)bufferSize, qualifiedName, &lpszLastNamePart);
+    if ((rc == 0) || (rc >= bufferSize))
     {
-        qualifiedName[0] = '\0';
-        return;
+      // if GetFullPathName() failed or would need a larger buffer, return null string 
+      qualifiedName[0] = '\0';
     }
     else
     {
-        strcpy(qualifiedName, unqualifiedName);
+      // qualifying a Windows device like "aux", "con" or "nul" (even when written in
+      // the form "xxx:" or /dir/xxx" etc.) will return the device name with a leading
+      // Win32 device namespace prefix "\\.\", e. g. QUALIFY("nul") --> "\\.\nul"
+      // (see https://msdn.microsoft.com/en-us/library/windows/desktop/aa365247%28v=vs.85%29.aspx#win32_device_namespaces)
+      // the downside of a path with such a prefix is, that .File methods like exists(),
+      // isFile(), canRead(), or canWrite() will unconditionally return .false for it.
+      // To make things simple, we just remove such a prefix, if it hasn't already
+      // been there in 'unqualifiedName'
+      if ((strncmp(unqualifiedName, "\\\\.\\", 4) != 0) &&  // didn't start with "\\.\"
+          (strncmp(qualifiedName, "\\\\.\\", 4) == 0))      // starts with "\\.\"
+      {
+        strcpy(qualifiedName, &qualifiedName[4]);           // remove leading "\\.\"
+      }
     }
-
-    len = strlen(qualifiedName);
-    /* name end in a colon?              */
-    if (qualifiedName[len - 1] == ':')
-    {
-        // this could be the drive letter.  If so, make it the root of the current drive.
-        if (len == 2)
-        {
-            strcat(qualifiedName, "\\");
-        }
-        else
-        {
-            // potentially a device, we need to remove the colon.
-            qualifiedName[len - 1] = '\0';
-            return;                            /* all finished                      */
-
-        }
-    }
-    // get the fully expanded name
-    errorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
-    DWORD rc = GetFullPathName(qualifiedName, (DWORD)bufferSize, qualifiedName, &lpszLastNamePart);
     SetErrorMode(errorMode);
 }
 
