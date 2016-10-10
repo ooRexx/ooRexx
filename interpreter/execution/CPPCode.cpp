@@ -1189,6 +1189,12 @@ CPPM(RexxInfo::getCaseSensitiveFiles),
 CPPM(RexxInfo::getMajorVersion),
 CPPM(RexxInfo::getRelease),
 CPPM(RexxInfo::getRevision),
+CPPM(RexxInfo::getInternalMaxNumber),
+CPPM(RexxInfo::getInternalMinNumber),
+CPPM(RexxInfo::getMaxExponent),
+CPPM(RexxInfo::getMinExponent),
+CPPM(RexxInfo::getMaxPathLength),
+CPPM(RexxInfo::getMaxArraySize),
 // This NULL terminator is important to mark the end of the table.
 NULL
 };

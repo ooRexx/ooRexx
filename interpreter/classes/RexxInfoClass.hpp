@@ -86,6 +86,12 @@ public:
     RexxObject *getMajorVersion();
     RexxObject *getRelease();
     RexxObject *getRevision();
+    RexxObject *getInternalMaxNumber();
+    RexxObject *getInternalMinNumber();
+    RexxObject *getMaxExponent();
+    RexxObject *getMinExponent();
+    RexxObject *getMaxPathLength();
+    RexxObject *getMaxArraySize();
 
     RexxObject *copyRexx();
     RexxObject *newRexx(RexxObject **args, size_t argc);

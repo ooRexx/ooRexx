@@ -401,3 +401,73 @@ RexxObject *RexxInfo::getCaseSensitiveFiles()
 {
     return booleanObject(SysFileSystem::isCaseSensitive());
 }
+
+
+/**
+ * Return the largest platform whole number allowed
+ *
+ * @return MAX_WHOLENUMBER, as an Integer object.
+ */
+RexxObject *RexxInfo::getInternalMaxNumber()
+{
+    return new_integer(Numerics::MAX_WHOLENUMBER);
+}
+
+
+/**
+ * Return the smallest platform whole number allowed
+ *
+ * @return MIN_WHOLENUMBER, as an Integer object.
+ */
+RexxObject *RexxInfo::getInternalMinNumber()
+{
+    return new_integer(Numerics::MIN_WHOLENUMBER);
+}
+
+
+/**
+ * Return the largest exponent allowed
+ *
+ * @return MAX_EXPONENT, as an Integer object.
+ */
+RexxObject *RexxInfo::getMaxExponent()
+{
+    return new_integer(Numerics::MAX_EXPONENT);
+}
+
+
+/**
+ * Return the smallest exponent allowed
+ *
+ * @return MIN_EXPONENT, as an Integer object.
+ */
+RexxObject *RexxInfo::getMinExponent()
+{
+    return new_integer(Numerics::MIN_EXPONENT);
+}
+
+
+/**
+ * Return the maximum path length allowed by the file system
+ *
+ * @return (Windows) MAX_PATH - 1 or (Unix) PATH_MAX, as an Integer object.
+ */
+RexxObject *RexxInfo::getMaxPathLength()
+{
+    // usable length is one less, as one char is reserved for the terminating NUL
+    return new_integer(SysFileSystem::MaximumPathLength - 1);
+}
+
+
+/**
+ * Return the maximum Array size allowed
+ *
+ * @return MaxFixedArraySize, as an Integer object.
+ */
+RexxObject *RexxInfo::getMaxArraySize()
+{
+    // see interpreter/classes/ArrayClass.hpp
+    return new_integer(Numerics::MAX_WHOLENUMBER / 10);
+}
+
+

@@ -1207,6 +1207,12 @@ StartClassDefinition(RexxInfo)
         AddMethod("MajorVersion", RexxInfo::getMajorVersion, 0);
         AddMethod("Release", RexxInfo::getRelease, 0);
         AddMethod("Revision", RexxInfo::getRevision, 0);
+        AddMethod("internalMaxNumber", RexxInfo::getInternalMaxNumber, 0);
+        AddMethod("internalMinNumber", RexxInfo::getInternalMinNumber, 0);
+        AddMethod("maxExponent", RexxInfo::getMaxExponent, 0);
+        AddMethod("minExponent", RexxInfo::getMinExponent, 0);
+        AddMethod("maxPathLength", RexxInfo::getMaxPathLength, 0);
+        AddMethod("maxArraySize", RexxInfo::getMaxArraySize, 0);
 
     CompleteMethodDefinitions();
 
