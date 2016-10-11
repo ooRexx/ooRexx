@@ -618,7 +618,8 @@ return position
 ::method compareTo
   use strict arg other
 
-  .ArgUtil~validateClass("other", other, .File)
+  if \other~isA(.File) then
+    forward class (super) -- let the default implementation handle this
 
   if self~isCaseSensitive then do
        return self~absolutePath~compareTo(other~absolutePath)

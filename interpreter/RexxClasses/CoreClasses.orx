@@ -1283,7 +1283,12 @@ nomethod:
 
 -- sort comparison classes.
 ::CLASS 'Comparable' MIXINCLASS Object Public
-::METHOD compareTo ABSTRACT
+::METHOD compareTo
+  -- fallback implementation for classes inheriting from Comparable
+  -- (see discussion in [bugs:1406])
+  use strict arg other
+  numeric digits 18
+  return (self~identityHash - other~identityHash)~sign
 
 ::CLASS 'Comparator' MIXINCLASS Object Public
 ::METHOD compare
@@ -2680,7 +2685,8 @@ nomethod:
 
   use strict arg other
 
-  .ArgUtil~validateClass("other", other, .DateTime)
+  if \other~isA(.DateTime) then
+    forward class (super) -- let the default implementation handle this
 
   othertime = other~utcDate
 
@@ -3308,7 +3314,8 @@ nomethod:
 
   use strict arg other
 
-  .ArgUtil~validateClass("other", other, .TimeSpan)
+  if \other~isA(.TimeSpan) then
+    forward class (super) -- let the default implementation handle this
 
   numeric digits 18
   othertime = other~totalMicroseconds
@@ -3765,7 +3772,13 @@ nomethod:
 ::CLASS 'Orderable' PUBLIC MIXINCLASS Object
 
 -- perform an ordered comparison of two objects
-::METHOD compareTo ABSTRACT
+::METHOD compareTo
+  -- fallback implementation for classes inheriting from Orderable
+  -- (see discussion in [bugs:1406])
+  use strict arg other
+  numeric digits 18
+  return (self~identityHash - other~identityHash)~sign
+
 
 -- we generally expect any comparison arguments to be 'orderable'
 -- there's one exception, though: .nil
