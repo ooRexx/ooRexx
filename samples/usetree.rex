@@ -53,7 +53,7 @@ say "==========================================="
 call testOrder .treeDirectory~new
 
 
-::requires treeDirectory.cls
+::requires "treeDirectory.cls"
 ::routine testOrder
 use arg t
 
