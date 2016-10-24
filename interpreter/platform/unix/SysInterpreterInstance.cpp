@@ -90,7 +90,7 @@ void SysInterpreterInstance::addSearchExtension(const char *name)
 {
     // if the extension is not already in the extension list, add it
     RexxString *ext = new_string(name);
-    if (instance->searchExtensions->hasItem(ext))
+    if (!instance->searchExtensions->hasItem(ext))
     {
         instance->searchExtensions->append(ext);
     }
