@@ -128,7 +128,7 @@ sudo systemctl --system daemon-reload
 
 Using a generically named packages as an example. They must be executed as
 root or using sudo.  If there is no previous installation of ooRexx, skip
-the first command, (dpkg -P or rmp -e) they are the commands to uninstall a
+the first command, (dpkg -P or rpm -e) they are the commands to uninstall a
 previous version.
 
 tom@Loon:~/downloads$ dpkg -P ooRexx
