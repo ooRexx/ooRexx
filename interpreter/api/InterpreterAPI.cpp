@@ -238,14 +238,14 @@ char *REXXENTRY RexxGetVersionInformation()
     char build[] = "\nBuild date: ";
   #endif
   #ifdef __REXX64__
-    char mode[] = "\nAddressing Mode: 64";
+    char mode[] = "\nAddressing mode: 64";
   #else
-    char mode[] = "\nAddressing Mode: 32";
+    char mode[] = "\nAddressing mode: 32";
   #endif
-    char copy1[] = "\n\nCopyright (c) IBM Corporation 1995, 2004.\nCopyright (c) RexxLA " OOREXX_COPY_YEAR ".\nAll Rights Reserved.";
-    char copy2[] = "\nThis program and the accompanying materials are made available under";
-    char copy3[] = "\nthe terms of the Common Public License v1.0 which accompanies this";
-    char copy4[] = "\ndistribution or at";
+    char copy1[] = "\nCopyright (c) 1995, 2004 IBM Corporation. All rights reserved.";
+    char copy2[] = "\nCopyright (c) " OOREXX_COPY_YEAR " Rexx Language Association. All rights reserved.";
+    char copy3[] = "\nThis program and the accompanying materials are made available under the terms";
+    char copy4[] = "\nof the Common Public License v1.0 which accompanies this distribution or at";
     char copy5[] = "\nhttp://www.oorexx.org/license.html";
     char *ptr = (char *)SystemInterpreter::allocateResultMemory(strlen(header) + strlen(ver) + strlen(build) + strlen(__DATE__) +
         strlen(mode) + strlen(copy1) + strlen(copy2) + strlen(copy3) + strlen(copy4) + strlen(copy5) + 1);
