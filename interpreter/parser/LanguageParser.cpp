@@ -1191,7 +1191,9 @@ RexxCode *LanguageParser::translateBlock()
                     // did we hit the end of file?, this is an error
                     if (!nextClause())
                     {
-                        syntaxError(Error_Then_expected_if, instruction);
+                        // select appropriate error message: either for the IF here,
+                        // or for the WHEN / WHEN_CASE we fell through from above
+                        syntaxError(type == KEYWORD_IF ? Error_Then_expected_if : Error_Then_expected_when, instruction);
                     }
 
                     // now check the next token and ensure it is a THEN keyword.
@@ -1199,7 +1201,9 @@ RexxCode *LanguageParser::translateBlock()
                     // Not a THEN keyword?  This is an error
                     if (token->keyword() != KEYWORD_THEN)
                     {
-                        syntaxError(Error_Then_expected_if, instruction);
+                        // select appropriate error message: either for the IF here,
+                        // or for the WHEN / WHEN_CASE we fell through from above
+                        syntaxError(type == KEYWORD_IF ? Error_Then_expected_if : Error_Then_expected_when, instruction);
                     }
                     // create a new then clause attached to the IF
                     second = thenNew(token, (RexxInstructionIf *)instruction);

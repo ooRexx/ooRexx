@@ -1875,7 +1875,7 @@ $ Error_Execution_unassigned_variable
 753 Reference to unassigned variable "&1".
 
 $ Error_Logical_value_when_case
-754 SELECT CASE comparison result must be "0", "1", "true", or "false"; found "&1".
+754 SELECT CASE comparison result must be exactly "0" or "1"; found "&1".
 
 $ Error_Invalid_expression_case_when_list
 755 Missing expression in WHEN case expression list.

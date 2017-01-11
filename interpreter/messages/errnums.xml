@@ -1692,7 +1692,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>905</term>
 <listitem>
-<para>SELECT CASE comparison result must be "0", "1", "true", or "false"; found "<emphasis role="italic">value</emphasis>".</para>
+<para>SELECT CASE comparison result must be exactly "0" or "1"; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>

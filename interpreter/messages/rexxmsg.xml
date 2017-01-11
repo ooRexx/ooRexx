@@ -2406,7 +2406,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Logical_value_when_case</SymbolicName>
-        <Text>SELECT CASE comparison result must be <q>0</q>, <q>1</q>, <q>true</q>, or <q>false</q>; found <q><Sub position="1" name="value"/></q>.</Text>
+        <Text>SELECT CASE comparison result must be exactly <q>0</q> or <q>1</q>; found <q><Sub position="1" name="value"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>34</Code>
