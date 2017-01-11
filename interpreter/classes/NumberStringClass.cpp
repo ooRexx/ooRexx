@@ -2166,7 +2166,7 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
         // count of digits to the exponent.  If we end up losing
         // all of the integers, then our value is 1 (for the leading "0").
         integers = digitsCount + numberExponent;
-        if (integers < 0)
+        if (integers <= 0)
         {
             integers = 1;
             integerDigits = 0;
