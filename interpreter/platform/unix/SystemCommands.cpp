@@ -186,7 +186,7 @@ bool sys_process_export(RexxExitContext *context, const char * cmd, RexxObjectPt
         return false;
     }
 
-    for (i=0;(name[i]!='=')&&(i<iLength);i++)
+    for (i=0; (i<iLength) && (name[i]!='='); i++)
     {
         cmd_name[i] = name[i];
     }
@@ -659,7 +659,7 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStrin
             }
             strncpy(tmp, cmd, 6);
             tmp[6] = '\0';
-            if (Utilities::strCaselessCompare("unset ", tmp) == 0)
+            if (strcmp("unset ", tmp) == 0)
             {
                 if (sys_process_export(context, cmd, rc, UNSET_FLAG))
                 {
@@ -668,7 +668,7 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStrin
             }
             strncpy(tmp, cmd, 7);
             tmp[7] = '\0';
-            if (Utilities::strCaselessCompare("export ", tmp) == 0)
+            if (strcmp("export ", tmp) == 0)
             {
                 if (sys_process_export(context, cmd, rc, EXPORT_FLAG))
                 {
