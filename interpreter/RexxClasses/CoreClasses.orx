@@ -1523,6 +1523,7 @@ return left~caselessCompareTo(right, start, length)
        timespan = target - current
        scheduledTime = target
    end
+   SIGNAL ON syntax                    -- stop trapping syntax to invalid_time
  end
 
  if timespan~sign < 0 then do
