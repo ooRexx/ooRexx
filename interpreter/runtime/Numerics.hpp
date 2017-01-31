@@ -99,6 +99,16 @@ public:
     static const wholenumber_t SIZE_DIGITS  = 10;
 #endif
 
+    // RexxInteger size limits
+    static const wholenumber_t REXXINTEGER_DIGITS = ARGUMENT_DIGITS;
+    static const wholenumber_t MIN_REXXINTEGER = MIN_WHOLENUMBER;
+    static const wholenumber_t MAX_REXXINTEGER = MAX_WHOLENUMBER;
+#ifdef __REXX64__
+    static const wholenumber_t REXXINTEGER_BITS = 64;
+#else
+    static const wholenumber_t REXXINTEGER_BITS = 32;
+#endif
+
     static const wholenumber_t MAX_EXPONENT = 999999999;
     static const wholenumber_t MIN_EXPONENT = -999999999;
     static const wholenumber_t DEFAULT_DIGITS  = 9;
@@ -114,6 +124,7 @@ public:
     static const bool DEFAULT_FORM;
 
     static const wholenumber_t validMaxWhole[];      // table of maximum values per digits setting
+    static const wholenumber_t validMaxWholeBits[];  // table of bit sizes of above values
 
     static RexxObject *wholenumberToObject(wholenumber_t v);
     static RexxObject *stringsizeToObject(size_t v);
@@ -152,19 +163,26 @@ public:
     static inline size_t maxVal(size_t n1, size_t n2) { return n2 > n1 ? n2 : n1; }
     static inline wholenumber_t maxValueForDigits(wholenumber_t d)
     {
-        if (d > ARGUMENT_DIGITS)
+        if (d > REXXINTEGER_DIGITS) // 9 for 32-bit, 18 for 64-bit
         {
-            return validMaxWhole[ARGUMENT_DIGITS - 1];
+            return validMaxWhole[REXXINTEGER_DIGITS];
         }
         else
         {
-            return validMaxWhole[d - 1];
+            return validMaxWhole[d];
         }
     }
 
-    static inline wholenumber_t multiplierForExponent(size_t e)
+    static inline wholenumber_t maxBitsForDigits(wholenumber_t d)
     {
-        return validMaxWhole[e - 1];
+        if (d > REXXINTEGER_DIGITS) // 9 for 32-bit, 18 for 64-bit
+        {
+            return validMaxWholeBits[REXXINTEGER_DIGITS];
+        }
+        else
+        {
+            return validMaxWholeBits[d];
+        }
     }
 
     static RexxString *pointerToString(void *);
@@ -174,8 +192,8 @@ public:
     // the compiler complains.  The first is for validating a whole number value, the second is for validating an
     // explicit 64-bit value.
     static inline bool isValid32Bit(int64_t v) { return v <= INT32_MAX && v >= INT32_MIN; }
-    static inline bool isValid(wholenumber_t v, wholenumber_t digits)  { return abs(v) < validMaxWhole[minVal(digits, ARGUMENT_DIGITS) - 1]; }
-    static inline bool isValid64Bit(int64_t v, wholenumber_t digits)  { digits = minVal(digits, ARGUMENT_DIGITS); return v < (int64_t)validMaxWhole[digits - 1] && v > -(int64_t)validMaxWhole[digits - 1]; }
+    static inline bool isValid(wholenumber_t v, wholenumber_t digits)  { return abs(v) <= validMaxWhole[minVal(digits, REXXINTEGER_DIGITS)]; }
+    static inline bool isValid64Bit(int64_t v, wholenumber_t digits)  { digits = minVal(digits, REXXINTEGER_DIGITS); return v <= (int64_t)validMaxWhole[digits] && v >= -(int64_t)validMaxWhole[digits]; }
 
 
 protected:

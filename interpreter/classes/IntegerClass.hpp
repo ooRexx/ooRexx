@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -127,8 +127,8 @@ class RexxInteger : public RexxObject
     RexxObject *ceiling();
     RexxObject *round();
     RexxObject *format(RexxObject *, RexxObject *, RexxObject *, RexxObject *);
-    RexxObject *d2c(RexxObject *);
-    RexxObject *d2x(RexxObject *);
+    RexxObject *d2c(RexxInteger *);
+    RexxObject *d2x(RexxInteger *);
     virtual RexxObject *evaluate(RexxActivation *, ExpressionStack *);
     virtual RexxObject *getValue(RexxActivation *);
     virtual RexxObject *getValue(VariableDictionary *);
@@ -180,11 +180,11 @@ class RexxIntegerClass : public RexxClass
         RexxClass(id, classBehaviour, instanceBehaviour) { }
 
     static const int IntegerCacheLow = -10;
-    static const int IntegerCacheSize = 100;
+    static const int IntegerCacheHigh = 100;
 
     inline RexxInteger *newCache(wholenumber_t value)
     {
-        if (value >= IntegerCacheLow && value < IntegerCacheSize)
+        if (value >= IntegerCacheLow && value <= IntegerCacheHigh)
         {
             return integercache[value - IntegerCacheLow];
         }
@@ -199,10 +199,58 @@ class RexxIntegerClass : public RexxClass
 
     void initCache();
 
-    // array of fast aloocation integers -10 to 90
-    RexxInteger *integercache[IntegerCacheSize - IntegerCacheLow];
+    // array of fast allocation integers -10 to 100
+    RexxInteger *integercache[IntegerCacheHigh - IntegerCacheLow + 1];
 };
 
 
 inline RexxInteger *new_integer(wholenumber_t v) { return TheIntegerClass->newCache(v); }
+inline RexxInteger *new_integer(bool sign, const char *digits, wholenumber_t intDigits, wholenumber_t pad = 0)
+{
+    wholenumber_t v, i;
+    v = digits[0];
+    for (i = 1; i < intDigits; i++)
+    {
+        // add digits
+        v = v * 10 + digits[i];
+    }
+    for (i = 1; i <= pad; i++)
+    {
+        // add zeros
+        v  = v * 10;
+    }
+    // return value with correct sign
+    return TheIntegerClass->newCache(sign ? -v : v);
+}
+
+inline wholenumber_t length_in_bits(wholenumber_t v)
+{
+    wholenumber_t r = 0;
+
+    if (v < 0) v = -v;
+#ifdef __REXX64__
+    if (v & 0xFFFFFFFF00000000) { v >>= 32; r |= 32; }
+#endif
+    if (v &         0xFFFF0000) { v >>= 16; r |= 16; }
+    if (v &             0xFF00) { v >>=  8; r |=  8; }
+    if (v &               0xF0) { v >>=  4; r |=  4; }
+    if (v &                0xC) { v >>=  2; r |=  2; }
+    if (v &                0x2) { v >>=  1; r |=  1; }
+    return r + 1;
+}
+
+// ignoring bases or powers < 3, this is the maximum base/power a RexxInteger can handle
+#ifdef __REXX64__
+    // 999999 ** 3 = 999997000002999999
+    #define RexxIntegerMaxBase  999999
+    // 3 ** 37 = 450283905890997363
+    #define RexxIntegerMaxPower 37
+#else
+    // 999 ** 3 = 997002999
+    #define RexxIntegerMaxBase  999
+    // 3 ** 18 = 387420489
+    #define RexxIntegerMaxPower 18
+#endif
+
+
 #endif

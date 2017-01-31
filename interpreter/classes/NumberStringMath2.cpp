@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -731,6 +731,20 @@ NumberString *NumberString::Division(NumberString *other, ArithmeticOperator div
         {
             return(NumberString *)IntegerZero;
         }
+    }
+
+    // if this has been an integer divide, we can return the result as a
+    // RexxInteger if we have at most Numerics::REXXINTEGER_DIGITS digits
+    // no need to check the current numeric digits setting, as an 
+    // integer divide will have raised
+    // Error 26.11:  Result of % operation did not result in a whole number
+    // for any result outside of the current digits setting
+    if (divOP == OT_INT_DIVIDE &&
+        accum->digitsCount + accum->numberExponent <= Numerics::REXXINTEGER_DIGITS &&
+        // we also require accum->numberExponent >= 0 .. not sure if this might happen
+        accum->numberExponent >= 0)
+    {
+      return (NumberString *)new_integer(accum->numberSign < 0, resultPtr, accum->digitsCount, accum->numberExponent);
     }
 
     // ok, accum is the number data, resultPtr is the result data

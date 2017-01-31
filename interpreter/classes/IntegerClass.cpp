@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -551,34 +551,43 @@ RexxString *RexxInteger::concat(RexxString *other )
  */
 RexxObject *RexxInteger::plus(RexxInteger *other)
 {
-    // if using less than the default digits, do the math the hard way
-    if (number_digits() < Numerics::DEFAULT_DIGITS)
+    // if we want to do this with binary math, our operand must be valid
+    // under the current numeric digits
+    if (Numerics::isValid(value, number_digits()))
     {
-        return integer_forward(plus, other);
-    }
-
-    // if this is a plus operation, we just return this object as the result
-    if (other == OREF_NULL)
-    {
-        return this;
-    }
-    // binary operation
-    else
-    {
-        // if we have two integers, we can do this very quickly.  However, if we
-        // overflow as a result, we fall back to the slow way
-        if (isInteger(other))
+        // if this is an prefix plus, we just return this object as the result
+        if (other == OREF_NULL)
         {
-            wholenumber_t tempVal = value + other->value;
-            // fall withing range?  return an integer result
-            if (Numerics::isValid(tempVal))
+            return this;
+        }
+        // binary operation
+        else
+        {
+            // to calculate the sum with binary math, also the second operand
+            // must be a RexxInteger that is valid under the current numeric digits
+            if (isInteger(other) && Numerics::isValid(other->value, number_digits()))
             {
-                return new_integer(tempVal);
+                // neither in the 32-bit, nor in the 64-bit case, will the sum
+                // overflow wholenumber_t: for 32-bit, wholenumber_t accepts up to
+                // 2^31-1 = 2147483647, which is more than twice as large as the
+                // maximum of 999999999 for a RexxInteger
+                // for the 64-bit case, wholenumber_t accepts up to
+                // 2^63 -1 = 9223372036854775807 which is also more than twice as
+                // large as   999999999999999999, the maximum for a RexxInteger
+                wholenumber_t result = value + other->value;
+
+                // though no wholenumber_t overflow is possible, the sum may
+                // still be too large for a RexxInteger under current numeric digits
+                if (Numerics::isValid(result, number_digits()))
+                {
+                    return new_integer(result);
+                }
             }
         }
-        // type mismatch or potential overflow...do the math the hard way
-        return integer_forward(plus, other);
     }
+
+    // we will have to forward to NumberString::plus
+    return integer_forward(plus, other);
 }
 
 
@@ -591,33 +600,43 @@ RexxObject *RexxInteger::plus(RexxInteger *other)
  */
 RexxObject *RexxInteger::minus(RexxInteger *other)
 {
-    // if less than default digits in effect, us full arithmetic to generate this
-    if (number_digits() < Numerics::DEFAULT_DIGITS )
+    // if we want to do this with binary math, our operand must be valid
+    // under the current numeric digits
+    if (Numerics::isValid(value, number_digits()))
     {
-        return integer_forward(minus, other);
-    }
-
-    // the unary minus is easy
-    if (other == OREF_NULL)
-    {
-        return new_integer(-value);
-    }
-    else
-    {
-        // if subtracting two integer objects, try this in binary
-        if (isInteger(other))
+        // if this is an prefix minus, we just return the negated value
+        if (other == OREF_NULL)
         {
-            wholenumber_t tempVal = value - other->value;
-            // if this is still in the whole number range, we can return a new Integer result
-            if (Numerics::isValid(tempVal))
+            return new_integer(-value);
+        }
+        // binary operation
+        else
+        {
+            // to calculate the difference with binary math, also the second operand
+            // must be a RexxInteger that is valid under the current numeric digits
+            if (isInteger(other) && Numerics::isValid(other->value, number_digits()))
             {
-                return new_integer(tempVal);
+                // neither in the 32-bit, nor in the 64-bit case, will the difference
+                // overflow wholenumber_t: for 32-bit, wholenumber_t accepts up to
+                // 2^31-1 = 2147483647, which is more than twice as large as the
+                // maximum of 999999999 for a RexxInteger
+                // for the 64-bit case, wholenumber_t accepts up to
+                // 2^63 -1 = 9223372036854775807 which is also more than twice as
+                // large as   999999999999999999, the maximum for a RexxInteger
+                wholenumber_t result = value - other->value;
+
+                // though no wholenumber_t overflow is possible, the difference may
+                // still be too large for a RexxInteger under current numeric digits
+                if (Numerics::isValid(result, number_digits()))
+                {
+                    return new_integer(result);
+                }
             }
         }
-
-        // full number string arithmetic required
-        return integer_forward(minus, other);
     }
+
+    // we will have to forward to NumberString::minus
+    return integer_forward(minus, other);
 }
 
 
@@ -630,40 +649,67 @@ RexxObject *RexxInteger::minus(RexxInteger *other)
  */
 RexxObject *RexxInteger::multiply(RexxInteger *other)
 {
-    // if using less than the default digits, do this the slow way
-    if (number_digits() < Numerics::DEFAULT_DIGITS )
+    // we'll try to multiply with binary math if both factors
+    // are RexxIntegers that are valid under the current numeric digits
+    if (Numerics::isValid(value, number_digits()) &&
+        other != OREF_NULL && isInteger(other))
     {
-        return integer_forward(multiply, other);
+        wholenumber_t multiplier = other->getValue();
+        wholenumber_t result;
+        if (Numerics::isValid(multiplier, number_digits()))
+        {
+            // check if we can cut this short
+            switch(multiplier)
+            {
+                case 0:
+                    // n * 0 is 0, always
+                    return IntegerZero;
+                case 1:
+                    // n * 1 is n, always
+                    return this;
+                case -1:
+                    // we just negate
+                    return new_integer(-value);
+                case -2: case 2:
+                    // we'll evaluate n * 2 by bit shifting
+                    // neither in the 32-bit, nor in the 64-bit case, will the shift
+                    // overflow wholenumber_t: for 32-bit, wholenumber_t accepts up to
+                    // 2^31-1 = 2147483647, which is more than twice as large as the
+                    // maximum of 999999999 for a RexxInteger
+                    // for the 64-bit case, wholenumber_t accepts up to
+                    // 2^63 -1 = 9223372036854775807 which is also more than twice as
+                    // large as   999999999999999999, the maximum for a RexxInteger
+                    result = value << 1;
+
+                    // though no wholenumber_t overflow is possible, the shift may
+                    // still be too large for a RexxInteger under current numeric digits
+                    if (Numerics::isValid(result, number_digits()))
+                    {
+                        // for a multiplier of -2, result will be negative
+                        return new_integer(multiplier == -2 ? -result : result);
+                    }
+            }
+
+            // the product should be a valid integer under the current numeric
+            // digits; if we know it won't fit, there's no neeed to multiply
+            // we can estimate this: multiplying an m-bit number with an n-bit
+            // number yields a product of either (m + n - 1) or (m + n) bits
+            // we test (m + n - 1) <= 30 (for 32-bit) and 60 (for 64-bit),
+            // which means (m + n) <= 31 (32-bit) and <= 61 (64-bit), which in
+            // turn makes sure there will be no wholenumber_t overflow
+            if (length_in_bits(value) + length_in_bits(multiplier) - 1 <= Numerics::maxBitsForDigits(number_digits()))
+            {
+                result = value * multiplier;
+                // the result may still be slightly too large; need to check
+                if (Numerics::isValid(result, number_digits()))
+                {
+                    return new_integer(result);
+                }
+            }
+        }
     }
 
-    // the other argument is required
-    requiredArgument(other, ARG_ONE);
-    // if the other value is an integer, we can multiply this directly if the other value is
-    // an integer, but we need to do this using 64-bit math to detect overflows.
-    if (isInteger(other))
-    {
-        int64_t tempThis = (int64_t)value;
-        int64_t tempOther = (int64_t)other->value;
-
-        //.We are doing this multiplication assuming we have values that cannot produce
-        // an overflow/underflow.  If either operand it too large, then we need to
-        // do this the slow way.
-        if (!Numerics::isValid32Bit(tempThis) || !Numerics::isValid32Bit(tempOther))
-        {
-            return integer_forward(multiply, other);
-        }
-
-        int64_t tempValue = tempThis * tempOther;
-
-        // we have a good multiplication that will not overflow or underflow, but
-        // we can only return an integer object as a result if the result
-        //.is still in a valid range.
-        if (Numerics::isValid64Bit(tempValue, number_digits()))
-        {
-            return new_integer((wholenumber_t)tempValue);
-        }
-    }
-    // do this via the number string method
+    // we will have to forward to NumberString::multiply
     return integer_forward(multiply, other);
 }
 
@@ -677,7 +723,49 @@ RexxObject *RexxInteger::multiply(RexxInteger *other)
  */
 RexxObject *RexxInteger::divide(RexxInteger *other)
 {
-    // not even worth trying to do this via binary integer means.
+    // we'll try to divide with binary math if both dividend and divisor
+    // are RexxIntegers that are valid under the current numeric digits
+    if (Numerics::isValid(value, number_digits()) &&
+        other != OREF_NULL && isInteger(other))
+    {
+        wholenumber_t divisor = other->getValue();
+        if (Numerics::isValid(divisor, number_digits()))
+        {
+            // this may be an integer division, which we can do in binary math
+            // if so, there's no need to check for the size of the resulting quotient
+            switch(divisor)
+            {
+                case 0:
+                    break; // let NumberString::divide handle this
+                case -1:
+                    return new_integer(-value);
+                case 1:
+                    return this;
+                case -2:
+                case 2:
+                    // if even, dividing by 2 (or -2) is easy
+                    if (!(value & 1))
+                    {
+                        return new_integer(value / divisor);
+                    }
+                case -4:
+                case 4:
+                    // if multiple of four, dividing is easy
+                    if (!(value & 3))
+                    {
+                        return new_integer(value / divisor);
+                    }
+                default:
+                    // generally, if there's no remainder, we can divide here
+                    if (value % divisor == 0)
+                    {
+                        return new_integer(value / divisor);
+                    }
+            }
+        }
+    }
+
+    // else we will have forward to NumberString::divide
     return integer_forward(divide, other);
 }
 
@@ -691,29 +779,24 @@ RexxObject *RexxInteger::divide(RexxInteger *other)
  */
 RexxObject *RexxInteger::integerDivide(RexxInteger *other)
 {
-    // if less than default digits, do this via number string
-    if (number_digits() < Numerics::DEFAULT_DIGITS)
+    // we'll try to divide with binary math if both dividend and divisor
+    // are RexxIntegers that are valid under the current numeric digits
+    if (Numerics::isValid(value, number_digits()) &&
+        other != OREF_NULL && isInteger(other))
     {
-        return integer_forward(integerDivide, other);
-    }
-
-    // the other argument is required
-    requiredArgument(other, ARG_ONE);
-
-    // we can do this via binary means, but need to check for divide by zero here.
-    if (isInteger(other))
-    {
-        if (other->value != 0)
+        wholenumber_t divisor = other->getValue();
+        if (Numerics::isValid(divisor, number_digits()))
         {
-            // do the division directly
-            return new_integer(value / other->value);
-        }
-        else
-        {
-            reportException(Error_Overflow_zero);
+            // no need to check for the size of the resulting quotient
+            // let NumberString:integerDivide handle any divide-by-zero
+            if (divisor != 0)
+            {
+                return new_integer(value / divisor);
+            }
         }
     }
 
+    // else we will have forward to NumberString:integerDivide
     return integer_forward(integerDivide, other);
 }
 
@@ -727,28 +810,34 @@ RexxObject *RexxInteger::integerDivide(RexxInteger *other)
  */
 RexxObject *RexxInteger::remainder(RexxInteger *other)
 {
-    // skip doing this here if under reduced digits
-    if (number_digits() < Numerics::DEFAULT_DIGITS)
+    // we'll try to calculate the remainder with binary math if both operands
+    // are RexxIntegers that are valid under the current numeric digits
+    if (Numerics::isValid(value, number_digits()) &&
+        other != OREF_NULL && isInteger(other))
     {
-        return integer_forward(remainder, other);
+        wholenumber_t divisor = other->getValue();
+        if (Numerics::isValid(divisor, number_digits()))
+        {
+            // no need to check for the size of the result
+            switch(divisor)
+            {
+                case 0:
+                    break; // let NumberString::remainder handle this
+                case -1:
+                case 1:
+                    return IntegerZero;
+                case -2:
+                case 2:
+                    // if odd, remainder is +/-1, otherwise 0
+                    // the sign of the remainder is the sign of the dividend
+                    return (value & 1) ? (value < 0 ? IntegerMinusOne : IntegerOne) : IntegerZero;
+                default:
+                    return new_integer(value % divisor);
+            }
+        }
     }
 
-    requiredArgument(other, ARG_ONE);
-
-    // if we have a pair of integer, we can do this here.
-    if (isInteger(other))
-    {
-        // protect against divide by zero
-        if (other->value != 0)
-        {
-            return new_integer(value % other->value);
-        }
-        else
-        {
-            reportException(Error_Overflow_zero);
-        }
-    }
-
+    // else we will have forward to NumberString::remainder
     return integer_forward(remainder, other);
 }
 
@@ -762,11 +851,211 @@ RexxObject *RexxInteger::remainder(RexxInteger *other)
  */
 RexxObject *RexxInteger::power(RexxObject *other)
 {
-    // we might be able to optimize this a little by trying
-    // this using direct binary math, but there are a lot of
-    // ways this could go wrong, so just punt and do it via full
-    // number string math.  This might work ok with very small
-    // exponents...
+    // we'll try to do this with binary math if both base and power
+    // are RexxIntegers that are valid under the current numeric digits
+    if (Numerics::isValid(value, number_digits()) &&
+        other != OREF_NULL && isInteger(other))
+    {
+        wholenumber_t power = ((RexxInteger *)other)->getValue();
+        if (Numerics::isValid(power, number_digits()))
+        {
+            // handle some common bases
+            switch (value)
+            {
+                case 0:
+                    // base 0 returns integers for positive powers only
+                    // 0 ^ n is 0 for n >= 1
+                    if (power >= 1)
+                    {
+                      return integerZero;
+                    }
+                    // handle power = 0 case and other powers later
+                    break;
+
+                case 1:
+                    // base 1 returns integers with both positive and negative powers
+                    // 1 ^ n is 1, always
+                    return integerOne;
+
+                case -1:
+                    // base -1 returns integers with both positive and negative powers
+                    // (-1) ^ n is -1 if n is odd, and +1 if n is even
+                    return (power & 1) ? integerMinusOne : integerOne;
+
+                case 2: case -2:
+                    // bases 2 and -2 return integers for positive powers only
+                    // we'll evaluate 2 ^ n by bit shifting
+                    // the number of bits to shift left must be less than the
+                    // maximum bits allowed under the current numeric digits
+                    // 2 ** 59 = 576460752303423488 is maximum for 64-bits
+                    // 2 ** 29 = 536870912 is maximum for 32-bits
+                    // base -2 results will be negative if power is odd
+                    if (power >= 0 && power < Numerics::maxBitsForDigits(number_digits()))
+                    {
+                        // no wholenumber_t overflow possible
+                        wholenumber_t result = (wholenumber_t)1 << power;
+
+                        // base -2 results will be negative if power is odd
+                        return (value == -2 && power & 1) ? new_integer(-result) : new_integer(result);
+                    }
+                    // can't use RexxInteger, have to fall back to NumberString
+                    return integer_forward(power, other);
+
+                case 4: case -4:
+                case 8: case -8:
+                case 16: case -16:
+                case 32: case -32:
+                case 64: case -64:
+                case 128: case -128:
+                case 256: case -256:
+                    // similar to above base 2 case
+                    wholenumber_t baseFactor;
+                    baseFactor = length_in_bits(value) - 1;
+                    if (power >= 0 && power * baseFactor < Numerics::maxBitsForDigits(number_digits()))
+                    {
+                        // no wholenumber_t overflow possible
+                        wholenumber_t result = (wholenumber_t)1 << (power * baseFactor);
+
+                        // result for negative bases will be negative if power is odd
+                        return (value < 0 && power & 1) ? new_integer(-result) : new_integer(result);
+                    }
+                    // can't use RexxInteger, have to fall back to NumberString
+                    return integer_forward(power, other);
+
+                case 10:
+                case -10:
+                    // bases 10 and -10 return integers for positive powers only
+                    // we'll evaluate 10 ^ n by lookup (n less than REXXINTEGER_DIGITS)
+                    // to keep the result valid under the current numeric digits,
+                    // n must be also less than the current numeric digits
+                    if (power >= 0 &&
+                        power < Numerics::REXXINTEGER_DIGITS &&
+                        power < number_digits())
+                    {
+                        // we abuse our table of maximum values for specified digits
+                        // e. g. 10^9 = 999 999 999 (maximum for numeric digits 9) plus 1
+                        wholenumber_t result = Numerics::maxValueForDigits(power) + 1;
+                        // base -10 results will be negative if power is odd
+                        return (value == -10 && power & 1) ? new_integer(-result) : new_integer(result);
+                    }
+                    // can't use RexxInteger, have to fall back to NumberString
+                    return integer_forward(power, other);
+            }
+
+            // handle some common powers
+            switch (power)
+            {
+                case 0:
+                    // n ^ 0 is 1, even 0 ^ 0 is defined as 1 in ooRexx
+                    return integerOne;
+
+                case 1:
+                    // n ^ 1 is n, of course
+                    return this;
+
+                case 2:
+                    // we'll evaluate n ^ 2 as n * n
+                    // the result should be a valid integer under the current numeric
+                    // digits; if we know it won't fit, there's no neeed to multiply
+                    // we can estimate this: squaring an n-bit number yields a result
+                    // of either (2n - 1) or (2n) bits
+                    // we test (2n - 1) <= 30 (for 32-bit) and 60 (for 64-bit),
+                    // which means (2n) <= 31 (32-bit) and <= 61 (64-bit), which in
+                    // turn makes sure there will be no wholenumber_t overflow
+                    if (length_in_bits(value) * 2 - 1 <= Numerics::maxBitsForDigits(number_digits()))
+                    {
+                        wholenumber_t result;
+                        result = value * value;
+                        // the result may still be slightly too large; need to check
+                        if (Numerics::isValid(result, number_digits()))
+                        {
+                            return new_integer(result);
+                        }
+                    }
+                    // we cannot use NumberString::multiply to finish this
+                    //     return integer_forward(multiply, this);
+                    // because "*" and "**" behave differently as documented
+                    // "**" will remove trailing zeros as if divided by 1
+                    // "*" will keep any trailing zeros
+                    // there's a test case in EXPONENT.testGroup which shows this:
+                    //     ::method "test_25"
+                    //       numeric digits 18
+                    //       self~assertSame(12345678900000 ** 2, 1.5241578750190521E+26)
+                    //     Expected: [[1.52415787501905210E+26]
+                    //     Actual:   [[1.5241578750190521E+26],
+                    // another example to reproduce this issue is
+                    //    a = 123000; say a ** 2 a * a -> 1.5129E+10 1.51290000E+10
+                    // we instead forward to NumberString::power
+                    return integer_forward(power, other);
+            }
+
+            // at this point, with bases 0, 1, 2, and powers 0, 1, 2 checked,
+            // we know that (no matter what the current numeric digits setting is),
+            // a RexxInteger cannot handle
+            // - negative powers,
+            // - any power larger than 18 (32-bit) or 37 (64-bit), and
+            // - any base larger than +/-999 (32-bit) or +/-999999 (64-bit)
+            if (power < 0 || power > RexxIntegerMaxPower ||
+                Numerics::abs(value) > RexxIntegerMaxBase)
+            {
+                return integer_forward(power, other);
+            }
+
+            // no common base or power .. try to do the full calculation
+            // the result should be a valid integer under the current numeric digits
+            // if we know it won't fit, there's no neeed to try
+            // we can estimate the result size: if base has b bits, the result
+            // will require between (b * power - b + 1) and (b * power) bits
+            wholenumber_t maxBits = Numerics::maxBitsForDigits(number_digits());
+            if ((length_in_bits(value) - 1) * power + 1 <= maxBits)
+            {
+                wholenumber_t base = value;
+                wholenumber_t result = 1;
+                bool overflow = 0;
+
+                // https://en.wikipedia.org/wiki/Exponentiation_by_squaring#Basic_method
+                while (power > 1)
+                {
+                    if (power & 1)
+                    {
+                        // make sure that result * base will not overflow
+                        if (length_in_bits(result) + length_in_bits(base) - 1 > maxBits)
+                        {
+                            overflow = 1;
+                            break;
+                        }
+                        result *= base;
+                        power = (power - 1) / 2;
+                    }
+                    else
+                    {
+                        power /= 2;
+                    }
+                    // make sure that base * base will not overflow
+                    if (length_in_bits(base) * 2 - 1 > maxBits)
+                    {
+                        overflow = 1;
+                        break;
+                    }
+                    base *= base;
+                }
+                // check that we didn't break out of the loop due to overflow
+                if (!overflow &&
+                    // and make sure that result * base will not overflow
+                    length_in_bits(result) + length_in_bits(base) - 1 <= maxBits)
+                {
+                    result *= base;
+                    // our result may still be slightly too large; need to check
+                    if (Numerics::isValid(result, number_digits()))
+                    {
+                        return new_integer(result);
+                    }
+                }
+            }
+        }
+    }
+
+    // else we fall back using NumberString's power()
     return integer_forward(power, other);
 }
 
@@ -855,8 +1144,16 @@ wholenumber_t RexxInteger::comp(RexxObject *other)
     // also used from multiple arguments
     requiredArgument(other, ARG_ONE);
 
-    if (isSameType(other) && number_digits() >= Numerics::DEFAULT_DIGITS)
+    // if we want to do a binary compare, both operands must be valid
+    // under the current numeric digits
+    if (Numerics::isValid(value, number_digits()) &&
+        isInteger(other) &&
+        Numerics::isValid(((RexxInteger *)other)->value, number_digits()))
     {
+        // the difference of two RexxIntegers may overflow a RexxInteger, but no
+        // wholenumber_t overflow will occur - see dicussion at RexxInteger::minus
+        // as the comp() result will just be used for further binary comparisons
+        // (<0, >0, =0, etc.) and not be converted into a RexxInteger, that's ok
         return value - ((RexxInteger *)other)->value;
     }
     else
@@ -1182,8 +1479,9 @@ RexxObject *RexxInteger::choiceRexx(RexxObject *trueResult, RexxObject *falseRes
  */
 RexxObject *RexxInteger::abs()
 {
-    // if working under the default digits or higher, do this here.
-    if (number_digits() >= Numerics::DEFAULT_DIGITS)
+    // we need to check if we have a value that's valid under the
+    // current numeric digits
+    if (Numerics::isValid(value, number_digits()))
     {
         // if we're already positive, this is a quick return
         if (value >= 0)
@@ -1193,11 +1491,8 @@ RexxObject *RexxInteger::abs()
         // negate and return as a new integer
         return new_integer(-value);
     }
-    else
-    {
-        // return the numberstring result
-        return numberString()->abs();
-    }
+    // else forward to NumberString
+    return numberString()->abs();
 }
 
 
@@ -1229,12 +1524,12 @@ RexxObject *RexxInteger::sign()
  * @param args     The array of arguments
  * @param argCount The count of arguments
  *
- * @return The Largest of the numbers.
+ * @return The largest of the numbers.
  */
 RexxObject *RexxInteger::Max(RexxObject **args, size_t argCount)
 {
-    // if less than default digits, hand this off to the number string now
-    if (number_digits() < Numerics::DEFAULT_DIGITS )
+    // we must have a RexxInteger valid under the current numeric digits
+    if (!Numerics::isValid(value, number_digits()))
     {
         return numberString()->Max(args, argCount);
     }
@@ -1247,9 +1542,9 @@ RexxObject *RexxInteger::Max(RexxObject **args, size_t argCount)
         return this;
     }
 
-
     // we can try this here as long as all of the numbers really are integers
-    wholenumber_t maxvalue = value;
+    wholenumber_t maxValue = value;
+    RexxObject *maxObject = this;
 
     // now check all of the numbers in turn
     for (size_t arg = 0; arg < argCount; arg++)
@@ -1261,8 +1556,12 @@ RexxObject *RexxInteger::Max(RexxObject **args, size_t argCount)
         if (isInteger(argument))
         {
             wholenumber_t v = ((RexxInteger *)argument)->getValue();
-            // get the larger value
-            maxvalue = Numerics::maxVal(v, maxvalue);
+            // remember the larger value and the corresponding object
+            if (v > maxValue)
+            {
+                maxValue = v;
+                maxObject = argument;
+            }
         }
         // not all integers, so have numberstring figure this out
         else
@@ -1270,35 +1569,41 @@ RexxObject *RexxInteger::Max(RexxObject **args, size_t argCount)
             return numberString()->Max(args, argCount);
         }
     }
-
-    // return the maximum integer
-    return new_integer(maxvalue);
+    // return the minimum object
+    return maxObject;
 }
 
-RexxObject *RexxInteger::Min(
-                            RexxObject **args,                 /* array of comparison values        */
-                            size_t argCount)                   /* count of arguments                */
-/******************************************************************************/
-/* Function:  Perform MAX function on integer objects                         */
-/******************************************************************************/
-{
-    // if less than default digits, hand this off to the number string now
-    if (number_digits() < Numerics::DEFAULT_DIGITS )
-    {
-        return numberString()->Min(args, argCount);
-    }
 
+/**
+ * Perform MIN function on integer objects
+ *
+ * @param args     The array of arguments
+ * @param argCount The count of arguments
+ *
+ * @return The smallest of the numbers.
+ */
+RexxObject *RexxInteger::Min(RexxObject **args, size_t argCount)
+{
     // if nothing to compare against, we can return this object immediately
-    // NOTE: we cannot move this before the digits test because the restricted digits
-    // might require reformatting into exponential form or even rounding.
+    // NOTE: we've intentionally moved this before the digits test because
+    // it gives us the ability to distinguish between RexxInteger and a
+    // NumberString from within ooRexx (see e. g. RexxInteger.testGroup)
+    // "n~min" is a very unlikely expression, and it is extremely unlikely
+    // that this will show up as a bug in real code
     if (argCount < 1)
     {
         return this;
     }
 
+    // we must have a RexxInteger valid under the current numeric digits
+    if (!Numerics::isValid(value, number_digits()))
+    {
+        return numberString()->Min(args, argCount);
+    }
 
     // we can try this here as long as all of the numbers really are integers
-    wholenumber_t minvalue = value;
+    wholenumber_t minValue = value;
+    RexxObject *minObject = this;
 
     // now check all of the numbers in turn
     for (size_t arg = 0; arg < argCount; arg++)
@@ -1310,8 +1615,12 @@ RexxObject *RexxInteger::Min(
         if (isInteger(argument))
         {
             wholenumber_t v = ((RexxInteger *)argument)->getValue();
-            // get the larger value
-            minvalue = Numerics::minVal(v, minvalue);
+            // remember the smaller value and the corresponding object
+            if (v < minValue)
+            {
+                minValue = v;
+                minObject = argument;
+            }
         }
         // not all integers, so have numberstring figure this out
         else
@@ -1319,9 +1628,8 @@ RexxObject *RexxInteger::Min(
             return numberString()->Min(args, argCount);
         }
     }
-
-    // return the maximum integer
-    return new_integer(minvalue);
+    // return the minimum object
+    return minObject;
 }
 
 
@@ -1334,7 +1642,16 @@ RexxObject *RexxInteger::Min(
  */
 RexxObject *RexxInteger::trunc(RexxObject *decimals)
 {
-    /* just forward to numberstring      */
+    // if decimals are omitted or zero, this is the same value
+    // we also need to check if we have a value that's valid under the
+    // current numeric digits
+    if ((decimals == OREF_NULL ||
+       (isInteger(decimals) && ((RexxInteger *)decimals)->getValue() == 0)) &&
+       Numerics::isValid(value, number_digits()))
+    {
+      return this;
+    }
+    // else forward to NumberString
     return numberString()->trunc(decimals);
 }
 
@@ -1347,7 +1664,14 @@ RexxObject *RexxInteger::trunc(RexxObject *decimals)
 RexxObject *RexxInteger::floor()
 {
     // the floor of an integer is always the same value
-    return this;
+    // we still need to check if we have a value that's valid under the
+    // current numeric digits
+    if (Numerics::isValid(value, number_digits()))
+    {
+      return this;
+    }
+    // else forward to NumberString
+    return numberString()->floor();
 }
 
 
@@ -1359,7 +1683,14 @@ RexxObject *RexxInteger::floor()
 RexxObject *RexxInteger::ceiling()
 {
     // the ceiling of an integer is always the same value
-    return this;
+    // we still need to check if we have a value that's valid under the
+    // current numeric digits
+    if (Numerics::isValid(value, number_digits()))
+    {
+      return this;
+    }
+    // else forward to NumberString
+    return numberString()->ceiling();
 }
 
 
@@ -1371,7 +1702,14 @@ RexxObject *RexxInteger::ceiling()
 RexxObject *RexxInteger::round()
 {
     // the rounding of an integer is always the same value
-    return this;
+    // we still need to check if we have a value that's valid under the
+    // current numeric digits
+    if (Numerics::isValid(value, number_digits()))
+    {
+      return this;
+    }
+    // else forward to NumberString
+    return numberString()->round();
 }
 
 /**
@@ -1398,9 +1736,54 @@ RexxObject *RexxInteger::format(RexxObject *integers, RexxObject *decimals, Rexx
  *
  * @return The converted string value.
  */
-RexxObject *RexxInteger::d2c(RexxObject *length)
+RexxObject *RexxInteger::d2c(RexxInteger *lengthObject)
 {
-    return numberString()->d2xD2c(length, true);
+    // we'll try the conversion with binary math if both the value and
+    // (if specified) the length argument are RexxIntegers that are valid
+    // under the current numeric digits; in addition we require either:
+    //     value >= 0, length omitted, or
+    //     any value, length specified and > 0
+    // we'll forward anything else to NumberString to deal with
+    if (Numerics::isValid(value, number_digits()) &&
+       ((value >= 0 && lengthObject == OREF_NULL) ||
+        (lengthObject != OREF_NULL) && isInteger(lengthObject) && lengthObject->getValue() > 0))
+    {
+        wholenumber_t length;
+        if (lengthObject == OREF_NULL)
+        {
+            // we know that value >= 0
+            // calculate length = number of characters, e.g.
+            // value = 1, length_in_bits() = 1, length = 1
+            // value = 256, length_in_bits() = 9, length = 2
+            // value = 65535, length_in_bits() = 16, length = 3
+            length = (length_in_bits(value) + 7) / 8;
+        }
+        else
+        {
+            length = lengthObject->getValue();
+        }
+
+        // get a result string large enough to fit our length
+        RexxString *result = raw_string(length);
+
+        // add hex nibbles from right to left
+        RexxString::StringBuilderRtL builder(result);
+
+        // we must not change our value instance variable .. copy it
+        wholenumber_t val = value;
+
+        // looping for length will both automatically
+        // - take care of leading '00'x or 'FF'x characters, and
+        // - left-truncate for short lengths
+        while (length--)
+        {
+            builder.put((unsigned char)(val & 0xFF));
+            val >>= 8;
+        }
+        return result;
+    }
+    // else we will have to forward to NumberString
+    return numberString()->d2xD2c(lengthObject, true);
 }
 
 
@@ -1411,9 +1794,60 @@ RexxObject *RexxInteger::d2c(RexxObject *length)
  *
  * @return The converted string.
  */
-RexxObject *RexxInteger::d2x(RexxObject *length)
+RexxObject *RexxInteger::d2x(RexxInteger *lengthObject)
 {
-    return numberString()->d2xD2c(length, false);
+    // we'll try the conversion with binary math if both the value and
+    // (if specified) the length argument are RexxIntegers that are valid
+    // under the current numeric digits; in addition we require either:
+    //     value >= 0, length omitted, or
+    //     any value, length specified and > 0
+    // we'll forward anything else to NumberString to deal with
+    if (Numerics::isValid(value, number_digits()) &&
+       ((value >= 0 && lengthObject == OREF_NULL) ||
+        (lengthObject != OREF_NULL) && isInteger(lengthObject) && lengthObject->getValue() > 0))
+    {
+        wholenumber_t length;
+        if (lengthObject == OREF_NULL)
+        {
+            // we know that value >= 0
+            // calculate length = number of hex nibbles, e.g.
+            // value = 1, length_in_bits() = 1, length = 1
+            // value = 256, length_in_bits() = 9, length = 3
+            // value = 65535, length_in_bits() = 16, length = 4
+            length = (length_in_bits(value) + 3) / 4;
+        }
+        else
+        {
+            length = lengthObject->getValue();
+        }
+
+        // if length is 1, and value between 0..9, just return this object
+        if (length == 1 && value >= 0 && value <= 9)
+        {
+            return this;
+        }
+
+        // get a result string large enough to fit our length
+        RexxString *result = raw_string(length);
+
+        // add hex nibbles from right to left
+        RexxString::StringBuilderRtL builder(result);
+
+        // we must not change our value instance variable .. copy it
+        wholenumber_t val = value;
+
+        // looping for length will both automatically
+        // - take care of leading '0' or 'F' characters, and
+        // - left-truncate for short lengths
+        while (length--)
+        {
+            builder.put(RexxString::intToHexDigit(val & 0xF));
+            val >>= 4;
+        }
+        return result;
+    }
+    // else we will have to forward to NumberString
+    return numberString()->d2xD2c(lengthObject, false);
 }
 
 
@@ -1497,14 +1931,14 @@ RexxObject  *RexxInteger::getRealValue(VariableDictionary *context)
 
 
 /**
- * This method will pre-allocate 100 integer objects, 0-99.  These will then
- * be used when ever a request for an integer between 0 and 99 is requested
+ * This method will pre-allocate 111 integer objects, -10 .. 100.  These will then
+ * be used whenever a request for an integer between -10 and 100 is requested
  * this should help reduce some of our memory requirements and trips through
  * memory_new.
  */
 void RexxIntegerClass::initCache()
 {
-    for (int i = IntegerCacheLow; i < IntegerCacheSize; i++ )
+    for (int i = IntegerCacheLow; i <= IntegerCacheHigh; i++)
     {
         integercache[i - IntegerCacheLow] = new  RexxInteger (i);
         // force the item to create its string value too.  This can save
@@ -1529,7 +1963,7 @@ void RexxIntegerClass::live(size_t liveMark)
     RexxClass::live(liveMark);     // do RexxClass level marking
 
     // mark the cache array
-    for (int i = IntegerCacheLow; i < IntegerCacheSize ;i++ )
+    for (int i = IntegerCacheLow; i <= IntegerCacheHigh; i++)
     {
         memory_mark(integercache[i - IntegerCacheLow]);
     }
@@ -1540,7 +1974,7 @@ void RexxIntegerClass::liveGeneral(MarkReason reason)
     RexxClass::liveGeneral(reason);// do RexxClass level marking
 
     // mark the cache array
-    for (int i = IntegerCacheLow; i < IntegerCacheSize ;i++ )
+    for (int i = IntegerCacheLow; i <= IntegerCacheHigh; i++)
     {
         memory_mark_general(integercache[i - IntegerCacheLow]);
     }

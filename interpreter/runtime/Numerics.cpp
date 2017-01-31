@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -55,37 +55,51 @@
 
 // Array for valid whole number at various digits settings
 //  for value 1-18.
-const wholenumber_t Numerics::validMaxWhole[] = {10,
-                                           100,
-                                           1000,
-                                           10000,
-                                           100000,
-                                           1000000,
-                                           10000000,
-                                           100000000,
-                                           1000000000,
-                                           10000000000,
-                                           100000000000,
-                                           1000000000000,
-                                           10000000000000,
-                                           100000000000000,
-                                           1000000000000000,
-                                           10000000000000000,
-                                           100000000000000000,
-                                           1000000000000000000};
+// also used by RexxInteger::power to quickly calculate 10 ^ n
+const wholenumber_t Numerics::validMaxWhole[] = {0, // 10^0 - 1
+                                           9,       // numeric digits 1; 10^1 - 1
+                                           99,      // numeric digits 2; 10^2 - 1
+                                           999,     // etc.
+                                           9999,
+                                           99999,
+                                           999999,
+                                           9999999,
+                                           99999999,
+                                           999999999,
+                                           9999999999,
+                                           99999999999,
+                                           999999999999,
+                                           9999999999999,
+                                           99999999999999,
+                                           999999999999999,
+                                           9999999999999999,
+                                           99999999999999999,
+                                           999999999999999999};
+// number of bits each validMaxWhole[] number requires
+// e. g. 99 can be expressed in 7 bits
+// used by RexxInteger::multiply and ::power to estimate if results will fit current digits
+const wholenumber_t Numerics::validMaxWholeBits[] =
+  {0, 4, 7, 10, 14, 17, 20, 24, 27, 30, 34, 37, 40, 44, 47, 50, 54, 57, 60};
 #else
 
 // Array for valid whole number at various digits settings
 //  for value 1-9.
-const wholenumber_t Numerics::validMaxWhole[] = {10,
-                                           100,
-                                           1000,
-                                           10000,
-                                           100000,
-                                           1000000,
-                                           10000000,
-                                           100000000,
-                                           1000000000};
+// also used by RexxInteger::power to quickly calculate 10 ^ n
+const wholenumber_t Numerics::validMaxWhole[] = {0, // 10^0 - 1
+                                           9,       // numeric digits 1; 10^1 - 1
+                                           99,      // numeric digits 2; 10^2 - 1
+                                           999,     // etc.
+                                           9999,
+                                           99999,
+                                           999999,
+                                           9999999,
+                                           99999999,
+                                           999999999};
+// number of bits each validMaxWhole[] number requires
+// e. g. 99 can be expressed in 7 bits
+// used by RexxInteger::multiply and ::power to estimate if results will fit current digits
+const wholenumber_t Numerics::validMaxWholeBits[] =
+  {0, 4, 7, 10, 14, 17, 20, 24, 27, 30};
 #endif
 
 const NumericSettings Numerics::defaultSettings;

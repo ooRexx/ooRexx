@@ -1536,9 +1536,9 @@ RexxToken *LanguageParser::scanSymbol()
     {
         // this is a constant symbol
         subclass = SYMBOL_CONSTANT;
-        // if all digits and shorter than default digits, we can
+        // if all digits and not longer than REXXINTEGER_DIGITS, we can
         // use integer objects instead.
-        if (state == EXP_DIGIT && length < Numerics::DEFAULT_DIGITS)
+        if (state == EXP_DIGIT && length <= Numerics::REXXINTEGER_DIGITS)
         {
             // no leading zero or only zero?
             if (inch != '0' || length == 1)

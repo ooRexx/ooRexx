@@ -579,6 +579,17 @@ RexxString *RexxString::x2dC2d(RexxInteger *_length, bool type )
 
     // get accumulator length...this will be our final result length
     wholenumber_t decLength = (accumulator - highDigit);
+
+    // we can return this result as a RexxInteger if we have at most
+    // Numerics::REXXINTEGER_DIGITS digits
+    // no need to check the current numeric digits setting, as C2D/X2D raises
+    // Error 93.935/6:  X/C2D result is not a valid whole number with NUMERIC DIGITS nn
+    // for any result outside of the current digits setting
+    if (decLength <= Numerics::REXXINTEGER_DIGITS)
+    {
+      return (RexxString *)new_integer(negative, highDigit + 1, decLength, 0);
+    }
+
     // now we need to turn the math digits into real characters for the result
     wholenumber_t tempLength = decLength;
     scan = highDigit + 1;

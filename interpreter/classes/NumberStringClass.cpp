@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -715,11 +715,10 @@ bool NumberString::doubleValue(double &result)
  */
 RexxInteger *NumberString::integerValue(wholenumber_t digits)
 {
-
     wholenumber_t integerNumber;
 
     // try to convert and return .nil for any failures
-    if (!numberValue(integerNumber, number_digits()))
+    if (!numberValue(integerNumber, digits))
     {
         return (RexxInteger *)TheNilObject;
     }
@@ -792,7 +791,7 @@ bool  NumberString::createUnsignedValue(const char *thisnum, size_t intlength, i
     }
 
     // was ths out of range for this conversion?
-    if (intNumber >= maxValue)
+    if (intNumber > maxValue)
     {
         return false;
     }
@@ -997,7 +996,7 @@ bool NumberString::int64Value(int64_t *result, wholenumber_t numDigits)
     if (numberLength <= numDigits && numberExp >= 0)
     {
         // the minimum negative value requires one more than the max positive
-        if (!createUnsignedInt64Value(numberDigits, numberLength, false, numberExp, ((uint64_t)INT64_MAX) + 1, intnum))
+        if (!createUnsignedInt64Value(numberDigits, numberLength, false, numberExp, ((uint64_t)INT64_MAX), intnum))
         {
             return false;                   // too big to handle
         }
@@ -1044,14 +1043,14 @@ bool NumberString::int64Value(int64_t *result, wholenumber_t numDigits)
     if (numberExp < 0)
     {
         // now convert this into an unsigned value
-        if (!createUnsignedInt64Value(numberDigits, numberLength + numberExp, carry, 0, ((uint64_t)INT64_MAX) + 1, intnum))
+        if (!createUnsignedInt64Value(numberDigits, numberLength + numberExp, carry, 0, ((uint64_t)INT64_MAX), intnum))
         {
             return false;                   // to big to handle
         }
     }
     else
     {
-        if (!createUnsignedInt64Value(numberDigits, numberLength, carry, numberExp, ((uint64_t)INT64_MAX) + 1, intnum))
+        if (!createUnsignedInt64Value(numberDigits, numberLength, carry, numberExp, ((uint64_t)INT64_MAX), intnum))
         {
             return false;                   // to big to handle
         }
@@ -1494,6 +1493,14 @@ RexxObject *NumberString::truncInternal(wholenumber_t needed_digits)
         }
     }
 
+    // let's see if we can return this as an integer.  this requires
+    // - no digits requested,
+    // - have at least one digit,
+    // - but no more than REXXINTEGER_DIGITS in result 
+    if (needed_digits == 0 && integerDigits >= 1 && integerDigits + integerPadding <= Numerics::REXXINTEGER_DIGITS)
+    {
+        return new_integer(signOverHead != 0, numberDigits, integerDigits, integerPadding);
+    }
 
     // add up the whole lot to get the result size
     wholenumber_t resultSize = overHead + signOverHead + integerDigits + integerPadding + leadDecimalPadding + decimalDigits + trailingDecimalPadding;

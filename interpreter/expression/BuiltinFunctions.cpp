@@ -1236,20 +1236,30 @@ BUILTIN(DATE)
     {
 
         case 'B':
-            timestamp.formatBaseDate(work);
-            break;
+            // always return RexxInteger instead of String
+            return new_integer(timestamp.getBaseDate());
 
         case 'F':
+            // if possible, return RexxInteger instead of String
+#ifdef __REXX64__
+            return new_integer(timestamp.getBaseTime());
+#else
             timestamp.formatBaseTime(work);
             break;
+#endif
 
         case 'T':
+            // if possible, return RexxInteger instead of String
+#ifdef __REXX64__
+            return new_integer(timestamp.getUnixTime());
+#else
             timestamp.formatUnixTime(work);
             break;
+#endif
 
         case 'D':
-            timestamp.formatDays(work);
-            break;
+            // always return RexxInteger instead of String
+            return new_integer(timestamp.getYearDay());
 
         case 'E':
             timestamp.formatEuropeanDate(work, outputSeparator);
@@ -1490,36 +1500,51 @@ BUILTIN(TIME)
             break;
 
         case 'H':                         // 'Hours'
-            timestamp.formatHours(work);
-            break;
+            // always return RexxInteger instead of String
+            return new_integer(timestamp.hours);
 
         case 'L':                         // 'L'ong format
             timestamp.formatLongTime(work);
             break;
 
         case 'M':                         // 'M'inutes format
-            timestamp.formatMinutes(work);
-            break;
+            // always return RexxInteger instead of String
+            return new_integer(timestamp.hours * MINUTES_IN_HOUR + timestamp.minutes);
 
         case 'N':                         // 'N'ormal format...the default
             timestamp.formatNormalTime(work);
             break;
 
         case 'S':                         // 'S'econds format...total seconds
-            timestamp.formatSeconds(work);
-            break;
+            // always return RexxInteger instead of String
+            return new_integer((timestamp.hours * MINUTES_IN_HOUR + timestamp.minutes) * SECONDS_IN_MINUTE + timestamp.seconds);
 
         case 'F':                          // 'F'ull
+            // if possible, return RexxInteger instead of String
+#ifdef __REXX64__
+            return new_integer(timestamp.getBaseTime());
+#else
             timestamp.formatBaseTime(work);
             break;
+#endif
 
         case 'T':                          // 'T'icks
+            // if possible, return RexxInteger instead of String
+#ifdef __REXX64__
+            return new_integer(timestamp.getUnixTime());
+#else
             timestamp.formatUnixTime(work);
             break;
+#endif
 
         case 'O':                          // 'O'ffset.  microseconds offset from UTC
+            // if possible, return RexxInteger instead of String
+#ifdef __REXX64__
+            return new_integer(timestamp.timeZoneOffset);
+#else
             timestamp.formatTimeZone(work);
             break;
+#endif
 
         // unknown output format
         default:
@@ -1796,7 +1821,7 @@ BUILTIN(SIGN)
 
     RexxObject *argument = get_arg(SIGN, n);
 
-    // check for the numeric forms and use them directory, otherwise
+    // check for the numeric forms and use them directly, otherwise
     // do this on the string value
     if (isInteger(argument))
     {
@@ -1844,8 +1869,13 @@ BUILTIN(MAX)
 
     RexxObject *argument = get_arg(MAX, target);
 
-    // if in number string form, we can do this directory
-    if (isNumberString(argument))
+    // check for the numeric forms and use them directly, otherwise
+    // do this on the string value
+    if (isInteger(argument))
+    {
+        return((RexxInteger *)argument)->Max(stack->arguments(argcount - 1), argcount - 1);
+    }
+    else if (isNumberString(argument))
     {
         return((NumberString *)argument)->Max(stack->arguments(argcount - 1), argcount - 1);
     }
@@ -1868,8 +1898,13 @@ BUILTIN(MIN)
 
     RexxObject *argument = get_arg(MIN, target);
 
-    // the numberstring gives us a leg up on the first one
-    if (isNumberString(argument))
+    // check for the numeric forms and use them directly, otherwise
+    // do this on the string value
+    if (isInteger(argument))
+    {
+        return((RexxInteger *)argument)->Min(stack->arguments(argcount - 1), argcount - 1);
+    }
+    else if (isNumberString(argument))
     {
         return((NumberString *)argument)->Min(stack->arguments(argcount - 1), argcount - 1);
     }
@@ -2664,7 +2699,7 @@ BUILTIN(RXQUEUE)
         // 'S'et a new queue name
         case 'S':
         {
-            // queueName is required 
+            // queueName is required
             if (queueName == OREF_NULL)
             {
                 reportException(Error_Incorrect_call_minarg, "RXQUEUE", IntegerTwo);
@@ -2683,7 +2718,7 @@ BUILTIN(RXQUEUE)
         // 'O'pen a new queue name...creates if needed
         case 'O':
         {
-            // queueName is required 
+            // queueName is required
             if (queueName == OREF_NULL)
             {
                 reportException(Error_Incorrect_call_minarg, "RXQUEUE", IntegerTwo);
@@ -2701,7 +2736,7 @@ BUILTIN(RXQUEUE)
         // 'E'xists
         case 'E':
         {
-            // queueName is required 
+            // queueName is required
             if (queueName == OREF_NULL)
             {
                 reportException(Error_Incorrect_call_minarg, "RXQUEUE", IntegerTwo);
@@ -2719,7 +2754,7 @@ BUILTIN(RXQUEUE)
         // 'D'elete
         case 'D':
         {
-            // queueName is required 
+            // queueName is required
             if (queueName == OREF_NULL)
             {
                 reportException(Error_Incorrect_call_minarg, "RXQUEUE", IntegerTwo);

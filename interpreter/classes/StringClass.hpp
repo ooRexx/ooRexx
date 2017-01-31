@@ -100,6 +100,22 @@ class RexxString : public RexxObject
 
 
      /**
+      * A class for constructing a string value from a sequence
+      * of right-to-left put steps.
+      */
+     class StringBuilderRtL
+     {
+     public:
+         inline StringBuilderRtL(RexxString *s) : current(s->getWritableData() + s->getLength() - 1) {}
+
+         inline void put(char c) { *current-- = c; }
+
+     protected:
+         char *current;   // current output pointer
+     };
+
+
+     /**
       * A class for iterating through the words of a string.
       */
      class WordIterator

@@ -2123,7 +2123,7 @@ RexxInternalObject *LanguageParser::addText(RexxToken *token)
                     // digits, create an integer object
                     if (token->isIntegerConstant())
                     {
-                        value = name->requestInteger(Numerics::DEFAULT_DIGITS);
+                        value = name->requestInteger(Numerics::REXXINTEGER_DIGITS);
                         // this should not happen, given we've already validated
                         // this, but belt and braces and all that...just
                         // stick with the string value if it does occur.
