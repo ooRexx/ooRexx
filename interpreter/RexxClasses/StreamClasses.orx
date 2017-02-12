@@ -353,7 +353,7 @@ notready:                              /* standard notready handler         */
 
 ::METHOD say UNGUARDED                 /* the SAY method                    */
   use strict arg line = ""             /* enforce zero or one argument      */
-  forward message 'LINEOUT'            /* write the target line out         */
+  forward message 'LINEOUT' array (line) /* write the target line out       */
 
 ::METHOD supplier                      /* create a supplier object          */
 use strict arg
