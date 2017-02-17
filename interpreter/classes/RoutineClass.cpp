@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -486,13 +486,13 @@ RoutineClass *RoutineClass::restore(RXSTRING *inData, RexxString *name)
 
 
 /**
- * Create a new method from REXX code contained in a string or an
+ * Create a new routine from REXX code contained in a string or an
  * array
  *
- * @param init_args The array of arguments to the new method.
+ * @param init_args The array of arguments to the new routine.
  * @param argCount  The argument count.
  *
- * @return A new method object.
+ * @return A new routine object.
  */
 RoutineClass *RoutineClass::newRexx(RexxObject **init_args, size_t argCount)
 {
@@ -521,13 +521,14 @@ RoutineClass *RoutineClass::newRexx(RexxObject **init_args, size_t argCount)
 
 
 /**
- * Create a method object from a file.
+ * Create a routine object from a file.
  *
  * @param filename The target file name.
+ * @param scope    The scope that the new method object will be given.
  *
- * @return The created method object.
+ * @return The created routine object.
  */
-RoutineClass *RoutineClass::newFileRexx(RexxString *filename)
+RoutineClass *RoutineClass::newFileRexx(RexxString *filename, PackageClass *sourceContext)
 {
     // this class is defined on the object class, but this is actually attached
     // to a class object instance.  Therefore, any use of the this pointer
@@ -535,11 +536,11 @@ RoutineClass *RoutineClass::newFileRexx(RexxString *filename)
     // any methods on this object from this method.
     RexxClass *classThis = (RexxClass *)this;
 
-    // get the method name as a string
-    filename = stringArgument(filename, ARG_ONE);
+    // parse all of the options
+    processNewFileExecutableArgs(filename, sourceContext);
 
-    RoutineClass *newRoutine = LanguageParser::createRoutine(filename);
-    ProtectedObject p(newRoutine);
+    // go create a method from filename
+    Protected<RoutineClass> newRoutine = LanguageParser::createRoutine(filename, sourceContext);
 
     // complete the initialization
     classThis->completeNewObject(newRoutine);

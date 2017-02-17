@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -124,18 +124,20 @@ MethodClass *LanguageParser::createMethod(RexxString *name, BufferClass *source)
  * Static method for creating a new MethodClass instance from a
  * file.
  *
- * @param name   The name given to the method and package.
- * @param source The code source as an array of strings.
+ * @param name   The filename to read the method source from.
+ * @param sourceContext
+ *               A parent source context that this method will inherit
+ *               a package environment from.
  *
  * @return An executable method object.
  */
-MethodClass *LanguageParser::createMethod(RexxString *name)
+MethodClass *LanguageParser::createMethod(RexxString *name, PackageClass *sourceContext)
 {
-    // create the appropriate array source, then the parser, then generate the
+    // create the appropriate program source, then the parser, then generate the
     // code.
     ProgramSource *programSource = new FileProgramSource(name);
     Protected<LanguageParser> parser = new LanguageParser(name, programSource);
-    return parser->generateMethod();
+    return parser->generateMethod(sourceContext);
 }
 
 
@@ -164,18 +166,20 @@ RoutineClass *LanguageParser::createRoutine(RexxString *name, ArrayClass *source
  * Static method for creating a new RoutineClass instance from a
  * file.
  *
- * @param name   The name given to the routine and package.
- * @param source The code source as an array of strings.
+ * @param name   The filename to read the routine source from.
+ * @param sourceContext
+ *               A parent source context that this routine will inherit
+ *               a package environment from.
  *
- * @return An executable method object.
+ * @return An executable routine object.
  */
-RoutineClass *LanguageParser::createRoutine(RexxString *name)
+RoutineClass *LanguageParser::createRoutine(RexxString *name, PackageClass *sourceContext)
 {
     // create the appropriate program source, then the parser, then generate the
     // code.
     ProgramSource *programSource = new FileProgramSource(name);
     Protected<LanguageParser> parser = new LanguageParser(name, programSource);
-    return parser->generateRoutine();
+    return parser->generateRoutine(sourceContext);
 }
 
 

@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -465,22 +465,24 @@ MethodClass *MethodClass::newRexx(RexxObject **init_args, size_t argCount)
  * Create a method object from a file.
  *
  * @param filename The target file name.
+ * @param scope    The scope that the new method object will be given.
  *
  * @return The created method object.
  */
-MethodClass *MethodClass::newFileRexx(RexxString *filename)
+MethodClass *MethodClass::newFileRexx(RexxString *filename, PackageClass *sourceContext)
 {
     // this class is defined on the object class, but this is actually attached
     // to a class object instance.  Therefore, any use of the this pointer
     // will be touching the wrong data.  Use the classThis pointer for calling
     // any methods on this object from this method.
     RexxClass *classThis = (RexxClass *)this;
-    // get the method name as a string
-    filename = stringArgument(filename, ARG_ONE);
 
-    Protected<MethodClass> newMethod = LanguageParser::createMethod(filename);
+    // parse all of the options
+    processNewFileExecutableArgs(filename, sourceContext);
 
-    newMethod->setScope((RexxClass *)TheNilObject);
+    // go create a method from filename
+    Protected<MethodClass> newMethod = LanguageParser::createMethod(filename, sourceContext);
+
     classThis->completeNewObject(newMethod);
     return newMethod;
 }

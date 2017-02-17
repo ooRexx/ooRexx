@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -222,15 +222,15 @@ void BaseExecutable::processNewExecutableArgs(RexxObject **&init_args, size_t &a
     // get the method name as a string
     name = stringArgument(pgmname, "name");
     // make sure there is something for the second arg.
-    requiredArgument(source, "Rexx source code");
+    requiredArgument(source, "source");
 
     // figure out the source section.
-    sourceArray = processExecutableSource(source, "Rexx source code");
+    sourceArray = processExecutableSource(source, "source");
 
     // if not a valid source, give an error
     if (sourceArray == OREF_NULL)
     {
-        reportException(Error_Incorrect_method_no_method, "Rexx source code");
+        reportException(Error_Incorrect_method_no_method, "source");
     }
 
     // now process an optional sourcecontext argument
@@ -267,7 +267,7 @@ void BaseExecutable::processNewExecutableArgs(RexxObject **&init_args, size_t &a
             // default given? set option to NULL (see code below)
             if (!((RexxString *)option)->strCaselessCompare("PROGRAMSCOPE"))
             {
-                reportException(Error_Incorrect_call_list, "NEW", IntegerThree, "\"PROGRAMSCOPE\", Method, Routine, Package object", option);
+                reportException(Error_Incorrect_call_list, "NEW", IntegerThree, "\"PROGRAMSCOPE\", Method, Routine, or Package object", option);
             }
 
             // using the calling source context, so get the package from the top activation if
@@ -278,6 +278,58 @@ void BaseExecutable::processNewExecutableArgs(RexxObject **&init_args, size_t &a
             {
                 sourceContext = currentContext->getPackage();
             }
+        }
+    }
+}
+
+
+/**
+ * Process the newFile() arguments for either a Routine
+ * or Method class.  This decodes all of the arguments
+ * and processes them into acceptable forms.  This includes
+ * figuring out the different source contexts.
+ *
+ * @param filename  The filename option of the call.
+ * @param sourceContext
+ *                  The optional source context this should inherit from.
+ */
+void BaseExecutable::processNewFileExecutableArgs(RexxString *&filename,
+     PackageClass *&sourceContext)
+{
+    // get the filename as a string
+    filename = stringArgument(filename, "name");
+
+    // now process an optional sourcecontext argument
+    if (sourceContext == OREF_NULL || isOfClass(Package, sourceContext))
+    {
+        return;
+    }
+
+    if (isOfClass(Method, sourceContext) || isOfClass(Routine, sourceContext))
+    {
+        sourceContext = ((BaseExecutable *)sourceContext)->getPackage();
+    }
+    else
+    {
+        // this must be a string (or convertable) and have a specific value
+        RexxString *source = sourceContext->requestString();
+        if (source == TheNilObject)
+        {
+            reportException(Error_Incorrect_method_argType, IntegerTwo, "Method, Routine, Package, or String object");
+        }
+        // default given?
+        if (!(source->strCaselessCompare("PROGRAMSCOPE")))
+        {
+            reportException(Error_Incorrect_call_list, "NEWFILE", IntegerTwo, "\"PROGRAMSCOPE\", Method, Routine, or Package object", source);
+        }
+
+        // using the calling source context, so get the package from the top activation if
+        // there is one.
+        // see if we have an active context and use the current source as the basis for the lookup
+        RexxActivation *currentContext = ActivityManager::currentActivity->getCurrentRexxFrame();
+        if (currentContext != OREF_NULL)
+        {
+            sourceContext = currentContext->getPackage();
         }
     }
 }

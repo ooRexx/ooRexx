@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -76,6 +76,7 @@ public:
     static ArrayClass *processExecutableSource(RexxObject *source, const char *position);
     static void processNewExecutableArgs(RexxObject **&init_args, size_t &argCount, RexxString *&name,
         Protected<ArrayClass> &sourceArray, PackageClass *&sourceContext);
+    static void processNewFileExecutableArgs(RexxString *&filename, PackageClass *&sourceContext);
 
 protected:
 
