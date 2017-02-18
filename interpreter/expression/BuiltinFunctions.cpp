@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -2461,7 +2461,7 @@ BUILTIN(CONDITION)
         // null string is not a valid option
         if (option->getLength() == 0)
         {
-            reportException(Error_Incorrect_call_list, "CONDITION", IntegerOne, "ACDIOS", option);
+            reportException(Error_Incorrect_call_list, "CONDITION", IntegerOne, "ACDIORS", option);
         }
 
         style = toupper(option->getChar(0));
@@ -2477,14 +2477,14 @@ BUILTIN(CONDITION)
             if (conditionobj != OREF_NULL)
             {
                 RexxObject *result = (RexxObject *)conditionobj->get(ADDITIONAL);
-                // return either .nil or a copy of the additional informaion
+                // return either .nil or the additional information
                 if (result == OREF_NULL)
                 {
                     return TheNilObject;
                 }
                 else
                 {
-                    return (RexxObject *)result->copy();
+                    return (RexxObject *)result;
                 }
             }
             else
@@ -2533,7 +2533,7 @@ BUILTIN(CONDITION)
             }
             return TheNilObject;
 
-        // condition('S'tate
+        // condition('S'tate)
         case 'S':
             // get the current trap state from the condition object if we have one
             if (conditionobj != OREF_NULL)
@@ -2542,9 +2542,16 @@ BUILTIN(CONDITION)
             }
             break;
 
+        // condition('R'eset)
+        case 'R':
+            // clear the current condition object
+            context->setConditionObj(OREF_NULL);
+            return GlobalNames::NULLSTRING;
+            break;
+
         // an unknown option
         default:
-            reportException(Error_Incorrect_call_list, "CONDITION", IntegerOne, "ACDIOS", option);
+            reportException(Error_Incorrect_call_list, "CONDITION", IntegerOne, "ACDIORS", option);
             break;
     }
 
