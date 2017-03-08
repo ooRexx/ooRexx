@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -558,6 +558,9 @@ RexxObject *RexxClass::defineMethodsRexx(RexxObject *newMethods)
 void RexxClass::inheritInstanceMethods(RexxClass *source)
 {
     MethodDictionary *sourceMethods = source->instanceMethodDictionary;
+
+    // we want all methods to be "inherited" with this scope
+    sourceMethods->setMethodScope(this);
 
     // loop through the table with an iterator.
     HashContents::TableIterator iterator = sourceMethods->iterator();
