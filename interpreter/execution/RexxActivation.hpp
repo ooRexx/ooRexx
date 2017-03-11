@@ -189,8 +189,8 @@ class RexxActivation : public ActivationBase
    RexxString      * traceSetting();
    void              iterate(RexxString *);
    void              leaveLoop(RexxString *);
-   void              trapOn(RexxString *, RexxInstructionTrapBase *);
-   void              trapOff(RexxString *);
+   void              trapOn(RexxString *, RexxInstructionTrapBase *, bool);
+   void              trapOff(RexxString *, bool);
    void              setAddress(RexxString *);
    void              signalValue(RexxString *);
    RexxString      * trapState(RexxString *);

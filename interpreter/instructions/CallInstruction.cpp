@@ -560,12 +560,12 @@ void RexxInstructionCallOn::execute(RexxActivation *context, ExpressionStack *st
     if (targetName != OREF_NULL)
     {
         // wax on...
-        context->trapOn(conditionName, this);
+        context->trapOn(conditionName, this, false);
     }
     else
     {
         // wax off...
-        context->trapOff(conditionName);
+        context->trapOff(conditionName, false);
     }
 }
 

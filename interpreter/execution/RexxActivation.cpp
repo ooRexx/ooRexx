@@ -1420,7 +1420,7 @@ void RexxActivation::checkTrapTable()
  * @param condition The condition name being trapped.
  * @param handler   The instruction handling the trap.
  */
-void RexxActivation::trapOn(RexxString *condition, RexxInstructionTrapBase *handler)
+void RexxActivation::trapOn(RexxString *condition, RexxInstructionTrapBase *handler, bool signal)
 {
     // make sure we have a trap table (we create on demand)
     checkTrapTable();
@@ -1429,7 +1429,8 @@ void RexxActivation::trapOn(RexxString *condition, RexxInstructionTrapBase *hand
     settings.traps->put(new TrapHandler(condition, handler), condition);
     // if this is NOVALUE or ANY, then we need to flip on the switch in the
     // local variables indicating we're interested in NOVALUE events.
-    if (condition->strCompare(GlobalNames::NOVALUE) || condition->strCompare(GlobalNames::ANY))
+    // (we only need to check this for SIGNAL, not for CALL)
+    if (signal && (condition->strCompare(GlobalNames::NOVALUE) || condition->strCompare(GlobalNames::ANY)))
     {
         settings.localVariables.setNovalueOn();
     }
@@ -1441,14 +1442,15 @@ void RexxActivation::trapOn(RexxString *condition, RexxInstructionTrapBase *hand
  *
  * @param condition The name of the condition we're turning off.
  */
-void RexxActivation::trapOff(RexxString *condition)
+void RexxActivation::trapOff(RexxString *condition, bool signal)
 {
     checkTrapTable();
     // remove our existing trap.
     settings.traps->remove(condition);
     // if we no longer have NOVALUE or ANY enabled, then we can turn
     // off novalue processing in the variable pool
-    if (!settings.traps->hasIndex(GlobalNames::NOVALUE) && !settings.traps->hasIndex(GlobalNames::ANY))
+    // (we only need to check this for SIGNAL, not for CALL)
+    if (signal && !settings.traps->hasIndex(GlobalNames::NOVALUE) && !settings.traps->hasIndex(GlobalNames::ANY))
     {
         settings.localVariables.setNovalueOff();
     }

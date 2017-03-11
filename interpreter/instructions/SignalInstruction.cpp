@@ -306,12 +306,12 @@ void RexxInstructionSignalOn::execute(RexxActivation *context, ExpressionStack *
     if (targetName != OREF_NULL)
     {
         // wax on...
-        context->trapOn(conditionName, this);
+        context->trapOn(conditionName, this, true);
     }
     else
     {
         // wax off...
-        context->trapOff(conditionName);
+        context->trapOff(conditionName, true);
     }
 }
 
@@ -344,7 +344,7 @@ void RexxInstructionSignalOn::resolve(StringTable *labels)
 void RexxInstructionSignalOn::trap(RexxActivation *context, DirectoryClass  *conditionObj)
 {
     // trapping a condition turns off the tracp
-    context->trapOff(conditionName);
+    context->trapOff(conditionName, true);
     // this should have been resolved already...raise the error now if
     // we don't have a resolved label.
     if (targetInstruction == OREF_NULL)
