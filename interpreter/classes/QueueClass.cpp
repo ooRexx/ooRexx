@@ -299,5 +299,27 @@ QueueClass *QueueClass::ofRexx(RexxObject **args, size_t argCount)
 }
 
 
+/**
+ * Handle a string conversion REQUEST for a Queue object
+ * we need to override this because Queue doesn't define a makeString() method
+ *
+ * @return Always return .nil
+ */
+RexxString *QueueClass::primitiveMakeString()
+{
+    return (RexxString *)TheNilObject;
+}
+
+
+/**
+ * Handle a string conversion REQUEST for a Queue object
+ * we need to override this because Queue doesn't define a makeString() method
+ *
+ * @return Always return .nil
+ */
+RexxString *QueueClass::makeString()
+{
+    return (RexxString *)TheNilObject;
+}
 
 

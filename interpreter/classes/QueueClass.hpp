@@ -55,6 +55,8 @@ class QueueClass : public ArrayClass
      inline QueueClass() {;};
      inline QueueClass(RESTORETYPE restoreType) { ; };
 
+     virtual RexxString *primitiveMakeString();
+     virtual RexxString *makeString();
      virtual bool validateIndex(RexxObject **index, size_t indexCount, size_t argPosition, size_t boundsError, size_t &position);
      virtual void checkInsertIndex(size_t position);
      RexxObject *pullRexx();

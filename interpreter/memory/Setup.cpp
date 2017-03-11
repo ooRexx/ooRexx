@@ -758,6 +758,16 @@ StartClassDefinition(Queue);
         RemoveMethod("Dimensions");
         RemoveMethod("Fill");
 
+        // to be consistent with our other Collections, also
+        // - remove all four sort methods (will always be inherited from OrderedCollection)
+        // - remove makeString, toString
+        RemoveMethod("sort");
+        RemoveMethod("sortWith");
+        RemoveMethod("stableSort");
+        RemoveMethod("stableSortWith");
+        RemoveMethod("makeString");
+        RemoveMethod("toString");
+
     CompleteMethodDefinitions();
 
     CompleteClassDefinition(Queue);
