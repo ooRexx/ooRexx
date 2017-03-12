@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -190,7 +190,7 @@ static bool validAttachTo(RexxMethodContext *c, RexxObjectPtr dlg, size_t argPos
 
     if ( ! c->IsOfType(dlg, "PLAINBASEDIALOG") )
     {
-        _snprintf(buf, sizeof(buf), "can not attach menu unless arg %d 'attachTo' is a dialog object", argPos);
+        _snprintf(buf, sizeof(buf), "can not attach menu unless arg %zd 'attachTo' is a dialog object", argPos);
         userDefinedMsgException(c, buf);
         return false;
     }
@@ -201,7 +201,7 @@ static bool validAttachTo(RexxMethodContext *c, RexxObjectPtr dlg, size_t argPos
 
     if ( ! pcpbd->isDlgHwndSet )
     {
-        _snprintf(buf, sizeof(buf), "can not attach menu when the underlying arg %d 'attachTo' dialog does not exist",
+        _snprintf(buf, sizeof(buf), "can not attach menu when the underlying arg %zd 'attachTo' dialog does not exist",
                   argPos);
         userDefinedMsgException(c, buf);
         return false;
@@ -209,7 +209,7 @@ static bool validAttachTo(RexxMethodContext *c, RexxObjectPtr dlg, size_t argPos
 
     if ( c->SendMessage0(dlg, "HASMENUBAR") == TheTrueObj )
     {
-        _snprintf(buf, sizeof(buf), "can not attach menu when the arg %d 'attachTo' dialog already has a menu bar",
+        _snprintf(buf, sizeof(buf), "can not attach menu when the arg %zd 'attachTo' dialog already has a menu bar",
                   argPos);
         userDefinedMsgException(c, buf);
         return false;

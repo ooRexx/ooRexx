@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -160,7 +160,7 @@ char *getStandardConditionMsg(RexxThreadContext *c, wholenumber_t *major, wholen
         }
     }
 
-    cBytes = _snprintf(buf, MEDIUM_BUF_SIZE, "Error %d running %s line %d: %s\r\n", condition.rc,
+    cBytes = _snprintf(buf, MEDIUM_BUF_SIZE, "Error %zd running %s line %zd: %s\r\n", condition.rc,
                        c->CString(condition.program), condition.position, c->CString(condition.errortext));
 
     // The next, last string is short.  We add some padding to the needed size
@@ -176,7 +176,7 @@ char *getStandardConditionMsg(RexxThreadContext *c, wholenumber_t *major, wholen
     }
     strcat(condMsg, buf);
 
-    _snprintf(buf, MEDIUM_BUF_SIZE, "Error %d.%03d:  %s\r\n", condition.rc, conditionSubCode(&condition),
+    _snprintf(buf, MEDIUM_BUF_SIZE, "Error %zd.%03zd:  %s\r\n", condition.rc, conditionSubCode(&condition),
               c->CString(condition.message));
     strcat(condMsg, buf);
 
@@ -468,14 +468,14 @@ char *getCompleteVersion(RexxThreadContext *c)
 
     _snprintf(buf1, SMALL_BUF_SIZE, "          Built %s %s\r\n"
                                     "          Copyright (c) IBM Corporation 1995, 2004.\r\n"
-                                    "          Copyright (c) RexxLA %s.\r\n"
+                                    "          Copyright (c) RexxLA %d.\r\n"
                                     "          All Rights Reserved.\r\n\r\n",
               __DATE__, __TIME__, OOD_COPY_YEAR);
     strcat(buf, buf1);
 
     size_t rx = c->InterpreterVersion();
 
-    _snprintf(buf1, SMALL_BUF_SIZE, "Rexx:     Open Object Rexx Version %d.%d.%d\r\n\r\n",
+    _snprintf(buf1, SMALL_BUF_SIZE, "Rexx:     Open Object Rexx Version %zd.%zd.%zd\r\n\r\n",
              (rx >> 16) & 0xff, (rx >> 8) & 0xff, rx & 0x0000ff);
     strcat(buf, buf1);
 

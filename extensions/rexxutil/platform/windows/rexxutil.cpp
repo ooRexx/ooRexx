@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -1571,7 +1571,7 @@ static void badSFTOptsException(RexxThreadContext *c, size_t pos, CSTRING actual
 {
     char buf[256] = {0};
     _snprintf(buf, sizeof(buf),
-             "SysFileTree argument %d must be a combination of F, D, B, S, T, L, I, or O; found \"%s\"",
+             "SysFileTree argument %zd must be a combination of F, D, B, S, T, L, I, or O; found \"%s\"",
              pos, actual);
 
     c->RaiseException1(Rexx_Error_Incorrect_call_user_defined, c->String(buf));
@@ -1588,7 +1588,7 @@ static void badMaskException(RexxThreadContext *c, size_t pos, CSTRING actual)
 {
     char buf[256] = {0};
     _snprintf(buf, sizeof(buf),
-             "SysFileTree argument %d must be 5 characters or less in length containing only '+', '-', or '*'; found \"%s\"",
+             "SysFileTree argument %zd must be 5 characters or less in length containing only '+', '-', or '*'; found \"%s\"",
              pos, actual);
 
     c->RaiseException1(Rexx_Error_Incorrect_call_user_defined, c->String(buf));

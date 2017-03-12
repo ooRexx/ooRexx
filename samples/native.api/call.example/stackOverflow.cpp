@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2008-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2008-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -154,7 +154,7 @@ void printInterpreterVersion(RexxInstance *interpreter)
 {
     wholenumber_t ver = interpreter->InterpreterVersion();
     wholenumber_t lang = interpreter->LanguageLevel();
-    printf("Created interpreter instance version=%d.%d.%d language level=%d.%02d\n\n",
+    printf("Created interpreter instance version=%zd.%zd.%zd language level=%zd.%02zd\n\n",
            (ver & 0xff0000) >> 16, (ver & 0x00ff00) >> 8, ver & 0x0000ff, (lang & 0xff00) >> 8, lang & 0x00ff);
 }
 
@@ -203,10 +203,10 @@ void standardConditionMsg(RexxThreadContext *c, RexxDirectoryObject condObj, Rex
             }
         }
     }
-    printf("Error %d running %s line %d: %s\n", condition->rc, c->CString(condition->program),
+    printf("Error %zd running %s line %zd: %s\n", condition->rc, c->CString(condition->program),
            condition->position, c->CString(condition->errortext));
 
-    printf("Error %d.%03d:  %s\n", condition->rc, conditionSubCode(condition), c->CString(condition->message));
+    printf("Error %zd.%03zd:  %s\n", condition->rc, conditionSubCode(condition), c->CString(condition->message));
 }
 
 

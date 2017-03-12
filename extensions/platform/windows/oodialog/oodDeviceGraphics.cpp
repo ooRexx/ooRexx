@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -1712,7 +1712,7 @@ bool getSystemColor(RexxMethodContext *c, RexxObjectPtr clr, uint32_t *color, si
     else
     {
         TCHAR buffer[512];
-        _snprintf(buffer, sizeof(buffer), "Argument %d is not a valid system color keyword; found %s", argPos, keyword);
+        _snprintf(buffer, sizeof(buffer), "Argument %zd is not a valid system color keyword; found %s", argPos, keyword);
         userDefinedMsgException(c, buffer);
 
         return false;

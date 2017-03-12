@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -217,7 +217,7 @@ void DeadObjectPool::checkObjectOverlap(DeadObject *obj)
 
     while (check != NULL && check->isReal()) {
         if (check->overlaps(obj)) {
-            printf("Object at %p for length %lu overlaps object at %p for length %lu\n", obj, obj->getObjectSize(), check, check->getObjectSize());
+            printf("Object at %p for length %zu overlaps object at %p for length %zu\n", obj, obj->getObjectSize(), check, check->getObjectSize());
             Interpreter::logicError("Overlapping dead objects added to the cache.");
         }
         check = check->next;

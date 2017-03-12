@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2008 Rexx Language Association. All rights reserved.         */
+/* Copyright (c) 2008-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -196,7 +196,7 @@ int main (int argc, char **argv)
         CONSTRXSTRING result;
         char errorResult[50];
 
-        sprintf(errorResult, "%d %d", instanceInfo.rc, instanceInfo.code);
+        sprintf(errorResult, "%zd %zd", instanceInfo.rc, instanceInfo.code);
         MAKERXSTRING(result, errorResult, strlen(errorResult));
         RexxAddQueue("TESTQUEUE", &result, RXQUEUE_LIFO);
 

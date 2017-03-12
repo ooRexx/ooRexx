@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -5398,7 +5398,7 @@ void dumpMsgTable(MESSAGETABLEENTRY *msgTable, size_t count, CSTRING title)
 
     for ( size_t i = 0; i < count; i++)
     {
-        printf("0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x %s\n",
+        printf("0x%08x 0x%08x 0x%08zx 0x%08zx 0x%08zx 0x%08zx 0x%08x %s\n",
                msgTable[i].msg, msgTable[i].msgFilter,
                msgTable[i].wParam, msgTable[i].wpFilter,
                msgTable[i].lParam, msgTable[i].lpFilter,

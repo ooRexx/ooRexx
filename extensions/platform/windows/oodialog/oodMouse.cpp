@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2011-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2011-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -2056,10 +2056,10 @@ RexxMethod1(RexxObjectPtr, mouse_test, CSELF, pCSelf)
         HWND hWindow = pcm->hWindow;
 
         ULONG_PTR style = getClassPtr(hWindow, GCL_STYLE);
-        printf("Dialog Control Class style=0x%08x\n", style);
+        printf("Dialog Control Class style=0x%08zx\n", style);
         style |= CS_DBLCLKS;
         setClassPtr(hWindow, GCL_STYLE, style);
-        printf("Adding dblclks new style=0x%08x last error=%d\n", getClassPtr(hWindow, GCL_STYLE), GetLastError());
+        printf("Adding dblclks new style=0x%08zx last error=%d\n", getClassPtr(hWindow, GCL_STYLE), GetLastError());
     }
     return TheTrueObj;
 }

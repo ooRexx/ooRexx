@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -1642,7 +1642,7 @@ int32_t fullRowOperation(RexxMethodContext *c, RexxObjectPtr row, FullRowOp type
         if ( count >= cColumns )
         {
             char buffer[256];
-            _snprintf(buffer, sizeof(buffer), "subitem count (%d) is invalid for column count(%d)", count, cColumns);
+            _snprintf(buffer, sizeof(buffer), "subitem count (%zd) is invalid for column count(%d)", count, cColumns);
             userDefinedMsgException(c, buffer);
 
             goto done_out;

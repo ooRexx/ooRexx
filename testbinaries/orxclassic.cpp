@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2008 Rexx Language Association. All rights reserved.         */
+/* Copyright (c) 2008-2017  Rexx Language Association. All rights reserved.   */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -54,7 +54,7 @@ size_t REXXENTRY TestFunction(
     }
 
     // return the name, count of arguments, and first argument as a return value
-    sprintf(Retstr->strptr, "%s %d %s", Name, Argc, Argv[0].strptr);
+    sprintf(Retstr->strptr, "%s %zd %s", Name, Argc, Argv[0].strptr);
     Retstr->strlength = strlen(Retstr->strptr);
     return 0;
 }

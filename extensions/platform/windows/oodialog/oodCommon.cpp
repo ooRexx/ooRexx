@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -239,7 +239,7 @@ RexxObjectPtr invalidCategoryPageException(RexxMethodContext *c, int pageNum, in
 RexxObjectPtr noSuchPageException(RexxMethodContext *c, RexxObjectPtr page, size_t pos)
 {
     TCHAR buf[256];
-    _snprintf(buf, sizeof(buf), "Argument %d (%s) is not a page in this property sheet", pos, c->ObjectToStringValue(page));
+    _snprintf(buf, sizeof(buf), "Argument %zd (%s) is not a page in this property sheet", pos, c->ObjectToStringValue(page));
     c->RaiseException1(Rexx_Error_Incorrect_method_user_defined, c->String(buf));
     return NULLOBJECT;
 }
@@ -265,7 +265,7 @@ RexxObjectPtr noSuchPageException(RexxMethodContext *c, RexxObjectPtr page, size
 RexxObjectPtr noSuchControlException(RexxMethodContext *c, int32_t id, RexxObjectPtr rxDlg, size_t pos)
 {
     TCHAR buf[256];
-    _snprintf(buf, sizeof(buf), "Argument %d (resource ID %d) is not an ID of a control in the %s dialog",
+    _snprintf(buf, sizeof(buf), "Argument %zd (resource ID %d) is not an ID of a control in the %s dialog",
               pos, id, c->ObjectToStringValue(rxDlg));
     c->RaiseException1(Rexx_Error_Incorrect_method_user_defined, c->String(buf));
     return NULLOBJECT;
@@ -293,7 +293,7 @@ RexxObjectPtr controlNotSupportedException(RexxMethodContext *c, RexxObjectPtr r
                                            RexxStringObject controlName)
 {
     TCHAR buf[256];
-    _snprintf(buf, sizeof(buf), "Argument %d (resource ID %s) the %s control in the %s dialog is not supported by ooDialog",
+    _snprintf(buf, sizeof(buf), "Argument %zd (resource ID %s) the %s control in the %s dialog is not supported by ooDialog",
               pos, c->ObjectToStringValue(rxID), c->ObjectToStringValue(controlName), c->ObjectToStringValue(rxDlg));
     c->RaiseException1(Rexx_Error_Incorrect_method_user_defined, c->String(buf));
     return NULLOBJECT;
@@ -344,7 +344,7 @@ RexxObjectPtr noSuchPageException(RexxMethodContext *c, int32_t id, uint32_t ind
 RexxObjectPtr noWindowsPageException(RexxMethodContext *c, size_t pageID, size_t pos)
 {
     TCHAR buf[256];
-    _snprintf(buf, sizeof(buf), "The Windows property sheet page, (argument %d, page %d,) has not been created", pos, pageID);
+    _snprintf(buf, sizeof(buf), "The Windows property sheet page, (argument %zd, page %zd,) has not been created", pos, pageID);
     c->RaiseException1(Rexx_Error_Incorrect_method_user_defined, c->String(buf));
     return NULLOBJECT;
 }
@@ -367,7 +367,7 @@ RexxObjectPtr noWindowsPageException(RexxMethodContext *c, size_t pageID, size_t
 void *noWindowsPageDlgException(RexxMethodContext *c, size_t pageID)
 {
     TCHAR buf[256];
-    _snprintf(buf, sizeof(buf), "The dialog template for the Windows property sheet page (page %d) could not be created", pageID);
+    _snprintf(buf, sizeof(buf), "The dialog template for the Windows property sheet page (page %zd) could not be created", pageID);
     return executionErrorException(c->threadContext, buf);
 }
 
@@ -548,7 +548,7 @@ void *wrongReplyNotBooleanException(RexxThreadContext *c, const char *mName, Rex
 void stringTooLongReplyException(RexxThreadContext *c, CSTRING method, size_t len, size_t realLen)
 {
     char buffer[256];
-    snprintf(buffer, sizeof(buffer), "The reply from the event handler (%s) must be less than %d characters in length; length is %d",
+    snprintf(buffer, sizeof(buffer), "The reply from the event handler (%s) must be less than %zd characters in length; length is %zd",
              method, len, realLen);
     userDefinedMsgException(c, buffer);
 }
@@ -572,7 +572,7 @@ void wrongWindowStyleException(RexxMethodContext *c, const char *obj, const char
 void bitmapTypeMismatchException(RexxMethodContext *c, CSTRING orig, CSTRING found, size_t pos)
 {
     char msg[256];
-    _snprintf(msg, sizeof(msg), "Button bitmaps must be the same; normal bitmap is %s, arg %d bitmap is %s",
+    _snprintf(msg, sizeof(msg), "Button bitmaps must be the same; normal bitmap is %s, arg %zd bitmap is %s",
               orig, pos, found);
     userDefinedMsgException(c, msg);
 }

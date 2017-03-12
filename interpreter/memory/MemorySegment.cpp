@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -73,10 +73,10 @@ const size_t NormalSegmentSet::InitialNormalSegmentSpace = ((LargeSegmentSize * 
 void MemorySegment::dump(const char *owner, size_t counter, FILE *keyfile, FILE *dumpfile)
 {
                                      /* print header for segment          */
-    fprintf(stderr,"Dumping %s Segment %lu from %p for %lu\n", owner, counter, &segmentStart, segmentSize);
+    fprintf(stderr,"Dumping %s Segment %zu from %p for %zu\n", owner, counter, &segmentStart, segmentSize);
                                      /* now dump the segment              */
-    fprintf(keyfile, "%s addr.%lu = %p\n", owner, counter, &segmentStart);
-    fprintf(keyfile, "%s size.%lu = %lu\n", owner, counter, segmentSize);
+    fprintf(keyfile, "%s addr.%zu = %p\n", owner, counter, &segmentStart);
+    fprintf(keyfile, "%s size.%zu = %zu\n", owner, counter, segmentSize);
     fwrite(&segmentStart, 1, segmentSize, dumpfile);
 }
 
@@ -258,7 +258,7 @@ NormalSegmentSet::NormalSegmentSet(MemoryObject *mem) :
     {  /* there are only                    */
         /* DeadPools subpools! (<, not <=)   */
         char buffer[100];
-        sprintf(buffer, "Normal allocation subpool %d for blocks of size %d", i, deadPoolToLength(i));
+        sprintf(buffer, "Normal allocation subpool %d for blocks of size %zd", i, deadPoolToLength(i));
         subpools[i].setID(buffer);
         /* make sure these are properly set up as single size */
         /* keepers */

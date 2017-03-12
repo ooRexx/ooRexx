@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -923,7 +923,7 @@ DirectoryClass *Activity::createExceptionObject(RexxErrorCodes errcode,
     char work[32];
 
     // get a version of the error code formatted in "dot" format.
-    sprintf(work,"%ld.%1ld", errcode/1000, errcode - primary);
+    sprintf(work,"%d.%1zd", errcode/1000, errcode - primary);
     RexxString *code = new_string(work);
     exobj->put(code, CODE);
 
@@ -1234,7 +1234,7 @@ void Activity::reraiseException(DirectoryClass *exobj)
     if (errornumber != primary)
     {
         char work[10];
-        sprintf(work,"%1ld%3.3ld", errornumber/1000, errornumber - primary);
+        sprintf(work,"%1zd%3.3zd", errornumber/1000, errornumber - primary);
         errornumber = atol(work);
 
         RexxString *message = SystemInterpreter::getMessageText(errornumber);
