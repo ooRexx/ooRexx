@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -192,15 +192,16 @@ RexxInteger *StringUtil::posRexx(const char *stringData, size_t length, RexxStri
 
 
 /**
- * Primitive level search withint a string buffer.
+ * Primitive level search within a string buffer.
  *
- * @param stringData The maystack buffer.
+ * @param stringData The haystack buffer.
  * @param haystack_length
  *                   The length of the haystack.
  * @param needle     The search needle.
- * @param _start     The starting position.
+ * @param _start     The starting offset (i.e. 0 means first byte).
+ * @param _range     The number of bytes to search (counting from _start).
  *
- * @return The offset of the located needle, or 0 if the needle doesn't exist.
+ * @return The position of the located needle, or 0 if the needle doesn't exist.
  */
 size_t StringUtil::pos(const char *stringData, size_t haystack_length, RexxString *needle, size_t _start, size_t _range)
 {
@@ -220,22 +221,30 @@ size_t StringUtil::pos(const char *stringData, size_t haystack_length, RexxStrin
     // address the string value
     const char *haypointer = stringData + _start;
     const char *needlepointer = needle->getStringData();
-    size_t location = _start + 1;         // this is the match location as an index
-    // calculate the number of probes we can make in this string
-    size_t count = _range - needle_length + 1;
 
-    // now scan
-    while (count--)
+    // this is the last possible position (plus one) for a first character of needle
+    const char *endpointer = haypointer + _range - needle_length + 1;
+
+    // try to find the first char of needle with memchr()
+    haypointer = (char *)memchr(haypointer, *needlepointer, endpointer - haypointer);
+
+    // if needle is just a single char, we're finshed
+    if (needle_length == 1)
     {
-        // get a match at this position?  return that location
+      return haypointer ? haypointer - stringData + 1 : 0;
+    }
+
+    // our needle is two chars or longer, so we repeatedly
+    // - search for the first char of needle with memchr() and then
+    // - test for the complete needle with memcmp()
+    while (haypointer) 
+    {
         if (memcmp(haypointer, needlepointer, needle_length) == 0)
         {
-            return location;
+            return haypointer - stringData + 1;
         }
-        // step our pointers accordingly
-        location++;
-        haypointer++;
-    }
+        haypointer = (char *)memchr(haypointer + 1, *needlepointer, endpointer - haypointer);
+    } 
     return 0;  // we got nothing...
 }
 
