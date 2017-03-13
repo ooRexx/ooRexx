@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -76,8 +76,8 @@ public:
     static const char *memcpbrk(const char *String, const char *Set, size_t Length);
     static RexxObject *dataType(RexxString *String, char Option );
     static size_t wordCount(const char *String, size_t   StringLength );
-    static size_t countStr(const char *hayStack, size_t hayStackLength, RexxString *needle);
-    static size_t caselessCountStr(const char *hayStack, size_t hayStackLength, RexxString *needle);
+    static size_t countStr(const char *hayStack, size_t hayStackLength, RexxString *needle, size_t maxCount);
+    static size_t caselessCountStr(const char *hayStack, size_t hayStackLength, RexxString *needle, size_t maxCount);
     static size_t memPos(const char *string, size_t length, char target);
     static RexxInteger *verify(const char *data, size_t stringLen, RexxString  *ref, RexxString  *option, RexxInteger *_start, RexxInteger *range);
     static RexxString *subWord(const char *data, size_t length, RexxInteger *position, RexxInteger *plength);

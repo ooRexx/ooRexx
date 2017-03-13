@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -911,7 +911,7 @@ RexxInteger *MutableBuffer::countStrRexx(RexxString *needle)
 {
     needle = stringArgument(needle, ARG_ONE);
     // delegate the counting to the string util
-    return new_integer(StringUtil::countStr(getStringData(), getLength(), needle));
+    return new_integer(StringUtil::countStr(getStringData(), getLength(), needle, Numerics::MAX_WHOLENUMBER));
 }
 
 
@@ -926,7 +926,7 @@ RexxInteger *MutableBuffer::caselessCountStrRexx(RexxString *needle)
 {
     needle = stringArgument(needle, ARG_ONE);
     // delegate the counting to the string util
-    return new_integer(StringUtil::caselessCountStr(getStringData(), getLength(), needle));
+    return new_integer(StringUtil::caselessCountStr(getStringData(), getLength(), needle, Numerics::MAX_WHOLENUMBER));
 }
 
 /**
@@ -951,18 +951,15 @@ MutableBuffer *MutableBuffer::changeStr(RexxString *needle, RexxString *newNeedl
         return this;
     }
 
-    // find the number of matches in the string
-    size_t matches = StringUtil::countStr(getStringData(), getLength(), needle);
-    // the matches are bounded by the count
-    if (matches > count)
-    {
-        matches = count;
-    }
+    // find the number of matches (up to count) in the string
+    size_t matches = StringUtil::countStr(getStringData(), getLength(), needle, count);
+
     // no matches is easy!
     if (matches == 0)
     {
         return this;
     }
+
     size_t needleLength = needle->getLength();
     size_t newLength = newNeedle->getLength();
 
@@ -1096,14 +1093,9 @@ MutableBuffer *MutableBuffer::caselessChangeStr(RexxString *needle, RexxString *
         return this;
     }
 
-    // find the number of matches in the string
-    size_t matches = StringUtil::caselessCountStr(getStringData(), getLength(), needle);
+    // find the number of matches (up to count) in the string
+    size_t matches = StringUtil::caselessCountStr(getStringData(), getLength(), needle, count);
 
-    // the matches are bounded by the count
-    if (matches > count)
-    {
-        matches = count;
-    }
     // no matches is easy!
     if (matches == 0)
     {

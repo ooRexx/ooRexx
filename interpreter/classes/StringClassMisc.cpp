@@ -419,7 +419,7 @@ RexxInteger *RexxString::countStrRexx(RexxString *needle)
 {
     needle = stringArgument(needle, ARG_ONE);
     // delegate the counting to the string util
-    return new_integer(StringUtil::countStr(getStringData(), getLength(), needle));
+    return new_integer(StringUtil::countStr(getStringData(), getLength(), needle, Numerics::MAX_WHOLENUMBER));
 }
 
 
@@ -434,7 +434,7 @@ RexxInteger *RexxString::caselessCountStrRexx(RexxString *needle)
 {
     needle = stringArgument(needle, ARG_ONE);
     // delegate the counting to the string util
-    return new_integer(StringUtil::caselessCountStr(getStringData(), getLength(), needle));
+    return new_integer(StringUtil::caselessCountStr(getStringData(), getLength(), needle, Numerics::MAX_WHOLENUMBER));
 }
 
 
@@ -461,8 +461,8 @@ RexxString *RexxString::changeStr(RexxString *needle, RexxString *newNeedle, Rex
         return this;
     }
 
-    // The change count is bounded by the number of matches
-    count = Numerics::minVal(count, StringUtil::countStr(getStringData(), getLength(), needle));
+    // find the number of matches (up to count) in the string
+    count = StringUtil::countStr(getStringData(), getLength(), needle, count);
 
     // if we don't have anything we can change, return the original string.
     if (count == 0)
@@ -526,8 +526,8 @@ RexxString *RexxString::caselessChangeStr(RexxString *needle, RexxString *newNee
         return this;
     }
 
-    // The change count is bounded by the number of matches
-    count = Numerics::minVal(count, StringUtil::caselessCountStr(getStringData(), getLength(), needle));
+    // find the number of matches (up to count) in the string
+    count = StringUtil::caselessCountStr(getStringData(), getLength(), needle, count);
 
     // if we don't have anything we can change, return the original string.
     if (count == 0)
