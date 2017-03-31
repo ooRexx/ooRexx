@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -342,7 +342,9 @@ class ArrayClass : public RexxObject
     // maximum size we can handle
     static const size_t MaxFixedArraySize = (Numerics::MAX_WHOLENUMBER / 10) + 1;
     static const size_t MinimumArraySize = 8;      // the minimum size we allocate.
-    static const size_t MaximumExtendSize = 100;   // maximum "extra" size we tack on when extending
+    // for small Arrays, we expand by doubling the current size, however
+    // for Arrays larger than this limit, we just extend by half the current size
+    static const size_t ExpansionDoubleLimit = 2000;
 
     size_t arraySize;                   // current logical size of the array
     size_t maximumSize;                 // The allocation size of the array

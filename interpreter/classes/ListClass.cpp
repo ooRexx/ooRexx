@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -266,9 +266,11 @@ ListContents::ItemLink ListClass::requiredIndex(RexxObject *index, size_t positi
  */
 void ListClass::expandContents()
 {
-    // just double the bucket size...until we reach the max expansion size, then
-    // use smaller increments after that.
-    expandContents(contents->capacity() + Numerics::minVal(contents->capacity(), MaxExpansionSize));
+    // double the bucket size for small Lists
+    // for Lists above the limit, just add half of the actual bucket size
+    size_t size = contents->capacity(); 
+    size += size <= ExpansionDoubleLimit ? size : size / 2;
+    expandContents(size);
 }
 
 
@@ -296,11 +298,13 @@ void ListClass::expandContents(size_t capacity )
 void ListClass::ensureCapacity(size_t delta)
 {
     // not enough space?  time to expand.  We'll go to
-    // the current total capacity plus the delta...or the standard
-    // doubling if the delta is a small value.
+    // double the bucket size for small Lists
+    // for Lists above the limit, just add half of the actual bucket size
     if (!contents->hasCapacity(delta))
     {
-        expandContents(contents->capacity() + Numerics::maxVal(delta, contents->capacity()));
+        size_t size = contents->capacity(); 
+        size += size <= ExpansionDoubleLimit ? size : size / 2;
+        expandContents(size);
     }
 }
 

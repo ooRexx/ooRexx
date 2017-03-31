@@ -54,6 +54,7 @@ class DirectoryClass : public StringHashCollection
 
     inline DirectoryClass(RESTORETYPE restoreType) { ; }
            DirectoryClass(size_t capacity = HashCollection::DefaultTableSize) : methodTable(OREF_NULL), unknownMethod(OREF_NULL), StringHashCollection(capacity) { }
+           DirectoryClass(bool fromRexx) { }
 
     RexxObject *newRexx(RexxObject **, size_t);
 
