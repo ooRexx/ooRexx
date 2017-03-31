@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -388,16 +388,30 @@ NativeMethod *LibraryPackage::resolveMethod(RexxString *name)
 
 
 /**
- * Get a Routine object for a method associated with a package.
+ * Get a Routine object from a native library package.
  *
- * @param name   Name of the target method.
+ * @param name   Name of the target routine, searching is done caseless.
  *
- * @return A NativeCode object for this method, if located.
+ * @return A Routine object, if located.
  */
 RoutineClass *LibraryPackage::resolveRoutine(RexxString *name)
 {
     // we resolve all of these at load time, so this is either in the table, or it's not.
-    return (RoutineClass *)routines->get(name);
+    RoutineClass *code = (RoutineClass *)routines->get(name);
+    if (code == OREF_NULL) 
+    {
+        // try to locate name caseless
+        RexxRoutineEntry *entry = locateRoutineEntry(name);
+        // if we found one with a caseless equal name, return the routine
+        if (entry != NULL)
+        {
+            return (RoutineClass *)routines->get(new_string(entry->name));
+        }
+        // This, we know from nothing....
+        return OREF_NULL;
+    }
+    // had this resolved already.
+    return code;
 }
 
 
