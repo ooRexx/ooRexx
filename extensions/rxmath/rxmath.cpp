@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -73,11 +73,10 @@
  *------------------------------------------------------------------*/
 
 
-#define PROG_DESC "REXX mathematical function package"
+#define PROG_DESC "REXX mathematical function library"
 #define PROG_VERS "1.1"
-#define PROG_SECU " "
-#define PROG_COPY "(c) Copyright RexxLanguage Association 2005."
-#define PROG_ALRR "All Rights Reserved."
+#define PROG_COPY "Copyright (c) 2005-2017 Rexx Language Association."
+#define PROG_ALRR "All rights reserved."
 
 /*------------------------------------------------------------------
  * standard includes
@@ -97,8 +96,6 @@
 #include "oorexxapi.h"
 #include <sys/types.h>
 
-#define MAX_DIGITS     9
-
 /*********************************************************************/
 /*  Various definitions used by the math functions                   */
 /*********************************************************************/
@@ -115,14 +112,6 @@
 
 #define MAX_PRECISION     16           /* maximum available precision*/
 #define MIN_PRECISION     1            /* minimum available precision*/
-
-/* Turn off optimization under Windows. If this is compiler under    */
-/* Windows with the MS Visual C++ copiler and optimization is on     */
-/* then the function _matherr is not called                          */
-#ifdef WIN32
-#pragma optimize( "", off )
-#endif
-
 
 
 
@@ -669,6 +658,3 @@ RexxPackageEntry rxmath_package_entry =
 // package loading stub.
 OOREXX_GET_PACKAGE(rxmath);
 
-#ifdef WIN32
-#pragma optimize( "", on )
-#endif
