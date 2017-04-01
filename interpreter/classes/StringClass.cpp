@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -67,6 +67,36 @@ const char *RexxString::LOWER_ALPHA  = "abcdefghijklmnopqrstuvwxyz";
 const char *RexxString::MIXED_ALPHA  = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const char *RexxString::UPPER_ALPHA  = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const char *RexxString::DIGITS_BASE64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+/*
+https://en.wikipedia.org/wiki/Regular_expression#Character_classes
+POSIX character ranges returned by XRANGE() and String methods
+[:alnum:] [A-Za-z0-9]   Alphanumeric characters
+[:alpha:] [A-Za-z]      Alphabetic characters
+[:blank:] [ \t]         Space and tab
+[:cntrl:] [\x00-\x1F\x7F]       Control characters
+[:digit:] [0-9]         Digits
+[:graph:] [\x21-\x7E]   Visible characters
+[:lower:] [a-z]         Lowercase letters
+[:print:] [\x20-\x7E]   Visible characters and the space character
+[:punct:] [][!"#$%&'()*+,./:;<=>?@\^_`{|}~-]    Punctuation characters
+[:space:] [ \t\r\n\v\f]         Whitespace characters
+[:upper:] [A-Z]         Uppercase letters
+[:xdigit:] [A-Fa-f0-9]  Hexadecimal digits
+*/
+// the character ranges are returned in ascending byte order
+const char *RexxString::ALNUM = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+const char *RexxString::ALPHA = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+const char *RexxString::BLANK = "\t ";
+const char *RexxString::CNTRL = "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f\x7f";
+const char *RexxString::DIGIT = "0123456789";
+const char *RexxString::GRAPH = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
+const char *RexxString::LOWER = RexxString::LOWER_ALPHA;
+const char *RexxString::PRINT = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
+const char *RexxString::PUNCT = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~";
+const char *RexxString::SPACE = "\t\n\v\f\r ";
+const char *RexxString::UPPER = RexxString::UPPER_ALPHA;
+const char *RexxString::XDIGIT = "0123456789ABCDEFabcdef";
 
 const char RexxString::ch_PLUS='+';
 const char RexxString::ch_MINUS='-';

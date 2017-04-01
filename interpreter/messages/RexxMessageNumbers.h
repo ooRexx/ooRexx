@@ -273,6 +273,7 @@
 #define Error_Expression_result_trace_msg                            331
 #define Error_Expression_result_raise_msg                            332
 #define Error_Logical_value_if_msg                                   333
+#define Error_Incorrect_call_pad_or_name_msg                         334
 #define Error_Logical_value_while_msg                                335
 #define Error_Logical_value_until_msg                                336
 #define Error_Logical_value_logical_msg                              337

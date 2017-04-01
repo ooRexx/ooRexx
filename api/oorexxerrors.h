@@ -368,6 +368,7 @@
 #define Rexx_Error_Incorrect_call_binary                                  40024
 #define Rexx_Error_Incorrect_call_hex                                     40025
 #define Rexx_Error_Incorrect_call_symbol                                  40026
+#define Rexx_Error_Incorrect_call_pad_or_name                             40028
 #define Rexx_Error_Incorrect_call_list                                    40904
 #define Rexx_Error_Incorrect_call_trace                                   40905
 #define Rexx_Error_Incorrect_call_random                                  40033

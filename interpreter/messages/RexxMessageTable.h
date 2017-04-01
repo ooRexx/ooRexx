@@ -372,6 +372,7 @@ ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
       MINOR(Error_Incorrect_call_binary)
       MINOR(Error_Incorrect_call_hex)
       MINOR(Error_Incorrect_call_symbol)
+      MINOR(Error_Incorrect_call_pad_or_name)
       MINOR(Error_Incorrect_call_list)
       MINOR(Error_Incorrect_call_trace)
       MINOR(Error_Incorrect_call_random)

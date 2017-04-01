@@ -1593,50 +1593,159 @@ BUILTIN(RANDOM)
 BUILTIN(XRANGE)
 {
     const size_t XRANGE_Min = 0;
-    const size_t XRANGE_Max = 2;
-    const size_t XRANGE_start =   1;
-    const size_t XRANGE_end =     2;
+    const size_t XRANGE_Max = argcount;
 
     fix_args(XRANGE);
 
-    // default start and end positions are the full range
-    char startchar = 0;
-    char endchar = (char)0xff;
+    char startchar, endchar;           // start and end positions
+    typedef enum {START_END, CHAR_CLASS} arg_t;
+    arg_t argumentType;                // character class or start/end range
 
-    RexxString *start = optional_string(XRANGE, start);
-    RexxString *end = optional_string(XRANGE, end);
+    RexxString *first, *second, *result;
+    RexxString::StringBuilder result_builder;
+    size_t length, totalLength = 0;
+    size_t XRANGE_arg;
+    const char *characterClass;
 
-    // validate the starts and end
-    if (start != OREF_NULL)
+    // we will need to know the total length of the result string
+    // before we can begin to build it
+    // if there are more than one or two args, we'll have to step through
+    // all our args twice: first, to count the total string length, and
+    // a second time to append all the pieces together
+    typedef enum {CALC_LENGTH, BUILD_STRING} work_t;
+    work_t mode = CALC_LENGTH;         // step one: calculate total length
+
+    for (size_t loops = 1; loops <= 2; loops++)
     {
-        // must be just a single character
-        if (start->getLength() != 1)
+        XRANGE_arg = 0;
+        // we want to enter our loop even if argcount is zero
+        while (XRANGE_arg == 0 || XRANGE_arg < argcount)
         {
-            reportException(Error_Incorrect_call_pad, "XRANGE", IntegerOne, start);
+            // default start and end positions are the full range
+            startchar = 0;
+            endchar = (char)0xff;
+            argumentType = START_END;
+
+            // for each loop, we can accept either:
+            // - no args
+            // - first arg length 1, no second arg: a start byte only
+            // - first arg length larger than 1, no second arg: a character class
+            // - no first arg, second arg length 1: an end byte only
+            // - first arg length 1, second arg length 1: both a start and an end byte
+
+            XRANGE_arg++;
+            if ((first = optional_string(XRANGE, arg)) != OREF_NULL)
+            {
+                // must be a single character or a character class name
+                if (first->getLength() == 1)
+                {
+                    // single character means a start byte
+                    startchar = first->getChar(0);
+                }
+                else
+                {
+                    // must be a character class name
+                    argumentType = CHAR_CLASS;
+                    if      (first->strCaselessCompare("alnum")) characterClass = RexxString::ALNUM;
+                    else if (first->strCaselessCompare("alpha")) characterClass = RexxString::ALPHA;
+                    else if (first->strCaselessCompare("blank")) characterClass = RexxString::BLANK;
+                    else if (first->strCaselessCompare("cntrl")) characterClass = RexxString::CNTRL;
+                    else if (first->strCaselessCompare("digit")) characterClass = RexxString::DIGIT;
+                    else if (first->strCaselessCompare("graph")) characterClass = RexxString::GRAPH;
+                    else if (first->strCaselessCompare("lower")) characterClass = RexxString::LOWER;
+                    else if (first->strCaselessCompare("print")) characterClass = RexxString::PRINT;
+                    else if (first->strCaselessCompare("punct")) characterClass = RexxString::PUNCT;
+                    else if (first->strCaselessCompare("space")) characterClass = RexxString::SPACE;
+                    else if (first->strCaselessCompare("upper")) characterClass = RexxString::UPPER;
+                    else if (first->strCaselessCompare("xdigit")) characterClass = RexxString::XDIGIT;
+                    else reportException(Error_Incorrect_call_pad_or_name, "XRANGE", new_integer(XRANGE_arg), first);
+
+                }
+            }
+            if (argumentType == CHAR_CLASS)
+            {
+                // CNTRL contains a leading NUL character, so we calculate length here
+                length = 1 + strlen(characterClass + 1);
+
+                // just one character class arg?  we can finish this early
+                if (mode == CALC_LENGTH && argcount == 1)
+                {
+                    return new_string(characterClass, length);
+                }
+                else if (mode == CALC_LENGTH)
+                {
+                    totalLength += length;
+                }
+                else // mode == BUILD_STRING
+                {
+                    result_builder.append(characterClass, length);
+                }
+
+                // if this was a character class, we won't have a second arg
+                continue;
+            }
+
+            // if run out of args, endchar is already set to its default
+            XRANGE_arg++;
+            if ((second = optional_string(XRANGE, arg)) != OREF_NULL)
+            {
+                // must be a single character
+                if (second->getLength() != 1)
+                {
+                    reportException(Error_Incorrect_call_pad, "XRANGE", new_integer(XRANGE_arg), second);
+                }
+                else
+                {
+                    // the single character is the end byte
+                    endchar = second->getChar(0);
+                }
+            }
+
+            length = 1 + (endchar < startchar ? 256 - startchar + endchar : endchar - startchar);
+
+            // just two args?  we can finish this early
+            if (mode == CALC_LENGTH && argcount <= 2)
+            {
+                // create a new string to build the result
+                result = raw_string(length);
+                result_builder.init(result);
+                for (size_t i = 0; i < length; i++)
+                {
+                    // NOTE:  This depends on the fact that we are only inserting the
+                    // least significant byte here, so the wrap situation is handled
+                    // automatically.
+                    result_builder.append(startchar++);
+                }
+                return result;
+            }
+            else if (mode == CALC_LENGTH)
+            {
+                totalLength += length;
+            }
+            else // mode == BUILD_STRING
+            {
+                for (size_t i = 0; i < length; i++)
+                {
+                    // NOTE:  This depends on the fact that we are only inserting the
+                    // least significant byte here, so the wrap situation is handled
+                    // automatically.
+                    result_builder.append(startchar++);
+                }
+            }
         }
-        startchar = start->getChar(0);
-    }
-    // same rules with the end
-    if (end != OREF_NULL)
-    {
-        if (end->getLength() != 1)
+
+        if (mode == CALC_LENGTH)
         {
-            reportException(Error_Incorrect_call_pad, "XRANGE", IntegerTwo, end);
+            // finished counting length, switch to building string
+            mode = BUILD_STRING;       // step two: build the string
+
+            // create a new string to build the result
+            result = raw_string(totalLength);
+            result_builder.init(result);
         }
-        endchar = end->getChar(0);
     }
 
-    // calculate the result size...note that XRANGE can wrap if the end precedes the start
-    size_t length = ((endchar < startchar) ? (256 - startchar) + endchar : (endchar - startchar)) + 1;
-
-    RexxString *result = raw_string(length);
-    for (size_t i = 0; i < length; i++)
-    {
-        // NOTE:  This depends on the fact that we are only inserting the
-        // least significant byte here, so the wrap situation is handled
-        // automatically.
-        result->putChar(i, startchar++);
-    }
+    // finished building string
     return result;
 }
 

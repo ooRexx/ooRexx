@@ -272,6 +272,7 @@ BEGIN
    33903    "Incorrect expression result following VALUE keyword of TRACE instruction."
    33904    "Incorrect expression result following SYNTAX keyword of RAISE instruction."
    34001    "Value of expression following IF keyword must be exactly ""0"" or ""1""; found ""&1""."
+   40028    "&1 argument &2 must be a character class name or a single character; found ""&3""."
    34003    "Value of expression following WHILE keyword must be exactly ""0"" or ""1""; found ""&1""."
    34004    "Value of expression following UNTIL keyword must be exactly ""0"" or ""1""; found ""&1""."
    34005    "Value of expression to the left of the logical operator ""&1"" must be exactly ""0"" or ""1""; found ""&2""."

@@ -3079,6 +3079,15 @@ special character (such as a parenthesis).
       </SubMessage>
       <SubMessage>
         <Code>40</Code>
+        <Subcode>028</Subcode>
+        <MessageNumber>334</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Incorrect_call_pad_or_name</SymbolicName>
+        <Text><Sub position="1" name="function_name"/> argument <Sub position="2" name="argument_number"/> must be a character class name or a single character; found <q><Sub position="3" name="value"/></q>.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>40</Code>
         <Subcode>904</Subcode>
         <MessageNumber>389</MessageNumber>
         <Component>Rexx</Component>

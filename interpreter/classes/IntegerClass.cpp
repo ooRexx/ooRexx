@@ -691,7 +691,7 @@ RexxObject *RexxInteger::multiply(RexxInteger *other)
             }
 
             // the product should be a valid integer under the current numeric
-            // digits; if we know it won't fit, there's no neeed to multiply
+            // digits; if we know it won't fit, there's no need to multiply
             // we can estimate this: multiplying an m-bit number with an n-bit
             // number yields a product of either (m + n - 1) or (m + n) bits
             // we test (m + n - 1) <= 30 (for 32-bit) and 60 (for 64-bit),
@@ -956,7 +956,7 @@ RexxObject *RexxInteger::power(RexxObject *other)
                 case 2:
                     // we'll evaluate n ^ 2 as n * n
                     // the result should be a valid integer under the current numeric
-                    // digits; if we know it won't fit, there's no neeed to multiply
+                    // digits; if we know it won't fit, there's no need to multiply
                     // we can estimate this: squaring an n-bit number yields a result
                     // of either (2n - 1) or (2n) bits
                     // we test (2n - 1) <= 30 (for 32-bit) and 60 (for 64-bit),
@@ -1003,7 +1003,7 @@ RexxObject *RexxInteger::power(RexxObject *other)
 
             // no common base or power .. try to do the full calculation
             // the result should be a valid integer under the current numeric digits
-            // if we know it won't fit, there's no neeed to try
+            // if we know it won't fit, there's no need to try
             // we can estimate the result size: if base has b bits, the result
             // will require between (b * power - b + 1) and (b * power) bits
             wholenumber_t maxBits = Numerics::maxBitsForDigits(number_digits());
@@ -1569,7 +1569,7 @@ RexxObject *RexxInteger::Max(RexxObject **args, size_t argCount)
             return numberString()->Max(args, argCount);
         }
     }
-    // return the minimum object
+    // return the maximum object
     return maxObject;
 }
 

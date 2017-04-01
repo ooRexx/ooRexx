@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -85,9 +85,11 @@ class RexxString : public RexxObject
      class StringBuilder
      {
      public:
+         inline StringBuilder()  {}
          inline StringBuilder(char *b) : current(b) {}
          inline StringBuilder(RexxString *s) : current(s->getWritableData()) {}
 
+         inline void init(RexxString *s)  { current = s->getWritableData(); }
          inline void append(const char *d, size_t l)  { memcpy(current, d, l); current += l; }
          inline void append(const char *d)  { size_t l = strlen(d); memcpy(current, d, l); current += l; }
          inline void append(char c) { *current++ = c; }
@@ -745,6 +747,21 @@ class RexxString : public RexxObject
     static const char *MIXED_ALPHA;
     static const char *UPPER_ALPHA;
     static const char *DIGITS_BASE64;
+
+    // POSIX character ranges returned by XRANGE() and .String class methods
+    static const char *RexxString::ALNUM;
+    static const char *RexxString::ALPHA;
+    static const char *RexxString::BLANK;
+    static const char *RexxString::CNTRL;
+    static const char *RexxString::DIGIT;
+    static const char *RexxString::GRAPH;
+    static const char *RexxString::LOWER;
+    static const char *RexxString::PRINT;
+    static const char *RexxString::PUNCT;
+    static const char *RexxString::SPACE;
+    static const char *RexxString::UPPER;
+    static const char *RexxString::XDIGIT;
+
 
   protected:
 

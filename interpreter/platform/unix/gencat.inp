@@ -710,6 +710,9 @@ $ Error_Expression_result_raise
 $ Error_Logical_value_if
 333 Value of expression following IF keyword must be exactly "0" or "1"; found "&1".
 
+$ Error_Incorrect_call_pad_or_name
+334 &1 argument &2 must be a character class name or a single character; found "&3".
+
 $ Error_Logical_value_while
 335 Value of expression following WHILE keyword must be exactly "0" or "1"; found "&1".
 
