@@ -749,18 +749,18 @@ class RexxString : public RexxObject
     static const char *DIGITS_BASE64;
 
     // POSIX character ranges returned by XRANGE() and .String class methods
-    static const char *RexxString::ALNUM;
-    static const char *RexxString::ALPHA;
-    static const char *RexxString::BLANK;
-    static const char *RexxString::CNTRL;
-    static const char *RexxString::DIGIT;
-    static const char *RexxString::GRAPH;
-    static const char *RexxString::LOWER;
-    static const char *RexxString::PRINT;
-    static const char *RexxString::PUNCT;
-    static const char *RexxString::SPACE;
-    static const char *RexxString::UPPER;
-    static const char *RexxString::XDIGIT;
+    static const char *ALNUM;
+    static const char *ALPHA;
+    static const char *BLANK;
+    static const char *CNTRL;
+    static const char *DIGIT;
+    static const char *GRAPH;
+    static const char *LOWER;
+    static const char *PRINT;
+    static const char *PUNCT;
+    static const char *SPACE;
+    static const char *UPPER;
+    static const char *XDIGIT;
 
 
   protected:
