@@ -236,7 +236,19 @@ void BaseExecutable::processNewExecutableArgs(RexxObject **&init_args, size_t &a
     // now process an optional sourcecontext argument
     sourceContext = OREF_NULL;
     // retrieve extra parameter if exists
-    if (argCount != 0)
+    // if not explicitly specified, then the program scope is used
+    if (argCount == 0)
+    {
+        // using the calling source context, so get the package from the top activation if
+        // there is one.
+        // see if we have an active context and use the current source as the basis for the lookup
+        RexxActivation *currentContext = ActivityManager::currentActivity->getCurrentRexxFrame();
+        if (currentContext != OREF_NULL)
+        {
+            sourceContext = currentContext->getPackage();
+        }
+    }
+    else
     {
         RexxObject *option;
         // parse off an additional argument
