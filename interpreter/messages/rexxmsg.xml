@@ -5342,6 +5342,15 @@ special character (such as a parenthesis).
       </SubMessage>
       <SubMessage>
         <Code>99</Code>
+        <Subcode>910</Subcode>
+        <MessageNumber>582</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Translation_use_local</SymbolicName>
+        <Text>USE LOCAL must be the first instruction executed after a method invocation.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>99</Code>
         <Subcode>908</Subcode>
         <MessageNumber>513</MessageNumber>
         <Component>Rexx</Component>
@@ -5400,8 +5409,8 @@ special character (such as a parenthesis).
         <MessageNumber>519</MessageNumber>
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
-        <SymbolicName>Error_Translation_use_interpret</SymbolicName>
-        <Text>INTERPRET data must not contain USE.</Text>
+        <SymbolicName>Error_Translation_use_local_interpret</SymbolicName>
+        <Text>INTERPRET data must not contain USE LOCAL.</Text>
       </SubMessage>
       <SubMessage>
         <Code>99</Code>

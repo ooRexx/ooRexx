@@ -1929,8 +1929,16 @@ RexxInstruction *LanguageParser::exposeNew()
         syntaxError(Error_Translation_expose_interpret);
     }
 
-    // validate the placement at the beginning of the code block
-    isExposeValid();
+    // The EXPOSE must be the first instruction.
+    // NOTE:  labels are not allowed preceding, as that will give a target
+    // for SIGNAL or CALL that will result in an invalid EXPOSE execution.
+ 
+    // the last instruction in the chain must be our dummy
+    // first instruction
+    if (!lastInstruction->isType(KEYWORD_FIRST))
+    {
+        syntaxError(Error_Translation_expose);
+    }
 
     // process the variable list and create an instruction from this.
     // The variables are placed in the subTerms stack
@@ -1952,12 +1960,15 @@ RexxInstruction *LanguageParser::useLocalNew()
     // not valid in an interpret
     if (isInterpret())
     {
-        syntaxError(Error_Translation_expose_interpret);
+        syntaxError(Error_Translation_use_local_interpret);
     }
 
     // validate the placement at the beginning of the code block...
     // the rules are the same as with EXPOSE.
-    isExposeValid();
+    if (!lastInstruction->isType(KEYWORD_FIRST))
+    {
+        syntaxError(Error_Translation_use_local);
+    }
 
     // switch on auto expose tracking
     autoExpose();
@@ -3985,30 +3996,6 @@ RexxInstruction *LanguageParser::useNew()
     ::new ((void *)newObject) RexxInstructionUse(variableCount, strictChecking, allowOptionals, variable_list, defaults_list);
 
     return newObject;
-}
-
-
-/**
- * Validate placement of an EXPOSE instruction.  The EXPOSE must
- * be the first instruction and this must not be an interpret
- * invocation.  NOTE:  labels are not allowed preceeding, as that
- * will give a target for SIGNAL or CALL that will result in an
- * invalid EXPOSE execution.
- */
-void LanguageParser::isExposeValid()
-{
-    // expose is never allowed in an interpret
-    if (isInterpret())
-    {
-        syntaxError(Error_Translation_expose_interpret);
-    }
-
-    // the last instruction in the chain must be our dummy
-    // first instruction
-    if (!lastInstruction->isType(KEYWORD_FIRST))
-    {
-        syntaxError(Error_Translation_expose);
-    }
 }
 
 

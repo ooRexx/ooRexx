@@ -237,7 +237,6 @@ class LanguageParser: public RexxInternalObject
 
     // instruction parsing methods
     RexxInstruction *nextInstruction();
-    void        isExposeValid();
     size_t      processVariableList(InstructionKeyword);
 
     RexxInstruction *addressNew();

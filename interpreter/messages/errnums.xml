@@ -3777,6 +3777,12 @@ special character (such as a parenthesis).
 </listitem>
 </varlistentry>
 <varlistentry>
+<term>910</term>
+<listitem>
+<para>USE LOCAL must be the first instruction executed after a method invocation.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
 <term>911</term>
 <listitem>
 <para>GUARD can only be issued in an object method invocation.</para>
@@ -3803,7 +3809,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>915</term>
 <listitem>
-<para>INTERPRET data must not contain USE.</para>
+<para>INTERPRET data must not contain USE LOCAL.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
