@@ -612,13 +612,14 @@
 #define Rexx_Error_Translation_missing_class                              99905
 #define Rexx_Error_Translation_bad_metaclass                              99927
 #define Rexx_Error_Translation_expose                                     99907
+#define Rexx_Error_Translation_use_local                                  99910
 #define Rexx_Error_Translation_expose_interpret                           99908
 #define Rexx_Error_Translation_guard                                      99909
 #define Rexx_Error_Translation_guard_guard                                99911
 #define Rexx_Error_Translation_guard_interpret                            99912
 #define Rexx_Error_Translation_guard_expose                               99913
 #define Rexx_Error_Translation_directive_interpret                        99914
-#define Rexx_Error_Translation_use_interpret                              99915
+#define Rexx_Error_Translation_use_local_interpret                        99915
 #define Rexx_Error_Translation_bad_directive                              99916
 #define Rexx_Error_Translation_bad_external                               99917
 #define Rexx_Error_Translation_use_comma                                  99918

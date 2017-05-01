@@ -1235,8 +1235,8 @@ $ Error_Translation_guard_expose
 $ Error_Translation_directive_interpret
 518 INTERPRET data must not contain directive instructions.
 
-$ Error_Translation_use_interpret
-519 INTERPRET data must not contain USE.
+$ Error_Translation_use_local_interpret
+519 INTERPRET data must not contain USE LOCAL.
 
 $ Error_Translation_bad_directive
 520 Unrecognized directive instruction.
@@ -1384,6 +1384,9 @@ $ Error_Translation_class_external_bad_parameters
 
 $ Error_Execution_no_concurrency
 581 Concurrency not supported.
+
+$ Error_Translation_use_local
+582 USE LOCAL must be the first instruction executed after a method invocation.
 
 $ Error_Translation_class_external_bad_class_name
 583 Incorrect class external; class name missing or invalid.
