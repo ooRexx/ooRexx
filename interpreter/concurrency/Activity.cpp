@@ -1520,6 +1520,8 @@ void Activity::createNewActivationStack()
     // This is a root activation that will allow API functions to be called
     // on this thread without having an active bit of ooRexx code first.
     NativeActivation *new_activation = ActivityManager::newNativeActivation(this);
+    // this indicates this is a new stack basepoint. Error/rollbacks will terminate
+    // at this point.
     new_activation->setStackBase();
     // create a new root element on the stack and bump the depth indicator
     activations->push(new_activation);
@@ -1688,7 +1690,10 @@ void Activity::setupAttachedActivity(InterpreterInstance *interpreter)
     addToInstance(interpreter);
 
     // mark this as an attached activity
-    attached = true;
+    attachCount++;
+    // also mark this as being on a thread not originally controlled by the
+    // interpreter. This indicates that the base of the activity is the attach point
+    newThreadAttached = true;
     // This is a root activation that will allow API functions to be called
     // on this thread without having an active bit of ooRexx code first.
     createNewActivationStack();
@@ -1757,12 +1762,64 @@ void Activity::detachInstance()
 {
     // Undo this attached status
     instance = OREF_NULL;
-    attached = false;
+    // clear the attach trackers
+    attachCount = 0;
+    newThreadAttached = false;
     // if there's a nesting situation, restore the activity to active state.
     if (nestedActivity != OREF_NULL)
     {
         nestedActivity->setSuspended(false);
     }
+}
+
+
+/**
+ * Handle a nested attach on an Activity. In this situation,
+ * a program has exited the Rexx code to native code, which
+ * then has used AttachThread() to access API services. We
+ * Reuse the activity, but push another NativeActivation
+ * instance on to the stack to anchor allocated objects.
+ */
+void Activity::nestAttach()
+{
+    attachCount++;
+    // create the base marker for anchoring any objects returned by
+    // this instance.
+    createNewActivationStack();
+}
+
+
+/**
+ * Return from a nested attach. We need to pop our dummy
+ * native activation from the stack so that objects in the
+ * local reference table can be GC'd.
+ */
+void Activity::returnAttach()
+{
+    attachCount--;
+    // remove the stack frame we created as a GC anchor so that objects
+    // obtained using this nested thread instance can be GC'd.
+
+    // This is just a precaution. It might be possible that there are other activations
+    // present, so make sure we get back to a base activation.
+    while (!topStackFrame->isStackBase())
+    {
+        // if we're not to the very base of the stack, terminate the frame
+        topStackFrame->termination();
+        popStackFrame(false);
+    }
+
+    // NB: popStackframe has protections against popping a stack base activation,
+    // so we need to handle this activity here otherwise this ends up being a NOP.
+    ActivationBase *poppedStackFrame = (ActivationBase *)activations->pop();
+    stackFrameDepth--;
+    // the popped stack frame might still be in the save stack, but can
+    // also contain pointers back to locations on the C stack.  Make sure
+    // that this never tries to mark anything in case of a garbage collection
+    poppedStackFrame->setHasNoReferences();
+
+    // and make sure all of the frame markers are reset.
+    updateFrameMarkers();
 }
 
 

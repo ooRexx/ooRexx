@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -237,9 +237,9 @@ Activity *InterpreterInstance::attachThread()
  */
 bool InterpreterInstance::detachThread(Activity *activity)
 {
-    // if the thread in question is not found, is not an attached thread, or
-    // the thread is currently busy, this fails
-    if (activity == OREF_NULL || !activity->isAttached() || activity->isActive())
+    // if the thread in question is not found or this is not an attached thread,
+    // this fails
+    if (activity == OREF_NULL || !activity->isAttached())
     {
         return false;
     }

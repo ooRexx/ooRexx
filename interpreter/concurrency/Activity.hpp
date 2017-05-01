@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -219,9 +219,9 @@ class Activity : public RexxInternalObject
     void detachThread();
     inline InterpreterInstance *getInstance() { return instance; }
 
-    inline void nestAttach() { attachCount++; }
-    inline bool isNestedAttach() { return attachCount != 0; }
-    inline void returnAttach() { attachCount--; }
+    void nestAttach();
+    void returnAttach();
+    inline bool isNestedAttach() { return attachCount > 1 || (attachCount == 1 && !newThreadAttached); }
     inline void activate() { nestedCount++; }
     inline void deactivate() { nestedCount--; }
     inline bool isActive() { return nestedCount > 0; }
@@ -234,7 +234,7 @@ class Activity : public RexxInternalObject
     inline void setInterpreterRoot() { interpreterRoot = true; }
     inline void setNestedActivity(Activity *a) { nestedActivity = a; }
     inline Activity *getNestedActivity() { return nestedActivity; }
-    inline bool isAttached() { return attached; }
+    inline bool isAttached() { return attachCount > 0; }
            void validateThread();
 
     SecurityManager *getEffectiveSecurityManager();
@@ -344,9 +344,9 @@ class Activity : public RexxInternalObject
     bool     requestingString;          // in error handling currently
     bool     suspended;                 // the suspension flag
     bool     interpreterRoot;           // This is the root activity for an interpreter instance
-    bool     attached;                  // this is attached to an instance (vs. created directly)
     size_t   nestedCount;               // extent of the nesting
     size_t   attachCount;               // extent of nested attaches
+    bool     newThreadAttached;         // Indicates this thread was a "side door" attach.
     char       *stackBase;              // pointer to base of C stack
     bool        clauseExitUsed;         // halt/trace sys exit not set ==> 1
     uint64_t    randomSeed;             // random number seed
