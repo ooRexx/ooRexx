@@ -79,7 +79,7 @@ else ()
 endif ()
 
 find_package(Subversion)
-if(SUBVERSION_FOUND)
+if(SUBVERSION_FOUND AND IS_DIRECTORY ".svn")
   Subversion_WC_INFO(${PROJECT_SOURCE_DIR} ORX)
   set(ORX_BLD_LVL ${ORX_WC_REVISION})
 endif()
