@@ -441,9 +441,9 @@ FARPROC WINAPI delayFailHook(unsigned int dliNotify, PDelayLoadInfo pdli)
     return NULL;
 }
 
+#if 0
 PfnDliHook __pfnDliFailureHook2 = delayFailHook;
 
-#if 0
 /**
  * Temp for testing, will be removed.
  *
