@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -156,11 +156,11 @@ static bool morph2daemon()
     unlink(OOREXX_PIDFILE);
     int pfile = open(OOREXX_PIDFILE, O_WRONLY | O_CREAT, 0640);
     snprintf(pid_buf, sizeof(pid_buf), "%d\n", (int)getpid());
-    write(pfile, pid_buf, strlen(pid_buf));
+    ssize_t ignore = write(pfile, pid_buf, strlen(pid_buf));
     close(pfile);
 
     // housekeeping
-	chdir("/");
+	int ignore_int = chdir("/");
 	umask(0);
 	for(int i = 0; i < 1024; i++) {
 		close(i);
@@ -217,7 +217,7 @@ int main(int argc, char *argv[])
             return -1;
     }
     snprintf(pid_buf, sizeof(pid_buf), "%d\n", (int)getpid());
-    write(pfile, pid_buf, strlen(pid_buf));
+    ssize_t ignore = write(pfile, pid_buf, strlen(pid_buf));
     close(pfile);
 
     // make ourselves a daemon

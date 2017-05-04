@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2009-2010 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2009-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -548,7 +548,9 @@ RexxRoutine1(int,
              SysChroot,
              CSTRING, path1)
 {
-    chdir("/");
+    int ignore; // avoid warning: ignoring return value of 'int chdir(const char*)'
+
+    ignore = chdir("/");
     return chroot(path1);
 }
 

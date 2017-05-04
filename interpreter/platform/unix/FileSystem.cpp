@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -195,6 +195,7 @@ BufferClass *SystemInterpreter::readProgram(const char *file_name)
 {
     FILE    *handle;                     /* open file access handle           */
     size_t   buffersize;                 /* size of read buffer               */
+    size_t   readSize;                   // actual bytes read
     {
         handle = fopen(file_name, "rb");     /* open as a binary file             */
         if (handle == NULL)
@@ -211,8 +212,12 @@ BufferClass *SystemInterpreter::readProgram(const char *file_name)
     {
         UnsafeBlock releaser;
 
-        fread(buffer->getData(), 1, buffersize, handle);
+        readSize = fread(buffer->getData(), 1, buffersize, handle);
         fclose(handle);                      /* close the file                    */
+    }
+    if (readSize < buffersize) // read error?
+    {   
+        return OREF_NULL;                  /* return nothing                    */
     }
     return buffer;                       /* return the program buffer         */
 }

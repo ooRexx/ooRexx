@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -43,6 +43,7 @@
 #include "Interpreter.hpp"
 #include "ActivityManager.hpp"
 #include "LanguageParser.hpp"
+#include "ProtectedObject.hpp"
 
 #include <stdio.h>
 #include <fcntl.h>
@@ -216,14 +217,17 @@ void ProgramMetaData::write(FILE *handle, BufferClass *program)
 BufferClass *ProgramMetaData::read(RexxString *fileName, FILE *handle)
 {
     bool badVersion = false;
+    size_t headerSize = getHeaderSize();
+    size_t readSize;
 
     // now read the control info
-    fread((char *)this, 1, getHeaderSize(), handle);
-    // validate all of the meta information
-    if (!validate(badVersion))
+    readSize = fread((char *)this, 1, headerSize, handle);
+    // if we could read the header, validate all of the meta information
+    if (readSize < headerSize || !validate(badVersion))
     {
-        // if this failed because of the version signature, we need to raise an error now.
-        if (badVersion)
+        // if this failed because we couldn't read in the required header, or
+        // because of the version signature, we need to raise an error now.
+        if (readSize < headerSize || badVersion)
         {
             fclose(handle);
             reportException(Error_Program_unreadable_version, fileName);
@@ -252,13 +256,14 @@ BufferClass *ProgramMetaData::read(RexxString *fileName, FILE *handle)
                 }
                 // ok, try to read the control information one more time.
                 // if this doesn't work, no point in being pushy about it.
-                fread((char *)this, 1, getHeaderSize(), handle);
-                // validate all of the meta information
-                if (!validate(badVersion))
+                readSize = fread((char *)this, 1, headerSize, handle);
+                // if we could read the header, validate all of the meta information
+                if (readSize < headerSize || !validate(badVersion))
                 {
                     fclose(handle);                    /* close the file                    */
-                    // if because of a bad version sig, we can close now
-                    if (badVersion)
+                    // if because we couldn't read in the required header, or
+                    // because of a bad version sig, we can close now
+                    if (readSize < headerSize || badVersion)
                     {
                         reportException(Error_Program_unreadable_version, fileName);
                     }
@@ -268,6 +273,13 @@ BufferClass *ProgramMetaData::read(RexxString *fileName, FILE *handle)
         }
     }
     BufferClass *buffer = new_buffer(imageSize);
-    fread(buffer->getData(), 1, imageSize, handle);
+    ProtectedObject p(buffer);
+    readSize = fread(buffer->getData(), 1, imageSize, handle);
+    if (readSize < imageSize)
+    {
+        fclose(handle);
+        reportException(Error_Program_unreadable_version, fileName);
+        return OREF_NULL;
+    }
     return buffer;
 }

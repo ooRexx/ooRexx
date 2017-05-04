@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -81,7 +81,11 @@ void SysThread::dispatch()
 char *SysThread::getStackBase()
 {
    int32_t temp;
+// avoid warning: function returns address of local variable
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wreturn-local-addr"
    return ((char *)(&temp)) - THREAD_STACK_SIZE;
+#pragma GCC diagnostic pop
 }
 
 

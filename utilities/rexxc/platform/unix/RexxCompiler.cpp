@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -147,8 +147,7 @@ int main (int argc, char **argv)
     if (!silent)                       /* display version and copyright     */
     {
         ptr = RexxGetVersionInformation();
-        printf(ptr);
-        printf("\n");
+        printf("%s\n", ptr);
         RexxFreeMemory(ptr);
     }
     /* Check validity of arguments       */

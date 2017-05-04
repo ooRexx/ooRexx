@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -75,6 +75,8 @@ int main(int argc, char **argv)
     short    rexxrc = 0;                    /* return code from function  */
     const char *pszLibraryName = "librexx.so"; /* define the library name    */
     char returnBuffer[100];
+    int ignore; // avoid warning: ignoring return value of 'system'
+                // avoid warning: ignoring return value of 'scanf'
 
     char    val;
     const char *str1 = "Arg number one";                   /* text to swap   */
@@ -120,7 +122,7 @@ int main(int argc, char **argv)
     /* If the returned value does not fit into the buffer,                */
     /* Open Object Rexx creates a new one.                                */
 
-    system("clear");
+    ignore = system("clear");
 
     rexxretval.strptr = NULL;       /* initialize return-pointer to empty */
     rexxretval.strlength = 0;       /* initialize return-length to zero   */
@@ -129,7 +131,7 @@ int main(int argc, char **argv)
     printf("The Rexx commandfile which is started is named: startrx1.rex\n");
 
     printf("Press Enter to continue\n");
-    scanf("%c", &val);
+    ignore = scanf("%c", &val);
 
 
     /* This is the interpreter invocation. ------------------------------ */
@@ -146,7 +148,7 @@ int main(int argc, char **argv)
              &rexxretval );          /* Rexx program output   */
 
     printf("CALLREXX2 - Back from REXXSTART:  Return Code: %d\n", rc);
-    printf("CALLREXX2 - RESULT-LENGTH:           %d\n", rexxretval.strlength);
+    printf("CALLREXX2 - RESULT-LENGTH:           %zd\n", rexxretval.strlength);
     printf("CALLREXX2 - RESULT-Value:            %s\n", rexxretval.strptr);
 
     if (rexxretval.strptr != NULL)
@@ -155,16 +157,16 @@ int main(int argc, char **argv)
     }
 
     printf("Press Enter to continue\n");
-    scanf("%c", &val);
+    ignore = scanf("%c", &val);
 
-    system("clear");
+    ignore = system("clear");
 
     printf("In this case a previously defined Resultstring is \n");
     printf("delivered to Open Object Rexx, which is large enough to \n");
     printf("hold the Return Value of the Rexx commandfile.\n");
 
     printf("Press Enter to continue\n");
-    scanf("%c", &val);
+    ignore = scanf("%c", &val);
 
     rexxretval.strptr = returnBuffer;
     rexxretval.strlength = sizeof(returnBuffer);
@@ -182,7 +184,7 @@ int main(int argc, char **argv)
 
     printf("CALLREXX2 - Back from REXXSTART:  Return Code: %d\n", rc);
     printf("rexxretval.strptr contains %s\n", rexxretval.strptr);
-    printf("CALLREXX2 - RESULT-LENGTH:           %d\n", rexxretval.strlength);
+    printf("CALLREXX2 - RESULT-LENGTH:           %zd\n", rexxretval.strlength);
     printf("CALLREXX2 - RESULT-Value:            %s\n", rexxretval.strptr);
     /* if Rexx needed to allocate a new buffer, release that one */
     if (rexxretval.strptr != returnBuffer)
@@ -191,9 +193,9 @@ int main(int argc, char **argv)
     }
 
     printf("Press Enter to continue\n");
-    scanf("%c", &val);
+    ignore = scanf("%c", &val);
 
-    system("clear");
+    ignore = system("clear");
 
     printf("In this case a previously defined Resultstring is \n");
     printf("delivered to Open Object Rexx, which is too small to\n");
@@ -202,12 +204,12 @@ int main(int argc, char **argv)
     printf("in the calling program\n");
 
     printf("Press Enter to continue\n");
-    scanf("%c", &val);
+    ignore = scanf("%c", &val);
 
     rexxretval.strptr = (char *)returnBuffer;
     rexxretval.strlength = 2;
 
-    printf("The length of the Resultstring is %d\n", rexxretval.strlength);
+    printf("The length of the Resultstring is %zd\n", rexxretval.strlength);
 
     rc = (*FuncAddress)(
              0,                      /* number of arguments   */
@@ -222,7 +224,7 @@ int main(int argc, char **argv)
 
     printf("CALLREXX2 - Back from REXXSTART:  Return Code: %d\n", rc);
     printf("The ResultString contains %s after call\n", rexxretval.strptr);
-    printf("The length is now %d\n", rexxretval.strlength);
+    printf("The length is now %zd\n", rexxretval.strlength);
 
     /* if Rexx needed to allocate a new buffer, release that one */
     if (rexxretval.strptr != returnBuffer)
@@ -231,9 +233,9 @@ int main(int argc, char **argv)
     }
 
     printf("Press Enter to continue\n");
-    scanf("%c", &val);
+    ignore = scanf("%c", &val);
 
-    system("clear");
+    ignore = system("clear");
 
     rexxretval.strptr = NULL;       /* initialize return-pointer to empty */
     rexxretval.strlength = 0;       /* initialize return-length to zero   */
@@ -243,7 +245,7 @@ int main(int argc, char **argv)
     printf("The Rexx commandfile which is started is named: startrx2.rex\n");
 
     printf("Press Enter to continue\n");
-    scanf("%c", &val);
+    ignore = scanf("%c", &val);
 
     MAKERXSTRING(arg[0], str1, strlen(str1));  /* create input argument 1 */
     MAKERXSTRING(arg[1], str2, strlen(str2));  /* create input argument 2 */
@@ -262,22 +264,22 @@ int main(int argc, char **argv)
              &rexxretval );          /* Rexx program output   */
 
     printf("CALLREXX2 - Back from REXXSTART:  Return Code: %d\n", rc);
-    printf("CALLREXX2 - RESULT-LENGTH:           %d\n", rexxretval.strlength);
+    printf("CALLREXX2 - RESULT-LENGTH:           %zd\n", rexxretval.strlength);
     printf("CALLREXX2 - RESULT-Value:            %s\n", rexxretval.strptr);
 
     RexxFreeMemory(rexxretval.strptr);
 
     printf("Press Enter to continue\n");
-    scanf("%c", &val);
+    ignore = scanf("%c", &val);
 
-    system("clear");
+    ignore = system("clear");
 
     printf("This is a sample with 2 arguments delivered to  \n");
     printf("REXXSTART\n");
     printf("The Rexx commandfile which is started is named: startrx2.rex\n");
 
     printf("Press Enter to continue\n");
-    scanf("%c", &val);
+    ignore = scanf("%c", &val);
 
     rexxretval.strptr = NULL;       /* initialize return-pointer to empty */
     rexxretval.strlength = 0;       /* initialize return-length to zero   */
@@ -294,15 +296,15 @@ int main(int argc, char **argv)
              &rexxretval );          /* Rexx program output   */
 
     printf("CALLREXX2 - Back from REXXSTART:  Return Code: %d\n", rc);
-    printf("CALLREXX2 - RESULT-LENGTH:           %d\n", rexxretval.strlength);
+    printf("CALLREXX2 - RESULT-LENGTH:           %zd\n", rexxretval.strlength);
     printf("CALLREXX2 - RESULT-Value:            %s\n", rexxretval.strptr);
 
     RexxFreeMemory(rexxretval.strptr);
 
     printf("Press Enter to continue\n");
-    scanf("%c", &val);
+    ignore = scanf("%c", &val);
 
-    system("clear");
+    ignore = system("clear");
 
     printf("This is a sample where the directory listing of the   \n");
     printf("actual directory is returned by the Rexx program. The \n");
@@ -310,7 +312,7 @@ int main(int argc, char **argv)
     printf("The Rexx commandfile which is started is named: startrx3.rex\n");
 
     printf("Press Enter to continue\n");
-    scanf("%c", &val);
+    ignore = scanf("%c", &val);
 
     rexxretval.strptr = NULL;       /* initialize return-pointer to empty */
     rexxretval.strlength = 0;       /* initialize return-length to zero   */
@@ -327,24 +329,24 @@ int main(int argc, char **argv)
              &rexxretval );          /* Rexx program output   */
 
     printf("CALLREXX2 - Back from REXXSTART:  Return Code: %d\n", rc);
-    printf("CALLREXX2 - RESULT-LENGTH:           %d\n", rexxretval.strlength);
+    printf("CALLREXX2 - RESULT-LENGTH:           %zd\n", rexxretval.strlength);
     printf("CALLREXX2 - RESULT-Value:            %s\n", rexxretval.strptr);
 
     RexxFreeMemory(rexxretval.strptr);
 
     printf("Press Enter to continue\n");
-    scanf("%c", &val);
+    ignore = scanf("%c", &val);
 
-    system("clear");
+    ignore = system("clear");
 
     printf("This is a sample where the instore parameter [0] is \n");
     printf("tested. Instore parameter [0] is loaded with \n");
     printf("a small Open Object Rexx script showing the concurrency feature.\n");
 
     printf("Press Enter to continue\n");
-    scanf("%c", &val);
+    ignore = scanf("%c", &val);
 
-    instore[0].strptr = (const char *)sync_tst;
+    instore[0].strptr = (char *)sync_tst;
     instore[0].strlength = strlen(instore[0].strptr);
     instore[1].strptr = NULL;
     instore[1].strlength = 0;
@@ -364,21 +366,21 @@ int main(int argc, char **argv)
              &rexxretval );          /* Rexx program output   */
 
     printf("CALLREXX2 - Back from REXXSTART:  Return Code: %d\n", rc);
-    printf("CALLREXX2 - RESULT-LENGTH:           %d\n", rexxretval.strlength);
+    printf("CALLREXX2 - RESULT-LENGTH:           %zd\n", rexxretval.strlength);
     printf("CALLREXX2 - RESULT-Value:            %s\n", rexxretval.strptr);
 
     RexxFreeMemory(rexxretval.strptr);
 
     printf("Press Enter to continue\n");
-    scanf("%c", &val);
+    ignore = scanf("%c", &val);
 
-    system("clear");
+    ignore = system("clear");
 
     printf("Now instore[1] is loaded with the content of instore[0]. \n");
     printf("It can be used on subsequent calls. instore[0] is set to NULL \n");
 
     printf("Press Enter to continue\n");
-    scanf("%c", &val);
+    ignore = scanf("%c", &val);
 
     instore[0].strptr = NULL;
     instore[0].strlength = 0;
@@ -398,7 +400,7 @@ int main(int argc, char **argv)
              &rexxretval );          /* Rexx program output   */
 
     printf("CALLREXX2 - Back from REXXSTART:  Return Code: %d\n", rc);
-    printf("CALLREXX2 - RESULT-LENGTH:           %d\n", rexxretval.strlength);
+    printf("CALLREXX2 - RESULT-LENGTH:           %zd\n", rexxretval.strlength);
     printf("CALLREXX2 - RESULT-Value:            %s\n", rexxretval.strptr);
 
     RexxFreeMemory(rexxretval.strptr);
@@ -406,9 +408,9 @@ int main(int argc, char **argv)
     free(instore[1].strptr);
 
     printf("Press Enter to continue\n");
-    scanf("%c", &val);
+    ignore = scanf("%c", &val);
 
-    system("clear");
+    ignore = system("clear");
 
     printf("This is a sample to show how to use the Rexx MacroSpace facility. \n");
     printf("First of all load_macro.rex is called to load \n");
@@ -416,7 +418,7 @@ int main(int argc, char **argv)
     printf("name is upload.rex. \n");
 
     printf("Press Enter to continue\n");
-    scanf("%c", &val);
+    ignore = scanf("%c", &val);
 
     rexxretval.strptr = NULL;       /* initialize return-pointer to empty */
     rexxretval.strlength = 0;       /* initialize return-length to zero   */
@@ -433,15 +435,15 @@ int main(int argc, char **argv)
              &rexxretval );          /* Rexx program output   */
 
     printf("CALLREXX2 - Back from REXXSTART:  Return Code: %d\n", rc);
-    printf("CALLREXX2 - RESULT-LENGTH:           %d\n", rexxretval.strlength);
+    printf("CALLREXX2 - RESULT-LENGTH:           %zd\n", rexxretval.strlength);
     printf("CALLREXX2 - RESULT-Value:            %s\n", rexxretval.strptr);
 
     RexxFreeMemory(rexxretval.strptr);
 
     printf("Press Enter to continue\n");
-    scanf("%c", &val);
+    ignore = scanf("%c", &val);
 
-    system("clear");
+    ignore = system("clear");
 
     printf("Now the Open Object Rexx script macros.rex (named upload.rex) has been loaded\n");
     printf("into Macrospace. It is now used in the name option of\n");
@@ -450,7 +452,7 @@ int main(int argc, char **argv)
     printf("initialized to NULL rsp. 0 and used as REXXSTART parameters\n");
 
     printf("Press Enter to continue\n");
-    scanf("%c", &val);
+    ignore = scanf("%c", &val);
 
     rexxretval.strptr = NULL;       /* initialize return-pointer to empty */
     rexxretval.strlength = 0;       /* initialize return-length to zero   */
@@ -472,7 +474,7 @@ int main(int argc, char **argv)
              &rexxretval );          /* Rexx program output   */
 
     printf("CALLREXX2 - Back from REXXSTART:  Return Code: %d\n", rc);
-    printf("CALLREXX2 - RESULT-LENGTH:           %d\n", rexxretval.strlength);
+    printf("CALLREXX2 - RESULT-LENGTH:           %zd\n", rexxretval.strlength);
     printf("CALLREXX2 - RESULT-Value:            %s\n", rexxretval.strptr);
 
     RexxFreeMemory(rexxretval.strptr);
@@ -480,15 +482,15 @@ int main(int argc, char **argv)
     free(rexxretval.strptr);
 
     printf("Press Enter to continue\n");
-    scanf("%c", &val);
+    ignore = scanf("%c", &val);
 
-    system("clear");
+    ignore = system("clear");
 
     printf("Finally del_macro.rex is called to delete macros.rex (named upload.rex)\n");
     printf("out of the Open Object Rexx Macrospace.\n");
 
     printf("Press Enter to continue\n");
-    scanf("%c", &val);
+    ignore = scanf("%c", &val);
 
     rc = (*FuncAddress)(
              0,                      /* number of arguments   */
@@ -502,15 +504,15 @@ int main(int argc, char **argv)
              &rexxretval );          /* Rexx program output   */
 
     printf("CALLREXX2 - Back from REXXSTART:  Return Code: %d\n", rc);
-    printf("CALLREXX2 - RESULT-LENGTH:           %d\n", rexxretval.strlength);
+    printf("CALLREXX2 - RESULT-LENGTH:           %zd\n", rexxretval.strlength);
     printf("CALLREXX2 - RESULT-Value:            %s\n", rexxretval.strptr);
 
     RexxFreeMemory(rexxretval.strptr);
 
     printf("Press Enter to continue\n");
-    scanf("%c", &val);
+    ignore = scanf("%c", &val);
 
-    system("clear");
+    ignore = system("clear");
     return 0;
 }
 

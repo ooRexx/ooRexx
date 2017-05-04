@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -1183,7 +1183,7 @@ size_t RexxEntry SysCls(const char *name, size_t numargs, CONSTRXSTRING args[], 
 {
   if (numargs)                         /* arguments specified?       */
     return INVALID_ROUTINE;            /* raise the error            */
-  system("clear");                     /* do the clear               */             // think about the use of 'execve', Weigold
+  int ignore = system("clear");        /* do the clear               */             // think about the use of 'execve', Weigold
   BUILDRXSTRING(retstr, NO_UTIL_ERROR);/* pass back result           */
   return VALID_ROUTINE;                /* no error on call           */
 }
@@ -3025,7 +3025,7 @@ static bool getPathSegment(RexxCallContext *c, char *fileSpec, char **path, size
                     if ( ! getBiggerBuffer(c, &dPath, &nPath, *pathLen) )
                     {
                         // Back to current directory.
-                        chdir(savedPath);
+                        int ignore = chdir(savedPath);
                         return false;
                     }
                 }
@@ -3046,7 +3046,7 @@ static bool getPathSegment(RexxCallContext *c, char *fileSpec, char **path, size
                 }
 
                 // Back to current directory.
-                chdir(savedPath);
+                int ignore = chdir(savedPath);
             }
         }
     }
@@ -4645,13 +4645,13 @@ size_t RexxEntry SysDumpVariables(const char *name, size_t numargs, CONSTRXSTRIN
 
     if (rc == RXSHV_OK)
     {
+      ssize_t ignore; // avoid warning: ignoring return value of 'ssize_t write(int, const void*, size_t)'
 
-
-      write(handle, "Name=", strlen("Name="));
-      write(handle, shvb.shvname.strptr, shvb.shvname.strlength);
-      write(handle, ", Value='", 9);
-      write(handle, shvb.shvvalue.strptr,shvb.shvvalue.strlength);
-      write(handle, "'\n", 2);
+      ignore = write(handle, "Name=", strlen("Name="));
+      ignore = write(handle, shvb.shvname.strptr, shvb.shvname.strlength);
+      ignore = write(handle, ", Value='", 9);
+      ignore = write(handle, shvb.shvvalue.strptr,shvb.shvvalue.strlength);
+      ignore = write(handle, "'\n", 2);
 
       /* free memory allocated by REXX */
       RexxFreeMemory((void *)shvb.shvname.strptr);

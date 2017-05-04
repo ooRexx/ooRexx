@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -604,8 +604,8 @@ void ServerQueueManager::createUniqueQueue(ServiceMessage &message)
         sprintf(tagstring, "%p", (void *)tag);
 
         // message parameter1 is the session identifier.
-        sprintf(message.nameArg, "S%sQ%s", (void *)(session[1] == 'x' ? session + 2 : session),
-            (void *)(tagstring[1] == 'x' ? tagstring + 2 : tagstring));
+        sprintf(message.nameArg, "S%sQ%s", (char *)(session[1] == 'x' ? session + 2 : session),
+            (char *)(tagstring[1] == 'x' ? tagstring + 2 : tagstring));
         if (namedQueues.locate(message.nameArg) == 0)
         {
             // set the name
