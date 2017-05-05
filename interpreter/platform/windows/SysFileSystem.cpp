@@ -139,9 +139,9 @@ void SysFileSystem::qualifyStreamName(const char *unqualifiedName, char *qualifi
     errorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
     // similar to the Unix behaviour, we return the current directory
     // if 'unqualifiedName' is the null string
-    DWORD rc = GetFullPathName((unqualifiedName[0] == '\0') ? "." : unqualifiedName,
+    DWORD length = GetFullPathName((unqualifiedName[0] == '\0') ? "." : unqualifiedName,
                                (DWORD)bufferSize, qualifiedName, &lpszLastNamePart);
-    if ((rc == 0) || (rc >= bufferSize))
+    if ((length == 0) || (length >= bufferSize))
     {
       // if GetFullPathName() failed or would need a larger buffer, return null string 
       qualifiedName[0] = '\0';
@@ -159,7 +159,7 @@ void SysFileSystem::qualifyStreamName(const char *unqualifiedName, char *qualifi
       if ((strncmp(unqualifiedName, "\\\\.\\", 4) != 0) &&  // didn't start with "\\.\"
           (strncmp(qualifiedName, "\\\\.\\", 4) == 0))      // starts with "\\.\"
       {
-        strcpy(qualifiedName, &qualifiedName[4]);           // remove leading "\\.\"
+        memmove(qualifiedName, &qualifiedName[4], length - 4 + 1); // remove leading "\\.\"
       }
     }
     SetErrorMode(errorMode);
