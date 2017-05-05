@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2008 Rexx Language Association. All rights reserved.         */
+/* Copyright (c) 2008-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -113,6 +113,7 @@ int RexxEntry TestFunctionExit(int code, int subcode, PEXIT exitInfo)
             return RXEXIT_RAISE_ERROR;
         case InstanceInfo::RAISE:
             return RXEXIT_RAISE_ERROR;
+        default: break; // avoid warning: enumeration values not handled in switch
     }
 
     RXFNCCAL_PARM *parms = (RXFNCCAL_PARM *)exitInfo;
@@ -178,6 +179,7 @@ int RexxEntry TestCommandExit(int code, int subcode, PEXIT exitInfo)
             return RXEXIT_RAISE_ERROR;
         case InstanceInfo::RAISE:
             return RXEXIT_RAISE_ERROR;
+        default: break; // avoid warning: enumeration values not handled in switch
     }
 
     RXCMDHST_PARM *parms = (RXCMDHST_PARM *)exitInfo;
@@ -249,6 +251,7 @@ int RexxEntry TestQueueExit(int code, int subcode, PEXIT exitInfo)
             return RXEXIT_RAISE_ERROR;
         case InstanceInfo::RAISE:
             return RXEXIT_RAISE_ERROR;
+        default: break; // avoid warning: enumeration values not handled in switch
     }
 
     switch (subcode)
@@ -316,6 +319,7 @@ int RexxEntry TestSessionIOExit(int code, int subcode, PEXIT exitInfo)
             return RXEXIT_RAISE_ERROR;
         case InstanceInfo::RAISE:
             return RXEXIT_RAISE_ERROR;
+        default: break; // avoid warning: enumeration values not handled in switch
     }
     switch (subcode)
     {
@@ -397,6 +401,7 @@ int RexxEntry TestHaltExit(int code, int subcode, PEXIT exitInfo)
             parms->rxhlt_flags.rxfhhalt = 0;
             return RXEXIT_HANDLED;
         }
+        default: break; // avoid warning: enumeration values not handled in switch
     }
     return RXEXIT_NOT_HANDLED;
 }
@@ -428,6 +433,7 @@ int RexxEntry TestTraceExit(int code, int subcode, PEXIT exitInfo)
             parms->rxtrc_flags.rxftrace = 0;
             return RXEXIT_HANDLED;
         }
+        default: break; // avoid warning: enumeration values not handled in switch
     }
     return RXEXIT_NOT_HANDLED;
 }
@@ -444,6 +450,7 @@ int RexxEntry TestInitExit(int code, int subcode, PEXIT exitInfo)
             return RXEXIT_RAISE_ERROR;
         case InstanceInfo::RAISE:
             return RXEXIT_RAISE_ERROR;
+        default: break; // avoid warning: enumeration values not handled in switch
     }
     setContextVariable("TEST1", "Hello World");
     return RXEXIT_HANDLED;
@@ -461,6 +468,7 @@ int RexxEntry TestTerminationExit(int code, int subcode, PEXIT exitInfo)
             return RXEXIT_RAISE_ERROR;
         case InstanceInfo::RAISE:
             return RXEXIT_RAISE_ERROR;
+        default: break; // avoid warning: enumeration values not handled in switch
     }
 
     char buffer[256];
@@ -487,6 +495,7 @@ int RexxEntry TestScriptFunctionExit(int code, int subcode, PEXIT exitInfo)
             return RXEXIT_RAISE_ERROR;
         case InstanceInfo::RAISE:
             return RXEXIT_RAISE_ERROR;
+        default: break; // avoid warning: enumeration values not handled in switch
     }
     // nothing else really testable in a classic fashion
     return RXEXIT_NOT_HANDLED;
@@ -504,6 +513,7 @@ int RexxEntry TestObjectFunctionExit(int code, int subcode, PEXIT exitInfo)
             return RXEXIT_RAISE_ERROR;
         case InstanceInfo::RAISE:
             return RXEXIT_RAISE_ERROR;
+        default: break; // avoid warning: enumeration values not handled in switch
     }
     // nothing else really testable in a classic fashion
     return RXEXIT_NOT_HANDLED;
@@ -521,6 +531,7 @@ int RexxEntry TestNovalueExit(int code, int subcode, PEXIT exitInfo)
             return RXEXIT_RAISE_ERROR;
         case InstanceInfo::RAISE:
             return RXEXIT_RAISE_ERROR;
+        default: break; // avoid warning: enumeration values not handled in switch
     }
 
     // nothing else really testable in a classic fashion
@@ -539,6 +550,7 @@ int RexxEntry TestValueExit(int code, int subcode, PEXIT exitInfo)
             return RXEXIT_RAISE_ERROR;
         case InstanceInfo::RAISE:
             return RXEXIT_RAISE_ERROR;
+        default: break; // avoid warning: enumeration values not handled in switch
     }
 
     // nothing else really testable in a classic fashion

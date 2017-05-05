@@ -84,6 +84,7 @@ char *SysThread::getStackBase()
 // avoid warning: function returns address of local variable
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wreturn-local-addr"
+#pragma clang diagnostic ignored "-Wreturn-stack-address"
    return ((char *)(&temp)) - THREAD_STACK_SIZE;
 #pragma GCC diagnostic pop
 }

@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -49,6 +49,12 @@
 #include <fcntl.h>
 #if defined(__OpenBSD__)
 #include <sys/stat.h>
+#endif
+
+// avoid warning: 'fstat64' is deprecated: first deprecated in macOS 10.6
+#if defined __APPLE__
+# define stat64 stat
+# define fstat64 fstat
 #endif
 
 // The following define the platform independent open flags
