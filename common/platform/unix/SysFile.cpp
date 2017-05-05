@@ -62,10 +62,14 @@
 # include <sys/filio.h>
 #endif
 
-#if defined(__APPLE__) && defined(__MACH__)
+#if defined __APPLE__
 # define lseek64 lseek
 # define open64 open
+// avoid warning: '(f)stat64' is deprecated: first deprecated in macOS 10.6
+# define stat64 stat
+# define fstat64 fstat
 #endif
+
 
 #include "SysFile.hpp"
 

@@ -51,12 +51,6 @@
 #include <sys/stat.h>
 #endif
 
-// avoid warning: 'fstat64' is deprecated: first deprecated in macOS 10.6
-#if defined __APPLE__
-# define stat64 stat
-# define fstat64 fstat
-#endif
-
 // The following define the platform independent open flags
 // openFlags argument flags
 #define RX_O_RDONLY       O_RDONLY
