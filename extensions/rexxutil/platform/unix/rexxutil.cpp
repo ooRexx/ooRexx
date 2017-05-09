@@ -249,7 +249,7 @@ union semun {
 # define open64 open
 // avoid warning: '(l)stat64' is deprecated: first deprecated in macOS 10.6
 # define stat64 stat
-# define lstat64 fstat
+# define lstat64 lstat
 #endif
 
 

@@ -65,9 +65,9 @@
 #if defined __APPLE__
 # define lseek64 lseek
 # define open64 open
-// avoid warning: '(l)stat64' is deprecated: first deprecated in macOS 10.6
+// avoid warning: '(f)stat64' is deprecated: first deprecated in macOS 10.6
 # define stat64 stat
-# define lstat64 fstat
+# define fstat64 fstat
 #endif
 
 
