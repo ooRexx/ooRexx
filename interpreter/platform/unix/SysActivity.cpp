@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -163,5 +163,13 @@ void SysActivity::useCurrentThread()
 char *SysActivity::getStackBase(size_t stackSize)
 {
     size_t temp;
+#pragma GCC diagnostic push
+// avoid CLANG warning: address of stack memory associated with local variable returned
+#pragma clang diagnostic ignored "-Wreturn-stack-address"
+// avoid CLANG warning: unknown warning group '-Wreturn-local-addr', ignored
+#pragma clang diagnostic ignored "-Wunknown-pragmas"
+// avoid GCC warning: function returns address of local variable
+#pragma GCC diagnostic ignored "-Wreturn-local-addr"
     return (char *)&temp - stackSize;
+#pragma GCC diagnostic pop
 }

@@ -62,6 +62,13 @@
 #include "Utilities.hpp"
 #include "ActivityManager.hpp"
 
+#if defined __APPLE__
+// avoid warning: '(l)stat64' is deprecated: first deprecated in macOS 10.6
+# define stat64 stat
+# define lstat64 fstat
+#endif
+
+
 const char SysFileSystem::EOF_Marker = 0x1A;
 const char *SysFileSystem::EOL_Marker = "\n";
 const char SysFileSystem::PathDelimiter = '/';

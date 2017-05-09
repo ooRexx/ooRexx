@@ -2623,6 +2623,12 @@ special character (such as a parenthesis).
 </listitem>
 </varlistentry>
 <varlistentry>
+<term>002</term>
+<listitem>
+<para>Interpretation error: unmatched <emphasis role="italic">type</emphasis> <emphasis role="italic">number</emphasis>.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
 <term>900</term>
 <listitem>
 <para>

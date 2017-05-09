@@ -166,11 +166,6 @@
 # include <malloc.h>
 #endif
 
-#if defined(__APPLE__) && defined(__MACH__)
-#define lseek64 lseek
-#define open64 open
-#endif
-
 #include <fcntl.h>
 #include <ctype.h>
 #include <string.h>
@@ -249,6 +244,14 @@ union semun {
   unsigned short *array;
 };
 #endif
+
+#if defined __APPLE__
+# define open64 open
+// avoid warning: '(l)stat64' is deprecated: first deprecated in macOS 10.6
+# define stat64 stat
+# define lstat64 fstat
+#endif
+
 
 extern char *resolve_tilde(const char *);
 

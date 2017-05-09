@@ -3655,6 +3655,18 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Interpretation_initialization</SymbolicName>
         <Text>Interpretation error: unexpected failure initializing the interpreter.</Text>
       </SubMessage>
+
+      <SubMessage>
+        <Code>49</Code>
+        <Subcode>002</Subcode>
+        <MessageNumber>585</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Interpretation_switch</SymbolicName>
+        <Text>Interpretation error: unmatched <Sub position="1" name="type"/> <Sub position="2" name="number"/>.</Text>
+        <Explanation><para>An internal interpreter error occured: a switch() statement couldn't match any of its case statements.</para></Explanation>
+      </SubMessage>
+
       <SubMessage>
         <Code>49</Code>
         <Subcode>900</Subcode>

@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2015 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -1395,6 +1395,10 @@ RexxToken *LanguageParser::scanSymbol()
 
             // once EXP_EXCLUDED is reached the state doesn't change.  We're
             // just consuming symbol characters from here.
+            case EXP_EXCLUDED:
+            {
+                break;                   /* go get the next character         */
+            }
         }
 
         // handled all of the states, now handle the termination checks.

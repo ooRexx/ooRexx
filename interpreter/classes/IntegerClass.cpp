@@ -1746,7 +1746,7 @@ RexxObject *RexxInteger::d2c(RexxInteger *lengthObject)
     // we'll forward anything else to NumberString to deal with
     if (Numerics::isValid(value, number_digits()) &&
        ((value >= 0 && lengthObject == OREF_NULL) ||
-        (lengthObject != OREF_NULL) && isInteger(lengthObject) && lengthObject->getValue() > 0))
+        (lengthObject != OREF_NULL && isInteger(lengthObject) && lengthObject->getValue() > 0)))
     {
         wholenumber_t length;
         if (lengthObject == OREF_NULL)
@@ -1804,7 +1804,7 @@ RexxObject *RexxInteger::d2x(RexxInteger *lengthObject)
     // we'll forward anything else to NumberString to deal with
     if (Numerics::isValid(value, number_digits()) &&
        ((value >= 0 && lengthObject == OREF_NULL) ||
-        (lengthObject != OREF_NULL) && isInteger(lengthObject) && lengthObject->getValue() > 0))
+        (lengthObject != OREF_NULL && isInteger(lengthObject) && lengthObject->getValue() > 0)))
     {
         wholenumber_t length;
         if (lengthObject == OREF_NULL)

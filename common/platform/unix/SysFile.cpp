@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -65,9 +65,9 @@
 #if defined __APPLE__
 # define lseek64 lseek
 # define open64 open
-// avoid warning: '(f)stat64' is deprecated: first deprecated in macOS 10.6
+// avoid warning: '(l)stat64' is deprecated: first deprecated in macOS 10.6
 # define stat64 stat
-# define fstat64 fstat
+# define lstat64 fstat
 #endif
 
 

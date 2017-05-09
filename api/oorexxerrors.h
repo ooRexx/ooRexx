@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -428,6 +428,7 @@
 #define Rexx_Error_System_service_user_defined                            48900
 #define Rexx_Error_Interpretation                                         49000
 #define Rexx_Error_Interpretation_initialization                          49001
+#define Rexx_Error_Interpretation_switch                                  49002
 #define Rexx_Error_Interpretation_user_defined                            49900
 #define Rexx_Error_Invalid_argument                                       88000
 #define Rexx_Error_Invalid_argument_user_defined                          88900

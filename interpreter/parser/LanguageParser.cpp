@@ -2207,6 +2207,13 @@ RexxInternalObject *LanguageParser::addText(RexxToken *token)
                     return retriever;
                     break;
                 }
+
+                // invalid symbol subtype (should really never happen)
+                default:
+                {
+                    reportException(Error_Interpretation_switch, "symbol subtype", token->subtype());
+                    break;
+                }
             }
             break;
         }
@@ -2227,6 +2234,12 @@ RexxInternalObject *LanguageParser::addText(RexxToken *token)
             // this to the table and return it directly
             literals->put(name,  name);
             return name;
+            break;
+        }
+
+        // not a token type that can have a retriever
+        default:
+        {
             break;
         }
     }
@@ -3546,7 +3559,7 @@ RexxInternalObject *LanguageParser::parseSubTerm(int terminators)
         // an error
         case  TOKEN_OPERATOR:
         {
-             switch (token->type())
+             switch (token->subtype())
              {
                  // +, -, and logical NOT variants are permitted here...except
                  // we don't actually process them here, so back up and say we got nothing.
@@ -3926,6 +3939,13 @@ void LanguageParser::blockError(RexxInstruction *instruction)
         case KEYWORD_ELSE:
             syntaxError(Error_Incomplete_do_else, instruction);
             break;
+
+        // invalid block instruction type (should really never happen)
+        default:
+        {
+            reportException(Error_Interpretation_switch, "block instruction type", instruction->getType());
+            break;
+        }
     }
 }
 

@@ -331,7 +331,7 @@ RexxReturnCode RexxEntry GrxHost(PCONSTRXSTRING command,
                /* DISKR */
                pll -> pFile = fopen(pll -> FileName, "r+");
                }
-            if ((pll -> pFile == NULL)) {
+            if (pll -> pFile == NULL) {
                /* file could be opened so return an error */
                free(pll);
                rc = ERR_EXECIO_BAD_PLIST; // Bad PLIST

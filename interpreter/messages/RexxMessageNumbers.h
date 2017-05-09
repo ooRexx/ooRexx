@@ -2,7 +2,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -501,6 +501,7 @@
 #define Error_Translation_use_local_msg                              582
 #define Error_Translation_class_external_bad_class_name_msg          583
 #define Error_Translation_class_external_bad_class_server_msg        584
+#define Error_Interpretation_switch_msg                              585
 #define Error_Incorrect_call_parm_wrong_sep_msg                      586
 #define Error_Incorrect_call_format_incomp_sep_msg                   587
 #define Error_Incorrect_call_queue_no_char_msg                       588

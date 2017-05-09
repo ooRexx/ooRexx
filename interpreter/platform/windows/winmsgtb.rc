@@ -2,7 +2,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -500,6 +500,7 @@ BEGIN
    99910    "USE LOCAL must be the first instruction executed after a method invocation."
    99928    "Incorrect class external; class name missing or invalid."
    99929    "Incorrect class external; invalid class server ""&1""."
+   49002    "Interpretation error: unmatched &1 &2."
    40043    "&1 argument &2 must be a single non-alphanumeric character or the null string; found ""&3""."
    40044    "&1 argument &2, ""&3"", is a format incompatible with the separator specified in argument &4."
    40915    "&1 cannot be used with QUEUE:."

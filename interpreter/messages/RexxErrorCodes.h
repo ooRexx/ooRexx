@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -430,6 +430,7 @@ Error_System_service_service                                 = 48001,
 Error_System_service_user_defined                            = 48900,
 Error_Interpretation                                         = 49000,
 Error_Interpretation_initialization                          = 49001,
+Error_Interpretation_switch                                  = 49002,
 Error_Interpretation_user_defined                            = 49900,
 Error_Invalid_argument                                       = 88000,
 Error_Invalid_argument_user_defined                          = 88900,
