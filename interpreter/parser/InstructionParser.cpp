@@ -1198,6 +1198,13 @@ RexxInstruction *LanguageParser::newDoOverLoop(RexxString *label, RexxToken *nam
                 conditional.conditional = parseLoopConditional(conditionalType, Error_None);
                 break;
             }
+
+            // invalid DO OVER loop subkey (should really never happen)
+            default:
+            {
+                reportException(Error_Interpretation_switch, "DO OVER loop subkey", token->subKeyword());
+                break;
+            }
         }
         token = nextReal();
     }
