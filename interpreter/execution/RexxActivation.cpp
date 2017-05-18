@@ -263,11 +263,8 @@ RexxActivation::RexxActivation(Activity *_activity, RoutineClass *_routine, Rexx
     executionState = ACTIVE;       // we are now in active execution
     objectScope = SCOPE_RELEASED;  // scope not reserved yet
 
-    // a live marking can happen without a properly set up stack (::live()
-    // is called). Setting the NoRefBit when creating the stack avoids it.
-    setHasNoReferences();
-    _activity->allocateStackFrame(&stack, code->getMaxStackSize());
-    setHasReferences();
+    // get our evaluation stack
+    allocateStackFrame();
 
     // initialize with the package-defined settings
     inheritPackageSettings();
@@ -1320,6 +1317,8 @@ void RexxActivation::exitFrom(RexxObject * resultObj)
         {
             activity->callTerminationExit(this);
         }
+        // terminate this level
+        termination();
     }
     else
     {
@@ -1391,6 +1390,11 @@ void RexxActivation::termination()
     {
         contextObject->detach();
     }
+    // since we don't always control the order of garbage collection and the
+    // argument list source, clear the arglist pointers as a belt-and-braces
+    // situation.
+    argList = OREF_NULL;
+    argCount = 0;
 }
 
 

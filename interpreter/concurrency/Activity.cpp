@@ -438,9 +438,8 @@ wholenumber_t Activity::error()
     // unwind to a base activation
     while (!topStackFrame->isStackBase())
     {
-        // if we're not to the very base of the stack, terminate the frame
-        topStackFrame->termination();
-        popStackFrame(false);
+        // pop and terminate te frame
+        popStackFrame(topStackFrame);
     }
 
     // go display
@@ -470,8 +469,7 @@ wholenumber_t Activity::error(ActivationBase *activation, DirectoryClass *errorI
     while (topStackFrame != activation)
     {
         // if we're not to the stack very base of the stack, terminate the frame
-        topStackFrame->termination();
-        popStackFrame(false);
+        popStackFrame(topStackFrame);
     }
 
     // go display
@@ -1671,8 +1669,7 @@ void Activity::unwindToFrame(RexxActivation *frame)
     // keep popping frames until we find the tarte frame
     while ((activation = getTopStackFrame()) != frame)
     {
-        activation->termination();
-        popStackFrame(false);
+        popStackFrame(activation);
     }
 }
 
@@ -1805,8 +1802,7 @@ void Activity::returnAttach()
     while (!topStackFrame->isStackBase())
     {
         // if we're not to the very base of the stack, terminate the frame
-        topStackFrame->termination();
-        popStackFrame(false);
+        popStackFrame(topStackFrame);
     }
 
     // NB: popStackframe has protections against popping a stack base activation,
