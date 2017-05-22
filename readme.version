@@ -4,10 +4,8 @@ oorexx.ver
 configure.ac
 CHANGES
 ReleaseNotes
-api/oorexxapi.h                         (REXX_INTERPRETER_4_1_x)
+api/oorexxapi.h                         (REXX_INTERPRETER_5_x_x)
 extensions/rxftp/rxftp.cls
-platform/unix/oorexx-config.1
-platform/unix/oorexx.spec.in
 platform/unix/rexx.1
 platform/unix/rexxc.1
 platform/unix/rxqueue.1
