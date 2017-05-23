@@ -116,11 +116,11 @@ bool TrapHandler::canHandle(RexxString *c)
     // if the trap is CALL ON, there are only a few
     // conditions we can trap with an ANY
     if (handler->isType(KEYWORD_CALL_ON) &&
-        (condition->strCompare(GlobalNames::SYNTAX) ||
-         condition->strCompare(GlobalNames::NOVALUE) ||
-         condition->strCompare(GlobalNames::LOSTDIGITS) ||
-         condition->strCompare(GlobalNames::NOMETHOD) ||
-         condition->strCompare(GlobalNames::NOSTRING)))
+        (c->strCompare(GlobalNames::SYNTAX) ||
+         c->strCompare(GlobalNames::NOVALUE) ||
+         c->strCompare(GlobalNames::LOSTDIGITS) ||
+         c->strCompare(GlobalNames::NOMETHOD) ||
+         c->strCompare(GlobalNames::NOSTRING)))
     {
         return false;
     }
