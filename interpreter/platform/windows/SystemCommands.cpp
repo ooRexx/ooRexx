@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -230,7 +230,11 @@ bool sysCommandNT(RexxExitContext *context, const char *command, const char *cmd
     siStartInfo.hStdError = GetStdHandle(STD_ERROR_HANDLE);
     titleChanged = GetConsoleTitle(ctitle, 255) != 0;
     siStartInfo.lpTitle = (LPSTR)cmdstring_ptr;
-    creationFlags = GetPriorityClass(GetCurrentProcess()) | CREATE_NEW_PROCESS_GROUP;
+    // if creation flag CREATE_NEW_PROCESS_GROUP is specified, CreateProcess() will
+    // implicitly call SetConsoleCtrlHandler(NULL,TRUE) which causes the created
+    // process to ignore Ctrl+C signals, as reported in [bugs:#1328]
+    // (for details see MSDN CreateProcess() and SetConsoleCtrlHandler())
+    creationFlags = GetPriorityClass(GetCurrentProcess()); // | CREATE_NEW_PROCESS_GROUP;
     if (!siStartInfo.hStdInput && !siStartInfo.hStdOutput && !titleChanged)  /* is REXXHIDE running without console */
     {
         if (!direct)
