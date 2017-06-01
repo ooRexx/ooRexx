@@ -263,7 +263,8 @@ else
 	    fi
 	}
 	checkproc() { return status ${1+"$@"}; }
-	start_daemon() { return daemon ${1+"$@"}; }
+	# start_daemon() { return daemon ${1+"$@"}; }
+	start_daemon() { shift; daemon "--pidfile" $@; return $?; }
     else
 	# emulate it
 	echo_rc() { echo "  [${_SMSG[${_RC_RV}]}] "; }
