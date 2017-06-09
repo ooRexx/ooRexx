@@ -996,7 +996,7 @@ bool NumberString::int64Value(int64_t *result, wholenumber_t numDigits)
     if (numberLength <= numDigits && numberExp >= 0)
     {
         // the minimum negative value requires one more than the max positive
-        if (!createUnsignedInt64Value(numberDigits, numberLength, false, numberExp, ((uint64_t)INT64_MAX), intnum))
+        if (!createUnsignedInt64Value(numberDigits, numberLength, false, numberExp, ((uint64_t)INT64_MAX) + 1, intnum))
         {
             return false;                   // too big to handle
         }
