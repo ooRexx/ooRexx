@@ -1,6 +1,6 @@
 #/*----------------------------------------------------------------------------*/
 #/*                                                                            */
-#/* Copyright (c) 2014-2014 Rexx Language Association. All rights reserved.    */
+#/* Copyright (c) 2014-2017 Rexx Language Association. All rights reserved.    */
 #/*                                                                            */
 #/* This program and the accompanying materials are made available under       */
 #/* the terms of the Common Public License v1.0 which accompanies this         */
@@ -151,7 +151,6 @@ if (WIN32)
    set (INSTALL_EXECUTABLE_DIR .)
    set (INSTALL_LIB_DIR .)
    set (INSTALL_CLS_DIR .)
-   set (INSTALL_REX_DIR .)
    set (INSTALL_DOC_DIR doc)
    set (INSTALL_INCLUDE_DIR api)
    set (INSTALL_SAMPLES_DIR samples)
@@ -210,12 +209,11 @@ if (WIN32)
 
 
    endif ()
-   set (catdir ${CMAKE_REXXPATH})
    set (INSTALL_EXECUTABLE_DIR ${CMAKE_INSTALL_PREFIX}/bin)
-   set (INSTALL_CLS_DIR ${CMAKE_REXXPATH})
-   set (INSTALL_REX_DIR ${CMAKE_REXXPATH})
+   set (catdir ${INSTALL_EXECUTABLE_DIR})
+   set (INSTALL_CLS_DIR ${INSTALL_EXECUTABLE_DIR})
    set (INSTALL_INCLUDE_DIR ${CMAKE_INSTALL_PREFIX}/include)
-   set (INSTALL_SAMPLES_DIR ${CMAKE_REXXPATH}/samples)
+   set (INSTALL_SAMPLES_DIR ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
    set (INSTALL_MAN_DIR ${CMAKE_INSTALL_PREFIX}/share/man)
 endif ()
 # Set compiler and linker flags common to all build environments
@@ -231,9 +229,14 @@ if (WIN32)
             /DORX_CATDIR="${catdir}"
             /DORX_SHARED_LIBRARY_EXT="${CMAKE_SHARED_LIBRARY_SUFFIX}"
             /DORX_REXXPATH="${CMAKE_REXXPATH}"
+# suppress CRT_SECURE warnings
+# (we might instead use the secure versions, by using these two DEFINEs:
+#           /D_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1
+#           /D_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1
             /D_CRT_SECURE_NO_DEPRECATE
             /D_CRT_SECURE_NO_WARNINGS
             /D_CRT_NONSTDC_NO_DEPRECATE
+# suppress warning C4291: no matching operator delete found; memory will not be freed if initialization throws an exception
             /wd4291
             /DWIN32 /D_WINDOWS /DHAVE_CONFIG_H)
    if (${ORX_ARCHITECTURE} STREQUAL "64")
@@ -2007,8 +2010,6 @@ endif ()
 
 if (BUILD_PKG)
    set(CPACK_GENERATOR PKG)
-   #set (CPACK_PREFLIGHT_SCRIPT xxx)
-   #set (CPACK_POSTFLIGHT_SCRIPT xxx)
    #set (CPACK_OSX_PACKAGE_VERSION "10.10")
    #set (CPACK_BUNDLE_PLIST xxx)
    #set (CPACK_BUNDLE_STARTUP_COMMABD xxx)
