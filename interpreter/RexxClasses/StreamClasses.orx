@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -539,22 +539,25 @@ return position
 ::METHOD normalizePathSyntax PRIVATE
   use strict arg path
 
-  foundSeparator = false;
+  separator = self~separator
+
   -- since we might need to make multiple updates,
   -- do this in a mutable buffer
   buffer = .mutableBuffer~new(path)
-  -- we apply special matching rules for Windows files
-  isWindows = self~separator == "\"
 
   -- we only need to fix this up for Windows, since that has a platform
   -- specific separator that's different from the default
-  if isWindows then do
+  if separator == "\" then do
       buffer~changeStr('/', '\')   -- convert all slashes to backslashes
   end
 
-  -- the last name element should not end with a separator, to remove it
-  -- if one is there
-  do while buffer~length > 1, buffer~match(buffer~length, self~separator)
+  -- the last name element should not end with a separator
+  -- remove it if one is there, but keep "d:\" or a single "/" as-is
+  if buffer[2] == ":" then
+      minimum = 3
+  else
+      minimum = 1
+  do while buffer~length > minimum, buffer~endsWith(separator)
       buffer~delstr(buffer~length, 1)
   end
 
