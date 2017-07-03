@@ -2515,7 +2515,7 @@ void ArrayClass::mergeSort(BaseSortComparator &comparator, ArrayClass *working, 
     {
         for (size_t i = left + 1; i <= right; i++)
         {
-            RexxInternalObject *current = get(i);
+            Protected<RexxInternalObject> current = get(i);
             RexxInternalObject *prev = get(i - 1);
             if (comparator.compare(current, prev) < 0)
             {
