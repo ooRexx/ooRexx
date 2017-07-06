@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -213,6 +213,7 @@ protected:
     size_t          argCount;            // size of the argument list
     RexxObject    **argList;             // copy of the argument list
     ArrayClass     *argArray;            // optionally create argument array
+    RexxInternalObject *firstSavedObject;// first saved object...an optimization
     IdentityTable  *saveList;            // list of saved objects
     RexxObject     *result;              // result from RexxRaise call
     ActivationType activationType;       // the type of activation
