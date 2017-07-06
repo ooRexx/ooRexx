@@ -196,6 +196,11 @@ public:
     // default index hashing method.  bypass the hash() method and directly use the hash value
     virtual ItemLink hashIndex(RexxInternalObject *index)
     {
+        // Note: even though we are using object reference identity to find a match,
+        // we use the hash value returned from getHashValue() rather than the identityHash
+        // because identityTables stored in the saved image or compiled programs will have
+        // a different reference value (and thus a different identifyHash) on restore, meaning
+        // that lookups against these tables may fail.
         return (ItemLink)(index->getHashValue() % bucketSize);
     }
 

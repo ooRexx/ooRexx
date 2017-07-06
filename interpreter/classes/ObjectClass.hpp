@@ -264,6 +264,7 @@ class RexxInternalObject : public RexxVirtualBase
     inline void   clearObject() { memset(getObjectDataSpace(), '\0', getObjectDataSize()); }
     inline void   clearObject(size_t l) { memset(getObjectDataSpace(), '\0', l - getObjectHeaderSize()); }
     inline void   setVirtualFunctions(void *t) { *((void **)this) = t; }
+    inline bool   checkVirtualFunctions() { return *((void **)this) != NULL; }
 
     inline void   setInitHeader(size_t s, size_t markword)  { header.initHeader(s, markword); }
     inline void   setInitHeader(size_t markword)  { header.initHeader(markword); }

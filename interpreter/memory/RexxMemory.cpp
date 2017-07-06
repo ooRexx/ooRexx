@@ -1017,6 +1017,17 @@ void MemoryObject::mark(RexxInternalObject *markObject)
 {
     // get the current live mark to use for testing
     size_t liveMark = markWord | ObjectHeader::OldSpaceBit;
+
+    // The following is useful for debugging some garbage collection problems where
+    // an object with a NULL VFT is getting pushed on the to stack. This is a somewhat
+    // critical performance pack, so only enable these lines when debugging problems.
+#if 0
+    if (!markObject->checkVirtualFunctions())
+    {
+        Interpreter::logicError("Invalid object traced during garbage collection");
+    }
+#endif
+
     // mark this object as live
     markObject->setObjectLive(markWord);
 
