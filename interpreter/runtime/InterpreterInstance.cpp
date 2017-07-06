@@ -683,7 +683,7 @@ bool InterpreterInstance::processOptions(RexxOption *options)
             // if we have handlers, initialize the array
             if (handlers != NULL)
             {
-                for (int i = 0; handlers[i].handler != NULL; i++)
+                for (int i = 0; handlers[i].name != NULL && handlers[i].handler != NULL; i++)
                 {
                     // add the handler to this setup
                     addCommandHandler(handlers[i].name, (REXXPFN)handlers[i].handler);
