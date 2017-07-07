@@ -2515,6 +2515,10 @@ void ArrayClass::mergeSort(BaseSortComparator &comparator, ArrayClass *working, 
     {
         for (size_t i = left + 1; i <= right; i++)
         {
+            // During the insertion sort operation, 'current' may be temporarily
+            // out of both the source and working arrays, so it is vulnerable to
+            // garbage collection during subsequent compare operations.
+            // We need to give an extra layer of protection here.
             Protected<RexxInternalObject> current = get(i);
             RexxInternalObject *prev = get(i - 1);
             if (comparator.compare(current, prev) < 0)
@@ -2760,7 +2764,6 @@ ArrayClass *ArrayClass::stableSortWithRexx(RexxObject *comparator)
 
     // the merge sort requires a temporary scratch area for the sort.
     Protected<ArrayClass> working = new_array(count);
-    ProtectedObject p(working);
 
     WithSortComparator c(comparator);
 
