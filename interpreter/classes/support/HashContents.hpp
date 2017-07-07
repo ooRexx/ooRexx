@@ -463,7 +463,7 @@ public:
     // remap the put method to the multi-value type
     virtual void put(RexxInternalObject *value, RexxInternalObject *index)
     {
-        return addFront(value, index);
+        addFront(value, index);
     }
 };
 
