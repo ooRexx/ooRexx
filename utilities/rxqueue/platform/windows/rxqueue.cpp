@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -52,6 +52,8 @@
 #include <conio.h>             /* needed for input                   */
 #include <stdlib.h>            /* needed for miscellaneous functions */
 #include <string.h>            /* needed for string functions        */
+#include <io.h>                // _setmode()
+#include <fcntl.h>             // _O_BINARY
 #include "rexx.h"              /* needed for queue functions & codes */
 /* used for queue name                */
 #include "RexxErrorCodes.h"    /* generated file containing message numbers */
@@ -65,7 +67,6 @@
 #define DLLNAME "rexx.dll"
 
 char  line[LINEBUFSIZE];       /* buffer for data to add to queue    */
-char  work[256];               /* buffer for queue name, if default  */
 
 static void options_error(     /* function called on errors          */
     int   type,
@@ -93,7 +94,6 @@ int __cdecl main(
 /*********************************************************************/
 
     memset(line, '\0', sizeof(line)); /* clear buffer 'line' -for data */
-    memset(work, '\0', sizeof(work)); /* clear buffer 'work' -for      */
                                       /*   queuename                   */
 
 /*********************************************************************/
@@ -165,6 +165,12 @@ int __cdecl main(
 
     if (queuemode != RXQUEUE_CLEAR)
     {     /* if not CLEAR operation...  */
+
+        // not sure why this should be required, but it fixes
+        // [bugs:#1471] RXQUEUE loses lineends every 4096 chars
+        // (used to work on 4.2 and 5.0 until 12/2014; maybe compiler issue?)
+        _setmode(_fileno(stdin), _O_BINARY);
+
           // read until we get an EOF
         while (!get_line(line, sizeof(line), &linelen))
         {
@@ -410,9 +416,9 @@ static bool get_line(char *buffer,   /* Read buffer                */
         actual = fread(&newchar, 1, 1, stdin);
     }
     // had an error
-    if (actual != 0)                     // something read?
+    if (length != 0)                     // something read?
     {
-        *linelen = actual;               // return this
+        *linelen = length;               // return this
         eof = true;                      // can't read more
         return false;                    // but no error yet
     }
