@@ -543,16 +543,6 @@ nomethod:                              -- unknown method sent
   nomethod:                              -- unknown method sent
     raise syntax 93.948 array(1, "Collection")
 
-/*****************************************/
-/* HASITEM       method                  */
-/*****************************************/
-::method hasItem
-  -- the inherited hasItem is less efficient than
-  -- hasIndex.  Since the item and index must
-  -- be the same for Sets, map HASITEM to the
-  -- more efficient HASINDEX.
-  forward message('HASINDEX')
-
 
 /* *************************************** */
 /*    B A G                   C L A S S    */
@@ -728,18 +718,6 @@ nomethod:
 
   nomethod:                              -- unknown method sent
     raise syntax 93.948 array(1, "Collection")
-
-
-/*****************************************/
-/* HASITEM       method                  */
-/*****************************************/
-::method hasItem
-  -- the inherited hasItem is less efficient than
-  -- hasIndex.  Since the item and index must
-  -- be the same for Bags, map HASITEM to the
-  -- more efficient HASINDEX.
-  forward message('HASINDEX')
-
 
 -- Notification interface for the .Message class
 ::CLASS 'MessageNotification' MIXINCLASS Object Public

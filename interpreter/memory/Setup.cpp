@@ -872,6 +872,11 @@ StartClassDefinition(Set)
         // most of the hash collection methods can be inherited
         InheritInstanceMethods(IdentityTable);
 
+        // hasItem() is the same as hasIndex() for the Set class
+        AddMethod("HasItem", IdentityTable::hasIndexRexx, 1);
+        // removeItem() is the same as remove() for the Set class
+        AddMethod("RemoveItem", IdentityTable::removeRexx, 1);
+
     CompleteMethodDefinitions();
 
     CompleteClassDefinition(Set);
@@ -944,8 +949,11 @@ StartClassDefinition(Bag)
 
     CompleteClassMethodDefinitions();
 
-    // many of the hash collection methods can be inherited
+        // many of the hash collection methods can be inherited
         InheritInstanceMethods(Relation);
+
+        AddMethod("HasItem", BagClass::hasItemRexx, 2);
+        AddMethod("RemoveItem", BagClass::removeItemRexx, 2);
 
     CompleteMethodDefinitions();
 

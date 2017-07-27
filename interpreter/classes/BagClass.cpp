@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -158,4 +158,51 @@ BagClass *BagClass::ofRexx(RexxObject **args, size_t  argCount)
         newBag->put(item);
     }
     return newBag;
+}
+
+
+/**
+ * Test for the existence of an item in the Bag, optionally
+ * qualified by an index value.
+ *
+ * @param value  The target value.
+ * @param index  The optional index.
+ *
+ * @return .true if this was found, .false otherwise.
+ */
+RexxObject *BagClass::hasItemRexx(RexxObject *value, RexxObject *index)
+{
+    requiredArgument(value, ARG_ONE);
+
+    // index is optional, but if specified, it must be equal to value
+    if (index != OREF_NULL && !contents->isIndexEqual(value, index))
+    {
+        return TheNilObject;
+    }
+
+    // hasItem() is the same as hasIndex() for the Bag class
+    return booleanObject(hasIndex(value));
+}
+
+
+/**
+ * Remove an item from a Bag, optionally qualified with an index value.
+ *
+ * @param value The target value.
+ * @param index The optional index.
+ *
+ * @return The removed item, if any.
+ */
+RexxObject *BagClass::removeItemRexx(RexxObject *value, RexxObject *index)
+{
+    requiredArgument(value, ARG_ONE);
+
+    // index is optional, but if specified, it must be equal to value
+    if (index != OREF_NULL && !contents->isIndexEqual(value, index))
+    {
+        return TheNilObject;
+    }
+
+    // removeItem() is the same as remove() for the Bag class
+    return resultOrNil(remove(value));
 }
