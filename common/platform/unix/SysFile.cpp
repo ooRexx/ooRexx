@@ -628,39 +628,60 @@ bool SysFile::putLine(const char *mybuffer, size_t len, size_t &bytesWritten)
 }
 
 
-bool SysFile::gets(char *mybuffer, size_t bufferLen, size_t &bytesRead)
+/**
+ * Read characters from the stream until the next newline, or until the
+ * buffer fills up.  If the read characters end in a carriage return +
+ * newline sequence, collapse it into a single newline character.
+ * Return the line including the trailing newline character (if any).
+ *
+ * @param buffer Start of the line to write.
+ * @param bufferLen
+ *               The maximum length to read.
+ * @param bytesRead
+ *               The actual number of bytes read, including the line
+ *               terminator.
+ *
+ * @return A success/failure indicator.
+ */
+bool SysFile::gets(char *buffer, size_t bufferLen, size_t &bytesRead)
 {
     size_t i;
-    for (i = 0; i < bufferLen - 1; i++)
+
+    for (i = 0; i < bufferLen; i++)
     {
         size_t len;
 
         // if we don't get a character break out of here.
-        if (!this->read(mybuffer + i, 1, len))
+        if (!read(buffer + i, 1, len))
         {
             break;
         }
 
-        // we only look for a newline character.  On return, this
-        // line will have the terminator characters at the end, or
-        // if the buffer fills up before we find the terminator,
-        // this will just be null terminated.  If this us a multi
-        // character line terminator, both characters will appear
-        // at the end of the line.
-        if (mybuffer[i] == '\n')
+        // we only look for a newline character to terminate our line.
+        if (buffer[i] == '\n')
         {
-            // once we hit a new line character, back up and see if the
+            // once we hit a newline character, back up and see if the
             // previous character is a carriage return.  If it is, collapse
             // it to the single line delimiter.
-            if (i >= 1 && mybuffer[i - 1] == '\r')
+            if (i >= 1 && buffer[i - 1] == '\r')
             {
                 i--;
-                mybuffer[i] = '\n';
+                buffer[i] = '\n';
             }
-            i++;   // we need to step the position so that the null terminator doesn't overwrite
+            i++;   // step the position to give the actual number of bytes read
             break;
         }
     }
+
+    // The buffer may have filled up with a carriage return as its last character.
+    // A following newline character will require collapsing crlf to lf,
+    // but any other character will require transmitting cr unmodified.
+    // So, we need to refreain from returning the trailing cr.
+    if (i == bufferLen && buffer[i - 1] == '\r')
+        {
+            i--;
+            ungetc(buffer[i]);
+        }
 
     // if there is no data read at all, this is an eof failure;
     if (i == 0)
@@ -668,7 +689,7 @@ bool SysFile::gets(char *mybuffer, size_t bufferLen, size_t &bytesRead)
         return false;
     }
 
-    // this is the length minus the terminating null
+    // this is the length of the read data (including the newline, if any)
     bytesRead = i;
     // return an error state, but not EOF status.
     return !error();
@@ -783,8 +804,8 @@ bool SysFile::seekForwardLines(int64_t startPosition, int64_t &lineCount, int64_
     flush();
 
     // get a buffer for searching
-    char *mybuffer = (char *)malloc(LINE_POSITIONING_BUFFER);
-    if (mybuffer == NULL)
+    char *buffer = (char *)malloc(LINE_POSITIONING_BUFFER);
+    if (buffer == NULL)
     {
         errInfo = ENOMEM;
         return false;
@@ -798,16 +819,16 @@ bool SysFile::seekForwardLines(int64_t startPosition, int64_t &lineCount, int64_
         // return our current count and indicate this worked.
         if (!setPosition(startPosition, startPosition))
         {
-            free(mybuffer);
+            free(buffer);
             // set the return position and get outta here
             endPosition = startPosition;
             return true;
         }
 
         size_t bytesRead;
-        if (!read(mybuffer, readLength, bytesRead))
+        if (!read(buffer, readLength, bytesRead))
         {
-            free(mybuffer);
+            free(buffer);
             // if we've hit an eof condition, this is the end
             if (atEof())
             {
@@ -821,7 +842,7 @@ bool SysFile::seekForwardLines(int64_t startPosition, int64_t &lineCount, int64_
         // have we hit the eof?
         if (bytesRead == 0)
         {
-            free(mybuffer);
+            free(buffer);
             // set the return position and get outta here
             endPosition = startPosition;
             return true;
@@ -833,7 +854,7 @@ bool SysFile::seekForwardLines(int64_t startPosition, int64_t &lineCount, int64_
         {
             // we're only interested in \n character, since this will
             // mark the transition point between lines.
-            if (mybuffer[offset] == '\n')
+            if (buffer[offset] == '\n')
             {
                 // reduce the line count by one.
                 lineCount--;
@@ -842,7 +863,7 @@ bool SysFile::seekForwardLines(int64_t startPosition, int64_t &lineCount, int64_
                 {
                     // set the return position and get outta here
                     endPosition = startPosition + offset + 1;
-                    free(mybuffer);
+                    free(buffer);
                     return true;
                 }
             }
