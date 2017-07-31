@@ -628,7 +628,7 @@ bool SysFile::gets(char *buffer, size_t bufferLen, size_t &bytesRead)
 {
     size_t i;
 
-    for (i = 0; i < bufferLen; i++)
+    for (i = 0; i < bufferLen - 1; i++)
     {
         size_t len;
 
@@ -657,8 +657,8 @@ bool SysFile::gets(char *buffer, size_t bufferLen, size_t &bytesRead)
     // The buffer may have filled up with a carriage return as its last character.
     // A following newline character will require collapsing crlf to lf,
     // but any other character will require transmitting cr unmodified.
-    // So, we need to refreain from returning the trailing cr.
-    if (i == bufferLen && buffer[i - 1] == '\r')
+    // So, we need to refrain from returning the trailing cr.
+    if (i == bufferLen - 1 && buffer[i - 1] == '\r')
         {
             i--;
             ungetc(buffer[i]);
