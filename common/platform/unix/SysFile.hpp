@@ -99,7 +99,7 @@ public:
     bool write(const char *data, size_t len, size_t &bytesWritten);
     bool putChar(char ch);
     bool ungetc(char ch);
-    bool getChar(char &ch);
+    inline bool getChar(char &ch) { size_t len; return read(&ch, 1, len); }
     bool puts(const char *data, size_t &bytesWritten);
     bool gets(char *buffer, size_t len, size_t &bytesRead);
     bool setPosition(int64_t location, int64_t &position);
