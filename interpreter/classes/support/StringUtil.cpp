@@ -240,7 +240,10 @@ size_t StringUtil::pos(const char *stringData, size_t haystack_length, RexxStrin
     // - test for the complete needle with memcmp()
     while (haypointer) 
     {
-        if (memcmp(haypointer, needlepointer, needle_length) == 0)
+        // memchr() gave us a match for the first character of needle
+        // before calling memcmp() we also check for a match of the second character
+        if ( *(haypointer + 1) == *(needlepointer + 1) &&
+            memcmp(haypointer + 2, needlepointer + 2, needle_length - 2) == 0)
         {
             return haypointer - stringData + 1;
         }

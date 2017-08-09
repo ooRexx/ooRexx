@@ -945,30 +945,26 @@ MutableBuffer *MutableBuffer::changeStr(RexxString *needle, RexxString *newNeedl
 
     // we'll only change up to a specified count.  If not there, we do everything.
     size_t count = optionalNonNegative(countArg, Numerics::MAX_WHOLENUMBER, ARG_THREE);
+
     // if no change is requested, return the original string.
     if (count == 0)
     {
         return this;
     }
 
-    // find the number of matches (up to count) in the string
-    size_t matches = StringUtil::countStr(getStringData(), getLength(), needle, count);
-
-    // no matches is easy!
-    if (matches == 0)
+    size_t needleLength = needle->getLength();
+    // if needle is the nullstring, return the original string.
+    if (needleLength == 0)
     {
         return this;
     }
-
-    size_t needleLength = needle->getLength();
     size_t newLength = newNeedle->getLength();
-
-    // calculate the final length and make sure we have enough space
-    size_t resultLength = getLength() - (matches * needleLength) + (matches * newLength);
-    ensureCapacity(resultLength);
+    const char *newData = newNeedle->getStringData();
 
     // an inplace update has complications, depending on whether the new string is shorter,
     // the same length, or longer
+
+    size_t matches;
 
     // simplest case...same length strings.  We can just overlay the existing occurrences
     if (needleLength == newLength)
@@ -976,16 +972,22 @@ MutableBuffer *MutableBuffer::changeStr(RexxString *needle, RexxString *newNeedl
         const char *source = getStringData();
         size_t sourceLength = getLength();
         size_t _start = 0;                          /* set a zero starting point         */
-        for (size_t i = 0; i < matches; i++)
+        // search for at most 'count' occurences
+        for (matches = 1; matches <= count; matches++)
         {
-            // search for the next occurrence...which should be there because we
-            // already know the count
+            // search for the next occurrence
             size_t matchPos = StringUtil::pos(source, sourceLength, needle, _start, sourceLength);
-            copyData(matchPos - 1, newNeedle->getStringData(), newLength);
+            if (matchPos == 0)         // no more match? we're done
+            {
+                break;
+            }
+            copyData(matchPos - 1, newData, newLength);
             // step to the next search position
             _start = matchPos + newLength - 1;
         }
+        // no need to update the result length as it will be the same
     }
+
     // this will be a shorter thing, so we can do things in place as if we were using two buffers
     else if (needleLength > newLength)
     {
@@ -995,12 +997,17 @@ MutableBuffer *MutableBuffer::changeStr(RexxString *needle, RexxString *newNeedl
         // get our string bounds
         const char *source = getStringData();
         size_t sourceLength = getLength();
-        const char *newPtr = newNeedle->getStringData();
-        // this is our scan offset
-        for (size_t i = 0; i < matches; i++)
+        // search for at most 'count' occurences
+        for (matches = 0; matches < count; matches++)
         {
-            // look for each instance and replace
+            // search for the next occurrence
             size_t matchPos = StringUtil::pos(source, sourceLength, needle, _start, sourceLength);
+            if (matchPos == 0)         // no more match? we're done
+            {
+                break;
+            }
+
+            // replace match
             size_t copyLength = (matchPos - 1) - _start;  /* get the next length to copy       */
             // if this skipped over characters, we need to copy those
             if (copyLength != 0)
@@ -1011,7 +1018,7 @@ MutableBuffer *MutableBuffer::changeStr(RexxString *needle, RexxString *newNeedl
             // replacing with a non-null string, copy the replacement string in
             if (newLength != 0)
             {
-                copyData(copyOffset, newPtr, newLength);
+                copyData(copyOffset, newData, newLength);
                 copyOffset += newLength;
             }
             _start = matchPos + needleLength - 1;  /* step to the next position         */
@@ -1021,11 +1028,28 @@ MutableBuffer *MutableBuffer::changeStr(RexxString *needle, RexxString *newNeedl
         {
             copyData(copyOffset, source + _start, sourceLength - _start);
         }
+
+        // update the result length
+        dataLength = sourceLength - matches * (needleLength - newLength);
     }
+
     // hardest case...the string gets longer.  We need to shift all of the data
     // to the end and then pull the pieces back in as we go
     else
     {
+        // find the number of matches (up to count) in the string
+        size_t matches = StringUtil::countStr(getStringData(), getLength(), needle, count);
+
+        // no matches is easy!
+        if (matches == 0)
+        {
+            return this;
+        }
+
+        // calculate the final length and make sure we have enough space
+        size_t resultLength = getLength() + matches * (newLength - needleLength);
+        ensureCapacity(resultLength);
+
         size_t growth = (newLength - needleLength) * matches;
 
         // we start building from the beginning
@@ -1037,7 +1061,6 @@ MutableBuffer *MutableBuffer::changeStr(RexxString *needle, RexxString *newNeedl
         // this shifts everything to the end of the buffer.  From there,
         // we pull pieces back into place.
         openGap(0, growth, sourceLength);
-        const char *newPtr = newNeedle->getStringData();
         // this is our scan offset
         for (size_t i = 0; i < matches; i++)
         {
@@ -1053,7 +1076,7 @@ MutableBuffer *MutableBuffer::changeStr(RexxString *needle, RexxString *newNeedl
             // replacing with a non-null string, copy the replacement string in
             if (newLength != 0)
             {
-                copyData(copyOffset, newPtr, newLength);
+                copyData(copyOffset, newData, newLength);
                 copyOffset += newLength;
             }
             _start = matchPos + needleLength - 1;  /* step to the next position         */
@@ -1063,9 +1086,9 @@ MutableBuffer *MutableBuffer::changeStr(RexxString *needle, RexxString *newNeedl
         {
             copyData(copyOffset, source + _start, sourceLength - _start);
         }
+        // update the result length for the longer result
+        dataLength = resultLength;
     }
-    // update the result length, and return
-    dataLength = resultLength;
     return this;
 }
 
@@ -1087,47 +1110,49 @@ MutableBuffer *MutableBuffer::caselessChangeStr(RexxString *needle, RexxString *
 
     // we'll only change up to a specified count.  If not there, we do everything.
     size_t count = optionalNonNegative(countArg, Numerics::MAX_WHOLENUMBER, ARG_THREE);
+
     // if no change is requested, return the original string.
     if (count == 0)
     {
         return this;
     }
 
-    // find the number of matches (up to count) in the string
-    size_t matches = StringUtil::caselessCountStr(getStringData(), getLength(), needle, count);
-
-    // no matches is easy!
-    if (matches == 0)
+    size_t needleLength = needle->getLength();
+    // if needle is the nullstring, return the original string.
+    if (needleLength == 0)
     {
         return this;
     }
-
-    size_t needleLength = needle->getLength();
     size_t newLength = newNeedle->getLength();
-
-    // calculate the final length and make sure we have enough space
-    size_t resultLength = getLength() - (matches * needleLength) + (matches * newLength);
-    ensureCapacity(resultLength);
+    const char *newData = newNeedle->getStringData();
 
     // an inplace update has complications, depending on whether the new string is shorter,
     // the same length, or longer
+
+    size_t matches;
 
     // simplest case...same length strings.  We can just overlay the existing occurrences
     if (needleLength == newLength)
     {
         const char *source = getStringData();
         size_t sourceLength = getLength();
-        size_t _start = 0;
-        for (size_t i = 0; i < matches; i++)
+        size_t _start = 0;                          /* set a zero starting point         */
+        // search for at most 'count' occurences
+        for (matches = 1; matches <= count; matches++)
         {
-            // search for the next occurrence...which should be there because we
-            // already know the count
+            // search for the next occurrence
             size_t matchPos = StringUtil::caselessPos(source, sourceLength, needle, _start, sourceLength);
-            copyData(matchPos - 1, newNeedle->getStringData(), newLength);
+            if (matchPos == 0)         // no more match? we're done
+            {
+                break;
+            }
+            copyData(matchPos - 1, newData, newLength);
             // step to the next search position
             _start = matchPos + newLength - 1;
         }
+        // no need to update the result length as it will be the same
     }
+
     // this will be a shorter thing, so we can do things in place as if we were using two buffers
     else if (needleLength > newLength)
     {
@@ -1137,12 +1162,17 @@ MutableBuffer *MutableBuffer::caselessChangeStr(RexxString *needle, RexxString *
         // get our string bounds
         const char *source = getStringData();
         size_t sourceLength = getLength();
-        const char *newPtr = newNeedle->getStringData();
-        // this is our scan offset
-        for (size_t i = 0; i < matches; i++)
+        // search for at most 'count' occurences
+        for (matches = 0; matches < count; matches++)
         {
-            // look for each instance and replace
+            // search for the next occurrence
             size_t matchPos = StringUtil::caselessPos(source, sourceLength, needle, _start, sourceLength);
+            if (matchPos == 0)         // no more match? we're done
+            {
+                break;
+            }
+
+            // replace match
             size_t copyLength = (matchPos - 1) - _start;  /* get the next length to copy       */
             // if this skipped over characters, we need to copy those
             if (copyLength != 0)
@@ -1153,21 +1183,38 @@ MutableBuffer *MutableBuffer::caselessChangeStr(RexxString *needle, RexxString *
             // replacing with a non-null string, copy the replacement string in
             if (newLength != 0)
             {
-                copyData(copyOffset, newPtr, newLength);
+                copyData(copyOffset, newData, newLength);
                 copyOffset += newLength;
             }
-            _start = matchPos + needleLength - 1;
+            _start = matchPos + needleLength - 1;  /* step to the next position         */
         }
         // we likely have some remainder that needs copying
         if (_start < sourceLength)
         {
             copyData(copyOffset, source + _start, sourceLength - _start);
         }
+
+        // update the result length
+        dataLength = sourceLength - matches * (needleLength - newLength);
     }
+
     // hardest case...the string gets longer.  We need to shift all of the data
     // to the end and then pull the pieces back in as we go
     else
     {
+        // find the number of matches (up to count) in the string
+        size_t matches = StringUtil::caselessCountStr(getStringData(), getLength(), needle, count);
+
+        // no matches is easy!
+        if (matches == 0)
+        {
+            return this;
+        }
+
+        // calculate the final length and make sure we have enough space
+        size_t resultLength = getLength() + matches * (newLength - needleLength);
+        ensureCapacity(resultLength);
+
         size_t growth = (newLength - needleLength) * matches;
 
         // we start building from the beginning
@@ -1179,7 +1226,6 @@ MutableBuffer *MutableBuffer::caselessChangeStr(RexxString *needle, RexxString *
         // this shifts everything to the end of the buffer.  From there,
         // we pull pieces back into place.
         openGap(0, growth, sourceLength);
-        const char *newPtr = newNeedle->getStringData();
         // this is our scan offset
         for (size_t i = 0; i < matches; i++)
         {
@@ -1195,19 +1241,19 @@ MutableBuffer *MutableBuffer::caselessChangeStr(RexxString *needle, RexxString *
             // replacing with a non-null string, copy the replacement string in
             if (newLength != 0)
             {
-                copyData(copyOffset, newPtr, newLength);
+                copyData(copyOffset, newData, newLength);
                 copyOffset += newLength;
             }
-            _start = matchPos + needleLength - 1;
+            _start = matchPos + needleLength - 1;  /* step to the next position         */
         }
         // we likely have some remainder that needs copying
         if (_start < sourceLength)
         {
             copyData(copyOffset, source + _start, sourceLength - _start);
         }
+        // update the result length for the longer result
+        dataLength = resultLength;
     }
-    // update the result length, and return
-    dataLength = resultLength;
     return this;
 }
 
