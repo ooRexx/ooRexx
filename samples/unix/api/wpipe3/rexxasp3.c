@@ -271,7 +271,7 @@ RexxReturnCode REXXENTRY Aspi_Read_All_Elements_Of_A_Specific_Stem_From_REXX_VP(
 {
    SHVBLOCK *prxshv, *temp, *interim, rxshv;
    RexxReturnCode rc;
-   char array[20], value[10];
+   char array[20], value[11];
    char *pch, *result;
    int chars;
    int j, k = 0;

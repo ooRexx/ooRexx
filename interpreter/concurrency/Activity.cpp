@@ -1231,7 +1231,7 @@ void Activity::reraiseException(DirectoryClass *exobj)
     wholenumber_t primary = (errornumber / 1000) * 1000;
     if (errornumber != primary)
     {
-        char work[10];
+        char work[22];
         sprintf(work,"%1zd%3.3zd", errornumber/1000, errornumber - primary);
         errornumber = atol(work);
 
