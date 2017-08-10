@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -59,7 +59,7 @@ class NumberArray : public RexxInternalObject
     NumberArray(size_t entries);
     inline NumberArray(RESTORETYPE restoreType) { ; };
 
-    inline void clear() { memset((void *)&entries[0], (int) (sizeof(size_t) * totalSize), 0); }
+    inline void clear() { memset((void *)&entries[0], 0, sizeof(size_t) * totalSize); }
     inline bool inBounds(size_t index) { return index > 0 && index <= totalSize; }
     size_t       size() { return totalSize; };
 
