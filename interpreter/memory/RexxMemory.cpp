@@ -117,8 +117,6 @@ MemoryObject::MemoryObject()
     // a lie.  Since this never participates in a sweep operation,
     // this works ok in the end.
     setObjectSize(Memory::roundObjectBoundary(sizeof(MemoryObject)));
-    // our first pool is the current one
-    currentPool = firstPool;
 
     // OR'ed into object headers to mark during gc
     markWord = 1;
@@ -143,12 +141,13 @@ MemoryObject::MemoryObject()
  */
 void MemoryObject::initialize(bool restoringImage)
 {
-    // create the initial memory pool and initialize everything.
-    firstPool = MemorySegmentPool::createPool();
-    currentPool = firstPool;
-
     // The constructor makes sure some crucial aspects of the Memory object are set up.
     new (this) MemoryObject;
+
+    // create the initial memory pool and initialize everything.
+    firstPool = MemorySegmentPool::createPool();
+    // our first pool is the current one
+    currentPool = firstPool;
 
     // create our various segment pools
     new (&newSpaceNormalSegments) NormalSegmentSet(this);
