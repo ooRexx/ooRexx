@@ -1943,6 +1943,7 @@ RexxString  *NumberString::formatRexx(RexxObject *Integers, RexxObject *Decimals
 RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t decimals, wholenumber_t mathexp,
     wholenumber_t exptrigger, NumberString *original, wholenumber_t digits, bool form)
 {
+
     // if we have an exponent, we will format this early
     // so that we know the length.  Set this up as a null string
     // value to start.
@@ -2077,6 +2078,19 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
                     digitsCount -= adjustedDecimals;
                     // go round the number digit
                     mathRound(numberDigits);
+
+                    // [bugs:#1474] has brought up a case, where although the initial
+                    // exponential notation trigger had been true, when re-doing
+                    // "the whole trigger thing" (see below), it became false.
+                    // Neither do we want format() to switch from exponential to
+                    // non-exponential just because of format() rounding reasons, nor
+                    // can the code further down build the result string for this case
+                    // without crashing (because trailingDecimalZeros becomes negative).
+                    // To fix we apply some sort of kludge here:
+                    // we simply remember the triggered exponential state and let it
+                    // override the outcome of the second trigger calulation
+                    bool showExponentWasTrue = showExponent;
+
                     // calculate new adjusted value, which means we have to redo
                     // the previous exponent calculation.
                     // needed for format(.999999,,4,2,2)
@@ -2095,7 +2109,7 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
                     wholenumber_t adjustedExponent = numberExponent + digitsCount - 1;
 
                     // redo the whole trigger thing
-                    if (mathexp != 0 && (adjustedExponent >= exptrigger || (adjustedExponent < 0 && Numerics::abs(numberExponent) > exptrigger * 2)))
+                    if (showExponentWasTrue | (mathexp != 0 && (adjustedExponent >= exptrigger || (adjustedExponent < 0 && Numerics::abs(numberExponent) > exptrigger * 2))))
                     {
                         // this might not have been set on originally, but only occurring because of
                         // the rounding.
