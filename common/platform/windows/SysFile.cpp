@@ -1088,6 +1088,7 @@ bool SysFile::getTimeStamp(const char *name, const char *&time)
 
         time = asctime(gmtime(&mtime));
 
+        CloseHandle(h);
         return true;
     }
     return false;
