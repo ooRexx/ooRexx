@@ -991,6 +991,14 @@ VariableDictionary::VariableIterator::VariableIterator(VariableDictionary *d)
     dictionaryIterator = dictionary->contents->iterator();
     currentStem = OREF_NULL;
     returnStemValue = false;
+
+    // we need to skip over any dropped variables
+    while (dictionaryIterator.isAvailable() &&
+      ((RexxVariable *)dictionaryIterator.value())->isDropped())
+    {
+       dictionaryIterator.next();
+    }
+
     // now we're set up, but it is possible that the
     // first item in the dictionary is a stem.  We need to
     // check this here so we're set up properly to
