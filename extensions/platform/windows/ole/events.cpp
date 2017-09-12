@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -48,7 +48,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <dispex.h>
-#include <agtctl_i.c> /* include to get the ID of ControlAgent events */
+// no more required for MSVC 2015/2017
+// #include <agtctl_i.c> /* include to get the ID of ControlAgent events */
 
 #include "oorexxapi.h"
 #include "events.h"
