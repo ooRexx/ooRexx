@@ -580,9 +580,9 @@ return position
   end
 
   -- the normalization process has removed trailing separators, except for
-  -- the case where the dir is a root specification
+  -- the case where the dir is a root specification, / or d:/
 
-  if dir == separator then do
+  if dir~endsWith(separator) then do
       return dir || name
   end
   else do
