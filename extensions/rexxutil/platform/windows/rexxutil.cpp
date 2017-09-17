@@ -176,6 +176,7 @@
 #include <conio.h>
 #include <limits.h>
 #include <shlwapi.h>
+#include <math.h>                      // isnan(), HUGE_VAL
 
 #define OM_WAKEUP (WM_USER+10)
 VOID CALLBACK SleepTimerProc( HWND, UINT, UINT, DWORD);
@@ -3473,7 +3474,7 @@ size_t RexxEntry SysGetErrortext(const char *name, size_t numargs, CONSTRXSTRING
 {
     DWORD  errnum;
     char  *errmsg;
-    int length;
+    size_t length;
 
     if (numargs != 1)
     {
@@ -3805,74 +3806,52 @@ size_t RexxEntry SysSearchPath(const char *name, size_t numargs, CONSTRXSTRING a
 * Syntax:    call SysSleep secs                                          *
 *                                                                        *
 * Params:    secs - Number of seconds to sleep.                          *
+*                   must be in the range 0 .. 2147483                    *
 *                                                                        *
-* Return:    NO_UTIL_ERROR                                               *
+* Return:    0                                                           *
 *************************************************************************/
-
-size_t RexxEntry SysSleep(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine1(int, SysSleep, RexxStringObject, delay)
 {
-  LONG secs;                           /* Time to sleep in secs      */
-  MSG msg;
-
-  LONG milliseconds;
-  LONG secs_buf;
-  size_t length;
-  LONG digits;
-
-  if (numargs != 1)                    /* Must have one argument     */
-    return INVALID_ROUTINE;
-
-  /* code fragment taken from lrxutil.c: */
-  const char *string = args[0].strptr; /* point to the string        */
-  length = args[0].strlength;          /* get length of string       */
-  if (length == 0 ||                   /* if null string             */
-      length > MAX_DIGITS)             /* or too long                */
-    return INVALID_ROUTINE;            /* not valid                  */
-
-  secs = 0;                            /* start with zero            */
-
-  while (length) {                     /* while more digits          */
-    if (!isdigit(*string))             /* not a digit?               */
-      break;                           /* get out of this loop       */
-    secs = secs * 10 + (*string - '0');/* add to accumulator         */
-    length--;                          /* reduce length              */
-    string++;                          /* step pointer               */
+  double seconds;
+  // try to convert the provided delay to a valid floating point number
+  if (context->ObjectToDouble(delay, &seconds) == 0 ||
+      isnan(seconds) || seconds == HUGE_VAL || seconds == -HUGE_VAL)
+  {
+      // 88.902 The &1 argument must be a number; found "&2"
+      context->RaiseException2(Rexx_Error_Invalid_argument_number, context->String("delay"), delay);
+      return 1;
   }
-  secs_buf = secs;                     /* remember the seconds       */
-  secs = secs * 1000;                  /* convert to milliseconds    */
-  if (*string == '.') {                /* have a decimal number?     */
-    string++;                          /* step over the decimal      */
-    length--;                          /* reduce the length          */
-    milliseconds = 0;                  /* no milliseconds yet        */
-    digits = 0;                        /* and no digits              */
-    while (length) {                   /* while more digits          */
-      if (!isdigit(*string))           /* not a digit?               */
-        return INVALID_ROUTINE;        /* not a valid number         */
-      if (++digits <= 3)               /* still within precision?    */
-                                       /* add to accumulator         */
-        milliseconds = milliseconds * 10 + (*string - '0');
-      length--;                        /* reduce length              */
-      string++;                        /* step pointer               */
-    }
-    while (digits < 3) {               /* now adjust up              */
-      milliseconds = milliseconds * 10;/* by powers of 10            */
-      digits++;                        /* count the digit            */
-    }
-    secs += milliseconds;              /* now add in the milliseconds*/
-  }
-  else if (length != 0)                /* invalid character found?   */
-    return INVALID_ROUTINE;            /* this is invalid            */
 
+  // according to MSDN the maximum is USER_TIMER_MAXIMUM (0x7FFFFFFF) milliseconds,
+  // which translates to 2147483.647 seconds
+  if (seconds < 0.0 || seconds > 2147483.0)
+  {
+      // 88.907 The &1 argument must be in the range &2 to &3; found "&4"
+      context->RaiseException(Rexx_Error_Invalid_argument_range,
+          context->ArrayOfFour(context->String("delay"),
+          context->String("0"), context->String("2147483"), delay));
+      return 1;
+  }
+
+  // convert to milliseconds, no overflow possible
+  LONG milliseconds = (LONG) (seconds * 1000);
 
   /** Using Sleep with a long timeout risks sleeping on a thread with a message
    *  queue, which can make the system sluggish, or possibly deadlocked.  If the
    *  sleep is longer than 333 milliseconds use a window timer to avoid this
    *  risk.
    */
-  if ( secs > 333 )
+  if ( milliseconds > 333 )
   {
-      if ( !(SetTimer(NULL, 0, (secs), (TIMERPROC) SleepTimerProc)) )
-          return INVALID_ROUTINE;        /* no timer available, need to abort */
+      if ( !(SetTimer(NULL, 0, milliseconds, (TIMERPROC) SleepTimerProc)) )
+      {
+          // no timer available, need to abort
+          context->RaiseException1(Rexx_Error_System_resources_user_defined,
+              context->String("System resources exhausted: cannot start timer"));
+          return 1;
+      }
+
+      MSG msg;
       while ( GetMessage (&msg, NULL, 0, 0) )
       {
           if ( msg.message == OM_WAKEUP )  /* If our message, exit loop       */
@@ -3883,11 +3862,10 @@ size_t RexxEntry SysSleep(const char *name, size_t numargs, CONSTRXSTRING args[]
   }
   else
   {
-      Sleep(secs);
+      Sleep(milliseconds);
   }
 
-  BUILDRXSTRING(retstr, NO_UTIL_ERROR);
-  return VALID_ROUTINE;
+  return 0;
 }
 
 /*********************************************************************
@@ -6773,7 +6751,7 @@ RexxRoutineEntry rexxutil_routines[] =
     REXX_CLASSIC_ROUTINE(SysVersion,                  SysVersion),
     REXX_TYPED_ROUTINE(SysRmDir,                      SysRmDir),
     REXX_CLASSIC_ROUTINE(SysSearchPath,               SysSearchPath),
-    REXX_CLASSIC_ROUTINE(SysSleep,                    SysSleep),
+    REXX_TYPED_ROUTINE(SysSleep,                      SysSleep),
     REXX_CLASSIC_ROUTINE(SysTempFileName,             SysTempFileName),
     REXX_TYPED_ROUTINE(SysTextScreenRead,             SysTextScreenRead),
     REXX_TYPED_ROUTINE(SysTextScreenSize,             SysTextScreenSize),

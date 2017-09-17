@@ -1063,82 +1063,51 @@ sigaction(SIGPIPE, &new_action, NULL); /* exitClear on broken pipe            */
 * Syntax:    call SysSleep secs                                          *
 *                                                                        *
 * Params:    secs - Number of seconds to sleep.                          *
+*                   must be in the range 0 .. 999999999                  *
 *                                                                        *
-* Return:    NO_UTIL_ERROR                                               *
+* Return:    0                                                           *
 *************************************************************************/
-
-size_t RexxEntry SysSleep(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine1(int, SysSleep, RexxStringObject, delay)
 {
-  int   secs;                          /* Time to sleep in secs      */
-  size_t length;                       /* length of the count        */
-  const char * string;                 /* input sleep time           */
-  int   nanoseconds = 0;               /* decimals value             */
-  int   digits;                        /* number of decimal digits   */
+  double seconds;
+  // try to convert the provided delay to a valid floating point number
+  if (context->ObjectToDouble(delay, &seconds) == 0 ||
+      isnan(seconds) || seconds == HUGE_VAL || seconds == -HUGE_VAL)
+  {
+      // 88.902 The &1 argument must be a number; found "&2"
+      context->RaiseException2(Rexx_Error_Invalid_argument_number, context->String("delay"), delay);
+      return 1;
+  }
+
+  // we (arbitrarily) limit the number of seconds to 999999999
+  if (seconds < 0.0 || seconds > 999999999)
+  {
+      // 88.907 The &1 argument must be in the range &2 to &3; found "&4"
+      context->RaiseException(Rexx_Error_Invalid_argument_range,
+          context->ArrayOfFour(context->String("delay"),
+          context->String("0"), context->String("999999999"), delay));
+      return 1;
+  }
+
+  // split into two part: secs and nanoseconds
+  long secs = (long) seconds;
+  long nanoseconds = (long) ((seconds - secs) * 1000000000);
+
 #if defined( HAVE_NANOSLEEP )
   struct timespec    Rqtp, Rmtp;
-#elif defined( HAVE_NSLEEP )
-  struct timestruc_t Rqtp, Rmtp;
-#endif
-  int  nano;
-  if (numargs != 1)                    /* Must have one argument     */
-    return INVALID_ROUTINE;
-
-  string = args[0].strptr;             /* point to the string        */
-  length = args[0].strlength;          /* get length of string       */
-  if (length == 0 ||                   /* if null string             */
-      length > MAX_DIGITS)             /* or too long                */
-    return INVALID_ROUTINE;            /* not valid                  */
-
-  secs = 0;                            /* start with zero            */
-
-  while (length) {                     /* while more digits          */
-    if (!isdigit(*string))             /* not a digit?               */
-      break;                           /* get out of this loop       */
-    secs = secs * 10 + (*string - '0');/* add to accumulator         */
-    length--;                          /* reduce length              */
-    string++;                          /* step pointer               */
-  }
-  if (*string == '.') {                /* have a decimal number?     */
-    string++;                          /* step over the decimal      */
-    length--;                          /* reduce the length          */
-    nanoseconds = 0;                   /* no nanoseconds yet         */
-    digits = 0;                        /* and no digits              */
-    nano = 9;
-
-    while(nano)
-    {
-      while (length)
-      {                   /* while more digits          */
-        if (!isdigit(*string))           /* not a digit?               */
-          return INVALID_ROUTINE;        /* not a valid number         */
-                                       /* add to accumulator         */
-        nanoseconds = nanoseconds * 10 + (*string - '0');
-        length--;                        /* reduce length              */
-        string++;                        /* step pointer               */
-        nano--;
-      }
-      while(nano)
-      {
-        nanoseconds = nanoseconds * 10;
-        nano--;
-      }
-    }
-  }
-  else if (length != 0)                /* invalid character found?   */
-    return INVALID_ROUTINE;            /* this is invalid            */
-#if defined( HAVE_NANOSLEEP )
   Rqtp.tv_sec = secs;
   Rqtp.tv_nsec = nanoseconds;
   nanosleep(&Rqtp, &Rmtp);
 #elif defined( HAVE_NSLEEP )
+  struct timestruc_t Rqtp, Rmtp;
   Rqtp.tv_sec = secs;
   Rqtp.tv_nsec = nanoseconds;
   nsleep(&Rqtp, &Rmtp);
 #else
   sleep( secs );
 #endif
-  BUILDRXSTRING(retstr, NO_UTIL_ERROR);/* return no error            */
-  return VALID_ROUTINE;                /* this worked ok             */
+
+  return 0;
 }
 
 /*************************************************************************
@@ -5817,7 +5786,7 @@ RexxRoutineEntry rexxutil_routines[] =
     REXX_CLASSIC_ROUTINE(SysVersion,             SysVersion),
     REXX_CLASSIC_ROUTINE(SysRmDir,               SysRmDir),
     REXX_CLASSIC_ROUTINE(SysSearchPath,          SysSearchPath),
-    REXX_CLASSIC_ROUTINE(SysSleep,               SysSleep),
+    REXX_TYPED_ROUTINE(SysSleep,                 SysSleep),
     REXX_CLASSIC_ROUTINE(SysTempFileName,        SysTempFileName),
     REXX_CLASSIC_ROUTINE(SysDumpVariables,       SysDumpVariables),
     REXX_CLASSIC_ROUTINE(SysSetFileDateTime,     SysSetFileDateTime),
