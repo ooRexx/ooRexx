@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -785,7 +785,7 @@ PackageClass *PackageManager::getMacroSpaceRequires(Activity *activity, RexxStri
     RoutineClass *code = RexxActivation::getMacroCode(name);
     package = code->getPackage();
 
-    if (securityManager == OREF_NULL)
+    if (securityManager != OREF_NULL)
     {
         package->setSecurityManager(securityManager);
     }
@@ -813,7 +813,7 @@ PackageClass *PackageManager::getRequiresFile(Activity *activity, RexxString *na
     // translate it a new if not.
     package = LanguageParser::createPackage(name);
 
-    if (securityManager == OREF_NULL)
+    if (securityManager != OREF_NULL)
     {
         package->setSecurityManager(securityManager);
     }
