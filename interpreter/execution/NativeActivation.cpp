@@ -3359,7 +3359,7 @@ StackFrameClass *NativeActivation::createStackFrame()
 
         RexxString *message = activity->buildMessage(Message_Translations_compiled_routine_invocation, info);
         p = message;
-        return new StackFrameClass(StackFrameClass::FRAME_ROUTINE, getMessageName(), (BaseExecutable *)getExecutableObject(), NULL, getArguments(), message, SIZE_MAX);
+        return new StackFrameClass(StackFrameClass::FRAME_ROUTINE, getMessageName(), (BaseExecutable *)getExecutableObject(), NULL, getArguments(), message, SIZE_MAX, OREF_NULL);
     }
     else
     {
@@ -3368,7 +3368,7 @@ StackFrameClass *NativeActivation::createStackFrame()
 
         RexxString *message = activity->buildMessage(Message_Translations_compiled_method_invocation, info);
         p = message;
-        return new StackFrameClass(StackFrameClass::FRAME_METHOD, getMessageName(), (BaseExecutable *)getExecutableObject(), receiver, getArguments(), message, SIZE_MAX);
+        return new StackFrameClass(StackFrameClass::FRAME_METHOD, getMessageName(), (BaseExecutable *)getExecutableObject(), receiver, getArguments(), message, SIZE_MAX, OREF_NULL);
     }
 }
 

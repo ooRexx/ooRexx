@@ -1586,6 +1586,7 @@ StartClassDefinition(StackFrame)
         // the string method just maps to TRACELINE
         AddMethod("String", StackFrameClass::getTraceLine, 0);
         AddMethod("MakeString", StackFrameClass::getTraceLine, 0);
+        AddMethod("context", StackFrameClass::getContextObject, 0);
 
     CompleteMethodDefinitions();
 

@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -45,6 +45,7 @@
 
 #include "RoutineClass.hpp"
 #include "MethodClass.hpp"
+#include "RexxActivation.hpp"
 
 class PackageClass;
 class ArrayClass;
@@ -54,7 +55,7 @@ class StackFrameClass : public RexxObject
 public:
     void *operator new(size_t);
 
-    StackFrameClass(const char *type, RexxString *name, BaseExecutable *p, RexxObject *target, ArrayClass *arguments, RexxString *t, size_t l);
+    StackFrameClass(const char *type, RexxString *name, BaseExecutable *p, RexxObject *target, ArrayClass *arguments, RexxString *t, size_t l, RexxActivation *ac);
     inline StackFrameClass(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
@@ -72,6 +73,7 @@ public:
     RexxString *getTraceLine();
     ArrayClass  *getArguments();
     PackageClass *getPackageObject();
+    RexxObject *getContextObject();
     virtual RexxString *makeString();
     virtual RexxString *stringValue();
 
@@ -91,9 +93,11 @@ protected:
     RexxString *name;               // the name of the item at that stack frame instance
     BaseExecutable *executable;     // the executable associated with this frame instance
     RexxObject *target;             // the target object, if a message send
-    ArrayClass *arguments;           // arguments to the method/routine
+    ArrayClass *arguments;          // arguments to the method/routine
     size_t          line;           // the frame line position (MAX_SIZE indicates no line available)
     RexxString *traceLine;          // a tracing line
+    RexxActivation *activation;     // the activation we're attached to
+
 };
 
 #endif
