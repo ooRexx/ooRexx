@@ -2128,7 +2128,7 @@ bool NativeActivation::form()
 void NativeActivation::setDigits(wholenumber_t _digits)
 {
     // if we're in a call context, set this
-    if (activation == OREF_NULL)
+    if (activation != OREF_NULL)
     {
         activation->setDigits(_digits);
     }
@@ -2160,7 +2160,7 @@ void NativeActivation::setForm(bool _form)
 /******************************************************************************/
 {
     // only process if we're in a call context.
-    if (activation == OREF_NULL)
+    if (activation != OREF_NULL)
     {
         activation->setForm(_form);
     }
