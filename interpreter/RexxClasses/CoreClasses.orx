@@ -3465,7 +3465,7 @@ nomethod:
   -- "-" is not commutative with .DateTime.  We don't support
   -- subtracting a time from a TimeStamp.  The reverse operation,
   -- however, makes sense.
-  if !other~isa(.timespan) then do
+  if \other~isa(.timespan) then do
       raise syntax 93.948 array(1, "TimeSpan")
   end
 
