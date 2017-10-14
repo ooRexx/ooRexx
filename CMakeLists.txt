@@ -1203,7 +1203,7 @@ target_include_directories(rxunixsys PUBLIC
              ${build_api_platform_dir}
              ${extensions_unix_dir}/rxunixsys)
 # Extra link library definitions
-target_link_libraries(rxunixsys rexx rexxapi)
+target_link_libraries(rxunixsys rexx rexxapi crypt)
 set_target_properties(rxunixsys PROPERTIES VERSION ${ORX_VERSION})
 install(TARGETS rxunixsys RUNTIME DESTINATION ${INSTALL_LIB_DIR}
                           LIBRARY DESTINATION ${INSTALL_LIB_DIR} COMPONENT Core)
