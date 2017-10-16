@@ -1780,9 +1780,16 @@ void Activity::detachInstance()
 void Activity::nestAttach()
 {
     attachCount++;
+    // Creating the activation stack needs to allocate objects, so we need go grab
+    // the kernel lock before doing this
+    requestAccess();
     // create the base marker for anchoring any objects returned by
     // this instance.
     createNewActivationStack();
+    // we're in a state here where we need the access for a short window to
+    // allocate the objects for the stack, but we will be requesting it again
+    // once the nesting is complete, so we need to release it again now.
+    releaseAccess();
 }
 
 
