@@ -690,18 +690,6 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStrin
     }
 
     int errCode = 0;
-#ifdef LINUX
-
-    if (Utilities::strCaselessCompare("bash", envName) == 0)
-    {
-        errCode = system( cmd );
-        if ( errCode >= 256 )
-        {
-            errCode = errCode / 256;
-        }
-    }
-    else
-#endif
     {
         int pid = fork();
         int status;
@@ -723,8 +711,8 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStrin
                 }
             }
         }
-        else
-        {                                /* run the command in the child      */
+        else // we're in the spawned child process
+        {                               
             if (Utilities::strCaselessCompare("sh", envName) == 0)
             {
                 execl("/bin/sh", "sh", "-c", cmd, NULL);
@@ -745,20 +733,24 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStrin
             {
                 execl("/bin/bash", "bash", "-c", cmd, NULL);
             }
-            else if (Utilities::strCaselessCompare("cmd", envName) == 0)
+            else if (Utilities::strCaselessCompare("noshell", envName) == 0)
             {
                 char * args[MAX_COMMAND_ARGS+1];      /* Array for argument parsing */
-                if (!scan_cmd(cmd, args))             /* Parse cmd into arguments  */
+                if (scan_cmd(cmd, args))              /* Parse cmd into arguments   */
                 {
-                    exit(1);
+                    execvp(args[0], args);            /* Invoke command directly    */
                 }
-                execvp(args[0], args);           /* Invoke command directly   */
-                exit(1);                         /* we couldn't run the       */
             }
-            else
+            else // "command" environment (or anything else not covered by above)
             {
                 execl("/bin/sh", "sh", "-c", cmd, NULL);
             }
+
+            // if the above exec..() calls are successful, the process image is 
+            // replaced with the command to be executed and execution will never
+            // reach this point
+            // but if an exec..() call fails to run, we must EXIT this child process
+            exit(UNKNOWN_COMMAND);
         }
     }
     // unknown command code?
@@ -791,6 +783,7 @@ void SysInterpreterInstance::registerCommandHandlers(InterpreterInstance *_insta
     _instance->addCommandHandler("CSH", (REXXPFN)systemCommandHandler);
     _instance->addCommandHandler("BSH", (REXXPFN)systemCommandHandler);
     _instance->addCommandHandler("BASH", (REXXPFN)systemCommandHandler);
+    _instance->addCommandHandler("NOSHELL", (REXXPFN)systemCommandHandler);
 }
 
 
