@@ -1203,7 +1203,14 @@ target_include_directories(rxunixsys PUBLIC
              ${build_api_platform_dir}
              ${extensions_unix_dir}/rxunixsys)
 # Extra link library definitions
-target_link_libraries(rxunixsys rexx rexxapi crypt)
+# gcc (at least on Linux) requires linking with -lcrypt
+# clang (at least on Darwin) doesn't have libcrypt
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_link_libraries(rxunixsys rexx rexxapi crypt)
+else ()
+    target_link_libraries(rxunixsys rexx rexxapi)
+endif ()
+
 set_target_properties(rxunixsys PROPERTIES VERSION ${ORX_VERSION})
 install(TARGETS rxunixsys RUNTIME DESTINATION ${INSTALL_LIB_DIR}
                           LIBRARY DESTINATION ${INSTALL_LIB_DIR} COMPONENT Core)
