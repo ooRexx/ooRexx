@@ -738,8 +738,8 @@ void ActivityManager::returnRootActivity(Activity *activity)
  *
  * @param instance The interpreter instance involved.
  *
- * @return Either an existing activity, or a new activity created for
- *         this thread.
+ * @return A new activity instance created for this thread. This
+ *         activity will own the kernel lock on return.
  */
 Activity *ActivityManager::attachThread()
 {
@@ -751,8 +751,11 @@ Activity *ActivityManager::attachThread()
     // so we're going to have a new activity to create, and potentially an existing one to
     // suspend
     // we need to lock the kernel to have access to the memory manager to
-    // create this activity.
+    // create this activity. This is an "unowned" lock, since there will not be
+    // an activity connected with it.
     lockKernel();
+    // now that we have the lock, we can allocate an activity object
+    // from the heap.
     Activity *activityObject = createCurrentActivity();
     // Do we have a nested interpreter call occurring on the same thread?  We need to
     // mark the old activity as suspended, and chain this to the new activity.
@@ -763,15 +766,14 @@ Activity *ActivityManager::attachThread()
         activityObject->setNestedActivity(oldActivity);
     }
 
-    unlockKernel();                /* release kernel semaphore          */
-
-    // now we need to have this activity become the kernel owner.
-    activityObject->requestAccess();
-    // this will help ensure that the code after the request access call
-    // is only executed after access acquired.
+    // this will help ensure that the following code is only executed after
+    // everything above is executed.
     sentinel = true;
-    // belt-and-braces.  Make sure the current activity is explicitly set to
-    // this activity before leaving.
+
+    // We own the kernel lock, but there is no current activity set. While still
+    // locked, make this the current activity and return. We don't want to release
+    // the lock yet because the garbage collector could get triggered on another
+    // thread.
     currentActivity = activityObject;
     return activityObject;
 }

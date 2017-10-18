@@ -216,9 +216,12 @@ Activity *InterpreterInstance::attachThread()
     // we need to get a new activity set up for this particular thread
     activity = ActivityManager::attachThread();
 
-    // resource lock must come AFTER we attach the thread, otherwise
-    // we can create a deadlock situation when we attempt to get the kernel
-    // lock
+    // The creation of the new activity also made that activity the current
+    // thread.
+
+    // resource lock must come AFTER we attach the thread and acquire the
+    // kernel lock. We must never try to acquire the kernel lock while holding
+    // the resource lock.
     ResourceSection lock;
     // add this to the activity lists
     allActivities->append(activity);
@@ -391,18 +394,14 @@ Activity *InterpreterInstance::findActivity()
  */
 Activity *InterpreterInstance::enterOnCurrentThread()
 {
-    Activity *activity;
-    {
-        ResourceSection lock;              // lock the outer control block access
-        // attach this thread to the current activity
-        activity = attachThread();
-        // this will also get us the kernel lock, and take care of nesting
-        activity->activate();
-    }
-    // we need to ensure the resource lock is released before we attempt to
+    // attach this thread to the current activity
+    Activity *activity = attachThread();
+    // indicate this is a nested entry
+    activity->activate();
+    // from this point forward, we want to be the active activity, so
     // acquire the kernel lock
     activity->requestAccess();
-    // return the activity in case the caller needs it.
+    // return the activity for use
     return activity;
 }
 
