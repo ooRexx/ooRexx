@@ -2333,7 +2333,7 @@ nomethod:
 
   value = value~request('STRING')
 
-  if .nil == value then do
+  if value~isNil then do
      raise syntax 93.938 array (2)  -- raise an error
   end
 
@@ -2344,7 +2344,7 @@ nomethod:
   use strict arg name, default=.nil
 
   value = self~at(name)
-  if .nil == value then do
+  if value~isNil then do
       if arg(2, 'e') then
           value = default
   end
@@ -2406,7 +2406,7 @@ nomethod:
 
   value = value~request('STRING')
 
-  if .nil == value then do
+  if value~isNil then do
      raise syntax 93.938 array (1)  -- raise an error
   end
 
@@ -2418,7 +2418,7 @@ nomethod:
 
   value = value~request('STRING')
 
-  if .nil == value then do
+  if value~isNil then do
      raise syntax 93.938 array (1)  -- raise an error
   end
 
@@ -3797,28 +3797,28 @@ nomethod:
 ::METHOD "=="
   use strict arg other
   -- special case .nil comparison: this instance can never be equal to .nil
-  if .nil == other then
+  if other~isNil then
     return 0
   return self~compareTo(other) = 0
 
 ::METHOD "\=="
   use strict arg other
   -- special case .nil comparison: this instance is always 'not equal' to .nil
-  if .nil == other then
+  if other~isNil then
     return 1
   return self~compareTo(other) \= 0
 
 ::METHOD "="
   use strict arg other
   -- special case .nil comparison: this instance can never be equal to .nil
-  if .nil == other then
+  if other~isNil then
     return 0
   return self~compareTo(other) = 0
 
 ::METHOD "\="
   use strict arg other
   -- special case .nil comparison: this instance is always 'not equal' to .nil
-  if .nil == other then
+  if other~isNil then
     return 1
   return self~compareTo(other) \= 0
 
@@ -3833,14 +3833,14 @@ nomethod:
 ::METHOD "<"
   use strict arg other
   -- for this operator a .nil comparison is invalid
-  if .nil == other then
+  if other~isNil then
     raise syntax 93.973 array("<")     -- ORDERABLE comparison method "<" argument cannot be .nil
   return self~compareTo(other) < 0
 
 ::METHOD "<="
   use strict arg other
   -- for this operator a .nil comparison is invalid
-  if .nil == other then
+  if other~isNil then
     raise syntax 93.973 array("<=")    -- ORDERABLE comparison method "<=" argument cannot be .nil
   return self~compareTo(other) <= 0
 
@@ -3851,14 +3851,14 @@ nomethod:
 ::METHOD "<<"
   use strict arg other
   -- for this operator a .nil comparison is invalid
-  if .nil == other then
+  if other~isNil then
     raise syntax 93.973 array("<<")    -- ORDERABLE comparison method "<<" argument cannot be .nil
   return self~compareTo(other) < 0
 
 ::METHOD "<<="
   use strict arg other
   -- for this operator a .nil comparison is invalid
-  if .nil == other then
+  if other~isNil then
     raise syntax 93.973 array("<<=")   -- ORDERABLE comparison method "<<=" argument cannot be .nil
   return self~compareTo(other) <= 0
 
@@ -3869,14 +3869,14 @@ nomethod:
 ::METHOD ">"
   use strict arg other
   -- for this operator a .nil comparison is invalid
-  if .nil == other then
+  if other~isNil then
     raise syntax 93.973 array(">")     -- ORDERABLE comparison method ">" argument cannot be .nil
   return self~compareTo(other) > 0
 
 ::METHOD ">="
   use strict arg other
   -- for this operator a .nil comparison is invalid
-  if .nil == other then
+  if other~isNil then
     raise syntax 93.973 array(">=")    -- ORDERABLE comparison method ">=" argument cannot be .nil
   return self~compareTo(other) >= 0
 
@@ -3887,14 +3887,14 @@ nomethod:
 ::METHOD ">>"
   use strict arg other
   -- for this operator a .nil comparison is invalid
-  if .nil == other then
+  if other~isNil then
     raise syntax 93.973 array(">>")    -- ORDERABLE comparison method ">>" argument cannot be .nil
   return self~compareTo(other) > 0
 
 ::METHOD ">>="
   use strict arg other
   -- for this operator a .nil comparison is invalid
-  if .nil == other then
+  if other~isNil then
     raise syntax 93.973 array(">>=")   -- ORDERABLE comparison method ">>=" argument cannot be .nil
   return self~compareTo(other) >= 0
 

@@ -160,7 +160,7 @@ notready:
 
                                      /* get as a string                   */
   stream_name = stream_name~request('STRING')
-  if .nil == stream_name then        /* not a real string value?          */
+  if stream_name~isNil then          /* not a real string value?          */
     raise syntax 93.938 array (1)    /* this is an error                  */
   self~!c_stream_init(stream_name)   /* initialize the stream block       */
                                      /* upper case the name               */
@@ -476,7 +476,7 @@ return position
   arr = .array~new(qItems)
   do i = 1 to qItems
      line = self~pull
-     if .nil = line /* items have been removed by another thread or process */
+     if line~isNil /* items have been removed by another thread or process */
      then do
         arr = arr~section(1, i - 1)
         leave
@@ -501,7 +501,7 @@ return position
   use strict arg path, dir = .nil
   qualifiedPath = .nil
 
-  if .nil == dir then do
+  if dir~isNil then do
       -- if we don't have a path, then we can't do a lazy
       -- qualification because the current directory might
       -- change.  We need to process everything
@@ -593,7 +593,7 @@ return position
 ::METHOD qualifiedPath PRIVATE
   expose path qualifiedPath
 
-  if .nil == qualifiedPath then do
+  if qualifiedPath~isNil then do
       qualifiedPath = self~qualifyImpl(path)
   end
 
@@ -689,7 +689,7 @@ return position
 ::METHOD parentFile
   use strict arg
   parent = self~parent
-  if .nil == parent then
+  if parent~isNil then
       return .nil
 
   return self~class~new(parent)
@@ -756,7 +756,7 @@ return position
   use strict arg
 
   names = self~list
-  if .nil == names then
+  if names~isNil then
       return .nil
 
   files = .array~new(names~items)
@@ -788,7 +788,7 @@ return position
 
   -- we might be at the top level already
   parent = self~parentFile
-  if .nil == parent then
+  if parent~isNil then
       return .false
   -- try to create the parent directories first
   if \parent~makeDirs then

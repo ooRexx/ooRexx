@@ -512,6 +512,7 @@ StartClassDefinition(Object);
         AddMethod("SendWith", RexxObject::sendWith, 2);
         AddMethod("String", RexxObject::stringRexx, 0);
         AddMethod("IsInstanceOf", RexxObject::isInstanceOfRexx, 1);
+        AddMethod("isNil", RexxObject::isNilRexx, 0);
         AddMethod("IsA", RexxObject::isInstanceOfRexx, 1);
         AddMethod("InstanceMethod", RexxObject::instanceMethodRexx, 1);
         AddMethod("InstanceMethods", RexxObject::instanceMethodsRexx, 1);
