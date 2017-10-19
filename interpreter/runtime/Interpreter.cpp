@@ -62,6 +62,8 @@
 
 // global resource lock
 SysMutex Interpreter::resourceLock;
+// activity dispatch queue lock
+SysMutex Interpreter::dispatchLock;
 
 QueueClass *Interpreter::interpreterInstances = OREF_NULL;
 

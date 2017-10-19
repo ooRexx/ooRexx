@@ -178,6 +178,7 @@ class Activity : public RexxInternalObject
     void        yield();
     void        releaseAccess();
     void        requestAccess();
+    void        setupCurrentActivity();
     void        checkStackSpace();
     void        cleanupActivityResources();
     void        terminatePoolActivity();

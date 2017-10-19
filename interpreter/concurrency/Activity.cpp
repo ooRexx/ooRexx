@@ -2081,6 +2081,18 @@ void Activity::requestAccess()
     ActivityManager::currentActivity = this;          /* set new current activity          */
 }
 
+
+/**
+ * Perform final setup for an activity as the current activity.
+ * This assumes the kernel lock has already been obtained.
+ */
+void Activity::setupCurrentActivity()
+{
+    // update the current activity pointer and the global numeric settings.
+    ActivityManager::currentActivity = this;
+    Numerics::setCurrentSettings(numericSettings);
+}
+
 void Activity::checkStackSpace()
 /******************************************************************************/
 /* Function:  Make sure there is enough stack space to run a method           */

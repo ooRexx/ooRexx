@@ -75,13 +75,17 @@ public:
 
     static inline void getResourceLock() { resourceLock.request(); }
     static inline void releaseResourceLock() { resourceLock.release(); }
+    static inline void getDispatchLock() { dispatchLock.request(); }
+    static inline void releaseDispatchLock() { dispatchLock.release(); }
     static inline void createLocks()
     {
         resourceLock.create();
+        dispatchLock.create();
     }
 
     static inline void closeLocks()
     {
+        dispatchLock.close();
         resourceLock.close();
     }
 
@@ -140,6 +144,7 @@ public:
 
 protected:
     static SysMutex  resourceLock;   // use to lock resources accessed outside of kernel global lock
+    static SysMutex  dispatchLock;   // use to lock when manipulating the activity dispatch queue
     static int    initializations;   // indicates whether we're terminated or not
     static bool   timeSliceElapsed;  // indicates we've had a timer interrupt
     static QueueClass *interpreterInstances;  // the set of interpreter instances
@@ -192,6 +197,50 @@ private:
     bool terminated;       // we can release these as needed
 };
 
+
+/**
+ * Block control for access to the dispatch queue.
+ */
+class DispatchSection
+{
+public:
+    inline DispatchSection()
+    {
+        Interpreter::getDispatchLock();
+        terminated = false;
+    }
+
+    inline ~DispatchSection()
+    {
+        if (!terminated)
+        {
+            Interpreter::releaseDispatchLock();
+        }
+    }
+
+    inline void release()
+    {
+        if (!terminated)
+        {
+            Interpreter::releaseDispatchLock();
+            terminated = true;
+        }
+    }
+
+
+    inline void reacquire()
+    {
+        if (terminated)
+        {
+            Interpreter::getDispatchLock();
+            terminated = false;
+        }
+    }
+
+private:
+
+    bool terminated;       // we can release these as needed
+};
 
 
 class InstanceBlock

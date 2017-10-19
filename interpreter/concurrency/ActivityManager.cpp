@@ -123,7 +123,7 @@ void ActivityManager::liveGeneral(MarkReason reason)
  */
 void ActivityManager::addWaitingActivity(Activity *waitingAct, bool release )
 {
-    ResourceSection lock;                // need the control block locks
+    DispatchSection lock;                // need the dispatch queue lock
 
     // nobody waiting yet?  If the release flag is true, we already have the
     // kernel lock, but nobody is waiting.  In theory, this can't really
@@ -774,7 +774,7 @@ Activity *ActivityManager::attachThread()
     // locked, make this the current activity and return. We don't want to release
     // the lock yet because the garbage collector could get triggered on another
     // thread.
-    currentActivity = activityObject;
+    activityObject->setupCurrentActivity();
     return activityObject;
 }
 
