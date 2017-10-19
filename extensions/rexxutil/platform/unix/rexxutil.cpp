@@ -189,7 +189,6 @@
 #include <signal.h>
 #include <time.h>
 #include <netdb.h>
-#include <alloca.h>
 
 
 #if defined( HAVE_SYS_SEM_H )

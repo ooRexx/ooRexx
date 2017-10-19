@@ -308,8 +308,11 @@ RexxRoutine0(RexxObjectPtr,
 RexxRoutine0(RexxObjectPtr,
              SysSetpgrp)
 {
-
+#if defined(OPENBSD)
+    return context->WholeNumberToObject((wholenumber_t)setpgrp(0, 0));
+#else
     return context->WholeNumberToObject((wholenumber_t)setpgrp());
+#endif
 }
 
 
@@ -1105,6 +1108,7 @@ RexxRoutine3(RexxObjectPtr,
  *
  * @return        Array of file names.
  */
+#if !defined(OPENBSD)
 RexxRoutine1(RexxObjectPtr,
              SysWordexp,
              CSTRING, inexp)
@@ -1126,6 +1130,7 @@ RexxRoutine1(RexxObjectPtr,
     wordfree(&p);
     return (RexxObjectPtr)arr;
 }
+#endif
 
 
 #ifdef HAVE_XATTR_H
@@ -1766,7 +1771,9 @@ RexxRoutineEntry orxnixclib_routines[] = {
 #endif
     REXX_TYPED_ROUTINE(SysGetservbyname, SysGetservbyname),
     REXX_TYPED_ROUTINE(SysGetservbyport, SysGetservbyport),
+#if !defined(OPENBSD)    
     REXX_TYPED_ROUTINE(SysWordexp, SysWordexp),
+#endif    
 #ifdef HAVE_XATTR_H
     REXX_TYPED_ROUTINE(SysSetxattr, SysSetxattr),
     REXX_TYPED_ROUTINE(SysGetxattr, SysGetxattr),

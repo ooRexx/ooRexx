@@ -59,8 +59,10 @@
 #include <grp.h>
 #include <time.h>
 #include <netdb.h>
+#if !defined(OPENBSD)
 #include <wordexp.h>
-#if !defined(AIX)
+#endif
+#if !defined(AIX) && !defined(OPENBSD)
 #include <alloca.h>
 #endif
 #include <pthread.h>
