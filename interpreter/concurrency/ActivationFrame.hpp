@@ -63,11 +63,25 @@ friend class Activity;
         activity->activationFrames = this;
     }
 
+    // explicitly disable a frame for situations where we no longer
+    // wish to have the frame show up in the tracebacks.
+    inline void disableFrame()
+    {
+        // only do this once
+        if (activity != OREF_NULL)
+        {
+            // remove ourselves from the list
+            activity->activationFrames = next;
+            // this will keep us from attempting to do this twice
+            activity = OREF_NULL;
+        }
+
+    }
+
     inline ~ActivationFrame()
     {
-        // remove ourselves from the list and give this object a
-        // little hold protection.
-        activity->activationFrames = next;
+        // make this no longer active
+        disableFrame();
     }
 
     virtual RexxString *messageName() = 0;
@@ -78,7 +92,7 @@ friend class Activity;
  protected:
 
     ActivationFrame *next;             // the next activation frame in the chain
-    Activity *activity;            // the activity we're running on
+    Activity *activity;                // the activity we're running on
 };
 
 

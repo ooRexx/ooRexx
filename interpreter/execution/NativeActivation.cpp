@@ -1314,6 +1314,12 @@ void NativeActivation::run(MethodClass *_method, NativeMethod *_code, RexxObject
 
     // set the return value and get outta here
     resultObj = result;
+
+    // disable the stack frame used to generate the tracebacks since we are
+    // no longer active. An error in an uninit method might pick up bogus information
+    // if we're still in the list
+    frame.disableFrame();
+
     // good place to check for uninits
     memoryObject.checkUninitQueue();
 

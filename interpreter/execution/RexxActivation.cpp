@@ -666,6 +666,10 @@ RexxObject * RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxOb
                 resultObj = result;  // save the result
                 // pop this off of the activity stack and
                 activity->popStackFrame(false);
+                // this stack frame is no longer active. If there is an error
+                // running an uninit method, we want to ensure that this stack
+                // frame doesn't get processed when generating the traceback.
+                frame.disableFrame();
                 // see if there are any objects waiting to run uninits.
                 memoryObject.checkUninitQueue();
             }
