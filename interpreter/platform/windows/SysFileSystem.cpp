@@ -780,7 +780,7 @@ bool SysFileSystem::setLastModifiedDate(const char *name, int64_t time)
 
     // MSDN SetFileTime function: "The handle must have been created using
     // the CreateFile function with the FILE_WRITE_ATTRIBUTES"
-    HANDLE hFile = CreateFile (name, FILE_WRITE_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE,
+    HANDLE hFile = CreateFile(name, FILE_WRITE_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE,
        NULL, OPEN_EXISTING, flags, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
     {
@@ -798,6 +798,7 @@ bool SysFileSystem::setLastModifiedDate(const char *name, int64_t time)
         CloseHandle(hFile);
         return true;
     }
+    CloseHandle(hFile);
     return false;
 }
 

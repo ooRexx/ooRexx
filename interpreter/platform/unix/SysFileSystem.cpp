@@ -887,7 +887,7 @@ int get_utc_offset(time_t time)
 
   // if both local and UTC timestamps fall on the same day, this is the UTC/DST offset
   offset = ((local.tm_hour - gmt.tm_hour) * 60
-          + (local.tm_min - gmt.tm_min)) * 60 +
+          + (local.tm_min - gmt.tm_min)) * 60
           + local.tm_sec - gmt.tm_sec; 
 
   // if either local year or local day_in_year is less than its UTC counterpart,
