@@ -80,6 +80,10 @@ void SystemInterpreter::getCurrentTime(RexxDateTime *Date )
 #else
     GMTDate = gmtime((time_t *)&tv.tv_sec);
 #endif
+    // a negative value means that mktime() should (use timezone information and
+    // system databases to) attempt to determine whether DST is in effect at the
+    // specified time.
+    GMTDate->tm_isdst = -1;
     // in microseconds
     Date->timeZoneOffset = ((int64_t)(tv.tv_sec - mktime(GMTDate))) * 1000000UL;
 }
