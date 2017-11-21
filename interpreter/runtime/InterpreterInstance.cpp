@@ -203,18 +203,34 @@ int InterpreterInstance::attachThread(RexxThreadContext *&attachedContext)
 Activity *InterpreterInstance::attachThread()
 {
     // first check for an existing activity
-    Activity *activity = findActivity();
-    // do we have this?  we can just return it
-    if (activity != OREF_NULL)
+    Activity *oldActivity = findActivity();
+    // do we have an activity for this already? There are possible
+    // situations here. Normally, this will be a case where the thread
+    // exits the interpreter and calls external code that is then
+    // reattaches to the interpreter using the same interpreter instance.
+    // We treat this as a nested  activity and keep the same activity
+    // object for use.
+    //
+    // On Windows, however there's another situation that can occur
+    // that's more difficult to handle. When we wait for a semaphore on
+    // Windows, we also process the Windows message queue. If the activity
+    // is waiting for the kernel semaphore and a
+    // dispatched messages make ooRexx API calls on the same thread, then
+    // the original activity can get its semaphore posted, but it cannot wake
+    // up until the message returns, which might also be sitting waiting to be
+    // dispatched. The result is a hang.
+    if (oldActivity != OREF_NULL && !oldActivity->isNestable())
     {
         // make sure we mark this as attached...we might be nested and don't want to
         // clean this up until we complete
-        activity->nestAttach();
-        return activity;
+        oldActivity->nestAttach();
+        return oldActivity;
     }
 
     // we need to get a new activity set up for this particular thread
-    activity = ActivityManager::attachThread();
+    // NB: The activity manager handles the special case of an activity
+    // on the dispatch queue.
+    Activity *activity = ActivityManager::attachThread();
 
     // The creation of the new activity also made that activity the current
     // thread.

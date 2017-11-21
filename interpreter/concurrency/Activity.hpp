@@ -230,12 +230,16 @@ class Activity : public RexxInternalObject
     inline size_t getActivationLevel() { return nestedCount; }
     inline void restoreActivationLevel(size_t l) { nestedCount = l; }
     inline bool isSuspended() { return suspended; }
+    inline bool isWaitingForDispatch() { return waitingForDispatch; }
+    inline bool isNestable() { return waitingOnSemaphore; }
+    inline bool isWaiting() { return waitingForDispatch || waitingOnSemaphore; }
     inline void setSuspended(bool s) { suspended = s; }
     inline bool isInterpreterRoot() { return interpreterRoot; }
     inline void setInterpreterRoot() { interpreterRoot = true; }
     inline void setNestedActivity(Activity *a) { nestedActivity = a; }
     inline Activity *getNestedActivity() { return nestedActivity; }
     inline bool isAttached() { return attachCount > 0; }
+           bool isSameActivityStack(Activity *a);
            void validateThread();
 
     SecurityManager *getEffectiveSecurityManager();
@@ -248,6 +252,11 @@ class Activity : public RexxInternalObject
     void run(CallbackDispatcher &target);
     void run(TrappingDispatcher &target);
 
+    inline void        waitForDispatch() { waitingForDispatch = true; waitForRunPermission(); waitingForDispatch = false; }
+    inline void        waitForRunPermission() { waitingOnSemaphore = true; runSem.wait(); waitingOnSemaphore = false; }
+    inline void        waitForGuardPermission() { waitingOnSemaphore = true; guardSem.wait(); waitingOnSemaphore = false; }
+           void        waitForKernel();
+
     inline RexxActivation *getCurrentRexxFrame() {return currentRexxFrame;}
     inline ActivationBase *getTopStackFrame() { return topStackFrame; }
     inline size_t getActivationDepth() { return stackFrameDepth; }
@@ -257,8 +266,8 @@ class Activity : public RexxInternalObject
     inline void        removeRunningRequires(RexxInternalObject *program) { requiresTable->remove(program);}
     inline void        resetRunningRequires() { requiresTable->empty();}
     inline bool        checkRequires(RexxString *n) { return runningRequires(n) != OREF_NULL; }
-    inline void        waitForDispatch() { runsem.wait(); }
-    inline void        clearWait()  { runsem.reset(); }
+    inline void        clearRunWait()  { runSem.reset(); }
+    inline void        clearGuardWait()  { guardSem.reset(); }
            uint64_t    getRandomSeed();
            RexxString *getLastMessageName();
 
@@ -335,8 +344,8 @@ class Activity : public RexxInternalObject
     ActivationBase     *topStackFrame;  // top-most activation frame (can be either native or Rexx).
     RexxString         *currentExit;    // current executing system exit
     RexxInternalObject *waitingObject;  // object activity is waiting on
-    SysSemaphore        runsem;         // activity run control semaphore
-    SysSemaphore        guardsem;       // guard expression semaphore
+    SysSemaphore        runSem;         // activity run control semaphore
+    SysSemaphore        guardSem;       // guard expression semaphore
     SysActivity currentThread;          // descriptor for this thread
     const NumericSettings *numericSettings; // current activation setting values
 
@@ -345,6 +354,8 @@ class Activity : public RexxInternalObject
     bool     requestingString;          // in error handling currently
     bool     suspended;                 // the suspension flag
     bool     interpreterRoot;           // This is the root activity for an interpreter instance
+    bool     waitingForDispatch;        // This activity is in the dispatch queue waiting to be dispatched.
+    bool     waitingOnSemaphore;        // activity is blocked while waiting for any semaphore
     size_t   nestedCount;               // extent of the nesting
     size_t   attachCount;               // extent of nested attaches
     bool     newThreadAttached;         // Indicates this thread was a "side door" attach.

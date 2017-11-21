@@ -135,11 +135,11 @@ void ActivityManager::addWaitingActivity(Activity *waitingAct, bool release )
         {
             return;
         }
-        // add to the end
-        waitingActivities.push_back(waitingAct);
         // this will ensure this happens before the lock is released
         sentinel = false;
         // we should end up getting the lock immediately, but you never know.
+        // since we are not going to be waiting from a dispatch, we do not
+        // add ourselves to the queue
         lock.release();                  // release the lock now
     }
     else
@@ -149,7 +149,7 @@ void ActivityManager::addWaitingActivity(Activity *waitingAct, bool release )
         // this will ensure this happens before the lock is released
         sentinel = false;
         // we're going to wait until posted, so make sure the run semaphore is cleared
-        waitingAct->clearWait();
+        waitingAct->clearRunWait();
         sentinel = true;
         lock.release();                    // release the lock now
         sentinel = false;
@@ -164,19 +164,16 @@ void ActivityManager::addWaitingActivity(Activity *waitingAct, bool release )
     }
 
     sentinel = true;
-    lockKernel();                        // get the kernel lock now
+    waitingAct->waitForKernel();         // perform the kernel lock
     // belt and braces.  it is possible the dispatcher was
     // reentered on the same thread, in which case we have an
     // earlier stack frame waiting on the same semaphore.  Clear it so it
     // get get reposted later.
-    waitingAct->clearWait();
+    waitingAct->clearRunWait();
     sentinel = false;
     lock.reacquire();                    // get the resource lock back
     sentinel = false;                    // another memory barrier
 
-    // We only get dispatched if we end up at the front of the queue again,
-    // so just pop the front element.
-    waitingActivities.pop_front();
     sentinel = true;
     // if there's something else in the queue, then post the run semaphore of
     // the head element so that it wakes up next and starts waiting on the
@@ -184,6 +181,10 @@ void ActivityManager::addWaitingActivity(Activity *waitingAct, bool release )
     if (hasWaiters())
     {
         waitingActivities.front()->postDispatch();
+        // Once we have nudged this thread to wake up,
+        // we remove the entry from the queue so it doesn't inadvertenly
+        // get reprocessed.
+        waitingActivities.pop_front();
     }
     // the setting of the sentinel variables acts as a memory barrier to
     // ensure that the assignment of currentActivitiy occurs precisely at this point.
@@ -192,6 +193,35 @@ void ActivityManager::addWaitingActivity(Activity *waitingAct, bool release )
     sentinel = true;
     // set the new active numeric settings
     Numerics::setCurrentSettings(waitingAct->getNumericSettings());
+}
+
+
+/**
+ * return a nested waiting activity to the waiting queue.
+ *
+ * @param waitingAct The activity to queue up.
+ */
+void ActivityManager::returnWaitingActivity(Activity *waitingAct)
+{
+    DispatchSection lock;                // need the dispatch queue lock
+
+    // nobody waiting yet?  Unusual, but we might be the only one waiting
+    // dispatch at this time. Push it back on the queue and post the semaphore
+    // so that this will wakup up when we rewind back to it.
+    if (waitingActivities.empty())
+    {
+        // since this is at the front of the queue now, we want to ensure it
+        // wakes up once we get back to the semaphore wait call.
+        waitingAct->postDispatch();
+    }
+    else
+    {
+        // add to the end behind the others.
+        waitingActivities.push_back(waitingAct);
+        // others are in line ahead of us, so we need to clear our semaphore so that we
+        // won't get into a dispatch race.
+        waitingAct->clearRunWait();
+    }
 }
 
 
@@ -631,9 +661,25 @@ void ActivityManager::returnActivity(Activity *activityObject)
         // if we ended up pushing an old activity down when we attached this
         // thread, then we need to restore the old thread to active state.
         Activity *oldActivity = activityObject->getNestedActivity();
+
+        // there are two situations for a nested activity. The first is simple,
+        // which is just a normal exit interpreter/reenter interpreter.
+        // The second is more complicated and can (as far as we know) only
+        // occur on Windows).
         if (oldActivity != OREF_NULL)
         {
-            oldActivity->setSuspended(false);
+            // this is the dispatch queue situation. We just return this
+            // to the dispatch queue without waiting to obtain the kernel
+            // lock.
+            if (oldActivity->isWaitingForDispatch())
+            {
+                returnWaitingActivity(oldActivity);
+            }
+            // just remove the suspended state
+            else
+            {
+                oldActivity->setSuspended(false);
+            }
         }
         // cleanup any system resources this activity might own
         activityObject->cleanupActivityResources();
@@ -749,7 +795,9 @@ Activity *ActivityManager::attachThread()
     // we have an activity created for this thread already.  The interpreter instance
     // should already have handled the case of an attach for an already attached thread.
     // so we're going to have a new activity to create, and potentially an existing one to
-    // suspend
+    // suspend. We may also need to remove the activity from the dispatch queue if
+    // it is there.
+
     // we need to lock the kernel to have access to the memory manager to
     // create this activity. This is an "unowned" lock, since there will not be
     // an activity connected with it.
@@ -761,7 +809,22 @@ Activity *ActivityManager::attachThread()
     // mark the old activity as suspended, and chain this to the new activity.
     if (oldActivity != OREF_NULL)
     {
-        oldActivity->setSuspended(true);
+        // if we have an activity on this thread that is waiting for dispatch,
+        // then we need to make sure the old activity is removed from the
+        // dispatch queue and disabled until this new activity is detached.
+        if (oldActivity->isWaitingForDispatch())
+        {
+            // make sure this is never dispatched.
+            suspendDispatch(oldActivity);
+        }
+        // this is a normal nested reentry, so just make it as suspended.
+        else
+        {
+            oldActivity->setSuspended(true);
+        }
+        // The third state is an activity that's waiting on kernel access. We don't
+        // need to do anything special here.
+
         // this pushes this down the stack.
         activityObject->setNestedActivity(oldActivity);
     }
@@ -776,6 +839,83 @@ Activity *ActivityManager::attachThread()
     // thread.
     activityObject->setupCurrentActivity();
     return activityObject;
+}
+
+
+/**
+ * Remove an activity from the dispatch queue when a
+ * an attach is superceding an activity that is in the
+ * dispatch queue.
+ *
+ * @param activity The activity to suspend.
+ */
+void ActivityManager::suspendDispatch(Activity *activity)
+{
+    DispatchSection lock;                // need the dispatch queue lock
+
+    // if this activity is at the front of the queue, then we need to remove
+    // this and dispatch the new front element.
+    if (waitingActivities.front() == activity)
+    {
+        // belt and braces.  it is possible the dispatcher was
+        // reentered on the same thread, in which case we have an
+        // earlier stack frame waiting on the same semaphore.  Clear it so it
+        // get get reposted later.
+        activity->clearRunWait();
+
+        // We only get dispatched if we end up at the front of the queue again,
+        // so just pop the front element.
+        waitingActivities.pop_front();
+        // this will give some other thread a chance to run
+        if (hasWaiters())
+        {
+            waitingActivities.front()->postDispatch();
+            // because we posted the semaphore for that activity, we
+            // remove it from the queue, otherwise this could be processed
+            // again because of the orphan activity in the queue.
+            waitingActivities.pop_front();
+        }
+    }
+    // we're in line behind some other activity, so just remove this one
+    // from the queue. We don't need to repost anything at this point.
+    else
+    {
+        removeWaitingActivity(activity);
+    }
+}
+
+
+/**
+ * In certain situations (mostly confined to Windows),
+ * we can re-enter the interpreter on a thread that is
+ * currently on the dispatch queue. If that activity gets
+ * dispatched, then everything blocks because the
+ * activity never wakes up until the nested thread returns.
+ * In that situation, we need to ensure that the original
+ * waiting activity is removed from the dispatch queue
+ * until it is the top activity on the stack.
+ *
+ * @param waitingAct The activity to remove from the queue.
+ */
+void ActivityManager::removeWaitingActivity(Activity *waitingAct)
+{
+    // iterators don't work if the collection is empty, so
+    if (waitingActivities.empty())
+    {
+        return;
+    }
+
+    // search for the activity position and remove it.
+    for (std::deque<Activity *>::iterator it = waitingActivities.begin(); it != waitingActivities.end(); ++it)
+    {
+        // if this is found, remove it from the queue
+        if (*it == waitingAct)
+        {
+            waitingActivities.erase(it);
+            return;
+        }
+    }
+    // ignore this if not found.
 }
 
 

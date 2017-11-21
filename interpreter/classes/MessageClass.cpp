@@ -258,7 +258,8 @@ RexxObject *MessageClass::wait()
         }
         // add our activity to the list
         waitingActivities->append(ActivityManager::currentActivity);
-        // and wait for the wake up call.
+        // and wait for the wake up call. We are handling this like
+        // it is a guard wait, which has its own semaphore rules.
         ActivityManager::currentActivity->waitReserve(this);
     }
 
@@ -650,7 +651,9 @@ void MessageClass::sendNotification()
         {
             // get each activity and give them a poke.
             Activity *waitingActivity = (Activity *)waitingActivities->get(i);
-            waitingActivity->postDispatch();
+            // we process this like it is a guard variable reserve, so
+            // we wake it up as if it was a guard wait.
+            waitingActivity->guardPost();
         }
         // clear the list so that we don't anchor those activities needlessly
         waitingActivities = OREF_NULL;

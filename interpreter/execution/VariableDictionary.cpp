@@ -517,15 +517,16 @@ void VariableDictionary::reserve(Activity *activity)
         reserveCount = 1;
     }
     // doing this again on the same stack?  Just bump the
-    // nesting count.
-    else if (reservingActivity == activity)
+    // nesting count. Note that nested activities created via
+    // attach thread will count as being part of the same activity
+    // stack since they are on the same system thread.
+    else if (activity->isSameActivityStack(reservingActivity))
     {
         reserveCount++;
     }
     // we have an access collision.  We need to wait on this one.
     else
     {
-
         reservingActivity->checkDeadLock(activity);
         // this one we need to use setField()
         if (waitingActivities == OREF_NULL)
@@ -560,7 +561,7 @@ void VariableDictionary::release(Activity *activity)
             reservingActivity = (Activity *)waitingActivities->removeFirst();
             reserveCount = 1;
             // wake up the waiting activity.
-            reservingActivity->postDispatch();
+            reservingActivity->guardPost();
         }
     }
 }

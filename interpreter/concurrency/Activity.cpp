@@ -176,7 +176,7 @@ void Activity::runThread()
         {
             // wait for permission to run, then figure out what action
             // we've been asked to take.
-            runsem.wait();
+            waitForRunPermission();
             // told to exit.  Most likely we were in the thread pool
             // and the interpreer is shutting down
             if (exit)
@@ -233,8 +233,8 @@ void Activity::runThread()
         deactivate();
 
         // reset our semaphores
-        runsem.reset();
-        guardsem.reset();
+        runSem.reset();
+        guardSem.reset();
 
         // try to pool this.  If the ActivityManager doesn't take it,
         // we go into termination mode
@@ -258,8 +258,8 @@ void Activity::runThread()
 void Activity::cleanupActivityResources()
 {
     // close our semaphores and destroy the thread.
-    runsem.close();
-    guardsem.close();
+    runSem.close();
+    guardSem.close();
     currentThread.close();
 }
 
@@ -321,8 +321,8 @@ Activity::Activity(bool createThread)
     // The framestack creates space for expression stacks and local variable tables
     frameStack.init();
     // an activity has a couple of semaphores it uses to synchronize execution.
-    runsem.create();
-    guardsem.create();
+    runSem.create();
+    guardSem.create();
     activationStackSize = ACT_STACK_SIZE;
     // stack checking is enabled by default
     stackcheck = true;
@@ -345,7 +345,7 @@ Activity::Activity(bool createThread)
     {
         // we need to make sure this is cleared, since we use this
         // to wait for dispatch at thread start up.
-        runsem.reset();
+        runSem.reset();
         // we need to enter this thread already marked as active, otherwise
         // the main thread might shut us down before we get a chance to perform
         // whatever function we're getting asked to run.
@@ -1415,8 +1415,8 @@ void Activity::run()
     // post both of the semaphores.  The activity will be waiting
     // on one of these on another thread, so we yield control to
     // give the other thread a chance to run.
-    guardsem.post();
-    runsem.post();
+    guardSem.post();
+    runSem.post();
     SysActivity::yield();
 }
 
@@ -1767,6 +1767,7 @@ void Activity::detachInstance()
     {
         nestedActivity->setSuspended(false);
     }
+    nestedActivity = OREF_NULL;
 }
 
 
@@ -1859,6 +1860,23 @@ void Activity::enterKernel()
 
 
 /**
+ * Check to see if the target activity is part of the same
+ * activity stack on a thread.
+ *
+ * @param target The activity to check.
+ *
+ * @return true if the target is the same as the argument activity
+ *         or if the argument activity is a parent activity to
+ *         the argument activity due to AttachThread nesting.
+ */
+bool Activity::isSameActivityStack(Activity *target)
+{
+    // just compare the thread ids activity is associated with
+    return target->isThread(threadIdMethod());
+}
+
+
+/**
  * Check for a circular wait dead lock error
  *
  * @param targetActivity
@@ -1901,13 +1919,14 @@ void Activity::checkDeadLock(Activity *targetActivity)
  */
 void Activity::waitReserve(RexxInternalObject *resource)
 {
-    // clear the run semaphore and save the object we're waiting on
-    runsem.reset();
+    // We use the guard semaphore both for waiting to wakeup for guard expression
+    // evaluation and also for obtaining the guard lock
+    guardSem.reset();
     waitingObject = resource;
     // release the interpreter lock and wait for access.  Don't continue
     // until we get the lock back
     releaseAccess();
-    runsem.wait();
+    waitForGuardPermission();
     requestAccess();
 }
 
@@ -1920,7 +1939,7 @@ void Activity::guardWait()
     // we release the access while we are waiting so something
     // can actually run to post the change event.
     releaseAccess();
-    guardsem.wait();
+    waitForGuardPermission();
     requestAccess();
 }
 
@@ -1930,7 +1949,8 @@ void Activity::guardWait()
  */
 void Activity::guardPost()
 {
-    guardsem.post();
+    waitingObject = OREF_NULL;
+    guardSem.post();
 }
 
 
@@ -1940,7 +1960,7 @@ void Activity::guardPost()
  */
 void Activity::guardSet()
 {
-    guardsem.reset();
+    guardSem.reset();
 }
 
 
@@ -1949,8 +1969,7 @@ void Activity::guardSet()
  */
 void Activity::postDispatch()
 {
-    waitingObject = OREF_NULL;
-    runsem.post();
+    runSem.post();
 }
 
 
@@ -2075,10 +2094,24 @@ void Activity::requestAccess()
         Numerics::setCurrentSettings(numericSettings);
         return;
     }
-    /* can't get it, go stand in line    */
+    // can't get it, go stand in line
     ActivityManager::addWaitingActivity(this, false);
     // belt and braces to ensure this is done on this thread
-    ActivityManager::currentActivity = this;          /* set new current activity          */
+    ActivityManager::currentActivity = this;
+}
+
+
+/**
+ * Perform the actual wait for kernel access for this activity;
+ */
+void Activity::waitForKernel()
+{
+    // we need to set a semaphore to flag that we are waiting
+    // on a semaphore in case there is a Windows message queue recursive
+    // reentry.
+    waitingOnSemaphore = true;
+    ActivityManager::lockKernel();
+    waitingOnSemaphore = false;
 }
 
 
@@ -3165,7 +3198,7 @@ void Activity::queue(RexxActivation *activation, RexxString *line, QueueOrder or
 void  Activity::terminatePoolActivity()
 {
     exit = true;
-    runsem.post();
+    runSem.post();
 }
 
 

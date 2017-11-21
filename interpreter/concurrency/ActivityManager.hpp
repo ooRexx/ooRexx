@@ -99,6 +99,9 @@ public:
     static Activity *attachThread();
     static RexxObject *getLocalEnvironment(RexxString *name);
     static DirectoryClass *getLocal();
+    static void suspendDispatch(Activity *activity);
+    static void removeWaitingActivity(Activity *waitingAct);
+    static void returnWaitingActivity(Activity *waitingAct);
 
     // non-static method that is attached to the environment directory
     DirectoryClass *getLocalRexx()
