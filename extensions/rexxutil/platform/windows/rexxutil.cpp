@@ -4027,28 +4027,136 @@ RexxRoutine3(RexxStringObject, SysTextScreenRead, int, row, int, col, OPTIONAL_i
 /*************************************************************************
 * Function:  SysTextScreenSize                                           *
 *                                                                        *
-* Syntax:    call SysTextScreenSize                                      *
+* Syntax:    call SysTextScreenSize [option], [rows, colummns]          *
+*            call SysTextScreenSize [option], [top, left, bottom, right] *
 *                                                                        *
-* Return:    Size of screen in row and columns returned as:  row, col    *
+* Params:    option - "BUFFERSIZE", "WINDOWRECT", "MAXWINDOWSIZE"        *
+*               "BUFFERSIZE" (default) return or set console buffer size *
+*               "WINDOWRECT" return or set windows position              *
+*               "MAXWINDOWSIZE" return maximum window size               *
+*            lines, columns - set buffer size to lines by columns        *
+*            top, left, bottom, right - set window size and position     *
+*                                                                        *
+* Return:    "BUFFERSIZE" or "MAXWINDOWSIZE": rows columns               *
+*            "WINDOWRECT": top left bottom right                         *
 *************************************************************************/
 
-RexxRoutine0(RexxStringObject, SysTextScreenSize)
+RexxRoutine5(RexxStringObject, SysTextScreenSize,
+    OPTIONAL_CSTRING, optionString,
+    OPTIONAL_stringsize_t, rows, OPTIONAL_stringsize_t, columns,  
+    OPTIONAL_stringsize_t, rows2, OPTIONAL_stringsize_t, columns2)  
 {
-    CONSOLE_SCREEN_BUFFER_INFO csbiInfo; /* Console information        */
-
-    HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
-    /* if in character mode       */
-    if (GetConsoleScreenBufferInfo(hStdout, &csbiInfo))
+    // check for valid option
+    typedef enum { BUFFERSIZE, WINDOWRECT, MAXWINDOWSIZE } console_option;
+    console_option option;
+    if (optionString == NULL || stricmp(optionString, "BUFFERSIZE") == 0)
     {
-        char buffer[100];
-
-        wsprintf(buffer, "%d %d", csbiInfo.dwSize.Y, csbiInfo.dwSize.X);
-        return context->NewStringFromAsciiz(buffer);
+        option = BUFFERSIZE;
+    }
+    else if (stricmp(optionString, "WINDOWRECT") == 0)
+    {
+        option = WINDOWRECT;
+    }
+    else if (stricmp(optionString, "MAXWINDOWSIZE") == 0)
+    {
+        option = MAXWINDOWSIZE;
     }
     else
     {
-        return context->NewStringFromAsciiz("0 0");
+        context->InvalidRoutine();
+        return 0;
     }
+
+    // check for valid SET arguments: either none, or two more, or four more
+    size_t setArgs;
+    bool omitted45 = argumentOmitted(4) && argumentOmitted(5);
+    bool exists23 = argumentExists(2) && argumentExists(3);
+    if (argumentOmitted(2) && argumentOmitted(3) && omitted45)
+    {
+        setArgs = 0;
+    }
+    else if (exists23 && omitted45)
+    {
+        setArgs = 2;
+    }
+    else if (exists23 && argumentExists(4) && argumentExists(5))
+    {
+        setArgs = 4;
+    }
+    else
+    {
+        context->InvalidRoutine();
+        return 0;
+    }
+
+    // check that all SET arguments fit a SHORT
+    if (!(setArgs == 0 ||
+         (setArgs == 2 && rows <= SHRT_MAX && columns <= SHRT_MAX) ||
+         (setArgs == 4 && rows <= SHRT_MAX && columns <= SHRT_MAX && rows2 <= SHRT_MAX && columns2 <= SHRT_MAX)))
+    {
+        context->InvalidRoutine();
+        return 0;
+    }
+
+    // real work starts here
+    CONSOLE_SCREEN_BUFFER_INFO csbi; // console screen buffer information
+    char buffer[100];
+
+    HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
+
+    if (setArgs == 0)
+    {
+        // this is a GET requset, retrieve console information
+        if (GetConsoleScreenBufferInfo(hStdout, &csbi) == NULL)
+        {
+            // console not in character mode, return two or four zeroes
+            return context->NewStringFromAsciiz(option == WINDOWRECT ? "0 0 0 0" : "0 0");
+        }
+    }
+
+    if (option == BUFFERSIZE && setArgs == 0)
+    {
+        // this is a BUFFERSIZE GET, returns two values
+        sprintf(buffer, "%d %d", csbi.dwSize.Y, csbi.dwSize.X);
+    }
+    else if (option == WINDOWRECT && setArgs == 0)
+    {
+        // this is a WINDOWRECT GET, returns four values
+        sprintf(buffer, "%d %d %d %d", csbi.srWindow.Top, csbi.srWindow.Left, csbi.srWindow.Bottom, csbi.srWindow.Right);
+    }
+    else if (option == MAXWINDOWSIZE && setArgs == 0)
+    {
+        // this is a MAXWINDOWSIZE GET, returns two values
+        sprintf(buffer, "%d %d", csbi.dwMaximumWindowSize.Y, csbi.dwMaximumWindowSize.X);
+    }
+    else if (option == BUFFERSIZE && setArgs == 2)
+    {
+        // this is a BUFFERSIZE SET, requires two more arguments
+        COORD consoleBuffer;
+        consoleBuffer.Y = (SHORT)rows;
+        consoleBuffer.X = (SHORT)columns;
+        BOOL code = SetConsoleScreenBufferSize(hStdout, consoleBuffer);
+        sprintf(buffer, "%d", code == 0 ? GetLastError() : 0);
+    }
+    else if (option == WINDOWRECT  && setArgs == 4)
+    {
+        // this is a WINDOWRECT  SET, requires four more arguments
+        SMALL_RECT consoleWindow;
+        consoleWindow.Top =    (SHORT)rows;
+        consoleWindow.Left =   (SHORT)columns;
+        consoleWindow.Bottom = (SHORT)rows2;
+        consoleWindow.Right =  (SHORT)columns2;
+        BOOL code = SetConsoleWindowInfo(hStdout, 1, &consoleWindow);
+        sprintf(buffer, "%d", code == 0 ? GetLastError() : 0);
+    }
+    else
+    {
+        context->InvalidRoutine();
+        return 0;
+    }
+
+    // return the buffer as result
+    return context->NewStringFromAsciiz(buffer);
 }
 
 /*************************************************************************
