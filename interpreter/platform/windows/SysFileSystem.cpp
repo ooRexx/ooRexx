@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -432,7 +432,7 @@ bool SysFileSystem::hasDirectory(const char *name)
     // hasDirectory() means we have enough absolute directory
     // information at the beginning to bypass performing path searches.
     // We really only need to look at the first character.
-    return name[0] == '\\' || name[0] == '.' || name[2] == ':';
+    return name[0] == '\\' || name[0] == '.' || name[1] == ':';
 }
 
 
@@ -473,6 +473,7 @@ bool SysFileSystem::checkCurrentFile(const char *name, char *resolvedName)
             return true;
         }
     }
+    SetErrorMode(errorMode);
     return false;        // not found
 }
 
@@ -507,6 +508,7 @@ bool SysFileSystem::searchPath(const char *name, const char *path, const char *e
             return true;
         }
     }
+    SetErrorMode(errorMode);
     return false;        // not found
 }
 
