@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -99,12 +99,12 @@
 /* REQUIRED:  Define the string used for the default initial address setting. */
 /******************************************************************************/
 
-#if defined(AIX)
-#define SYSINITIALADDRESS "ksh"
-#elif defined(OPSYS_SUN)
+// "sh" should be our initial ADDRESS() environment across all Unix platforms
 #define SYSINITIALADDRESS "sh"
+#ifdef AIX
+#define SYSSHELLPATH "/usr/bin"
 #else
-#define SYSINITIALADDRESS "bash"
+#define SYSSHELLPATH "/bin"
 #endif
 
 

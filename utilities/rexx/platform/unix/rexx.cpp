@@ -46,13 +46,6 @@
 
 #include "oorexxapi.h"
 
-#if defined(AIX)
-#define SYSINITIALADDRESS "ksh"
-#elif defined(OPSYS_SUN)
-#define SYSINITIALADDRESS "sh"
-#else
-#define SYSINITIALADDRESS "bash"
-#endif
 
 int main (int argc, char **argv) {
     int   i;                             /* loop counter                      */
@@ -133,7 +126,7 @@ int main (int argc, char **argv) {
                        &argument,        /* array of arguments     */
                        program_name,     /* INSTORE                */
                        instore,          /* rexx code from -e      */
-                       SYSINITIALADDRESS,/* command env. name      */
+                       NULL,             // use the default initial ADDRESS() environment
                        RXCOMMAND,        /* code for how invoked   */
                        NULL,
                        &rexxrc,          /* REXX program output    */

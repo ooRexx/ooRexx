@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -57,14 +57,11 @@
 #include "InterpreterInstance.hpp"
 #include "SysInterpreterInstance.hpp"
 
-#define CMDBUFSIZE32S 260              /* Max size of executable cmd     */
-#define CMDBUFSIZENT 8092              /* Max size of executable cmd     */
-#define CMDDEFNAME32S "COMMAND.COM"    /* Default Win 95   cmd handler   */
-#define CMDDEFNAMENT "CMD.EXE"         /* Default Win NT   cmd handler   */
+#define CMDBUFSIZE 8092                // maximum commandline length
+#define CMDDEFNAME "CMD.EXE"           // default Windows cmomand handler
 #define UNKNOWN_COMMAND 1              /* unknown command return code    */
 #include "direct.h"
 
-#define SYSENV "CMD"                   /* Default windows cmd environment*/
 #define COMSPEC "COMSPEC"              /*      cmd handler env name      */
 
 #define SHOWWINDOWFLAGS SW_HIDE        // determines visibility of cmd
@@ -477,7 +474,7 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStrin
     // with command.com
     if ( (sys_cmd_handler = getenv(COMSPEC)) == NULL )
     {
-        sys_cmd_handler = CMDDEFNAMENT;
+        sys_cmd_handler = CMDDEFNAME;
     }
 
     // Determine the maximum possible buffer size needed to pass the final
@@ -488,10 +485,10 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStrin
                            + 2   // Two possible extra quotes
                            + 1;  // Terminating null
 
-    char  cmdstring[CMDBUFSIZENT];    // Default static buffer.
+    char  cmdstring[CMDBUFSIZE];    // Default static buffer.
     char *cmdstring_ptr = cmdstring;  // Will point to static buffer.
 
-    if ( maxBufferSize > CMDBUFSIZENT )
+    if ( maxBufferSize > CMDBUFSIZE )
     {
         // Allocate dynamic memory and set cmdstring_ptr to point to it.
         cmdstring_ptr = (char *)LocalAlloc(LPTR, maxBufferSize);
@@ -506,7 +503,7 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStrin
     {
         // We want maxBufferSize to relect the actual size of the buffer we are
         // using so that we can test the return from SearchPath()
-        maxBufferSize = CMDBUFSIZENT;
+        maxBufferSize = CMDBUFSIZE;
     }
 
     SystemInterpreter::exceptionConsole = false;

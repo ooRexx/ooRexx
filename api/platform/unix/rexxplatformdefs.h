@@ -38,7 +38,7 @@
 #ifndef REXXPLATFORMDEFS_INCLUDED
 #define REXXPLATFORMDEFS_INCLUDED
 
-#if !defined(AIX) && !defined(LINUX)
+#if !defined(AIX) && !defined(LINUX) && !defined(__APPLE__) && !defined(OPENBSD)
 #define AIX                           /* Default definition for AIX          */
 #endif
 
