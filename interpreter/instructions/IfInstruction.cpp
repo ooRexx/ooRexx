@@ -152,7 +152,7 @@ void RexxInstructionIf::execute(RexxActivation *context, ExpressionStack *stack)
     else if (result != TheTrueObject)
     {
         // evaluate and decide if we take the ELSE branch
-        if (!result->truthValue(Error_Logical_value_if))
+        if (!result->truthValue(instructionType == KEYWORD_WHEN ? Error_Logical_value_when : Error_Logical_value_if))
         {
             context->setNext(else_location->nextInstruction);
         }
