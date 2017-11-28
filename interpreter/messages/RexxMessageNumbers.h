@@ -338,6 +338,7 @@
 #define Error_Incorrect_call_random_range_msg                        396
 #define Error_Incorrect_call_stream_name_msg                         397
 #define Error_Incorrect_method_stream_type_msg                       398
+#define Error_Invalid_subkeyword_use_strict_msg                      399
 #define Error_Incorrect_call_array_msg                               400
 #define Error_Incorrect_call_nostring_msg                            401
 #define Error_Incorrect_call_selector_msg                            402
@@ -573,8 +574,8 @@
 #define Error_Invalid_expression_logical_list_msg                    660
 #define Error_Symbol_expected_namespace_class_msg                    661
 #define Error_Symbol_expected_namespace_msg                          662
-#define Error_Translation_use_strict_ellipsis_msg                    663
-#define Error_Invalid_expression_use_strict_default_msg              664
+#define Error_Translation_use_arg_ellipsis_msg                       663
+#define Error_Invalid_expression_use_arg_default_msg                 664
 #define Error_Incorrect_method_abstract_msg                          665
 #define Error_Invalid_whole_number_compareto_msg                     666
 #define Error_Invalid_whole_number_compare_msg                       667

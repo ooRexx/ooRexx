@@ -1664,6 +1664,15 @@ special character (such as a parenthesis).
       </SubMessage>
       <SubMessage>
         <Code>25</Code>
+        <Subcode>929</Subcode>
+        <MessageNumber>399</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_subkeyword_use_strict</SymbolicName>
+        <Text>USE STRICT must be followed by the keyword ARG; found <q><Sub position="1" name="word"/></q>.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>25</Code>
         <Subcode>906</Subcode>
         <MessageNumber>298</MessageNumber>
         <Component>Rexx</Component>
@@ -2705,8 +2714,8 @@ special character (such as a parenthesis).
         <MessageNumber>664</MessageNumber>
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
-        <SymbolicName>Error_Invalid_expression_use_strict_default</SymbolicName>
-        <Text>Missing expression following <q>=</q> token of a USE STRICT ARG instruction.</Text>
+        <SymbolicName>Error_Invalid_expression_use_arg_default</SymbolicName>
+        <Text>Invalid or missing expression following <q>=</q> token of a USE ARG instruction.</Text>
       </SubMessage>
       <SubMessage>
         <Code>35</Code>
@@ -5538,7 +5547,7 @@ special character (such as a parenthesis).
         <MessageNumber>663</MessageNumber>
         <Component>Rexx</Component>
         <Severity>Error</Severity>
-        <SymbolicName>Error_Translation_use_strict_ellipsis</SymbolicName>
+        <SymbolicName>Error_Translation_use_arg_ellipsis</SymbolicName>
         <Text>The <q>...</q> argument marker can only appear at the end of the argument list.</Text>
       </SubMessage>
       <SubMessage>

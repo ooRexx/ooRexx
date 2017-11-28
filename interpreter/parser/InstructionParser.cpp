@@ -3920,7 +3920,7 @@ RexxInstruction *LanguageParser::traceNew()
 
 
 /**
- * Parse a USE STRICT ARG instruction.
+ * Parse a USE ARG or USE STRICT ARG instruction.
  *
  * @return The executable instruction object.
  */
@@ -3948,7 +3948,7 @@ RexxInstruction *LanguageParser::useNew()
     // the only subkeyword supported is ARG
     if (token->subKeyword() != SUBKEY_ARG)
     {
-        syntaxError(Error_Invalid_subkeyword_use, token);
+        syntaxError(strictChecking == true ? Error_Invalid_subkeyword_use_strict : Error_Invalid_subkeyword_use, token);
     }
 
     // we accumulate 2 sets of data here, so we need 2 queues to push them in
@@ -3988,7 +3988,7 @@ RexxInstruction *LanguageParser::useNew()
                     token = nextReal();
                     if (!token->isEndOfClause())
                     {
-                        syntaxError(Error_Translation_use_strict_ellipsis);
+                        syntaxError(Error_Translation_use_arg_ellipsis);
                     }
                     break;  // done parsing
                 }
@@ -4005,7 +4005,7 @@ RexxInstruction *LanguageParser::useNew()
             variable_list->push(retriever);
             variableCount++;
             token = nextReal();
-            // a terminator takes us out.  We need to keep all 3 lists in sync with dummy entries.
+            // a terminator takes us out.  We need to keep our lists in sync with dummy entries.
             if (token->isEndOfClause())
             {
                 defaults_list->push(OREF_NULL);
@@ -4026,17 +4026,17 @@ RexxInstruction *LanguageParser::useNew()
                 // are fine without parens, more complex forms require parens as
                 // delimiters.
                 RexxInternalObject *defaultValue = parseConstantExpression();
-                // no expression is an error
+                // not a constant expression is an error
                 if (defaultValue == OREF_NULL)
                 {
-                    syntaxError(Error_Invalid_expression_use_strict_default);
+                    syntaxError(Error_Invalid_expression_use_arg_default);
                 }
 
                 // add this to the defaults
                 defaults_list->push(defaultValue);
                 // step to the next token
                 token = nextReal();
-                // a terminator takes us out.  We need to keep all 3 lists in sync with dummy entries.
+                // a terminator takes us out.
                 if (token->isEndOfClause())
                 {
                     break;
@@ -4047,6 +4047,12 @@ RexxInstruction *LanguageParser::useNew()
                     token = nextReal();
                     continue;
                 }
+                // not a comma is an error
+                else
+                {
+                    syntaxError(Error_Invalid_expression_use_arg_default);
+                }
+
             }
             else
             {

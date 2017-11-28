@@ -905,6 +905,9 @@ $ Error_Incorrect_call_stream_name
 $ Error_Incorrect_method_stream_type
 398 Positioning of transient streams is not valid.
 
+$ Error_Invalid_subkeyword_use_strict
+399 USE STRICT must be followed by the keyword ARG; found "&1".
+
 $ Error_Incorrect_call_array
 400 &1 argument &2 must be a single-dimensional array; found "&3".
 
@@ -1610,11 +1613,11 @@ $ Error_Symbol_expected_namespace_class
 $ Error_Symbol_expected_namespace
 662 Symbol expected after NAMESPACE keyword.
 
-$ Error_Translation_use_strict_ellipsis
+$ Error_Translation_use_arg_ellipsis
 663 The "..." argument marker can only appear at the end of the argument list.
 
-$ Error_Invalid_expression_use_strict_default
-664 Missing expression following "=" token of a USE STRICT ARG instruction.
+$ Error_Invalid_expression_use_arg_default
+664 Invalid or missing expression following "=" token of a USE ARG instruction.
 
 $ Error_Incorrect_method_abstract
 665 Method &1 is ABSTRACT and cannot be directly invoked.

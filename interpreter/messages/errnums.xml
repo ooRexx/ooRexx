@@ -1276,6 +1276,12 @@ special character (such as a parenthesis).
 <para>Unknown keyword on ::ANNOTATE directive; found "<emphasis role="italic">word</emphasis>".</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>929</term>
+<listitem>
+<para>USE STRICT must be followed by the keyword ARG; found "<emphasis role="italic">word</emphasis>".</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR26">
@@ -1907,7 +1913,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>930</term>
 <listitem>
-<para>Missing expression following "=" token of a USE STRICT ARG instruction.</para>
+<para>Invalid or missing expression following "=" token of a USE ARG instruction.</para>
 </listitem>
 </varlistentry>
 <varlistentry>

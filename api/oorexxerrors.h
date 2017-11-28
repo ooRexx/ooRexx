@@ -219,6 +219,7 @@
 #define Rexx_Error_Invalid_subkeyword_signalonname                        25915
 #define Rexx_Error_Invalid_subkeyword_parse                               25012
 #define Rexx_Error_Invalid_subkeyword_use                                 25905
+#define Rexx_Error_Invalid_subkeyword_use_strict                          25929
 #define Rexx_Error_Invalid_subkeyword_raise                               25906
 #define Rexx_Error_Invalid_subkeyword_raiseoption                         25907
 #define Rexx_Error_Invalid_subkeyword_description                         25908
@@ -329,7 +330,7 @@
 #define Rexx_Error_Invalid_expression_forward_message                     35927
 #define Rexx_Error_Invalid_expression_forward_class                       35928
 #define Rexx_Error_Invalid_expression_logical_list                        35929
-#define Rexx_Error_Invalid_expression_use_strict_default                  35930
+#define Rexx_Error_Invalid_expression_use_arg_default                     35930
 #define Rexx_Error_Invalid_expression_parse                               35931
 #define Rexx_Error_Invalid_expression_call                                35932
 #define Rexx_Error_Invalid_expression_select_case                         35933
@@ -633,7 +634,7 @@
 #define Rexx_Error_Translation_class_external_bad_parameters              99926
 #define Rexx_Error_Translation_class_external_bad_class_name              99928
 #define Rexx_Error_Translation_class_external_bad_class_server            99929
-#define Rexx_Error_Translation_use_strict_ellipsis                        99930
+#define Rexx_Error_Translation_use_arg_ellipsis                           99930
 #define Rexx_Error_Translation_duplicate_attribute                        99931
 #define Rexx_Error_Translation_duplicate_constant                         99932
 #define Rexx_Error_Translation_abstract_method                            99933

@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -66,7 +66,7 @@ RexxInstructionUse::RexxInstructionUse(size_t count, bool strict, bool extraAllo
     // set the variable count and the option flag
     variableCount = count;
     variableSize = extraAllowed; // we might allow an unchecked number of additional arguments
-    minimumRequired = 0;         // do don't necessarily require any of these.
+    minimumRequired = 0;         // don't necessarily require any of these.
     strictChecking = strict;     // record if this is the strict form
 
     // items are added to the queues in reverse order, so we pop them off and add
@@ -78,8 +78,8 @@ RexxInstructionUse::RexxInstructionUse(size_t count, bool strict, bool extraAllo
         variables[count].variable = (RexxVariableBase *)variable_list->pop();
         variables[count].defaultValue = (RexxObject *)defaults->pop();
 
-        // if this is a real variable, see if this is the last of the required ones.
-        if (minimumRequired < count + 1 && variables[count].variable != OREF_NULL)
+        // see if this is the last of the required ones.
+        if (minimumRequired == 0)
         {
             // no default value means this is a required argument, this is the min we'll accept.
             if (variables[count].defaultValue == OREF_NULL)
