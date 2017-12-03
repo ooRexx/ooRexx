@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -47,6 +47,7 @@
 #include <ctype.h>
 #include "automaton.hpp"
 #include "regexp.hpp"
+//#define MYDEBUG
 
 // constructor: initialize automaton
 automaton::automaton() : ch(NULL), next1(NULL), next2(NULL), final(-1), regexp(NULL),
@@ -114,6 +115,79 @@ void automaton::setMinimal(bool f)
 /* and the automaton will match any pattern.                 */
 /* parsing is recursive.                                     */
 /*************************************************************/
+
+/*
+We parse a regular expression pattern to create a finite-state
+machine (FSM) that later match() can use to efficiently determine
+whether a string matches the pattern or not.
+
+The FSM's main part are three arrays, where the array index is the
+state number.
+  ch[]    holds one of the following:
+          a specific character which this state must consume
+          EPSILON, indicating that this state doesn't consume a character
+          ANY, indicating that this state consumes any character
+          SET, indicating that this state consumes a character from a set
+  next1[] the state to transition to for the next step
+  next2[] if next2[] is not equal to next1[], it specifies an alternative
+          state to transition to
+
+  freeState keeps track of the first yet unused state.  
+  setState() is used to set a new or modify an existing state.
+
+
+Parsing is done in a single pass.
+
+Here's an example.  After parsing the pattern "ABC", the FSM will look
+like this:
+state   ch      next1   next2
+0       eps     1
+1       A       2
+2       B       3
+3       C       4
+
+Starting in state 0, we transition to state 1 without consuming anything.
+In state 1 we consume "A" and transition to state 2.
+In state 2 we consume "B" and transition to state 3.
+In state 3 we consume the final "C", and transition to the terminal state 4.
+
+Now let's see what happens if we change the pattern to e. g. "ABC*".
+Having parsed "ABC", the FSM is as shown above.
+When the parser sees the asterisk, it will modify the FSM as follows
+(see factor() function, block regexp[currentPos] == '*'):
+
+(1)     setState(freeState, EPSILON, freeState+1, t2);
+(2)     next1[t1-1] = freeState;
+
+(1) adds a new epsilon-state that allows to either transition to the new
+terminal state (freeState+1), or to the start of the last expression, which
+in our example is state 3, which consumes "C".
+(2) modifies the existing state t1-1, the state before our last expression,
+in our case state 2, consuming "B", to alternatively transition to state 4. 
+state   ch      next1   next2
+0       eps     1
+1       A       2
+2       B       4       3
+3       C       4
+4       eps     5       3
+
+Following the state transitions, we find that this will - as expected -
+allow AB, ABC, ABCC, ABCCC.. to be successfully matched.
+
+
+Parsing is done (roughly) according to this regular expression BNF:
+
+   expression ::= term | term "|" expression
+
+   term ::= factor | factor term
+
+   factor ::= atom | atom metacharacter
+
+   atom ::= "?" | "[" set "]" | "(" expression ")" | character 
+
+   metacharacter ::= "*" | "+" | "{" times "}"
+
+*/
 int automaton::parse(const char *regexp)
 {
     int temp;
@@ -170,7 +244,7 @@ int automaton::parse(const char *regexp)
 
 // in debug mode, print out the automaton
 #ifdef MYDEBUG
-    printf("S\tT\t1\t2\n");
+    printf("state\tch\tnext1\tnext2\n");
     for (int i=0;i<size && next1[i] != EOP;i++)
     {
         if ((unsigned int) next1[i] < 32000)
@@ -194,12 +268,9 @@ int automaton::parse(const char *regexp)
                     printf("%c\t",ch[i]);
                     break;
             }
-            if ( (ch[i] & SCAN) == EPSILON )
+            if (next1[i] != next2[i])
             {
-                if (next1[i] != next2[i])
-                {
-                    printf("%d\t%d\n",next1[i],next2[i]);
-                }
+                printf("%d\t%d\n",next1[i],next2[i]);
             }
             else
             {
@@ -246,6 +317,8 @@ int automaton::letter(int c)
 /**************************************************************/
 /* automaton::expression                                      */
 /*                                                            */
+/* expression ::= term | term "|" expression                  */
+/*                                                            */
 /* dissect expression into smaller parts (expression => term) */
 /* and insert fitting states into the automaton.              */
 /**************************************************************/
@@ -272,30 +345,25 @@ int automaton::expression()
     return r;
 }
 
-/*******************/
-/* automaton::term */
-/*                 */
-/* parse a term.   */
-/*******************/
+/*********************************/
+/* automaton::term               */
+/*                               */
+/* term ::= factor | factor term */
+/*                               */
+/* parse a term.                 */
+/*********************************/
 int automaton::term()
 {
     int r;
 
     r = factor();
 
-    // do we need to concatenate parenthesis?
-    // parenthesis need an extra epsilon transition so that | works correctly
-    if ( (regexp[currentPos] == '(') )
+    // another term following?
+    if ( (regexp[currentPos] == '(') ||
+         (regexp[currentPos] == '[') ||
+          letter(regexp[currentPos]))
     {
-        int t1 = freeState, t2;
-        freeState++;
-        t2 = term();
-        setState(t1, EPSILON, t2, t2);
-    }
-    else if ((regexp[currentPos] == '[') ||
-             letter(regexp[currentPos]))
-    {
-        term(); // simple concat
+        term();
     }
 
     return r;
@@ -304,9 +372,17 @@ int automaton::term()
 /***************************************************************/
 /* automaton::factor                                           */
 /*                                                             */
+/* factor ::= atom | atom metacharacter                        */
+/*                                                             */
+/* atom ::= "?" | "[" set "]" | "(" expression ")" | character */
+/*                                                             */
+/* metacharacter ::= "*" | "+" | "{" times "}"                 */
+/*                                                             */
 /* create new states for the automaton according to meaning of */
 /* single characters.                                          */
 /* known operators are '?', '\', '[', '(', '{', '*', '+'       */
+/*                                                             */
+/* returns the start state for this factor                     */
 /***************************************************************/
 int automaton::factor()
 {
@@ -318,6 +394,7 @@ int automaton::factor()
     {
         // match any single character
         case '?':
+            // consume any character and transition to the following state
             setState(freeState, ANY, freeState+1, freeState+1);
             r = t2 = freeState;
             freeState++;
@@ -327,6 +404,7 @@ int automaton::factor()
         case '\\':
             currentPos++;
             if (regexp[currentPos] == 0x00) throw E_UNEXPECTED_EOP;
+            // consume the current character and transition to the following state
             setState(freeState, regexp[currentPos], freeState+1, freeState+1);
             t2 = freeState;
             freeState++;
@@ -341,8 +419,16 @@ int automaton::factor()
             break;
             // an expression in parenthesis
         case '(':
-            currentPos++;
+            currentPos++;              // step over "("
+
+            // parenthesis need an extra leading epsilon transition so that | works correctly
+            freeState++;               // reserve space for leading epsilon transition
             t2 = expression();
+            setState(t1, EPSILON, t2, t2);
+
+            // we also require an extra closing epsilon transition to make "(A|B)x*" work
+            setState(freeState++, EPSILON, freeState, freeState);
+
             if (regexp[currentPos] == ')') currentPos++;
             else throw E_MISSING_PAREN_CLOSE;
             break;
@@ -350,6 +436,7 @@ int automaton::factor()
             // only a letter is valid at this position
             if (letter(regexp[currentPos]))
             {
+                // consume the letter and transition to the following state
                 setState(freeState, regexp[currentPos], freeState+1, freeState+1);
                 t2 = freeState;
                 freeState++;
@@ -378,6 +465,7 @@ int automaton::factor()
     // match previous expression one or more times
     else if (regexp[currentPos] == '+')
     {
+        // consume the letter and transition to the following state
         setState(freeState, EPSILON, t1, freeState+1);
         r = t1;
         freeState++;
@@ -605,6 +693,7 @@ int automaton::set()
 
   // set SET transition (bits 16 to 27 contain the set number)
   // that is created by insertSet
+  // consume a character from/not from the set and transition to the following state
   setState(freeState, transition | (insertSet(range, i)<<16), freeState+1, freeState+1);
   i = freeState;
   freeState++;
@@ -706,7 +795,7 @@ int automaton::match(const char *a, int N)  // string length passed in
   // terminates when end state (==0) is reached
   while (state) {
 #ifdef MYDEBUG
-    printf("double queue dump:\n");
+    printf("          ");
     dq.dump();
 #endif
     // go to next character
@@ -759,7 +848,7 @@ int automaton::match(const char *a, int N)  // string length passed in
       break;
     }
 #ifdef MYDEBUG
-    printf("dq is %s\n",dq.isEmpty()?"empty":"NOT empty");
+    printf("%s",dq.isEmpty()?"    empty ":"NOT empty ");
     dq.dump();
 #endif
     // break out if we've reached the end of the string
