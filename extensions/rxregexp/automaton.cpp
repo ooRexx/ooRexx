@@ -427,7 +427,8 @@ int automaton::factor()
             setState(t1, EPSILON, t2, t2);
 
             // we also require an extra closing epsilon transition to make "(A|B)x*" work
-            setState(freeState++, EPSILON, freeState, freeState);
+            setState(freeState, EPSILON, freeState + 1, freeState + 1);
+            freeState++;
 
             if (regexp[currentPos] == ')') currentPos++;
             else throw E_MISSING_PAREN_CLOSE;
