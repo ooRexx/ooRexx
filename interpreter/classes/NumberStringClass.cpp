@@ -3555,6 +3555,38 @@ NumberString *NumberString::remainder(RexxObject *right)
 
 
 /**
+ * Perform modulo operation for two numbers.
+ * There is no universal agreement how to calculate modulo for
+ * floating point arguments or for negative divisors, so we restrict
+ * the dividend to a whole number and the divisor to a positive whole number.
+ *
+ * @param right  The divisor object.
+ *
+ * @return The module result.
+ */
+NumberString *NumberString::modulo(RexxObject *divisorObj)
+{
+    // modulo requires the dividend to be an integer
+    if (!this->isInteger())
+    {
+        reportException(Error_Incorrect_method_string_no_whole_number, "MODULO", this);
+    }
+
+    requiredArgument(divisorObj, ARG_ONE);
+    NumberString *divisor = divisorObj->numberString();
+    // the divisor is required to be a positive integer
+    if (divisor == OREF_NULL || !divisor->isInteger() || divisor->numberSign != 1)
+    {
+        reportException(Error_Incorrect_method_positive, 1, divisorObj);
+    }
+    // calculate the remainder
+    NumberString *module = Division(divisor, OT_REMAINDER);
+    // if negative, correct by adding the divisor
+    return module->numberSign >= 0 ? module : module->plus(divisor);
+}
+
+
+/**
  * Perform conditional rounding of a number value.
  *
  * @param digits The current digits value.

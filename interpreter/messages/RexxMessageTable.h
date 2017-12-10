@@ -525,6 +525,7 @@ ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
       MINOR(Error_Incorrect_method_supplier)
       MINOR(Error_Incorrect_method_nostring)
       MINOR(Error_Incorrect_method_noarray)
+      MINOR(Error_Incorrect_method_string_no_whole_number)
       MINOR(Error_Incorrect_method_exponent_oversize)
       MINOR(Error_Incorrect_method_before_oversize)
       MINOR(Error_Incorrect_method_string_nonumber)

@@ -985,6 +985,19 @@ RexxObject *RexxString::trunc(RexxInteger *decimals)
 
 
 /**
+ * The String class version of the modulo method.
+ *
+ * @param divisor The divisor.
+ *
+ * @return The module result.
+ */
+RexxObject *RexxString::modulo(RexxObject *divisor)
+{
+    ArithmeticMethod(modulo(divisor), "MODULO");
+}
+
+
+/**
  * The String class version of the floor method.
  *
  * @return The formatted numeric version.

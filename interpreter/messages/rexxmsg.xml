@@ -4517,6 +4517,15 @@ special character (such as a parenthesis).
       </SubMessage>
       <SubMessage>
         <Code>93</Code>
+        <Subcode>940</Subcode>
+        <MessageNumber>403</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Incorrect_method_string_no_whole_number</SymbolicName>
+        <Text><Sub position="1" name="method"/> method target must be a whole number; found <q><Sub position="2" name="value"/></q>.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>93</Code>
         <Subcode>941</Subcode>
         <MessageNumber>467</MessageNumber>
         <Component>Rexx</Component>

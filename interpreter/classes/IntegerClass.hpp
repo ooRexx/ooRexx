@@ -110,6 +110,7 @@ class RexxInteger : public RexxObject
     RexxObject *divide(RexxInteger *);
     RexxObject *integerDivide(RexxInteger *);
     RexxObject *remainder(RexxInteger *);
+    RexxObject *modulo(RexxInteger *);
     RexxObject *power(RexxObject *);
     RexxObject *notOp();
     RexxObject *operatorNot(RexxObject *);

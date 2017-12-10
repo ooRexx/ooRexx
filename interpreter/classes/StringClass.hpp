@@ -407,6 +407,7 @@ class RexxString : public RexxObject
     RexxObject *choiceRexx(RexxObject *trueResult, RexxObject *falseResult);
     RexxObject *Max(RexxObject **args, size_t argCount);
     RexxObject *Min(RexxObject **args, size_t argCount);
+    RexxObject *modulo(RexxObject *divisor);
     RexxObject *trunc(RexxInteger *decimals);
     RexxObject *floor();
     RexxObject *ceiling();

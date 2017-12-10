@@ -843,6 +843,48 @@ RexxObject *RexxInteger::remainder(RexxInteger *other)
 
 
 /**
+ * Integer object modulo operation.
+ * There is no universal agreement how to calculate modulo for
+ * floating point arguments or for negative divisors, so we restrict
+ * the dividend to a whole number and the divisor to a positive whole number.
+ *
+ * @param other  The divisor object.
+ *
+ * @return The module result.
+ */
+RexxObject *RexxInteger::modulo(RexxInteger *other)
+{
+    // we'll try to calculate the module with binary math if both operands
+    // are RexxIntegers that are valid under the current numeric digits
+    if (Numerics::isValid(value, number_digits()) &&
+        other != OREF_NULL && isInteger(other))
+    {
+        wholenumber_t divisor = other->getValue();
+        // our divisor must be a positive whole number
+        if (Numerics::isValid(divisor, number_digits()) && divisor >= 1)
+        {
+            // no need to check for the size of the result
+            switch(divisor)
+            {
+                case 1:
+                    // a mod 1 is zero, always
+                    return IntegerZero;
+                case 2:
+                    // if odd, the module is 1, otherwise 0
+                    return (value & 1) ? IntegerOne : IntegerZero;
+                default:
+                    wholenumber_t module = value % divisor;
+                    return module >= 0 ? new_integer(module) : new_integer(divisor + module);
+            }
+        }
+    }
+
+    // else we will have to forward to NumberString::modulo
+    return integer_forward(modulo, other);
+}
+
+
+/**
  * Integer power operation.
  *
  * @param other  The power exponent

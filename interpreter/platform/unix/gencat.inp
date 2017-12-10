@@ -917,6 +917,9 @@ $ Error_Incorrect_call_nostring
 $ Error_Incorrect_call_selector
 402 Unknown VALUE function variable environment selector; found "&1".
 
+$ Error_Incorrect_method_string_no_whole_number
+403 &1 method target must be a whole number; found "&2".
+
 $ Error_Conversion_operator
 404 Nonnumeric value ("&1") used in arithmetic operation.
 

@@ -521,6 +521,7 @@
 #define Rexx_Error_Incorrect_method_supplier                              93937
 #define Rexx_Error_Incorrect_method_nostring                              93938
 #define Rexx_Error_Incorrect_method_noarray                               93939
+#define Rexx_Error_Incorrect_method_string_no_whole_number                93940
 #define Rexx_Error_Incorrect_method_exponent_oversize                     93941
 #define Rexx_Error_Incorrect_method_before_oversize                       93942
 #define Rexx_Error_Incorrect_method_string_nonumber                       93943

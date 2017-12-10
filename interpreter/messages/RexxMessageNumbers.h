@@ -342,6 +342,7 @@
 #define Error_Incorrect_call_array_msg                               400
 #define Error_Incorrect_call_nostring_msg                            401
 #define Error_Incorrect_call_selector_msg                            402
+#define Error_Incorrect_method_string_no_whole_number_msg            403
 #define Error_Conversion_operator_msg                                404
 #define Error_Conversion_prefix_msg                                  405
 #define Error_Conversion_exponent_msg                                406

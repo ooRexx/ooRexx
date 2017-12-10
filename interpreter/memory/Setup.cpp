@@ -573,6 +573,7 @@ StartClassDefinition(String)
         AddMethod("CEILING", RexxString::ceiling, 0);
         AddMethod("ROUND", RexxString::round, 0);
         AddMethod("Trunc", RexxString::trunc, 1);
+        AddMethod("modulo", RexxString::modulo, 1);
         AddMethod("Word", RexxString::word, 1);
         AddMethod("WordIndex", RexxString::wordIndex, 1);
         AddMethod("WordLength", RexxString::wordLength, 1);
@@ -1408,6 +1409,7 @@ StartClassDefinition(Integer)
         AddMethod("MakeString", RexxObject::makeStringRexx, 0);
         AddMethod("Format", RexxInteger::format, 4);
         AddMethod("Trunc", RexxInteger::trunc, 1);
+        AddMethod("modulo", RexxInteger::modulo, 1);
         AddMethod("Floor", RexxInteger::floor, 0);
         AddMethod("Ceiling", RexxInteger::ceiling, 0);
         AddMethod("Round", RexxInteger::round, 0);
@@ -1471,6 +1473,7 @@ StartClassDefinition(NumberString)
         AddMethod("MakeString", RexxObject::makeStringRexx, 0);
         AddMethod("Format", NumberString::formatRexx, 4);
         AddMethod("Trunc", NumberString::trunc, 1);
+        AddMethod("modulo", NumberString::modulo, 1);
         AddMethod("Floor", NumberString::floor, 0);
         AddMethod("Ceiling", NumberString::ceiling, 0);
         AddMethod("Round", NumberString::round, 0);

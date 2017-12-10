@@ -341,6 +341,7 @@ BEGIN
    40912    "&1 argument &2 must be a single-dimensional array; found ""&3""."
    40913    "&1 argument &2 must have a string value; found ""&3""."
    40914    "Unknown VALUE function variable environment selector; found ""&1""."
+   93940    "&1 method target must be a whole number; found ""&2""."
    41001    "Nonnumeric value (""&1"") used in arithmetic operation."
    41003    "Nonnumeric value (""&1"") used with prefix operator."
    41007    "Exponent exceeds &1 digits; found ""&2""."

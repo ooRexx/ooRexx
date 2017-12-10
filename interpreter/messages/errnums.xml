@@ -3203,6 +3203,13 @@ special character (such as a parenthesis).
 </listitem>
 </varlistentry>
 <varlistentry>
+<term>940</term>
+<listitem>
+<para>
+<emphasis role="italic">method</emphasis> method target must be a whole number; found "<emphasis role="italic">value</emphasis>".</para>
+</listitem>
+</varlistentry>
+<varlistentry>
 <term>941</term>
 <listitem>
 <para>Exponent of "<emphasis role="italic">exponent</emphasis>" is too large for <emphasis role="italic">number</emphasis> spaces.</para>
