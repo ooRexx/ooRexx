@@ -302,7 +302,7 @@ RexxObject *SecurityManager::checkStreamAccess(RexxString *name)
     if (callSecurityManager(GlobalNames::STREAM, securityArgs))
     {
         // get the result and return
-        return (RexxObject *)securityArgs->get(GlobalNames::RESULT);
+        return (RexxObject *)securityArgs->get(GlobalNames::STREAM);
     }
     // not handled
     return OREF_NULL;
