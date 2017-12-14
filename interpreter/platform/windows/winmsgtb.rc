@@ -698,6 +698,7 @@ BEGIN
    20929    "Symbol expected after &1 keyword."
    27903    "No INDEX or ITEM control variable specified on a WITH loop."
    27904    "OVER keyword expected for a WITH loop."
+   99949    """&1"" is not a valid class."
    
 END
 

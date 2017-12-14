@@ -1988,6 +1988,9 @@ $ Error_Invalid_do_with_no_control
 $ Error_Invalid_do_with_no_over
 786 OVER keyword expected for a WITH loop.
 
+$ Error_Translation_bad_class
+787 "&1" is not a valid class.
+
 
 $ * -------------------------------------------------------------------------- */
 $ * --            ==================================================        -- */

@@ -658,6 +658,7 @@ ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
       MINOR(Error_Translation_delegate_method)
       MINOR(Error_Translation_delegate_attribute)
       MINOR(Error_Translation_use_local_compound)
+      MINOR(Error_Translation_bad_class)
   MAJOR(Error_at_line)
       MINOR(Message_Translations_error)
       MINOR(Message_Translations_running)

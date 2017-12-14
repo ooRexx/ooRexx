@@ -699,6 +699,7 @@
 #define Error_Symbol_expected_after_keyword_msg                      784
 #define Error_Invalid_do_with_no_control_msg                         785
 #define Error_Invalid_do_with_no_over_msg                            786
+#define Error_Translation_bad_class_msg                              787
 
 
 #endif

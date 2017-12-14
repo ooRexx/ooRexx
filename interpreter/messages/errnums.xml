@@ -4023,6 +4023,12 @@ special character (such as a parenthesis).
 <para>USE LOCAL cannot process compound variables; found "<emphasis role="italic">variable</emphasis>".</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>949</term>
+<listitem>
+<para>"<emphasis role="italic">classname</emphasis>" is not a valid class.</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 </section>

@@ -151,7 +151,14 @@ RexxClass *ClassResolver::lookup(PackageClass *package)
     // if this is not qualified by namespace, do the full class search.
     if (namespaceName == OREF_NULL)
     {
-        return package->findClass(className);
+        RexxClass *resolvedClass = package->findClass(className);
+
+        // We found something, but it must be a real class object
+        if (resolvedClass != OREF_NULL && !resolvedClass->isInstanceOf(TheClassClass))
+        {
+            reportException(Error_Translation_bad_class, className);
+        }
+        return resolvedClass;
     }
     // namespace qualified
     else
@@ -167,6 +174,12 @@ RexxClass *ClassResolver::lookup(PackageClass *package)
         if (resolvedClass == OREF_NULL)
         {
             reportException(Error_Execution_no_namespace_class, className, namespaceName);
+        }
+
+        // We found something, but it must be a real class object
+        if (resolvedClass != OREF_NULL && !resolvedClass->isInstanceOf(TheClassClass))
+        {
+            reportException(Error_Translation_bad_class, className);
         }
         return resolvedClass;
     }

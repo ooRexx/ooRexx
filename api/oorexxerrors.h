@@ -654,6 +654,7 @@
 #define Rexx_Error_Translation_delegate_method                            99946
 #define Rexx_Error_Translation_delegate_attribute                         99947
 #define Rexx_Error_Translation_use_local_compound                         99948
+#define Rexx_Error_Translation_bad_class                                  99949
 
 
 #endif
