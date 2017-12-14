@@ -1398,7 +1398,7 @@ StartClassDefinition(Integer)
         AddMethod("<=", RexxInteger::isLessOrEqual, 1);
         AddMethod("\\>", RexxInteger::isLessOrEqual, 1);
         AddMethod("==", RexxInteger::strictEqual, 1);
-        AddMethod("HashCode", RexxInteger::hashCode, 1);
+        AddMethod("HashCode", RexxInteger::hashCode, 0);
         AddMethod("\\==", RexxInteger::strictNotEqual, 1);
         AddMethod(">>", RexxInteger::strictGreaterThan, 1);
         AddMethod("<<", RexxInteger::strictLessThan, 1);
