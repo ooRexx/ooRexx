@@ -723,7 +723,7 @@ RexxString *LanguageParser::packBinaryLiteral(size_t start, size_t length)
                 // invalid character
                 clauseLocation = clause->getLocation();
                 char errorOutput = (char)bit;
-                syntaxError(Error_Invalid_hex_invhex, new_string(&errorOutput, 1));
+                syntaxError(Error_Invalid_hex_invbin, new_string(&errorOutput, 1));
             }
         }
         // we always process 8 bits after the first byte
