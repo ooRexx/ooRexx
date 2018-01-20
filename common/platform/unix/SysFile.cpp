@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -1228,21 +1228,23 @@ bool SysFile::hasData()
         return false;
     }
 
-    if (isTTY || (isStdIn() && !hasBufferedInput()))
+    // if there is buffered input, we can always return true
+    if (hasBufferedInput())
+    {
+        return true;
+    }
+
+    // if this is a transient stream, we need to use the direct io
+    // functions to see if there is something there.
+    if (isTTY || isStdIn())
     {
         int bytesWaiting;
         ioctl(fileHandle, FIONREAD, &bytesWaiting);
-        if (bytesWaiting)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        // if there are bytes waiting, we have something
+        return bytesWaiting > 0;
     }
 
-    // we might have something buffered, but also check the
-    // actual stream.
+    // we've already checked for buffered input, now check to see if the .
+    // stream is readable.
     return !atEof();
 }
