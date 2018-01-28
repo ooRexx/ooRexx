@@ -835,21 +835,18 @@ return
 -- Will not catch charout & lineout if the first argument is supplied
 ::class SayCatcher subclass stream
 ::method say
-    expose .si
     use arg input
     .local~say_stg = .say_stg||input||.endOfLine
     .si~title = .say_stg
 return
 
 ::method charout
-    expose .si
     use arg input
     .local~say_stg = .say_stg||input
     .si~title = .say_stg
 return 0
 
 ::method lineout
-    expose .si
     use arg input
     .local~say_stg = .say_stg||input||.endOfLine
     .si~title = .say_stg
