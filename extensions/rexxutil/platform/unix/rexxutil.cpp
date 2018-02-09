@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -2268,29 +2268,6 @@ void inline nullStringException(RexxThreadContext *c, CSTRING fName, size_t pos)
 
 
 /**
- * <routineName>() argument <argPos> must be less than <len> characters in
- * length; length is <realLen>
- *
- * SysFileTree() argument 2 must be less than 255 characters in length; length
- * is 260
- *
- * Raises 88.900
- *
- * @param c        Thread context we are executing in.
- * @param pos      Argumet position
- * @param len      Fixed length
- * @param realLen  Actual length
- */
-static void stringTooLongException(RexxThreadContext *c, CSTRING funcName, size_t pos, size_t len, size_t realLen)
-{
-    char buf[256];
-    snprintf(buf, sizeof(buf), "%s() argument %lu must be less than %lu characters in length; length is %lu",
-              funcName, pos, len, realLen);
-
-    c->RaiseException1(Rexx_Error_Incorrect_call_user_defined, c->String(buf));
-}
-
-/**
  * This is a SysFileTree specific function.
  *
  * @param c
@@ -2770,10 +2747,8 @@ static bool getOptionsFromArg(RexxCallContext *context, CSTRING opts, uint32_t *
  *
  * @param context   Call context we are operating in.
  *
- * @param fSpec     The file specification as passed by the user.  Can not be
- *                  the empty string or longer than 255 characters.  The unix
- *                  version has always enforced that, although the Windows
- *                  version never has.
+ * @param fSpec     The file specification as passed by the user.
+ *                  Can not be the empty string.
  *
  * @param fileSpec  Buffer to contain the expanded file specification.  At this
  *                  time the buffer is 4096 in length, which seems more than
@@ -2787,17 +2762,11 @@ static bool getOptionsFromArg(RexxCallContext *context, CSTRING opts, uint32_t *
  * @return True if no error, otherwise false.  False is only returned if an
  *         exception has been raised.
  *
- * @remarks  The fileSpec buffer is IBUF_LEN, or 4096 bytes.  fSpec is
- *           restricted to 255 characters, so there is no problem with the input
- *           string being to long, o begin with.  Theoretically, if fSpec starts
- *           with the tilde, '~', the string could be too long after expanding
- *           the home directoy.
- *
- *           But that would mean the path to the user's home directory would be
- *           over about 3750 characters long.  That seems absurd.  I believe
- *           this will never happen, but to prevent a possible buffer overflow,
- *           an out of memory exception is raised for this seemingly impossible
- *           situation.
+ * @remarks  The fileSpec buffer is IBUF_LEN, or 4096 bytes.
+ *           Theoretically, if fSpec starts with the tilde, '~', the string
+ *           could be too long after expanding the home directoy.
+ *           To prevent a possible buffer overflow, an out of memory exception
+ *           is raised for this seemingly impossible situation.
  */
 static bool getFileSpecFromArg(RexxCallContext *context, CSTRING fSpec, char *fileSpec, size_t bufLen, size_t argPos)
 {
@@ -2806,11 +2775,6 @@ static bool getFileSpecFromArg(RexxCallContext *context, CSTRING fSpec, char *fi
     if ( len == 0 )
     {
         nullStringException(context->threadContext, "SysFileTree", argPos);
-        return false;
-    }
-    if ( len > 255 )
-    {
-        stringTooLongException(context->threadContext, "SysFileTree", argPos, 255, len);
         return false;
     }
 
