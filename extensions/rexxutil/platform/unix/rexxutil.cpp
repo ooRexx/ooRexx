@@ -2266,6 +2266,28 @@ void inline nullStringException(RexxThreadContext *c, CSTRING fName, size_t pos)
     c->RaiseException2(Rexx_Error_Incorrect_call_null, c->String(fName), c->StringSize(pos));
 }
 
+/**
+ * <routineName>() argument <argPos> must be less than <len> characters in
+ * length; length is <realLen>
+ *
+ * SysFileTree() argument 2 must be less than 4095 characters in length; length
+ * is 5000
+ *
+ * Raises 88.900
+ *
+ * @param c        Thread context we are executing in.
+ * @param pos      Argumet position
+ * @param len      Fixed length
+ * @param realLen  Actual length
+ */
+static void stringTooLongException(RexxThreadContext *c, CSTRING funcName, size_t pos, size_t len, size_t realLen)
+{
+    char buf[256];
+    snprintf(buf, sizeof(buf), "%s() argument %lu must be less than %lu characters in length; length is %lu",
+              funcName, pos, len, realLen);
+
+    c->RaiseException1(Rexx_Error_Incorrect_call_user_defined, c->String(buf));
+}
 
 /**
  * This is a SysFileTree specific function.
@@ -2748,7 +2770,7 @@ static bool getOptionsFromArg(RexxCallContext *context, CSTRING opts, uint32_t *
  * @param context   Call context we are operating in.
  *
  * @param fSpec     The file specification as passed by the user.
- *                  Can not be the empty string.
+ *                  Can not be the empty string and must be 494 chars or less.
  *
  * @param fileSpec  Buffer to contain the expanded file specification.  At this
  *                  time the buffer is 4096 in length, which seems more than
@@ -2765,8 +2787,6 @@ static bool getOptionsFromArg(RexxCallContext *context, CSTRING opts, uint32_t *
  * @remarks  The fileSpec buffer is IBUF_LEN, or 4096 bytes.
  *           Theoretically, if fSpec starts with the tilde, '~', the string
  *           could be too long after expanding the home directoy.
- *           To prevent a possible buffer overflow, an out of memory exception
- *           is raised for this seemingly impossible situation.
  */
 static bool getFileSpecFromArg(RexxCallContext *context, CSTRING fSpec, char *fileSpec, size_t bufLen, size_t argPos)
 {
@@ -2777,7 +2797,11 @@ static bool getFileSpecFromArg(RexxCallContext *context, CSTRING fSpec, char *fi
         nullStringException(context->threadContext, "SysFileTree", argPos);
         return false;
     }
-
+    if ( len >= bufLen - 1) // take into account that a trailing "*" may be appended
+    {
+        stringTooLongException(context->threadContext, "SysFileTree", argPos, bufLen - 1, len);
+        return false;
+    }
     strcpy(fileSpec, fSpec);
 
     // If filespec is '*' then use './ *'
@@ -2802,10 +2826,9 @@ static bool getFileSpecFromArg(RexxCallContext *context, CSTRING fSpec, char *fi
             return false;
         }
 
-        size_t l = strlen(temp) + len + 1;
-        if ( l > bufLen )
+        if ( strlen(temp) >= bufLen )
         {
-            outOfMemoryException(context->threadContext);
+            stringTooLongException(context->threadContext, "SysFileTree", argPos, bufLen, strlen(temp));
             free(temp);
             return false;
         }
