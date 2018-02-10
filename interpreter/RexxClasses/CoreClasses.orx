@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -2857,9 +2857,9 @@ nomethod:
   -- we need to check to see if the resulting year will be a leap year
   -- or not.  If it is, we're fine, otherwise we have to step back to the
   -- 28th.
-  if month = 2 & day = 29 then do
+  if month = 2, day = 29 then do
       -- test for the leap year on the new target
-      if year // 4 == 0 & ((year // 100 \= 0) | (year // 400 == 0))  then nop
+      if year // 4 == 0, ((year // 100 \= 0) | (year // 400 == 0))  then nop
       else do
           day -= 1
       end
