@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -121,17 +121,39 @@ void RexxDotVariable::flatten(Envelope * envelope)
  */
 RexxObject * RexxDotVariable::evaluate(RexxActivation *context, ExpressionStack *stack )
 {
-    // try first from the environment
-    RexxObject *result = context->resolveDotVariable(variableName);
-    if (result == OREF_NULL)
-    {
-        // might be a special rexx name
-        result = context->rexxVariable(variableName);
+    RexxObject *result;
 
+    // we handle .nil, .true, and .false as a special case here to
+    // ensure we're getting the real stuff rather than overrides
+    // somebody has poked into the environment
+    size_t length = variableName->getLength();
+    const char *name = variableName->getStringData();
+    if (length == 3 && memcmp(name, "NIL", 3) == 0)
+    {
+        result = TheNilObject;
+    }
+    else if (length == 4 && memcmp(name, "TRUE", 4) == 0)
+    {
+        result = TheTrueObject;
+    }
+    else if (length == 5 && memcmp(name, "FALSE", 5) == 0)
+    {
+        result = TheFalseObject;
+    }
+    else
+    {
+        // try from the environment
+        result = context->resolveDotVariable(variableName);
         if (result == OREF_NULL)
         {
-            // add a period to the name
-            result = variableName->concatToCstring(".");
+            // might be a special rexx name
+            result = context->rexxVariable(variableName);
+
+            if (result == OREF_NULL)
+            {
+                // add a period to the name
+                result = variableName->concatToCstring(".");
+            }
         }
     }
     // evaluate always pushes on the stack.
