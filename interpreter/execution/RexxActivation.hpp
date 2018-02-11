@@ -323,6 +323,8 @@ class RexxActivation : public ActivationBase
        { if (settings.intermediateTrace) { traceTaggedValue(TRACE_PREFIX_VARIABLE, NULL, false, n, VALUE_MARKER, v); } };
    inline void              traceDotVariable(RexxString *n, RexxObject *v)
        { if (settings.intermediateTrace) { traceTaggedValue(TRACE_PREFIX_DOTVARIABLE, ".", false, n, VALUE_MARKER, v); } };
+   inline void              traceSpecialDotVariable(RexxString *n, RexxObject *v)
+       { if (settings.intermediateTrace) { traceTaggedValue(TRACE_PREFIX_DOTVARIABLE, NULL, false, n, VALUE_MARKER, v); } };
    inline void              traceFunction(RexxString *n, RexxObject *v)
        { if (settings.intermediateTrace) { traceTaggedValue(TRACE_PREFIX_FUNCTION, NULL, false, n, VALUE_MARKER, v); } };
    inline void              traceMessage(RexxString *n, RexxObject *v)

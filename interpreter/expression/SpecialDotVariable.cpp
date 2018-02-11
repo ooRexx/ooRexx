@@ -128,7 +128,7 @@ RexxObject *SpecialDotVariable::evaluate(RexxActivation *context, ExpressionStac
     // evaluate always pushes on the stack.
     stack->push(variableValue);
     // trace this if tracing intermediates
-    context->traceDotVariable(variableName, variableValue);
+    context->traceSpecialDotVariable(variableName, variableValue);
     return variableValue;
 }
 
