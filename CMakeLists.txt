@@ -344,7 +344,32 @@ if (NOT WIN32)
                           HAVE_UNION_SEMUN)
   check_include_file(unistd.h HAVE_UNISTD_H)
   check_include_file(usersec.h HAVE_USERSEC_H)
-  check_include_file(ncurses.h HAVE_NCURSES_H)
+  if (CMAKE_SYSTEM_NAME MATCHES "(SunOS|Solaris)")
+    check_library_exists(socket getaddrinfo "" HAVE_LIBSOCKET)
+    if (HAVE_LIBSOCKET)
+      set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES} socket)
+    endif (HAVE_LIBSOCKET)
+    check_library_exists(nsl gethostbyname "" HAVE_LIBNSL)
+    if (HAVE_LIBNSL)
+      set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES} nsl)
+    endif (HAVE_LIBNSL)
+    check_library_exists(resolv hstrerror "" HAVE_LIBRESOLV)
+    if (HAVE_LIBRESOLV)
+      set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES} resolv)
+    endif (HAVE_LIBRESOLV)
+    check_library_exists(rt nanosleep "" HAVE_LIBRT)
+    if (HAVE_LIBRT)
+      set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES} rt)
+    endif (HAVE_LIBRT)
+    check_include_file(ncurses/ncurses.h NCURSES_H_)
+    if (NOT NCURSES_H_)
+      check_include_file(ncurses.h HAVE_NCURSES_H)
+    else ()
+      include_directories(/usr/include/ncurses)
+    endif (NOT NCURSES_H_)
+  else ()
+    check_include_file(ncurses.h HAVE_NCURSES_H)
+  endif ()  
 endif ()
 set (PACKAGE ${PROJECT_NAME})
 set (PACKAGE_BUGREPORT "http://sourceforge.net/projects/oorexx/")
@@ -499,7 +524,7 @@ target_include_directories(rexxapi PUBLIC
             ${build_common_platform_dir}
             ${build_lib_dir})
 # Extra link library definitions
-target_link_libraries(rexxapi ${platform_rexxapi_libs})
+target_link_libraries(rexxapi ${platform_rexxapi_libs} ${CMAKE_REQUIRED_LIBRARIES})
 
 install(TARGETS rexxapi RUNTIME DESTINATION ${INSTALL_LIB_DIR} COMPONENT Core
                         LIBRARY DESTINATION ${INSTALL_LIB_DIR} COMPONENT Core
@@ -768,7 +793,7 @@ target_include_directories(rexx PUBLIC
             ${build_interpreter_platform_dir})
 
 # Extra link library definitions
-target_link_libraries(rexx rexxapi ${platform_interpreter_libs})
+target_link_libraries(rexx rexxapi ${platform_interpreter_libs} ${CMAKE_REQUIRED_LIBRARIES})
 install(TARGETS rexx RUNTIME DESTINATION ${INSTALL_LIB_DIR} COMPONENT Core
                      LIBRARY DESTINATION ${INSTALL_LIB_DIR} COMPONENT Core
                      ARCHIVE DESTINATION ${INSTALL_INCLUDE_DIR} COMPONENT DevLib)
@@ -809,7 +834,7 @@ target_include_directories(rexx_exe PUBLIC
             ${build_api_platform_dir}
             ${build_messages_dir})
 # Extra link library definitions
-target_link_libraries(rexx_exe rexx rexxapi ${platform_rexx_exe_libs})
+target_link_libraries(rexx_exe rexx rexxapi ${platform_rexx_exe_libs} ${CMAKE_REQUIRED_LIBRARIES})
 # Merge in extra manifest information on Windows
 if (WIN32)
 add_custom_command(TARGET rexx_exe POST_BUILD
@@ -838,7 +863,7 @@ target_include_directories(rexximage PUBLIC
             ${build_api_dir}
             ${build_api_platform_dir})
 # Extra link library definitions
-target_link_libraries(rexximage rexx rexxapi ${platform_rexximg_libs})
+target_link_libraries(rexximage rexx rexxapi ${platform_rexximg_libs} ${CMAKE_REQUIRED_LIBRARIES})
 
 # handy macro for copying files from the source into the build directory.
 macro (copy_build_file name source)
@@ -910,7 +935,7 @@ add_executable(rxapi ${rxapi_executable_type}
 target_include_directories(rxapi PUBLIC
          ${build_rexxapi_server_dir})
 # Extra link library definitions
-target_link_libraries(rxapi rexx rexxapi ${platform_rxapi_libs})
+target_link_libraries(rxapi rexx rexxapi ${platform_rxapi_libs} ${CMAKE_REQUIRED_LIBRARIES})
 
 # Kill the rxapi daemon whenever we have to build, otherwise the build
 # will fail.  Unfortunately, the killing of the process is not immediate,
@@ -1013,7 +1038,7 @@ target_include_directories(rexxc PUBLIC
             ${build_api_platform_dir}
             ${build_messages_dir})
 # Extra link library definitions
-target_link_libraries(rexxc rexx rexxapi ${platform_rexxc_libs})
+target_link_libraries(rexxc rexx rexxapi ${platform_rexxc_libs} ${CMAKE_REQUIRED_LIBRARIES})
 install(TARGETS rexxc RUNTIME COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
 
 #################### rxqueue (executable) #########################
@@ -1035,7 +1060,7 @@ target_include_directories(rxqueue PUBLIC
             ${build_interpreter_platform_dir}
             ${build_messages_dir})
 # Extra link library definitions
-target_link_libraries(rxqueue rexx rexxapi ${platform_rxqueue_libs})
+target_link_libraries(rxqueue rexx rexxapi ${platform_rxqueue_libs} ${CMAKE_REQUIRED_LIBRARIES})
 install(TARGETS rxqueue RUNTIME COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
 
 #################### rxsubcom (executable) #########################
@@ -1057,7 +1082,7 @@ target_include_directories(rxsubcom PUBLIC
              ${build_interpreter_platform_dir}
              ${build_messages_dir})
 # Extra link library definitions
-target_link_libraries(rxsubcom rexx rexxapi ${platform_subcom_libs})
+target_link_libraries(rxsubcom rexx rexxapi ${platform_subcom_libs} ${CMAKE_REQUIRED_LIBRARIES})
 install(TARGETS rxsubcom RUNTIME COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
 
 #################### librexxutil.so ################
@@ -1080,7 +1105,7 @@ target_include_directories(rexxutil PUBLIC
              ${build_api_platform_dir}
              ${build_messages_dir})
 # Extra link library definitions
-target_link_libraries(rexxutil rexx rexxapi ${platform_rexxutil_libs})
+target_link_libraries(rexxutil rexx rexxapi ${platform_rexxutil_libs} ${CMAKE_REQUIRED_LIBRARIES})
 install(TARGETS rexxutil RUNTIME COMPONENT Core DESTINATION ${INSTALL_LIB_DIR}
                          LIBRARY DESTINATION ${INSTALL_LIB_DIR} COMPONENT Core)
 set_target_properties(rexxutil PROPERTIES VERSION ${ORX_VERSION})
@@ -1102,7 +1127,7 @@ target_include_directories(rxmath PUBLIC
              ${build_api_dir}
              ${build_api_platform_dir})
 # Extra link library definitions
-target_link_libraries(rxmath rexx rexxapi ${platform_rxmath_libs})
+target_link_libraries(rxmath rexx rexxapi ${platform_rxmath_libs} ${CMAKE_REQUIRED_LIBRARIES})
 install(TARGETS rxmath RUNTIME COMPONENT Core DESTINATION ${INSTALL_LIB_DIR}
                        LIBRARY DESTINATION ${INSTALL_LIB_DIR} COMPONENT Core)
 set_target_properties(rxmath PROPERTIES VERSION ${ORX_VERSION})
@@ -1120,7 +1145,7 @@ add_library(rxsock SHARED ${build_extensions_rxsock_dir}/rxsock.cpp
              ${build_extensions_rxsock_dir}/rxsockfn.cpp
              ${platform_rxsock_sources})
 # Extra link library definitions
-target_link_libraries(rxsock rexx rexxapi ${platform_rxsock_libs})
+target_link_libraries(rxsock rexx rexxapi ${platform_rxsock_libs} ${CMAKE_REQUIRED_LIBRARIES})
 install(TARGETS rxsock RUNTIME COMPONENT Core DESTINATION ${INSTALL_LIB_DIR}
                        LIBRARY DESTINATION ${INSTALL_LIB_DIR} COMPONENT Core)
 set_target_properties(rxsock PROPERTIES VERSION ${ORX_VERSION})
@@ -1137,7 +1162,7 @@ if (WIN32)
    target_link_libraries(rxsock6 rexx rexxapi ${platform_rxsock_libs} ws2_32)
 else ()
    # Extra link library definitions
-   target_link_libraries(rxsock6 rexx rexxapi ${platform_rxsock_libs})
+   target_link_libraries(rxsock6 rexx rexxapi ${platform_rxsock_libs} ${CMAKE_REQUIRED_LIBRARIES})
 endif ()
 
 install(TARGETS rxsock6 RUNTIME COMPONENT Core DESTINATION ${INSTALL_LIB_DIR}
@@ -1164,7 +1189,7 @@ target_include_directories(rxregexp PUBLIC
              ${build_api_platform_dir}
              ${build_messages_dir})
 # Extra link library definitions
-target_link_libraries(rxregexp rexx rexxapi ${platform_rxregexp_libs})
+target_link_libraries(rxregexp rexx rexxapi ${platform_rxregexp_libs} ${CMAKE_REQUIRED_LIBRARIES})
 install(TARGETS rxregexp RUNTIME COMPONENT Core DESTINATION ${INSTALL_LIB_DIR}
                          LIBRARY DESTINATION ${INSTALL_LIB_DIR} COMPONENT Core)
 set_target_properties(rxregexp PROPERTIES VERSION ${ORX_VERSION})
@@ -1189,7 +1214,7 @@ target_include_directories(hostemu PUBLIC
              ${build_api_platform_dir}
              ${build_extensions_hostemu_dir})
 # Extra link library definitions
-target_link_libraries(hostemu rexx rexxapi ${platform_hostemu_libs})
+target_link_libraries(hostemu rexx rexxapi ${platform_hostemu_libs} ${CMAKE_REQUIRED_LIBRARIES})
 install(TARGETS hostemu RUNTIME COMPONENT Core DESTINATION ${INSTALL_LIB_DIR}
                         LIBRARY DESTINATION ${INSTALL_LIB_DIR} COMPONENT Core)
 set_target_properties(hostemu PROPERTIES VERSION ${ORX_VERSION})
@@ -1207,9 +1232,9 @@ target_include_directories(rxunixsys PUBLIC
 # gcc (at least on Linux) requires linking with -lcrypt
 # clang (at least on Darwin) doesn't have libcrypt
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_link_libraries(rxunixsys rexx rexxapi crypt)
+    target_link_libraries(rxunixsys rexx rexxapi crypt ${CMAKE_REQUIRED_LIBRARIES})
 else ()
-    target_link_libraries(rxunixsys rexx rexxapi)
+    target_link_libraries(rxunixsys rexx rexxapi ${CMAKE_REQUIRED_LIBRARIES})
 endif ()
 
 set_target_properties(rxunixsys PROPERTIES VERSION ${ORX_VERSION})
@@ -1227,7 +1252,7 @@ target_include_directories(orxncurses PUBLIC
              ${build_api_platform_dir}
              ${build_extensions_dir}/orxncurses)
 # Extra link library definitions
-target_link_libraries(orxncurses rexx rexxapi ncurses)
+target_link_libraries(orxncurses rexx rexxapi ncurses ${CMAKE_REQUIRED_LIBRARIES})
 set_target_properties(orxncurses PROPERTIES VERSION ${ORX_VERSION})
 install(TARGETS orxncurses RUNTIME DESTINATION ${INSTALL_LIB_DIR}
                           LIBRARY DESTINATION ${INSTALL_LIB_DIR} COMPONENT Core)
@@ -1245,7 +1270,7 @@ add_library(orexxole SHARED ${build_extensions_ole_dir}/orexxole.cpp
 target_include_directories(orexxole PUBLIC
              ${build_extensions_ole_dir})
 # Extra link library definitions
-target_link_libraries(orexxole rexx rexxapi)
+target_link_libraries(orexxole rexx rexxapi ${CMAKE_REQUIRED_LIBRARIES})
 install(TARGETS orexxole RUNTIME COMPONENT Core DESTINATION ${INSTALL_LIB_DIR})
 endif ()
 
