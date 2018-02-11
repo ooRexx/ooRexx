@@ -3,7 +3,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -226,34 +226,35 @@ typedef enum
     T_QualifiedFunction = 164,
     T_PointerBucket = 165,
     T_PointerTable = 166,
+    T_SpecialDotVariableTerm = 167,
 
-    T_Last_Internal_Class = 166,
+    T_Last_Internal_Class = 167,
     
-    T_First_Transient_Class = 167,
+    T_First_Transient_Class = 168,
 
-    T_Memory = 167,
-    T_InternalStack = 168,
-    T_LiveStack = 169,
-    T_PushThroughStack = 170,
-    T_Activity = 171,
-    T_Activation = 172,
-    T_NativeActivation = 173,
-    T_ActivationFrameBuffer = 174,
-    T_Envelope = 175,
-    T_LanguageParser = 176,
-    T_Clause = 177,
-    T_Token = 178,
-    T_DoBlock = 179,
-    T_InterpreterInstance = 180,
-    T_SecurityManager = 181,
-    T_CommandHandler = 182,
-    T_MapBucket = 183,
-    T_MapTable = 184,
-    T_TrapHandler = 185,
+    T_Memory = 168,
+    T_InternalStack = 169,
+    T_LiveStack = 170,
+    T_PushThroughStack = 171,
+    T_Activity = 172,
+    T_Activation = 173,
+    T_NativeActivation = 174,
+    T_ActivationFrameBuffer = 175,
+    T_Envelope = 176,
+    T_LanguageParser = 177,
+    T_Clause = 178,
+    T_Token = 179,
+    T_DoBlock = 180,
+    T_InterpreterInstance = 181,
+    T_SecurityManager = 182,
+    T_CommandHandler = 183,
+    T_MapBucket = 184,
+    T_MapTable = 185,
+    T_TrapHandler = 186,
 
-    T_Last_Transient_Class = 185,
-    T_Last_Primitive_Class = 185,
-    T_Last_Class_Type = 185,
+    T_Last_Transient_Class = 186,
+    T_Last_Primitive_Class = 186,
+    T_Last_Class_Type = 186,
     
 } ClassTypeCode;
 

@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -67,6 +67,7 @@
 #include "ExpressionCompoundVariable.hpp"
 #include "ExpressionStem.hpp"
 #include "ExpressionDotVariable.hpp"
+#include "SpecialDotVariable.hpp"
 #include "ExpressionMessage.hpp"
 #include "ExpressionOperator.hpp"
 #include "ExpressionLogical.hpp"
@@ -678,6 +679,12 @@ void LanguageParser::initializeForParsing()
     operators = new_queue();      // the operator queue
     literals = new_string_table();   // table of literal values
     dotVariables = new_string_table();   // table of dot variables
+
+    // we have three special dot variables that are given special treatment. Go ahead and
+    // create the retriever objects now
+    dotVariables->put(new SpecialDotVariable(GlobalNames::DOTNIL, TheNilObject), GlobalNames::DOTNIL);
+    dotVariables->put(new SpecialDotVariable(GlobalNames::DOTTRUE, TheTrueObject), GlobalNames::DOTTRUE);
+    dotVariables->put(new SpecialDotVariable(GlobalNames::DOTFALSE, TheFalseObject), GlobalNames::DOTFALSE);
 
     // during an image build, we have a global string table.  If this is
     // available now, use it.
@@ -2190,7 +2197,9 @@ RexxInternalObject *LanguageParser::addText(RexxToken *token)
                 {
                     // we might already have processed this before.
                     // if not, we need to examine this and find the
-                    // most appropriate form.
+                    // most appropriate form. Note that the constant, non-overridable
+                    // variables .nil, .true, and .false were added to the common set
+                    // up front, so we don't need to perform special checks here.
                     RexxInternalObject *retriever = dotVariables->get(name);
                     if (retriever != OREF_NULL)
                     {

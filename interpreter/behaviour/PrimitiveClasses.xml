@@ -216,6 +216,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="QualifiedFunction" class="QualifiedFunction" include="ExpressionQualifiedFunction.hpp"/>
 <Class id="PointerBucket" class="PointerBucket" include="PointerBucket.hpp"/>
 <Class id="PointerTable" class="PointerTable" include="PointerTable.hpp"/>
+<Class id="SpecialDotVariableTerm" class="SpecialDotVariable" include="SpecialDotVariable.hpp"/>
 </Internal>
 <Transient>
 <Class id="Memory" class="MemoryObject" include="RexxMemory.hpp" objectvirtual="true"/>

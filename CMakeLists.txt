@@ -1,6 +1,6 @@
 #/*----------------------------------------------------------------------------*/
 #/*                                                                            */
-#/* Copyright (c) 2014-2017 Rexx Language Association. All rights reserved.    */
+#/* Copyright (c) 2014-2018 Rexx Language Association. All rights reserved.    */
 #/*                                                                            */
 #/* This program and the accompanying materials are made available under       */
 #/* the terms of the Common Public License v1.0 which accompanies this         */
@@ -125,7 +125,7 @@ include_directories(BEFORE api api/${ORX_PLATFORM_DIR})
 
 # Rexx search path
 set (CMAKE_REXXPATH ${CMAKE_CURRENT_BINARY_DIR}/bin)
-if (ORX_REXXPATH) 
+if (ORX_REXXPATH)
     message(STATUS "Setting REXX search path to ${ORX_REXXPATH}")
     set (CMAKE_REXXPATH ${ORX_REXXPATH})
 endif()
@@ -612,6 +612,7 @@ set (expression_sources ${build_expression_dir}/BuiltinFunctions.cpp
             ${build_expression_dir}/ExpressionClassResolver.cpp
             ${build_expression_dir}/ExpressionCompoundVariable.cpp
             ${build_expression_dir}/ExpressionDotVariable.cpp
+            ${build_expression_dir}/SpecialDotVariable.cpp
             ${build_expression_dir}/ExpressionFunction.cpp
             ${build_expression_dir}/ExpressionMessage.cpp
             ${build_expression_dir}/ExpressionOperator.cpp
