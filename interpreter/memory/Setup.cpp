@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -1159,6 +1159,7 @@ StartClassDefinition(Package)
         AddMethod("Trace", PackageClass::traceRexx, 0);
         AddMethod("Prolog", PackageClass::getMainRexx, 0);
         AddMethod("FindProgram", PackageClass::findProgramRexx, 1);
+        AddMethod("Local", PackageClass::getPackageLocal, 0);
 
     CompleteMethodDefinitions();
 

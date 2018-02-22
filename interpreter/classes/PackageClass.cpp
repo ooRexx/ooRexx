@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -229,6 +229,7 @@ void PackageClass::live(size_t liveMark)
     memory_mark(mergedPublicClasses);
     memory_mark(mergedPublicRoutines);
     memory_mark(objectVariables);
+    memory_mark(packageLocal);
 }
 
 
@@ -271,6 +272,7 @@ void PackageClass::liveGeneral(MarkReason reason)
     memory_mark_general(mergedPublicClasses);
     memory_mark_general(mergedPublicRoutines);
     memory_mark_general(objectVariables);
+    memory_mark_general(packageLocal);
 }
 
 
@@ -308,6 +310,7 @@ void PackageClass::flatten (Envelope *envelope)
     flattenRef(mergedPublicClasses);
     flattenRef(mergedPublicRoutines);
     flattenRef(objectVariables);
+    flattenRef(packageLocal);
 
     cleanUpFlatten
 }
@@ -1030,6 +1033,17 @@ RexxClass *PackageClass::findClass(RexxString *className)
         // NOTE:  We only search public classes in the REXX package.
         classObject = TheRexxPackage->findPublicClass(internalName);
         // return if we got one
+        if (classObject != OREF_NULL)
+        {
+            return classObject;
+        }
+    }
+
+    // the package local is owned by the package and is not subject to
+    // the security manager check.
+    if (packageLocal != OREF_NULL)
+    {
+        classObject = (RexxClass *)(packageLocal->get(internalName));
         if (classObject != OREF_NULL)
         {
             return classObject;
@@ -2036,4 +2050,22 @@ void PackageClass::addNamespace(RexxString *name, PackageClass *package)
     }
     // add the namespace name
     namespaces->put(package, name->upper());
+}
+
+
+/**
+ * Retrieve the package local directory for this package.
+ *
+ * @return A mutable directory object associated with this package.
+ */
+DirectoryClass *PackageClass::getPackageLocal()
+{
+    // if this is the first request, create a new directory for this.
+    // Note that we are using a directory because the setMethod() method
+    // can be useful for the various environment areas
+    if (packageLocal == OREF_NULL)
+    {
+        setField(packageLocal, new_directory());
+    }
+    return packageLocal;
 }
