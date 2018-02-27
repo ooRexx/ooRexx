@@ -1991,6 +1991,15 @@ $ Error_Invalid_do_with_no_over
 $ Error_Translation_bad_class
 787 "&1" is not a valid class.
 
+$ Error_Invalid_argument_nonnegative_number
+788 The &1 argument must be zero or a positive number; found "&2".
+
+$ Error_Invalid_argument_positive_number
+789 The &1 argument must be a positive number; found "&2".
+
+$ Error_Invalid_argument_logical
+790 The &1 argument must be exactly "0" or "1"; found "&2".
+
 
 $ * -------------------------------------------------------------------------- */
 $ * --            ==================================================        -- */

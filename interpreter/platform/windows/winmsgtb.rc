@@ -699,6 +699,9 @@ BEGIN
    27903    "No INDEX or ITEM control variable specified on a WITH loop."
    27904    "OVER keyword expected for a WITH loop."
    99949    """&1"" is not a valid class."
+   88925    "The &1 argument must be zero or a positive number; found ""&2""."
+   88926    "The &1 argument must be a positive number; found ""&2""."
+   88927    "The &1 argument must be exactly ""0"" or ""1""; found ""&2""."
    
 END
 

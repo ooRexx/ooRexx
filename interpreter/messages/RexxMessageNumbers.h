@@ -700,6 +700,9 @@
 #define Error_Invalid_do_with_no_control_msg                         785
 #define Error_Invalid_do_with_no_over_msg                            786
 #define Error_Translation_bad_class_msg                              787
+#define Error_Invalid_argument_nonnegative_number_msg                788
+#define Error_Invalid_argument_positive_number_msg                   789
+#define Error_Invalid_argument_logical_msg                           790
 
 
 #endif

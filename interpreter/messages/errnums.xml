@@ -2804,6 +2804,24 @@ special character (such as a parenthesis).
 <emphasis role="italic">name</emphasis> argument <emphasis role="italic">argument_number</emphasis> must be an array with exactly <emphasis role="italic">count</emphasis> items.</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>925</term>
+<listitem>
+<para>The <emphasis role="italic">argument</emphasis> argument must be zero or a positive number; found "<emphasis role="italic">value</emphasis>".</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>926</term>
+<listitem>
+<para>The <emphasis role="italic">argument</emphasis> argument must be a positive number; found "<emphasis role="italic">value</emphasis>".</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>927</term>
+<listitem>
+<para>The <emphasis role="italic">argument</emphasis> argument must be exactly "0" or "1"; found "<emphasis role="italic">value</emphasis>".</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR89">

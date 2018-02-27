@@ -2655,7 +2655,7 @@ nomethod:
       offset = offset~totalMicroseconds
   else do
      -- must be a whole number
-     .argUtil~validateWhole("offset", offset)
+     .Validate~wholeNumber("offset", offset)
      -- we need to convert from minutes to microseconds
      offset = offset * 60000000
   end
@@ -2665,9 +2665,9 @@ nomethod:
 -- private utility method to get a full date value from year/month/day.
 ::METHOD convertDate private
   use arg year, month, day
-  .argUtil~validateWholeRange("year", year, 1, 9999)
-  .argUtil~validateWholeRange("month", month, 1, 12)
-  .argUtil~validateWholeRange("day", day, 1, 31)
+  .Validate~wholeNumberRange("year", year, 1, 9999)
+  .Validate~wholeNumberRange("month", month, 1, 12)
+  .Validate~wholeNumberRange("day", day, 1, 31)
 
   date = year~right(4, '0')month~right(2, '0')day~right(2, '0')
   return date('F', date, 'S')
@@ -2676,10 +2676,10 @@ nomethod:
 ::METHOD convertTime private
   use arg hours, minutes, seconds, usecs = 0
 
-  .argUtil~validateWholeRange("hours", hours, 0, 23)
-  .argUtil~validateWholeRange("minutes", minutes, 0, 59)
-  .argUtil~validateWholeRange("seconds", seconds, 0, 59)
-  .argUtil~validateWholeRange("microseconds", usecs, 0, 999999)
+  .Validate~wholeNumberRange("hours", hours, 0, 23)
+  .Validate~wholeNumberRange("minutes", minutes, 0, 59)
+  .Validate~wholeNumberRange("seconds", seconds, 0, 59)
+  .Validate~wholeNumberRange("microseconds", usecs, 0, 999999)
 
   time = hours~right(2, '0')':'minutes~right(2, '0')':'seconds~right(2, '0')'.'usecs~right(6, '0')
   return time('f', time, 'l')
@@ -2840,7 +2840,7 @@ nomethod:
   expose timestamp
   use strict arg years
 
-  .ArgUtil~validateWhole("years", years)
+  .Validate~wholeNumber("years", years)
 
   -- This is easier to deal with if we split the date and time into
   -- two components first
@@ -2876,7 +2876,7 @@ nomethod:
   expose timestamp
   use strict arg weeks
 
-  .ArgUtil~validateNumber("weeks", weeks)
+  .Validate~number("weeks", weeks)
 
   numeric digits 18
   -- return a new instance of DateTime
@@ -2888,7 +2888,7 @@ nomethod:
   expose timestamp
   use strict arg days
 
-  .ArgUtil~validateNumber("days", days)
+  .Validate~number("days", days)
 
   numeric digits 18
   -- return a new instance of DateTime
@@ -2900,7 +2900,7 @@ nomethod:
   expose timestamp
   use strict arg hours
 
-  .ArgUtil~validateNumber("hours", hours)
+  .Validate~number("hours", hours)
 
   numeric digits 18
 
@@ -2915,7 +2915,7 @@ nomethod:
   expose timestamp
   use strict arg minutes
 
-  .ArgUtil~validateNumber("minutes", minutes)
+  .Validate~number("minutes", minutes)
 
   numeric digits 18
 
@@ -2930,7 +2930,7 @@ nomethod:
   expose timestamp
   use strict arg seconds
 
-  .ArgUtil~validateNumber("seconds", seconds)
+  .Validate~number("seconds", seconds)
 
   numeric digits 18
 
@@ -2944,6 +2944,8 @@ nomethod:
 ::METHOD addMicroseconds
   expose timestamp
   use strict arg usecs
+
+  .Validate~number("microseconds", usecs)
 
   numeric digits 18
 
@@ -3100,8 +3102,8 @@ nomethod:
       offset = adjustment/60000000
   end
   else do
-     -- must be a whole number
-     .argUtil~validateWhole("offset", offset, 18)
+     -- offset in minutes, must be a whole number
+     .Validate~wholeNumber("offset", offset)
      adjustment = offset * 60000000
   end
   -- we create a new DateTime by converting the UTC time to
@@ -3197,30 +3199,32 @@ nomethod:
 ::METHOD fromDays class
   use strict arg days
 
-  .ArgUtil~validateNumber("days", days)
+  .Validate~number("days", days)
   return self~new(days, 0, 0, 0, 0)
 
 -- Create a timespan object representing a number of hours
 ::METHOD fromHours class
   use strict arg hours
-  .ArgUtil~validateNumber("hours", hours)
+  .Validate~number("hours", hours)
   return self~new(0, hours, 0, 0, 0)
 
 -- Create a timespan object representing a number of minutes
 ::METHOD fromMinutes class
   use strict arg minutes
-  .ArgUtil~validateNumber("minutes", minutes)
+  .Validate~number("minutes", minutes)
   return self~new(0, 0, minutes, 0, 0)
 
 -- Create a timespan object representing a number of seconds
 ::METHOD fromSeconds class
   use strict arg seconds
-  .ArgUtil~validateNumber("seconds", seconds)
+  .Validate~number("seconds", seconds)
   return self~new(0, 0, 0, seconds, 0)
 
 -- Create a timespan object representing a number of microseconds
 ::METHOD fromMicroseconds class
   use strict arg usec
+
+  .Validate~number("microseconds", usec)
   return self~new(usec)
 
 -- Create a timespan object representing the interval from a Civil time
@@ -3562,7 +3566,7 @@ nomethod:
   expose timestamp
   use strict arg weeks
 
-  .ArgUtil~validateNumber("weeks", weeks)
+  .Validate~number("weeks", weeks)
 
   numeric digits 18
   -- return a new instance of DateTime
@@ -3574,7 +3578,7 @@ nomethod:
   expose timestamp
   use strict arg days
 
-  .ArgUtil~validateNumber("days", days)
+  .Validate~number("days", days)
 
   numeric digits 18
   -- return a new instance of TimeSpan
@@ -3586,7 +3590,7 @@ nomethod:
   expose timestamp
   use strict arg hours
 
-  .ArgUtil~validateNumber("hours", hours)
+  .Validate~number("hours", hours)
 
   numeric digits 18
 
@@ -3599,7 +3603,7 @@ nomethod:
   expose timestamp
   use strict arg minutes
 
-  .ArgUtil~validateNumber("minutes", minutes)
+  .Validate~number("minutes", minutes)
 
   numeric digits 18
 
@@ -3612,7 +3616,7 @@ nomethod:
   expose timestamp
   use strict arg seconds
 
-  .ArgUtil~validateNumber("seconds", seconds)
+  .Validate~number("seconds", seconds)
 
   numeric digits 18
 
@@ -3625,6 +3629,7 @@ nomethod:
   expose timestamp
   use strict arg usecs
 
+  .Validate~number("microseconds", usecs)
   numeric digits 18
 
   -- return a new instance of TimeSpan
@@ -3668,6 +3673,8 @@ nomethod:
   end
 
 
+-- NOTE: undocumented ArgUtil class has been superseded by documented Validate class 
+-- ArgUtil is deprected, use of it is discouraged, as it may be removed in the future
 ::CLASS 'ArgUtil' public
 ::METHOD validateNumber class
   use strict arg name, number
@@ -3770,6 +3777,139 @@ nomethod:
 
   if \obj~isa(class) then do
       raise syntax 88.914 array(name, class~id)
+  end
+
+
+-- a class for performing easy argument validation
+::CLASS 'Validate' public
+
+-- validate that an argument is a valid Rexx number
+::METHOD number class
+  use strict arg name, number
+  if \number~dataType("Number") then do
+      -- The NAME argument must be a number; found "NUMBER"
+      raise syntax 88.902 array(name, number)
+  end
+
+-- validate that an argument is a number and is in range
+::METHOD numberRange class
+  use strict arg name, number, min, max, digits=(digits())
+  numeric digits digits
+  -- must be numeric and within the given range
+  if number~dataType("Number"), number >= min, number <= max then do
+      return
+  end
+  -- The NAME argument must be in the range MIN to MAX; found "NUMBER"
+  raise syntax 88.907 array(name, min, max, number)
+
+-- validate that an argument is zero or a positive number
+::METHOD nonNegativeNumber class
+  use strict arg name, number, digits=(digits())
+  numeric digits digits
+  -- must be numeric and zero or positive
+  if number~dataType("Number"), number >= 0 then do
+      return
+  end
+  -- The NAME argument must be zero or a positive number; found "NUMBER"
+  raise syntax 88.925 array(name, number)
+
+-- validate that an argument is a positive number
+::METHOD positiveNumber class
+  use strict arg name, number, digits=(digits())
+  numeric digits digits
+  -- must be numeric and positive
+  if number~dataType("Number"), number > 0 then do
+      return
+  end
+  -- The NAME argument must be a positive number; found "NUMBER"
+  raise syntax 88.926 array(name, number)
+
+-- validate that an argument is a whole number within the given digits
+::METHOD wholeNumber class
+  use strict arg name, number, digits=(digits())
+  numeric digits digits
+  if \number~dataType("Whole") then do
+      -- The NAME argument must be a whole number; found "NUMBER"
+      raise syntax 88.903 array(name, number)
+  end
+
+
+-- validate that an argument is a whole number and is in range
+::METHOD wholeNumberRange class
+  use strict arg name, number, min, max, digits=(digits())
+  numeric digits digits
+  -- must be whole and within the given range
+  if number~dataType("Whole"), number >= min, number <= max then do
+      return
+  end
+  -- The NAME argument must be in the range MIN to MAX; found "NUMBER"
+  raise syntax 88.907 array(name, min, max, number)
+
+-- validate that an argument is zero or a positive whole number
+::METHOD nonNegativeWholeNumber class
+  use strict arg name, number, digits=(digits())
+  numeric digits digits
+  -- must be whole and zero or positive
+  if number~dataType("Whole"), number >= 0 then do
+      return
+  end
+  -- The NAME argument must be zero or a positive whole number; found "NUMBER"
+  raise syntax 88.904 array(name, number)
+
+-- validate that an argument is a positive whole number
+::METHOD positiveWholeNumber class
+  use strict arg name, number, digits=(digits())
+  numeric digits digits
+  -- must be whole and positive
+  if number~dataType("Whole"), number > 0 then do
+      return
+  end
+  -- The NAME argument must be a positive whole number; found "NUMBER"
+  raise syntax 88.905 array(name, number)
+
+
+-- validates a length argument
+-- this is very similar to method nonNegativeWholeNumber, but with
+-- a different default digits concept and a more specific message.
+::METHOD length class
+  use strict arg name, number, digits=(.RexxInfo~internalDigits)
+  numeric digits digits
+  -- must be whole and zero or positive
+  if number~dataType("Whole"), number >= 0 then do
+      return
+  end
+  -- Argument NAME is an invalid length value; found "NUMBER"
+  raise syntax 88.911 array(name, number)
+
+-- validates a position argument
+-- this is very similar to method positiveWholeNumber, but with
+-- a different default digits concept and a more specific message.
+::METHOD position class
+  use strict arg name, number, digits=(.RexxInfo~internalDigits)
+  numeric digits digits
+  -- must be whole and positive
+  if number~dataType("Whole"), number > 0 then do
+      return
+  end
+  -- Argument NAME is an invalid position value; found "NUMBER"
+  raise syntax 88.912 array(name, number)
+
+-- validate that an argument is an instance of a specific class
+::METHOD classType class
+  use strict arg name, object, class
+
+  if \object~isA(class) then do
+      -- Argument NAME must be an instance of the CLASS class
+      raise syntax 88.914 array(name, class~id)
+  end
+
+-- validate that an argument is a valid boolean
+::METHOD logical class
+  use strict arg name, number
+
+  if number \== .true, number \== .false then do
+      -- The NAME argument must be exactly "0" or "1"; found NUMBER
+      raise syntax 88.927 array(name, number)
   end
 
 

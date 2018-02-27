@@ -3922,6 +3922,33 @@ special character (such as a parenthesis).
           <SymbolicName>Error_Invalid_argument_array_size</SymbolicName>
           <Text><Sub position="1" name="name"/> argument <Sub position="2" name="argument_number"/> must be an array with exactly <Sub position="3" name="count"/> items.</Text>
         </SubMessage>
+        <SubMessage>
+          <Code>88</Code>
+          <Subcode>925</Subcode>
+          <MessageNumber>788</MessageNumber>
+          <Component>Rexx</Component>
+          <Severity>Warning</Severity>
+          <SymbolicName>Error_Invalid_argument_nonnegative_number</SymbolicName>
+          <Text>The <Sub position="1" name="argument"/> argument must be zero or a positive number; found <q><Sub position="2" name="value"/></q>.</Text>
+        </SubMessage>
+        <SubMessage>
+          <Code>88</Code>
+          <Subcode>926</Subcode>
+          <MessageNumber>789</MessageNumber>
+          <Component>Rexx</Component>
+          <Severity>Warning</Severity>
+          <SymbolicName>Error_Invalid_argument_positive_number</SymbolicName>
+          <Text>The <Sub position="1" name="argument"/> argument must be a positive number; found <q><Sub position="2" name="value"/></q>.</Text>
+        </SubMessage>
+        <SubMessage>
+          <Code>88</Code>
+          <Subcode>927</Subcode>
+          <MessageNumber>790</MessageNumber>
+          <Component>Rexx</Component>
+          <Severity>Warning</Severity>
+          <SymbolicName>Error_Invalid_argument_logical</SymbolicName>
+          <Text>The <Sub position="1" name="argument"/> argument must be exactly <q>0</q> or <q>1</q>; found <q><Sub position="2" name="value"/></q>.</Text>
+        </SubMessage>
     </Subcodes>
   </Message>
   <Message>

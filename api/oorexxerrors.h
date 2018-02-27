@@ -457,6 +457,9 @@
 #define Rexx_Error_Invalid_argument_maxarg                                88922
 #define Rexx_Error_Invalid_argument_array                                 88923
 #define Rexx_Error_Invalid_argument_array_size                            88924
+#define Rexx_Error_Invalid_argument_nonnegative_number                    88925
+#define Rexx_Error_Invalid_argument_positive_number                       88926
+#define Rexx_Error_Invalid_argument_logical                               88927
 #define Rexx_Error_Variable_expected                                      89000
 #define Rexx_Error_Variable_expected_USE                                  89001
 #define Rexx_Error_Variable_expected_PARSE                                89002
