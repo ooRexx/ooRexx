@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -238,7 +238,7 @@ size_t StringUtil::pos(const char *stringData, size_t haystack_length, RexxStrin
     // our needle is two chars or longer, so we repeatedly
     // - search for the first char of needle with memchr() and then
     // - test for the complete needle with memcmp()
-    while (haypointer) 
+    while (haypointer)
     {
         // memchr() gave us a match for the first character of needle
         // before calling memcmp() we also check for a match of the second character
@@ -248,7 +248,7 @@ size_t StringUtil::pos(const char *stringData, size_t haystack_length, RexxStrin
             return haypointer - stringData + 1;
         }
         haypointer = (char *)memchr(haypointer + 1, *needlepointer, endpointer - haypointer);
-    } 
+    }
     return 0;  // we got nothing...
 }
 
@@ -1136,6 +1136,15 @@ RexxObject *StringUtil::dataType(RexxString *string, char option )
             return TheFalseObject;
         }
 
+        // whole number using the precision used numbers "used internally
+        // by Rexx".
+        case RexxString::DATATYPE_INTERNAL_WHOLE:
+        {
+            wholenumber_t value;
+
+            return booleanObject(string->numberValue(value, Numerics::ARGUMENT_DIGITS));
+        }
+
         case RexxString::DATATYPE_NUMBER:
         {
             // validate as a number
@@ -1170,7 +1179,7 @@ RexxObject *StringUtil::dataType(RexxString *string, char option )
             return booleanObject(!(len != 1 || (*scanp != '1' && *scanp != '0')));
 
         default  :
-            reportException(Error_Incorrect_method_option, "ABLMNOSUVWX9", new_string(option));
+            reportException(Error_Incorrect_method_option, "ABILMNOSUVWX9", new_string(option));
     }
     return TheFalseObject;
 }

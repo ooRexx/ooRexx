@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -712,6 +712,7 @@ class RexxString : public RexxObject
     // Datatype method options
     static const char DATATYPE_ALPHANUMERIC =   'A';
     static const char DATATYPE_BINARY =         'B';
+    static const char DATATYPE_INTERNAL_WHOLE = 'I';
     static const char DATATYPE_LOWERCASE =      'L';
     static const char DATATYPE_MIXEDCASE =      'M';
     static const char DATATYPE_NUMBER =         'N';
