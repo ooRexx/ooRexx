@@ -3192,40 +3192,43 @@ nomethod:
 
 
 -- TimeSpan represents an interval of time.  Timespans are created by subtracting
--- two DateTime objects.  They also can added to DateTime objects.
+-- two DateTime objects.  They also can be added to DateTime objects.
 ::CLASS 'TimeSpan' public inherit Comparable Orderable
 
 -- Create a timespan object representing a number of days
 ::METHOD fromDays class
   use strict arg days
-
   .Validate~number("days", days)
-  return self~new(days, 0, 0, 0, 0)
+  numeric digits 18
+  return self~new(trunc(days * 24 * 3600 * 1000000))
 
 -- Create a timespan object representing a number of hours
 ::METHOD fromHours class
   use strict arg hours
   .Validate~number("hours", hours)
-  return self~new(0, hours, 0, 0, 0)
+  numeric digits 18
+  return self~new(trunc(hours * 3600 * 1000000))
 
 -- Create a timespan object representing a number of minutes
 ::METHOD fromMinutes class
   use strict arg minutes
   .Validate~number("minutes", minutes)
-  return self~new(0, 0, minutes, 0, 0)
+  numeric digits 18
+  return self~new(trunc(minutes * 60 * 1000000))
 
 -- Create a timespan object representing a number of seconds
 ::METHOD fromSeconds class
   use strict arg seconds
   .Validate~number("seconds", seconds)
-  return self~new(0, 0, 0, seconds, 0)
+  numeric digits 18
+  return self~new(trunc(seconds * 1000000))
 
 -- Create a timespan object representing a number of microseconds
 ::METHOD fromMicroseconds class
   use strict arg usec
-
   .Validate~number("microseconds", usec)
-  return self~new(usec)
+  numeric digits 18
+  return self~new(trunc(usec))
 
 -- Create a timespan object representing the interval from a Civil time
 ::METHOD fromCivilTime class
@@ -3298,7 +3301,7 @@ nomethod:
 --      are optional and default to zero.
 ::METHOD init
   expose timestamp
-  numeric digits 20    -- need higher digits for time calculations
+  numeric digits 18    -- need higher digits for time calculations
 
   select
       when arg() <= 1 then do    -- just create from a microseconds value
@@ -3641,7 +3644,7 @@ nomethod:
   expose timestamp
   use strict arg
 
-  numeric digits 10
+  numeric digits 18
   return timestamp~sign
 
 
