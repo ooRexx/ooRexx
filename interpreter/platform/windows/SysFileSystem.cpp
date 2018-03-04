@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -143,7 +143,7 @@ void SysFileSystem::qualifyStreamName(const char *unqualifiedName, char *qualifi
                                (DWORD)bufferSize, qualifiedName, &lpszLastNamePart);
     if ((length == 0) || (length >= bufferSize))
     {
-      // if GetFullPathName() failed or would need a larger buffer, return null string 
+      // if GetFullPathName() failed or would need a larger buffer, return null string
       qualifiedName[0] = '\0';
     }
     else
@@ -831,6 +831,17 @@ bool SysFileSystem::setFileReadOnly(const char *name)
  * @return For Windows, always returns false.
  */
 bool SysFileSystem::isCaseSensitive()
+{
+    return false;
+}
+
+
+/**
+ * test if an individual file is a case sensitive name
+ *
+ * @return For Windows, always returns false.
+ */
+bool SysFileSystem::isCaseSensitive(const char *name)
 {
     return false;
 }

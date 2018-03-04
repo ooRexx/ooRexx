@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -72,6 +72,16 @@ RexxMethod0(CSTRING, file_path_separator)
 RexxMethod0(logical_t, file_case_sensitive)
 {
     return SysFileSystem::isCaseSensitive();
+}
+
+
+/**
+ * Return the file system case sensitivity section
+ */
+RexxMethod1(logical_t, this_file_case_sensitive, CSTRING, fileName)
+{
+    // Ask the file system for an answer
+    return SysFileSystem::isCaseSensitive(fileName);
 }
 
 

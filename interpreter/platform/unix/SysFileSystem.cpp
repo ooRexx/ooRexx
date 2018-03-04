@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -871,7 +871,7 @@ bool SysFileSystem::exists(const char *name)
 */
 int get_utc_offset(time_t time)
 {
-  struct tm gmt, local; 
+  struct tm gmt, local;
   int one_day = 24*60*60;
   int offset;
 
@@ -888,7 +888,7 @@ int get_utc_offset(time_t time)
   // if both local and UTC timestamps fall on the same day, this is the UTC/DST offset
   offset = ((local.tm_hour - gmt.tm_hour) * 60
           + (local.tm_min - gmt.tm_min)) * 60
-          + local.tm_sec - gmt.tm_sec; 
+          + local.tm_sec - gmt.tm_sec;
 
   // if either local year or local day_in_year is less than its UTC counterpart,
   // we're dealing with a negative UTC/DST offset which extends into the prior day
@@ -1051,11 +1051,48 @@ bool SysFileSystem::setFileReadOnly(const char *name)
 /**
  * indicate whether the file system is case sensitive.
  *
- * @return For Unix systems, always returns true.
+ * @return For Unix systems, always returns true. For MacOS,
+ *         this needs to be determined on a case-by-case basis.
+ *         This returns the information for the root file system
  */
 bool SysFileSystem::isCaseSensitive()
 {
+#ifndef _HAVE_PC_CASE_SENSITIVE
     return true;
+#else
+    long res = pathconf("/", _PC_CASE_SENSITIVE);
+    if (res \= -1)
+    {
+        return res == 1;
+    }
+    // any error means this value is not supported for this file system
+    // so the result is most likely true (unix standard)
+    return true;
+#endif
+}
+
+
+/**
+ * test if an individual file is a case sensitive name
+ *
+ * @return For Unix systems, always returns true. For MacOS,
+ *         this needs to be determined on a case-by-case basis.
+ */
+bool SysFileSystem::isCaseSensitive(const char *name)
+{
+#ifndef _HAVE_PC_CASE_SENSITIVE
+    return true;
+#else
+    long res = pathconf(name, _PC_CASE_SENSITIVE);
+
+    if (res \= -1)
+    {
+        return res == 1;
+    }
+    // any error means this the value is not supported for this file system
+    // so the result is most likely true (unix standard)
+    return true;
+#endif
 }
 
 

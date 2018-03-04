@@ -533,7 +533,6 @@ return position
 
 ::METHOD separator EXTERNAL 'LIBRARY REXX file_separator'
 ::METHOD pathSeparator EXTERNAL 'LIBRARY REXX file_path_separator'
-::METHOD isCaseSensitive EXTERNAL 'LIBRARY REXX file_case_sensitive'
 
 -- Normalize the path separator syntax for a new File instance
 ::METHOD normalizePathSyntax PRIVATE
@@ -604,6 +603,13 @@ return position
 ::METHOD canWriteImpl PRIVATE EXTERNAL 'LIBRARY REXX file_can_write'
 ::METHOD existsImpl PRIVATE EXTERNAL 'LIBRARY REXX file_exists'
 ::METHOD qualifyImpl PRIVATE EXTERNAL 'LIBRARY REXX file_qualify'
+::METHOD isCaseSensitiveImpl EXTERNAL 'LIBRARY REXX this_file_case_sensitive'
+
+-- test if this individual file name is case sensitive
+::METHOD isCaseSensitive
+  use strict arg
+
+  return self~isCaseSensitiveImpl(self~qualifiedPath)
 
 ::METHOD canRead
   use strict arg

@@ -305,18 +305,9 @@ if (NOT WIN32)
   set(CMAKE_REQUIRED_LIBRARIES "pthread")
   set(CMAKE_REQUIRED_DEFINITIONS "-D_GNU_SOURCE=1")
   check_function_exists(pthread_mutexattr_settype HAVE_PTHREAD_MUTEXATTR_SETTYPE)
-  check_c_source_compiles("#include <pthread.h>
-                           int main(int arg, char **argv) {
-                           int tryme;
-                           tryme = PTHREAD_MUTEX_ERRORCHECK;
-                           return 0;}"
-                          HAVE_PTHREAD_MUTEX_ERRORCHECK)
-  check_c_source_compiles("#include <pthread.h>
-                           int main(int arg, char **argv) {
-                           int tryme;
-                           tryme = PTHREAD_MUTEX_RECURSIVE;
-                           return 0;}"
-                          HAVE_PTHREAD_MUTEX_RECURSIVE)
+  check_symbol_exists(PTHREAD_MUTEX_ERRORCHECK pthread.h HAVE_PTHREAD_MUTEX_ERRORCHECK)
+  check_symbol_exists(PTHREAD_MUTEX_RECURSIVE pthread.h HAVE_PTHREAD_MUTEX_RECURSIVE)
+  check_symbol_exists(_PC_CASE_SENSITIVE unistd.h HAVE_PC_CASE_SENSITIVE)
   check_include_file(pwd.h HAVE_PWD_H)
   check_include_file(sched.h HAVE_SCHED_H)
   check_function_exists(sighold HAVE_SIGHOLD)
@@ -369,7 +360,7 @@ if (NOT WIN32)
     endif (NOT NCURSES_H_)
   else ()
     check_include_file(ncurses.h HAVE_NCURSES_H)
-  endif ()  
+  endif ()
 endif ()
 set (PACKAGE ${PROJECT_NAME})
 set (PACKAGE_BUGREPORT "http://sourceforge.net/projects/oorexx/")
