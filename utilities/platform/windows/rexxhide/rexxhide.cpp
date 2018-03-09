@@ -126,12 +126,21 @@ int WINAPI WinMain(
         result = pgmThrdInst->CallProgram(program_name, rxargs);
         // display any error message if there is a condition.  if there was an
         // error, then that will be our return code. we know error code will fit
-        // in an int32_t.
+        // in an int32_t. This just writes it out to the configured error stream. We
+        // will want to give full information in the popup as well.
         rc = (int32_t)pgmThrdInst->DisplayCondition();
         if (rc != 0)
         {
-            sprintf(arg_buffer, "Open Object Rexx program execution failure: rc = %d",rc);
-            MessageBox(NULL, arg_buffer, "Execution Error", MB_OK | MB_ICONHAND);
+            RexxDirectoryObject condition = pgmThrdInst->GetConditionInfo();
+            RexxCondition conditionInfo;
+
+            pgmThrdInst->DecodeConditionInfo(condition, &conditionInfo);
+            wholenumber_t minorCode = conditionInfo.code - (conditionInfo.rc * 1000);
+
+            sprintf(arg_buffer, "Error %zd.%1zd running program %s line %zd\n\n  %s\n  %s", conditionInfo.rc, minorCode,
+                pgmThrdInst->StringData(conditionInfo.program), conditionInfo.position,
+                pgmThrdInst->StringData(conditionInfo.errortext), pgmThrdInst->StringData(conditionInfo.message));
+            MessageBox(NULL, arg_buffer, "Object Object Rexx Execution Error", MB_OK | MB_ICONHAND);
 
             pgmInst->Terminate();
             return -rc;   // well, the negation of the error number is the return code
