@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -3819,7 +3819,7 @@ size_t RexxEntry WSCtrlSend(const char *funcname, size_t argc, CONSTRXSTRING arg
     }
     else if ( strcmp(argv[0].strptr,"TO") == 0 )  /* Send message Time Out */
     {
-        UINT      msg, timeOut;
+        uint32_t  msg, timeOut;
         WPARAM    wp;
         LPARAM    lp;
         DWORD_PTR dwResult;
@@ -3828,10 +3828,21 @@ size_t RexxEntry WSCtrlSend(const char *funcname, size_t argc, CONSTRXSTRING arg
         CHECKARG(6,7);
 
         GET_HANDLE(argv[1].strptr, hW);
-        GET_HANDLE(argv[2].strptr, msg);
+
+        // Can't use GET_HANDLE, on 64 bit OS. Message IDs are 32 bit numbers.
+        // Can't use atoi because we have allowed things like 0x111.
+        if ( ! rxStr2Number32(argv[2].strptr, &msg) )
+        {
+            RETVAL(1);
+        }
+        // Can't use GET_HANDLE, on 64 bit OS. timeOut is 32 bit.
+        if ( ! rxStr2Number32(argv[5].strptr, &timeOut) )
+        {
+            RETVAL(1);
+        }
+
         GET_HANDLE(argv[3].strptr, wp);
         GET_HANDLE(argv[4].strptr, lp);
-        GET_HANDLE(argv[5].strptr, timeOut);
 
         /* The 7th arg can, optionally, be used as an extra qualifier.  Currently
          * only used in one case.
