@@ -6153,8 +6153,6 @@ special character (such as a parenthesis).
         <Severity>Error</Severity>
         <SymbolicName>Error_RXQUE_notinit</SymbolicName>
         <Text>The REXX queuing system is not initialized.</Text>
-        <Explanation><para>The queuing system requires a housekeeping program to run. This program usually runs under the Presentation Manager shell.  The program is not running.</para></Explanation>
-        <UserAction><para>Report this message to your IBM service representative.</para></UserAction>
       </SubMessage>
       <SubMessage>
         <Code>999</Code>
@@ -6205,7 +6203,6 @@ special character (such as a parenthesis).
         <SymbolicName>Error_RXQUE_access</SymbolicName>
         <Text>The queue access mode is not correct.</Text>
         <Explanation><para>An internal error occurred in RXQUEUE. The RXQUEUE program tried to access a queue with an incorrect access mode. Correct access modes are LIFO and FIFO.</para></Explanation>
-        <UserAction><para>Report this message to your IBM service representative.</para></UserAction>
       </SubMessage>
       <SubMessage>
         <Code>999</Code>

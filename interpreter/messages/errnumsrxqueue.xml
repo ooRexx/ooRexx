@@ -3,10 +3,7 @@
 <para>RXQUEUE issues the following errors:</para>
 <section id="ERR119">
 <title>Error 119 - The REXX queuing system is not initialized.</title>
-<para>
-<emphasis role="bold">Explanation:</emphasis>
-</para>
-<para>The queuing system requires a housekeeping program to run. This program usually runs under the Presentation Manager shell.  The program is not running.</para>
+<para> </para>
 </section>
 <section id="ERR120">
 <title>Error 120 - The size of the data is incorrect.</title>
