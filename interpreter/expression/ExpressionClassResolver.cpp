@@ -151,7 +151,9 @@ RexxClass *ClassResolver::lookup(PackageClass *package)
     // if this is not qualified by namespace, do the full class search.
     if (namespaceName == OREF_NULL)
     {
-        RexxClass *resolvedClass = package->findClass(className);
+        RexxObject *t = OREF_NULL;   // required for the findClass call
+
+        RexxClass *resolvedClass = package->findClass(className, t);
 
         // We found something, but it must be a real class object
         if (resolvedClass != OREF_NULL && !resolvedClass->isInstanceOf(TheClassClass))

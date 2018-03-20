@@ -208,7 +208,9 @@ RexxInternalObject *MessageClass::copy()
  */
 RexxObject *MessageClass::notify(RexxObject *notificationTarget)
 {
-    classArgument(notificationTarget, TheRexxPackage->findClass(GlobalNames::MessageNotification), "notification target");
+    RexxObject *t = OREF_NULL;   // required for the findClass call
+
+    classArgument(notificationTarget, TheRexxPackage->findClass(GlobalNames::MessageNotification, t), "notification target");
 
     // get a new array if this is the first one added.
     if (interestedParties == OREF_NULL)

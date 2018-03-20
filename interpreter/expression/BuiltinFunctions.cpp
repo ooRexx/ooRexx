@@ -2792,8 +2792,9 @@ BUILTIN(RXQUEUE)
         // 'C'reate a named queue
         case 'C':
         {
+            RexxObject *t = OREF_NULL;   // required for the findClass call
             // we need the RexxQueue class for this
-            RexxClass *rexxQueue = TheRexxPackage->findClass(REXXQUEUE);
+            RexxClass *rexxQueue = TheRexxPackage->findClass(REXXQUEUE, t);
 
             // if no queue name specified, we allow a name to be
             // created for us
@@ -2840,7 +2841,9 @@ BUILTIN(RXQUEUE)
                 reportException(Error_Incorrect_call_minarg, "RXQUEUE", IntegerTwo);
             }
             // we need the RexxQueue class for this
-            RexxClass *rexxQueue = TheRexxPackage->findClass(REXXQUEUE);
+            RexxObject *t = OREF_NULL;   // required for the findClass call
+
+            RexxClass *rexxQueue = TheRexxPackage->findClass(REXXQUEUE, t);
             // this must be a valid symbol
             if (queueName->isSymbol() == STRING_BAD_VARIABLE)
             {
@@ -2857,8 +2860,10 @@ BUILTIN(RXQUEUE)
             {
                 reportException(Error_Incorrect_call_minarg, "RXQUEUE", IntegerTwo);
             }
+            RexxObject *t = OREF_NULL;   // required for the findClass call
+
             // we need the RexxQueue class for this
-            RexxClass *rexxQueue = TheRexxPackage->findClass(REXXQUEUE);
+            RexxClass *rexxQueue = TheRexxPackage->findClass(REXXQUEUE,t);
             // this must be a valid symbol
             if (queueName->isSymbol() == STRING_BAD_VARIABLE)
             {
@@ -2875,8 +2880,10 @@ BUILTIN(RXQUEUE)
             {
                 reportException(Error_Incorrect_call_minarg, "RXQUEUE", IntegerTwo);
             }
+            RexxObject *t = OREF_NULL;   // required for the findClass call
+
             // we need the RexxQueue class for this
-            RexxClass *rexxQueue = TheRexxPackage->findClass(REXXQUEUE);
+            RexxClass *rexxQueue = TheRexxPackage->findClass(REXXQUEUE, t);
             // this must be a valid symbol
             if (queueName->isSymbol() == STRING_BAD_VARIABLE)
             {

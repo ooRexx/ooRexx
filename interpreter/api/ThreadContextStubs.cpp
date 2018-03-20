@@ -265,6 +265,7 @@ logical_t RexxEntry IsOfType(RexxThreadContext *c, RexxObjectPtr o, CSTRING cn)
         // our current context
         RexxString *name = new_upper_string(cn);
         ProtectedObject p(name);
+
         RexxClass *classObject = context.context->findClass(name);
         // if not found, this is always false
         if (classObject == OREF_NULL)
@@ -395,7 +396,9 @@ RexxClassObject RexxEntry FindClassFromPackage(RexxThreadContext *c, RexxPackage
         // convert the name to a string instance, and check the environments.
         RexxString *name = new_upper_string(n);
         ProtectedObject p(name);
-        return (RexxClassObject)context.ret(((PackageClass *)m)->findClass(name));
+
+        RexxObject *t = OREF_NULL;   // required for the findClass call
+        return (RexxClassObject)context.ret(((PackageClass *)m)->findClass(name, t));
 
     }
     catch (NativeActivation *)

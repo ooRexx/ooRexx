@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -161,11 +161,12 @@ PackageClass *BaseCode::getPackageObject()
 RexxClass *BaseCode::findClass(RexxString *className)
 {
     RexxClass *classObject;
+    RexxObject *t = OREF_NULL;   // required for the findClass call
 
     // if we have a package set, search the packge first
     if (package != OREF_NULL)
     {
-        classObject = package->findClass(className);
+        classObject = package->findClass(className, t);
         if (classObject != OREF_NULL)
         {
             return classObject;

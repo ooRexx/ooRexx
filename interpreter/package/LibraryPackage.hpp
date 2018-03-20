@@ -88,12 +88,14 @@ public:
     inline bool isLoaded() { return loaded; }
     inline bool isInternal() { return internal; }
     inline void makeInternal() { internal = true; }
+    inline StringTable *getRoutines() { return publicRoutines; }
 
 protected:
 
     RexxPackageEntry *package;  // loaded package information
     RexxString *libraryName;    // the name of the library
     StringTable    *routines;   // loaded routines
+    StringTable    *publicRoutines;   // loaded routines table
     StringTable    *methods;    // loaded methods
     SysLibrary  lib;            // the library management handle
     bool        loaded;         // we've at least been able to load the library

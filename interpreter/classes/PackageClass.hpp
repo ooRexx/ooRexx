@@ -53,6 +53,7 @@ class RexxCode;
 class RoutineClass;
 class Activity;
 class DirectoryClass;
+class LibraryPackage;
 
 
 /**
@@ -87,6 +88,7 @@ public:
     ArrayClass   *extractSource(SourceLocation &);
     ArrayClass   *extractSource();
     void          mergeRequired(PackageClass *);
+    void          mergeLibrary(LibraryPackage *);
     PackageClass *loadRequires(Activity *activity, RexxString *target);
     PackageClass *loadRequires(Activity *activity, RexxString *target, ArrayClass *s);
     void          addPackage(PackageClass *package);
@@ -95,7 +97,7 @@ public:
     RoutineClass *findLocalRoutine(RexxString *);
     RoutineClass *findPublicRoutine(RexxString *);
     PackageClass *findNamespace(RexxString *);
-    RexxClass    *findClass(RexxString *);
+    RexxClass    *findClass(RexxString *, RexxObject *&);
     RexxClass    *findClass(RexxString *, RexxString *);
     RexxClass    *findInstalledClass(RexxString *name);
     RexxClass    *findPublicClass(RexxString *name);

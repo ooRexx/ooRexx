@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -51,6 +51,7 @@
 #include "Token.hpp"
 #include "Activity.hpp"
 #include "ProtectedObject.hpp"
+#include "RoutineClass.hpp"
 
 
 /**
@@ -105,6 +106,7 @@ RexxExpressionFunction::RexxExpressionFunction(RexxString *function_name,
 void RexxExpressionFunction::live(size_t liveMark)
 {
     memory_mark(target);
+    memory_mark(externalTarget);
     memory_mark(functionName);
     memory_mark_array(argumentCount, arguments);
 }
@@ -119,6 +121,7 @@ void RexxExpressionFunction::live(size_t liveMark)
  */
 void RexxExpressionFunction::liveGeneral(MarkReason reason)
 {
+    memory_mark_general(externalTarget);
     memory_mark_general(target);
     memory_mark_general(functionName);
     memory_mark_general_array(argumentCount, arguments);
@@ -135,6 +138,7 @@ void RexxExpressionFunction::flatten(Envelope *envelope)
     setUpFlatten(RexxExpressionFunction)
 
     flattenRef(target);
+    flattenRef(externalTarget);
     flattenRef(functionName);
     flattenArrayRefs(argumentCount, arguments);
 
@@ -182,8 +186,14 @@ RexxObject *RexxExpressionFunction::evaluate(RexxActivation *context, Expression
 
     ProtectedObject   result;            // returned result
 
+    // do we have a resolved external routine to call?
+    if (externalTarget != OREF_NULL)
+    {
+        context->externalCall(functionName, externalTarget, stack->arguments(argumentCount), argumentCount, GlobalNames::FUNCTION, result);
+    }
+
     // if we resolved to an internal label, call that now
-    if (target != OREF_NULL)
+    else if (target != OREF_NULL)
     {
         context->internalCall(functionName, target, stack->arguments(argumentCount), argumentCount, result);
     }
@@ -194,7 +204,14 @@ RexxObject *RexxExpressionFunction::evaluate(RexxActivation *context, Expression
     }
     else
     {
-        context->externalCall(functionName, stack->arguments(argumentCount), argumentCount, GlobalNames::FUNCTION, result);
+        // this is a potentially resolved external target
+        RoutineClass *resolvedTarget = OREF_NULL;
+
+        context->externalCall(resolvedTarget, functionName, stack->arguments(argumentCount), argumentCount, GlobalNames::FUNCTION, result);
+
+        // this potentially resolved a target that will allow us
+        // to fast path the next call
+        setField(externalTarget, resolvedTarget);
     }
 
     // functions must have a return result

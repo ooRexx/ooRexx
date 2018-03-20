@@ -166,9 +166,10 @@ void Interpreter::startInterpreter(InterpreterStartupMode mode)
             // Get an instance.  This also gives the root activity of the instance
             // the kernel lock.
             InstanceBlock instance;
+            RexxObject *t = OREF_NULL;   // required for the findClass call
 
             // get the server class from the REXX package where it is a non-public class
-            RexxClass *server_class = TheRexxPackage->findClass(new_string("LOCALSERVER"));
+            RexxClass *server_class = TheRexxPackage->findClass(new_string("LOCALSERVER"), t);
 
             // NOTE:  This is a second block so that the
             // protected object's destructor gets run before
@@ -552,7 +553,9 @@ RexxClass *Interpreter::findClass(RexxString *className)
 
     if (TheRexxPackage != OREF_NULL)
     {
-        classObject = TheRexxPackage->findClass(internalName);
+        RexxObject *t = OREF_NULL;   // required for the findClass call
+
+        classObject = TheRexxPackage->findClass(internalName, t);
         if (classObject != OREF_NULL)
         {
             return classObject;

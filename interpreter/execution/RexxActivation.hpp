@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -63,6 +63,7 @@ class SupplierClass;
 class PackageClass;
 class StackFrameClass;
 class RequiresDirective;
+class RoutineClass;
 
 
 /**
@@ -197,14 +198,15 @@ class RexxActivation : public ActivationBase
    void              trapDelay(RexxString *);
    void              trapUndelay(RexxString *);
    bool              callExternalRexx(RexxString *, RexxObject **, size_t, RexxString *, ProtectedObject &);
-   RexxObject      * externalCall(RexxString *, RexxObject **, size_t, RexxString *, ProtectedObject &);
+   RexxObject      * externalCall(RoutineClass *&, RexxString *, RexxObject **, size_t, RexxString *, ProtectedObject &);
+   RexxObject      * externalCall(RexxString *, RoutineClass *, RexxObject **, size_t, RexxString *, ProtectedObject &);
    RexxObject      * internalCall(RexxString *, RexxInstruction *, RexxObject **, size_t, ProtectedObject &);
    RexxObject      * internalCallTrap(RexxString *, RexxInstruction *, DirectoryClass *, ProtectedObject &);
    bool              callMacroSpaceFunction(RexxString *, RexxObject **, size_t, RexxString *, int, ProtectedObject &);
    static RoutineClass* getMacroCode(RexxString *macroName);
    RexxString       *resolveProgramName(RexxString *name);
    RexxClass        *findClass(RexxString *name);
-   RexxObject       *resolveDotVariable(RexxString *name);
+   RexxObject       *resolveDotVariable(RexxString *name, RexxObject *&);
    void              command(RexxString *, RexxString *);
    int64_t           getElapsed();
    RexxDateTime      getTime();
@@ -241,7 +243,7 @@ class RexxActivation : public ActivationBase
    void              setDefaultAddress(RexxString *);
    bool              internalMethod();
    void              loadRequires(RequiresDirective *);
-   void              loadLibrary(RexxString *target, RexxInstruction *instruction);
+   void              loadLibrary(RexxString *target, RexxInstruction *instruction, PackageClass *package);
    RexxObject      * rexxVariable(RexxString *);
    void              pushEnvironment(RexxObject *);
    RexxObject      * popEnvironment();

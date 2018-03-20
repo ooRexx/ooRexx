@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -80,6 +80,7 @@ RexxDotVariable::RexxDotVariable(RexxString *variable_name )
 void RexxDotVariable::live(size_t liveMark)
 {
     memory_mark(variableName);
+    memory_mark(cachedValue);
 }
 
 
@@ -93,6 +94,7 @@ void RexxDotVariable::live(size_t liveMark)
 void RexxDotVariable::liveGeneral(MarkReason reason)
 {
     memory_mark_general(variableName);
+    memory_mark_general(cachedValue);
 }
 
 
@@ -106,6 +108,7 @@ void RexxDotVariable::flatten(Envelope * envelope)
     setUpFlatten(RexxDotVariable)
 
     flattenRef(variableName);
+    flattenRef(cachedValue);
 
     cleanUpFlatten
 }
@@ -121,8 +124,23 @@ void RexxDotVariable::flatten(Envelope * envelope)
  */
 RexxObject * RexxDotVariable::evaluate(RexxActivation *context, ExpressionStack *stack )
 {
+    // if we previously resolved this from a package source, then
+    // we saved the value for quick access.
+    if (cachedValue != OREF_NULL)
+    {
+        // evaluate always pushes on the stack.
+        stack->push(cachedValue);
+        // trace this if tracing intermediates
+        context->traceDotVariable(variableName, cachedValue);
+        return cachedValue;
+    }
+
+    // if this gets set by resolveDotVariable, the value
+    // can be cached for quick lookup
+    RexxObject *value = OREF_NULL;
+
     // try first from the environment
-    RexxObject *result = context->resolveDotVariable(variableName);
+    RexxObject *result = context->resolveDotVariable(variableName, value);
     if (result == OREF_NULL)
     {
         // might be a special rexx name
@@ -134,6 +152,15 @@ RexxObject * RexxDotVariable::evaluate(RexxActivation *context, ExpressionStack 
             result = variableName->concatToCstring(".");
         }
     }
+    else
+    {
+        // the value returned by resolveDotVariable might
+        // be capable to caching, so set this for the next call
+        // (this might still be null if it came from a dynamic
+        // source)
+        setField(cachedValue, value);
+    }
+
     // evaluate always pushes on the stack.
     stack->push(result);
     // trace this if tracing intermediates
@@ -152,8 +179,19 @@ RexxObject * RexxDotVariable::evaluate(RexxActivation *context, ExpressionStack 
  */
 RexxObject * RexxDotVariable::getValue(RexxActivation *context)
 {
+    // if we previously resolved this from a package source, then
+    // we saved the value for quick access.
+    if (cachedValue != OREF_NULL)
+    {
+        return cachedValue;
+    }
+
+    // if this gets set by resolveDotVariable, the value
+    // can be cached for quick lookup
+    RexxObject *value = OREF_NULL;
+
     // try first from the environment
-    RexxObject *result = context->resolveDotVariable(variableName);
+    RexxObject *result = context->resolveDotVariable(variableName, value);
     if (result == OREF_NULL)
     {
         // might be a special rexx name
@@ -165,7 +203,15 @@ RexxObject * RexxDotVariable::getValue(RexxActivation *context)
             result = variableName->concatToCstring(".");
         }
     }
-    // this just returns without pusing on the stack
+    else
+    {
+        // the value returned by resolveDotVariable might
+        // be capable to caching, so set this for the next call
+        // (this might still be null if it came from a dynamic
+        // source)
+        setField(cachedValue, value);
+    }
+    // this just returns without pushing on the stack
     return result;
 }
 

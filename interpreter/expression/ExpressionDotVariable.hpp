@@ -70,6 +70,6 @@ class RexxDotVariable : public RexxVariableBase
  protected:
 
     RexxString *variableName;     // name of the environment symbol
-
+    RexxObject *cachedValue;      // if the value is obtained from the package, we can cache the value.
 };
 #endif

@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -68,6 +68,7 @@ protected:
 
     RexxString *functionName;            // the name of the function
     RexxInstruction *target;             // internal routine to call
+    RoutineClass    *externalTarget;     // a resolved external routine call
     size_t  builtinIndex;                // resolved builtin function index
     size_t  argumentCount;               // count of arguments
     RexxInternalObject *arguments[1];    // argument list

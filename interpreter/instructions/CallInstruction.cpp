@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -88,6 +88,7 @@ void RexxInstructionCall::live(size_t liveMark)
 {
     memory_mark(nextInstruction);  // must be first one marked
     memory_mark(targetInstruction);
+    memory_mark(externalTarget);
     memory_mark(targetName);
     memory_mark_array(argumentCount, arguments);
 }
@@ -105,6 +106,7 @@ void RexxInstructionCall::liveGeneral(MarkReason reason)
     // must be first one marked
     memory_mark_general(nextInstruction);
     memory_mark_general(targetInstruction);
+    memory_mark_general(externalTarget);
     memory_mark_general(targetName);
     memory_mark_general_array(argumentCount, arguments);
 }
@@ -121,6 +123,7 @@ void RexxInstructionCall::flatten(Envelope *envelope)
 
     flattenRef(nextInstruction);
     flattenRef(targetInstruction);
+    flattenRef(externalTarget);
     flattenRef(targetName);
     flattenArrayRefs(argumentCount, arguments);
 
@@ -166,8 +169,14 @@ void RexxInstructionCall::execute(RexxActivation *context, ExpressionStack *stac
 
     ProtectedObject   result;            // returned result
 
+    // do we have a resolved external routine to call?
+    if (externalTarget != OREF_NULL)
+    {
+        context->externalCall(targetName, externalTarget, stack->arguments(argumentCount), argumentCount, GlobalNames::SUBROUTINE, result);
+    }
+
     // if this has not resolved to an internal call, this is set to NULL
-    if (targetInstruction != OREF_NULL)
+    else if (targetInstruction != OREF_NULL)
     {
         context->internalCall(targetName, targetInstruction, stack->arguments(argumentCount), argumentCount, result);
     }
@@ -180,7 +189,14 @@ void RexxInstructionCall::execute(RexxActivation *context, ExpressionStack *stac
     // an external call...this is handled elsewhere.
     else
     {
-        context->externalCall(targetName, stack->arguments(argumentCount), argumentCount, GlobalNames::SUBROUTINE, result);
+        // this is a potentially resolved external target
+        RoutineClass *resolvedTarget = OREF_NULL;
+
+        context->externalCall(resolvedTarget, targetName, stack->arguments(argumentCount), argumentCount, GlobalNames::SUBROUTINE, result);
+
+        // this potentially resolved a target that will allow us
+        // to fast path the next call
+        setField(externalTarget, resolvedTarget);
     }
 
     // did we get a result returned?  We need to either set or drop
@@ -313,7 +329,10 @@ void RexxInstructionDynamicCall::execute(RexxActivation *context, ExpressionStac
         // an external call...this is handled elsewhere.
         else
         {
-            context->externalCall(targetName, stack->arguments(argumentCount), argumentCount, GlobalNames::SUBROUTINE, result);
+            // we need to provide the variable, but we don't cache the result in this case
+            RoutineClass *resolvedRoutine = OREF_NULL;
+
+            context->externalCall(resolvedRoutine, targetName, stack->arguments(argumentCount), argumentCount, GlobalNames::SUBROUTINE, result);
         }
     }
 
@@ -600,7 +619,10 @@ void RexxInstructionCallOn::trap(RexxActivation *context, DirectoryClass  *condi
     // this is an external call.
     else
     {
-        context->externalCall(targetName, NULL, 0, GlobalNames::SUBROUTINE, result);
+        // we need to provide the variable, but we don't cache the result in this case
+        RoutineClass *resolvedRoutine = OREF_NULL;
+
+        context->externalCall(resolvedRoutine, targetName, NULL, 0, GlobalNames::SUBROUTINE, result);
     }
 
     // NOTE:  Any result object is ignored for a CALL ON trap

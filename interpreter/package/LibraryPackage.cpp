@@ -101,6 +101,7 @@ void LibraryPackage::live(size_t liveMark)
 {
     memory_mark(libraryName);
     memory_mark(routines);
+    memory_mark(publicRoutines);
     memory_mark(methods);
 }
 
@@ -112,6 +113,7 @@ void LibraryPackage::liveGeneral(MarkReason reason)
 {
     memory_mark_general(libraryName);
     memory_mark_general(routines);
+    memory_mark_general(publicRoutines);
     memory_mark_general(methods);
 }
 
@@ -255,6 +257,8 @@ void LibraryPackage::loadRoutines(RexxRoutineEntry *table)
 
     // create a directory of loaded routines
     setField(routines, new_string_table());
+    // and a version using an uppercase name map
+    setField(publicRoutines, new_string_table());
 
     while (table->style != 0)
     {
@@ -278,6 +282,8 @@ void LibraryPackage::loadRoutines(RexxRoutineEntry *table)
         // add this to our local table.  Our local table needs to keep the original case,
         // since those will be referenced by ::ROUTINE statements.
         routines->put(routine, routineName);
+        // and also keep an upper case version for merging with packages
+        publicRoutines->put(routine, target);
 
         // add this to the global function pool
         PackageManager::addPackageRoutine(target, routine);
@@ -398,7 +404,7 @@ RoutineClass *LibraryPackage::resolveRoutine(RexxString *name)
 {
     // we resolve all of these at load time, so this is either in the table, or it's not.
     RoutineClass *code = (RoutineClass *)routines->get(name);
-    if (code == OREF_NULL) 
+    if (code == OREF_NULL)
     {
         // try to locate name caseless
         RexxRoutineEntry *entry = locateRoutineEntry(name);
