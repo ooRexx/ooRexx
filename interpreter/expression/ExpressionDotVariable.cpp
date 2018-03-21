@@ -93,6 +93,21 @@ void RexxDotVariable::live(size_t liveMark)
  */
 void RexxDotVariable::liveGeneral(MarkReason reason)
 {
+    // if this is an alert that the image is getting saved,
+    // we try to resolve any dot variables we can so that
+    // we don't have to add entries to the old-to-new
+    // table during normal operations.
+    if (reason == PREPARINGIMAGE)
+    {
+        RexxObject *t = OREF_NULL;   // required for the findClass call
+
+        // any code in the image is part of the Rexx package, so we resolve
+        // from that.
+        RexxClass *rexxQueue = TheRexxPackage->findClass(variableName, t);
+        // set with anything that is returned, including OREF_NULL
+        setField(cachedValue, t);
+    }
+
     memory_mark_general(variableName);
     memory_mark_general(cachedValue);
 }
