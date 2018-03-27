@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -45,11 +45,11 @@ extern "C"
 {
 #endif
 
-int _init() __attribute__((constructor));
-int _fini() __attribute__((destructor));
+int _rexx_init() __attribute__((constructor));
+int _rexx_fini() __attribute__((destructor));
 
 
-int _init()
+int _rexx_init()
 {
     // perform the interpreter start up
     SystemInterpreter::processStartup();
@@ -57,7 +57,7 @@ int _init()
 }
 
 
-int _fini()
+int _rexx_fini()
 {
     SystemInterpreter::processShutdown();
     return 0;

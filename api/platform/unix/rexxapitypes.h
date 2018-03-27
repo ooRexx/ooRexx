@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -48,7 +48,7 @@
 #include <limits.h>
 #include <pthread.h>
 
-#if __WORDSIZE == 64 || defined(__64BIT__)
+#if __WORDSIZE == 64 || defined(__64BIT__) || defined(__LP64__) || defined(_LP64)
 #define __REXX64__
 #else
 #undef __REXX64__

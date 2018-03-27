@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2014-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2014-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -60,7 +60,9 @@
         // need to define this for Mac OSX 10.2
         #define _BSD_SOCKLEN_T_
     #endif
-    #include <sys/socket.h>
+    #ifdef __sun
+        #include <alloca.h>
+    #endif    #include <sys/socket.h>
     #include <sys/ioctl.h>
     #include <sys/time.h>
     #include <unistd.h>
