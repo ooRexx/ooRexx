@@ -1247,18 +1247,23 @@ endif ()
 
 #################### liborxncurses.so ################
 if (NOT WIN32)
-# Sources for liborxncurses.so
-add_library(orxncurses SHARED ${build_extensions_dir}/orxncurses/orxncurses.cpp)
-# Include file definition
-target_include_directories(orxncurses PUBLIC
+   # need to copy this to the binary dir
+   copy_build_file(ncurses.cls ${build_extensions_orxncurses_dir})
+   # Sources for liborxncurses.so
+   add_library(orxncurses SHARED ${build_extensions_dir}/orxncurses/orxncurses.cpp)
+   # Include file definition
+   target_include_directories(orxncurses PUBLIC
              ${build_api_dir}
              ${build_api_platform_dir}
              ${build_extensions_dir}/orxncurses)
-# Extra link library definitions
-target_link_libraries(orxncurses rexx rexxapi ncurses ${CMAKE_REQUIRED_LIBRARIES})
-set_target_properties(orxncurses PROPERTIES VERSION ${ORX_VERSION})
-install(TARGETS orxncurses RUNTIME DESTINATION ${INSTALL_LIB_DIR}
+   # Extra link library definitions
+   target_link_libraries(orxncurses rexx rexxapi ncurses ${CMAKE_REQUIRED_LIBRARIES})
+   # Make sure ncurses.cls gets copied
+   add_custom_target(ncurses_cls  ALL DEPENDS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/ncurses.cls)
+   set_target_properties(orxncurses PROPERTIES VERSION ${ORX_VERSION})
+   install(TARGETS orxncurses RUNTIME DESTINATION ${INSTALL_LIB_DIR}
                           LIBRARY DESTINATION ${INSTALL_LIB_DIR} COMPONENT Core)
+   install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/ncurses.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
 endif ()
 
 #################### orexxole.dll ################
@@ -1520,7 +1525,6 @@ copy_build_file(streamsocket6.cls ${build_extensions_rxsock_dir})
 copy_build_file(mime.cls ${build_extensions_rxsock_dir})
 copy_build_file(smtp.cls ${build_extensions_rxsock_dir})
 copy_build_file(smtp6.cls ${build_extensions_rxsock_dir})
-copy_build_file(ncurses.cls ${build_extensions_orxncurses_dir})
 copy_build_file(rexxtry.rex ${build_samples_dir})
 add_custom_target(class_files ALL DEPENDS
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rxregexp.cls
@@ -1531,7 +1535,6 @@ add_custom_target(class_files ALL DEPENDS
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/streamsocket.cls
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mime.cls
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/smtp.cls
-    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/ncurses.cls
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexxtry.rex)
 
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rxregexp.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
@@ -1545,7 +1548,6 @@ install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/socket.cls COMPONENT Core DESTIN
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/streamsocket.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mime.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/smtp.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
-install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/ncurses.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
 # technically a sample, but this is so useful we add it to the binary dir
 install(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir}/rexxtry.rex COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
 
