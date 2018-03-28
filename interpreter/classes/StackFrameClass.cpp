@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -88,13 +88,8 @@ void *StackFrameClass::operator new(size_t size)
  * @param a      Arguments to the method/routine.
  * @param t      A tracing line.
  * @param l      The frame line position (MAX_SIZE indicates no line available).
- * @param ac     The activation we're attached to.
-
-    size_t          line;           // 
-    RexxString 
-    RexxActivation *activation;     // the activation we're attached to
  */
-StackFrameClass::StackFrameClass(const char *ty, RexxString *n, BaseExecutable *e, RexxObject *tg, ArrayClass *a, RexxString *t, size_t l, RexxActivation *ac)
+StackFrameClass::StackFrameClass(const char *ty, RexxString *n, BaseExecutable *e, RexxObject *tg, ArrayClass *a, RexxString *t, size_t l)
 {
     type = ty;
     name = n;
@@ -109,7 +104,6 @@ StackFrameClass::StackFrameClass(const char *ty, RexxString *n, BaseExecutable *
     arguments = a;
     traceLine = t;
     line = l;
-    activation = ac;
 }
 
 
@@ -300,15 +294,4 @@ RexxString *StackFrameClass::stringValue()
 RexxString *StackFrameClass::makeString()
 {
     return getTraceLine();
-}
-
-/**
- * Get the Context object associated with the stack frame.
- *
- * @return The Context object instance for the stack frame
- *         .nil if no Rexx code (e. g. native activation)
- */
-RexxObject *StackFrameClass::getContextObject()
-{
-    return activation == OREF_NULL ? TheNilObject : activation->getContextObject();
 }

@@ -1175,7 +1175,6 @@ CPPM(StackFrameClass::getType),
 CPPM(StackFrameClass::getTarget),
 CPPM(StackFrameClass::getArguments),
 CPPM(StackFrameClass::newRexx),
-CPPM(StackFrameClass::getContextObject),
 
 CPPM(RexxInfo::newRexx),
 CPPM(RexxInfo::copyRexx),

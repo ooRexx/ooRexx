@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -99,7 +99,7 @@ StackFrameClass *InternalActivationFrame::createStackFrame()
 
     RexxString *message = activity->buildMessage(Message_Translations_compiled_method_invocation, info);
     p = message;
-    return new StackFrameClass(StackFrameClass::FRAME_METHOD, name, frameMethod, target, new_array(count, argPtr), message, SIZE_MAX, OREF_NULL);
+    return new StackFrameClass(StackFrameClass::FRAME_METHOD, name, frameMethod, target, new_array(count, argPtr), message, SIZE_MAX);
 }
 
 PackageClass *InternalActivationFrame::getPackage()

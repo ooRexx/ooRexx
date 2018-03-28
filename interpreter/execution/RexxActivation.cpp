@@ -4539,7 +4539,7 @@ StackFrameClass *RexxActivation::createStackFrame()
     // to be inadvertently reclaimed if a GC is triggered while evaluating the constructor
     // arguments.
     RexxString *traceback = getTraceBack();
-    return new StackFrameClass(type, getMessageName(), getExecutableObject(), target, arguments, traceback, getContextLineNumber(), this);
+    return new StackFrameClass(type, getMessageName(), getExecutableObject(), target, arguments, traceback, getContextLineNumber());
 }
 
 /**
