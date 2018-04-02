@@ -79,12 +79,10 @@ else ()
 endif ()
 
 find_package(Subversion)
-if(SUBVERSION_FOUND)
+if(SUBVERSION_FOUND AND (EXISTS ${PROJECT_SOURCE_DIR}/.svn))
   Subversion_WC_INFO(${PROJECT_SOURCE_DIR} ORX)
   set(ORX_BLD_LVL ${ORX_WC_REVISION})
 endif()
-
-
 message(STATUS "SVN Revision Number is ${ORX_BLD_LVL}")
 
 if (WIN32)
@@ -106,9 +104,10 @@ set (ORX_REVISION 0)
 set (ORX_AGE 0)
 # Please note that the version-info has nothing to do with the release version.
 # You need to know exactly what you are doing in order to get this correct.
-set(VERSION_INFO "-version-info ${ORX_CURRENT}:${ORX_REVISION}:${ORX_AGE}")
+set (VERSION_INFO "-version-info ${ORX_CURRENT}:${ORX_REVISION}:${ORX_AGE}")
 # This is version information set on library properties
-set(ORX_VERSION ${ORX_CURRENT}.${ORX_AGE}.${ORX_REVISION})
+set (ORX_VERSION ${ORX_CURRENT}.${ORX_AGE}.${ORX_REVISION})
+
 
 # The following are general settings
 # Always create shared libraries (DLLs)
@@ -195,20 +194,31 @@ if (WIN32)
    ENDMACRO ()
 
  else ()
-   if (APPLE )
-     set (CMAKE_INSTALL_PREFIX ~/Applications/ooRexx${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL})
-     set (INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/bin)
-     set (CMAKE_INSTALL_RPATH @executable_path)
+   if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+     set(CMAKE_INSTALL_PREFIX
+       $<IF:$<PLATFORM_ID:Darwin>,$ENV{HOME}/Applications/ooRexx${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL},/usr>
+       CACHE
+       PATH
+       "Default install path"
+       FORCE)
+   endif()
+   if (APPLE)
+     if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+       set (INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/bin)
+       set (CMAKE_INSTALL_RPATH @executable_path)
+     else ()
+       set (INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/lib)
+       set (CMAKE_INSTALL_RPATH ${INSTALL_LIB_DIR})
+     endif ()
    else ()
      set (CMAKE_INSTALL_PREFIX /usr)
-        find_path(INSTALL_LIB_DIR libc.so PATHS ${CMAKE_INSTALL_PREFIX}/lib ${CMAKE_INSTALL_PREFIX}/lib64)
-   # at least on Ubuntu above doesn't seem to work; use fallback:
-   if (${INSTALL_LIB_DIR} STREQUAL "INSTALL_LIB_DIR-NOTFOUND")
-      set (INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/lib)
+     find_path(INSTALL_LIB_DIR libc.so PATHS ${CMAKE_INSTALL_PREFIX}/lib ${CMAKE_INSTALL_PREFIX}/lib64)
+     # at least on Ubuntu above doesn't seem to work; use fallback:
+     if (${INSTALL_LIB_DIR} STREQUAL "INSTALL_LIB_DIR-NOTFOUND")
+       set (INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/lib)
+     endif ()
    endif ()
 
-
-   endif ()
    set (INSTALL_EXECUTABLE_DIR ${CMAKE_INSTALL_PREFIX}/bin)
    set (catdir ${INSTALL_EXECUTABLE_DIR})
    set (INSTALL_CLS_DIR ${INSTALL_EXECUTABLE_DIR})
