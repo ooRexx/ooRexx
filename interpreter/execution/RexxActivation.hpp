@@ -367,6 +367,7 @@ class RexxActivation : public ActivationBase
        settings.setDebugBypass(true);
    }
    inline bool              isNovalueErrorEnabled() { return settings.packageSettings.isNovalueErrorEnabled(); }
+   inline void              disableNovalueError() { return settings.packageSettings.disableNovalueError(); }
 
 
    inline void              stopExecution(ExecutionState state)

@@ -1442,7 +1442,11 @@ void RexxActivation::trapOn(RexxString *condition, RexxInstructionTrapBase *hand
     if (signal && (condition->strCompare(GlobalNames::NOVALUE) || condition->strCompare(GlobalNames::ANY)))
     {
         settings.localVariables.setNovalueOn();
+        // we also need to disable the novalue error setting from ::OPTIONS in order for the
+        // events to be raised.
+        disableNovalueError();
     }
+
 }
 
 
@@ -1462,6 +1466,9 @@ void RexxActivation::trapOff(RexxString *condition, bool signal)
     if (signal && !settings.traps->hasIndex(GlobalNames::NOVALUE) && !settings.traps->hasIndex(GlobalNames::ANY))
     {
         settings.localVariables.setNovalueOff();
+        // we also need to disable the novalue error setting from ::OPTIONS in order to restore
+        // the real default behavior.
+        disableNovalueError();
     }
 }
 
