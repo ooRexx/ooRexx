@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -167,9 +167,9 @@ void RexxInstructionTrace::execute(RexxActivation *context, ExpressionStack *sta
     {
         // evaluate, and get as a string value
         RexxObject *result = expression->evaluate(context, stack);
-        RexxString *value = result->requestString();
         // Even trace gets traced :-)
-        context->traceResult(result);
+        context->traceKeywordResult(GlobalNames::VALUE, result);
+        RexxString *value = result->requestString();
         // again, we don't change anything if we're already in debug mode.
         if (!context->inDebug())
         {

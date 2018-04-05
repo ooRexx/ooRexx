@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -155,6 +155,7 @@ void RexxInstructionParse::execute(RexxActivation *context, ExpressionStack *sta
             // pull a line from the queue and push on the stack for safekeeping
             value = ActivityManager::currentActivity->pullInput(context);
             stack->push(value);
+            context->traceKeywordResult(GlobalNames::PULL, value);
             break;
 
         // PARSE LINEIN
@@ -162,6 +163,7 @@ void RexxInstructionParse::execute(RexxActivation *context, ExpressionStack *sta
             // read a line from the console stream
             value = ActivityManager::currentActivity->lineIn(context);
             stack->push(value);
+            context->traceKeywordResult(GlobalNames::LINEIN, value);
             break;
 
         // ARG OR PARSE ARG
@@ -178,6 +180,7 @@ void RexxInstructionParse::execute(RexxActivation *context, ExpressionStack *sta
             // we're using the source string
             value = context->sourceString();
             stack->push(value);
+            context->traceKeywordResult(GlobalNames::SOURCE, value);
             break;
 
         // PARSE VERSION
@@ -185,6 +188,7 @@ void RexxInstructionParse::execute(RexxActivation *context, ExpressionStack *sta
             // get the version string
             value = Interpreter::getVersionString();
             stack->push(value);
+            context->traceKeywordResult(GlobalNames::VERSION_STRING, value);
             break;
 
         // PARSE VAR
@@ -192,6 +196,7 @@ void RexxInstructionParse::execute(RexxActivation *context, ExpressionStack *sta
             // our expression is a variable retriever which we can
             // evaluate to get the value.
             value = expression->evaluate(context, stack);
+            context->traceKeywordResult(GlobalNames::VAR, value);
             // Evaluate always pushes the object on to the evaluation stack.
             // We don't need to do anthing extra to protect this.
             break;
@@ -208,6 +213,7 @@ void RexxInstructionParse::execute(RexxActivation *context, ExpressionStack *sta
             {
                 value = GlobalNames::NULLSTRING;
             }
+            context->traceKeywordResult(GlobalNames::VALUE, value);
             // the expression version is still on the evalation stack.
             break;
 

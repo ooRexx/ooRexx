@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -161,7 +161,7 @@ void RexxInstructionGuard::execute(RexxActivation *context, ExpressionStack *sta
         ActivityManager::currentActivity->guardSet();
         // get the expression result
         RexxObject *result = expression->evaluate(context, stack);
-        context->traceResult(result);
+        context->traceKeywordResult(GlobalNames::WHEN, result);
 
         // do first evaluation without establishing doing any waits
         if (!result->truthValue(Error_Logical_value_guard))
@@ -179,7 +179,7 @@ void RexxInstructionGuard::execute(RexxActivation *context, ExpressionStack *sta
                 ActivityManager::currentActivity->guardSet();
                 // try the expression again
                 result = expression->evaluate(context, stack);
-                context->traceResult(result);
+                context->traceKeywordResult(GlobalNames::WHEN, result);
                 // and continue until we get a true result
             } while (!result->truthValue(Error_Logical_value_guard));
         }

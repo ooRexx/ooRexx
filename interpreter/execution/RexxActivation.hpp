@@ -103,6 +103,7 @@ class RexxActivation : public ActivationBase
         TRACE_PREFIX_ASSIGNMENT,
         TRACE_PREFIX_INVOCATION,
         TRACE_PREFIX_NAMESPACE,
+        TRACE_PREFIX_KEYWORD,
     } TracePrefix;
 
    void *operator new(size_t);
@@ -348,7 +349,8 @@ class RexxActivation : public ActivationBase
    inline bool              tracingAll() {return settings.packageSettings.traceSettings.tracingAll(); }
    inline bool              inDebug() { return settings.packageSettings.traceSettings.isDebug() && !debugPause;}
    inline void              traceResult(RexxObject * v) { if (tracingResults()) traceValue(v, TRACE_PREFIX_RESULT); };
-   inline void              traceResultValue(RexxObject * v) { traceValue(v, TRACE_PREFIX_RESULT); };
+   inline void              traceKeywordResult(RexxString *k, RexxObject *v) { if (tracingResults()) traceTaggedValue(TRACE_PREFIX_KEYWORD, NULL, true, k, VALUE_MARKER, v); }
+   inline void              traceResultValue(RexxObject * v) {  };
    inline bool              tracingInstructions() { return tracingAll(); }
    inline bool              tracingErrors() { return settings.packageSettings.traceSettings.tracingErrors(); }
    inline bool              tracingFailures() { return settings.packageSettings.traceSettings.tracingFailures(); }

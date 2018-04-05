@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -213,10 +213,10 @@ void RexxInstructionDynamicSignal::execute(RexxActivation *context, ExpressionSt
 
     // evaluate the expression in the current context.
     RexxObject *result = dynamicName->evaluate(context, stack);
+    // expression results require tracing
+    context->traceKeywordResult(GlobalNames::VALUE, result);
     // force to a string value
     ProtectedObject stringResult = result->requestString();
-    // expression results require tracing
-    context->traceResult((RexxString *)stringResult);
     // the context handles locating the target label
     context->signalValue((RexxString *)stringResult);
 }

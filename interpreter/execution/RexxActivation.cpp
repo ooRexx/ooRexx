@@ -3220,6 +3220,7 @@ static const char * trace_prefix_table[] =
   ">=>",                               // TRACE_PREFIX_ASSIGNMENT
   ">I>",                               // TRACE_PREFIX_INVOCATION
   ">N>",                               // TRACE_PREFIX_NAMESPACE
+  ">K>",                               // TRACE_PREFIX_KEYWORD
 };
 
 // size of a line number

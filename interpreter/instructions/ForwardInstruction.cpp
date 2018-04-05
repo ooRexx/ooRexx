@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -147,6 +147,7 @@ void RexxInstructionForward::execute(RexxActivation *context, ExpressionStack *s
     if (target != OREF_NULL)
     {
         _target = target->evaluate(context, stack);
+        context->traceKeywordResult(GlobalNames::TO, _target);
     }
 
     // sending a different message?
@@ -154,6 +155,8 @@ void RexxInstructionForward::execute(RexxActivation *context, ExpressionStack *s
     {
         // we need this as a string value...and in upper case.
         RexxObject *temp = message->evaluate(context, stack);
+        // needs tracing too
+        context->traceKeywordResult(GlobalNames::MESSAGE, temp);
         _message = temp->requestString()->upper();
         // leave this on the stack.
         stack->push(_message);
@@ -163,6 +166,7 @@ void RexxInstructionForward::execute(RexxActivation *context, ExpressionStack *s
     if (superClass != OREF_NULL)
     {
         _superClass = (RexxClass *)superClass->evaluate(context, stack);
+        context->traceKeywordResult(GlobalNames::CLASS, _superClass);
     }
 
     // overriding the arguments?
@@ -170,6 +174,7 @@ void RexxInstructionForward::execute(RexxActivation *context, ExpressionStack *s
     {
         // we need to evaluate this argument, then get as an array
         RexxObject *temp = arguments->evaluate(context, stack);
+        context->traceKeywordResult(GlobalNames::ARRAY, temp);
         ArrayClass *argArray = temp->requestArray();
         // protect this on the stack too
         stack->push(argArray);
@@ -210,12 +215,16 @@ void RexxInstructionForward::execute(RexxActivation *context, ExpressionStack *s
             // a real argument?                  */
             if (argElement != OREF_NULL)
             {
-                argElement->evaluate(context, stack);
+                // trace each of these as arguments
+                RexxObject *arg = argElement->evaluate(context, stack);
+                // trace each of these as arguments
+                context->traceArgument(arg);
             }
             else
             {
                 // just push a null reference for the missing ones
                 stack->push(OREF_NULL);
+                context->traceArgument(GlobalNames::NULLSTRING);
             }
         }
         // note that we evaluated this one last, so that other

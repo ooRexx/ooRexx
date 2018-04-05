@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -73,13 +73,14 @@ void ForLoop::setup(RexxActivation *context,
     wholenumber_t count = 0;
     RexxObject *result = forCount->evaluate(context, stack);
 
+    context->traceKeywordResult(GlobalNames::FOR, result);
+
     // if this is an integer value already and we're at the default digits setting,
     // we should be able to use this directly.
     if (isInteger(result) && context->digits() >= Numerics::DEFAULT_DIGITS)
     {
         // get the value directly and trace
         count = ((RexxInteger *)result)->getValue();
-        context->traceResult(result);
     }
     else
     {
@@ -92,7 +93,6 @@ void ForLoop::setup(RexxActivation *context,
         }
         // force rounding
         RexxObject *rounded = strResult->callOperatorMethod(OPERATOR_PLUS, OREF_NULL);
-        context->traceResult(rounded);
         // now convert the rounded value to an integer, if possible
         if (!rounded->requestNumber(count, number_digits()))
         {
@@ -140,6 +140,8 @@ void ControlledLoop::setup( RexxActivation *context,
                 // get the too value and round...which has the side effect
                 // of also validating that this is a valid numeric.
                 RexxObject *result = to->evaluate(context, stack);
+                context->traceKeywordResult(GlobalNames::TO, result);
+
                 // prefix + is like adding zero
                 result = result->callOperatorMethod(OPERATOR_PLUS, OREF_NULL);
 
@@ -161,6 +163,7 @@ void ControlledLoop::setup( RexxActivation *context,
             {
                 // get the expression value and round
                 RexxObject *result = by->evaluate(context, stack);
+                context->traceKeywordResult(GlobalNames::BY, result);
                 result = result->callOperatorMethod(OPERATOR_PLUS, OREF_NULL);
                 // this gets saved in the doblock
                 doblock->setBy(result);
@@ -223,7 +226,7 @@ void OverLoop::setup( RexxActivation *context,
     // anchor immediately to protect from GC
     doblock->setTo(result);
 
-    context->traceResult(result);
+    context->traceKeywordResult(GlobalNames::OVER, result);
     // if this is already an array item, request the non-sparse version
 
     ArrayClass *array;
@@ -266,7 +269,7 @@ bool WhileUntilLoop::checkWhile(RexxActivation *context, ExpressionStack *stack 
 {
     // evaluate the condition and trace
     RexxObject *result = conditional->evaluate(context, stack);
-    context->traceResult(result);
+    context->traceKeywordResult(GlobalNames::WHILE, result);
 
     // most comparisons return either true or false directly, so we
     // can optimize this check.  WHILE conditions are more likely to
@@ -300,7 +303,7 @@ bool WhileUntilLoop::checkUntil(RexxActivation *context, ExpressionStack *stack 
 {
     // evaluate the condition and trace
     RexxObject *result = conditional->evaluate(context, stack);
-    context->traceResult(result);
+    context->traceKeywordResult(GlobalNames::UNTIL, result);
 
     // most comparisons return either true or false directly, so we
     // can optimize this check.  UNTIL conditions are more likely to
@@ -332,7 +335,7 @@ void WithLoop::setup( RexxActivation *context,
     // evaluate the supplier provider
     RexxObject* result = supplierSource->evaluate(context, stack);
 
-    context->traceResult(result);
+    context->traceKeywordResult(GlobalNames::WITH, result);
     // Now send this expression result the supplier message
     // to get a supplier instance.
     ProtectedObject p;
@@ -383,8 +386,7 @@ bool WithLoop::checkIteration(RexxActivation *context, ExpressionStack *stack, D
         RexxObject *index = supplier->loopIndex();
         // the control variable gets set immediately, and we trace this
         // increment result
-        indexVar->set(context, index);
-        context->traceResult(index);
+        indexVar->assign(context, index);
     }
 
     // we must have one of the variable items, but need not have both.
@@ -393,8 +395,7 @@ bool WithLoop::checkIteration(RexxActivation *context, ExpressionStack *stack, D
         RexxObject *item = supplier->loopItem();
         // the control variable gets set immediately, and we trace this
         // increment result
-        itemVar->set(context, item);
-        context->traceResult(item);
+        itemVar->assign(context, item);
     }
 
     // this is a good iteration

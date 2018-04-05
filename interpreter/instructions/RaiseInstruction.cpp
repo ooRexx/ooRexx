@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -178,6 +178,8 @@ void RexxInstructionRaise::execute(RexxActivation *context, ExpressionStack *sta
     {
                                          /* get the expression value          */
         rc = rcValue->evaluate(context, stack);
+        // this is traced using the condition name as the keyword
+        context->traceKeywordResult(conditionName, rc);
     }
     // syntax conditions have some special requirements, so process those
     // up front.
@@ -204,6 +206,7 @@ void RexxInstructionRaise::execute(RexxActivation *context, ExpressionStack *sta
     if (description != OREF_NULL)
     {
         _description = (RexxString *)description->evaluate(context, stack);
+        context->traceKeywordResult(GlobalNames::DESCRIPTION, rc);
     }
 
     // is this the ARRAY form of passing information?
@@ -220,7 +223,18 @@ void RexxInstructionRaise::execute(RexxActivation *context, ExpressionStack *sta
             // ones that have been specified
             if (additional[i] != OREF_NULL)
             {
-                ((ArrayClass *)_additional)->put((additional[i])->evaluate(context, stack), i + 1);
+                // trace each of these as arguments
+                RexxObject *arg = (additional[i])->evaluate(context, stack);
+                // trace each of these as arguments
+                context->traceArgument(arg);
+                ((ArrayClass *)_additional)->put(arg, i + 1);
+                // trace each of these as arguments
+                context->traceArgument(arg);
+            }
+            else
+            {
+                // just trace a null argument
+                context->traceArgument(GlobalNames::NULLSTRING);
             }
         }
     }
@@ -229,11 +243,14 @@ void RexxInstructionRaise::execute(RexxActivation *context, ExpressionStack *sta
     {
         // get this expression value
         _additional = additional[0]->evaluate(context, stack);
+        // trace what we got
+        context->traceKeywordResult(GlobalNames::ARRAY, _additional);
     }
     // given a return result value to pass back to the caller?
     if (resultValue != OREF_NULL)
     {
         _result = resultValue->evaluate(context, stack);
+        context->traceKeywordResult(GlobalNames::RESULT, _result);
     }
 
     // set a default condition object
