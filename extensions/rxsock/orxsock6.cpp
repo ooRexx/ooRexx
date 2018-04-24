@@ -235,7 +235,7 @@ RexxMethod1(RexxObjectPtr,             // Return type
     {
         if (!context->IsOfType(inetaddr, "InetAddress"))
         {
-            RexxArrayObject arrobj;
+            RexxArrayObject arrobj = context->NewArray(1);
             const char *msg = "Argument 1 must be of type .InetAddress.";
             context->ArrayAppendString(arrobj, msg, strlen(msg));
             context->RaiseException(88900, arrobj);
@@ -297,7 +297,7 @@ RexxMethod1(int,                       // Return type
     // RKM:  This is done a lot...got place for a helper function.
     if (!context->IsOfType(inetaddr, "InetAddress"))
     {
-        RexxArrayObject arrobj;
+        RexxArrayObject arrobj = context->NewArray(1);
         const char *msg = "Argument 1 must be of type .InetAddress.";
         context->ArrayAppendString(arrobj, msg, strlen(msg));
         context->RaiseException(88900, arrobj);
@@ -389,7 +389,7 @@ RexxMethod1(int,                       // Return type
     memset(&myaddr, 0, sizeof(struct sockaddr_storage));
     if (!context->IsOfType(inetaddr, "InetAddress"))
     {
-        RexxArrayObject arrobj;
+        RexxArrayObject arrobj = context->NewArray(1);
         const char *msg = "Argument 1 must be of type .InetAddress.";
         context->ArrayAppendString(arrobj, msg, strlen(msg));
         context->RaiseException(88900, arrobj);
@@ -619,7 +619,7 @@ RexxMethod1(int,                       // Return type
     memset(&myaddr, 0, sizeof(struct sockaddr_storage));
     if (!context->IsOfType(inetaddr, "InetAddress"))
     {
-        RexxArrayObject arrobj;
+        RexxArrayObject arrobj = context->NewArray(1);
         const char *msg = "Argument 1 must be of type .InetAddress.";
         context->ArrayAppendString(arrobj, msg, strlen(msg));
         context->RaiseException(88900, arrobj);
@@ -734,7 +734,7 @@ RexxMethod1(int,                       // Return type
     memset(&myaddr, 0, sizeof(struct sockaddr_storage));
     if (!context->IsOfType(inetaddr, "InetAddress"))
     {
-        RexxArrayObject arrobj;
+        RexxArrayObject arrobj = context->NewArray(1);
         const char *msg = "Argument 1 must be of type .InetAddress.";
         context->ArrayAppendString(arrobj, msg, strlen(msg));
         context->RaiseException(88900, arrobj);
@@ -1054,7 +1054,7 @@ RexxMethod2(RexxObjectPtr,             // Return type
     memset(&myaddr, 0, sizeof(struct sockaddr_storage));
     if (!context->IsOfType(inetaddr, "InetAddress"))
     {
-        RexxArrayObject arrobj;
+        RexxArrayObject arrobj = context->NewArray(1);
         const char *msg = "Argument 2 must be of type .InetAddress.";
         context->ArrayAppendString(arrobj, msg, strlen(msg));
         context->RaiseException(88900, arrobj);
@@ -1095,7 +1095,6 @@ RexxMethod2(RexxObjectPtr,             // Return type
     return buffer;
 }
 
-#if !defined(WIN32)
 /*----------------------------------------------------------------------------*/
 /* Method: select                                                             */
 /* Description: find out if file operations are available.                    */
@@ -1238,7 +1237,6 @@ RexxMethod4(int,                       // Return type
     // return
     return retc;
 }
-#endif
 
 
 /*----------------------------------------------------------------------------*/
@@ -1299,7 +1297,7 @@ RexxMethod2(int,                       // Return type
     // perform function and return
     if (!context->IsOfType(inetaddr, "InetAddress"))
     {
-        RexxArrayObject arrobj;
+        RexxArrayObject arrobj = context->NewArray(1);
         const char *msg = "Argument 2 must be of type .InetAddress.";
         context->ArrayAppendString(arrobj, msg, strlen(msg));
         context->RaiseException(88900, arrobj);
@@ -1531,9 +1529,7 @@ RexxMethodEntry rxsock6_methods[] =
     REXX_METHOD(orxListen6, orxListen6),
     REXX_METHOD(orxRecv6, orxRecv6),
     REXX_METHOD(orxRecvFrom6, orxRecvFrom6),
-#if !defined(WIN32)
     REXX_METHOD(orxSelect6, orxSelect6),
-#endif
     REXX_METHOD(orxSend6, orxSend6),
     REXX_METHOD(orxSendTo6, orxSendTo6),
     REXX_METHOD(orxSetSockOpt6, orxSetSockOpt6),
