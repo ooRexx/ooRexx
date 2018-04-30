@@ -3414,6 +3414,12 @@ special character (such as a parenthesis).
 <para>The <emphasis role="italic">argument</emphasis> argument must be a string, array, or method object.</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>975</term>
+<listitem>
+<para>Invalid <emphasis role="italic">option</emphasis> value; found "<emphasis role="italic">value</emphasis>".</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR97">

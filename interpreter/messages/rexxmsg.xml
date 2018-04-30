@@ -4805,6 +4805,15 @@ special character (such as a parenthesis).
       </SubMessage>
       <SubMessage>
         <Code>93</Code>
+        <Subcode>973</Subcode>
+        <MessageNumber>527</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Incorrect_method_nil_not_orderable</SymbolicName>
+        <Text>ORDERABLE comparison method <q><Sub position="1" name="method"/></q> argument cannot be .nil.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>93</Code>
         <Subcode>974</Subcode>
         <MessageNumber>539</MessageNumber>
         <Component>Rexx</Component>
@@ -4814,12 +4823,12 @@ special character (such as a parenthesis).
       </SubMessage>
       <SubMessage>
         <Code>93</Code>
-        <Subcode>973</Subcode>
-        <MessageNumber>527</MessageNumber>
+        <Subcode>975</Subcode>
+        <MessageNumber>791</MessageNumber>
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
-        <SymbolicName>Error_Incorrect_method_nil_not_orderable</SymbolicName>
-        <Text>ORDERABLE comparison method <q><Sub position="1" name="method"/></q> argument cannot be .nil.</Text>
+        <SymbolicName>Error_Incorrect_method_invalid_value_for</SymbolicName>
+        <Text>Invalid <Sub position="1" name="option"/> value; found <q><Sub position="2" name="value"/></q>.</Text>
       </SubMessage>
     </Subcodes>
   </Message>

@@ -2000,6 +2000,9 @@ $ Error_Invalid_argument_positive_number
 $ Error_Invalid_argument_logical
 790 The &1 argument must be exactly "0" or "1"; found "&2".
 
+$ Error_Incorrect_method_invalid_value_for
+791 Invalid &1 value; found "&2".
+
 
 $ * -------------------------------------------------------------------------- */
 $ * --            ==================================================        -- */

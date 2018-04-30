@@ -703,6 +703,7 @@
 #define Error_Invalid_argument_nonnegative_number_msg                788
 #define Error_Invalid_argument_positive_number_msg                   789
 #define Error_Invalid_argument_logical_msg                           790
+#define Error_Incorrect_method_invalid_value_for_msg                 791
 
 
 #endif

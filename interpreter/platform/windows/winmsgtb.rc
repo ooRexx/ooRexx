@@ -702,6 +702,7 @@ BEGIN
    88925    "The &1 argument must be zero or a positive number; found ""&2""."
    88926    "The &1 argument must be a positive number; found ""&2""."
    88927    "The &1 argument must be exactly ""0"" or ""1""; found ""&2""."
+   93975    "Invalid &1 value; found ""&2""."
    
 END
 

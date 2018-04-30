@@ -97,6 +97,1651 @@
  *------------------------------------------------------------------*/
 # include "oorexxapi.h"
 
+#define CheckOpt(n) if (!caselessCompare(#n, pszOptName)) return n;
+
+/**
+ * Simple caseless comparison operator.
+ *
+ * @param op1    The first string
+ * @param op2    The second string
+ *
+ * @return 0 if they are equal, non-zero if unequal.
+ */
+int caselessCompare(const char *op1, const char *op2)
+{
+    for (; tolower(*op1) == tolower(*op2); op1++,op2++)
+    {
+        if (*op1 == 0)
+        {
+            return 0;
+        }
+    }
+
+    return(tolower(*op1) - tolower(*op2));
+}
+
+
+/**
+ * Convert a string option name into the numeric equivalent.
+ *
+ * @param pszOptName The string option name.
+ *
+ * @return The numeric equivalent, or -1 for unknown options.
+ */
+int stringToSockOpt(const char * pszOptName)
+{
+    CheckOpt(SO_DEBUG)
+    CheckOpt(SO_REUSEADDR)
+    CheckOpt(SO_KEEPALIVE)
+    CheckOpt(SO_DONTROUTE)
+    CheckOpt(SO_BROADCAST)
+    CheckOpt(SO_USELOOPBACK)
+    CheckOpt(SO_LINGER)
+    CheckOpt(SO_OOBINLINE)
+    CheckOpt(SO_SNDBUF)
+    CheckOpt(SO_RCVBUF)
+    CheckOpt(SO_SNDLOWAT)
+    CheckOpt(SO_RCVLOWAT)
+    CheckOpt(SO_SNDTIMEO)
+    CheckOpt(SO_RCVTIMEO)
+    CheckOpt(SO_ERROR)
+    CheckOpt(SO_TYPE)
+#ifdef SO_SNDBUFFORCE
+    CheckOpt(SO_SNDBUFFORCE)
+#endif
+#ifdef SO_RCVBUFFORCE
+    CheckOpt(SO_RCVBUFFORCE)
+#endif
+#ifdef SO_NO_CHECK
+    CheckOpt(SO_NO_CHECK)
+#endif
+#ifdef SO_PRIORITY
+    CheckOpt(SO_PRIORITY)
+#endif
+#ifdef SO_BSDCOMPAT
+    CheckOpt(SO_BSDCOMPAT)
+#endif
+#ifdef SO_REUSEPORT
+    CheckOpt(SO_REUSEPORT)
+#endif
+#ifdef SO_SECURITY_AUTHENTICATION
+    CheckOpt(SO_SECURITY_AUTHENTICATION)
+#endif
+#ifdef SO_SECURITY_ENCRYPTION_TRANSPORT
+    CheckOpt(SO_SECURITY_ENCRYPTION_TRANSPORT)
+#endif
+#ifdef SO_SECURITY_ENCRYPTION_NETWORK
+    CheckOpt(SO_SECURITY_ENCRYPTION_NETWORK)
+#endif
+#ifdef SO_ATTACH_FILTER
+    CheckOpt(SO_ATTACH_FILTER)
+#endif
+#ifdef SO_DETACH_FILTER
+    CheckOpt(SO_DETACH_FILTER)
+#endif
+#ifdef SO_TIMESTAMP
+    CheckOpt(SO_TIMESTAMP)
+#endif
+#ifdef SO_PEERSEC
+    CheckOpt(SO_PEERSEC)
+#endif
+#ifdef SO_PASSSEC
+    CheckOpt(SO_PASSSEC)
+#endif
+#ifdef SO_TIMESTAMPNS
+    CheckOpt(SO_TIMESTAMPNS)
+#endif
+#ifdef SO_MARK
+    CheckOpt(SO_MARK)
+#endif
+#ifdef SO_TIMESTAMPING
+    CheckOpt(SO_TIMESTAMPING)
+#endif
+#ifdef SO_PROTOCOL
+    CheckOpt(SO_PROTOCOL)
+#endif
+#ifdef SO_DOMAIN
+    CheckOpt(SO_DOMAIN)
+#endif
+#ifdef SO_RXQ_OVFL
+    CheckOpt(SO_RXQ_OVFL)
+#endif
+#ifdef SO_RXQ_WIFI_STATUS
+    CheckOpt(SO_RXQ_WIFI_STATUS)
+#endif
+#ifdef SO_PEEK_OFF
+    CheckOpt(SO_PEEK_OFF)
+#endif
+#ifdef SO_NOFCS
+    CheckOpt(SO_NOFCS)
+#endif
+#ifdef SO_LOCK_FILTER
+    CheckOpt(SO_LOCK_FILTER)
+#endif
+#ifdef SO_SELECT_ERR_QUEUE
+    CheckOpt(SO_SELECT_ERR_QUEUE)
+#endif
+#ifdef SO_BUSY_POLL
+    CheckOpt(SO_BUSY_POLL)
+#endif
+#ifdef SO_PASSCRED
+    CheckOpt(SO_PASSCRED)
+#endif
+
+    return -1;
+}
+
+
+/**
+ * Convert a string socket family name to its numeric equivalent
+ *
+ * @return The mapped numeric value or -1 for an unknown name.
+ */
+int stringToFamily(const char *pszOptName)
+{
+#ifdef PF_UNSPEC
+    CheckOpt(PF_UNSPEC)
+#endif
+#ifdef PF_LOCAL
+    CheckOpt(PF_LOCAL)
+#endif
+#ifdef PF_UNIX
+    CheckOpt(PF_UNIX)
+#endif
+#ifdef PF_FILE
+    CheckOpt(PF_FILE)
+#endif
+#ifdef PF_INET
+    CheckOpt(PF_INET)
+#endif
+#ifdef PF_IMPLINK
+    CheckOpt(PF_IMPLINK)
+#endif
+#ifdef PF_AX25
+    CheckOpt(PF_AX25)
+#endif
+#ifdef PF_PUP
+    CheckOpt(PF_PUP)
+#endif
+#ifdef PF_CHAOS
+    CheckOpt(PF_CHAOS)
+#endif
+#ifdef PF_APPLETALK
+    CheckOpt(PF_APPLETALK)
+#endif
+#ifdef PF_NETROM
+    CheckOpt(PF_NETROM)
+#endif
+#ifdef PF_IPX
+    CheckOpt(PF_IPX)
+#endif
+#ifdef PF_NS
+    CheckOpt(PF_NS)
+#endif
+#ifdef PF_ISO
+    CheckOpt(PF_ISO)
+#endif
+#ifdef PF_OSI
+    CheckOpt(PF_OSI)
+#endif
+#ifdef PF_BRIDGE
+    CheckOpt(PF_BRIDGE)
+#endif
+#ifdef PF_ECMA
+    CheckOpt(PF_ECMA)
+#endif
+#ifdef PF_ATMPVC
+    CheckOpt(PF_ATMPVC)
+#endif
+#ifdef PF_DATAKIT
+    CheckOpt(PF_DATAKIT)
+#endif
+#ifdef PF_X25
+    CheckOpt(PF_X25)
+#endif
+#ifdef PF_CCITT
+    CheckOpt(PF_CCITT)
+#endif
+#ifdef PF_INET6
+    CheckOpt(PF_INET6)
+#endif
+#ifdef PF_SNA
+    CheckOpt(PF_SNA)
+#endif
+#ifdef PF_ROSE
+    CheckOpt(PF_ROSE)
+#endif
+#ifdef PF_DECnet
+    CheckOpt(PF_DECnet)
+#endif
+#ifdef PF_DLI
+    CheckOpt(PF_DLI)
+#endif
+#ifdef PF_NETBEUI
+    CheckOpt(PF_NETBEUI)
+#endif
+#ifdef PF_SECURITY
+    CheckOpt(PF_SECURITY)
+#endif
+#ifdef PF_KEY
+    CheckOpt(PF_KEY)
+#endif
+#ifdef PF_NETLINK
+    CheckOpt(PF_NETLINK)
+#endif
+#ifdef PF_ROUTE
+    CheckOpt(PF_ROUTE)
+#endif
+#ifdef PF_PACKET
+    CheckOpt(PF_PACKET)
+#endif
+#ifdef PF_ASH
+    CheckOpt(PF_ASH)
+#endif
+#ifdef PF_ECONET
+    CheckOpt(PF_ECONET)
+#endif
+#ifdef PF_ATMSVC
+    CheckOpt(PF_ATMSVC)
+#endif
+#ifdef PF_RDS
+    CheckOpt(PF_RDS)
+#endif
+#ifdef PF_SNA
+    CheckOpt(PF_SNA)
+#endif
+#ifdef PF_IRDA
+    CheckOpt(PF_IRDA)
+#endif
+#ifdef PF_PPPOX
+    CheckOpt(PF_PPPOX)
+#endif
+#ifdef PF_WANPIPE
+    CheckOpt(PF_WANPIPE)
+#endif
+#ifdef PF_LLC
+    CheckOpt(PF_LLC)
+#endif
+#ifdef PF_CAN
+    CheckOpt(PF_CAN)
+#endif
+#ifdef PF_TIPC
+    CheckOpt(PF_TIPC)
+#endif
+#ifdef PF_BLUETOOTH
+    CheckOpt(PF_BLUETOOTH)
+#endif
+#ifdef PF_IUCV
+    CheckOpt(PF_IUCV)
+#endif
+#ifdef PF_RXRPC
+    CheckOpt(PF_RXRPC)
+#endif
+#ifdef PF_ISDN
+    CheckOpt(PF_ISDN)
+#endif
+#ifdef PF_PHONET
+    CheckOpt(PF_PHONET)
+#endif
+#ifdef PF_IEEE802154
+    CheckOpt(PF_IEEE802154)
+#endif
+#ifdef PF_CAIF
+    CheckOpt(PF_CAIF)
+#endif
+#ifdef PF_ALG
+    CheckOpt(PF_ALG)
+#endif
+#ifdef PF_NFC
+    CheckOpt(PF_NFC)
+#endif
+#ifdef PF_VSOCK
+    CheckOpt(PF_VSOCK)
+#endif
+#ifdef PF_KCM
+    CheckOpt(PF_KCM)
+#endif
+#ifdef PF_QIPCRTR
+    CheckOpt(PF_QIPCRTR)
+#endif
+#ifdef PF_SMP
+    CheckOpt(PF_SMP)
+#endif
+    return -1;
+}
+
+
+/**
+ * Convert a string socket family name to its numeric equivalent
+ *
+ * @return The mapped numeric value or -1 for an unknown name.
+ */
+int stringToAddrType(const char *pszOptName)
+{
+#ifdef AF_UNSPEC
+    CheckOpt(AF_UNSPEC)
+#endif
+#ifdef AF_LOCAL
+    CheckOpt(AF_LOCAL)
+#endif
+#ifdef AF_UNIX
+    CheckOpt(AF_UNIX)
+#endif
+#ifdef AF_FILE
+    CheckOpt(AF_FILE)
+#endif
+#ifdef AF_INET
+    CheckOpt(AF_INET)
+#endif
+#ifdef AF_IMPLINK
+    CheckOpt(AF_IMPLINK)
+#endif
+#ifdef AF_AX25
+    CheckOpt(AF_AX25)
+#endif
+#ifdef AF_PUP
+    CheckOpt(AF_PUP)
+#endif
+#ifdef AF_CHAOS
+    CheckOpt(AF_CHAOS)
+#endif
+#ifdef AF_APPLETALK
+    CheckOpt(AF_APPLETALK)
+#endif
+#ifdef AF_NETROM
+    CheckOpt(AF_NETROM)
+#endif
+#ifdef AF_IPX
+    CheckOpt(AF_IPX)
+#endif
+#ifdef AF_NS
+    CheckOpt(AF_NS)
+#endif
+#ifdef AF_ISO
+    CheckOpt(AF_ISO)
+#endif
+#ifdef AF_OSI
+    CheckOpt(AF_OSI)
+#endif
+#ifdef AF_BRIDGE
+    CheckOpt(AF_BRIDGE)
+#endif
+#ifdef AF_ECMA
+    CheckOpt(AF_ECMA)
+#endif
+#ifdef AF_ATMPVC
+    CheckOpt(AF_ATMPVC)
+#endif
+#ifdef AF_DATAKIT
+    CheckOpt(AF_DATAKIT)
+#endif
+#ifdef AF_X25
+    CheckOpt(AF_X25)
+#endif
+#ifdef AF_CCITT
+    CheckOpt(AF_CCITT)
+#endif
+#ifdef AF_INET6
+    CheckOpt(AF_INET6)
+#endif
+#ifdef AF_SNA
+    CheckOpt(AF_SNA)
+#endif
+#ifdef AF_ROSE
+    CheckOpt(AF_ROSE)
+#endif
+#ifdef AF_DECnet
+    CheckOpt(AF_DECnet)
+#endif
+#ifdef AF_DLI
+    CheckOpt(AF_DLI)
+#endif
+#ifdef AF_NETBEUI
+    CheckOpt(AF_NETBEUI)
+#endif
+#ifdef AF_SECURITY
+    CheckOpt(AF_SECURITY)
+#endif
+#ifdef AF_KEY
+    CheckOpt(AF_KEY)
+#endif
+#ifdef AF_NETLINK
+    CheckOpt(AF_NETLINK)
+#endif
+#ifdef AF_ROUTE
+    CheckOpt(AF_ROUTE)
+#endif
+#ifdef AF_PACKET
+    CheckOpt(AF_PACKET)
+#endif
+#ifdef AF_ASH
+    CheckOpt(AF_ASH)
+#endif
+#ifdef AF_ECONET
+    CheckOpt(AF_ECONET)
+#endif
+#ifdef AF_ATMSVC
+    CheckOpt(AF_ATMSVC)
+#endif
+#ifdef AF_RDS
+    CheckOpt(AF_RDS)
+#endif
+#ifdef AF_SNA
+    CheckOpt(AF_SNA)
+#endif
+#ifdef AF_IRDA
+    CheckOpt(AF_IRDA)
+#endif
+#ifdef AF_PPPOX
+    CheckOpt(AF_PPPOX)
+#endif
+#ifdef AF_WANPIPE
+    CheckOpt(AF_WANPIPE)
+#endif
+#ifdef AF_LLC
+    CheckOpt(AF_LLC)
+#endif
+#ifdef AF_CAN
+    CheckOpt(AF_CAN)
+#endif
+#ifdef AF_TIPC
+    CheckOpt(AF_TIPC)
+#endif
+#ifdef AF_BLUETOOTH
+    CheckOpt(AF_BLUETOOTH)
+#endif
+#ifdef AF_IUCV
+    CheckOpt(AF_IUCV)
+#endif
+#ifdef AF_RXRPC
+    CheckOpt(AF_RXRPC)
+#endif
+#ifdef AF_ISDN
+    CheckOpt(AF_ISDN)
+#endif
+#ifdef AF_PHONET
+    CheckOpt(AF_PHONET)
+#endif
+#ifdef AF_IEEE802154
+    CheckOpt(AF_IEEE802154)
+#endif
+#ifdef AF_CAIF
+    CheckOpt(AF_CAIF)
+#endif
+#ifdef AF_ALG
+    CheckOpt(AF_ALG)
+#endif
+#ifdef AF_NFC
+    CheckOpt(AF_NFC)
+#endif
+#ifdef AF_VSOCK
+    CheckOpt(AF_VSOCK)
+#endif
+#ifdef AF_KCM
+    CheckOpt(AF_KCM)
+#endif
+#ifdef AF_QIPCRTR
+    CheckOpt(AF_QIPCRTR)
+#endif
+#ifdef AF_SMP
+    CheckOpt(AF_SMP)
+#endif
+    return -1;
+}
+
+
+/**
+ * Convert a string socket type name to its numeric equivalent
+ *
+ * @return The mapped numeric value or -1 for an unknown name.
+ */
+int stringToSockType(const char *pszOptName)
+{
+    -- a string value of zero means unspecified
+    CheckOpt(0)
+#ifdef SOCK_DGRAM
+    CheckOpt(SOCK_DGRAM)
+#endif
+#ifdef SOCK_STREAM
+    CheckOpt(SOCK_STREAM)
+#endif
+#ifdef SOCK_RAW
+    CheckOpt(SOCK_RAW)
+#endif
+#ifdef SOCK_RDM
+    CheckOpt(SOCK_RDM)
+#endif
+#ifdef SOCK_SEQPACKET
+    CheckOpt(SOCK_SEQPACKET)
+#endif
+#ifdef SOCK_DCCP
+    CheckOpt(SOCK_DCCP)
+#endif
+#ifdef SOCK_PACKET
+    CheckOpt(SOCK_PACKET)
+#endif
+#ifdef SOCK_CLOEXEC
+    CheckOpt(SOCK_CLOEXEC)
+#endif
+#ifdef SOCK_NONBLOCK
+    CheckOpt(SOCK_NONBLOCK)
+#endif
+
+    return -1;
+}
+
+
+/**
+ * Convert a string protocol name to its numeric equivalent
+ *
+ * @return The mapped numeric value or -1 for an unknown name.
+ */
+int stringToProtocol(const char *pszOptName)
+{
+    // a non-specified protocol shows up as the string "0" and returns the same
+    CheckOpt(0)
+#ifdef IPPROTO_IP
+    CheckOpt(IPPROTO_IP)
+#endif
+    CheckOpt(IPPROTO_IP)
+#ifdef IPPROTO_HOPOPTS
+    CheckOpt(IPPROTO_HOPOPTS)
+#endif
+#ifdef IPPROTO_ICMP
+    CheckOpt(IPPROTO_ICMP)
+#endif
+#ifdef IPPROTO_IGMP
+    CheckOpt(IPPROTO_IGMP)
+#endif
+#ifdef IPPROTO_IPIP
+    CheckOpt(IPPROTO_IPIP)
+#endif
+#ifdef IPPROTO_TCP
+    CheckOpt(IPPROTO_TCP)
+#endif
+#ifdef IPPROTO_EGP
+    CheckOpt(IPPROTO_EGP)
+#endif
+#ifdef IPPROTO_PUP
+    CheckOpt(IPPROTO_PUP)
+#endif
+#ifdef IPPROTO_UDP
+    CheckOpt(IPPROTO_UDP)
+#endif
+#ifdef IPPROTO_IDP
+    CheckOpt(IPPROTO_IDP)
+#endif
+#ifdef IPPROTO_TP
+    CheckOpt(IPPROTO_TP)
+#endif
+#ifdef IPPROTO_DCCP
+    CheckOpt(IPPROTO_DCCP)
+#endif
+#ifdef IPPROTO_IPV6
+    CheckOpt(IPPROTO_IPV6)
+#endif
+#ifdef IPPROTO_ROUTING
+    CheckOpt(IPPROTO_ROUTING)
+#endif
+#ifdef IPPROTO_FRAGMENT
+    CheckOpt(IPPROTO_FRAGMENT)
+#endif
+#ifdef IPPROTO_RSVP
+    CheckOpt(IPPROTO_RSVP)
+#endif
+#ifdef IPPROTO_GRE
+    CheckOpt(IPPROTO_GRE)
+#endif
+#ifdef IPPROTO_ESP
+    CheckOpt(IPPROTO_ESP)
+#endif
+#ifdef IPPROTO_AH
+    CheckOpt(IPPROTO_AH)
+#endif
+#ifdef IPPROTO_ICMPV6
+    CheckOpt(IPPROTO_ICMPV6)
+#endif
+#ifdef IPPROTO_NONE
+    CheckOpt(IPPROTO_NONE)
+#endif
+#ifdef IPPROTO_DSTOPTS
+    CheckOpt(IPPROTO_DSTOPTS)
+#endif
+#ifdef IPPROTO_MTP
+    CheckOpt(IPPROTO_MTP)
+#endif
+#ifdef IPPROTO_ENCAP
+    CheckOpt(IPPROTO_ENCAP)
+#endif
+#ifdef IPPROTO_PIM
+    CheckOpt(IPPROTO_PIM)
+#endif
+#ifdef IPPROTO_COMP
+    CheckOpt(IPPROTO_COMP)
+#endif
+#ifdef IPPROTO_SCTP
+    CheckOpt(IPPROTO_SCTP)
+#endif
+#ifdef IPPROTO_UDPLITE
+    CheckOpt(IPPROTO_UDPLITE)
+#endif
+#ifdef IPPROTO_MPLS
+    CheckOpt(IPPROTO_MPLS)
+#endif
+#ifdef IPPROTO_RAW
+    CheckOpt(IPPROTO_RAW)
+#endif
+
+    return -1;
+}
+
+#undef CheckOpt
+#define CheckOpt(n) case n: return #n;
+
+
+/**
+ * Convert a numeric value back into the STRING name
+ *
+ * @param option The numeric option value
+ *
+ * @return The string equivalient or "" for unknown options
+ */
+const char *sockOptToString(int option)
+{
+    switch (option)
+    {
+        CheckOpt(SO_DEBUG)
+        CheckOpt(SO_REUSEADDR)
+        CheckOpt(SO_KEEPALIVE)
+        CheckOpt(SO_DONTROUTE)
+        CheckOpt(SO_BROADCAST)
+        CheckOpt(SO_USELOOPBACK)
+        CheckOpt(SO_LINGER)
+        CheckOpt(SO_OOBINLINE)
+        CheckOpt(SO_SNDBUF)
+        CheckOpt(SO_RCVBUF)
+        CheckOpt(SO_SNDLOWAT)
+        CheckOpt(SO_RCVLOWAT)
+        CheckOpt(SO_SNDTIMEO)
+        CheckOpt(SO_RCVTIMEO)
+        CheckOpt(SO_ERROR)
+        CheckOpt(SO_TYPE)
+    #ifdef SO_SNDBUFFORCE
+        CheckOpt(SO_SNDBUFFORCE)
+    #endif
+    #ifdef SO_RCVBUFFORCE
+        CheckOpt(SO_RCVBUFFORCE)
+    #endif
+    #ifdef SO_NO_CHECK
+        CheckOpt(SO_NO_CHECK)
+    #endif
+    #ifdef SO_PRIORITY
+        CheckOpt(SO_PRIORITY)
+    #endif
+    #ifdef SO_BSDCOMPAT
+        CheckOpt(SO_BSDCOMPAT)
+    #endif
+    #ifdef SO_REUSEPORT
+        CheckOpt(SO_REUSEPORT)
+    #endif
+    #ifdef SO_SECURITY_AUTHENTICATION
+        CheckOpt(SO_SECURITY_AUTHENTICATION)
+    #endif
+    #ifdef SO_SECURITY_ENCRYPTION_TRANSPORT
+        CheckOpt(SO_SECURITY_ENCRYPTION_TRANSPORT)
+    #endif
+    #ifdef SO_SECURITY_ENCRYPTION_NETWORK
+        CheckOpt(SO_SECURITY_ENCRYPTION_NETWORK)
+    #endif
+    #ifdef SO_ATTACH_FILTER
+        CheckOpt(SO_ATTACH_FILTER)
+    #endif
+    #ifdef SO_DETACH_FILTER
+        CheckOpt(SO_DETACH_FILTER)
+    #endif
+    #ifdef SO_TIMESTAMP
+        CheckOpt(SO_TIMESTAMP)
+    #endif
+    #ifdef SO_PEERSEC
+        CheckOpt(SO_PEERSEC)
+    #endif
+    #ifdef SO_PASSSEC
+        CheckOpt(SO_PASSSEC)
+    #endif
+    #ifdef SO_TIMESTAMPNS
+        CheckOpt(SO_TIMESTAMPNS)
+    #endif
+    #ifdef SO_MARK
+        CheckOpt(SO_MARK)
+    #endif
+    #ifdef SO_TIMESTAMPING
+        CheckOpt(SO_TIMESTAMPING)
+    #endif
+    #ifdef SO_PROTOCOL
+        CheckOpt(SO_PROTOCOL)
+    #endif
+    #ifdef SO_DOMAIN
+        CheckOpt(SO_DOMAIN)
+    #endif
+    #ifdef SO_RXQ_OVFL
+        CheckOpt(SO_RXQ_OVFL)
+    #endif
+    #ifdef SO_RXQ_WIFI_STATUS
+        CheckOpt(SO_RXQ_WIFI_STATUS)
+    #endif
+    #ifdef SO_PEEK_OFF
+        CheckOpt(SO_PEEK_OFF)
+    #endif
+    #ifdef SO_NOFCS
+        CheckOpt(SO_NOFCS)
+    #endif
+    #ifdef SO_LOCK_FILTER
+        CheckOpt(SO_LOCK_FILTER)
+    #endif
+    #ifdef SO_SELECT_ERR_QUEUE
+        CheckOpt(SO_SELECT_ERR_QUEUE)
+    #endif
+    #ifdef SO_BUSY_POLL
+        CheckOpt(SO_BUSY_POLL)
+    #endif
+    #ifdef SO_PASSCRED
+        CheckOpt(SO_PASSCRED)
+    #endif
+    }
+
+    return "";
+}
+
+
+/**
+ * Convert a string socket family name to its numeric equivalent
+ *
+ * @return The mapped numeric value or -1 for an unknown name.
+ */
+const char *familyToString(int option)
+{
+    switch (option)
+    {
+#ifdef PF_UNSPEC
+    CheckOpt(PF_UNSPEC)
+#endif
+#ifdef PF_LOCAL
+    CheckOpt(PF_LOCAL)
+#endif
+#ifdef PF_UNIX
+    CheckOpt(PF_UNIX)
+#endif
+#ifdef PF_FILE
+    CheckOpt(PF_FILE)
+#endif
+#ifdef PF_INET
+    CheckOpt(PF_INET)
+#endif
+#ifdef PF_IMPLINK
+    CheckOpt(PF_IMPLINK)
+#endif
+#ifdef PF_AX25
+    CheckOpt(PF_AX25)
+#endif
+#ifdef PF_PUP
+    CheckOpt(PF_PUP)
+#endif
+#ifdef PF_CHAOS
+    CheckOpt(PF_CHAOS)
+#endif
+#ifdef PF_APPLETALK
+    CheckOpt(PF_APPLETALK)
+#endif
+#ifdef PF_NETROM
+    CheckOpt(PF_NETROM)
+#endif
+#ifdef PF_IPX
+    CheckOpt(PF_IPX)
+#endif
+#ifdef PF_ISO
+    CheckOpt(PF_ISO)
+#endif
+#ifdef PF_BRIDGE
+    CheckOpt(PF_BRIDGE)
+#endif
+#ifdef PF_ECMA
+    CheckOpt(PF_ECMA)
+#endif
+#ifdef PF_ATMPVC
+    CheckOpt(PF_ATMPVC)
+#endif
+#ifdef PF_DATAKIT
+    CheckOpt(PF_DATAKIT)
+#endif
+#ifdef PF_X25
+    CheckOpt(PF_X25)
+#endif
+#ifdef PF_CCITT
+    CheckOpt(PF_CCITT)
+#endif
+#ifdef PF_INET6
+    CheckOpt(PF_INET6)
+#endif
+#ifdef PF_SNA
+    CheckOpt(PF_SNA)
+#endif
+#ifdef PF_ROSE
+    CheckOpt(PF_ROSE)
+#endif
+#ifdef PF_DECnet
+    CheckOpt(PF_DECnet)
+#endif
+#ifdef PF_DLI
+    CheckOpt(PF_DLI)
+#endif
+#ifdef PF_NETBEUI
+    CheckOpt(PF_NETBEUI)
+#endif
+#ifdef PF_SECURITY
+    CheckOpt(PF_SECURITY)
+#endif
+#ifdef PF_KEY
+    CheckOpt(PF_KEY)
+#endif
+#ifdef PF_NETLINK
+    CheckOpt(PF_NETLINK)
+#endif
+#ifdef PF_ROUTE
+    CheckOpt(PF_ROUTE)
+#endif
+#ifdef PF_PACKET
+    CheckOpt(PF_PACKET)
+#endif
+#ifdef PF_ASH
+    CheckOpt(PF_ASH)
+#endif
+#ifdef PF_ECONET
+    CheckOpt(PF_ECONET)
+#endif
+#ifdef PF_ATMSVC
+    CheckOpt(PF_ATMSVC)
+#endif
+#ifdef PF_RDS
+    CheckOpt(PF_RDS)
+#endif
+#ifdef PF_IRDA
+    CheckOpt(PF_IRDA)
+#endif
+#ifdef PF_PPPOX
+    CheckOpt(PF_PPPOX)
+#endif
+#ifdef PF_WANPIPE
+    CheckOpt(PF_WANPIPE)
+#endif
+#ifdef PF_LLC
+    CheckOpt(PF_LLC)
+#endif
+#ifdef PF_CAN
+    CheckOpt(PF_CAN)
+#endif
+#ifdef PF_TIPC
+    CheckOpt(PF_TIPC)
+#endif
+#ifdef PF_BLUETOOTH
+    CheckOpt(PF_BLUETOOTH)
+#endif
+#ifdef PF_IUCV
+    CheckOpt(PF_IUCV)
+#endif
+#ifdef PF_RXRPC
+    CheckOpt(PF_RXRPC)
+#endif
+#ifdef PF_ISDN
+    CheckOpt(PF_ISDN)
+#endif
+#ifdef PF_PHONET
+    CheckOpt(PF_PHONET)
+#endif
+#ifdef PF_IEEE802154
+    CheckOpt(PF_IEEE802154)
+#endif
+#ifdef PF_CAIF
+    CheckOpt(PF_CAIF)
+#endif
+#ifdef PF_ALG
+    CheckOpt(PF_ALG)
+#endif
+#ifdef PF_NFC
+    CheckOpt(PF_NFC)
+#endif
+#ifdef PF_VSOCK
+    CheckOpt(PF_VSOCK)
+#endif
+#ifdef PF_KCM
+    CheckOpt(PF_KCM)
+#endif
+#ifdef PF_QIPCRTR
+    CheckOpt(PF_QIPCRTR)
+#endif
+#ifdef PF_SMP
+    CheckOpt(PF_SMP)
+#endif
+    }
+    return "";
+}
+
+
+/**
+ * Convert a string socket family name to its numeric equivalent
+ *
+ * @return The mapped numeric value or -1 for an unknown name.
+ */
+const char *addrTypeToString(int option)
+{
+    switch (option)
+    {
+#ifdef AF_UNSPEC
+    CheckOpt(AF_UNSPEC)
+#endif
+#ifdef AF_LOCAL
+    CheckOpt(AF_LOCAL)
+#endif
+#ifdef AF_UNIX
+    CheckOpt(AF_UNIX)
+#endif
+#ifdef AF_FILE
+    CheckOpt(AF_FILE)
+#endif
+#ifdef AF_INET
+    CheckOpt(AF_INET)
+#endif
+#ifdef AF_IMPLINK
+    CheckOpt(AF_IMPLINK)
+#endif
+#ifdef AF_AX25
+    CheckOpt(AF_AX25)
+#endif
+#ifdef AF_PUP
+    CheckOpt(AF_PUP)
+#endif
+#ifdef AF_CHAOS
+    CheckOpt(AF_CHAOS)
+#endif
+#ifdef AF_APPLETALK
+    CheckOpt(AF_APPLETALK)
+#endif
+#ifdef AF_NETROM
+    CheckOpt(AF_NETROM)
+#endif
+#ifdef AF_IPX
+    CheckOpt(AF_IPX)
+#endif
+#ifdef AF_ISO
+    CheckOpt(AF_ISO)
+#endif
+#ifdef AF_BRIDGE
+    CheckOpt(AF_BRIDGE)
+#endif
+#ifdef AF_ECMA
+    CheckOpt(AF_ECMA)
+#endif
+#ifdef AF_ATMPVC
+    CheckOpt(AF_ATMPVC)
+#endif
+#ifdef AF_DATAKIT
+    CheckOpt(AF_DATAKIT)
+#endif
+#ifdef AF_X25
+    CheckOpt(AF_X25)
+#endif
+#ifdef AF_CCITT
+    CheckOpt(AF_CCITT)
+#endif
+#ifdef AF_INET6
+    CheckOpt(AF_INET6)
+#endif
+#ifdef AF_SNA
+    CheckOpt(AF_SNA)
+#endif
+#ifdef AF_ROSE
+    CheckOpt(AF_ROSE)
+#endif
+#ifdef AF_DECnet
+    CheckOpt(AF_DECnet)
+#endif
+#ifdef AF_DLI
+    CheckOpt(AF_DLI)
+#endif
+#ifdef AF_NETBEUI
+    CheckOpt(AF_NETBEUI)
+#endif
+#ifdef AF_SECURITY
+    CheckOpt(AF_SECURITY)
+#endif
+#ifdef AF_KEY
+    CheckOpt(AF_KEY)
+#endif
+#ifdef AF_NETLINK
+    CheckOpt(AF_NETLINK)
+#endif
+#ifdef AF_ROUTE
+    CheckOpt(AF_ROUTE)
+#endif
+#ifdef AF_PACKET
+    CheckOpt(AF_PACKET)
+#endif
+#ifdef AF_ASH
+    CheckOpt(AF_ASH)
+#endif
+#ifdef AF_ECONET
+    CheckOpt(AF_ECONET)
+#endif
+#ifdef AF_ATMSVC
+    CheckOpt(AF_ATMSVC)
+#endif
+#ifdef AF_RDS
+    CheckOpt(AF_RDS)
+#endif
+#ifdef AF_IRDA
+    CheckOpt(AF_IRDA)
+#endif
+#ifdef AF_PPPOX
+    CheckOpt(AF_PPPOX)
+#endif
+#ifdef AF_WANPIPE
+    CheckOpt(AF_WANPIPE)
+#endif
+#ifdef AF_LLC
+    CheckOpt(AF_LLC)
+#endif
+#ifdef AF_CAN
+    CheckOpt(AF_CAN)
+#endif
+#ifdef AF_TIPC
+    CheckOpt(AF_TIPC)
+#endif
+#ifdef AF_BLUETOOTH
+    CheckOpt(AF_BLUETOOTH)
+#endif
+#ifdef AF_IUCV
+    CheckOpt(AF_IUCV)
+#endif
+#ifdef AF_RXRPC
+    CheckOpt(AF_RXRPC)
+#endif
+#ifdef AF_ISDN
+    CheckOpt(AF_ISDN)
+#endif
+#ifdef AF_PHONET
+    CheckOpt(AF_PHONET)
+#endif
+#ifdef AF_IEEE802154
+    CheckOpt(AF_IEEE802154)
+#endif
+#ifdef AF_CAIF
+    CheckOpt(AF_CAIF)
+#endif
+#ifdef AF_ALG
+    CheckOpt(AF_ALG)
+#endif
+#ifdef AF_NFC
+    CheckOpt(AF_NFC)
+#endif
+#ifdef AF_VSOCK
+    CheckOpt(AF_VSOCK)
+#endif
+#ifdef AF_KCM
+    CheckOpt(AF_KCM)
+#endif
+#ifdef AF_QIPCRTR
+    CheckOpt(AF_QIPCRTR)
+#endif
+#ifdef AF_SMP
+    CheckOpt(AF_SMP)
+#endif
+    }
+    return "";
+}
+
+
+/**
+ * Convert a string socket type name to its numeric equivalent
+ *
+ * @return The mapped numeric value or -1 for an unknown name.
+ */
+const char *sockTypeToString(int option)
+{
+    switch (option)
+    {
+    --zero has special meaning as unspecified
+    CheckOpt(0)
+#ifdef SOCK_DGRAM
+    CheckOpt(SOCK_DGRAM)
+#endif
+#ifdef SOCK_STREAM
+    CheckOpt(SOCK_STREAM)
+#endif
+#ifdef SOCK_RAW
+    CheckOpt(SOCK_RAW)
+#endif
+#ifdef SOCK_RDM
+    CheckOpt(SOCK_RDM)
+#endif
+#ifdef SOCK_SEQPACKET
+    CheckOpt(SOCK_SEQPACKET)
+#endif
+#ifdef SOCK_DCCP
+    CheckOpt(SOCK_DCCP)
+#endif
+#ifdef SOCK_PACKET
+    CheckOpt(SOCK_PACKET)
+#endif
+#ifdef SOCK_CLOEXEC
+    CheckOpt(SOCK_CLOEXEC)
+#endif
+#ifdef SOCK_NONBLOCK
+    CheckOpt(SOCK_NONBLOCK)
+#endif
+    }
+
+    return "";
+}
+
+
+/**
+ * Convert a string protocol name to its numeric equivalent
+ *
+ * @return The mapped numeric value or -1 for an unknown name.
+ */
+const char *protocolToString(int option)
+{
+    switch (option)
+    {
+#ifdef IPPROTO_IP
+    CheckOpt(IPPROTO_IP)
+#endif
+#ifdef IPPROTO_HOPOPTS
+    CheckOpt(IPPROTO_HOPOPTS)
+#endif
+#ifdef IPPROTO_ICMP
+    CheckOpt(IPPROTO_ICMP)
+#endif
+#ifdef IPPROTO_IGMP
+    CheckOpt(IPPROTO_IGMP)
+#endif
+#ifdef IPPROTO_IPIP
+    CheckOpt(IPPROTO_IPIP)
+#endif
+#ifdef IPPROTO_TCP
+    CheckOpt(IPPROTO_TCP)
+#endif
+#ifdef IPPROTO_EGP
+    CheckOpt(IPPROTO_EGP)
+#endif
+#ifdef IPPROTO_PUP
+    CheckOpt(IPPROTO_PUP)
+#endif
+#ifdef IPPROTO_UDP
+    CheckOpt(IPPROTO_UDP)
+#endif
+#ifdef IPPROTO_IDP
+    CheckOpt(IPPROTO_IDP)
+#endif
+#ifdef IPPROTO_TP
+    CheckOpt(IPPROTO_TP)
+#endif
+#ifdef IPPROTO_DCCP
+    CheckOpt(IPPROTO_DCCP)
+#endif
+#ifdef IPPROTO_IPV6
+    CheckOpt(IPPROTO_IPV6)
+#endif
+#ifdef IPPROTO_ROUTING
+    CheckOpt(IPPROTO_ROUTING)
+#endif
+#ifdef IPPROTO_FRAGMENT
+    CheckOpt(IPPROTO_FRAGMENT)
+#endif
+#ifdef IPPROTO_RSVP
+    CheckOpt(IPPROTO_RSVP)
+#endif
+#ifdef IPPROTO_GRE
+    CheckOpt(IPPROTO_GRE)
+#endif
+#ifdef IPPROTO_ESP
+    CheckOpt(IPPROTO_ESP)
+#endif
+#ifdef IPPROTO_AH
+    CheckOpt(IPPROTO_AH)
+#endif
+#ifdef IPPROTO_ICMPV6
+    CheckOpt(IPPROTO_ICMPV6)
+#endif
+#ifdef IPPROTO_NONE
+    CheckOpt(IPPROTO_NONE)
+#endif
+#ifdef IPPROTO_DSTOPTS
+    CheckOpt(IPPROTO_DSTOPTS)
+#endif
+#ifdef IPPROTO_MTP
+    CheckOpt(IPPROTO_MTP)
+#endif
+#ifdef IPPROTO_ENCAP
+    CheckOpt(IPPROTO_ENCAP)
+#endif
+#ifdef IPPROTO_PIM
+    CheckOpt(IPPROTO_PIM)
+#endif
+#ifdef IPPROTO_COMP
+    CheckOpt(IPPROTO_COMP)
+#endif
+#ifdef IPPROTO_SCTP
+    CheckOpt(IPPROTO_SCTP)
+#endif
+#ifdef IPPROTO_UDPLITE
+    CheckOpt(IPPROTO_UDPLITE)
+#endif
+#ifdef IPPROTO_MPLS
+    CheckOpt(IPPROTO_MPLS)
+#endif
+#ifdef IPPROTO_RAW
+    CheckOpt(IPPROTO_RAW)
+#endif
+    }
+
+    return "";
+}
+
+
+/**
+ * Convert a string protocol name to its numeric equivalent
+ *
+ * @return The mapped numeric value or -1 for an unknown name.
+ */
+const char *errnoToString(int option)
+{
+    switch (option)
+    {
+         CheckOpt(EPERM)
+#ifdef ENOENT
+         CheckOpt(ENOENT)
+#endif
+#ifdef ESRCH
+         CheckOpt(ESRCH)
+#endif
+#ifdef EINTR
+         CheckOpt(EINTR)
+#endif
+#ifdef EIO
+         CheckOpt(EIO)
+#endif
+#ifdef ENXIO
+         CheckOpt(ENXIO)
+#endif
+#ifdef E2BIG
+         CheckOpt(E2BIG)
+#endif
+#ifdef ENOEXEC
+         CheckOpt(ENOEXEC)
+#endif
+#ifdef EBADF
+         CheckOpt(EBADF)
+#endif
+#ifdef ECHILD
+         CheckOpt(ECHILD)
+#endif
+#ifdef EAGAIN
+         CheckOpt(EAGAIN)
+#endif
+#ifdef ENOMEM
+         CheckOpt(ENOMEM)
+#endif
+#ifdef EACCES
+         CheckOpt(EACCES)
+#endif
+#ifdef EFAULT
+         CheckOpt(EFAULT)
+#endif
+#ifdef ENOTBLK
+         CheckOpt(ENOTBLK)
+#endif
+#ifdef EBUSY
+         CheckOpt(EBUSY)
+#endif
+#ifdef EEXIST
+         CheckOpt(EEXIST)
+#endif
+#ifdef EXDEV
+         CheckOpt(EXDEV)
+#endif
+#ifdef ENODEV
+         CheckOpt(ENODEV)
+#endif
+#ifdef ENOTDIR
+         CheckOpt(ENOTDIR)
+#endif
+#ifdef EISDIR
+         CheckOpt(EISDIR)
+#endif
+#ifdef EINVAL
+         CheckOpt(EINVAL)
+#endif
+#ifdef ENFILE
+         CheckOpt(ENFILE)
+#endif
+#ifdef EMFILE
+         CheckOpt(EMFILE)
+#endif
+#ifdef ENOTTY
+         CheckOpt(ENOTTY)
+#endif
+#ifdef ETXTBSY
+         CheckOpt(ETXTBSY)
+#endif
+#ifdef EFBIG
+         CheckOpt(EFBIG)
+#endif
+#ifdef ENOSPC
+         CheckOpt(ENOSPC)
+#endif
+#ifdef ESPIPE
+         CheckOpt(ESPIPE)
+#endif
+#ifdef EROFS
+         CheckOpt(EROFS)
+#endif
+#ifdef EMLINK
+         CheckOpt(EMLINK)
+#endif
+#ifdef EPIPE
+         CheckOpt(EPIPE)
+#endif
+#ifdef EDOM
+         CheckOpt(EDOM)
+#endif
+#ifdef ERANGE
+         CheckOpt(ERANGE)
+#endif
+#ifdef EDEADLK
+         CheckOpt(EDEADLK)
+#endif
+#ifdef ENAMETOOLONG
+         CheckOpt(ENAMETOOLONG)
+#endif
+#ifdef ENOLCK
+         CheckOpt(ENOLCK)
+#endif
+#ifdef ENOSYS
+         CheckOpt(ENOSYS)
+#endif
+#ifdef ENOTEMPTY
+         CheckOpt(ENOTEMPTY)
+#endif
+#ifdef ELOOP
+         CheckOpt(ELOOP)
+#endif
+#ifdef ENOMSG
+         CheckOpt(ENOMSG)
+#endif
+#ifdef EIDRM
+         CheckOpt(EIDRM)
+#endif
+#ifdef ECHRNG
+         CheckOpt(ECHRNG)
+#endif
+#ifdef EL2NSYNC
+         CheckOpt(EL2NSYNC)
+#endif
+#ifdef EL3HLT
+         CheckOpt(EL3HLT)
+#endif
+#ifdef EL3RST
+         CheckOpt(EL3RST)
+#endif
+#ifdef ELNRNG
+         CheckOpt(ELNRNG)
+#endif
+#ifdef EUNATCH
+         CheckOpt(EUNATCH)
+#endif
+#ifdef ENOCSI
+         CheckOpt(ENOCSI)
+#endif
+#ifdef EL2HLT
+         CheckOpt(EL2HLT)
+#endif
+#ifdef EBADE
+         CheckOpt(EBADE)
+#endif
+#ifdef EBADR
+         CheckOpt(EBADR)
+#endif
+#ifdef EXFULL
+         CheckOpt(EXFULL)
+#endif
+#ifdef ENOANO
+         CheckOpt(ENOANO)
+#endif
+#ifdef EBADRQC
+         CheckOpt(EBADRQC)
+#endif
+#ifdef EBADSLT
+         CheckOpt(EBADSLT)
+#endif
+#ifdef EBFONT
+         CheckOpt(EBFONT)
+#endif
+#ifdef ENOSTR
+         CheckOpt(ENOSTR)
+#endif
+#ifdef ENODATA
+         CheckOpt(ENODATA)
+#endif
+#ifdef ETIME
+         CheckOpt(ETIME)
+#endif
+#ifdef ENOSR
+         CheckOpt(ENOSR)
+#endif
+#ifdef ENONET
+         CheckOpt(ENONET)
+#endif
+#ifdef ENOPKG
+         CheckOpt(ENOPKG)
+#endif
+#ifdef EREMOTE
+         CheckOpt(EREMOTE)
+#endif
+#ifdef ENOLINK
+         CheckOpt(ENOLINK)
+#endif
+#ifdef EADV
+         CheckOpt(EADV)
+#endif
+#ifdef ESRMNT
+         CheckOpt(ESRMNT)
+#endif
+#ifdef ECOMM
+         CheckOpt(ECOMM)
+#endif
+#ifdef EPROTO
+         CheckOpt(EPROTO)
+#endif
+#ifdef EMULTIHOP
+         CheckOpt(EMULTIHOP)
+#endif
+#ifdef EDOTDOT
+         CheckOpt(EDOTDOT)
+#endif
+#ifdef EBADMSG
+         CheckOpt(EBADMSG)
+#endif
+#ifdef EOVERFLOW
+         CheckOpt(EOVERFLOW)
+#endif
+#ifdef ENOTUNIQ
+         CheckOpt(ENOTUNIQ)
+#endif
+#ifdef EBADFD
+         CheckOpt(EBADFD)
+#endif
+#ifdef EREMCHG
+         CheckOpt(EREMCHG)
+#endif
+#ifdef ELIBACC
+         CheckOpt(ELIBACC)
+#endif
+#ifdef ELIBBAD
+         CheckOpt(ELIBBAD)
+#endif
+#ifdef ELIBSCN
+         CheckOpt(ELIBSCN)
+#endif
+#ifdef ELIBMAX
+         CheckOpt(ELIBMAX)
+#endif
+#ifdef ELIBEXEC
+         CheckOpt(ELIBEXEC)
+#endif
+#ifdef EILSEQ
+         CheckOpt(EILSEQ)
+#endif
+#ifdef ERESTART
+         CheckOpt(ERESTART)
+#endif
+#ifdef ESTRPIPE
+         CheckOpt(ESTRPIPE)
+#endif
+#ifdef EUSERS
+         CheckOpt(EUSERS)
+#endif
+#ifdef ENOTSOCK
+         CheckOpt(ENOTSOCK)
+#endif
+#ifdef EDESTADDRREQ
+         CheckOpt(EDESTADDRREQ)
+#endif
+#ifdef EMSGSIZE
+         CheckOpt(EMSGSIZE)
+#endif
+#ifdef EPROTOTYPE
+         CheckOpt(EPROTOTYPE)
+#endif
+#ifdef ENOPROTOOPT
+         CheckOpt(ENOPROTOOPT)
+#endif
+#ifdef EPROTONOSUPPORT
+         CheckOpt(EPROTONOSUPPORT)
+#endif
+#ifdef ESOCKTNOSUPPORT
+         CheckOpt(ESOCKTNOSUPPORT)
+#endif
+#ifdef EOPNOTSUPP
+         CheckOpt(EOPNOTSUPP)
+#endif
+#ifdef EPFNOSUPPORT
+         CheckOpt(EPFNOSUPPORT)
+#endif
+#ifdef EAFNOSUPPORT
+         CheckOpt(EAFNOSUPPORT)
+#endif
+#ifdef EADDRINUSE
+         CheckOpt(EADDRINUSE)
+#endif
+#ifdef EADDRNOTAVAIL
+         CheckOpt(EADDRNOTAVAIL)
+#endif
+#ifdef ENETDOWN
+         CheckOpt(ENETDOWN)
+#endif
+#ifdef ENETUNREACH
+         CheckOpt(ENETUNREACH)
+#endif
+#ifdef ENETRESET
+         CheckOpt(ENETRESET)
+#endif
+#ifdef ECONNABORTED
+         CheckOpt(ECONNABORTED)
+#endif
+#ifdef ECONNRESET
+         CheckOpt(ECONNRESET)
+#endif
+#ifdef ENOBUFS
+         CheckOpt(ENOBUFS)
+#endif
+#ifdef EISCONN
+         CheckOpt(EISCONN)
+#endif
+#ifdef ENOTCONN
+         CheckOpt(ENOTCONN)
+#endif
+#ifdef ESHUTDOWN
+         CheckOpt(ESHUTDOWN)
+#endif
+#ifdef ETOOMANYREFS
+         CheckOpt(ETOOMANYREFS)
+#endif
+#ifdef ETIMEDOUT
+         CheckOpt(ETIMEDOUT)
+#endif
+#ifdef ECONNREFUSED
+         CheckOpt(ECONNREFUSED)
+#endif
+#ifdef EHOSTDOWN
+         CheckOpt(EHOSTDOWN)
+#endif
+#ifdef EHOSTUNREACH
+         CheckOpt(EHOSTUNREACH)
+#endif
+#ifdef EALREADY
+         CheckOpt(EALREADY)
+#endif
+#ifdef EINPROGRESS
+         CheckOpt(EINPROGRESS)
+#endif
+#ifdef ESTALE
+         CheckOpt(ESTALE)
+#endif
+#ifdef EUCLEAN
+         CheckOpt(EUCLEAN)
+#endif
+#ifdef ENOTNAM
+         CheckOpt(ENOTNAM)
+#endif
+#ifdef ENAVAIL
+         CheckOpt(ENAVAIL)
+#endif
+#ifdef EISNAM
+         CheckOpt(EISNAM)
+#endif
+#ifdef EREMOTEIO
+         CheckOpt(EREMOTEIO)
+#endif
+#ifdef EDQUOT
+         CheckOpt(EDQUOT)
+#endif
+#ifdef ENOMEDIUM
+         CheckOpt(ENOMEDIUM)
+#endif
+#ifdef EMEDIUMTYPE
+         CheckOpt(EMEDIUMTYPE)
+#endif
+#ifdef ECANCELED
+         CheckOpt(ECANCELED)
+#endif
+#ifdef ENOKEY
+         CheckOpt(ENOKEY)
+#endif
+#ifdef EKEYEXPIRED
+         CheckOpt(EKEYEXPIRED)
+#endif
+#ifdef EKEYREVOKED
+         CheckOpt(EKEYREVOKED)
+#endif
+#ifdef EKEYREJECTED
+         CheckOpt(EKEYREJECTED)
+#endif
+#ifdef EOWNERDEAD
+         CheckOpt(EOWNERDEAD)
+#endif
+    }
+    return "";
+}
 
 
 // Common routine
@@ -105,6 +1750,28 @@ ORXSOCKET getSocket(RexxMethodContext* context)
     uintptr_t temp;
     // get the socket file descriptor
     RexxObjectPtr rxsockfd = context->GetObjectVariable("socketfd");
+    // is is possible that we might have had an error before everything
+    // was initialized, so return a zero value if not found
+    if (rxsockfd == NULL)
+    {
+       return (ORXSOCKET)0;
+    }
+    context->Uintptr(rxsockfd, &temp);
+    return (ORXSOCKET)temp;
+}
+
+// Common routine
+ORXSOCKET getSocket(RexxMethodContext* context, RexxObjectPtr obj)
+{
+    RexxObjectPtr rxsockfd = context->SendMessage0(obj, "socketfd");
+    // is is possible that we might have had an error before everything
+    // was initialized, so return a zero value if not found
+    if (rxsockfd == NULL)
+    {
+       return (ORXSOCKET)0;
+    }
+
+    uintptr_t temp;
     context->Uintptr(rxsockfd, &temp);
     return (ORXSOCKET)temp;
 }
@@ -113,11 +1780,56 @@ ORXSOCKET getSocket(RexxMethodContext* context)
 // Common routine
 RexxObjectPtr socketToObject(RexxMethodContext* context, ORXSOCKET socket)
 {
-#ifdef WIN32
     return context->UintptrToObject(socket);
-#else
-    return context->Int32((int)socket);
-#endif
+}
+
+// retrieve a int 32 value from an object
+int32_t getInt32(RexxMethodContext *context, RexxObjectPtr o, const char *name)
+{
+    RexxObjectPtr obj = context->SendMessage0(o, name);
+    int32_t tmp;
+    context->Int32(obj, &tmp);
+    return tmp;
+}
+
+// retrieve a int 32 value from an object
+uint32_t getUint32(RexxMethodContext *context, RexxObjectPtr o, const char *name)
+{
+    RexxObjectPtr obj = context->SendMessage0(o, name);
+    uint32_t tmp;
+    context->ObjectToUnsignedInt32(obj, &tmp);
+    return tmp;
+}
+
+// retrieve a string value from an object
+const char *getStringValue(RexxMethodContext *context, RexxObjectPtr o, const char *name)
+{
+    RexxObjectPtr obj = context->SendMessage0(o, name);
+    return context->CString(obj);
+}
+
+// set 32-bit int value in an object
+void setValue(RexxMethodContext *context, RexxObjectPtr o, const char *name, int32_t v)
+{
+    context->SendMessage1(o, name, context->Int32ToObject(v));
+}
+
+// set an unsigned 32-bit int value in an object
+void setValue(RexxMethodContext *context, RexxObjectPtr o, const char *name, uint32_t v)
+{
+    context->SendMessage1(o, name, context->UnsignedInt32ToObject(v));
+}
+
+// set a string value into an object
+void setValue(RexxMethodContext *context, RexxObjectPtr o, const char *name, const char *v)
+{
+    context->SendMessage1(o, name, context->CString(v));
+}
+
+// set a string value into an object
+void setValue(RexxMethodContext *context, RexxObjectPtr o, const char *name, RexxObjectPtr v)
+{
+    context->SendMessage1(o, name, v);
 }
 
 
@@ -125,6 +1837,29 @@ RexxObjectPtr socketToObject(RexxMethodContext* context, ORXSOCKET socket)
 void setErrno(RexxMethodContext* context, bool hasError)
 {
     context->SetObjectVariable("errno", context->Int32(hasError ? sock_errno() : 0));
+}
+
+// Common routine for setting the error condition
+void setErrno(RexxMethodContext* context, int32_t errNo)
+{
+    context->SetObjectVariable("errno", context->Int32(errNo));
+}
+
+
+// Common routine for setting the error condition
+void setRetc(RexxMethodContext* context, int32_t v)
+{
+    context->SetObjectVariable("retc", context->Int32(v));
+}
+
+void setRetc(RexxMethodContext* context, uintptr_t v)
+{
+    context->SetObjectVariable("retc", context->UintptrToObject(v));
+}
+
+void setRetc(RexxMethodContext* context, RexxObjectPtr v)
+{
+    context->SetObjectVariable("retc", v);
 }
 
 
@@ -149,6 +1884,204 @@ int local_inet_pton(int af, const char *src, void *dst)
 }
 
 
+/**
+ * Format an inet address into either the IPV4 or IPV6 style.
+ *
+ * @param addr   The address structure.
+ * @param stringAddress
+ */
+void internetAddressToString(struct sockaddr_in *addr, char *stringAddress)
+{
+    local_inet_ntop(addr->sin_family, addr, stringAddress, INET6_ADDRSTRLEN);
+}
+
+/**
+ * Convert a string ip address into a binary version
+ *
+ * @param addr   The addr structure used to return the address
+ * @param family The type of address (AF_INET or AF_INET6)
+ * @param stringAddress
+ *               The string version of the name.
+ */
+void stringToInternetAddress(struct sockaddr_in *addr, uint16_t family, char *stringAddress)
+{
+    // fill in the family in the struct
+    addr->sin_family = family;
+    if (family == AF_INET)
+    {
+        local_inet_pton(AF_INET, stringAddress, &addr->sin_addr.s_addr);
+    }
+    else
+    {
+        struct sockaddr_in6 * addr6 = (struct sockaddr_in6 *)&addr;
+        local_inet_pton(AF_INET6, stringAddress, &addr6->sin6_addr.s6_addr);
+    }
+}
+
+
+/**
+ * Create a host entity object and populate it.
+ *
+ * @param context  The current call context.
+ * @param pHostEnt The pHostEnt structure source for the information (can be NULL)
+ *
+ * @return A HostEntity instance.
+ */
+RexxObjectPtr createHostEntity(RexxMethodContext *context, struct hostent *pHostEnt)
+{
+    RexxClassObject classinst = context->FindClass("HostEntity");
+    RexxObjectPtr entity = context->SendMessage0(classinst, "new");
+
+    // if we don't have any actual information, return the empty entity
+    if (pHostEnt == NULL)
+    {
+        return entity;
+    }
+
+    // the family name
+    setValue(context, entity, "name=", pHostEnt->h_name);
+
+    // aliases are returned as an array. create a reasonable default size
+    RexxArrayObject aliases = context->NewArray(5);
+    setValue(context, entity, "aliases=", aliases);
+    // now add in the alias values
+    for (size_t count=0; pHostEnt->h_aliases[count]; count++)
+    {
+        context->ArrayAppendString(aliases, pHostEnt->h_aliases[count], strlen(pHostEnt->h_aliases[count]));
+    }
+
+    // the address type, which is variable
+    setValue(context, entity, "addrtype=", addrTypeToString(pHostEnt->h_addrtype));
+
+    // get the string version of the address. This is just the first
+    // address on the list.
+    in_addr  addr;
+    addr.s_family = pHostEnt->h_addrtype
+    addr.s_addr = (*(uint32_t *)pHostEnt->h_addr);
+    char stringAddress[INET6_ADDRSTRLEN];
+    inetAddressToString(&addr, stringAddress);
+    setValue(context, entity, "addr=", stringAddress);
+
+    // There may be multiple s an array. create a reasonable default size
+    RexxArrayObject addresses = context->NewArray(5);
+    setValue(context, entity, "addresses=", addresses);
+    for (size_t count = 0; pHostEnt->h_addr_list[count]; count++)
+    {
+        addr.s_addr = (*(uint32_t *)pHostEnt->h_addr_list[count]);
+        inetAddressToString(&addr, stringAddress);
+        context->ArrayAppendString(addresses, stringAddress, strlen(stringAddress));
+    }
+
+    return entity;
+}
+
+
+// a helper class to simplify the code that uses address objects.
+class InetAddress
+{
+public:
+    InetAddress(RexxMethodContext *c, RexxObjectPtr o) : inetaddr(o), context(c) {}
+
+    // validate that this is a correct inet address object
+    bool validate()
+    {
+        if (!context->IsOfType(inetaddr, "InetAddress"))
+        {
+            RexxArrayObject arrobj = context->NewArray(1);
+            context->ArrayAppendString(arrobj, "address", strlen("address"));
+            context->ArrayAppendString(arrobj, "InetAddress", strlen("InetAddress"));
+            context->RaiseException(Rexx_Error_Invalid_argument_noclass, arrobj);
+            return false;
+        }
+        return true;
+    }
+
+    void setFamily(uint16_t f)
+    {
+        context->SendMessage1(inetaddr, "family=", context->UnsignedInt32(f));
+    }
+
+    void setPort(uint16_t p)
+    {
+        context->SendMessage1(inetaddr, "port=", context->UnsignedInt32(p));
+    }
+
+    void setAddress(const char *a)
+    {
+        context->SendMessage1(inetaddr, "address=", context->String(a));
+    }
+
+    uint16_t family()
+    {
+        RexxObjectPtr obj = context->SendMessage0(inetaddr, "family");
+        uint32_t tmp;
+        context->UnsignedInt32(obj, &tmp);
+        return (uint16_t)tmp;
+    }
+
+    uint16_t port()
+    {
+        RexxObjectPtr obj = context->SendMessage0(inetaddr, "port");
+        uint32_t tmp;
+        context->UnsignedInt32(obj, &tmp);
+        return (uint16_t)tmp;
+    }
+
+    const char *address()
+    {
+        RexxObjectPtr obj = context->SendMessage0(inetaddr, "address");
+        return context->CString(obj);
+    }
+
+    // prep the address structures from the InetAddress object
+    void prep(struct sockaddr_storage &addr)
+    {
+        uint16_t fam = family();
+        if (fam == AF_INET)
+        {
+            struct sockaddr_in *addr4 = (struct sockaddr_in *)&addr;
+            addr4->sin_family = fam;
+            addr4->sin_port = port();
+            local_inet_pton(AF_INET, address(), &addr4->sin_addr.s_addr);
+        }
+        else
+        {
+            struct sockaddr_in6 * addr6 = (struct sockaddr_in6 *)&addr;
+            addr6->sin6_family = fam;
+            addr6->sin6_port = port();
+            local_inet_pton(AF_INET6, address(), &addr6->sin6_addr.s6_addr);
+        }
+    }
+
+    // update the object using newly obtained information.
+    void update(struct sockaddr_storage &addr)
+    {
+        // fill out the caller's inetaddress
+        if (addr.ss_family == AF_INET)
+        {
+            struct sockaddr_in *addr4 = (struct sockaddr_in *)&addr;
+            setFamily(addr4->sin_family);
+            setPort(addr4->sin_port);
+        }
+        else
+        {
+            struct sockaddr_in6 * addr6 = (struct sockaddr_in6 *)&addr;
+            setFamily(addr6->sin6_family);
+            setPort(addr6->sin6_port);
+        }
+
+        char stringAddress[INET6_ADDRSTRLEN];
+        inetAddressToString(addr, stringAddress);
+        setAddress(stringAddress);
+    }
+
+
+protected:
+    RexxObjectPtr inetaddr;         // the Rexx object version
+    RexxMethodContext *context;     // current call context.
+};
+
+
 /*----------------------------------------------------------------------------*/
 /* Method: init                                                               */
 /* Description: instance initialization                                       */
@@ -158,16 +2091,19 @@ int local_inet_pton(int af, const char *src, void *dst)
 /*         protocol - socket protocol, usually zero                           */
 /*----------------------------------------------------------------------------*/
 
-// RKM:  You shouldn't need different signatures here.  A uintptr_t can hold
-// an int value just fine.
-RexxMethod3(RexxObjectPtr,                 // Return type
-            orxSocket6,                // Object_method name
-            int, domain,               // protocol family
-            int, type,                 // socket type
-            int, protocol)             // protocol
+RexxMethod3(RexxObjectPtr,             // Return type
+            socket_init,               // Object_method name
+            CSTRING, domainStr,        // protocol family
+            CSTRING, typeStr,          // socket type
+            CSTRING, protocolStr)      // protocol
 {
     ORXSOCKET socketfd;
     int zero = 0;
+
+    // convert the string option names to the numeric equivalents
+    int domain = stringToFamily(domainStr);
+    int type = stringToSockType(typeStr);
+    int protocol = stringToProtocol(protocolStr);
 
 #ifdef WIN32
     WORD wVersionRequested;
@@ -179,13 +2115,13 @@ RexxMethod3(RexxObjectPtr,                 // Return type
     socketfd = socket(domain, type, protocol);
     if (socketfd == INVALID_SOCKET)
     {
-        context->SetObjectVariable("retc", context->Int32(-1));
-        context->SetObjectVariable("errno", context->Int32(sock_errno()));
+        setRetc(context, -1);
+        setErrno(context, sock_errno());
     }
     else
     {
-        context->SetObjectVariable("retc", context->Int32(0));
-        context->SetObjectVariable("errno", context->Int32(0));
+        setRetc(context, -1);
+        setErrno(context, (int32_t)0);
     }
 
 #if defined(WIN32)
@@ -204,68 +2140,49 @@ RexxMethod3(RexxObjectPtr,                 // Return type
 /*----------------------------------------------------------------------------*/
 
 RexxMethod1(RexxObjectPtr,             // Return type
-            orxAccept6,                // Object_method name
+            socket_accept,             // Object_method name
+            OSELF, self,               // The object itself,
             OPTIONAL_RexxObjectPtr, inetaddr) // INetaddr instance
 {
-    RexxObjectPtr newrxsockfd;
-    RexxClassObject classinst;
-    ORXSOCKET socketfd, retc;
+    ORXSOCKET socketfd = getSocket(context);
+
     struct sockaddr_storage myaddr;
-    struct sockaddr_in * myaddr4 = (struct sockaddr_in *)&myaddr;
-    struct sockaddr_in6 * myaddr6 = (struct sockaddr_in6 *)&myaddr;
-    socklen_t len = sizeof(struct sockaddr_storage);
-    char str[INET6_ADDRSTRLEN];
-
-    socketfd = getSocket(context);
     memset(&myaddr, 0, sizeof(struct sockaddr_storage));
+    socklen_t len = sizeof(struct sockaddr_storage);
+
     // perform function and return
-    retc = accept(socketfd, (struct sockaddr *)&myaddr, &len);
+    ORXSOCKET newSocket = accept(socketfd, (struct sockaddr *)&myaddr, &len);
 
-    context->SetObjectVariable("retc", socketToObject(context, retc));
-
-    // RKM: use common routine for setting the errno value
-    setErrno(context, retc == INVALID_SOCKET);
-
+    RexxObjectPtr newSocketObject = socketToObject(context, newSocket);
+    setRetc(context, newSocketObject);
+    setErrno(context, newSocket == INVALID_SOCKET);
+    // if this was not a good socket return, return ,nil
     if (retc == INVALID_SOCKET)
     {
-        return socketToObject(context, retc);
+        return context->Nil();
     }
 
+    // we've been asked to return information
     if (inetaddr != NULLOBJECT)
     {
-        if (!context->IsOfType(inetaddr, "InetAddress"))
+        InetAddress addr(context, inetaddr);
+
+        // it must be a valid InetAddress object
+        if (!addr.validate())
         {
-            RexxArrayObject arrobj = context->NewArray(1);
-            const char *msg = "Argument 1 must be of type .InetAddress.";
-            context->ArrayAppendString(arrobj, msg, strlen(msg));
-            context->RaiseException(88900, arrobj);
             return context->String("-1");
         }
-        // fill out the caller's inetaddress
-        if (myaddr.ss_family == AF_INET)
-        {
-            context->SendMessage1(inetaddr, "family=",
-                                  context->UnsignedInt64((uint64_t)myaddr4->sin_family));
-            context->SendMessage1(inetaddr, "port=",
-                                  context->UnsignedInt64((uint64_t)myaddr4->sin_port));
-
-            // RKM:  This used a lot and the only difference is the routine name.
-            // create a macro for the name.
-            local_inet_ntop(AF_INET, myaddr4, str, INET6_ADDRSTRLEN);
-        }
-        else
-        {
-            context->SendMessage1(inetaddr, "family=",
-                                  context->UnsignedInt64((uint64_t)myaddr6->sin6_family));
-            context->SendMessage1(inetaddr, "port=",
-                                  context->UnsignedInt64((uint64_t)myaddr6->sin6_port));
-            local_inet_ntop(AF_INET6, myaddr4, str, INET6_ADDRSTRLEN);
-        }
-        context->SendMessage1(inetaddr, "address=", context->String(str));
+        // update the InetAddress object with the current information
+        addr.update(myaddr);
     }
-    classinst = context->FindClass("Socket");
-    newrxsockfd = context->SendMessage1(classinst, "new", socketToObject(context, retc));
-    return newrxsockfd;
+
+    // now create a wrappered socket object. start by copying ourselves so that
+    // all of the settings are maintained. This includes the last return and errno values.
+    RexxObjectPtr newSocketObject = context->SendMessage0(self, "copy");
+
+    // the new socket needs the new socket descriptor
+    setValue(context, newSocketObject, "socketfd=", newSocketObject);
+    return newSocketObject;
 }
 
 
@@ -277,59 +2194,29 @@ RexxMethod1(RexxObjectPtr,             // Return type
 /*----------------------------------------------------------------------------*/
 
 RexxMethod1(int,                       // Return type
-            orxBind6,                  // Object_method name
+            socket_bind,               // Object_method name
             RexxObjectPtr, inetaddr)   // Inetaddr instance
 {
-    ORXSOCKET socketfd;
+    ORXSOCKET socketfd = getSocket(context);
+
     struct sockaddr_storage myaddr;
-    struct sockaddr_in * myaddr4 = (struct sockaddr_in *)&myaddr;
-    struct sockaddr_in6 * myaddr6 = (struct sockaddr_in6 *)&myaddr;
-    char str[INET6_ADDRSTRLEN];
-    socklen_t len;
-    RexxObjectPtr obj;
-    uint32_t tmp;
-
-    socketfd = getSocket(context);
-
-    // perform function and return
     memset(&myaddr, 0, sizeof(struct sockaddr_storage));
 
-    // RKM:  This is done a lot...got place for a helper function.
-    if (!context->IsOfType(inetaddr, "InetAddress"))
+    InetAddress addr(context, inetaddr);
+
+    if (!addr.validate())
     {
-        RexxArrayObject arrobj = context->NewArray(1);
-        const char *msg = "Argument 1 must be of type .InetAddress.";
-        context->ArrayAppendString(arrobj, msg, strlen(msg));
-        context->RaiseException(88900, arrobj);
         return -1;
     }
-    obj = context->SendMessage0(inetaddr, "family");
-    context->UnsignedInt32(obj, &tmp);
-    if (tmp == AF_INET)
-    {
-        myaddr4->sin_family = (uint16_t) tmp;
-        obj = context->SendMessage0(inetaddr, "port");
-        context->UnsignedInt32(obj, &tmp);
-        myaddr4->sin_port = (uint16_t) tmp;
-        obj = context->SendMessage0(inetaddr, "address");
 
-        // another helper macro opportunity
-        local_inet_pton(myaddr4->sin_family, context->CString(obj), str);
-        len = sizeof(struct sockaddr_in);
-    }
-    else
-    {
-        myaddr6->sin6_family = (uint16_t) tmp;
-        obj = context->SendMessage0(inetaddr, "port");
-        context->UnsignedInt32(obj, &tmp);
-        myaddr6->sin6_port = (uint16_t) tmp;
-        obj = context->SendMessage0(inetaddr, "address");
-        local_inet_pton(myaddr6->sin6_family, context->CString(obj), str);
-        len = sizeof(struct sockaddr_in6);
-    }
+    // get the specifics from the address object
+    addr.prep(myaddr);
+
+    // we need the proper structure length set here
+    socklen_t len = myaddr.ss_family == AF_INET ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6);
+
     int retc = bind(socketfd, (struct sockaddr *)&myaddr, len);
-    context->SetObjectVariable("retc", context->Int32(retc));
-
+    setRetc(context, retc);
     setErrno(context, retc == -1);
     return retc;
 }
@@ -339,27 +2226,19 @@ RexxMethod1(int,                       // Return type
 /* Description: shutdown and close a socket                                   */
 /* Arguments: none                                                            */
 /*----------------------------------------------------------------------------*/
-
-// RKM:  use uintptr every where
 RexxMethod0(uintptr_t,                 // Return type
-            orxClose6)                 // Object_method name
+            socket_close)              // Object_method name
 {
-    ORXSOCKET socketfd, retc;
-
-    socketfd = getSocket(context);
+    ORXSOCKET socketfd = getSocket(context);
     // perform function and return
-    retc = shutdown(socketfd, 2);
-    // RKM:  Don't much mind the conditional here because it is only used in one place.
-    // however, a #define for the Linux case to map closesocket to close would
-    // simplify this in the inline code.  Probably worth doing, since it appears
-    // using the conditional here might have introduced a bug.
-    retc = closesocket(socketfd);
-    // RKM:  Shouldn't this variable also be set for the Linux case?
-    context->SetObjectVariable("retc", context->Uintptr(retc));
+    shutdown(socketfd, 2);
+    ORXSOCKET retc = closesocket(socketfd);
 
+    // clear out the socket descriptor so that uninit won't close again.
+    context->SetObjectVariable("socketfd", context->Int32(-1));
+    setRetc(context, (uintptr_t)retc);
     setErrno(context, retc == -1);
 
-    // RKM:  Need a cast here.
     return (uintptr_t)retc;
 }
 
@@ -372,60 +2251,65 @@ RexxMethod0(uintptr_t,                 // Return type
 /*----------------------------------------------------------------------------*/
 
 RexxMethod1(int,                       // Return type
-            orxConnect6,               // Object_method name
+            socket_connect,            // Object_method name
             RexxObjectPtr, inetaddr)   // Inetaddr instance
 {
-    ORXSOCKET socketfd;
+    ORXSOCKET socketfd = getSocket(context);
+
     struct sockaddr_storage myaddr;
-    struct sockaddr_in * myaddr4 = (struct sockaddr_in *)&myaddr;
-    struct sockaddr_in6 * myaddr6 = (struct sockaddr_in6 *)&myaddr;
-    socklen_t len = sizeof(myaddr);
-    RexxObjectPtr obj;
-    uint32_t tmp;
-
-    socketfd = getSocket(context);
-
-    // perform function and return
     memset(&myaddr, 0, sizeof(struct sockaddr_storage));
-    if (!context->IsOfType(inetaddr, "InetAddress"))
+    socklen_t len = sizeof(myaddr);
+
+    InetAddress addr(context, inetaddr);
+
+    if (!addr.validate())
     {
-        RexxArrayObject arrobj = context->NewArray(1);
-        const char *msg = "Argument 1 must be of type .InetAddress.";
-        context->ArrayAppendString(arrobj, msg, strlen(msg));
-        context->RaiseException(88900, arrobj);
         return -1;
     }
 
+    // get the specifis from the address object
+    addr.prep(myaddr);
 
-    // RKM:  This is also done a lot...make a single helper function
-    obj = context->SendMessage0(inetaddr, "family");
-    context->UnsignedInt32(obj, &tmp);
-    if (tmp == AF_INET)
-    {
-        myaddr4->sin_family = (uint16_t) tmp;
-        obj = context->SendMessage0(inetaddr, "port");
-        context->UnsignedInt32(obj, &tmp);
-        myaddr4->sin_port = (uint16_t) tmp;
-        obj = context->SendMessage0(inetaddr, "address");
-        local_inet_pton(AF_INET, context->CString(obj), &myaddr4->sin_addr.s_addr);
-    }
-    else
-    {
-        myaddr6->sin6_family = (uint16_t) tmp;
-        obj = context->SendMessage0(inetaddr, "port");
-        context->UnsignedInt32(obj, &tmp);
-        myaddr6->sin6_port = (uint16_t) tmp;
-        obj = context->SendMessage0(inetaddr, "address");
-        local_inet_pton(AF_INET6, context->CString(obj), &myaddr6->sin6_addr.s6_addr);
-    }
     int retc = connect(socketfd, (struct sockaddr *)&myaddr, len);
 
-    // RKM:  Setting the error stuff is done a lot.  Make a helper here too.
-
-    context->SetObjectVariable("retc", context->Int32(retc));
-
+    setRetc(context, retc);
     setErrno(context, retc == -1);
     return retc;
+}
+
+
+/**
+ * Populate an AddrInfo object instance with the information from
+ * the system structure.
+ *
+ * @param context The call context.
+ * @param info    The addrinfo structure
+ *
+ * @return A Rexx object containing the address information.
+ */
+RexxObjectPtr buildAddressInfo(RexxMethodContext *context, struct addrinfo *info)
+{
+    RexxClassObject cobj = context->FindClass("AddrInfo");
+    RexxObjectPtr obj = context->SendMessage0(cobj, "new");
+    setValue(context, obj, "flags=", info->ai_flags);
+    setValue(context, obj, "family=", familyToString(info->ai_family));
+    setValue(context, obj, "socktype=", sockTypeToString(info->ai_socktype));
+    setValue(context, obj, "protocol=", protocolToString(info->ai_protocol));
+    if (info->ai_canonname != NULL)
+    {
+        setValue(context, obj, "ai_canonname=", info->ai_canonname);
+    }
+    if (info->ai_addr != NULL)
+    {
+        char stringAddress[INET6_ADDRSTRLEN];
+        setValue(context, obj, "addressFamily=", familyToString(info->ai_addr->sa_family));
+        // now format the string address
+        char stringAddress[INET6_ADDRSTRLEN];
+        internetAddressToString(info->ai_addr->sa_data, stringAddress);
+        setValue(context, obj, "address=", stringAddress);
+    }
+
+    return obj;
 }
 
 
@@ -440,59 +2324,46 @@ RexxMethod1(int,                       // Return type
 /*----------------------------------------------------------------------------*/
 
 RexxMethod4(int,                       // Return type
-            orxGetAddrinfo6,           // Object_method name
-            RexxStringObject, nodename,// the host name or ip address
-            RexxStringObject, servname,// the service name or number
+            socket_getAddrInfo,        // Object_method name
+            CSTRING, nodename,         // the host name or ip address
+            CSTRING, servname,         // the service name or number
             RexxObjectPtr, hints,      // an Inetaddr for the search hints
             RexxArrayObject, rea)      // the name of a Rexx variable for the returned array
 {
-    CSTRING snodename = context->StringData(nodename);
-    CSTRING sservname = context->StringData(servname);
-    struct addrinfo shints, *rrea, *startrrea;
-    RexxObjectPtr obj;
-    int tmp, retc;
-    unsigned int utmp;
+    struct addrinfo shints;
     struct sockaddr_storage myaddr;
-    struct sockaddr_in * myaddr4 = (struct sockaddr_in *)&myaddr;
-    struct sockaddr_in6 * myaddr6 = (struct sockaddr_in6 *)&myaddr;
-    char str[INET6_ADDRSTRLEN];
 
     // fill out the shints struct
     memset(&shints, 0, sizeof(shints));
-    obj = context->SendMessage0(hints, "ai_flags");
-    context->Int32(obj, &tmp);
-    shints.ai_flags = (int32_t) tmp;
-    obj = context->SendMessage0(hints, "ai_family");
-    context->Int32(obj, &tmp);
-    shints.ai_family = (int32_t) tmp;
-    obj = context->SendMessage0(hints, "ai_socktype");
-    context->Int32(obj, &tmp);
-    shints.ai_socktype = (int32_t) tmp;
-    obj = context->SendMessage0(hints, "ai_protocol");
-    context->Int32(obj, &tmp);
-    shints.ai_protocol = tmp;
-    obj = context->SendMessage0(hints, "ai_canonname");
-    shints.ai_canonname = (char *) context->StringData((RexxStringObject)obj);
-    obj = context->SendMessage0(hints, "sa_family");
-    context->UnsignedInt32(obj, &utmp);
-    if (tmp == AF_INET)
+
+    // get everything we can from the hints
+    shints.ai_flags = getInt32(context, hints, "ai_flags");
+    shints.ai_family = stringToFamily(getStringValue(context, hints, "ai_family"));
+    shints.ai_socktype = stringToSockType(getStringValue(context, hints, "ai_socktype"));
+    shints.ai_protocol = stringToProtocol(getStringValue(context, hints, "ai_protocol"));
+    shints.ai_canonname = (char *)getStringValue(context, hints, "ai_canonname");
+    int family = stringToFamily(getStringValue(context, hints, "sa_family"));
+
+    if (family == AF_INET)
     {
-        myaddr4->sin_family = (uint16_t) utmp;
-        obj = context->SendMessage0(hints, "sa_addr");
-        local_inet_pton(AF_INET, context->CString(obj), &myaddr4 ->sin_addr.s_addr);
+        struct sockaddr_in * myaddr4 = (struct sockaddr_in *)&myaddr;
+        myaddr4->sin_family = (uint16_t)family;
+        local_inet_pton(AF_INET, getStringValue(context, hints, "sa_addr"), &myaddr4->sin_addr.s_addr);
         shints.ai_addrlen = sizeof(struct sockaddr_in);
     }
     else
     {
-        myaddr6->sin6_family = (uint16_t) tmp;
-        obj = context->SendMessage0(hints, "sa_addr");
-        local_inet_pton(AF_INET6, context->CString(obj), &myaddr6 ->sin6_addr.s6_addr);
+        struct sockaddr_in6 * myaddr6 = (struct sockaddr_in6 *)&myaddr;
+        myaddr6->sin6_family = (uint16_t)family;
+        local_inet_pton(AF_INET6, getStringValue(context, hints, "sa_addr"), &myaddr6 ->sin6_addr.s6_addr);
         shints.ai_addrlen = sizeof(struct sockaddr_in6);
     }
+
     shints.ai_addr = (struct sockaddr *) &myaddr;
     //perform function
-    retc = getaddrinfo(snodename, sservname, &shints, &rrea);
-    context->SetObjectVariable("retc", context->Int32(retc));
+    struct addrinfo *rrea;
+    int retc = getaddrinfo(nodename, servname, &shints, &rrea);
+    setRetc(context, retc);
     setErrno(context, retc == -1);
 
     if (retc != 0 || rrea == NULL)
@@ -500,51 +2371,10 @@ RexxMethod4(int,                       // Return type
         return retc;
     }
     // create the output array
-    startrrea = rrea;
+    struct addrinfo *startrrea = rrea;
     while (rrea != NULL)
     {
-        RexxClassObject cobj = context->FindClass("AddrInfo");
-        obj = context->SendMessage0(cobj, "new");
-        context->SendMessage1(obj, "ai_flags=",
-                              context->Int32ToObject(rrea->ai_flags));
-        context->SendMessage1(obj, "ai_family=",
-                              context->Int32ToObject(rrea->ai_family));
-        context->SendMessage1(obj, "ai_socktype=",
-                              context->Int32ToObject(rrea->ai_socktype));
-        context->SendMessage1(obj, "ai_protocol=",
-                              context->Int32ToObject(rrea->ai_protocol));
-        if (rrea->ai_canonname != NULL)
-        {
-            context->SendMessage1(obj, "ai_canonname=",
-                                  context->String(rrea->ai_canonname));
-        }
-        else
-        {
-            context->SendMessage1(obj, "ai_canonname=",
-                                  context->String(""));
-        }
-        if (rrea->ai_addr != NULL)
-        {
-            context->SendMessage1(obj, "sa_family=",
-                                  context->UnsignedInt32((uint32_t)rrea->ai_addr->sa_family));
-            if (utmp == AF_INET)
-            {
-                rrea->ai_addr->sa_family = AF_INET;
-                local_inet_ntop(AF_INET, rrea->ai_addr->sa_data, str, INET6_ADDRSTRLEN);
-            }
-            else
-            {
-                rrea->ai_addr->sa_family = AF_INET6;
-                local_inet_ntop(AF_INET6, rrea->ai_addr->sa_data, str, INET6_ADDRSTRLEN);
-            }
-            context->SendMessage1(obj, "sa_addr=", context->String(str));
-        }
-        else
-        {
-            context->SendMessage1(obj, "sa_family=", context->UnsignedInt32(0));
-            context->SendMessage1(obj, "sa_addr=", context->String(""));
-        }
-        context->ArrayAppend(rea, obj);
+        context->ArrayAppend(rea, buildAddressInfo(family == AF_INET, context, rrea));
         rrea = rrea->ai_next;
     }
     freeaddrinfo(startrrea);
@@ -561,7 +2391,7 @@ RexxMethod4(int,                       // Return type
 /*----------------------------------------------------------------------------*/
 
 RexxMethod1(RexxObjectPtr,             // Return type
-            orxGetStrerror6,           // Object_method name
+            socket_getStringError,     // Object_method name
             int, err)                  // error code
 {
 
@@ -577,18 +2407,16 @@ RexxMethod1(RexxObjectPtr,             // Return type
 /*----------------------------------------------------------------------------*/
 
 RexxMethod0(RexxObjectPtr,             // Return type
-            orxGetHostName6)           // Object_method name
+            socket_getHostName)        // Object_method name
 {
     char host[HOST_NAME_MAX + 1];
+    host[0] = '\0';
 
     // perform function and return
     int retc = gethostname(host, sizeof(host));
-    context->SetObjectVariable("retc", context->Int32(retc));
-
+    setRetc(context, retc);
     setErrno(context, retc == -1);
 
-    // RKM:  Suspect the host needs to be initialized to a null string.  This will
-    // return garbage if there is an error.
     return context->String(host);
 }
 
@@ -601,32 +2429,27 @@ RexxMethod0(RexxObjectPtr,             // Return type
 /*----------------------------------------------------------------------------*/
 
 RexxMethod1(int,                       // Return type
-            orxGetPeerName6,           // Object_method name
+            socket_getPeerName,        // Object_method name
             RexxObjectPtr, inetaddr)   // Inetaddr instance
 {
-    ORXSOCKET socketfd;
     struct sockaddr_storage myaddr;
-    struct sockaddr_in * myaddr4 = (struct sockaddr_in *)&myaddr;
-    struct sockaddr_in6 * myaddr6 = (struct sockaddr_in6 *)&myaddr;
-    char str[INET6_ADDRSTRLEN];
     socklen_t len = sizeof(myaddr);
-    int retc;
 
     // get the socket file descriptor
-    socketfd = getSocket(context);
+    ORXSOCKET socketfd = getSocket(context);
 
     // perform function and return
     memset(&myaddr, 0, sizeof(struct sockaddr_storage));
-    if (!context->IsOfType(inetaddr, "InetAddress"))
+
+    InetAddress addr(context, inetaddr);
+    if (!addr.validate())
     {
-        RexxArrayObject arrobj = context->NewArray(1);
-        const char *msg = "Argument 1 must be of type .InetAddress.";
-        context->ArrayAppendString(arrobj, msg, strlen(msg));
-        context->RaiseException(88900, arrobj);
         return -1;
     }
-    retc = getpeername(socketfd, (struct sockaddr *)&myaddr, &len);
-    context->SetObjectVariable("retc", context->Int32(retc));
+
+    int retc = getpeername(socketfd, (struct sockaddr *)&myaddr, &len);
+
+    setRetc(context, retc);
     setErrno(context, retc == -1);
 
     if (retc == -1)
@@ -634,23 +2457,8 @@ RexxMethod1(int,                       // Return type
         return retc;
     }
 
-    if (myaddr.ss_family == AF_INET)
-    {
-        context->SendMessage1(inetaddr, "family=",
-                              context->UnsignedInt64((uint64_t)myaddr4->sin_family));
-        context->SendMessage1(inetaddr, "port=",
-                              context->UnsignedInt64((uint64_t)myaddr4->sin_port));
-        local_inet_ntop(AF_INET, myaddr4, str, INET6_ADDRSTRLEN);
-    }
-    else
-    {
-        context->SendMessage1(inetaddr, "family=",
-                              context->UnsignedInt64((uint64_t)myaddr6->sin6_family));
-        context->SendMessage1(inetaddr, "port=",
-                              context->UnsignedInt64((uint64_t)myaddr6->sin6_port));
-        local_inet_ntop(AF_INET6, myaddr4, str, INET6_ADDRSTRLEN);
-    }
-    context->SendMessage1(inetaddr, "address=", context->String(str));
+    // update the address info
+    addr.update(myaddr);
     return retc;
 }
 
@@ -663,22 +2471,19 @@ RexxMethod1(int,                       // Return type
 /*----------------------------------------------------------------------------*/
 
 RexxMethod1(int,                       // Return type
-            orxGetProtocolByName6,     // Object_method name
-            RexxStringObject, proto)   // Protocol name
+            socket_getProtocolByName,  // Object_method name
+            CSTRING, protoname)        // Protocol name
 {
-    CSTRING protoname = context->StringData(proto);
-    struct protoent *ent;
-
     // perform function and return
-    ent = getprotobyname(protoname);
+    struct protoent *ent = getprotobyname(protoname);
     if (ent == NULL)
     {
-        context->SetObjectVariable("retc", context->Int32(-1));
-        context->SetObjectVariable("errno", context->Int32(22));
+        setRetc(context, -1);
+        setErrno(context, 22);
         return -1;
     }
-    context->SetObjectVariable("retc", context->Int32(0));
-    context->SetObjectVariable("errno", context->Int32(0));
+    setRetc(context, 0);
+    setErrno(context, (int32_t)0);
     return ent->p_proto;
 }
 
@@ -691,19 +2496,17 @@ RexxMethod1(int,                       // Return type
 /*----------------------------------------------------------------------------*/
 
 RexxMethod1(RexxStringObject,          // Return type
-            orxGetProtocolByNumber6,   // Object_method name
+            socket_getProtocolByNumber,// Object_method name
             int, proto)                // Protocol number
 {
-    struct protoent *ent;
-
     // perform function and return
-    ent = getprotobynumber(proto);
+    struct protoent *ent = getprotobynumber(proto);
     if (ent == NULL)
     {
         return context->String("-1");
     }
-    context->SetObjectVariable("retc", context->Int32(0));
-    context->SetObjectVariable("errno", context->Int32(0));
+    setRetc(context, 0);
+    setErrno(context, (int32_t)0);
     return context->String(ent->p_name);
 }
 
@@ -716,32 +2519,27 @@ RexxMethod1(RexxStringObject,          // Return type
 /*----------------------------------------------------------------------------*/
 
 RexxMethod1(int,                       // Return type
-            orxGetSockName6,           // Object_method name
+            socket_getSockName,        // Object_method name
             RexxObjectPtr, inetaddr)   // Inetaddr instance
 {
-    ORXSOCKET socketfd;
     struct sockaddr_storage myaddr;
-    struct sockaddr_in * myaddr4 = (struct sockaddr_in *)&myaddr;
-    struct sockaddr_in6 * myaddr6 = (struct sockaddr_in6 *)&myaddr;
-    char str[INET6_ADDRSTRLEN];
     socklen_t len = sizeof(myaddr);
-    int retc;
 
     // get the socket file descriptor
-    socketfd = getSocket(context);
+    ORXSOCKET socketfd = getSocket(context);
 
     // perform function and return
     memset(&myaddr, 0, sizeof(struct sockaddr_storage));
-    if (!context->IsOfType(inetaddr, "InetAddress"))
+
+    InetAddress addr(context, inetaddr);
+    if (!addr.validate())
     {
-        RexxArrayObject arrobj = context->NewArray(1);
-        const char *msg = "Argument 1 must be of type .InetAddress.";
-        context->ArrayAppendString(arrobj, msg, strlen(msg));
-        context->RaiseException(88900, arrobj);
         return -1;
     }
-    retc = getsockname(socketfd, (struct sockaddr *)&myaddr, &len);
-    context->SetObjectVariable("retc", context->Int32(retc));
+
+    int retc = getsockname(socketfd, (struct sockaddr *)&myaddr, &len);
+
+    setRetc(context, retc);
     setErrno(context, retc == -1);
 
     if (retc == -1)
@@ -749,23 +2547,9 @@ RexxMethod1(int,                       // Return type
         return retc;
     }
 
-    if (myaddr.ss_family == AF_INET)
-    {
-        context->SendMessage1(inetaddr, "family=",
-                              context->UnsignedInt64((uint64_t)myaddr4->sin_family));
-        context->SendMessage1(inetaddr, "port=",
-                              context->UnsignedInt64((uint64_t)myaddr4->sin_port));
-        local_inet_ntop(AF_INET, myaddr4, str, INET6_ADDRSTRLEN);
-    }
-    else
-    {
-        context->SendMessage1(inetaddr, "family=",
-                              context->UnsignedInt64((uint64_t)myaddr6->sin6_family));
-        context->SendMessage1(inetaddr, "port=",
-                              context->UnsignedInt64((uint64_t)myaddr6->sin6_port));
-        local_inet_ntop(AF_INET6, myaddr4, str, INET6_ADDRSTRLEN);
-    }
-    context->SendMessage1(inetaddr, "address=", context->String(str));
+    // update the inetaddress object from the returned information.
+    addr.update(myaddr);
+
     return retc;
 }
 
@@ -778,15 +2562,15 @@ RexxMethod1(int,                       // Return type
 /*----------------------------------------------------------------------------*/
 
 RexxMethod1(RexxObjectPtr,             // Return type
-            orxGetSockOpt6,            // Object_method name
-            int, option)               // socket option
+            socket_getSockOpt,         // Object_method name
+            CSTRING, optionStr)        // socket option
 {
-    ORXSOCKET socketfd;
-    int sockval_int, retc;
-    socklen_t len;
 
     // get the socket file descriptor
-    socketfd = getSocket(context);
+    ORXSOCKET socketfd = getSocket(context);
+
+    // convert from a string to the numeric equivalent
+    int option = stringToSockOpt(optionStr);
 
     // perform function and return
     switch (option)
@@ -889,46 +2673,44 @@ RexxMethod1(RexxObjectPtr,             // Return type
 #endif
         {
             // boolean/int options
-            len = (int) sizeof(int);
+            socklen_t len = (int)sizeof(int);
+            int sockval_int = 0;
 
-// RKM:  I suspect this one is ok to leave too...you could probably hide the differences
-// with a macro if needed.
-            retc = getsockopt(socketfd, SOL_SOCKET, option, (SOCKOPTION *)&sockval_int, &len);
-            context->SetObjectVariable("retc", context->Int32(retc));
+            int retc = getsockopt(socketfd, SOL_SOCKET, option, (SOCKOPTION *)&sockval_int, &len);
+            setRetc(context, retc);
             setErrno(context, retc == -1);
 
-            // RKM: Fixed a bug here...should be "==" not "="
             if (retc == -1)
             {
-                return context->Int64((int64_t)retc);
+                return context->Int32(retc);
             }
-            return context->Int64((int)sockval_int);
+            return context->Int32(sockval_int);
         }
         case SO_LINGER:
         {
             struct linger so_linger;
-            len = (int) sizeof(so_linger);
-            retc = getsockopt(socketfd, SOL_SOCKET, option, (SOCKOPTION *)&so_linger, &len);
-            context->SetObjectVariable("retc", context->Int32(retc));
+            socklen_t len = (int) sizeof(so_linger);
+            int retc = getsockopt(socketfd, SOL_SOCKET, option, (SOCKOPTION *)&so_linger, &len);
+            setRetc(context, retc);
             setErrno(context, retc == -1);
 
-            // RKM:  Another comparison bug
             if (retc == 0)
             {
                 RexxClassObject l_class= context->FindClass("Linger");
                 RexxObjectPtr l_obj = context->SendMessage0(l_class, "new");
-                context->SendMessage1(l_obj, "l_onoff=", context->Int64((int64_t)so_linger.l_onoff));
-                context->SendMessage1(l_obj, "l_linger=", context->Int64((int64_t)so_linger.l_linger));
+                setValue(context, l_obj, "l_onoff=", so_linger.l_onoff);
+                setValue(context, l_obj, "l_linger=", so_linger.l_linger);
+                return l_obj;
             }
-            return context->Int64((int64_t)retc);
+            return context->Int32(retc);
         }
 #ifdef SO_BINDTODEVICE
         case SO_BINDTODEVICE:
         {
             char sockval_str[512];
-            len = sizeof(sockval_str);
-            retc = getsockopt(socketfd, SOL_SOCKET, option, &sockval_str, &len);
-            context->SetObjectVariable("retc", context->Int32(retc));
+            socklen_t len = sizeof(sockval_str);
+            int retc = getsockopt(socketfd, SOL_SOCKET, option, (SOCKOPTION *)&sockval_str, &len);
+            setRetc(context, retc);
             setErrno(context, retc == -1);
 
             return context->String(sockval_str, len);
@@ -941,9 +2723,9 @@ RexxMethod1(RexxObjectPtr,             // Return type
         case SO_PEERCRED:    // we do not support credentials
 #endif
         default:
-            context->SetObjectVariable("retc", context->Int32(-1));
-            context->SetObjectVariable("errno", context->Int32(22));
-            return context->Int64(-1);
+            setRetc(context, -1);
+            setErrno(context, 22);
+            return context->Int32(-1);
     }
 }
 
@@ -955,19 +2737,16 @@ RexxMethod1(RexxObjectPtr,             // Return type
 /*         backlog - number of possible waiting clients.                      */
 /*----------------------------------------------------------------------------*/
 
-// RKM:  Just use uintptr_t always
 RexxMethod1(uintptr_t,                 // Return type
-            orxListen6,                // Object_method name
+            socket_listen,             // Object_method name
             int, backlog)              // backlog
 {
-    ORXSOCKET socketfd, retc;
-
     // get the socket file descriptor
-    socketfd = getSocket(context);
+    ORXSOCKET socketfd = getSocket(context);
 
     // perform function and return
-    retc = listen(socketfd, backlog);
-    context->SetObjectVariable("retc", socketToObject(context, retc));
+    ORXSOCKET retc = listen(socketfd, backlog);
+    setRetc(context, socketToObject(context, retc));
 
     setErrno(context, retc == INVALID_SOCKET);
     return retc;
@@ -982,34 +2761,20 @@ RexxMethod1(uintptr_t,                 // Return type
 /*----------------------------------------------------------------------------*/
 
 RexxMethod1(RexxObjectPtr,             // Return type
-            orxRecv6,                  // Object_method name
+            socket_receive,            // Object_method name
             size_t, len)               // number of bytes to be read
 {
-    ORXSOCKET socketfd;
-
-    // RKM:  Can probably fixed just by defining alloca() to _malloca() on Windows.
-    // However, I don't think this is a good idea.  If reading a lot of data from the
-    // socket, there's a good chance this will fail, particularly if not running on the
-    // main thread.  Also, I think this is completely wrong, since this will only allocate
-    // Consider using a BufferString for this.
-
     RexxBufferStringObject buffer = context->NewBufferString(len);
     char *cblock = (char *)context->BufferStringData(buffer);
-    ssize_t lenread;
 
     // get the socket file descriptor
-    socketfd = getSocket(context);
+    ORXSOCKET socketfd = getSocket(context);
 
     // perform function and return
-    // RKM:  The cast to (int) could be a problem in 64-bit.  Is that correct?
-    lenread = recv(socketfd, cblock, (int)len, 0);
-    // RKM:  This could potentially truncate in 64-bit, so changed the conversion function
-    context->SetObjectVariable("retc", context->Int64((int64_t)lenread));
+    size_t lenread = recv(socketfd, cblock, (int)len, 0);
+    setRetc(context, context->Int64((int64_t)lenread));
     setErrno(context, lenread == -1);
 
-    // RKM:  Not sure this is an appropriate return value for errors...null string
-    // or maybe .nil might be a better return.  The data read might actually be
-    // the string "-1"
     if (lenread == -1)
     {
         return context->Nil();
@@ -1030,59 +2795,35 @@ RexxMethod1(RexxObjectPtr,             // Return type
 /*----------------------------------------------------------------------------*/
 
 RexxMethod2(RexxObjectPtr,             // Return type
-            orxRecvFrom6,              // Object_method name
+            socket_receiveFrom,        // Object_method name
             int, len,                  // number of bytes to be read
             RexxObjectPtr, inetaddr)   // Inetaddr instance
 {
-    RexxObjectPtr obj;
-    ORXSOCKET socketfd;
     RexxBufferStringObject buffer = context->NewBufferString(len);
     char *cblock = (char *)context->BufferStringData(buffer);
-    ssize_t lenread;
 
     struct sockaddr_storage myaddr;
-    struct sockaddr_in * myaddr4 = (struct sockaddr_in *)&myaddr;
-    struct sockaddr_in6 * myaddr6 = (struct sockaddr_in6 *)&myaddr;
-    char str[INET6_ADDRSTRLEN];
     socklen_t slen = sizeof(myaddr);
-    uint32_t tmp;
 
     // get the socket file descriptor
-    socketfd = getSocket(context);
+    ORXSOCKET socketfd = getSocket(context);
 
     // perform function and return
     memset(&myaddr, 0, sizeof(struct sockaddr_storage));
-    if (!context->IsOfType(inetaddr, "InetAddress"))
+
+    InetAddress addr(context, inetaddr);
+
+    if (!addr.validate())
     {
-        RexxArrayObject arrobj = context->NewArray(1);
-        const char *msg = "Argument 2 must be of type .InetAddress.";
-        context->ArrayAppendString(arrobj, msg, strlen(msg));
-        context->RaiseException(88900, arrobj);
         return (RexxObjectPtr) context->NullString();
     }
-    obj = context->SendMessage0(inetaddr, "family");
-    context->UnsignedInt32(obj, &tmp);
-    if (tmp == AF_INET)
-    {
-        myaddr4->sin_family = (uint16_t) tmp;
-        obj = context->SendMessage0(inetaddr, "port");
-        context->UnsignedInt32(obj, &tmp);
-        myaddr4->sin_port = (uint16_t) tmp;
-        obj = context->SendMessage0(inetaddr, "address");
-        local_inet_pton(myaddr4->sin_family, context->CString(obj), str);
-    }
-    else
-    {
-        myaddr6->sin6_family = (uint16_t) tmp;
-        obj = context->SendMessage0(inetaddr, "port");
-        context->UnsignedInt32(obj, &tmp);
-        myaddr6->sin6_port = (uint16_t) tmp;
-        obj = context->SendMessage0(inetaddr, "address");
-        local_inet_pton(myaddr6->sin6_family, context->CString(obj), str);
-    }
 
-    lenread = recvfrom(socketfd, cblock, len, 0, (struct sockaddr *)&myaddr, &slen);
-    context->SetObjectVariable("retc", context->Int64((int64_t)lenread));
+    // fill in the address info from the object
+    addr.prep(myaddr);
+
+    size_t lenread = recvfrom(socketfd, cblock, len, 0, (struct sockaddr *)&myaddr, &slen);
+
+    setRetc(context, context->Int64((int64_t)lenread));
     setErrno(context, lenread == -1);
 
     if (lenread == -1)
@@ -1094,6 +2835,78 @@ RexxMethod2(RexxObjectPtr,             // Return type
     context->FinishBufferString(buffer, lenread);
     return buffer;
 }
+
+
+/**
+ * Perform setup for a call to the select() function.
+ *
+ * @param context The current execution context.
+ * @param fdarray Any optional array object containing sockets to be used for the select.
+ * @param fdset   An fd_set value that the socket descriptors are written to.
+ * @param maxsocketfd
+ *                Am accumulator used to track the maximum socket number required for the select() call.
+ *
+ * @return A pointer to the fd_set or NULL if there we no sockets to process.
+ */
+fd_set *buildFDSet(RexxMethodContext *context, RexxArrayObject fdarray, fd_set &fdset, ORXSOCKET &maxsocketfd)
+{
+    // the arrays are optional, so return nothing if we're not
+    // interested in thie set
+    if (fdarray == NULL)
+    {
+        return NULL;
+    }
+
+    // initialize the set
+    FD_ZERO(&fdset);
+    size_t items = context->ArrayItems(fdarray);
+    for (size_t i = 1; i <= items; i++)
+    {
+        // each item is a socket and we need the socket from that array.
+        RexxObjectPtr rxsockfd = context->ArrayAt(fdarray, i);
+        ORXSOCKET socketfd = getSocket(context, rxsockfd);
+        if (socketfd > maxsocketfd)
+        {
+            maxsocketfd = socketfd;
+        }
+        // add the socket to the set
+        FD_SET(socketfd, &fdset);
+    }
+
+    // we have something, so return a pointer to the set
+    // to be used in the select.
+    return &fdset;
+}
+
+
+/**
+ * Update the select arrays with the results of the select
+ *
+ * @param context The current execution context.
+ * @param fdarray The input array (optional). Non-selected sockets will be removed from this array.
+ * @param fdset   The fd_set value after the select() operation
+ */
+void updateFDSet(RexxMethodContext *context, RexxArrayObject fdarray, fd_set &fdset)
+{
+    // set the read array
+    if (fdarray != NULL)
+    {
+        size_t items = context->ArrayItems(fdarray);
+        for (size_t i = 1; i <= items; i++)
+        {
+            // each item is a socket and we need the socket from that array.
+            RexxObjectPtr rxsockfd = context->ArrayAt(fdarray, i);
+            ORXSOCKET socketfd = getSocket(context, rxsockfd);
+            if (!FD_ISSET(socketfd, &fdset))
+            {
+                // remove the item so DO OVER can be used on the remainders
+                context->SendMessage1(fdarray, "remove", context->StringSizeToObject(i));
+            }
+        }
+    }
+}
+
+
 
 /*----------------------------------------------------------------------------*/
 /* Method: select                                                             */
@@ -1107,132 +2920,39 @@ RexxMethod2(RexxObjectPtr,             // Return type
 /*----------------------------------------------------------------------------*/
 
 RexxMethod4(int,                       // Return type
-            orxSelect6,                // Object_method name
-            RexxArrayObject, readfds,  // array of read file descriptors
-            RexxArrayObject, writefds, // array of write file descriptors
-            RexxArrayObject, excpfds,  // array of read file descriptors
+            socket_select,             // Object_method name
+            OPTIONAL_RexxArrayObject, readfds,  // array of read file descriptors
+            OPTIONAL_RexxArrayObject, writefds, // array of write file descriptors
+            OPTIONAL_RexxArrayObject, excpfds,  // array of read file descriptors
             int, timeout)              // timeout in milliseconds
 {
-    RexxObjectPtr rxsockfd1, rxsockfd2;
-    int i, retc;
-    size_t items;
-    int socketfd, maxsocketfd = 0;
-    fd_set *pread_set = NULL, *pwrite_set = NULL, *pexcp_set = NULL;
-    struct timeval sel_timeout;
+    ORXSOCKET maxsocketfd = 0;
 
-    // get the read set
-    if (readfds != context->Nil())
-    {
-        pread_set = (fd_set *)alloca(sizeof(fd_set));
-        FD_ZERO(pread_set);
-        items = context->ArrayItems(readfds);
-        for (i = 1; i <= items; i++)
-        {
-            rxsockfd1 = context->ArrayAt(readfds, i);
-            rxsockfd2 = context->SendMessage0(rxsockfd1, "socketfd");
-            context->Int32(rxsockfd2, &socketfd);
-            if (socketfd > maxsocketfd)
-            {
-                maxsocketfd = socketfd;
-            }
-            FD_SET(socketfd, pread_set);
-        }
-    }
-    // get the write set
-    if (writefds != context->Nil())
-    {
-        pwrite_set = (fd_set *)alloca(sizeof(fd_set));
-        FD_ZERO(pwrite_set);
-        items = context->ArrayItems(writefds);
-        for (i = 1; i <= items; i++)
-        {
-            rxsockfd1 = context->ArrayAt(writefds, i);
-            rxsockfd2 = context->SendMessage0(rxsockfd1, "socketfd");
-            context->Int32(rxsockfd2, &socketfd);
-            if (socketfd > maxsocketfd)
-            {
-                maxsocketfd = socketfd;
-            }
-            FD_SET(socketfd, pwrite_set);
-        }
-    }
-    // get the exception set
-    if (excpfds != context->Nil())
-    {
-        pexcp_set = (fd_set *)alloca(sizeof(fd_set));
-        FD_ZERO(pexcp_set);
-        items = context->ArrayItems(excpfds);
-        for (i = 1; i <= items; i++)
-        {
-            rxsockfd1 = context->ArrayAt(excpfds, i);
-            rxsockfd2 = context->SendMessage0(rxsockfd1, "socketfd");
-            context->Int32(rxsockfd2, &socketfd);
-            if (socketfd > maxsocketfd)
-            {
-                maxsocketfd = socketfd;
-            }
-            FD_SET(socketfd, pexcp_set);
-        }
-    }
+    fd_set read_set;
+    fd_set write_set;
+    fd_set excp_set;
+
+    fd_set *pread_set = buildFDSet(context, readfds, read_set, maxsocketfd);
+    fd_set *pwrite_set = buildFDSet(context, writefds, write_set, maxsocketfd);
+    fd_set *pexcp_set = buildFDSet(context, excpfds, excp_set, maxsocketfd);
+
+    struct timeval sel_timeout;
     // get the timeout
     sel_timeout.tv_sec = timeout / 1000;
     sel_timeout.tv_usec = timeout % 1000;
     // perform the select() operation
-    retc = select(maxsocketfd + 1, pread_set, pwrite_set, pexcp_set, &sel_timeout);
-    context->SetObjectVariable("retc", context->Int32(retc));
-    if (retc == -1)
+    int retc = select((int)maxsocketfd + 1, pread_set, pwrite_set, pexcp_set, &sel_timeout);
+    setRetc(context, retc);
+    setErrno(context, retc == -1);
+
+    // since our result is done by removing the non-selected sockets,
+    // we need to update even if nothing is selected.
+    if (retc >= 0)
     {
-        context->SetObjectVariable("errno", context->Int32(sock_errno()));
-    }
-    else
-    {
-        context->SetObjectVariable("errno", context->Int32(0));
-    }
-    // see if at least one file descriptor changed
-    if (retc > 0)
-    {
-        // set the read array
-        if (readfds != context->Nil())
-        {
-            items = context->ArrayItems(readfds);
-            for (i = 1; i <= items; i++)
-            {
-                rxsockfd1 = context->ArrayAt(readfds, i);
-                rxsockfd2 = context->SendMessage0(rxsockfd1, "socketfd");
-                if (!FD_ISSET(socketfd, pread_set))
-                {
-                    context->ArrayPut(readfds, context->Nil(), i);
-                }
-            }
-        }
-        // set the write array
-        if (writefds != context->Nil())
-        {
-            items = context->ArrayItems(writefds);
-            for (i = 1; i <= items; i++)
-            {
-                rxsockfd1 = context->ArrayAt(writefds, i);
-                rxsockfd2 = context->SendMessage0(rxsockfd1, "socketfd");
-                if (!FD_ISSET(socketfd, pwrite_set))
-                {
-                    context->ArrayPut(writefds, context->Nil(), i);
-                }
-            }
-        }
-        // set the exception array
-        if (excpfds != context->Nil())
-        {
-            items = context->ArrayItems(excpfds);
-            for (i = 1; i <= items; i++)
-            {
-                rxsockfd1 = context->ArrayAt(excpfds, i);
-                rxsockfd2 = context->SendMessage0(rxsockfd1, "socketfd");
-                if (!FD_ISSET(socketfd, pexcp_set))
-                {
-                    context->ArrayPut(excpfds, context->Nil(), i);
-                }
-            }
-        }
+        // now update the argument arrays with the results
+        updateFDSet(context, readfds, read_set);
+        updateFDSet(context, writefds, write_set);
+        updateFDSet(context, excpfds, excp_set);
     }
     // return
     return retc;
@@ -1247,19 +2967,16 @@ RexxMethod4(int,                       // Return type
 /*----------------------------------------------------------------------------*/
 
 RexxMethod1(int,                       // Return type
-            orxSend6,                  // Object_method name
+            socket_send,               // Object_method name
             RexxStringObject, block)   // bytes to be written
 {
-    ORXSOCKET socketfd;
-    CSTRING cblock;
-
     // get the socket file descriptor
-    socketfd = getSocket(context);
+    ORXSOCKET socketfd = getSocket(context);
 
     // perform function and return
-    cblock = context->CString(block);
-    int retc = send(socketfd, cblock, (int)context->StringLength(block), 0);
-    context->SetObjectVariable("retc", context->Int32(retc));
+    int retc = send(socketfd, context->CString(block), (int)context->StringLength(block), 0);
+
+    setRetc(context, retc);
     setErrno(context, retc == -1);
 
     return retc;
@@ -1275,61 +2992,31 @@ RexxMethod1(int,                       // Return type
 /*----------------------------------------------------------------------------*/
 
 RexxMethod2(int,                       // Return type
-            orxSendTo6,                // Object_method name
-            RexxObjectPtr, data,       // data to be sent
+            socket_sendTo,             // Object_method name
+            RexxStringObject, data,    // data to be sent
             RexxObjectPtr, inetaddr)   // Inetaddr instance
 {
-    RexxObjectPtr obj;
-    ORXSOCKET socketfd;
-    ssize_t lenwritten;
     struct sockaddr_storage myaddr;
-    struct sockaddr_in * myaddr4 = (struct sockaddr_in *)&myaddr;
-    struct sockaddr_in6 * myaddr6 = (struct sockaddr_in6 *)&myaddr;
-    char str[INET6_ADDRSTRLEN];
-    socklen_t slen = sizeof(myaddr);
-    uint32_t tmp;
-    CSTRING strdata;
-    int len;
 
     // get the socket file descriptor
-    socketfd = getSocket(context);
+    ORXSOCKET socketfd = getSocket(context);
+
+    InetAddress addr(context, inetaddr);
 
     // perform function and return
-    if (!context->IsOfType(inetaddr, "InetAddress"))
+    if (!addr.validate())
     {
-        RexxArrayObject arrobj = context->NewArray(1);
-        const char *msg = "Argument 2 must be of type .InetAddress.";
-        context->ArrayAppendString(arrobj, msg, strlen(msg));
-        context->RaiseException(88900, arrobj);
         return -1;
     }
-    obj = context->SendMessage0(inetaddr, "family");
-    context->UnsignedInt32(obj, &tmp);
-    if (tmp == AF_INET)
-    {
-        myaddr4->sin_family = (uint16_t) tmp;
-        obj = context->SendMessage0(inetaddr, "port");
-        context->UnsignedInt32(obj, &tmp);
-        myaddr4->sin_port = (uint16_t) tmp;
-        obj = context->SendMessage0(inetaddr, "address");
-        local_inet_pton(myaddr4->sin_family, context->CString(obj), str);
-    }
-    else
-    {
-        myaddr6->sin6_family = (uint16_t) tmp;
-        obj = context->SendMessage0(inetaddr, "port");
-        context->UnsignedInt32(obj, &tmp);
-        myaddr6->sin6_port = (uint16_t) tmp;
-        obj = context->SendMessage0(inetaddr, "address");
-        local_inet_pton(myaddr6->sin6_family, context->CString(obj), str);
-    }
-    strdata = context->CString(data);
-    len = (int) context->StringLength((RexxStringObject)data);
-    lenwritten = sendto(socketfd, str, len, 0, (struct sockaddr *)&myaddr, slen);
-    context->SetObjectVariable("retc", context->Int32((int32_t)lenwritten));
 
+    // fill in the control blocks with the address info
+    addr.prep(myaddr);
+
+    int lenwritten = sendto(socketfd, context->CString(data), (int)context->StringLength(data), 0, (struct sockaddr *)&myaddr, sizeof(myaddr));
+
+    setRetc(context, (int32_t)lenwritten);
     setErrno(context, lenwritten == -1);
-    return (int)lenwritten;
+    return lenwritten;
 }
 
 
@@ -1342,17 +3029,14 @@ RexxMethod2(int,                       // Return type
 /*----------------------------------------------------------------------------*/
 
 RexxMethod2(int,                       // Return type
-            orxSetSockOpt6,            // Object_method name
-            int, option,               // socket option
+            socket_setSockOpt,         // Object_method name
+            CSTRING, optionStr,        // socket option
             RexxObjectPtr, val)        // socket option value
 {
-    ORXSOCKET socketfd;
-    int sockval_int;
-    socklen_t len;
-    int retc;
-
     // get the socket file descriptor
-    socketfd = getSocket(context);
+    ORXSOCKET socketfd = getSocket(context);
+
+    int option = stringToSockOpt(optionStr);
 
     // perform function and return
     switch (option)
@@ -1454,12 +3138,13 @@ RexxMethod2(int,                       // Return type
         case SO_PASSCRED:
 #endif
         {
+            int sockval_int;
+
             // boolean/int options
             context->Int32(val, &sockval_int);
-            len = sizeof(int);
-            retc = setsockopt(socketfd, SOL_SOCKET, option, (SOCKOPTION *)&sockval_int, len);
-            context->SetObjectVariable("retc", context->Int32(retc));
+            int retc = setsockopt(socketfd, SOL_SOCKET, option, (SOCKOPTION *)&sockval_int, sizeof(int));
 
+            setRetc(context, retc);
             setErrno(context, retc == -1);
             return retc;
         }
@@ -1468,20 +3153,12 @@ RexxMethod2(int,                       // Return type
             struct linger so_linger;
             RexxObjectPtr obj = context->SendMessage0(val, "l_onoff");
 
-            // RKM:  Using a temp variable eliminates the conditionals here.
-            int32_t temp;
-            context->Int32(obj, &temp);
-            so_linger.l_onoff = temp;
+            so_linger.l_onoff = getInt32(context, obj, "l_onoff");
+            so_linger.l_linger = getInt32(context, obj, "l_onoff");
 
-            // RKM:  Something doesn't look right here...both values are setting
-            // l_onoff value.
-            obj = context->SendMessage0(val, "l_linger");
-            context->Int32(obj, &temp);
-            so_linger.l_onoff = temp;
-            len = sizeof(so_linger);
-            retc = setsockopt(socketfd, SOL_SOCKET, option, (SOCKOPTION *)&so_linger, len);
-            context->SetObjectVariable("retc", context->Int32(retc));
+            int retc = setsockopt(socketfd, SOL_SOCKET, option, (SOCKOPTION *)&so_linger, sizeof(so_linger));
 
+            setRetc(context, retc);
             setErrno(context, retc == -1);
             return retc;
         }
@@ -1489,9 +3166,9 @@ RexxMethod2(int,                       // Return type
         case SO_BINDTODEVICE:
         {
             CSTRING strval = context->CString(val);
-            len = strlen(strval);
-            retc = setsockopt(socketfd, SOL_SOCKET, option, strval, len);
-            context->SetObjectVariable("retc", context->Int32(retc));
+            int retc = setsockopt(socketfd, SOL_SOCKET, option, strval, strlen(strval));
+
+            setRetc(context, retc);
             setErrno(context, retc == -1);
             return retc;
         }
@@ -1503,36 +3180,140 @@ RexxMethod2(int,                       // Return type
         case SO_PEERCRED:    // we do not support credentials
 #endif
         default:
-            context->SetObjectVariable("retc", context->Int32(-1));
-            context->SetObjectVariable("errno", context->Int32(22));
+            setRetc(context, -1);
+            setErrno(context, 22);
             return -1;
     }
+}
+
+RexxMethod1(CSTRING,                   // Return type
+            socket_familyToString,     // Object_method name
+            int, option)               // family value
+{
+    return familyToString(option);
+}
+
+RexxMethod1(CSTRING,                   // Return type
+            socket_sockOptToString,    // Object_method name
+            int, option)               // option value
+{
+    return sockOptToString(option);
+}
+
+RexxMethod1(CSTRING,                   // Return type
+            socket_sockTypeToString,   // Object_method name
+            int, option)               // option value
+{
+    return sockTypeToString(option);
+}
+
+
+RexxMethod1(CSTRING,                   // Return type
+            socket_protocolToString,   // Object_method name
+            int, option)               // option value
+{
+    return protocolToString(option);
+}
+
+
+RexxMethod1(CSTRING,                   // Return type
+            socket_errnoToString,      // Object_method name
+            int, option)               // option value
+{
+    return errnoToString(option);
+}
+
+
+/*------------------------------------------------------------------
+ * gethostbyaddr()
+ *------------------------------------------------------------------*/
+RexxRoutine3(RexxObjectPtr, inetaddress_getHostByAddr, CSTRING, addrArg, RexxObjectPtr, OPTIONAL_CSTRING, domainName)
+{
+
+    // set a default domain
+    int domain = AF_INET;
+
+    // if we had the optional argument, convert the string constant
+    // to the numeric value
+    if (domainName != NULL)
+    {
+        domain = stringToAddressType(domainName);
+    }
+
+    struct sockaddr_storage addr;
+
+    stringToInternetAddress(&addr, domain, addrArg);
+
+    struct hostent *pHostEnt = gethostbyaddr((char*)&addr, sizeof(addr), domain);
+    // convert this into an object
+    return createHostEntity(context, pHostEnt);
+}
+
+
+/*------------------------------------------------------------------
+ *  gethostbyname()
+ *------------------------------------------------------------------*/
+RexxRoutine2(RexxObjectPtr, inetaddress_getHostByName, CSTRING, name)
+{
+    struct hostent *pHostEnt = gethostbyname(name);
+    // convert this into an object
+    return createHostEntity(context, pHostEnt);
+}
+
+
+/*------------------------------------------------------------------
+ *  gethostid()
+ *------------------------------------------------------------------*/
+RexxRoutine0(RexxObjectPtr, inetaddress_getHost)
+{
+    char     hostName[128];                  // buffer for host name
+    /*
+     *   Retrieve my ip address.  Assuming the hosts file in
+     *   in %systemroot%/system/drivers/etc/hosts contains my computer name.
+     */                                      //get our name
+    if (gethostname(pszBuff, sizeof(pszBuff)))
+    {
+        // not retrievable, return an empty host entity
+        return createHostEntity(context, NULL);
+    }
+    // now get the host information and return the HostEntity
+    struct hostent *pHostEnt = gethostbyname(pszBuff);
+    // convert this into an object
+    return createHostEntity(context, pHostEnt);
 }
 
 
 // now build the actual entry list
 RexxMethodEntry rxsock6_methods[] =
 {
-    REXX_METHOD(orxSocket6, orxSocket6),
-    REXX_METHOD(orxAccept6, orxAccept6),
-    REXX_METHOD(orxBind6, orxBind6),
-    REXX_METHOD(orxClose6, orxClose6),
-    REXX_METHOD(orxConnect6, orxConnect6),
-    REXX_METHOD(orxGetAddrinfo6, orxGetAddrinfo6),
-    REXX_METHOD(orxGetHostName6, orxGetHostName6),
-    REXX_METHOD(orxGetPeerName6, orxGetPeerName6),
-    REXX_METHOD(orxGetProtocolByName6, orxGetProtocolByName6),
-    REXX_METHOD(orxGetProtocolByNumber6, orxGetProtocolByNumber6),
-    REXX_METHOD(orxGetSockName6, orxGetSockName6),
-    REXX_METHOD(orxGetSockOpt6, orxGetSockOpt6),
-    REXX_METHOD(orxGetStrerror6, orxGetStrerror6),
-    REXX_METHOD(orxListen6, orxListen6),
-    REXX_METHOD(orxRecv6, orxRecv6),
-    REXX_METHOD(orxRecvFrom6, orxRecvFrom6),
-    REXX_METHOD(orxSelect6, orxSelect6),
-    REXX_METHOD(orxSend6, orxSend6),
-    REXX_METHOD(orxSendTo6, orxSendTo6),
-    REXX_METHOD(orxSetSockOpt6, orxSetSockOpt6),
+    REXX_METHOD(socket_init, socket_init),
+    REXX_METHOD(socket_accept, socket_accept),
+    REXX_METHOD(socket_bind, socket_bind),
+    REXX_METHOD(socket_close, socket_close),
+    REXX_METHOD(socket_connect, socket_connect),
+    REXX_METHOD(socket_getAddrInfo, socket_getAddrInfo),
+    REXX_METHOD(socket_getHostName, socket_getHostName),
+    REXX_METHOD(socket_getPeerName, socket_getPeerName),
+    REXX_METHOD(socket_getProtocolByName, socket_getProtocolByName),
+    REXX_METHOD(socket_getProtocolByNumber, socket_getProtocolByNumber),
+    REXX_METHOD(socket_getSockName, socket_getSockName),
+    REXX_METHOD(socket_getSockOpt, socket_getSockOpt),
+    REXX_METHOD(socket_getStringError, socket_getStringError),
+    REXX_METHOD(socket_listen, socket_listen),
+    REXX_METHOD(socket_receive,socket_receive),
+    REXX_METHOD(socket_receiveFrom, socket_receiveFrom),
+    REXX_METHOD(socket_select, socket_select),
+    REXX_METHOD(socket_send, socket_send),
+    REXX_METHOD(socket_sendTo, socket_sendTo),
+    REXX_METHOD(socket_setSockOpt, socket_setSockOpt),
+    REXX_METHOD(socket_familyToString, socket_familyToString),
+    REXX_METHOD(socket_sockOptToString, socket_sockOptToString),
+    REXX_METHOD(socket_sockTypeToString, socket_sockTypeToString),
+    REXX_METHOD(socket_protocolToString, socket_protocolToString),
+    REXX_METHOD(socket_errnoToString, socket_errnoToString),
+    REXX_METHOD(inetaddress_getHost, inetaddress_getHost),
+    REXX_METHOD(inetaddress_getHostByName, inetaddress_getHostByName),
+    REXX_METHOD(inetaddress_getHostByAddr, inetaddress_getHostByAddr),
     REXX_LAST_METHOD()
 };
 

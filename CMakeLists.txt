@@ -1163,6 +1163,7 @@ install(TARGETS rxsock RUNTIME COMPONENT Core DESTINATION ${INSTALL_LIB_DIR}
                        LIBRARY DESTINATION ${INSTALL_LIB_DIR} COMPONENT Core)
 set_target_properties(rxsock PROPERTIES VERSION ${ORX_VERSION})
 
+if (RXSOCK6)
 #################### librxsock6.so ################
 # Sources for librxsock.so
 add_library(rxsock6 SHARED ${build_extensions_rxsock_dir}/orxsock6.cpp
@@ -1182,6 +1183,8 @@ endif ()
 install(TARGETS rxsock6 RUNTIME COMPONENT Core DESTINATION ${INSTALL_LIB_DIR}
                        LIBRARY DESTINATION ${INSTALL_LIB_DIR} COMPONENT Core)
 set_target_properties(rxsock6 PROPERTIES VERSION ${ORX_VERSION})
+endif()
+
 
 #################### librxregexp.so ################
 # additional source files required by specific platforms
@@ -1530,12 +1533,14 @@ copy_build_file(rxftp.cls ${build_extensions_rxftp_dir})
 copy_build_file(csvStream.cls ${build_extensions_csvstream_dir})
 copy_build_file(json.cls ${build_extensions_json_dir})
 copy_build_file(socket.cls ${build_extensions_rxsock_dir})
-copy_build_file(socket6.cls ${build_extensions_rxsock_dir})
 copy_build_file(streamsocket.cls ${build_extensions_rxsock_dir})
+if(RXSOCK6)
+copy_build_file(socket6.cls ${build_extensions_rxsock_dir})
 copy_build_file(streamsocket6.cls ${build_extensions_rxsock_dir})
+copy_build_file(smtp6.cls ${build_extensions_rxsock_dir})
+endif()
 copy_build_file(mime.cls ${build_extensions_rxsock_dir})
 copy_build_file(smtp.cls ${build_extensions_rxsock_dir})
-copy_build_file(smtp6.cls ${build_extensions_rxsock_dir})
 copy_build_file(rexxtry.rex ${build_samples_dir})
 add_custom_target(class_files ALL DEPENDS
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rxregexp.cls
@@ -1738,8 +1743,10 @@ if (WIN32 AND DOC_SOURCE_DIR)
        CONFIGURATIONS Debug RelWithDebInfo)
    install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rxsock.pdb COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR}
        CONFIGURATIONS Debug RelWithDebInfo)
+if(RXSOCK6)
    install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rxsock6.pdb COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR}
        CONFIGURATIONS Debug RelWithDebInfo)
+endif()
    install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rxsubcom.pdb COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR}
        CONFIGURATIONS Debug RelWithDebInfo)
    install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rxwinsys.pdb COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR}

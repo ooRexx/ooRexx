@@ -2,7 +2,7 @@
 /*                                                                            */
 /* Description: Simple classes to encalsulate stream sockets.                 */
 /*                                                                            */
-/* Copyright (c) 2007-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2007-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -41,6 +41,28 @@
 
 ::requires "rxsock" LIBRARY    -- need the rxsock library available to function
 
+-- a holder class that provides common option tables
+-- Note that this is NOT public
+::class SocketOptions
+::method activate class
+  expose optionNames domainNames domainTypes protocols families
+  -- check args
+  optionNames = .set~of('SO_BROADCAST', 'SO_DEBUG', 'SO_DONTROUTE', 'SO_ERROR',,
+                      'SO_KEEPALIVE', 'SO_LINGER', 'SO_OOBINLINE', 'SO_RCVBUF',,
+                      'SO_RCVLOWAT', 'SO_RCVTIMEO', 'SO_REUSEADDR', 'SO_SNDBUF',,
+                      'SO_SNDLOWAT', 'SO_SNDTIMEO', 'SO_TYPE', 'SO_USELOOPBACK')
+  domainNames = .set~of('AF_INET')
+  families = domainNames
+  domainTypes = .set~of('SOCK_STREAM', 'SOCK_DGRAM', 'SOCK_RAW')
+  protocols = .set~of(0, 'IPPROTO_UDP', 'IPPROTO_TCP')
+
+::attribute optionNames GET CLASS
+::attribute domainNames GET CLASS
+::attribute domainTypes GET CLASS
+::attribute protocols   GET CLASS
+::attribute families    GET CLASS
+
+
 /*----------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
 /* Class: Socket - a class for stream sockets                                 */
@@ -48,13 +70,15 @@
 /*----------------------------------------------------------------------------*/
 
 ::class 'Socket' public
-
 /*----------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
 /* Class: Socket                                                              */
 /*        Class methods                                                       */
 /*----------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
+
+
+-- complete the class initialization
 
 /*----------------------------------------------------------------------------*/
 /* Method: gethostbyaddr                                                      */
@@ -321,8 +345,7 @@ return .socket~new(newsocket)
 ::method bind
 expose s errno
 use strict arg address
-if \address~isA(.InetAddress) then ,
- raise syntax 93.914 array (1, 'an InetAddress class instance', address)
+.validate~classType('hostaddr', address, .InetAddress)
 stem. = address~makeStem()
 retc = SockBind(s, 'stem.!')
 -- It should be noted here that the SockBind() function can give a false
@@ -357,8 +380,8 @@ return retc
 ::method connect
 expose s errno
 use strict arg address
-if \address~isA(.InetAddress) then ,
- raise syntax 93.914 array (1, 'an InetAddress class instance', address)
+
+.validate~classType('hostaddr', address, .InetAddress)
 stem. = address~makeStem()
 retc = SockConnect(s, 'stem.!')
 if retc = -1 then errno = self~convert_err_number(SockSock_errno())
@@ -377,12 +400,8 @@ expose s errno
 use strict arg name
 name = name~upper()
 -- check args
-optvals = .array~of('SO_BROADCAST', 'SO_DEBUG', 'SO_DONTROUTE', 'SO_ERROR',,
-                    'SO_KEEPALIVE', 'SO_LINGER', 'SO_OOBINLINE', 'SO_RCVBUF',,
-                    'SO_RCVLOWAT', 'SO_RCVTIMEO', 'SO_REUSEADDR', 'SO_SNDBUF',,
-                    'SO_SNDLOWAT', 'SO_SNDTIMEO', 'SO_TYPE', 'SO_USELOOPBACK')
-if optvals~hasItem(name) = .false then ,
- raise syntax 93.914 array (1, optvals~toString, name)
+if .SocketOptions~optionNames~hasItem(name) = .false then ,
+ raise syntax 93.914 array (1, .SocketOptions~optionNames~makeArray~toString, name)
 -- get the value
 retc = SockGetSockOpt(s, 'SOL_SOCKET', name, 'xxx')
 -- some values may not be gettable
@@ -391,7 +410,7 @@ if retc = -1 then do
    return .nil
    end
 else errno = ''
-return xxx
+return retc
 
 /*----------------------------------------------------------------------------*/
 /* Method: getPeerName                                                        */
@@ -443,8 +462,7 @@ expose s errno
 -- are we being passed an existing socket?
 if arg() = 1 then do
    use strict arg s
-   if s~datatype('W') = 0 then raise syntax 93.905 array (1, s)
-   if s < 1 then raise syntax 93.907 array (1, s)
+   .validate~positiveWholeNumber('socket', s)
    return
    end
 -- assume we want a new socket created
@@ -453,15 +471,12 @@ domain = domain~upper()
 type= type~upper()
 protocol = protocol~upper()
 -- check arguments
-domains = .array~of('AF_INET')
-if domains~hasItem(domain) = .false then ,
- raise syntax 93.914 array (1, domains~toString, domain)
-types = .array~of('SOCK_STREAM', 'SOCK_DGRAM', 'SOCK_RAW')
-if types~hasItem(type) = .false then ,
- raise syntax 93.914 array (2, types~toString, type)
-protocols = .array~of(0, 'IPPROTO_UDP', 'IPPROTO_TCP')
-if protocols~hasItem(protocol) = .false then ,
- raise syntax 93.914 array (3, protocols~toString, protocol)
+if .SocketOptions~domainNames~hasItem(domain) = .false then ,
+ raise syntax 93.914 array ('domain', .SocketOptions~domainNames~domainNames~makearray~toString, domain)
+if .SocketOptions~domainTypes~hasItem(type) = .false then ,
+ raise syntax 93.914 array ('type', .SocketOptions~domainTypes~makearray~toString, type)
+if .SocketOptions~protocols~hasItem(protocol) = .false then ,
+ raise syntax 93.914 array ('protocol', .SocketOptions~protocols~makearray~toString, protocol)
 -- create the socket
 s = SockSocket(domain, type, protocol)
 if s = -1 then errno = self~convert_err_number(SockSock_errno())
@@ -497,8 +512,7 @@ return retc
 ::method listen
 expose s errno
 use strict arg backlog
-if backlog~datatype('W') = 0 then raise syntax 93.905 array (1, backlog)
-if backlog < 1 then raise syntax 93.907 array (1, backlog)
+.validate~nonNegativeWholeNumber('backlog', backlog)
 retc = SockListen(s, backlog)
 if retc = -1 then errno = self~convert_err_number(SockSock_errno())
 else errno = ''
@@ -514,8 +528,7 @@ return retc
 ::method recv
 expose s errno
 use strict arg len
-if len~datatype('W') = 0 then raise syntax 93.905 array (1, len)
-if len < 1 then raise syntax 93.907 array (1, len)
+.validate~length('length', len)
 retc = SockRecv(s, 'xxx', len)
 if retc = -1 then do
    errno = socksock_errno()
@@ -536,10 +549,8 @@ return xxx
 ::method recvFrom
 expose s errno
 use strict arg len, address
-if len~datatype('W') = 0 then raise syntax 93.905 array (1, len)
-if len < 1 then raise syntax 93.907 array (1, len)
-if \address~isA(.InetAddress) then ,
- raise syntax 93.914 array (1, 'an InetAddress', address)
+.validate~positiveWholeNumber('length', len)
+.validate~classType('address', address, .InetAddress)
 stem. = address~makeStem()
 retc = SockRecvFrom(s, 'xxx', len, 'stem.!')
 if retc = -1 then do
@@ -570,12 +581,10 @@ return xxx
 ::method select
 expose errno
 use strict arg reads, writes, excepts, timeout
-if \reads~isInstanceOf(.Array) then ,
- raise syntax 93.914 array (1, 'an Array', reads)
-if \writes~isInstanceOf(.Array) then ,
- raise syntax 93.914 array (2, 'an Array', writes)
-if \excepts~isInstanceOf(.Array) then ,
- raise syntax 93.914 array (3, 'an Array', excepts)
+
+.validate~classType('reads', reads, .Array)
+.validate~classType('writes', writes, .Array)
+.validate~classType('excepts', excepts, .Array)
 reads.0 = reads~items
 do i = 1 to reads~items
    reads.i = reads[i]~string
@@ -635,12 +644,8 @@ return retc
 expose s errno
 use strict arg name, val
 name = name~upper()
-optvals = .array~of('SO_BROADCAST', 'SO_DEBUG', 'SO_DONTROUTE', 'SO_ERROR',,
-                    'SO_KEEPALIVE', 'SO_LINGER', 'SO_OOBINLINE', 'SO_RCVBUF',,
-                    'SO_RCVLOWAT', 'SO_RCVTIMEO', 'SO_REUSEADDR', 'SO_SNDBUF',,
-                    'SO_SNDLOWAT', 'SO_SNDTIMEO', 'SO_TYPE', 'SO_USELOOPBACK')
-if optvals~hasItem(name) = .false then ,
- raise syntax 93.914 array (1, optvals~toString, name)
+if .SocketOptions~optionNames~hasItem(name) = .false then ,
+ raise syntax 93.914 array (1, .SocketOptions~optionNames~makearray~toString, name)
 if val~datatype('W') <> 1 & name <> 'SO_LINGER' then raise syntax 93.907 array(2, val)
 retc = SockSetSockOpt(s, 'SOL_SOCKET', name, val)
 if retc = -1 then do
@@ -731,9 +736,8 @@ return
 expose family
 use strict arg family
 family = family~upper()
-families = .array~of('AF_INET')
-if families~hasItem(family) = .false then ,
- raise syntax 93.914 array (1, families~toString, family)
+if .SocketOptions~families~hasItem(family) = .false then ,
+ raise syntax 93.914 array ("family", .SocketOptions~families~makearray~toString, family)
 return
 
 /*----------------------------------------------------------------------------*/
@@ -777,8 +781,7 @@ return stem.
 ::method 'port='
 expose port
 use strict arg port
-if port~datatype('W') <> 1 then raise syntax 93.907 array(1, port)
-if port < 1 then raise syntax 93.907 array(1, port)
+.Validate~positiveWholeNumber('port', port)
 return
 
 
