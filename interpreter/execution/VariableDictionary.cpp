@@ -275,6 +275,10 @@ VariableDictionary *VariableDictionary::deepCopy()
 {
     // make a copy of ourselves first.  This also copies the values.
     Protected<VariableDictionary> newDictionary = (VariableDictionary *)copy();
+    // We might be copying an object with a guard lock, so we need to
+    // clear this out in the new copy.
+    newDictionary->reservingActivity = OREF_NULL;
+    newDictionary->waitingActivities = OREF_NULL;
     // and propagate this if we're chained
     if (nextDictionary != OREF_NULL)
     {
