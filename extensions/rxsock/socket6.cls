@@ -695,7 +695,9 @@ return addr
 ::attribute canonname
 ::attribute address
 ::attribute addressFamily
+::attribute addressPort
 ::attribute addresses
+::attribute errno
 
 /*----------------------------------------------------------------------------*/
 /* Method: init                                                               */
@@ -715,8 +717,69 @@ return addr
   canonname = ''
   family = .Socket~AF_UNSPECIFIED
   address = ''
+  addressPort = 0
   -- no address list
   addresses = .nil
+  errno = 0
+
+-- set one of the addrInfo flags
+::method setFlag
+  expose flags
+  use strict arg flag
+
+  flags = flags~bitor(flag)
+
+-- clear one of the flag values
+::method clearFlag
+  expose flags
+  use strict arg flag
+
+  flags = flags~bitand(flag~bitxor('ffffffff'x))
+
+-- test if a given flag is set
+::method testFlags
+  expose flags
+  use strict arg flag
+
+  return flags~bitand(flag) == flag
+
+
+
+
+::class HostEntity public
+
+::method init
+  use local
+
+  name = ""
+  aliases = .nil
+  addressType = .InetAddress~AF_UNSPEC
+  address = ""
+  addresses = .nil
+  errno = 0
+
+/*----------------------------------------------------------------------------*/
+/* Method: init                                                               */
+/* Description: initialization of the AddrInfo                                */
+/* Arguments:                                                                 */
+/*----------------------------------------------------------------------------*/
+
+::method init
+  use local
+  use strict arg
+
+  flags = '00000000'x
+  family = .InetAddress~AF_UNSPEC
+  socktype = .Socket~SOCK_STREAM
+  -- "unspecified"
+  protocol = 0
+  canonname = ''
+  family = .Socket~AF_UNSPECIFIED
+  address = ''
+  addressPort = 0
+  -- no address list
+  addresses = .nil
+  errno = 0
 
 -- set one of the addrInfo flags
 ::method setFlag
