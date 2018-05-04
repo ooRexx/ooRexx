@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -46,6 +46,7 @@
 #include "Activity.hpp"
 #include "ActivityManager.hpp"
 #include "StemClass.hpp"
+#include "RexxActivation.hpp"
 
 
 /**
@@ -70,6 +71,7 @@ void RexxVariable::live(size_t liveMark)
 {
     memory_mark(variableValue);
     memory_mark(variableName);
+    memory_mark(creator);
     memory_mark(dependents);
 }
 
@@ -85,6 +87,7 @@ void RexxVariable::liveGeneral(MarkReason reason)
 {
     memory_mark_general(variableValue);
     memory_mark_general(variableName);
+    memory_mark_general(creator);
     memory_mark_general(dependents);
 }
 
@@ -100,6 +103,7 @@ void RexxVariable::flatten(Envelope *envelope)
 
      flattenRef(variableValue);
      flattenRef(variableName);
+     flattenRef(creator);
      flattenRef(dependents);
 
     cleanUpFlatten
