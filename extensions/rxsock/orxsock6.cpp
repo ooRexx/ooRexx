@@ -89,7 +89,7 @@
 #endif
 
 #if !defined(HOST_NAME_MAX)
-   #define HOST_NAME_MAX 255
+   #define HOST_NAME_MAX 1024
 #endif
 
 /*------------------------------------------------------------------
@@ -597,7 +597,7 @@ int stringToAddrType(const char *pszOptName)
  */
 int stringToSockType(const char *pszOptName)
 {
-    -- a string value of zero means unspecified
+    // a string value of zero means unspecified
     CheckOpt(0)
 #ifdef SOCK_DGRAM
     CheckOpt(SOCK_DGRAM)
@@ -1208,7 +1208,7 @@ const char *sockTypeToString(int option)
 {
     switch (option)
     {
-    --zero has special meaning as unspecified
+    // zero has special meaning as unspecified
     CheckOpt(0)
 #ifdef SOCK_DGRAM
     CheckOpt(SOCK_DGRAM)
@@ -1910,27 +1910,6 @@ void setRetc(RexxMethodContext* context, RexxObjectPtr v)
 }
 
 
-// Common routine
-const char *local_inet_ntop(int af, void *src, char *dst, socklen_t size)
-{
-#ifdef WIN32
-     return InetNtop(af, src, dst, size);
-#else
-     return inet_ntop(af, src, dst, size);
-#endif
-}
-
-
-int local_inet_pton(int af, const char *src, void *dst)
-{
-#ifdef WIN32
-    return InetPton(af, src, dst);
-#else
-    return inet_pton(af, src, dst);
-#endif
-}
-
-
 /**
  * Format an inet address into either the IPV4 or IPV6 style.
  *
@@ -1941,12 +1920,12 @@ void internetAddressToString(struct sockaddr_in *addr, char *stringAddress)
 {
     if (addr->sin_family == AF_INET)
     {
-        local_inet_ntop(AF_INET, &addr->sin_addr, stringAddress, INET6_ADDRSTRLEN);
+        inet_ntop(AF_INET, &addr->sin_addr, stringAddress, INET6_ADDRSTRLEN);
     }
     else
     {
         struct sockaddr_in6 *addr6 = (struct sockaddr_in6 *)addr;
-        local_inet_ntop(AF_INET6, &addr6->sin6_addr, stringAddress, INET6_ADDRSTRLEN);
+        inet_ntop(AF_INET6, &addr6->sin6_addr, stringAddress, INET6_ADDRSTRLEN);
     }
 }
 
@@ -1962,26 +1941,7 @@ void internetAddressToString(struct sockaddr_in *addr, char *stringAddress)
  */
 void internetAddressToString(int family, const char *rawAddr, char *stringAddress)
 {
-    if (family == AF_INET)
-    {
-        addr_in addr;
-        memset(addr, 0, sizeof(addr));
-
-        addr.sin_family = family;
-        addr.sin_addr = (*(uint32_t *)rawAddr);
-
-        local_inet_ntop(AF_INET, &addr->sin_addr, stringAddress, INET6_ADDRSTRLEN);
-    }
-    else
-    {
-        addr_in6 addr;
-        memset(addr, 0, sizeof(addr));
-
-        addr.sin6_family = family;
-        addr.sin6_addr = (*(struct in6_addr *)rawAddr);
-
-        local_inet_ntop(AF_INET6, &addr6->sin6_addr, stringAddress, INET6_ADDRSTRLEN);
-    }
+    inet_ntop(family, rawAddr, stringAddress, INET6_ADDRSTRLEN);
 }
 
 
@@ -1993,74 +1953,19 @@ void internetAddressToString(int family, const char *rawAddr, char *stringAddres
  * @param stringAddress
  *               The string version of the name.
  */
-void stringToInternetAddress(struct sockaddr_in *addr, uint16_t family, char *stringAddress)
+void stringToInternetAddress(struct sockaddr_in *addr, uint16_t family, const char *stringAddress)
 {
     // fill in the family in the struct
     addr->sin_family = family;
     if (family == AF_INET)
     {
-        local_inet_pton(AF_INET, stringAddress, &addr->sin_addr.s_addr);
+        inet_pton(AF_INET, stringAddress, &addr->sin_addr.s_addr);
     }
     else
     {
-        struct sockaddr_in6 * addr6 = (struct sockaddr_in6 *)&addr;
-        local_inet_pton(AF_INET6, stringAddress, &addr6->sin6_addr.s6_addr);
+        struct sockaddr_in6 * addr6 = (struct sockaddr_in6 *)addr;
+        inet_pton(AF_INET6, stringAddress, &addr6->sin6_addr.s6_addr);
     }
-}
-
-
-/**
- * Create a host entity object and populate it.
- *
- * @param context  The current call context.
- * @param pHostEnt The pHostEnt structure source for the information (can be NULL)
- *
- * @return A HostEntity instance.
- */
-RexxObjectPtr createHostEntity(RexxMethodContext *context, struct hostent *pHostEnt)
-{
-    RexxClassObject classinst = context->FindClass("HostEntity");
-    RexxObjectPtr entity = context->SendMessage0(classinst, "new");
-
-    // if we don't have any actual information, return the empty entity
-    if (pHostEnt == NULL)
-    {
-        // add the error information
-        setValue(context, entity, "errno=", sock_errno());
-        return entity;
-    }
-
-    // the family name
-    setValue(context, entity, "name=", pHostEnt->h_name);
-
-    // aliases are returned as an array. create a reasonable default size
-    RexxArrayObject aliases = context->NewArray(5);
-    setValue(context, entity, "aliases=", aliases);
-    // now add in the alias values
-    for (size_t count=0; pHostEnt->h_aliases[count]; count++)
-    {
-        context->ArrayAppendString(aliases, pHostEnt->h_aliases[count], strlen(pHostEnt->h_aliases[count]));
-    }
-
-    // the address type, which is variable
-    setValue(context, entity, "addresstype=", addrTypeToString(pHostEnt->h_addrtype));
-
-    // get the string version of the address. This is just the first
-    // address on the list.
-    char stringAddress[INET6_ADDRSTRLEN];
-    ineternetAddressToString(pHostEnt->h_addrtype, pHostEnt->h_addr, stringAddress);
-    setValue(context, entity, "address=", stringAddress);
-
-    // There may be multiple addresses in an array. create a reasonable default size
-    RexxArrayObject addresses = context->NewArray(5);
-    setValue(context, entity, "addresses=", addresses);
-    for (size_t count = 0; pHostEnt->h_addr_list[count]; count++)
-    {
-        ineternetAddressToString(pHostEnt->h_addrtype, pHostEnt->h_addrlist[count], stringAddress);
-        context->ArrayAppendString(addresses, stringAddress, strlen(stringAddress));
-    }
-
-    return entity;
 }
 
 
@@ -2099,6 +2004,11 @@ public:
         context->SendMessage1(inetaddr, "address=", context->String(a));
     }
 
+    void setErrno(int e)
+    {
+        context->SendMessage1(inetaddr, "errno=", context->Int32(e));
+    }
+
     uint16_t family()
     {
         RexxObjectPtr obj = context->SendMessage0(inetaddr, "family");
@@ -2130,14 +2040,14 @@ public:
             struct sockaddr_in *addr4 = (struct sockaddr_in *)&addr;
             addr4->sin_family = fam;
             addr4->sin_port = port();
-            local_inet_pton(AF_INET, address(), &addr4->sin_addr.s_addr);
+            inet_pton(AF_INET, address(), &addr4->sin_addr.s_addr);
         }
         else
         {
             struct sockaddr_in6 * addr6 = (struct sockaddr_in6 *)&addr;
             addr6->sin6_family = fam;
             addr6->sin6_port = port();
-            local_inet_pton(AF_INET6, address(), &addr6->sin6_addr.s6_addr);
+            inet_pton(AF_INET6, address(), &addr6->sin6_addr.s6_addr);
         }
     }
 
@@ -2159,7 +2069,7 @@ public:
         }
 
         char stringAddress[INET6_ADDRSTRLEN];
-        internetAddressToString(addr, stringAddress);
+        internetAddressToString((struct sockaddr_in *)&addr, stringAddress);
         setAddress(stringAddress);
         // clear any error status
         setErrno(0);
@@ -2212,7 +2122,9 @@ RexxMethod3(RexxObjectPtr,             // Return type
     }
 
 #if defined(WIN32)
-    // Windows sockets are not dual-stack by default, so force it to be dual-stack
+    // Windows sockets only support inet6 communications by default. Turn off
+    // that setting to allow both types of communication.
+    int zero = 0;
     setsockopt(socketfd, SOL_SOCKET, IPV6_V6ONLY, (char *)&zero, sizeof(zero));
 #endif
     return socketToObject(context, socketfd);
@@ -2226,7 +2138,7 @@ RexxMethod3(RexxObjectPtr,             // Return type
 /*         inetaddr - Inetaddr instance uninitialized (optional)              */
 /*----------------------------------------------------------------------------*/
 
-RexxMethod1(RexxObjectPtr,             // Return type
+RexxMethod2(RexxObjectPtr,             // Return type
             socket_accept,             // Object_method name
             OSELF, self,               // The object itself,
             OPTIONAL_RexxObjectPtr, inetaddr) // INetaddr instance
@@ -2244,7 +2156,7 @@ RexxMethod1(RexxObjectPtr,             // Return type
     setRetc(context, newSocketObject);
     setErrno(context, newSocket == INVALID_SOCKET);
     // if this was not a good socket return, return ,nil
-    if (retc == INVALID_SOCKET)
+    if (newSocket == INVALID_SOCKET)
     {
         return context->Nil();
     }
@@ -2265,7 +2177,7 @@ RexxMethod1(RexxObjectPtr,             // Return type
 
     // now create a wrappered socket object. start by copying ourselves so that
     // all of the settings are maintained. This includes the last return and errno values.
-    RexxObjectPtr newSocketObject = context->SendMessage0(self, "copy");
+    newSocketObject = context->SendMessage0(self, "copy");
 
     // the new socket needs the new socket descriptor
     setValue(context, newSocketObject, "socketfd=", newSocketObject);
@@ -2377,14 +2289,12 @@ RexxMethod1(int,                       // Return type
  */
 void buildSockAddr(RexxMethodContext *context, RexxObjectPtr addrObj, struct sockaddr *addr)
 {
-    setValue(context, obj, "addressFamily=", familyToString(addr->sa_family));
-    setValue(context, obj, "addressPort=", ((sockaddr_in *)addr)->sin_port);
+    setValue(context, addrObj, "addressFamily=", familyToString(addr->sa_family));
+    setValue(context, addrObj, "addressPort=", ((sockaddr_in *)addr)->sin_port);
     // now format the string address
     char stringAddress[INET6_ADDRSTRLEN];
-    internetAddressToString(addr, stringAddress);
-    setValue(context, obj, "address=", stringAddress);
-
-    return obj;
+    internetAddressToString((struct sockaddr_in *)addr, stringAddress);
+    setValue(context, addrObj, "address=", stringAddress);
 }
 
 
@@ -2405,7 +2315,7 @@ RexxObjectPtr buildAddressInfo(RexxMethodContext *context, struct addrinfo *info
     // bit values are manipulated using the bitXXX methods. We need to store
     // this as a string also
 
-    setValue(context, obj, "flags=", context->NewString((const char *)&info->ai_flags, sizeof(info->ai_flags));
+    setValue(context, obj, "flags=", context->NewString((const char *)&info->ai_flags, sizeof(info->ai_flags)));
     setValue(context, obj, "family=", familyToString(info->ai_family));
     setValue(context, obj, "socktype=", sockTypeToString(info->ai_socktype));
     setValue(context, obj, "protocol=", protocolToString(info->ai_protocol));
@@ -2500,16 +2410,16 @@ void populateAddrInfo(RexxMethodContext *context, RexxObjectPtr infoObj, struct 
     {
         struct sockaddr_in * myaddr4 = (struct sockaddr_in *)info.ai_addr;
         myaddr4->sin_family = (uint16_t)family;
-        myaddr4->sin_port = getInt32Value(context, infoObj, "addressPort");
-        local_inet_pton(AF_INET, getStringValue(context, infoObj, "address"), &myaddr4->sin_addr.s_addr);
+        myaddr4->sin_port = getInt32(context, infoObj, "addressPort");
+        inet_pton(AF_INET, getStringValue(context, infoObj, "address"), &myaddr4->sin_addr.s_addr);
         info.ai_addrlen = sizeof(struct sockaddr_in);
     }
     else
     {
         struct sockaddr_in6 * myaddr6 = (struct sockaddr_in6 *)info.ai_addr;
         myaddr6->sin6_family = (uint16_t)family;
-        myaddr4->sin6_port = getInt32Value(context, infoObj, "addressPort");
-        local_inet_pton(AF_INET6, getStringValue(context, infoObj, "sa_addr"), &myaddr6 ->sin6_addr.s6_addr);
+        myaddr6->sin6_port = getInt32(context, infoObj, "addressPort");
+        inet_pton(AF_INET6, getStringValue(context, infoObj, "sa_addr"), &myaddr6 ->sin6_addr.s6_addr);
         info.ai_addrlen = sizeof(struct sockaddr_in6);
     }
 }
@@ -2520,17 +2430,53 @@ void populateAddrInfo(RexxMethodContext *context, RexxObjectPtr infoObj, struct 
  * situations.
  *
  * @param context The call context.
- * @param info    The addrinfo structure
  *
  * @return A Rexx object containing the address information.
  */
-RexxObjectPtr buildErrorAddressInfo(RexxMethodContext *context, int errno)
+RexxObjectPtr buildErrorAddressInfo(RexxMethodContext *context)
 {
     RexxClassObject cobj = context->FindClass("AddrInfo");
     RexxObjectPtr obj = context->SendMessage0(cobj, "new");
 
     setValue(context, obj, "errno", sock_errno());
     return obj;
+}
+
+RexxObjectPtr getAddressInfo(RexxMethodContext *context, const char *nodeName, const char *serviceName, RexxObjectPtr hints)
+{
+    // this is our hints that we populate from the object version
+    struct addrinfo shints;
+    struct sockaddr_storage hintAddr;
+
+    // fill out the shints struct
+    memset(&shints, 0, sizeof(shints));
+    memset(&hintAddr, 0, sizeof(hintAddr));
+    shints.ai_addr = (struct sockaddr *)&hintAddr;
+
+    // the hints are optional, so we pass NULL if we don't have one provided
+    struct addrinfo *hintPtr = NULL;
+
+    // if we have a hints object provided, pluck the information from it
+    // and fill in the structure
+    if (hints != NULL)
+    {
+        hintPtr = &shints;
+        populateAddrInfo(context, hints, shints);
+    }
+
+    //perform function
+    struct addrinfo *returnAddressInfo;
+    int retc = getaddrinfo(nodeName, serviceName, hintPtr, &returnAddressInfo);
+
+    // if there was any error or nothing returned, return an
+    // empty object with error information included
+    if (retc != 0 || returnAddressInfo == NULL)
+    {
+        return buildErrorAddressInfo(context);
+    }
+
+    // convert the returned data to a Rexx Object
+    return buildAddressInfoSet(context, returnAddressInfo);
 }
 
 
@@ -2544,45 +2490,14 @@ RexxObjectPtr buildErrorAddressInfo(RexxMethodContext *context, int errno)
 /*         rea      - Rexx array variable (empty)                             */
 /*----------------------------------------------------------------------------*/
 
-RexxMethod4(RexxObjectPtr,             // Return type
-            socket_getAddrInfo,        // Object_method name
+RexxMethod3(RexxObjectPtr,             // Return type
+            inetaddress_getAddrInfo,   // Object_method name
             CSTRING, nodename,         // the host name or ip address
             OPTIONAL_CSTRING, servname,// the service name or number
             OPTIONAL_RexxObjectPtr, hints) // an Inetaddr for the search hints
 {
-    // this is our hints that we populate from the object version
-    struct addrinfo shints;
-    struct sockaddr_storage hintAddr;
-
-    // fill out the shints struct
-    memset(&shints, 0, sizeof(shints));
-    memset(&hintAddr, 0, sizeof(hintAddr));
-    shints->ai_addr = &hintAddr;
-
-    // the hints are optional, so we pass NULL if we don't have one provided
-    struct addrinfo *hintAddr = NULL;
-
-    // if we have a hints object provided, pluck the information from it
-    // and fill in the structure
-    if (hints != NULL)
-    {
-        hintAddr = &shints;
-        populateAddrInfo(context, hints, shints);
-    }
-
-    //perform function
-    struct addrinfo *returnAddressInfo;
-    int retc = getaddrinfo(nodename, servname, hintAddr, &returnAddressInfo);
-
-    // if there was any error or nothing returned, return an
-    // empty object with error information included
-    if (retc != 0 || *returnAddressInfo == NULL)
-    {
-        return errorAddressInfo(context);
-    }
-
-    // convert the returned data to a Rexx Object
-    return buildAddressInfoSet(context, returnAddressInfo);
+    // all handled by a common routine
+    return getAddressInfo(context, nodename, servname, hints);
 }
 
 
@@ -2624,14 +2539,12 @@ RexxMethod0(RexxObjectPtr,             // Return type
 
 
 /*----------------------------------------------------------------------------*/
-/* Method: getPeerName                                                        */
-/* Description: get the peer name connected to a socket                       */
-/* Arguments:                                                                 */
-/*         inetaddr - Inetaddr instance                                       */
+/* Method: getPeer                                                            */
+/* Description: get the info for the socket peer                              */
 /*----------------------------------------------------------------------------*/
 
-RexxMethod0(int,                       // Return type
-            socket_getPeerName)        // Object_method name
+RexxMethod0(RexxObjectPtr,             // Return type
+            socket_getPeer)            // Object_method name
 {
     struct sockaddr_storage myaddr;
     socklen_t len = sizeof(myaddr);
@@ -2642,57 +2555,20 @@ RexxMethod0(int,                       // Return type
     // perform function and return
     memset(&myaddr, 0, sizeof(struct sockaddr_storage));
 
-    getpeername(socketfd, (struct sockaddr *)&myaddr, &len);
-
-    return buildSockAddr(context, (struct sockaddr *)&myaddr);
-}
-
-
-/*----------------------------------------------------------------------------*/
-/* Method: getProtoByName                                                     */
-/* Description: get the protocol by its name.                                 */
-/* Arguments:                                                                 */
-/*         proto - protocol name                                              */
-/*----------------------------------------------------------------------------*/
-
-RexxMethod1(int,                       // Return type
-            inetAddress_getProtocolByName,  // Object_method name
-            CSTRING, protoname)        // Protocol name
-{
-    // perform function and return
-    struct protoent *ent = getprotobyname(protoname);
-    if (ent == NULL)
+    // we might not have an actual connection, so there might not be a peer.
+    // return an empty AddressInfo object if that's the case.
+    if (getpeername(socketfd, (struct sockaddr *)&myaddr, &len) != 0)
     {
-        setRetc(context, -1);
-        setErrno(context, 22);
-        return -1;
+        return buildErrorAddressInfo(context);
     }
-    setRetc(context, 0);
-    setErrno(context, (int32_t)0);
-    return ent->p_proto;
-}
 
+    // format this into a string, then use that to retrieve the full peer
+    // information
+    char stringAddress[INET6_ADDRSTRLEN];
+    internetAddressToString((struct sockaddr_in *)&myaddr, stringAddress);
 
-/*----------------------------------------------------------------------------*/
-/* Method: getProtoByNumber                                                   */
-/* Description: get the protocol by its name.                                 */
-/* Arguments:                                                                 */
-/*         proto - protocol number                                            */
-/*----------------------------------------------------------------------------*/
-
-RexxMethod1(RexxStringObject,          // Return type
-            socket_getProtocolByNumber,// Object_method name
-            int, proto)                // Protocol number
-{
-    // perform function and return
-    struct protoent *ent = getprotobynumber(proto);
-    if (ent == NULL)
-    {
-        return context->String("-1");
-    }
-    setRetc(context, 0);
-    setErrno(context, (int32_t)0);
-    return context->String(ent->p_name);
+    // now that we have string version of the address, retrieve the full information
+    return getAddressInfo(context, stringAddress, NULL, NULL);
 }
 
 
@@ -3361,37 +3237,37 @@ RexxMethod2(int,                       // Return type
 }
 
 RexxMethod1(CSTRING,                   // Return type
-            socket_familyToString,     // Object_method name
+            inetaddress_familyToString,// Object_method name
             int, option)               // family value
 {
     return familyToString(option);
 }
 
-RexxMethod1(CSTRING,                   // Return type
-            socket_sockOptToString,    // Object_method name
-            int, option)               // option value
+RexxMethod1(CSTRING,                     // Return type
+            inetaddress_sockOptToString, // Object_method name
+            int, option)                 // option value
 {
     return sockOptToString(option);
 }
 
-RexxMethod1(CSTRING,                   // Return type
-            socket_sockTypeToString,   // Object_method name
-            int, option)               // option value
+RexxMethod1(CSTRING,                            // Return type
+            inetaddress_sockTypeToString,       // Object_method name
+            int, option)                        // option value
 {
     return sockTypeToString(option);
 }
 
 
-RexxMethod1(CSTRING,                   // Return type
-            socket_protocolToString,   // Object_method name
-            int, option)               // option value
+RexxMethod1(CSTRING,                            // Return type
+            inetaddress_protocolToString,       // Object_method name
+            int, option)                        // option value
 {
     return protocolToString(option);
 }
 
 
 RexxMethod1(CSTRING,                   // Return type
-            socket_errnoToString,      // Object_method name
+            inetaddress_errnoToString, // Object_method name
             int, option)               // option value
 {
     return errnoToString(option);
@@ -3399,71 +3275,31 @@ RexxMethod1(CSTRING,                   // Return type
 
 
 /*------------------------------------------------------------------
- * gethostbyaddr()
- *------------------------------------------------------------------*/
-RexxRoutine3(RexxObjectPtr, inetaddress_getHostByAddr, CSTRING, addrArg, RexxObjectPtr, OPTIONAL_CSTRING, domainName)
-{
-
-    // set a default domain
-    int domain = AF_INET;
-
-    // if we had the optional argument, convert the string constant
-    // to the numeric value
-    if (domainName != NULL)
-    {
-        domain = stringToAddressType(domainName);
-    }
-
-    struct sockaddr_storage addr;
-
-    stringToInternetAddress(&addr, domain, addrArg);
-
-    struct hostent *pHostEnt = gethostbyaddr((char*)&addr, sizeof(addr), domain);
-    // convert this into an object
-    return createHostEntity(context, pHostEnt);
-}
-
-
-/*------------------------------------------------------------------
- *  gethostbyname()
- *------------------------------------------------------------------*/
-RexxRoutine2(RexxObjectPtr, inetaddress_getHostByName, CSTRING, name, OPTIONAL_STRING, domainName)
-{
-    // set a default domain
-    int domain = AF_INET;
-
-    // if we had the optional argument, convert the string constant
-    // to the numeric value
-    if (domainName != NULL)
-    {
-        domain = stringToAddressType(domainName);
-    }
-
-    struct hostent *pHostEnt = gethostbyname(name, domain);
-    // convert this into an object
-    return createHostEntity(context, pHostEnt);
-}
-
-
-/*------------------------------------------------------------------
  *  gethostid()
  *------------------------------------------------------------------*/
-RexxRoutine0(RexxObjectPtr, inetaddress_getHost)
+RexxMethod0(RexxObjectPtr, inetaddress_getHost)
 {
-    char     hostName[128];                  // buffer for host name
+    char     hostName[HOST_NAME_MAX + 1];   // buffer for host name
     /*
      *   Retrieve my ip address.  Assuming the hosts file in
      *   in %systemroot%/system/drivers/etc/hosts contains my computer name.
      */                                      //get our name
-    if (gethostname(pszBuff, sizeof(pszBuff)))
+    if (gethostname(hostName, sizeof(hostName)))
     {
         // not retrievable, return an empty host entity
-        return createHostEntity(context, NULL);
+        return buildErrorAddressInfo(context);
     }
-    // now get the host information and return the HostEntity
-    struct hostent *pHostEnt = gethostbyname(pszBuff);
-    // convert this into an object
-    return createHostEntity(context, pHostEnt);
+
+    struct addrinfo *returnAddressInfo;
+    int retc = getaddrinfo(hostName, NULL, NULL, &returnAddressInfo);
+
+    if (retc != 0)
+    {
+        // not retrievable, return an empty host entity
+        return buildErrorAddressInfo(context);
+    }
+
+    return buildAddressInfo(context, returnAddressInfo);
 }
 
 
@@ -3475,11 +3311,7 @@ RexxMethodEntry rxsock6_methods[] =
     REXX_METHOD(socket_bind, socket_bind),
     REXX_METHOD(socket_close, socket_close),
     REXX_METHOD(socket_connect, socket_connect),
-    REXX_METHOD(socket_getAddrInfo, socket_getAddrInfo),
-    REXX_METHOD(socket_getHostName, socket_getHostName),
-    REXX_METHOD(socket_getPeerName, socket_getPeerName),
-    REXX_METHOD(socket_getProtocolByName, socket_getProtocolByName),
-    REXX_METHOD(socket_getProtocolByNumber, socket_getProtocolByNumber),
+    REXX_METHOD(socket_getPeer, socket_getPeer),
     REXX_METHOD(socket_getSockName, socket_getSockName),
     REXX_METHOD(socket_getSockOpt, socket_getSockOpt),
     REXX_METHOD(socket_getStringError, socket_getStringError),
@@ -3490,14 +3322,14 @@ RexxMethodEntry rxsock6_methods[] =
     REXX_METHOD(socket_send, socket_send),
     REXX_METHOD(socket_sendTo, socket_sendTo),
     REXX_METHOD(socket_setSockOpt, socket_setSockOpt),
-    REXX_METHOD(socket_familyToString, socket_familyToString),
-    REXX_METHOD(socket_sockOptToString, socket_sockOptToString),
-    REXX_METHOD(socket_sockTypeToString, socket_sockTypeToString),
-    REXX_METHOD(socket_protocolToString, socket_protocolToString),
-    REXX_METHOD(socket_errnoToString, socket_errnoToString),
+    REXX_METHOD(inetaddress_familyToString, inetaddress_familyToString),
+    REXX_METHOD(inetaddress_sockOptToString, inetaddress_sockOptToString),
+    REXX_METHOD(inetaddress_sockTypeToString, inetaddress_sockTypeToString),
+    REXX_METHOD(inetaddress_protocolToString, inetaddress_protocolToString),
+    REXX_METHOD(inetaddress_errnoToString, inetaddress_errnoToString),
     REXX_METHOD(inetaddress_getHost, inetaddress_getHost),
-    REXX_METHOD(inetaddress_getHostByName, inetaddress_getHostByName),
-    REXX_METHOD(inetaddress_getHostByAddr, inetaddress_getHostByAddr),
+    REXX_METHOD(inetaddress_getHostName, inetaddress_getHostName),
+    REXX_METHOD(inetaddress_getAddrInfo, inetaddress_getAddrInfo),
     REXX_LAST_METHOD()
 };
 
