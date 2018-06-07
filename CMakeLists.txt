@@ -1542,19 +1542,26 @@ endif()
 copy_build_file(mime.cls ${build_extensions_rxsock_dir})
 copy_build_file(smtp.cls ${build_extensions_rxsock_dir})
 copy_build_file(rexxtry.rex ${build_samples_dir})
+
+if(RXSOCK6)
+  set (rxsock6_classFiles
+    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/socket6.cls
+    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/streamsocket6.cls
+    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/smtp6.cls)
+endif()
+
 add_custom_target(class_files ALL DEPENDS
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rxregexp.cls
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rxftp.cls
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/csvStream.cls
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/json.cls
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/socket.cls
-    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/socket6.cls
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/streamsocket.cls
-    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/streamsocket6.cls
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mime.cls
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/smtp.cls
-    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/smtp6.cls
+    ${rxsock6_classFiles}
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexxtry.rex)
+
 
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rxregexp.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
 
@@ -1565,11 +1572,13 @@ install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/json.cls COMPONENT Core DESTINAT
 
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/socket.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/streamsocket.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
-install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/socket6.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
-install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/streamsocket6.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mime.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/smtp.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
+if(RXSOCK6)
+install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/socket6.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
+install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/streamsocket6.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/smtp6.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
+endif()
 # technically a sample, but this is so useful we add it to the binary dir
 install(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir}/rexxtry.rex COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
 

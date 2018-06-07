@@ -2,7 +2,7 @@
 /*                                                                            */
 /* Description: Classes to encalsulate Ipv4 and IPv6 sockets.                 */
 /*                                                                            */
-/* Copyright (c) 2014-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2014-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -35,13 +35,10 @@
 /* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
-/* Author: W. David Ashley                                                    */
-/*                                                                            */
 /*----------------------------------------------------------------------------*/
 
 
 ::requires "rxsock6" LIBRARY
-
 
 /*----------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
@@ -49,11 +46,8 @@
 /*----------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
 
+-- a class for socket operations
 ::class 'Socket' public
-
-/*----------------------------------------------------------------------------*/
-/* Constants                                                                  */
-/*----------------------------------------------------------------------------*/
 
 -- protocol family constants
 ::constant PF_UNSPEC
@@ -234,14 +228,14 @@
 ::constant SO_BUSY_POLL
 
 
-
-/*----------------------------------------------------------------------------*/
-/* Attributes                                                                 */
-/*----------------------------------------------------------------------------*/
-
+-- public attributes
 ::attribute socketfd GET               -- socket file descriptor
+::attribute address  GET               -- the bound address
 ::attribute retc     GET               -- last socket API return code
 ::attribute errno    GET               -- last socket API errno
+
+-- private access only
+::attribute socketfd SET               -- set a new socket descriptor
 
 /*----------------------------------------------------------------------------*/
 /* Methods                                                                    */
@@ -257,13 +251,14 @@
 /*----------------------------------------------------------------------------*/
 
 ::method init
-  expose socketfd retc errno
+  expose socketfd retc errno address
 
   socketfd = -1
   retc = 0
   errno = 0
+  address = .nil
 
-  use strict arg domain = (.InetAddress~AF_INET), type = (self~SOCK_STREAM), protocol = (self~IPPROTO_IP)
+  use strict arg domain = (.self~PF_INET), type = (self~SOCK_STREAM), protocol = (self~IPPROTO_IP)
   socketfd = self~private_init(domain, type, protocol)
 
 
@@ -322,61 +317,13 @@
 ::method convert_err_number external "LIBRARY rxsock6 socket_errnoToString"
 
 /*----------------------------------------------------------------------------*/
-/* Method: gai_strerror                                                       */
-/* Description: get the error text associated with an error code from         */
-/*              getaddrinfo method.                                           */
-/* Arguments:                                                                 */
-/*         errcode - error code                                               */
-/*----------------------------------------------------------------------------*/
-
-::method gai_strerror class external "LIBRARY rxsock6 socket_getStringError"
-
-/*----------------------------------------------------------------------------*/
-/* Method: getAddrInfo                                                        */
-/* Description: get the address info for a host.                              */
-/* Arguments:                                                                 */
-/*         nodename - the host name or ip address                             */
-/*         servname - the service name or number                              */
-/*         hints    - an Inetaddr for the search hints                        */
-/*         rea      - Rexx array variable (empty)                             */
-/*----------------------------------------------------------------------------*/
-
-::method getaddrinfo class external "LIBRARY rxsock6 socket_getAddrInfo"
-
-/*----------------------------------------------------------------------------*/
-/* Method: getHostName                                                        */
-/* Description: get the host name of the local machine.                       */
-/* Arguments:                                                                 */
-/*----------------------------------------------------------------------------*/
-
-::method gethostname class external "LIBRARY rxsock6 socket_getHostName"
-
-/*----------------------------------------------------------------------------*/
-/* Method: getPeerName                                                        */
+/* Method: getPeer                                                            */
 /* Description: get the peer name connected to a socket                       */
 /* Arguments:                                                                 */
 /*         inetaddr - Inetaddr instance                                       */
 /*----------------------------------------------------------------------------*/
 
-::method getpeername external "LIBRARY rxsock6 socket_getPeerName"
-
-/*----------------------------------------------------------------------------*/
-/* Method: getProtoByName                                                     */
-/* Description: get the protocol by its name.                                 */
-/* Arguments:                                                                 */
-/*         proto - protocol name                                              */
-/*----------------------------------------------------------------------------*/
-
-::method getprotocolbyname class external "LIBRARY rxsock6 socket_getProtocolByName"
-
-/*----------------------------------------------------------------------------*/
-/* Method: getProtoByNumber                                                   */
-/* Description: get the protocol by its number.                               */
-/* Arguments:                                                                 */
-/*         proto - protocol number                                            */
-/*----------------------------------------------------------------------------*/
-
-::method getprotocolbynumber class external "LIBRARY rxsock6 socket_getProtocolByNumber"
+::method getpeer external "LIBRARY rxsock6 socket_getPeerName"
 
 /*----------------------------------------------------------------------------*/
 /* Method: getSockName                                                        */
@@ -484,8 +431,6 @@ return socketfd
 ::method uninit
 expose socketfd
 if socketfd <> -1 then retc = self~close()
-return
-
 
 /*----------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
@@ -497,8 +442,9 @@ return
 
 -- class methods
 ::method getHost class external "LIBRARY rxsock6 inetaddress_getHost"
-::method getHostByName class external "LIBRARY rxsock6 inetaddress_getHostByName"
-::method getHostByAddr class external "LIBRARY rxsock6 inetaddress_getHostByAddr"
+::method getHostName class external "LIBRARY rxsock6 inetaddress_getHostName"
+::method getAddrinfo class external "LIBRARY rxsock6 inetaddress_getAddrInfo"
+::method validateAddrType private external "LIBRARY rxsock6 inetaddress_validateAddrType"
 
 /*----------------------------------------------------------------------------*/
 /* Constants                                                                  */
@@ -562,31 +508,12 @@ return
 /* Attributes                                                                 */
 /*----------------------------------------------------------------------------*/
 
-::attribute address get
+::attribute address
 ::attribute family  get
 ::attribute port    get
 
 -- a private attribute for setting the socket descriptor
 ::attribute socketfd set private
-
-/*----------------------------------------------------------------------------*/
-/* Method: address=                                                           */
-/* Description: the InetAddress address                                       */
-/* Arguments:                                                                 */
-/*         value - the ip address or host name                                */
-/*----------------------------------------------------------------------------*/
-
-::attribute address SET
-  expose address
-  use strict arg address
-  -- this is either use any or a specific address or host
-  if address~upper() <> 'INADDR_ANY' then do
-     retc = SockGetHostByName(address, 'hostinfo.!')
-     if retc = 1 then address = hostinfo.!addr
-     if address~verify('0123456789.') <> 0 then ,
-      raise syntax 93.953 array(1, 'dotted decimal internet address')
-     end
-  return
 
 /*----------------------------------------------------------------------------*/
 /* Method: family=                                                            */
@@ -595,11 +522,12 @@ return
 /*         value - the address family                                         */
 /*----------------------------------------------------------------------------*/
 
+-- set the family name with validation
 ::attribute family SET
   expose family
   use strict arg family
 
-  if self~validateFamily(family) = -1 then do
+  if \self~validateFamily(family) then do
      raise syntax 93.974 array ("family", family)
   end
 
@@ -625,28 +553,8 @@ return
 /*----------------------------------------------------------------------------*/
 
 ::method init
-expose address port family
-if arg() >= 2 then do
-   use strict arg address, port, family = (self~AF_INET)
-   end
-else use strict arg
-return
-
--- methods for validating string versions of options
-::method validateFamily private external "LIBRARY rxsock6 orxFamilyToString"
-
-/*----------------------------------------------------------------------------*/
-/* Method: fromstruct                                                         */
-/* Description: return InetAddress from the supplied pointer                  */
-/* Arguments:                                                                 */
-/*         ptr - pointer to a sockaddr struct                                 */
-/*----------------------------------------------------------------------------*/
-
-::method fromstruct
-use strict arg ptr
-addr = .InetAddress~new(.InetAddress~AF_INET, 0, .InetAddress~INADDR_ANY)
-call orxAddrFromStruct6 ptr, addr
-return addr
+  expose address port family
+  use strict arg address, port = 0, family = (self~AF_INET)
 
 ::method getHost class external "LIBRARY rxsock6 inetaddress_getHost"
 ::method getHostByName class external "LIBRARY rxsock6 inetaddress_getHostByName"

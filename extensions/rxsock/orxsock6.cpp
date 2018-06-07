@@ -121,6 +121,7 @@ int caselessCompare(const char *op1, const char *op2)
 
 #define CheckOpt(n) if (!caselessCompare(#n, pszOptName)) return n;
 
+
 /**
  * Convert a string option name into the numeric equivalent.
  *
@@ -412,7 +413,8 @@ int stringToFamily(const char *pszOptName)
 
 
 /**
- * Convert a string socket family name to its numeric equivalent
+ * Convert a string socket address type name to its numeric
+ * equivalent
  *
  * @return The mapped numeric value or -1 for an unknown name.
  */
@@ -420,6 +422,12 @@ int stringToAddrType(const char *pszOptName)
 {
 #ifdef AF_UNSPEC
     CheckOpt(AF_UNSPEC)
+#endif
+#ifdef AF_INET
+    CheckOpt(AF_INET)
+#endif
+#ifdef AF_INET6
+    CheckOpt(AF_INET6)
 #endif
 #ifdef AF_LOCAL
     CheckOpt(AF_LOCAL)
@@ -429,9 +437,6 @@ int stringToAddrType(const char *pszOptName)
 #endif
 #ifdef AF_FILE
     CheckOpt(AF_FILE)
-#endif
-#ifdef AF_INET
-    CheckOpt(AF_INET)
 #endif
 #ifdef AF_IMPLINK
     CheckOpt(AF_IMPLINK)
@@ -480,9 +485,6 @@ int stringToAddrType(const char *pszOptName)
 #endif
 #ifdef AF_CCITT
     CheckOpt(AF_CCITT)
-#endif
-#ifdef AF_INET6
-    CheckOpt(AF_INET6)
 #endif
 #ifdef AF_SNA
     CheckOpt(AF_SNA)
@@ -740,7 +742,7 @@ int stringToProtocol(const char *pszOptName)
 
 
 /**
- * Convert a numeric value back into the STRING name
+ * Convert a numeric sock option value back into the STRING name
  *
  * @param option The numeric option value
  *
@@ -854,9 +856,11 @@ const char *sockOptToString(int option)
 
 
 /**
- * Convert a string socket family name to its numeric equivalent
+ * Convert a numeric family code back to it's string equivalent
  *
- * @return The mapped numeric value or -1 for an unknown name.
+ * @param option The numeric option value.
+ *
+ * @return The string name of the option or "" if not found.
  */
 const char *familyToString(int option)
 {
@@ -1027,9 +1031,11 @@ const char *familyToString(int option)
 
 
 /**
- * Convert a string socket family name to its numeric equivalent
+ * Convert a numeric address type back to its string equivalent
  *
- * @return The mapped numeric value or -1 for an unknown name.
+ * @param option The numeric option value.
+ *
+ * @return The string name of the option or "" if not found.
  */
 const char *addrTypeToString(int option)
 {
@@ -1200,9 +1206,11 @@ const char *addrTypeToString(int option)
 
 
 /**
- * Convert a string socket type name to its numeric equivalent
+ * Convert a numeric socket type back to its string equivalent
  *
- * @return The mapped numeric value or -1 for an unknown name.
+ * @param option The numeric option value.
+ *
+ * @return The string name of the option or "" if not found.
  */
 const char *sockTypeToString(int option)
 {
@@ -1244,9 +1252,11 @@ const char *sockTypeToString(int option)
 
 
 /**
- * Convert a string protocol name to its numeric equivalent
+ * Convert a numeric protocol type back to its string equivalent
  *
- * @return The mapped numeric value or -1 for an unknown name.
+ * @param option The numeric option value.
+ *
+ * @return The string name of the option or "" if not found.
  */
 const char *protocolToString(int option)
 {
@@ -1855,55 +1865,120 @@ const char *getStringValue(RexxMethodContext *context, RexxObjectPtr o, const ch
     return context->CString(obj);
 }
 
-// set 32-bit int value in an object
+
+/**
+ * set 32-bit int value in an object
+ *
+ * @param context The current method context
+ * @param o       The target object
+ * @param name    The method used to set the value
+ * @param v       The numeric value to set.
+ */
 void setValue(RexxMethodContext *context, RexxObjectPtr o, const char *name, int32_t v)
 {
     context->SendMessage1(o, name, context->Int32ToObject(v));
 }
 
-// set an unsigned 32-bit int value in an object
+
+/**
+ * set an unsigned 32-bit int value in an object
+ *
+ * @param context The current method context
+ * @param o       The target object
+ * @param name    The method used to set the value
+ * @param v       The numeric value to set.
+ */
 void setValue(RexxMethodContext *context, RexxObjectPtr o, const char *name, uint32_t v)
 {
     context->SendMessage1(o, name, context->UnsignedInt32ToObject(v));
 }
 
+
+
+/**
+ * set a string value in an object
+ *
+ * @param context The current method context
+ * @param o       The target object
+ * @param name    The method used to set the value
+ * @param v       The string value to set.
+ */
 // set a string value into an object
 void setValue(RexxMethodContext *context, RexxObjectPtr o, const char *name, const char *v)
 {
     context->SendMessage1(o, name, context->CString(v));
 }
 
-// set a string value into an object
+
+
+/**
+ * set an object value in an object
+ *
+ * @param context The current method context
+ * @param o       The target object
+ * @param name    The method used to set the value
+ * @param v       The object value to set.
+ */
 void setValue(RexxMethodContext *context, RexxObjectPtr o, const char *name, RexxObjectPtr v)
 {
     context->SendMessage1(o, name, v);
 }
 
 
-// Common routine for setting the error condition
+/**
+ * Common routine for setting the error condition
+ *
+ * @param context  The current call context.
+ * @param hasError A flag indicating whether this is an error return value or should
+ *                 just be zeroed.
+ */
 void setErrno(RexxMethodContext* context, bool hasError)
 {
     context->SetObjectVariable("errno", context->Int32(hasError ? sock_errno() : 0));
 }
 
-// Common routine for setting the error condition
+/**
+ * Common routine for setting the error condition
+ *
+ * @param context The current method context
+ * @param errNo   The error value to set.
+ */
 void setErrno(RexxMethodContext* context, int32_t errNo)
 {
     context->SetObjectVariable("errno", context->Int32(errNo));
 }
 
 
-// Common routine for setting the error condition
+/**
+ * Common routine for setting the error condition in a socket object.
+ *
+ * @param context The method call context
+ * @param v       The retc value.
+ */
 void setRetc(RexxMethodContext* context, int32_t v)
 {
     context->SetObjectVariable("retc", context->Int32(v));
 }
 
+
+/**
+ * Common routine for setting the error condition in a socket object.
+ *
+ * @param context The method call context
+ * @param v       The retc value.
+ */
 void setRetc(RexxMethodContext* context, uintptr_t v)
 {
     context->SetObjectVariable("retc", context->UintptrToObject(v));
 }
 
+
+/**
+ * Common routine for setting the error condition in a socket object.
+ *
+ * @param context The method call context
+ * @param v       The retc value.
+ */
 void setRetc(RexxMethodContext* context, RexxObjectPtr v)
 {
     context->SetObjectVariable("retc", v);
@@ -1969,7 +2044,9 @@ void stringToInternetAddress(struct sockaddr_in *addr, uint16_t family, const ch
 }
 
 
-// a helper class to simplify the code that uses address objects.
+/**
+ * a helper class to simplify the code that uses InetAddress objects.
+ */
 class InetAddress
 {
 public:
@@ -2082,15 +2159,14 @@ protected:
 };
 
 
-/*----------------------------------------------------------------------------*/
-/* Method: init                                                               */
-/* Description: instance initialization                                       */
-/* Arguments:                                                                 */
-/*         domain   - socket domain, like PF_INET6                            */
-/*         type     - socket type, like SOCK_STREAM                           */
-/*         protocol - socket protocol, usually zero                           */
-/*----------------------------------------------------------------------------*/
-
+/**
+ * Complete initialization of a socket object.
+ *
+ * @param domainStr The protocol domain, as a string
+ * @param typeStr   The socket type, as a string option name
+ * @param protocolStr
+ *                  The string protocol name
+ */
 RexxMethod3(RexxObjectPtr,             // Return type
             socket_init,               // Object_method name
             CSTRING, domainStr,        // protocol family
@@ -2102,12 +2178,6 @@ RexxMethod3(RexxObjectPtr,             // Return type
     int type = stringToSockType(typeStr);
     int protocol = stringToProtocol(protocolStr);
 
-#ifdef WIN32
-    WORD wVersionRequested;
-    WSADATA wsaData;
-    wVersionRequested = MAKEWORD( 1, 1 );
-    int rc = WSAStartup( wVersionRequested, &wsaData );
-#endif
     // perform function and return
     ORXSOCKET socketfd = socket(domain, type, protocol);
     if (socketfd == INVALID_SOCKET)
@@ -2131,13 +2201,18 @@ RexxMethod3(RexxObjectPtr,             // Return type
 }
 
 
-/*----------------------------------------------------------------------------*/
-/* Method: accept                                                             */
-/* Description: accept a connection                                           */
-/* Arguments:                                                                 */
-/*         inetaddr - Inetaddr instance uninitialized (optional)              */
-/*----------------------------------------------------------------------------*/
-
+/**
+ * Accept an inbound connection
+ *
+ * @param self      The object reference to the host socket
+ *                  object
+ * @param inetaddr  An InternetAddress object that will be
+ *                  updated with information about the
+ *                  connection.
+ *
+ * @return A new socket object that is the server side of the
+ *         connection.
+ */
 RexxMethod2(RexxObjectPtr,             // Return type
             socket_accept,             // Object_method name
             OSELF, self,               // The object itself,
@@ -2185,13 +2260,13 @@ RexxMethod2(RexxObjectPtr,             // Return type
 }
 
 
-/*----------------------------------------------------------------------------*/
-/* Method: bind                                                               */
-/* Description: bind a socket to an address.                                  */
-/* Arguments:                                                                 */
-/*         inetaddr - Inetaddr instance initialized with the address          */
-/*----------------------------------------------------------------------------*/
-
+/**
+ * Bind a socket to an address
+ *
+ * @param inetaddr  The address information for the bind target
+ *
+ * @return A success/failure code
+ */
 RexxMethod1(int,                       // Return type
             socket_bind,               // Object_method name
             RexxObjectPtr, inetaddr)   // Inetaddr instance
@@ -2215,41 +2290,47 @@ RexxMethod1(int,                       // Return type
     socklen_t len = myaddr.ss_family == AF_INET ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6);
 
     int retc = bind(socketfd, (struct sockaddr *)&myaddr, len);
+
+    // if we successfully bound, keep a copy of the address information
+    if (retc != -1)
+    {
+        context->SetObjectVariable("address", context->SendMessage0(inetaddr, "copy"));
+    }
     setRetc(context, retc);
     setErrno(context, retc == -1);
     return retc;
 }
 
 
-/*----------------------------------------------------------------------------*/
-/* Method: close                                                              */
-/* Description: shutdown and close a socket                                   */
-/* Arguments: none                                                            */
-/*----------------------------------------------------------------------------*/
-RexxMethod0(uintptr_t,                 // Return type
+/**
+ * shutdown and close a socket
+ *
+ * @return A success/failure code
+ */
+RexxMethod0(int,                       // Return type
             socket_close)              // Object_method name
 {
     ORXSOCKET socketfd = getSocket(context);
     // perform function and return
     shutdown(socketfd, 2);
-    ORXSOCKET retc = closesocket(socketfd);
+    int retc = closesocket(socketfd);
 
     // clear out the socket descriptor so that uninit won't close again.
     context->SetObjectVariable("socketfd", context->Int32(-1));
-    setRetc(context, (uintptr_t)retc);
+    setRetc(context, retc);
     setErrno(context, retc == -1);
 
-    return (uintptr_t)retc;
+    return retc;
 }
 
 
-/*----------------------------------------------------------------------------*/
-/* Method: connect                                                            */
-/* Description: connect a socket to a remote address                          */
-/* Arguments:                                                                 */
-/*         inetaddr - Inetaddr instance initialized with the address          */
-/*----------------------------------------------------------------------------*/
-
+/**
+ * Connect a socket to a remote address
+ *
+ * @param inetaddr  The address information for the target
+ *
+ * @return A success/failure code
+ */
 RexxMethod1(int,                       // Return type
             socket_connect,            // Object_method name
             RexxObjectPtr, inetaddr)   // Inetaddr instance
@@ -2442,6 +2523,19 @@ RexxObjectPtr buildErrorAddressInfo(RexxMethodContext *context)
     return obj;
 }
 
+
+/**
+ * Retrieve the address info for an address or node name and return
+ * an AddrInfo object containing the information.
+ *
+ * @param context  The current call context.
+ * @param nodeName The node name or target address
+ * @param serviceName
+ *                 The optional service or port for the target
+ * @param hints    A hints object used to narrow the request.
+ *
+ * @return An AddrInfo object containing the information about the target address.
+ */
 RexxObjectPtr getAddressInfo(RexxMethodContext *context, const char *nodeName, const char *serviceName, RexxObjectPtr hints)
 {
     // this is our hints that we populate from the object version
@@ -2476,20 +2570,24 @@ RexxObjectPtr getAddressInfo(RexxMethodContext *context, const char *nodeName, c
     }
 
     // convert the returned data to a Rexx Object
-    return buildAddressInfoSet(context, returnAddressInfo);
+    RexxObjectPtr info = buildAddressInfoSet(context, returnAddressInfo);
+    // we need to release the dynamic storage after we're done with this
+    freeaddrinfo(returnAddressInfo);
+    return info;
 }
 
 
-/*----------------------------------------------------------------------------*/
-/* Method: getAddrInfo                                                        */
-/* Description: get the address info for a host.                              */
-/* Arguments:                                                                 */
-/*         nodename - the host name or ip address                             */
-/*         servname - the service name or number                              */
-/*         hints    - an Inetaddr for the search hints                        */
-/*         rea      - Rexx array variable (empty)                             */
-/*----------------------------------------------------------------------------*/
-
+/**
+ * Retrieve the address info for an address or node name and return
+ * an AddrInfo object containing the information.
+ *
+ * @param nodeName The node name or target address as a string
+ * @param serviceName
+ *                 The optional service or port for the target
+ * @param hints    A hints object used to narrow the request.
+ *
+ * @return An AddrInfo object containing the information about the target address.
+ */
 RexxMethod3(RexxObjectPtr,             // Return type
             inetaddress_getAddrInfo,   // Object_method name
             CSTRING, nodename,         // the host name or ip address
@@ -2501,30 +2599,11 @@ RexxMethod3(RexxObjectPtr,             // Return type
 }
 
 
-/*----------------------------------------------------------------------------*/
-/* Method: gai_strerror                                                       */
-/* Description: get the error text associated with an error code from         */
-/*              getaddrinfo method.                                           */
-/* Arguments:                                                                 */
-/*         errcode - error code                                               */
-/*----------------------------------------------------------------------------*/
-
-RexxMethod1(RexxObjectPtr,             // Return type
-            socket_getStringError,     // Object_method name
-            int, err)                  // error code
-{
-
-    // perform function and return
-    return context->String(gai_strerror(err));
-}
-
-
-/*----------------------------------------------------------------------------*/
-/* Method: getHostName                                                        */
-/* Description: get the host name of the local machine.                       */
-/* Arguments:                                                                 */
-/*----------------------------------------------------------------------------*/
-
+/**
+ * Retrieve the name of the local host.
+ *
+ * @return The string name of the local host.
+ */
 RexxMethod0(RexxObjectPtr,             // Return type
             inetaddress_getHostName)   // Object_method name
 {
@@ -2543,6 +2622,13 @@ RexxMethod0(RexxObjectPtr,             // Return type
 /* Description: get the info for the socket peer                              */
 /*----------------------------------------------------------------------------*/
 
+
+/**
+ * Retrieve the information of the socket peer
+ *
+ * @return An AddrInfo object populated with the peer host
+ *         information.
+ */
 RexxMethod0(RexxObjectPtr,             // Return type
             socket_getPeer)            // Object_method name
 {
@@ -2576,7 +2662,7 @@ RexxMethod0(RexxObjectPtr,             // Return type
 /* Method: getSockName                                                        */
 /* Description: get the socket name of the socket.                            */
 /* Arguments:                                                                 */
-/*         inetaddr - Inetaddr instance                                       */
+/*         inetaddr - Inxetaddr instance                                       */
 /*----------------------------------------------------------------------------*/
 
 RexxMethod0(RexxObjectPtr,             // Return type
@@ -3236,6 +3322,13 @@ RexxMethod2(int,                       // Return type
     }
 }
 
+RexxMethod1(logical_t,                    // Return type
+            inetaddress_validateAddrType, // Object_method name
+            CSTRING, option)              // family value
+{
+    return stringToAddrType(option) != -1;
+}
+
 RexxMethod1(CSTRING,                   // Return type
             inetaddress_familyToString,// Object_method name
             int, option)               // family value
@@ -3290,16 +3383,30 @@ RexxMethod0(RexxObjectPtr, inetaddress_getHost)
         return buildErrorAddressInfo(context);
     }
 
-    struct addrinfo *returnAddressInfo;
-    int retc = getaddrinfo(hostName, NULL, NULL, &returnAddressInfo);
 
-    if (retc != 0)
-    {
-        // not retrievable, return an empty host entity
-        return buildErrorAddressInfo(context);
-    }
+    // now that we have string version of the address, retrieve the full information
+    return getAddressInfo(context, hostName, NULL, NULL);
+}
 
-    return buildAddressInfo(context, returnAddressInfo);
+
+/**
+ * Initial package startup
+ *
+ * @param context The thread context for the load operation.
+ *
+ * @return Nothing
+ */
+void RexxEntry packageLoader(RexxThreadContext * context)
+{
+
+// only Windows requires the socket library to be initialized. This is only
+// required once. so we can do it at package load time.
+#ifdef WIN32
+    WORD wVersionRequested;
+    WSADATA wsaData;
+    wVersionRequested = MAKEWORD( 1, 1 );
+    WSAStartup( wVersionRequested, &wsaData );
+#endif
 }
 
 
@@ -3314,7 +3421,6 @@ RexxMethodEntry rxsock6_methods[] =
     REXX_METHOD(socket_getPeer, socket_getPeer),
     REXX_METHOD(socket_getSockName, socket_getSockName),
     REXX_METHOD(socket_getSockOpt, socket_getSockOpt),
-    REXX_METHOD(socket_getStringError, socket_getStringError),
     REXX_METHOD(socket_listen, socket_listen),
     REXX_METHOD(socket_receive,socket_receive),
     REXX_METHOD(socket_receiveFrom, socket_receiveFrom),
@@ -3322,10 +3428,7 @@ RexxMethodEntry rxsock6_methods[] =
     REXX_METHOD(socket_send, socket_send),
     REXX_METHOD(socket_sendTo, socket_sendTo),
     REXX_METHOD(socket_setSockOpt, socket_setSockOpt),
-    REXX_METHOD(inetaddress_familyToString, inetaddress_familyToString),
-    REXX_METHOD(inetaddress_sockOptToString, inetaddress_sockOptToString),
-    REXX_METHOD(inetaddress_sockTypeToString, inetaddress_sockTypeToString),
-    REXX_METHOD(inetaddress_protocolToString, inetaddress_protocolToString),
+    REXX_METHOD(inetaddress_validateAddrType, inetaddress_validateAddrType),
     REXX_METHOD(inetaddress_errnoToString, inetaddress_errnoToString),
     REXX_METHOD(inetaddress_getHost, inetaddress_getHost),
     REXX_METHOD(inetaddress_getHostName, inetaddress_getHostName),
@@ -3340,8 +3443,8 @@ RexxPackageEntry rxsock6_package_entry =
     REXX_INTERPRETER_4_0_0,              // anything after 4.0.0 will work
     "RXSOCK6",                           // name of the package
     "4.0",                               // package information
-    NULL,                                // no load/unload functions
-    NULL,
+    packageLoader,                       // perform needed socket initializations
+    NULL,                                // nothing to do on unload
     NULL,                                // no functions in this package
     rxsock6_methods                      // the exported methods
 };
