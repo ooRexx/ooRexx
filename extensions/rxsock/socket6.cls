@@ -258,7 +258,7 @@
   errno = 0
   address = .nil
 
-  use strict arg domain = (.self~PF_INET), type = (self~SOCK_STREAM), protocol = (self~IPPROTO_IP)
+  use strict arg domain = (self~PF_INET), type = (self~SOCK_STREAM), protocol = (self~IPPROTO_IP)
   socketfd = self~private_init(domain, type, protocol)
 
 
@@ -308,22 +308,13 @@
 ::method connect external "LIBRARY rxsock6 socket_connect"
 
 /*----------------------------------------------------------------------------*/
-/* Method: convert_err_number                                                 */
-/* Description: convert an error number to a short string.                    */
-/* Arguments:                                                                 */
-/*         error_number - errno number                                        */
-/*----------------------------------------------------------------------------*/
-
-::method convert_err_number external "LIBRARY rxsock6 socket_errnoToString"
-
-/*----------------------------------------------------------------------------*/
 /* Method: getPeer                                                            */
 /* Description: get the peer name connected to a socket                       */
 /* Arguments:                                                                 */
 /*         inetaddr - Inetaddr instance                                       */
 /*----------------------------------------------------------------------------*/
 
-::method getpeer external "LIBRARY rxsock6 socket_getPeerName"
+::method getpeer external "LIBRARY rxsock6 socket_getPeer"
 
 /*----------------------------------------------------------------------------*/
 /* Method: getSockName                                                        */
@@ -555,10 +546,6 @@ if socketfd <> -1 then retc = self~close()
 ::method init
   expose address port family
   use strict arg address, port = 0, family = (self~AF_INET)
-
-::method getHost class external "LIBRARY rxsock6 inetaddress_getHost"
-::method getHostByName class external "LIBRARY rxsock6 inetaddress_getHostByName"
-::method getHostByAddr class external "LIBRARY rxsock6 inetaddress_getHostByAddr"
 
 /*----------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
