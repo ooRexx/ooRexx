@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -1496,7 +1496,7 @@ RexxObject *NumberString::truncInternal(wholenumber_t needed_digits)
     // let's see if we can return this as an integer.  this requires
     // - no digits requested,
     // - have at least one digit,
-    // - but no more than REXXINTEGER_DIGITS in result 
+    // - but no more than REXXINTEGER_DIGITS in result
     if (needed_digits == 0 && integerDigits >= 1 && integerDigits + integerPadding <= Numerics::REXXINTEGER_DIGITS)
     {
         return new_integer(signOverHead != 0, numberDigits, integerDigits, integerPadding);
@@ -3107,7 +3107,7 @@ bool NumberString::isEqual(RexxInternalObject *other)
 wholenumber_t NumberString::strictComp(RexxObject *other)
 {
     // do this using the string form
-    return stringValue()->strictComp(other);
+    return stringValue()->primitiveStrictComp(other);
 }
 
 

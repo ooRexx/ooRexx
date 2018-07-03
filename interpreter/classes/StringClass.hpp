@@ -356,6 +356,7 @@ class RexxString : public RexxObject
     bool        primitiveCaselessIsEqual(RexxObject *);
     wholenumber_t strictComp(RexxObject *);
     wholenumber_t comp(RexxObject *);
+    wholenumber_t primitiveStrictComp(RexxObject *);
     wholenumber_t stringComp(RexxString *);
     virtual wholenumber_t compareTo(RexxInternalObject *);
     RexxObject  *equal(RexxObject *);

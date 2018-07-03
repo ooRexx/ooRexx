@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -1144,7 +1144,7 @@ wholenumber_t RexxInteger::strictComp(RexxObject *other)
     // this must always be done using the string version, since values of
     // different decimal lengths need to use string rules.  Thus
     // 12<<2 is true because string rules are used
-    return stringValue()->strictComp((RexxString *)other);
+    return stringValue()->primitiveStrictComp(other);
 }
 
 
@@ -1168,7 +1168,7 @@ bool RexxInteger::strictEquality(RexxObject *other)
     // string comparison
     else
     {
-        return (stringValue()->strictComp((RexxString *)other)) == 0;
+        return stringValue()->primitiveIsEqual(other);
     }
 }
 

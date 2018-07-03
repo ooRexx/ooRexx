@@ -807,6 +807,52 @@ wholenumber_t RexxString::strictComp(RexxObject *otherObj)
 }
 
 
+/**
+ * Do a strict comparison of two strings when called by either
+ * the Interger or NumberString class. This returns:
+ *
+ *    a value < 0 when this is smaller than other
+ *    a value   0 when this is equal to other
+ *    a value > 0 when this is larger than other
+ *
+ * @param otherObj The other comparison object.
+ *
+ * @return The relative comparison result (<0, 0, >0)
+ */
+wholenumber_t RexxString::primitiveStrictComp(RexxObject *otherObj)
+{
+    wholenumber_t result;
+
+    // get the string argument and the data/length values
+    RexxString *other = otherObj->requestString();
+    size_t otherLen = other->getLength();
+    const char *otherData = other->getStringData();
+
+    // if we are the longer string string, compare using the other length.  the
+    // lengths are the tie breaker.
+    if (getLength() >= otherLen)
+    {
+        result = memcmp(getStringData(), otherData, (size_t) otherLen);
+        if ((result == 0) && (getLength() > otherLen))
+        {
+            result = 1;                      /* otherwise they are equal.         */
+        }
+    }
+    // compare using our length...
+    else
+    {
+        result = memcmp(getStringData(), otherData, (size_t) getLength());
+        // since the other length is longer, we cannot be equal.  The other string
+        // is longer, and is considered the greater of the two.
+        if (result == 0)
+        {
+            result = -1;
+        }
+    }
+    return result;
+}
+
+
 // simple macro for generating the arithmetic operator methods, which
 // are essentially identical except for the final method call.
 #define ArithmeticOperator(method)  \
