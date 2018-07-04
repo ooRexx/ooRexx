@@ -1198,25 +1198,25 @@ RexxObject *RexxString::isLessOrEqual(RexxObject *other)
 
 RexxObject *RexxString::strictGreaterThan(RexxObject *other)
 {
-    CompareOperator(strictComp(other) > 0);
+    CompareOperator(primitiveStrictComp(other) > 0);
 }
 
 
 RexxObject *RexxString::strictLessThan(RexxObject *other)
 {
-    CompareOperator(strictComp(other) < 0);
+    CompareOperator(primitiveStrictComp(other) < 0);
 }
 
 
 RexxObject *RexxString::strictGreaterOrEqual(RexxObject *other)
 {
-    CompareOperator(strictComp(other) >= 0);
+    CompareOperator(primitiveStrictComp(other) >= 0);
 }
 
 
 RexxObject *RexxString::strictLessOrEqual(RexxObject *other)
 {
-    CompareOperator(strictComp(other) <= 0);
+    CompareOperator(primitiveStrictComp(other) <= 0);
 }
 
 
