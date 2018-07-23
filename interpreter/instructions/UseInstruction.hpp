@@ -49,8 +49,10 @@
 class UseVariable
 {
 public:
-    RexxVariableBase *variable;        // the variable accessor
+    RexxVariableBase   *variable;      // the variable accessor
     RexxInternalObject *defaultValue;  // default value for optional variables
+    void handleArgument(RexxActivation *context, ExpressionStack *stack, RexxObject *argument, size_t argumentPos, bool isStrict);
+    void handleReferenceArgument(RexxActivation *context, ExpressionStack *stack, RexxObject *argument, size_t argumentPos);
 };
 
 

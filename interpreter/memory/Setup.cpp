@@ -90,6 +90,7 @@
 #include "BagClass.hpp"
 #include "ActivityManager.hpp"
 #include "ProgramSource.hpp"
+#include "VariableReference.hpp"
 
 
 /**
@@ -254,6 +255,7 @@ void MemoryObject::createImage()
     BagClass::createInstance();
     ListClass::createInstance();
     QueueClass::createInstance();
+    VariableReference::createInstance();
 
     // We keep handy references to a number of commonly used
     // integer objects.
@@ -294,6 +296,7 @@ void MemoryObject::createImage()
     WeakReference::createInstance();
     StackFrameClass::createInstance();
     RexxInfo::createInstance();
+    VariableReference::createInstance();
 
     // build the common retrievers table.  This is needed before we can parse an
     // Rexx code.
@@ -1240,6 +1243,39 @@ StartClassDefinition(RexxInfo)
     CompleteClassDefinition(RexxInfo);
 
 EndSpecialClassDefinition(RexxInfo);
+
+
+    /***************************************************************************/
+    /*           VariableReference                                             */
+    /***************************************************************************/
+
+StartClassDefinition(VariableReference)
+
+        AddClassMethod("New", VariableReference::newRexx, A_COUNT);
+
+    CompleteClassMethodDefinitions();
+
+        AddMethod("Name", VariableReference::getName, 0);
+        AddMethod("Value", VariableReference::getValue, 0);
+        AddMethod("Value=", VariableReference::setValueRexx, 1);
+        AddMethod("Unknown", VariableReference::unknownRexx, 2);
+        AddMethod("Request", VariableReference::request, 1);
+
+    // We want various operator methods that we inherit from the object
+    // class to be redirected to our unknown method, so we block these methods
+    // in our instance method directory.
+        HideMethod("==");
+        HideMethod("=");
+        HideMethod("\\==");
+        HideMethod("\\=");
+        HideMethod("<>");
+        HideMethod("><");
+
+    CompleteMethodDefinitions();
+
+    CompleteClassDefinition(VariableReference);
+
+EndClassDefinition(VariableReference);
 
 
     /***************************************************************************/

@@ -192,5 +192,6 @@ inline bool isNumberString(RexxInternalObject *o) { return isOfClass(NumberStrin
 inline bool isArray(RexxInternalObject *o) { return isOfClass(Array, o); }
 inline bool isStem(RexxInternalObject *o) { return isOfClass(Stem, o); }
 inline bool isMethod(RexxInternalObject *o) { return isOfClass(Method, o); }
+inline bool isVariableReference(RexxInternalObject *o) { return isOfClass(VariableReference, o); }
 
 #endif

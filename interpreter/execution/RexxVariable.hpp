@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -47,6 +47,8 @@
 #include "StringClass.hpp"
 #include "ObjectClass.hpp"
 
+class VariableReference;
+
 class RexxVariable : public RexxInternalObject
 {
  public:
@@ -76,29 +78,22 @@ class RexxVariable : public RexxInternalObject
         }
     };
 
+    void setValue(RexxObject *value);
+
+    inline void setCreator(RexxActivation *creatorActivation) { creator = creatorActivation; }
+    inline bool isLocal() { return creator != OREF_NULL; }
+           bool isAliasable();
     inline RexxObject *getVariableValue() { return variableValue; };
     inline RexxObject *getResolvedValue() { return variableValue != OREF_NULL ? variableValue : variableName; };
     inline RexxString *getName() { return variableName; }
     inline void setName(RexxString *name) { setField(variableName, name); }
     inline bool isDropped() { return variableValue == OREF_NULL; }
 
-    // NOTE:  this is only called for local variables, which will never be in oldspace,
-    // so setField is not needed.
-    inline void reset(RexxString *name)
-    {
-        creator       = OREF_NULL;        // this is unowned
-        variableValue = OREF_NULL;        // clear out the hash value
-        variableName  = name;             // fill in the name
-        dependents = OREF_NULL;           // and the dependents
-    }
-
     // Note:  This does not use setField() since it will only occur with
     // local variables that can never be part of oldspace;
-    inline void setCreator(RexxActivation *creatorActivation) { creator = creatorActivation; }
     inline RexxVariable *getNext() { return (RexxVariable *)variableValue; }
-    inline void cache(RexxVariable *next) { reset(OREF_NULL); variableValue = (RexxObject *)next; }
-    inline bool isLocal(RexxActivation *act) { return act == creator; }
     inline bool isStem() { return variableName->endsWith('.'); }
+    VariableReference *createReference();
 
 protected:
 

@@ -3221,6 +3221,7 @@ static const char * trace_prefix_table[] =
   ">I>",                               // TRACE_PREFIX_INVOCATION
   ">N>",                               // TRACE_PREFIX_NAMESPACE
   ">K>",                               // TRACE_PREFIX_KEYWORD
+  ">R>",                               // TRACE_PREFIX_ALIAS
 };
 
 // size of a line number

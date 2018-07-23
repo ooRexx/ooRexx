@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -65,6 +65,8 @@ class RexxSimpleVariable : public RexxVariableBase
     virtual RexxObject *getValue(RexxActivation *);
     virtual RexxObject *getRealValue(VariableDictionary *);
     virtual RexxObject *getRealValue(RexxActivation *);
+    virtual VariableReference *getVariableReference(VariableDictionary *);
+    virtual VariableReference *getVariableReference(RexxActivation *);
 
     // RexxVariableBase variable methods
     virtual bool exists(RexxActivation *);
@@ -77,6 +79,7 @@ class RexxSimpleVariable : public RexxVariableBase
     virtual void clearGuard(RexxActivation *);
     virtual void expose(RexxActivation *, VariableDictionary *);
     virtual void procedureExpose(RexxActivation *, RexxActivation *);
+    virtual void alias(RexxActivation *, RexxVariable *);
 
     RexxString *getName();
 

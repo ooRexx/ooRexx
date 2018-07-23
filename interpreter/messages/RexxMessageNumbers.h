@@ -704,6 +704,14 @@
 #define Error_Invalid_argument_positive_number_msg                   789
 #define Error_Invalid_argument_logical_msg                           790
 #define Error_Incorrect_method_invalid_value_for_msg                 791
+#define Error_Invalid_argument_variable_reference_msg                792
+#define Error_Invalid_argument_variable_reference_stem_msg           793
+#define Error_Invalid_argument_variable_reference_simple_msg         794
+#define Error_Symbol_expected_after_prefix_reference_msg             795
+#define Error_Invalid_argument_no_reference_msg                      796
+#define Error_Symbol_expected_after_use_arg_reference_msg            797
+#define Error_Translation_use_arg_reference_no_default_msg           798
+#define Error_Execution_reference_variable_in_use_msg                799
 
 
 #endif

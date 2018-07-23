@@ -392,6 +392,8 @@ void ArrayClass::liveGeneral(MarkReason reason)
     // but we need to mark our space too.
     memory_mark_general_array(arraySize, objects);
 }
+
+
 void ArrayClass::flatten(Envelope *envelope)
 {
     setUpFlatten(ArrayClass)
@@ -2037,7 +2039,7 @@ void ArrayClass::extend(size_t toSize)
 
     // double the size for small Arrays
     // for Arrays above the limit, just add half of the actual size
-    size_t newSize = size(); 
+    size_t newSize = size();
     newSize += newSize <= ExpansionDoubleLimit ? newSize : newSize / 2;
 
     // now allocate the extension array of the required size + some extra.

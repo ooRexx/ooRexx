@@ -529,6 +529,55 @@ void RexxLocalVariables::updateVariable(RexxVariable *variable)
 
 
 /**
+ * Create a local variable object of the given name and store
+ * it at the given location.
+ *
+ * @param name   The variable name.
+ * @param index  The target index position.
+ *
+ * @return The created or resolved variable object.
+ */
+void RexxLocalVariables::aliasVariable(RexxString *name, size_t index, RexxVariable *variable)
+{
+    // we're going to be putting a variable into the local table using a name
+    // other than the actual variable name. This means we need to get the dictionary
+    // created so we can get this added into the dictionary under the aliased name.
+    // if we don't then the dictionary will get created using the real variable name.
+    // Just requesting the dictionary is sufficient to do this.
+    getDictionary();
+
+    // see if there is already a variable with this name in the context (which might be
+    // an autoExposed object variable
+    RexxVariable *oldVar = findVariable(name, index);
+
+    // we can only perform the aliasing if this an unassigned local variable
+    if (oldVar != OREF_NULL && !oldVar->isAliasable())
+    {
+        reportException(Error_Execution_reference_variable_in_use, name);
+    }
+
+    // if we have a local variable with no value, this would have been created
+    // with USE LOCAL, so just overwrite the existing variable with the aliased one
+
+
+    // Put uses the name from the variable, so we repeat that here.
+    // We will most likly have an index since this is only used on the USE ARG
+    // instruction, which tends not to be interpreted.
+    if (index != 0)
+    {
+        // plug the referenced variable into the target slot.
+        locals[index] = variable;
+    }
+
+    // we already created the dictionary, so we can unconditionally add
+    // this value. Note that we are using the alias name, not the name
+    // from the referenced variable. This will also replace any variable created via
+    // use arg.
+    dictionary->addVariable(name, variable);
+}
+
+
+/**
  * Create a variable dictionary for this activation to
  * support dynamic access to variables.  This is created only
  * when dynamic lookup cannot be avoided.

@@ -107,6 +107,7 @@
 #include "OtherwiseInstruction.hpp"
 #include "SelectInstruction.hpp"
 #include "ProtectedObject.hpp"
+#include "UseArgVariableRef.hpp"
 
 
 /**
@@ -1992,7 +1993,7 @@ RexxInstruction *LanguageParser::exposeNew()
     // The EXPOSE must be the first instruction.
     // NOTE:  labels are not allowed preceding, as that will give a target
     // for SIGNAL or CALL that will result in an invalid EXPOSE execution.
- 
+
     // the last instruction in the chain must be our dummy
     // first instruction
     if (!lastInstruction->isType(KEYWORD_FIRST))
@@ -2933,7 +2934,7 @@ RexxInstruction *LanguageParser::parseNew(InstructionSubKeyword argPull)
         // comma in the template?  Really the same as the end-of-clause case,
         // but we need to push a NULL on to the trigger stack to cause a switch to the
         // next parse string
-        else if (token->isType(TOKEN_COMMA))
+        else if (token->isComma())
         {
             if (variableCount > 0)
             {
@@ -3927,6 +3928,7 @@ RexxInstruction *LanguageParser::traceNew()
 RexxInstruction *LanguageParser::useNew()
 {
     bool strictChecking = false;  // no strict checking enabled yet
+    bool referencesUsed = false;  // no aliasing required yet
 
     // The STRICT keyword turns this into a different instruction with different
     // syntax rules
@@ -3963,7 +3965,7 @@ RexxInstruction *LanguageParser::useNew()
     while (!token->isEndOfClause())
     {
         // this could be a token to skip a variable
-        if (token->isType(TOKEN_COMMA))
+        if (token->isComma())
         {
             // this goes on as a variable, but an empty entry to process.
             // we also need to push empty entries on the other queues to keep everything in sync.
@@ -3993,7 +3995,58 @@ RexxInstruction *LanguageParser::useNew()
                     break;  // done parsing
                 }
             }
+            // this could be a '>' or ',' prefix used to indicate variable aliasing
+            else if (token->isOperator(OPERATOR_GREATERTHAN) || token->isOperator(OPERATOR_LESSTHAN))
+            {
+                // this must be a simple variable symbol or stem symbol
+                token = nextReal();
+                if (!token->isSymbol() || !token->isNonCompoundVariable())
+                {
+                    syntaxError(Error_Symbol_expected_after_use_arg_reference, token);
+                }
 
+                // get the variable retriever for this variable.
+                RexxInternalObject *retriever = addText(token);
+
+                // step to the next token, which should be a comma or a end of clause
+                token = nextReal();
+                // if this is not a comma, then we need to do some additional checking
+                if (!token->isComma())
+                {
+                    // Check to see if a default is specified. This is not
+                    // allowed for references. We could give a generic error, but
+                    // it is better to be explicit about the problem,
+                    if (token->isSubtype(OPERATOR_EQUAL))
+                    {
+                        syntaxError(Error_Translation_use_arg_reference_no_default);
+                    }
+                    // anything other than a end of clause is a generic error
+                    else if (!token->isEndOfClause())
+                    {
+                        // if not an assignment, this needs to be a comma.
+                        syntaxError(Error_Variable_reference_use, token);
+                    }
+                }
+                // we had a terminating comma, so step to the next token
+                else
+                {
+                    token = nextReal();
+                }
+
+                // we wrap this in a special retriever to handle the aliasing
+                Protected<UseArgVariableRef> ref = new UseArgVariableRef((RexxVariableBase *)retriever);
+
+                // add the reference proxy as the variable, and add a NULL to the defaults
+                // to keep them in sync.
+                variable_list->push(ref);
+                defaults_list->push(OREF_NULL);
+                variableCount++;
+                // using this feature bumps the language level requirement.
+                requireLanguageLevel(LanguageLevel0606);
+                // continue the loop. Note that token is already positioned for the
+                // next section
+                continue;
+            }
 
             previousToken();       // push the current token back for term processing
             // see if we can get a variable or a message term from this
@@ -4012,7 +4065,7 @@ RexxInstruction *LanguageParser::useNew()
                 break;
             }
             // if we've hit a comma here, step to the next token and continue with the next variable
-            else if (token->isType(TOKEN_COMMA))
+            else if (token->isComma())
             {
                 defaults_list->push(OREF_NULL);
                 token = nextReal();
@@ -4042,7 +4095,7 @@ RexxInstruction *LanguageParser::useNew()
                     break;
                 }
                 // if we've hit a comma here, step to the next token and continue with the next variable
-                else if (token->isType(TOKEN_COMMA))
+                else if (token->isComma())
                 {
                     token = nextReal();
                     continue;
@@ -4052,7 +4105,6 @@ RexxInstruction *LanguageParser::useNew()
                 {
                     syntaxError(Error_Invalid_expression_use_arg_default);
                 }
-
             }
             else
             {

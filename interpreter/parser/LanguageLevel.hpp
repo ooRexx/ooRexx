@@ -60,9 +60,10 @@
 typedef enum
 {
     LanguageLevel0605 = 060500,
+    LanguageLevel0606 = 060600,
     DefaultLanguageLevel = LanguageLevel0605,        // the default language level for translated programs
     MinimumLanguageLevel = LanguageLevel0605,        // the lowest language level we can interpret
-    MaximumLanguageLevel = LanguageLevel0605         // the highest language level we can interpret
+    MaximumLanguageLevel = LanguageLevel0606         // the highest language level we can interpret
 } LanguageLevel;
 
 #endif

@@ -177,6 +177,8 @@
 #define Rexx_Error_Symbol_expected_use_local                              20927
 #define Rexx_Error_Symbol_expected_indirect                               20928
 #define Rexx_Error_Symbol_expected_after_keyword                          20929
+#define Rexx_Error_Symbol_expected_after_prefix_reference                 20930
+#define Rexx_Error_Symbol_expected_after_use_arg_reference                20931
 #define Rexx_Error_Invalid_data                                           21000
 #define Rexx_Error_Invalid_data_user_defined                              21900
 #define Rexx_Error_Invalid_data_nop                                       21901
@@ -460,6 +462,10 @@
 #define Rexx_Error_Invalid_argument_nonnegative_number                    88925
 #define Rexx_Error_Invalid_argument_positive_number                       88926
 #define Rexx_Error_Invalid_argument_logical                               88927
+#define Rexx_Error_Invalid_argument_variable_reference                    88928
+#define Rexx_Error_Invalid_argument_variable_reference_stem               88929
+#define Rexx_Error_Invalid_argument_variable_reference_simple             88930
+#define Rexx_Error_Invalid_argument_no_reference                          88931
 #define Rexx_Error_Variable_expected                                      89000
 #define Rexx_Error_Variable_expected_USE                                  89001
 #define Rexx_Error_Variable_expected_PARSE                                89002
@@ -610,6 +616,7 @@
 #define Rexx_Error_Execution_expose_method                                98992
 #define Rexx_Error_Execution_use_local_method                             98993
 #define Rexx_Error_Execution_no_supplier                                  98994
+#define Rexx_Error_Execution_reference_variable_in_use                    98995
 #define Rexx_Error_Translation                                            99000
 #define Rexx_Error_Translation_user_defined                               99900
 #define Rexx_Error_Translation_duplicate_class                            99901
@@ -659,6 +666,7 @@
 #define Rexx_Error_Translation_delegate_attribute                         99947
 #define Rexx_Error_Translation_use_local_compound                         99948
 #define Rexx_Error_Translation_bad_class                                  99949
+#define Rexx_Error_Translation_use_arg_reference_no_default               99950
 
 
 #endif

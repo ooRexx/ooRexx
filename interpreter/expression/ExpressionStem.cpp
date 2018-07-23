@@ -49,6 +49,7 @@
 #include "VariableDictionary.hpp"
 #include "StemClass.hpp"
 #include "ExpressionStem.hpp"
+#include "VariableReference.hpp"
 
 
 /**
@@ -343,6 +344,52 @@ void RexxStemVariable::clearGuard(RexxActivation *context )
     // look up the variable and remove the inform status for this activity.
     RexxVariable *variable = context->getLocalStemVariable(stemName, stemIndex);
     variable->uninform(context->getActivity());
+}
+
+
+/**
+ * Alias a local variable name to a supplied variable reference
+ * from another context.
+ *
+ * @param context  The variable context
+ * @param variable The variable object.
+ */
+void RexxStemVariable::alias(RexxActivation *context, RexxVariable *variable)
+{
+    // since we don't create the stem object here, we can treat the stem
+    // variables and the simple variables the same.
+    context->aliasLocalVariable(stemName, stemIndex, variable);
+}
+
+
+/**
+ * Retrieve a VariableReference object for this variable from
+ * the given source dictionary.
+ *
+ * @param dictionary The source variable dictionary.
+ *
+ * @return The variable reference for this variable.
+ */
+VariableReference *RexxStemVariable::getVariableReference(VariableDictionary *dictionary)
+{
+    // look up the stem variable in the dictionary
+    RexxVariable *variable = dictionary->getStemVariable(stemName);
+    return variable->createReference();
+}
+
+
+/**
+ * Get a variable reference to a variable from the given
+ * activation context.
+ *
+ * @param context The current context.
+ *
+ * @return A variable reference object for the variable.
+ */
+VariableReference *RexxStemVariable::getVariableReference(RexxActivation *context)
+{
+    RexxVariable *variable = context->getLocalStemVariable(stemName, stemIndex);
+    return variable->createReference();
 }
 
 

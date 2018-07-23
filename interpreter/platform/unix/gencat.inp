@@ -2003,6 +2003,30 @@ $ Error_Invalid_argument_logical
 $ Error_Incorrect_method_invalid_value_for
 791 Invalid &1 value; found "&2".
 
+$ Error_Invalid_argument_variable_reference
+792 The &1 argument must be a VariableReference instance; found "&2".
+
+$ Error_Invalid_argument_variable_reference_stem
+793 The &1 argument must be a VariableReference for a Stem variable; found "&2".
+
+$ Error_Invalid_argument_variable_reference_simple
+794 The &1 argument must be a VariableReference for a Simple variable; found "&2".
+
+$ Error_Symbol_expected_after_prefix_reference
+795 Simple variable or stem symbol expected after > or < prefix operator; found &1.
+
+$ Error_Invalid_argument_no_reference
+796 Argument &1 was omitted. A VariableReference argument is required.
+
+$ Error_Symbol_expected_after_use_arg_reference
+797 Simple variable or stem symbol expected after > or < USE ARG reference operator; found &1.
+
+$ Error_Translation_use_arg_reference_no_default
+798 A USE ARG default value is not allowed for variable references.
+
+$ Error_Execution_reference_variable_in_use
+799 Unable to reference variable "&1"; it must be an uninitialized local variable.
+
 
 $ * -------------------------------------------------------------------------- */
 $ * --            ==================================================        -- */

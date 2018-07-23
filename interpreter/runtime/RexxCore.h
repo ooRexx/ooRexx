@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -112,6 +112,156 @@ class RexxString;
 // this one is special, and is truly global.
 extern MemoryObject memoryObject;
 
+// Guide to adding new classes to ooRexx
+// 1) Determine the type of class. We have three categories,
+// a) exported classes (classes visible to the Rexx programmer), b)
+// external classes (classes that are not directly visible to the
+// Rexx programmer, but can end up in a saved image or in a program
+// compiled by rexxc, and c) transient classes that never get saved, but
+// manage the run time state of the program. All classes must be defined
+// in the file PrimitiveClasses.xml and the .cpp files must also be
+// added to CMakeList.txt.
+//
+// Some requirements for each of the classes.
+//
+// a) exported classes.
+//   - are subclasses of RexxObject
+//   - implement a flatten() method so that they can be saved.
+//   - the class must implement a createInstance() static method
+//   - the class must define a classInstance static variable that
+//     will hold a reference to the class object for the type.
+//   - All methods visible to the Rexx programmer are defined in Setup.cpp
+//   - All assignments to instance variables within the class after
+//     initial creation must use setField() to handle old-to-new memory
+//     references.
+//
+// b) internal classes
+//   - are subclasses of RexxInternalObject
+//   - also implement a flatten method
+//   - do not have an associated class object or external methods.
+//   - All assignments to instance variables within the class after
+//     initial creation must use setField() to handle old-to-new memory
+//     references.
+//
+// c) transient classes
+//   - are also subclasses of RexxInternalObject
+//   - do not require a flatten method.
+//   - Since transient classes are never included in the saved
+//     image, they do not need to use setField() for instance variable
+//     assignments.
+
+// Steps to adding a new class
+// 1) Create the .hpp file and .cpp file. This does not need to be
+// one-to-one. An hpp file can define multiple classes, but remember that
+// each class you defined will require the additional steps.
+//
+// 2) Add the class definition to the appropriate section of
+// PrimitiveClasses.xml. The build uses this information to generate
+// header files and .cpp files that are part of the build.
+//
+// 3) Add the new .cpp files to CMakeLists.txt
+//
+// 4) If this is an exported class,
+//    a) add a define below mapping the  TheXxxxxxXxxxxxxClass to
+//       the static variable holding the class object.
+//    b) add a call to the createInstance() method for the new class
+//       object in Setup.cpp
+//    c) define the exported methods for the class in Setup.cpp.
+//    d) The method mapping table in CppCode.cpp needs to be updated
+//       with all new native code methods exported by the class.
+//    e) Implement a newRexx method with the following signature
+//       that will be the NEW method that is called to create new
+//       instances:
+//
+//       RexxObject *newRexx(RexxObject **args, size_t argc);
+
+// Steps for writing a new class:
+// All objects allocated from the object heap must implement
+// some common features:
+//
+// 1) Are subclasses of either RexxInternalObject or RexxObject (only for
+// exported classes.
+// 2) Define a new and delete method as part of the class definition.
+//
+//    void  *operator new(size_t);
+//    inline void  operator delete(void *) { ; }
+//
+// 3) The new method should look like this:
+//
+//    void *VariableReferenceOp::operator new(size_t size)
+//    {
+//        return new_object(size, T_VariableReferenceOp);
+//    }
+//
+//    where the T_XxxxxxXxxxxxxXxxxxxx symbol is the class
+//    identifier that is automatically generated from the name
+//    given on PrimitiveClass.xml
+//
+// 4) The new class must implement live() and liveGeneral() methods
+//    to interact with garbage collection. These methods look like
+//    this:
+//
+//
+//    /**
+//     * Perform garbage collection on a live object.
+//     *
+//     * @param liveMark The current live mark.
+//     */
+//    void VariableReferenceOp::live(size_t liveMark)
+//    {
+//        memory_mark(variable);
+//    }
+//
+//
+//    /**
+//     * Perform generalized live marking on an object.  This is
+//     * used when mark-and-sweep processing is needed for purposes
+//     * other than garbage collection.
+//     *
+//     * @param reason The reason for the marking call.
+//     */
+//    void VariableReferenceOp::liveGeneral(MarkReason reason)
+//    {
+//        memory_mark_general(variable);
+//    }
+//
+//    The live methods must mark each of the object variables that
+//    are references to other Rexx objects (of all types). Note that
+//    each class must also mark the symbols defined by the superclass.
+//    In particular, exported classes must mark the symbol "objectVariables"
+//    inherited from the RexxObject class.
+//
+//  5) Exported (a) and internal (b) classes must implement a flatten method.
+//
+//
+//    /**
+//     * Flatten a source object.
+//     *
+//     * @param envelope The envelope that will hold the flattened object.
+//     */
+//    void VariableReferenceOp::flatten(Envelope *envelope)
+//    {
+//        setUpFlatten(VariableReferenceOp)
+//
+//        flattenRef(variable);
+//
+//        cleanUpFlatten
+//    }
+//
+//    Where the name specified in the setUpFlatten() macro matches name of
+//    the class.
+//
+//    the garbage collection methods are crucial to proper functioning of the
+//    interpreter. A lot of crashes during development can be traced to failure
+//    in updating the GC methods when a new field is added to the class.
+//
+//  6) define the special constructor for the class. This constructor is used to
+//     the virtual function table needed to restore classes during unflattening
+//     operations. This special constructor looks like this:
+//
+//    inline VariableReference(RESTORETYPE restoreType) { ; };
+//
+
 // short hand references to internal class objects.
 
 #define TheArrayClass ArrayClass::classInstance
@@ -142,6 +292,7 @@ extern MemoryObject memoryObject;
 #define TheWeakReferenceClass WeakReference::classInstance
 #define TheStackFrameClass StackFrameClass::classInstance
 #define TheRexxInfoClass RexxInfo::classInstance
+#define TheVariableReferenceClass VariableReference::classInstance
 
 // shorthand access to some important objects.
 #define TheEnvironment memoryObject.environment

@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -158,7 +158,6 @@ void MemoryObject::initialize(bool restoringImage)
 
     collections = 0;
     allocations = 0;
-    variableCache = OREF_NULL;
     globalStrings = OREF_NULL;
 
     // get our table of virtual functions setup first thing.  We need this
@@ -685,7 +684,6 @@ void MemoryObject::live(size_t liveMark)
     // the savestack.
     memory_mark(saveStack);
     memory_mark(old2new);
-    memory_mark(variableCache);
     memory_mark(globalStrings);
     memory_mark(environment);
     memory_mark(commonRetrievers);
@@ -718,7 +716,6 @@ void MemoryObject::liveGeneral(MarkReason reason)
 {
     memory_mark_general(saveStack);
     memory_mark_general(old2new);
-    memory_mark_general(variableCache);
     memory_mark_general(globalStrings);
     memory_mark_general(environment);
     memory_mark_general(commonRetrievers);

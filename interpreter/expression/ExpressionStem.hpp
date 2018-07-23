@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -46,6 +46,8 @@
 
 #include "ExpressionBaseVariable.hpp"
 
+class RexxVariable;
+
 /**
  * A "retriever" class representing a Stem variable.  This
  * performs all of the normal operations expected from
@@ -70,6 +72,8 @@ class RexxStemVariable : public RexxVariableBase
     virtual RexxObject *getValue(RexxActivation *);
     virtual RexxObject *getRealValue(VariableDictionary *);
     virtual RexxObject *getRealValue(RexxActivation *);
+    virtual VariableReference *getVariableReference(VariableDictionary *);
+    virtual VariableReference *getVariableReference(RexxActivation *);
 
     // overrides of RexxVariableBase methods
     virtual bool exists(RexxActivation *);
@@ -82,6 +86,7 @@ class RexxStemVariable : public RexxVariableBase
     virtual void clearGuard(RexxActivation *);
     virtual void expose(RexxActivation *, VariableDictionary *);
     virtual void procedureExpose(RexxActivation *, RexxActivation *);
+    virtual void alias(RexxActivation *, RexxVariable *);
 
     // class-specific methods
     bool sort(RexxActivation *context, RexxString *prefix, int order, int type, size_t start, size_t end, size_t firstcol, size_t lastcol);

@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -93,6 +93,7 @@
 #define REXX_VALUE_RexxMutableBufferObject 37
 #define REXX_VALUE_positive_wholenumber_t 38
 #define REXX_VALUE_nonnegative_wholenumber_t 39
+#define REXX_VALUE_RexxVariableReferenceObject 40     // NB: These are never optional!
 
 #define REXX_OPTIONAL_ARGUMENT                 0x8000
 
@@ -232,7 +233,8 @@ typedef struct _RexxMethodEntry
 #define REXX_LANGUAGE_6_03 0x00000603
 #define REXX_LANGUAGE_6_04 0x00000604
 #define REXX_LANGUAGE_6_05 0x00000605
-#define REXX_CURRENT_LANGUAGE_LEVEL REXX_LANGUAGE_6_05
+#define REXX_LANGUAGE_6_06 0x00000606
+#define REXX_CURRENT_LANGUAGE_LEVEL REXX_LANGUAGE_6_06
 
 #define STANDARD_PACKAGE_HEADER sizeof(RexxPackageEntry), REXX_PACKAGE_API_NO,
 
@@ -309,6 +311,7 @@ typedef struct
         RexxStemObject        value_RexxStemObject;
         POINTER               value_POINTERSTRING;
         RexxMutableBufferObject value_RexxMutableBufferObject;
+        RexxVariableReferenceObject value_RexxVariableReferenceObject;
         wholenumber_t         value_positive_wholenumber_t;
         wholenumber_t         value_nonnegative_wholenumber_t;
 
@@ -460,7 +463,8 @@ typedef struct
 
 #define THREAD_INTERFACE_VERSION_4_0_0 100
 #define THREAD_INTERFACE_VERSION_4_1_1 101
-#define THREAD_INTERFACE_VERSION 102
+#define THREAD_INTERFACE_VERSION_5_0_0 101
+#define THREAD_INTERFACE_VERSION 103
 
 BEGIN_EXTERN_C()
 
@@ -622,12 +626,18 @@ typedef struct
     size_t           (RexxEntry *MutableBufferCapacity)(RexxThreadContext *, RexxMutableBufferObject);
     POINTER          (RexxEntry *SetMutableBufferCapacity)(RexxThreadContext *, RexxMutableBufferObject, size_t);
 
+    RexxStringObject  (RexxEntry *VariableReferenceName)(RexxThreadContext *, RexxVariableReferenceObject);
+    RexxObjectPtr     (RexxEntry *VariableReferenceValue)(RexxThreadContext *, RexxVariableReferenceObject);
+    void              (RexxEntry *SetVariableReferenceValue)(RexxThreadContext *, RexxVariableReferenceObject, RexxObjectPtr);
+    logical_t         (RexxEntry *IsVariableReference)(RexxThreadContext *, RexxObjectPtr);
+
 } RexxThreadInterface;
 
 
 #define METHOD_INTERFACE_VERSION_4_0_0 100
 #define METHOD_INTERFACE_VERSION_4_2_0 101
-#define METHOD_INTERFACE_VERSION 102
+#define METHOD_INTERFACE_VERSION_5_0_0 102
+#define METHOD_INTERFACE_VERSION 103
 
 typedef struct
 {
@@ -651,6 +661,7 @@ typedef struct
     POINTER          (RexxEntry *AllocateObjectMemory)(RexxMethodContext *, size_t);
     void             (RexxEntry *FreeObjectMemory)(RexxMethodContext *, POINTER);
     POINTER          (RexxEntry *ReallocateObjectMemory)(RexxMethodContext *, POINTER, size_t);
+    RexxVariableReferenceObject (RexxEntry *GetObjectVariableReference)(RexxMethodContext *, CSTRING);
 } MethodContextInterface;
 
 #define CALL_INTERFACE_VERSION 100
@@ -1294,6 +1305,26 @@ struct RexxThreadContext_
     logical_t IsPointer(RexxObjectPtr o)
     {
         return functions->IsPointer(this, o);
+    }
+
+    RexxStringObject VariableReferenceName(RexxVariableReferenceObject vr)
+    {
+        return functions->VariableReferenceName(this, vr);
+    }
+
+    RexxObjectPtr VariableReferenceValue(RexxVariableReferenceObject vr)
+    {
+        return functions->VariableReferenceValue(this, vr);
+    }
+
+    void SetVariableReferenceValue(RexxVariableReferenceObject vr, RexxObjectPtr v)
+    {
+        functions->SetVariableReferenceValue(this, vr, v);
+    }
+
+    logical_t IsVariableReference(RexxObjectPtr o)
+    {
+        return functions->IsVariableReference(this, o);
     }
 
     RexxObjectPtr SupplierItem(RexxSupplierObject so)
@@ -1984,6 +2015,21 @@ struct RexxMethodContext_
         return threadContext->IsPointer(o);
     }
 
+    RexxStringObject VariableReferenceName(RexxVariableReferenceObject vr)
+    {
+        return threadContext->VariableReferenceName(vr);
+    }
+
+    RexxObjectPtr VariableReferenceValue(RexxVariableReferenceObject vr)
+    {
+        return threadContext->VariableReferenceValue(vr);
+    }
+
+    logical_t IsVariableReference(RexxObjectPtr o)
+    {
+        return threadContext->IsVariableReference(o);
+    }
+
     RexxObjectPtr SupplierItem(RexxSupplierObject so)
     {
         return threadContext->SupplierItem(so);
@@ -2176,6 +2222,11 @@ struct RexxMethodContext_
     {
         return functions->ReallocateObjectMemory(this, p, s);
     }
+    RexxVariableReferenceObject GetObjectVariableReference(CSTRING n)
+    {
+        return functions->GetObjectVariableReference(this, n);
+    }
+
 #endif
 };
 
@@ -2744,6 +2795,21 @@ struct RexxCallContext_
     logical_t IsPointer(RexxObjectPtr o)
     {
         return threadContext->IsPointer(o);
+    }
+
+    RexxStringObject VariableReferenceName(RexxVariableReferenceObject vr)
+    {
+        return threadContext->VariableReferenceName(vr);
+    }
+
+    RexxObjectPtr VariableReferenceValue(RexxVariableReferenceObject vr)
+    {
+        return threadContext->VariableReferenceValue(vr);
+    }
+
+    logical_t IsVariableReference(RexxObjectPtr o)
+    {
+        return threadContext->IsVariableReference(o);
     }
 
     RexxObjectPtr SupplierItem(RexxSupplierObject so)
@@ -3496,6 +3562,21 @@ struct RexxExitContext_
     logical_t IsPointer(RexxObjectPtr o)
     {
         return threadContext->IsPointer(o);
+    }
+
+    RexxStringObject VariableReferenceName(RexxVariableReferenceObject vr)
+    {
+        return threadContext->VariableReferenceName(vr);
+    }
+
+    RexxObjectPtr VariableReferenceValue(RexxVariableReferenceObject vr)
+    {
+        return threadContext->VariableReferenceValue(vr);
+    }
+
+    logical_t IsVariableReference(RexxObjectPtr o)
+    {
+        return threadContext->IsVariableReference(o);
     }
 
     RexxObjectPtr SupplierItem(RexxSupplierObject so)

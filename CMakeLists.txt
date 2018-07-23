@@ -39,11 +39,7 @@
 #/*----------------------------------------------------------------------------*/
 #/* Global settings                                                            */
 #/*----------------------------------------------------------------------------*/
-cmake_minimum_required (VERSION 2.8)
-cmake_policy(SET CMP0010 OLD)
-if(POLICY CMP0042)
-  cmake_policy(SET CMP0042 NEW)
-endif()
+cmake_minimum_required (VERSION 3.8)
 include(CheckIncludeFile)
 include(CheckLibraryExists)
 include(CheckFunctionExists)
@@ -596,7 +592,8 @@ set (classes_sources ${build_classes_dir}/ArrayClass.cpp
             ${build_classes_dir}/TableClass.cpp
             ${build_classes_dir}/IdentityTableClass.cpp
             ${build_classes_dir}/WeakReferenceClass.cpp
-            ${build_classes_dir}/StackFrameClass.cpp)
+            ${build_classes_dir}/StackFrameClass.cpp
+            ${build_classes_dir}/VariableReference.cpp)
 set (package_sources ${build_package_dir}/LibraryPackage.cpp
             ${build_package_dir}/PackageManager.cpp)
 set (memory_sources ${build_memory_dir}/DeadObject.cpp
@@ -660,7 +657,8 @@ set (expression_sources ${build_expression_dir}/BuiltinFunctions.cpp
             ${build_expression_dir}/ExpressionVariable.cpp
             ${build_expression_dir}/IndirectVariableReference.cpp
             ${build_expression_dir}/ExpressionList.cpp
-            ${build_expression_dir}/ExpressionLogical.cpp)
+            ${build_expression_dir}/ExpressionLogical.cpp
+            ${build_expression_dir}/VariableReferenceOp.cpp)
 set (instructions_sources  ${build_instructions_dir}/AddressInstruction.cpp
             ${build_instructions_dir}/AssignmentInstruction.cpp
             ${build_instructions_dir}/BaseDoInstruction.cpp
@@ -710,6 +708,7 @@ set (instructions_sources  ${build_instructions_dir}/AddressInstruction.cpp
             ${build_instructions_dir}/ThenInstruction.cpp
             ${build_instructions_dir}/TraceInstruction.cpp
             ${build_instructions_dir}/UseInstruction.cpp
+            ${build_instructions_dir}/UseArgVariableRef.cpp
             ${build_instructions_dir}/UseLocalInstruction.cpp
             ${build_instructions_dir}/WhenCaseInstruction.cpp)
 set (parser_sources ${build_parser_dir}/Clause.cpp

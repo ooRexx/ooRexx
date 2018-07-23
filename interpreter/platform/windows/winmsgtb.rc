@@ -703,6 +703,14 @@ BEGIN
    88926    "The &1 argument must be a positive number; found ""&2""."
    88927    "The &1 argument must be exactly ""0"" or ""1""; found ""&2""."
    93975    "Invalid &1 value; found ""&2""."
+   88928    "The &1 argument must be a VariableReference instance; found ""&2""."
+   88929    "The &1 argument must be a VariableReference for a Stem variable; found ""&2""."
+   88930    "The &1 argument must be a VariableReference for a Simple variable; found ""&2""."
+   20930    "Simple variable or stem symbol expected after > or < prefix operator; found &1."
+   88931    "Argument &1 was omitted. A VariableReference argument is required."
+   20931    "Simple variable or stem symbol expected after > or < USE ARG reference operator; found &1."
+   99950    "A USE ARG default value is not allowed for variable references."
+   98995    "Unable to reference variable ""&1""; it must be an uninitialized local variable."
    
 END
 

@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -48,6 +48,7 @@
 #include "VariableDictionary.hpp"
 #include "RexxVariable.hpp"
 #include "ExpressionVariable.hpp"
+#include "VariableReference.hpp"
 
 
 /**
@@ -198,6 +199,36 @@ RexxObject *RexxSimpleVariable::getRealValue(VariableDictionary *dictionary)
 {
     RexxVariable *variable = dictionary->getVariable(variableName);
     return variable->getVariableValue();
+}
+
+
+/**
+ * Retrieve a VariableReference object for this variable from
+ * the given source dictionary.
+ *
+ * @param dictionary The source variable dictionary.
+ *
+ * @return The variable reference for this variable.
+ */
+VariableReference *RexxSimpleVariable::getVariableReference(VariableDictionary *dictionary)
+{
+    RexxVariable *variable = dictionary->getVariable(variableName);
+    return variable->createReference();
+}
+
+
+/**
+ * Get a variable reference to a variable from the given
+ * activation context.
+ *
+ * @param context The current context.
+ *
+ * @return A variable reference object for the variable.
+ */
+VariableReference *RexxSimpleVariable::getVariableReference(RexxActivation *context)
+{
+    RexxVariable *variable = context->getLocalVariable(variableName, index);
+    return variable->createReference();
 }
 
 
@@ -357,5 +388,18 @@ void RexxSimpleVariable::expose(RexxActivation *context, VariableDictionary *obj
 RexxString *RexxSimpleVariable::getName()
 {
     return variableName;
+}
+
+
+/**
+ * Alias a local variable name to a supplied variable reference
+ * from another context.
+ *
+ * @param context  The variable context
+ * @param variable The variable object.
+ */
+void RexxSimpleVariable::alias(RexxActivation *context, RexxVariable *variable)
+{
+    context->aliasLocalVariable(variableName, index, variable);
 }
 

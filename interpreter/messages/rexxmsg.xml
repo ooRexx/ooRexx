@@ -1264,6 +1264,24 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Symbol_expected_after_keyword</SymbolicName>
         <Text>Symbol expected after <Sub position="1" name="keyword"/> keyword.</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>20</Code>
+        <Subcode>930</Subcode>
+        <MessageNumber>795</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Symbol_expected_after_prefix_reference</SymbolicName>
+        <Text>Simple variable or stem symbol expected after &gt; or &lt; prefix operator; found <Sub position="1" name="token"/>.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>20</Code>
+        <Subcode>931</Subcode>
+        <MessageNumber>797</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Symbol_expected_after_use_arg_reference</SymbolicName>
+        <Text>Simple variable or stem symbol expected after &gt; or &lt; USE ARG reference operator; found <Sub position="1" name="token"/>.</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>
@@ -3949,6 +3967,42 @@ special character (such as a parenthesis).
           <SymbolicName>Error_Invalid_argument_logical</SymbolicName>
           <Text>The <Sub position="1" name="argument"/> argument must be exactly <q>0</q> or <q>1</q>; found <q><Sub position="2" name="value"/></q>.</Text>
         </SubMessage>
+        <SubMessage>
+          <Code>88</Code>
+          <Subcode>928</Subcode>
+          <MessageNumber>792</MessageNumber>
+          <Component>Rexx</Component>
+          <Severity>Warning</Severity>
+          <SymbolicName>Error_Invalid_argument_variable_reference</SymbolicName>
+          <Text>The <Sub position="1" name="argument"/> argument must be a VariableReference instance; found <q><Sub position="2" name="value"/></q>.</Text>
+        </SubMessage>
+        <SubMessage>
+          <Code>88</Code>
+          <Subcode>929</Subcode>
+          <MessageNumber>793</MessageNumber>
+          <Component>Rexx</Component>
+          <Severity>Warning</Severity>
+          <SymbolicName>Error_Invalid_argument_variable_reference_stem</SymbolicName>
+          <Text>The <Sub position="1" name="argument"/> argument must be a VariableReference for a Stem variable; found <q><Sub position="2" name="value"/></q>.</Text>
+        </SubMessage>
+        <SubMessage>
+          <Code>88</Code>
+          <Subcode>930</Subcode>
+          <MessageNumber>794</MessageNumber>
+          <Component>Rexx</Component>
+          <Severity>Warning</Severity>
+          <SymbolicName>Error_Invalid_argument_variable_reference_simple</SymbolicName>
+          <Text>The <Sub position="1" name="argument"/> argument must be a VariableReference for a Simple variable; found <q><Sub position="2" name="value"/></q>.</Text>
+        </SubMessage>
+        <SubMessage>
+          <Code>88</Code>
+          <Subcode>931</Subcode>
+          <MessageNumber>796</MessageNumber>
+          <Component>Rexx</Component>
+          <Severity>Warning</Severity>
+          <SymbolicName>Error_Invalid_argument_no_reference</SymbolicName>
+          <Text>Argument <Sub position="1" name="argument"/> was omitted. A VariableReference argument is required.</Text>
+        </SubMessage>
     </Subcodes>
   </Message>
   <Message>
@@ -5322,6 +5376,15 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Execution_no_supplier</SymbolicName>
         <Text>Unable to convert object <q><Sub position="1" name="object"/></q> to a supplier object.</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>98</Code>
+        <Subcode>995</Subcode>
+        <MessageNumber>799</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Execution_reference_variable_in_use</SymbolicName>
+        <Text>Unable to reference variable <q><Sub position="1" name="object"/></q>; it must be an uninitialized local variable.</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>
@@ -5765,6 +5828,15 @@ special character (such as a parenthesis).
         <Severity>Warning</Severity>
         <SymbolicName>Error_Translation_bad_class</SymbolicName>
         <Text><q><Sub position="1" name="classname"/></q> is not a valid class.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>99</Code>
+        <Subcode>950</Subcode>
+        <MessageNumber>798</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Translation_use_arg_reference_no_default</SymbolicName>
+        <Text>A USE ARG default value is not allowed for variable references.</Text>
       </SubMessage>
     </Subcodes>
   </Message>

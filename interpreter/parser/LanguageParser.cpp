@@ -77,6 +77,7 @@
 #include "TraceSetting.hpp"
 #include "ExpressionQualifiedFunction.hpp"
 #include "ExpressionClassResolver.hpp"
+#include "VariableReferenceOp.hpp"
 
 
 /**
@@ -2539,7 +2540,7 @@ RexxInternalObject *LanguageParser::parseFullSubExpression(int terminators)
         // the next token will be our terminator.  If this is not
         // a comma, we have more expressions to parse.
         terminatorToken = nextToken();
-        if (!terminatorToken->isType(TOKEN_COMMA))
+        if (!terminatorToken->isComma())
         {
             // push this token back and stop parsing
             previousToken();
@@ -2882,7 +2883,7 @@ size_t LanguageParser::parseArgList(RexxToken *firstToken, int terminators )
         // the next token will be our terminator.  If this is not
         // a comma, we have more expressions to parse.
         terminatorToken = nextToken();
-        if (!terminatorToken->isType(TOKEN_COMMA))
+        if (!terminatorToken->isComma())
         {
             break;
         }
@@ -2965,7 +2966,7 @@ size_t LanguageParser::parseCaseWhenList(int terminators )
         // the next token will be our terminator.  If this is not
         // a comma, we have more expressions to parse.
         RexxToken *terminatorToken = nextToken();
-        if (!terminatorToken->isType(TOKEN_COMMA))
+        if (!terminatorToken->isComma())
         {
             // put the terminator back on
             previousToken();
@@ -3418,6 +3419,31 @@ RexxInternalObject *LanguageParser::parseMessageSubterm(int terminators)
                 // create a new unary operator using the subtype code.
                 return new RexxUnaryOperator(token->subtype(), term);
                 break;
+            }
+            // not a aperator in the normal sense, but > or as a prefix creates
+            // a variable reference.
+            case OPERATOR_LESSTHAN:
+            case OPERATOR_GREATERTHAN:
+            {
+                // this must be either a simple variable or a stem.
+                token = nextReal();
+                if (!token->isSymbol() || !token->isNonCompoundVariable())
+                {
+                    syntaxError(Error_Symbol_expected_after_prefix_reference, token);
+                }
+                RexxVariableBase *retriever = OREF_NULL;
+
+                if (token->isSimpleVariable())
+                {
+                    retriever = addSimpleVariable(token->value());
+                }
+                else
+                {
+                    retriever = addStem(token->value());
+                }
+
+                // create a new expression term to retrieve the variable
+                return new VariableReferenceOp(retriever);
             }
 
             // other operators are invalid
@@ -4005,7 +4031,7 @@ RexxInternalObject *LanguageParser::parseLogical(int terminators)
         // the next token will be our terminator.  If this is not
         // a comma, we have more expressions to parse.
         terminatorToken = nextToken();
-        if (!terminatorToken->isType(TOKEN_COMMA))
+        if (!terminatorToken->isComma())
         {
             // push the terminator token back
             previousToken();

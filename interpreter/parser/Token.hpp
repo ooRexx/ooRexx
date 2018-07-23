@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -548,6 +548,7 @@ class RexxToken : public RexxInternalObject
     inline void       setSubtype(TokenSubclass t) { subclass = t; }
     inline void       setValue(RexxString *v) { stringValue = v; }
     inline bool       isVariable() { return (subclass == SYMBOL_VARIABLE || subclass == SYMBOL_STEM || subclass == SYMBOL_COMPOUND); };
+    inline bool       isNonCompoundVariable() { return subclass == SYMBOL_VARIABLE || subclass == SYMBOL_STEM; };
     inline bool       isSimpleVariable() { return subclass == SYMBOL_VARIABLE; };
     inline bool       isVariableOrDot() { return isVariable() || subclass == SYMBOL_DOTSYMBOL; };
     inline bool       isDotSymbol() { return (subclass == SYMBOL_DOTSYMBOL); }
@@ -559,7 +560,9 @@ class RexxToken : public RexxInternalObject
     inline bool       isIntegerConstant() { return numeric == INTEGER_CONSTANT; }
     inline bool       isSymbol() { return classId == TOKEN_SYMBOL; };
     inline bool       isOperator() { return classId == TOKEN_OPERATOR; }
+    inline bool       isOperator(TokenSubclass t) { return isType(TOKEN_OPERATOR) && isSubtype(t); }
     inline bool       isBlank() { return classId == TOKEN_BLANK; }
+    inline bool       isComma() { return classId == TOKEN_COMMA; }
     inline bool       isLeftParen() { return classId == TOKEN_LEFT; }
     inline bool       isRightParen() { return classId == TOKEN_RIGHT; }
     inline bool       isLeftBracket() { return classId == TOKEN_SQLEFT; }
