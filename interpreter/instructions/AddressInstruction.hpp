@@ -46,11 +46,14 @@
 
 #include "RexxInstruction.hpp"
 
+class CommandIOConfiguration;
+
 class RexxInstructionAddress : public RexxInstruction
 {
  public:
     inline void operator delete(void *) { }
 
+    RexxInstructionAddress() { ; }
     RexxInstructionAddress(RexxInternalObject *, RexxString *, RexxInternalObject *);
     inline RexxInstructionAddress(RESTORETYPE restoreType) { ; };
 
@@ -59,6 +62,7 @@ class RexxInstructionAddress : public RexxInstruction
     virtual void flatten(Envelope *);
 
     virtual void execute(RexxActivation *, ExpressionStack *);
+    virtual CommandIOConfiguration *getIOConfig() { return OREF_NULL; }
 
     RexxInternalObject *dynamicAddress;      // ADDRESS VALUE expression
     RexxString *environment;                 // An environment string (static form)

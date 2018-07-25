@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -47,6 +47,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <spawn.h>
 
 #include "RexxCore.h"
 #include "StringClass.hpp"
@@ -55,11 +56,13 @@
 #include "SystemInterpreter.hpp"
 #include "InterpreterInstance.hpp"
 #include "SysInterpreterInstance.hpp"
+#include "SysThread.hpp"
 
 #include "RexxInternalApis.h"
 #include <sys/types.h>
 #include <pwd.h>
 #include <limits.h>
+#include <errno.h>
 
 // "sh" should be our initial ADDRESS() environment across all Unix platforms
 #define SYSINITIALADDRESS "sh"
@@ -73,6 +76,136 @@
 #define MAX_VALUE   1280
 
 extern int putflag;
+
+// a thread that writes INPUT data to the command pipe
+class InputWriterThread : public SysThread
+{
+
+public:
+    inline InputWriterThread() : SysThread(),
+        pipe(0), inputBuffer(NULL), bufferLength(0), error(0) { }
+    inline ~InputWriterThread() { terminate(); }
+
+    void start(int _pipe)
+    {
+        pipe = _pipe;
+        SysThread::createThread();
+    }
+
+    virtual void dispatch()
+    {
+
+        if (inputBuffer != NULL && bufferLength > 0)
+        {
+            if (write(pipe, inputBuffer, bufferLength) < 0)
+            {
+                // We may receive EPIPE, which we only expect if a spawned
+                // command finishes while we're still busy trying to pipe
+                // our input.  The command may simply not need (i. e. want
+                // to read) our input.  We dont' consider this an error.
+                if (errno != EPIPE)
+                {
+                    error = errno;
+                }
+            }
+            close(pipe);
+        }
+    }
+
+    int         pipe;             // the pipe we read the data from
+    const char *inputBuffer;      // the buffer of data to write
+    size_t      bufferLength;     // the length of the buffer
+    int         error;            // and error that resulted.
+};
+
+
+// a thread that reads ERROR data from the command pipe
+class ErrorReaderThread : public SysThread
+{
+
+public:
+    inline ErrorReaderThread() : SysThread(),
+        pipe(0), errorBuffer(firstBuffer), bufferLength(0), error(0) { }
+    inline ~ErrorReaderThread()
+    {
+        if (errorBuffer != NULL && errorBuffer != firstBuffer)
+        {
+            free(errorBuffer);
+        }
+        terminate();
+    }
+
+    void start(int _pipe)
+    {
+        pipe = _pipe;
+        SysThread::createThread();
+    }
+
+    virtual void dispatch()
+    {
+        ssize_t length, eof;
+
+        // We'll use our internal buffer first.  Only if this buffer is
+        // too small, we'll dynamically allocate a buffer which we'll
+        // increase when necessary.
+        length = read(pipe, errorBuffer, PIPE_BUF - 1);
+        eof = read(pipe, &errorBuffer[PIPE_BUF - 1], 1);
+        if (length < 0 || eof < 0) // error reading pipe
+        {
+            error = errno;
+            return;
+        }
+        else if (length >= 0 && eof == 0)
+        {   // EOF on first or second read; our initial buffer was large enough
+            bufferLength = length;
+        }
+        else
+        {   // Our initial buffer is too small; we'll allocate a larger
+            // buffer and copy everything over.
+            size_t bufferAllocation = PIPE_BUF * 4;
+
+            // we need a larger buffer
+            if ((errorBuffer = (char *)malloc(bufferAllocation)) == NULL)
+            {
+                error = errno;
+                return;
+            }
+            bufferLength = length + eof;
+            memcpy(errorBuffer, firstBuffer, bufferLength);
+
+            // Read until we hit EOF or an error.  Whenever the buffer gets too
+            // small, we reallocate it with twice the size.
+            while ((length = read(pipe, &errorBuffer[bufferLength], PIPE_BUF)) > 0)
+            {
+                bufferLength += length;
+                // do we need to increase our buffer allocation?
+                if (bufferLength + PIPE_BUF > bufferAllocation)
+                {
+                    bufferAllocation *= 2; // reallocate with twice the size
+                    char *largerBuffer = (char *)realloc(errorBuffer, bufferAllocation);
+                    if (largerBuffer == NULL)
+                    {
+                        error = errno;
+                        return;
+                    }
+                    errorBuffer = largerBuffer;
+                }
+            }
+            if (length < 0) // error reading pipe
+            {
+                error = errno;
+                return;
+            }
+        }
+        close(pipe);
+    }
+
+    int    pipe;                  // the pipe we read the data from
+    char   firstBuffer[PIPE_BUF]; // internal buffer.
+    char  *errorBuffer;           // initally errorBuffer = firstBuffer
+    size_t bufferLength;          // the length of the buffer
+    int    error;                 // and error that resulted.
+};
 
 
 /**
@@ -322,7 +455,7 @@ bool sys_process_export(RexxExitContext *context, const char * cmd, RexxObjectPt
         if (errCode != 0)
         {
             // non-zero is an error condition
-            context->RaiseCondition("ERROR", context->String(cmd), NULL, context->WholeNumberToObject(errCode));
+            context->RaiseCondition("ERROR", context->String(cmd), NULL, context->WholeNumberToObject(errno));
         }
         else
         {
@@ -489,6 +622,10 @@ bool sys_process_cd(RexxExitContext *context, const char * cmd, RexxObjectPtr rc
         return false;
     }
     int errCode = chdir(unquoted);
+    if (errCode < 0)
+    {
+        errCode = errno;
+    }
     free(unquoted);
 
     free(dir_buf);
@@ -505,13 +642,15 @@ bool sys_process_cd(RexxExitContext *context, const char * cmd, RexxObjectPtr rc
 }
 
 
-/*********************************************************************/
-/* This function breaks a command up into whitespace-delimited pieces*/
-/* to create the pointer array for the execvp call.  It is only used */
-/* to support the "COMMAND" command environment, which does not use  */
-/* a shell to invoke its commands.                                   */
-/*********************************************************************/
-
+/**
+ * Breaks up a command string into whitespace-delimited pieces. Whitespace-
+ * delimited double-quoted strings are treated as a single argument.
+ *
+ * @param parm_cmd   The command string.
+ * @param argPtr     The "argv" array.
+ *
+ * @return           True if command parsed successfully, else false.
+ */
 bool scan_cmd(const char *parm_cmd, char **argPtr)
 {
     char *cmd = strdup(parm_cmd);        /* Allocate for copy          */
@@ -526,6 +665,7 @@ bool scan_cmd(const char *parm_cmd, char **argPtr)
     /* pos points to the next character of the command to be examined. */
     /* i indicates the next element of the args[] array to be loaded.  */
     size_t i = 0;                               /* Start with args[0]         */
+    logical_t quoted = false;
     for (char *pos = cmd; pos < end; pos++)
     {
         while (*pos==' ' || *pos=='\t')
@@ -546,13 +686,35 @@ bool scan_cmd(const char *parm_cmd, char **argPtr)
             return false;
         }
 
+        if (*pos == '"')               // start of a quoted part?
+        {
+            quoted = true;             // we're now within quotes
+            *pos++ = '\0';             // remove and skip the quote character
+        }
+
         argPtr[i++] = pos;                 /* Point to current argument  */
                                            /* and advance i to next      */
                                            /* element of args[]          */
-        while (*pos!=' ' && *pos!='\t' && *pos!='\0')
-        {
-            pos++;                           /* Look for next whitespace   */
-        }                                  /* or end of command          */
+        if (quoted)
+        {   // look for next quote followed by whitespace or end of command
+            while (!(*pos == '\0' ||
+                    (*(pos - 1) == '"' && (*pos == ' ' || *pos == '\t' ))))
+            {
+                pos++;
+            }
+            if (*(pos - 1) == '"')
+            {
+                quoted = false;        // we're again outside of any quotes
+                *(pos - 1) = '\0';     // remove the quote character
+            }
+        }
+        else
+        {   // look for next whitespace or end of command
+            while (*pos != ' ' && *pos != '\t' && *pos != '\0')
+            {
+                pos++;
+            }
+        }
         *pos = '\0';                       /* Null-terminate this arg    */
 
     }
@@ -562,26 +724,18 @@ bool scan_cmd(const char *parm_cmd, char **argPtr)
     return true;
 }
 
-/******************************************************************************/
-/* Name:       sys_command                                                    */
-/*                                                                            */
-/* Arguments:  cmd - Command to be executed                                   */
-/*             local_env_type - integer indicating which shell                */
-/*                                                                            */
-/* Returned:   rc - Return Code                                               */
-/*                                                                            */
-/* Notes:      Handles processing of a system command.                        */
-/*             Uses the 'fork' and 'exec' system calls to create a new process*/
-/*             and invoke the shell indicated by the local_env_type argument. */
-/*             This is modeled after command handling done in Classic REXX.   */
-/******************************************************************************/
-RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStringObject address, RexxStringObject command)
+/**
+ * Try to handle special commands like "cd" or "export" internally.  This will
+ * work if we have a simple commend with no redirection, piping, or such.
+ *
+ * @param context    The Exit oontext.
+ * @param cmd        The command string.
+ * @param rc         The operating system return code.
+ *
+ * @return           True if command was handled, false otherwise.
+ */
+logical_t handleCommandInternally(RexxExitContext *context, char *cmd, RexxObjectPtr rc)
 {
-    const char *cmd = context->StringData(command);
-    const char *envName = context->StringData(address);
-
-    RexxObjectPtr rc = NULLOBJECT;
-
     /* check for redirection symbols, ignore them when enclosed in double quotes.
        escaped quotes are ignored. */
     bool noDirectInvoc = false;
@@ -607,7 +761,7 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStrin
             /* if we're in the unquoted part and the current character is one of */
             /* the redirection characters or the & for multiple commands then we */
             /* will no longer try to invoke the command directly                 */
-            if (!inQuotes && (strchr("<>|&", cmd[i]) != NULL))
+            if (!inQuotes && (strchr("<>|&;", cmd[i]) != NULL))
             {
                 noDirectInvoc = true;
                 break;
@@ -617,145 +771,317 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStrin
 
     if (!noDirectInvoc)
     {
-        /* execute 'cd' in the same process */
-        size_t commandLen = strlen(cmd);
-
-        if (strcmp(cmd, "cd") == 0)
+        // execute special commands in the same process
+        // we currently don't handle formats like " cd" or "'cd'" internally
+        if (strcmp("cd", cmd) == 0 || strncmp("cd ", cmd, 3) == 0)
         {
-            if (sys_process_cd(context, cmd, rc))
-            {
-                return rc;
-            }
+            return sys_process_cd(context, cmd, rc);
         }
-        else if (commandLen >= 3)
+        if (strncmp("set ", cmd, 4) == 0)
         {
-            char tmp[16];
-            strncpy(tmp, cmd, 3);
-            tmp[3] = '\0';
-            if (strcmp("cd ",tmp) == 0)
-            {
-                if (sys_process_cd(context, cmd, rc))
-                {
-                    return rc;
-                }
-            }
-            strncpy(tmp, cmd, 4);
-            tmp[4] = '\0';
-            if (strcmp("set ",tmp) == 0)
-            {
-                if (sys_process_export(context, cmd, rc, SET_FLAG)) /*unset works fine for me*/
-                {
-                    return rc;
-                }
-            }
-            strncpy(tmp, cmd, 6);
-            tmp[6] = '\0';
-            if (strcmp("unset ", tmp) == 0)
-            {
-                if (sys_process_export(context, cmd, rc, UNSET_FLAG))
-                {
-                    return rc;
-                }
-            }
-            strncpy(tmp, cmd, 7);
-            tmp[7] = '\0';
-            if (strcmp("export ", tmp) == 0)
-            {
-                if (sys_process_export(context, cmd, rc, EXPORT_FLAG))
-                {
-                    return rc;
-                }
-            }
+            return sys_process_export(context, cmd, rc, SET_FLAG);
+        }
+        if (strncmp("unset ", cmd, 6) == 0)
+        {
+            return sys_process_export(context, cmd, rc, UNSET_FLAG);
+        }
+        if (strncmp("export ", cmd, 7) == 0)
+        {
+            return sys_process_export(context, cmd, rc, EXPORT_FLAG);
         }
     }
+    return false;
+}
 
 
-    /****************************************************************************/
-    /* Invoke the system command handler to execute the command                 */
-    /****************************************************************************/
-    // if this is the null string, then use the default address environment
-    // for the platform
-    if (strlen(envName) == 0)
+/**
+ * Raises syntax error 98.896 Address command redirection failed.
+ *
+ * @param context    The Exit context.
+ * @param errCode    The operating system error code.
+ */
+RexxObjectPtr ErrorRedirection(RexxExitContext *context, int errCode)
+{
+    // raise 98.896 Address command redirection failed
+    context->RaiseException1(Error_Execution_address_redirection_failed,
+      context->CString(strerror(errno)));
+    return NULLOBJECT;
+}
+
+/**
+ * Raises a FAILURE condition.
+ *
+ * @param context    The Exit context.
+ * @param command    The command name and arguments.
+ */
+RexxObjectPtr ErrorFailure(RexxExitContext *context, CSTRING commandString)
+{
+    context->RaiseCondition("FAILURE", context->String(commandString),
+      NULLOBJECT, context->WholeNumberToObject(UNKNOWN_COMMAND));
+    return NULLOBJECT;
+}
+
+
+/**
+ * A redirecting test command handler.
+ *
+ * @param context    The Exit context.
+ * @param address    The environment name.
+ * @param command    The command name and arguments.
+ * @param ioContext  The IO Redirector context.
+ */
+RexxObjectPtr RexxEntry ioCommandHandler(RexxExitContext *context, RexxStringObject address, RexxStringObject command, RexxIORedirectorContext *ioContext)
+{
+    int pid;
+    int status;
+    char* argv[MAX_COMMAND_ARGS + 1];
+
+    CSTRING environment = context->CString(address);
+    CSTRING commandString = context->CString(command);
+
+    if (Utilities::strCaselessCompare("path", environment) == 0)
+    {   // For the no-shell "direct" environment we need to break the command
+        // string into a command name and separate arguments each (we have no
+        // shell to do this for us).
+        if (!scan_cmd(commandString, argv))
+        {   // too many arguments
+            return ErrorFailure(context, commandString);
+        }
+        // posix_spawnp() will fault if argv[0] is NULL.  Fix this.
+        if (argv[0] == NULL)
+        {
+            argv[0] = (char*)"";
+            argv[1] = NULL;
+        }
+    }
+    else
+    {   // Set up the full path to the requested shell.  If SYSSHELLPATH
+        //  could ever grow longer than 128 chars this array size will
+        // need to be increased.
+        char shell[128 + 1 + 256 + 1]; // SYSSHELLPATH plus "/" plus environment name
+        strcpy(shell, SYSSHELLPATH);
+        if (shell[strlen(shell) - 1] != '/')
+        {   // append slash if we don't have one yet
+            strcat(shell, "/");
+        }
+        if (strlen(environment) == 0 || Utilities::strCaselessCompare("command", environment) == 0)
+        {   // for environments "" and "command" we use "sh" as shell
+            strcat(shell, "sh");
+        }
+        else
+        {   // for all other environment names we use this name in lower case
+            strcat(shell, environment);
+            Utilities::strlower(shell);
+        }
+
+        argv[0] = (char*)shell;
+        argv[1] = (char*)"-c";
+        argv[2] = (char*)commandString;
+        argv[3] = NULL;
+    }
+
+    if (ioContext->IsRedirectionRequested())
     {
-        envName = SYSINITIALADDRESS;
-    }
+        InputWriterThread inputThread; // separate thread if we need to write INPUT
+        ErrorReaderThread errorThread; // separate thread if we need to read ERROR
+        bool need_to_write_input = false;
+        bool need_to_read_output = false;
+        bool need_to_read_error = false;
+        int input[2], output[2], error[2];
 
-    int errCode = 0;
-    {
-        int pid = fork();
-        int status;
+        posix_spawn_file_actions_t action;
+        posix_spawn_file_actions_init(&action);
 
-        if (pid != 0)                         /* spawn a child process to run the  */
+        // ignore SIGPIPE so that we receive EPIPE for a write() operation on a
+        // pipe which has closed its read end.
+        if (signal(SIGPIPE, SIG_IGN) == SIG_ERR)
         {
-            waitpid ( pid, &status, 0);          /* command and wait for it to finish */
-            if (WIFEXITED(status))               /* If cmd process ended normal       */
-            {
-                                                 /* Give 'em the exit code            */
-                errCode = WEXITSTATUS(status);
-            }
-            else                              /* Else process died ugly, so        */
-            {
-                errCode = -(WTERMSIG(status));
-                if (errCode == 1)                    /* If process was stopped            */
-                {
-                    errCode = -1;                   /* Give 'em a -1.                    */
-                }
-            }
+            return ErrorRedirection(context, errno);
         }
-        else // we're in the spawned child process
-        {                               
-            if (Utilities::strCaselessCompare("sh", envName) == 0)
+
+        // Create stdin, stdout, and stderr pipes as requested.  pipe() returns
+        // two file descriptors: [0] is the pipe read end, [1] is the pipe
+        // write end.  The child process (i. e. the command to be run) will
+        // inherit both the read and write end of all created pipes.  Of each
+        // end *we* will only ever use one end, and the child the other end.
+        // Therefore we and the child will close any unused ends.  In addition,
+        // we also prepare any file actions that are to be be done by the child.
+        // These actions are collected with posix_spawn_file_actions()
+
+        // is stdin redirection requested?
+        if (ioContext->IsInputRedirected())
+        {
+            if (pipe(input) != 0) // create stdin pipe
             {
-                execl(SYSSHELLPATH "/sh", "sh", "-c", cmd, NULL);
+                return ErrorRedirection(context, errno);
             }
-            else if (Utilities::strCaselessCompare("bash", envName) == 0)
+            posix_spawn_file_actions_adddup2(&action, input[0], 0); // stdin reads from pipe
+            posix_spawn_file_actions_addclose(&action, input[1]); // close unused write end in child
+            need_to_write_input = true;
+        }
+
+        // is stdout redirection requested?
+        if (ioContext->IsOutputRedirected())
+        {
+            if (pipe(output) != 0) // create stdout pipe
             {
-                execl(SYSSHELLPATH "/bash", "bash", "-c", cmd, NULL);
+                return ErrorRedirection(context, errno);
             }
-            else if (Utilities::strCaselessCompare("ksh", envName) == 0)
+            // do we want interleaved stdout and stderr redirection?
+            // this is a special case .. we just redirect stderr to stdout upfront
+            if (ioContext->AreOutputAndErrorSameTarget())
             {
-                execl(SYSSHELLPATH "/ksh", "ksh", "-c", cmd, NULL);
+                posix_spawn_file_actions_adddup2(&action, output[1], 2); //stderr writes to pipe
             }
-            else if (Utilities::strCaselessCompare("bsh", envName) == 0)
+            posix_spawn_file_actions_adddup2(&action, output[1], 1); //stdout writes to pipe
+            posix_spawn_file_actions_addclose(&action, output[0]); // close unused read end in child
+            need_to_read_output = true;
+        }
+
+        // now stderr redirection
+        // if both stdout and stderr are to be redirected to the same object, then
+        // everything was already set up in the previous stdout redirection step
+        if (ioContext->IsErrorRedirected() && !ioContext->AreOutputAndErrorSameTarget())
+        {
+            if (pipe(error) != 0) // create stderr pipe
             {
-                execl(SYSSHELLPATH "/bsh", "bsh", "-c", cmd, NULL);
+                return ErrorRedirection(context, errno);
             }
-            else if (Utilities::strCaselessCompare("csh", envName) == 0)
+            posix_spawn_file_actions_adddup2(&action, error[1], 2); // stderr writes to pipe
+            posix_spawn_file_actions_addclose(&action, error[0]); // close unused read end in child
+            need_to_read_error = true;
+        }
+
+        // ok, everything is set up accordingly, let's fork the redirected command
+        if (posix_spawnp(&pid, argv[0], &action, NULL, argv, getEnvironment()) != 0)
             {
-                execl(SYSSHELLPATH "/csh", "csh", "-c", cmd, NULL);
-            }
-            else if (Utilities::strCaselessCompare("noshell", envName) == 0)
-            {
-                char * args[MAX_COMMAND_ARGS+1];      /* Array for argument parsing */
-                if (scan_cmd(cmd, args))              /* Parse cmd into arguments   */
-                {
-                    execvp(args[0], args);            /* Invoke command directly    */
-                }
-            }
-            else // "command" environment (or anything else not covered by above)
-            {
-                execl(SYSSHELLPATH "/sh", "sh", "-c", cmd, NULL);
+                return ErrorFailure(context, commandString);
             }
 
-            // if the above exec..() calls are successful, the process image is 
-            // replaced with the command to be executed and execution will never
-            // reach this point
-            // but if an exec..() call fails to run, we must EXIT this child process
-            exit(UNKNOWN_COMMAND);
+        // Close all unneeded read- and write ends
+        if (need_to_write_input)
+        {
+            close(input[0]); // we close our unused stdout pipe write end
+        }
+        if (need_to_read_output)
+        {
+            close(output[1]); // we close our unused stdout pipe write end
+        }
+        if (need_to_read_error)
+        {
+            close(error[1]); // we close our unused stderr pipe write end
+        }
+
+        if (need_to_write_input)
+        {
+            ioContext->ReadInputBuffer(&inputThread.inputBuffer, &inputThread.bufferLength);
+            // we start a separate thread to write INPUT data to the input pipe
+            inputThread.start(input[1]);
+        }
+        if (need_to_read_error)
+        {
+            // we start a separate thread to read ERROR data from the error pipe
+            errorThread.start(error[0]);
+        }
+
+        // do we need to read OUTPUT from the stdout pipe?
+        // we run this in the main thread instead of starting another new thread
+        // if we have stdout and sterr interleaved, we'll read both of them here
+        if (need_to_read_output)
+        {
+            // According to POSIX.1 PIPE_BUF is at least 512 bytes; on Linux
+            // it's 4096 bytes.
+            char outputBuffer[PIPE_BUF];
+            ssize_t outputLength;
+
+            while ((outputLength = read(output[0], &outputBuffer, PIPE_BUF)) > 0)
+            {
+                ioContext->WriteOutputBuffer(outputBuffer, outputLength);
+            }
+            if (outputLength != 0) // 0 is EOF, success
+            {
+                return ErrorRedirection(context, errno);
+            }
+            close(output[0]);
+        }
+
+        // did we start an ERROR thrad?
+        if (need_to_read_error)
+        {
+            // wait for the ERROR thread to finish
+            errorThread.waitForTermination();
+            if (errorThread.bufferLength > 0)
+            {   // return what the ERROR thread read from its pipe
+                ioContext->WriteErrorBuffer(errorThread.errorBuffer, errorThread.bufferLength);
+            }
+            // the ERROR thread may have encountered an error .. raise it now
+            if (errorThread.error != 0)
+            {
+                return ErrorRedirection(context, errorThread.error);
+            }
+        }
+
+        // if we started an INPUT thread, wait until it finishes
+        if (need_to_write_input)
+        {
+            inputThread.waitForTermination();
+            // the INPUT thread may have encountered an error .. raise it now
+            if (inputThread.error != 0)
+            {
+                return ErrorRedirection(context, inputThread.error);
+            }
+        }
+
+        posix_spawn_file_actions_destroy(&action);
+    }
+    else // no redirection requested
+    {
+        // try to handle special commands like 'cd' or 'export' internally
+        RexxObjectPtr rc = NULLOBJECT;
+
+        if (handleCommandInternally(context, (char*)commandString, rc))
+        {   // the command was handled in this thread
+            return rc;
+        }
+        else
+        {   // to run the command we spawn another thread
+            if (posix_spawnp(&pid, argv[0], NULL, NULL, argv, getEnvironment()) != 0)
+            {
+                return ErrorFailure(context, commandString);
+            }
         }
     }
+
+    // wait for our child, the forked command
+    waitpid(pid, &status, 0);
+    int rc;
+    if (WIFEXITED(status)) // child process ended normal
+    {
+        rc = WEXITSTATUS(status); // set return code
+    }
+    else
+    {   // child process died
+        rc = -(WTERMSIG(status));
+        if (rc == 1) // process was stopped
+        {
+            rc = -1;
+        }
+    }
+
     // unknown command code?
-    if (errCode == UNKNOWN_COMMAND)
+    // a FAILURE will be raised for any command returning 127
+    if (rc == UNKNOWN_COMMAND)
     {
-        // failure condition
-        context->RaiseCondition("FAILURE", context->String(cmd), NULL, context->WholeNumberToObject(errCode));
+        return ErrorFailure(context, commandString);
     }
-    else if (errCode != 0)
+    else if (rc != 0)
     {
-        // non-zero is an error condition
-        context->RaiseCondition("ERROR", context->String(cmd), NULL, context->WholeNumberToObject(errCode));
+        // for any non-zero return code we raise an ERROR condition
+        context->RaiseCondition("ERROR", context->String(commandString),
+          NULL, context->WholeNumberToObject(rc));
+        return NULLOBJECT;
     }
-    return context->False();      // zero return code
+    return context->False(); // zero return code
 }
 
 
@@ -767,17 +1093,18 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStrin
 void SysInterpreterInstance::registerCommandHandlers(InterpreterInstance *_instance)
 {
     // Unix has a whole collection of similar environments, services by a single handler
-    _instance->addCommandHandler("COMMAND", (REXXPFN)systemCommandHandler);
-    _instance->addCommandHandler("", (REXXPFN)systemCommandHandler);
-    _instance->addCommandHandler("SH", (REXXPFN)systemCommandHandler);
-    _instance->addCommandHandler("KSH", (REXXPFN)systemCommandHandler);
-    _instance->addCommandHandler("CSH", (REXXPFN)systemCommandHandler);
-    _instance->addCommandHandler("BSH", (REXXPFN)systemCommandHandler);
-    _instance->addCommandHandler("BASH", (REXXPFN)systemCommandHandler);
-    _instance->addCommandHandler("NOSHELL", (REXXPFN)systemCommandHandler);
+    _instance->addCommandHandler("COMMAND", (REXXPFN)ioCommandHandler, HandlerType::REDIRECTING);
+    _instance->addCommandHandler("", (REXXPFN)ioCommandHandler, HandlerType::REDIRECTING);
+    _instance->addCommandHandler("SH", (REXXPFN)ioCommandHandler, HandlerType::REDIRECTING);
+    _instance->addCommandHandler("KSH", (REXXPFN)ioCommandHandler, HandlerType::REDIRECTING);
+    _instance->addCommandHandler("CSH", (REXXPFN)ioCommandHandler, HandlerType::REDIRECTING);
+    _instance->addCommandHandler("BSH", (REXXPFN)ioCommandHandler, HandlerType::REDIRECTING);
+    _instance->addCommandHandler("BASH", (REXXPFN)ioCommandHandler, HandlerType::REDIRECTING);
+    _instance->addCommandHandler("TCSH", (REXXPFN)ioCommandHandler, HandlerType::REDIRECTING);
+    _instance->addCommandHandler("ZSH", (REXXPFN)ioCommandHandler, HandlerType::REDIRECTING);
+
+    // This is a no-shell environment that searches PATH.  It is named "PATH"
+    // which happens to be compatible with Regina.
+    _instance->addCommandHandler("PATH", (REXXPFN)ioCommandHandler, HandlerType::REDIRECTING);
 }
-
-
-
-
 

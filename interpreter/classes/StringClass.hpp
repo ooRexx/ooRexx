@@ -553,6 +553,7 @@ class RexxString : public RexxObject
     inline void  toRxstring(RXSTRING &r) { r.strptr = getWritableData(); r.strlength = getLength(); }
            void  copyToRxstring(RXSTRING &r);
     inline bool  endsWith(char c) const { return length > 0 && stringData[length - 1] == c; }
+    inline bool  startsWith(char c) const { return length > 0 && stringData[0] == c; }
 
     inline int sortCompare(RexxString *other)
     {
@@ -693,6 +694,7 @@ class RexxString : public RexxObject
 
 
     static RexxString *newString(const char *, size_t);
+    static RexxString *newString(const char *, size_t, const char *, size_t);
     static RexxString *rawString(size_t);
     static RexxString *newUpperString(const char *, size_t);
     static RexxString *newString(double d);
@@ -781,6 +783,14 @@ class RexxString : public RexxObject
 inline RexxString *new_string(const char *s, size_t l)
 {
     return RexxString::newString(s, l);
+}
+
+
+// String creation inline functions
+
+inline RexxString *new_string(const char *s1, size_t l1, const char *s2, size_t l2)
+{
+    return RexxString::newString(s1, l1, s2, l2);
 }
 
 inline RexxString *raw_string(size_t l)

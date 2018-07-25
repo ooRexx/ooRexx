@@ -98,6 +98,13 @@ public:
     RoutineClass *findPublicRoutine(RexxString *);
     PackageClass *findNamespace(RexxString *);
     RexxClass    *findClass(RexxString *, RexxObject *&);
+
+    inline RexxClass *findClass(RexxString * n)
+    {
+        RexxObject *t;
+        return findClass(n, t);
+    }
+
     RexxClass    *findClass(RexxString *, RexxString *);
     RexxClass    *findInstalledClass(RexxString *name);
     RexxClass    *findPublicClass(RexxString *name);

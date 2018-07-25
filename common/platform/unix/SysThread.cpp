@@ -141,6 +141,8 @@ void SysThread::createThread()
     int schedpolicy, maxpri, minpri;
     struct sched_param schedparam;
 
+    attached = false;           // we own this thread
+
     // Create an attr block for Thread.
     pthread_attr_init(&newThreadAttr);
 #if defined(LINUX) ||  defined(OPSYS_SUN) || defined(AIX)
@@ -195,7 +197,18 @@ void SysThread::createThread()
         fprintf(stderr," *** ERROR: At SysThread(), createThread - RC = %d !\n", rc);
     }
     pthread_attr_destroy(&newThreadAttr);
-    attached = false;           // we own this thread
     return;
+}
+
+
+// wait for the thread to terminatre
+void SysThread::waitForTermination()
+{
+    if (!attached && _threadID != 0)
+    {
+        void *res;
+        pthread_join(_threadID, &res);
+        _threadID = 0;
+    }
 }
 

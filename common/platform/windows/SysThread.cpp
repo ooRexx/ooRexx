@@ -45,13 +45,23 @@
 #include "windows.h"
 #include "SysThread.hpp"
 
+/**
+ * Stub function for handling the intial startup on a new thread.
+ *
+ * @param arguments The void argument object, which is just a pointer to the
+ *                  SysThread object.
+ *
+ * @return Always returns 0.
+ */
 DWORD WINAPI call_thread_function(void * arguments)
 {
     ((SysThread *)arguments)->dispatch();
    return 0;
 }
 
-// create a new thread and attach to an activity
+/**
+ * create a new thread
+ */
 void SysThread::createThread()
 {
     _threadHandle = CreateThread(NULL, THREAD_STACK_SIZE, call_thread_function, this, 0, &_threadID);
@@ -59,12 +69,18 @@ void SysThread::createThread()
     attached = false;
 }
 
+/**
+ * This is a dummy method intended for subclass overrides. This
+ * dispatches the code on the new thread.
+ */
 void SysThread::dispatch()
 {
     // default dispatch returns immediately
 }
 
-// attach an activity to an existing thread
+/**
+ * attach an activity to an existing thread
+ */
 void SysThread::attachThread()
 {
     // initialize the thread basics
@@ -73,6 +89,11 @@ void SysThread::attachThread()
     attached = true;           // we don't own this one (and don't terminate it)
 }
 
+/**
+ * Set the thread priority.
+ *
+ * @param priority The thread priority value.
+ */
 void SysThread::setPriority(ThreadPriority priority)
 {
     int pri = THREAD_PRIORITY_NORMAL;
@@ -103,20 +124,22 @@ void SysThread::setPriority(ThreadPriority priority)
 }
 
 
+/**
+ * Return a pointer to the current stack base.
+ *
+ * @return A pointer to the current stack position
+ */
 char *SysThread::getStackBase()
-/******************************************************************************/
-/* Function:  Return a pointer to the current stack base                      */
-/******************************************************************************/
 {
    int32_t temp;
    return ((char *)(&temp)) - THREAD_STACK_SIZE;
 }
 
 
+/**
+ * Do any platform specific termination
+ */
 void SysThread::terminate()
-/******************************************************************************/
-/* Function:  Do any platform specific thread termination                     */
-/******************************************************************************/
 {
     if (!attached && _threadHandle != INVALID_HANDLE_VALUE)
     {
@@ -126,38 +149,54 @@ void SysThread::terminate()
 }
 
 
+/**
+ * Do any thread-specific startup activity.
+ */
 void SysThread::startup()
-/******************************************************************************/
-/* Function:  Do any platform specific thread initialization                  */
-/******************************************************************************/
 {
     // this is a nop on Windows;
 }
 
 
+/**
+ * Perform any platform-specific thread shutdown activities.
+ */
 void SysThread::shutdown()
-/******************************************************************************/
-/* Function:  Do any platform specific thread shutdown activities.  This      */
-/* replaces the WindowEnv stuff in prior releases.                            */
-/******************************************************************************/
 {
     // this is a nop on Windows;
 }
 
 
+/**
+ * yield control to other threads.
+ */
 void SysThread::yield()
-/******************************************************************************/
-/* Function:  Yield control to other threads.                                 */
-/******************************************************************************/
 {
     // this is a nop on Windows;
 }
 
 
+/**
+ * Test whether two threads are the same.
+ *
+ * @param other  The other thread object.
+ *
+ * @return True if they are the same thread, false if not.
+ */
 bool SysThread::equals(SysThread &other)
-/******************************************************************************/
-/* Function:  Yield dispatching control to other threads.                     */
-/******************************************************************************/
 {
     return _threadID == other._threadID;
+}
+
+
+/**
+ * Wait for the thread to terminate
+ */
+void SysThread::waitForTermination()
+{
+    if (!attached && _threadID != 0)
+    {
+        WaitForSingleObject(_threadHandle, INFINITE);
+        _threadID = 0;
+    }
 }

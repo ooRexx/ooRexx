@@ -40,9 +40,11 @@
 /*                                                                            */
 /******************************************************************************/
 
+#include "RexxCore.h"
+#include "Activity.hpp"
+#include "RexxActivation.hpp"
 #include "InterpreterInstance.hpp"
 #include "SystemInterpreter.hpp"
-#include "RexxActivation.hpp"
 
 
 /**

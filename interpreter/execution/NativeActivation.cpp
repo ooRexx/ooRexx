@@ -1339,7 +1339,7 @@ void NativeActivation::run(MethodClass *_method, NativeMethod *_code, RexxObject
     resultObj = result;
 
     // disable the stack frame used to generate the tracebacks since we are
-    // no longer active. An error in an uninit method might pick up bogus information
+    // noh longer active. An error in an uninit method might pick up bogus information
     // if we're still in the list
     frame.disableFrame();
 
@@ -1719,6 +1719,8 @@ void NativeActivation::run(TrappingDispatcher &dispatcher)
     activationType = TRAPPING_ACTIVATION;    // we're handling a callback
     size_t activityLevel = activity->getActivationLevel();
     trapErrors = true;               // trap errors on
+    // the caller may want conditions trapped as well.
+    trapConditions = dispatcher.trapConditions();
     try
     {
         // make the activation hookup and run it.  Note that this
@@ -1779,11 +1781,8 @@ void NativeActivation::checkConditions()
         // base of the stack, there's nothing left to handle this.
         if (!isStackBase())
         {
-            // get the original condition name from the condition object
-            RexxString *condition = (RexxString *)conditionObj->get(GlobalNames::CONDITION);
-
             // syntax errors are fatal...we need to reraise this
-            if (condition->strCompare(GlobalNames::SYNTAX))
+            if (conditionName->strCompare(GlobalNames::SYNTAX))
             {
                 // this prevents us from trying to trap this again
                 trapErrors = false;
@@ -1797,7 +1796,7 @@ void NativeActivation::checkConditions()
                 // raise this in our caller's context.
                 if (_sender != OREF_NULL)
                 {
-                    _sender->trap(condition, conditionObj);
+                    _sender->trap(conditionName, conditionObj);
                 }
                 // if the trap is not handled, then we return directly.  The return
                 // value (if any) is stored in the condition object
@@ -1805,6 +1804,39 @@ void NativeActivation::checkConditions()
             }
         }
     }
+}
+
+
+/**
+ * Clear any non-syntax conditions that have been trapped
+ * so that they are not propagated to a caller.
+ */
+void NativeActivation::clearCondition()
+{
+    // if we have a stashed condition object, we need to see if this is a
+    // non-syntax condition
+    if (conditionObj != OREF_NULL)
+    {
+        // syntax errors need to be propagated, only clear other types
+        if (!conditionName->strCompare(GlobalNames::SYNTAX))
+        {
+            clearException();
+        }
+    }
+}
+
+
+/**
+ * Check if a condition of the given type has been trapped.
+ *
+ * @param name   The condition name.
+ *
+ * @return True if this activation has trapped a condition of the
+ *         indicated type.
+ */
+bool NativeActivation::checkCondition(RexxString *name)
+{
+    return conditionName != OREF_NULL && conditionName->strCompare(name);
 }
 
 
@@ -2450,7 +2482,7 @@ bool NativeActivation::fetchNext(RexxString *&name, RexxObject *&value)
  * @return false if this activation takes a pass on the condition.  Does not
  *         return at all if the condition is handled.
  */
-bool NativeActivation::trap(RexxString *condition, DirectoryClass * exception_object)
+bool NativeActivation::trap(RexxString *condition, DirectoryClass *exception_object)
 {
     // There are two possibilities here.  We're either seeing this because of a
     // propagating syntax condition.  for this case, we trap this and hold it.
@@ -2465,7 +2497,7 @@ bool NativeActivation::trap(RexxString *condition, DirectoryClass * exception_ob
         if (trapErrors)
         {
             // record this in case any callers want to know about it.
-            setConditionInfo(exception_object);
+            setConditionInfo(condition, exception_object);
             // this will unwind back to the calling level, with the
             // exception information recorded.
             throw this;
@@ -2474,16 +2506,40 @@ bool NativeActivation::trap(RexxString *condition, DirectoryClass * exception_ob
     }
     else if (trapConditions)
     {
+        // record this in case any callers want to know about it.
+        setConditionInfo(condition, exception_object);
+
+        // in some contexts, we need to capture without propagating (ie,
+        // command redirection handers. We also allow more than one condition
+        // to occur, we'll just overwrite the last one.
+        if (captureConditions)
+        {
+            // we handled this
+            return true;
+        }
+
         // pretty much the same deal, but we're only handling conditions, and
         // only one condtion, so reset the trap flag
         trapConditions = false;
-        // record this in case any callers want to know about it.
-        setConditionInfo(exception_object);
+
         // this will unwind back to the calling level, with the
         // exception information recorded.
         throw this;
     }
-    return false;                        /* this wasn't handled               */
+    return false;
+}
+
+
+/**
+ * Transfer a trapped condition into an activation context.
+ *
+ * @param c      The condition object.
+ */
+void NativeActivation::setConditionInfo(DirectoryClass *c)
+{
+    conditionObj = c;
+    // we also need to retrieve the condition name from the object
+    conditionName = (RexxString *)conditionObj->get(GlobalNames::CONDITION);
 }
 
 
@@ -2502,9 +2558,9 @@ bool NativeActivation::willTrap(RexxString *condition)
 {
     // There are two possibilities here.  We're either seeing this because of a
     // propagating syntax condition.  for this case, we trap this and hold it.
-    // The other possibility is a condition being raised by an API callback.  That should
-    // be the only situation where we see any other condition type.  We also trap that
-    // one so it can be raised in the caller's context.
+    // The other possibility is a condition being raised by an API callback or we've
+    // been created by a trapping dispatcher. In either case, we will trap and hold
+    // the condition.
 
     // we end up seeing this a second time if we're raising the exception on
     // return from an external call or method.

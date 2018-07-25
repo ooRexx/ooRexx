@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -73,7 +73,6 @@ class ActivationFrame;
 class ActivationBase;
 class NativeActivation;
 class RexxActivation;
-
 
 typedef enum
 {
@@ -303,6 +302,7 @@ class Activity : public RexxInternalObject
     void createMethodContext(MethodContext &context, NativeActivation *owner);
     void createCallContext(CallContext &context, NativeActivation *owner);
     void createExitContext(ExitContext &context, NativeActivation *owner);
+    void createRedirectorContext(RedirectorContext &context, NativeActivation *owner);
     RexxObject *getLocalEnvironment(RexxString *name);
     DirectoryClass *getLocal();
     CommandHandler *resolveCommandHandler(RexxString *);
@@ -371,6 +371,7 @@ class Activity : public RexxInternalObject
     static MethodContextInterface methodContextFunctions;
     static CallContextInterface callContextFunctions;
     static ExitContextInterface exitContextFunctions;
+    static IORedirectorInterface ioRedirectorContextFunctions;
 };
 
 
@@ -431,6 +432,21 @@ inline NativeActivation *contextToActivation(RexxExitContext *c)
 inline NativeActivation *contextToActivation(RexxMethodContext *c)
 {
     return ((MethodContext *)c)->context;
+}
+
+
+/**
+ * Convert an API context to into the top native activation
+ * context associated with the thread.
+ *
+ * @param c      The source API context.
+ *
+ * @return A Native activation context that is the anchor point for the
+ *         API activity.
+ */
+inline NativeActivation *contextToActivation(RexxIORedirectorContext *c)
+{
+    return ((RedirectorContext *)c)->context;
 }
 
 #endif

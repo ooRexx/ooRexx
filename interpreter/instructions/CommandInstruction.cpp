@@ -84,6 +84,6 @@ void RexxInstructionCommand::execute(RexxActivation *context, ExpressionStack *s
     }
 
     // finally, execute this command in the current address environment
-    context->command(context->getAddress(), command);
+    context->command(context->getAddress(), command, OREF_NULL);
 }
 

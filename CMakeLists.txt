@@ -636,6 +636,7 @@ set (concurrency_sources ${build_concurrency_dir}/ActivityDispatcher.cpp
             ${build_concurrency_dir}/ActivationFrame.cpp
             ${build_concurrency_dir}/CallbackDispatcher.cpp
             ${build_concurrency_dir}/TrappingDispatcher.cpp
+            ${build_concurrency_dir}/ConditionTrappingDispatcher.cpp
             ${build_concurrency_dir}/ExitHandler.cpp
             ${build_concurrency_dir}/CommandHandler.cpp
             ${build_concurrency_dir}/MessageDispatcher.cpp
@@ -660,11 +661,17 @@ set (expression_sources ${build_expression_dir}/BuiltinFunctions.cpp
             ${build_expression_dir}/ExpressionLogical.cpp
             ${build_expression_dir}/VariableReferenceOp.cpp)
 set (instructions_sources  ${build_instructions_dir}/AddressInstruction.cpp
+            ${build_instructions_dir}/AddressWithInstruction.cpp
             ${build_instructions_dir}/AssignmentInstruction.cpp
+            ${build_instructions_dir}/AddressInstruction.cpp
             ${build_instructions_dir}/BaseDoInstruction.cpp
             ${build_instructions_dir}/CallInstruction.cpp
             ${build_instructions_dir}/ClassDirective.cpp
             ${build_instructions_dir}/CommandInstruction.cpp
+            ${build_instructions_dir}/CommandIOContext.cpp
+            ${build_instructions_dir}/CommandIOConfiguration.cpp
+            ${build_instructions_dir}/InputRedirector.cpp
+            ${build_instructions_dir}/OutputRedirector.cpp
             ${build_instructions_dir}/DoBlock.cpp
             ${build_instructions_dir}/DoBlockComponents.cpp
             ${build_instructions_dir}/DoCountInstruction.cpp

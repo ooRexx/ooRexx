@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -55,6 +55,8 @@
 #include "DoBlockComponents.hpp"
 #include "LanguageLevel.hpp"
 #include "RexxErrorCodes.h"
+#include "CommandIOConfiguration.hpp"
+
 
 class RexxInstruction;
 class RexxInstructionIf;
@@ -375,6 +377,10 @@ class LanguageParser: public RexxInternalObject
     RexxInternalObject *popTerm();
     RexxInternalObject *popSubTerm();
     RexxInternalObject *popNTerms(size_t);
+    CommandIOConfiguration *parseAddressWith();
+    bool checkRedirectNormal(RexxToken *token);
+    OutputOption::Enum parseRedirectOutputOptions();
+    void parseRedirectOptions(RexxInternalObject *&source, RedirectionType::Enum &type);
 
     // various error processing methods
     void        error(RexxErrorCodes);

@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -49,6 +49,7 @@
 #include "SystemInterpreter.hpp"
 #include "DirectoryClass.hpp"
 #include "ActivityManager.hpp"
+#include "CommandIOContext.hpp"
 
 
 /**
@@ -79,7 +80,7 @@ void CommandHandler::resolve(const char *handlerName)
     // only resolved if we got something back
     if (entryPoint != NULL)
     {
-        type = REGISTERED_NAME;
+        type = HandlerType::REGISTERED_NAME;
     }
 }
 
@@ -94,24 +95,61 @@ void CommandHandler::resolve(const char *handlerName)
  * @param result     The returned RC value.
  * @param condition  A potential returned condition object.
  */
-void CommandHandler::call(Activity *activity, RexxActivation *activation, RexxString *address, RexxString *command, ProtectedObject &result, ProtectedObject &condition)
+void CommandHandler::call(Activity *activity, RexxActivation *activation, RexxString *address, RexxString *command, ProtectedObject &result, ProtectedObject &condition, CommandIOContext *ioContext)
 {
-    if (type == REGISTERED_NAME)
+    if (type == HandlerType::REGISTERED_NAME)
     {
+        // not all handlers support I/O redirection. Give an error
+        // if an attempt is made here
+        if (ioContext != OREF_NULL)
+        {
+            reportException(Error_Execution_address_redirection_not_supported, address);
+        }
+
         CommandHandlerDispatcher dispatcher(activity, entryPoint, command);
 
         // run this and give back the return code
         activity->run(dispatcher);
         dispatcher.complete(command, result, condition);
     }
-    else
+    // new style command handler
+    else if (type == HandlerType::DIRECT)
     {
+        // not all handlers support I/O redirection. Give an error
+        // if an attempt is made here
+        if (ioContext != OREF_NULL)
+        {
+            reportException(Error_Execution_address_redirection_not_supported, address);
+        }
+
         ContextCommandHandlerDispatcher dispatcher(entryPoint, address, command, result, condition);
 
         // run this and give back the return code
         activity->run(dispatcher);
     }
+    // a command handler that supports I/O redirection. This is
+    // the only one that uses the I/O context.
+    else if (type == HandlerType::REDIRECTING)
+    {
+        RedirectingCommandHandlerDispatcher dispatcher(entryPoint, address, command, result, condition, ioContext);
+
+        // if we got an io context back, it is time to initialize everthing. This is the very
+        // last point before we exit the interpreter.
+        if (ioContext != OREF_NULL)
+        {
+            ioContext->init();
+        }
+        // run this and give back the return code
+        activity->run(dispatcher);
+
+        // and also perform clean up as soon as we get control back
+        if (ioContext != OREF_NULL)
+        {
+            ioContext->cleanup();
+        }
+    }
 }
+
 
 CommandHandlerDispatcher::CommandHandlerDispatcher(Activity *a, REXXPFN e, RexxString *command)
 {
@@ -187,7 +225,6 @@ void CommandHandlerDispatcher::complete(RexxString *command, ProtectedObject &re
 }
 
 
-
 /**
  * Process a callout to a system exit function.
  */
@@ -234,4 +271,25 @@ void ContextCommandHandlerDispatcher::handleError(DirectoryClass *c)
             activation->checkConditions();
         }
     }
+}
+
+
+/**
+ * Process a callout to a system exit function.
+ */
+void RedirectingCommandHandlerDispatcher::run()
+{
+    RexxRedirectingCommandHandler *handler_address = (RexxRedirectingCommandHandler *)entryPoint;
+
+    // we create two different contexts for this call. Each manages its own locks on
+    // call backs
+    ExitContext context;
+    RedirectorContext redirectorContext;
+
+    // build a context pointer to pass out
+    activity->createExitContext(context, activation);
+    activity->createRedirectorContext(redirectorContext, activation);
+    redirectorContext.ioContext = ioContext;
+
+    result = (RexxObject *)(*handler_address)(&context.threadContext, (RexxStringObject)address, (RexxStringObject)command, &redirectorContext.redirectorContext);
 }

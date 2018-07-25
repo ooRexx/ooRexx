@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -43,24 +43,26 @@
 
 class DirectoryClass;
 class NativeActivation;
+class Activity;
 
 class TrappingDispatcher
 {
 public:
-    inline TrappingDispatcher() { ; }
+    inline TrappingDispatcher() : activity(OREF_NULL), activation(OREF_NULL), conditionData(OREF_NULL) { ; }
     virtual ~TrappingDispatcher() { ; }
 
     virtual void run();
     virtual void handleError(wholenumber_t, DirectoryClass *);
     virtual void handleError(DirectoryClass *);
+    virtual bool trapConditions() { return false; }
 
     inline void setContext(Activity *act, NativeActivation *a) { activity = act; activation = a; }
 
     wholenumber_t  rc;                 // error return code
 
 protected:
-    Activity *activity;            // the activity we're running on
-    NativeActivation *activation;  // the native activation we're running under
+    Activity *activity;                 // the activity we're running on
+    NativeActivation *activation;       // the native activation we're running under
     DirectoryClass *conditionData;      // any condition data posted due to an activity error
 };
 

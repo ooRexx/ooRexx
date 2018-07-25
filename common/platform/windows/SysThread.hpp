@@ -94,6 +94,7 @@ public:
     }
     bool equals(SysThread &other);
     inline size_t hash() { return (((size_t)_threadHandle) >> 8) * 37; }
+    void waitForTermination();
 
 protected:
     void createThread();

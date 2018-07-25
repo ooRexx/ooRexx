@@ -78,6 +78,8 @@
 #include "TrapHandler.hpp"
 #include "MethodArguments.hpp"
 #include "RequiresDirective.hpp"
+#include "CommandIOConfiguration.hpp"
+#include "CommandIOContext.hpp"
 #include "LibraryPackage.hpp"
 
 
@@ -1474,6 +1476,63 @@ void RexxActivation::trapOff(RexxString *condition, bool signal)
 
 
 /**
+ * Create/copy an io config table as needed
+ */
+void RexxActivation::checkIOConfigTable()
+{
+    // no table created yet?  just create a new collection
+    if (settings.ioConfigs == OREF_NULL)
+    {
+        settings.ioConfigs = new_string_table();
+    }
+    // have to copy the trap table for an internal routine call?
+    else if (isInternalCall() && !settings.isIOConfigCopied())
+    {
+        // copy the table and remember that we've done that
+        settings.ioConfigs = (StringTable *)settings.ioConfigs->copy();
+        settings.setIOConfigCopied(true);
+    }
+}
+
+
+/**
+ * Retrieve the IO configuration for an address enviroment,
+ * if it exists
+ *
+ * @param environment
+ *               The name of the environment
+ *
+ * @return The configuration (if any) associated with the environment name.
+ */
+CommandIOConfiguration *RexxActivation::getIOConfig(RexxString *environment)
+{
+    // no config table means no need to check
+    if (settings.ioConfigs == OREF_NULL)
+    {
+        return OREF_NULL;
+    }
+
+    // see if we have one for this environment name
+    return (CommandIOConfiguration *)settings.ioConfigs->get(environment);
+}
+
+
+/**
+ * Add an i/o configuration to the config table.
+ *
+ * @param environment
+ *               The name of the address environment
+ * @param config The config we're adding
+ */
+void RexxActivation::addIOConfig(RexxString *environment, CommandIOConfiguration *config)
+{
+    // create or copy the config table as required
+    checkIOConfigTable();
+    settings.ioConfigs->put(config, environment);
+}
+
+
+/**
  * Return the top level external activation
  *
  * @return The main external call (a top level call or an external routine invocation)
@@ -1620,7 +1679,7 @@ void RexxActivation::raise(RexxString *condition, RexxObject *rc, RexxString *de
     else
     {
         // find a predecessor Rexx activation
-        RexxActivation *_sender = senderActivation();
+        ActivationBase *_sender = senderActivation(condition);
         // see if the sender level is trapping this condition
         bool trapped = false;
         if (_sender != OREF_NULL)
@@ -1740,6 +1799,7 @@ RexxObject *RexxActivation::resolveStream(RexxString *name, bool input, Protecte
             RexxObject *t = OREF_NULL;   // required for the findClass call
             RexxClass *streamClass = TheRexxPackage->findClass(GlobalNames::STREAM, t);
 
+
             ProtectedObject result;
             stream = streamClass->sendMessage(GlobalNames::NEW, name, result);
 
@@ -1844,10 +1904,17 @@ void RexxActivation::toggleAddress()
  * @param address The new address setting.  The current setting becomes
  *                the alternate.
  */
-void RexxActivation::setAddress(RexxString *address)
+void RexxActivation::setAddress(RexxString *address, CommandIOConfiguration *config)
 {
     settings.alternateAddress = settings.currentAddress;
     settings.currentAddress = address;
+    // if a config was specified, then make it the current for this
+    // environment
+    if (config != OREF_NULL)
+    {
+        // keep this in the table
+        addIOConfig(address, config);
+    }
 }
 
 
@@ -2400,20 +2467,27 @@ void RexxActivation::unwindTrap(RexxActivation * child )
 
 /**
  * Retrieve the activation that activated this activation (whew)
+ * with the intent of doing condition trapping.
  *
  * @return The parent activation.
  */
-RexxActivation * RexxActivation::senderActivation()
+ActivationBase *RexxActivation::senderActivation(RexxString *conditionName)
 {
     // get the sender from the activity
     ActivationBase *_sender = getPreviousStackFrame();
     // spin down to non-native activation
     while (_sender != OREF_NULL && isOfClass(NativeActivation, _sender))
     {
+        // if this is a native activation that is actively trapping conditions,
+        // then use that as the condition trap target
+        if (_sender->willTrap(conditionName))
+        {
+            return _sender;
+        }
         _sender = _sender->getPreviousStackFrame();
     }
     // that is our sender
-    return(RexxActivation *)_sender;
+    return _sender;
 }
 
 
@@ -3907,16 +3981,46 @@ void RexxActivation::traceClause(RexxInstruction *clause, TracePrefix prefix)
     }
 }
 
+
+/**
+ * resolve an IO configuration from an address name.
+ *
+ * @param address The address environment name
+ * @param localConfig
+ *                The configuration that may have been specified on an
+ *                ADDRESS instruction.
+ *
+ * @return The IO context created by the potential merger of local
+ *         and global IO configurations.
+ */
+CommandIOContext *RexxActivation::resolveAddressIOConfig(RexxString *address, CommandIOConfiguration *localConfig)
+{
+    // see if we have something globally set, merge with any
+    // local settings that have been specified
+    CommandIOConfiguration *globalConfig = getIOConfig(address);
+    if (globalConfig != OREF_NULL)
+    {
+        return globalConfig->createIOContext(this, &stack, localConfig);
+    }
+    // no global, but might have a local one
+    if (localConfig != OREF_NULL)
+    {
+        return localConfig->createIOContext(this, &stack, OREF_NULL);
+    }
+    // no configuration, nothing to do
+    return OREF_NULL;
+}
+
+
 /**
  * Issue a command to a named host evironment
  *
+ * @param address  The target address
  * @param commandString
- *                The command to issue
- * @param address The target address
- *
- * @return The return code object
+ *                 The command to issue
+ * @param ioConfig A potential I/O redirection setup for this command.
  */
-void RexxActivation::command(RexxString *address, RexxString *commandString)
+void RexxActivation::command(RexxString *address, RexxString *commandString, CommandIOConfiguration *ioConfig)
 {
     // if we are tracing command instructions, then we need to add some
     // additional trace information afterward.  Also, if we're tracing errors or
@@ -3924,6 +4028,10 @@ void RexxActivation::command(RexxString *address, RexxString *commandString)
     bool instruction_traced = tracingAll() || tracingCommands();
     ProtectedObject condition;
     ProtectedObject commandResult;
+
+    // we possibly have local or global IO configurations in place for
+    Protected<CommandIOContext> ioContext = resolveAddressIOConfig(address, ioConfig);
+
 
     // give the command exit first pass at this.
     if (activity->callCommandExit(this, address, commandString, commandResult, condition))
@@ -3933,7 +4041,7 @@ void RexxActivation::command(RexxString *address, RexxString *commandString)
         CommandHandler *handler = activity->resolveCommandHandler(address);
         if (handler != OREF_NULL)
         {
-            handler->call(activity, this, address, commandString, commandResult, condition);
+            handler->call(activity, this, address, commandString, commandResult, condition, ioContext);
         }
         else
         {
@@ -3943,6 +4051,7 @@ void RexxActivation::command(RexxString *address, RexxString *commandString)
             condition = activity->createConditionObject(GlobalNames::FAILURE, commandResult, commandString, OREF_NULL, OREF_NULL);
         }
     }
+
 
     // now process the command result.
     RexxObject *rc = commandResult;

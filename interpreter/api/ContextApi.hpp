@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -65,6 +65,7 @@ public:
     {
         // we need to cleanup on exit
         releaseLock = true;
+        clearConditions = false;
         activity = contextToActivity(c);
         context = activity->getApiContext();
         context->enableConditionTraps();
@@ -88,6 +89,7 @@ public:
 
         // we need to cleanup on exit
         releaseLock = blocking;
+        clearConditions = false;
         activity = contextToActivity(c);
         context = activity->getApiContext();
         context->enableConditionTraps();
@@ -102,6 +104,7 @@ public:
     {
         // we need to cleanup on exit
         releaseLock = true;
+        clearConditions = false;
         activity = contextToActivity(c);
         context = contextToActivation(c);
         context->enableConditionTraps();
@@ -111,6 +114,7 @@ public:
         // is the correct thread
         activity->validateThread();
     }
+
 
     /**
      * Initialize an API context from an exit context.
@@ -121,6 +125,7 @@ public:
     {
         // we need to cleanup on exit
         releaseLock = true;
+        clearConditions = false;
         activity = contextToActivity(c);
         context = contextToActivation(c);
         context->enableConditionTraps();
@@ -131,6 +136,27 @@ public:
         activity->validateThread();
     }
 
+
+    /**
+     * Initialize an API context from an exit context.
+     *
+     * @param c      The source context.
+     */
+    inline ApiContext(RexxIORedirectorContext *c)
+    {
+        // we need to cleanup on exit
+        releaseLock = true;
+        activity = contextToActivity(c);
+        context = contextToActivation(c);
+        context->enableConditionTraps();
+        clearConditions = true;
+        activity->enterCurrentThread();
+        // we need to validate the thread call context to ensure this
+        // is the correct thread
+        activity->validateThread();
+    }
+
+
     /**
      * Initialize an API context from a method context.
      *
@@ -140,6 +166,7 @@ public:
     {
         // we need to cleanup on exit
         releaseLock = true;
+        clearConditions = false;
         activity = contextToActivity(c);
         context = contextToActivation(c);
         context->enableConditionTraps();
@@ -156,6 +183,12 @@ public:
      */
     inline ~ApiContext()
     {
+        // clear the condition if we've been requested not to propagate
+        if (clearConditions)
+        {
+            context->clearCondition();
+        }
+
         // we only do this sort of cleanup if we really entered on the
         // activity
         if (releaseLock)
@@ -184,6 +217,11 @@ public:
      * Indicates whether we need to release the lock on return.
      */
     bool releaseLock;
+
+    /**
+     * Indicates whether conditions should be cleared on return.
+     */
+    bool clearConditions;
 };
 
 

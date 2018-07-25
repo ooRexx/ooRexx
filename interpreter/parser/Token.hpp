@@ -310,7 +310,16 @@ typedef enum
     SUBKEY_STRICT,
     SUBKEY_TRUE,
     SUBKEY_FALSE,
-    SUBKEY_CASE
+    SUBKEY_CASE,
+    SUBKEY_INPUT,
+    SUBKEY_OUTPUT,
+    SUBKEY_ERROR,
+    SUBKEY_STEM,
+    SUBKEY_STREAM,
+    SUBKEY_USING,
+    SUBKEY_NORMAL,
+    SUBKEY_APPEND,
+    SUBKEY_REPLACE,
 } InstructionSubKeyword;
 
 
@@ -548,6 +557,7 @@ class RexxToken : public RexxInternalObject
     inline void       setSubtype(TokenSubclass t) { subclass = t; }
     inline void       setValue(RexxString *v) { stringValue = v; }
     inline bool       isVariable() { return (subclass == SYMBOL_VARIABLE || subclass == SYMBOL_STEM || subclass == SYMBOL_COMPOUND); };
+    inline bool       isStem() { return (subclass == SYMBOL_STEM); }
     inline bool       isNonCompoundVariable() { return subclass == SYMBOL_VARIABLE || subclass == SYMBOL_STEM; };
     inline bool       isSimpleVariable() { return subclass == SYMBOL_VARIABLE; };
     inline bool       isVariableOrDot() { return isVariable() || subclass == SYMBOL_DOTSYMBOL; };

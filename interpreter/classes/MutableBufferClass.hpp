@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -130,6 +130,7 @@ class MutableBuffer : public RexxObject
     inline char *      getData()       { return data->getData(); }
            void append(const char *string, size_t l);
            void append(RexxString *s) { append(s->getStringData(), s->getLength()); };
+           void append(const char *string) { append(string, strlen(string)); }
     inline void copyData(size_t offset, const char *string, size_t l) { data->copyData(offset, string, l); }
     inline void openGap(size_t offset, size_t _size, size_t tailSize) { data->openGap(offset, _size, tailSize); }
     inline void closeGap(size_t offset, size_t _size, size_t tailSize) { data->closeGap(offset, _size, tailSize); }

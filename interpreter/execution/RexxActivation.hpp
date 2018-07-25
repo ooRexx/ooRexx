@@ -63,6 +63,8 @@ class SupplierClass;
 class PackageClass;
 class StackFrameClass;
 class RequiresDirective;
+class CommandIOConfiguration;
+class CommandIOContext;
 class RoutineClass;
 
 
@@ -183,7 +185,7 @@ class RexxActivation : public ActivationBase
    void              toggleAddress();
    void              guardOn();
    void              raiseExit(RexxString *, RexxObject *, RexxString *, RexxObject *, RexxObject *, DirectoryClass *);
-   RexxActivation  * senderActivation();
+   ActivationBase  * senderActivation(RexxString *conditionName);
    RexxActivation  * external();
    void              interpret(RexxString *);
    void              signalTo(RexxInstruction *);
@@ -194,7 +196,7 @@ class RexxActivation : public ActivationBase
    void              leaveLoop(RexxString *);
    void              trapOn(RexxString *, RexxInstructionTrapBase *, bool);
    void              trapOff(RexxString *, bool);
-   void              setAddress(RexxString *);
+   void              setAddress(RexxString *, CommandIOConfiguration *config);
    void              signalValue(RexxString *);
    RexxString      * trapState(RexxString *);
    void              trapDelay(RexxString *);
@@ -209,7 +211,7 @@ class RexxActivation : public ActivationBase
    RexxString       *resolveProgramName(RexxString *name);
    RexxClass        *findClass(RexxString *name);
    RexxObject       *resolveDotVariable(RexxString *name, RexxObject *&);
-   void              command(RexxString *, RexxString *);
+   void              command(RexxString *, RexxString *, CommandIOConfiguration *config);
    int64_t           getElapsed();
    RexxDateTime      getTime();
    RexxInteger     * random(RexxInteger *, RexxInteger *, RexxInteger *);
@@ -260,6 +262,10 @@ class RexxActivation : public ActivationBase
    void              pushControl(RexxObject *);
    void              closeStreams();
    void              checkTrapTable();
+   void              checkIOConfigTable();
+   CommandIOConfiguration *getIOConfig(RexxString *environment);
+   void              addIOConfig(RexxString *environment, CommandIOConfiguration *config);
+   CommandIOContext *resolveAddressIOConfig(RexxString *address, CommandIOConfiguration *localConfig);
    RexxObject       *resolveStream(RexxString *name, bool input, Protected<RexxString> &fullName, bool *added);
    StringTable      *getStreams();
    RexxObject       *novalueHandler(RexxString *);

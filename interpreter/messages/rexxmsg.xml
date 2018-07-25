@@ -533,6 +533,15 @@ Say NOT EQUALS
         <SymbolicName>Error_Incomplete_do_else</SymbolicName>
         <Text>ELSE on line <Sub position="1" name="line_number"/> must be followed by an instruction.</Text>
       </SubMessage>
+      <SubMessage>/
+        <Code>14</Code>
+        <Subcode>005</Subcode>
+        <MessageNumber>725</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Incomplete_do_loop</SymbolicName>
+        <Text>DO or LOOP instruction on line <Sub position="1" name="line_number"/> requires matching END.</Text>
+      </SubMessage>
       <SubMessage>
         <Code>14</Code>
         <Subcode>901</Subcode>
@@ -541,15 +550,6 @@ Say NOT EQUALS
         <Severity>Warning</Severity>
         <SymbolicName>Error_Incomplete_do_otherwise</SymbolicName>
         <Text>OTHERWISE on line <Sub position="1" name="line_number"/> requires matching END.</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>14</Code>
-        <Subcode>005</Subcode>
-        <MessageNumber>725</MessageNumber>
-        <Component>Rexx</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Incomplete_do_loop</SymbolicName>
-        <Text>DO or LOOP instruction on line <Sub position="1" name="line_number"/> requires matching END.</Text>
       </SubMessage>
     </Subcodes>
   </Message>
@@ -750,15 +750,6 @@ special character (such as a parenthesis).
       </SubMessage>
       <SubMessage>
         <Code>19</Code>
-        <Subcode>912</Subcode>
-        <MessageNumber>238</MessageNumber>
-        <Component>Rexx</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Symbol_or_string_stream</SymbolicName>
-        <Text>String or symbol expected after STREAM keyword.</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>19</Code>
         <Subcode>006</Subcode>
         <MessageNumber>239</MessageNumber>
         <Component>Rexx</Component>
@@ -873,6 +864,15 @@ special character (such as a parenthesis).
         <Severity>Warning</Severity>
         <SymbolicName>Error_Symbol_or_string_colon</SymbolicName>
         <Text>String or symbol expected after superclass colon (:).</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>19</Code>
+        <Subcode>912</Subcode>
+        <MessageNumber>238</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Symbol_or_string_stream</SymbolicName>
+        <Text>String or symbol expected after STREAM keyword.</Text>
       </SubMessage>
       <SubMessage>
         <Code>19</Code>
@@ -1282,6 +1282,24 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Symbol_expected_after_use_arg_reference</SymbolicName>
         <Text>Simple variable or stem symbol expected after &gt; or &lt; USE ARG reference operator; found <Sub position="1" name="token"/>.</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>20</Code>
+        <Subcode>932</Subcode>
+        <MessageNumber>812</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Symbol_expected_after_stem_keyword</SymbolicName>
+        <Text>Stem symbol expected after STEM keyword.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>20</Code>
+        <Subcode>933</Subcode>
+        <MessageNumber>814</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Symbol_expected_address_with</SymbolicName>
+        <Text>Symbol expected after WITH keyword.</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>
@@ -1574,6 +1592,24 @@ special character (such as a parenthesis).
       </SubMessage>
       <SubMessage>
         <Code>25</Code>
+        <Subcode>011</Subcode>
+        <MessageNumber>288</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_subkeyword_form</SymbolicName>
+        <Text>NUMERIC FORM must be followed by one of the keywords SCIENTIFIC or ENGINEERING; found <q><Sub position="1" name="word"/></q>.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>25</Code>
+        <Subcode>012</Subcode>
+        <MessageNumber>296</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_subkeyword_parse</SymbolicName>
+        <Text>PARSE must be followed by one of the keywords ARG, LINEIN, PULL, SOURCE, VALUE, VAR, or VERSION; found <q><Sub position="1" name="word"/></q>.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>25</Code>
         <Subcode>015</Subcode>
         <MessageNumber>287</MessageNumber>
         <Component>Rexx</Component>
@@ -1583,12 +1619,12 @@ special character (such as a parenthesis).
       </SubMessage>
       <SubMessage>
         <Code>25</Code>
-        <Subcode>011</Subcode>
-        <MessageNumber>288</MessageNumber>
+        <Subcode>017</Subcode>
+        <MessageNumber>293</MessageNumber>
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
-        <SymbolicName>Error_Invalid_subkeyword_form</SymbolicName>
-        <Text>NUMERIC FORM must be followed by one of the keywords SCIENTIFIC or ENGINEERING; found <q><Sub position="1" name="word"/></q>.</Text>
+        <SymbolicName>Error_Invalid_subkeyword_procedure</SymbolicName>
+        <Text>PROCEDURE must be followed by the keyword EXPOSE or nothing; found <q><Sub position="1" name="word"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>25</Code>
@@ -1637,12 +1673,12 @@ special character (such as a parenthesis).
       </SubMessage>
       <SubMessage>
         <Code>25</Code>
-        <Subcode>017</Subcode>
-        <MessageNumber>293</MessageNumber>
+        <Subcode>905</Subcode>
+        <MessageNumber>297</MessageNumber>
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
-        <SymbolicName>Error_Invalid_subkeyword_procedure</SymbolicName>
-        <Text>PROCEDURE must be followed by the keyword EXPOSE or nothing; found <q><Sub position="1" name="word"/></q>.</Text>
+        <SymbolicName>Error_Invalid_subkeyword_use</SymbolicName>
+        <Text>USE must be followed by the keyword ARG or LOCAL; found <q><Sub position="1" name="word"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>25</Code>
@@ -1661,33 +1697,6 @@ special character (such as a parenthesis).
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_subkeyword_signalonname</SymbolicName>
         <Text>SIGNAL ON condition must be followed by the keyword NAME; found <q><Sub position="1" name="word"/></q>.</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>25</Code>
-        <Subcode>012</Subcode>
-        <MessageNumber>296</MessageNumber>
-        <Component>Rexx</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Invalid_subkeyword_parse</SymbolicName>
-        <Text>PARSE must be followed by one of the keywords ARG, LINEIN, PULL, SOURCE, VALUE, VAR, or VERSION; found <q><Sub position="1" name="word"/></q>.</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>25</Code>
-        <Subcode>905</Subcode>
-        <MessageNumber>297</MessageNumber>
-        <Component>Rexx</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Invalid_subkeyword_use</SymbolicName>
-        <Text>USE must be followed by the keyword ARG or LOCAL; found <q><Sub position="1" name="word"/></q>.</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>25</Code>
-        <Subcode>929</Subcode>
-        <MessageNumber>399</MessageNumber>
-        <Component>Rexx</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Invalid_subkeyword_use_strict</SymbolicName>
-        <Text>USE STRICT must be followed by the keyword ARG; found <q><Sub position="1" name="word"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>25</Code>
@@ -1860,6 +1869,60 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Invalid_subkeyword_annotation</SymbolicName>
         <Text>Unknown keyword on ::ANNOTATE directive; found <q><Sub position="1" name="word"/></q>.</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>25</Code>
+        <Subcode>929</Subcode>
+        <MessageNumber>399</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_subkeyword_use_strict</SymbolicName>
+        <Text>USE STRICT must be followed by the keyword ARG; found <q><Sub position="1" name="word"/></q>.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>25</Code>
+        <Subcode>930</Subcode>
+        <MessageNumber>808</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_subkeyword_address_input</SymbolicName>
+        <Text>Duplicate INPUT keyword found.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>25</Code>
+        <Subcode>931</Subcode>
+        <MessageNumber>809</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_subkeyword_address_output</SymbolicName>
+        <Text>Duplicate OUTPUT keyword found.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>25</Code>
+        <Subcode>932</Subcode>
+        <MessageNumber>810</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_subkeyword_address_error</SymbolicName>
+        <Text>Duplicate ERROR keyword found.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>25</Code>
+        <Subcode>933</Subcode>
+        <MessageNumber>811</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_subkeyword_address_with_io_option</SymbolicName>
+        <Text>Acceptable ADDRESS WITH I/O types are STEM, STREAM, and USING; found <q><Sub position="1" name="word"/></q>.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>25</Code>
+        <Subcode>934</Subcode>
+        <MessageNumber>807</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_subkeyword_address_with_option</SymbolicName>
+        <Text>WITH must be followed by one of the keywords INPUT, OUTPUT, or ERROR; found <q><Sub position="1" name="word"/></q>.</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>
@@ -1882,15 +1945,6 @@ special character (such as a parenthesis).
     </itemizedlist>
     </para></Explanation>
     <Subcodes>
-      <SubMessage>
-        <Code>26</Code>
-        <Subcode>008</Subcode>
-        <MessageNumber>304</MessageNumber>
-        <Component>Rexx</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Invalid_whole_number_power</SymbolicName>
-        <Text>Operand to the right of the power operator (**) must be a whole number; found <q><Sub position="1" name="value"/></q>.</Text>
-      </SubMessage>
       <SubMessage>
         <Code>26</Code>
         <Subcode>002</Subcode>
@@ -1947,6 +2001,15 @@ special character (such as a parenthesis).
       </SubMessage>
       <SubMessage>
         <Code>26</Code>
+        <Subcode>008</Subcode>
+        <MessageNumber>304</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_whole_number_power</SymbolicName>
+        <Text>Operand to the right of the power operator (**) must be a whole number; found <q><Sub position="1" name="value"/></q>.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>26</Code>
         <Subcode>011</Subcode>
         <MessageNumber>311</MessageNumber>
         <Component>Rexx</Component>
@@ -1998,6 +2061,15 @@ special character (such as a parenthesis).
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_whole_number_compare</SymbolicName>
         <Text>Result of a COMPARE method call did not result in a whole number; found <q><Sub position="1" name="value"/></q>.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>26</Code>
+        <Subcode>904</Subcode>
+        <MessageNumber>803</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_whole_number_stem_array_index</SymbolicName>
+        <Text>Stem <q><Sub position="1" name="stem"/></q> element 0 is not a whole number; found <q><Sub position="2" name="count"/></q>.</Text>
       </SubMessage>
     </Subcodes>
   </Message>
@@ -2771,6 +2843,15 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Invalid_expression_case_when_list</SymbolicName>
         <Text>Missing expression in WHEN case expression list.</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>35</Code>
+        <Subcode>935</Subcode>
+        <MessageNumber>813</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_expression_missing_general</SymbolicName>
+        <Text>Missing expression following <Sub position="1" name="keyword"/> keyword of a <Sub position="1" name="instruction"/> instruction.</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>
@@ -2962,15 +3043,6 @@ special character (such as a parenthesis).
       </SubMessage>
       <SubMessage>
         <Code>40</Code>
-        <Subcode>901</Subcode>
-        <MessageNumber>373</MessageNumber>
-        <Component>Rexx</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Incorrect_call_result</SymbolicName>
-        <Text>Result returned by <Sub position="1" name="routine"/> is longer than <Sub position="2" name="length"/>:  <q><Sub position="3" name="value"/></q>.</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>40</Code>
         <Subcode>003</Subcode>
         <MessageNumber>374</MessageNumber>
         <Component>Rexx</Component>
@@ -3034,21 +3106,12 @@ special character (such as a parenthesis).
       </SubMessage>
       <SubMessage>
         <Code>40</Code>
-        <Subcode>902</Subcode>
-        <MessageNumber>381</MessageNumber>
+        <Subcode>019</Subcode>
+        <MessageNumber>394</MessageNumber>
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
-        <SymbolicName>Error_Incorrect_call_toobig</SymbolicName>
-        <Text><Sub position="1" name="function_name"/> argument <Sub position="2" name="argument_number"/> must not exceed the whole number limit.</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>40</Code>
-        <Subcode>903</Subcode>
-        <MessageNumber>382</MessageNumber>
-        <Component>Rexx</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Incorrect_call_range</SymbolicName>
-        <Text><Sub position="1" name="function_name"/> argument <Sub position="2" name="argument_number"/> must be in the range 0-99; found <q><Sub position="3" name="value"/></q>.</Text>
+        <SymbolicName>Error_Incorrect_call_format_invalid</SymbolicName>
+        <Text><Sub position="1" name="function_name"/> argument 2, <q><Sub position="2" name="value"/></q>, is not in the format described by argument 3, <q><Sub position="3" name="value"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>40</Code>
@@ -3106,6 +3169,15 @@ special character (such as a parenthesis).
       </SubMessage>
       <SubMessage>
         <Code>40</Code>
+        <Subcode>027</Subcode>
+        <MessageNumber>397</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Incorrect_call_stream_name</SymbolicName>
+        <Text><Sub position="1" name="function_name"/> argument 1 must be a valid stream name; found <q><Sub position="2" name="value"/></q>.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>40</Code>
         <Subcode>028</Subcode>
         <MessageNumber>334</MessageNumber>
         <Component>Rexx</Component>
@@ -3115,21 +3187,21 @@ special character (such as a parenthesis).
       </SubMessage>
       <SubMessage>
         <Code>40</Code>
-        <Subcode>904</Subcode>
-        <MessageNumber>389</MessageNumber>
+        <Subcode>029</Subcode>
+        <MessageNumber>395</MessageNumber>
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
-        <SymbolicName>Error_Incorrect_call_list</SymbolicName>
-        <Text><Sub position="1" name="function_name"/> argument <Sub position="2" name="argument_number"/> must be one of <Sub position="3" name="values"/>; found <q><Sub position="4" name="value"/></q>.</Text>
+        <SymbolicName>Error_Incorrect_call_invalid_conversion</SymbolicName>
+        <Text><Sub position="1" name="function_name"/> conversion to format <q><Sub position="2" name="value"/></q> is not allowed.</Text>
       </SubMessage>
       <SubMessage>
         <Code>40</Code>
-        <Subcode>905</Subcode>
-        <MessageNumber>390</MessageNumber>
+        <Subcode>032</Subcode>
+        <MessageNumber>396</MessageNumber>
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
-        <SymbolicName>Error_Incorrect_call_trace</SymbolicName>
-        <Text>TRACE setting letter must be one of <q>ACEFILNOR</q>; found <q><Sub position="1" name="value"/></q>.</Text>
+        <SymbolicName>Error_Incorrect_call_random_range</SymbolicName>
+        <Text>RANDOM difference between argument 1 (<q><Sub position="1" name="value"/></q>) and argument 2 (<q><Sub position="2" name="value"/></q>) must not exceed 999,999,999.</Text>
       </SubMessage>
       <SubMessage>
         <Code>40</Code>
@@ -3160,21 +3232,21 @@ special character (such as a parenthesis).
       </SubMessage>
       <SubMessage>
         <Code>40</Code>
-        <Subcode>019</Subcode>
-        <MessageNumber>394</MessageNumber>
+        <Subcode>043</Subcode>
+        <MessageNumber>586</MessageNumber>
         <Component>Rexx</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Incorrect_call_format_invalid</SymbolicName>
-        <Text><Sub position="1" name="function_name"/> argument 2, <q><Sub position="2" name="value"/></q>, is not in the format described by argument 3, <q><Sub position="3" name="value"/></q>.</Text>
+        <Severity>Error</Severity>
+        <SymbolicName>Error_Incorrect_call_parm_wrong_sep</SymbolicName>
+        <Text><Sub position="1" name="function_name"/> argument <Sub position="2" name="number"/> must be a single non-alphanumeric character or the null string; found <q><Sub position="3" name="value"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>40</Code>
-        <Subcode>029</Subcode>
-        <MessageNumber>395</MessageNumber>
+        <Subcode>044</Subcode>
+        <MessageNumber>587</MessageNumber>
         <Component>Rexx</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Incorrect_call_invalid_conversion</SymbolicName>
-        <Text><Sub position="1" name="function_name"/> conversion to format <q><Sub position="2" name="value"/></q> is not allowed.</Text>
+        <Severity>Error</Severity>
+        <SymbolicName>Error_Incorrect_call_format_incomp_sep</SymbolicName>
+        <Text><Sub position="1" name="function_name"/> argument <Sub position="2" name="number"/>, <q><Sub position="3" name="value"/></q>, is a format incompatible with the separator specified in argument <Sub position="4" name="number"/>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>40</Code>
@@ -3187,21 +3259,48 @@ special character (such as a parenthesis).
       </SubMessage>
       <SubMessage>
         <Code>40</Code>
-        <Subcode>032</Subcode>
-        <MessageNumber>396</MessageNumber>
+        <Subcode>901</Subcode>
+        <MessageNumber>373</MessageNumber>
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
-        <SymbolicName>Error_Incorrect_call_random_range</SymbolicName>
-        <Text>RANDOM difference between argument 1 (<q><Sub position="1" name="value"/></q>) and argument 2 (<q><Sub position="2" name="value"/></q>) must not exceed 999,999,999.</Text>
+        <SymbolicName>Error_Incorrect_call_result</SymbolicName>
+        <Text>Result returned by <Sub position="1" name="routine"/> is longer than <Sub position="2" name="length"/>:  <q><Sub position="3" name="value"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>40</Code>
-        <Subcode>027</Subcode>
-        <MessageNumber>397</MessageNumber>
+        <Subcode>902</Subcode>
+        <MessageNumber>381</MessageNumber>
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
-        <SymbolicName>Error_Incorrect_call_stream_name</SymbolicName>
-        <Text><Sub position="1" name="function_name"/> argument 1 must be a valid stream name; found <q><Sub position="2" name="value"/></q>.</Text>
+        <SymbolicName>Error_Incorrect_call_toobig</SymbolicName>
+        <Text><Sub position="1" name="function_name"/> argument <Sub position="2" name="argument_number"/> must not exceed the whole number limit.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>40</Code>
+        <Subcode>903</Subcode>
+        <MessageNumber>382</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Incorrect_call_range</SymbolicName>
+        <Text><Sub position="1" name="function_name"/> argument <Sub position="2" name="argument_number"/> must be in the range 0-99; found <q><Sub position="3" name="value"/></q>.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>40</Code>
+        <Subcode>904</Subcode>
+        <MessageNumber>389</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Incorrect_call_list</SymbolicName>
+        <Text><Sub position="1" name="function_name"/> argument <Sub position="2" name="argument_number"/> must be one of <Sub position="3" name="values"/>; found <q><Sub position="4" name="value"/></q>.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>40</Code>
+        <Subcode>905</Subcode>
+        <MessageNumber>390</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Incorrect_call_trace</SymbolicName>
+        <Text>TRACE setting letter must be one of <q>ACEFILNOR</q>; found <q><Sub position="1" name="value"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>40</Code>
@@ -3229,24 +3328,6 @@ special character (such as a parenthesis).
         <Severity>Warning</Severity>
         <SymbolicName>Error_Incorrect_call_selector</SymbolicName>
         <Text>Unknown VALUE function variable environment selector; found <q><Sub position="1" name="value"/></q>.</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>40</Code>
-        <Subcode>043</Subcode>
-        <MessageNumber>586</MessageNumber>
-        <Component>Rexx</Component>
-        <Severity>Error</Severity>
-        <SymbolicName>Error_Incorrect_call_parm_wrong_sep</SymbolicName>
-        <Text><Sub position="1" name="function_name"/> argument <Sub position="2" name="number"/> must be a single non-alphanumeric character or the null string; found <q><Sub position="3" name="value"/></q>.</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>40</Code>
-        <Subcode>044</Subcode>
-        <MessageNumber>587</MessageNumber>
-        <Component>Rexx</Component>
-        <Severity>Error</Severity>
-        <SymbolicName>Error_Incorrect_call_format_incomp_sep</SymbolicName>
-        <Text><Sub position="1" name="function_name"/> argument <Sub position="2" name="number"/>, <q><Sub position="3" name="value"/></q>, is a format incompatible with the separator specified in argument <Sub position="4" name="number"/>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>40</Code>
@@ -3326,15 +3407,6 @@ special character (such as a parenthesis).
       </SubMessage>
       <SubMessage>
         <Code>41</Code>
-        <Subcode>007</Subcode>
-        <MessageNumber>406</MessageNumber>
-        <Component>Rexx</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Conversion_exponent</SymbolicName>
-        <Text>Exponent exceeds <Sub position="1" name="number"/> digits; found <q><Sub position="2" name="value"/></q>.</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>41</Code>
         <Subcode>004</Subcode>
         <MessageNumber>407</MessageNumber>
         <Component>Rexx</Component>
@@ -3359,6 +3431,15 @@ special character (such as a parenthesis).
         <Severity>Warning</Severity>
         <SymbolicName>Error_Conversion_control</SymbolicName>
         <Text>Value of control variable expression of DO or LOOP instruction must be numeric; found <q><Sub position="1" name="value"/></q>.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>41</Code>
+        <Subcode>007</Subcode>
+        <MessageNumber>406</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Conversion_exponent</SymbolicName>
+        <Text>Exponent exceeds <Sub position="1" name="number"/> digits; found <q><Sub position="2" name="value"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>41</Code>
@@ -4274,15 +4355,6 @@ special character (such as a parenthesis).
       </SubMessage>
       <SubMessage>
         <Code>93</Code>
-        <Subcode>958</Subcode>
-        <MessageNumber>398</MessageNumber>
-        <Component>Rexx</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Incorrect_method_stream_type</SymbolicName>
-        <Text>Positioning of transient streams is not valid.</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>93</Code>
         <Subcode>902</Subcode>
         <MessageNumber>432</MessageNumber>
         <Component>Rexx</Component>
@@ -4697,12 +4769,12 @@ special character (such as a parenthesis).
       </SubMessage>
       <SubMessage>
         <Code>93</Code>
-        <Subcode>961</Subcode>
-        <MessageNumber>528</MessageNumber>
+        <Subcode>952</Subcode>
+        <MessageNumber>542</MessageNumber>
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
-        <SymbolicName>Error_Incorrect_method_no_method</SymbolicName>
-        <Text>The <Sub position="1" name="argument"/> argument must be a string or array object.</Text>
+        <SymbolicName>Error_Incorrect_method_nostring_inarray</SymbolicName>
+        <Text>Method argument <Sub position="1" name="argument"/> is an array and does not contain all string values.</Text>
       </SubMessage>
       <SubMessage>
         <Code>93</Code>
@@ -4724,15 +4796,6 @@ special character (such as a parenthesis).
       </SubMessage>
       <SubMessage>
         <Code>93</Code>
-        <Subcode>952</Subcode>
-        <MessageNumber>542</MessageNumber>
-        <Component>Rexx</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Incorrect_method_nostring_inarray</SymbolicName>
-        <Text>Method argument <Sub position="1" name="argument"/> is an array and does not contain all string values.</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>93</Code>
         <Subcode>956</Subcode>
         <MessageNumber>543</MessageNumber>
         <Component>Rexx</Component>
@@ -4751,12 +4814,30 @@ special character (such as a parenthesis).
       </SubMessage>
       <SubMessage>
         <Code>93</Code>
+        <Subcode>958</Subcode>
+        <MessageNumber>398</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Incorrect_method_stream_type</SymbolicName>
+        <Text>Positioning of transient streams is not valid.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>93</Code>
         <Subcode>959</Subcode>
         <MessageNumber>546</MessageNumber>
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Incorrect_method_array_too_big</SymbolicName>
         <Text>An array cannot contain more than <Sub position="1" name="size"/> elements.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>93</Code>
+        <Subcode>961</Subcode>
+        <MessageNumber>528</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Incorrect_method_no_method</SymbolicName>
+        <Text>The <Sub position="1" name="argument"/> argument must be a string or array object.</Text>
       </SubMessage>
       <SubMessage>
         <Code>93</Code>
@@ -5081,6 +5162,51 @@ special character (such as a parenthesis).
       </SubMessage>
       <SubMessage>
         <Code>98</Code>
+        <Subcode>920</Subcode>
+        <MessageNumber>806</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Execution_file_not_writeable</SymbolicName>
+        <Text>Unable to open file <q><Sub position="1" name="file"/></q> for writing; open result was <q><Sub position="2" name="error"/></q>.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>98</Code>
+        <Subcode>921</Subcode>
+        <MessageNumber>815</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Execution_address_redirection_not_supported</SymbolicName>
+        <Text>Address environment <q><Sub position="1" name="address"/></q> does not support input/output redirection.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>98</Code>
+        <Subcode>922</Subcode>
+        <MessageNumber>816</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Execution_using_rexxqueue_option</SymbolicName>
+        <Text>REPLACE or APPEND cannot be specified with a RexxQueue object USING target.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>98</Code>
+        <Subcode>923</Subcode>
+        <MessageNumber>817</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Execution_address_redirection_failed</SymbolicName>
+        <Text>Address command redirection failed (<Sub position="1" name="oserror"/>).</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>98</Code>
+        <Subcode>924</Subcode>
+        <MessageNumber>800</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Execution_address_input_source</SymbolicName>
+        <Text>Object <q><Sub position="1" name="object"/></q> is not a valid ADDRESS WITH INPUT source.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>98</Code>
         <Subcode>935</Subcode>
         <MessageNumber>500</MessageNumber>
         <Component>Rexx</Component>
@@ -5385,6 +5511,42 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Execution_reference_variable_in_use</SymbolicName>
         <Text>Unable to reference variable <q><Sub position="1" name="object"/></q>; it must be an uninitialized local variable.</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>98</Code>
+        <Subcode>996</Subcode>
+        <MessageNumber>801</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Execution_address_output_target</SymbolicName>
+        <Text>Object <q><Sub position="1" name="object"/></q> is not a valid ADDRESS WITH OUTPUT or ERROR target.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>98</Code>
+        <Subcode>997</Subcode>
+        <MessageNumber>802</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Execution_using_stream_option</SymbolicName>
+        <Text>REPLACE or APPEND cannot be specified with a Stream object USING target.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>98</Code>
+        <Subcode>998</Subcode>
+        <MessageNumber>804</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Execution_missing_stem_array_index</SymbolicName>
+        <Text>Stem <q><Sub position="1" name="object"/></q> does not contain a size count in element 0.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>98</Code>
+        <Subcode>999</Subcode>
+        <MessageNumber>805</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Execution_file_not_readable</SymbolicName>
+        <Text>Unable to open file <q><Sub position="1" name="file"/></q> for reading; open result was <q><Sub position="2" name="error"/></q>.</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>
@@ -5453,30 +5615,12 @@ special character (such as a parenthesis).
       </SubMessage>
       <SubMessage>
         <Code>99</Code>
-        <Subcode>927</Subcode>
-        <MessageNumber>511</MessageNumber>
-        <Component>Rexx</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Translation_bad_metaclass</SymbolicName>
-        <Text><q><Sub position="1" name="classname"/></q> is not a valid metaclass.</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>99</Code>
         <Subcode>907</Subcode>
         <MessageNumber>512</MessageNumber>
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Translation_expose</SymbolicName>
         <Text>EXPOSE must be the first instruction executed after a method invocation.</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>99</Code>
-        <Subcode>910</Subcode>
-        <MessageNumber>582</MessageNumber>
-        <Component>Rexx</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Translation_use_local</SymbolicName>
-        <Text>USE LOCAL must be the first instruction executed after a method invocation.</Text>
       </SubMessage>
       <SubMessage>
         <Code>99</Code>
@@ -5495,6 +5639,15 @@ special character (such as a parenthesis).
         <Severity>Warning</Severity>
         <SymbolicName>Error_Translation_guard</SymbolicName>
         <Text>GUARD must be the first instruction executed after EXPOSE or USE.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>99</Code>
+        <Subcode>910</Subcode>
+        <MessageNumber>582</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Translation_use_local</SymbolicName>
+        <Text>USE LOCAL must be the first instruction executed after a method invocation.</Text>
       </SubMessage>
       <SubMessage>
         <Code>99</Code>
@@ -5630,6 +5783,15 @@ special character (such as a parenthesis).
         <Severity>Error</Severity>
         <SymbolicName>Error_Translation_class_external_bad_parameters</SymbolicName>
         <Text>Incorrect class external; too many parameters.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>99</Code>
+        <Subcode>927</Subcode>
+        <MessageNumber>511</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Translation_bad_metaclass</SymbolicName>
+        <Text><q><Sub position="1" name="classname"/></q> is not a valid metaclass.</Text>
       </SubMessage>
       <SubMessage>
         <Code>99</Code>

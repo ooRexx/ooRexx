@@ -147,10 +147,13 @@ class NativeActivation : public ActivationBase
     void setObjectVariable(const char *name, RexxObject *value);
     void dropObjectVariable(const char *name);
     DirectoryClass *getAllContextVariables();
-    inline void setConditionInfo(DirectoryClass *info) { conditionObj = info; }
+    inline void setConditionInfo(RexxString *name, DirectoryClass *info) { conditionName = name; conditionObj = info; }
+    void setConditionInfo(DirectoryClass *info);
     inline DirectoryClass *getConditionInfo() { return conditionObj; }
-    inline void clearException() { conditionObj = OREF_NULL; }
+    inline void clearException() { conditionName = OREF_NULL; conditionObj = OREF_NULL; }
+    void clearCondition();
     void checkConditions();
+    bool checkCondition(RexxString *name);
     inline RexxObject *getSelf() { return receiver; }
     inline Activity *getActivity() { return activity; }
     BaseExecutable *getRexxContextExecutable();
@@ -181,7 +184,8 @@ class NativeActivation : public ActivationBase
     RexxReturnCode copyValue(RexxObject * value, RXSTRING *rxstring, size_t *length);
     RexxReturnCode copyValue(RexxObject * value, CONSTRXSTRING *rxstring, size_t *length);
     int stemSort(const char *stemname, int order, int type, size_t start, size_t end, size_t firstcol, size_t lastcol);
-    inline void enableConditionTrap() { trapConditions = true; }
+    inline void enableConditionTrap() { trapConditions = true; captureConditions = false; }
+    inline void enableConditionCapture() { trapConditions = true; captureConditions = true; }
 
     void forwardMessage(RexxObject *to, RexxString *msg, RexxClass *super, ArrayClass *args, ProtectedObject &result);
     void enableConditionTraps() { trapErrors = true; }
@@ -219,6 +223,7 @@ protected:
     IdentityTable  *saveList;            // list of saved objects
     RexxObject     *result;              // result from RexxRaise call
     ActivationType activationType;       // the type of activation
+    RexxString     *conditionName;       // name of the currently trapped condition
     DirectoryClass *conditionObj;        // potential condition object
     SecurityManager *securityManager;    // our active security manager
                                          // running object variable pool
@@ -226,6 +231,7 @@ protected:
     bool            stackBase;           // this is a stack base marker
     bool            trapErrors;          // we're trapping errors from external callers
     bool            trapConditions;      // trap any raised conditions
+    bool            captureConditions;   // but don't propagate trapped conditions via throw.
     bool            variablePoolEnabled; // Variable pool access flag
                                          // our iterator for the variable pool next function
     VariableDictionary::VariableIterator iterator;

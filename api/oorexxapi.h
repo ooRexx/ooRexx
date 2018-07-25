@@ -165,6 +165,13 @@ typedef RexxExitContext_ RexxExitContext;
 typedef const struct RexxExitContext_ *RexxExitContext;
 #endif
 
+struct RexxIORedirectorContext_;
+#ifdef __cplusplus
+typedef RexxIORedirectorContext_ RexxIORedirectorContext;
+#else
+typedef const struct RexxIORedirectorContext_ *RexxIORedirectorContext;
+#endif
+
 
 /* This typedef simplifies coding of an Exit handler.                */
 typedef int REXXENTRY RexxContextExitHandler(RexxExitContext *, int, int, PEXIT);
@@ -401,6 +408,8 @@ typedef struct
 // The set of command environments to use.  These are direct call addresses using the
 // object-oriented calling convetion.
 #define DIRECT_ENVIRONMENTS         "DirectEnvironments"
+// Command environments that support Address With i/o redirection
+#define REDIRECTING_ENVIRONMENTS         "DirectEnvironments"
 // register a library for an in-process package
 #define REGISTER_LIBRARY            "RegisterLibrary"
 
@@ -408,12 +417,21 @@ typedef struct
 /* This typedef simplifies coding of an Exit handler.                */
 typedef RexxObjectPtr REXXENTRY RexxContextCommandHandler(RexxExitContext *, RexxStringObject, RexxStringObject);
 
+// This typedef is used for command environments that support i/o redirection
+typedef RexxObjectPtr REXXENTRY RexxRedirectingCommandHandler(RexxExitContext *, RexxStringObject, RexxStringObject, RexxIORedirectorContext *);
+
 
 typedef struct
 {
    RexxContextCommandHandler *handler;    // the environment handler
    const char *name;                      // the handler name
 }  RexxContextEnvironment;
+
+typedef struct
+{
+   RexxRedirectingCommandHandler *handler;  // the environment handler
+   const char *name;                        // the handler name
+}  RexxRedirectingEnvironment;
 
 typedef struct
 {
@@ -447,7 +465,11 @@ typedef struct
   RexxArrayObject  additional;       // additional information
 } RexxCondition;
 
-#define INSTANCE_INTERFACE_VERSION 100
+#define INSTANCE_INTERFACE_VERSION_4_0_0 100
+#define INSTANCE_INTERFACE_VERSION 101
+
+#define DIRECT_COMMAND_ENVIRONMENT 1
+#define REDIRECTING_COMMAND_ENVIRONMENT 2
 
 typedef struct
 {
@@ -459,6 +481,7 @@ typedef struct
     size_t      (RexxEntry *LanguageLevel)(RexxInstance *);
     void        (RexxEntry *Halt)(RexxInstance *);
     void        (RexxEntry *SetTrace)(RexxInstance *, logical_t);
+    void        (RexxEntry *AddCommandEnvironment)(RexxInstance *, const char *, REXXPFN, int);
 } RexxInstanceInterface;
 
 #define THREAD_INTERFACE_VERSION_4_0_0 100
@@ -699,6 +722,26 @@ typedef struct
     RexxObjectPtr    (RexxEntry *GetCallerContext)(RexxExitContext *);
 } ExitContextInterface;
 
+
+// the interface for I/O redirection
+#define REDIRECT_INTERFACE_VERSION 100
+typedef struct
+{
+    wholenumber_t interfaceVersion;    // The interface version identifier
+
+    void    (RexxEntry *ReadInput)(RexxIORedirectorContext *, CSTRING *, size_t *);
+    void    (RexxEntry *ReadInputBuffer)(RexxIORedirectorContext *, CSTRING *, size_t *);
+    void    (RexxEntry *WriteOutput)(RexxIORedirectorContext *, CSTRING, size_t);
+    void    (RexxEntry *WriteError)(RexxIORedirectorContext *, CSTRING, size_t);
+    void    (RexxEntry *WriteOutputBuffer)(RexxIORedirectorContext *, CSTRING, size_t);
+    void    (RexxEntry *WriteErrorBuffer)(RexxIORedirectorContext *, CSTRING, size_t);
+    logical_t (RexxEntry *IsInputRedirected)(RexxIORedirectorContext *);
+    logical_t (RexxEntry *IsOutputRedirected)(RexxIORedirectorContext *);
+    logical_t (RexxEntry *IsErrorRedirected)(RexxIORedirectorContext *);
+    logical_t (RexxEntry *AreOutputAndErrorSameTarget)(RexxIORedirectorContext *);
+    logical_t (RexxEntry *IsRedirectionRequested)(RexxIORedirectorContext *);
+} IORedirectorInterface;
+
 END_EXTERN_C()
 
 struct RexxInstance_
@@ -730,6 +773,10 @@ struct RexxInstance_
     {
         functions->SetTrace(this, s);
     }
+    void AddCommandEnvironment(const char *n, REXXPFN h, int t)
+    {
+        functions->AddCommandEnvironment(this, n, h, t);
+    }
 #endif
 };
 
@@ -750,6 +797,10 @@ struct RexxThreadContext_
     size_t LanguageLevel()
     {
         return instance->LanguageLevel();
+    }
+    void AddCommandEnvironment(const char *n, REXXPFN h, int t)
+    {
+        instance->AddCommandEnvironment(n, h, t);
     }
     void DetachThread()
     {
@@ -1466,6 +1517,10 @@ struct RexxMethodContext_
     size_t LanguageLevel()
     {
         return threadContext->LanguageLevel();
+    }
+    void AddCommandEnvironment(const char *n, REXXPFN h, int t)
+    {
+        threadContext->AddCommandEnvironment(n, h, t);
     }
     RexxObjectPtr RequestGlobalReference(RexxObjectPtr o)
     {
@@ -2249,6 +2304,10 @@ struct RexxCallContext_
     {
         return threadContext->LanguageLevel();
     }
+    void AddCommandEnvironment(const char *n, REXXPFN h, int t)
+    {
+        threadContext->AddCommandEnvironment(n, h, t);
+    }
     RexxObjectPtr RequestGlobalReference(RexxObjectPtr o)
     {
         return threadContext->RequestGlobalReference(o);
@@ -3016,6 +3075,10 @@ struct RexxExitContext_
     {
         return threadContext->LanguageLevel();
     }
+    void AddCommandEnvironment(const char *n, REXXPFN h, int t)
+    {
+        threadContext->AddCommandEnvironment(n, h, t);
+    }
     RexxObjectPtr RequestGlobalReference(RexxObjectPtr o)
     {
         return threadContext->RequestGlobalReference(o);
@@ -3717,6 +3780,61 @@ struct RexxExitContext_
     RexxObjectPtr GetCallerContext()
     {
         return functions->GetCallerContext(this);
+    }
+
+#endif
+};
+
+
+// interface structure for I/O redirection
+struct RexxIORedirectorContext_
+{
+    IORedirectorInterface *functions;
+
+#ifdef __cplusplus
+    void ReadInput(CSTRING *data, size_t *length)
+    {
+        functions->ReadInput(this, data, length);
+    }
+    void ReadInputBuffer(CSTRING *data, size_t *length)
+    {
+        functions->ReadInputBuffer(this, data, length);
+    }
+    void WriteOutput(CSTRING data, size_t length)
+    {
+        functions->WriteOutput(this, data, length);
+    }
+    void WriteError(CSTRING data, size_t length)
+    {
+        functions->WriteError(this, data, length);
+    }
+    void WriteOutputBuffer(CSTRING data, size_t length)
+    {
+        functions->WriteOutputBuffer(this, data, length);
+    }
+    void WriteErrorBuffer(CSTRING data, size_t length)
+    {
+        functions->WriteErrorBuffer(this, data, length);
+    }
+    logical_t IsInputRedirected()
+    {
+        return functions->IsInputRedirected(this);
+    }
+    logical_t IsOutputRedirected()
+    {
+        return functions->IsOutputRedirected(this);
+    }
+    logical_t IsErrorRedirected()
+    {
+        return functions->IsErrorRedirected(this);
+    }
+    logical_t AreOutputAndErrorSameTarget()
+    {
+        return functions->AreOutputAndErrorSameTarget(this);
+    }
+    logical_t IsRedirectionRequested()
+    {
+        return functions->IsRedirectionRequested(this);
     }
 #endif
 };

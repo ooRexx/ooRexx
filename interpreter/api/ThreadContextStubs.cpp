@@ -398,6 +398,8 @@ RexxClassObject RexxEntry FindClassFromPackage(RexxThreadContext *c, RexxPackage
         RexxString *name = new_upper_string(n);
         ProtectedObject p(name);
 
+        return (RexxClassObject)context.ret(((PackageClass *)m)->findClass(name));
+
         RexxObject *t = OREF_NULL;   // required for the findClass call
         return (RexxClassObject)context.ret(((PackageClass *)m)->findClass(name, t));
 
@@ -685,7 +687,8 @@ RexxObjectPtr RexxEntry ValueToObject(RexxThreadContext *c, ValueDescriptor *d)
     }
     catch (NativeActivation *)
     {
-        context.context->setConditionInfo(OREF_NULL);
+        // we want this to fail without raising an error
+        context.context->clearException();
     }
     return NULLOBJECT;
 }
@@ -700,7 +703,8 @@ RexxArrayObject RexxEntry ValuesToObject(RexxThreadContext *c, ValueDescriptor *
     }
     catch (NativeActivation *)
     {
-        context.context->setConditionInfo(OREF_NULL);
+        // we want this to fail without raising an error
+        context.context->clearException();
     }
     return NULLOBJECT;
 }
@@ -717,7 +721,7 @@ logical_t RexxEntry ObjectToValue(RexxThreadContext *c, RexxObjectPtr o, ValueDe
     {
         // some conversion failures result in an exception...cancel that, and
         // just return FALSE;
-        context.context->setConditionInfo(OREF_NULL);
+        context.context->clearException();
     }
     return false;
 }
@@ -1909,7 +1913,7 @@ void RexxEntry ClearCondition(RexxThreadContext *c)
     ApiContext context(c);
     try
     {
-        context.context->setConditionInfo(OREF_NULL);
+        context.context->clearException();
     }
     catch (NativeActivation *)
     {

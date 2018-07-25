@@ -889,6 +889,18 @@ special character (such as a parenthesis).
 <para>Simple variable or stem symbol expected after &gt; or &lt; USE ARG reference operator; found <emphasis role="italic">token</emphasis>.</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>932</term>
+<listitem>
+<para>Stem symbol expected after STEM keyword.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>933</term>
+<listitem>
+<para>Symbol expected after WITH keyword.</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR21">
@@ -1294,6 +1306,36 @@ special character (such as a parenthesis).
 <para>USE STRICT must be followed by the keyword ARG; found "<emphasis role="italic">word</emphasis>".</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>930</term>
+<listitem>
+<para>Duplicate INPUT keyword found.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>931</term>
+<listitem>
+<para>Duplicate OUTPUT keyword found.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>932</term>
+<listitem>
+<para>Duplicate ERROR keyword found.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>933</term>
+<listitem>
+<para>Acceptable ADDRESS WITH I/O types are STEM, STREAM, and USING; found "<emphasis role="italic">word</emphasis>".</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>934</term>
+<listitem>
+<para>WITH must be followed by one of the keywords INPUT, OUTPUT, or ERROR; found "<emphasis role="italic">word</emphasis>".</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR26">
@@ -1403,6 +1445,12 @@ special character (such as a parenthesis).
 <term>903</term>
 <listitem>
 <para>Result of a COMPARE method call did not result in a whole number; found "<emphasis role="italic">value</emphasis>".</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>904</term>
+<listitem>
+<para>Stem "<emphasis role="italic">stem</emphasis>" element 0 is not a whole number; found "<emphasis role="italic">count</emphasis>".</para>
 </listitem>
 </varlistentry>
 </variablelist>
@@ -1950,6 +1998,12 @@ special character (such as a parenthesis).
 <term>934</term>
 <listitem>
 <para>Missing expression in WHEN case expression list.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>935</term>
+<listitem>
+<para>Missing expression following <emphasis role="italic">keyword</emphasis> keyword of a <emphasis role="italic">instruction</emphasis> instruction.</para>
 </listitem>
 </varlistentry>
 </variablelist>
@@ -3593,6 +3647,36 @@ special character (such as a parenthesis).
 </listitem>
 </varlistentry>
 <varlistentry>
+<term>920</term>
+<listitem>
+<para>Unable to open file "<emphasis role="italic">file</emphasis>" for writing; open result was "<emphasis role="italic">error</emphasis>".</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>921</term>
+<listitem>
+<para>Address environment "<emphasis role="italic">address</emphasis>" does not support input/output redirection.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>922</term>
+<listitem>
+<para>REPLACE or APPEND cannot be specified with a RexxQueue object USING target.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>923</term>
+<listitem>
+<para>Address command redirection failed (<emphasis role="italic">oserror</emphasis>).</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>924</term>
+<listitem>
+<para>Object "<emphasis role="italic">object</emphasis>" is not a valid ADDRESS WITH INPUT source.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
 <term>935</term>
 <listitem>
 <para>REPLY can be issued only once per method invocation.</para>
@@ -3794,6 +3878,30 @@ special character (such as a parenthesis).
 <term>995</term>
 <listitem>
 <para>Unable to reference variable "<emphasis role="italic">object</emphasis>"; it must be an uninitialized local variable.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>996</term>
+<listitem>
+<para>Object "<emphasis role="italic">object</emphasis>" is not a valid ADDRESS WITH OUTPUT or ERROR target.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>997</term>
+<listitem>
+<para>REPLACE or APPEND cannot be specified with a Stream object USING target.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>998</term>
+<listitem>
+<para>Stem "<emphasis role="italic">object</emphasis>" does not contain a size count in element 0.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>999</term>
+<listitem>
+<para>Unable to open file "<emphasis role="italic">file</emphasis>" for reading; open result was "<emphasis role="italic">error</emphasis>".</para>
 </listitem>
 </varlistentry>
 </variablelist>

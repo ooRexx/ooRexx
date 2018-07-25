@@ -231,6 +231,8 @@ RexxBehaviour RexxBehaviour::primitiveBehaviours[T_Last_Primitive_Class + 1] =
     RexxBehaviour(T_SpecialDotVariableTerm, (PCPPM *)RexxObject::operatorMethods),
     RexxBehaviour(T_VariableReferenceOp, (PCPPM *)RexxObject::operatorMethods),
     RexxBehaviour(T_UseArgVariableRef, (PCPPM *)RexxObject::operatorMethods),
+    RexxBehaviour(T_CommandIOConfiguration, (PCPPM *)RexxObject::operatorMethods),
+    RexxBehaviour(T_AddressWithInstruction, (PCPPM *)RexxObject::operatorMethods),
     RexxBehaviour(T_Memory, (PCPPM *)RexxObject::operatorMethods),
     RexxBehaviour(T_InternalStack, (PCPPM *)RexxObject::operatorMethods),
     RexxBehaviour(T_LiveStack, (PCPPM *)RexxObject::operatorMethods),
@@ -250,6 +252,17 @@ RexxBehaviour RexxBehaviour::primitiveBehaviours[T_Last_Primitive_Class + 1] =
     RexxBehaviour(T_MapBucket, (PCPPM *)RexxObject::operatorMethods),
     RexxBehaviour(T_MapTable, (PCPPM *)RexxObject::operatorMethods),
     RexxBehaviour(T_TrapHandler, (PCPPM *)RexxObject::operatorMethods),
+    RexxBehaviour(T_CommandIOContext, (PCPPM *)RexxObject::operatorMethods),
+    RexxBehaviour(T_StemOutputTarget, (PCPPM *)RexxObject::operatorMethods),
+    RexxBehaviour(T_StreamObjectOutputTarget, (PCPPM *)RexxObject::operatorMethods),
+    RexxBehaviour(T_StreamOutputTarget, (PCPPM *)RexxObject::operatorMethods),
+    RexxBehaviour(T_CollectionOutputTarget, (PCPPM *)RexxObject::operatorMethods),
+    RexxBehaviour(T_BufferingOutputTarget, (PCPPM *)RexxObject::operatorMethods),
+    RexxBehaviour(T_StemInputSource, (PCPPM *)RexxObject::operatorMethods),
+    RexxBehaviour(T_StreamObjectInputSource, (PCPPM *)RexxObject::operatorMethods),
+    RexxBehaviour(T_StreamInputSource, (PCPPM *)RexxObject::operatorMethods),
+    RexxBehaviour(T_ArrayInputSource, (PCPPM *)RexxObject::operatorMethods),
+    RexxBehaviour(T_RexxQueueOutputTarget, (PCPPM *)RexxObject::operatorMethods),
 };
 
 

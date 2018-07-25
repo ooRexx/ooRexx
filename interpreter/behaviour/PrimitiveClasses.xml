@@ -220,6 +220,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="SpecialDotVariableTerm" class="SpecialDotVariable" include="SpecialDotVariable.hpp"/>
 <Class id="VariableReferenceOp" class="VariableReferenceOp" include="VariableReferenceOp.hpp"/>
 <Class id="UseArgVariableRef" class="UseArgVariableRef" include="UseArgVariableRef.hpp"/>
+<Class id="CommandIOConfiguration" class="CommandIOConfiguration" include="CommandIOConfiguration.hpp"/>
+<Class id="AddressWithInstruction" class="RexxInstructionAddressWith" include="AddressWithInstruction.hpp"/>
 </Internal>
 <Transient>
 <Class id="Memory" class="MemoryObject" include="RexxMemory.hpp" objectvirtual="true"/>
@@ -241,6 +243,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="MapBucket" class="MapBucket" include="MapBucket.hpp"/>
 <Class id="MapTable" class="MapTable" include="MapTable.hpp"/>
 <Class id="TrapHandler" class="TrapHandler" include="TrapHandler.hpp"/>
+<Class id="CommandIOContext" class="CommandIOContext" include="CommandIOContext.hpp"/>
+<Class id="StemOutputTarget" class="StemOutputTarget" include="OutputRedirector.hpp"/>
+<Class id="StreamObjectOutputTarget" class="StreamObjectOutputTarget" include="OutputRedirector.hpp"/>
+<Class id="StreamOutputTarget" class="StreamOutputTarget" include="OutputRedirector.hpp"/>
+<Class id="CollectionOutputTarget" class="CollectionOutputTarget" include="OutputRedirector.hpp"/>
+<Class id="BufferingOutputTarget" class="BufferingOutputTarget" include="OutputRedirector.hpp"/>
+<Class id="StemInputSource" class="StemInputSource" include="InputRedirector.hpp"/>
+<Class id="StreamObjectInputSource" class="StreamObjectInputSource" include="InputRedirector.hpp"/>
+<Class id="StreamInputSource" class="StreamInputSource" include="InputRedirector.hpp"/>
+<Class id="ArrayInputSource" class="ArrayInputSource" include="InputRedirector.hpp"/>
+<Class id="RexxQueueOutputTarget" class="RexxQueueOutputTarget" include="OutputRedirector.hpp"/>
 </Transient>
 </Classes>
 </RexxClasses>

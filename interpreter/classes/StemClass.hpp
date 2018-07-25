@@ -154,6 +154,8 @@ class StemClass : public RexxObject
     RexxObject *getElement(size_t tail);
     RexxObject *getElement(const char *tail);
     RexxObject *getElement(CompoundVariableTail &tail);
+    RexxObject *getFullElement(size_t tail);
+    RexxObject *getFullElement(CompoundVariableTail &tail);
 
     CompoundVariableTable::TableIterator iterator();
 

@@ -42,6 +42,7 @@
 /*                                                                            */
 /******************************************************************************/
 #include "RexxCore.h"
+#include "Activity.hpp"
 #include "ArrayClass.hpp"
 #include "StringTableClass.hpp"
 #include "ProtectedObject.hpp"

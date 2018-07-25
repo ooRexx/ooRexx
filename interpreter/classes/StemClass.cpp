@@ -1201,6 +1201,7 @@ RexxObject *StemClass::getElement(const char *tail)
     return getElement(resolved_tail);
 }
 
+
 /**
  * Resolve a compound variable as a result of an api call.
  *
@@ -1220,6 +1221,46 @@ RexxObject *StemClass::getElement(CompoundVariableTail &resolved_tail)
         return variable->getVariableValue();
     }
     return OREF_NULL;
+}
+
+
+/**
+ * Evaluate an array element including default value resolution
+ *
+ * @param tail   The direct tail value.
+ *
+ * @return The object value.  If the stem element does not exist or
+ *         has been dropped, this returns the default value.
+ */
+RexxObject *StemClass::getFullElement(size_t tail)
+{
+    CompoundVariableTail resolved_tail(tail);
+
+    return getFullElement(resolved_tail);
+}
+
+
+/**
+ * Resolve a compound variable as a result of an api call.
+ *
+ * @param resolved_tail
+ *               The resolved tail value.
+ *
+ * @return The variable value.  Returns default value if not
+ *         assigned or dropped.
+ */
+RexxObject *StemClass::getFullElement(CompoundVariableTail &resolved_tail)
+{
+    // see if we have a variable...if we do, return its value (a dropped variable
+    // has a value of OREF_NULL).  If not found, return OREF_NULL;
+    CompoundTableElement *variable = findCompoundVariable(resolved_tail);
+
+    RexxObject *varValue = OREF_NULL;
+    if (variable != OREF_NULL)
+    {
+        varValue = variable->getVariableValue();
+    }
+    return varValue != OREF_NULL ? varValue : value;
 }
 
 

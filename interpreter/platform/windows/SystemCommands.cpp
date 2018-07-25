@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -56,6 +56,8 @@
 #include "SystemInterpreter.hpp"
 #include "InterpreterInstance.hpp"
 #include "SysInterpreterInstance.hpp"
+#include "CommandHandler.hpp"
+#include "SysThread.hpp"
 
 #define CMDBUFSIZE 8092                // maximum commandline length
 #define CMDDEFNAME "CMD.EXE"           // default Windows cmomand handler
@@ -67,6 +69,135 @@
 #define SHOWWINDOWFLAGS SW_HIDE        // determines visibility of cmd
                                        // window SHOW, HIDE etc...
                                        // function prototypes
+
+const int READ_SIZE = 4096;         // size of chunks read from pipes
+
+class InputWriterThread : public SysThread
+{
+
+public:
+    inline InputWriterThread() : SysThread(),
+        pipe(0), inputBuffer(NULL), bufferLength(0), error(0), wasShutdown(false) { }
+    inline ~InputWriterThread() { terminate(); }
+
+    void start(HANDLE _pipe)
+    {
+        pipe = _pipe;
+        SysThread::createThread();
+    }
+    virtual void dispatch()
+    {
+        DWORD bytesWritten = 0;
+        if (!WriteFile(pipe, inputBuffer, (DWORD)bufferLength, &bytesWritten, NULL))
+        {
+            // if we've had a shutdown request after the process completes, no longer
+            // record errors
+            if (!wasShutdown)
+            {
+                error = GetLastError();
+            }
+        }
+        CloseHandle(pipe);
+    }
+
+    void shutdown()
+    {
+        wasShutdown = true;
+    }
+
+
+
+    bool        wasShutdown;      // this is a shutdown request
+    const char *inputBuffer;      // the buffer of data to write
+    size_t      bufferLength;     // the length of the buffer
+    HANDLE      pipe;             // the pipe we write the data to
+    int         error;            // and error that resulted.
+};
+
+
+// a thread that reads ERROR or OUTPUT data from the command pipe
+class ReaderThread : public SysThread
+{
+
+public:
+    inline ReaderThread() : SysThread(),
+        pipe(0), pipeBuffer(NULL), dataLength(0), error(0) { }
+    inline ~ReaderThread()
+    {
+        if (pipeBuffer != NULL)
+        {
+            free(pipeBuffer);
+            pipeBuffer = NULL;
+        }
+        terminate();
+    }
+
+    void start(HANDLE _pipe)
+    {
+        pipe = _pipe;
+        SysThread::createThread();
+    }
+
+    virtual void dispatch()
+    {
+        DWORD cntRead;
+        size_t bufferSize = READ_SIZE;       // current size of our buffer
+        pipeBuffer = (char *)malloc(READ_SIZE);  // allocate an initial buffer
+        if (pipeBuffer == NULL)
+        {
+            // use the Windows error code
+            error = ERROR_NOT_ENOUGH_MEMORY;
+            return;
+        }
+        for (;;)
+        {
+            if (!ReadFile(pipe, pipeBuffer + dataLength, (DWORD)(bufferSize - dataLength), &cntRead, NULL) || cntRead == 0)
+            {
+                break;
+            }
+
+            dataLength += cntRead;
+            // have we hit the end of the buffer?
+            if (dataLength >= bufferSize)
+            {
+                // increase the buffer by another increment
+                bufferSize += READ_SIZE;
+                char *largerBuffer = (char *)realloc(pipeBuffer, bufferSize);
+                if (largerBuffer == NULL)
+                {
+                    // use the Windows error code
+                    error = ERROR_NOT_ENOUGH_MEMORY;
+                    return;
+                }
+                pipeBuffer = largerBuffer;
+            }
+        }
+        CloseHandle(pipe);
+    }
+
+    HANDLE pipe;                  // the pipe we read the data from
+    char  *pipeBuffer;            // initally errorBuffer = firstBuffer
+    size_t dataLength;            // the length of data we've read
+    int    error;                 // and error that resulted.
+};
+
+
+/**
+ * Raises syntax error 98.896 Address command redirection failed.
+ *
+ * @param context    The Exit context.
+ * @param errCode    The operating system error code.
+ */
+RexxObjectPtr ErrorRedirection(RexxExitContext *context, int errCode)
+{
+    // raise 98.896 Address command redirection failed
+    context->RaiseException1(Error_Execution_address_redirection_failed,
+      context->Int32ToObject(errCode));
+    return NULLOBJECT;
+}
+
+
+
 /**
  * Retrieve the globally default initial address.
  *
@@ -193,6 +324,39 @@ bool sys_process_cd(RexxExitContext *context, const char *command, const char * 
     return true;
 }
 
+void makePipe(PHANDLE readH, PHANDLE writeH,    // pointers to the handles
+              SECURITY_ATTRIBUTES* sAttr,       // pointer to the security attr.
+              CSTRING name,                     // name of the pipe
+              RexxExitContext* context)         // context for errors
+{
+    BOOL pipeOK;
+    HANDLE noInheritH;
+
+    pipeOK = CreatePipe(readH, writeH, sAttr, 0);
+    if (!pipeOK)
+    {
+        ErrorRedirection(context, GetLastError());
+        return;
+    }
+
+    // insure the "unconnected" end of the pipe is not inherited
+    if (strcmp(name, "Input") == 0)
+    {
+        noInheritH = *writeH;
+    }
+    else
+    {
+        noInheritH = *readH;
+    }
+
+    pipeOK = SetHandleInformation(noInheritH, HANDLE_FLAG_INHERIT, 0);
+    if (!pipeOK)
+    {
+        ErrorRedirection(context, GetLastError());
+        return;
+    }
+}
+
 
 /*-----------------------------------------------------------------------------
  | Name:       sysCommandNT                                                   |
@@ -206,14 +370,39 @@ bool sys_process_cd(RexxExitContext *context, const char *command, const char * 
  | Notes:      Handles processing of a system command on a Windows NT system  |
  |                                                                      |
   ----------------------------------------------------------------------------*/
-bool sysCommandNT(RexxExitContext *context, const char *command, const char *cmdstring_ptr, bool direct, RexxObjectPtr &result)
+bool sysCommandNT(RexxExitContext *context,
+                  const char *command,
+                  const char *cmdstring_ptr,
+                  bool direct,
+                  RexxObjectPtr &result,
+                  RexxIORedirectorContext *ioContext)
 {
     DWORD rc;
     STARTUPINFO siStartInfo;                  // process startup info
     PROCESS_INFORMATION piProcInfo;           // returned process info
     char ctitle[256];
     DWORD creationFlags;
-    bool titleChanged;
+    BOOL titleChanged;
+
+    logical_t redirIn = ioContext->IsInputRedirected();      // Input redirected?
+    logical_t redirOut = ioContext->IsOutputRedirected();    // Output redirected?
+    logical_t redirErr = ioContext->IsErrorRedirected();     // Error redirected?
+    logical_t combo = ioContext->AreOutputAndErrorSameTarget();  // Err/Out combined?
+
+    InputWriterThread inputThread;                           // used if need to write input
+    ReaderThread outputThread;                               // separate thread if we need to read OUTPUT
+    ReaderThread errorThread;                                // separate thread if we need to read ERROR
+
+    BOOL readOK = false;
+    // handles for pipes if needed
+    HANDLE inPipeW, outPipeR, errPipeR;
+
+    // security attributes for pipes
+    SECURITY_ATTRIBUTES secAttr;
+    secAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
+    // Set the bInheritHandle flag so pipe handles are inherited.
+    secAttr.bInheritHandle = TRUE;
+    secAttr.lpSecurityDescriptor = NULL;
 
     ZeroMemory(&siStartInfo, sizeof(siStartInfo));
     ZeroMemory(&piProcInfo, sizeof(piProcInfo));
@@ -221,7 +410,7 @@ bool sysCommandNT(RexxExitContext *context, const char *command, const char *cmd
     /* Invoke the system command handler to execute the command                 */
     /****************************************************************************/
     siStartInfo.cb = sizeof(siStartInfo);
-
+    // change the following if redirecting I/O
     siStartInfo.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
     siStartInfo.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
     siStartInfo.hStdError = GetStdHandle(STD_ERROR_HANDLE);
@@ -257,23 +446,76 @@ bool sysCommandNT(RexxExitContext *context, const char *command, const char *cmd
         siStartInfo.wShowWindow = SHOWWINDOWFLAGS;
     }
 
+    if (ioContext->IsRedirectionRequested()) {
+        // create the pipes needed to implement the redirection
+        if (redirIn)
+        {
+            makePipe(&siStartInfo.hStdInput, &inPipeW, &secAttr, "Input", context);
+        }
+
+        if (redirOut)
+        {
+            makePipe(&outPipeR, &siStartInfo.hStdOutput, &secAttr, "Output", context);
+        }
+
+        if (redirErr)
+        {
+            if (combo)
+            {                // send output and error to the same stream
+                siStartInfo.hStdError = siStartInfo.hStdOutput;
+                redirErr = false;
+            }
+            else
+            {
+                makePipe(&errPipeR, &siStartInfo.hStdError, &secAttr, "Error", context);
+            }
+        }
+    }
+
     if (CreateProcess(NULL,           // address of module name
                       (LPSTR)cmdstring_ptr,// address of command line
                       NULL,                // address of process security attrs
                       NULL,                // address of thread security attrs
                       true,                // new process inherits handles?
-                      // creation flags
-                      creationFlags,
+                      creationFlags,       // creation flags
                       NULL,                // address of new environment block
                       NULL,                // address of current directory name
                       &siStartInfo,        // address of STARTUPINFO
                       &piProcInfo))        // address of PROCESS_INFORMATION
     {
-        // CreateProcess succeeded, now wait for the process to end.
+        // CreateProcess succeeded, change the title if needed
         if (titleChanged)
         {
             SetConsoleTitle(siStartInfo.lpTitle);
         }
+
+        // if Input is redirected, write the input data to the input pipe
+        if (redirIn)
+        {
+            ioContext->ReadInputBuffer(&inputThread.inputBuffer, &inputThread.bufferLength);
+            // only start the thread if we have real data
+            if (inputThread.inputBuffer != NULL)
+            {
+                // we need the pipe handle to do this
+                inputThread.start(inPipeW);
+            }
+        }
+
+        if (redirErr)
+        {
+            // we start a separate thread to read ERROR data from the error pipe
+            errorThread.start(errPipeR);
+        }
+
+
+        // if Output is redirected, write the data from the output pipe
+        if (redirOut)
+        {
+            // we start a separate thread to read OUTPUT data from the stdout pipe
+            outputThread.start(outPipeR);
+        }
+
+
         SystemInterpreter::exceptionHostProcess = piProcInfo.hProcess;
         SystemInterpreter::exceptionHostProcessId = piProcInfo.dwProcessId;
 
@@ -281,6 +523,57 @@ bool sysCommandNT(RexxExitContext *context, const char *command, const char *cmd
         {
             // Completed ok, get termination rc
             GetExitCodeProcess(piProcInfo.hProcess, &rc);
+            // do we have input cleanup to perform?
+            if (redirIn)
+            {
+                // the process has returned, but the input thread may be stuck
+                // on a write for data that was never used. We need to close the
+                // pipe to force it to complete
+                inputThread.shutdown();
+                // close the process end of the pipe
+                CloseHandle(siStartInfo.hStdInput);
+                // wait for everything to complete
+                inputThread.waitForTermination();
+                // the INPUT thread may have encountered an error .. raise it now
+                if (inputThread.error != 0)
+                {
+                    return ErrorRedirection(context, inputThread.error);
+                }
+            }
+
+            // did we start an ERROR thread?
+            if (redirOut)
+            {
+                CloseHandle(siStartInfo.hStdOutput);  // close the handle so readFile will stop
+                // wait for the ERROR thread to finish
+                outputThread.waitForTermination();
+                if (outputThread.dataLength > 0)
+                {   // return what the ERROR thread read from its pipe
+                    ioContext->WriteOutputBuffer(outputThread.pipeBuffer, outputThread.dataLength);
+                }
+                // the OUTPUT thread may have encountered an error .. raise it now
+                if (outputThread.error != 0)
+                {
+                    return ErrorRedirection(context, errorThread.error);
+                }
+            }
+
+            // did we start an ERROR thread?
+            if (redirErr)
+            {
+                CloseHandle(siStartInfo.hStdError);  // close the handle so readFile will stop
+                // wait for the ERROR thread to finish
+                errorThread.waitForTermination();
+                if (errorThread.dataLength > 0)
+                {   // return what the ERROR thread read from its pipe
+                    ioContext->WriteErrorBuffer(errorThread.pipeBuffer, errorThread.dataLength);
+                }
+                // the ERROR thread may have encountered an error .. raise it now
+                if (errorThread.error != 0)
+                {
+                    return ErrorRedirection(context, errorThread.error);
+                }
+            }
         }
         else
         {
@@ -338,7 +631,10 @@ bool sysCommandNT(RexxExitContext *context, const char *command, const char *cmd
 /*             command handler with the command to be executed                */
 /*                                                                            */
 /******************************************************************************/
-RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStringObject address, RexxStringObject command)
+RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context,
+                                             RexxStringObject address,
+                                             RexxStringObject command,
+                                             RexxIORedirectorContext *ioContext)
 {
     // address the command information
     const char *cmd = context->StringData(command);
@@ -558,10 +854,11 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStrin
 
     // First check whether we can run the command directly as a program. (There
     // can be no file redirection when not using cmd.exe or command.com)
-    if (SystemInterpreter::explicitConsole || !noDirectInvoc)
+    //  N.B. ADDRESS ... WITH also implies redirection
+    if (SystemInterpreter::explicitConsole || (!noDirectInvoc && !ioContext->IsRedirectionRequested()))
     {
         // Invoke this directly.  If we fail, we fall through and try again.
-        if (sysCommandNT(context, cmd, &interncmd[j], true, result))
+        if (sysCommandNT(context, cmd, &interncmd[j], true, result, ioContext))
         {
             if ( cmdstring_ptr != cmdstring )
             {
@@ -609,7 +906,7 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStrin
     }
 
     // Invoke the command
-    if (!sysCommandNT(context, cmd, cmdstring_ptr, false, result))
+    if (!sysCommandNT(context, cmd, cmdstring_ptr, false, result, ioContext))
     {
         // Failed, get error code and return
         context->RaiseCondition("FAILURE", context->String(cmd), NULLOBJECT, context->WholeNumberToObject(GetLastError()));
@@ -641,7 +938,7 @@ void SysInterpreterInstance::registerCommandHandlers(InterpreterInstance *instan
 {
     // Windows only has the single command environment, we also register this
     // under "" for the default handler
-    instance->addCommandHandler("CMD", (REXXPFN)systemCommandHandler);
-    instance->addCommandHandler("COMMAND", (REXXPFN)systemCommandHandler);
-    instance->addCommandHandler("", (REXXPFN)systemCommandHandler);
+    instance->addCommandHandler("CMD", (REXXPFN)systemCommandHandler, HandlerType::REDIRECTING);
+    instance->addCommandHandler("COMMAND", (REXXPFN)systemCommandHandler, HandlerType::REDIRECTING);
+    instance->addCommandHandler("", (REXXPFN)systemCommandHandler, HandlerType::REDIRECTING);
 }

@@ -2027,6 +2027,60 @@ $ Error_Translation_use_arg_reference_no_default
 $ Error_Execution_reference_variable_in_use
 799 Unable to reference variable "&1"; it must be an uninitialized local variable.
 
+$ Error_Execution_address_input_source
+800 Object "&1" is not a valid ADDRESS WITH INPUT source.
+
+$ Error_Execution_address_output_target
+801 Object "&1" is not a valid ADDRESS WITH OUTPUT or ERROR target.
+
+$ Error_Execution_using_stream_option
+802 REPLACE or APPEND cannot be specified with a Stream object USING target.
+
+$ Error_Invalid_whole_number_stem_array_index
+803 Stem "&1" element 0 is not a whole number; found "&2".
+
+$ Error_Execution_missing_stem_array_index
+804 Stem "&1" does not contain a size count in element 0.
+
+$ Error_Execution_file_not_readable
+805 Unable to open file "&1" for reading; open result was "&2".
+
+$ Error_Execution_file_not_writeable
+806 Unable to open file "&1" for writing; open result was "&2".
+
+$ Error_Invalid_subkeyword_address_with_option
+807 WITH must be followed by one of the keywords INPUT, OUTPUT, or ERROR; found "&1".
+
+$ Error_Invalid_subkeyword_address_input
+808 Duplicate INPUT keyword found.
+
+$ Error_Invalid_subkeyword_address_output
+809 Duplicate OUTPUT keyword found.
+
+$ Error_Invalid_subkeyword_address_error
+810 Duplicate ERROR keyword found.
+
+$ Error_Invalid_subkeyword_address_with_io_option
+811 Acceptable ADDRESS WITH I/O types are STEM, STREAM, and USING; found "&1".
+
+$ Error_Symbol_expected_after_stem_keyword
+812 Stem symbol expected after STEM keyword.
+
+$ Error_Invalid_expression_missing_general
+813 Missing expression following &1 keyword of a &1 instruction.
+
+$ Error_Symbol_expected_address_with
+814 Symbol expected after WITH keyword.
+
+$ Error_Execution_address_redirection_not_supported
+815 Address environment "&1" does not support input/output redirection.
+
+$ Error_Execution_using_rexxqueue_option
+816 REPLACE or APPEND cannot be specified with a RexxQueue object USING target.
+
+$ Error_Execution_address_redirection_failed
+817 Address command redirection failed (&1).
+
 
 $ * -------------------------------------------------------------------------- */
 $ * --            ==================================================        -- */

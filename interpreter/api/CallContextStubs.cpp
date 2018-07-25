@@ -51,6 +51,7 @@
 #include "PackageClass.hpp"
 #include "DirectoryClass.hpp"
 #include "ActivityManager.hpp"
+#include "CommandIOContext.hpp"
 
 BEGIN_EXTERN_C()
 
@@ -275,6 +276,7 @@ stringsize_t RexxEntry GetContextFuzz(RexxCallContext *c)
     return 0;
 
 }
+
 logical_t RexxEntry GetContextForm(RexxCallContext *c)
 {
     ApiContext context(c);
@@ -318,8 +320,256 @@ RexxClassObject RexxEntry FindCallContextClass(RexxCallContext *c, CSTRING n)
 }
 
 
+void RexxEntry ReadInput(RexxIORedirectorContext *c, CSTRING *data, size_t *length)
+{
+    ApiContext context(c);
+
+    // set the default
+    *data = NULL;
+    *length = 0;
+    try
+    {
+        CommandIOContext *ioContext = ((RedirectorContext *)c)->ioContext;
+
+        // The command handler does not get passed an operable context if
+        // this is not an ADDRESS WITH variant. If that's the case, we return
+        // nothing if this is called.
+        if (ioContext == OREF_NULL)
+        {
+            return;
+        }
+        // request the next input line. This will be NULL if we've reached the end.
+        // Note that the string object is anchored by the ioContext, so
+        // we don't need to add this to the context local reference table
+        RexxString *nextLine = ioContext->readInput(context.context);
+        if (nextLine != OREF_NULL)
+        {
+            *data = (CSTRING)nextLine->getStringData();
+            *length = nextLine->getLength();
+        }
+    }
+    catch (NativeActivation *)
+    {
+    }
+    return;
+}
+
+
+void RexxEntry ReadInputBuffer(RexxIORedirectorContext *c, CSTRING *data, size_t *length)
+{
+    ApiContext context(c);
+
+    // set the default
+    *data = NULL;
+    *length = 0;
+    try
+    {
+        CommandIOContext *ioContext = ((RedirectorContext *)c)->ioContext;
+
+        // The command handler does not get passed an operable context if
+        // this is not an ADDRESS WITH variant. If that's the case, we return
+        // nothing if this is called.
+        if (ioContext == OREF_NULL)
+        {
+            return;
+        }
+        // go read everything into a buffer and return
+        ioContext->readInputBuffered(context.context, *data, *length);
+    }
+    catch (NativeActivation *)
+    {
+    }
+    return;
+}
+
+
+void RexxEntry WriteOutput(RexxIORedirectorContext *c, const char *data, size_t length)
+{
+    ApiContext context(c);
+    try
+    {
+        CommandIOContext *ioContext = ((RedirectorContext *)c)->ioContext;
+
+        // The command handler does not get passed an operable context if
+        // this is not an ADDRESS WITH variant. If that's the case, we return
+        // nothing if this is called.
+        if (ioContext != OREF_NULL)
+        {
+            ioContext->writeOutput(context.context, data, length);
+        }
+    }
+    catch (NativeActivation *)
+    {
+    }
+}
+
+
+void RexxEntry WriteError(RexxIORedirectorContext *c, const char *data, size_t length)
+{
+    ApiContext context(c);
+    try
+    {
+        CommandIOContext *ioContext = ((RedirectorContext *)c)->ioContext;
+
+        // The command handler does not get passed an operable context if
+        // this is not an ADDRESS WITH variant. If that's the case, we return
+        // nothing if this is called.
+        if (ioContext != OREF_NULL)
+        {
+            Protected<RexxString> value = new_string(data, length);
+            ioContext->writeError(context.context, data, length);
+        }
+    }
+    catch (NativeActivation *)
+    {
+    }
+}
+
+
+void RexxEntry WriteOutputBuffer(RexxIORedirectorContext *c, const char *data, size_t length)
+{
+    ApiContext context(c);
+    try
+    {
+        CommandIOContext *ioContext = ((RedirectorContext *)c)->ioContext;
+
+        // The command handler does not get passed an operable context if
+        // this is not an ADDRESS WITH variant. If that's the case, we return
+        // nothing if this is called.
+        if (ioContext != OREF_NULL)
+        {
+            ioContext->writeOutputBuffer(context.context, data, length);
+        }
+    }
+    catch (NativeActivation *)
+    {
+    }
+}
+
+
+void RexxEntry WriteErrorBuffer(RexxIORedirectorContext *c, const char *data, size_t length)
+{
+    ApiContext context(c);
+    try
+    {
+        CommandIOContext *ioContext = ((RedirectorContext *)c)->ioContext;
+
+        // The command handler does not get passed an operable context if
+        // this is not an ADDRESS WITH variant. If that's the case, we return
+        // nothing if this is called.
+        if (ioContext != OREF_NULL)
+        {
+            Protected<RexxString> value = new_string(data, length);
+            ioContext->writeErrorBuffer(context.context, data, length);
+        }
+    }
+    catch (NativeActivation *)
+    {
+    }
+}
+
+
+logical_t RexxEntry IsInputRedirected(RexxIORedirectorContext *c)
+{
+    ApiContext context(c);
+    try
+    {
+        CommandIOContext *ioContext = ((RedirectorContext *)c)->ioContext;
+
+        // The command handler does not get passed an operable context if
+        // this is not an ADDRESS WITH variant. If that's the case, we return
+        // nothing if this is called.
+        if (ioContext != OREF_NULL)
+        {
+            return ioContext->isInputRedirected();
+        }
+    }
+    catch (NativeActivation *)
+    {
+    }
+    return false;
+}
+
+
+logical_t RexxEntry IsOutputRedirected(RexxIORedirectorContext *c)
+{
+    ApiContext context(c);
+    try
+    {
+        CommandIOContext *ioContext = ((RedirectorContext *)c)->ioContext;
+
+        // The command handler does not get passed an operable context if
+        // this is not an ADDRESS WITH variant. If that's the case, we return
+        // nothing if this is called.
+        if (ioContext != OREF_NULL)
+        {
+            return ioContext->isOutputRedirected();
+        }
+    }
+    catch (NativeActivation *)
+    {
+    }
+    return false;
+}
+
+
+logical_t RexxEntry IsErrorRedirected(RexxIORedirectorContext *c)
+{
+    ApiContext context(c);
+    try
+    {
+        CommandIOContext *ioContext = ((RedirectorContext *)c)->ioContext;
+
+        // The command handler does not get passed an operable context if
+        // this is not an ADDRESS WITH variant. If that's the case, we return
+        // nothing if this is called.
+        if (ioContext != OREF_NULL)
+        {
+            return ioContext->isErrorRedirected();
+        }
+    }
+    catch (NativeActivation *)
+    {
+    }
+    return false;
+}
+
+
+logical_t RexxEntry AreOutputAndErrorSameTarget(RexxIORedirectorContext *c)
+{
+    ApiContext context(c);
+    try
+    {
+        CommandIOContext *ioContext = ((RedirectorContext *)c)->ioContext;
+
+        // The command handler does not get passed an operable context if
+        // this is not an ADDRESS WITH variant. If that's the case, we return
+        // nothing if this is called.
+        if (ioContext != OREF_NULL)
+        {
+            return ioContext->areOutputAndErrorSameTarget();
+        }
+    }
+    catch (NativeActivation *)
+    {
+    }
+    return false;
+}
+
+
+logical_t RexxEntry IsRedirectionRequested(RexxIORedirectorContext *c)
+{
+    // we can perform this operaiton without getting a lock
+    CommandIOContext *ioContext = ((RedirectorContext *)c)->ioContext;
+    return ioContext != OREF_NULL;
+}
+
+
 END_EXTERN_C()
 
+/**
+ * The interface vector for call context callbacks.
+ */
 CallContextInterface Activity::callContextFunctions =
 {
     CALL_INTERFACE_VERSION,
@@ -340,6 +590,10 @@ CallContextInterface Activity::callContextFunctions =
     FindCallContextClass
 };
 
+
+/**
+ * The interface vector for exit handler callbacks.
+ */
 ExitContextInterface Activity::exitContextFunctions =
 {
     EXIT_INTERFACE_VERSION,
@@ -348,5 +602,26 @@ ExitContextInterface Activity::exitContextFunctions =
     DropExitContextVariable,
     GetAllExitContextVariables,
     GetExitCallerContext,
+};
+
+
+/**
+ * The interface vector for command handler I/O redirection
+ * callbacks.
+ */
+IORedirectorInterface Activity::ioRedirectorContextFunctions =
+{
+    REDIRECT_INTERFACE_VERSION,
+    ReadInput,
+    ReadInputBuffer,
+    WriteOutput,
+    WriteError,
+    WriteOutputBuffer,
+    WriteErrorBuffer,
+    IsInputRedirected,
+    IsOutputRedirected,
+    IsErrorRedirected,
+    AreOutputAndErrorSameTarget,
+    IsRedirectionRequested,
 };
 

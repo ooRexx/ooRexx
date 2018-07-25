@@ -121,6 +121,7 @@ class ActivationSettings
         traceSuppress,           // tracing is currently suppressed
         elapsedReset,            // The elapsed time stamp was reset via time('r')
         guardedMethod,           // this is a guarded method
+        ioConfigCopied,          // We have made a copy of the config table
     } ActivationFlag;
 
 
@@ -145,6 +146,8 @@ class ActivationSettings
       inline void setReplyIssued(bool v = true) { stateFlags[replyIssued] = v; }
       inline bool areTrapsCopied() { return stateFlags[trapsCopied]; }
       inline void setTrapsCopied(bool v = true) { stateFlags[trapsCopied] = v; }
+      inline bool isIOConfigCopied() { return stateFlags[ioConfigCopied]; }
+      inline void setIOConfigCopied(bool v = true) { stateFlags[ioConfigCopied] = v; }
       inline bool haveClauseExits() { return stateFlags[clauseExits]; }
       inline void setHaveClauseExits(bool v = true) { stateFlags[clauseExits] = v; }
       inline bool hasTransferFailed() { return stateFlags[transferFailed]; }
@@ -163,6 +166,7 @@ class ActivationSettings
       inline void setHaltCondition(bool v = true) { stateFlags[haltCondition] = v; }
 
       StringTable    *traps;               // enabled condition traps
+      StringTable    *ioConfigs;           // address envronment io configurations
       DirectoryClass *conditionObj;        // current condition object
       RexxObject    **parentArgList;       // arguments to top level program
       size_t          parentArgCount;      // number of arguments to the top level program

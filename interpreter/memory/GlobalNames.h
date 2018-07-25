@@ -39,22 +39,16 @@
 /* REXX Kernel                                              GlobalNames.h     */
 /*                                                                            */
 /* Definitions of all name objects created at startup time.  All these        */
-/* Name objects are addressible via OREF_ global names.  Changes to this file */
-/* also require recompilation of GlobalNames.cpp and GlobalData.cpp for things*/
-/* to link correctly.                                                         */
-/*                                                                            */
-/* NOTE:  The string values of these constants do not need to be a symbolic   */
-/* CHAR_* name.  These values can be directly coded as a literal string.  If  */
-/* an existing CHAR_* constant is available for the value to be defined, use  */
-/* the symbol.  Otherwise, it is perfectly acceptable to just use a literal   */
-/* string value here.                                                         */
+/* Name objects are addressible via the GlobalNames::name namespace.          */
 /*                                                                            */
 /******************************************************************************/
 
+  GLOBAL_NAME(ABSOLUTEPATH, "ABSOLUTEPATH")
   GLOBAL_NAME(ACTIVATE, "ACTIVATE")
   GLOBAL_NAME(ADDITIONAL, "ADDITIONAL")
   GLOBAL_NAME(ADDRESS, "ADDRESS")
   GLOBAL_NAME(AND, "&")
+  GLOBAL_NAME(APPEND, "APPEND")
   GLOBAL_NAME(ASSIGNMENT_AND, "&=")
   GLOBAL_NAME(ANY, "ANY")
   GLOBAL_NAME(ARGUMENTS, "ARGUMENTS")
@@ -92,12 +86,14 @@
   GLOBAL_NAME(DOTNIL, ".NIL")
   GLOBAL_NAME(DOTTRUE, ".TRUE")
   GLOBAL_NAME(ASSIGNMENT_DIVIDE, "/=")
+  GLOBAL_NAME(EMPTY, "EMPTY")
   GLOBAL_NAME(ENGINEERING, "ENGINEERING")
   GLOBAL_NAME(ENVIRONMENT, "ENVIRONMENT")
   GLOBAL_NAME(EQUAL, "=")
   GLOBAL_NAME(ERRORNAME, "ERROR")
   GLOBAL_NAME(ERRORTEXT, "ERRORTEXT")
   GLOBAL_NAME(FAILURE, "FAILURE")
+  GLOBAL_NAME(FILE, "FILE")
   GLOBAL_NAME(FOR, "FOR")
   GLOBAL_NAME(FORM, "FORM")
   GLOBAL_NAME(FUZZ, "FUZZ")
@@ -113,6 +109,7 @@
   // this is defined in the platform definitions.
   GLOBAL_NAME(INITIALADDRESS, SYSINITIALADDRESS)
   GLOBAL_NAME(INPUT, "INPUT")
+  GLOBAL_NAME(INPUTSTREAM, "INPUTSTREAM")
   GLOBAL_NAME(INSTRUCTION, "INSTRUCTION")
   GLOBAL_NAME(INTDIV, "%")
   GLOBAL_NAME(INDEX, "INDEX")
@@ -136,20 +133,25 @@
   GLOBAL_NAME(NAME, "NAME")
   GLOBAL_NAME(NEXT, "NEXT")
   GLOBAL_NAME(MESSAGE, "MESSAGE")
+  GLOBAL_NAME(MONITOR, "MONITOR")
   GLOBAL_NAME(NEW, "NEW")
   GLOBAL_NAME(NOMETHOD, "NOMETHOD")
   GLOBAL_NAME(NONE, "NONE")
   GLOBAL_NAME(NOSTRING, "NOSTRING")
   GLOBAL_NAME(NOVALUE, "NOVALUE")
+  GLOBAL_NAME(NOTREADY, "NOTREADY")
   GLOBAL_NAME(NULLSTRING, "")
   GLOBAL_NAME(OBJECT, "OBJECT")
   GLOBAL_NAME(OBJECTNAME, "OBJECTNAME")
   GLOBAL_NAME(OFF, "OFF")
+  GLOBAL_NAME(OPEN, "OPEN")
   GLOBAL_NAME(ON, "ON")
   GLOBAL_NAME(OR, "|")
   GLOBAL_NAME(ASSIGNMENT_OR, "|=")
-  GLOBAL_NAME(OVER, "OVER")
+  GLOBAL_NAME(ORDEREDCOLLECTION, "ORDEREDCOLLECTION")
   GLOBAL_NAME(OUTPUT, "OUTPUT")
+  GLOBAL_NAME(OUTPUTSTREAM, "OUTPUTSTREAM")
+  GLOBAL_NAME(OVER, "OVER")
   GLOBAL_NAME(PLUS, "+")
   GLOBAL_NAME(ASSIGNMENT_PLUS, "+=")
   GLOBAL_NAME(POSITION, "POSITION")
@@ -166,6 +168,9 @@
   GLOBAL_NAME(QUEUE, "QUEUE")
   GLOBAL_NAME(RC, "RC")
   GLOBAL_NAME(REMAINDER, "//")
+  GLOBAL_NAME(READ, "READ")
+  GLOBAL_NAME(READY, "READY")              // response from .Stream~state
+  GLOBAL_NAME(OPENREADY, "READY:")         // good open from .Stream~open
   GLOBAL_NAME(REXX, "REXX")
   GLOBAL_NAME(ASSIGNMENT_REMAINDER, "//=")
   GLOBAL_NAME(REQUEST, "REQUEST")
@@ -211,12 +216,15 @@
   GLOBAL_NAME(UNKNOWN, "UNKNOWN")
   GLOBAL_NAME(UNNAMED_METHOD, "*UNNAMED*")
   GLOBAL_NAME(UNTIL, "UNTIL")
+  GLOBAL_NAME(USING, "*USING")
   GLOBAL_NAME(VALUE, "VALUE")
   GLOBAL_NAME(VAR, "VAR")
   GLOBAL_NAME(VERSION_STRING, "VERSION")
   GLOBAL_NAME(WHEN, "WHEN")
   GLOBAL_NAME(WHILE, "WHILE")
   GLOBAL_NAME(WITH, "WITH")
+  GLOBAL_NAME(WRITE_REPLACE, "WRITE REPLACE")
+  GLOBAL_NAME(WRITE_APPEND, "WRITE APPEND")
   GLOBAL_NAME(XOR, "&&")
   GLOBAL_NAME(ASSIGNMENT_XOR, "&&=")
   GLOBAL_NAME(ZERO, "0")

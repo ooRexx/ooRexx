@@ -712,6 +712,24 @@
 #define Error_Symbol_expected_after_use_arg_reference_msg            797
 #define Error_Translation_use_arg_reference_no_default_msg           798
 #define Error_Execution_reference_variable_in_use_msg                799
+#define Error_Execution_address_input_source_msg                     800
+#define Error_Execution_address_output_target_msg                    801
+#define Error_Execution_using_stream_option_msg                      802
+#define Error_Invalid_whole_number_stem_array_index_msg              803
+#define Error_Execution_missing_stem_array_index_msg                 804
+#define Error_Execution_file_not_readable_msg                        805
+#define Error_Execution_file_not_writeable_msg                       806
+#define Error_Invalid_subkeyword_address_with_option_msg             807
+#define Error_Invalid_subkeyword_address_input_msg                   808
+#define Error_Invalid_subkeyword_address_output_msg                  809
+#define Error_Invalid_subkeyword_address_error_msg                   810
+#define Error_Invalid_subkeyword_address_with_io_option_msg          811
+#define Error_Symbol_expected_after_stem_keyword_msg                 812
+#define Error_Invalid_expression_missing_general_msg                 813
+#define Error_Symbol_expected_address_with_msg                       814
+#define Error_Execution_address_redirection_not_supported_msg        815
+#define Error_Execution_using_rexxqueue_option_msg                   816
+#define Error_Execution_address_redirection_failed_msg               817
 
 
 #endif

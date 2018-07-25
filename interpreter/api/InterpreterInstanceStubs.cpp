@@ -86,6 +86,20 @@ size_t RexxEntry LanguageLevel(RexxInstance *)
     return Interpreter::getLanguageLevel();
 }
 
+void RexxEntry AddCommandEnvironment(RexxInstance *c, const char *name, REXXPFN handler, int type)
+{
+    InstanceApiContext context(c);
+
+    if (type == DIRECT_COMMAND_ENVIRONMENT)
+    {
+        context.instance->addCommandHandler(name, handler, HandlerType::DIRECT);
+    }
+    else if (type == REDIRECTING_COMMAND_ENVIRONMENT)
+    {
+        context.instance->addCommandHandler(name, handler, HandlerType::REDIRECTING);
+    }
+}
+
 END_EXTERN_C()
 
 
@@ -98,4 +112,5 @@ RexxInstanceInterface InterpreterInstance::interfaceVector =
     LanguageLevel,
     Halt,
     SetTrace,
+    AddCommandEnvironment,
 };
