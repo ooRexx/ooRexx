@@ -353,7 +353,12 @@ notready:                              /* standard notready handler         */
 
 ::METHOD say UNGUARDED                 /* the SAY method                    */
   use strict arg line = ""             /* enforce zero or one argument      */
-  forward message 'LINEOUT' array (line) /* write the target line out       */
+
+  -- NOTE: We do this directly rather than using FORWARD. The SAY instruction
+  -- (and by extension, the SAY method) should not be raising a NOTREADY condition.
+  -- By calling lineout directly rather than using FORWARD, we can swallow a
+  -- NOTREADY.
+  return self~lineout(line)
 
 ::METHOD supplier                      /* create a supplier object          */
 use strict arg
