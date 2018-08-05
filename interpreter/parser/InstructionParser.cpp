@@ -651,8 +651,6 @@ RexxInstruction *LanguageParser::addressNew()
     }
     else
     {
-        // we require a higher language level to run this.
-        requireLanguageLevel(LanguageLevel0606);
         RexxInstruction *newObject = new_instruction(ADDRESS, AddressWith);
         ::new ((void *)newObject) RexxInstructionAddressWith(dynamicAddress, environment, command, ioConfig);
         return newObject;
@@ -4330,8 +4328,6 @@ RexxInstruction *LanguageParser::useNew()
                 variable_list->push(ref);
                 defaults_list->push(OREF_NULL);
                 variableCount++;
-                // using this feature bumps the language level requirement.
-                requireLanguageLevel(LanguageLevel0606);
                 // continue the loop. Note that token is already positioned for the
                 // next section
                 continue;
