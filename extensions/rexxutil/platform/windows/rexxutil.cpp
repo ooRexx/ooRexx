@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -6550,7 +6550,7 @@ RexxRoutine1(int, SysWinSetDefaultPrinter, CSTRING, printer)
     {
         // This is W2K or later and the user specified just the printer name.
         // This code will work on W2K through Vista.
-        if (SetDefaultPrinter(printer) == 0)
+        if (SetDefaultPrinter(printer) != 0)
         {
             return 0;
         }
