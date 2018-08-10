@@ -1565,7 +1565,7 @@ RexxStringObject RexxEntry VariableReferenceName(RexxThreadContext *c, RexxVaria
     catch (NativeActivation *)
     {
     }
-    return false;
+    return NULLOBJECT;
 }
 
 RexxObjectPtr RexxEntry VariableReferenceValue(RexxThreadContext *c, RexxVariableReferenceObject o)
@@ -1578,7 +1578,7 @@ RexxObjectPtr RexxEntry VariableReferenceValue(RexxThreadContext *c, RexxVariabl
     catch (NativeActivation *)
     {
     }
-    return false;
+    return NULLOBJECT;
 }
 
 void RexxEntry SetVariableReferenceValue(RexxThreadContext *c, RexxVariableReferenceObject o, RexxObjectPtr v)
