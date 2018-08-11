@@ -835,6 +835,9 @@ RexxObjectPtr RexxEntry ioCommandHandler(RexxExitContext *context, RexxStringObj
     int pid;
     int status;
     char* argv[MAX_COMMAND_ARGS + 1];
+    // If SYSSHELLPATH could ever grow longer than 128 chars
+    // then this array size will need to be increased.
+    char shell[128 + 1 + 256 + 1]; // SYSSHELLPATH plus "/" plus environment name
 
     CSTRING environment = context->CString(address);
     CSTRING commandString = context->CString(command);
@@ -855,10 +858,7 @@ RexxObjectPtr RexxEntry ioCommandHandler(RexxExitContext *context, RexxStringObj
         }
     }
     else
-    {   // Set up the full path to the requested shell.  If SYSSHELLPATH
-        //  could ever grow longer than 128 chars this array size will
-        // need to be increased.
-        char shell[128 + 1 + 256 + 1]; // SYSSHELLPATH plus "/" plus environment name
+    {   // Set up the full path to the requested shell.
         strcpy(shell, SYSSHELLPATH);
         if (shell[strlen(shell) - 1] != '/')
         {   // append slash if we don't have one yet
