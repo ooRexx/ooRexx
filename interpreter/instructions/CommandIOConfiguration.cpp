@@ -396,7 +396,7 @@ OutputRedirector *CommandIOConfiguration::createOutputTarget(RexxActivation *con
         return OREF_NULL;
     }
 
-    return createOutputTarget(GlobalNames::INPUT, context, stack, outputTarget, outputType, outputOption);
+    return createOutputTarget(GlobalNames::OUTPUT, context, stack, outputTarget, outputType, outputOption);
 }
 
 
