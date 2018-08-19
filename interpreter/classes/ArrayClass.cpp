@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -125,10 +125,13 @@ RexxObject *ArrayClass::newRexx(RexxObject **arguments, size_t argCount)
 
         // finish the class initialization and init calls.
         classThis->completeNewObject(temp);
+        return temp;
     }
-
-    // more than one argument, so all arguments must be valid size values.
-    return createMultidimensional(arguments, argCount, classThis);
+    else
+    {
+        // more than one argument, so all arguments must be valid size values.
+        return createMultidimensional(arguments, argCount, classThis);
+    }
 }
 
 
