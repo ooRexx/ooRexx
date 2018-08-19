@@ -904,30 +904,21 @@ RexxInternalObject *MemoryObject::newObject(size_t requestLength, size_t type)
  */
 void MemoryObject::reSize(RexxInternalObject *shrinkObj, size_t requestSize)
 {
+
+    // any object following this object must be aligned on an object
+    // grain boundary, so we round to that boundary.
     size_t newSize = Memory::roundObjectResize(requestSize);
 
-    // is the rounded size smaller and is remainder at least the size
-    // of the smallest OBJ MINOBJSIZE
-    if (newSize < requestSize && (shrinkObj->getObjectSize() - newSize) >= Memory::MinimumObjectSize)
+    size_t objectSize = shrinkObj->getObjectSize();
+
+    // The rounded size must still be smaller than the object we're shrinking
+    // AND the trailing part of the object must be at least a minimum size object.
+    if (newSize < objectSize && (objectSize - newSize) >= Memory::MinimumObjectSize)
     {
-        size_t deadObjectSize = shrinkObj->getObjectSize() - newSize;
+        size_t deadObjectSize = objectSize - newSize;
         // Yes, then we can shrink the object.  Get starting point of
-        // the extra, this will be the new Dead obj
+        // the extra, this will be the new Dead obj. This will be swept up on the next GC.
         DeadObject *newDeadObj = new ((void *)((char *)shrinkObj + newSize)) DeadObject (deadObjectSize);
-        // if an object is larger than 16 MB, the last 8 bits (256) are
-        // truncated and therefore the object must have a size
-        // dividable by 256 and the rest must be put to the dead chain.
-        // If the resulting dead object is smaller than the size we
-        // gave, then we've got a truncated remainder we need to turn
-        // into a dead object.
-        deadObjectSize -= newDeadObj->getObjectSize();
-        if (deadObjectSize != 0)
-        {
-            // create difference object.  Note:  We don't bother
-            // putting this back on the dead chain.  It will be
-            // picked up during the next GC cycle.
-            new ((char *)newDeadObj + newDeadObj->getObjectSize()) DeadObject (deadObjectSize);
-        }
         // Adjust size of original object
         shrinkObj->setObjectSize(newSize);
     }
