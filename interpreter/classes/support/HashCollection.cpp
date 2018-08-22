@@ -987,8 +987,17 @@ RexxObject *StringHashCollection::unknownRexx(RexxString *message, ArrayClass *a
  */
 void StringHashCollection::processUnknown(RexxString *messageName, RexxObject **arguments, size_t count, ProtectedObject &result)
 {
-    // go to the unknown handler
-    result = unknown(messageName, arguments, count);
+    // if this is not a subclass, we can just directly compare the pointers.
+    if (isBaseClass())
+    {
+        // go to the unknown handler
+        result = unknown(messageName, arguments, count);
+    }
+    else
+    {
+        // this could be a subclass that overrides UNKNOWN, so do this the slow way
+        return RexxObject::processUnknown(messageName, arguments, count, result);
+    }
 }
 
 
