@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -82,8 +82,6 @@ public:
     // The unit of granularity for large allocation
     static const size_t LargeAllocationUnit = 128 * ObjectGrain;
 
-    // The unit of granularity for extremely large objects
-    static const size_t VeryLargeAllocationUnit = LargeAllocationUnit * 4;
     // this is the granularity for objects greater than 16Mb.
     static const size_t VeryLargeObjectGrain = 32 * ObjectGrain;
 

@@ -144,14 +144,10 @@ void MemoryObject::initialize(bool restoringImage)
     // The constructor makes sure some crucial aspects of the Memory object are set up.
     new (this) MemoryObject;
 
-    // create the initial memory pool and initialize everything.
-    firstPool = MemorySegmentPool::createPool();
-    // our first pool is the current one
-    currentPool = firstPool;
-
     // create our various segment pools
     new (&newSpaceNormalSegments) NormalSegmentSet(this);
     new (&newSpaceLargeSegments) LargeSegmentSet(this);
+    new (&newSpaceSingleSegments) SingleObjectSegmentSet(this);
 
     // and the new/old Space segments
     new (&oldSpaceSegments) OldSpaceSegmentSet(this);
@@ -184,6 +180,10 @@ void MemoryObject::initialize(bool restoringImage)
     // make sure we have an inital segment set to allocate from.
     newSpaceNormalSegments.getInitialSet();
 
+    // we also get an initial segment set for large object, since we
+    // will need this for the globalReferences table.
+    newSpaceLargeSegments.getInitialSet();
+
     // get the initial uninit table
     uninitTable = new_identity_table();
 
@@ -210,10 +210,11 @@ void MemoryObject::initialize(bool restoringImage)
  * @param message The main message text.
  * @param sub1    The first substitution value.
  * @param sub2    The second substitution value.
+ * @param sub3    third substitution value
  */
-void MemoryObject::logVerboseOutput(const char *message, void *sub1, void *sub2)
+void MemoryObject::logVerboseOutput(const char *message, void *sub1, void *sub2, void *sub3)
 {
-    logMemoryCheck(NULL, message, sub1, sub2);
+    logMemoryCheck(NULL, message, sub1, sub2, sub3);
 }
 
 
@@ -333,6 +334,7 @@ void  MemoryObject::runUninits()
 
     // ok, turn on the interlock
     processingUninits = true;
+    verboseMessage("Starting to process pending uninit methods\n");
 
     // get the current activity for running the uninits
     Activity *activity = ActivityManager::currentActivity;
@@ -368,6 +370,7 @@ void  MemoryObject::runUninits()
 
     // turn off the interlock
     processingUninits = false; ;
+    verboseMessage("Done processing pending uninit methods\n");
 }
 
 
@@ -485,13 +488,63 @@ void MemoryObject::addWeakReference(WeakReference *ref)
 
 
 /**
+ * Allocate the memory for a managed heap segment.
+ *
+ * @param requestedBytes
+ *               The size required for the segment
+ *
+ * @return A new segment or NULL in the case of an allocation failure.
+ */
+MemorySegment *MemoryObject::newSegment(size_t requestedBytes)
+{
+    // the platform determines how the memory is allocated
+    void *segmentBlock = SystemInterpreter::allocateSegmentMemory(requestedBytes);
+    // return nothing if this was not allocated
+    if (segmentBlock == NULL)
+    {
+        return NULL;
+    }
+
+    // initialize this as a segment object.
+    MemorySegment *segment = new (segmentBlock) MemorySegment (requestedBytes);
+    // we keep track of the segments here for cleanup at shutdown time.
+    segments.push_back(segment);
+    return segment;
+}
+
+
+/**
+ * Return a memory segment to the system.
+ *
+ * @param segment The segment to release.
+ */
+void MemoryObject::freeSegment(MemorySegment *segment)
+{
+    // free up all of the allocated memory segments
+    for (std::vector<MemorySegment *>::iterator it = segments.begin(); it != segments.end(); ++it)
+    {
+        // is this the segment being released, remove it from the tracking list
+        if (*it == segment)
+        {
+                                    // and release the memory before removing from
+                                    // the tracking list and the iterator is no longer
+                                    // valid.
+            SystemInterpreter::releaseSegmentMemory (*it);
+            segments.erase(it);     // remove from the tracking list
+            break;                  // the iterator is no longer usable after the erase.
+        }
+    }
+}
+
+
+/**
  * Allocate a segment of the requested size.  The requested size
  * is the desired size, while the minimum is the absolute minimum we can
  * handle.  This takes care of the overhead accounting and additional
  * rounding.  The requested size is assumed to have been rounded up to the
  * next "appropriate" boundary already, and the segment overhead will be
- * allocated from that part, if possible.  Otherwise, and additional page is
- * added.
+ * allocated from that part, if possible.  Otherwise, an
+ * additional page is added.
  *
  * @param requestedBytes
  *                 The suggested number of bytes to allocate.
@@ -502,27 +555,26 @@ void MemoryObject::addWeakReference(WeakReference *ref)
  */
 MemorySegment *MemoryObject::newSegment(size_t requestedBytes, size_t minBytes)
 {
-#ifdef MEMPROFILE
-    printf("Allocating a new segment of %d bytes\n", requestedBytes);
-#endif
     // first make sure we've got enough space for the control
-    // information, and round this to a proper boundary
-    requestedBytes = MemorySegment::roundSegmentBoundary(requestedBytes + MemorySegment::MemorySegmentOverhead);
-#ifdef MEMPROFILE
-    printf("Allocating boundary a new segment of %d bytes\n", requestedBytes);
-#endif
+    // information. We don't do any rounding. The segment set has already
+    // decided what the apropriate size should be. In some cases (i.e., the single object
+    // segment set), rounding would just waste memory.
+    requestedBytes = requestedBytes + MemorySegment::MemorySegmentOverhead;
+    verboseMessage("Allocating a new segment of %d bytes\n", requestedBytes);
     // try to allocate a new segment
-    MemorySegment *segment = currentPool->newSegment(requestedBytes);
+    MemorySegment *segment = newSegment(requestedBytes);
     if (segment == NULL)
     {
+        verboseMessage("Allocating a boundary new segment of %d bytes\n", requestedBytes);
         // Segmentsize is the minimum size request we handle.  If
         // minbytes is small, then we're just adding a segment to the
         // small pool.  Reduce the request to SegmentSize and try again.
         // For all other requests, try once more with the minimum.
-        minBytes = MemorySegment::roundSegmentBoundary(minBytes + MemorySegment::MemorySegmentOverhead);
+        minBytes = minBytes + MemorySegment::MemorySegmentOverhead;
+        verboseMessage("Allocating a fallback new segment of %d bytes\n", minBytes);
         // try to allocate once more...if this fails, the caller will
         // have to handle it.
-        segment = currentPool->newSegment(minBytes);
+        segment = newSegment(minBytes);
     }
     return segment;                      // return the allocated segment
 }
@@ -548,7 +600,7 @@ MemorySegment *MemoryObject::newLargeSegment(size_t requestedBytes, size_t minBy
     printf("Allocating large boundary new segment of %d bytes for request of %d\n", allocationBytes, requestedBytes);
 #endif
     // try allocate a segment using the requested size
-    MemorySegment *segment = currentPool->newLargeSegment(allocationBytes);
+    MemorySegment *segment = newSegment(allocationBytes);
     if (segment == NULL)
     {
         // Segmentsize is the minimum size request we handle.  If
@@ -556,7 +608,7 @@ MemorySegment *MemoryObject::newLargeSegment(size_t requestedBytes, size_t minBy
         // small pool.  Reduce the request to SegmentSize and try again.
         // For all other requests, try once more with the minimum.
         minBytes = MemorySegment::roundSegmentBoundary(minBytes + MemorySegment::MemorySegmentOverhead);
-        segment = currentPool->newLargeSegment(minBytes);
+        segment = newSegment(minBytes);
     }
     return segment;
 }
@@ -747,7 +799,7 @@ void MemoryObject::liveGeneral(MarkReason reason)
 void MemoryObject::collect()
 {
     collections++;
-    verboseMessage("Begin collecting memory, cycle #%d after %d allocations.\n", collections, allocations);
+    verboseMessage("Begin collecting memory, cycle #%zu after %zu allocations.\n", collections, allocations);
     allocations = 0;
 
     // change our marker to the next value so we can distinguish
@@ -758,8 +810,12 @@ void MemoryObject::collect()
     // do the object marking now...followed by a sweep of all of the
     // segments.
     markObjects();
+
+    // have each of the segment spaces sweep up the dead objects from
+    // all of their spaces.
     newSpaceNormalSegments.sweep();
     newSpaceLargeSegments.sweep();
+    newSpaceSingleSegments.sweep();
 
     // The space segments are now in a known, completely clean state.
     // Now based on the context that caused garbage collection to be
@@ -837,7 +893,8 @@ RexxInternalObject *MemoryObject::newObject(size_t requestLength, size_t type)
 
     RexxInternalObject *newObj;
 
-    // is this a typical small object?
+    // is this a typical small object? These come from a segment set that optimizes
+    // for small size objects.
     if (requestLength <= MemorySegment::LargeBlockThreshold)
     {
         // make sure we don't go below our minimum size.
@@ -847,23 +904,43 @@ RexxInternalObject *MemoryObject::newObject(size_t requestLength, size_t type)
         }
         newObj = newSpaceNormalSegments.allocateObject(requestLength);
         // if we could not allocate, process an allocation failure.  This will
-        // drive a garbage collection and potentially expand the heap size.
+        // drive a garbage collection and potentially expand the heap size. This also
+        // raises an error if all of the recovery steps result in an allocation failure.
         if (newObj == NULL)
         {
             newObj = newSpaceNormalSegments.handleAllocationFailure(requestLength);
         }
     }
-    // we keep the big objects in a separate cage
-    else
+    // between the small size threshold and "really big", we allocate from a segment set
+    // designed to handle this range of allocation.
+    else if (requestLength <= MemorySegment::SingleBlockThreshold)
     {
-        // round this allocation up to the appropriate large boundary
-        requestLength = Memory::roundLargeObjectAllocation(requestLength);
+        // these are larger objects, but we still try to pack them tightly in the
+        // segment sets.
         newObj = newSpaceLargeSegments.allocateObject(requestLength);
+
+        // again, if there is a failure, we try various fall back strategies.
         if (newObj == NULL)
         {
             newObj = newSpaceLargeSegments.handleAllocationFailure(requestLength);
         }
     }
+    // once we get into really large objects (segment size or larger), we manage those allocations separately
+    // so that they get removed from the heap when they get garbage collected.
+    else
+    {
+        // since we're only to have one object in the segment, there's no need to round
+        // the size to any boundary.
+        newObj = newSpaceSingleSegments.allocateObject(requestLength);
+        if (newObj == NULL)
+        {
+            // Recovery here will always force a GC and try again. Because previously
+            // allocated large objects may have been returned to the system, this might succeed
+            // this time.
+            newObj = newSpaceSingleSegments.handleAllocationFailure(requestLength);
+        }
+    }
+
 
     // initialize the object to the required type.  This also fills in the
     // object header so things work correctly on a garbage collection.
@@ -904,7 +981,6 @@ RexxInternalObject *MemoryObject::newObject(size_t requestLength, size_t type)
  */
 void MemoryObject::reSize(RexxInternalObject *shrinkObj, size_t requestSize)
 {
-
     // any object following this object must be aligned on an object
     // grain boundary, so we round to that boundary.
     size_t newSize = Memory::roundObjectResize(requestSize);
@@ -930,8 +1006,9 @@ void MemoryObject::reSize(RexxInternalObject *shrinkObj, size_t requestSize)
  * sets in low storage conditions.  We do this only as a last ditch, as we'll
  * end up fragmenting the large heap with small blocks, messing up the
  * benefits of keeping the heaps separate.  We first look a set to donate a
- * segment to the requesting set.  If that doesn't work, we'll borrow a block
- * of storage from the other set so that we can satisfy this request.
+ * segment to the requesting set.  We try to find a block of
+ * storage large enough for the request than we can add to our
+ * dead cache until the next GC cycle.
  *
  * @param requestor The segment set needing to steal storage.
  * @param allocationLength
@@ -951,14 +1028,6 @@ void MemoryObject::scavengeSegmentSets(MemorySegmentSet *requestor, size_t alloc
         donor = &newSpaceNormalSegments;
     }
 
-    // first look for an unused segment.  We might be able to steal
-    // one and just move it over.
-    MemorySegment *newSeg = donor->donateSegment(allocationLength);
-    if (newSeg != NULL)
-    {
-        requestor->addSegment(newSeg);
-        return;
-    }
 
     // we can't just move a segment over.  Find the smallest block
     // we can find that will satisfy this allocation.  If found, we
@@ -966,10 +1035,27 @@ void MemoryObject::scavengeSegmentSets(MemorySegmentSet *requestor, size_t alloc
     DeadObject *largeObject = donor->donateObject(allocationLength);
     if (largeObject != NULL)
     {
+        verboseMessage("Donating an object of %zu bytes from %s to %s\n", largeObject->getObjectSize(), donor->name, requestor->name);
         // we need to insert this into the normal dead chain
         // locations.
         requestor->addDeadObject(largeObject);
     }
+
+    // Note, by this point, the Single Object set has already released its empty
+    // blocks or transferred segments to the Normal set, so there is nothing to
+    // scavenge from there.
+}
+
+
+/**
+ * Transfer a memory segment from the single object pool into the
+ * normal segment space because of array object expansion.
+ *
+ * @param segment The segment to transfer.
+ */
+void MemoryObject::transferSegmentToNormalSet(MemorySegment *segment)
+{
+    newSpaceNormalSegments.transferSegment(segment);
 }
 
 
@@ -1465,36 +1551,17 @@ void MemoryObject::dumpImageStats()
 
 
 /**
- *
- * Add a new pool to the memory set.
- *
- * @param pool   The new pool.
- */
-void MemoryObject::memoryPoolAdded(MemorySegmentPool *pool)
-{
-    currentPool = pool;
-}
-
-
-/**
  * Free all the memory pools currently accessed by this process
  * If not already released.  Then set process Pool to NULL, indicate
  * pools have been released.
  */
 void MemoryObject::shutdown()
 {
-    MemorySegmentPool *pool = firstPool;
-    while (pool != NULL)
+    // free up all of the allocated memory segments
+    for (std::vector<MemorySegment *>::iterator it = segments.begin(); it != segments.end(); ++it)
     {
-        // save the one we're about to release, and get the next one.
-        MemorySegmentPool *releasedPool = pool;
-        pool = pool->nextPool();
-        // go free this pool up
-        releasedPool->freePool();
+        SystemInterpreter::releaseSegmentMemory(*it);
     }
-    // clear out the memory pool information
-    firstPool = NULL;
-    currentPool = NULL;
 }
 
 

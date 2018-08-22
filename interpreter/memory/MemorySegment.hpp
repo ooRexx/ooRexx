@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                       RexxMemorysegment.hpp    */
+/* REXX Kernel                                           Memorysegment.hpp    */
 /*                                                                            */
 /* Primitive MemorySegment class definitions                                  */
 /*                                                                            */
@@ -71,12 +71,6 @@ class MemorySegmentHeader
 };
 
 
-
-// Our threshold for deciding we're thrashing the garbage
-// collector.  We'll always just extend memory if we're below this
-// request threshold.
-const size_t MemoryThrashingThreshold = 4;
-
 /* A segment of heap memory. A MemorySegment will be associated */
 /* with a particular MemorySegmentSet, which implements the */
 /* suballocation rules. */
@@ -85,6 +79,7 @@ class MemorySegment : public MemorySegmentHeader
  friend class MemorySegmentSet;
  friend class NormalSegmentSet;
  friend class LargeSegmentSet;
+ friend class SingleObjectSegmentSet;
  friend class OldSegmentSet;
  friend class MemoryObject;
 
@@ -130,6 +125,7 @@ class MemorySegment : public MemorySegmentHeader
        firstObject()->remove();
        remove();
    }
+   void transferSegment(MemorySegment *segment);
 
    inline bool isInSegment(RexxInternalObject *object)
    {
@@ -139,12 +135,6 @@ class MemorySegment : public MemorySegmentHeader
    inline DeadObject *createDeadObject() { return new ((void *)segmentStart) DeadObject(segmentSize); }
 
    inline DeadObject *firstObject() { return (DeadObject *)segmentStart; }
-   inline void combine(MemorySegment *nextSegment) { segmentSize += nextSegment->segmentSize + MemorySegmentOverhead; }
-   inline void shrink(size_t delta) { segmentSize -= delta; }
-   inline bool isAdjacentTo(MemorySegment *seg) { return end() == (char *)seg; }
-   inline bool isLastBlock(char *addr, size_t length) { return (addr + length) == end(); }
-   inline bool isFirstBlock(char *addr) { return addr == start(); }
-
    inline size_t size() { return segmentSize; }
    inline size_t realSize() { return segmentSize + MemorySegmentOverhead; }
    inline char *start() { return segmentStart; }
@@ -155,8 +145,6 @@ class MemorySegment : public MemorySegmentHeader
    inline bool isReal() { return segmentSize != 0; }
    inline bool isEmpty() { return liveObjects == 0; }
    void   dump(const char *owner, size_t counter, FILE *keyfile, FILE *dumpfile);
-   DeadObject *lastDeadObject();
-   DeadObject *firstDeadObject();
    void gatherObjectStats(MemoryStats *memStats, SegmentStats *stats);
    void markAllObjects();
 
@@ -164,20 +152,17 @@ class MemorySegment : public MemorySegmentHeader
    static inline size_t roundSegmentBoundary(size_t n) { return Memory::roundUp(n, SegmentSize); }
 
    static const size_t MemorySegmentOverhead = sizeof(MemorySegmentHeader);
-   static const size_t MemorySegmentPoolOverhead  = sizeof(MemorySegmentPoolHeader);
-
-   static inline size_t roundToSegmentPoolSize(size_t n) { return Memory::roundPageSize(n + MemorySegmentPoolOverhead); }
 
    // default size for a segment allocation, we go larger on 64-bit
    static const size_t SegmentSize = (256 * Memory::LargeAllocationUnit * 2);
    // our threshold for moving to a larger block allocation scheme
-   static const size_t LargeBlockThreshold = Memory::VeryLargeAllocationUnit;
-   // Minimum size segment we'll allow
+   static const size_t LargeBlockThreshold = Memory::LargeAllocationUnit * 4;
+   // our threshold for moving to an object per block allocation scheme
+   // a default segment size seems a logical threshold
+   static const size_t SingleBlockThreshold = SegmentSize;
 
-   char segmentStart[sizeof(DeadObject)];  /* start of the object data      */
+   char segmentStart[sizeof(DeadObject)];  // start of the object data
 };
-
-
 
 
 /* A set of memory segments.  This manages the access to a pool of */
@@ -189,7 +174,7 @@ class MemorySegmentSet
     friend class MemoryObject;
 
   public:
-      typedef enum { SET_UNINITIALIZED, SET_NORMAL, SET_LARGEBLOCK, SET_OLDSPACE } SegmentSetID;
+      typedef enum { SET_UNINITIALIZED, SET_NORMAL, SET_LARGEBLOCK, SET_OLDSPACE, SET_SINGLEOBJECT } SegmentSetID;
         /* the memory segment mimic for anchoring the pool */
       MemorySegmentSet(MemoryObject *memObject, SegmentSetID id, const char *setName)
       {
@@ -262,29 +247,18 @@ class MemorySegmentSet
           }
       }
 
-      inline bool isInSegmentSet(RexxInternalObject *object)
-      {
-          MemorySegment *segment = first();
-          while (segment != NULL) {
-              if (segment->isInSegment(object)) {
-                  return true;
-              }
-              segment = next(segment);
-          }
-          return false;
-      }
-
+      void transferSegment(MemorySegment *segment);
 
       void dumpSegments(FILE *keyfile, FILE *dumpfile);
-      void addSegment(MemorySegment *segment, bool createDeadObject = 1);
+      void addSegment(MemorySegment *segment);
       void sweep();
+      void sweepSingleSegment(MemorySegment *sweepSegment);
       inline bool is(SegmentSetID id) { return owner == id; }
       void gatherStats(MemoryStats *memStats, SegmentStats *stats);
-
+      MemorySegment *largestActiveSegment();
 
       virtual void   dumpMemoryProfile(FILE *outfile);
       virtual DeadObject *donateObject(size_t allocationLength);
-      virtual MemorySegment *donateSegment(size_t allocationLength);
 
       static const size_t MinimumSegmentSize;
       // amount of usable space in a minimum sized segment
@@ -298,24 +272,14 @@ class MemorySegmentSet
 
   protected:
 
-      virtual void collectEmptySegments();
       virtual void addDeadObject(DeadObject *object);
       virtual void addDeadObject(char *object, size_t length);
       RexxInternalObject *splitDeadObject(DeadObject *object, size_t allocationLength, size_t splitMinimum);
       void insertSegment(MemorySegment *segment);
-      MemorySegment *findEmptySegment(size_t allocationLength);
-      MemorySegment *splitSegment(size_t allocationLength);
-      void mergeSegments(size_t allocationLength);
-      void combineEmptySegments(MemorySegment *front, MemorySegment *back);
       virtual size_t suggestMemoryExpansion();
-      virtual size_t suggestMemoryContraction();
       virtual void prepareForSweep();
       virtual void completeSweepOperation();
-      MemorySegment *largestActiveSegment();
-      MemorySegment *largestEmptySegment();
       void adjustMemorySize();
-      void releaseEmptySegments(size_t releaseSize);
-      void releaseSegment(MemorySegment *segment);
       bool newSegment(size_t requestLength, size_t minimumLength);
 
       virtual MemorySegment *allocateSegment(size_t requestLength, size_t minimumLength);
@@ -335,8 +299,6 @@ class MemorySegmentSet
           return size;
       }
       void addSegments(size_t requiredSpace);
-      MemorySegment *getSegment(size_t requestLength, size_t minimumLength);
-      void activateEmptySegments();
 
       inline void validateObject(size_t bytes)
       {
@@ -354,7 +316,6 @@ class MemorySegmentSet
 
 
     MemorySegment anchor;                 /* the anchor for our active segment chain */
-    MemorySegment emptySegments;          /* our empty segment chain (used for reserves) */
     size_t  count;                        /* the number of elements in the pool */
     size_t  liveObjectBytes;              /* bytes allocation to live objects */
     size_t  deadObjectBytes;              /* bytes consumed by dead objects */
@@ -475,7 +436,6 @@ class NormalSegmentSet : public MemorySegmentSet
     virtual DeadObject *donateObject(size_t allocationLength);
     void    getInitialSet();
     virtual size_t suggestMemoryExpansion();
-    virtual size_t suggestMemoryContraction();
 
   protected:
     virtual void addDeadObject(DeadObject *object);
@@ -500,8 +460,6 @@ class NormalSegmentSet : public MemorySegmentSet
 
     // the threshold to trigger expansion of the normal segment set.
     static const double NormalMemoryExpansionThreshold;
-    // The point where we consider releasing segments
-    static const double NormalMemoryContractionThreshold;
     // allocation request for the recovery segment
     static const size_t RecoverSegmentSize = ((MemorySegment::SegmentSize/2) - MemorySegment::MemorySegmentOverhead);
     // initial allocation size for normal space.
@@ -516,7 +474,6 @@ class NormalSegmentSet : public MemorySegmentSet
     inline size_t mapLengthToDeadPool(size_t length) { return length / Memory::ObjectGrain; }
     RexxInternalObject *findLargeDeadObject(size_t allocationLength);
     inline size_t recommendedMemorySize() { return (size_t)((float)liveObjectBytes/(1.0 - NormalMemoryExpansionThreshold)); }
-    inline size_t recommendedMaximumMemorySize() { return (size_t)((float)liveObjectBytes/(1.0 - NormalMemoryContractionThreshold)); }
     void checkObjectOverlap(DeadObject *obj);
     RexxInternalObject *findObject(size_t allocationLength);
     inline RexxInternalObject *splitNormalDeadObject(DeadObject *object, size_t allocationLength, size_t deadLength)
@@ -565,6 +522,10 @@ class NormalSegmentSet : public MemorySegmentSet
 };
 
 
+/**
+ * A segment set used for allocating "larger" objects, but not necessarily
+ * the largest objects.
+ */
 class LargeSegmentSet : public MemorySegmentSet
 {
   public:
@@ -595,18 +556,26 @@ class LargeSegmentSet : public MemorySegmentSet
     }
 
     virtual DeadObject *donateObject(size_t allocationLength);
+    void    getInitialSet();
 
 protected:
+
+    // initial allocation size for large space.
+    static const size_t InitialLargeSegmentSpace;
 
     virtual void addDeadObject(DeadObject *object);
     virtual void addDeadObject(char *object, size_t length);
     virtual MemorySegment *allocateSegment(size_t requestLength, size_t minimumLength);
-    void expandOrCollect(size_t allocationLength);
+    virtual size_t suggestMemoryExpansion();
     void expandSegmentSet(size_t allocationLength);
     virtual void prepareForSweep();
             void completeSweepOperation();
 
   private:
+
+    // the threshold to trigger expansion of the normal segment set.
+    static const double LargeMemoryExpansionThreshold;
+    inline size_t recommendedMemorySize() { return (size_t)((float)liveObjectBytes/(1.0 - LargeMemoryExpansionThreshold)); }
 
     RexxInternalObject *findObject(size_t allocationLength);
 
@@ -617,6 +586,46 @@ protected:
 };
 
 
+/**
+ * A segment set used for allocating the largest objects. We
+ * allocate a segment dedicated to each object and will return
+ * the segment when the object is garbage collected.
+ */
+class SingleObjectSegmentSet : public MemorySegmentSet
+{
+  public:
+
+    /* the default constructor */
+    SingleObjectSegmentSet()  { ; }
+    SingleObjectSegmentSet(MemoryObject *memory);
+    virtual ~SingleObjectSegmentSet() { ; }
+    virtual void   dumpMemoryProfile(FILE *outfile);
+    RexxInternalObject *handleAllocationFailure(size_t allocationLength);
+    RexxInternalObject *allocateObject(size_t allocationLength);
+
+protected:
+
+    virtual void addDeadObject(DeadObject *object);
+    virtual void addDeadObject(char *object, size_t length);
+    virtual MemorySegment *allocateSegment(size_t requestLength, size_t minimumLength);
+    virtual void completeSweepOperation();
+
+  private:
+
+    // the limit of new segments we will allocate before forcing a GC.
+    // this is kept fairly small, since repeated allocations is frequently a
+    // sign that we have segments we can release.
+    static const size_t ForceGCThreshold = 4;
+
+    size_t         allocationsSinceLastGC;// number of objects allocated since the last GC.
+    size_t         allocationCount;       // total number of allocations
+    size_t         returnCount;           // the count of segments we've returned to system
+};
+
+
+/**
+ * The segment set for the oldspace containing the ooRexx image.
+ */
 class OldSpaceSegmentSet : public MemorySegmentSet
 {
   public:

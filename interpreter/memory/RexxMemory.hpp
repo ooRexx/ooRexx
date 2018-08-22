@@ -51,12 +51,16 @@
 #include "IdentityTableClass.hpp"
 #include "QueueClass.hpp"
 
+#include <vector>
+
 // this can be enabled to switch on memory profiling info
 //#define MEMPROFILE
 
+// this can be enabled to have major GC events chronicled.
+//#define VERBOSE_GC
+
 class ActivationFrameBuffer;
 class MemorySegment;
-class MemorySegmentPool;
 class MethodClass;
 class RexxVariable;
 class WeakReference;
@@ -69,50 +73,6 @@ class StringTable;
 #ifdef _DEBUG
 class MemoryObject;
 #endif
-
-typedef char MEMORY_POOL_STATE;
-
-class MemorySegmentPoolHeader
-{
-#ifdef _DEBUG
- friend class MemoryObject;
-#endif
-
- protected:
-     MemorySegmentPool *next;
-     MemorySegment     *spareSegment;
-     char  *nextAlloc;
-     char  *nextLargeAlloc;
-     size_t uncommitted;
-     size_t reserved;            // force aligment of the state data....
-};
-
-
-/**
- * Class for managing memory pools. We define the interfaces
- * here, but the platform code implements most of the methods.
- */
-class MemorySegmentPool : public MemorySegmentPoolHeader
-{
-#ifdef _DEBUG
- friend class MemoryObject;
-#endif
- public:
-     void          *operator new(size_t size, size_t minSize);
-     inline void    operator delete(void *) { }
-
-     static MemorySegmentPool *createPool();
-
-     MemorySegmentPool();
-     MemorySegment *newSegment(size_t minSize);
-     MemorySegment *newLargeSegment(size_t minSize);
-     void               freePool();
-     MemorySegmentPool *nextPool() {return next;}
-     void               setNext( MemorySegmentPool *nextPool ); /* CHM - def.96: new function */
-
- private:
-     char           state[8];    // must be at the end of the structure.
-};
 
 #include "MemoryStats.hpp"
 #include "MemorySegment.hpp"
@@ -144,8 +104,10 @@ class MemoryObject : public RexxInternalObject
     virtual void liveGeneral(MarkReason reason);
 
     void        initialize(bool restoringImage);
+    MemorySegment *newSegment(size_t requestLength);
     MemorySegment *newSegment(size_t requestLength, size_t minLength);
     MemorySegment *newLargeSegment(size_t requestLength, size_t minLength);
+    void freeSegment(MemorySegment *segment);
     RexxInternalObject *oldObject(size_t size);
     inline RexxInternalObject *newObject(size_t size) { return newObject(size, T_Object); }
     RexxInternalObject *newObject(size_t size, size_t type);
@@ -170,26 +132,50 @@ class MemoryObject : public RexxInternalObject
     RexxInternalObject *holdObject(RexxInternalObject *obj);
     void        saveImage();
     void        setOref(RexxInternalObject *variable, RexxInternalObject *value);
-    void        memoryPoolAdded(MemorySegmentPool *);
     void        shutdown();
     void        liveStackFull();
     char *      allocateImageBuffer(size_t size);
-    void        logVerboseOutput(const char *message, void *sub1, void *sub2);
-    inline void verboseMessage(const char *message) {
+    void        logVerboseOutput(const char *message, void *sub1, void *sub2, void*sub3);
+    inline void verboseMessage(const char *message)
+    {
   #ifdef VERBOSE_GC
-        logVerboseOutput(message, NULL, NULL);
+        logVerboseOutput(message, NULL, NULL, NULL);
   #endif
     }
 
     inline void verboseMessage(const char *message, size_t sub1) {
   #ifdef VERBOSE_GC
-        logVerboseOutput(message, (void *)sub1, NULL);
+        logVerboseOutput(message, (void *)sub1, NULL, NULL);
   #endif
     }
 
     inline void verboseMessage(const char *message, size_t sub1, size_t sub2) {
   #ifdef VERBOSE_GC
-        logVerboseOutput(message, (void *)sub1, (void *)sub2);
+        logVerboseOutput(message, (void *)sub1, (void *)sub2, NULL);
+  #endif
+    }
+
+    inline void verboseMessage(const char *message, const char *sub1, size_t sub2) {
+  #ifdef VERBOSE_GC
+        logVerboseOutput(message, (void *)sub1, (void *)sub2, NULL);
+  #endif
+    }
+
+    inline void verboseMessage(const char *message, size_t sub1, const char *sub2) {
+  #ifdef VERBOSE_GC
+        logVerboseOutput(message, (void *)sub1, (void *)sub2, NULL);
+  #endif
+    }
+
+    inline void verboseMessage(const char *message, size_t sub1, size_t sub2, size_t sub3) {
+  #ifdef VERBOSE_GC
+        logVerboseOutput(message, (void *)sub1, (void *)sub2, (void *)sub3);
+  #endif
+    }
+
+    inline void verboseMessage(const char *message, size_t sub1, const char *sub2, const char *sub3) {
+  #ifdef VERBOSE_GC
+        logVerboseOutput(message, (void *)sub1, (void *)sub2, (void *)sub3);
   #endif
     }
 
@@ -201,6 +187,7 @@ class MemoryObject : public RexxInternalObject
     void        checkAllocs();
     void        dumpImageStats();
     void        scavengeSegmentSets(MemorySegmentSet *requester, size_t allocationLength);
+    void        transferSegmentToNormalSet(MemorySegment *segment);
     void        setUpMemoryTables(MapTable *old2newTable);
     void        collectAndUninit(bool clearStack);
     void        lastChanceUninit();
@@ -293,12 +280,12 @@ private:
     size_t            pendingUninits;    // count of objects in the uninit queue
     bool              processingUninits; // this is set when we are processing the uninit table
     WeakReference    *weakReferenceList; // list of active weak references
+    std::vector<MemorySegment *> segments;  // A tracker for all allocated memory segments
 
-    MemorySegmentPool *firstPool;        // First segmentPool block.
-    MemorySegmentPool *currentPool;      // Curent segmentPool being carved
-    OldSpaceSegmentSet oldSpaceSegments;
-    NormalSegmentSet newSpaceNormalSegments;
-    LargeSegmentSet  newSpaceLargeSegments;
+    OldSpaceSegmentSet oldSpaceSegments;     // the image memory segments (not swept)
+    NormalSegmentSet newSpaceNormalSegments; // the segment set for "normal" size allocations
+    LargeSegmentSet  newSpaceLargeSegments;  // the segment set for "larger" memory allocations
+    SingleObjectSegmentSet newSpaceSingleSegments; // the segment set for the very largest of allocations. Managed a little differently
 
     MarkHandler *currentMarkHandler;     // current handler for liveGeneral marking
     MarkHandler  defaultMarkHandler;     // the default mark handler
