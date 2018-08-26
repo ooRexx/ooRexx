@@ -235,7 +235,6 @@ RexxBehaviour RexxBehaviour::primitiveBehaviours[T_Last_Primitive_Class + 1] =
     RexxBehaviour(T_AddressWithInstruction, (PCPPM *)RexxObject::operatorMethods),
     RexxBehaviour(T_Memory, (PCPPM *)RexxObject::operatorMethods),
     RexxBehaviour(T_InternalStack, (PCPPM *)RexxObject::operatorMethods),
-    RexxBehaviour(T_LiveStack, (PCPPM *)RexxObject::operatorMethods),
     RexxBehaviour(T_PushThroughStack, (PCPPM *)RexxObject::operatorMethods),
     RexxBehaviour(T_Activity, (PCPPM *)RexxObject::operatorMethods),
     RexxBehaviour(T_Activation, (PCPPM *)RexxObject::operatorMethods),

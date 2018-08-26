@@ -80,14 +80,11 @@ void Envelope::live(size_t liveMark)
     memory_mark(saveTable);
     memory_mark(buffer);
     memory_mark(rehashTable);
-    memory_mark(flattenStack);
 }
 
 
 /**
  * Generalized object marking
- *
- * NOTE: Do not mark flattenStack
  *
  * @param reason The reason for the marking call.
  */
@@ -99,7 +96,6 @@ void Envelope::liveGeneral(MarkReason reason)
     memory_mark_general(saveTable);
     memory_mark_general(buffer);
     memory_mark_general(rehashTable);
-    memory_mark_general(flattenStack);
 }
 
 
@@ -202,11 +198,7 @@ BufferClass *Envelope::pack(RexxInternalObject *_receiver)
     dupTable = new MapTable(DefaultDupTableSize);
     buffer = new SmartBuffer(DefaultEnvelopeBuffer);
     // Allocate a flatten stack
-    flattenStack = new (Memory::LiveStackSize, true) LiveStack (Memory::LiveStackSize);
-    // we need to mark the flatten stack to protect it from GC, but we're
-    // going to be storing offsets in here, not object references, so we don't want
-    // this to be marked.
-    flattenStack->setHasNoReferences();
+    flattenStack = new (Memory::LiveStackSize) LiveStack (Memory::LiveStackSize);
     // push unique terminator onto stack
     flattenStack->push(OREF_NULL);
 
@@ -244,6 +236,8 @@ BufferClass *Envelope::pack(RexxInternalObject *_receiver)
     // behind it to the size we've written to it.
     BufferClass *letter = buffer->getBuffer();
     letter->setDataLength(buffer->getDataLength());
+    // delete the flatten stack, since that is not allocated from the object heap.
+    delete flattenStack;
     return letter;
 }
 

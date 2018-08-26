@@ -734,9 +734,6 @@ void MemoryObject::buildVirtualFunctionTable()
    objectPtr = ::new (objectLoc) InternalStack(RESTOREIMAGE);
    virtualFunctionTable[T_InternalStack] = getVftPointer(objectLoc);
    
-   objectPtr = ::new (objectLoc) LiveStack(RESTOREIMAGE);
-   virtualFunctionTable[T_LiveStack] = getVftPointer(objectLoc);
-   
    objectPtr = ::new (objectLoc) PushThroughStack(RESTOREIMAGE);
    virtualFunctionTable[T_PushThroughStack] = getVftPointer(objectLoc);
    

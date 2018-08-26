@@ -1166,25 +1166,21 @@ RexxInternalObject *NormalSegmentSet::handleAllocationFailure(size_t allocationL
             // still no luck?
             if (newObject == OREF_NULL)
             {
-                // absolute last chance to fix this.  We allocated a
-                // recovery segment at start up and have been hiding this
-                // in our back pocket.  It is now time to bring this into
-                // play, because we're running on fumes! */
+                // We have a recovery segment in our back pocket, but this
+                // is needed to allow us to actually report that we have an
+                // out of memory condition. We add this to the segment set, but
+                // we will not try to use it to satisfy this request. We need this
+                // to keep from crashing.
                 if (recoverSegment != NULL)
                 {
                     addSegment(recoverSegment);
                     recoverSegment = NULL;
-                    // And try to find it once more
-                    newObject = findObject(allocationLength);
                 }
 
                 // if we have gone through all of that and still have nothing,
                 // this is a real out-of-memory situation.
-                if (newObject == OREF_NULL)
-                {
-                    // can't allocate, report resource error.
-                    reportException(Error_System_resources);
-                }
+                // can't allocate, report resource error.
+                reportException(Error_System_resources);
             }
         }
     }

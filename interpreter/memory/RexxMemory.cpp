@@ -160,11 +160,9 @@ void MemoryObject::initialize(bool restoringImage)
     // before we can allocate our first real object.
     buildVirtualFunctionTable();
 
-    // our first object allocation.  This is the live stack used for
-    // sweep marking.
-    liveStack = (LiveStack *)oldSpaceSegments.allocateObject(MemorySegmentSet::SegmentDeadSpace);
-    // remember the original one
-    originalLiveStack = liveStack;
+    // This is the live stack used for
+    // sweep marking (not allocated from the object heap)
+    liveStack = new(Memory::LiveStackSize) LiveStack(Memory::LiveStackSize);
 
     // if we're restoring, load everything from the image file.  All of the
     // classes will exist then, as well as restoring all of the
@@ -233,6 +231,9 @@ void MemoryObject::markObjectsMain(RexxInternalObject *rootObject)
         return;
     }
 
+    // flag that we're in the middle of a mark operation
+    markingObjects = true;
+
     // set up the live marking word passed to the live() routines
     // we include the OldSpaceBit here to allow both conditions to be tested
     // in one shot.
@@ -254,6 +255,9 @@ void MemoryObject::markObjectsMain(RexxInternalObject *rootObject)
         allocations++;
         markObject->live(liveMark);
     }
+
+    // we are done marking, no longer in a critical section
+    markingObjects = false;
 }
 
 
@@ -422,13 +426,9 @@ void MemoryObject::markObjects()
     markObjectsMain(uninitTable);
 
     // if we had to expand the live stack previously, we allocated a temporary
-    // one from malloc() storage rather than the object heap.  We need to
-    // explicitly free this version when that happens.
-    if (liveStack != originalLiveStack)
-    {
-        free((void *)liveStack);
-        liveStack = originalLiveStack;
-    }
+    // one from malloc() storage rather than the object heap.  We will hold on
+    // to the expanded one because once we've hit the threshold where we expand,
+    // it's likely we'll need to in the future.
     verboseMessage("Mark operation completed\n");
 }
 
@@ -1064,17 +1064,26 @@ void MemoryObject::transferSegmentToNormalSet(MemorySegment *segment)
  */
 void MemoryObject::liveStackFull()
 {
-    // create a new stack that is double in size
-    LiveStack *newLiveStack = liveStack->reallocate(2);
+    // create a new stack that a stack increment larger
+    LiveStack *newLiveStack = liveStack->reallocate(Memory::LiveStackSize);
 
-    // if we've already been expanded, we need to release the
-    // storage for the existing livestack.  When we expand, we create a
-    // new object using malloc() storage rather than the object heap, so we
-    // use free() to release it.
-    if (liveStack != originalLiveStack)
-    {
-        free((void *)liveStack);
-    }
+    // delete the existing liveStack
+    delete liveStack;
+    // we can set the new stack
+    liveStack = newLiveStack;
+}
+
+
+/**
+ * Process a predictive live-stack overflow situation
+ */
+void MemoryObject::liveStackFull(size_t needed)
+{
+    // create a new stack that a stack increment larger
+    LiveStack *newLiveStack = liveStack->ensureSpace(needed);
+
+    // delete the existing liveStack
+    delete liveStack;
     // we can set the new stack
     liveStack = newLiveStack;
 }
@@ -1136,18 +1145,44 @@ void MemoryObject::mark(RexxInternalObject *markObject)
  *
  * @return Storage for creating a new object.
  */
-RexxInternalObject *MemoryObject::temporaryObject(size_t requestLength)
+void *MemoryObject::temporaryObject(size_t requestLength)
 {
     size_t allocationLength = Memory::roundObjectBoundary(requestLength);
     // allocate just using malloc()
-    RexxInternalObject *newObj = (RexxInternalObject *)malloc(allocationLength);
-    if (newObj == OREF_NULL)             /* unable to allocate a new one?     */
+    void *newObj = malloc(allocationLength);
+    // there are two times where we can get an allocation failure. When
+    // collection objects are allocated, we try to predict if we will need a
+    // larger live stack to handle large collections. If we get an allocation
+    // failure at that point, we can raise this as a normal error. This is not
+    // a perfect process, so we might need to expand the live stack during a
+    // a marking operation. A failure at that time is fatal, so we can only
+    // handle this as a fatal internal error.
+    if (newObj == OREF_NULL)
     {
-        reportException(Error_System_resources);
+        // If we're marking, then we can't recover from this.
+        if (markingObjects)
+        {
+            // This is an unrecoverable logic error
+            Interpreter::logicError("Unrecoverable out of memory error");
+        }
+        // a failure during the predictive process, we can raise a real error
+        else
+        {
+            reportException(Error_System_resources);
+        }
     }
-    // initialize the new object
-    ((RexxObject *)newObj)->initializeNewObject(allocationLength, markWord, virtualFunctionTable[T_Object], TheObjectBehaviour);
     return newObj;
+}
+
+
+/**
+ * Delete a temporary object.
+ *
+ * @param storage The storage pointer to release,
+ */
+void MemoryObject::deleteTemporaryObject(void *storage)
+{
+    free(storage);
 }
 
 
@@ -1562,6 +1597,9 @@ void MemoryObject::shutdown()
     {
         SystemInterpreter::releaseSegmentMemory(*it);
     }
+
+    // release the livestack also, which is allocated separately.
+    delete liveStack;
 }
 
 
@@ -1573,10 +1611,6 @@ void MemoryObject::shutdown()
  */
 void MemoryObject::setUpMemoryTables(MapTable *old2newTable)
 {
-    // fix up the previously allocated live stack to have the correct
-    // characteristics...we're almost ready to go on the air.
-    liveStack->setBehaviour(TheLiveStackBehaviour);
-    liveStack = ::new ((void *)liveStack) LiveStack(Memory::LiveStackSize);
     // set up the old 2 new table provided for us
     old2new = old2newTable;
     // Now get our savestack

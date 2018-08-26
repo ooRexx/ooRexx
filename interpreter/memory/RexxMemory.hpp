@@ -111,7 +111,8 @@ class MemoryObject : public RexxInternalObject
     RexxInternalObject *oldObject(size_t size);
     inline RexxInternalObject *newObject(size_t size) { return newObject(size, T_Object); }
     RexxInternalObject *newObject(size_t size, size_t type);
-    RexxInternalObject *temporaryObject(size_t size);
+    void *temporaryObject(size_t size);
+    void  deleteTemporaryObject(void *obj);
     ArrayClass *newObjects(size_t size, size_t count, size_t objectType);
     void        reSize(RexxInternalObject *, size_t);
     void        checkUninit();
@@ -134,8 +135,11 @@ class MemoryObject : public RexxInternalObject
     void        setOref(RexxInternalObject *variable, RexxInternalObject *value);
     void        shutdown();
     void        liveStackFull();
+    void        liveStackFull(size_t needed);
     char *      allocateImageBuffer(size_t size);
     void        logVerboseOutput(const char *message, void *sub1, void *sub2, void*sub3);
+    void        memoryError();
+
     inline void verboseMessage(const char *message)
     {
   #ifdef VERBOSE_GC
@@ -208,6 +212,7 @@ class MemoryObject : public RexxInternalObject
     void restoreStrings(ArrayClass *stringArray);
 
     inline void checkLiveStack() { if (!liveStack->checkRoom()) liveStackFull(); }
+    inline void checkLiveStack(size_t needed) { if (!liveStack->checkRoom(needed)) liveStackFull(needed); }
     inline void pushLiveStack(RexxInternalObject *obj) { checkLiveStack(); liveStack->push(obj); }
     inline RexxInternalObject * popLiveStack() { return liveStack->pop(); }
     inline void bumpMarkWord() { markWord ^= ObjectHeader::MarkMask; }
@@ -274,6 +279,7 @@ private:
 
     LiveStack  *liveStack;               // stack used for memory marking
     PushThroughStack *saveStack;         // our temporary protection stack
+    bool              markingObjects;    // a flag to indicate we are marking objects.
 
     MapTable         *old2new;           // the table for tracking old2new references.
     IdentityTable    *uninitTable;       // the table of objects with uninit methods
@@ -290,7 +296,6 @@ private:
     MarkHandler *currentMarkHandler;     // current handler for liveGeneral marking
     MarkHandler  defaultMarkHandler;     // the default mark handler
 
-    LiveStack *originalLiveStack;        // original live stack allocation
     MemoryStats *imageStats;             // current statistics collector
 
     size_t allocations;                  // number of allocations since last GC
@@ -426,6 +431,7 @@ inline void holdObject(RexxInternalObject *o) { memoryObject.holdObject(o); }
 
 inline RexxInternalObject *new_object(size_t s) { return memoryObject.newObject(s); }
 inline RexxInternalObject *new_object(size_t s, size_t t) { return memoryObject.newObject(s, t); }
+inline RexxInternalObject *new_object(size_t s, size_t t, size_t i) { memoryObject.checkLiveStack(i); return memoryObject.newObject(s, t); }
 
 inline ArrayClass *new_arrayOfObject(size_t s, size_t c, size_t t)  { return memoryObject.newObjects(s, c, t); }
 

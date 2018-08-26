@@ -52,18 +52,13 @@
  * the using code needs to perform appropriate "stack is full"
  * checks.
  */
-class LiveStack : public RexxInternalObject
+class LiveStack
 {
  public:
     void        *operator new(size_t, size_t);
-    void        *operator new(size_t, size_t, bool temporary);
-    inline void  operator delete(void *) { };
+    void         operator delete(void *);
 
-    inline LiveStack(RESTORETYPE restoreType) { ; };
     LiveStack(size_t size);
-
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
 
     // the position is origin zero, relative to the top, which is an empty slot.  So, position 0
     // is the top element, 1 is the penultimate elements, etc.
@@ -115,8 +110,10 @@ class LiveStack : public RexxInternalObject
     }
 
     LiveStack  *reallocate(size_t increment);
+    LiveStack  *ensureSpace(size_t needed);
 
     inline bool        checkRoom() { return top < size; }
+    inline bool        checkRoom(size_t needed) { return size - top > needed; }
     inline size_t      stackSize() { return size; };
     inline RexxInternalObject *stackTop() { return top == 0 ? OREF_NULL : stack[top - 1]; };
     inline void        copyEntries(LiveStack *other) { memcpy((char *)stack, (char *)other->stack, other->size * sizeof(RexxInternalObject *)); top = other->top; }

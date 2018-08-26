@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -56,15 +56,23 @@
  *
  * @return A newly allocated stack object.
  */
-void *LiveStack::operator new(size_t size, size_t stksize, bool temporary)
+void *LiveStack::operator new(size_t size, size_t stksize)
 {
     // This is a special allocation.  We use this if we need to expand the livestack
     // during a GC operation, which of course is when we are not able to allocate from
     // the Rexx heap.
-    RexxInternalObject *newObject = memoryObject.temporaryObject(size + ((stksize-1) * sizeof(RexxObject *)));
-    // set the behaviour
-    newObject->setBehaviour(TheLiveStackBehaviour);
-    return newObject;
+    return memoryObject.temporaryObject(size + ((stksize-1) * sizeof(RexxObject *)));
+}
+
+
+/**
+ * Delete a LiveStack object.
+ *
+ * @param storage The pointer to the object storage
+ */
+void LiveStack::operator delete(void *storage)
+{
+    memoryObject.deleteTemporaryObject(storage);
 }
 
 
@@ -75,9 +83,6 @@ void *LiveStack::operator new(size_t size, size_t stksize, bool temporary)
  */
 LiveStack::LiveStack(size_t _size)
 {
-    // we can get created via means other than normal memory allocation, so
-    // ensure we're completely cleared out
-    clearObject();
     // set the size and top element
     size = _size;
     top = 0;
@@ -85,52 +90,45 @@ LiveStack::LiveStack(size_t _size)
 
 
 /**
- * Perform garbage collection on a live object.
- *
- * @param liveMark The current live mark.
- */
-void LiveStack::live(size_t liveMark)
-{
-    // note, we only mark the array up to (but not including) the top position.
-    if (top > 0)
-    {
-        memory_mark_array(top - 1, stack);
-    }
-}
-
-
-/**
- * Perform generalized live marking on an object.  This is
- * used when mark-and-sweep processing is needed for purposes
- * other than garbage collection.
- *
- * @param reason The reason for the marking call.
- */
-void LiveStack::liveGeneral(MarkReason reason)
-{
-    // note, we only mark the array up to (but not including) the top position.
-    if (top > 0)
-    {
-        memory_mark_general_array(top - 1, stack);
-    }
-}
-
-
-/**
  * Reallocate the stack to one that is larger by a given multiplier.
  *
- * @param multiplier The multiplier value.
+ * @param delta  The size to expand by
  *
  * @return A newly allocated stack with the entries from this
  *         stack copied over to it.
  */
-LiveStack *LiveStack::reallocate(size_t multiplier)
+LiveStack *LiveStack::reallocate(size_t delta)
 {
     // create a new stack that is larger by the given multiplier
-    LiveStack *newStack = new (size * multiplier, true) LiveStack (size * multiplier);
+    LiveStack *newStack = new (size + delta) LiveStack (size + delta);
     // copy the entries over to the new stack
     newStack->copyEntries(this);
     return newStack;
+}
+
+
+/**
+ * Ensure that the live stack is going to be large enough to fit
+ * all of the objects that might be marked from a large
+ * collection. This allows us to proactively expand the stack
+ * before a GC event is taking place, and potentially raise a
+ * real Rexx EOM condition before we're at a critical point.
+ *
+ * @param needed  The number of live stack slots this object
+ *                might require. It is assumed that the stack
+ *                needs to be expanded at this point.
+ *
+ * @return A newly allocated stack with the entries from this
+ *         stack copied over to it.
+ */
+LiveStack *LiveStack::ensureSpace(size_t needed)
+{
+    // NB: we've already determined expansion is needed, so
+    // this should be non-zero. We only expand by LiveStackSize increments
+    size_t shortFall = Memory::roundUp(needed - size, Memory::LiveStackSize);
+
+    // now expand by that increment
+    return reallocate(shortFall);
 }
 
 

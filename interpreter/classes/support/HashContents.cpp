@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -62,7 +62,7 @@ void *IdentityHashContents::operator new(size_t size, size_t capacity)
     size_t bytes = size + (sizeof(ContentEntry) * (capacity - 1));
 
     // now allocate the suggested bucket size
-    return new_object(bytes, T_IdentityHashContents);
+    return new_object(bytes, T_IdentityHashContents, capacity * 2);
 }
 
 
@@ -79,7 +79,7 @@ void *EqualityHashContents::operator new(size_t size, size_t capacity)
     size_t bytes = size + (sizeof(ContentEntry) * (capacity - 1));
 
     // now allocate the suggested bucket size
-    return new_object(bytes, T_EqualityHashContents);
+    return new_object(bytes, T_EqualityHashContents, capacity * 2);
 }
 
 
@@ -96,7 +96,7 @@ void *MultiValueContents::operator new(size_t size, size_t capacity)
     size_t bytes = size + (sizeof(ContentEntry) * (capacity - 1));
 
     // now allocate the suggested bucket size
-    return new_object(bytes, T_MultiValueContents);
+    return new_object(bytes, T_MultiValueContents, capacity * 2);
 }
 
 
@@ -113,7 +113,7 @@ void *StringHashContents::operator new(size_t size, size_t capacity)
     size_t bytes = size + (sizeof(ContentEntry) * (capacity - 1));
 
     // now allocate the suggested bucket size
-    return new_object(bytes, T_StringHashContents);
+    return new_object(bytes, T_StringHashContents, capacity * 2);
 }
 
 

@@ -225,7 +225,6 @@
 #define TheAddressWithInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_AddressWithInstruction])
 #define TheMemoryBehaviour      (&RexxBehaviour::primitiveBehaviours[T_Memory])
 #define TheInternalStackBehaviour      (&RexxBehaviour::primitiveBehaviours[T_InternalStack])
-#define TheLiveStackBehaviour      (&RexxBehaviour::primitiveBehaviours[T_LiveStack])
 #define ThePushThroughStackBehaviour      (&RexxBehaviour::primitiveBehaviours[T_PushThroughStack])
 #define TheActivityBehaviour      (&RexxBehaviour::primitiveBehaviours[T_Activity])
 #define TheActivationBehaviour      (&RexxBehaviour::primitiveBehaviours[T_Activation])

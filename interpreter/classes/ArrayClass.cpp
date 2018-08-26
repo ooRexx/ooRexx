@@ -281,8 +281,10 @@ ArrayClass *ArrayClass::allocateNewObject(size_t size, size_t items, size_t maxS
     // add in the max size value.  Note that we subtract one since
     // the first item is contained in the base object allocation.
     bytes += sizeof(RexxInternalObject *) * (maxSize - 1);
-    // now allocate the new object with that size.
-    ArrayClass *newArray = (ArrayClass *)new_object(bytes, type);
+    // now allocate the new object with that size.  We also give a hint to
+    // the language process about how many objects we can potentially mark during
+    // a garbage collection.
+    ArrayClass *newArray = (ArrayClass *)new_object(bytes, type, maxSize);
 
     // now fill in the various control bits.  Ideally, this
     // really should be done in the constructor, but that gets really too

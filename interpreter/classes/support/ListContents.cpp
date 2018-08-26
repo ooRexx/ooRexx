@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -60,7 +60,7 @@
  */
 void *ListContents::operator new(size_t size, size_t initialSize)
 {
-    return new_object(size + sizeof(ListEntry) * (initialSize - 1), T_ListContents);
+    return new_object(size + sizeof(ListEntry) * (initialSize - 1), T_ListContents, initialSize);
 }
 
 

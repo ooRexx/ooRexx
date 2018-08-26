@@ -226,7 +226,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Transient>
 <Class id="Memory" class="MemoryObject" include="RexxMemory.hpp" objectvirtual="true"/>
 <Class id="InternalStack" class="InternalStack" include="InternalStack.hpp"/>
-<Class id="LiveStack" class="LiveStack" include="MemoryStack.hpp"/>
 <Class id="PushThroughStack" class="PushThroughStack" include="MemoryStack.hpp"/>
 <Class id="Activity" class="Activity" include="Activity.hpp"/>
 <Class id="Activation" class="RexxActivation" include="RexxActivation.hpp"/>
