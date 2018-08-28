@@ -138,7 +138,6 @@ class MemoryObject : public RexxInternalObject
     void        liveStackFull(size_t needed);
     char *      allocateImageBuffer(size_t size);
     void        logVerboseOutput(const char *message, void *sub1, void *sub2, void*sub3);
-    void        memoryError();
 
     inline void verboseMessage(const char *message)
     {
