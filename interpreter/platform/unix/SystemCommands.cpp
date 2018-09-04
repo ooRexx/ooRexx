@@ -114,7 +114,7 @@ public:
 
     int         pipe;             // the pipe we read the data from
     const char *inputBuffer;      // the buffer of data to write
-    size_t      bufferLength;     // the length of the buffer
+    size_t      bufferLength;     // the length of the read data
     int         error;            // and error that resulted.
 };
 
@@ -125,10 +125,10 @@ class ErrorReaderThread : public SysThread
 
 public:
     inline ErrorReaderThread() : SysThread(),
-        pipe(0), errorBuffer(firstBuffer), bufferLength(0), error(0) { }
+        pipe(0), errorBuffer(NULL), bufferLength(0), error(0) { }
     inline ~ErrorReaderThread()
     {
-        if (errorBuffer != NULL && errorBuffer != firstBuffer)
+        if (errorBuffer != NULL)
         {
             free(errorBuffer);
         }
@@ -143,67 +143,46 @@ public:
 
     virtual void dispatch()
     {
-        ssize_t length, eof;
+        bufferLength = 0;
+        size_t bufferAllocation = PIPE_BUF;
 
-        // We'll use our internal buffer first.  Only if this buffer is
-        // too small, we'll dynamically allocate a buffer which we'll
-        // increase when necessary.
-        length = read(pipe, errorBuffer, PIPE_BUF - 1);
-        eof = read(pipe, &errorBuffer[PIPE_BUF - 1], 1);
-        if (length < 0 || eof < 0) // error reading pipe
+        // allocate the initial buffer
+        if ((errorBuffer = (char *)malloc(PIPE_BUF)) == NULL)
         {
             error = errno;
             return;
         }
-        else if (length >= 0 && eof == 0)
-        {   // EOF on first or second read; our initial buffer was large enough
-            bufferLength = length;
-        }
-        else
-        {   // Our initial buffer is too small; we'll allocate a larger
-            // buffer and copy everything over.
-            size_t bufferAllocation = PIPE_BUF * 4;
+        ssize_t length;
 
-            // we need a larger buffer
-            if ((errorBuffer = (char *)malloc(bufferAllocation)) == NULL)
+        // Read until we hit EOF or an error.  Whenever the buffer gets too
+        // small, we reallocate it with twice the size.
+        while ((length = read(pipe, &errorBuffer[bufferLength], bufferAllocation - bufferLength)) > 0)
+        {
+            bufferLength += length;
+            // do we need to increase our buffer allocation?
+            if (bufferLength >= bufferAllocation)
             {
-                error = errno;
-                return;
-            }
-            bufferLength = length + eof;
-            memcpy(errorBuffer, firstBuffer, bufferLength);
-
-            // Read until we hit EOF or an error.  Whenever the buffer gets too
-            // small, we reallocate it with twice the size.
-            while ((length = read(pipe, &errorBuffer[bufferLength], PIPE_BUF)) > 0)
-            {
-                bufferLength += length;
-                // do we need to increase our buffer allocation?
-                if (bufferLength + PIPE_BUF > bufferAllocation)
+                bufferAllocation += PIPE_BUF;  // add another increment
+                char *largerBuffer = (char *)realloc(errorBuffer, bufferAllocation);
+                if (largerBuffer == NULL)
                 {
-                    bufferAllocation *= 2; // reallocate with twice the size
-                    char *largerBuffer = (char *)realloc(errorBuffer, bufferAllocation);
-                    if (largerBuffer == NULL)
-                    {
-                        error = errno;
-                        return;
-                    }
-                    errorBuffer = largerBuffer;
+                    error = errno;
+                    return;
                 }
+                errorBuffer = largerBuffer;
             }
-            if (length < 0) // error reading pipe
-            {
-                error = errno;
-                return;
-            }
+        }
+        if (length < 0) // error reading pipe
+        {
+            error = errno;
+            return;
         }
         close(pipe);
     }
 
     int    pipe;                  // the pipe we read the data from
-    char   firstBuffer[PIPE_BUF]; // internal buffer.
-    char  *errorBuffer;           // initally errorBuffer = firstBuffer
-    size_t bufferLength;          // the length of the buffer
+    char  *errorBuffer;           // dynamically allocated once we start reading
+    size_t bufferLength;          // the length of the read data
     int    error;                 // and error that resulted.
 };
 
