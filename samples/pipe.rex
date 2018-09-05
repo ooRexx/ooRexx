@@ -360,7 +360,7 @@ else do
 end
 
 
-::class dropLast public subclass pipeStage     -- drop the last n records
+::class takeLast public subclass pipeStage     -- take the last n records
 ::method init
 expose count array
 use strict arg count
@@ -392,6 +392,7 @@ else do
         self~write(array[i])                -- the remainder ones go down the main pipe
     end
 end
+forward class(super)                        -- finish the eof process
 
 
 ::class takeFirst public subclass pipeStage    -- take the first n records
@@ -415,7 +416,7 @@ else do
 end
 
 
-::class takeLast public subclass pipeStage     -- drop the last n records
+::class dropLast public subclass pipeStage     -- drop the last n records
 ::method init
 expose count array
 use strict arg count
@@ -447,7 +448,7 @@ else do
         self~writeSecondary(array[i])       -- the discarded ones go down the secondary pipe
     end
 end
-
+forward class(super)                        -- finish the eof process
 
 
 ::class x2c public subclass pipeStage       -- translate records to hex characters
