@@ -74,21 +74,6 @@
 #define STACKCHECK
 
 /******************************************************************************/
-/* OPTIONAL:  No time slicing support for REXX activation yields is available.*/
-/* Code will yield after a given count of instructions.                       */
-/* This option is mutually exclusive with TIMESLICE.                          */
-/******************************************************************************/
-
-#define NOTIMER
-
-/******************************************************************************/
-/* OPTIONAL:  Enable concurrency timeslice dispatching support.  Default is   */
-/* only yield at specific event points.                                       */
-/******************************************************************************/
-
-/* #define TIMESLICE  */
-
-/******************************************************************************/
 /* REQUIRED:  Define the REXX type for semaphores.  These can be system       */
 /* specific semaphore types or the REXX define OSEM.                          */
 /******************************************************************************/

@@ -1694,7 +1694,7 @@ return left~caselessCompareTo(right, start, length)
  use strict arg
 
  -- wait until the timer is actually set
- guard on when timerStarted
+ guard off when timerStarted
 
  -- indicate we're canceled and stop the timer
  canceled = .true
@@ -3676,7 +3676,7 @@ nomethod:
   end
 
 
--- NOTE: undocumented ArgUtil class has been superseded by documented Validate class 
+-- NOTE: undocumented ArgUtil class has been superseded by documented Validate class
 -- ArgUtil is deprected, use of it is discouraged, as it may be removed in the future
 ::CLASS 'ArgUtil' public
 ::METHOD validateNumber class

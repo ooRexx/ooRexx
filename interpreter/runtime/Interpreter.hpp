@@ -103,18 +103,6 @@ public:
     static size_t getInterpreterVersion();
     static size_t getLanguageLevel();
 
-    static inline bool hasTimeSliceElapsed()
-    {
-        // if we've had a time slice event, flip the event flag and return true
-        if (timeSliceElapsed)
-        {
-           timeSliceElapsed = false;
-           return true;
-        }
-        // not time to break
-        return false;
-    }
-
     static inline int getWordSize()
     {
         return sizeof(void *) * 8;
@@ -132,8 +120,6 @@ public:
 
     static void logicError (const char *desc);
     static wholenumber_t messageNumber(RexxString *);
-    static inline void setTimeSliceElapsed() { timeSliceElapsed = true; }
-    static inline void clearTimeSliceElapsed() { timeSliceElapsed = false; }
     static bool haltAllActivities(RexxString *);
     static void decodeConditionData(DirectoryClass *conditionObj, RexxCondition *condData);
     static RexxClass *findClass(RexxString *className);
@@ -146,7 +132,6 @@ protected:
     static SysMutex  resourceLock;   // use to lock resources accessed outside of kernel global lock
     static SysMutex  dispatchLock;   // use to lock when manipulating the activity dispatch queue
     static int    initializations;   // indicates whether we're terminated or not
-    static bool   timeSliceElapsed;  // indicates we've had a timer interrupt
     static QueueClass *interpreterInstances;  // the set of interpreter instances
     static bool   active;            // indicates whether the interpreter is initialized
     static RexxString *versionNumber;  // our version number information

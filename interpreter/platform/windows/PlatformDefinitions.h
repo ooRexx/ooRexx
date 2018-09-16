@@ -72,24 +72,6 @@
 #define STACKCHECK
 
 /******************************************************************************/
-/* OPTIONAL:  No time slicing support for REXX activation yields is available.*/
-/* Code will yield after a given count of instructions.                       */
-/******************************************************************************/
-//
-// timers in windows only get called back at yield boundaries
-//
-//#define NOTIMER                        // used in activa, activi for
-                                        // count based yielding
-
-/******************************************************************************/
-/* OPTIONAL:  Enable concurrency timeslice dispatching support.  Default is   */
-/* only yield at specific event points.                                       */
-/******************************************************************************/
-// Make this clearer? Mutually exclusive with NOTIMER?
-#define TIMESLICE
-#define FIXEDTIMERS
-
-/******************************************************************************/
 /* REQUIRED:  Define the string used for the default initial address setting. */
 /******************************************************************************/
 

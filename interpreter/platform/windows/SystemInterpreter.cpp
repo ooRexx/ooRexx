@@ -69,8 +69,6 @@ HINSTANCE SystemInterpreter::moduleHandle = 0;      // handle to the interpeter 
 void SystemInterpreter::processStartup(HINSTANCE mod)
 {
     moduleHandle = mod;
-    // startup timeslice processing
-    startTimeSlice();
     // now do the platform independent startup
     Interpreter::processStartup();
 }
@@ -81,7 +79,6 @@ void SystemInterpreter::processStartup(HINSTANCE mod)
  */
 void SystemInterpreter::processShutdown()
 {
-    stopTimeSlice();              // shutdown the timer thread
     // now do the platform independent shutdown
     Interpreter::processShutdown();
 }

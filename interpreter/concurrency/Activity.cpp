@@ -2076,7 +2076,7 @@ void Activity::releaseAccess()
     {
         // reset the numeric settings
         Numerics::setDefaultSettings();
-        ActivityManager::unlockKernel();
+        ActivityManager::releaseAccess();
     }
 }
 

@@ -43,12 +43,6 @@
 #include "SystemInterpreter.hpp"
 #include <time.h>
 
-HANDLE SystemInterpreter::timeSliceTimerThread = 0;
-
-#define TIMESLICE_STACKSIZE 2048
-#define TIMESLICEMS 10
-
-
 #define DELTA_EPOCH_IN_MICROSECS  11644473600000000ULL
 
 struct timezone
@@ -118,58 +112,6 @@ void SystemInterpreter::getCurrentTime(RexxDateTime *Date )
     Date->day = localTime.wDay;
     Date->month = localTime.wMonth;
     Date->year = localTime.wYear;
-}
-
-
-/**
- * The thread function for the time slice timer
- *
- * @param args   The thread arguments
- *
- * @return The return code.
- */
-DWORD WINAPI TimeSliceControl(void * args)
-{
-#ifdef TIMESLICE
-   do
-   {
-      Sleep(TIMESLICEMS);
-      Interpreter::setTimeSliceElapsed();
-   } while (!Interpreter::isTerminated());
-   SystemInterpreter::setTimeSliceTimerThread(0);
-#endif
-   return 0;
-}
-
-
-/**
- * Make sure we have a Timer running and reset TimeSlice Sem
- */
-void SystemInterpreter::startTimeSlice()
-{
-#ifdef TIMESLICE
-   ULONG thread;
-   if (timeSliceTimerThread == 0)
-   {
-
-     // we only allow one timer thread.  Make sure we don't create a second.
-     timeSliceTimerThread = CreateThread(NULL, TIMESLICE_STACKSIZE, TimeSliceControl, NULL, 0, &thread);
-     SetThreadPriority(timeSliceTimerThread, THREAD_PRIORITY_NORMAL+1);
-  }
-  Interpreter::clearTimeSliceElapsed();
-#endif
-}
-
-
-/**
- * Stop the time slice timer thread
- */
-void SystemInterpreter::stopTimeSlice()
-{
-#ifdef TIMESLICE
-    TerminateThread(timeSliceTimerThread, 0);
-    timeSliceTimerThread = 0;
-#endif
 }
 
 

@@ -72,8 +72,6 @@ RexxObject *Interpreter::localServer = OREF_NULL;
 
 // the interpreter active state flag
 bool Interpreter::active = false;
-// used for timeslice dispatching
-bool Interpreter::timeSliceElapsed = false;
 
 
 // exit return codes.

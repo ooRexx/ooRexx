@@ -464,10 +464,9 @@ RexxObject * RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxOb
     // add the frame to the execution stack
     RexxActivationFrame frame(activity, this);
 
-#ifndef FIXEDTIMERS
     // this is the number of instructions to run without yielding
     size_t instructionCount = 0;
-#endif
+
     receiver = _receiver;
     // the "msgname" can also be the name of an external routine, the label
     // name of an internal routine.
@@ -591,30 +590,19 @@ RexxObject * RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxOb
     {
         try
         {
-#ifndef FIXEDTIMERS
             // reset the instruction counter
             instructionCount = 0;
-#endif
             RexxInstruction *nextInst = next;
             // loop until we no longer have a next instruction to process
             while (nextInst != OREF_NULL)
             {
-
-                // if we're time slicing, do a quick timeslice check and give
-                // up the kernel lock if has pinged.
-#ifdef FIXEDTIMERS
-                if (Interpreter::hasTimeSliceElapsed())
-                {
-                    activity->relinquish();
-                }
-#else
-                // not doing time slicing, so just relinquish every so often.
+                // concurrency is cooperative, so we release access every so often
+                // to allow other threads to run.
                 if (++instructionCount > MAX_INSTRUCTIONS)
                 {
                     activity->relinquish();
                     instructionCount = 0;
                 }
-#endif
                 // set the current instruction and prefetch the next one.  Control
                 // instructions may change next on us.
                 current = nextInst;

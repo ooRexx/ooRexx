@@ -70,9 +70,6 @@ public:
     static void initializeInstance(InterpreterInstance *instance);
     static void terminateInstance(InterpreterInstance *instance);
 
-    static void startTimeSlice();
-    static void stopTimeSlice();
-    static inline void setTimeSliceTimerThread(HANDLE h) { timeSliceTimerThread = h; }
     static bool loadMessage(wholenumber_t code, char *buffer, size_t bufferLength);
 
     static RexxObject *popEnvironment(RexxActivation *context);
@@ -105,7 +102,6 @@ public:
 protected:
 
     static HINSTANCE moduleHandle;      // handle to the interpeter DLL
-    static HANDLE timeSliceTimerThread; // handle of the time slice thread
 };
 
 #endif
