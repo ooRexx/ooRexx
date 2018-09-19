@@ -316,11 +316,6 @@ size_t Envelope::copyBuffer(RexxInternalObject *obj)
         // just replace the behaviour with its normalized type number.  This will be used
         // to restore it later.
         newObj->behaviour = newObj->behaviour->getSavedPrimitiveBehaviour();
-
-        if ((intptr_t)newObj->behaviour == 1)
-        {
-            printf("Class file being flattened\n");
-        }
     }
     // if we flattened an object from oldspace, we just copied everything.  Make sure
     // this is no longer marked as oldspace
