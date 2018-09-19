@@ -218,7 +218,20 @@ RexxInternalObject *RexxString::unflatten(Envelope *envelope)
     // if this has been proxied, then retrieve our target object from the environment
     if (isProxyObject())
     {
-        return TheEnvironment->entry(this);
+        // we have a couple of special cases, everything else should be a core class lookup.
+        if (strCompare("NIL"))
+        {
+            return TheNilObject;
+        }
+        else if (strCompare("ENVIRONMENT"))
+        {
+            return TheEnvironment;
+        }
+        else
+        {
+            // must be a reference to a core class
+            return TheRexxPackage->findClass(this);
+        }
     }
     else
     {
@@ -2205,7 +2218,7 @@ RexxString *RexxString::newProxy(const char *string)
 {
     RexxString *sref = new_string(string);
     // mark as a proxy and return.
-    sref->makeProxiedObject();
+    sref->makeProxyObject();
 
     return sref;
 }

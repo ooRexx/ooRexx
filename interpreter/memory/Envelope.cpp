@@ -134,7 +134,7 @@ void Envelope::flattenReference(void *newThisVoid, size_t newSelf, void *objRefV
 
         // if this is a proxied object, we need to convert it to a proxy and
         // copy that object into the buffer and the reference table
-        if (obj->isProxyObject())
+        if (obj->requiresProxyObject())
         {
             // get a proxy and make sure it's in our protection table
             RexxInternalObject *proxyObj = obj->makeProxy(this);
@@ -316,6 +316,11 @@ size_t Envelope::copyBuffer(RexxInternalObject *obj)
         // just replace the behaviour with its normalized type number.  This will be used
         // to restore it later.
         newObj->behaviour = newObj->behaviour->getSavedPrimitiveBehaviour();
+
+        if ((intptr_t)newObj->behaviour == 1)
+        {
+            printf("Class file being flattened\n");
+        }
     }
     // if we flattened an object from oldspace, we just copied everything.  Make sure
     // this is no longer marked as oldspace
