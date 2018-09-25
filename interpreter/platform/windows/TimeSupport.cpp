@@ -325,18 +325,8 @@ RexxMethod3(int, ticker_waitTimer, POINTER, eventSemHandle, wholenumber_t, numda
             return 0;
         }
 
-        /* Wait for the WM_TIMER message or for the alarm to be canceled. */
+        // wait for the timer to pop or the timer to be canceled.
         waitTimerOrEvent(SemHandle);
-        /* Check if the alarm is canceled. */
-        RexxObjectPtr cancelObj = context->GetObjectVariable("CANCELED");
-
-        if (cancelObj == context->True())
-        {
-            /* Alarm is canceled, delete timer, close semaphore, return. */
-            KillTimer(NULL, TimerHandle);
-            CloseHandle(SemHandle);
-            return 0;
-        }
         KillTimer(NULL, TimerHandle);
     }
 

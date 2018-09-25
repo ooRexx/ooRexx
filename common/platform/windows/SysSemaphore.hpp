@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -49,12 +49,12 @@
 
 #include <stdlib.h>
 
-inline void waitHandle(HANDLE s);
+inline void waitHandle(HANDLE s, bool noMessageLoop);
 
 class SysSemaphore {
 public:
      SysSemaphore() : sem(0) { ; }
-     SysSemaphore(bool);
+     SysSemaphore(bool create);
      ~SysSemaphore() { ; }
      void create();
      inline void open() { ; }
@@ -62,7 +62,7 @@ public:
      void post() { SetEvent(sem); };
      inline void wait()
      {
-         waitHandle(sem);
+         waitHandle(sem, SysSemaphore::noMessageLoop());
      }
 
      inline bool wait(uint32_t timeout)
@@ -98,16 +98,17 @@ private:
 };
 
 
-class SysMutex {
+class SysMutex
+{
 public:
-     SysMutex() : mutexMutex(0) { }
-     SysMutex(bool);
+     SysMutex() : mutexMutex(0), bypassMessageLoop(false) { }
+     SysMutex(bool create, bool critical);
      ~SysMutex() { ; }
-     void create();
+     void create(bool critical = false);
      void close();
      inline void request()
      {
-         waitHandle(mutexMutex);
+         waitHandle(mutexMutex, bypassMessageLoop || SysSemaphore::noMessageLoop());
      }
 
      inline void release()
@@ -121,7 +122,8 @@ public:
      }
 
 protected:
-     HANDLE mutexMutex;      // the actual mutex
+     HANDLE mutexMutex;              // the actual mutex
+     bool bypassMessageLoop;         // a force off for the message loop
 };
 
 
@@ -155,18 +157,18 @@ protected:
  *  the queue so that they are no longer 'new.'  Once PeekMessage is called,
  *  all the messages on the queue need to be processed.
  */
-inline void waitHandle(HANDLE s)
+inline void waitHandle(HANDLE s, bool bypassMessageLoop)
 {
-    // If already signaled, return.
-    if ( WaitForSingleObject(s, 0) == WAIT_OBJECT_0 )
+    // If no message loop is flagged, then use WaitForSingleobject()
+    if ( bypassMessageLoop )
     {
+        WaitForSingleObject(s, INFINITE);
         return;
     }
 
-    // If no message loop is flagged, then use WaitForSingleobject()
-    if ( SysSemaphore::noMessageLoop() )
+    // If already signaled, return.
+    if ( WaitForSingleObject(s, 0) == WAIT_OBJECT_0 )
     {
-        WaitForSingleObject(s, INFINITE);
         return;
     }
 

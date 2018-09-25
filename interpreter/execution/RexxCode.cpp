@@ -208,8 +208,6 @@ void RexxCode::run(Activity *activity, MethodClass *method, RexxObject *receiver
     activity->pushStackFrame(newacta);
     // run the method.  The result is returned via the ProtectedObject reference.
     newacta->run(receiver, msgname, argPtr, argcount, OREF_NULL, result);
-    // yield control now.
-    activity->relinquish();
 }
 
 

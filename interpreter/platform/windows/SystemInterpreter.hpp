@@ -92,6 +92,12 @@ public:
     static void loadImage(char *&imageBuffer, size_t &imageSize);
     static BufferClass *readProgram(const char *file_name);
     static bool processSignal(DWORD dwCtrlType);
+    static uint64_t getMillisecondTicks()
+    {
+        // on Windows, this is limited to the resolution of the system timer,
+        // which is typically in the range of 10 milliseconds to 16 milliseconds.
+        return GetTickCount64();
+    }
 
     static ULONG exceptionHostProcessId;
     static HANDLE exceptionHostProcess;

@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -73,9 +73,9 @@ protected:
 class SysMutex {
 public:
      SysMutex() : created(false) { ; }
-     SysMutex(bool);
+     SysMutex(bool create, bool critical = false);
      ~SysMutex() { ; }
-     void create();
+     void create(bool critical = false);
      inline void open() { ; }
      void close();
      inline void request() { pthread_mutex_lock(&mutexMutex); }

@@ -157,7 +157,7 @@ public:
     };
 
 
-    ServerMacroSpaceManager() : lock(), macros() { lock.create(); }
+    ServerMacroSpaceManager() : lock(), macros() { lock.create(true); }
 
     void terminateServer();
     void addMacro(ServiceMessage &message);

@@ -79,8 +79,9 @@ public:
     static inline void releaseDispatchLock() { dispatchLock.release(); }
     static inline void createLocks()
     {
-        resourceLock.create();
-        dispatchLock.create();
+        // these are critical-time locks, which involves special processing on Windows
+        resourceLock.create(true);
+        dispatchLock.create(true);
     }
 
     static inline void closeLocks()

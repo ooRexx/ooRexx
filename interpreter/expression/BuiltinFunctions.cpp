@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -2109,6 +2109,8 @@ BUILTIN(LINEIN)
 
     fix_args(LINEIN);
 
+    YieldResetter resetter(context);  // ensures the yield values are reset on return.
+
     RexxString *name = optional_string(LINEIN, name);
     RexxObject *line = optional_big_integer(LINEIN, line);
     RexxObject *count = optional_big_integer(LINEIN, count);
@@ -2168,6 +2170,8 @@ BUILTIN(CHARIN)
 
     fix_args(CHARIN);
 
+    YieldResetter resetter(context);  // ensures the yield values are reset on return.
+
     RexxString *name = optional_string(CHARIN, name);
     RexxObject *position = optional_big_integer(CHARIN, start);
     RexxObject *count = optional_big_integer(CHARIN, count);
@@ -2209,6 +2213,8 @@ BUILTIN(LINEOUT)
     const size_t LINEOUT_line =   3;
 
     fix_args(LINEOUT);
+
+    YieldResetter resetter(context);  // ensures the yield values are reset on return.
 
     RexxString *name = optional_string(LINEOUT, name);
     RexxString *string = optional_string(LINEOUT, string);
@@ -2268,6 +2274,8 @@ BUILTIN(CHAROUT)
 
     fix_args(CHAROUT);
 
+    YieldResetter resetter(context);  // ensures the yield values are reset on return.
+
     RexxString *name = optional_string(CHAROUT, name);
     RexxString *string = optional_string(CHAROUT, string);
     RexxObject *position = optional_big_integer(CHAROUT, start);
@@ -2308,6 +2316,8 @@ BUILTIN(LINES)
     const size_t LINES_option = 2;
 
     fix_args(LINES);
+
+    YieldResetter resetter(context);  // ensures the yield values are reset on return.
 
     RexxString *name = optional_string(LINES, name); /* get the string name               */
     RexxString *option = optional_string(LINES, option);
@@ -2366,6 +2376,8 @@ BUILTIN(CHARS)
 
     fix_args(CHARS);
 
+    YieldResetter resetter(context);  // ensures the yield values are reset on return.
+
     RexxString *name = optional_string(CHARS, name);
 
     // queue not allowed with chars()
@@ -2397,6 +2409,8 @@ BUILTIN(STREAM)
     const size_t STREAM_COMMAND =     'C';
 
     fix_args(STREAM);
+
+    YieldResetter resetter(context);  // ensures the yield values are reset on return.
 
     RexxString *name = required_string(STREAM, name);
 
@@ -2537,6 +2551,8 @@ BUILTIN(QUEUED)
     const size_t QUEUED_Max = 0;
 
     check_args(QUEUED);
+
+    YieldResetter resetter(context);  // ensures the yield values are reset on return.
     RexxInteger  *queuesize;
 
     // see if the exit handles this, otherwise send a message to the current queue
@@ -2715,6 +2731,8 @@ BUILTIN(RXFUNCADD)
 
     fix_args(RXFUNCADD);
 
+    YieldResetter resetter(context);  // ensures the yield values are reset on return.
+
     // we require a name and module, but the
     // procedure is optional.  If not specified, we
     // use the function name directly.
@@ -2740,6 +2758,8 @@ BUILTIN(RXFUNCDROP)
 
     fix_args(RXFUNCDROP);
 
+    YieldResetter resetter(context);  // ensures the yield values are reset on return.
+
     RexxString *name = required_string(RXFUNCDROP, name);
 
     // hand this off to the package manager.
@@ -2754,6 +2774,8 @@ BUILTIN(RXFUNCQUERY)
     const size_t RXFUNCQUERY_name =   1;
 
     fix_args(RXFUNCQUERY);
+
+    YieldResetter resetter(context);  // ensures the yield values are reset on return.
 
     RexxString *name = required_string(RXFUNCQUERY, name);
 
@@ -2770,6 +2792,8 @@ BUILTIN(RXQUEUE)
     const size_t RXQUEUE_name =   2;
 
     fix_args(RXQUEUE);
+
+    YieldResetter resetter(context);  // ensures the yield values are reset on return.
 
     RexxString *option = required_string(RXQUEUE, option);
     RexxString *queueName = optional_string(RXQUEUE, name);

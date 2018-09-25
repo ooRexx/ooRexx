@@ -153,7 +153,7 @@ void RexxInstructionParse::execute(RexxActivation *context, ExpressionStack *sta
         // PULL or PARSE PULL instruction
         case SUBKEY_PULL:
             // pull a line from the queue and push on the stack for safekeeping
-            value = ActivityManager::currentActivity->pullInput(context);
+            value = context->pullInput();
             stack->push(value);
             context->traceKeywordResult(GlobalNames::PULL, value);
             break;
@@ -161,7 +161,7 @@ void RexxInstructionParse::execute(RexxActivation *context, ExpressionStack *sta
         // PARSE LINEIN
         case SUBKEY_LINEIN:
             // read a line from the console stream
-            value = ActivityManager::currentActivity->lineIn(context);
+            value = context->lineIn();
             stack->push(value);
             context->traceKeywordResult(GlobalNames::LINEIN, value);
             break;

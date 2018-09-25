@@ -83,8 +83,10 @@
 #include "LibraryPackage.hpp"
 
 
-// max instructions without a yield
-const size_t MAX_INSTRUCTIONS = 100;
+
+
+
+
 
 /**
  * Create a new activation object
@@ -465,7 +467,7 @@ RexxObject * RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxOb
     RexxActivationFrame frame(activity, this);
 
     // this is the number of instructions to run without yielding
-    size_t instructionCount = 0;
+    resetYield();
 
     receiver = _receiver;
     // the "msgname" can also be the name of an external routine, the label
@@ -591,17 +593,28 @@ RexxObject * RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxOb
         try
         {
             // reset the instruction counter
-            instructionCount = 0;
+            resetYield();
             RexxInstruction *nextInst = next;
             // loop until we no longer have a next instruction to process
             while (nextInst != OREF_NULL)
             {
                 // concurrency is cooperative, so we release access every so often
                 // to allow other threads to run.
-                if (++instructionCount > MAX_INSTRUCTIONS)
+                if (++instructionCount > yieldInstructions)
                 {
-                    activity->relinquish();
-                    instructionCount = 0;
+                    checksSinceLastYield++;     // keep track of how often we have done this
+                    uint64_t timeNow = SystemInterpreter::getMillisecondTicks();
+                    if (timeNow - lastYieldTime > timeSliceLength)
+                    {
+                        // give up control if there are waiters
+                        ActivityManager::relinquish(activity);
+                        // reset the timer to the time when we get control back, not the
+                        // check time.
+                        lastYieldTime = SystemInterpreter::getMillisecondTicks();
+                        checksSinceLastYield = 0;        // reset this. TODO: try dynamically adjusting the time slice
+                    }
+
+                    instructionCount = 0;   // reset the instruction counter even if we didn't yield.
                 }
                 // set the current instruction and prefetch the next one.  Control
                 // instructions may change next on us.
@@ -663,6 +676,14 @@ RexxObject * RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxOb
                 frame.disableFrame();
                 // see if there are any objects waiting to run uninits.
                 memoryObject.checkUninitQueue();
+                // because short methods are very common, we don't want to
+                // thrash on every method call, if we've executed at last
+                // a "significant" number of instructions, then we relinquish
+                // control on exit.
+                if (instructionCount > shortMethodThreshold)
+                {
+                    activity->relinquish();
+                }
             }
             // This is a REPLIED state
             else
@@ -671,6 +692,7 @@ RexxObject * RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxOb
                 resultObj = result;
                 // reset the next instruction
                 next = current->nextInstruction;
+
                 // now we need to create a new activity and
                 // attach this activation to it.
                 Activity *oldActivity = activity;
@@ -2740,6 +2762,7 @@ RexxObject *RexxActivation::externalCall(RexxString *target, RoutineClass *routi
 {
     // call and return the result
     routine->call(activity, target, arguments, argcount, calltype, OREF_NULL, EXTERNALCALL, resultObj);
+    resetYield();                       // the call will yield control on return, so we can reset our yield counter
     return resultObj;
 }
 
@@ -2763,6 +2786,8 @@ RexxObject *RexxActivation::externalCall(RexxString *target, RoutineClass *routi
 RexxObject *RexxActivation::externalCall(RoutineClass *&routine, RexxString *target, RexxObject **arguments, size_t argcount,
     RexxString *calltype, ProtectedObject &resultObj)
 {
+    YieldResetter resetter(this);         // the call will yield control on return, so we can reset our yield counter
+
     // Step 1: used to be the functions directory, which has been deprecated.
 
     // Step 2:  Check for a ::ROUTINE definition in the local context
@@ -3002,6 +3027,8 @@ void RexxActivation::loadLibrary(RexxString *target, RexxInstruction *instructio
 RexxObject * RexxActivation::internalCall(RexxString *name, RexxInstruction *target,
     RexxObject **arguments, size_t argcount, ProtectedObject &returnObject)
 {
+    YieldResetter resetter(this); // we want to reset the yield points when we get control back
+
     // we need to set SIGL to the caller's line number
     size_t lineNum = current->getLineNumber();
     setLocalVariable(GlobalNames::SIGL, VARIABLE_SIGL, new_integer(lineNum));
@@ -3028,6 +3055,8 @@ RexxObject * RexxActivation::internalCall(RexxString *name, RexxInstruction *tar
 RexxObject * RexxActivation::internalCallTrap(RexxString *name, RexxInstruction *target,
     DirectoryClass *conditionObj, ProtectedObject &resultObj)
 {
+    YieldResetter resetter(this); // we want to reset the yield points when we get control back
+
     // protect the condition object from GC by pushing on to the expression stack.
     stack.push(conditionObj);
     // we need to set the SIGL variable for an internal call
@@ -3049,6 +3078,8 @@ RexxObject * RexxActivation::internalCallTrap(RexxString *name, RexxInstruction 
  */
 void RexxActivation::guardWait()
 {
+    YieldResetter resetter(this); // we want to reset the yield points when we get control back
+
     // we need to wait without locking the variables.  If we
     // held the lock before the wait, we reaquire it after we wake up.
     GuardStatus initial_state = objectScope;
@@ -4010,6 +4041,8 @@ CommandIOContext *RexxActivation::resolveAddressIOConfig(RexxString *address, Co
  */
 void RexxActivation::command(RexxString *address, RexxString *commandString, CommandIOConfiguration *ioConfig)
 {
+    YieldResetter resetter(this); // we want to reset the yield points when we get control back
+
     // if we are tracing command instructions, then we need to add some
     // additional trace information afterward.  Also, if we're tracing errors or
     // failures, we similarly need to know if the command has already been traced.
@@ -4347,7 +4380,42 @@ void RexxActivation::closeStreams()
  */
 void RexxActivation::sayOutput(RexxString *line)
 {
+    YieldResetter resetter(this); // we want to reset the yield points when we get control back
+
     activity->sayOutput(this, line);
+}
+
+
+/**
+ * Handle PULL or PARSE PULL input
+ */
+RexxString *RexxActivation::pullInput()
+{
+    YieldResetter resetter(this); // we want to reset the yield points when we get control back
+
+    return activity->pullInput(this);
+}
+
+
+/**
+ * Handle PARSE LINEIN input
+ */
+RexxString *RexxActivation::lineIn()
+{
+    YieldResetter resetter(this); // we want to reset the yield points when we get control back
+
+    return activity->lineIn(this);
+}
+
+
+/**
+ * Handle PUSH/QUEUE output
+ */
+void RexxActivation::queue(RexxString *line, Activity::QueueOrder order)
+{
+    YieldResetter resetter(this); // we want to reset the yield points when we get control back
+
+    activity->queue(this, line, order);
 }
 
 

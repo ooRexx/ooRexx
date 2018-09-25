@@ -149,6 +149,8 @@ void QualifiedFunction::flatten(Envelope *envelope)
  */
 RexxObject *QualifiedFunction::evaluate(RexxActivation *context, ExpressionStack *stack)
 {
+    YieldResetter resetter(context); // we want to reset the yield points when we get control back
+
     // save the top of the stack for popping values off later.
     size_t stacktop = stack->location();
 

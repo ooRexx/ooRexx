@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -85,6 +85,8 @@ SysSemaphore::SysSemaphore(bool createSem)
         create();
     }
 }
+
+
 
 
 void SysSemaphore::create()
@@ -209,7 +211,7 @@ bool SysSemaphore::wait(uint32_t t)           // takes a timeout in msecs
     ts.tv_nsec = tv.tv_usec * 1000;           // .. and microsecs to nanosecs
     pthread_mutex_lock(&(this->semMutex));    // Lock access to semaphore
     while (result == 0 && !this->postedCount) // Has it been posted? Spurious wakeups may occur
-    {                                         // wait with timeout 
+    {                                         // wait with timeout
         result = pthread_cond_timedwait(&(this->semCond),&(this->semMutex),&ts);
     }
     pthread_mutex_unlock(&(this->semMutex));    // Release mutex lock
@@ -232,9 +234,10 @@ void SysSemaphore::reset()
  * Create a semaphore with potential creation-time
  * initialization.
  *
- * @param create Indicates whether the semaphore should be created now.
+ * @param createSem
+ * @param critical  Indicates this is a critical-time semaphore only held for a short period of time (ignored for unix-based)
  */
-SysMutex::SysMutex(bool createSem)
+SysMutex::SysMutex(bool createSem, bool critical)
 {
     if (createSem)
     {
@@ -242,7 +245,15 @@ SysMutex::SysMutex(bool createSem)
     }
 }
 
-void SysMutex::create()
+
+/**
+ * Create a mutex for operation
+ *
+ * @param critical Indicates whether this is a "critical time" semaphore that will only be
+ *                 held for short windows. This is a noop for
+ *                 unix-based platforms.
+ */
+void SysMutex::create(bool critical)
 {
     // don't create this multiple times
     if (created)

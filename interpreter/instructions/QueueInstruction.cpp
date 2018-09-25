@@ -68,7 +68,7 @@ void RexxInstructionQueue::execute(RexxActivation *context, ExpressionStack *sta
     // evaluate the line to PUSH or QUEUE
     RexxString *value = evaluateStringExpression(context, stack);
     // write out the line, using the order dictated by the instruction.
-    ActivityManager::currentActivity->queue(context, value, (instructionType == KEYWORD_PUSH) ? Activity::QUEUE_LIFO : Activity::QUEUE_FIFO);
+    context->queue(value, (instructionType == KEYWORD_PUSH) ? Activity::QUEUE_LIFO : Activity::QUEUE_FIFO);
     context->pauseInstruction();
 }
 

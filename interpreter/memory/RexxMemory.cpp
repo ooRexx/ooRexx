@@ -597,7 +597,7 @@ MemorySegment *MemoryObject::newLargeSegment(size_t requestedBytes, size_t minBy
     // information, and round this to a proper boundary
     size_t allocationBytes = MemorySegment::roundSegmentBoundary(requestedBytes + MemorySegment::MemorySegmentOverhead);
 #ifdef MEMPROFILE
-    printf("Allocating large boundary new segment of %d bytes for request of %d\n", allocationBytes, requestedBytes);
+    printf("Allocating large boundary new segment of %zu bytes for request of %zu\n", allocationBytes, requestedBytes);
 #endif
     // try allocate a segment using the requested size
     MemorySegment *segment = newSegment(allocationBytes);
@@ -1343,7 +1343,7 @@ void MemoryObject::saveImage()
 #ifdef MEMPROFILE
     printf("Object stats for this image save are \n");
     _imageStats.printSavedImageStats();
-    printf("\n\n Total bytes for this image %lu bytes \n", saveHandler.imageOffset);
+    printf("\n\n Total bytes for this image %zu bytes \n", saveHandler.imageOffset);
 #endif
 }
 

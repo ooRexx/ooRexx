@@ -241,7 +241,7 @@ class ServerQueueManager
     friend class DataQueue;     // needs access to the instance lock
     friend class QueueTable;    // needs access to the instance lock
 public:
-    ServerQueueManager() : namedQueues(), sessionQueues(), lock() { lock.create(); }
+    ServerQueueManager() : namedQueues(), sessionQueues(), lock() { lock.create(true); }
 
     void terminateServer();
     void addToSessionQueue(ServiceMessage &message);

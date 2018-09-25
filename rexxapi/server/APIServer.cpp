@@ -56,7 +56,7 @@ void APIServer::initServer()
         throw new ServiceException(SERVER_FAILURE, "RexxAPIServer::initServer() Failure creating server stream");
     }
 
-    lock.create();         // create the mutex.
+    lock.create(true);         // create the mutex.
     serverActive = true;
 }
 

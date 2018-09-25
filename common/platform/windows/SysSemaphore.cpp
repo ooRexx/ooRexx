@@ -92,11 +92,13 @@ void SysSemaphore::close()
  * Create a semaphore with potential creation-time
  * initialization.
  *
- * @param create Indicates whether the semaphore should be created now.
+ * @param createSem
+ * @param critical  Critical indicates the most efficient dispatching mechanism should be use.
  */
-SysMutex::SysMutex(bool createSem)
+SysMutex::SysMutex(bool createSem, bool critical)
 {
     mutexMutex = 0;
+    bypassMessageLoop = critical;
     if (createSem)
     {
         create();
@@ -104,8 +106,16 @@ SysMutex::SysMutex(bool createSem)
 }
 
 
-void SysMutex::create()
+/**
+ * Create a mutex for operation
+ *
+ * @param critical Indicates whether this is a "critical time" semaphore that will only be
+ *                 held for short windows. The most optimal (i.e., no message loop on Windows)
+ *                 mechanism will be used for requesting the semaphore.
+ */
+void SysMutex::create(bool critical)
 {
+    bypassMessageLoop = critical;
     if (mutexMutex == 0)
     {
         mutexMutex = CreateMutex(NULL, false, NULL);

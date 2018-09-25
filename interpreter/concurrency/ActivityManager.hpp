@@ -61,7 +61,7 @@ public:
     static void liveGeneral(MarkReason reason);
 
     static void addWaitingActivity(Activity *a, bool release);
-    static inline bool hasWaiters() { return !waitingActivities.empty(); }
+    static inline bool hasWaiters() { return !waitingActivities.empty() || waitingAttaches != 0; }
     static Activity *findActivity();
     static Activity *findActivity(thread_id_t);
     static Activity *getActivity();
@@ -94,7 +94,15 @@ public:
     static bool haltActivity(thread_id_t thread_id, RexxString * description);
     static void yieldCurrentActivity();
     static void exit(int retcode);
-    static void relinquish(Activity *activity);
+    static inline void relinquish(Activity *activity)
+    {
+        // if we have waiting activities, then let one of them
+        // in next.
+        if (hasWaiters())
+        {
+            addWaitingActivity(activity, true);
+        }
+    }
     static Activity *getRootActivity();
     static void returnRootActivity(Activity *activity);
     static Activity *attachThread();
@@ -136,6 +144,7 @@ protected:
     static SysSemaphore      terminationSem;          // used to signal that everything has shutdown
     static volatile bool sentinel;                    // used to ensure proper ordering of updates
     static std::deque<Activity *>waitingActivities;   // queue of waiting activities
+    static size_t waitingAttaches;                    // the count of attaches waiting for access
 };
 
 
