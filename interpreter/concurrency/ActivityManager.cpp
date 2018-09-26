@@ -64,6 +64,8 @@ std::deque<Activity *>ActivityManager::waitingActivities;   // queue of waiting 
 
 size_t ActivityManager::waitingAttaches = 0;                // count of waiting external attaches
 
+uint64_t ActivityManager::lastLockTime = 0;                 // the last time we granted the kernel lock.
+
 // process shutting down flag
 bool ActivityManager::processTerminating = false;
 
@@ -635,15 +637,6 @@ void ActivityManager::exit(int retcode)
 
 
 /**
- * Request access to the kernel
- */
-void ActivityManager::lockKernel()
-{
-    kernelSemaphore.request();
-}
-
-
-/**
  * release the kernel access and make sure waiting activites are woken up.
  */
 void ActivityManager::releaseAccess()
@@ -665,21 +658,6 @@ void ActivityManager::releaseAccess()
 
     // now release the kernel lock
     unlockKernel();
-}
-
-
-/**
- * Release the kernel access
- */
-void ActivityManager::unlockKernel()
-{
-    // the use of the sentinel variables will ensure that the assignment of
-    // current activity occurs BEFORE the kernel semaphore is released.
-    sentinel = false;
-    currentActivity = OREF_NULL;
-    sentinel = true;
-    // now release the semaphore
-    kernelSemaphore.release();
 }
 
 

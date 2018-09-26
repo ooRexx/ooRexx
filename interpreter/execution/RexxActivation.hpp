@@ -562,16 +562,8 @@ class RexxActivation : public ActivationBase
    RexxString *pullInput();
    RexxString *lineIn();
    void queue(RexxString *, Activity::QueueOrder);
-   void resetYield()
-   {
-       instructionCount = 0;
-       checksSinceLastYield = 0;
-       lastYieldTime = SystemInterpreter::getMillisecondTicks();
-   }
 
-   static const size_t shortMethodThreshold = 10;         // an instruction threshold for short method termination.
    static const size_t yieldInstructions = 50;            // the number of instructions we'll execute before a yield check
-   static const uint64_t timeSliceLength = 24;            // how long we'll run before checking for a control yield.
 
    static const uint64_t RANDOM_FACTOR = 25214903917LL;   // random multiplication factor
    static const uint64_t RANDOM_ADDER = 11LL;
@@ -623,30 +615,5 @@ class RexxActivation : public ActivationBase
     bool                 randomSet;     // random seed has been set
     size_t               blockNest;     // block instruction nesting level
     size_t               instructionCount;  // The number of instructions since we last yielded control
-    size_t               checksSinceLastYield;  // the number of times we checked for a yield since the last one.
-    uint64_t             lastYieldTime;     // the last time we yielded control.
  };
-
-
-/**
- * An object that uses the destructor to ensure that the dispatch yields
- * are reset on exit.
- */
-class YieldResetter
-{
-public:
-    inline YieldResetter(RexxActivation *c)
-    {
-        context = c;
-    }
-
-    inline ~YieldResetter()
-    {
-        context->resetYield();
-    }
-
-private:
-
-    RexxActivation *context;
-};
  #endif

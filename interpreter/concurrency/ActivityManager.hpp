@@ -42,6 +42,7 @@
 #include "ActivationSettings.hpp"
 #include <deque>
 #include "GlobalNames.hpp"
+#include "SystemInterpreter.hpp"
 
 // the error code definitions are need for any code that
 // issues error messages, so place these here.
@@ -71,8 +72,25 @@ public:
     static void checkShutdown();
     static void createInterpreter();
     static void terminateInterpreter();
-    static void lockKernel();
-    static void unlockKernel();
+
+    inline static void lockKernel()
+    {
+        kernelSemaphore.request();
+        // keep track of the last time this was granted.
+        lastLockTime = SystemInterpreter::getMillisecondTicks();
+    }
+
+    inline static void unlockKernel()
+    {
+        // the use of the sentinel variables will ensure that the assignment of
+        // current activity occurs BEFORE the kernel semaphore is released.
+        sentinel = false;
+        currentActivity = OREF_NULL;
+        sentinel = true;
+        // now release the semaphore
+        kernelSemaphore.release();
+    }
+
     static void releaseAccess();
     static bool lockKernelImmediate();
     static void createLocks();
@@ -101,6 +119,22 @@ public:
         if (hasWaiters())
         {
             addWaitingActivity(activity, true);
+        }
+    }
+    // give up control, but only if the time slice requires it.
+    static inline void relinquishIfNeeded(Activity *activity)
+    {
+        // if we have waiting activities, then let one of them
+        // in next.
+        if (hasWaiters())
+        {
+            // check the time that we've have been holding the lock and release it
+            // if we've crossed the threshold,
+            uint64_t timeNow = SystemInterpreter::getMillisecondTicks();
+            if (timeNow - lastLockTime > timeSliceLength)
+            {
+                addWaitingActivity(activity, true);
+            }
         }
     }
     static Activity *getRootActivity();
@@ -134,6 +168,7 @@ protected:
 
     // maximum number of activities we'll pool
     static const size_t MAX_THREAD_POOL_SIZE = 5;
+    static const uint64_t timeSliceLength = 24;            // how long we'll run before checking for a control yield.
 
     static QueueClass       *availableActivities;     // table of available activities
     static QueueClass       *allActivities;           // table of all activities
@@ -145,6 +180,7 @@ protected:
     static volatile bool sentinel;                    // used to ensure proper ordering of updates
     static std::deque<Activity *>waitingActivities;   // queue of waiting activities
     static size_t waitingAttaches;                    // the count of attaches waiting for access
+    static uint64_t          lastLockTime;            // the last time we granted the kernel lock.
 };
 
 
