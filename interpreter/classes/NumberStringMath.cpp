@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -106,7 +106,7 @@ RexxString *NumberString::d2xD2c(RexxObject *length, bool type)
         bufferLength = Numerics::maxVal(currentDigits, resultSize) + OVERFLOWSPACE;
     }
 
-    BufferClass *target = new_buffer(bufferLength);
+    Protected<BufferClass> target = new_buffer(bufferLength);
     char *scan = numberDigits;
 
     // we start accumulating from the end of the buffer
@@ -800,13 +800,15 @@ NumberString *NumberString::addSub(NumberString *other, ArithmeticOperator opera
     // cases.
     char resultBufFast[FAST_BUFFER * 2 + 1];
     char *resultBuffer = resultBufFast;
+    Protected<BufferClass> outputBuffer;
 
     // if the digits are really big, then we need to allocate a larger buffer.
     // just allocate a buffer object and allow it to get garbage collected after
     // we're done.
     if (digits > FAST_BUFFER)
     {
-        resultBuffer = new_buffer(digits * 2 + 1)->getData();
+        outputBuffer = new_buffer(digits * 2 + 1);
+        resultBuffer = outputBuffer->getData();
     }
 
     // point to the end, which will be the start of where we accumulate

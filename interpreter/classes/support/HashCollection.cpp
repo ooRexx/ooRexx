@@ -964,10 +964,10 @@ RexxObject *StringHashCollection::setEntryRexx(RexxObject *entryName, RexxObject
  */
 RexxObject *StringHashCollection::unknownRexx(RexxString *message, ArrayClass *arguments)
 {
-    message = stringArgument(message, ARG_ONE);
-    arguments = arrayArgument(arguments, ARG_TWO);
+    Protected<RexxString> messageName = stringArgument(message, ARG_ONE);
+    Protected<ArrayClass> argumentList = arrayArgument(arguments, ARG_TWO);
 
-    return unknown(message, arguments->messageArgs(), arguments->messageArgCount());
+    return unknown(messageName, argumentList->messageArgs(), argumentList->messageArgCount());
 }
 
 

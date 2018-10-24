@@ -139,13 +139,12 @@ PackageClass *PackageClass::newRexx(RexxObject **init_args, size_t argCount)
     Protected<PackageClass> package;
 
     // get the package name as a string
-    RexxString *nameString = stringArgument(pgmname, "name");
+    Protected<RexxString> nameString = stringArgument(pgmname, "name");
     if (programSource == OREF_NULL)
     {
         // if no directly provided source, resolve the name in the global context and have the instance
         // load the file.
-        RexxString *resolvedName = instance->resolveProgramName(nameString, OREF_NULL, OREF_NULL);
-        ProtectedObject n(resolvedName);
+        Protected<RexxString> resolvedName = instance->resolveProgramName(nameString, OREF_NULL, OREF_NULL);
         package = instance->loadRequires(activity, nameString, resolvedName);
     }
     // we're creating an in-memory package.  We allow a parent context object to be specified
@@ -908,7 +907,7 @@ RexxString *PackageClass::resolveProgramName(Activity *activity, RexxString *nam
  */
 RexxObject *PackageClass::findProgramRexx(RexxObject *name)
 {
-    RexxString *target = stringArgument(name, "name");
+    Protected<RexxString> target = stringArgument(name, "name");
 
     Activity *activity = ActivityManager::currentActivity;
     // we need the instance this is associated with
@@ -916,8 +915,8 @@ RexxObject *PackageClass::findProgramRexx(RexxObject *name)
 
     // get a fully resolved name for this....we might locate this under either name, but the
     // fully resolved name is generated from this source file context.
-    RexxString *programName = instance->resolveProgramName(target, programDirectory, programExtension);
-    if (programName != OREF_NULL)
+    Protected<RexxString> programName = instance->resolveProgramName(target, programDirectory, programExtension);
+    if (programName != (RexxString *)OREF_NULL)
     {
         return programName;
     }
@@ -1778,18 +1777,18 @@ ArrayClass *PackageClass::getImportedPackagesRexx()
 PackageClass *PackageClass::loadPackageRexx(RexxString *name, ArrayClass *s)
 {
     // make sure we have a valid name and delegate to the source object
-    name = stringArgument(name, 1);
+    Protected<RexxString> packageName = stringArgument(name, 1);
     // unable to add to the external packages
     checkRexxPackage();
     // if no source provided, this comes from a file
     if (s == OREF_NULL)
     {
-        return loadRequires(ActivityManager::currentActivity, name);
+        return loadRequires(ActivityManager::currentActivity, packageName);
     }
     else
     {
-        s = arrayArgument(s, "source");
-        return loadRequires(ActivityManager::currentActivity, name, s);
+        Protected<ArrayClass> source = arrayArgument(s, "source");
+        return loadRequires(ActivityManager::currentActivity, packageName, source);
     }
 }
 
@@ -1804,13 +1803,13 @@ PackageClass *PackageClass::loadPackageRexx(RexxString *name, ArrayClass *s)
 RexxObject *PackageClass::addPackageRexx(PackageClass *package, RexxString *namespaceName)
 {
     classArgument(package, ThePackageClass, "package");
-    namespaceName = optionalStringArgument(namespaceName, OREF_NULL, "namespace");
+    Protected<RexxString> addedNamespace = optionalStringArgument(namespaceName, OREF_NULL, "namespace");
     // unable to add to the external packages
     checkRexxPackage();
     addPackage(package);
-    if (namespaceName != OREF_NULL)
+    if (addedNamespace != (RexxString *)OREF_NULL)
     {
-        addNamespace(namespaceName, package);
+        addNamespace(addedNamespace, package);
     }
     return this;
 }
@@ -1825,11 +1824,11 @@ RexxObject *PackageClass::addPackageRexx(PackageClass *package, RexxString *name
  */
 RexxObject *PackageClass::addRoutineRexx(RexxString *name, RoutineClass *routine)
 {
-    name = stringArgument(name, "name");
+    Protected<RexxString> routineName = stringArgument(name, "name");
     classArgument(routine, TheRoutineClass, "routine");
     // unable to add to the external packages
     checkRexxPackage();
-    addInstalledRoutine(name, routine, false);
+    addInstalledRoutine(routineName, routine, false);
     return this;
 }
 
@@ -1843,11 +1842,11 @@ RexxObject *PackageClass::addRoutineRexx(RexxString *name, RoutineClass *routine
  */
 RexxObject *PackageClass::addPublicRoutineRexx(RexxString *name, RoutineClass *routine)
 {
-    name = stringArgument(name, "name");
+    Protected<RexxString> routineName = stringArgument(name, "name");
     classArgument(routine, TheRoutineClass, "routine");
     // unable to add to the external packages
     checkRexxPackage();
-    addInstalledRoutine(name, routine, true);
+    addInstalledRoutine(routineName, routine, true);
     return this;
 }
 
@@ -1861,11 +1860,11 @@ RexxObject *PackageClass::addPublicRoutineRexx(RexxString *name, RoutineClass *r
  */
 RexxObject *PackageClass::addClassRexx(RexxString *name, RexxClass *clazz)
 {
-    name = stringArgument(name, "name");
+    Protected<RexxString> className = stringArgument(name, "name");
     classArgument(clazz, TheClassClass, "class");
     // unable to add to the external packages
     checkRexxPackage();
-    addInstalledClass(name, clazz, false);
+    addInstalledClass(className, clazz, false);
     return this;
 }
 
@@ -1879,11 +1878,11 @@ RexxObject *PackageClass::addClassRexx(RexxString *name, RexxClass *clazz)
  */
 RexxObject *PackageClass::addPublicClassRexx(RexxString *name, RexxClass *clazz)
 {
-    name = stringArgument(name, "name");
+    Protected<RexxString> className = stringArgument(name, "name");
     classArgument(clazz, TheClassClass, "class");
     // unable to add to the external packages
     checkRexxPackage();
-    addInstalledClass(name, clazz, true);
+    addInstalledClass(className, clazz, true);
     return this;
 }
 
@@ -1987,12 +1986,12 @@ RexxObject *PackageClass::setSecurityManagerRexx(RexxObject *manager)
  */
 RexxObject *PackageClass::loadLibraryRexx(RexxString *name)
 {
-    name = stringArgument(name, "name");
+    Protected<RexxString> libraryName = stringArgument(name, "name");
     // unable to add to the external packages
     checkRexxPackage();
     // have we already loaded this package?
     // may need to bootstrap it up first.
-    LibraryPackage *package = PackageManager::loadLibrary(name);
+    LibraryPackage *package = PackageManager::loadLibrary(libraryName);
     return booleanObject(package != NULL);
 }
 

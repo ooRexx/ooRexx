@@ -172,7 +172,8 @@ void SysThread::shutdown()
  */
 void SysThread::yield()
 {
-    // this is a nop on Windows;
+    // just give up the time slice
+    Sleep(1);
 }
 
 

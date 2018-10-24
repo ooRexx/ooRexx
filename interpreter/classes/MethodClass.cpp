@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -491,18 +491,18 @@ MethodClass *MethodClass::newFileRexx(RexxString *filename, PackageClass *source
 /**
  * Create a method from an external library source.
  *
- * @param name   The method name.
+ * @param methodName The method name.
+ * @param libraryDescriptor
  *
  * @return The resolved method object, or OREF_NULL if unable to
  *         load the routine.
  */
-MethodClass *MethodClass::loadExternalMethod(RexxString *name, RexxString *descriptor)
+MethodClass *MethodClass::loadExternalMethod(RexxString *methodName, RexxString *libraryDescriptor)
 {
-    name = stringArgument(name, "name");
-    descriptor = stringArgument(descriptor, "descriptor");
+    Protected<RexxString> name = stringArgument(methodName, "name");
+    Protected<RexxString> descriptor = stringArgument(libraryDescriptor, "descriptor");
     // convert external into words
-    ArrayClass *_words = StringUtil::words(descriptor->getStringData(), descriptor->getLength());
-    ProtectedObject p(_words);
+    Protected<ArrayClass> _words = StringUtil::words(descriptor->getStringData(), descriptor->getLength());
     // "LIBRARY libbar [foo]"
     if (_words->size() > 0 && ((RexxString *)(_words->get(1)))->strCompare("LIBRARY"))
     {

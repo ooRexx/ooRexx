@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -49,6 +49,7 @@
 #include "Activity.hpp"
 #include "ActivityManager.hpp"
 #include "MethodArguments.hpp"
+#include "ProtectedObject.hpp"
 
 
 /**
@@ -104,6 +105,8 @@ char *NumberString::addMultiplier(const char *top, wholenumber_t topLen, char *a
  */
 NumberString *NumberString::Multiply(NumberString *other)
 {
+    Protected<BufferClass> outputBuffer;
+
     wholenumber_t digits = number_digits();
 
     // prepare both numbers, copying and rounding if necessary.
@@ -140,7 +143,8 @@ NumberString *NumberString::Multiply(NumberString *other)
     // we're done.
     if (totalDigits > FAST_BUFFER)
     {
-        outPtr = new_buffer(totalDigits)->getData();
+        outputBuffer = new_buffer(totalDigits);
+        outPtr = outputBuffer->getData();
     }
     // make sure this is cleared out
     memset(outPtr, '\0', totalDigits);
@@ -330,6 +334,7 @@ NumberString *NumberString::Division(NumberString *other, ArithmeticOperator div
     NumberStringBase accumBuffer;
     NumberStringBase saveLeftBuffer;
     NumberStringBase saveRightBuffer;
+    Protected<BufferClass> outputBuffer;
 
     // static sized buffers for typical calculation sizes.
     char leftBufFast[FAST_BUFFER];
@@ -405,7 +410,8 @@ NumberString *NumberString::Division(NumberString *other, ArithmeticOperator div
     if (totalDigits > FAST_BUFFER)
     {
         // we can use a single buffer and chop it up
-        leftNum = new_buffer(totalDigits * 3)->getData();
+        outputBuffer = new_buffer(totalDigits * 3);
+        leftNum = outputBuffer->getData();
         rightNum = leftNum + totalDigits;
         output = rightNum + totalDigits;
     }
@@ -735,7 +741,7 @@ NumberString *NumberString::Division(NumberString *other, ArithmeticOperator div
 
     // if this has been an integer divide, we can return the result as a
     // RexxInteger if we have at most Numerics::REXXINTEGER_DIGITS digits
-    // no need to check the current numeric digits setting, as an 
+    // no need to check the current numeric digits setting, as an
     // integer divide will have raised
     // Error 26.11:  Result of % operation did not result in a whole number
     // for any result outside of the current digits setting
@@ -806,6 +812,7 @@ NumberString *NumberString::power(RexxObject *powerObj)
 {
     requiredArgument(powerObj, ARG_ONE);
     wholenumber_t powerValue;
+    Protected<BufferClass> outputBuffer;
 
     if (!powerObj->numberValue(powerValue, number_digits()))
     {
@@ -892,7 +899,8 @@ NumberString *NumberString::power(RexxObject *powerObj)
     wholenumber_t accumLen = (2 * (digits + 1)) + 1;
 
     // get a single buffer object with space for two values of this size
-    char *outPtr = new_buffer(accumLen * 2)->getData();
+    outputBuffer = new_buffer(accumLen * 2);
+    char *outPtr = outputBuffer->getData();
     char *accumBuffer = outPtr + accumLen;
     char *accumPtr = accumBuffer;
 
@@ -1058,10 +1066,12 @@ char *NumberString::dividePower(const char *accumPtr, NumberStringBase *accum, c
     //   this routin also check Division for similiar updates
 
     wholenumber_t totalDigits = ((digits + 1) * 2) + 1;
+    Protected<BufferClass> outputBuffer;
 
     // set up temporary buffers for the calculations
     NumberStringBase leftBuffer;
-    char *leftPtr = new_buffer(totalDigits * 2)->getData();
+    outputBuffer = new_buffer(totalDigits * 2);
+    char *leftPtr = outputBuffer->getData();
     char *result = leftPtr + totalDigits;
 
     NumberStringBase *left = &leftBuffer;

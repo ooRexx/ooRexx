@@ -110,7 +110,6 @@ class ActivationSettings
         traceOff,                // external trace OFF condition occurred
         sourceTraced,            // source string has been traced
         clauseExits,             // need to call clause boundary exits
-        externalYield,           // activity wants us to yield
         forwarded,               // forward instruction active
         replyIssued,             // reply has already been issued
         setTraceOn,              // trace turned on externally
@@ -160,8 +159,6 @@ class ActivationSettings
       inline void setReturnStatus(bool v = true) { stateFlags[returnStatusSet] = v; }
       inline bool wasSourceTraced() { return stateFlags[sourceTraced]; }
       inline void setSourceTraced(bool v = true) { stateFlags[sourceTraced] = v; }
-      inline bool haveExternalYield() { return stateFlags[externalYield]; }
-      inline void setExternalYield(bool v = true) { stateFlags[externalYield] = v; }
       inline bool haveHaltCondition() { return stateFlags[haltCondition]; }
       inline void setHaltCondition(bool v = true) { stateFlags[haltCondition] = v; }
 

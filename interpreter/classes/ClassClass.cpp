@@ -883,13 +883,13 @@ RexxObject *RexxClass::defineMethod(RexxString *method_name, RexxObject *methodS
 RexxObject *RexxClass::defineClassMethod(RexxString *method_name, MethodClass *newMethod)
 {
     // validate the arguments
-    method_name = stringArgument(method_name, ARG_ONE)->upper();
+    Protected<RexxString> name = stringArgument(method_name, ARG_ONE)->upper();
     requiredArgument(newMethod, ARG_TWO);
-    newMethod = newMethod->newScope(this);
+    Protected<MethodClass> addedMethod = newMethod->newScope(this);
     // now add this directly to the behaviour
-    behaviour->defineMethod(method_name, newMethod);
+    behaviour->defineMethod(name, addedMethod);
     // also add to the class method dictionary
-    classMethodDictionary->addMethod(method_name, newMethod);
+    classMethodDictionary->addMethod(name, addedMethod);
     // called as a Rexx method, so we need a return value.
     return OREF_NULL;
 }
@@ -1782,7 +1782,7 @@ RexxClass  *RexxClass::newRexx(RexxObject **args, size_t argCount)
     }
 
     // first argument is the class id...make sure it is a string value
-    RexxString *class_id = (RexxString *)args[0];
+    Protected<RexxString> class_id = (RexxString *)args[0];
     class_id = stringArgument(class_id, "class id");
 
     // get a copy of this class object

@@ -416,7 +416,7 @@ Activity *InterpreterInstance::enterOnCurrentThread()
     activity->activate();
     // from this point forward, we want to be the active activity, so
     // acquire the kernel lock
-    activity->requestAccess();
+    activity->requestApiAccess();
     // return the activity for use
     return activity;
 }

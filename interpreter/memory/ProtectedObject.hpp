@@ -127,6 +127,11 @@ class ProtectedObject : public ProtectedBase
         return (ArrayClass *)protectedObject;
     }
 
+    inline operator RexxClass *()
+    {
+        return (RexxClass *)protectedObject;
+    }
+
     // this conversion helps the parsing process protect objects
     inline operator RexxInstruction *()
     {

@@ -215,12 +215,12 @@ void VariableReference::setValueRexx(RexxObject *v)
  */
 RexxObject *VariableReference::unknownRexx(RexxString *message, ArrayClass *arguments)
 {
-    message = stringArgument(message, ARG_ONE);
-    arguments = arrayArgument(arguments, ARG_TWO);
+    Protected<RexxString> messageName = stringArgument(message, ARG_ONE);
+    Protected<ArrayClass> argumentList = arrayArgument(arguments, ARG_TWO);
 
     ProtectedObject result;
     // get the resolved variable value and forward this to the value
-    return variable->getResolvedValue()->sendMessage(message, arguments, result);
+    return variable->getResolvedValue()->sendMessage(messageName, argumentList, result);
 }
 
 

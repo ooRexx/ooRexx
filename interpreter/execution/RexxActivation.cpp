@@ -597,8 +597,9 @@ RexxObject * RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxOb
                 // to allow other threads to run.
                 if (++instructionCount > yieldInstructions)
                 {
-                    ActivityManager::relinquishIfNeeded(activity);
                     instructionCount = 0;   // reset the instruction counter even if we didn't yield.
+                    // and have the activity manager decide if we need to give up control
+                    ActivityManager::relinquishIfNeeded(activity);
                 }
                 // set the current instruction and prefetch the next one.  Control
                 // instructions may change next on us.
@@ -651,6 +652,7 @@ RexxObject * RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxOb
                     // merge any pending conditions
                     parent->mergeTraps(conditionQueue);
                 }
+
                 resultObj = result;  // save the result
                 // pop this off of the activity stack and
                 activity->popStackFrame(false);
@@ -1600,6 +1602,8 @@ void RexxActivation::raise(RexxString *condition, RexxObject *rc, RexxString *de
 {
     bool propagated = false;
 
+    Protected<DirectoryClass> p = conditionobj;
+
     // are we propagating an an existing condition?
     if (condition->strCompare(GlobalNames::PROPAGATE))
     {
@@ -1618,7 +1622,9 @@ void RexxActivation::raise(RexxString *condition, RexxObject *rc, RexxString *de
     else
     {
         // build a condition object for the condition
-        conditionobj = new_directory();
+        p = conditionobj = new_directory();
+
+        conditionobj = p;
         conditionobj->put(condition, GlobalNames::CONDITION);
         conditionobj->put(GlobalNames::NULLSTRING, GlobalNames::DESCRIPTION);
         conditionobj->put(TheFalseObject, GlobalNames::PROPAGATED);
@@ -3722,14 +3728,6 @@ void RexxActivation::processClauseBoundary()
         }
     }
 
-    // asked to yield control?
-    if (settings.haveExternalYield())
-    {
-        // turn off the flag and give up control
-        settings.setExternalYield(false);
-        activity->relinquish();
-    }
-
     // have a halt condition?
     if (settings.haveHaltCondition())
     {
@@ -3823,8 +3821,8 @@ bool RexxActivation::halt(RexxString *description )
  */
 void RexxActivation::yield()
 {
-    settings.setExternalYield(true);
-    clauseBoundary = true;
+    // max the instruction counter so that we will check immediately.
+    instructionCount = yieldInstructions;
 }
 
 

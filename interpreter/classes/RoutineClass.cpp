@@ -220,10 +220,10 @@ RexxObject *RoutineClass::callRexx(RexxObject **args, size_t count)
 RexxObject *RoutineClass::callWithRexx(ArrayClass *args)
 {
     // this is required and must be an array
-    args = arrayArgument(args, ARG_ONE);
+    Protected<ArrayClass> argList = arrayArgument(args, ARG_ONE);
 
     ProtectedObject result;
-    code->call(ActivityManager::currentActivity, this, executableName, args->messageArgs(), args->messageArgCount(), result);
+    code->call(ActivityManager::currentActivity, this, executableName, argList->messageArgs(), argList->messageArgCount(), result);
     return result;
 }
 
@@ -558,17 +558,17 @@ RoutineClass *RoutineClass::newFileRexx(RexxString *filename, PackageClass *sour
  */
 RoutineClass *RoutineClass::loadExternalRoutine(RexxString *name, RexxString *descriptor)
 {
-    name = stringArgument(name, "name");
-    descriptor = stringArgument(descriptor, "descriptor");
+    Protected<RexxString> routineName = stringArgument(name, "name");
+    Protected<RexxString> libraryDescriptor = stringArgument(descriptor, "descriptor");
 
     // convert external into words
-    Protected<ArrayClass> words = StringUtil::words(descriptor->getStringData(), descriptor->getLength());
+    Protected<ArrayClass> words = StringUtil::words(libraryDescriptor->getStringData(), libraryDescriptor->getLength());
     // "LIBRARY libbar [foo]"
     if (words->size() > 0 && ((RexxString *)(words->get(1)))->strCompare("LIBRARY"))
     {
         RexxString *library = OREF_NULL;
         // the default entry point name is the internal name
-        RexxString *entry = name;
+        RexxString *entry = routineName;
 
         // full library with entry name version?
         if (words->size() == 3)

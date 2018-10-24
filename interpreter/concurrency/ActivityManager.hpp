@@ -62,7 +62,11 @@ public:
     static void liveGeneral(MarkReason reason);
 
     static void addWaitingActivity(Activity *a, bool release);
-    static inline bool hasWaiters() { return !waitingActivities.empty() || waitingAttaches != 0; }
+    static void addWaitingApiActivity(Activity *a);
+    static bool dispatchNext();
+    static inline bool hasWaiters() { return waitingAccess != 0 || waitingAttaches != 0; }
+    static inline bool hasApiWaiters() { return waitingApiAccess != 0; }
+
     static Activity *findActivity();
     static Activity *findActivity(thread_id_t);
     static Activity *getActivity();
@@ -77,7 +81,7 @@ public:
     {
         kernelSemaphore.request();
         // keep track of the last time this was granted.
-        lastLockTime = SystemInterpreter::getMillisecondTicks();
+        lastLockTime = SysThread::getMillisecondTicks();
     }
 
     inline static void unlockKernel()
@@ -128,15 +132,24 @@ public:
         // in next.
         if (hasWaiters())
         {
-            // check the time that we've have been holding the lock and release it
-            // if we've crossed the threshold,
-            uint64_t timeNow = SystemInterpreter::getMillisecondTicks();
-            if (timeNow - lastLockTime > timeSliceLength)
+            // if we have API calls trying to get in, then don't bother checking the time stamp.
+            if (hasApiWaiters())
             {
                 addWaitingActivity(activity, true);
             }
+            else
+            {
+                // check the time that we've have been holding the lock and release it
+                // if we've crossed the threshold,
+                uint64_t timeNow = SysThread::getMillisecondTicks();
+                if (timeNow - lastLockTime > timeSliceLength)
+                {
+                    addWaitingActivity(activity, true);
+                }
+            }
         }
     }
+
     static Activity *getRootActivity();
     static void returnRootActivity(Activity *activity);
     static Activity *attachThread();
@@ -145,6 +158,7 @@ public:
     static void suspendDispatch(Activity *activity);
     static void removeWaitingActivity(Activity *waitingAct);
     static void returnWaitingActivity(Activity *waitingAct);
+    static void handleNestedActivity(Activity *newActivity, Activity *oldActivity);
 
     // non-static method that is attached to the environment directory
     DirectoryClass *getLocalRexx()
@@ -180,6 +194,8 @@ protected:
     static volatile bool sentinel;                    // used to ensure proper ordering of updates
     static std::deque<Activity *>waitingActivities;   // queue of waiting activities
     static size_t waitingAttaches;                    // the count of attaches waiting for access
+    static size_t waitingAccess;                      // the count of activities waiting for access
+    static size_t waitingApiAccess;                   // the count of activities waiting for access for API callbacks.
     static uint64_t          lastLockTime;            // the last time we granted the kernel lock.
 };
 

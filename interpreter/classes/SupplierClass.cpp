@@ -308,8 +308,8 @@ RexxObject *SupplierClass::loopIndex()
  */
 RexxObject *SupplierClass::initRexx(ArrayClass *_items, ArrayClass *_indexes)
 {
-    ArrayClass *new_items = arrayArgument(_items, ARG_ONE);           // both values are required
-    ArrayClass *new_indexes = arrayArgument(_indexes, ARG_TWO);
+    Protected<ArrayClass> new_items = arrayArgument(_items, ARG_ONE);           // both values are required
+    Protected<ArrayClass> new_indexes = arrayArgument(_indexes, ARG_TWO);
 
     // technically, we could probably directly assign these since this really is a constructor,
     // but it doesn't hurt to use these here.

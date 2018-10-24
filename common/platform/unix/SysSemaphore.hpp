@@ -48,6 +48,7 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include "rexx.h"
+#include "SysThread.hpp"
 
 class SysSemaphore {
 public:

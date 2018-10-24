@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -53,8 +53,8 @@ void SysLocalAPIManager::startServerProcess()
 {
     char apiExeName[] = "rxapi";
     char *apiExeArg[2];
-    apiExeArg[0] = apiExeName; 
-    apiExeArg[1] = NULL; 
+    apiExeArg[0] = apiExeName;
+    apiExeArg[1] = NULL;
 
 	if (signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
 		return;
@@ -105,7 +105,7 @@ bool SysLocalAPIManager::getActiveSessionQueue(QueueHandle &sessionQueue)
     char *envbuffer = getenv("RXQUEUESESSION");
     if (envbuffer != NULL)
     {
-        sscanf(envbuffer, "%p", (char **)&sessionQueue);
+        sscanf(envbuffer, "%p", (void **)&sessionQueue);
         return true;
     }
     return false;

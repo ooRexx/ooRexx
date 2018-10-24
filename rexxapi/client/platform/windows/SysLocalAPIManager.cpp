@@ -398,7 +398,7 @@ bool SysLocalAPIManager::getActiveSessionQueue(QueueHandle &sessionQueue)
     DWORD envchars = GetEnvironmentVariable("RXQUEUESESSION", (LPTSTR) envbuffer, MAX_QUEUE_NAME_LENGTH);
     if (envchars != 0)
     {
-        sscanf(envbuffer, "%p", &sessionQueue);
+        sscanf(envbuffer, "%p", (void **)&sessionQueue);
         return true;
     }
     return false;
@@ -414,6 +414,6 @@ void SysLocalAPIManager::setActiveSessionQueue(QueueHandle sessionQueue)
 {
     char   envbuffer[MAX_QUEUE_NAME_LENGTH+1];
     // and set this as an environment variable for programs we call
-    sprintf(envbuffer, "%p", sessionQueue);
+    sprintf(envbuffer, "%p", (void *)sessionQueue);
     SetEnvironmentVariable("RXQUEUESESSION", (LPTSTR) envbuffer);
 }

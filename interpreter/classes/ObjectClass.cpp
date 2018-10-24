@@ -310,15 +310,14 @@ MethodClass *RexxInternalObject::instanceMethod(RexxString  *method_name)
 /**
  * Retrieve the method instance for an object's defined method.
  *
- * @param method_name
- *               The method name.
+ * @param name The method name.
  *
  * @return The method object that implements the object method.
  */
-MethodClass *RexxObject::instanceMethod(RexxString *method_name)
+MethodClass *RexxObject::instanceMethod(RexxString *name)
 {
     // the name must be a string...and we use it in upper case
-    method_name = stringArgument(method_name, ARG_ONE)->upper();
+    Protected<RexxString> method_name = stringArgument(name, ARG_ONE)->upper();
     // retrieve the method from the dictionary
     MethodClass *method_object = behaviour->methodLookup(method_name);
     return (MethodClass *)resultOrNil(method_object);
@@ -1637,9 +1636,9 @@ RexxString *RexxObject::objectName()
  */
 RexxObject  *RexxObject::objectNameEquals(RexxObject *name)
 {
-    name = stringArgument(name, ARG_ONE);
+    Protected<RexxString> objectName = stringArgument(name, ARG_ONE);
     // set the name in the object class scope
-    setObjectVariable(GlobalNames::OBJECTNAME, name, TheObjectClass);
+    setObjectVariable(GlobalNames::OBJECTNAME, objectName, TheObjectClass);
     return OREF_NULL;
 }
 
@@ -1652,7 +1651,7 @@ RexxObject  *RexxObject::objectNameEquals(RexxObject *name)
  */
 RexxString  *RexxInternalObject::defaultName()
 {
-    return new_string("Unknownn class object");
+    return new_string("Unknown class object");
 }
 
 
@@ -1725,19 +1724,20 @@ RexxClass *RexxObject::classObject()
 /**
  * Add a new method to an object instance
  *
- * @param msgname The name of the new method.
+ * @param name    The name of the new method.
  * @param methobj The method object.
  * @param option  The scope option.
  *
  * @return Returns nothing.
  */
-RexxObject *RexxObject::setMethod(RexxString *msgname, MethodClass *methobj, RexxString *option)
+RexxObject *RexxObject::setMethod(RexxString *name, MethodClass *methobj, RexxString *option)
 {
     // get the message name as a string
-    msgname = stringArgument(msgname, "method name")->upper();
+    Protected<RexxString> msgname = stringArgument(name, "method name")->upper();
 
     // by default, the added scope is .nil, which is the object scope.
     RexxClass *targetScope = (RexxClass *)TheNilObject;
+    Protected<MethodClass> newMethod;
 
     // if not passed a method, we're hiding methods of this name, so use .nil for
     // the method object.
@@ -1748,7 +1748,8 @@ RexxObject *RexxObject::setMethod(RexxString *msgname, MethodClass *methobj, Rex
     else
     {
         // make one from a string or array, setting the scope to .nil
-        methobj = MethodClass::newMethodObject(msgname, (RexxObject *)methobj, (RexxClass *)TheNilObject, "method");
+        newMethod = MethodClass::newMethodObject(msgname, (RexxObject *)methobj, (RexxClass *)TheNilObject, "method");
+        methobj = newMethod;
     }
 
     // By default, we add this method using the floating scope, which is a
@@ -1787,13 +1788,13 @@ RexxObject *RexxObject::setMethod(RexxString *msgname, MethodClass *methobj, Rex
 /**
  * Remove a method from an object instance.
  *
- * @param msgname The method we're removing.
+ * @param name    The method we're removing.
  *
  * @return Returns nothing.
  */
-RexxObject  *RexxObject::unsetMethod(RexxString *msgname)
+RexxObject  *RexxObject::unsetMethod(RexxString *name)
 {
-    msgname = stringArgument(msgname, "method name")->upper();
+    Protected<RexxString> msgname = stringArgument(name, "method name")->upper();
 
     // this has restrictions on how it can be used, check this context is valid.
     checkRestrictedMethod("UNSETMETHOD");
@@ -1808,22 +1809,22 @@ RexxObject  *RexxObject::unsetMethod(RexxString *msgname)
  * Externalized version of the REQUEST method.  This tries to
  * convert one class of object into another.
  *
- * @param className The class name to convert.
+ * @param name      The class name to convert.
  *
  * @return The converted object, or .nil of can't be converted.
  */
-RexxObject *RexxObject::requestRexx(RexxString *className)
+RexxObject *RexxObject::requestRexx(RexxString *name)
 {
     // we need this in uppercase to search for a method name.
-    className = stringArgument(className, ARG_ONE)->upper();
-    RexxString *class_id = behaviour->getOwningClass()->getId()->upper();
+    Protected<RexxString> className = stringArgument(name, ARG_ONE)->upper();
+    Protected<RexxString> class_id = behaviour->getOwningClass()->getId()->upper();
     // if the existing class id and the target name are the same, we are there already.
     if (className->strictEqual(class_id) == TheTrueObject)
     {
         return this;
     }
     // Get "MAKE"||class methodname
-    RexxString *make_method = className->concatToCstring("MAKE");
+    Protected<RexxString>make_method = className->concatToCstring("MAKE");
     // find the MAKExxxx method
     MethodClass *method = behaviour->methodLookup(make_method);
     // have this method?
@@ -1899,14 +1900,15 @@ void RexxObject::validateOverrideContext(RexxObject *target, RexxClass *scope)
  *
  * @return The method result.
  */
-RexxObject *RexxObject::sendWith(RexxObject *message, ArrayClass *arguments)
+RexxObject *RexxObject::sendWith(RexxObject *message, ArrayClass *args)
 {
-    RexxString *messageName;
-    RexxClass *startScope;
+    ProtectedObject messageName;
+    ProtectedObject startScope;
     // decode and validate the message input
     decodeMessageName(this, message, messageName, startScope);
 
-    arguments = arrayArgument(arguments, "message arguments");
+    // this needs to be protected in case this was converted to an array via makeArray
+    Protected<ArrayClass> arguments = arrayArgument(args, "message arguments");
     ProtectedObject r;
     if (startScope == OREF_NULL)
     {
@@ -1943,8 +1945,8 @@ RexxObject *RexxObject::send(RexxObject **arguments, size_t argCount)
         missingArgument("message name");
     }
 
-    RexxString *messageName;
-    RexxClass *startScope;
+    ProtectedObject messageName;
+    ProtectedObject startScope;
     // decode and validate the message input
     decodeMessageName(this, arguments[0], messageName, startScope);
 
@@ -1974,12 +1976,12 @@ RexxObject *RexxObject::send(RexxObject **arguments, size_t argCount)
  *
  * @return The message object.
  */
-MessageClass *RexxObject::startWith(RexxObject *message, ArrayClass *arguments)
+MessageClass *RexxObject::startWith(RexxObject *message, ArrayClass *args)
 {
     // the message is required
     requiredArgument(message, "message name");
     // this is required and must be an array
-    arguments = arrayArgument(arguments, ARG_TWO);
+    Protected<ArrayClass> arguments = arrayArgument(args, ARG_TWO);
     // the rest is handled by code common to startWith();
     return startCommon(message, arguments->messageArgs(), arguments->messageArgCount());
 }
@@ -2024,8 +2026,8 @@ MessageClass *RexxObject::start(RexxObject **arguments, size_t argCount)
  */
 MessageClass *RexxObject::startCommon(RexxObject *message, RexxObject **arguments, size_t argCount)
 {
-    RexxString *messageName;
-    RexxClass *startScope;
+    ProtectedObject messageName;
+    ProtectedObject startScope;
     // decode and validate the message input
     decodeMessageName(this, message, messageName, startScope);
 
@@ -2035,7 +2037,9 @@ MessageClass *RexxObject::startCommon(RexxObject *message, RexxObject **argument
     validateOverrideContext(this, startScope);
 
     // creeate the new message object and start it.
-    Protected<MessageClass> newMessage = new MessageClass(this, messageName, startScope, new_array(argCount, arguments));
+    Protected<ArrayClass> argArray = new_array(argCount, arguments);
+
+    Protected<MessageClass> newMessage = new MessageClass(this, messageName, startScope, argArray);
     newMessage->start();
     // the message object is our return value.
     return newMessage;
@@ -2052,7 +2056,7 @@ MessageClass *RexxObject::startCommon(RexxObject *message, RexxObject **argument
  * @param messageName
  * @param startScope
  */
-void RexxObject::decodeMessageName(RexxObject *target, RexxObject *message, RexxString *&messageName, RexxClass *&startScope)
+void RexxObject::decodeMessageName(RexxObject *target, RexxObject *message, ProtectedObject &messageName, ProtectedObject &startScope)
 {
     // clear the starting scope
     startScope = OREF_NULL;
@@ -2063,8 +2067,8 @@ void RexxObject::decodeMessageName(RexxObject *target, RexxObject *message, Rexx
     if (!isString(message))
     {
         // get the array form and verify we got a single-dimension array back.
-        ArrayClass *messageArray = message->requestArray();
-        if (messageArray == TheNilObject)
+        Protected<ArrayClass> messageArray = message->requestArray();
+        if (messageArray == (ArrayClass *)TheNilObject)
         {
             reportException(Error_Incorrect_method_message_name, message);
         }
@@ -2129,6 +2133,7 @@ RexxObject *RexxObject::run(RexxObject **arguments, size_t argCount)
     requiredArgument(methobj, "method");
     // make sure we have a method object, including creating one from source if necessary
     methobj = MethodClass::newMethodObject(GlobalNames::RUN, (RexxObject *)methobj, (RexxClass *)TheNilObject, "method");
+    Protected<ArrayClass> argList;
 
     // if we have arguments, decode how we are supposed to handle method arguments.
     if (argCount > 1)
@@ -2151,7 +2156,7 @@ RexxObject *RexxObject::run(RexxObject **arguments, size_t argCount)
                         reportException(Error_Incorrect_method_maxarg, IntegerThree);
                     }
                     // get the argument array and make sure we have a good array
-                    ArrayClass *arglist = arrayArgument(arguments[2], "argument array");
+                    arglist = arrayArgument(arguments[2], "argument array");
                     // get the array specifics to pass along
                     argumentPtr = arglist->messageArgs();
                     argcount = arglist->messageArgCount();
@@ -2206,7 +2211,7 @@ RexxObject *RexxObject::defineInstanceMethods(DirectoryClass *methods)
             method = OREF_NULL;       // this is a method removal
         }
         // Get the name for this method, in uppercase
-        RexxString *name = (RexxString *)iterator.index();
+        Protected<RexxString> name = (RexxString *)iterator.index();
         name = name->upper();
         behaviour->defineMethod(name, method);
     }
@@ -2761,8 +2766,8 @@ RexxObject *RexxObject::copyRexx()
  */
 RexxObject *RexxObject::hasMethodRexx(RexxString *message )
 {
-    message = stringArgument(message, ARG_ONE)->upper();
-    return booleanObject(hasMethod(message));
+    Protected<RexxString>messageName = stringArgument(message, ARG_ONE)->upper();
+    return booleanObject(hasMethod(messageName));
 }
 
 

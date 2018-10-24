@@ -117,7 +117,10 @@ void SysThread::shutdown()
 
 void SysThread::yield()
 {
-    sched_yield();
+// sched_yield doesn't really seem to do a yield unless this is a
+// real time scheduling priority, so force this thread to sleep for a
+// sort interval to give other threads a chance to run
+    usleep(1);
 }
 
 

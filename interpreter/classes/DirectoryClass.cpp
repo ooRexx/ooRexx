@@ -477,18 +477,18 @@ RexxInternalObject *DirectoryClass::removeItem(RexxInternalObject *target)
  *
  * @return Nothing.
  */
-RexxInternalObject *DirectoryClass::setMethodRexx(RexxString *entryname, MethodClass *methodobj)
+RexxInternalObject *DirectoryClass::setMethodRexx(RexxString *name, MethodClass *methodobj)
 {
-    entryname = stringArgument(entryname, "index")->upper();
+    Protected<RexxString> entryname = stringArgument(name, "index")->upper();
     if (methodobj != OREF_NULL)
     {
         // make sure we have a method object for this.  The scope is .nil to indicate object scope.
-        methodobj = MethodClass::newMethodObject(entryname, methodobj, (RexxClass *)TheNilObject, "method");
+        Protected<MethodClass> method = MethodClass::newMethodObject(entryname, methodobj, (RexxClass *)TheNilObject, "method");
 
         // the unknown method?  We keep that in a special place
         if (entryname->strCompare(GlobalNames::UNKNOWN))
         {
-            setField(unknownMethod, methodobj);
+            setField(unknownMethod, method);
         }
         else
         {
@@ -498,7 +498,7 @@ RexxInternalObject *DirectoryClass::setMethodRexx(RexxString *entryname, MethodC
                 setField(methodTable, new_string_table());
             }
             // and add the method to the table
-            methodTable->put(methodobj, entryname);
+            methodTable->put(method, entryname);
         }
     }
     // no method object given, this is a removal

@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -844,12 +844,12 @@ RexxObject *MessageClass::newRexx(RexxObject **msgArgs, size_t argCount)
     requiredArgument(_target, "message target");
     RexxObject *_message  = msgArgs[1];
     requiredArgument(_message, "message name");
-    RexxString *msgName;
-    RexxClass *_startScope;
+    ProtectedObject msgName;
+    ProtectedObject _startScope;
     // decode the message argument into name and scope
     RexxObject::decodeMessageName(_target, _message, msgName, _startScope);
 
-    ArrayClass *argPtr = OREF_NULL;
+    Protected<ArrayClass> argPtr;
 
     // are there arguments to be sent with the message?
     if (num_args > 2 )

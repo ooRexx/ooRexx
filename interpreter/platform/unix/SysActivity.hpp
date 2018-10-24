@@ -68,6 +68,8 @@
 # include <sched.h>
 #endif
 
+#include <utime.h>
+
 class Activity;
 
 class SysActivity
@@ -84,11 +86,6 @@ public:
     inline thread_id_t getThreadID() { return (thread_id_t)threadId; }
 
     static thread_id_t queryThreadID();
-    // the following os a NOP on unix platforms
-    static inline void yield()
-    {
-        sched_yield();
-    }
 
 protected:
     pthread_t     threadId;         // the thread identifier

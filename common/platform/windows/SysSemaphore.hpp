@@ -46,10 +46,12 @@
 #define Included_SysSemaphore
 
 #include "rexx.h"
+#include "SysThread.hpp"
 
 #include <stdlib.h>
 
 inline void waitHandle(HANDLE s, bool noMessageLoop);
+inline bool waitHandle(HANDLE s, uint32_t timeout, bool noMessageLoop);
 
 class SysSemaphore {
 public:
@@ -67,11 +69,11 @@ public:
 
      inline bool wait(uint32_t timeout)
      {
-         return WaitForSingleObject(sem, timeout) != WAIT_TIMEOUT;
+         return WaitForSingleObject(sem, timeout) != WAIT_OBJECT_0;
      }
 
      inline void reset() { ResetEvent(sem); }
-     inline bool posted() { return WaitForSingleObject(sem, 0) != 0; }
+     inline bool posted() { return WaitForSingleObject(sem, 0) == WAIT_OBJECT_0; }
 
      static inline bool allocTlsIndex()
      {

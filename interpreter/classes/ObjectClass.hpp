@@ -476,7 +476,7 @@ class RexxObject : public RexxInternalObject
     RexxObject  *send(RexxObject **, size_t);
     RexxObject  *sendWith(RexxObject *, ArrayClass *);
     MessageClass *startCommon(RexxObject *message, RexxObject **arguments, size_t argCount);
-    static void decodeMessageName(RexxObject *target, RexxObject *message, RexxString *&messageName, RexxClass *&startScope);
+    static void decodeMessageName(RexxObject *target, RexxObject *message, ProtectedObject &messageName, ProtectedObject &startScope);
     RexxObject  *run(RexxObject **, size_t);
     void         checkUninit();
 

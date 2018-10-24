@@ -290,12 +290,8 @@ void Activity::enterCurrentThread()
 {
     // the activity already existed for this thread, we're reentering,
     // so get the interpreter lock.
-    requestAccess();
+    requestApiAccess();
     activate();        // let the activity know it's in use, potentially nested
-
-    // belt-and-braces.  Make sure the current activity is explicitly set to
-    // this activity before leaving.
-    ActivityManager::currentActivity = this;
 }
 
 
@@ -1417,7 +1413,7 @@ void Activity::run()
     // give the other thread a chance to run.
     guardSem.post();
     runSem.post();
-    SysActivity::yield();
+    yield();
 }
 
 
@@ -1970,6 +1966,7 @@ void Activity::guardSet()
 void Activity::postDispatch()
 {
     runSem.post();
+    dispatchPosted = true;
 }
 
 
@@ -2089,15 +2086,31 @@ void Activity::requestAccess()
     // try the fast version first
     if (ActivityManager::lockKernelImmediate())
     {
-        // update the current activity pointer and the global numeric settings.
-        ActivityManager::currentActivity = this;
-        Numerics::setCurrentSettings(numericSettings);
+        setupCurrentActivity();
         return;
     }
     // can't get it, go stand in line
     ActivityManager::addWaitingActivity(this, false);
-    // belt and braces to ensure this is done on this thread
-    ActivityManager::currentActivity = this;
+}
+
+
+/**
+ * Acquire priority API exclusive access to the kernel
+ */
+void Activity::requestApiAccess()
+{
+    // try the fast version first
+    if (ActivityManager::lockKernelImmediate())
+    {
+        setupCurrentActivity();
+        return;
+    }
+    // indicate we're waiting with priority
+    setWaitingForApiAccess();
+    // can't get it, go stand in line
+    ActivityManager::addWaitingApiActivity(this);
+    // and clear that waiting state
+    clearWaitingForApiAccess();
 }
 
 
@@ -2121,6 +2134,8 @@ void Activity::waitForKernel()
  */
 void Activity::setupCurrentActivity()
 {
+    DispatchSection lock;
+
     // update the current activity pointer and the global numeric settings.
     ActivityManager::currentActivity = this;
     Numerics::setCurrentSettings(numericSettings);

@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -252,11 +252,11 @@ RexxInternalObject *StemClass::getStemValue()
  */
 RexxObject *StemClass::unknownRexx(RexxString *message, ArrayClass *arguments)
 {
-    message = stringArgument(message, ARG_ONE);
-    arguments = arrayArgument(arguments, ARG_TWO);
+    Protected<RexxString> messageName = stringArgument(message, ARG_ONE);
+    Protected<ArrayClass> argumentList = arrayArgument(arguments, ARG_TWO);
 
     ProtectedObject result;
-    return value->sendMessage(message, arguments, result);
+    return value->sendMessage(messageName, argumentList, result);
 }
 
 
@@ -602,14 +602,14 @@ RexxInteger *StemClass::integerValue(wholenumber_t precision)
  * handle some of these directly, the rest are passed on
  * to the default value.
  *
- * @param makeclass The name of the class for the request.
+ * @param requestclass The name of the class for the request.
  *
  * @return The appropriate result for the request.
  */
-RexxObject *StemClass::request(RexxString *makeclass)
+RexxObject *StemClass::request(RexxString *requestclass)
 {
     ProtectedObject result;
-    makeclass = stringArgument(makeclass, ARG_ONE)->upper();
+    Protected<RexxString> makeclass = stringArgument(requestclass, ARG_ONE)->upper();
     // take care of any ARRAY requests, the rest go to the default value
     if (makeclass->strCompare("ARRAY"))
     {

@@ -108,12 +108,6 @@ public:
     static void loadImage(char *&imageBuffer, size_t &imageSize);
     static BufferClass *readProgram(const char *file_name);
     static int setEnvironmentVariable(RexxString *name, RexxString *value);
-    static uint64_t getMillisecondTicks()
-    {
-        struct timeval now;
-        gettimeofday(&now, NULL);
-        return (uint64_t)now.tv_sec * 1000 + now.tv_usec / 1000;
-    }
 
     static sigset_t oldmask;       // masks used for setting signal handlers
     static sigset_t newmask;

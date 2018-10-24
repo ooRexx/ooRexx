@@ -95,6 +95,12 @@ public:
     bool equals(SysThread &other);
     inline size_t hash() { return (((size_t)_threadHandle) >> 8) * 37; }
     void waitForTermination();
+    static uint64_t getMillisecondTicks()
+    {
+        // on Windows, this is limited to the resolution of the system timer,
+        // which is typically in the range of 10 milliseconds to 16 milliseconds.
+        return GetTickCount64();
+    }
 
 protected:
     void createThread();
