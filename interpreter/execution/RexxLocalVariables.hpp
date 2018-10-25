@@ -159,7 +159,7 @@ class RexxLocalVariables
     inline bool       isNested() { return flags[NESTED_INTERNAL]; }
     inline bool       autoExpose() { return objectVariables != OREF_NULL; }
 
-    inline void       procedure(RexxActivation *activation) { owner = activation; dictionary = OREF_NULL;  clearNested(); }
+    inline void       procedure(RexxActivation *activation) { owner = activation; dictionary = OREF_NULL; objectVariables = OREF_NULL; clearNested(); }
     inline void       setDictionary(VariableDictionary *dict) { dictionary = dict; }
     inline VariableDictionary *getNestedDictionary() { return dictionary; }
 
