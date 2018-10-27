@@ -2,12 +2,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -78,7 +78,7 @@
 
                                               /* return a new item of same class*/
                                               /* (this could potentially be a   */
-                                              /* subclass of Complex            */
+                                              /* subclass of Complex)           */
   return self~class~new(real + adder~real, imaginary + adder~imaginary )
 
 ::method '-'                                  /* subtraction method             */
@@ -150,8 +150,17 @@
 
 ::method string                               /* format as a string value       */
   expose real imaginary                       /* get the state info             */
-  if imaginary = 0 then return real           /* if no imaginary, don't format  */
-  return real'+'imaginary'i'                  /* format as real+imaginaryi      */
+  -- format as real+/-imaginaryi, but use short format if possible
+  select                                      
+    when imaginary = 0 then return real
+    when real = 0, imaginary = -1 then return "-i"
+    when real = 0, imaginary = 1 then return "i"
+    when real = 0 then return imaginary"i"
+    when imaginary = 1 then return real"+i" 
+    when imaginary = -1 then return real"-i" 
+    when imaginary > 0 then return real"+"imaginary"i" 
+    when imaginary < 0 then return real || imaginary"i"
+  end
 
 -- Technically, complex numbers are not mathematically orderable.  This is considered
 -- a "lexical" ordering, which is still a useful operation and demonstrates the use
