@@ -49,6 +49,7 @@ set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 set (CMAKE_PDB_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
+set (CMAKE_SAMPLES_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/samples)
 #/*----------------------------------------------------------------------------*/
 #/* Project settings                                                           */
 #/*----------------------------------------------------------------------------*/
@@ -124,6 +125,7 @@ set (CMAKE_REXXPATH ${CMAKE_CURRENT_BINARY_DIR}/bin)
 if (ORX_REXXPATH)
     message(STATUS "Setting REXX search path to ${ORX_REXXPATH}")
     set (CMAKE_REXXPATH ${ORX_REXXPATH})
+
 endif()
 
 
@@ -190,6 +192,8 @@ if (WIN32)
      set(NSIS_COMPONENT_SHORTCUTS_Docs "${NSIS_COMPONENT_SHORTCUTS_Docs}\n!insertmacro ConfigureDocShortCut \"${name}\" \"${file}\"")
    ENDMACRO ()
 
+   set (OOREXX_SHEBANG_PROGRAM "/usr/bin/rexx")
+
  else ()
    if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
      set(CMAKE_INSTALL_PREFIX
@@ -222,6 +226,7 @@ if (WIN32)
    set (INSTALL_INCLUDE_DIR ${CMAKE_INSTALL_PREFIX}/include)
    set (INSTALL_SAMPLES_DIR ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
    set (INSTALL_MAN_DIR ${CMAKE_INSTALL_PREFIX}/share/man)
+   set (OOREXX_SHEBANG_PROGRAM ${CMAKE_INSTALL_PREFIX}/rexx)
 endif ()
 # Set compiler and linker flags common to all build environments
 include_directories(${PROJECT_BINARY_DIR})
@@ -894,6 +899,12 @@ macro (copy_build_file name source)
        )
 endmacro (copy_build_file)
 
+# handy macro for configuring files from the source into the build directory.
+macro (configure_build_file name source)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${source}/${name} ${CMAKE_CURRENT_BINARY_DIR}/${source}/${name} @ONLY)
+endmacro (configure_build_file)
+
+
 # Copy the class files to the build directory
 copy_build_file(CoreClasses.orx ${build_rexx_classes_dir})
 copy_build_file(StreamClasses.orx ${build_rexx_classes_dir})
@@ -1312,9 +1323,9 @@ if (WIN32)
    set (OOD_SVN_REVSION 11506)
 
    #################### ooshapes.dll ################
-   # Sources for ooshapes.dll                                          
-   add_library(ooshapes SHARED                                              
-                ${build_extensions_oodialog_dir}/APICommon.cpp              
+   # Sources for ooshapes.dll
+   add_library(ooshapes SHARED
+                ${build_extensions_oodialog_dir}/APICommon.cpp
                 ${build_extensions_oodialog_dir}/ooShapes.cpp
                 ${build_extensions_oodialog_dir}/ooShapesAid.cpp
                 ${build_extensions_oodialog_dir}/ooShapesPE.cpp
@@ -1342,39 +1353,39 @@ if (WIN32)
 
 
    #################### oodialog.dll ################
-   # Sources for oodialog.dll                                               
-   add_library(oodialog SHARED                                              
-                ${build_extensions_oodialog_dir}/APICommon.cpp              
-                ${build_extensions_oodialog_dir}/oodBarControls.cpp         
-                ${build_extensions_oodialog_dir}/oodBaseDialog.cpp          
-                ${build_extensions_oodialog_dir}/oodBasicControls.cpp       
-                ${build_extensions_oodialog_dir}/oodCommon.cpp              
-                ${build_extensions_oodialog_dir}/oodControl.cpp             
-                ${build_extensions_oodialog_dir}/oodData.cpp                
-                ${build_extensions_oodialog_dir}/oodDeviceGraphics.cpp      
-                ${build_extensions_oodialog_dir}/ooDialog.cpp               
-                ${build_extensions_oodialog_dir}/oodKeyboard.cpp            
-                ${build_extensions_oodialog_dir}/oodListView.cpp            
-                ${build_extensions_oodialog_dir}/oodMenu.cpp                
-                ${build_extensions_oodialog_dir}/oodMessaging.cpp           
-                ${build_extensions_oodialog_dir}/oodMouse.cpp               
-                ${build_extensions_oodialog_dir}/oodPackageEntry.cpp        
-                ${build_extensions_oodialog_dir}/oodPropertySheetDialog.cpp 
-                ${build_extensions_oodialog_dir}/oodReBar.cpp               
-                ${build_extensions_oodialog_dir}/oodResizableDialog.cpp     
-                ${build_extensions_oodialog_dir}/oodResources.cpp           
-                ${build_extensions_oodialog_dir}/oodRoutines.cpp            
-                ${build_extensions_oodialog_dir}/oodShared.cpp              
-                ${build_extensions_oodialog_dir}/oodShellObjects.cpp        
-                ${build_extensions_oodialog_dir}/oodStatusBar.cpp           
-                ${build_extensions_oodialog_dir}/oodToolBar.cpp             
-                ${build_extensions_oodialog_dir}/oodToolTip.cpp             
-                ${build_extensions_oodialog_dir}/oodTreeView.cpp            
-                ${build_extensions_oodialog_dir}/oodUser.cpp                
-                ${build_extensions_oodialog_dir}/oodUtilities.cpp           
-                ${build_extensions_oodialog_dir}/oodViewControls.cpp        
-#               ${build_extensions_oodialog_dir}/ooShapes.cpp              
-#               ${build_extensions_oodialog_dir}/ooShapesAid.cpp              
+   # Sources for oodialog.dll
+   add_library(oodialog SHARED
+                ${build_extensions_oodialog_dir}/APICommon.cpp
+                ${build_extensions_oodialog_dir}/oodBarControls.cpp
+                ${build_extensions_oodialog_dir}/oodBaseDialog.cpp
+                ${build_extensions_oodialog_dir}/oodBasicControls.cpp
+                ${build_extensions_oodialog_dir}/oodCommon.cpp
+                ${build_extensions_oodialog_dir}/oodControl.cpp
+                ${build_extensions_oodialog_dir}/oodData.cpp
+                ${build_extensions_oodialog_dir}/oodDeviceGraphics.cpp
+                ${build_extensions_oodialog_dir}/ooDialog.cpp
+                ${build_extensions_oodialog_dir}/oodKeyboard.cpp
+                ${build_extensions_oodialog_dir}/oodListView.cpp
+                ${build_extensions_oodialog_dir}/oodMenu.cpp
+                ${build_extensions_oodialog_dir}/oodMessaging.cpp
+                ${build_extensions_oodialog_dir}/oodMouse.cpp
+                ${build_extensions_oodialog_dir}/oodPackageEntry.cpp
+                ${build_extensions_oodialog_dir}/oodPropertySheetDialog.cpp
+                ${build_extensions_oodialog_dir}/oodReBar.cpp
+                ${build_extensions_oodialog_dir}/oodResizableDialog.cpp
+                ${build_extensions_oodialog_dir}/oodResources.cpp
+                ${build_extensions_oodialog_dir}/oodRoutines.cpp
+                ${build_extensions_oodialog_dir}/oodShared.cpp
+                ${build_extensions_oodialog_dir}/oodShellObjects.cpp
+                ${build_extensions_oodialog_dir}/oodStatusBar.cpp
+                ${build_extensions_oodialog_dir}/oodToolBar.cpp
+                ${build_extensions_oodialog_dir}/oodToolTip.cpp
+                ${build_extensions_oodialog_dir}/oodTreeView.cpp
+                ${build_extensions_oodialog_dir}/oodUser.cpp
+                ${build_extensions_oodialog_dir}/oodUtilities.cpp
+                ${build_extensions_oodialog_dir}/oodViewControls.cpp
+#               ${build_extensions_oodialog_dir}/ooShapes.cpp
+#               ${build_extensions_oodialog_dir}/ooShapesAid.cpp
                 ${build_extensions_oodialog_dir}/ooDialog.def
                 ${build_extensions_oodialog_dir}/ooDialog.rc)
    # Override the compile definitions with ooDialog-exclusive defines
@@ -1565,7 +1576,10 @@ copy_build_file(socket.cls ${build_extensions_rxsock_dir})
 copy_build_file(streamsocket.cls ${build_extensions_rxsock_dir})
 copy_build_file(mime.cls ${build_extensions_rxsock_dir})
 copy_build_file(smtp.cls ${build_extensions_rxsock_dir})
-copy_build_file(rexxtry.rex ${build_samples_dir})
+
+# the shebang line needs adjusting in the .rex files, so we need to
+# do this based on the build target
+configure_build_file(rexxtry.rex ${build_samples_dir})
 
 add_custom_target(class_files ALL DEPENDS
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rxregexp.cls
@@ -1576,7 +1590,7 @@ add_custom_target(class_files ALL DEPENDS
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/streamsocket.cls
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mime.cls
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/smtp.cls
-    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexxtry.rex)
+    ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/rexxtry.rex)
 
 
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rxregexp.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
@@ -1591,7 +1605,7 @@ install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/streamsocket.cls COMPONENT Core 
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mime.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/smtp.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
 # technically a sample, but this is so useful we add it to the binary dir
-install(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir}/rexxtry.rex COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
+install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIR}/rexxtry.rex COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
 
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_dir}/rexx.h COMPONENT DevLib DESTINATION ${INSTALL_INCLUDE_DIR})
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_dir}/rexxapidefs.h COMPONENT DevLib DESTINATION ${INSTALL_INCLUDE_DIR})
